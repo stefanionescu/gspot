@@ -7,13 +7,13 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { COVERAGE_ZERO_LIMITS } from '#tests/config/integration/checks/testing/samples.ts';
 
 import {
     VITEST_SOURCE,
     UNTESTED_SOURCE,
+    COVERAGE_ZERO_LIMITS,
     VITEST_PROJECT_FILES,
-} from '#tests/config/integration/checks/testing/testing.ts';
+} from '#tests/config/integration/testing.ts';
 
 const vitestProjectFiles = {
     ...VITEST_PROJECT_FILES,

@@ -14,7 +14,7 @@ import {
     JSDOC_FINDINGS,
     CORRECTED_JSDOC,
     ROOT_PARAMETERS,
-} from '#tests/config/generation/configurations/language/javascript/eslint/eslint.ts';
+} from '#tests/config/configurations/javascript/plugins.ts';
 
 test.each(['all'] as const)(
     'JSDoc types are allowed in JavaScript and duplicate TypeScript type tags are reported at %s',

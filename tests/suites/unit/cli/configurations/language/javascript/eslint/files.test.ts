@@ -9,7 +9,7 @@ import {
     NESTED_ESLINT_PATHS,
     NESTED_ESLINT_RULES,
     WILDCARD_ESLINT_FILES,
-} from '#tests/config/generation/configurations/language/javascript/eslint/eslint.ts';
+} from '#tests/config/configurations/javascript/overrides.ts';
 
 test("a child scope's test_files and script_files get the test and script rule blocks", async () => {
     await using sandbox = await testdir({

@@ -5,31 +5,29 @@ import { test, expect, describe } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import type { Sandbox } from '#tests/types/sandbox.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
-import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
-import { CAFE_SCRIPT_PATH } from '#tests/config/paths.ts';
 import type { SandboxChanges } from '#tests/types/samples.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
+import { CAFE_SCRIPT_PATH } from '#tests/config/setup/programs.ts';
+import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { changeSandbox, writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
 import {
+    SWIFT_SAMPLE,
     SEMGREP_CHECK,
     SEMGREP_SANDBOX,
-    SEMGREP_PROJECT_FILES,
-} from '#tests/config/integration/checks/general/security/sandbox.ts';
-import {
-    SWIFT_SAMPLE,
     REPOSITORY_RULE,
     PLATFORM_SOURCES,
     NEXT_CONFIG_CASES,
     BASH_DOWNLOAD_SAMPLE,
+    SEMGREP_PROJECT_FILES,
     PLATFORM_SOURCE_FIXES,
     SECURITY_RULE_FINDINGS,
     PLATFORM_SOURCE_FINDINGS,
     MALFORMED_SEMGREP_RESULTS,
-} from '#tests/config/integration/checks/general/security/security.ts';
+} from '#tests/config/integration/security/semgrep.ts';
 
 describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
     const installedSandbox = shareInstalledSandbox(SEMGREP_SANDBOX);

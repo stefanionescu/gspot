@@ -4,7 +4,7 @@ import { compareText } from '#cli/system/text.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { SONAR_TYPE_SAMPLES } from '#tests/config/generation/configurations/language/javascript/eslint/replacements.ts';
+import { SONAR_TYPE_SAMPLES } from '#tests/config/configurations/javascript/replacements.ts';
 
 test.each(['basic', 'all'] as const)('%s preserves replaced Sonar type checks in TypeScript', async (level) => {
     await using sandbox = await createGitSandbox({

@@ -11,8 +11,8 @@ import { validateKeys } from '#cli/settings/validation/keys.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { PURGECSS_SAFELIST_TABLES } from '#tests/config/settings/read.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { PURGECSS_SAFELIST_TABLES } from '#tests/config/settings/inherit.ts';
 
 test('an empty PurgeCSS safelist is inherited, and a scope value applies to its children', async () => {
     await using sandbox = await createGitSandbox({});

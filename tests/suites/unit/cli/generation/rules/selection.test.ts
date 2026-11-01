@@ -6,7 +6,7 @@ import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
-import { RUNTIME_RULE_CASES } from '#tests/config/generation/rules.ts';
+import { RUNTIME_RULE_CASES } from '#tests/config/generation/generate.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 async function generateRuleFiles(level: Level, files: Record<string, string>): Promise<Map<string, string>> {

@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { MISSING_TEST_RUN_FOLDER } from '#tests/config/setup/runner.ts';
+import { MISSING_TEST_RUN_FOLDER } from '#tests/config/setup/sandboxes.ts';
 
 export const REPOSITORY_ROOT = join(import.meta.dir, '../../..');
 

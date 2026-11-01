@@ -2,7 +2,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
-import { MARKDOWN_REPORT } from '#tests/config/engine/outputs/outputs.ts';
+import { MARKDOWN_REPORT } from '#tests/config/engine/outputs.ts';
 
 test('a markdownlint JSON result becomes a finding', async () => {
     await using sandbox = await testdir({ 'sample.md': '<span>Content</span>\n' });

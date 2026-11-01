@@ -3,12 +3,11 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { parse } from '@decimalturn/toml-patch';
 import type { TomlTable } from '#cli/types/settings.ts';
-import { REFUSAL_FILES } from '#tests/config/commands/set.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
-import { IGNORE_REFUSALS, UNKNOWN_IGNORE_ARGUMENTS } from '#tests/config/commands/ignore.ts';
+import { REFUSAL_FILES, IGNORE_REFUSALS, UNKNOWN_IGNORE_ARGUMENTS } from '#tests/config/commands/edits.ts';
 
 test('ignore of an unknown check exits 2 and leaves gspot.toml byte for byte', async () => {
     const settings = buildSandboxSettings(['bash']);

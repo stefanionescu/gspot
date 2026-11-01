@@ -2,11 +2,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-
-import {
-    DUPLICATE_RULE_CASES,
-    DUPLICATE_RULE_FILES,
-} from '#tests/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
+import { DUPLICATE_RULE_CASES, DUPLICATE_RULE_FILES } from '#tests/config/configurations/javascript/blocks.ts';
 
 test.each([...DUPLICATE_RULE_CASES])(
     'each pair of duplicate rules reports a defect once, from the kept rule ($kept)',

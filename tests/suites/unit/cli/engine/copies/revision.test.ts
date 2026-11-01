@@ -4,7 +4,6 @@ import { pathToFileURL } from 'node:url';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { LOWERCASE_SELECT_SQL } from '#tests/config/sql.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
@@ -15,9 +14,10 @@ import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { LOWERCASE_SELECT_SQL } from '#tests/config/engine/tool-runs.ts';
 import { readHead, listRevisionFiles } from '#cli/repository/revisions/files.ts';
+import { SELECTED_SOURCE, GIT_HOOK_REPORT } from '#tests/config/engine/files.ts';
 import { prepareNestedRepository } from '#tests/setup/sandboxes/repositories.ts';
-import { SELECTED_SOURCE, GIT_HOOK_REPORT } from '#tests/config/engine/copies.ts';
 import { mkdir, readdir, symlink, copyFile, readFile, writeFile } from 'node:fs/promises';
 
 test('a revision copy of a nested gspot.toml keeps the repository around it', async () => {

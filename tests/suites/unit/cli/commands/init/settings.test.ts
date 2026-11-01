@@ -5,10 +5,14 @@ import { findValueAt } from '#cli/system/tables.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import type { InitJson } from '#cli/types/commands/edits.ts';
-import { SIMULATOR_DESTINATION } from '#tests/config/xcode.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/checks/infrastructure/infrastructure.ts';
-import { IMPORT_STYLE_CASES, WORKSPACE_SITE_FILES } from '#tests/config/commands/init/init.ts';
+import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/setup/configurations.ts';
+
+import {
+    IMPORT_STYLE_CASES,
+    WORKSPACE_SITE_FILES,
+    SIMULATOR_DESTINATION,
+} from '#tests/config/commands/init/settings.ts';
 
 test('the gspot.toml text keeps root and scope configurations', async () => {
     await using sandbox = await createGitSandbox(WORKSPACE_SITE_FILES);

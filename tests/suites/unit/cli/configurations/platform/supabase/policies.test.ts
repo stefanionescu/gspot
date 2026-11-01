@@ -18,7 +18,7 @@ import {
     SERVICE_ROLE_CLIENTS,
     AVATARS_BUCKET_CONFIG,
     SERVICE_ROLE_CLIENT_FILES,
-} from '#tests/config/checks/platform/supabase.ts';
+} from '#tests/config/configurations/platform.ts';
 
 test('supabase/storage-policies reports a syntax finding for malformed TOML', async () => {
     await using sandbox = await createGitSandbox({

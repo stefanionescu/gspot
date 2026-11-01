@@ -9,9 +9,7 @@ import { buildInitSettings } from '#cli/commands/init/settings.ts';
 import { setKey, buildEditedSettings } from '#cli/settings/edit.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
-import { ARRAY_COMMENT_CASES } from '#tests/config/settings/text/array-comments.ts';
-import { FIELD_COMMENT_CASES } from '#tests/config/settings/text/field-comments.ts';
-import { IGNORE_COMMENT_CASES } from '#tests/config/settings/text/ignore-comments.ts';
+import { ARRAY_COMMENT_CASES, FIELD_COMMENT_CASES, IGNORE_COMMENT_CASES } from '#tests/config/settings/text.ts';
 
 test.each([...IGNORE_COMMENT_CASES, ...ARRAY_COMMENT_CASES, ...FIELD_COMMENT_CASES])(
     'a template keeps each comment of $name on its key',

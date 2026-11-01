@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
-import { TYPO } from '#tests/config/spelling.ts';
 import { compareText } from '#cli/system/text.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { TYPO } from '#tests/config/setup/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -12,7 +12,7 @@ import {
     SPELLING_SANDBOX,
     SPELLING_IGNORE_CASES,
     SPELLING_LOCALE_SETTINGS,
-} from '#tests/config/integration/checks/general/general.ts';
+} from '#tests/config/integration/general.ts';
 
 const installedSandbox = shareInstalledSandbox(SPELLING_SANDBOX);
 

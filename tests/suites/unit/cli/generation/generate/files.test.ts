@@ -11,15 +11,14 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { NOTES_MARKDOWN } from '#tests/config/documents.ts';
-import { SWIFT_VALUE_SOURCE } from '#tests/config/swift.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { NESTED_YAML } from '#tests/config/generation/documents.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { NESTED_YAML, NOTES_MARKDOWN } from '#tests/config/setup/configurations.ts';
 import { getRuleFilePath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 test.each(['absent', 'authored', 'managed'])(

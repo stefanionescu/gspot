@@ -18,11 +18,7 @@ import { runSandboxCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { checkGeneratorOutputs } from '#cli/configurations/generator-outputs.ts';
 import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { runCommand, buildProcessResult } from '#tests/setup/system/processes.ts';
-
-import {
-    CLOUDFLARE_ENV_SOURCE,
-    UNTRACKED_CLOUDFLARE_FINDINGS,
-} from '#tests/config/checks/cross-configuration/generator-outputs.ts';
+import { CLOUDFLARE_ENV_SOURCE, UNTRACKED_CLOUDFLARE_FINDINGS } from '#tests/config/configurations/general.ts';
 
 async function fakeWrangler(root: string): Promise<DisposableStack> {
     const pin = getTool(readConfigurations().values(), 'wrangler');

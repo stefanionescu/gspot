@@ -6,15 +6,14 @@ import { runChecks } from '#cli/engine/run.ts';
 import { compareText } from '#cli/system/text.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
-import { TWO_WORDS } from '#tests/config/ignores.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { listAlwaysSelected } from '#tests/setup/cli/manifests.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { SCHEDULE_RELEASE_MARKDOWN } from '#tests/config/documents.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { isActive, planChecks, stripCoverageArguments } from '#cli/engine/plan.ts';
-import { TSC_REPLACEMENTS, SCOPE_WIDE_IGNORE_CASES } from '#tests/config/engine/plan.ts';
+import { TSC_REPLACEMENTS, SCOPE_WIDE_IGNORE_CASES } from '#tests/config/engine/run.ts';
+import { TWO_WORDS, SCHEDULE_RELEASE_MARKDOWN } from '#tests/config/setup/configurations.ts';
 
 test('coverage stripping leaves your own checks and given arguments unchanged', async () => {
     await using sandbox = await createGitSandbox({});

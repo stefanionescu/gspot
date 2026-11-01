@@ -12,12 +12,7 @@ import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { fakeNpmTool, fakeCommands } from '#tests/setup/system/fakes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
-
-import {
-    SVELTE_PROJECTS,
-    SVELTE_CHECK_OUTPUT,
-    SVELTE_CHECK_FINDINGS,
-} from '#tests/config/checks/framework/framework.ts';
+import { SVELTE_PROJECTS, SVELTE_CHECK_OUTPUT, SVELTE_CHECK_FINDINGS } from '#tests/config/configurations/framework.ts';
 
 async function runSvelteCheck(stdout: string, options: { scope?: string } = {}): Promise<Finding[]> {
     const scope = options.scope ?? '';

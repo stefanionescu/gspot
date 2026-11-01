@@ -4,11 +4,8 @@ import { compareText } from '#cli/system/text.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-
-import {
-    ESLINT_LEVEL_CASES,
-    SONAR_FLOW_SAMPLES,
-} from '#tests/config/generation/configurations/language/javascript/eslint/replacements.ts';
+import { SONAR_FLOW_SAMPLES } from '#tests/config/configurations/javascript/replacements.ts';
+import { ESLINT_LEVEL_CASES } from '#tests/config/configurations/javascript/configuration-blocks.ts';
 
 test.each(ESLINT_LEVEL_CASES)('%s preserves replaced Sonar control flow checks in %s', async (level, extension) => {
     await using sandbox = await createGitSandbox({

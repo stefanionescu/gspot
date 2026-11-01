@@ -8,9 +8,9 @@ import { createRunCache } from '#cli/system/cache.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { README, LICENSE } from '#tests/config/documents.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { README, LICENSE } from '#tests/config/setup/configurations.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
@@ -30,7 +30,7 @@ import {
     COVERAGE_CHECK_TABLES,
     RELATIVE_PATH_FINDINGS,
     MDX_MISSING_PATH_FINDINGS,
-} from '#tests/config/checks/general/docs.ts';
+} from '#tests/config/configurations/docs.ts';
 
 test('required files run in root and child scopes even without any Markdown file', async () => {
     await using sandbox = await createGitSandbox({

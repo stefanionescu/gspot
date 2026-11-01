@@ -16,7 +16,7 @@ import {
     FILE_NAME_CASES,
     NUMBERED_FILE_FINDINGS,
     NUMBERED_PREFIX_OVERRIDE,
-} from '#tests/config/checks/general/naming/naming.ts';
+} from '#tests/config/configurations/naming/validation.ts';
 
 test('[slug] path brackets are allowed in every scope and banned file names are reported', async () => {
     await using sandbox = await createGitSandbox({

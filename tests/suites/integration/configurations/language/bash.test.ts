@@ -5,8 +5,8 @@ import { planChecks } from '#cli/engine/plan.ts';
 import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
@@ -19,7 +19,7 @@ import {
     DIALECT_FIXES,
     DIALECT_SOURCES,
     SHELLCHECK_DIALECT_FINDINGS,
-} from '#tests/config/integration/checks/language/bash.ts';
+} from '#tests/config/integration/language.ts';
 
 test('ShellCheck reports a finding in a filename that starts with a dash', async () => {
     await using sandbox = await createGitSandbox({

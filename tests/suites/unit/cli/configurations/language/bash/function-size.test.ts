@@ -2,14 +2,19 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/engine/run.ts';
-import { BASH_HEADER } from '#tests/config/bash.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { type SizeCase } from '#tests/types/function-size.ts';
+import { BASH_HEADER } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { PASSED_BASH_RESULTS } from '#tests/config/checks/language/bash/runs.ts';
-import { COUNTED_LOOPS, BASH_SIZE_CASES, CORRECTED_LOOPS } from '#tests/config/checks/language/bash/bash.ts';
+
+import {
+    COUNTED_LOOPS,
+    BASH_SIZE_CASES,
+    CORRECTED_LOOPS,
+    PASSED_BASH_RESULTS,
+} from '#tests/config/configurations/bash.ts';
 
 test('Bash function-size counts C-style loops as branches and nesting, not their header assignments, in each scope', async () => {
     const options = buildRunOptions({ only: ['bash/function-size'] });

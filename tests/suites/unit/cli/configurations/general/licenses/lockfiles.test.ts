@@ -10,7 +10,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeNpmTool, fakeCommands, writeProgramCommand } from '#tests/setup/system/fakes.ts';
-import { SAMPLE_PYPROJECT, LOCKED_PACKAGE_CASES, LICENSE_PACKAGE_JSON } from '#tests/config/checks/general/licenses.ts';
+import { SAMPLE_PYPROJECT, LOCKED_PACKAGE_CASES, LICENSE_PACKAGE_JSON } from '#tests/config/configurations/licenses.ts';
 
 test.each([...LOCKED_PACKAGE_CASES])(
     'licenses/allowed reads only the packages that $name locks',

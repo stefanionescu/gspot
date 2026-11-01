@@ -9,7 +9,7 @@ import {
     INI_HEADING_CASES,
     ORDERED_CONFLICTS,
     CONFLICT_REPLACEMENTS,
-} from '#tests/config/repository/repository.ts';
+} from '#tests/config/repository/setup.ts';
 
 test('INI tool headings include their exact sections and subsections', async () => {
     await using sandbox = await testdir({

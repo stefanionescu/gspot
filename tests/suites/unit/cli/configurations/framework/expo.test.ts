@@ -12,7 +12,7 @@ import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { APP_FOLDERS, EXPO_PACKAGE_JSON, FAILED_DOCTOR_OUTPUT } from '#tests/config/checks/framework/framework.ts';
+import { APP_FOLDERS, EXPO_PACKAGE_JSON, FAILED_DOCTOR_OUTPUT } from '#tests/config/configurations/framework.ts';
 
 test('Expo Doctor reports each failed check once in each app folder', async () => {
     await using apps = await prepareExpoApps({ code: 1, stdout: FAILED_DOCTOR_OUTPUT });

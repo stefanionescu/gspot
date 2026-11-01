@@ -7,8 +7,8 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildAgentsBlock } from '#cli/generation/rules.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { COMMANDS_HEADING } from '#tests/config/generation/rules.ts';
 import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
+import { COMMANDS_HEADING } from '#tests/config/generation/generate.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 function listIndexPaths(block: string): (string | undefined)[] {

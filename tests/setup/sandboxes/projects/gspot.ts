@@ -9,7 +9,7 @@ import { join, resolve, relative, delimiter } from 'node:path';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { NPM_INSTALL_FLAGS } from '#tests/config/setup/sandboxes.ts';
-import { GSPOT_ENVIRONMENT, OFFLINE_ENVIRONMENT } from '#tests/config/setup/environment.ts';
+import { GSPOT_ENVIRONMENT, OFFLINE_ENVIRONMENT } from '#tests/config/setup/programs.ts';
 
 export const isolatedEnvironment: Record<string, string | undefined> = {
     NODE_PATH: undefined,

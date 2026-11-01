@@ -2,17 +2,18 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { PYPROJECT, GOOGLE_PYPROJECT } from '#tests/config/python.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { ARITHMETIC_MODULE } from '#tests/config/integration/checks/samples.ts';
+import { PYPROJECT, GOOGLE_PYPROJECT } from '#tests/config/setup/languages.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { PYTHON_SANDBOX, ARITHMETIC_MODULE_PATH } from '#tests/config/integration/checks/language/python/sandboxes.ts';
 
 import {
+    PYTHON_SANDBOX,
+    ARITHMETIC_MODULE,
     DOCSTRING_MODULES,
+    ARITHMETIC_MODULE_PATH,
     PYDOCLINT_CHECK_ARGUMENTS,
-} from '#tests/config/integration/checks/language/python/python.ts';
+} from '#tests/config/integration/python.ts';
 
 const installedSandbox = shareInstalledSandbox(PYTHON_SANDBOX);
 

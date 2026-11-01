@@ -11,7 +11,7 @@ import {
     TYPED_RULE_TSCONFIG,
     TYPED_RULE_FOLDER_PREFIX,
     RULE_TESTER_PARSER_OPTIONS,
-} from '#tests/config/setup/eslint.ts';
+} from '#tests/config/setup/sandboxes.ts';
 
 /**
 A rule tester using the TypeScript parser and a fixed repository root.

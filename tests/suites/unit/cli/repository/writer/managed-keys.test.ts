@@ -2,14 +2,14 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openFiles } from '#cli/system/files/open.ts';
-import { CHECK_COMMAND } from '#tests/config/hooks.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
+import { CHECK_COMMAND } from '#tests/config/setup/programs.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
-import { STYLELINT_PACKAGE_JSON } from '#tests/config/authored-configs.ts';
-import { INVALID_PACKAGE_JSON_TEXTS } from '#tests/config/repository/writer.ts';
+import { INVALID_PACKAGE_JSON_TEXTS } from '#tests/config/repository/files.ts';
+import { STYLELINT_PACKAGE_JSON } from '#tests/config/setup/configurations.ts';
 import { writePlans, hasManagedKeys, planManagedKeys } from '#cli/repository/writer.ts';
 
 test('managed JSON keys survive reopening and updates and keep other bytes and the mode', async () => {

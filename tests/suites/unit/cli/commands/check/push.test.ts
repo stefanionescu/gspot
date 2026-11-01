@@ -1,17 +1,17 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { CHECK_COMMAND } from '#tests/config/hooks.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { CommandFailureJson } from '#cli/types/system.ts';
+import { CHECK_COMMAND } from '#tests/config/setup/programs.ts';
 import type { PushReport } from '#cli/types/commands/reports.ts';
 import { CLI_BIN, runGspot } from '#tests/setup/cli/commands.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check/check.ts';
+import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check.ts';
 import { PUSH_CONTENT, BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { createGitSandbox, preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
 

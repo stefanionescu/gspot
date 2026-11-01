@@ -14,8 +14,8 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { runChecks, runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { cp, chmod, mkdir, unlink, copyFile, readFile, realpath, writeFile } from 'node:fs/promises';
-import { EMPTY_PROJECT_RESULT, IMPORTED_AMBIENT_FILES } from '#tests/config/checks/language/language.ts';
 import { toolModules, linkTypescript, linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { EMPTY_PROJECT_RESULT, IMPORTED_AMBIENT_FILES } from '#tests/config/configurations/javascript/checks.ts';
 
 test('javascript/biome checks shebang scripts, TypeScript, and component files in each scope', async () => {
     const nested = 'if (value) { if (value.ready) { if (value.id) return 1; } } return 0;';

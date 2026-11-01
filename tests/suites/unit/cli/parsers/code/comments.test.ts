@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { parseComments, stripCommentEnd } from '#cli/parsers/code/comments.ts';
-import { COMMENT_BOUNDARIES, COMPONENT_SCRIPT_COMMENTS } from '#tests/config/parsers/code/comments.ts';
+import { COMMENT_BOUNDARIES, COMPONENT_SCRIPT_COMMENTS } from '#tests/config/parsers/comments.ts';
 
 async function listMarkedLines(path: string, source: string, tags: readonly string[]): Promise<number[]> {
     const comments = await parseComments(path, source, tags);

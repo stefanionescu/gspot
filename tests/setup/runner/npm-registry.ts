@@ -2,18 +2,18 @@ import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { REGISTRY_HOST } from '#tests/config/setup/sandboxes.ts';
 import { TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 import { type NpmRegistry, type PackedPackage, type RegistryPackage } from '#tests/types/packages.ts';
 
 import {
+    REGISTRY_HOST,
     NPM_PACK_FLAGS,
     UPSTREAM_REGISTRY,
     PACKED_PUBLISH_TIME,
     GSPOT_PACKAGE_SCOPE,
     PACKED_PACKAGES_FILE,
     AUTHENTICATION_REQUIRED_MESSAGE,
-} from '#tests/config/setup/runner.ts';
+} from '#tests/config/setup/sandboxes.ts';
 
 async function answerRegistryRequest(
     request: Request,

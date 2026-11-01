@@ -3,22 +3,21 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { HOOKS_SETTINGS } from '#tests/config/hooks.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { readGitSetting } from '#cli/repository/git/run.ts';
 import { runtimePinsSchema } from '#tests/schemas/runner.ts';
 import type { DoctorReport } from '#cli/types/commands/reports.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { MISE_TRUST, TOOL_PINS_FILE } from '#tests/config/setup/runner.ts';
 import { runCommand, runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { MISE_TRUST, HOOKS_SETTINGS, TOOL_PINS_FILE } from '#tests/config/setup/sandboxes.ts';
 import { runGspot, spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { UNQUOTED_SCRIPT, HOOKS_OFF_SETTINGS, UNQUOTED_FINDING_PREFIX } from '#tests/config/integration/installers.ts';
+import { UNQUOTED_SCRIPT, HOOKS_OFF_SETTINGS, UNQUOTED_FINDING_PREFIX } from '#tests/config/integration/commands.ts';
 
 test('doctor reports hooks this clone has not installed and accepts them after install', async () => {
     await using sandbox = await createGitSandbox({

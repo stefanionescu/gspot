@@ -8,14 +8,14 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import type { RunOptions } from '#cli/types/engine/run.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { LOWERCASE_SELECT_SQL } from '#tests/config/sql.ts';
-import { FIX_LINTER_CASES } from '#tests/config/engine/fixes.ts';
+import { FIX_LINTER_CASES } from '#tests/config/engine/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { LOWERCASE_SELECT_SQL } from '#tests/config/engine/tool-runs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { SQL_COMMAND_CHECK, SQL_SEARCH_ARGUMENTS } from '#tests/config/setup/sandboxes.ts';
 import { runGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { SQL_COMMAND_CHECK, SQL_SEARCH_ARGUMENTS } from '#tests/config/commands/samples.ts';
 
 test.each([...FIX_LINTER_CASES])(
     'after --fix, the $configuration check status matches what the linter still reports',

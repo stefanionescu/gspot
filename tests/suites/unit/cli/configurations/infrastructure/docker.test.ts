@@ -21,7 +21,7 @@ import {
     TRIVY_REGISTRY_FAILURE,
     DOCKERIGNORE_ALLOWLISTS,
     INVALID_COMPOSE_SOURCES,
-} from '#tests/config/checks/infrastructure/docker.ts';
+} from '#tests/config/configurations/docker.ts';
 
 async function scanImages(root: string, stdout: string, resources: DisposableStack) {
     const session = await openFakeToolSession(root, ['trivy'], resources);

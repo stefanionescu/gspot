@@ -8,12 +8,12 @@ import { fakePlatform } from '#tests/setup/system/platform.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { listTrackedFiles } from '#cli/repository/files/tracked.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
-import { INDEX_LINE_FAILURE } from '#tests/config/parsers/parsers.ts';
+import { INDEX_LINE_FAILURE } from '#tests/config/setup/languages.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { ROOT_DISCOVERY_CASES, DUBIOUS_GIT_ENVIRONMENT } from '#tests/config/repository/repository.ts';
+import { ROOT_DISCOVERY_CASES, DUBIOUS_GIT_ENVIRONMENT } from '#tests/config/repository/files.ts';
 
 test.each([...ROOT_DISCOVERY_CASES])(
     'inside Git, gspot takes the worktree root with $name',

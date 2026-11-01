@@ -17,15 +17,15 @@ import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
+    NON_EXACT_PNPM_VERSIONS,
+    PACKAGE_MANAGER_PIN_CASES,
+    UNSUPPORTED_PACKAGE_MANAGERS,
+} from '#tests/config/repository/detect.ts';
+import {
     detectPackageManager,
     readToolPackageManager,
     readPackageManagerVersion,
 } from '#cli/repository/javascript/package-manager.ts';
-import {
-    NON_EXACT_PNPM_VERSIONS,
-    PACKAGE_MANAGER_PIN_CASES,
-    UNSUPPORTED_PACKAGE_MANAGERS,
-} from '#tests/config/repository/javascript.ts';
 
 test('without a packageManager field or Bun on PATH, the tool project uses npm at the version it prints', async () => {
     await using sandbox = await createGitSandbox({});

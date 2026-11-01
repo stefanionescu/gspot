@@ -3,10 +3,10 @@ import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { APP_SCOPE_SETTINGS } from '#tests/config/toml.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
 import type { ToolPackageJson } from '#tests/types/packages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { APP_SCOPE_SETTINGS } from '#tests/config/setup/languages.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
@@ -23,7 +23,7 @@ import {
     REFUSED_IMPORT_MESSAGES,
     TEST_IMPORT_RULE_TABLES,
     ENVIRONMENT_READER_PATHS,
-} from '#tests/config/generation/configurations/language/javascript/eslint/blocks/boundaries.ts';
+} from '#tests/config/configurations/javascript/blocks.ts';
 
 test.each(COMPONENT_IMPORT_CASES)(
     '$configuration component imports obey their import rule',

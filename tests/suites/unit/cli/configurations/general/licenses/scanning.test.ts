@@ -7,14 +7,14 @@ import { runChecks } from '#cli/engine/run.ts';
 import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
-import { APP_PYPROJECT } from '#tests/config/toml.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { ROOT_LABEL } from '#tests/config/messages.ts';
 import { executableLayout } from '#cli/system/paths.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { ROOT_LABEL } from '#tests/config/setup/programs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { APP_PYPROJECT } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
@@ -34,7 +34,7 @@ import {
     LICENSE_TOOL_PROJECT_FILES,
     ALLOWED_PACKAGE_SCOPE_CASES,
     UNINSTALLED_DEPENDENCY_CASES,
-} from '#tests/config/checks/general/licenses.ts';
+} from '#tests/config/configurations/licenses.ts';
 
 test.each([...ALLOWED_PACKAGE_SCOPE_CASES])(
     'licenses/allowed keeps a root allowed_package record that a project uses: $name',

@@ -1,12 +1,12 @@
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
-import { CLEAN_SWIFT } from '#tests/config/swift.ts';
+import { CLEAN_SWIFT } from '#tests/config/setup/languages.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/checks/infrastructure/infrastructure.ts';
-import { SWIFT_PROJECT_SETTINGS } from '#tests/config/generation/configurations/language/language.ts';
+import { SWIFT_PROJECT_SETTINGS } from '#tests/config/configurations/swift.ts';
+import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/setup/configurations.ts';
 
 test("SwiftFormat reads each scope's Swift version from Package.swift", async () => {
     await using sandbox = await createGitSandbox({

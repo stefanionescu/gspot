@@ -6,10 +6,10 @@ import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { PACKAGE_JSON_ERROR } from '#tests/config/paths.ts';
 import { SOURCE_KIND } from '#cli/config/repository/files.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { PACKAGE_JSON_ERROR } from '#tests/config/setup/programs.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readPackageJson, readDependencyFiles, listProjectDependencyNames } from '#cli/repository/dependencies.ts';
@@ -22,7 +22,7 @@ import {
     PROJECT_DEPENDENCY_FILES,
     PROJECT_DEPENDENCY_SCOPES,
     ROOT_PACKAGE_WITHOUT_DEPENDENCIES,
-} from '#tests/config/repository/dependencies.ts';
+} from '#tests/config/repository/detect.ts';
 
 test('Python dependency groups with includes keep every dependency', async () => {
     await using sandbox = await createGitSandbox({

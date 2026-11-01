@@ -5,18 +5,18 @@ import { readFile } from 'node:fs/promises';
 import { readSettings } from '#cli/settings/read.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { CONFIGURATIONS_SETTINGS } from '#tests/config/toml.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
+import { API_SCOPE_FILES } from '#tests/config/commands/reports.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 
 import {
-    API_SCOPE_FILES,
+    CONFIGURATIONS_SETTINGS,
     UNKNOWN_CONFIGURATION_REFUSALS,
     INHERITED_CONFIGURATION_SETTINGS,
-} from '#tests/config/commands/samples.ts';
+} from '#tests/config/commands/edits.ts';
 
 test('add --scope writes the scope list and applies the generated files', async () => {
     await using sandbox = await createGitSandbox({

@@ -3,11 +3,11 @@ import { createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { buildEslint } from '#tests/setup/eslint/lint.ts';
-import { TERMS_SOURCE } from '#tests/config/typescript.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { TERMS_SOURCE } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { UNMATCHED_PATH_CASES } from '#tests/config/checks/general/gspot/gspot.ts';
+import { UNMATCHED_PATH_CASES } from '#tests/config/configurations/gspot/files.ts';
 
 test.each([...UNMATCHED_PATH_CASES])(
     'gspot/unmatched-paths reports each setting path without a tracked match: $name',

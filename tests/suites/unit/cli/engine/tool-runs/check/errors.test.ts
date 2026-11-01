@@ -5,9 +5,9 @@ import { createFileTree } from 'testdirs';
 import { planChecks } from '#cli/engine/plan.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
-import { APP_PYPROJECT } from '#tests/config/toml.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { formatRunReport } from '#cli/commands/check/report.ts';
+import { APP_PYPROJECT } from '#tests/config/setup/languages.ts';
 import { runChecks, buildCheckSession } from '#cli/engine/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -16,7 +16,7 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { fakeCommands, writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { runCommandCheck, runCommandBatches } from '#cli/engine/tool-runs/check.ts';
-import { BATCH_CHECK, BATCH_IGNORE, BATCH_FINDINGS, CAFE_SOURCE_PATH } from '#tests/config/engine/tool-runs/check.ts';
+import { BATCH_CHECK, BATCH_IGNORE, BATCH_FINDINGS, CAFE_SOURCE_PATH } from '#tests/config/engine/tool-runs.ts';
 
 test.skipIf(isWindows)('a command check whose program lost its execute bit errors with exit code 2', async () => {
     await using sandbox = await createGitSandbox({});

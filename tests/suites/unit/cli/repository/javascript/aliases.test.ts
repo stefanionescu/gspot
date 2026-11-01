@@ -5,7 +5,7 @@ import { createRunCache } from '#cli/system/cache.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
 import { readScopeAliases, readPackageAliases } from '#cli/repository/javascript/aliases.ts';
-import { ALIAS_FILES, SCOPE_ALIASES, ALIAS_PROJECT } from '#tests/config/repository/javascript.ts';
+import { ALIAS_FILES, SCOPE_ALIASES, ALIAS_PROJECT } from '#tests/config/repository/detect.ts';
 
 test.each([...ALIAS_FILES])('alias reads report a malformed $path', async ({ path, message }) => {
     await using sandbox = await testdir({ [path]: '{ "compilerOptions": { "paths": {} },' });

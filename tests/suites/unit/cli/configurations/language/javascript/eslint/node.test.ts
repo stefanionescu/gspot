@@ -22,7 +22,7 @@ import {
     NODE_SCRIPT_TABLES,
     EXTENSIONLESS_SCRIPT_CASES,
     EXTENSIONLESS_SCRIPT_RULES,
-} from '#tests/config/generation/configurations/language/javascript/eslint/node.ts';
+} from '#tests/config/configurations/javascript/node.ts';
 
 test.each([...ENGINE_PHASES])(
     `ESLint reports Node APIs newer than the engines of each file's package ($name)`,

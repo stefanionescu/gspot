@@ -13,8 +13,12 @@ import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { PYTHON_DEPENDENCY_CASES } from '#tests/config/repository/dependencies.ts';
-import { PRISMA_SCHEMA_CASES, RUNTIME_DETECTION_CASES } from '#tests/config/repository/detect.ts';
+
+import {
+    PRISMA_SCHEMA_CASES,
+    PYTHON_DEPENDENCY_CASES,
+    RUNTIME_DETECTION_CASES,
+} from '#tests/config/repository/detect.ts';
 
 async function detectSandboxConfigurations(root: string): Promise<string[]> {
     const repository = await readTestRepository(root);

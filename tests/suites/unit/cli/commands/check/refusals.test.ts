@@ -4,18 +4,17 @@ import { testdir } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import type { CommandFailureJson } from '#cli/types/system.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { INDEX_LINE_FAILURE } from '#tests/config/parsers/parsers.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { limitCommand, runCommandBlocking } from '#tests/setup/system/processes.ts';
-import { FIX_REFUSALS, ARGUMENT_REFUSALS, PUSH_INPUT_REFUSALS } from '#tests/config/commands/check/check.ts';
+import { CLEAN_BASH_SCRIPT, INDEX_LINE_FAILURE } from '#tests/config/setup/languages.ts';
+import { FIX_REFUSALS, ARGUMENT_REFUSALS, PUSH_INPUT_REFUSALS } from '#tests/config/commands/check.ts';
 
 async function createFixableSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
     const fix = buildProgramCommand('fakes/tool', '--text', 'fixed\n', 'source.txt');

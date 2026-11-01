@@ -9,7 +9,7 @@ import {
     REFUSAL_FILES,
     SET_VALUE_REFUSALS,
     UNKNOWN_SETTING_KEYS,
-} from '#tests/config/commands/set.ts';
+} from '#tests/config/commands/edits.ts';
 
 test.each([...SET_REFUSALS])('set refuses %s', async (_, commandArguments, expected) => {
     await using sandbox = await createGitSandbox({

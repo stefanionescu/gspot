@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { INIT_FILES } from '#tests/config/init.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
+import { INIT_FILES } from '#tests/config/setup/sandboxes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

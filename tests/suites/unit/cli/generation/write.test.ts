@@ -8,17 +8,17 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import type { ApplyReport } from '#cli/types/generation.ts';
-import { BUN_SCANNER_SETTINGS } from '#tests/config/toml.ts';
-import { MANAGED_KEYS_NOTE } from '#tests/config/messages.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { listOutdatedFiles } from '#cli/generation/outdated.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import type { PackageFieldScenario } from '#tests/types/write.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { MANAGED_KEYS_NOTE } from '#tests/config/setup/sandboxes.ts';
 import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
+import { BUN_SCANNER_SETTINGS } from '#tests/config/setup/languages.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { EDITED_STYLELINT_PACKAGE, STYLELINT_PACKAGE_FIELDS } from '#tests/config/generation/generation.ts';
+import { EDITED_STYLELINT_PACKAGE, STYLELINT_PACKAGE_FIELDS } from '#tests/config/generation/generate.ts';
 
 async function applyPackageFields(root: string, scenario: PackageFieldScenario): Promise<Map<string, string>> {
     const session = await openSession(root);

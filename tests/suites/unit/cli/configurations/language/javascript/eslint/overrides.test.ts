@@ -11,7 +11,7 @@ import {
     SCOPE_IMPORT_TABLES,
     ESLINT_OVERRIDES_SETTINGS,
     RESTRICTED_IMPORT_FINDINGS,
-} from '#tests/config/generation/configurations/language/javascript/eslint/overrides.ts';
+} from '#tests/config/configurations/javascript/overrides.ts';
 
 test.each(IGNORE_CASES)('an ignore of an ESLint rule applies after your rule options ($name)', async ({ ignored }) => {
     const settings = buildSandboxSettings(['javascript'], {

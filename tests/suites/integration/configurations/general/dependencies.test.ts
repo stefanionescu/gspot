@@ -5,8 +5,8 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import { spawnGspot } from '#tests/setup/cli/commands.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { SYNCPACK_PACKAGE_FILES } from '#tests/config/setup/sandboxes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { SYNCPACK_PACKAGE_FILES } from '#tests/config/commands/init/conflicts.ts';
 
 async function initAtLevelAll(root: string): Promise<void> {
     commitAll(root);

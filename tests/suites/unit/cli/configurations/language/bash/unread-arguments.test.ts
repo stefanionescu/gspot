@@ -1,15 +1,15 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
+import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
 import { commitAll, markExecutable } from '#tests/setup/system/git.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { UNREAD_ARGUMENT_CASES } from '#tests/config/checks/language/bash/bash.ts';
+import { UNREAD_ARGUMENT_CASES } from '#tests/config/configurations/bash.ts';
 
 test('main "$@" with a main that reads no argument is not reported', async () => {
     await using sandbox = await createGitSandbox({

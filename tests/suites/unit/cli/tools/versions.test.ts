@@ -3,11 +3,11 @@ import { test, expect } from 'bun:test';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { type Tool } from '#cli/types/manifests.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { UNCLOSED_SEQUENCE } from '#tests/config/yaml.ts';
+import { UNCLOSED_SEQUENCE } from '#tests/config/setup/languages.ts';
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
 import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
 import { fakeNpmPackage, writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
-import { VERSION_OUTPUTS, SYSTEM_BASH_VERSIONS, PROGRAM_VERSION_STATES } from '#tests/config/tools/tools.ts';
+import { VERSION_OUTPUTS, SYSTEM_BASH_VERSIONS, PROGRAM_VERSION_STATES } from '#tests/config/tools/versions.ts';
 
 test('an npm tool is the version its package holds, whatever it prints', async () => {
     await using sandbox = await testdir();

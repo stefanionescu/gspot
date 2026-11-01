@@ -1,7 +1,7 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import plugin from '#eslint-plugin/plugin.ts';
-import { LEVELS } from '#cli/config/manifests/names.ts';
+import { LEVELS } from '#cli/config/manifests.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, readEslintRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
 

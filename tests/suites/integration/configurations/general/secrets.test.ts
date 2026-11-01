@@ -8,18 +8,12 @@ import type { CheckResult } from '#cli/types/engine/run.ts';
 import { type GitleaksHistory } from '#tests/types/secrets.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import type { PushReport } from '#cli/types/commands/reports.ts';
+import { AWS_KEY_ID } from '#tests/config/setup/configurations.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-
-import {
-    API_TOKEN,
-    AWS_KEY_ID,
-    SECRET_FILES,
-    FIXED_SECRET_FILES,
-    DOTENV_LINTER_CASES,
-} from '#tests/config/integration/checks/general/general.ts';
+import { API_TOKEN, SECRET_FILES, FIXED_SECRET_FILES, DOTENV_LINTER_CASES } from '#tests/config/integration/general.ts';
 
 async function prepareSecrets(root: string): Promise<void> {
     runGitStep(root, ['init', '-q']);

@@ -9,7 +9,6 @@ import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { startNpmRegistry } from '#tests/setup/runner/npm-registry.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { toolModules, workspaceModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { MISE_LOCK_ENVIRONMENT, GIT_ISOLATION_ENVIRONMENT } from '#tests/config/setup/environment.ts';
 
 import {
     LINE_BREAK,
@@ -18,8 +17,10 @@ import {
     TEMPORARY_FOLDER,
     GSPOT_LAUNCHER_PATH,
     PACKED_PACKAGES_FILE,
+    MISE_LOCK_ENVIRONMENT,
+    GIT_ISOLATION_ENVIRONMENT,
     TEST_TIMEOUT_MILLISECONDS,
-} from '#tests/config/setup/runner.ts';
+} from '#tests/config/setup/sandboxes.ts';
 
 setDefaultTimeout(TEST_TIMEOUT_MILLISECONDS);
 

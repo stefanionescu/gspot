@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
@@ -13,7 +13,7 @@ import {
     TRAP_FUNCTION_SOURCE,
     UNUSED_FUNCTION_CASES,
     LITERAL_FUNCTION_REFERENCES,
-} from '#tests/config/checks/language/bash/bash.ts';
+} from '#tests/config/configurations/bash.ts';
 
 test.each(TRAP_SCRIPT_FORMS)('a function called by trap %s is not reported', async (script) => {
     await using sandbox = await createGitSandbox({

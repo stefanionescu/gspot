@@ -5,7 +5,7 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { BUN_PROJECT_FILES } from '#tests/config/checks/general/general.ts';
+import { BUN_PROJECT_FILES } from '#tests/config/configurations/general.ts';
 
 test('react-versions reports react and react-dom that lock different versions, and nothing when they match', async () => {
     await using sandbox = await createGitSandbox({

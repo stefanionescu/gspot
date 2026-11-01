@@ -1,22 +1,21 @@
 import { join, posix } from 'node:path';
 import { stringify } from '@decimalturn/toml-patch';
-import { LICENSE } from '#tests/config/documents.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { PushReport } from '#cli/types/commands/reports.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { COMMITLINT_PACKAGE } from '#tests/config/authored-configs.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { test, expect, describe, beforeAll, beforeEach } from 'bun:test';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { LICENSE, COMMITLINT_PACKAGE } from '#tests/config/setup/configurations.ts';
+import { COMMIT_MESSAGES, UNTYPED_MESSAGE_RULES } from '#tests/config/integration/general.ts';
 import { runGspot, spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { COMMIT_MESSAGES, UNTYPED_MESSAGE_RULES } from '#tests/config/integration/checks/general/general.ts';
 
 async function assertDraftCheck(root: string, draft: string, rules: string[] = []): Promise<void> {
     const checked = parseCheckReport(

@@ -7,7 +7,7 @@ import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { COMPILER_SOURCE } from '#tests/config/typescript.ts';
+import { COMPILER_SOURCE } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -16,7 +16,7 @@ import {
     SUPPRESSION_REASONS,
     TYPESCRIPT_SUPPRESSIONS,
     SUPPRESSION_REASON_CASES,
-} from '#tests/config/checks/general/gspot/suppressions.ts';
+} from '#tests/config/configurations/gspot/suppressions.ts';
 
 test('@ts-ignore, @ts-expect-error and @ts-nocheck need a reason; the same text in a string is not a comment', async () => {
     await using sandbox = await createGitSandbox({});

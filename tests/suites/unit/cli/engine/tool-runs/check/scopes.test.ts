@@ -5,16 +5,15 @@ import { test, spyOn, expect } from 'bun:test';
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
-import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
-import { SWIFT_VALUE_SOURCE } from '#tests/config/swift.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { runChecks, buildCheckSession } from '#cli/engine/run.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { CHILD_SCOPE_SETTINGS } from '#tests/config/engine/tool-runs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
-import { CHILD_SCOPE_SETTINGS } from '#tests/config/engine/tool-runs/check.ts';
+import { BROKEN_IF_SCRIPT, SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
 
 test('a command in a scope runs in the scope folder with paths relative to it', async () => {
     await using sandbox = await createGitSandbox({});

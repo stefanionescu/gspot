@@ -4,19 +4,19 @@ import { stringify } from '@decimalturn/toml-patch';
 import { join, dirname, delimiter } from 'node:path';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
-import { LINE_BREAK } from '#tests/config/setup/runner.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { LINE_BREAK } from '#tests/config/setup/sandboxes.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { CLI_BIN, applyThenInstall } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { type CiDocument, type GithubWorkflow } from '#tests/types/ci.ts';
-import { CI_CHECKS, GITHUB_WORKFLOW } from '#tests/config/integration/integration.ts';
+import { CI_CHECKS, GITHUB_WORKFLOW } from '#tests/config/integration/infrastructure.ts';
 
 async function prepareCiProject(root: string, provider: 'gitlab' | 'github') {
     runGitStep(root, ['init', '-q']);

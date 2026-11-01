@@ -3,10 +3,10 @@ import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { TWO_WORDS } from '#tests/config/ignores.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { setKey, getScopeTable } from '#cli/settings/edit.ts';
 import type { Scope, TomlTable } from '#cli/types/settings.ts';
+import { TWO_WORDS } from '#tests/config/setup/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -19,7 +19,7 @@ import {
     OPENAPI_SCOPE_SETTINGS,
     POSTGRES_SCOPE_SETTINGS,
     SITE_PACKAGE_MANAGER_CASES,
-} from '#tests/config/settings/settings.ts';
+} from '#tests/config/settings/read.ts';
 
 async function readNestedScopes(): Promise<Scope[]> {
     await using sandbox = await createGitSandbox({

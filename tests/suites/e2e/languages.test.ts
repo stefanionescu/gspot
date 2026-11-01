@@ -6,8 +6,8 @@ import type { GspotProject } from '#tests/types/packages.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { PROSE_CHECK, SWIFT_CHECK } from '#tests/config/e2e.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import { GUIDE_READ_MARKDOWN } from '#tests/config/documents.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { GUIDE_READ_MARKDOWN } from '#tests/config/setup/configurations.ts';
 import { createGspotProject } from '#tests/setup/sandboxes/projects/gspot.ts';
 
 async function prepareLanguages(installation: GspotProject): Promise<void> {

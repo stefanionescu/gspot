@@ -1,11 +1,11 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
-import { CAFE_SCRIPT_PATH } from '#tests/config/paths.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { CAFE_SCRIPT_PATH } from '#tests/config/setup/programs.ts';
+import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
-import { SEMGREP_MATCH, SEMGREP_PARSE_ERROR, SEMGREP_REFUSED_REPORTS } from '#tests/config/engine/outputs/outputs.ts';
+import { SEMGREP_MATCH, SEMGREP_PARSE_ERROR, SEMGREP_REFUSED_REPORTS } from '#tests/config/engine/outputs.ts';
 
 test('Semgrep rule findings and source parse errors keep positions and Unicode paths', async () => {
     await using sandbox = await testdir({ 'scripts/café build.sh': 'if then\neval input\n' });

@@ -8,22 +8,22 @@ import { openSession } from '#cli/engine/session.ts';
 import { buildCheckSession } from '#cli/engine/run.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
-import { SWIFT_VALUE_SOURCE } from '#tests/config/swift.ts';
-import { FAILED_RUN } from '#tests/config/engine/samples.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildCheckResult, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 
 import {
+    FAILED_RUN,
     BASE_CHECK,
     LOCATED_CHECK,
     FILELESS_CHECKS,
     REGEX_OUTPUT_CASES,
     MISSING_LOCATED_FILE,
-} from '#tests/config/engine/tool-runs/check.ts';
+} from '#tests/config/engine/tool-runs.ts';
 
 test.each([...REGEX_OUTPUT_CASES])('$title', async ({ result, expected }) => {
     await using sandbox = await testdir({ 'source.txt': 'source' });

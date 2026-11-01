@@ -6,12 +6,12 @@ import { test, spyOn, expect } from 'bun:test';
 import { planChecks } from '#cli/engine/plan.ts';
 import type { Session } from '#cli/types/tools.ts';
 import type { Level } from '#cli/types/settings.ts';
-import { PYPROJECT } from '#tests/config/python.ts';
 import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
+import { PYPROJECT } from '#tests/config/setup/languages.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
@@ -26,7 +26,7 @@ import {
     NUMPY_DOCSTRING_MODULE,
     GOOGLE_DOCSTRING_MODULE,
     PYDOCLINT_PROJECT_CASES,
-} from '#tests/config/checks/language/python.ts';
+} from '#tests/config/configurations/python.ts';
 
 test.each([...PYDOCLINT_PROJECT_CASES])('pydoclint $name', async ({ project, setting, expected }) => {
     await using sandbox = await createGitSandbox({});

@@ -13,7 +13,7 @@ import {
     HANDLE_PREFIX_TABLES,
     OVERLONG_NAME_FINDINGS,
     HANDLE_ROUTE_IDENTIFIER,
-} from '#tests/config/checks/general/naming/validation.ts';
+} from '#tests/config/configurations/naming/validation.ts';
 
 test.each([...NAMING_LIMIT_CASES])(
     '$language accepts its exact limits and reports the next character or word',

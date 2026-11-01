@@ -6,12 +6,12 @@ import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { NO_UPSTREAM_MESSAGE } from '#tests/config/git.ts';
 import type { CommandFailureJson } from '#cli/types/system.ts';
+import { ALL_FILES_BASES } from '#tests/config/commands/check.ts';
 import { buildReportingCheck } from '#tests/setup/cli/settings.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { NO_UPSTREAM_MESSAGE } from '#tests/config/setup/programs.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { ALL_FILES_BASES } from '#tests/config/commands/check/arguments.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The tests of this file commit the changed repository through it, and jscpd reports the inlined copies as clones.
 async function prepareChangedRepository(root: string, files: Record<string, string>): Promise<void> {

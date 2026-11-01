@@ -1,9 +1,8 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
-import { BASE_CHECK } from '#tests/config/engine/tool-runs/check.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { FILELESS_COVERAGE_CASES } from '#tests/config/engine/tool-runs/output.ts';
+import { BASE_CHECK, FILELESS_COVERAGE_CASES } from '#tests/config/engine/tool-runs.ts';
 import { buildCheckResult, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 
 test.each(FILELESS_COVERAGE_CASES)(

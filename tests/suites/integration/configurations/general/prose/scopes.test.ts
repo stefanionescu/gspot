@@ -2,12 +2,11 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import type { SandboxChanges } from '#tests/types/samples.ts';
-import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { GUIDE_READ_MARKDOWN, SCHEDULE_RELEASE_MARKDOWN } from '#tests/config/documents.ts';
-import { PACKAGE_STYLE_CASES } from '#tests/config/integration/checks/general/prose/prose.ts';
+import { PROSE_SANDBOX, PACKAGE_STYLE_CASES } from '#tests/config/integration/prose.ts';
+import { GUIDE_READ_MARKDOWN, SCHEDULE_RELEASE_MARKDOWN } from '#tests/config/setup/configurations.ts';
 import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);

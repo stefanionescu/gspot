@@ -9,11 +9,11 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
-import { SWIFT_VALUE_SOURCE } from '#tests/config/swift.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { buildIgnoreSections } from '#cli/generation/ignores.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 
@@ -24,7 +24,7 @@ import {
     IGNORE_LIST_SETTINGS,
     PRETTIER_IGNORE_CASES,
     PRETTIER_IGNORE_SETTINGS,
-} from '#tests/config/generation/configs.ts';
+} from '#tests/config/generation/files.ts';
 
 test('negative ignores follow positives for ordered tools and stay out of tools without negation', async () => {
     await using sandbox = await createGitSandbox({

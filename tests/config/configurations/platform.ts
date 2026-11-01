@@ -1,0 +1,141 @@
+export const CLOUDFLARE_REDIRECTS = `/old /new 200
+/old /new 301
+/old /new 302
+/old /new 303
+/old /new 307
+/old /new 308
+/old /new
+/old /new 404
+/old /new 410
+/old /new 302!
+/lonely
+old /new 301
+`;
+
+export const CLOUDFLARE_HEADERS = `  Header-before-path: value
+# Comment
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: same-origin
+  Content-Security-Policy: frame-ancestors none
+/assets/*
+  X-Frame-Options: INVALID
+  No colon
+assets/*
+  X-Robots-Tag: noindex
+`;
+
+export const SECURITY_HEADER_CASES = [
+    {
+        name: 'missing content type protection',
+        text: '/*\n  Referrer-Policy: same-origin\n  X-Frame-Options: DENY\n',
+        missing: ['x-content-type-options'],
+    },
+    {
+        name: 'no global block',
+        text: '/assets/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: same-origin\n  X-Frame-Options: DENY\n',
+        missing: ['x-content-type-options', 'referrer-policy', 'x-frame-options'],
+    },
+    {
+        name: 'a detached unrelated header',
+        text: '/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: same-origin\n  X-Frame-Options: DENY\n  ! X-Powered-By\n',
+        missing: [],
+    },
+] as const;
+
+export const STORAGE_POLICIES = [
+    {
+        name: 'dropped policy',
+        sql: "CREATE POLICY p ON storage.objects USING (bucket_id = 'avatars'); DROP POLICY p ON storage.objects;",
+        allowed: false,
+    },
+    {
+        name: 'altered policy',
+        sql: "CREATE POLICY p ON storage.objects USING (bucket_id = 'avatars'); ALTER POLICY p ON storage.objects USING (bucket_id = 'other');",
+        allowed: false,
+    },
+    {
+        name: 'owner comparison',
+        sql: "CREATE POLICY p ON storage.objects USING (owner_id = 'avatars');",
+        allowed: false,
+    },
+    {
+        name: 'bucket inequality',
+        sql: "CREATE POLICY p ON storage.objects USING (bucket_id <> 'avatars');",
+        allowed: false,
+    },
+    {
+        name: 'negated condition',
+        sql: "CREATE POLICY p ON storage.objects USING (NOT (bucket_id = 'avatars'));",
+        allowed: false,
+    },
+    {
+        name: 'qualified bucket list',
+        sql: "CREATE POLICY p ON storage.objects USING (objects.bucket_id IN ('avatars', 'other'));",
+        allowed: true,
+    },
+    {
+        name: 'alter preserves with check',
+        sql: "CREATE POLICY p ON storage.objects WITH CHECK (bucket_id = 'avatars'); ALTER POLICY p ON storage.objects TO authenticated;",
+        allowed: true,
+    },
+    {
+        name: 'unrelated table',
+        sql: "CREATE POLICY p ON public.objects USING (bucket_id = 'avatars');",
+        allowed: false,
+    },
+    {
+        name: 'unrelated statement',
+        sql: "CREATE POLICY p ON storage.objects USING (true); SELECT 'avatars';",
+        allowed: false,
+    },
+    {
+        name: 'quoted identifier',
+        sql: 'CREATE POLICY p ON storage.objects USING ("avatars" = bucket_id);',
+        allowed: false,
+    },
+    {
+        name: 'quoted relation and literal',
+        sql: 'CREATE POLICY p ON "storage"."objects" USING (bucket_id = \'avatars\');',
+        allowed: true,
+    },
+    {
+        name: 'with check array',
+        sql: "CREATE POLICY p ON storage.objects WITH CHECK (bucket_id = ANY(ARRAY['other', 'avatars']));",
+        allowed: true,
+    },
+] as const;
+
+export const SERVICE_KEY_SETTINGS = `configurations = ["supabase"]
+test_files = ["qa/**"]
+[[scope]]
+path = "apps/web"
+
+test_files = ["apps/web/qa/**", "apps/web/verification/**"]
+`;
+
+export const SERVICE_KEY_READERS = {
+    'qa/entry.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
+    'tests/default.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
+    'client.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
+    'apps/web/verification/entry.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
+    'apps/web/qa/entry.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
+    'apps/web/client.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
+} as const;
+
+export const SECRET_KEY_READS = [
+    'process.env.SUPABASE_SECRET_KEY',
+    'settings.supabase_secret_key',
+    '"sb_secret_example"',
+] as const;
+
+export const SERVICE_ROLE_CLIENT_FILES = ['client.mts', 'client.vue'] as const;
+
+export const SERVICE_ROLE_CLIENTS = {
+    'client.vue': '<script setup>const key = process.env.SUPABASE_SERVICE_ROLE_KEY;</script>\n',
+    'client.mts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
+    'server/allowed.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
+    'notes.txt': 'SUPABASE_SERVICE_ROLE_KEY\n',
+} as const;
+
+export const AVATARS_BUCKET_CONFIG = '[storage.buckets.avatars]\npublic = false\n';

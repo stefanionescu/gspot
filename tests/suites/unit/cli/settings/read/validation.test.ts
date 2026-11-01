@@ -8,16 +8,16 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { FIRST_READ } from '#cli/config/settings/validation.ts';
-import { EMPTY_DEFAULT_SOURCE } from '#tests/config/typescript.ts';
-import { REVIEWED_REASON } from '#tests/config/settings/reasons.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
+import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
 
 import {
     EMPTY_REASONS,
     VALID_LICENSES,
     KEY_PATH_CASES,
+    REVIEWED_REASON,
     INVALID_LICENSES,
     RULE_FILE_ERRORS,
     UNKNOWN_KEY_CASES,

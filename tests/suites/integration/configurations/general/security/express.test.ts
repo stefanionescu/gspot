@@ -7,16 +7,17 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
-import { SEMGREP_CHECK, SEMGREP_SANDBOX } from '#tests/config/integration/checks/general/security/sandbox.ts';
 import { spawnGspot, listFindingRows, parseCheckReport, listScopeFindingRows } from '#tests/setup/cli/commands.ts';
 
 import {
+    SEMGREP_CHECK,
+    SEMGREP_SANDBOX,
     EXPRESS_SOURCES,
     EXPRESS_SCOPE_FILES,
     EXPRESS_RESPONSE_CASES,
     EXPRESS_SCOPE_SETTINGS,
     EXPRESS_SOURCE_FINDINGS,
-} from '#tests/config/integration/checks/general/security/security.ts';
+} from '#tests/config/integration/security/semgrep.ts';
 
 describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
     const installedSandbox = shareInstalledSandbox(SEMGREP_SANDBOX);

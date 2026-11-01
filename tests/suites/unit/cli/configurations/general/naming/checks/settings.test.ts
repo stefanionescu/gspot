@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildScopeNamingSettings } from '#tests/setup/cli/checks.ts';
 import { splitWords } from '#cli/configurations/general/naming/checks/settings.ts';
-import { NAME_WORD_CASES, SWIFT_NAMING_LIMITS } from '#tests/config/checks/general/naming/naming.ts';
+import { NAME_WORD_CASES, SWIFT_NAMING_LIMITS } from '#tests/config/configurations/naming/allowed-names.ts';
 
 test('category limits inherit root and scope language settings while explicit categories take precedence', async () => {
     const text = buildSandboxSettings(['naming'], {

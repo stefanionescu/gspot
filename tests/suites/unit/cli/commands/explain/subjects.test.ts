@@ -5,9 +5,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { unlink, writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import type { PathExplanation } from '#cli/types/commands/reports.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -17,7 +17,7 @@ import {
     SYNTAX_CHECK_TABLES,
     CHECK_TOOL_MINIMUMS,
     UNKNOWN_SUBJECT_CASES,
-} from '#tests/config/commands/explain.ts';
+} from '#tests/config/commands/reports.ts';
 
 test('a path explanation lists the command checks and the ignores that apply', async () => {
     await using sandbox = await createGitSandbox({});

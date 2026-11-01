@@ -8,9 +8,9 @@ import { runGitStep } from '#tests/setup/system/git.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { fakePlatform } from '#tests/setup/system/platform.ts';
-import { DEPENDENCY_FILES_MESSAGE } from '#tests/config/messages.ts';
 import { copyDependencies } from '#cli/engine/copies/dependencies.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { DEPENDENCY_FILES_MESSAGE } from '#tests/config/setup/sandboxes.ts';
 import { lstat, mkdir, unlink, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 
 import {
@@ -22,7 +22,7 @@ import {
     DECLARATION_COPY_FILES,
     LOCKED_NPM_PROJECT_FILES,
     EXTERNAL_DEPENDENCY_FILES,
-} from '#tests/config/engine/copies.ts';
+} from '#tests/config/engine/files.ts';
 
 test('an index copy links installed packages and redirects workspace links into the copy', async () => {
     await using sandbox = await testdir(WORKSPACE_LOCK_FILES);

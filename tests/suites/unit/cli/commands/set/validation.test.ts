@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { VALUE_VALIDATION_CASES } from '#tests/config/commands/set.ts';
+import { VALUE_VALIDATION_CASES } from '#tests/config/commands/edits.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each(VALUE_VALIDATION_CASES)('set validates the value before its reason: $name', async ({ hasReason }) => {

@@ -4,11 +4,11 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { LINGUIST_GENERATED_PATTERN } from '#tests/config/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { LINGUIST_GENERATED_PATTERN } from '#tests/config/setup/programs.ts';
 import { type LintFinding, type SourceRuleCase } from '#tests/types/tools.ts';
 import { buildEslint, listFindingRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { INDEX_ONLY_REEXPORTS } from '#tests/config/generation/configurations/language/javascript/eslint/settings.ts';
+import { INDEX_ONLY_REEXPORTS } from '#tests/config/configurations/javascript/configuration-blocks.ts';
 
 import {
     BARREL_CASES,
@@ -21,7 +21,7 @@ import {
     ENTRYPOINT_SOURCE,
     LEVEL_REEXPORT_CASES,
     TRIVIAL_ENTRYPOINT_FILES,
-} from '#tests/config/generation/configurations/language/javascript/eslint/eslint.ts';
+} from '#tests/config/configurations/javascript/plugins.ts';
 
 async function listTrivialFindings(root: string, settings: string): Promise<Pick<LintFinding, 'file' | 'rule'>[]> {
     await writeFile(join(root, 'gspot.toml'), settings);

@@ -4,13 +4,13 @@ import { readFile } from 'node:fs/promises';
 import { stringify } from '@decimalturn/toml-patch';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+import { GSPOT_ENVIRONMENT } from '#tests/config/setup/programs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { GSPOT_ENVIRONMENT } from '#tests/config/setup/environment.ts';
 import { CLI_BIN, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { UNIT_TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/runner.ts';
-import { CANCELLATION_REPORT_CASES } from '#tests/config/commands/check/cancellation.ts';
+import { CANCELLATION_REPORT_CASES } from '#tests/config/commands/check.ts';
+import { UNIT_TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/sandboxes.ts';
 import { waitForExit, waitForFile, spawnCommand } from '#tests/setup/system/processes.ts';
 
 test.skipIf(isWindows).each(CANCELLATION_REPORT_CASES)(

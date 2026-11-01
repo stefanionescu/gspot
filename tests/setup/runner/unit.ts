@@ -3,9 +3,15 @@ import { join } from 'node:path';
 import { mkdtemp } from 'node:fs/promises';
 import { setDefaultTimeout } from 'bun:test';
 import { TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
+import { OFFLINE_ENVIRONMENT } from '#tests/config/setup/programs.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { OFFLINE_ENVIRONMENT, GIT_ISOLATION_ENVIRONMENT } from '#tests/config/setup/environment.ts';
-import { CACHE_FOLDER, TEMPORARY_FOLDER, UNIT_TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/runner.ts';
+
+import {
+    CACHE_FOLDER,
+    TEMPORARY_FOLDER,
+    GIT_ISOLATION_ENVIRONMENT,
+    UNIT_TEST_TIMEOUT_MILLISECONDS,
+} from '#tests/config/setup/sandboxes.ts';
 
 setDefaultTimeout(UNIT_TEST_TIMEOUT_MILLISECONDS);
 

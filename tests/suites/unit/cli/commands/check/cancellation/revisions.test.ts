@@ -10,14 +10,12 @@ import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { GSPOT_ENVIRONMENT } from '#tests/config/setup/environment.ts';
-import { SIGNAL_MARKER_OPTION } from '#tests/config/setup/programs.ts';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
-import { UNIT_TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/runner.ts';
 import { CLI_BIN, runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { SIGNAL_EXITS, AUTHORED_SCRIPT, CHECK_STOPPED_MESSAGE } from '#tests/config/commands/check/cancellation.ts';
+import { GSPOT_ENVIRONMENT, SIGNAL_MARKER_OPTION } from '#tests/config/setup/programs.ts';
+import { BASH_SYNTAX_CHECK, UNIT_TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/sandboxes.ts';
+import { SIGNAL_EXITS, AUTHORED_SCRIPT, CHECK_STOPPED_MESSAGE } from '#tests/config/commands/check.ts';
 import { waitForExit, waitForFile, captureChild, spawnCommand, limitCommand } from '#tests/setup/system/processes.ts';
 
 async function prepareStagedCancellation(root: string, operation: 'diff' | 'init' | 'cat-file') {

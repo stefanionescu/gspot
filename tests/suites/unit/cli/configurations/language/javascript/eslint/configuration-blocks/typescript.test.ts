@@ -9,7 +9,7 @@ import { buildEslint, listFindingRules, listLintFindings } from '#tests/setup/es
 import {
     TYPE_EXPORT_FILES,
     TYPED_RULE_PROJECTS,
-} from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
+} from '#tests/config/configurations/javascript/configuration-blocks.ts';
 
 test.each([...TYPED_RULE_PROJECTS])('$name gets typed lint rules', async ({ configurations, tables, files, file }) => {
     await using sandbox = await testdir({

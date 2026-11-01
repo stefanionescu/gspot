@@ -1,8 +1,12 @@
 import { parseArgs } from 'node:util';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { rmSync, existsSync, renameSync, appendFileSync } from 'node:fs';
-import { POLL_INTERVAL_MILLISECONDS } from '#tests/config/setup/system.ts';
-import { FAKE_TOOL_OPTIONS, WAIT_INTERVAL_MILLISECONDS } from '#tests/config/setup/programs.ts';
+
+import {
+    FAKE_TOOL_OPTIONS,
+    POLL_INTERVAL_MILLISECONDS,
+    WAIT_INTERVAL_MILLISECONDS,
+} from '#tests/config/setup/programs.ts';
 
 const { values, positionals } = parseArgs({ options: FAKE_TOOL_OPTIONS, allowPositionals: true, strict: false });
 const option = Object.fromEntries(

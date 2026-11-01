@@ -10,10 +10,10 @@ import { stat, chmod, readFile } from 'node:fs/promises';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
-import { CALLER_WORKFLOW } from '#tests/config/github-actions.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { CALLER_WORKFLOW } from '#tests/config/setup/configurations.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { checkGeneratorOutputs } from '#cli/configurations/generator-outputs.ts';
@@ -23,7 +23,7 @@ import {
     ACTIONLINT_EXITS,
     WORKFLOW_TEXT_CASES,
     OUTSIDE_GITHUB_ACTIONS,
-} from '#tests/config/checks/infrastructure/infrastructure.ts';
+} from '#tests/config/configurations/infrastructure.ts';
 
 test('actionlint copies root actions and unchanged actions outside .github with workflow replacements', async () => {
     await using sandbox = await createGitSandbox({

@@ -10,12 +10,13 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { fakePlatform } from '#tests/setup/system/platform.ts';
+import { SWIFT_PACKAGE } from '#tests/config/setup/programs.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { XCTEST_SOURCE, SWIFT_PACKAGE, SWIFT_PACKAGE_HEADER } from '#tests/config/swift.ts';
+import { XCTEST_SOURCE, SWIFT_PACKAGE_HEADER } from '#tests/config/setup/languages.ts';
+import { SWIFT_BUILD_PURPOSES, SWIFT_PROJECT_SELECTION_CASES } from '#tests/config/configurations/swift.ts';
 import { planSwiftBuild, readRepositoryCacheFolder } from '#cli/configurations/language/swift/checks/cache.ts';
-import { SWIFT_BUILD_PURPOSES, SWIFT_PROJECT_SELECTION_CASES } from '#tests/config/checks/language/swift/cache.ts';
 
 test.each(['platform=macOS'])('Xcode build plans keep destination %s for every build purpose', async (destination) => {
     await using sandbox = await createGitSandbox({});

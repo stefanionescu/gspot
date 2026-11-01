@@ -10,17 +10,17 @@ import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { GROUPED_PBXPROJ } from '#tests/config/setup/configurations.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     LOGO_IMAGE_SET,
-    GROUPED_PBXPROJ,
     ASSET_SETTING_CASES,
     SINGLE_FILE_PBXPROJ,
     PARTLY_TRANSLATED_STRINGS,
     ENTITLEMENT_SCOPE_RESULTS,
     INVALID_RESOURCE_DOCUMENTS,
-} from '#tests/config/checks/infrastructure/infrastructure.ts';
+} from '#tests/config/configurations/swift.ts';
 
 test('Xcode sources follow group paths and target membership instead of duplicate filenames', async () => {
     await using sandbox = await createGitSandbox({

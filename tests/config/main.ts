@@ -1,3 +1,5 @@
+export const NEEDS_GIT_MESSAGE = 'gspot needs a Git repository. Run git init, then gspot init.';
+
 export const JSON_ARGUMENT_ERRORS = [
     {
         name: 'no command',

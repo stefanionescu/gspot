@@ -9,7 +9,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { TOOL_LOCKFILES } from '#cli/config/configurations/structure.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { SWITCH_CASES, PROJECT_FILES } from '#tests/config/generation/settling.ts';
+import { SWITCH_CASES, PROJECT_FILES } from '#tests/config/generation/generate.ts';
 
 /**
 Check that the generated files report only tool lockfiles, and that a second apply changes nothing.

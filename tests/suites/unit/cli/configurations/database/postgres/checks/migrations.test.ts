@@ -10,16 +10,16 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { ROW_SECURITY_SQL } from '#tests/config/checks/database/postgres/statements.ts';
 import { readMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 import {
     POSTGRES_CHECKS,
+    ROW_SECURITY_SQL,
     MALFORMED_MIGRATION_PATH,
     DEFAULT_MIGRATION_FOLDER_FILES,
-} from '#tests/config/checks/database/postgres/postgres.ts';
+} from '#tests/config/configurations/database.ts';
 
 test('postgres/migration-order reports a migration that does not parse at its line and column, the other postgres checks skip, and the fixed migration passes', async () => {
     await using sandbox = await createGitSandbox({

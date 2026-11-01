@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { EXTERNAL_COMMAND_GUIDE, EXTERNAL_COMMAND_FINDINGS } from '#tests/config/checks/general/docs.ts';
+import { EXTERNAL_COMMAND_GUIDE, EXTERNAL_COMMAND_FINDINGS } from '#tests/config/configurations/docs.ts';
 
 test('command fences resolve local files at the repository root and skip external repositories, remote endpoints and media types', async () => {
     await using sandbox = await createGitSandbox({

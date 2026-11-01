@@ -7,7 +7,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import {
     MATCHING_SCOPE_FILES,
     MATCHING_SCOPE_SETTINGS,
-} from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
+} from '#tests/config/configurations/javascript/configuration-blocks.ts';
 
 test("a parent's configuration block covers a matching nested scope, and a different scope keeps its test paths", async () => {
     await using sandbox = await testdir({

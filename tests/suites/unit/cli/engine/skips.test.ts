@@ -18,7 +18,7 @@ import {
     GENERATOR_LIMITS,
     NEXT_INTL_PROJECTS,
     BUILT_IN_LIMIT_CASES,
-} from '#tests/config/engine/engine.ts';
+} from '#tests/config/engine/skips.ts';
 
 test('a check whose required setting is missing is skipped with a note naming the setting', async () => {
     const settings = buildSandboxSettings(['xcode'], { level: 'all' });

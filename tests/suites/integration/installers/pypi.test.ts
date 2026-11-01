@@ -7,7 +7,6 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
-import { REGISTRY_HOST } from '#tests/config/setup/sandboxes.ts';
 import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -15,16 +14,16 @@ import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { IndexedPythonProject } from '#tests/types/packages.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
-import { AUTHENTICATION_REQUIRED_MESSAGE } from '#tests/config/setup/runner.ts';
 import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
 import { spawnGspot, runGspotStep, applyThenInstall } from '#tests/setup/cli/commands.ts';
+import { REGISTRY_HOST, AUTHENTICATION_REQUIRED_MESSAGE } from '#tests/config/setup/sandboxes.ts';
 
 import {
     PYTHON_PROJECTS,
     ZIP_FILE_OPTIONS,
     UV_RELEASE_CUTOFF_LINE,
     PYTHON_INDEX_CREDENTIALS,
-} from '#tests/config/integration/installers.ts';
+} from '#tests/config/integration/commands.ts';
 
 const resources = new AsyncDisposableStack();
 

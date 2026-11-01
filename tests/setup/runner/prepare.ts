@@ -19,7 +19,7 @@ import {
     TOOL_PATHS_FILE,
     TOOL_INSTALL_FOLDER,
     GSPOT_LAUNCHER_PATH,
-} from '#tests/config/setup/runner.ts';
+} from '#tests/config/setup/sandboxes.ts';
 
 await runNpmPack(TEST_RUN_FOLDER, [
     { ...eslintPluginPackage, source: join(REPOSITORY_ROOT, 'packages/eslint-plugin') },

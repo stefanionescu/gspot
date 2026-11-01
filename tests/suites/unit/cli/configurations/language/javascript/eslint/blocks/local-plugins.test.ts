@@ -17,7 +17,7 @@ import {
     DUPLICATE_PLUGIN_ERROR,
     CONFLICTING_LOCAL_PLUGIN_FILES,
     CONFLICTING_LOCAL_PLUGIN_TABLES,
-} from '#tests/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
+} from '#tests/config/configurations/javascript/plugins.ts';
 
 test('a scope plugin reaches its scope and an inherited root plugin reaches nested files', async () => {
     await using sandbox = await createGitSandbox({

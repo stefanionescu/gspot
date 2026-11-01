@@ -4,12 +4,7 @@ import { test, expect, beforeAll } from 'bun:test';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-
-import {
-    TYPESCRIPT_CASES,
-    TYPESCRIPT_SANDBOX,
-    ARCHITECTURE_SETTINGS,
-} from '#tests/config/integration/checks/language/typescript.ts';
+import { TYPESCRIPT_CASES, TYPESCRIPT_SANDBOX, ARCHITECTURE_SETTINGS } from '#tests/config/integration/typescript.ts';
 
 const installedSandbox = shareInstalledSandbox(TYPESCRIPT_SANDBOX);
 

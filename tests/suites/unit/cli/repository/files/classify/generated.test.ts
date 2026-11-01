@@ -19,7 +19,7 @@ import {
     GENERATED_LAUNCHERS,
     GENERATED_PATH_CASES,
     TYPE_DECLARATION_FILES,
-} from '#tests/config/repository/files/classify.ts';
+} from '#tests/config/repository/files.ts';
 
 test.each([...GENERATED_HEADERS])('the generated header is found in each comment form: %j', (text) => {
     expect(hasGeneratedHeader(text)).toBe(true);

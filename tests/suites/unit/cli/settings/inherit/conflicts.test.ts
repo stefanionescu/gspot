@@ -8,7 +8,7 @@ import type { AvailableSettings } from '#cli/types/settings.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { CONFLICTING_DEFAULT_ERRORS } from '#tests/config/settings/inherit.ts';
+import { CONFLICTING_DEFAULT_ERRORS } from '#tests/config/settings/read.ts';
 
 const sqlConfiguration = readConfigurations().get('sql') as Configuration;
 

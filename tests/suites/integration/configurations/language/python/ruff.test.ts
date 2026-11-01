@@ -14,19 +14,19 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
 import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
 import { ruffRulesSchema, ruffConfigurationSchema } from '#tests/schemas/ruff.ts';
-import { RUFF_SANDBOX } from '#tests/config/integration/checks/language/python/sandboxes.ts';
 import { buildSandboxSettings, prepareParameterProject } from '#tests/setup/cli/settings.ts';
 import { writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { spawnGspot, listFindingRows, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
+    RUFF_SANDBOX,
     PYTEST_SAMPLE,
     VERSION_SOURCE,
     RUFF_FORMAT_CASES,
     RUFF_VERSION_CASES,
     PARAMETER_LIMIT_CASE,
     UNUSED_IMPORT_SOURCE,
-} from '#tests/config/integration/checks/language/python/python.ts';
+} from '#tests/config/integration/python.ts';
 
 const installedSandbox = shareInstalledSandbox(RUFF_SANDBOX);
 

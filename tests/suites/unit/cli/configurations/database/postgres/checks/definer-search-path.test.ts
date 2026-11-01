@@ -5,12 +5,7 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-
-import {
-    DEFINER_REPAIRS,
-    SECURITY_ALTERATIONS,
-    DEFINER_FUNCTION_SQL,
-} from '#tests/config/checks/database/postgres/postgres.ts';
+import { DEFINER_REPAIRS, SECURITY_ALTERATIONS, DEFINER_FUNCTION_SQL } from '#tests/config/configurations/database.ts';
 
 test.each([...DEFINER_REPAIRS])('definer-search-path accepts a later $name migration', async ({ sql }) => {
     await using sandbox = await createGitSandbox({

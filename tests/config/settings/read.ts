@@ -1,3 +1,26 @@
+export const CONFLICTING_DEFAULT_ERRORS = [
+    {
+        path: ['configurations'],
+        message:
+            'The configurations sql and alternate-sql set tools.sqlfluff.dialect to different values. Set it yourself in gspot.toml to decide.',
+    },
+] as const;
+
+export const PURGECSS_SAFELIST_TABLES = `[tools.purgecss]
+safelist = []
+[[scope]]
+path = "app"
+configurations = []
+[[scope]]
+path = "app/deep"
+configurations = []
+[[scope]]
+path = "sibling"
+removed_configurations = { site = "This scope does not use the inherited site checks." }
+`;
+
+export const POSTGRES_ORIGIN = 'configuration postgres';
+
 export const INVALID_LICENSES = ['MTI', 'MIT OR Apache-2.0'];
 
 export const VALID_LICENSES = ['MIT', 'GPL-2.0+', 'GPL-2.0-only WITH Classpath-exception-2.0'];
@@ -174,4 +197,86 @@ export const CONFIGURATION_CONFLICTS = [
         text: '[[scope]]\npath = "app"\nconfigurations = ["bash"]\nremoved_configurations = { bash = "External checks cover Bash." }\n',
         path: ['scope', 0, 'configurations'],
     },
+] as const;
+
+export const REVIEWED_REASON = 'Reviewed in tests.';
+
+export const COMMENTED_SETTINGS = `#:schema x
+
+# Comment on configurations.
+configurations = ["bash"]
+
+[hooks]
+# gspot checks the changed paths of a push.
+enabled = true
+`;
+
+export const POSTGRES_SCOPE_SETTINGS = {
+    level: 'basic',
+    rules: true,
+    scopes: [{ path: 'api', configurations: ['supabase'] }, { path: 'authored' }],
+    tables: 'postgres.client_schemas = ["client"]\n',
+} as const;
+
+export const OPENAPI_SCOPE_SETTINGS = {
+    level: 'basic',
+    rules: true,
+    scopes: [{ path: 'api' }],
+    tables: 'removed_configurations = { openapi = "This scope does not publish an OpenAPI document." }\n',
+} as const;
+
+export const NESTED_SCOPE_SETTINGS = `configurations = ["bash", "swift", "structure"]
+[rules]
+enabled = false
+[limits.bash]
+file_lines = 100
+[tools.swiftlint]
+always_keep_imports = ["Foundation"]
+[[ignore]]
+check = "bash/shellcheck"
+rule = "SC2086"
+paths = ["api/**"]
+reason = "The api scripts pass word lists on purpose."
+[[scope]]
+path = "api"
+configurations = ["bash"]
+limits.bash.file_lines = 80
+swift.xcode_scheme = "6.0"
+tools.swiftlint.always_keep_imports = ["UIKit"]
+[[scope]]
+path = "api/v1"
+configurations = ["bash"]
+limits.bash.file_lines = 60
+swift.xcode_scheme = "5.0"
+tools.swiftlint.always_keep_imports = ["SwiftUI"]
+[[scope]]
+path = "web"
+configurations = ["bash"]
+
+[swift]
+xcode_scheme = "5.0"
+`;
+
+export const PROJECT_CHOICES = {
+    configurations: ['nextjs', 'javascript'],
+    removed_configurations: [],
+    scope: [
+        { path: 'app', configurations: [], removed_configurations: ['nextjs'] },
+        { path: 'app/worker', configurations: ['nextjs'], removed_configurations: [] },
+        { path: 'required', configurations: [], removed_configurations: ['javascript'] },
+    ],
+} as const;
+
+export const PROJECT_SCOPE_CASES = [
+    { scope: '', name: 'nextjs', selected: true },
+    { scope: 'app', name: 'nextjs', selected: false },
+    { scope: 'app/child', name: 'nextjs', selected: false },
+    { scope: 'app/worker', name: 'nextjs', selected: true },
+    { scope: 'sibling', name: 'nextjs', selected: true },
+    { scope: 'required', name: 'javascript', selected: true },
+] as const;
+
+export const SITE_PACKAGE_MANAGER_CASES = [
+    ['npm fallback', {}, 'npm'],
+    ['declared Bun', { 'package.json': '{"packageManager":"bun@1.4.2"}' }, 'bun'],
 ] as const;

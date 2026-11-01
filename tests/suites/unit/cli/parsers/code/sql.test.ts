@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
-import { TYPO } from '#tests/config/spelling.ts';
 import { getPosition } from '#cli/system/text.ts';
 import { createRunCache } from '#cli/system/cache.ts';
+import { TYPO } from '#tests/config/setup/configurations.ts';
 import { parseSqlFile, selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
 
 import {
@@ -10,7 +10,7 @@ import {
     QUOTED_PSQL_SOURCES,
     FROZEN_MIGRATION_CASES,
     FROZEN_MIGRATION_PATHS,
-} from '#tests/config/parsers/code/code.ts';
+} from '#tests/config/parsers/comments.ts';
 
 test('empty SQL has no statements', async () => {
     const result = await parseSqlFile('', createRunCache(process.cwd()));

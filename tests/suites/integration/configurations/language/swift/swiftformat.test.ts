@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { CLEAN_SWIFT } from '#tests/config/swift.ts';
 import { stat, chmod, readFile } from 'node:fs/promises';
+import { CLEAN_SWIFT } from '#tests/config/setup/languages.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
@@ -9,9 +9,9 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { SWIFT_SANDBOX } from '#tests/config/integration/checks/language/swift/sandboxes.ts';
 
 import {
+    SWIFT_SANDBOX,
     SOURCE_HEADER,
     SWIFT_INLINE_DOCS,
     SWIFT_DOCS_SOURCE,
@@ -20,7 +20,7 @@ import {
     BLOCK_COMMENT_FINDINGS,
     INLINE_COMMENT_FINDINGS,
     SPACED_COMMENT_FINDINGS,
-} from '#tests/config/integration/checks/language/swift/swift.ts';
+} from '#tests/config/integration/swift.ts';
 
 const installedSandbox = shareInstalledSandbox(SWIFT_SANDBOX);
 

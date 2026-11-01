@@ -3,10 +3,10 @@ import { writeFile } from 'node:fs/promises';
 import { test, expect, describe } from 'bun:test';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { SUPABASE_SANDBOX } from '#tests/config/integration/commands.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { SUPABASE_SANDBOX } from '#tests/config/integration/checks/samples.ts';
+import { SECRET_LOG_FILES } from '#tests/config/integration/security/semgrep.ts';
 import { writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
-import { SECRET_LOG_FILES } from '#tests/config/integration/checks/general/security/security.ts';
 import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 describe.skipIf(!hasToolBuild('deno') || !hasToolBuild('semgrep'))('Supabase secret-log rule', () => {

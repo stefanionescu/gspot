@@ -113,7 +113,7 @@ allowed_names = ["reason_when"]
 reason = "gspot list settings --json and the shipped setting definitions name this field reason_when."
 
 [[naming.override]]
-paths = ["packages/cli/src/configurations/general/data-files/**", "packages/cli/src/configurations/general/data-files/checks.ts", "packages/cli/src/types/configurations/general.ts", "packages/cli/src/configurations/general/data-files/generate.ts", "tests/suites/unit/cli/configurations/general/data-files.test.ts", "tests/config/integration/checks/general/data-files.ts", "tests/suites/integration/configurations/general/data-files.test.ts", "tests/config/integration/checks/general/security/sensitive-data.ts", "tests/suites/integration/configurations/general/security/sensitive-data.test.ts"]
+paths = ["packages/cli/src/configurations/general/data-files/**", "packages/cli/src/configurations/general/data-files/checks.ts", "packages/cli/src/types/configurations/general.ts", "packages/cli/src/configurations/general/data-files/generate.ts", "tests/suites/unit/cli/configurations/general/data-files.test.ts", "tests/config/integration/general.ts", "tests/suites/integration/configurations/general/data-files.test.ts", "tests/config/integration/security/sensitive-data.ts", "tests/suites/integration/configurations/general/security/sensitive-data.test.ts"]
 allowed_names = ["data-files", "data-files.test", "sensitive-data", "sensitive-data.test"]
 reason = "These files and folders take the names of the data-files configuration and the security/sensitive-data check."
 
@@ -325,7 +325,7 @@ reason = "This file reproduces upstream license notices and terms whose wording 
 [[ignore]]
 check = "prose/vale"
 rule = "gspot.session-identifiers"
-paths = ["tests/config/integration/checks/general/prose/prose.ts"]
+paths = ["tests/config/integration/prose.ts"]
 reason = "This sample URL holds a session identifier so that the Vale test sees the rule report it."
 
 [[ignore]]
@@ -360,7 +360,7 @@ reason = "Starlight and Expressive Code write this markup."
 
 [[ignore]]
 check = "spelling/typos"
-paths = ["tests/config/spelling.ts"]
+paths = ["tests/config/setup/configurations.ts"]
 reason = "This literal supplies a deliberate misspelling to the spelling checks and their corrections."
 
 [[ignore]]

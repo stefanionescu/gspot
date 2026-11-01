@@ -131,9 +131,9 @@ repository.
 ### Values, types, and schemas
 
 - `packages/cli/src/`, `packages/eslint-plugin/src/`, `docs/src/`, and `tests/` keep fixed values in `config/`,
-  TypeScript types in `types/`, and runtime schemas in `schemas/`. No `values.ts`, `types.ts`, or `schemas.ts` sits
-  beside code. Other files declare no module-level literal constants, types, or schemas. A value computed at import
-  time stays with the behavior that uses it.
+  TypeScript types in `types/`, and runtime schemas in `schemas/`, and a folder of code holds only code. Other files
+  declare no module-level literal constants, types, or schemas. A value computed at import time stays with the
+  behavior that uses it.
 - Each of these folders holds one file per layer: `config/<layer>.ts`, `types/<layer>.ts`, and `schemas/<layer>.ts`.
 - The CLI layers follow the folders under "Commands and layers." Layer `main` serves `main.ts`, `bin.ts`, and
   `reference.ts`.
@@ -209,13 +209,11 @@ repository.
   `commands/<command>.test.ts`, or `installers/<module>.test.ts` for `packages/cli/src/tools/installers/<module>`. Past
   300 lines, the tests of one configuration become a folder with one file per tool.
 - `tests/suites/integration/ci.test.ts` tests `packages/cli/src/generation/ci.ts`.
-- `tests/config/` holds the values of each folder of tests, by the rules of `config/`. The values of the tests in
-  `tests/suites/unit/cli/<folder>/` sit at `tests/config/<folder>`.
-- The values of the other suites sit under `tests/config/integration/`, `tests/config/eslint-plugin/`, and
-  `tests/config/setup/`. The values of the e2e suite sit in `tests/config/e2e.ts`.
+- `tests/config/`, `tests/types/`, and `tests/schemas/` follow "Values, types, and schemas." The values of the tests in
+  `tests/suites/unit/cli/engine/` sit in `tests/config/engine/`, and those of the e2e suite in `tests/config/e2e.ts`.
+- `tests/config/setup/` holds the values of `tests/setup/` and the values that tests of several layers read.
 - A value goes to `tests/config/` when two tests share it. A value that one test reads stays in that test, even when
   it reads it twice. File text that only makes a file exist, and that no assertion compares, stays at each call that
   writes it.
 - RuleTester cases, command arguments, and sandbox file names stay beside their call.
-- `tests/types/` holds the types of the tests, and `tests/schemas/` the schemas that read tool output in tests. Each
-  stays one flat folder of topic files.
+- `tests/schemas/` holds the schemas that read tool output in tests.

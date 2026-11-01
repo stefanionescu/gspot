@@ -5,7 +5,7 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { createMigrationHistory } from '#tests/setup/sandboxes/repositories.ts';
-import { MIGRATION_ORDER_MESSAGE } from '#tests/config/checks/database/postgres/messages.ts';
+import { MIGRATION_ORDER_MESSAGE } from '#tests/config/configurations/database.ts';
 
 test('migration-order reports a new migration older than a committed one and passes after it is renamed', async () => {
     await using sandbox = await createMigrationHistory();

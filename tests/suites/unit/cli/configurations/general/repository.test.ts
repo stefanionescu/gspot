@@ -11,7 +11,7 @@ import { BYTES_PER_KILOBYTE } from '#cli/config/engine.ts';
 import { unlink, symlink, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { LOCAL_FILE_PATHS, LARGE_FILE_TABLES } from '#tests/config/checks/general/general.ts';
+import { LOCAL_FILE_PATHS, LARGE_FILE_TABLES } from '#tests/config/configurations/general.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 test(`local-files reports each tracked path that a scope's configurations leave untracked, once, including a path only in the Git index`, async () => {

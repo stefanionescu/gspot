@@ -5,10 +5,10 @@ import { isWindows } from '#tests/setup/system/platform.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system.ts';
-import { POLL_INTERVAL_MILLISECONDS } from '#tests/config/setup/system.ts';
+import { POLL_INTERVAL_MILLISECONDS } from '#tests/config/setup/programs.ts';
 import { spawnProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
 import { type ChildCapture, type ProcessCapture } from '#tests/types/processes.ts';
-import { TEST_TIMEOUT_MILLISECONDS, UNIT_TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/runner.ts';
+import { TEST_TIMEOUT_MILLISECONDS, UNIT_TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/sandboxes.ts';
 
 function readCommandResult(result: SpawnResult, limited: ReturnType<typeof limitCommand>): SpawnResult {
     if (!result.timedOut) return result;

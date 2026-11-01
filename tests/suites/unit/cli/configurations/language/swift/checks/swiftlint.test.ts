@@ -13,9 +13,13 @@ import { mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { getBuiltInCheck, prepareSwiftCheck } from '#tests/setup/cli/checks.ts';
 import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
-import { UNEXPECTED_PLAN_MESSAGE } from '#tests/config/checks/language/swift/messages.ts';
 import { listSwiftlintConfigs } from '#cli/configurations/language/swift/checks/swiftlint.ts';
-import { ANALYZER_EXIT_CASES, NESTED_SWIFTLINT_FILES } from '#tests/config/checks/language/swift/swift.ts';
+
+import {
+    ANALYZER_EXIT_CASES,
+    NESTED_SWIFTLINT_FILES,
+    UNEXPECTED_PLAN_MESSAGE,
+} from '#tests/config/configurations/swift.ts';
 
 test.each([...ANALYZER_EXIT_CASES])(
     'analyzer: build exit $buildCode and analyzer exit $analyzerCode report the failed stage',

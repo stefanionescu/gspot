@@ -8,15 +8,19 @@ import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { GREETING_SOURCE } from '#tests/config/typescript.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { NESTED_YAML } from '#tests/config/generation/documents.ts';
+import { GREETING_SOURCE } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { EDITORCONFIG_SELECTOR_ERRORS } from '#tests/config/configurations/general.ts';
 import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
-import { PRETTIER_OPTIONS_BY_FILE, FORMAT_OVERRIDES_SETTINGS } from '#tests/config/format.ts';
-import { EDITORCONFIG_SELECTOR_ERRORS } from '#tests/config/generation/configurations/general.ts';
+
+import {
+    NESTED_YAML,
+    PRETTIER_OPTIONS_BY_FILE,
+    FORMAT_OVERRIDES_SETTINGS,
+} from '#tests/config/setup/configurations.ts';
 
 test.each([...EDITORCONFIG_SELECTOR_ERRORS])(
     'a format override selector that EditorConfig cannot express is a settings error ($pattern)',

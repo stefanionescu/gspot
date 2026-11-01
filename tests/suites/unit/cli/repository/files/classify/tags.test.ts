@@ -2,13 +2,7 @@ import { test, expect } from 'bun:test';
 import { classifyFile } from '#cli/repository/files/classify.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-
-import {
-    SHEBANGS,
-    LICENSE_FILES,
-    SWIFT_TAG_CASES,
-    LICENSE_LIKE_SOURCES,
-} from '#tests/config/repository/files/classify.ts';
+import { SHEBANGS, LICENSE_FILES, SWIFT_TAG_CASES, LICENSE_LIKE_SOURCES } from '#tests/config/repository/files.ts';
 
 test('a license text is vendored, and a source file named like one stays source', async () => {
     await using sandbox = await createGitSandbox(

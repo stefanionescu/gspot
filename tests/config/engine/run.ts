@@ -1,3 +1,133 @@
+import { NPM_CHECK_IGNORES } from '#tests/config/setup/configurations.ts';
+
+const PYTHON_APP_FILES = {
+    'app.py': 'value = 1\n',
+    'pyproject.toml': `[project]
+name = "app"
+version = "1.0.0"
+`,
+} as const;
+
+export const NODE_REQUIREMENTS = [
+    {
+        name: 'Python with npm schema peers under mise',
+        tables: '',
+        configurations: ['python'],
+        files: PYTHON_APP_FILES,
+        needs: ['node', 'ruff'],
+        skips: [],
+    },
+    {
+        name: 'Python with only mise tools',
+        tables: `${NPM_CHECK_IGNORES}[[ignore]]
+check = "python/basedpyright"
+reason = "This sandbox exercises Python without the npm type checker."
+[[ignore]]
+check = "licenses/allowed"
+reason = "This sandbox exercises native tools without the license scanner."
+`,
+        configurations: ['python'],
+        files: PYTHON_APP_FILES,
+        needs: ['ruff'],
+        skips: ['node', 'eslint', 'typescript'],
+    },
+    {
+        name: 'Bun with TypeScript',
+        tables: '',
+        configurations: ['typescript'],
+        files: {
+            'app.ts': 'export const value = 1;\n',
+            'package.json': '{"private":true,"engines":{"bun":"1.4.2"}}\n',
+        },
+        needs: ['node', 'eslint'],
+        skips: [],
+    },
+] as const;
+
+export const COVERAGE_PROVIDERS = [
+    { configuration: 'pytest', provider: 'pytest-cov', file: 'test_math.py', configurations: ['python', 'pytest'] },
+    {
+        configuration: 'vitest',
+        provider: '@vitest/coverage-v8',
+        file: 'math.test.js',
+        configurations: ['javascript', 'vitest'],
+    },
+] as const;
+
+export const FIX_SUMMARY_CASES = [
+    {
+        name: 'no changes',
+        paths: [],
+        appliedText: 'No fixer changed anything.',
+    },
+    {
+        name: 'two changed files',
+        paths: ['source.txt', 'other.txt'],
+        appliedText: 'Fixed 2 files: other.txt, source.txt. The changes are not staged.',
+    },
+] as const;
+
+export const FIX_LINTER_CASES = [
+    {
+        configuration: 'javascript',
+        tool: 'eslint',
+        executable: 'eslint.js',
+        path: 'sample.js',
+        config: 'native.mjs',
+        nativeConfiguration: 'export default [{ rules: { semi: ["error", "always"], "no-undef": "error" } }];',
+        invalidConfiguration: 'throw new Error("Invalid native configuration");',
+        formatter: ['--format', 'json'],
+        sample: 'missing()\n',
+        partial: 'missing();\n',
+        corrected: 'export {};\n',
+    },
+] as const;
+
+export const FIXER_RESULTS = [
+    {
+        name: 'finding exit with original bytes',
+        toolArguments: ['--write', 'source.txt=original', '--exit', '3'],
+        exit_codes: [3],
+        status: 'unchanged',
+        after: 'original',
+        note: undefined,
+    },
+    {
+        name: 'finding exit with corrected bytes',
+        toolArguments: ['--write', 'source.txt=corrected', '--exit', '3'],
+        exit_codes: [3],
+        status: 'changed',
+        after: 'corrected',
+        note: undefined,
+    },
+    {
+        name: 'undeclared exit with partial bytes',
+        toolArguments: ['--write', 'source.txt=partial', '--exit', '4'],
+        exit_codes: [3],
+        status: 'failed',
+        after: 'partial',
+        note: 'sandbox/fixer exited 4',
+    },
+    {
+        name: 'default failure with original bytes',
+        toolArguments: ['--exit', '3'],
+        exit_codes: undefined,
+        status: 'failed',
+        after: 'original',
+        note: 'sandbox/fixer exited 3',
+    },
+] as const;
+
+export const TSC_REPLACEMENTS = [
+    { configuration: 'vue', check: 'vue/vue-tsc', source: 'src/App.vue', text: '<template><p>App</p></template>' },
+] as const;
+
+export const SCOPE_WIDE_IGNORE_CASES = [
+    { paths: ['api/**'], ignored: true },
+    { paths: ['api'], ignored: true },
+    { paths: ['api/**', '!api/app/**'], ignored: false },
+] as const;
+
 export const QUALITY_SEARCH_ARGUMENTS = [
     '--text',
     'corrected\n',

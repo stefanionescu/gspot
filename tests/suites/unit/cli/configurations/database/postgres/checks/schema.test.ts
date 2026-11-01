@@ -11,7 +11,7 @@ import {
     RECREATED_TABLE_SQL,
     EQUIVALENT_INDEXES_SQL,
     DROPPED_CONSTRAINTS_SQL,
-} from '#tests/config/checks/database/postgres/postgres.ts';
+} from '#tests/config/configurations/database.ts';
 
 test('table and column renames retain their foreign keys, indexes, and row security', async () => {
     const renamedTable = await parseSqlFile(RENAMED_TABLE_SQL, createRunCache(process.cwd()));

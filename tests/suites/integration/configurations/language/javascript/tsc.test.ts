@@ -9,15 +9,15 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { CheckResult } from '#cli/types/engine/run.ts';
-import { COMPILER_SOURCE } from '#tests/config/typescript.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
-import { LINGUIST_GENERATED_PATTERN } from '#tests/config/git.ts';
+import { COMPILER_SOURCE } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { rm, stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { LINGUIST_GENERATED_PATTERN } from '#tests/config/setup/programs.ts';
 import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
@@ -28,7 +28,7 @@ import {
     KNIP_FOLDER_FILES,
     OWN_TYPESCRIPT_RESULTS,
     JAVASCRIPT_PROJECT_FILES,
-} from '#tests/config/integration/checks/language/javascript.ts';
+} from '#tests/config/integration/javascript.ts';
 
 const installedSandbox = shareInstalledSandbox(JSCONFIG_SANDBOX);
 

@@ -10,7 +10,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import { isMacos, hasToolBuild } from '#tests/setup/system/platform.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { XCODE_CASES, PLUTIL_UNREADABLE_FILES } from '#tests/config/integration/checks/infrastructure.ts';
+import { XCODE_CASES, PLUTIL_UNREADABLE_FILES } from '#tests/config/integration/infrastructure.ts';
 
 describe.skipIf(!isMacos)('Xcode samples', () => {
     const installedSandbox = shareInstalledSandbox({

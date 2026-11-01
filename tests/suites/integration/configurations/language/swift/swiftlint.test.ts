@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { CLEAN_SWIFT } from '#tests/config/swift.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { CLEAN_SWIFT } from '#tests/config/setup/languages.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import type { LinterJsonFinding } from '#tests/types/tools.ts';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
@@ -12,17 +12,17 @@ import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runCommand, runCommandBlocking } from '#tests/setup/system/processes.ts';
-import { SWIFT_SANDBOX } from '#tests/config/integration/checks/language/swift/sandboxes.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings, prepareParameterProject } from '#tests/setup/cli/settings.ts';
 
 import {
     CAST_SWIFT,
+    SWIFT_SANDBOX,
     XCTEST_SCOPES,
     PARSER_SOURCE,
     PARAMETER_LIMIT_CASE,
     CORRECTED_PARSER_SOURCE,
-} from '#tests/config/integration/checks/language/swift/swift.ts';
+} from '#tests/config/integration/swift.ts';
 
 const installedSandbox = shareInstalledSandbox(SWIFT_SANDBOX);
 

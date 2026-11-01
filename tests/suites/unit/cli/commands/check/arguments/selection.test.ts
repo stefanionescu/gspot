@@ -5,9 +5,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { NAMING_SCOPE_SETTINGS } from '#tests/config/commands/check.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { NAMING_SCOPE_SETTINGS } from '#tests/config/commands/check/arguments.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 test('file and folder arguments narrow the files each check gets', async () => {

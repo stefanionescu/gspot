@@ -10,7 +10,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { listOtherTools, listCheckTools } from '#cli/engine/tools.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { NODE_REQUIREMENTS, COVERAGE_PROVIDERS } from '#tests/config/engine/engine.ts';
+import { NODE_REQUIREMENTS, COVERAGE_PROVIDERS } from '#tests/config/engine/run.ts';
 
 test('basic tRPC server files select the boundaries plugin without import rules', async () => {
     await using sandbox = await createGitSandbox({

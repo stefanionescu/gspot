@@ -3,20 +3,15 @@ import { test, expect, describe } from 'bun:test';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
-import { SWIFT_LANGUAGE_PACKAGE } from '#tests/config/swift.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { redirectCacheFolder } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { isMacos, hasToolBuild } from '#tests/setup/system/platform.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { SWIFT_LANGUAGE_PACKAGE } from '#tests/config/setup/languages.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-
-import {
-    XCODE_TOOL_PROJECT,
-    SWIFT_PACKAGE_CASES,
-    SWIFT_PACKAGE_SANDBOX,
-} from '#tests/config/integration/checks/language/swift/swift.ts';
+import { XCODE_TOOL_PROJECT, SWIFT_PACKAGE_CASES, SWIFT_PACKAGE_SANDBOX } from '#tests/config/integration/swift.ts';
 
 test.skipIf(!isMacos)('swift/build reuses its compiled objects and still reports a changed source', async () => {
     await using sandbox = await createGitSandbox({

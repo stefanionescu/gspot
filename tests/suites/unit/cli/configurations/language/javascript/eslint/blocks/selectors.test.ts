@@ -7,7 +7,7 @@ import {
     SELECTOR_FILES,
     SELECTOR_LIBRARY_FILES,
     FRAMEWORK_SELECTOR_CASES,
-} from '#tests/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
+} from '#tests/config/configurations/javascript/blocks.ts';
 
 test('a template message to a logger method, including log, is reported, and console.log is not', async () => {
     await using sandbox = await testdir({

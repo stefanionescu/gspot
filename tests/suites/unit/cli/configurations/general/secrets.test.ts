@@ -19,7 +19,7 @@ import {
     ENVIRONMENT_FUNCTION_EXAMPLE,
     ENVIRONMENT_FUNCTION_FINDINGS,
     COMPONENT_ENVIRONMENT_FINDINGS,
-} from '#tests/config/checks/general/secrets.ts';
+} from '#tests/config/configurations/secrets.ts';
 
 test('a nested scope uses the default example environment file names', async () => {
     await using sandbox = await createGitSandbox({

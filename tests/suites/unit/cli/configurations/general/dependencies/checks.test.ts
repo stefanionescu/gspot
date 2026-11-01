@@ -11,18 +11,18 @@ import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { BUN_PROJECT_FILES } from '#tests/config/configurations/general.ts';
 
 import {
     HOST_LOCKFILE,
     MISE_PIN_FILES,
     BUN_PIN_SETTINGS,
-    BUN_PROJECT_FILES,
     LOCKFILE_HOST_CASES,
     DEPENDENCIES_SANDBOX,
     REGISTRY_SCOPE_RESULTS,
     LOCKFILE_DOWNLOAD_CASES,
     ALLOWED_GITHUB_REGISTRIES,
-} from '#tests/config/checks/general/general.ts';
+} from '#tests/config/configurations/dependencies.ts';
 
 test('dependencies/lockfiles accepts a vendored file tarball without treating it as a download', async () => {
     await using sandbox = await createGitSandbox({

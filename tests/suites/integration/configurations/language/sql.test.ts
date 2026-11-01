@@ -5,12 +5,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-
-import {
-    SQL_SANDBOX,
-    SQL_FUNCTION_SOURCE,
-    SQLFLUFF_DIALECT_SETTINGS,
-} from '#tests/config/integration/checks/language/language.ts';
+import { SQL_SANDBOX, SQL_FUNCTION_SOURCE, SQLFLUFF_DIALECT_SETTINGS } from '#tests/config/integration/language.ts';
 
 const installedSandbox = shareInstalledSandbox(SQL_SANDBOX);
 

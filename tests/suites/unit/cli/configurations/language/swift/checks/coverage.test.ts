@@ -11,9 +11,9 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { testdir, createFileTree, type TestdirResult } from 'testdirs';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { XCTEST_SOURCE, SWIFT_PACKAGE_HEADER } from '#tests/config/swift.ts';
 import { planSandboxCheck, redirectCacheFolder } from '#tests/setup/cli/checks.ts';
 import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
+import { XCTEST_SOURCE, SWIFT_PACKAGE_HEADER } from '#tests/config/setup/languages.ts';
 
 import {
     XCTEST_TABLES,
@@ -22,7 +22,7 @@ import {
     UNTESTED_COVERAGE_RESULTS,
     SWIFT_PACKAGE_COVERAGE_FILES,
     SWIFT_PACKAGE_COVERAGE_TARGETS,
-} from '#tests/config/checks/language/swift/swift.ts';
+} from '#tests/config/configurations/swift.ts';
 
 test.each([...XCTEST_FAILURES])(
     'swift/coverage: XCTest coverage classifies $failure and passes after the fix',

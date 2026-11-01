@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
 import { dirname, delimiter } from 'node:path';
-import { HOOKS_SETTINGS } from '#tests/config/hooks.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
 import type { DoctorReport } from '#cli/types/commands/reports.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

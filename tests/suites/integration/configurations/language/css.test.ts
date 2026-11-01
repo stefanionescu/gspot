@@ -15,7 +15,7 @@ import {
     STYLELINT_COMMAND,
     CORRECTED_STYLESHEETS,
     ALL_LEVEL_STYLELINT_TABLES,
-} from '#tests/config/integration/checks/language/language.ts';
+} from '#tests/config/integration/language.ts';
 
 const installedSandbox = shareInstalledSandbox({
     configurations: ['css'],

@@ -5,17 +5,17 @@ import { openSession } from '#cli/engine/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
-import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     OS_VALUE_SOURCE,
     PYTHON_ENVIRONMENT_SOURCE,
     BASH_ENVIRONMENT_READ_CASES,
-} from '#tests/config/checks/general/structure/structure.ts';
+} from '#tests/config/configurations/structure/files.ts';
 
 test('Swift environment reads outside the env files are reported; comments and strings are not', async () => {
     await using sandbox = await createGitSandbox({

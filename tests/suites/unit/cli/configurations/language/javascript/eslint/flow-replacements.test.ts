@@ -3,7 +3,7 @@ import { createFileTree } from 'testdirs';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { ESLINT_LEVEL_CASES } from '#tests/config/generation/configurations/language/javascript/eslint/replacements.ts';
+import { ESLINT_LEVEL_CASES } from '#tests/config/configurations/javascript/configuration-blocks.ts';
 
 test.each(ESLINT_LEVEL_CASES)('%s preserves discarded postfix checks in %s', async (level, extension) => {
     await using sandbox = await createGitSandbox({

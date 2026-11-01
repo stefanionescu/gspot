@@ -3,13 +3,13 @@ import { test, spyOn, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { YARN_CLIENTS } from '#tests/config/setup/programs.ts';
 import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { YARN_CLIENTS } from '#tests/config/tools/installers/installers.ts';
 
 test.each([...YARN_CLIENTS])(
     'Yarn $packageManager.version plans an npm tool lockfile without Yarn settings',

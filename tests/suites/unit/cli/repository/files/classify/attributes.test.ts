@@ -15,7 +15,7 @@ import {
     CLASSIFICATION_FILES,
     TYPE_DECLARATION_FILES,
     LINGUIST_GENERATED_LINE,
-} from '#tests/config/repository/files/classify.ts';
+} from '#tests/config/repository/files.ts';
 
 test('Git attributes win over the generated files of configurations', async () => {
     await using sandbox = await createGitSandbox({

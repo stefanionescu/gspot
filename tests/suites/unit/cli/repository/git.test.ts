@@ -12,7 +12,7 @@ import {
     INVALID_BLOBS,
     ATTRIBUTE_LINES,
     TRAILING_BLOB_CHUNKS,
-} from '#tests/config/parsers/parsers.ts';
+} from '#tests/config/repository/files.ts';
 
 test.each([...ATTRIBUTE_LINES])(
     'a .gitattributes line in C quoting decodes its octal bytes, and an [attr] macro line gives no pattern: $line',

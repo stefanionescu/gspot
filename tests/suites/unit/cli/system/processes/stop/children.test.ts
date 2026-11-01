@@ -8,7 +8,7 @@ import { fakePlatform } from '#tests/setup/system/platform.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { spawnProcess, streamProcess } from '#cli/system/processes.ts';
 import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system.ts';
-import { STREAM_FAILURE, STOPPED_CAPTURES } from '#tests/config/system/processes.ts';
+import { STREAM_FAILURE, STOPPED_CAPTURES } from '#tests/config/system.ts';
 
 import {
     isStopped,

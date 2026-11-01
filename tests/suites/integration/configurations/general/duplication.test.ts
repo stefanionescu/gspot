@@ -12,7 +12,7 @@ import {
     DUPLICATED_METADATA,
     SHARED_PYTHON_IMPORTS,
     DUPLICATED_PYTHON_LOGIC,
-} from '#tests/config/integration/checks/general/general.ts';
+} from '#tests/config/integration/general.ts';
 
 const COUNT_STEPS = Array.from(
     { length: 30 },

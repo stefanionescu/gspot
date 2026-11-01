@@ -6,8 +6,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GITHUB_WORKFLOW } from '#cli/config/generation.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
-import { CALLER_WORKFLOW } from '#tests/config/github-actions.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { CALLER_WORKFLOW } from '#tests/config/setup/configurations.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
@@ -16,7 +16,7 @@ import {
     CHECKOUT_WORKFLOW,
     REQUIRED_INPUT_WORKFLOW,
     TEMPLATE_INJECTION_WORKFLOW,
-} from '#tests/config/integration/checks/infrastructure.ts';
+} from '#tests/config/integration/infrastructure.ts';
 
 test('workflow security checks report an untrusted expression in a run step', async () => {
     await using sandbox = await createGitSandbox({

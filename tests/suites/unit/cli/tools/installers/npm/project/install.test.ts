@@ -23,7 +23,7 @@ import {
     CREDENTIAL_LOCKFILE,
     FAILED_INSTALL_CASES,
     CREDENTIAL_PACKAGE_JSON,
-} from '#tests/config/tools/installers/npm/project.ts';
+} from '#tests/config/tools/npm.ts';
 
 async function prepareCredentialProject(root: string, packageJson: string, lockfile: string) {
     const files = {

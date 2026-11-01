@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
@@ -14,7 +14,7 @@ import {
     TRIVIAL_FUNCTION_CASES,
     NESTED_PYTHON_FUNCTIONS,
     BASH_TRIVIAL_FUNCTION_CASES,
-} from '#tests/config/checks/general/structure/trivial-functions.ts';
+} from '#tests/config/configurations/structure/code.ts';
 
 test('Swift reports constructors, accessors, decorated methods, and nested functions, and counts the statements of closures toward their function', async () => {
     await using initialSandbox = await createGitSandbox({

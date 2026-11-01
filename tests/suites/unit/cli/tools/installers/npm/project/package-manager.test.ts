@@ -7,9 +7,9 @@ import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { PACKAGE_MANAGER_AGE_CASES } from '#tests/config/tools/npm.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { assertPackageManagerVersion } from '#cli/tools/installers/npm/project.ts';
-import { PACKAGE_MANAGER_AGE_CASES } from '#tests/config/tools/installers/npm/project.ts';
 
 test('npm in place of Yarn 1 refuses to run without the minimum release age', async () => {
     await using sandbox = await createGitSandbox({

@@ -10,7 +10,7 @@ import type { TomlTable } from '#cli/types/settings.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
-import { API_SCOPE_FILES } from '#tests/config/commands/samples.ts';
+import { API_SCOPE_FILES } from '#tests/config/commands/reports.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -20,7 +20,7 @@ import {
     API_LANGUAGE_REASON,
     PARENT_REQUIREMENT_SETTINGS,
     EXCLUDED_CONFIGURATION_SETTINGS,
-} from '#tests/config/commands/remove.ts';
+} from '#tests/config/commands/edits.ts';
 
 test.each([...SCOPE_REMOVALS])('remove bash --scope $scope: $name', async ({ settings, files, scope, expected }) => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': settings, ...files });

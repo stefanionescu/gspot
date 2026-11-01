@@ -1,3 +1,32 @@
+import { SWIFT_PACKAGE_HEADER } from '#tests/config/setup/languages.ts';
+
+export const LINGUIST_GENERATED_PATTERN = 'emitted/** linguist-generated\n';
+
+export const NO_UPSTREAM_MESSAGE =
+    'No upstream or origin/HEAD is available. Use --base <ref> to name a branch, tag, or commit.';
+
+export const CHECK_COMMAND = 'gspot check';
+
+export const ROOT_LABEL = 'the root';
+
+export const CAFE_SCRIPT_PATH = 'scripts/café build.sh';
+
+export const PACKAGE_JSON_ERROR = 'package.json:1:2 is not valid JSON: CloseBraceExpected. Fix the file.';
+
+export const GSPOT_ENVIRONMENT = { NO_COLOR: '1', CI: '1' } as const;
+
+export const OFFLINE_ENVIRONMENT = {
+    HTTP_PROXY: 'http://127.0.0.1:1',
+    HTTPS_PROXY: 'http://127.0.0.1:1',
+    ALL_PROXY: 'http://127.0.0.1:1',
+    NO_PROXY: '',
+    http_proxy: undefined,
+    https_proxy: undefined,
+    all_proxy: undefined,
+    no_proxy: undefined,
+    MISE_OFFLINE: '1',
+} as const;
+
 export const PROGRAM_NAMES = [
     'fakes/tool',
     'checks/search',
@@ -123,3 +152,21 @@ export const CLI_PACKAGE_REQUEST = 'npm:@gspothq/cli[allow_low_downloads=true]@'
 export const REPORT_SWIFT_COVERAGE_OPTIONS = { report: { type: 'string' }, targets: { type: 'string' } } as const;
 
 export const INHERITED_STREAMS = { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' } as const;
+
+export const UNPINNED_NPM_MESSAGE = 'The npm package fake requires a pinned tool version.';
+
+export const POLL_INTERVAL_MILLISECONDS = 10;
+
+export const SWIFT_PACKAGE = `${SWIFT_PACKAGE_HEADER}let package = Package(name: "Example", targets: [.target(name: "Example", path: ".")])
+`;
+
+export const YARN_CLIENTS = [
+    {
+        packageManager: { name: 'yarn', version: '1.22.22' },
+    },
+    {
+        packageManager: { name: 'yarn', version: '4.12.0' },
+    },
+] as const;
+
+export const PREVIOUS_BYTES = 'previous bytes\n';

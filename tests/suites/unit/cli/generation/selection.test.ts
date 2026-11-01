@@ -15,16 +15,11 @@ import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { CONFIG_PROJECT } from '#tests/config/setup/configurations.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
-
-import {
-    CONFIG_PROJECT,
-    UNPARSED_CONFIGS,
-    IGNORED_CHECK_FILES,
-    NESTED_PYTHON_SETTINGS,
-} from '#tests/config/generation/configs.ts';
+import { UNPARSED_CONFIGS, IGNORED_CHECK_FILES, NESTED_PYTHON_SETTINGS } from '#tests/config/generation/generate.ts';
 
 test('a child project receives Python configuration only after its first Python file', async () => {
     await using sandbox = await createGitSandbox({

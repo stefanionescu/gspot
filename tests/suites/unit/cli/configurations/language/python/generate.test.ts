@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
-import { PYVENV_HOME } from '#tests/config/python.ts';
 import { type RuffConfig } from '#tests/types/tools.ts';
+import { PYVENV_HOME } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 

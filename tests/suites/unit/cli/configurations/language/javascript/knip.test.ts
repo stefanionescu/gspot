@@ -10,8 +10,8 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { EMPTY_DEFAULT_SOURCE } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
@@ -22,7 +22,7 @@ import {
     KNIP_UNUSED_FILES,
     KNIP_WORKSPACE_FILES,
     KNIP_COMPONENT_FILES,
-} from '#tests/config/generation/configurations/language/javascript/javascript.ts';
+} from '#tests/config/configurations/javascript/checks.ts';
 
 const knipArguments = [...KNIP_ARGUMENTS, '--config', getManifestTarget('javascript', 'knip.json'), '--include'];
 

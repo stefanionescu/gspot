@@ -7,20 +7,21 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { GUIDE, README, LICENSE } from '#tests/config/documents.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { README, LICENSE } from '#tests/config/setup/configurations.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
+    GUIDE,
     MDX_FILES,
     MARKDOWN_FILES,
     TITLED_DOCUMENT,
     REQUEST_FLOW_IMAGE,
     MARKDOWNLINT_TABLES,
-} from '#tests/config/integration/checks/language/language.ts';
+} from '#tests/config/integration/language.ts';
 
 const installedSandbox = shareInstalledSandbox({
     configurations: ['markdown'],

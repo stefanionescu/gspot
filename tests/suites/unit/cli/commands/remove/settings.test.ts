@@ -9,11 +9,11 @@ import { readSettings } from '#cli/settings/read.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import type { ApplyReport } from '#cli/types/generation.ts';
-import { MANAGED_KEYS_NOTE } from '#tests/config/messages.ts';
 import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { TOOLS_CHANGED_NOTE } from '#tests/config/commands/samples.ts';
+import { TOOLS_CHANGED_NOTE } from '#tests/config/commands/edits.ts';
+import { MANAGED_KEYS_NOTE } from '#tests/config/setup/sandboxes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('remove deletes settings that only the removed configuration exposes and names the deleted keys', async () => {

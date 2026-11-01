@@ -3,7 +3,7 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { URL_MARKUP_CASES, SCRIPT_TYPE_CASES, INLINE_SCRIPT_PAGE } from '#tests/config/checks/language/language.ts';
+import { URL_MARKUP_CASES, SCRIPT_TYPE_CASES, INLINE_SCRIPT_PAGE } from '#tests/config/configurations/language.ts';
 
 test.each([...SCRIPT_TYPE_CASES])(
     'html/inline-scripts treats type "$type" like the browser',

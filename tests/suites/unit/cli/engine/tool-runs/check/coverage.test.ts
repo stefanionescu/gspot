@@ -11,7 +11,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { COVERAGE_PROJECT_FILES } from '#tests/config/engine/tool-runs/coverage.ts';
+import { COVERAGE_PROJECT_FILES } from '#tests/config/engine/tool-runs.ts';
 
 test.each(COVERAGE_PROJECT_FILES)(
     'pytest respects $name and only adds its generated omissions as a fallback',

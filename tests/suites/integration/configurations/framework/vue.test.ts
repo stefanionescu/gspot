@@ -2,7 +2,7 @@ import { test } from 'bun:test';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { VUE_CASES, VUE_SANDBOX } from '#tests/config/integration/checks/framework/vue.ts';
+import { VUE_CASES, VUE_SANDBOX } from '#tests/config/integration/vue.ts';
 
 const installedSandbox = shareInstalledSandbox({
     ...VUE_SANDBOX,

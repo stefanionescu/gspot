@@ -8,7 +8,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { ESCAPED_SCOPE_CONFIGURATIONS } from '#tests/config/generation/configurations/language/javascript/eslint/eslint.ts';
+import { ESCAPED_SCOPE_CONFIGURATIONS } from '#tests/config/configurations/javascript/overrides.ts';
 
 async function parseScopeShape(scopePath: string): Promise<string> {
     await using sandbox = await createGitSandbox({});

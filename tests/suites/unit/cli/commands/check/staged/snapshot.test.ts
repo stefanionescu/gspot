@@ -6,20 +6,19 @@ import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
-import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
-import { NOTES_MARKDOWN } from '#tests/config/documents.ts';
 import { createFileTree, type TestdirResult } from 'testdirs';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
+import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { DEPENDENCY_FILES_MESSAGE } from '#tests/config/messages.ts';
-import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { NOTES_MARKDOWN } from '#tests/config/setup/configurations.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { rmSync, existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { stat, chmod, mkdir, unlink, readFile, writeFile } from 'node:fs/promises';
-import { SCRIPT_SPACES, STAGED_PACKAGE_JSON, UPPERCASE_NOTES_MARKDOWN } from '#tests/config/commands/check/staged.ts';
+import { BASH_SYNTAX_CHECK, DEPENDENCY_FILES_MESSAGE } from '#tests/config/setup/sandboxes.ts';
+import { SCRIPT_SPACES, STAGED_PACKAGE_JSON, UPPERCASE_NOTES_MARKDOWN } from '#tests/config/commands/check.ts';
 
 async function createCaseClashingSandbox(): Promise<TestdirResult> {
     const sandbox = await createGitSandbox({});

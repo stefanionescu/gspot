@@ -9,12 +9,7 @@ import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-
-import {
-    PREFIX_TREE,
-    NEST_SUFFIX_FILES,
-    NESTJS_PREFIX_RESULTS,
-} from '#tests/config/checks/general/structure/structure.ts';
+import { PREFIX_TREE, NEST_SUFFIX_FILES, NESTJS_PREFIX_RESULTS } from '#tests/config/configurations/structure/files.ts';
 
 test('shared-prefixes groups files and folders once, and honors an ignore and a raised limit', async () => {
     const settings = buildSandboxSettings(['typescript'], { level: 'all' });

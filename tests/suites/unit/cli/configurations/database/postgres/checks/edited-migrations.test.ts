@@ -8,8 +8,8 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { NAME_COLUMN_SQL } from '#tests/config/configurations/database.ts';
 import { createMigrationHistory } from '#tests/setup/sandboxes/repositories.ts';
-import { NAME_COLUMN_SQL } from '#tests/config/checks/database/postgres/statements.ts';
 import { TEAMS_TABLE_SQL, TEAMS_MIGRATION_PATH } from '#tests/config/setup/sandboxes.ts';
 
 test('history checks compare committed migration changes with the selected base revision', async () => {

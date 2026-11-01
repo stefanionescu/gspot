@@ -14,7 +14,7 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
-import { BUILD_OUTPUT_CHECKS, WORKSPACE_SITE_FILES } from '#tests/config/checks/framework/site.ts';
+import { BUILD_OUTPUT_CHECKS, WORKSPACE_SITE_FILES } from '#tests/config/configurations/framework.ts';
 import { listBuiltFiles, readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
 
 test('build: a push run builds the site without changing committed dist files or Git status', async () => {

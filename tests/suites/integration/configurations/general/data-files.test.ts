@@ -5,21 +5,15 @@ import { stringify } from '@decimalturn/toml-patch';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runGitStep } from '#tests/setup/system/git.ts';
-import { UNCLOSED_SEQUENCE } from '#tests/config/yaml.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildJsonSchema } from '#cli/settings/editor-schema.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { UNCLOSED_SEQUENCE } from '#tests/config/setup/languages.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-
-import {
-    FILES_CASES,
-    FILES_SANDBOX,
-    YAML_SCOPE_FILES,
-    YAML_SCOPE_TABLES,
-} from '#tests/config/integration/checks/general/data-files.ts';
+import { FILES_CASES, FILES_SANDBOX, YAML_SCOPE_FILES, YAML_SCOPE_TABLES } from '#tests/config/integration/general.ts';
 
 async function assertYamlFiles(root: string, rule?: string): Promise<void> {
     const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', 'data-files/yaml', '--json']));

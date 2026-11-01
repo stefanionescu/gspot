@@ -3,11 +3,10 @@ import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
-import { NEEDS_GIT_MESSAGE } from '#tests/config/git.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { VERSION_ARGUMENTS, MALFORMED_SETTINGS, JSON_ARGUMENT_ERRORS } from '#tests/config/main.ts';
+import { NEEDS_GIT_MESSAGE, VERSION_ARGUMENTS, MALFORMED_SETTINGS, JSON_ARGUMENT_ERRORS } from '#tests/config/main.ts';
 
 test('gspot without a command prints the help to stderr and exits 2', async () => {
     await using sandbox = await testdir({ 'gspot.toml': MALFORMED_SETTINGS });

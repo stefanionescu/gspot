@@ -4,11 +4,11 @@ import * as filesystem from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
 import { openFiles } from '#cli/system/files/open.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { MODE_REPLACEMENTS } from '#tests/config/system.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { UNSAFE_PATH_MESSAGE } from '#tests/config/messages.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { link, stat, symlink, readFile } from 'node:fs/promises';
-import { MODE_REPLACEMENTS } from '#tests/config/system/files.ts';
+import { UNSAFE_PATH_MESSAGE } from '#tests/config/setup/sandboxes.ts';
 
 test.skipIf(isWindows)(
     'the system path format keeps POSIX names the portable rules refuse, and reads a link as the link itself',

@@ -10,14 +10,14 @@ import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { PRETTIER_OPTIONS_BY_FILE, FORMAT_OVERRIDES_SETTINGS } from '#tests/config/format.ts';
+import { PRETTIER_OPTIONS_BY_FILE, FORMAT_OVERRIDES_SETTINGS } from '#tests/config/setup/configurations.ts';
 
 import {
     STAGED_FORMAT_PATHS,
     STAGED_FORMAT_SOURCE,
     EDITORCONFIG_SAMPLES,
     STAGED_FORMAT_CHECK_ARGUMENTS,
-} from '#tests/config/integration/checks/general/general.ts';
+} from '#tests/config/integration/general.ts';
 
 const installedSandbox = shareInstalledSandbox({
     configurations: ['format'],

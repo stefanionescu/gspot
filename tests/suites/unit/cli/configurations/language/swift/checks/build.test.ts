@@ -8,15 +8,15 @@ import { runGitStep } from '#tests/setup/system/git.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
-import { CANCELED_CHECK_NOTE } from '#tests/config/messages.ts';
+import { SWIFT_PACKAGE } from '#tests/config/setup/programs.ts';
 import { rm, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { CANCELED_CHECK_NOTE } from '#tests/config/setup/sandboxes.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
-import { UNEXPECTED_PLAN_MESSAGE } from '#tests/config/checks/language/swift/messages.ts';
-import { SWIFT_PACKAGE, SWIFT_VALUE_SOURCE, SWIFT_LANGUAGE_PACKAGE } from '#tests/config/swift.ts';
+import { SWIFT_VALUE_SOURCE, SWIFT_LANGUAGE_PACKAGE } from '#tests/config/setup/languages.ts';
 
 import {
     runSandboxCheck,
@@ -29,8 +29,9 @@ import {
     PRIVATE_MAIN_FINDING,
     FAILED_BUILD_FINDINGS,
     PRIVATE_OTHER_FINDING,
+    UNEXPECTED_PLAN_MESSAGE,
     SWIFT_REPLACEMENT_CASES,
-} from '#tests/config/checks/language/swift/swift.ts';
+} from '#tests/config/configurations/swift.ts';
 
 test('compiler: a failed Swift build without source errors exits 2, and the next build passes', async () => {
     using resources = new DisposableStack();

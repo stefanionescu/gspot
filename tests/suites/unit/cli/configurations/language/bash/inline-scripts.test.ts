@@ -1,11 +1,11 @@
 import { test, expect } from 'bun:test';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { INLINE_SCRIPT_CASES } from '#tests/config/checks/language/bash/bash.ts';
+import { INLINE_SCRIPT_CASES } from '#tests/config/configurations/bash.ts';
 
 test('a heredoc that writes a data file is not reported', async () => {
     await using sandbox = await createGitSandbox({

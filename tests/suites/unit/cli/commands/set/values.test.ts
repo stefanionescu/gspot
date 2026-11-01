@@ -8,21 +8,21 @@ import { readSettings } from '#cli/settings/read.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { SETTING_REASON } from '#tests/config/setup/sandboxes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { rm, symlink, readFile, writeFile } from 'node:fs/promises';
+import { ROOT_EDITORCONFIG } from '#tests/config/commands/reports.ts';
 import { runGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
 import type { SettingsListJson } from '#cli/types/commands/reports.ts';
-import { ROOT_EDITORCONFIG } from '#tests/config/commands/contents.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
-    SETTING_REASON,
     LOOSENED_SETTINGS,
     STOPPED_APPLY_FILES,
     KEPT_SETTING_CHANGES,
     STRING_SETTING_VALUES,
-} from '#tests/config/commands/set.ts';
+} from '#tests/config/commands/edits.ts';
 
 test('set writes and unset removes a setting of a configuration that detection selects from package.json', async () => {
     await using sandbox = await createGitSandbox({

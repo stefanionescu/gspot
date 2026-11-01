@@ -7,7 +7,7 @@ import {
     SQL_SOURCE_NAMES,
     QUALIFIED_SQL_NAMES,
     QUALIFIED_FUNCTION_DECLARATION,
-} from '#tests/config/checks/general/naming/naming.ts';
+} from '#tests/config/configurations/naming/allowed-names.ts';
 
 test('every SQL name comes with its category and line', async () => {
     const { identifiers: found } = await extractSqlIdentifiers(

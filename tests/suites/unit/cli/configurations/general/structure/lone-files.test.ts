@@ -8,16 +8,16 @@ import { openSession } from '#cli/engine/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { LINGUIST_GENERATED_PATTERN } from '#tests/config/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { LINGUIST_GENERATED_PATTERN } from '#tests/config/setup/programs.ts';
 
 import {
     LONE_FILE_TREE,
     LONE_CODE_FILES,
     ROUTE_FILE_CASES,
     FRAMEWORK_COMPONENT_CASES,
-} from '#tests/config/checks/general/structure/structure.ts';
+} from '#tests/config/configurations/structure/files.ts';
 
 test('an untracked neighbor does not hide a selected tracked lone file', async () => {
     await using sandbox = await createGitSandbox({

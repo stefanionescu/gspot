@@ -11,7 +11,7 @@ import {
     TRACKED_SOURCE,
     MIGRATION_CASES,
     PRETTIER_PLUGIN_CASES,
-} from '#tests/config/repository/files/files.ts';
+} from '#tests/config/repository/files.ts';
 
 test('files are covered by extension, file name at any depth, tag and glob', () => {
     const configurationsByName = readConfigurations();

@@ -19,7 +19,7 @@ import {
     VERBOSITY_ARGUMENTS,
     FAILED_CHECK_REPORT,
     FINDINGS_TOOL_ARGUMENTS,
-} from '#tests/config/commands/check/report.ts';
+} from '#tests/config/commands/check.ts';
 
 async function createVerbositySandbox(
     findingsCommand: string[],

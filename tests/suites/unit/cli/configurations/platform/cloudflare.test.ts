@@ -8,7 +8,7 @@ import {
     CLOUDFLARE_HEADERS,
     CLOUDFLARE_REDIRECTS,
     SECURITY_HEADER_CASES,
-} from '#tests/config/checks/platform/platform.ts';
+} from '#tests/config/configurations/platform.ts';
 
 test('cloudflare/redirects reports each malformed redirect and each status Cloudflare does not support', async () => {
     await using sandbox = await createGitSandbox({

@@ -2,29 +2,30 @@ import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
 import { writeFile } from 'node:fs/promises';
-import { TYPO } from '#tests/config/spelling.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { COMMENT_SOURCE } from '#tests/config/typescript.ts';
-import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
+import { TYPO } from '#tests/config/setup/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { writeSandboxChanges, applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { VALE_INI, EXAMPLE_STYLE_FOLDER } from '#tests/config/integration/checks/general/prose/vale.ts';
 import { spawnGspot, spawnRootCheck, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
+    VALE_INI,
     STYLE_CASES,
+    PROSE_SANDBOX,
+    COMMENT_SOURCE,
     ALT_TEXT_CASES,
     LINK_TEXT_GUIDE,
     VOCABULARY_SOURCE,
     HEADING_CASE_GUIDE,
+    EXAMPLE_STYLE_FOLDER,
     VERSION_RANGE_SOURCE,
     SUPPRESSION_COMMENTS,
     CORRECTED_LINK_TEXT_GUIDE,
-} from '#tests/config/integration/checks/general/prose/styles.ts';
+} from '#tests/config/integration/prose.ts';
 
 const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);
 

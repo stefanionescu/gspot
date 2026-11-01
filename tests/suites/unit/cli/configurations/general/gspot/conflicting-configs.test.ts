@@ -4,7 +4,7 @@ import { writeFile } from 'node:fs/promises';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { CONFLICTING_CONFIG_CASES } from '#tests/config/checks/general/gspot/gspot.ts';
+import { CONFLICTING_CONFIG_CASES } from '#tests/config/configurations/gspot/files.ts';
 
 test.each([...CONFLICTING_CONFIG_CASES])(
     'gspot/conflicting-configs at level %s reports the settings file of each tool gspot runs',

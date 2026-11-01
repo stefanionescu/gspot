@@ -5,15 +5,14 @@ import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
 import { commitAll, markExecutable } from '#tests/setup/system/git.ts';
+import { CONTINUED_TRAP_SOURCE } from '#tests/config/setup/languages.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { CONTINUED_TRAP_SOURCE } from '#tests/config/parsers/code/code.ts';
-import { PASSED_BASH_RESULTS } from '#tests/config/checks/language/bash/runs.ts';
-import { BASH_SAFETY_CASES, COMMAND_SAFETY_CASES } from '#tests/config/checks/language/bash/bash.ts';
+import { BASH_SAFETY_CASES, PASSED_BASH_RESULTS, COMMAND_SAFETY_CASES } from '#tests/config/configurations/bash.ts';
 
 test('a recursive removal outside a mktemp cleanup trap is reported', async () => {
     await using sandbox = await createGitSandbox({

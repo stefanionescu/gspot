@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { SITE_SANDBOX } from '#tests/config/site.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -11,12 +10,13 @@ import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
+    SITE_SANDBOX,
     OUTPUT_CASES,
     ALT_TEXT_PAGE,
     TWO_SITE_TABLES,
     BUILT_HTML_SITES,
     MISSING_ALT_PAGE,
-} from '#tests/config/integration/checks/framework/site.ts';
+} from '#tests/config/integration/site.ts';
 
 const installedSandbox = shareInstalledSandbox(SITE_SANDBOX);
 

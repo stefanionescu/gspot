@@ -14,7 +14,7 @@ import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { writeProgramCommand, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
-import { INVALID_SITEMAP_URLS, PURGECSS_STYLE_CASES } from '#tests/config/checks/framework/site.ts';
+import { INVALID_SITEMAP_URLS, PURGECSS_STYLE_CASES } from '#tests/config/configurations/framework.ts';
 
 test('a sitemap index supplies the base path for encoded and CDATA page URLs and Lychee remaps', async () => {
     await using sandbox = await createGitSandbox({

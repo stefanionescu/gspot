@@ -8,8 +8,8 @@ import { isWindows } from '#tests/setup/system/platform.ts';
 import { listTrackedFiles } from '#cli/repository/files/tracked.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { OUTSIDE_LINK_CASES } from '#tests/config/repository/files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { OUTSIDE_LINK_CASES } from '#tests/config/repository/files/files.ts';
 
 test.each([...OUTSIDE_LINK_CASES])('the repository file list leaves out the outside link %s', async (name, target) => {
     await using sandbox = await testdir({

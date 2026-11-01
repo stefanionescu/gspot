@@ -12,7 +12,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
-import { DATABASE_SCHEMAS, SUPABASE_TYPES_OUTPUT } from '#tests/config/checks/cross-configuration/generator-outputs.ts';
+import { DATABASE_SCHEMAS, SUPABASE_TYPES_OUTPUT } from '#tests/config/configurations/general.ts';
 
 async function prepareSupabaseCheck(
     root: string,

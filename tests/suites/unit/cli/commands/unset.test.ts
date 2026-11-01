@@ -3,9 +3,9 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { parse } from '@decimalturn/toml-patch';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { BUN_SCANNER_SETTINGS } from '#tests/config/toml.ts';
-import { UNSET_REFUSALS } from '#tests/config/commands/commands.ts';
+import { UNSET_REFUSALS } from '#tests/config/commands/edits.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { BUN_SCANNER_SETTINGS } from '#tests/config/setup/languages.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each([...UNSET_REFUSALS])(

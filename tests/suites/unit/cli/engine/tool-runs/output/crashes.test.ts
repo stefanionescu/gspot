@@ -1,7 +1,6 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { TYPE_ERROR_MESSAGE } from '#tests/config/typescript.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { isReportedCrash, formatOutputTail, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 
@@ -9,10 +8,11 @@ import {
     BASE_CHECK,
     ESLINT_CRASH,
     CRASH_TAIL_CASES,
+    TYPE_ERROR_MESSAGE,
     ASTRO_CHECK_OUTPUT,
     ASTRO_CHECK_SUMMARY,
     ESLINT_MANIFEST_TOOL,
-} from '#tests/config/engine/tool-runs/check.ts';
+} from '#tests/config/engine/tool-runs.ts';
 
 test('a shortened failure output keeps the last line of stdout and of stderr', () => {
     const progress = Array.from({ length: 30 }, (_, index) => `progress ${String(index)}`).join('\n');

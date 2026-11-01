@@ -4,7 +4,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildIgnoreSections } from '#cli/generation/ignores.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { CONFIG_PROJECT } from '#tests/config/generation/configs.ts';
+import { CONFIG_PROJECT } from '#tests/config/setup/configurations.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildConfigs, buildConfigFile } from '#cli/generation/configs.ts';
 

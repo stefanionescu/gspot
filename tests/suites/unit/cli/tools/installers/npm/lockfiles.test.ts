@@ -7,7 +7,7 @@ import {
     LOCKFILE_REGISTRY,
     LOCKFILE_SECURITY_CASES,
     LOCKFILE_REGISTRY_CASES,
-} from '#tests/config/tools/installers/npm/npm.ts';
+} from '#tests/config/tools/npm.ts';
 
 test.each([...ROOT_DEPENDENCIES])(
     'a $name lockfile is current only with the root development dependencies',

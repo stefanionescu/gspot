@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { SKIP_REASON_CASES } from '#tests/config/configurations/swift.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { SKIP_REASON_CASES } from '#tests/config/checks/language/swift/swift.ts';
 
 test.each([...SKIP_REASON_CASES])(
     'swift/skip-reasons checks the reason argument of `$body`',

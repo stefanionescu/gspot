@@ -1,4 +1,5 @@
 import { test, expect } from 'bun:test';
+import { CONTINUED_TRAP_SOURCE } from '#tests/config/setup/languages.ts';
 import { listCodeLines, parseBashScript } from '#cli/parsers/code/bash.ts';
 
 import {
@@ -7,9 +8,8 @@ import {
     QUOTED_TRAP_CALLS,
     BASH_COMMENT_CASES,
     MKTEMP_CLEANUP_CASES,
-    CONTINUED_TRAP_SOURCE,
     FORWARDING_CALL_CASES,
-} from '#tests/config/parsers/code/code.ts';
+} from '#tests/config/parsers/bash.ts';
 
 test.each(BASH_COMMENT_CASES)(
     'Bash comments keep quoted and parameter hashes as code: %s',

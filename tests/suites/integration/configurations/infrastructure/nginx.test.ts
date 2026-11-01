@@ -9,12 +9,7 @@ import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { isLinux, hasToolBuild } from '#tests/setup/system/platform.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-
-import {
-    NGINX_SERVER,
-    NGINX_SCOPE_TABLES,
-    NGINX_INCLUDE_FILES,
-} from '#tests/config/integration/checks/infrastructure.ts';
+import { NGINX_SERVER, NGINX_SCOPE_TABLES, NGINX_INCLUDE_FILES } from '#tests/config/integration/infrastructure.ts';
 
 test.skipIf(!isLinux || Bun.which('docker') === null)(
     'nginx/syntax follows include globs to the source line and tells invalid configuration from an unavailable image',

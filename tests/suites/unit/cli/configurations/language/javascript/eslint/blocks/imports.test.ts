@@ -4,12 +4,7 @@ import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { HOST_MODULE } from '#tests/config/generation/configurations/language/javascript/paths.ts';
-
-import {
-    SORT_CASES,
-    SORT_RULES,
-} from '#tests/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
+import { SORT_CASES, SORT_RULES, HOST_MODULE } from '#tests/config/configurations/javascript/blocks.ts';
 
 test.each(['all'] as const)(
     'imports and exports are sorted at level all only, in root and child scopes (%s)',

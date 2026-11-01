@@ -21,7 +21,7 @@ import {
     VALE_OUTPUT_CASES,
     VALE_SANDBOX_FILES,
     VALE_INSTALLED_FILES,
-} from '#tests/config/checks/general/general.ts';
+} from '#tests/config/configurations/general.ts';
 
 test('Vale gets the timeout setting', async () => {
     await using sandbox = await createGitSandbox({});

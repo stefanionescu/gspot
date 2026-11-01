@@ -4,14 +4,14 @@ import { writeFile } from 'node:fs/promises';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { SEMGREP_CHECK } from '#tests/config/integration/checks/general/security/sandbox.ts';
+import { SEMGREP_CHECK } from '#tests/config/integration/security/semgrep.ts';
 import { spawnGspot, listFindingRows, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     SENSITIVE_FILES,
     SENSITIVE_FINDINGS,
     CORRECTED_SENSITIVE_FILES,
-} from '#tests/config/integration/checks/general/security/sensitive-data.ts';
+} from '#tests/config/integration/security/sensitive-data.ts';
 
 test.skipIf(!hasToolBuild('semgrep'))(
     'Semgrep reports secrets in log calls and UserDefaults and a JWT check without algorithms, and passes after the fix',

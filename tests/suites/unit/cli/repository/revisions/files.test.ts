@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { readHead } from '#cli/repository/revisions/files.ts';
-import { UNREADABLE_HISTORY_MESSAGE } from '#tests/config/git.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { UNREADABLE_HISTORY_MESSAGE } from '#tests/config/repository/files.ts';
 
 test('unborn history is empty, and a broken HEAD refuses committed history', async () => {
     await using sandbox = await createGitSandbox({});

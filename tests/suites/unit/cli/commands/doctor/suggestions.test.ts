@@ -9,8 +9,13 @@ import type { DoctorReport } from '#cli/types/commands/reports.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { STYLELINT_FILES, COMMITLINT_PACKAGE } from '#tests/config/authored-configs.ts';
-import { REMOVE_SUGGESTIONS, CI_PREFERENCE_CASES, REMOVED_CONFIGURATION_CASES } from '#tests/config/commands/doctor.ts';
+import { STYLELINT_FILES, COMMITLINT_PACKAGE } from '#tests/config/setup/configurations.ts';
+
+import {
+    REMOVE_SUGGESTIONS,
+    CI_PREFERENCE_CASES,
+    REMOVED_CONFIGURATION_CASES,
+} from '#tests/config/commands/reports.ts';
 
 test.each([
     {

@@ -15,7 +15,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { RULE_PAGES, UNKNOWN_RULES, RULE_PAGE_SETTINGS } from '#tests/config/commands/explain.ts';
+import { RULE_PAGES, UNKNOWN_RULES, RULE_PAGE_SETTINGS } from '#tests/config/commands/reports.ts';
 
 async function readToolRules(name: string, specifier: string): Promise<Record<string, unknown>> {
     if (name === '@gspothq/eslint-plugin') return plugin.rules;

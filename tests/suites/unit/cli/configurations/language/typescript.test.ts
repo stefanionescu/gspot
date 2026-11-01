@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { STRICT_TSCONFIG_TEXT } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { STRICT_TSCONFIG_TEXT } from '#tests/config/setup/languages.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
@@ -18,7 +18,7 @@ import {
     DEFAULT_LEVEL_TSCONFIG,
     MISSING_TSCONFIG_MESSAGE,
     ALL_LEVEL_OPTION_FINDINGS,
-} from '#tests/config/checks/language/language.ts';
+} from '#tests/config/configurations/language.ts';
 
 test.each([...TSCONFIG_READ_ERRORS])(
     '$name is a read error that names the file, not missing options',

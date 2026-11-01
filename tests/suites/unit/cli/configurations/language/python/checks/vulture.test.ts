@@ -3,7 +3,6 @@ import { getTool } from '#cli/tools/pins.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
-import { OS_SOURCE } from '#tests/config/python.ts';
 import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
@@ -12,8 +11,8 @@ import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { VULTURE_OUTPUT } from '#tests/config/checks/language/python.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { OS_SOURCE, VULTURE_OUTPUT } from '#tests/config/configurations/python.ts';
 
 test('vulture reads every Python file of the scope and reports unused definitions and unreachable code only', async () => {
     await using sandbox = await createGitSandbox({

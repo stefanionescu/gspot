@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { UNUSED_NAME_CASES } from '#tests/config/checks/general/naming/allowed-names.ts';
+import { UNUSED_NAME_CASES } from '#tests/config/configurations/naming/allowed-names.ts';
 
 test.each([...UNUSED_NAME_CASES])(
     'naming/allowed-names reports allowed names that no identifier or path uses: $name',

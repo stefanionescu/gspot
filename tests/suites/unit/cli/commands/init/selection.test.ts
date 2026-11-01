@@ -8,8 +8,6 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { NODE_SCRIPT } from '#tests/config/typescript.ts';
-import { UNCLOSED_PACKAGES } from '#tests/config/yaml.ts';
 import type { InitJson } from '#cli/types/commands/edits.ts';
 import { LEVELS, GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
@@ -18,6 +16,7 @@ import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { listAlwaysSelected } from '#tests/setup/cli/manifests.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { NODE_SCRIPT, UNCLOSED_PACKAGES } from '#tests/config/setup/languages.ts';
 
 import {
     TOOL_ONLY_PACKAGE,
@@ -25,7 +24,7 @@ import {
     NEXTJS_LOCALE_CASES,
     CONFIGURATION_CHOICES,
     PLATFORM_PROJECT_FILES,
-} from '#tests/config/commands/init/init.ts';
+} from '#tests/config/commands/init/plan.ts';
 
 async function listPlannedConfigurations(root: string): Promise<string[]> {
     const result = await runGspot(root, ['init', '--json']);

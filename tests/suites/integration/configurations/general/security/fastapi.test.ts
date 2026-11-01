@@ -7,14 +7,12 @@ import { buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 
 import {
-    FASTAPI_SOURCE,
-    FASTAPI_CONFIGURATION_CASES,
-} from '#tests/config/integration/checks/general/security/security.ts';
-import {
     SEMGREP_CHECK,
+    FASTAPI_SOURCE,
     SEMGREP_SANDBOX,
     SEMGREP_PROJECT_FILES,
-} from '#tests/config/integration/checks/general/security/sandbox.ts';
+    FASTAPI_CONFIGURATION_CASES,
+} from '#tests/config/integration/security/semgrep.ts';
 
 describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
     const installedSandbox = shareInstalledSandbox(SEMGREP_SANDBOX);

@@ -4,7 +4,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { CONFIG_PROJECT } from '#tests/config/generation/configs.ts';
+import { CONFIG_PROJECT } from '#tests/config/setup/configurations.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('generated ESLint modules hold static imports and calls without executable expressions', async () => {

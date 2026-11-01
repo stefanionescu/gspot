@@ -7,18 +7,17 @@ import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
 import type { Check } from '#cli/types/manifests.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { CAFE_SCRIPT_PATH } from '#tests/config/paths.ts';
 import { isLinux } from '#tests/setup/system/platform.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { FAILED_RUN } from '#tests/config/engine/samples.ts';
-import { GREETING_SOURCE } from '#tests/config/typescript.ts';
 import { outputSchema } from '#cli/schemas/manifests/tools.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
+import { GREETING_SOURCE } from '#tests/config/setup/languages.ts';
+import { CAFE_SCRIPT_PATH } from '#tests/config/setup/programs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { BASE_CHECK } from '#tests/config/engine/tool-runs/check.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import type { Finding, CommandRun } from '#cli/types/engine/tool-runs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { FAILED_RUN, BASE_CHECK } from '#tests/config/engine/tool-runs.ts';
 import { parseOutput, hasRuleOutput } from '#cli/engine/outputs/formats.ts';
 import { addCommandLine, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 
@@ -31,7 +30,7 @@ import {
     OUTPUT_PARSE_RESULTS,
     FIXABLE_FORMAT_CASES,
     BRACKETED_WORD_FINDINGS,
-} from '#tests/config/engine/outputs/formats.ts';
+} from '#tests/config/engine/outputs.ts';
 
 function readParseResult(parse: () => Finding[]): { findings: readonly Finding[] } | { error: string } {
     try {

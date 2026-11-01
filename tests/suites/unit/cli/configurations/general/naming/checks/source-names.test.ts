@@ -11,7 +11,7 @@ import {
     NAME_POSITION_CASES,
     DECLARATION_ORDER_CASES,
     JAVASCRIPT_PARAMETER_NAMES,
-} from '#tests/config/checks/general/naming/source-names.ts';
+} from '#tests/config/configurations/naming/source-names.ts';
 
 async function listIdentifiers(file: string, source: string, language: string): Promise<Identifier[]> {
     using resources = new DisposableStack();

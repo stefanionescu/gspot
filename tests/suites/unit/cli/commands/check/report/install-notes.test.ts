@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { formatRunReport } from '#cli/commands/check/report.ts';
-import { FAILED_CHECK_REPORT } from '#tests/config/commands/check/report.ts';
+import { FAILED_CHECK_REPORT } from '#tests/config/commands/check.ts';
 
 test('a report of selected checks keeps the install advice in the note and prints it once', () => {
     const report = {

@@ -11,7 +11,7 @@ import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { GENERATED_BASH_FILES } from '#tests/config/checks/general/gspot/gspot.ts';
+import { GENERATED_BASH_FILES } from '#tests/config/configurations/gspot/files.ts';
 
 test('gspot/generated-files reports an edited file with the apply help and passes after apply, while tool lockfiles stay missing', async () => {
     await using sandbox = await createGitSandbox(GENERATED_BASH_FILES);

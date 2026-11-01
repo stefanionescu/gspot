@@ -3,17 +3,17 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { markExecutable } from '#tests/setup/system/git.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     LAYOUT_RULE_CASES,
     SCRIPT_LAYOUT_CASES,
     ENVIRONMENT_READER_SCOPE_TABLES,
-} from '#tests/config/checks/language/bash/script-layout.ts';
+} from '#tests/config/configurations/bash.ts';
 
 test('an environment reader that only its scope declares may run top-level commands', async () => {
     await using sandbox = await createGitSandbox({

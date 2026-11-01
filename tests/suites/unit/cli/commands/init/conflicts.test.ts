@@ -1,43 +1,45 @@
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
-import { INIT_FILES } from '#tests/config/init.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { readSettings } from '#cli/settings/read.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { GOOGLE_PYPROJECT } from '#tests/config/python.ts';
 import type { InitJson } from '#cli/types/commands/edits.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { LEVELS, GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
-import { EMPTY_DEFAULT_SOURCE } from '#tests/config/typescript.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { INVALID_CSS } from '#tests/config/commands/init/sources.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { SQLFLUFF_KEPT_NOTE } from '#tests/config/commands/init/messages.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { stat, chmod, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
-import { SQL_COMMAND_CHECK, SQL_SEARCH_ARGUMENTS } from '#tests/config/commands/samples.ts';
+import { GOOGLE_PYPROJECT, EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
 
 import {
+    INIT_FILES,
+    SQL_COMMAND_CHECK,
+    SQL_SEARCH_ARGUMENTS,
+    SYNCPACK_PACKAGE_FILES,
+} from '#tests/config/setup/sandboxes.ts';
+import {
+    INVALID_CSS,
     SYNCPACK_FILE,
     HOOKS_PATH_CASES,
     HOOK_NAMED_SOURCE,
     SQL_PACKAGE_FILES,
+    SQLFLUFF_KEPT_NOTE,
     SHARED_SETUP_CONFIG,
     LINKED_SETUP_CONFIG,
-    SYNCPACK_PACKAGE_FILES,
     INACTIVE_CONFIGURATIONS,
     REPLACED_CONFIG_DELETIONS,
     REPLACED_PYPROJECT_TABLES,
     STYLELINT_REPLACEMENT_CASES,
-} from '#tests/config/commands/init/conflicts.ts';
+} from '#tests/config/commands/init/plan.ts';
 
 test.each([...HOOKS_PATH_CASES])(
     'the init plan tells hook scripts in the source apart from the hooks folder Git uses ($hooksPath)',

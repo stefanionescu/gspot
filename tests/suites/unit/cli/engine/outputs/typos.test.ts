@@ -1,15 +1,15 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { planChecks } from '#cli/engine/plan.ts';
-import { TYPO } from '#tests/config/spelling.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
+import { TYPO } from '#tests/config/setup/configurations.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { TYPO_REPORT, TYPOS_REPORT_ERRORS, TYPOS_FINDING_CASES } from '#tests/config/engine/outputs/outputs.ts';
+import { TYPO_REPORT, TYPOS_REPORT_ERRORS, TYPOS_FINDING_CASES } from '#tests/config/engine/outputs.ts';
 
 test('the typos format tells findings from fatal exits', async () => {
     await using sandbox = await createGitSandbox({

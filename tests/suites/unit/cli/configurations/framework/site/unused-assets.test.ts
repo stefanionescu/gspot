@@ -8,7 +8,7 @@ import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { GLOB_ASSET_CASES, SCOPE_ASSET_FILES, ASSET_REFERENCE_CASES } from '#tests/config/checks/framework/site.ts';
+import { GLOB_ASSET_CASES, SCOPE_ASSET_FILES, ASSET_REFERENCE_CASES } from '#tests/config/configurations/framework.ts';
 
 async function prepareAssetRepository(resources: AsyncDisposableStack, files: Record<string, string>): Promise<string> {
     const sandbox = resources.use(

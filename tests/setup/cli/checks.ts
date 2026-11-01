@@ -1,8 +1,6 @@
 import { spyOn } from 'bun:test';
 import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { ROOT_LABEL } from '#tests/config/messages.ts';
-import { SWIFT_PACKAGE } from '#tests/config/swift.ts';
 import { runBuiltInCheck } from '#cli/engine/results.ts';
 import * as environment from '#cli/system/environment.ts';
 import { getTool, findToolName } from '#cli/tools/pins.ts';
@@ -17,6 +15,7 @@ import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import type { NamingSettings } from '#cli/types/configurations/general.ts';
+import { ROOT_LABEL, SWIFT_PACKAGE } from '#tests/config/setup/programs.ts';
 import { CHECK_CODE, selectCheckCode } from '#cli/configurations/registry.ts';
 import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
