@@ -43,6 +43,27 @@ test('the src files of a Vite app may read only VITE_ variables, and its other f
     expect(rules['server/src/main.ts']!['gspot/no-client-env']?.[1]).toMatchObject({ client: false });
 });
 
+test('the server files of a SvelteKit app under src may read any variable', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript', 'svelte']),
+        'package.json': '{"private":true,"type":"module","devDependencies":{"vite":"0.0.0-test"}}',
+        'src/routes/+page.svelte': '<p>Hello</p>\n',
+        'src/routes/api/+server.ts': 'export const value = 1;\n',
+        'src/routes/+page.server.ts': 'export const value = 1;\n',
+        'src/lib/server/database.ts': 'export const value = 1;\n',
+    });
+    const eslint = await buildEslint(sandbox.path);
+    const rules = await readEslintRules(eslint, [
+        'src/routes/+page.svelte',
+        'src/routes/api/+server.ts',
+        'src/routes/+page.server.ts',
+        'src/lib/server/database.ts',
+    ]);
+    expect(rules['src/routes/+page.svelte']!['gspot/no-client-env']?.[1]).toMatchObject({ client: true });
+    for (const file of ['src/routes/api/+server.ts', 'src/routes/+page.server.ts', 'src/lib/server/database.ts'])
+        expect(rules[file]!['gspot/no-client-env']?.[1]).toMatchObject({ client: false });
+});
+
 test('only the scope that depends on vite gets the VITE_ prefix', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['typescript'], {

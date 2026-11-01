@@ -221,7 +221,7 @@ all_level_rules = ["no-labels", "gspot/no-identical-functions", "no-new", "no-ne
 
 [[eslint.client_env]]
 dependencies = ["vite"]
-files = ["src/**/*.{js,jsx,ts,tsx,vue,svelte}"]
+files = ["src/**/*.{js,jsx,ts,tsx,vue,svelte}", "!src/**/+server.*", "!src/**/*.server.*", "!src/lib/server/**"]
 public_prefixes = ["VITE_"]
 
 [[config_file]]
