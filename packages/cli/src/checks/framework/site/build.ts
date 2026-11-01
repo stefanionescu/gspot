@@ -37,7 +37,11 @@ async function runSiteBuild(session: CheckSession, planned: PlannedCheck, copyRo
 
 function readSiteBuild(session: CheckSession, planned: PlannedCheck): Promise<SiteBuild> {
     return remember(session.cache, SITE_BUILDS, join(session.root, planned.scope.path), async () => {
-        const folder = await createCheckCopy(session, planned);
+        // A build can read tracked files at the repository root, such as the README, from outside its scope.
+        const rootFiles = session.repository.index
+            .map((indexFile) => indexFile.path)
+            .filter((path) => !path.includes('/'));
+        const folder = await createCheckCopy(session, planned, rootFiles);
         return runSiteBuild(session, planned, session.resources.use(folder).path);
     });
 }

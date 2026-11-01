@@ -35,6 +35,26 @@ test('build: a push run builds the site without changing committed dist files or
     expect(await readFile(join(sandbox.path, 'dist/index.html'), 'utf8')).toBe('committed output\n');
 });
 
+test('build: a scope build reads the tracked files at the repository root in its copy', async () => {
+    const command = buildProgramCommand('fakes/site-build', '--copy', '../README.md=dist/index.html');
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], {
+            level: 'all',
+            tables: `[[scope]]\npath = "docs"\nconfigurations = ["site"]\n[scope.site]\nbuild_command = ${JSON.stringify(command)}\n`,
+        }),
+        'README.md': '# Project\n',
+        'docs/page.md': '# Page\n',
+    });
+    commitAll(sandbox.path);
+    using resources = new DisposableStack();
+    const session = await openSession(sandbox.path, { resources });
+    const build = await readSuccessfulBuild(
+        buildCheckSession(session, CHECK_GENERATION),
+        planSandboxCheck(session, 'site/build', { scope: 'docs' }),
+    );
+    expect(await readFile(join(build.folder, 'index.html'), 'utf8')).toBe('# Project\n');
+});
+
 test('build: a build that reads an untracked file fails until the file is in the paths', async () => {
     const command = buildProgramCommand('fakes/site-build', '--copy', 'local-input.txt=dist/index.html');
     await using sandbox = await createGitSandbox({
