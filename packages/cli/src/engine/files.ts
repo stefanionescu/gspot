@@ -211,6 +211,7 @@ export function selectCheckFiles(
             ? listRunFiles(planned, scopeCheck, scopePath)
             : listScopeFiles(planned, scopePath, check.runs);
     files = listReadableFiles(planned, check, files);
+    if (check.command !== undefined) files = files.filter((file) => !file.tags.includes('symlink'));
     if (!keepsChildScopes) files = files.filter((file) => children.every((child) => !isInScope(file.path, child)));
     if (check.runs === 'files')
         return { ...stripIgnoredFiles(listNarrowedFiles(planned, scopeCheck, files), check, scope), triggerPaths };

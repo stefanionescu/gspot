@@ -44,6 +44,13 @@ test('a dangling tracked link is listed without reading the file it points to', 
     ]);
 });
 
+test('a dangling untracked link stays out of the inventory', async () => {
+    await using sandbox = await createGitSandbox({ 'source.ts': 'export {};\n' });
+    await symlink('missing.ts', join(sandbox.path, 'linked.ts'), 'file');
+    const repository = await readTestRepository(sandbox.path);
+    expect(repository.files.map(({ path }) => path)).toStrictEqual(['source.ts']);
+});
+
 test.each(
     [
         { name: 'a nested folder', folder: 'nested' },

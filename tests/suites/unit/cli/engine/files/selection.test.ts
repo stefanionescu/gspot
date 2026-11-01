@@ -208,3 +208,20 @@ test('a project check leaves binary files out of its planned inputs', async () =
         planned.map(({ check, files }) => ({ check: check.id, files: files.map(({ path }) => path) })),
     ).toStrictEqual([{ check: 'docker/dockerignore', files: ['Dockerfile', 'gspot.toml'] }]);
 });
+
+test('a link stays out of the file list of a tool and stays in the list of a built-in check', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['markdown']),
+        'AGENTS.md': '# Agents\n',
+    });
+    await symlink('AGENTS.md', join(sandbox.path, 'CLAUDE.md'), 'file');
+    commitAll(sandbox.path);
+    const planned = planChecks(await openSession(sandbox.path), {
+        stage: 'all',
+        only: ['format/prettier', 'repository/local-files'],
+    });
+    const paths = (id: string) => planned.find(({ check }) => check.id === id)?.files.map((file) => file.path);
+    expect(paths('format/prettier')).not.toContain('CLAUDE.md');
+    expect(paths('format/prettier')).toContain('AGENTS.md');
+    expect(paths('repository/local-files')).toContain('CLAUDE.md');
+});

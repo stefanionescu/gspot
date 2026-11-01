@@ -17,13 +17,13 @@ import {
     GIT_UNTRACKED_FILES_ARGUMENTS,
 } from '#cli/config/repository/files.ts';
 
-function readSymlinkFile(root: string, path: string): ListedFile | undefined {
+function readSymlinkFile(root: string, path: string, isTracked: boolean): ListedFile | undefined {
     const link = { path, size: 0, executable: false, isSymlink: true };
     let target: string;
     try {
         target = realpathSync(join(root, path));
     } catch (error) {
-        if (hasErrorCode(error, 'ENOENT') || hasErrorCode(error, 'ELOOP')) return link;
+        if (hasErrorCode(error, 'ENOENT') || hasErrorCode(error, 'ELOOP')) return isTracked ? link : undefined;
         throw error;
     }
     if (!isInside(relative(realpathSync(root), target))) return undefined;
@@ -34,7 +34,7 @@ function readSymlinkFile(root: string, path: string): ListedFile | undefined {
 function readListedFile(
     root: string,
     path: string,
-    executables: ReadonlySet<string> | undefined,
+    { executables, tracked }: { executables: ReadonlySet<string> | undefined; tracked: ReadonlySet<string> },
 ): ListedFile | undefined {
     const stat = lstatSync(join(root, path), { throwIfNoEntry: false });
     if (stat === undefined) return undefined;
@@ -42,7 +42,7 @@ function readListedFile(
         if (INSTALLED_DEPENDENCY_FOLDERS.has(posix.basename(path))) return undefined;
         return isInInstalledFolder(extractParentFolder(path))
             ? { path, size: stat.size, executable: false, isSymlink: true }
-            : readSymlinkFile(root, path);
+            : readSymlinkFile(root, path, tracked.has(path));
     }
     if (!stat.isFile()) return undefined;
     const isExecutable = executables === undefined ? (stat.mode & EXECUTABLE_BITS) !== 0 : executables.has(path);
@@ -96,7 +96,8 @@ export async function listTrackedFiles(
     unreadablePaths: string[],
 ): Promise<ListedFile[]> {
     const listed = await listGitFiles(root, GIT_UNTRACKED_FILES_ARGUMENTS, undefined, unreadablePaths);
-    const paths = [...index.map((indexFile) => indexFile.path), ...listed.split('\0').filter(Boolean)];
+    const tracked = new Set(index.map((indexFile) => indexFile.path));
+    const paths = [...tracked, ...listed.split('\0').filter(Boolean)];
     const submodules = listSubmodulePaths(index);
     const executables =
         process.platform === 'win32'
@@ -112,6 +113,6 @@ export async function listTrackedFiles(
     return [...new Set(paths)]
         .filter((path) => submodules.every((module) => !isInScope(path, module)))
         .toSorted((a, b) => compareText(a, b))
-        .map((path) => readListedFile(root, path, executables))
+        .map((path) => readListedFile(root, path, { executables, tracked }))
         .filter((file) => file !== undefined);
 }
