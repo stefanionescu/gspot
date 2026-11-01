@@ -11,14 +11,10 @@ import type { Config, Configuration } from '#cli/types/manifests.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import type { PlannedEslintFile } from '#cli/types/generation/eslint.ts';
 import { buildFilePatterns } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
+import { CODE_LANGUAGES } from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 import { BASE_RULES } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
 import { buildRuleOptions } from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
 import { buildScopeLimitRules } from '#cli/generation/configurations/language/javascript/eslint/blocks/limits.ts';
-
-import {
-    BASE_SELECTORS,
-    CODE_LANGUAGES,
-} from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 
 function listConfigConfigurations(scopes: Scope[], scope: Scope, config: Config): Configuration[] {
     if (config.per_scope) return scope.configurations;
@@ -68,7 +64,6 @@ export function buildPlannedEslintFile(planned: PlannedConfig): PlannedEslintFil
         levelRules: {
             code: {
                 ...BASE_RULES,
-                'no-restricted-syntax': ['error', ...(level === 'all' ? BASE_SELECTORS : [])],
                 ...buildScopeLimitRules(settings).code,
             },
             javascript: buildScopeLimitRules(settings).javascript,

@@ -16,7 +16,7 @@ export type PathExpressions = { includes: string[]; excludes: string[] };
 
 export type SelectorPaths = Pick<ParsedManifest['eslint']['selectors'][number], 'selector' | 'message'> & {
     files?: string[];
-    except?: string[];
+    ignores?: string[];
 };
 
 export type EslintRuleBlock = PathExpressions & { scope: string; rules: Record<string, unknown> };
@@ -31,13 +31,7 @@ export type BlockWriter = {
     ruleOptions: EslintRuleOptions[];
 };
 
-export type SelectorBlock = {
-    scope?: string;
-    ignoredScopes?: string[];
-    files?: (string | string[])[];
-    ignores?: string[];
-    selectors: { selector: string; message: string }[];
-};
+export type SelectorBlock = { scope: string; ignoredScopes: string[]; selectors: SelectorPaths[] };
 
 export type EslintBlock = {
     files: (string | string[])[];

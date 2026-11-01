@@ -21,7 +21,7 @@ test('a template message to a logger method, including log, is reported, and con
     const [result] = await eslint.lintFiles(['source.js']);
     expect(
         result?.messages
-            .filter(({ ruleId, message }) => ruleId === 'no-restricted-syntax' && message.startsWith('Log a stable'))
+            .filter(({ ruleId, message }) => ruleId === 'gspot/restricted-syntax' && message.startsWith('Log a stable'))
             .map(({ line }) => line),
     ).toStrictEqual([2, 3]);
 });
@@ -38,7 +38,8 @@ test('a block that stands alone is reported at the top of a file and inside a fu
     expect(
         result?.messages
             .filter(
-                ({ ruleId, message }) => ruleId === 'no-restricted-syntax' && message.startsWith('A block that stands'),
+                ({ ruleId, message }) =>
+                    ruleId === 'gspot/restricted-syntax' && message.startsWith('A block that stands'),
             )
             .map(({ line }) => line),
     ).toStrictEqual([2, 6]);
@@ -58,11 +59,16 @@ test.each(['basic'] as const)('form validation and list security run at level %s
 
     const eslint = await buildEslint(sandbox.path);
     expect(
-        await listLintFindings(eslint, sandbox.path, ['native/App.jsx', 'forms/Fields.jsx'], ['no-restricted-syntax']),
+        await listLintFindings(
+            eslint,
+            sandbox.path,
+            ['native/App.jsx', 'forms/Fields.jsx'],
+            ['gspot/restricted-syntax'],
+        ),
     ).toStrictEqual([
-        { file: 'forms/Fields.jsx', rule: 'no-restricted-syntax', line: 3 },
-        { file: 'forms/Fields.jsx', rule: 'no-restricted-syntax', line: 6 },
-        { file: 'native/App.jsx', rule: 'no-restricted-syntax', line: 2 },
+        { file: 'forms/Fields.jsx', rule: 'gspot/restricted-syntax', line: 3 },
+        { file: 'forms/Fields.jsx', rule: 'gspot/restricted-syntax', line: 6 },
+        { file: 'native/App.jsx', rule: 'gspot/restricted-syntax', line: 2 },
     ]);
 });
 
@@ -75,8 +81,8 @@ test('store, form and procedure selectors distinguish validated calls and unrela
             'useStore(cartStore);\nuseForm(options);\nuseForm({ ...options });\nuseForm({ defaultValues: { nested: { resolver: 1 } } });\npublicProcedure.query(resolve);\nprotectedProcedure.use(logger).query(resolve);\nt.procedure.query(resolve);\npool.query(sql);\nbyId.query(resolve);\ngetClient().query(sql);\npublicProcedure.input(schema).use(logger).mutation(resolve);\n',
     });
     const eslint = await buildEslint(sandbox.path);
-    expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['no-restricted-syntax'])).toStrictEqual(
-        [1, 4, 5, 6, 7].map((line) => ({ file: 'source.js', rule: 'no-restricted-syntax', line })),
+    expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['gspot/restricted-syntax'])).toStrictEqual(
+        [1, 4, 5, 6, 7].map((line) => ({ file: 'source.js', rule: 'gspot/restricted-syntax', line })),
     );
 });
 
@@ -89,10 +95,10 @@ test('library selectors at level basic report both whole-store reads and accept 
     });
     const eslint = await buildEslint(sandbox.path);
     expect(
-        await listLintFindings(eslint, sandbox.path, Object.keys(SELECTOR_LIBRARY_FILES), ['no-restricted-syntax']),
+        await listLintFindings(eslint, sandbox.path, Object.keys(SELECTOR_LIBRARY_FILES), ['gspot/restricted-syntax']),
     ).toStrictEqual([
-        { file: 'cart.js', line: 4, rule: 'no-restricted-syntax' },
-        { file: 'cart.js', line: 5, rule: 'no-restricted-syntax' },
+        { file: 'cart.js', line: 4, rule: 'gspot/restricted-syntax' },
+        { file: 'cart.js', line: 5, rule: 'gspot/restricted-syntax' },
     ]);
 });
 
@@ -107,8 +113,10 @@ test.each([...FRAMEWORK_SELECTOR_CASES])(
                 [sample.file]: sample.source,
             });
             const eslint = await buildEslint(sandbox.path);
-            expect(await listLintFindings(eslint, sandbox.path, [sample.file], ['no-restricted-syntax'])).toStrictEqual(
-                sample[level].map((line) => ({ file: sample.file, rule: 'no-restricted-syntax', line })),
+            expect(
+                await listLintFindings(eslint, sandbox.path, [sample.file], ['gspot/restricted-syntax']),
+            ).toStrictEqual(
+                sample[level].map((line) => ({ file: sample.file, rule: 'gspot/restricted-syntax', line })),
             );
         }
     },

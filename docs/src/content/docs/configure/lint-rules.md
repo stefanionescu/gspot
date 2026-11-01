@@ -37,7 +37,7 @@ gspot writes the options of some rules from a setting, and refuses them in these
 | `no-restricted-imports`                                                                                                                                  | `tools.eslint.restricted_imports`                                                                                  |
 | `gspot/import-boundaries`                                                                                                                                | `javascript.import_boundaries`, see [Import rules](/configure/import-rules/#keep-relative-imports-inside-a-folder) |
 | `n/file-extension-in-import`                                                                                                                             | `tools.eslint.import_extension`                                                                                    |
-| `n/no-process-env`, `no-restricted-properties`, `no-restricted-syntax`                                                                                   | `structure.environment_readers`                                                                                    |
+| `n/no-process-env`, `no-restricted-properties`, `gspot/restricted-syntax`                                                                                | `structure.environment_readers`                                                                                    |
 
 ## ESLint
 

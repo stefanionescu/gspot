@@ -1,84 +1,42 @@
-import { isDeepStrictEqual } from 'node:util';
 import type { Level } from '#cli/types/manifests.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { type SelectorBlock, type SelectorPaths } from '#cli/types/generation/eslint.ts';
-import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 
+import {
+    BASE_SELECTORS,
+    ESLINT_SETTINGS_TABLE,
+} from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 import {
     ENVIRONMENT_SELECTOR,
     ALIAS_IMPORT_SELECTORS,
 } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
 
-function listDistinctLists(lists: string[][]): string[][] {
-    const seen = new Set<string>();
-    return lists.filter((list) => {
-        const key = JSON.stringify(list);
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-    });
-}
-
-function listSelectorBlocks(selectors: SelectorPaths[]): SelectorBlock[] {
-    const boundaries = listDistinctLists(
-        selectors.flatMap((each) => [each.files ?? [], each.except ?? []]).filter((paths) => paths.length > 0),
-    );
-    let groups: { files: string[][]; ignores: string[]; matched: string[][] }[] = [
-        { files: [], ignores: [], matched: [] },
-    ];
-    for (const paths of boundaries)
-        groups = groups.flatMap((group) => [
-            {
-                files:
-                    group.files.length === 0
-                        ? paths.map((path) => [path])
-                        : group.files.flatMap((fileList) => paths.map((path) => [...fileList, path])),
-                ignores: group.ignores,
-                matched: [...group.matched, paths],
-            },
-            { ...group, ignores: [...group.ignores, ...paths] },
-        ]);
-    return groups.map((group) => ({
-        ...(group.files.length > 0 && { files: group.files }),
-        ...(group.ignores.length > 0 && { ignores: group.ignores }),
-        selectors: selectors
-            .filter(
-                (each) =>
-                    (each.files === undefined || group.matched.some((paths) => isDeepStrictEqual(paths, each.files))) &&
-                    (each.except === undefined ||
-                        group.matched.every((paths) => !isDeepStrictEqual(paths, each.except))),
-            )
-            .map((each) => ({ selector: each.selector, message: each.message })),
-    }));
-}
-
 function listSettingSelectors(scope: Scope, level: Level): SelectorPaths[] {
     const selectors: SelectorPaths[] = [];
     const owners = scope.settings.tables.structure?.environment_readers ?? [];
-    if (level === 'all' && owners.length > 0) selectors.push({ ...ENVIRONMENT_SELECTOR, except: owners });
+    if (level === 'all' && owners.length > 0) selectors.push({ ...ENVIRONMENT_SELECTOR, ignores: owners });
     const importExtension = scope.settings.tables[ESLINT_SETTINGS_TABLE]?.import_extension;
     if (importExtension !== undefined)
-        selectors.push({
-            ...ALIAS_IMPORT_SELECTORS[importExtension === 'extensionless' ? 'never' : 'always'],
-            except: [],
-        });
+        selectors.push(ALIAS_IMPORT_SELECTORS[importExtension === 'extensionless' ? 'never' : 'always']);
     return selectors;
 }
 
 /**
-Resolve the syntax selectors that the configurations and settings add in each project scope.
+Resolve the syntax selectors of each project scope: the base selectors at level all, the selectors of its
+configurations, and those of its settings. A later ESLint block replaces the options of a rule instead of merging them.
+Each scope gets one list, and gspot/restricted-syntax matches the files of each selector itself.
 
 @param scopes every project scope.
 @param level the selected lint rule level.
 */
 export function buildSelectorBlocks(scopes: Scope[], level: Level): SelectorBlock[] {
     const scopePaths = scopes.map((each) => each.path);
-    return scopes.flatMap((scope) => {
+    return scopes.map((scope) => {
         const declarations = scope.configurations.flatMap((configuration) =>
             configuration.eslint.selectors.filter((selector) => level === 'all' || selector.level === 'basic'),
         );
-        const applied: SelectorPaths[] = new Map(declarations.map((declaration) => [declaration.selector, declaration]))
+        const applied = new Map(declarations.map((declaration) => [declaration.selector, declaration]))
             .values()
             .map(
                 (declaration): SelectorPaths => ({
@@ -87,15 +45,14 @@ export function buildSelectorBlocks(scopes: Scope[], level: Level): SelectorBloc
                     ...(declaration.paths_setting !== undefined && {
                         files: (scope.settings.valuesByKey[declaration.paths_setting] as string[] | undefined) ?? [],
                     }),
-                    except: [],
                 }),
             )
+            .filter(({ files }) => files === undefined || files.length > 0)
             .toArray();
-        applied.push(...listSettingSelectors(scope, level));
-        return listSelectorBlocks(applied).map((group) => ({
-            ...group,
+        return {
             scope: scope.path,
             ignoredScopes: listNestedScopes(scopePaths, scope.path),
-        }));
+            selectors: [...(level === 'all' ? BASE_SELECTORS : []), ...applied, ...listSettingSelectors(scope, level)],
+        };
     });
 }

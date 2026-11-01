@@ -236,11 +236,11 @@ export const IMPORT_FILES = {
 export const IMPORT_CASES = [
     ['relative missing', 'import { value } from "./owner";\n', 'n/file-extension-in-import', 1],
     ['relative emitted suffix', 'import { value } from "./owner.js";\n', 'n/file-extension-in-import', 0],
-    ['hash alias missing', 'import { value } from "#lib/owner";\n', 'no-restricted-syntax', 1],
-    ['exact hash alias', 'import { value } from "#owner";\n', 'no-restricted-syntax', 0],
-    ['at alias missing', 'import { value } from "@/owner";\n', 'no-restricted-syntax', 1],
-    ['private alias suffix', 'import { value } from "@/private/owner.js";\n', 'no-restricted-syntax', 0],
-    ['alias dynamic import', 'const owner = await import("#lib/owner");\n', 'no-restricted-syntax', 1],
+    ['hash alias missing', 'import { value } from "#lib/owner";\n', 'gspot/restricted-syntax', 1],
+    ['exact hash alias', 'import { value } from "#owner";\n', 'gspot/restricted-syntax', 0],
+    ['at alias missing', 'import { value } from "@/owner";\n', 'gspot/restricted-syntax', 1],
+    ['private alias suffix', 'import { value } from "@/private/owner.js";\n', 'gspot/restricted-syntax', 0],
+    ['alias dynamic import', 'const owner = await import("#lib/owner");\n', 'gspot/restricted-syntax', 1],
 ] as const;
 
 export const BARREL_CASES = [

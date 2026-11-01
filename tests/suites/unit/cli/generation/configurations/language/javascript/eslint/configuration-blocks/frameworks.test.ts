@@ -95,7 +95,7 @@ test.each(['all'] as const)(
 
         const eslint = await buildEslint(sandbox.path);
         const files = ['source.js', 'api/source.js', 'api/child/source.js'];
-        expect(await listLintFindings(eslint, sandbox.path, files, ['no-restricted-syntax'])).toStrictEqual([
+        expect(await listLintFindings(eslint, sandbox.path, files, ['gspot/restricted-syntax'])).toStrictEqual([
             ...EXPRESS_FINDINGS[level],
         ]);
     },

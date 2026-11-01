@@ -19,6 +19,13 @@ export type TrivialFunctionsOptions = [
     },
 ];
 
+export type RestrictedSyntaxOptions = readonly {
+    selector: string;
+    message: string;
+    files?: readonly string[];
+    ignores?: readonly string[];
+}[];
+
 export type TrivialFilesOptions = [
     { reexports: 'none' | 'index-only'; indexExports: number; forwardingFiles: readonly string[] },
 ];

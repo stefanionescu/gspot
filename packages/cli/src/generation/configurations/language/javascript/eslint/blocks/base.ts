@@ -11,7 +11,6 @@ import { buildScopeFiles, listCodeTestFiles } from '#cli/generation/configuratio
 import { buildRestrictedImportBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
 
 import {
-    BASE_SELECTORS,
     PRESETS_AFTER_CONFIGURATIONS,
     PRESETS_BEFORE_CONFIGURATIONS,
 } from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
@@ -48,6 +47,7 @@ import {
     PACKAGE_JSON_PATTERN,
     PUBLISHED_PIN_OPTIONS,
     IMPORT_BOUNDARIES_RULE,
+    RESTRICTED_SYNTAX_RULE,
     ROOT_PACKAGE_JSON_RULES,
     BOUNDARIES_FILES_SETTING,
 } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
@@ -230,14 +230,9 @@ export function buildClosingBlocks(
         ...buildRuntimeBlocks(eslintFiles, runtimeBlocks),
         ...selectorGroups.map((group): ConfigurationBlocks['blocks'][number] => ({
             fields: {
-                files: buildScopeFiles(eslintFiles.code, group.scope ?? '', group.files ?? ['**/*']),
-                ignores: [
-                    ...(group.ignoredScopes ?? []).map((scope) => `${escapeGlob(scope)}/**`),
-                    ...(group.ignores ?? []),
-                ],
-                rules: {
-                    'no-restricted-syntax': ['error', ...(level === 'all' ? BASE_SELECTORS : []), ...group.selectors],
-                },
+                files: buildScopeFiles(eslintFiles.code, group.scope, ['**/*']),
+                ignores: group.ignoredScopes.map((scope) => `${escapeGlob(scope)}/**`),
+                rules: { [RESTRICTED_SYNTAX_RULE]: ['error', ...group.selectors] },
             },
         })),
         ...buildConsoleBlocks(planned).map((block): ConfigurationBlocks['blocks'][number] => ({

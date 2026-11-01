@@ -46,14 +46,14 @@ export const EXPRESS_SOURCE =
 
 export const EXPRESS_FINDINGS = {
     all: [
-        { file: 'api/child/source.js', rule: 'no-restricted-syntax', line: 1 },
-        { file: 'api/child/source.js', rule: 'no-restricted-syntax', line: 2 },
-        { file: 'api/child/source.js', rule: 'no-restricted-syntax', line: 3 },
-        { file: 'api/source.js', rule: 'no-restricted-syntax', line: 1 },
-        { file: 'api/source.js', rule: 'no-restricted-syntax', line: 2 },
-        { file: 'api/source.js', rule: 'no-restricted-syntax', line: 3 },
-        { file: 'source.js', rule: 'no-restricted-syntax', line: 1 },
-        { file: 'source.js', rule: 'no-restricted-syntax', line: 3 },
+        { file: 'api/child/source.js', rule: 'gspot/restricted-syntax', line: 1 },
+        { file: 'api/child/source.js', rule: 'gspot/restricted-syntax', line: 2 },
+        { file: 'api/child/source.js', rule: 'gspot/restricted-syntax', line: 3 },
+        { file: 'api/source.js', rule: 'gspot/restricted-syntax', line: 1 },
+        { file: 'api/source.js', rule: 'gspot/restricted-syntax', line: 2 },
+        { file: 'api/source.js', rule: 'gspot/restricted-syntax', line: 3 },
+        { file: 'source.js', rule: 'gspot/restricted-syntax', line: 1 },
+        { file: 'source.js', rule: 'gspot/restricted-syntax', line: 3 },
     ],
 } as const;
 

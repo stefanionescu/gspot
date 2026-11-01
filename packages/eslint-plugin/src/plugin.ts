@@ -28,6 +28,7 @@ import { preferTypeGuard } from './rules/prefer-type-guard.ts';
 import { importBoundaries } from './rules/import-boundaries.ts';
 import { noCodeAfterDone } from './rules/no-code-after-done.ts';
 import { noEmptyTestFile } from './rules/no-empty-test-file.ts';
+import { restrictedSyntax } from './rules/restricted-syntax.ts';
 import { noExclusiveTests } from './rules/no-exclusive-tests.ts';
 import { noInsecureRandom } from './rules/no-insecure-random.ts';
 import { noRenamedExports } from './rules/no-renamed-exports.ts';
@@ -212,6 +213,7 @@ const rules = {
     'redundant-type-aliases': redundantTypeAliases,
     'no-commented-code': noCommentedCode,
     'no-trivial-functions': noTrivialFunctions,
+    'restricted-syntax': restrictedSyntax,
     'require-server-only': requireServerOnly,
 };
 

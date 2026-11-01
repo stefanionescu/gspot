@@ -19,7 +19,7 @@ test.each(ESLINT_LEVEL_CASES)(
         });
         const eslint = await buildEslint(sandbox.path);
         const rules = [
-            'no-restricted-syntax',
+            'gspot/restricted-syntax',
             'no-delete-var',
             'gspot/no-switch-case-labels',
             'gspot/prefer-readonly-static',
@@ -30,8 +30,8 @@ test.each(ESLINT_LEVEL_CASES)(
         ];
         const files = ['assignment', 'delete', 'switch', 'static'].map((name) => `${name}.${extension}`);
         expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([
-            ...(level === 'all' ? [{ file: `assignment.${extension}`, rule: 'no-restricted-syntax', line: 1 }] : []),
-            { file: `delete.${extension}`, rule: 'no-restricted-syntax', line: 1 },
+            ...(level === 'all' ? [{ file: `assignment.${extension}`, rule: 'gspot/restricted-syntax', line: 1 }] : []),
+            { file: `delete.${extension}`, rule: 'gspot/restricted-syntax', line: 1 },
             ...(level === 'all' && extension === 'ts'
                 ? [{ file: 'static.ts', rule: 'gspot/prefer-readonly-static', line: 1 }]
                 : []),
@@ -71,7 +71,7 @@ test.each(['js', 'ts'])('assignment selectors preserve their allowed parent cont
     });
     const eslint = await buildEslint(sandbox.path);
     expect(
-        await listLintFindings(eslint, sandbox.path, [`contexts.${extension}`], ['no-restricted-syntax']),
+        await listLintFindings(eslint, sandbox.path, [`contexts.${extension}`], ['gspot/restricted-syntax']),
     ).toStrictEqual([]);
     await createFileTree(sandbox.path, {
         [`contexts.${extension}`]: [
@@ -85,9 +85,9 @@ test.each(['js', 'ts'])('assignment selectors preserve their allowed parent cont
         ].join('\n'),
     });
     expect(
-        await listLintFindings(eslint, sandbox.path, [`contexts.${extension}`], ['no-restricted-syntax']),
+        await listLintFindings(eslint, sandbox.path, [`contexts.${extension}`], ['gspot/restricted-syntax']),
     ).toStrictEqual(
-        [1, 2, 3, 4, 5, 6, 7].map((line) => ({ file: `contexts.${extension}`, rule: 'no-restricted-syntax', line })),
+        [1, 2, 3, 4, 5, 6, 7].map((line) => ({ file: `contexts.${extension}`, rule: 'gspot/restricted-syntax', line })),
     );
 });
 

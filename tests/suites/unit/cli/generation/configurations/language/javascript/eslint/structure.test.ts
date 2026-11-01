@@ -142,13 +142,13 @@ test('a JSON import attribute is accepted where your import extensions need a su
     const eslint = await buildEslint(sandbox.path);
     for (const filePath of ['main.js', 'app/main.js']) {
         await createFileTree(sandbox.path, { [filePath]: 'import manifest from "#data/package";' });
-        expect(await listLintFindings(eslint, sandbox.path, [filePath], ['no-restricted-syntax'])).toStrictEqual([
-            { file: filePath, rule: 'no-restricted-syntax', line: 1 },
+        expect(await listLintFindings(eslint, sandbox.path, [filePath], ['gspot/restricted-syntax'])).toStrictEqual([
+            { file: filePath, rule: 'gspot/restricted-syntax', line: 1 },
         ]);
         await createFileTree(sandbox.path, {
             [filePath]: 'import manifest from "#data/package" with { type: "json" };',
         });
-        expect(await listLintFindings(eslint, sandbox.path, [filePath], ['no-restricted-syntax'])).toStrictEqual([]);
+        expect(await listLintFindings(eslint, sandbox.path, [filePath], ['gspot/restricted-syntax'])).toStrictEqual([]);
     }
 });
 

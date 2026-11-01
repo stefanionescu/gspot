@@ -122,10 +122,10 @@ test.each(ESLINT_LEVEL_CASES)(
         });
         const eslint = await buildEslint(sandbox.path);
         const files = ['label', 'loop', 'allowed'].map((name) => `${name}.${extension}`);
-        const rules = ['no-restricted-syntax', 'sonarjs/label-position', 'sonarjs/prefer-while'];
+        const rules = ['gspot/restricted-syntax', 'sonarjs/label-position', 'sonarjs/prefer-while'];
         expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([
-            { file: `label.${extension}`, rule: 'no-restricted-syntax', line: 1 },
-            ...(level === 'all' ? [{ file: `loop.${extension}`, rule: 'no-restricted-syntax', line: 1 }] : []),
+            { file: `label.${extension}`, rule: 'gspot/restricted-syntax', line: 1 },
+            ...(level === 'all' ? [{ file: `loop.${extension}`, rule: 'gspot/restricted-syntax', line: 1 }] : []),
         ]);
         await createFileTree(sandbox.path, {
             [`label.${extension}`]: 'run();',

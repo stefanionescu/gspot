@@ -58,11 +58,11 @@ test.each(ESLINT_LEVEL_CASES)(
             [`literal.${extension}`]: invalid.join('\n'),
         });
         const eslint = await buildEslint(sandbox.path);
-        const rules = ['no-restricted-syntax', 'sonarjs/no-literal-call'];
+        const rules = ['gspot/restricted-syntax', 'sonarjs/no-literal-call'];
         expect(await listLintFindings(eslint, sandbox.path, [`literal.${extension}`], rules)).toStrictEqual(
             invalid.map((_, index) => ({
                 file: `literal.${extension}`,
-                rule: 'no-restricted-syntax',
+                rule: 'gspot/restricted-syntax',
                 line: index + 1,
             })),
         );
@@ -206,10 +206,10 @@ test.each(ESLINT_LEVEL_CASES)('%s preserves package entry-point imports in %s', 
     });
     const eslint = await buildEslint(sandbox.path);
     const files = [`imports.${extension}`, `require.${extension}`];
-    const rules = ['no-restricted-syntax', 'sonarjs/no-internal-api-use'];
+    const rules = ['gspot/restricted-syntax', 'sonarjs/no-internal-api-use'];
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([
-        { file: `imports.${extension}`, rule: 'no-restricted-syntax', line: 1 },
-        { file: `require.${extension}`, rule: 'no-restricted-syntax', line: 1 },
+        { file: `imports.${extension}`, rule: 'gspot/restricted-syntax', line: 1 },
+        { file: `require.${extension}`, rule: 'gspot/restricted-syntax', line: 1 },
     ]);
     await createFileTree(sandbox.path, {
         [`imports.${extension}`]: 'import value from "example";',

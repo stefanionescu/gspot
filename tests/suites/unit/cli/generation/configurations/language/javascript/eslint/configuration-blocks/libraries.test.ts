@@ -169,9 +169,10 @@ test.each(['basic'] as const)(
         });
         const eslint = await buildEslint(sandbox.path);
         for (const file of [...checked, ...unchecked]) {
-            expect(await listLintFindings(eslint, sandbox.path, [file], ['no-restricted-syntax']), file).toStrictEqual(
-                checked.has(file) ? [{ file, rule: 'no-restricted-syntax', line: 1 }] : [],
-            );
+            expect(
+                await listLintFindings(eslint, sandbox.path, [file], ['gspot/restricted-syntax']),
+                file,
+            ).toStrictEqual(checked.has(file) ? [{ file, rule: 'gspot/restricted-syntax', line: 1 }] : []);
         }
     },
 );

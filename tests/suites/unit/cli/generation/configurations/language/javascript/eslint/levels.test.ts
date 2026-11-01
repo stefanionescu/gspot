@@ -35,10 +35,10 @@ test.each(['all'] as const)('%s keeps the syntax selectors of a configuration in
     const eslint = await buildEslint(sandbox.path);
     const source = 'export const query = sql`select 1`;';
     await createFileTree(sandbox.path, { 'app/client.jsx': source, 'root.jsx': source });
-    expect(await listLintFindings(eslint, sandbox.path, ['app/client.jsx'], ['no-restricted-syntax'])).toStrictEqual([
-        { file: 'app/client.jsx', rule: 'no-restricted-syntax', line: 1 },
-    ]);
-    expect(await listLintFindings(eslint, sandbox.path, ['root.jsx'], ['no-restricted-syntax'])).toStrictEqual([]);
+    expect(await listLintFindings(eslint, sandbox.path, ['app/client.jsx'], ['gspot/restricted-syntax'])).toStrictEqual(
+        [{ file: 'app/client.jsx', rule: 'gspot/restricted-syntax', line: 1 }],
+    );
+    expect(await listLintFindings(eslint, sandbox.path, ['root.jsx'], ['gspot/restricted-syntax'])).toStrictEqual([]);
 });
 
 test('level all keeps every rule that level basic turns on for a React file', async () => {
@@ -120,12 +120,14 @@ test.each(['all'] as const)(
             'source.js': COALESCING_SOURCE,
         });
         const eslint = await buildEslint(sandbox.path);
-        expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['no-restricted-syntax'])).toStrictEqual([
-            { file: 'source.js', rule: 'no-restricted-syntax', line: 2 },
-            { file: 'source.js', rule: 'no-restricted-syntax', line: 3 },
+        expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['gspot/restricted-syntax'])).toStrictEqual([
+            { file: 'source.js', rule: 'gspot/restricted-syntax', line: 2 },
+            { file: 'source.js', rule: 'gspot/restricted-syntax', line: 3 },
         ]);
         await writeFile(join(sandbox.path, 'source.js'), COALESCING_CORRECTED);
-        expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['no-restricted-syntax'])).toStrictEqual([]);
+        expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['gspot/restricted-syntax'])).toStrictEqual(
+            [],
+        );
     },
 );
 

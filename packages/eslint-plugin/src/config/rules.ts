@@ -191,6 +191,29 @@ export const MAGIC_NUMBER_OPTIONS_SCHEMA = {
     additionalProperties: true,
 } satisfies JSONSchema4;
 
+export const RESTRICTED_SYNTAX_OPTIONS_SCHEMA = {
+    type: 'array',
+    items: {
+        type: 'object',
+        properties: {
+            selector: { description: 'The ESLint selector of the nodes to report.', type: 'string' },
+            message: { description: 'The message of each finding.', type: 'string' },
+            files: {
+                description: 'Globs of the files that the selector applies to. Without it, every file.',
+                type: 'array',
+                items: { type: 'string' },
+            },
+            ignores: {
+                description: 'Globs of the files that the selector skips.',
+                type: 'array',
+                items: { type: 'string' },
+            },
+        },
+        required: ['selector', 'message'],
+        additionalProperties: false,
+    },
+} satisfies JSONSchema4;
+
 export const TRIVIAL_FILE_OPTIONS_SCHEMA = {
     type: 'object',
     properties: {

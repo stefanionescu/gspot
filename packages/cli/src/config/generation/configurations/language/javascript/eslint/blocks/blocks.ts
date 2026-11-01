@@ -259,6 +259,8 @@ export const TRIVIAL_FILES_RULE = 'gspot/no-trivial-files';
 
 export const CLIENT_ENVIRONMENT_RULE = 'gspot/no-client-env';
 
+export const RESTRICTED_SYNTAX_RULE = 'gspot/restricted-syntax';
+
 export const ENVIRONMENT_RULES = {
     'n/no-process-env': ['error', { allowedVariables: ['NODE_ENV'] }],
     'no-restricted-properties': ['error', { object: 'Bun', property: 'env' }, { object: 'Deno', property: 'env' }],

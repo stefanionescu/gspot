@@ -113,7 +113,7 @@ export const ENVIRONMENT_CASES = [
     { source: 'const port = process.env.PORT;\n', rule: 'n/no-process-env' },
     { source: 'const port = Bun.env.PORT;\n', rule: 'no-restricted-properties' },
     { source: "const port = Deno.env.get('PORT');\n", rule: 'no-restricted-properties' },
-    { source: 'const port = import.meta.env.PORT;\n', rule: 'no-restricted-syntax' },
+    { source: 'const port = import.meta.env.PORT;\n', rule: 'gspot/restricted-syntax' },
 ] as const;
 
 export const TEST_IMPORT_RULE_TABLES = `test_files = ["app/qa/**"]
