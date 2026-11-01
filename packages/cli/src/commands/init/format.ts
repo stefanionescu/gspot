@@ -2,7 +2,6 @@ import { posix } from 'node:path';
 import { getTool } from '#cli/tools/pins.ts';
 import { isTable } from '#cli/system/tables.ts';
 import { find } from '#cli/system/files/reads.ts';
-import type { TomlTable } from '#cli/types/settings.ts';
 import type { Repository } from '#cli/types/repository.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
@@ -10,15 +9,11 @@ import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { DIGITS_ONLY } from '#cli/config/configurations/naming.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
+import type { TomlTable, ScopeConfigurations } from '#cli/types/settings.ts';
 import { LINE_BREAK, PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { ruffFormatSchema, prettierSettingsSchema } from '#cli/schemas/commands.ts';
+import type { SettingsDraft, PrettierOptions, EditorconfigSection } from '#cli/types/commands/edits.ts';
 
-import type {
-    SettingsDraft,
-    PrettierOptions,
-    ScopeConfigurations,
-    EditorconfigSection,
-} from '#cli/types/commands/edits.ts';
 import {
     PROSE_TAGS,
     PRETTIER_DEFAULTS,

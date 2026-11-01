@@ -4,7 +4,6 @@ import type { Session, Generation } from '#cli/types/tools.ts';
 import type { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { Setting, Configuration } from '#cli/types/manifests.ts';
 import type { prettierSettingsSchema } from '#cli/schemas/commands.ts';
-import type { IMPORT_EXTENSION_STYLES } from '#cli/config/settings/schema.ts';
 import type { RunCache, FileContents, CommandResult } from '#cli/types/system.ts';
 
 import type {
@@ -185,8 +184,6 @@ export type InitOptions = {
 
 export type PrettierOptions = z.infer<typeof prettierSettingsSchema>;
 
-export type ScopeConfigurations = { scope: string; selected: Configuration[] };
-
 export type WrittenTable = { scope: string; table: TomlTable; availableSettings: AvailableSettings };
 
 export type EditorconfigSection = { files: string; fields: Record<string, string> };
@@ -231,7 +228,5 @@ export type SettingsEditOptions = {
     cache?: RunCache | undefined;
     listing?: RepositoryListing | undefined;
 };
-
-export type ImportExtensionStyle = (typeof IMPORT_EXTENSION_STYLES)[number];
 
 export type CommandCompletion = (result: CommandResult<object>) => void;

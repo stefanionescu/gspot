@@ -1,4 +1,3 @@
-import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { planChecks } from '#cli/engine/plan.ts';
@@ -18,7 +17,6 @@ import {
     NESTED_SCOPE_SETTINGS,
     OPENAPI_SCOPE_SETTINGS,
     POSTGRES_SCOPE_SETTINGS,
-    SITE_PACKAGE_MANAGER_CASES,
 } from '#tests/config/settings/read.ts';
 
 async function readNestedScopes(): Promise<Scope[]> {
@@ -33,26 +31,6 @@ async function readNestedScopes(): Promise<Scope[]> {
     const session = await openSession(sandbox.path);
     return session.scopes;
 }
-
-test.each(
-    SITE_PACKAGE_MANAGER_CASES.flatMap(([name, files, installer]) =>
-        (installer === 'npm' ? [''] : ['', 'app']).map((scope) => ({ name, files, installer, scope })),
-    ),
-)('the site build command defaults to $installer in "$scope" ($name)', async ({ files, installer, scope }) => {
-    await using sandbox = await createGitSandbox({});
-    const settings =
-        scope === ''
-            ? buildSandboxSettings(['site'])
-            : buildSandboxSettings([], { scopes: [{ path: 'app', configurations: ['site'] }] });
-    await createFileTree(sandbox.path, {
-        'gspot.toml': settings,
-        [join(scope, 'index.html')]: '<!doctype html><title>Site</title>',
-        ...Object.fromEntries(Object.entries(files).map(([path, text]) => [join(scope, path), text])),
-    });
-    const session = await openSession(sandbox.path);
-    const selected = session.scopes.find((each) => each.path === scope)!;
-    expect(getTable(selected.settings, 'site').build_command).toStrictEqual([installer, 'run', 'build']);
-});
 
 test('a scope keeps a written site build command including empty and spaced arguments', async () => {
     await using sandbox = await createGitSandbox({});

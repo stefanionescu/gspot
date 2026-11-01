@@ -24,15 +24,6 @@ export const SETTING_NAME_PLACEHOLDER = '<name>';
 
 export const OVERRIDING_GROUPS = new Set<string>(['framework', 'platform', 'library', 'database']);
 
-export const OPENNEXT_PACKAGE = '@opennextjs/cloudflare';
-
-export const OPENNEXT_TYPE_DEFAULTS = {
-    'cloudflare.types_file': 'cloudflare-env.d.ts',
-    'cloudflare.types_interface': 'CloudflareEnv',
-} as const;
-
-export const BUILD_SCRIPT = ['run', 'build'] as const;
-
 export const NO_CHECK_PATHS_MESSAGE = 'An ignore without check needs paths.';
 
 export const NO_SETTINGS_MESSAGE = 'There is no gspot.toml here. Run gspot init to create one.';

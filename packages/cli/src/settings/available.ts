@@ -6,18 +6,12 @@ import { toolsSchema } from '#cli/schemas/settings/tools.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { importRulesSchema } from '#cli/schemas/settings/tables.ts';
 import type { Setting, Configuration } from '#cli/types/manifests.ts';
+import { OVERRIDING_GROUPS } from '#cli/config/settings/validation.ts';
 import type { Level, AvailableSettings } from '#cli/types/settings.ts';
 import { BOUND_PREFIXES, SETTING_LANGUAGES } from '#cli/config/manifests.ts';
 import { getSettingType, unwrapSettingSchema } from '#cli/settings/lookup.ts';
 import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/settings/configurations.ts';
 import { TABLE_KEY_SEGMENTS, LANGUAGE_GROUP_TABLES, SHIPPED_DEFAULT_ORIGIN } from '#cli/config/settings/schema.ts';
-
-import {
-    BUILD_SCRIPT,
-    OPENNEXT_PACKAGE,
-    OVERRIDING_GROUPS,
-    OPENNEXT_TYPE_DEFAULTS,
-} from '#cli/config/settings/validation.ts';
 
 function addDefault(availableSettings: AvailableSettings, configuration: Configuration, setting: Setting): void {
     const previous = availableSettings.defaults.get(setting.name);
@@ -178,29 +172,3 @@ export function buildAvailableSettings(configurations: Configuration[], level: L
 }
 
 export const SETTINGS_BY_CONFIGURATION = buildSettingsByConfiguration();
-
-/**
-Apply defaults detected from the package manager and project dependencies.
-
-@param availableSettings the mutable defaults of the selected configurations.
-@param detected the package manager and dependency names of the scope.
-@param detected.packageManagerName the package manager when the scope holds a site build default.
-@param detected.dependencyNames the package names recorded in the scope.
-*/
-export function mergeDetectedDefaults(
-    availableSettings: AvailableSettings,
-    detected: { packageManagerName: string | undefined; dependencyNames: string[] },
-): void {
-    const build = availableSettings.defaults.get('site.build_command');
-    if (build !== undefined && detected.packageManagerName !== undefined)
-        availableSettings.defaults.set('site.build_command', {
-            ...build,
-            value: [detected.packageManagerName, ...BUILD_SCRIPT],
-        });
-    if (detected.dependencyNames.includes(OPENNEXT_PACKAGE)) {
-        for (const [name, value] of Object.entries(OPENNEXT_TYPE_DEFAULTS)) {
-            const held = availableSettings.defaults.get(name);
-            if (held !== undefined) availableSettings.defaults.set(name, { ...held, value });
-        }
-    }
-}

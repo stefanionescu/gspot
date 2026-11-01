@@ -10,20 +10,18 @@ import type { Configuration } from '#cli/types/manifests.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import { selectToolConfigurations } from '#cli/engine/tools.ts';
 import type { SessionOptions } from '#cli/types/engine/plan.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
-import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
+import type { Repository, RepositoryListing } from '#cli/types/repository.ts';
 import { listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
-import { mergeDetectedDefaults, buildAvailableSettings } from '#cli/settings/available.ts';
-import type { Repository, PackageManagerPin, RepositoryListing } from '#cli/types/repository.ts';
 import { selectStartRunner, detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
 
 function buildScopes(
     settings: Settings,
     repository: Repository,
     configurationsByName: Map<string, Configuration>,
-    readPackageManager: () => PackageManagerPin,
 ): Scope[] {
     const { scopeFolders } = repository;
     const automatic = listAutomaticConfigurations(configurationsByName, repository);
@@ -31,11 +29,6 @@ function buildScopes(
     return scopeFolders.map((scope) => {
         const selected = selectForScope(active, scope.path, configurationsByName);
         const available = buildAvailableSettings(selected, settings.level);
-        const packageManager = available.defaults.has('site.build_command') ? readPackageManager() : undefined;
-        mergeDetectedDefaults(available, {
-            packageManagerName: packageManager?.name,
-            dependencyNames: listProjectDependencyNames(repository.dependencyFiles, scope.path),
-        });
         const scopeSettings = buildScopeSettings(available, active, selected, scope.path);
         return {
             path: scope.path,
@@ -107,13 +100,7 @@ export async function openSession(
         cache,
         listing: listing ?? (await listRepositoryFiles(cache)),
     });
-    let pin: PackageManagerPin | undefined;
-    const readPackageManager = () =>
-        (pin ??= detectPackageManager(
-            root,
-            repository.files.filter((file) => file.kind === 'source').map((file) => file.path),
-        ));
-    const scopes = buildScopes(settings, repository, configurationsByName, readPackageManager);
+    const scopes = buildScopes(settings, repository, configurationsByName);
     const session: Session = {
         toolConfigurations: [],
         configuredChecks: listEnabledChecks(scopes, settings),
@@ -134,6 +121,9 @@ export async function openSession(
     };
     session.toolConfigurations = selectToolConfigurations(session, session.configuredChecks);
     if (Object.keys(listPackagePins(session.toolConfigurations).npm).length > 0)
-        session.packageManager = readPackageManager();
+        session.packageManager = detectPackageManager(
+            root,
+            repository.files.filter((file) => file.kind === 'source').map((file) => file.path),
+        );
     return session;
 }

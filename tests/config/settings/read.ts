@@ -269,8 +269,3 @@ export const PROJECT_SCOPE_CASES = [
     { scope: 'sibling', name: 'nextjs', selected: true },
     { scope: 'required', name: 'javascript', selected: true },
 ] as const;
-
-export const SITE_PACKAGE_MANAGER_CASES = [
-    ['npm fallback', {}, 'npm'],
-    ['declared Bun', { 'package.json': '{"packageManager":"bun@1.4.2"}' }, 'bun'],
-] as const;

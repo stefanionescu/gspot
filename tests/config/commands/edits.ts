@@ -258,3 +258,8 @@ export const VALUE_VALIDATION_CASES = [
 ] as const;
 
 export const CONFIGURATIONS_SETTINGS = 'configurations = []\n';
+
+export const SITE_PACKAGE_MANAGER_CASES = [
+    ['npm fallback', {}, 'npm'],
+    ['declared Bun', { 'package.json': '{"packageManager":"bun@1.4.2"}' }, 'bun'],
+] as const;

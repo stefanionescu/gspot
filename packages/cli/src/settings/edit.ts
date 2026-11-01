@@ -142,3 +142,16 @@ export function getScopeTable(table: TomlTable, scopePath: string): TomlTable {
     }
     return scopeTable;
 }
+
+/**
+Write the values of one table into another, table by table.
+
+@param target the table to change.
+@param source the values to write.
+@returns the changed table.
+*/
+export function overlayTable(target: TomlTable, source: TomlTable): TomlTable {
+    for (const [key, value] of Object.entries(source))
+        target[key] = isTable(value) && isTable(target[key]) ? overlayTable(target[key], value) : value;
+    return target;
+}

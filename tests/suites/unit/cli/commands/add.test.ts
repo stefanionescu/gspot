@@ -2,6 +2,8 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
+import { getTable } from '#cli/settings/scopes.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
@@ -14,6 +16,7 @@ import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.
 
 import {
     CONFIGURATIONS_SETTINGS,
+    SITE_PACKAGE_MANAGER_CASES,
     UNKNOWN_CONFIGURATION_REFUSALS,
     INHERITED_CONFIGURATION_SETTINGS,
 } from '#tests/config/commands/edits.ts';
@@ -105,4 +108,38 @@ test('add --scope on a project folder writes its scope record', async () => {
         readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path).scopes.get('py')
             ?.configurations,
     ).toStrictEqual(['fastapi']);
+});
+
+test.each(
+    SITE_PACKAGE_MANAGER_CASES.flatMap(([name, files, installer]) =>
+        (installer === 'npm' ? [''] : ['', 'app']).map((scope) => ({ name, files, installer, scope })),
+    ),
+)('add site writes the $installer build command in "$scope" ($name)', async ({ files, installer, scope }) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { scopes: scope === '' ? [] : [{ path: scope, configurations: [] }] }),
+        [join(scope, 'index.html')]: '<!doctype html><title>Site</title>',
+        ...Object.fromEntries(Object.entries(files).map(([path, text]) => [join(scope, path), text])),
+    });
+    commitAll(sandbox.path);
+    const result = await runGspot(sandbox.path, ['add', 'site', ...(scope === '' ? [] : ['--scope', scope])]);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const session = await openSession(sandbox.path);
+    const selected = session.scopes.find((each) => each.path === scope)!;
+    expect(getTable(selected.settings, 'site').build_command).toStrictEqual([installer, 'run', 'build']);
+});
+
+test('add cloudflare writes the OpenNext types', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([]),
+        'package.json': JSON.stringify({ private: true, devDependencies: { '@opennextjs/cloudflare': '1.0.0' } }),
+        'wrangler.jsonc': '{ "name": "shop" }\n',
+    });
+    commitAll(sandbox.path);
+    const result = await runGspot(sandbox.path, ['add', 'cloudflare']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const session = await openSession(sandbox.path);
+    expect(getTable(session.scopes[0]!.settings, 'cloudflare')).toMatchObject({
+        types_file: 'cloudflare-env.d.ts',
+        types_interface: 'CloudflareEnv',
+    });
 });

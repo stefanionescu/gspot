@@ -68,8 +68,9 @@ test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and 
     await using sandbox = await createGitSandbox({});
     const source = CLOUDFLARE_ENV_SOURCE;
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSandboxSettings(['cloudflare']),
-        'package.json': JSON.stringify({ private: true, devDependencies: { '@opennextjs/cloudflare': '1.0.0' } }),
+        'gspot.toml': buildSandboxSettings(['cloudflare'], {
+            tables: '[cloudflare]\ntypes_file = "cloudflare-env.d.ts"\ntypes_interface = "CloudflareEnv"\n',
+        }),
         'wrangler.jsonc': '{ "name": "shop" }\n',
     });
     commitAll(sandbox.path);

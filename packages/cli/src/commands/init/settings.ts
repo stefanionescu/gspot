@@ -1,79 +1,17 @@
-import { posix } from 'node:path';
-import { isTable } from '#cli/system/tables.ts';
-import { find } from '#cli/system/files/reads.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { PBXPROJ_SUFFIX } from '#cli/config/parsers.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
+import { setKey, overlayTable } from '#cli/settings/edit.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { stripDefaults } from '#cli/commands/init/defaults.ts';
 import { readScopeFormat } from '#cli/commands/init/format.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { buildFilenameMatcher } from '#cli/system/matchers.ts';
 import { formatSettingsCommands } from '#cli/generation/rules.ts';
-import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
-import { SWIFT_CONFIGURATION } from '#cli/config/configurations/structure.ts';
+import { buildDetectedTables } from '#cli/settings/detected.ts';
+import { LEADING_COMMENTS, HAND_EDIT_RECORDS } from '#cli/config/commands/edits.ts';
+import type { InitOptions, SettingsDraft } from '#cli/types/commands/edits.ts';
 import type { Repository, InitConfigurations } from '#cli/types/repository.ts';
-import { buildImportExtensionTables } from '#cli/commands/init/import-extension.ts';
-import type { InitOptions, SettingsDraft, ScopeConfigurations } from '#cli/types/commands/edits.ts';
-
-import {
-    LEADING_COMMENTS,
-    HAND_EDIT_RECORDS,
-    XCODE_DESTINATIONS,
-    OPENAPI_CONFIGURATION,
-} from '#cli/config/commands/edits.ts';
-
-function buildOpenApiTables(
-    scopes: ScopeConfigurations[],
-    draft: SettingsDraft,
-    repository: Repository,
-): Map<string, TomlTable> {
-    return new Map(
-        scopes.flatMap(({ scope, selected }) => {
-            const openapi = selected.find((configuration) => configuration.name === OPENAPI_CONFIGURATION);
-            if (openapi === undefined) return [];
-            const isDocument = buildFilenameMatcher(openapi.detect.filenames);
-            const document = repository.files.find(
-                (file) => selectScopePath(file.path, draft.scopes) === scope && isDocument(file.path),
-            )?.path;
-            return document === undefined ? [] : [[scope, { openapi: { document } }] as const];
-        }),
-    );
-}
-
-function buildSwiftTables(
-    scopes: ScopeConfigurations[],
-    draft: SettingsDraft,
-    repository: Repository,
-): Map<string, TomlTable> {
-    const projectFiles = repository.files.filter((each) => each.path.endsWith(PBXPROJ_SUFFIX));
-    return new Map(
-        scopes.flatMap(({ scope, selected }) => {
-            if (selected.every((configuration) => configuration.name !== SWIFT_CONFIGURATION)) return [];
-            const file = projectFiles.find(
-                (projectFile) => selectScopePath(projectFile.path, draft.scopes) === scope,
-            )?.path;
-            if (file === undefined) return [];
-            const text = find(repository.root, file);
-            const sdkRoot = text === undefined ? undefined : parseBuildSettings(text, file).sdkRoot;
-            const destination = XCODE_DESTINATIONS.get(sdkRoot);
-            const swiftSettings = {
-                xcode_project: posix.dirname(file),
-                ...(destination !== undefined && { xcode_destination: destination }),
-            };
-            return [[scope, { swift: swiftSettings }] as const];
-        }),
-    );
-}
-
-function overlayTable(target: TomlTable, source: TomlTable): TomlTable {
-    for (const [key, value] of Object.entries(source))
-        target[key] = isTable(value) && isTable(target[key]) ? overlayTable(target[key], value) : value;
-    return target;
-}
 
 function buildSettingsTable(
     draft: SettingsDraft,
@@ -90,21 +28,11 @@ function buildSettingsTable(
         scope: scopePath,
         selected: selectForScope(selected, scopePath, configurationsByName),
     }));
-    const projects = buildSwiftTables(scopeConfigurations, draft, repository);
-    const formats = new Map(
-        scopeConfigurations.map((selection) => [selection.scope, readScopeFormat(selection, draft, repository)]),
-    );
-    const openapiTables = buildOpenApiTables(scopeConfigurations, draft, repository);
-    const importStyles = buildImportExtensionTables(scopeConfigurations, repository);
+    const detected = buildDetectedTables(scopeConfigurations, { repository, scopes: draft.scopes });
     const tables = new Map(
-        scopes.map((scopePath) => [
-            scopePath,
-            {
-                ...projects.get(scopePath),
-                ...openapiTables.get(scopePath),
-                ...formats.get(scopePath),
-                ...importStyles.get(scopePath),
-            },
+        scopeConfigurations.map((selection) => [
+            selection.scope,
+            { ...detected.get(selection.scope), ...readScopeFormat(selection, draft, repository) },
         ]),
     );
     const scope = draft.scopes.map(({ path, configurations }) => ({ path, configurations, ...tables.get(path) }));

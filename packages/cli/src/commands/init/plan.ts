@@ -1,5 +1,5 @@
 import { styleText } from 'node:util';
-import { formatCount } from '#cli/system/text.ts';
+import { formatCount, formatScope } from '#cli/system/text.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import type { Generation } from '#cli/types/tools.ts';
@@ -10,7 +10,6 @@ import { GENERATED_FILE_NOUN } from '#cli/config/generation.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { listMisePins, listPackagePins } from '#cli/tools/pins.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
-import { ROOT_SCOPE_LABEL } from '#cli/config/configurations/general.ts';
 import type { InitPlan, InitScan, InitFileRow, ConflictingConfigs } from '#cli/types/commands/edits.ts';
 
 import {
@@ -75,7 +74,7 @@ function listOutermostScopes(name: string, scopes: InitScan['scopes']): string[]
         .map((scope) => scope.path);
     return selecting
         .filter((path) => selecting.every((other) => other === path || !isInScope(path, other)))
-        .map((path) => (path === '' ? ROOT_SCOPE_LABEL : path));
+        .map((path) => formatScope(path));
 }
 
 function buildConfigurationRows(

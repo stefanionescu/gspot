@@ -131,17 +131,6 @@ export const FORMATTER_DEFAULTS = [
 
 export const PROSE_TAGS: ReadonlySet<string> = new Set(['text', 'markdown']);
 
-export const BUNDLER_PACKAGES: ReadonlySet<string> = new Set([
-    'esbuild',
-    'vite',
-    'webpack',
-    'rollup',
-    'rolldown',
-    '@rspack/core',
-]);
-
-export const IMPORT_EXTENSION_SETTING = 'javascript.import_extension';
-
 export const INIT_INSTALL_NOTES: ReadonlySet<string> = new Set([HOOKS_CHANGED_NOTE, TOOLS_CHANGED_NOTE]);
 
 export const WROTE_PLAN_MESSAGE = 'Wrote the plan above.';
@@ -205,16 +194,6 @@ export const CI_OFF_MESSAGE =
     'CI is off. To turn it on, run gspot set ci.enabled true; for GitLab, also run gspot set ci.provider gitlab.';
 
 export const PRETTIER_SCRIPT_FILE = /\.[cm]?[jt]s$/u;
-
-export const XCODE_DESTINATIONS = new Map<string | undefined, string>([
-    ['iphoneos', 'generic/platform=iOS Simulator'],
-    ['iphonesimulator', 'generic/platform=iOS Simulator'],
-    ['macosx', 'platform=macOS'],
-    ['watchos', 'generic/platform=watchOS Simulator'],
-    ['watchsimulator', 'generic/platform=watchOS Simulator'],
-    ['xros', 'generic/platform=visionOS Simulator'],
-    ['xrsimulator', 'generic/platform=visionOS Simulator'],
-]);
 
 export const HAND_EDIT_RECORDS = '[[scope]], [[command_check]], and [[import_rule]] take a hand edit.';
 

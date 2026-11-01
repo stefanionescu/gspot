@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { commitsSchema } from '#cli/schemas/settings/rules.ts';
 import type { ToolTableSchemas } from '#cli/types/settings.ts';
+import { BUILD_SCRIPT } from '#cli/config/settings/detected.ts';
 import { FROZEN_ALL, FROZEN_NONE } from '#cli/config/parsers.ts';
-import { BUILD_SCRIPT } from '#cli/config/settings/validation.ts';
 import { FROZEN_VERSION, TABLE_DESCRIPTIONS } from '#cli/config/settings/schema.ts';
 import { hooksSchema, generalTableSchemas } from '#cli/schemas/settings/general.ts';
 import { commandSchema, nonemptyStringSchema } from '#cli/schemas/manifests/tools.ts';
@@ -145,7 +145,7 @@ export const configurationTableSchemas = {
                 leftOut: 'code',
                 configurations: ['site'],
                 description:
-                    'The command that builds the site. Without it, gspot runs the build script of the package manager.',
+                    'The command that builds the site. Init and gspot add write the build script of the package manager.',
             }),
             build_folder: destinationPathSchema.default('dist').meta({
                 configurations: ['site'],
