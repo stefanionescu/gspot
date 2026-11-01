@@ -42,7 +42,7 @@ test('custom Worker type settings reach wrangler types as --env-interface', asyn
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], {
             scopes: [{ path: 'workers/api', configurations: ['cloudflare'] }],
-            tables: '[scope.cloudflare]\ntypes_file = "workers/api/cloudflare-env.d.ts"\ntypes_interface = "CloudflareEnv"\n',
+            tables: '[scope.cloudflare]\ntypes_file = "cloudflare-env.d.ts"\ntypes_interface = "CloudflareEnv"\n',
         }),
         'workers/api/cloudflare-env.d.ts': source,
     });

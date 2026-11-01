@@ -126,9 +126,9 @@ function buildPythonSearch(session: Session, planned: PlannedCheck): PythonSearc
     const python = getTable(settings, 'python');
     return {
         files: new Set(session.repository.files.map((file) => file.path)),
-        roots: [...PYTHON_SOURCE_ROOTS, ...python.import_folders]
-            .map((root) => posix.join(scopePath, root))
-            .map((root) => (root === '.' ? '' : root)),
+        roots: [...PYTHON_SOURCE_ROOTS.map((root) => posix.join(scopePath, root)), ...python.import_folders].map(
+            (root) => (root === '.' ? '' : root),
+        ),
         externals: new Set(python.externals),
     };
 }

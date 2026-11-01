@@ -46,13 +46,13 @@ export const UNMATCHED_PATH_CASES = [
                 {
                     path: 'app',
                     structure: {
-                        environment_readers: ['app/kept.sh', 'app/gone.sh'],
+                        environment_readers: ['kept.sh', 'gone.sh'],
                     },
                 },
                 {
                     path: 'app/deep',
                     structure: {
-                        environment_readers: ['app/deep/kept.sh', 'app/deep/gone.sh'],
+                        environment_readers: ['kept.sh', 'gone.sh'],
                     },
                 },
             ],

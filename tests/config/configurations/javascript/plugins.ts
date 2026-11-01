@@ -38,6 +38,7 @@ export const SCOPE_PLUGIN_FILES = {
     'source.js': 'export const forbidden = 1;\n',
     'outside/source.js': 'export const forbidden = 1;\n',
     'app/package.json': '{"private":true,"type":"module"}\n',
+    'app/tools/lint/plugin.mjs': LOCAL_PLUGIN,
     'app/source.js': 'export const forbidden = 1;\n',
     'app/nested/package.json': '{"private":true,"type":"module"}\n',
     'app/nested/source.js': 'export const forbidden = 1;\n',
@@ -72,15 +73,15 @@ export const CONFLICTING_LOCAL_PLUGIN_FILES = {
     'package.json': '{"private":true,"type":"module"}\n',
     'first/package.json': '{"private":true,"type":"module"}\n',
     'second/package.json': '{"private":true,"type":"module"}\n',
-    'tools/lint/first.mjs': LOCAL_PLUGIN,
-    'tools/lint/second.mjs': LOCAL_PLUGIN,
+    'first/tools/lint/first.mjs': LOCAL_PLUGIN,
+    'second/tools/lint/second.mjs': LOCAL_PLUGIN,
 };
 
 export const DUPLICATE_PLUGIN_ERROR = {
     name: 'GspotError',
     code: 'settings',
     message:
-        'tools.eslint.plugins: local names two modules, tools/lint/first.mjs and tools/lint/second.mjs. Give each its own prefix.',
+        'tools.eslint.plugins: local names two modules, first/tools/lint/first.mjs and second/tools/lint/second.mjs. Give each its own prefix.',
 } as const;
 
 export const LOCAL_PLUGIN_TABLES = `[[tools.eslint.plugins]]
@@ -227,7 +228,7 @@ entry = ["src/main.js"]
 path = "api"
 configurations = ["javascript"]
 
-tools.knip.entry = ["api/src/main.js"]
+tools.knip.entry = ["src/main.js"]
 `;
 
 export const TRIVIAL_RULES = ['gspot/no-trivial-files', 'gspot/no-trivial-functions'] as const;

@@ -27,8 +27,10 @@ import {
 } from '#cli/config/configurations/javascript.ts';
 
 function selectEntryFiles(settings: Settings, scopes: Scope[], scopePath: string): string[] {
-    const authored = listApplicableTables(settings, scopePath).flatMap(
-        ({ table }) => (table.tools?.knip as Partial<TableSettings<'tools.knip'>> | undefined)?.entry ?? [],
+    const authored = listApplicableTables(settings, scopePath).flatMap(({ table, scope = '' }) =>
+        ((table.tools?.knip as Partial<TableSettings<'tools.knip'>> | undefined)?.entry ?? []).map((pattern) =>
+            joinScopeSelector(pattern, scope),
+        ),
     );
     const nearest = scopes
         .filter((each) => isInScope(scopePath, each.path))

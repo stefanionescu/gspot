@@ -16,7 +16,7 @@ test("a child scope's test_files and script_files get the test and script rule b
         ...NESTED_ESLINT_FILES,
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
-            tables: '[[scope]]\npath = "app"\ntest_files = ["app/spec/**"]\n[scope.javascript]\nscript_files = ["app/scripts/**"]\n',
+            tables: '[[scope]]\npath = "app"\ntest_files = ["spec/**"]\n[scope.javascript]\nscript_files = ["scripts/**"]\n',
         }),
     });
     const eslint = await buildEslint(sandbox.path);

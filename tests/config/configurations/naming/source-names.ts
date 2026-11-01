@@ -7,7 +7,7 @@ configurations = ["javascript", "swift", "naming"]
 test_files = ["qa/**"]
 [[scope]]
 path = "apps/web"
-test_files = ["apps/web/verification/**"]
+test_files = ["verification/**"]
 [[scope]]
 path = "apps/api"
 `;

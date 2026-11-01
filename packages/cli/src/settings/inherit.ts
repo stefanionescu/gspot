@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { compareText } from '#cli/system/text.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
-import { joinDefaultPaths } from '#cli/settings/paths.ts';
+import { joinSettingPaths } from '#cli/settings/paths.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { commandSchema } from '#cli/schemas/manifests/tools.ts';
@@ -87,7 +87,7 @@ function mergeTable(
             value: mergeValue(
                 setting,
                 result.origin === 'configuration' ? undefined : result.value,
-                findValueAt(table.table, writtenKey.split('.')),
+                joinSettingPaths(writtenKey, findValueAt(table.table, writtenKey.split('.')), table.scope),
             ),
             source: writtenKey === key ? owner : `${owner} (${writtenKey})`,
             origin,
@@ -235,11 +235,11 @@ export function findSettingDefault(
     }
     const shipped = keys.map((key) => availableSettings.defaults.get(key)).find((value) => value !== undefined);
     if (shipped === undefined) return undefined;
-    const folder =
+    const buildFolder =
         setting.path_role === 'build'
             ? (getSettingValue(availableSettings, settings, 'site.build_folder', scopePath)?.value as string)
-            : scopePath;
-    return { ...shipped, value: joinDefaultPaths(setting.name, shipped.value, folder) };
+            : '';
+    return { ...shipped, value: joinSettingPaths(setting.name, shipped.value, scopePath, buildFolder) };
 }
 
 /**

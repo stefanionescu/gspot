@@ -56,8 +56,8 @@ At level `all`, raise the function length limit with a reason:
 gspot set limits.function_lines 80 --scope api --reason "The parser is one state machine."
 ```
 
-Root settings cover every scope. Write paths relative to the repository root; only `python.import_folders` takes
-folders relative to its scope. The default paths of a configuration resolve inside the scope that selects it.
+Root settings cover every scope. Paths in a root table start at the repository root, and paths in a `[[scope]]` table
+start at that scope. The default paths of a configuration resolve inside the scope that selects it.
 
 The first value that you write replaces the shipped default. In a scope, a list of plain values, such as `test_files`,
 adds to the lists of the root and of the parent scopes, without repeats. A table, such as `spelling.allowed_words`,

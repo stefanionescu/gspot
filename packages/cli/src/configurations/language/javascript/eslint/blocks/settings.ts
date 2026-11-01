@@ -1,5 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 import { escapeGlob } from '#cli/system/paths.ts';
+import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import { LIMIT_RULES_BY_CHECK } from '#cli/manifests/limits.ts';
@@ -244,7 +245,7 @@ export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRul
                 ? []
                 : {
                       scope: scope.path,
-                      ...splitGlobs(paths),
+                      ...splitGlobs(paths.map((path) => joinScopeSelector(path, scope.path))),
                       rules: rules,
                   },
         ),

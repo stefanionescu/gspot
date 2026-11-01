@@ -117,7 +117,7 @@ export const eslintPluginsSchema = z
             description: 'The rule prefix, such as local in local/no-legacy-api.',
         }),
         path: relativePathSchema.regex(ESLINT_PLUGIN_MODULE, 'Name a .js or .mjs module.').meta({
-            description: 'The plugin module, relative to the repository root.',
+            description: 'The plugin module, relative to the table that sets it.',
         }),
         rules: eslintRulesSchema.meta({
             description: 'The rules of the plugin to turn on, with their options.',

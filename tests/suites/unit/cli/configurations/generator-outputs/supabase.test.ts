@@ -27,7 +27,7 @@ async function prepareSupabaseCheck(
     await createFileTree(root, {
         'gspot.toml': buildSandboxSettings(['supabase'], {
             scopes: scopePath === '' ? [] : [{ path: scopePath, configurations: ['supabase'] }],
-            tables: `[${scopePath === '' ? '' : 'scope.'}supabase]\ntypes_file = "${prefix}database.ts"\n${schemasLine}`,
+            tables: `[${scopePath === '' ? '' : 'scope.'}supabase]\ntypes_file = "database.ts"\n${schemasLine}`,
         }),
         [`${prefix}supabase/config.toml`]: 'project_id = "types-sample"\n',
     });

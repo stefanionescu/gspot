@@ -174,7 +174,7 @@ configurations = []
 [[scope]]
 path = "different"
 configurations = []
-test_files = ["different/custom/**"]
+test_files = ["custom/**"]
 `;
 
 export const TESTING_LIBRARY_CASES = [['react', '@testing-library/react']] as const;

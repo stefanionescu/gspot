@@ -89,7 +89,7 @@ test('service role keys are refused in component and module clients and allowed 
 test.each([...SECRET_KEY_READS])('a secret Supabase key read as %s is refused in client files', async (read) => {
     await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['supabase'], {
-        tables: 'test_files = ["qa/**"]\n[supabase]\nfunctions_folder = "server"\n[[scope]]\npath = "apps/web"\nconfigurations = ["supabase"]\n[scope.supabase]\nfunctions_folder = "apps/web/server"\n',
+        tables: 'test_files = ["qa/**"]\n[supabase]\nfunctions_folder = "server"\n[[scope]]\npath = "apps/web"\nconfigurations = ["supabase"]\n[scope.supabase]\nfunctions_folder = "server"\n',
     });
     const source = `export const key = ${read};\n`;
     const allowed = {

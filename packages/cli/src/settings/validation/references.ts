@@ -4,6 +4,7 @@ import { isInScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { listRuleFiles } from '#cli/manifests/read.ts';
+import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { LIMIT_SETTING_RULES } from '#cli/manifests/limits.ts';
@@ -59,7 +60,7 @@ Check the rule file paths of the root and every scope against the repository fil
 */
 export function validateRuleFilePaths(root: string, settings: Settings): SettingsError[] {
     const files = openFiles(root);
-    return listSettingsTables(settings).flatMap(({ table, path }) => {
+    return listSettingsTables(settings).flatMap(({ table, scope, path }) => {
         const plugins = table.tools?.['eslint']?.['plugins'];
         const ruleFiles = table.tools?.['semgrep']?.['rule_files'];
         const paths = [
@@ -75,7 +76,7 @@ export function validateRuleFilePaths(root: string, settings: Settings): Setting
             })),
         ];
         return paths.flatMap(({ value, key, path }) => {
-            const stats = readPathStats(files, value);
+            const stats = readPathStats(files, joinScopeSelector(value, scope));
             if (stats instanceof Error)
                 return [
                     {
@@ -87,7 +88,7 @@ export function validateRuleFilePaths(root: string, settings: Settings): Setting
             return [
                 {
                     path,
-                    message: `${value} names no file. Point ${key} at a file, relative to the repository root.`,
+                    message: `${value} names no file. Point ${key} at a file, relative to its table.`,
                 },
             ];
         });

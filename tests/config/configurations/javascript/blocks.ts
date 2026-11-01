@@ -262,7 +262,7 @@ paths = ["apps/api/storage/**"]
 [[scope]]
 path = "apps/api"
 configurations = ["javascript"]
-test_files = ["apps/api/app/verification/**", "apps/api/app/qa/**"]
+test_files = ["app/verification/**", "app/qa/**"]
 `;
 
 export const TEST_IMPORT_RULE_CASES = [

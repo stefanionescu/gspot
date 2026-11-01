@@ -11,11 +11,11 @@ reason = "Application alternative text is supplied by the rendering environment.
 [[scope]]
 path = "app"
 configurations = ["site"]
-site.build_folder = "app/dist"
+site.build_folder = "dist"
 [[scope]]
 path = "other"
 configurations = ["site"]
-site.build_folder = "other/dist"
+site.build_folder = "dist"
 `;
 
 export const ALT_TEXT_PAGE = `<!doctype html>

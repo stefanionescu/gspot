@@ -264,7 +264,7 @@ test.each([...SCOPE_FINDINGS])("each check in a scope reads only that scope's fi
         'gspot.toml': buildSandboxSettings(['site', 'supabase', 'translations', 'cloudflare'], {
             level: 'all',
             scopes: [{ path: 'apps/backend' }],
-            tables: '[translations]\nmessages_folder = "messages"\nbase_locale = "en"\n[scope.translations]\nmessages_folder = "apps/backend/messages"\n',
+            tables: '[translations]\nmessages_folder = "messages"\nbase_locale = "en"\n[scope.translations]\nmessages_folder = "messages"\n',
         }),
     });
 

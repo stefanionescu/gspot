@@ -88,7 +88,7 @@ xcode_scheme = "App"
         scope: 'app',
         tables: `[[scope]]
 path = "app"
-swift = { xcode_project = "app/Choice.xcworkspace", xcode_scheme = "App" }
+swift = { xcode_project = "Choice.xcworkspace", xcode_scheme = "App" }
 `,
         files: { 'app/Child.xcodeproj/project.pbxproj': '', 'app/Choice.xcworkspace/contents.xcworkspacedata': '' },
         project: 'app/Choice.xcworkspace',
@@ -295,7 +295,7 @@ export const NESTED_SWIFTLINT_FILES = [
 export const SWIFT_PROJECT_SETTINGS = `configurations = ["swift", "xcode"]
 [[scope]]
 path = "nested"
-swift = {xcode_project = "nested/Chosen.xcodeproj"}
+swift = {xcode_project = "Chosen.xcodeproj"}
 [[scope]]
 path = "disabled"
 removed_configurations = { swift = "This scope does not build Swift projects." }

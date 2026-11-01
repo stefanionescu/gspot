@@ -5,6 +5,7 @@ import { formatNameList } from '#cli/system/text.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { listSettingReaders } from '#cli/engine/skips.ts';
+import { joinSettingPaths } from '#cli/settings/paths.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
@@ -95,9 +96,9 @@ function setSetting(scopeTable: TomlTable, change: ParsedSettingValue, setting: 
     setKey(scopeTable, options.key, { value, reason: options.reason });
 }
 
-function assertReason({ options, setting, change, previous, shippedDefault }: SettingReasonContext): void {
+function assertReason({ options, setting, change, joined, previous, shippedDefault }: SettingReasonContext): void {
     if (setting.reason_values === true) return;
-    const loosens = isLoosening(setting, change.value, shippedDefault);
+    const loosens = isLoosening(setting, joined, shippedDefault);
     if (options.reason === undefined) {
         if (change.type === 'list' && previous?.reason !== undefined && loosens)
             throw new GspotError(
@@ -149,7 +150,8 @@ function readSettingChange(
             : parseSettingValue(options.values, setting);
     const previous = getSettingValue(availableSettings, settings, options.key, edit.scope);
     const shippedDefault = findSettingDefault(availableSettings, settings, match, edit.scope)?.value;
-    assertReason({ options, setting, change, previous, shippedDefault });
+    const joined = joinSettingPaths(options.key, change.value, edit.scope);
+    assertReason({ options, setting, change, joined, previous, shippedDefault });
     const readers = listSettingReaders(settings, scope, options.key);
     const notes =
         options.key.startsWith('limits.') && readers.every((reader) => !reader.enabled)

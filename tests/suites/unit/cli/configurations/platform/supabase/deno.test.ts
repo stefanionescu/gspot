@@ -15,7 +15,7 @@ test('supabase/deno-lint runs in each scope folder on each edge function of its 
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['supabase'], {
             scopes: [{ path: 'apps/api', configurations: ['supabase'] }],
-            tables: '[scope.supabase]\nfunctions_folder = "apps/api/edge"\n',
+            tables: '[scope.supabase]\nfunctions_folder = "edge"\n',
         }),
         'supabase/functions/root/index.ts': 'export {};\n',
         'apps/api/edge/hello/index.ts': 'export {};\n',

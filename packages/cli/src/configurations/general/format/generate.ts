@@ -5,6 +5,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { Settings } from '#cli/types/settings.ts';
 import { listPrettierPlugins } from '#cli/engine/tools.ts';
+import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
@@ -55,7 +56,11 @@ function listScopeFormats(settings: Settings): ScopeFormat[] {
         scope === '' || Object.keys(format).length === 0 ? [] : { scope, paths: ['**/*'], format },
     );
     const overrides = tables.flatMap(({ scope, format }) =>
-        (format.override ?? []).map(({ paths, ...format }) => ({ scope, paths, format })),
+        (format.override ?? []).map(({ paths, ...format }) => ({
+            scope,
+            paths: paths.map((path) => joinScopeSelector(path, scope)),
+            format,
+        })),
     );
     return [...base, ...overrides];
 }

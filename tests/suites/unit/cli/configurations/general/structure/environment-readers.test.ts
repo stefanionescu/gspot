@@ -89,7 +89,7 @@ test('each scope uses its own environment readers', async () => {
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',
             scopes: [{ path: 'app', configurations: ['python'] }],
-            tables: '[structure]\nenvironment_readers = ["environment.py"]\n[scope.structure]\nenvironment_readers = ["app/environment.py"]\n',
+            tables: '[structure]\nenvironment_readers = ["environment.py"]\n[scope.structure]\nenvironment_readers = ["environment.py"]\n',
         }),
         'environment.py': OS_VALUE_SOURCE,
         'main.py': OS_VALUE_SOURCE,

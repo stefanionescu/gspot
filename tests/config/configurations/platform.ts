@@ -111,7 +111,7 @@ test_files = ["qa/**"]
 [[scope]]
 path = "apps/web"
 
-test_files = ["apps/web/qa/**", "apps/web/verification/**"]
+test_files = ["qa/**", "verification/**"]
 `;
 
 export const SERVICE_KEY_READERS = {

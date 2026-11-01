@@ -241,7 +241,12 @@ test('a scope path through a link to a folder outside the repository is refused'
 });
 
 test('a Semgrep rule file or a scope plugin module that names no file is refused at its key', async () => {
-    await using sandbox = await testdir({ 'present.mjs': 'export default {};', 'present.yml': 'rules: []' });
+    await using sandbox = await testdir({
+        'present.mjs': 'export default {};',
+        'present.yml': 'rules: []',
+        'app/present.mjs': 'export default {};',
+        'app/present.yml': 'rules: []',
+    });
     const text = stringify(RULE_FILE_SETTINGS);
     expect(validateSettingsText(text, sandbox.path)).toStrictEqual([...RULE_FILE_ERRORS]);
     const corrected = text

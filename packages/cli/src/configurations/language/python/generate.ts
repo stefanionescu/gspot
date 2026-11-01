@@ -71,7 +71,7 @@ export function buildBasedpyrightFile(planned: PlannedConfig): string {
             typeCheckingMode: BASEDPYRIGHT_LEVELS[planned.level],
             ...(pythonVenv !== undefined && { venvPath: pythonScopePath, venv: pythonVenv }),
             include: [pythonScopePath],
-            extraPaths: [pythonScopePath, ...extraPaths.map((path) => posix.join(pythonScopePath, path))],
+            extraPaths: [pythonScopePath, ...extraPaths.map((path) => posix.join(root, path))],
             exclude: listIgnoredGlobs(planned, BASEDPYRIGHT_CHECK, root),
         },
         null,

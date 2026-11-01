@@ -130,10 +130,10 @@ export const RULE_FILE_SETTINGS = {
 } as const;
 
 export const RULE_FILE_ERRORS = [
-    'gspot.toml:4: tools.eslint.plugins.0.path: missing-root.mjs names no file. Point path at a file, relative to the repository root.',
-    'gspot.toml:5: tools.semgrep.rule_files.0: missing-root.yml names no file. Point rule_files at a file, relative to the repository root.',
-    'gspot.toml:9: scope.0.tools.eslint.plugins.0.path: missing-scope.mjs names no file. Point path at a file, relative to the repository root.',
-    'gspot.toml:9: scope.0.tools.semgrep.rule_files.0: missing-scope.yml names no file. Point rule_files at a file, relative to the repository root.',
+    'gspot.toml:4: tools.eslint.plugins.0.path: missing-root.mjs names no file. Point path at a file, relative to its table.',
+    'gspot.toml:5: tools.semgrep.rule_files.0: missing-root.yml names no file. Point rule_files at a file, relative to its table.',
+    'gspot.toml:9: scope.0.tools.eslint.plugins.0.path: missing-scope.mjs names no file. Point path at a file, relative to its table.',
+    'gspot.toml:9: scope.0.tools.semgrep.rule_files.0: missing-scope.yml names no file. Point rule_files at a file, relative to its table.',
 ] as const;
 
 export const EMPTY_REASONS = [

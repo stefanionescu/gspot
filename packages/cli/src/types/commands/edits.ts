@@ -93,6 +93,7 @@ export type SettingReasonContext = {
     options: SetOptions;
     setting: Setting;
     change: ParsedSettingValue;
+    joined: unknown;
     previous: InheritedSetting | undefined;
     shippedDefault: unknown;
 };

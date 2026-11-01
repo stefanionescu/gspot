@@ -26,8 +26,7 @@ export const configurationTableSchemas = {
         .strictObject({
             types_file: destinationPathSchema.default('worker-configuration.d.ts').meta({
                 configurations: ['cloudflare'],
-                description:
-                    'Tracked Worker types file from the repository root; OpenNext defaults to cloudflare-env.d.ts.',
+                description: 'Tracked Worker types file; OpenNext defaults to cloudflare-env.d.ts.',
             }),
             types_interface: nonemptyStringSchema.default('Env').meta({
                 leftOut: 'repository',
@@ -95,7 +94,7 @@ export const configurationTableSchemas = {
             document: relativePathSchema.optional().meta({
                 configurations: ['openapi'],
                 description:
-                    'The committed OpenAPI document, relative to the repository root, which init fills in when it finds one; without it, the OpenAPI checks do not run.',
+                    'The committed OpenAPI document, which init fills in when it finds one; without it, the OpenAPI checks do not run.',
             }),
             generate_command: commandSchema.optional().meta({
                 leftOut: 'code',
@@ -124,7 +123,7 @@ export const configurationTableSchemas = {
             migrations_folder: relativePathSchema.optional().meta({
                 configurations: ['postgres'],
                 description:
-                    'The migrations folder, relative to the repository root; without it, the checks use the migration files of this configuration.',
+                    'The migrations folder; without it, the checks use the migration files of this configuration.',
             }),
         })
         .optional(),
@@ -154,8 +153,7 @@ export const configurationTableSchemas = {
         .strictObject({
             functions_folder: relativePathSchema.default('supabase/functions').meta({
                 configurations: ['supabase'],
-                description:
-                    'The folder, relative to the repository root, with one folder for each edge function; the default starts from the project scope.',
+                description: 'The folder with one folder for each edge function.',
             }),
             schemas: nonemptyStringsSchema.default(['public'] as ['public']).meta({
                 leftOut: 'repository',
@@ -164,8 +162,7 @@ export const configurationTableSchemas = {
             }),
             types_file: destinationPathSchema.optional().meta({
                 configurations: ['supabase'],
-                description:
-                    'The committed database types file, relative to the repository root; without it, no type comparison runs.',
+                description: 'The committed database types file; without it, no type comparison runs.',
             }),
         })
         .optional(),
@@ -178,7 +175,7 @@ export const configurationTableSchemas = {
             }),
             messages_folder: relativePathSchema.optional().meta({
                 configurations: ['translations'],
-                description: 'The folder of the `<locale>.json` message files, relative to the repository root.',
+                description: 'The folder of the `<locale>.json` message files.',
             }),
         })
         .optional(),
@@ -187,7 +184,7 @@ export const configurationTableSchemas = {
             xcode_project: relativePathSchema.optional().meta({
                 configurations: ['swift'],
                 description:
-                    'The Xcode project or workspace, relative to the repository root, which init fills in when it finds one; without it, the checks use the Swift package.',
+                    'The Xcode project or workspace, which init fills in when it finds one; without it, the checks use the Swift package.',
             }),
             xcode_scheme: nonemptyStringSchema.optional().meta({
                 leftOut: 'repository',

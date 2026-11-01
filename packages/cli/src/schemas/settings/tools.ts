@@ -38,7 +38,7 @@ export const javascriptSchema = z
             .meta({
                 configurations: ['javascript'],
                 description:
-                    'Folders, relative to the repository root, that a relative import may not leave, such as src/features/*. An import of a file outside them takes the alias, and eslint --fix writes it.',
+                    'Folders that a relative import may not leave, such as src/features/*. An import of a file outside them takes the alias, and eslint --fix writes it.',
             }),
         externals: allowReasonedValue(z.string().min(1).array(), {
             reason_when: 'adding',

@@ -44,7 +44,7 @@ test.each(['all'] as const)(
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings(['translations', 'react'], {
                 level,
-                tables: 'test_files = [ "**/qa/**" ]\n\n[[scope]]\npath = "app"\ntest_files = [ "app/verification/**" ]\n\n[[scope]]\npath = "app/deep"\n\n[[scope]]\npath = "sibling"\nremoved_configurations = { translations = "This scope does not translate its UI text." }\n',
+                tables: 'test_files = [ "**/qa/**" ]\n\n[[scope]]\npath = "app"\ntest_files = [ "verification/**" ]\n\n[[scope]]\npath = "app/deep"\n\n[[scope]]\npath = "sibling"\nremoved_configurations = { translations = "This scope does not translate its UI text." }\n',
             }),
             'package.json': '{"private":true,"type":"module"}\n',
             ...Object.fromEntries(

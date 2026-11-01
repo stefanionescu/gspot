@@ -139,8 +139,7 @@ export const pythonSchema = z
             .default([] as [])
             .meta({
                 configurations: ['python'],
-                description:
-                    'Folders, relative to the scope, that Python imports resolve from, for basedpyright and the import rules check.',
+                description: 'Folders that Python imports resolve from, for basedpyright and the import rules check.',
             }),
     })
     .optional();

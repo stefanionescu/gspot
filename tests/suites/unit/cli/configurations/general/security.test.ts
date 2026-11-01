@@ -32,7 +32,7 @@ test('Supabase rules use the configured functions folder', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['cloudflare'], {
             level: 'all',
-            tables: '[[scope]]\npath = "api"\n\nconfigurations = ["supabase"]\n[scope.supabase]\nfunctions_folder = "api/edge"\n[[scope]]\npath = "sibling"\n\nremoved_configurations = { cloudflare = "This scope does not deploy to Cloudflare." }\n',
+            tables: '[[scope]]\npath = "api"\n\nconfigurations = ["supabase"]\n[scope.supabase]\nfunctions_folder = "edge"\n[[scope]]\npath = "sibling"\n\nremoved_configurations = { cloudflare = "This scope does not deploy to Cloudflare." }\n',
         }),
         'src/worker.js': 'fetch(url.searchParams.get("target"));\n',
         'api/edge/handler.js': 'await req.json();\n',

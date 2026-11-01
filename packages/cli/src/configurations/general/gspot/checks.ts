@@ -1,7 +1,6 @@
 import { read } from '#cli/system/files/reads.ts';
 import { findToolName } from '#cli/tools/pins.ts';
 import type { Session } from '#cli/types/tools.ts';
-import { mapSettingPaths } from '#cli/settings/paths.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { SourceComment } from '#cli/types/parsers.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
@@ -20,6 +19,7 @@ import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';
 import { findSettingLine, isReasonedValue } from '#cli/settings/file.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
+import { mapSettingPaths, joinScopeSelector } from '#cli/settings/paths.ts';
 import type { CheckSession, CheckRunOptions } from '#cli/types/engine/run.ts';
 import { parseComments, stripCommentEnd } from '#cli/parsers/code/comments.ts';
 import type { FindingPlace, SuppressionSyntax } from '#cli/types/configurations/general.ts';
@@ -222,7 +222,8 @@ export function checkUnmatchedPaths(session: Session, _planned: PlannedCheck): C
         const findings: CheckFinding[] = [];
         const schema = scope === '' ? settingsSchema : scopeSchema;
         const visit: PathVisitor = (pattern, keys, role) => {
-            const matches = buildPathMatcher([pattern.replace(NEGATED_PATTERN, '')]);
+            const selector = keys[0] === 'path' ? pattern : joinScopeSelector(pattern, scope);
+            const matches = buildPathMatcher([selector.replace(NEGATED_PATTERN, '')]);
             if (role === 'source' && repositoryPaths.every((repositoryPath) => !matches(repositoryPath))) {
                 const names = keys
                     .filter(
@@ -239,7 +240,7 @@ export function checkUnmatchedPaths(session: Session, _planned: PlannedCheck): C
                     file: SETTINGS_FILE,
                     line: findSettingLine(session.settingsText, session.settings.written, [...path, ...keys]),
                     rule: GSPOT_RULES.unmatchedPath,
-                    message: `${pattern} under ${where} matches no tracked file or folder.${UNESCAPED_BRACKET.test(pattern) ? BRACKET_HELP : ''}`,
+                    message: `${selector} under ${where} matches no tracked file or folder.${UNESCAPED_BRACKET.test(pattern) ? BRACKET_HELP : ''}`,
                 });
             }
             return pattern;

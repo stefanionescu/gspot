@@ -81,19 +81,24 @@ export function joinScopeSelector(path: string, scopePath: string): string {
 }
 
 /**
-Resolve the path leaves of a shipped default against its project scope.
+Resolve the path leaves of a setting value against the table that sets it.
 
 @param key the dotted setting name.
-@param value the validated default.
+@param value the validated value.
 @param scopePath the owning folder, empty for repository-root values.
+@param buildFolder the folder that holds built-output paths.
 @returns repository-relative path values without changing identities or tool options.
 */
-export function joinDefaultPaths(key: string, value: unknown, scopePath: string): unknown {
-    if (scopePath === '' || value === undefined) return value;
+export function joinSettingPaths(key: string, value: unknown, scopePath: string, buildFolder = ''): unknown {
     const schema = findSettingSchema(key);
-    return schema === undefined
+    return schema === undefined || value === undefined
         ? value
-        : mapSettingPaths(schema, value, (path) => joinScopeSelector(path, scopePath), key.split('.'));
+        : mapSettingPaths(
+              schema,
+              value,
+              (path, _keys, role) => joinScopeSelector(path, role === 'build' ? buildFolder : scopePath),
+              key.split('.'),
+          );
 }
 
 /**

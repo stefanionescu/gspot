@@ -256,7 +256,7 @@ export const ENVIRONMENT_READER_SCOPE_TABLES = `[[scope]]
 path = "tools"
 configurations = ["bash"]
 [scope.structure]
-environment_readers = ["tools/env.sh"]
+environment_readers = ["env.sh"]
 `;
 
 export const LAYOUT_RULE_CASES = [

@@ -1,6 +1,7 @@
 import type { KeyPath } from '#cli/types/parsers.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
+import { joinSettingPaths } from '#cli/settings/paths.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import { TABLE_KEY_SEGMENTS } from '#cli/config/settings/schema.ts';
 import { UNDER_TABLE, AT_TOP_LEVEL } from '#cli/config/settings/validation.ts';
@@ -31,7 +32,8 @@ function validateWrittenReason(
     scopePath: string,
     shipped: unknown,
 ): SettingsError[] {
-    const isLoose = isLoosening(setting, written.value, shipped);
+    const joined = joinSettingPaths(key, written.value, scopePath);
+    const isLoose = isLoosening(setting, joined, shipped);
     if (written.reason !== undefined)
         return isLoose
             ? []
