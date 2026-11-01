@@ -1,10 +1,11 @@
 import { resolve, relative } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
+import { TYPOS_CODE_HELP } from '#cli/config/engine.ts';
 import { LINE_FEED } from '#cli/config/repository/git.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
 import { reportedTypoSchema } from '#cli/schemas/engine.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import type { Finding, ToolOutput, ReportedTypo } from '#cli/types/engine/tool-runs.ts';
 
 function readSourceLines(root: string, path: string, cache: Map<string, Buffer[]>): Buffer[] {
@@ -52,15 +53,17 @@ function buildTypoFinding(
     position: Pick<Finding, 'line' | 'column'>,
 ): Finding {
     const corrections = typo.corrections ?? [];
+    const isFixed = output.fixExtensions?.includes(extractExtension(path)) ?? true;
     const replacement = corrections.map((word) => `\`${word}\``).join(', ');
     const text =
         corrections.length === 0 ? `\`${typo.typo}\` is not allowed` : `\`${typo.typo}\` should be ${replacement}`;
+    const isLine = typo.line_num !== undefined;
     return {
         check: output.check,
         file: path,
-        help: output.help,
-        message: typo.line_num === undefined ? `Filename: ${text}` : text,
-        fixable: typo.line_num !== undefined && corrections.length === 1,
+        help: isFixed ? output.help : TYPOS_CODE_HELP,
+        message: isLine ? text : `Filename: ${text}`,
+        fixable: [isFixed, isLine, corrections.length === 1].every(Boolean),
         ...position,
     };
 }

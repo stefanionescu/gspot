@@ -6,6 +6,7 @@ import { hasErrorCode } from '#cli/system/errors.ts';
 import { findToolPath } from '#cli/tools/inspect.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
+import { extractExtension } from '#cli/system/paths.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -88,12 +89,17 @@ async function runFixer(session: CheckSession, planned: PlannedCheck): Promise<F
     const check = planned.check.id;
     if (session.cancelSignal?.aborted === true)
         return { check, status: 'canceled', changed: [], note: FIX_CANCELED_MESSAGE };
-    if (planned.skip !== undefined || planned.files.length + planned.triggerPaths.length === 0)
+    const { fix_extensions: extensions } = planned.check;
+    const files =
+        extensions === undefined
+            ? planned.files
+            : planned.files.filter(({ path }) => extensions.includes(extractExtension(path)));
+    if (planned.skip !== undefined || files.length + planned.triggerPaths.length === 0)
         return { check, status: 'skipped', changed: [] };
     const command = planned.check.fix as string[];
     const name = command[0] as string;
     const tool = planned.tool?.name === name ? planned.tool : getTool(readConfigurations().values(), name);
-    return runFixTool(session, planned, { command, tool });
+    return runFixTool(session, { ...planned, files }, { command, tool });
 }
 
 function readContents(sourceRoot: string, paths: string[]): PathBytes {

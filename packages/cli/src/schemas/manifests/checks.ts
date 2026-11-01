@@ -116,6 +116,7 @@ export const commandCheckFields = {
     summary: z.string().optional(),
     help: z.string().optional(),
     fix: commandSchema.optional(),
+    fix_extensions: z.string().min(1).array().optional(),
     exit_codes: findingExitCodesSchema.optional(),
     output: outputSchema.default(DEFAULT_OUTPUT_FORMAT),
 };

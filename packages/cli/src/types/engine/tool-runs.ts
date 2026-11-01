@@ -1,6 +1,6 @@
 import type { z } from 'zod';
-import type { Tool } from '#cli/types/manifests.ts';
 import type { CHECK_RUNS } from '#cli/config/manifests.ts';
+import type { Tool, Check } from '#cli/types/manifests.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { reportedTypoSchema } from '#cli/schemas/engine.ts';
 import type { GITLINK_MODE } from '#cli/config/repository/files.ts';
@@ -53,6 +53,7 @@ export type RevisionDependencies = { dependencies: string[]; dependencyNote?: st
 export type ToolOutput = OutputPaths & {
     check: string;
     help: string;
+    fixExtensions?: string[] | undefined;
     stdout: string;
     text: string;
     output: CheckOutput;
@@ -62,7 +63,7 @@ export type CheckOutput = z.output<typeof outputSchema>;
 
 export type OutputPaths = { cwd: string; root: string };
 
-export type ParsingCheck = {
+export type ParsingCheck = Partial<Pick<Check, 'fix_extensions'>> & {
     id: string;
     help: string;
     runs: (typeof CHECK_RUNS)[number];

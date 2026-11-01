@@ -80,6 +80,7 @@ export function parseOutput(check: ParsingCheck, stdout: string, stderr: string,
     const findings = OUTPUT_FORMATS[output.format].parse({
         check: check.id,
         help: check.help,
+        fixExtensions: check.fix_extensions,
         output,
         stdout,
         text,
