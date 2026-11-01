@@ -47,8 +47,10 @@ function buildScopeCompilerProject(
         options: {
             ...config.options,
             typeRoots: (
-                ts.getEffectiveTypeRoots({ ...config.options, configPath: join(root, scopePath, JSCONFIG_FILE) }, {}) ??
-                []
+                ts.getEffectiveTypeRoots(
+                    { ...config.options, configFilePath: join(root, scopePath, JSCONFIG_FILE) },
+                    {},
+                ) ?? []
             ).filter((path) => isInside(relative(root, path))),
         },
     };

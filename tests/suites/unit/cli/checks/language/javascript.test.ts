@@ -14,9 +14,27 @@ import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { fakeNpmTool, fakeCommands } from '#tests/setup/system/fakes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { runChecks, runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
+import { linkTypescript, linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { EMPTY_PROJECT_RESULT, IMPORTED_AMBIENT_FILES } from '#tests/config/checks/language/language.ts';
+
+test.each(['', 'app'])('javascript/tsc resolves project types in scope "%s" without tooling types', async (scope) => {
+    const prefix = scope === '' ? '' : `${scope}/`;
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            scopes: scope === '' ? [] : [{ path: scope }],
+        }),
+        [`${prefix}source.js`]: 'export const value = localValue;\nexport const secret = privateValue;\n',
+        [`${prefix}node_modules/@types/domain/index.d.ts`]: 'declare const localValue: string;\n',
+        '.gspot/node_modules/@types/private/index.d.ts': 'declare const privateValue: number;\n',
+    });
+    await linkTypescript(join(sandbox.path, 'node_modules'));
+    await applyGeneratedFiles(sandbox.path);
+    const findings = await runSandboxCheck(sandbox.path, 'javascript/tsc', { scope });
+    expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
+        { file: `${prefix}source.js`, line: 2, rule: 'TS2304' },
+    ]);
+});
 
 test('javascript/tsc checks a stale jsconfig and skips an absent one with apply advice', async () => {
     await using sandbox = await testdir({
