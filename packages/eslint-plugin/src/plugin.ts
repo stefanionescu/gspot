@@ -61,17 +61,20 @@ import { noElementOverwrite } from './rules/no-element-overwrite.ts';
 import { noGlobalsShadowing } from './rules/no-globals-shadowing.ts';
 import { noInvariantReturns } from './rules/no-invariant-returns.ts';
 import { noRedundantBoolean } from './rules/no-redundant-boolean.ts';
+import { noSwappedArguments } from './rules/no-swapped-arguments.ts';
 import { noTrivialFunctions } from './rules/no-trivial-functions.ts';
 import { noUnusedCollection } from './rules/no-unused-collection.ts';
 import { preferNativeJquery } from './rules/prefer-native-jquery.ts';
 import { reduceInitialValue } from './rules/reduce-initial-value.ts';
 import { requireErrorChecks } from './rules/require-error-checks.ts';
 import { noEmptyReturnValue } from './rules/no-empty-return-value.ts';
+import { noMixedReturnTypes } from './rules/no-mixed-return-types.ts';
 import { noNestedVitestMock } from './rules/no-nested-vitest-mock.ts';
 import { noSwitchCaseLabels } from './rules/no-switch-case-labels.ts';
 import { noIdenticalOperands } from './rules/no-identical-operands.ts';
 import { noNegatedComparison } from './rules/no-negated-comparison.ts';
 import { noRedundantOptional } from './rules/no-redundant-optional.ts';
+import { noSelectorParameter } from './rules/no-selector-parameter.ts';
 import { noUndefinedArgument } from './rules/no-undefined-argument.ts';
 import { preferBooleanReturn } from './rules/prefer-boolean-return.ts';
 import { noCommentsInImports } from './rules/no-comments-in-imports.ts';
@@ -126,6 +129,9 @@ import { noUnenclosedMultilineBlock } from './rules/no-unenclosed-multiline-bloc
 const rules = {
     ...securityRules,
     ...awsRules,
+    'no-mixed-return-types': noMixedReturnTypes,
+    'no-selector-parameter': noSelectorParameter,
+    'no-swapped-arguments': noSwappedArguments,
     'no-gratuitous-expressions': noGratuitousExpressions,
     'no-unused-collection': noUnusedCollection,
     'no-empty-collection': noEmptyCollection,

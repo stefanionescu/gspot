@@ -1,0 +1,38 @@
+import plugin from '#eslint-plugin/plugin.ts';
+import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+
+const rule = plugin.rules['no-selector-parameter'];
+
+buildRuleTester().run('no-selector-parameter', rule, {
+    valid: ['function save(draft) { if (draft) store(); else publish(); }'],
+    invalid: [],
+});
+
+buildTypedRuleTester().run('no-selector-parameter', rule, {
+    valid: [
+        'declare function store(): void; function save(draft: boolean) { if (draft) store(); }',
+        'declare function store(): void; function save(draft: boolean) { store(); if (draft) store(); else store(); }',
+        'function label(draft: boolean) { return draft ? "draft" : "final"; }',
+        'declare function store(): void; function save(draft?: boolean) { if (draft) store(); else store(); }',
+        'declare function store(): void; function save(draft: number) { if (draft) store(); else store(); }',
+        'declare function store(): void; declare function run(callback: unknown): void; run((draft: boolean) => { if (draft) store(); else store(); });',
+        'declare function store(): void; const handlers = { onSave(draft: boolean) { if (draft) store(); else store(); } };',
+    ],
+    invalid: [
+        {
+            code: 'declare function store(): void; declare function publish(): void; function save(draft: boolean) { if (draft) store(); else publish(); }',
+            errors: [{ messageId: 'selector', data: { name: 'draft' }, column: 103 }],
+        },
+        {
+            code: 'declare function store(): void; class Editor { save(draft: boolean) { return draft ? store() : 1; } }',
+            errors: [{ messageId: 'selector', data: { name: 'draft' } }],
+        },
+        {
+            code: 'declare function store(): void; const save = (draft: boolean, local: boolean) => { if (draft && !local) store(); else store(); };',
+            errors: [
+                { messageId: 'selector', data: { name: 'draft' } },
+                { messageId: 'selector', data: { name: 'local' } },
+            ],
+        },
+    ],
+});

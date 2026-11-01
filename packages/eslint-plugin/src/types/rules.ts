@@ -187,3 +187,9 @@ export type GroupRead = { node: TSESTree.Node; name: string };
 export type TestedName = { identifier: TSESTree.Identifier; value: 'truthy' | 'falsy' };
 
 export type DecidedVariable = { variable: TSESLint.Scope.Variable; value: TestedName['value'] };
+
+export type CallNode = TSESTree.CallExpression | TSESTree.NewExpression;
+
+export type ParameterNames = readonly (string | undefined)[];
+
+export type SwappedPair = readonly [string, string];

@@ -25,6 +25,8 @@ type TypeChecker = ReturnType<ParserServicesWithTypeInformation['program']['getT
 
 export type CheckedType = ReturnType<TypeChecker['getTypeAtLocation']>;
 
+export type CheckedSignature = NonNullable<ReturnType<TypeChecker['getSignatureFromDeclaration']>>;
+
 export type TypeReader = {
     program: ParserServicesWithTypeInformation['program'];
     checker: TypeChecker;
