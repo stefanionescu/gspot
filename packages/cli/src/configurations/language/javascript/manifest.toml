@@ -260,6 +260,10 @@ source = "eslint-functions.ts"
 target = "eslint/functions.mjs"
 tool = "eslint"
 
+[[config_file]]
+target = "eslint/import-cycles.mjs"
+tool = "eslint"
+
 [[check]]
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config_file:eslint}", "--format", "json", "{files}"]
 example = "The declaration `const unused = 1;` reports no-unused-vars. Delete the variable."
@@ -282,6 +286,33 @@ tags = ["shebang:node"]
 
 [check.output]
 children = ["messages"]
+format = "json"
+
+[check.output.fields]
+column = "column"
+file = "filePath"
+fixable = "fix"
+line = "line"
+message = "message"
+rule = "ruleId"
+
+[[check]]
+command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config_file:import-cycles}", "--format", "json", "{files}"]
+example = "`a.ts` imports `b.ts`, and `b.ts` imports `a.ts`: `import-x/no-cycle` reports each import. Move the shared code to a third module."
+exit_codes = [1]
+help = "Move the code that both files share to a module that imports neither of them."
+name = "import-cycles"
+stage = "push"
+summary = "Runs `import-x/no-cycle` alone, because it walks the whole import graph and is too slow for a commit."
+tool = ["eslint", "node"]
+why = "A cycle makes the start order of a module depend on which file loads first."
+
+[check.files]
+eslint_plugins = true
+extensions = [".js", ".jsx", ".mjs", ".cjs"]
+
+[check.output]
+children = "messages"
 format = "json"
 
 [check.output.fields]

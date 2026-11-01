@@ -36,6 +36,7 @@ import { buildPurgecssSafelistFile } from '#cli/configurations/framework/site/ge
 import { buildOsvScannerFile } from '#cli/configurations/general/dependencies/generate.ts';
 import { buildSpectralFile } from '#cli/configurations/infrastructure/openapi/generate.ts';
 import { buildEslintFile } from '#cli/configurations/language/javascript/eslint/config.ts';
+import { IMPORT_CYCLES_CONFIG } from '#cli/config/configurations/eslint.ts';
 import { buildAnsibleLintFile } from '#cli/configurations/infrastructure/ansible/generate.ts';
 import type { BuiltConfig, OwnedSourceFile, ConfigBuildState } from '#cli/types/generation.ts';
 import { buildV8rFile, buildTaploFile } from '#cli/configurations/general/data-files/generate.ts';
@@ -106,6 +107,7 @@ const CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder | undefined>> = {
     'javascript/biome.json': buildBiomeFile,
     'sql/sqlfluff.cfg': buildSqlfluffFile,
     'javascript/eslint/eslint.mjs': buildEslintFile,
+    'javascript/eslint/import-cycles.mjs': () => IMPORT_CYCLES_CONFIG,
     'javascript/jsconfig.json': buildJsconfigFile,
     'format/prettier.json': buildPrettierFile,
 };

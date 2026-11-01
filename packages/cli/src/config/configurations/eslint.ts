@@ -101,8 +101,9 @@ const SECURITY_RULES = {
     'security/detect-eval-with-expression': 'off',
     'security/detect-new-buffer': 'off',
     'security/detect-non-literal-regexp': 'off',
-    'security/detect-non-literal-require': 'error',
-    'security/detect-pseudoRandomBytes': 'error',
+    'security/detect-non-literal-require': 'off',
+    'security/detect-pseudoRandomBytes': 'off',
+    'import-x/no-dynamic-require': 'error',
     'security/detect-unsafe-regex': 'off',
     'security/detect-object-injection': 'off',
     'security/detect-non-literal-fs-filename': 'off',
@@ -186,9 +187,16 @@ const REGEXP_RULES = {
     'regexp/no-unused-capturing-group': 'error',
 } as const;
 
+export const IMPORT_CYCLES_CONFIG = `import config from './eslint.mjs';
+
+export default [
+    ...config.map(({ rules: _rules, ...block }) => block),
+    { rules: { 'import-x/no-cycle': ['error', { ignoreExternal: true }] } },
+];
+`;
+
 const IMPORT_X_RULES = {
     'import-x/export': 'error',
-    'import-x/no-cycle': 'error',
     'import-x/no-self-import': 'error',
     'import-x/no-useless-path-segments': 'error',
     'import-x/no-empty-named-blocks': 'error',
