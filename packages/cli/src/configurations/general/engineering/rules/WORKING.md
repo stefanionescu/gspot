@@ -53,6 +53,11 @@ follow the check, and name both to the user.
 When `gspot.toml` holds `[[import_rule]]` records, import only what they allow, and keep each code file inside the paths
 of a rule.
 
+## Agent rules
+
+Keep one `AGENTS.md`, at the root of the repository. It holds the rules for agents, or points to the rules that gspot
+installs. Do not add another `AGENTS.md`.
+
 ## No defensive logic
 
 Do not add guards, fallbacks, retries, defaults, or wrappers for states the public interface rules out. Handle known
