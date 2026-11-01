@@ -32,7 +32,6 @@ import { checkLoneFiles } from '#cli/configurations/general/structure/checks/lon
 import { checkLongFiles } from '#cli/configurations/general/structure/checks/long-files.ts';
 import { checkSkipReasons } from '#cli/configurations/language/swift/checks/skip-reasons.ts';
 import { checkBareBlocks } from '#cli/configurations/general/structure/checks/bare-blocks.ts';
-import { checkActionlint } from '#cli/configurations/infrastructure/github-actions/checks.ts';
 import { checkScriptLayout } from '#cli/configurations/language/bash/checks/script-layout.ts';
 import { checkAllowedNames } from '#cli/configurations/general/naming/checks/allowed-names.ts';
 import { checkSwiftlintAnalyze } from '#cli/configurations/language/swift/checks/swiftlint.ts';
@@ -60,6 +59,7 @@ import { checkFileFolderClashes } from '#cli/configurations/general/structure/ch
 import { checkJavascriptTsc, checkJavascriptBiome } from '#cli/configurations/language/javascript/checks.ts';
 import { checkEnvironmentReaders } from '#cli/configurations/general/structure/checks/environment-readers.ts';
 import { checkPassThroughFolders } from '#cli/configurations/general/structure/checks/pass-through-folders.ts';
+import { checkActionlint, checkWorkflowShape } from '#cli/configurations/infrastructure/github-actions/checks.ts';
 import { checkCompose, checkTrivyImage, checkDockerignore } from '#cli/configurations/infrastructure/docker/checks.ts';
 
 import {
@@ -138,6 +138,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'expo/expo-doctor': { check: checkExpoDoctor },
     'github-actions/actionlint': { run: checkActionlint },
     'gspot/baseline': { check: checkBaseline, runsLast: true },
+    'github-actions/workflow-shape': { check: checkWorkflowShape },
     'gspot/generated-files': { check: checkGeneratedFiles },
     'gspot/conflicting-configs': { check: checkConflictingConfigs },
     'gspot/suppressions': { check: checkSuppressions },

@@ -102,6 +102,36 @@ export const TRIVY_SKIPPED_FOLDERS = [NODE_MODULES, GSPOT_FOLDER, GIT_FOLDER] as
 
 export const HADOLINT_CHECK = 'docker/hadolint';
 
+export const WORKFLOW_SHAPE_RULES = {
+    timeout: 'job-timeout',
+    latestRunner: 'latest-runner',
+    continueOnError: 'continue-on-error',
+    runExpression: 'run-expression',
+    pullRequestConcurrency: 'pull-request-concurrency',
+    pushConcurrency: 'push-concurrency',
+    retention: 'artifact-retention',
+} as const;
+
+export const WORKFLOW_SHAPE_MESSAGES = {
+    timeout: 'This job has no `timeout-minutes`.',
+    latestRunner: 'Pin a runner image, such as `ubuntu-24.04`.',
+    continueOnError: 'Put a reason comment above this `continue-on-error`.',
+    runExpression: 'Pass this expression through the `env` of the step, and read it as a quoted shell variable.',
+    pullRequestConcurrency: 'This workflow runs for pull requests. Add a `concurrency` group keyed by the ref.',
+    pushConcurrency: 'This workflow runs only on a push. Remove `concurrency`: its result records that commit.',
+    retention: 'Set `retention-days` on this `upload-artifact` step.',
+} as const;
+
+export const PULL_REQUEST_TRIGGERS: ReadonlySet<string> = new Set(['pull_request', 'pull_request_target']);
+
+export const PUSH_TRIGGER = 'push';
+
+export const FLOATING_RUNNER = /-latest$/u;
+
+export const UPLOAD_ARTIFACT_ACTION = 'actions/upload-artifact@';
+
+export const WORKFLOW_EXPRESSION = '${{';
+
 export const SPECTRAL_DEFAULT_LEVEL_OFF = [
     'info-contact',
     'info-description',

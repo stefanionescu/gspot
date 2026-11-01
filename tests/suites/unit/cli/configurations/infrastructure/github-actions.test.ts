@@ -6,10 +6,11 @@ import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { stat, chmod, readFile } from 'node:fs/promises';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { CALLER_WORKFLOW } from '#tests/config/setup/configurations.ts';
@@ -131,3 +132,60 @@ test.each([...ACTIONLINT_EXITS])(
         expect(result.findings).toMatchObject(findings);
     },
 );
+
+test('workflow-shape reports each shape rule of a workflow, and passes after the fix', async () => {
+    const path = '.github/workflows/check.yml';
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['github-actions']),
+        [path]: `on:
+    pull_request: {}
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        continue-on-error: true
+        steps:
+            - run: echo "\${{ matrix.suite }}"
+            - uses: actions/upload-artifact@v4
+`,
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'github-actions/workflow-shape');
+    expect(findings.map(({ line, rule }) => [line, rule])).toStrictEqual([
+        [1, 'pull-request-concurrency'],
+        [4, 'job-timeout'],
+        [5, 'latest-runner'],
+        [6, 'continue-on-error'],
+        [8, 'run-expression'],
+        [9, 'artifact-retention'],
+    ]);
+    await writeFile(
+        join(sandbox.path, path),
+        `on:
+    pull_request: {}
+concurrency:
+    group: \${{ github.ref }}
+jobs:
+    test:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 30
+        # The nightly compiler breaks without notice.
+        continue-on-error: true
+        steps:
+            - run: echo "\${SUITE}"
+              env:
+                  SUITE: \${{ matrix.suite }}
+            - uses: actions/upload-artifact@v4
+              with:
+                  retention-days: 7
+`,
+    );
+    expect(await runSandboxCheck(sandbox.path, 'github-actions/workflow-shape')).toStrictEqual([]);
+});
+
+test('workflow-shape reports a push-only workflow with a concurrency group', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['github-actions']),
+        '.github/workflows/release.yml': 'on: push\nconcurrency:\n    group: release\njobs: {}\n',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'github-actions/workflow-shape');
+    expect(findings.map(({ line, rule }) => [line, rule])).toStrictEqual([[2, 'push-concurrency']]);
+});

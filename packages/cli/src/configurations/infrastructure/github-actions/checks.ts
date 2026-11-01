@@ -1,21 +1,41 @@
 import { join, posix } from 'node:path';
 import { read } from '#cli/system/files/reads.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { PRIVATE_FILE } from '#cli/config/system.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
 import { restoreCommandPaths } from '#cli/engine/results.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
-import { isMap, isSeq, isAlias, isScalar, type Scalar, parseDocument, type Document } from 'yaml';
+import type { WorkflowShapeHit } from '#cli/types/configurations/infrastructure.ts';
 
 import {
+    isMap,
+    isSeq,
+    isAlias,
+    isScalar,
+    type Scalar,
+    LineCounter,
+    type YAMLMap,
+    parseDocument,
+    type Document,
+} from 'yaml';
+import {
     GIT_FOLDER,
+    PUSH_TRIGGER,
     ACTION_FILES,
     GITHUB_FOLDER,
+    FLOATING_RUNNER,
+    WORKFLOW_EXPRESSION,
+    WORKFLOW_SHAPE_RULES,
+    PULL_REQUEST_TRIGGERS,
     SELF_REFERENCE_PREFIX,
     ENCODED_DOLLAR_SUFFIX,
+    UPLOAD_ARTIFACT_ACTION,
     SELF_REPOSITORY_MARKER,
+    WORKFLOW_SHAPE_MESSAGES,
 } from '#cli/config/configurations/infrastructure.ts';
 
 function listStepReferences(steps: unknown): unknown[] {
@@ -106,4 +126,99 @@ export async function checkActionlint(session: CheckSession, planned: PlannedChe
     }
     const result = await runCommandCheck({ ...session, root: scratch.path }, planned);
     return restoreCommandPaths(result, scratch.path, session.root);
+}
+
+function listTriggers(document: Document): string[] {
+    const triggers = document.get('on', true);
+    if (isScalar(triggers)) return [String(triggers.value)];
+    if (isSeq(triggers)) return triggers.items.filter(isScalar).map((trigger) => String(trigger.value));
+    return isMap(triggers) ? triggers.items.map((pair) => String(pair.key)) : [];
+}
+
+function findKey(map: YAMLMap, name: string): Scalar | undefined {
+    return map.items.map((pair) => pair.key).find((key): key is Scalar => isScalar(key) && key.value === name);
+}
+
+function listFlagHits(job: YAMLMap): WorkflowShapeHit[] {
+    const hits: WorkflowShapeHit[] = [];
+    const flag = findKey(job, 'continue-on-error');
+    if (flag !== undefined && job.get('continue-on-error') !== false)
+        hits.push({ kind: 'continueOnError', node: flag });
+    return hits;
+}
+
+function listStepHits(step: YAMLMap): WorkflowShapeHit[] {
+    const run = step.get('run', true);
+    const uses = step.get('uses');
+    return [
+        ...listFlagHits(step),
+        ...(isScalar(run) && String(run.value).includes(WORKFLOW_EXPRESSION)
+            ? [{ kind: 'runExpression' as const, node: run }]
+            : []),
+        ...(typeof uses === 'string' &&
+        uses.startsWith(UPLOAD_ARTIFACT_ACTION) &&
+        !step.hasIn(['with', 'retention-days'])
+            ? [{ kind: 'retention' as const, node: findKey(step, 'uses') as Scalar }]
+            : []),
+    ];
+}
+
+function listJobHits(name: Scalar, job: YAMLMap): WorkflowShapeHit[] {
+    const runner = job.get('runs-on', true);
+    const steps = job.get('steps', true);
+    return [
+        ...(job.has('uses') || job.has('timeout-minutes') ? [] : [{ kind: 'timeout' as const, node: name }]),
+        ...(isScalar(runner) && FLOATING_RUNNER.test(String(runner.value))
+            ? [{ kind: 'latestRunner' as const, node: runner }]
+            : []),
+        ...listFlagHits(job),
+        ...(isSeq(steps) ? steps.items.filter(isMap).flatMap((step) => listStepHits(step)) : []),
+    ];
+}
+
+function listConcurrencyHits(document: Document & { contents: YAMLMap }): WorkflowShapeHit[] {
+    const triggers = listTriggers(document);
+    const group = findKey(document.contents, 'concurrency');
+    const anchor = findKey(document.contents, 'on') ?? (document.contents.items[0]?.key as Scalar);
+    if (triggers.some((trigger) => PULL_REQUEST_TRIGGERS.has(trigger)))
+        return group === undefined ? [{ kind: 'pullRequestConcurrency', node: anchor }] : [];
+    return group !== undefined && triggers.every((trigger) => trigger === PUSH_TRIGGER)
+        ? [{ kind: 'pushConcurrency', node: group }]
+        : [];
+}
+
+/**
+Reports each workflow that breaks the shape rules of GITHUB-ACTIONS.md: job limits, runners, concurrency, comments on
+`continue-on-error`, expressions in `run:`, and artifact retention.
+
+@param session the repository file cache.
+@param planned the selected workflow files.
+*/
+export function checkWorkflowShape(session: Session, planned: PlannedCheck): CheckFinding[] {
+    return planned.files.flatMap(({ path }) => {
+        const text = read(session.cache, path);
+        const lines = new LineCounter();
+        const document = parseDocument(text, { lineCounter: lines });
+        if (document.errors.length > 0 || !isMap(document.contents)) return [];
+        const source = text.split('\n');
+        const jobs = document.get('jobs', true);
+        const jobHits = isMap(jobs)
+            ? jobs.items.flatMap(({ key, value }) => (isScalar(key) && isMap(value) ? listJobHits(key, value) : []))
+            : [];
+        return [...listConcurrencyHits(document as Document & { contents: YAMLMap }), ...jobHits].flatMap(
+            ({ kind, node }) => {
+                const { line } = lines.linePos(node.range?.[0] ?? 0);
+                const previous = source.slice(0, line - 1).at(-1);
+                if (kind === 'continueOnError' && previous?.trimStart().startsWith('#') === true) return [];
+                return [
+                    {
+                        file: path,
+                        line,
+                        rule: WORKFLOW_SHAPE_RULES[kind],
+                        message: WORKFLOW_SHAPE_MESSAGES[kind],
+                    },
+                ];
+            },
+        );
+    });
 }

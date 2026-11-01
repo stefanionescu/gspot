@@ -1,7 +1,9 @@
 import type { z } from 'zod';
+import type { Scalar } from 'yaml';
 import type { AlterTableCmd } from '@pgsql/types';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { WORKFLOW_SHAPE_RULES } from '#cli/config/configurations/infrastructure.ts';
 import type { composeSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations.ts';
 import type { SqlFile, SqlStatement, NumberedLine, SqlNodeFields } from '#cli/types/parsers.ts';
 
@@ -40,6 +42,8 @@ export type SchemaState = Pick<Schema, 'tables' | 'secured' | 'unprotectedViews'
 };
 
 export type StoragePolicies = Map<string, SqlNodeFields['CreatePolicyStmt']>;
+
+export type WorkflowShapeHit = { kind: keyof typeof WORKFLOW_SHAPE_RULES; node: Scalar };
 
 export type Location = { migration: Migration; statement: SqlStatement; table: string };
 

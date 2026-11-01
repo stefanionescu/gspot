@@ -39,6 +39,15 @@ tool = ["actionlint", "shellcheck"]
 why = "A workflow error surfaces on the first push after the change, in CI, where it costs a round trip."
 
 [[check]]
+example = "A job with no `timeout-minutes` reports `job-timeout`. Add `timeout-minutes: 30` to the job."
+files = { paths = ["**/.github/workflows/*.{yml,yaml}"] }
+help = "Apply the fix that the message names."
+name = "workflow-shape"
+stage = "commit"
+summary = "Checks each workflow for a job timeout, a pinned runner, a reason above `continue-on-error`, no expression in `run:`, a `concurrency` group that fits its triggers, and `retention-days` on uploads."
+why = "A hung job or a moving runner image costs a day to find, and an expression in `run:` becomes shell code."
+
+[[check]]
 command = ["zizmor", "--offline", "--no-progress", "--format", "github", "--config", "{config_file:zizmor}", "{files}"]
 example = "A workflow that puts pull request text straight into a shell command reports `template-injection`. Pass the text through a step environment variable, and quote its expansion."
 exit_codes = [11, 12, 13, 14]
