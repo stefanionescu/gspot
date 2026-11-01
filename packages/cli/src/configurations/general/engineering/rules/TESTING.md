@@ -2,7 +2,9 @@
 
 Read this rule when you write or change a test.
 
-Tests exist to catch bugs. A useful test fails when the behavior it covers breaks.
+Tests exist to catch bugs. A useful test fails when the behavior it covers breaks. A test proves a behavior that a user
+can observe, a security guarantee, a fixed bug, or a platform difference. One behavior gets one test, at the cheapest level that
+can fail.
 
 ## Assertions
 
@@ -11,12 +13,13 @@ Tests exist to catch bugs. A useful test fails when the behavior it covers break
   incidental configuration or internal representation.
 - Cover relevant empty and null inputs, limits, expected errors, and unexpected internal ones.
 - Assert every changed result: responses, stored rows, outbound requests, side effects, and logs.
-- A test has meaningful assertions; it does not only prove that the code called a collaborator or that a mock returns
-  its input.
+- A test has meaningful assertions; it does not only prove that the code called a collaborator. No test asserts a fake's
+  own return value.
 - Use snapshots only for stable data, and review every change to them.
 - Do not add test-only authentication bypasses, magic headers, or bypass routes.
-- Do not write a test that only repeats a constant, a table, or a configuration value. A test runs code and checks its
-  result.
+- No test pins a constant, a default, a message, a table, help text, or generated text that no behavior depends on. A
+  test runs code and checks its result.
+- No test checks a library, the language, a wrapper, or the test setup.
 - Do not export a function only so that a test can call it. Test it through the public function that uses it.
 - Test the behavior that exists. Never write a test that proves the absence of a feature, option, setting, export, or
   file that the project removed or decided against. When you remove a feature, delete its tests.
