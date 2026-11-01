@@ -286,12 +286,6 @@ export const ANALYZER_EXIT_CASES = [
     },
 ] as const;
 
-export const NESTED_SWIFTLINT_FILES = [
-    'app/.swiftlint.yml',
-    'app/Sources/.swiftlint.yml',
-    'app/Sources/Feature/.swiftlint.yml',
-] as const;
-
 export const SWIFT_PROJECT_SETTINGS = `configurations = ["swift", "xcode"]
 [[scope]]
 path = "nested"

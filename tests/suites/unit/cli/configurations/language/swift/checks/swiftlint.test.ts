@@ -1,25 +1,14 @@
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { planChecks } from '#cli/engine/plan.ts';
-import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
-import { buildCheckSession } from '#cli/engine/run.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { getBuiltInCheck, prepareSwiftCheck } from '#tests/setup/cli/checks.ts';
 import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
-import { listSwiftlintConfigs } from '#cli/configurations/language/swift/checks/swiftlint.ts';
-
-import {
-    ANALYZER_EXIT_CASES,
-    NESTED_SWIFTLINT_FILES,
-    UNEXPECTED_PLAN_MESSAGE,
-} from '#tests/config/configurations/swift.ts';
+import { ANALYZER_EXIT_CASES, UNEXPECTED_PLAN_MESSAGE } from '#tests/config/configurations/swift.ts';
 
 test.each([...ANALYZER_EXIT_CASES])(
     'analyzer: build exit $buildCode and analyzer exit $analyzerCode report the failed stage',
@@ -69,24 +58,4 @@ test('analyzer: swift/swiftlint-analyze removes its own old compiler files and l
     expect(await isOnDisk(analyzerState)).toBe(false);
     expect(await readFile(analyzer.log, 'utf8')).toBe('complete compiler log\n');
     expect(await readFile(compile.log, 'utf8')).toBe('incremental log\n');
-});
-
-test('the SwiftLint config files of a nested scope stop at the scope folder and include a link inside the repository', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['swift'], { scopes: [{ path: 'app' }] }),
-        '.swiftlint.yml': 'disabled_rules: []\n',
-        'app/.swiftlint.yml': 'disabled_rules: []\n',
-        'app/Sources/.swiftlint.yml': 'disabled_rules: []\n',
-        'app/Sources/Feature/One.swift': 'let one = 1\n',
-        'app/Sources/Feature/Two.swift': 'let two = 2\n',
-        'app/Other/.swiftlint.yml': 'disabled_rules: []\n',
-    });
-
-    const session = buildCheckSession(await openSession(sandbox.path), CHECK_GENERATION);
-    const plans = planChecks(session, { stage: 'commit', only: ['swift/swiftlint'] });
-    const planned = plans.find((plan) => plan.scope.path === 'app')!;
-    const shipped = '.gspot/configurations/language/swift/swiftlint.yml';
-    expect(listSwiftlintConfigs(session, planned)).toStrictEqual([shipped, ...NESTED_SWIFTLINT_FILES.slice(0, -1)]);
-    await symlink('../.swiftlint.yml', join(sandbox.path, 'app/Sources/Feature/.swiftlint.yml'));
-    expect(listSwiftlintConfigs(session, planned)).toStrictEqual([shipped, ...NESTED_SWIFTLINT_FILES]);
 });

@@ -58,6 +58,7 @@ import { buildAnsibleLintFile } from '#cli/configurations/infrastructure/ansible
 import { checkActionlint } from '#cli/configurations/infrastructure/github-actions/checks.ts';
 import { checkScriptLayout } from '#cli/configurations/language/bash/checks/script-layout.ts';
 import { checkAllowedNames } from '#cli/configurations/general/naming/checks/allowed-names.ts';
+import { checkSwiftlintAnalyze } from '#cli/configurations/language/swift/checks/swiftlint.ts';
 import { checkImportRules } from '#cli/configurations/general/structure/checks/import-rules.ts';
 import { checkBashDocComments } from '#cli/configurations/language/bash/checks/doc-comments.ts';
 import { checkHeaders, checkRedirects } from '#cli/configurations/platform/cloudflare/checks.ts';
@@ -86,7 +87,6 @@ import { checkJavascriptTsc, checkJavascriptBiome } from '#cli/configurations/la
 import { checkEnvironmentReaders } from '#cli/configurations/general/structure/checks/environment-readers.ts';
 import { checkPassThroughFolders } from '#cli/configurations/general/structure/checks/pass-through-folders.ts';
 import { checkEncoding, checkLargeFiles, checkLocalFiles } from '#cli/configurations/general/repository/checks.ts';
-import { listSwiftlintConfigs, checkSwiftlintAnalyze } from '#cli/configurations/language/swift/checks/swiftlint.ts';
 import { checkCompose, checkTrivyImage, checkDockerignore } from '#cli/configurations/infrastructure/docker/checks.ts';
 
 import {
@@ -276,7 +276,6 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'swift/doc-comments': { check: checkSwiftDocComments },
     'swift/periphery': { check: checkPeriphery },
     'swift/skip-reasons': { check: checkSkipReasons },
-    'swift/swiftlint': { listConfigs: listSwiftlintConfigs },
     'swift/swiftlint-analyze': { check: checkSwiftlintAnalyze },
     'translations/messages': { check: checkMessages },
     'typescript/tsc': { run: checkTsc },

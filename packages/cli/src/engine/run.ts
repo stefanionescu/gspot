@@ -264,8 +264,5 @@ export async function runCheckCode(
     options: CheckRunOptions,
 ): Promise<CheckResult> {
     if (code?.check !== undefined) return runBuiltInCheck(code.check, session, planned, options);
-    return (code?.run ?? runCommandCheck)(session, planned, {
-        ...options,
-        listConfigs: code?.listConfigs,
-    });
+    return (code?.run ?? runCommandCheck)(session, planned, options);
 }

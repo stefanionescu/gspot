@@ -85,15 +85,10 @@ async function runCommands(
 
 function findMissingConfig(
     planned: PlannedCheck,
-    {
-        session,
-        command,
-        base,
-        configs,
-    }: { session: CheckSession; command: string[]; base: CheckResult; configs: string[] },
+    { session, command, base }: { session: CheckSession; command: string[]; base: CheckResult },
 ): CheckResult | undefined {
     const files = openFiles(session.root);
-    const missing = [...configs, ...listCommandConfigs(session, planned, command)].find(
+    const missing = listCommandConfigs(session, planned, command).find(
         (path) => (isGspotPath(path) ? files.read(path) : find(session.cache, path)) === undefined,
     );
     if (missing === undefined) return undefined;
@@ -271,8 +266,7 @@ export async function runCommandCheck(
     const setup = buildCommandSetup(session, planned, session.root);
     const command = buildToolCommand(session, planned, options, setup.env);
     const { cwd } = setup;
-    const configs = options.listConfigs?.(session, planned) ?? [];
-    const missing = findMissingConfig(planned, { session, command, base, configs });
+    const missing = findMissingConfig(planned, { session, command, base });
     if (missing !== undefined) return missing;
     const availability = await findToolPath(session, tool, cwd);
     if ('status' in availability) return { ...base, ...availability };

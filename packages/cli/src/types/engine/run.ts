@@ -82,10 +82,9 @@ export type RunResult = { report: RunReport; planned: PlannedCheck[]; fixes?: Fi
 
 export type CheckStatus = 'passed' | 'failed' | 'missing' | 'skipped' | 'error';
 
-export type CheckCode = ({ check: BuiltInCheck; run?: never } | { run?: CheckRun; check?: never }) &
-    Pick<CheckRunOptions, 'listConfigs'> & {
-        ruleDocs?: Readonly<Record<string, LintRuleDocs>>;
-    };
+export type CheckCode = ({ check: BuiltInCheck; run?: never } | { run?: CheckRun; check?: never }) & {
+    ruleDocs?: Readonly<Record<string, LintRuleDocs>>;
+};
 
 type CheckRun = (
     session: CheckSession,
@@ -96,7 +95,6 @@ type CheckRun = (
 export type CheckRunOptions = {
     verbose?: boolean | undefined;
     command?: string[];
-    listConfigs?: ((session: CheckSession, planned: PlannedCheck) => string[]) | undefined;
 };
 
 export type FindingOptions = { verbose: boolean; help: string | undefined };
