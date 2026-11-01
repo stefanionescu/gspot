@@ -320,7 +320,13 @@ export const NPM_CONFIG_FOLDER_VARIABLE = 'XDG_CONFIG_HOME';
 
 export const NPM_SETTING_PREFIX = 'npm_config_';
 
+export const NOT_FOUND_STATUS = 404;
+
+export const MILLISECONDS_PER_DAY = 86_400_000;
+
 export const NPMRC_FILE = '.npmrc';
+
+export const NPM_DEFAULT_REGISTRY = 'https://registry.npmjs.org/';
 
 export const NODE_TOOL = 'node';
 

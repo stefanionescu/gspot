@@ -20,13 +20,18 @@ import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { PRIVATE_FILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { uvSettingsSchema, uvProjectSettingsSchema } from '#cli/schemas/tools.ts';
 import { GSPOT_FOLDER, PYPROJECT_TOML, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers.ts';
-import { runInstallStep, explainReleaseAgeHold, runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
 
 import {
     redactInstallOutput,
     extractUrlPasswords,
     assertCredentialFreeLockfile,
 } from '#cli/tools/installers/credentials.ts';
+import {
+    runInstallStep,
+    listPythonReleases,
+    explainReleaseAgeHold,
+    runRequiredInstallStep,
+} from '#cli/tools/installers/steps.ts';
 import type {
     UvCommand,
     UvLockfile,
@@ -84,9 +89,10 @@ async function runUv(
     if (result.code !== 0) {
         const output = redactInstallOutput(result, credentials);
         const pins = listPackagePins(install.session.toolConfigurations).python;
+        const explanation = await explainReleaseAgeHold(install, output, listPythonReleases(pins));
         throw new GspotError(
             'install',
-            `${explainReleaseAgeHold(install, output, pins)}uv ${String(commandArguments[0])} failed (exit ${String(result.code)}).\n${output}`,
+            `${explanation}uv ${String(commandArguments[0])} failed (exit ${String(result.code)}).\n${output}`,
         );
     }
     return result;
@@ -150,6 +156,12 @@ function hasAllowedPythonOrigins(lockfile: UvLockfile, indexes: PythonIndexSetti
     });
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The lockfile step and the install step write the same private settings file through it.
+function writeUvSettings(folder: string, indexes: PythonIndexSettings['settings'], days: number): void {
+    const settings = stringify({ ...indexes, 'exclude-newer': `${String(days)} days` });
+    writeFileSync(join(folder, UV_SETTINGS_FILE), settings, { mode: PRIVATE_FILE });
+}
+
 function normalizeIndexLocation(root: string, location: string): string {
     if (URL_SCHEME.test(location)) return location;
     return resolve(root, location);
@@ -173,9 +185,9 @@ export async function planPythonLockfile(
     const project = buildPythonProjectTable(install.session.toolConfigurations);
     const previous = install.writer.read(GSPOT_PATHS.uvLockfile);
     const saved = previous?.bytes.toString('utf8');
-    const { settings: indexes, credentials: savedCredentials } = readPythonSettings(root);
+    const { settings: indexes, credentials } = readPythonSettings(root);
     if (isPythonLockfileFresh(project, saved, indexes, install.releaseAgeDays)) {
-        assertCredentialFreeLockfile(saved, savedCredentials, UV_LOCKFILE_CREDENTIAL_MESSAGE);
+        assertCredentialFreeLockfile(saved, credentials, UV_LOCKFILE_CREDENTIAL_MESSAGE);
         return {
             path: GSPOT_PATHS.uvLockfile,
             next: { bytes: Buffer.from(saved), mode: OWNER_WRITABLE_FILE },
@@ -185,13 +197,7 @@ export async function planPythonLockfile(
     using scratch = createTemporaryFolder();
     const runFolder = scratch.path;
     writeFileSync(join(runFolder, PYPROJECT_TOML), toolProjectFile.content);
-
-    writeFileSync(
-        join(runFolder, UV_SETTINGS_FILE),
-        stringify({ ...indexes, 'exclude-newer': `${String(install.releaseAgeDays)} days` }),
-        { mode: PRIVATE_FILE },
-    );
-    const credentials = savedCredentials;
+    writeUvSettings(runFolder, indexes, install.releaseAgeDays);
     await runUv(install, {
         runFolder,
         commandArguments: UV_LOCKFILE_ARGUMENTS,
@@ -224,11 +230,7 @@ export async function installPythonTools(
 
     using settings = createTemporaryFolder();
     const { settings: indexes, credentials } = readPythonSettings(root);
-    writeFileSync(
-        join(settings.path, UV_SETTINGS_FILE),
-        stringify({ ...indexes, 'exclude-newer': `${String(install.releaseAgeDays)} days` }),
-        { mode: PRIVATE_FILE },
-    );
+    writeUvSettings(settings.path, indexes, install.releaseAgeDays);
     await runUv(install, {
         runFolder,
         commandArguments: [...UV_INSTALL_ARGUMENTS, ...flags],

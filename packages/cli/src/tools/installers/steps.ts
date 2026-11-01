@@ -1,10 +1,12 @@
 import { runTool } from '#cli/tools/run.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import type { ToolInstall } from '#cli/types/tools.ts';
 import { writeProgress } from '#cli/system/terminal.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+import type { ToolInstall, ToolRelease } from '#cli/types/tools.ts';
 import { redactInstallOutput } from '#cli/tools/installers/credentials.ts';
+import { npmReleaseSchema, pypiReleaseSchema } from '#cli/schemas/tools.ts';
+import { NOT_FOUND_STATUS, MILLISECONDS_PER_DAY, PYTHON_DEFAULT_INDEX_ORIGIN } from '#cli/config/tools/installers.ts';
 
 /**
 Record and run one install command with the shared cancellation and time limit.
@@ -64,18 +66,72 @@ export async function runRequiredInstallStep(
     return result;
 }
 
+async function readPublishedTime(install: ToolInstall, release: ToolRelease): Promise<Date | 'absent' | undefined> {
+    const { timeoutSeconds } = install.session;
+    const response = await fetch(release.url, {
+        signal: AbortSignal.timeout(timeoutSeconds * MILLISECONDS_PER_SECOND),
+    });
+    if (response.status === NOT_FOUND_STATUS) return 'absent';
+    if (!response.ok) return undefined;
+    const body: unknown = await response.json();
+    const published =
+        release.kind === 'npm'
+            ? npmReleaseSchema.parse(body).time[release.version]
+            : pypiReleaseSchema.parse(body).urls[0]?.upload_time_iso_8601;
+    return published === undefined ? 'absent' : new Date(published);
+}
+
 /**
-Name the pinned tools that a failed resolution names, and the setting that holds them back. A package manager finds no
-release of a pin that came out after the hold began.
+List the Python pins with the address of each release on the default index.
+
+@param pins the pins, each written name==version.
+*/
+export function listPythonReleases(pins: readonly string[]): ToolRelease[] {
+    return pins.map((pin) => {
+        const [name, version] = pin.split('==') as [string, string];
+        return {
+            label: pin,
+            kind: 'python',
+            version,
+            url: `${PYTHON_DEFAULT_INDEX_ORIGIN}/pypi/${name}/${version}/json`,
+        };
+    });
+}
+
+/**
+Say why the registry refused pinned tools that a failed resolution names. A release inside the hold waits for its age,
+and a release that the registry does not have needs another pin. A failed registry lookup adds nothing.
 
 @param install the installation state with the hold.
 @param output the redacted output of the package manager.
-@param pins each pinned tool with its version, as the package manager names it.
+@param releases each pinned tool, with the registry address of its release.
 @returns the explanation and a line break, or an empty string when the output names no pin.
 */
-export function explainReleaseAgeHold(install: ToolInstall, output: string, pins: readonly string[]): string {
-    const held = pins.filter((pin) => output.includes(pin));
-    if (held.length === 0 || install.releaseAgeDays === 0) return '';
+export async function explainReleaseAgeHold(
+    install: ToolInstall,
+    output: string,
+    releases: readonly ToolRelease[],
+): Promise<string> {
+    const named = releases.filter((release) => output.includes(release.label));
+    if (named.length === 0 || install.releaseAgeDays === 0) return '';
+    const published = await Promise.all(
+        named.map(async (release) => ({
+            label: release.label,
+            time: await readPublishedTime(install, release).catch(() => undefined),
+        })),
+    );
+    const oldest = Date.now() - install.releaseAgeDays * MILLISECONDS_PER_DAY;
+    const absent = published.filter(({ time }) => time === 'absent').map(({ label }) => label);
+    const held = published
+        .filter(({ time }) => time instanceof Date && time.getTime() > oldest)
+        .map(({ label }) => label);
     const days = String(install.releaseAgeDays);
-    return `${held.join(', ')} came out less than ${days} days ago. The setting dependencies.min_release_age_days holds back each release for ${days} days. Wait for the release to age, or lower the setting with gspot set dependencies.min_release_age_days <days> --reason "<why>".\n`;
+    return [
+        ...(absent.length === 0 ? [] : [`The registry has no release ${absent.join(', ')}.\n`]),
+        ...(held.length === 0
+            ? []
+            : [
+                  `${held.join(', ')} came out less than ${days} days ago. The setting dependencies.min_release_age_days holds back each release for ${days} days. Wait for the release to age, or lower the setting with gspot set dependencies.min_release_age_days <days> --reason "<why>".\n`,
+              ]),
+    ].join('');
 }

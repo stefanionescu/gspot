@@ -38,6 +38,12 @@ export const pnpmToolPackageSchema = z.looseObject({
     resolution: z.looseObject({ integrity: z.string(), tarball: z.string().optional() }),
 });
 
+export const npmReleaseSchema = z.looseObject({ time: z.record(z.string(), z.string()) });
+
+export const pypiReleaseSchema = z.looseObject({
+    urls: z.looseObject({ upload_time_iso_8601: z.string() }).array(),
+});
+
 export const lintRuleDocsSchema = z.object({
     description: z.string().exactOptional(),
     url: z.string().exactOptional(),

@@ -21,6 +21,7 @@ import { isLockfileFresh, selectLockfileName, stripBunRegistryUrls } from '#cli/
 
 import type {
     ToolInstall,
+    ToolRelease,
     GeneratedFile,
     NpmToolInstall,
     PackageManagerRun,
@@ -33,6 +34,7 @@ import {
     INSTALL_FAILURE,
     LOCKFILE_FAILURE,
     NPM_SETTING_PREFIX,
+    NPM_DEFAULT_REGISTRY,
     RELEASE_AGE_VERSIONS,
     NODE_MISSING_MESSAGE,
     PACKAGE_MANAGER_ARGUMENTS,
@@ -84,12 +86,19 @@ async function runPackageManager(install: ToolInstall, request: PackageManagerRe
     });
     if (result.code !== 0) {
         const output = redactInstallOutput(result, credentials);
-        const pins = Object.entries(listPackagePins(install.session.toolConfigurations).npm).map(
-            ([name, version]) => `${name}@${version}`,
+        const registry = env[`${NPM_SETTING_PREFIX}registry`] ?? NPM_DEFAULT_REGISTRY;
+        const releases = Object.entries(listPackagePins(install.session.toolConfigurations).npm).map(
+            ([name, version]): ToolRelease => ({
+                label: `${name}@${version}`,
+                kind: 'npm',
+                version,
+                url: new URL(name.replace('/', '%2f'), registry.endsWith('/') ? registry : `${registry}/`).href,
+            }),
         );
+        const explanation = await explainReleaseAgeHold(install, output, releases);
         throw new GspotError(
             'install',
-            `${explainReleaseAgeHold(install, output, pins)}${packageManager.name} ${failure} (exit ${String(result.code)}).\n${output}`,
+            `${explanation}${packageManager.name} ${failure} (exit ${String(result.code)}).\n${output}`,
         );
     }
     return { environment: env, credentials };

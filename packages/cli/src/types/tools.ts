@@ -173,6 +173,8 @@ export type ToolInstall = {
     steps: (readonly string[])[];
 };
 
+export type ToolRelease = { label: string; kind: 'npm' | 'python'; version: string; url: string };
+
 export type MiseInstall = { installed: string; note: string; binPaths: string[]; tools: Tool[] };
 
 export type ToolProjectsInstall = { installed: string[]; tools: Tool[] };
