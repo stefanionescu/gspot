@@ -150,3 +150,13 @@ test('supabase/storage-policies reports invalid bucket settings as a syntax find
     expect(failed.report.exitCode).toBe(1);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
+
+test('supabase/verify-jwt reports verify_jwt = false without a comment on its line', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['supabase']),
+        'supabase/config.toml':
+            '[functions.webhook]\nverify_jwt = false\n\n[functions.hook]\nverify_jwt = false # A signed webhook.\n\n[functions.user]\nverify_jwt = true\n',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'supabase/verify-jwt');
+    expect(findings.map(({ rule, line }) => ({ rule, line }))).toStrictEqual([{ rule: 'verify-jwt', line: 2 }]);
+});

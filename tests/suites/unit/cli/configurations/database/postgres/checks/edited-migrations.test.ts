@@ -8,9 +8,10 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { NAME_COLUMN_SQL } from '#tests/config/configurations/database.ts';
-import { createMigrationHistory } from '#tests/setup/sandboxes/repositories.ts';
 import { TEAMS_TABLE_SQL, TEAMS_MIGRATION_PATH } from '#tests/config/setup/sandboxes.ts';
+import { createGitSandbox, createMigrationHistory } from '#tests/setup/sandboxes/repositories.ts';
 
 test('history checks compare committed migration changes with the selected base revision', async () => {
     await using sandbox = await createMigrationHistory();
@@ -48,5 +49,29 @@ test('edited-migrations reports an edited committed migration and passes after t
         }),
     ]);
     await writeFile(join(sandbox.path, TEAMS_MIGRATION_PATH), TEAMS_TABLE_SQL);
+    expect(await runSandboxCheck(sandbox.path, 'postgres/edited-migrations')).toStrictEqual([]);
+});
+
+test.each([
+    'CREATE TABLE IF NOT EXISTS teams (id int);',
+    'CREATE INDEX IF NOT EXISTS team_index ON teams (id);',
+    'ALTER TABLE teams ADD COLUMN IF NOT EXISTS name text;',
+    'CREATE EXTENSION IF NOT EXISTS pgcrypto;',
+])('edited-migrations reports the drift guard of %s', async (statement) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['postgres']),
+        'migrations/1_tables.sql': `${statement}\n`,
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'postgres/edited-migrations');
+    expect(findings.map(({ rule, line }) => ({ rule, line }))).toStrictEqual([{ rule: 'drift-guard', line: 1 }]);
+});
+
+test('edited-migrations accepts IF NOT EXISTS on CREATE INDEX CONCURRENTLY', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['postgres'], { tables: '[postgres]\nfrozen_through = "1"\n' }),
+        'migrations/1_tables.sql': 'CREATE TABLE teams (id int);\n',
+        'migrations/2_index.sql': 'CREATE INDEX CONCURRENTLY IF NOT EXISTS team_index ON teams (id);\n',
+    });
+    commitAll(sandbox.path);
     expect(await runSandboxCheck(sandbox.path, 'postgres/edited-migrations')).toStrictEqual([]);
 });

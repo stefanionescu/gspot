@@ -48,3 +48,49 @@ test('row security skips when no client schemas are selected', async () => {
         { status: 'skipped', findings: [], note: 'needs the setting postgres.client_schemas' },
     ]);
 });
+
+test.each([
+    ['CREATE POLICY reader ON teams USING (id = 1);', 'policy-without-roles'],
+    ['CREATE POLICY reader ON teams TO authenticated USING (owner = auth.uid());', 'per-row-identity-call'],
+    [
+        "CREATE POLICY reader ON teams TO authenticated WITH CHECK (tenant = current_setting('app.tenant'));",
+        'per-row-identity-call',
+    ],
+    ['CREATE POLICY reader ON teams TO anon USING (true);', 'open-policy'],
+    ['CREATE VIEW public.team_names AS SELECT 1;', 'view-without-security-invoker'],
+    ['CREATE VIEW public.team_names WITH (security_invoker = false) AS SELECT 1;', 'view-without-security-invoker'],
+])('row security reports %s as %s', async (statement, rule) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['postgres'], { tables: '[postgres]\nclient_schemas = ["public"]\n' }),
+        'migrations/1_tables.sql': `CREATE TABLE teams (id int);\nALTER TABLE teams ENABLE ROW LEVEL SECURITY;\n${statement}\n`,
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'postgres/row-level-security');
+    expect(findings.map((finding) => finding.rule)).toStrictEqual([rule]);
+});
+
+test.each([
+    'CREATE POLICY reader ON teams TO authenticated USING (owner = (select auth.uid()));',
+    '-- The catalog is public.\nCREATE POLICY reader ON teams TO anon USING (true);',
+    'CREATE POLICY reader ON teams TO anon USING (true); -- The catalog is public.',
+    'CREATE VIEW public.team_names WITH (security_invoker = true) AS SELECT 1;',
+    'CREATE VIEW public.team_names AS SELECT 1;\nALTER VIEW public.team_names SET (security_invoker = true);',
+    'CREATE VIEW private.team_names AS SELECT 1;',
+    'CREATE VIEW public.team_names AS SELECT 1;\nDROP VIEW public.team_names;',
+])('row security accepts %s', async (statement) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['postgres'], { tables: '[postgres]\nclient_schemas = ["public"]\n' }),
+        'migrations/1_tables.sql': `CREATE TABLE teams (id int);\nALTER TABLE teams ENABLE ROW LEVEL SECURITY;\n${statement}\n`,
+    });
+    expect(await runSandboxCheck(sandbox.path, 'postgres/row-level-security')).toStrictEqual([]);
+});
+
+test('row security leaves the policies of a frozen migration alone', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['postgres'], {
+            tables: '[postgres]\nclient_schemas = ["public"]\nfrozen_through = "1"\n',
+        }),
+        'migrations/1_tables.sql':
+            'CREATE TABLE teams (id int);\nALTER TABLE teams ENABLE ROW LEVEL SECURITY;\nCREATE POLICY reader ON teams USING (id = 1);\n',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'postgres/row-level-security')).toStrictEqual([]);
+});

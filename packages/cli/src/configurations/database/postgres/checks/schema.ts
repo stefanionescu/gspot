@@ -1,13 +1,20 @@
-import type { Constraint } from '@pgsql/types';
+import type { Node, Constraint } from '@pgsql/types';
 import type { SqlStatement } from '#cli/types/parsers.ts';
 import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
-import { PUBLIC_SCHEMA, SCHEMA_NAME_INDEX, CONSTRAINT_SUFFIXES } from '#cli/config/configurations/infrastructure.ts';
 
+import {
+    PUBLIC_SCHEMA,
+    SCHEMA_NAME_INDEX,
+    CONSTRAINT_SUFFIXES,
+    DISABLED_OPTION_VALUES,
+    SECURITY_INVOKER_OPTION,
+} from '#cli/config/configurations/infrastructure.ts';
 import type {
     Schema,
     Location,
     Migration,
     SchemaState,
+    SourceStatement,
     StatementReader,
     SchemaAlterations,
     SqlStatementVisitors,
@@ -23,6 +30,21 @@ function removeTable(state: SchemaState, table: string): void {
     state.secured.delete(table);
     state.constraints.delete(table);
     state.indexes = state.indexes.filter((index) => index.table !== table);
+}
+
+function readViewOptions(
+    state: SchemaState,
+    view: string,
+    options: Node[] | undefined,
+    source?: SourceStatement,
+): void {
+    const isInvoker = listNodeFields(options, 'DefElem').some(
+        (option) =>
+            option.defname === SECURITY_INVOKER_OPTION &&
+            !DISABLED_OPTION_VALUES.has(findNodeFields(option.arg, 'String')?.sval ?? ''),
+    );
+    if (isInvoker) state.unprotectedViews.delete(view);
+    else if (source !== undefined) state.unprotectedViews.set(view, source);
 }
 
 function renameTable(state: SchemaState, table: string, renamed: string): void {
@@ -127,6 +149,9 @@ const ALTERATIONS: SchemaAlterations = {
         const node = findNodeFields(command.def, 'Constraint');
         if (node !== undefined) addConstraint(state, at, node);
     },
+    AT_SetRelOptions: (state, at, command) => {
+        readViewOptions(state, at.table, findNodeFields(command.def, 'List')?.items);
+    },
 };
 
 const readAlterTable: StatementReader<'AlterTableStmt'> = (statement, state, migration) => {
@@ -143,8 +168,10 @@ const readDrop: StatementReader<'DropStmt'> = (statement, state) => {
     for (const nodeField of listNodeFields(statement.fields.objects, 'List')) {
         const names = listNodeFields(nodeField.items, 'String').map((stringNode) => stringNode.sval ?? '');
         const name = qualifyName(names.at(SCHEMA_NAME_INDEX), names.at(-1));
-        if (statement.fields.removeType === 'OBJECT_TABLE') removeTable(state, name);
-        else if (statement.fields.removeType === 'OBJECT_INDEX')
+        const { removeType } = statement.fields;
+        if (removeType === 'OBJECT_TABLE') removeTable(state, name);
+        if (removeType === 'OBJECT_VIEW') state.unprotectedViews.delete(name);
+        if (removeType === 'OBJECT_INDEX')
             state.indexes = state.indexes.filter((index) => qualifyName(index.schema, index.name) !== name);
     }
 };
@@ -183,6 +210,14 @@ const STATEMENT_READERS: SqlStatementVisitors<void, [SchemaState, Migration]> = 
     DropStmt: readDrop,
     CreateStmt: readCreateTable,
     AlterTableStmt: readAlterTable,
+    ViewStmt: (statement, state, migration) => {
+        const view = qualifyName(statement.fields.view?.schemaname, statement.fields.view?.relname);
+        readViewOptions(state, view, statement.fields.options, {
+            path: migration.path,
+            offset: statement.start,
+            text: migration.text,
+        });
+    },
     RenameStmt: ({ fields }, state) => {
         const { relation = {}, newname: name = '', subname: previous = '' } = fields;
         const table = qualifyName(relation.schemaname, relation.relname);
@@ -227,6 +262,7 @@ export function buildDatabaseSchema(migrations: Migration[]): Schema {
         constraints: new Map(),
         tables: new Map(),
         secured: new Set(),
+        unprotectedViews: new Map(),
     };
     for (const migration of migrations)
         for (const statement of migration.statements) {
@@ -245,5 +281,11 @@ export function buildDatabaseSchema(migrations: Migration[]): Schema {
         columns.push(index.columns);
         indexed.set(index.table, columns);
     }
-    return { tables: state.tables, secured: state.secured, foreignKeys, indexed };
+    return {
+        tables: state.tables,
+        secured: state.secured,
+        unprotectedViews: state.unprotectedViews,
+        foreignKeys,
+        indexed,
+    };
 }

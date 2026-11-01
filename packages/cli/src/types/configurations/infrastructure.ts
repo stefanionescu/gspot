@@ -5,7 +5,7 @@ import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { composeSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations.ts';
 import type { SqlFile, SqlStatement, NumberedLine, SqlNodeFields } from '#cli/types/parsers.ts';
 
-type SourceStatement = { path: string; offset: number; text: string };
+export type SourceStatement = { path: string; offset: number; text: string };
 
 export type StatementReader<Kind extends keyof SqlNodeFields> = (
     statement: SqlStatement<Kind>,
@@ -29,14 +29,17 @@ export type Migration = {
 export type Schema = {
     tables: Map<string, SourceStatement>;
     secured: Set<string>;
+    unprotectedViews: Map<string, SourceStatement>;
     foreignKeys: (SourceStatement & { table: string; columns: string[] })[];
     indexed: Map<string, string[][]>;
 };
 
-export type SchemaState = Pick<Schema, 'tables' | 'secured'> & {
+export type SchemaState = Pick<Schema, 'tables' | 'secured' | 'unprotectedViews'> & {
     indexes: { schema: string | undefined; table: string; name: string; columns: string[]; constraint: string }[];
     constraints: Map<string, Map<string, Schema['foreignKeys'][number]>>;
 };
+
+export type StoragePolicies = Map<string, SqlNodeFields['CreatePolicyStmt']>;
 
 export type Location = { migration: Migration; statement: SqlStatement; table: string };
 

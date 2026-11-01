@@ -35,6 +35,37 @@ export const MIGRATION_DOWN = /^[\t ]*--[\t ]*migrate:down\b/mu;
 
 export const ROW_SECURITY_RULE = 'row-security';
 
+export const POLICY_RULES = {
+    roles: 'policy-without-roles',
+    identityCall: 'per-row-identity-call',
+    open: 'open-policy',
+    view: 'view-without-security-invoker',
+} as const;
+
+export const POLICY_ROLES_MESSAGE = 'This policy names no role. Add `TO` with the roles that it covers.';
+
+export const IDENTITY_CALL_MESSAGE =
+    'Wrap this identity call in `(select ...)`, so that the planner evaluates it once per statement.';
+
+export const OPEN_POLICY_MESSAGE =
+    'This `USING (true)` policy has no comment. Say why the table is public or service-only.';
+
+export const SECURITY_INVOKER_MESSAGE =
+    'Clients can read this view, and it skips the row security of its tables. Set `security_invoker = true`.';
+
+export const IDENTITY_FUNCTIONS: ReadonlySet<string> = new Set(['auth.uid', 'current_setting']);
+
+export const SECURITY_INVOKER_OPTION = 'security_invoker';
+
+export const DISABLED_OPTION_VALUES: ReadonlySet<string> = new Set(['false', 'off', '0']);
+
+export const SQL_COMMENT = /--|\/\*/u;
+
+export const DRIFT_GUARD_RULE = 'drift-guard';
+
+export const DRIFT_GUARD_MESSAGE =
+    '`IF NOT EXISTS` hides schema drift. Use it only on `CREATE INDEX CONCURRENTLY`, which cannot run in a transaction.';
+
 export const PUBLIC_SCHEMA = 'public';
 
 export const CONSTRAINT_SUFFIXES: Readonly<Record<string, string>> = {
@@ -325,7 +356,16 @@ export const SERVICE_ROLE_KEY_MESSAGE =
 
 export const DENO_CHECK_FAILED_MESSAGE = 'The deno check command failed.';
 
-export const SUPABASE_CHECK_RULES = { bucketPolicy: 'bucket-policy', serviceRoleKey: 'service-role-key' } as const;
+export const SUPABASE_CHECK_RULES = {
+    bucketPolicy: 'bucket-policy',
+    serviceRoleKey: 'service-role-key',
+    verifyJwt: 'verify-jwt',
+} as const;
+
+export const VERIFY_JWT_OFF = /^\s*verify_jwt\s*=\s*false\s*$/u;
+
+export const VERIFY_JWT_MESSAGE =
+    'This function skips the JWT check. Say why on this line, such as a signed webhook or a public endpoint.';
 
 export const DENO_IMPORT_MAP_FLAG = '--import-map';
 

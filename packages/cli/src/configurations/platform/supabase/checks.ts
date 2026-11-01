@@ -23,18 +23,24 @@ import type { Parsed, SqlStatement, SqlNodeFields } from '#cli/types/parsers.ts'
 import { formatOutputTail, assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { denoLintOutputSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
-import type { FunctionEntrypoint, SupabaseProjectFile } from '#cli/types/configurations/infrastructure.ts';
 
+import type {
+    StoragePolicies,
+    FunctionEntrypoint,
+    SupabaseProjectFile,
+} from '#cli/types/configurations/infrastructure.ts';
 import {
     SYNTAX_RULE,
     DENO_LOCATION,
     SHARED_PREFIX,
     DENO_LINT_NAME,
+    VERIFY_JWT_OFF,
     FILE_URL_PREFIX,
     DENO_CONFIG_FLAG,
     DENO_CONFIG_FILES,
     DENO_LINT_COMMAND,
     DENO_CHECK_COMMAND,
+    VERIFY_JWT_MESSAGE,
     FUNCTION_ENTRYPOINT,
     SUPABASE_CHECK_RULES,
     DENO_IMPORT_MAP_FLAG,
@@ -79,10 +85,7 @@ function listBucketConditions(node: Node | undefined): string[] {
     return expression.kind === 'AEXPR_OP' ? listEqualityBuckets(expression) : listMembershipBuckets(expression);
 }
 
-function removePolicies(
-    fields: SqlNodeFields['DropStmt'],
-    policies: Map<string, SqlNodeFields['CreatePolicyStmt']>,
-): void {
+function removePolicies(fields: SqlNodeFields['DropStmt'], policies: StoragePolicies): void {
     if (fields.removeType !== 'OBJECT_POLICY') return;
     for (const names of listNodeFields(fields.objects, 'List')) {
         const path = listNodeFields(names.items, 'String').map(({ sval }) => sval);
@@ -90,10 +93,7 @@ function removePolicies(
     }
 }
 
-function setPolicy(
-    statement: SqlStatement<'CreatePolicyStmt' | 'AlterPolicyStmt'>,
-    policies: Map<string, SqlNodeFields['CreatePolicyStmt']>,
-): void {
+function setPolicy(statement: SqlStatement<'CreatePolicyStmt' | 'AlterPolicyStmt'>, policies: StoragePolicies): void {
     const fields = statement.fields;
     const { table, policy_name: name } = fields;
     if (table?.schemaname !== 'storage' || table.relname !== 'objects' || name === undefined) return;
@@ -102,7 +102,7 @@ function setPolicy(
 }
 
 function listCoveredBuckets(statements: SqlStatement[]): Set<string> {
-    const policies = new Map<string, SqlNodeFields['CreatePolicyStmt']>();
+    const policies: StoragePolicies = new Map();
     for (const statement of statements) {
         if (statement.kind === 'DropStmt') removePolicies(statement.fields, policies);
         if (statement.kind === 'CreatePolicyStmt' || statement.kind === 'AlterPolicyStmt')
@@ -320,15 +320,31 @@ export function checkServiceRoleKey(session: Session, planned: PlannedCheck): Ch
             .split('\n')
             .flatMap((text, index): CheckFinding[] => {
                 if (!SERVICE_ROLE_KEY_NAMES.some((name) => text.includes(name))) return [];
-                const message = SERVICE_ROLE_KEY_MESSAGE;
                 return [
                     {
                         file: file.path,
                         line: index + 1,
                         rule: SUPABASE_CHECK_RULES.serviceRoleKey,
-                        message: message,
+                        message: SERVICE_ROLE_KEY_MESSAGE,
                     },
                 ];
             }),
     );
+}
+
+/**
+Reports each `verify_jwt = false` line of the project file with no comment that gives the reason.
+
+@param session the repository and its tools.
+@param planned the scope of the project file.
+*/
+export function checkVerifyJwt(session: Session, planned: PlannedCheck): CheckFinding[] {
+    const file = joinScope(planned.scope.path, SUPABASE_PROJECT_FILE);
+    return (find(session.cache, file) ?? '')
+        .split('\n')
+        .flatMap((text, index): CheckFinding[] =>
+            VERIFY_JWT_OFF.test(text)
+                ? [{ file, line: index + 1, rule: SUPABASE_CHECK_RULES.verifyJwt, message: VERIFY_JWT_MESSAGE }]
+                : [],
+        );
 }

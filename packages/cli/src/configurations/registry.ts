@@ -80,18 +80,19 @@ import {
     checkConflictMarkers,
 } from '#cli/configurations/general/repository/checks.ts';
 import {
-    checkDenoLint,
-    checkDenoCheck,
-    checkServiceRoleKey,
-    checkStoragePolicies,
-} from '#cli/configurations/platform/supabase/checks.ts';
-import {
     checkBaseline,
     checkSuppressions,
     checkGeneratedFiles,
     checkUnmatchedPaths,
     checkConflictingConfigs,
 } from '#cli/configurations/general/gspot/checks.ts';
+import {
+    checkDenoLint,
+    checkDenoCheck,
+    checkVerifyJwt,
+    checkServiceRoleKey,
+    checkStoragePolicies,
+} from '#cli/configurations/platform/supabase/checks.ts';
 import {
     checkDeptry,
     checkVulture,
@@ -193,6 +194,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'supabase/deno-lint': { check: checkDenoLint },
     'supabase/service-role-key': { check: checkServiceRoleKey },
     'supabase/storage-policies': { check: checkStoragePolicies },
+    'supabase/verify-jwt': { check: checkVerifyJwt },
     'svelte/svelte-check': { check: checkSvelteCheck },
     'swift/build': { check: checkSwiftBuild },
     'swift/coverage': { check: checkCoverage },
