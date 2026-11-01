@@ -1,13 +1,13 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { mergeIgnore } from '#cli/settings/text.ts';
-import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { EVERY_CHECK } from '#cli/config/ignores.ts';
 import type { Session } from '#cli/types/session.ts';
-import { readCheckRuleDocs } from '#cli/checks/rules.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { ignoreSchema } from '#cli/schemas/settings/file.ts';
 import { hasRuleOutput } from '#cli/engine/outputs/formats.ts';
+import { readCheckRuleDocs } from '#cli/configurations/rules.ts';
 import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';

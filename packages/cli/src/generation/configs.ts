@@ -1,25 +1,89 @@
-import { join } from 'node:path/posix';
+import { readFileSync } from 'node:fs';
 import { remember } from '#cli/system/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { Config } from '#cli/types/manifests.ts';
-import { buildConfig } from '#cli/generation/builders.ts';
+import { buildAssetPath } from '#cli/system/assets.ts';
+import { formatHeader } from '#cli/generation/header.ts';
+import { join, dirname, relative } from 'node:path/posix';
+import { requireTypescript } from '#cli/system/typescript.ts';
 import { listOwnedConfigs } from '#cli/generation/selection.ts';
 import { buildIgnoreSections } from '#cli/generation/ignores.ts';
+import { CONFIG_BUILDERS } from '#cli/configurations/registry.ts';
 import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
-import { CONFIG_SCOPES_FOLDER } from '#cli/config/generation/generation.ts';
 import { buildLinkFiles, listLinkFilePaths } from '#cli/generation/links.ts';
-import { isMarkdownlintShared } from '#cli/generation/configurations/language/markdown.ts';
+import { buildSemgrepFile } from '#cli/configurations/general/security/generate.ts';
+import { isMarkdownlintShared } from '#cli/configurations/language/markdown/generate.ts';
 
+import {
+    TS_EXTENSION,
+    CONFIG_REFERENCE,
+    CONFIG_SCOPES_FOLDER,
+    SEMGREP_RULE_PACK_FILE,
+} from '#cli/config/generation/generation.ts';
 import type {
     BuiltConfig,
     OwnedConfig,
+    ConfigBuilder,
+    PlannedConfig,
     OwnedSourceFile,
     ConfigGeneration,
     ConfigBuildState,
 } from '#cli/types/generation/files.ts';
 
 const CONFIGS = Symbol('config files');
+
+/**
+Build the text of one config file, and of the files that it imports.
+
+@param owned the config file and the scope that owns it.
+@param targetPath the repository path where gspot writes the file.
+@param generated the config paths and shared ignore sections.
+@returns the generated file, with paths relative to where it sits, and its companion files.
+*/
+export function buildConfig(
+    owned: OwnedSourceFile,
+    targetPath: string,
+    generated: Pick<ConfigBuildState, 'targets' | 'ignoreSections'>,
+): Pick<BuiltConfig, 'file' | 'companions'> {
+    const { config, owner } = owned;
+    const planned: PlannedConfig = {
+        ...owner,
+        config,
+        targetPath,
+        ignoreSections: generated.ignoreSections,
+        level: owner.session.settings.level,
+    };
+    const builder =
+        config.file === SEMGREP_RULE_PACK_FILE
+            ? buildSemgrepFile
+            : CONFIG_BUILDERS[`${planned.configuration.name}/${config.file}`];
+    let built: ReturnType<ConfigBuilder>;
+    if (builder === undefined) {
+        const source = config.source;
+        const shipped = readFileSync(buildAssetPath(`${planned.configuration.folder}/${source}`), 'utf8');
+        const ts = source.endsWith(TS_EXTENSION) ? requireTypescript() : undefined;
+        built =
+            ts === undefined
+                ? shipped
+                : ts.transpileModule(shipped, {
+                      compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+                  }).outputText;
+    } else built = builder(planned);
+    const { content, companions } = typeof built === 'string' ? { content: built, companions: [] } : built;
+    const source = content.replaceAll(CONFIG_REFERENCE, (match: string, path: string) => {
+        const referenced = join(dirname(config.target), path);
+        const mapped = generated.targets.get(planned.scope.path)?.get(referenced);
+        return mapped === undefined ? match : match.replace(path, () => relative(dirname(targetPath), mapped));
+    });
+    return {
+        file: { path: targetPath, content: `${formatHeader(targetPath)}${source.trimEnd()}\n` },
+        companions: companions.map((companion) => ({
+            path: companion.path,
+            content: `${formatHeader(companion.path)}${companion.content.trimEnd()}\n`,
+        })),
+    };
+}
 
 function buildOwnedOutput(
     owned: OwnedSourceFile,

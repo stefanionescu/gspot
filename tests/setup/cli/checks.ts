@@ -14,11 +14,11 @@ import { type PlannedCheck } from '#cli/types/engine/planning.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
-import { CHECK_CODE, selectCheckCode } from '#cli/checks/registry.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import type { NamingSettings } from '#cli/types/checks/general/naming.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { readNamingSettings } from '#cli/checks/general/naming/settings.ts';
+import { CHECK_CODE, selectCheckCode } from '#cli/configurations/registry.ts';
+import type { NamingSettings } from '#cli/types/configurations/general/naming.ts';
+import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
 
 /**

@@ -25,7 +25,7 @@ allowed_names = ["rule_id"]
 reason = "SwiftLint JSON diagnostics identify the native rule using rule_id."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/checks/platform.ts", "packages/cli/src/types/checks/general/naming.ts", "packages/cli/src/types/manifests.ts", "packages/cli/src/types/engine/outputs.ts", "packages/cli/src/types/settings/**"]
+paths = ["packages/cli/src/types/configurations/platform.ts", "packages/cli/src/types/configurations/general/naming.ts", "packages/cli/src/types/manifests.ts", "packages/cli/src/types/engine/outputs.ts", "packages/cli/src/types/settings/**"]
 categories = ["properties"]
 cases = ["camel", "upper-snake", "snake"]
 reason = "These properties retain the serialized gspot.toml, configuration manifest and tool report field names."
@@ -36,18 +36,18 @@ allowed_names = ["meta"]
 reason = "ESLint names the description of a rule meta."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/framework/site/purgecss-process.ts"]
+paths = ["packages/cli/src/configurations/framework/site/checks/purgecss-process.ts"]
 allowed_names = ["PurgeCSS"]
 reason = "PurgeCSS exports its class under this exact name."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/framework/svelte.ts"]
+paths = ["packages/cli/src/configurations/framework/svelte/checks.ts"]
 categories = ["functions"]
 allowed_names = ["checkSvelteCheck"]
 reason = "Check functions start with check and spell the svelte/svelte-check check ID without repeating svelte."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/platform/supabase.ts"]
+paths = ["packages/cli/src/configurations/platform/supabase/checks.ts"]
 categories = ["functions"]
 allowed_names = ["checkDenoCheck"]
 reason = "Check functions start with check and spell the check name of supabase/deno-check."
@@ -58,7 +58,7 @@ allowed_names = ["with"]
 reason = "GitHub Actions calls its action argument record with."
 
 [[naming.override]]
-paths = ["packages/cli/src/generation/configurations/general/data-files.ts", "packages/cli/src/config/generation/configurations/general.ts"]
+paths = ["packages/cli/src/configurations/general/data-files/generate.ts", "packages/cli/src/config/configurations/generators/general.ts"]
 allow_digits = true
 reason = "v8r is the name of the tool."
 
@@ -88,12 +88,12 @@ allowed_names = ["data"]
 reason = "Astro content entries keep their fields in data."
 
 [[naming.override]]
-paths = ["packages/cli/src/config/checks/language/swift.ts"]
+paths = ["packages/cli/src/config/configurations/language/swift.ts"]
 allowed_names = ["DERIVED_DATA_FLAG", "DERIVED_DATA_FOLDER"]
 reason = "Xcode names its build folder DerivedData and its flag -derivedDataPath."
 
 [[naming.override]]
-paths = ["packages/cli/src/generation/configurations/language/python.ts", "tests/suites/unit/cli/generation/configurations/language/python.test.ts"]
+paths = ["packages/cli/src/configurations/language/python/generate.ts", "tests/suites/unit/cli/configurations/language/python/generate.test.ts"]
 allowed_names = ["extraPaths"]
 reason = "basedpyright names its import search setting extraPaths."
 
@@ -103,7 +103,7 @@ allowed_names = ["raw"]
 reason = "toml-patch and the TypeScript compiler API name the source text raw."
 
 [[naming.override]]
-paths = ["packages/cli/src/config/generation/configurations/language/javascript/javascript.ts", "packages/cli/src/generation/configurations/language/javascript/knip.ts", "tests/types/tools.ts"]
+paths = ["packages/cli/src/config/configurations/generators/language/javascript/javascript.ts", "packages/cli/src/configurations/language/javascript/knip.ts", "tests/types/tools.ts"]
 allowed_names = ["KNIP_JAVASCRIPT_ENTRY_FILES", "selectEntryFiles", "entry", "entries"]
 reason = "knip names its start files entry, and tools.knip.entry passes them on."
 
@@ -113,7 +113,7 @@ allowed_names = ["reason_when"]
 reason = "gspot list settings --json and the shipped setting definitions name this field reason_when."
 
 [[naming.override]]
-paths = ["packages/cli/src/configurations/general/data-files/**", "packages/cli/src/checks/general/data-files.ts", "packages/cli/src/config/checks/general/data-files.ts", "packages/cli/src/types/checks/general/data-files.ts", "packages/cli/src/generation/configurations/general/data-files.ts", "tests/suites/unit/cli/checks/general/data-files.test.ts", "tests/config/integration/checks/general/data-files.ts", "tests/suites/integration/checks/general/data-files.test.ts", "tests/config/integration/checks/general/security/sensitive-data.ts", "tests/suites/integration/checks/general/security/sensitive-data.test.ts"]
+paths = ["packages/cli/src/configurations/general/data-files/**", "packages/cli/src/configurations/general/data-files/checks.ts", "packages/cli/src/config/configurations/general/data-files.ts", "packages/cli/src/types/configurations/general/data-files.ts", "packages/cli/src/configurations/general/data-files/generate.ts", "tests/suites/unit/cli/configurations/general/data-files.test.ts", "tests/config/integration/checks/general/data-files.ts", "tests/suites/integration/configurations/general/data-files.test.ts", "tests/config/integration/checks/general/security/sensitive-data.ts", "tests/suites/integration/configurations/general/security/sensitive-data.test.ts"]
 allowed_names = ["data-files", "data-files.test", "sensitive-data", "sensitive-data.test"]
 reason = "These files and folders take the names of the data-files configuration and the security/sensitive-data check."
 
@@ -170,7 +170,7 @@ import_extension = "ts"
 no-restricted-properties = [{ object = "Bun", property = "env" }, { object = "Deno", property = "env" }, { property = "localeCompare", message = "Use compareText for stable ordering." }]
 
 [tools.knip]
-entry = ["packages/cli/build.ts", "packages/cli/pin-ages.ts", "packages/eslint-plugin/build.ts", "tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/sandboxes/tool-project.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/src/configurations/language/javascript/files/eslint-functions.ts", "packages/cli/src/bin.ts", "packages/cli/src/reference.ts", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts", "packages/cli/src/configurations/framework/site/files/purgecss.ts"]
+entry = ["packages/cli/build.ts", "packages/cli/pin-ages.ts", "packages/eslint-plugin/build.ts", "tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/sandboxes/tool-project.ts", "tests/setup/runner/integration.ts", "packages/cli/src/configurations/framework/site/checks/purgecss-process.ts", "packages/cli/src/configurations/language/javascript/files/eslint-functions.ts", "packages/cli/src/bin.ts", "packages/cli/src/reference.ts", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts", "packages/cli/src/configurations/framework/site/files/purgecss.ts"]
 
 [[scope]]
 path = "docs"
@@ -194,7 +194,7 @@ can_import = ["cli-types"]
 [[import_rule]]
 name = "cli-types"
 paths = ["packages/cli/src/types/**"]
-can_import = ["cli-config", "parsers", "manifests", "repository", "settings", "tools", "engine", "checks", "commands"]
+can_import = ["cli-config", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "commands"]
 
 [[import_rule]]
 name = "system"
@@ -225,12 +225,17 @@ name = "engine"
 paths = ["packages/cli/src/engine/**", "packages/cli/src/schemas/engine/**"]
 
 [[import_rule]]
-name = "generation"
-paths = ["packages/cli/src/generation/**"]
+name = "shipped-config"
+paths = ["packages/cli/src/configurations/*/*/files/**"]
+can_import = ["cli-types"]
 
 [[import_rule]]
-name = "checks"
-paths = ["packages/cli/src/checks/**", "packages/cli/src/schemas/checks/**"]
+name = "configurations"
+paths = ["packages/cli/src/configurations/**", "packages/cli/src/schemas/configurations/**"]
+
+[[import_rule]]
+name = "generation"
+paths = ["packages/cli/src/generation/**"]
 
 [[import_rule]]
 name = "commands"
@@ -286,11 +291,6 @@ paths = ["tests/setup/**", "tests/schemas/**"]
 [[import_rule]]
 name = "tests"
 paths = ["tests/suites/**"]
-
-[[import_rule]]
-name = "shipped-config"
-paths = ["packages/cli/src/configurations/*/*/files/**"]
-can_import = ["cli-types"]
 
 [[import_rule]]
 name = "package-scripts"
@@ -377,6 +377,12 @@ reason = "Each group folder keeps the code of a configuration at <group>/<config
 [[ignore]]
 check = "structure/lone-files"
 rule = "lone-file"
+paths = ["packages/cli/src/configurations/{database,framework,general,infrastructure,language,library,platform,testing}/*/*.ts"]
+reason = "A configuration folder also holds its manifest.toml and rules/, which the check does not count."
+
+[[ignore]]
+check = "structure/lone-files"
+rule = "lone-file"
 paths = ["docs/src/pages/index.astro"]
 reason = "Astro builds the routes of the site only from files in src/pages/."
 
@@ -398,14 +404,19 @@ paths = ["**/{checks,configurations}/{database,framework,general,infrastructure,
 reason = "Each group folder keeps the code of a configuration at <group>/<configuration>, also when the group holds one configuration."
 
 [[ignore]]
+check = "structure/pass-through-folders"
+paths = ["packages/cli/src/configurations/{database,framework,general,infrastructure,language,library,platform,testing}/*"]
+reason = "A configuration folder also holds its manifest.toml and rules/, which the check does not count."
+
+[[ignore]]
 check = "structure/shared-prefixes"
 paths = ["docs/src/content.config.ts"]
 reason = "Astro fixes this name beside the content folder."
 
 [[ignore]]
 check = "structure/shared-prefixes"
-paths = ["packages/cli/src/generation/configurations/framework/react*.ts"]
-reason = "The react and react-dom configurations name these generators, after their npm packages."
+paths = ["tests/suites/unit/cli/configurations/framework/react*.test.ts"]
+reason = "The react and react-dom configurations name these tests, after their npm packages."
 
 [[ignore]]
 check = "structure/shared-prefixes"

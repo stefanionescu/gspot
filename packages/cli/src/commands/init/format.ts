@@ -13,9 +13,9 @@ import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import { FORMAT_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
-import { DEFAULT_QUOTES } from '#cli/config/generation/configurations/general.ts';
+import { DEFAULT_QUOTES } from '#cli/config/configurations/generators/general.ts';
 import { ruffFormatSchema, prettierSettingsSchema } from '#cli/schemas/commands.ts';
-import { PYTHON_FILES } from '#cli/config/generation/configurations/language/language.ts';
+import { PYTHON_FILES } from '#cli/config/configurations/generators/language/language.ts';
 
 import type {
     SettingsDraft,

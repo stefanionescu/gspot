@@ -5,7 +5,7 @@ import { runFixers } from '#cli/engine/fixes.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildCheckSession } from '#cli/engine/run.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { selectCheckCode } from '#cli/checks/registry.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';

@@ -112,7 +112,7 @@ await Bun.build({
 });
 chmodSync(join(packageFolder, 'dist/gspot.js'), executableMode);
 await Bun.build({
-    entrypoints: [join(packageFolder, 'src/checks/framework/site/purgecss-process.ts')],
+    entrypoints: [join(packageFolder, 'src/configurations/framework/site/checks/purgecss-process.ts')],
     outdir: join(packageFolder, 'dist'),
     target: 'node',
     format: 'esm',

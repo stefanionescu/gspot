@@ -1,0 +1,165 @@
+import type { Node } from 'web-tree-sitter';
+import { getLimit } from '#cli/settings/scopes.ts';
+import type { Session } from '#cli/types/session.ts';
+import { isDocstring } from '#cli/parsers/code/python.ts';
+import type { CheckFinding } from '#cli/types/engine/check.ts';
+import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import { readParsedSources } from '#cli/configurations/general/structure/checks/parsed-sources.ts';
+import type { ParsedSource, ParsedLanguage } from '#cli/types/configurations/general/structure.ts';
+
+import {
+    ONE_STATEMENT,
+    FUNCTION_LABEL,
+    BARE_NAME_NODES,
+    TYPE_ALIAS_NODES,
+    FORWARDING_NODES,
+    PYTHON_EXPORT_LIST,
+    BASH_COMMAND_NODES,
+    TRIVIAL_FILE_MESSAGE,
+    SWIFT_ACCESSOR_NODES,
+    TYPE_REFERENCE_NODES,
+    BASH_SOURCE_COMMANDS,
+    SWIFT_FUNCTION_LABELS,
+    SWIFT_ACCESSOR_OWNERS,
+    TRIVIAL_FUNCTION_RULES,
+    COUNTED_FUNCTION_NODES,
+} from '#cli/config/configurations/general/structure.ts';
+
+function extractFunctionBody(node: Node, language: ParsedLanguage): Node[] {
+    const body = node.childForFieldName('body') ?? node;
+    const siblings =
+        language === 'swift'
+            ? (body.namedChildren.find((child) => child.type === 'statements')?.namedChildren ?? [])
+            : body.namedChildren;
+    return siblings.filter(
+        (child) => !child.type.includes('comment') && !(language === 'python' && isDocstring(child, siblings)),
+    );
+}
+
+function isBashStatement(node: Node): boolean {
+    if (BASH_COMMAND_NODES.has(node.type)) return true;
+    return node.type === 'variable_assignment'
+        ? !BASH_COMMAND_NODES.has(node.parent?.type ?? '')
+        : node.type.endsWith('_statement') && node.type !== 'compound_statement';
+}
+
+const STATEMENT_COUNTS: Record<ParsedLanguage, (node: Node) => number> = {
+    swift: (node) => (node.parent?.type === 'statements' ? 1 : 0),
+    python: (node) => {
+        const isClass = node.type === 'class_definition';
+        const isStatement = node.type.endsWith('_statement') && node.type !== 'decorated_definition';
+        return Number(isClass) + Number(isStatement);
+    },
+    bash: (node) => (isBashStatement(node) ? 1 : 0),
+};
+
+function isPythonAlias(node: Node): boolean {
+    const assignment = node.namedChildren[0];
+    if (
+        node.type !== 'expression_statement' ||
+        assignment?.type !== 'assignment' ||
+        assignment.childForFieldName('type') !== null
+    )
+        return false;
+    const value = assignment.childForFieldName('right');
+    return (
+        assignment.childForFieldName('left')?.text === PYTHON_EXPORT_LIST ||
+        (value !== null && BARE_NAME_NODES.has(value.type))
+    );
+}
+
+const LANGUAGE_FORWARDING: Record<ParsedLanguage, (node: Node) => boolean> = {
+    python: isPythonAlias,
+    swift: () => false,
+    bash: (node) => node.type === 'command' && BASH_SOURCE_COMMANDS.has(node.childForFieldName('name')?.text ?? ''),
+};
+
+function isForwarding(node: Node, language: ParsedLanguage): boolean {
+    if (FORWARDING_NODES.has(node.type) || node.type.startsWith('import')) return true;
+    return TYPE_ALIAS_NODES.has(node.type)
+        ? TYPE_REFERENCE_NODES.has((node.childForFieldName('value') ?? node.namedChildren.at(-1))?.type ?? '')
+        : LANGUAGE_FORWARDING[language](node);
+}
+
+function countExecutableStatements(nodes: Node[], language: ParsedLanguage): number {
+    let count = 0;
+    for (const node of nodes) {
+        if (node.type.includes('comment') || TYPE_ALIAS_NODES.has(node.type)) continue;
+        if (COUNTED_FUNCTION_NODES.has(node.type)) {
+            const body = node.type === 'lambda' ? node.namedChildren : extractFunctionBody(node, language);
+            count += Number(node.type === 'lambda') + countExecutableStatements(body, language);
+            continue;
+        }
+        count += STATEMENT_COUNTS[language](node) + countExecutableStatements(node.namedChildren, language);
+    }
+    return count;
+}
+
+function isTrivialFile(syntaxRoot: Node, language: ParsedLanguage): boolean {
+    const siblings = syntaxRoot.namedChildren;
+    const statements = siblings.filter(
+        (node) => !node.type.includes('comment') && !(language === 'python' && isDocstring(node, siblings)),
+    );
+    return statements.length > 0 && statements.every((node) => isForwarding(node, language));
+}
+
+function formatAccessorName(node: Node, label: string): string {
+    let declaration = node.parent;
+    while (declaration !== null) {
+        if (SWIFT_ACCESSOR_OWNERS.has(declaration.type)) break;
+        declaration = declaration.parent;
+    }
+    if (declaration === null) return label;
+    const name =
+        declaration.type === 'subscript_declaration' ? 'subscript' : declaration.childForFieldName('name')?.text;
+    return name === undefined ? label : `${label} of ${name}`;
+}
+
+function listTrivialFunctions(planned: PlannedCheck, source: ParsedSource): CheckFinding[] {
+    const limit = getLimit(planned.scope.settings, 'trivial_function_statements', source.language);
+    return (source.captures.get(FUNCTION_LABEL) ?? []).flatMap((node) => {
+        const body = extractFunctionBody(node, source.language);
+        const count = countExecutableStatements(body, source.language);
+        if (count > limit) return [];
+        const label = node.childForFieldName('name')?.text ?? SWIFT_FUNCTION_LABELS[node.type] ?? FUNCTION_LABEL;
+        const name = SWIFT_ACCESSOR_NODES.has(node.type) ? formatAccessorName(node, label) : label;
+        const statements = count === 1 ? ONE_STATEMENT : `${String(count)} statements`;
+        const message = `${name} has ${statements}. Functions with ${String(limit)} or fewer are reported. Inline it into its callers, or record the API it serves with gspot ignore.`;
+        return [
+            {
+                file: source.path,
+                line: node.startPosition.row + 1,
+                column: node.startPosition.column + 1,
+                rule: TRIVIAL_FUNCTION_RULES.trivialFunction,
+                message: message,
+            },
+        ];
+    });
+}
+
+/**
+Report named functions at the statement limit and files that only forward code.
+
+@param session the repository and its tools.
+@param planned the scope files and statement limits.
+*/
+export async function checkTrivialFunctions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+    const parsed = await readParsedSources(session, planned);
+    const functions = parsed.flatMap((source) => listTrivialFunctions(planned, source));
+    const files = parsed
+        .filter((source) => isTrivialFile(source.tree.rootNode, source.language))
+        .map((source) => {
+            const line =
+                source.language === 'bash'
+                    ? 1
+                    : (source.tree.rootNode.namedChildren.find((node) => !node.type.includes('comment'))?.startPosition
+                          .row ?? 0) + 1;
+            return {
+                file: source.path,
+                line,
+                rule: TRIVIAL_FUNCTION_RULES.trivialFile,
+                message: TRIVIAL_FILE_MESSAGE,
+            };
+        });
+    return [...functions, ...files];
+}

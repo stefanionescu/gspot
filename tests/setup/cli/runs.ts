@@ -1,8 +1,8 @@
 import { planChecks } from '#cli/engine/plan.ts';
-import { selectCheckCode } from '#cli/checks/registry.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
 import { type RunOptions } from '#cli/types/commands/check.ts';
 import { listOutdatedFiles } from '#cli/generation/outdated.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { type PlannedCheck } from '#cli/types/engine/planning.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';

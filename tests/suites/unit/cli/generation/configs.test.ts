@@ -1,8 +1,11 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
-import { buildConfigs } from '#cli/generation/configs.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { buildIgnoreSections } from '#cli/generation/ignores.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { CONFIG_PROJECT } from '#tests/config/generation/configs.ts';
+import { buildConfig, buildConfigs } from '#cli/generation/configs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('a check copy builds the config files of the repository, not of the copy folder', async () => {
@@ -19,4 +22,33 @@ test('a check copy builds the config files of the repository, not of the copy fo
 
     const copied = buildConfigs({ ...(await openSession(sandbox.path)), root: copy.path });
     expect(copied).toStrictEqual(buildConfigs(await openSession(sandbox.path)));
+});
+
+test('every shipped source config has a working producer, including optional outputs', async () => {
+    const configurations = [...readConfigurations().values()];
+    await using sandbox = await createGitSandbox({
+        ...CONFIG_PROJECT,
+        'gspot.toml': buildSandboxSettings(
+            configurations.map(({ name }) => name),
+            { level: 'all', rules: true },
+        ),
+    });
+    const session = await openSession(sandbox.path);
+    const scope = session.scopes[0]!;
+    const targets = new Map([
+        ['', new Map(configurations.flatMap(({ configs }) => configs.map(({ target }) => [target, target] as const)))],
+    ]);
+    const ownedConfigs = configurations.flatMap((configuration) =>
+        configuration.configs.map((config) => ({ config, owner: { session, scope, configuration } })),
+    );
+    for (const { config, owner } of ownedConfigs) {
+        const { source } = config;
+        if (source === undefined) continue;
+        expect(() =>
+            buildConfig({ config: { ...config, source }, owner }, config.target, {
+                targets,
+                ignoreSections: buildIgnoreSections(session),
+            }),
+        ).not.toThrow();
+    }
 });

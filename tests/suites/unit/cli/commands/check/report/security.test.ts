@@ -1,8 +1,8 @@
 import { test, spyOn, expect } from 'bun:test';
 import { GspotError } from '#cli/system/errors.ts';
 import { stringify } from '@decimalturn/toml-patch';
-import { CHECK_CODE } from '#cli/checks/registry.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';

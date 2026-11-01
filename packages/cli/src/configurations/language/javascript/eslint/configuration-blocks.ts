@@ -1,0 +1,221 @@
+import { dirname } from 'node:path/posix';
+import { isDeepStrictEqual } from 'node:util';
+import { escapeGlob } from '#cli/system/paths.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import type { Scope } from '#cli/types/settings/inheritance.ts';
+import { buildZodBlocks } from '#cli/configurations/library/zod/generate.ts';
+import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
+import { buildVueBlocks } from '#cli/configurations/framework/vue/generate.ts';
+import { buildAstroBlocks } from '#cli/configurations/framework/astro/generate.ts';
+import { buildReactBlocks } from '#cli/configurations/framework/react/generate.ts';
+import { buildVitestBlocks } from '#cli/configurations/testing/vitest/generate.ts';
+import { buildNestjsBlocks } from '#cli/configurations/framework/nestjs/generate.ts';
+import { buildNextjsBlocks } from '#cli/configurations/framework/nextjs/generate.ts';
+import { buildSvelteBlocks } from '#cli/configurations/framework/svelte/generate.ts';
+import { buildDrizzleBlocks } from '#cli/configurations/library/drizzle/generate.ts';
+import { buildZustandBlocks } from '#cli/configurations/library/zustand/generate.ts';
+import { buildReactDomBlocks } from '#cli/configurations/framework/react-dom/generate.ts';
+import { buildTypescriptBlocks } from '#cli/configurations/language/typescript/generate.ts';
+import { buildTanstackQueryBlocks } from '#cli/configurations/library/tanstack-query/generate.ts';
+import { buildTestingLibraryBlocks } from '#cli/configurations/library/testing-library/generate.ts';
+import { joinScope, isInScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
+import { buildTestFiles, listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
+
+import {
+    SUPABASE_RULES,
+    PLUGIN_RULE_BLOCKS,
+} from '#cli/config/configurations/generators/language/javascript/eslint/eslint.ts';
+import {
+    type EslintScope,
+    type EslintPlugins,
+    type PlannedEslintFile,
+    type PlannedEslintBlock,
+    type ConfigurationBlocks,
+    type ConfigurationBuilder,
+    type ConfigurationScopeBlocks,
+} from '#cli/types/generation/eslint.ts';
+
+const CONFIGURATION_BUILDERS: Readonly<Record<string, ConfigurationBuilder | undefined>> = {
+    ...Object.fromEntries(Object.keys(PLUGIN_RULE_BLOCKS).map((name) => [name, buildPluginRuleBlocks])),
+    astro: buildAstroBlocks,
+    vue: buildVueBlocks,
+    svelte: buildSvelteBlocks,
+    nextjs: buildNextjsBlocks,
+    typescript: buildTypescriptBlocks,
+    zustand: buildZustandBlocks,
+    zod: buildZodBlocks,
+    'testing-library': buildTestingLibraryBlocks,
+    vitest: buildVitestBlocks,
+    react: buildReactBlocks,
+    'react-dom': buildReactDomBlocks,
+    nestjs: buildNestjsBlocks,
+    drizzle: buildDrizzleBlocks,
+    'tanstack-query': buildTanstackQueryBlocks,
+    supabase: buildSupabaseBlocks,
+};
+
+function buildConfigurationBlocks(
+    configuration: Configuration,
+    builder: ConfigurationBuilder,
+    scope: Scope,
+    planned: PlannedEslintFile,
+): ConfigurationBlocks {
+    const { session } = planned;
+    const scopePath = scope.path;
+    const children = listNestedScopes(
+        planned.session.scopes.map((each) => each.path),
+        scopePath,
+    );
+    const nextProject =
+        session.repository.dependencyFiles
+            .filter((file) => file.kind === 'package.json' && file.dependencies['next'] !== undefined)
+            .map((file) => (dirname(file.path) === '.' ? '' : dirname(file.path)))
+            .filter((path) => isInScope(scopePath, path))
+            .toSorted((left, right) => -compareScopeDepth(left, right))[0] ?? scopePath;
+    const testFiles = listCodeTestFiles(scope.settings.test_files).map((pattern) =>
+        scopePath !== '' && pattern.startsWith(`${scopePath}/**/`) ? pattern.slice(scopePath.length + 1) : pattern,
+    );
+    return builder(
+        {
+            settings: scope.settings,
+            projects: planned.projects,
+            path: scopePath,
+            projectPath: configuration.name === 'nextjs' ? nextProject : scopePath,
+            dependencies: listProjectDependencyNames(session.repository.dependencyFiles, scopePath),
+            eslintFiles: {
+                ...planned.eslintFiles,
+                tests: buildTestFiles(testFiles, planned.eslintFiles.code),
+            },
+            sourceFiles: session.repository.files
+                .filter((file) => file.kind === 'source')
+                .map((file) => file.path)
+                .filter((path) =>
+                    configuration.name === 'nextjs'
+                        ? isInScope(path, nextProject)
+                        : isInScope(path, scopePath) && children.every((child) => !isInScope(path, child)),
+                ),
+        },
+        configuration.name,
+    );
+}
+
+function listMatchingScopes(
+    scopeBlocks: { path: string; blocks: ConfigurationBlocks }[],
+    scopes: Scope[],
+): Set<string> {
+    return new Set(
+        scopeBlocks
+            .filter(({ path, blocks }) => {
+                const parent = scopes
+                    .filter((scope) => scope.path !== path && isInScope(path, scope.path))
+                    .toSorted((a, b) => compareScopeDepth(b.path, a.path))[0];
+                const previous = scopeBlocks.find((each) => each.path === parent?.path);
+                return previous !== undefined && isDeepStrictEqual(blocks.blocks, previous.blocks.blocks);
+            })
+            .map(({ path }) => path),
+    );
+}
+
+function buildScopeConfigurationBlocks(
+    configurations: { configuration: Configuration; builder: ConfigurationBuilder }[],
+    planned: PlannedEslintFile,
+): ConfigurationScopeBlocks[] {
+    const result: ConfigurationScopeBlocks[] = [];
+    for (const { configuration, builder } of configurations) {
+        const scopeBlocks = planned.session.scopes
+            .filter((each) => each.configurations.includes(configuration))
+            .map((scope) => ({
+                path: scope.path,
+                blocks: buildConfigurationBlocks(configuration, builder, scope, planned),
+            }));
+        const matching = listMatchingScopes(scopeBlocks, planned.session.scopes);
+        for (const { path, blocks } of scopeBlocks) {
+            if (matching.has(path)) continue;
+            const excluded = listNestedScopes(
+                planned.session.scopes.map((each) => each.path),
+                path,
+            )
+                .filter((child) => !matching.has(child))
+                .map((child) => joinScope(escapeGlob(child), '**'));
+            result.push({
+                configuration,
+                imports: blocks.imports,
+                blocks: blocks.blocks.map((block) => ({
+                    ...block,
+                    scope: { path, excluded },
+                    label: configuration.name,
+                })),
+            });
+        }
+    }
+    return result;
+}
+
+/**
+Build the declared plugin imports and lint rule blocks.
+
+@param scope the planned ESLint file of the scope.
+@param configuration the name with the pinned lint rule list.
+*/
+function buildPluginRuleBlocks(scope: EslintScope, configuration: string): ConfigurationBlocks {
+    const declaration = PLUGIN_RULE_BLOCKS[configuration] as (typeof PLUGIN_RULE_BLOCKS)[string];
+    const selectors = { code: scope.eslintFiles.code, tests: scope.eslintFiles.tests };
+    const files = typeof declaration.files === 'string' ? selectors[declaration.files] : declaration.files;
+    return {
+        imports: declaration.imports,
+        blocks: [
+            {
+                fields: {
+                    ...declaration.fields,
+                    files,
+                    ...(declaration.ignoresTests === true && {
+                        ignores: [
+                            ...new Set(
+                                scope.eslintFiles.tests.map(([test]) => test).filter((test) => test !== undefined),
+                            ),
+                        ],
+                    }),
+                    rules: declaration.rules,
+                },
+                calls: declaration.calls,
+            },
+        ],
+    };
+}
+
+/**
+Check the request body that each Supabase edge function reads.
+
+@param scope the planned ESLint file of the scope.
+*/
+function buildSupabaseBlocks(scope: EslintScope): ConfigurationBlocks {
+    const folder = escapeGlob(getTable(scope.settings, 'supabase').functions_folder);
+    const files = scope.eslintFiles.code.map((pattern) => [`${folder}/**`, pattern]);
+    return { imports: {}, blocks: [{ fields: { files, rules: SUPABASE_RULES } }] };
+}
+
+/**
+Collect imported bindings and the scoped blocks of each configuration.
+
+@param planned the source facts and resolved scopes.
+@returns the blocks of each configuration in plan order.
+*/
+export function listConfigurationBlocks(planned: PlannedEslintFile): {
+    configurationBlocks: Map<Configuration, PlannedEslintBlock[]>;
+    configurationImports: EslintPlugins;
+} {
+    const configurations = planned.configurations.flatMap((configuration) => {
+        const builder = CONFIGURATION_BUILDERS[configuration.name];
+        return builder === undefined ? [] : { configuration, builder };
+    });
+    const selected = buildScopeConfigurationBlocks(configurations, planned);
+    return {
+        configurationBlocks: new Map(
+            Map.groupBy(selected, ({ configuration }) => configuration)
+                .entries()
+                .map(([configuration, groups]) => [configuration, groups.flatMap(({ blocks }) => blocks)]),
+        ),
+        configurationImports: Object.fromEntries(selected.flatMap((blocks) => Object.entries(blocks.imports))),
+    };
+}

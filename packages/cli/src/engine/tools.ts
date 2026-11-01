@@ -20,7 +20,7 @@ import type { LicenseProject, ConfiguredCheck } from '#cli/types/engine/planning
 import { PIP_LICENSES_COMMAND, LICENSE_CHECKER_COMMAND } from '#cli/config/licenses.ts';
 import { isSettingEmpty, findSystemSkip, findSettingsSkip } from '#cli/engine/skips.ts';
 import { ESLINT_MANIFEST_TOOL, LICENSES_CONFIGURATION } from '#cli/config/manifests/names.ts';
-import { STYLELINT_COMPONENTS } from '#cli/config/generation/configurations/language/language.ts';
+import { STYLELINT_COMPONENTS } from '#cli/config/configurations/generators/language/language.ts';
 
 function isToolConditionMet(scope: Scope, conditions: Tool['when']): boolean {
     return (

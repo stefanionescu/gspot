@@ -106,7 +106,7 @@ You can edit the other keys of that file.
     - Use `runCheckCode` for a command check whose plan the test changes.
     - Use `runChecks` with `buildRunOptions` for status, notes, skip causes, or cancellation.
     - Use `assertCheckSample` for a sample that fails and passes after its fix.
-- Keep CLI calls, and imports of the functions that the check registry names, out of `tests/suites/unit/cli/checks/`.
+- Keep CLI calls, and imports of the functions that the check registry names, out of `tests/suites/unit/cli/configurations/`.
   A test may import such a function when other product code imports it too. Exit codes, JSON output, and other CLI
   behavior belong to `tests/suites/unit/cli/commands/`.
 - End no file with an export list.
@@ -155,21 +155,24 @@ repository.
   keeps its schema literals as the one list.
 - When only types read a list of names, write it as a union type in `types/`, with no array.
 
-### Checks and generators
+### Configurations
 
-- `packages/cli/src/checks/` has one file per configuration, `checks/<group>/<configuration>.ts`, under the group of
-  its folder in `packages/cli/src/configurations/`.
-- When the checks of a configuration pass the file length limit, they move to a folder
-  `checks/<group>/<configuration>/`. That folder has one file per check, named after it, or per input that several
-  checks read.
-- Code that several configurations share sits in `checks/cross-configuration/` or at the top of `generation/`.
-- Code that belongs to one configuration stays in its folder when another configuration reuses it, such as the
+- `packages/cli/src/configurations/<group>/<configuration>/` holds one configuration: `manifest.toml`, its rule files
+  in `rules/`, the files that gspot ships in `files/`, its checks in `checks.ts`, and its generator.
+- When the checks of a configuration pass the file length limit, `checks.ts` becomes a folder `checks/` with one file
+  per check, named after it, or per input that several checks read.
+- A configuration with one generator names it `generate.ts`. A configuration that generates several files names each
+  generator for the file it writes, such as `knip.ts` and `swiftlint.ts`.
+- `files/` holds the files that gspot copies or transpiles into `.gspot/configurations/<group>/<configuration>/`. A
+  TypeScript module in `files/` runs in the user's repository, so it imports only types, with `import type`.
+- Code that several configurations share sits at the top of `configurations/`, such as `registry.ts`, `syntax.ts`, and
+  `tsc/`. Code that belongs to one configuration stays in its folder when another configuration reuses it, such as the
   Postgres migrations reader that supabase reads.
-- The code of one configuration sits at `<group>/<configuration>` in every tree: its shipped files in
-  `packages/cli/src/configurations/`, its checks, its generators, and its tests. One code file sits at
-  `<group>/<configuration>.ts`, and more files make the folder `<group>/<configuration>/`.
-- The code that writes a config file sits in `packages/cli/src/generation/configurations/<group>/<configuration>/`,
-  named for the file it writes. gspot writes that file to `.gspot/configurations/<group>/<configuration>/`.
+- `packages/cli/src/configurations/registry.ts` joins the check and config file names of the manifests to their code.
+  The engine gets the check code through `RunOptions.selectCheckCode`, and a check reads the generated files through
+  `CheckSession.generation`, so neither layer imports a layer above it.
+- The npm package ships `manifest.toml`, `rules/`, and `files/` of each configuration from their paths under
+  `packages/cli/src/configurations/`, where the runtime reads them.
 
 ### Commands and layers
 
@@ -177,13 +180,13 @@ repository.
   a folder `commands/<command>/` with the entry file `<command>.ts`.
 - A command's folder holds the code that only that command uses. Code on the subject of another layer, such as Git
   revisions, copies, settings text, or the terminal, stays in that layer even when one command calls it.
-- Code that a second command or a check also uses sits in the folder of the thing it handles, such as `installers/` or
-  `generation/`. No folder outside `commands/` takes a command's name.
-- `system/` holds the code every layer may import: access to files, processes, Git, the environment, and the terminal,
-  and the pure text and value helpers that `parsers/` needs.
+- Code that a second command or a check also uses sits in the folder of the thing it handles, such as
+  `tools/installers/` or `generation/`. No folder outside `commands/` takes a command's name.
+- `system/` holds the code every layer may import: access to files, processes, the environment, and the terminal, and
+  the pure text and value helpers that `parsers/` needs. Git sits in `repository/git/`.
 - The layers of `packages/cli/src/` run from the base up: `system/`, `parsers/`, `manifests/`, `repository/`,
-  `settings/`, `planning/`, `executables/`, `installers/`, `generation/`, `runs/`, `checks/`, `commands/`, then
-  `main.ts` and `bin.ts`.
+  `settings/`, `tools/`, `engine/`, `configurations/`, `generation/`, `commands/`, then `main.ts`, `bin.ts`, and
+  `reference.ts`.
 - A layer imports only the layers before it. Every layer may import `config/` and `types/`, and the `schemas/` files
   of a layer belong to that layer. `types/` imports the schemas of any layer, to infer types from them.
 - The `[[import_rule]]` records in `gspot.toml` list the layers in this order, and `gspot check` reports an import
@@ -197,9 +200,9 @@ repository.
   tests `packages/<package>/src/<path>.ts`. A test of a whole source folder takes the folder name.
 - When the tests of one source file or folder pass 300 lines, they become a folder of that name with one file per
   scenario.
-- An integration test mirrors what it runs: `tests/suites/integration/checks/<group>/<configuration>.test.ts`,
-  `commands/<command>.test.ts`, or `installers/<module>.test.ts`. Past 300 lines, the tests of one configuration become
-  a folder with one file per tool.
+- An integration test mirrors what it runs: `tests/suites/integration/configurations/<group>/<configuration>.test.ts`,
+  `commands/<command>.test.ts`, or `installers/<module>.test.ts` for `packages/cli/src/tools/installers/<module>`. Past
+  300 lines, the tests of one configuration become a folder with one file per tool.
 - `tests/suites/integration/ci.test.ts` tests `packages/cli/src/generation/ci.ts`.
 - `tests/config/` holds the values of each folder of tests, by the rules of `config/`. The values of the tests in
   `tests/suites/unit/cli/<folder>/` sit at `tests/config/<folder>`.

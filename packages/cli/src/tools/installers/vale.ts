@@ -14,7 +14,7 @@ import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
 import { deleteStaleTemporaryPaths } from '#cli/system/files/folders.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
-import { VALE_STYLES_PATH } from '#cli/config/generation/configurations/general.ts';
+import { VALE_STYLES_PATH } from '#cli/config/configurations/generators/general.ts';
 import { rmSync, mkdirSync, renameSync, mkdtempSync, writeFileSync } from 'node:fs';
 import type { ToolInstall, ArchiveDownload } from '#cli/types/tools/installers/installers.ts';
 

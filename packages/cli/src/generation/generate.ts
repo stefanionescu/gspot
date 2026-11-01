@@ -22,8 +22,8 @@ import { parseAttributePatterns } from '#cli/repository/git/output.ts';
 import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import { LFS_FILTER, FILTER_ATTRIBUTE } from '#cli/config/repository/files.ts';
 import { readPackageManagerVersion } from '#cli/repository/javascript/package-manager.ts';
+import { buildBunScannerEdits } from '#cli/configurations/general/dependencies/generate.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
-import { buildBunScannerEdits } from '#cli/generation/configurations/general/dependencies.ts';
 import type { RuleFile, FrozenLockfile, CiPackageManager } from '#cli/types/generation/generation.ts';
 
 import {
