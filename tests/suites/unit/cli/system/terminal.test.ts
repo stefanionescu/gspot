@@ -1,6 +1,15 @@
-import { test, spyOn, expect } from 'bun:test';
+import { test, expect } from 'bun:test';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { getColors, printError, printResult, setOutputOptions, runCancelableCommand } from '#cli/system/terminal.ts';
+import { captureTerminal } from '#tests/setup/system/terminal.ts';
+
+import {
+    getColors,
+    printError,
+    printResult,
+    printWarning,
+    setOutputOptions,
+    runCancelableCommand,
+} from '#cli/system/terminal.ts';
 
 test('an aborted command returns its cancellation status and removes its signal listeners', async () => {
     const listeners = process.listenerCount('SIGINT');
@@ -18,11 +27,8 @@ test('an aborted command returns its cancellation status and removes its signal 
 });
 
 test('a printed result removes escape sequences and format characters but keeps the gspot colors', () => {
-    const stdout: string[] = [];
-    using _stdout = spyOn(process.stdout, 'write').mockImplementation((chunk) => {
-        stdout.push(String(chunk));
-        return true;
-    });
+    using output = captureTerminal();
+    const { stdout } = output;
     try {
         setOutputOptions({ isJson: false, colored: true });
         const name = 'title\u001B]0;renamed\u0007\u001B[2Jcheck‮gnp.exe​⁦x⁩';
@@ -35,16 +41,8 @@ test('a printed result removes escape sequences and format characters but keeps 
 
 test('a human error removes terminal controls while JSON preserves the message as escaped data', () => {
     const message = 'Before\u001B[2Kafter\u0000\u0007\u007F';
-    const stdout: string[] = [];
-    const stderr: string[] = [];
-    using _stdout = spyOn(process.stdout, 'write').mockImplementation((chunk) => {
-        stdout.push(String(chunk));
-        return true;
-    });
-    using _stderr = spyOn(process.stderr, 'write').mockImplementation((chunk) => {
-        stderr.push(String(chunk));
-        return true;
-    });
+    using output = captureTerminal();
+    const { stdout, stderr } = output;
     try {
         setOutputOptions({ isJson: false, colored: false });
         printError({ error: 'filesystem', message });
@@ -59,6 +57,24 @@ test('a human error removes terminal controls while JSON preserves the message a
             error: 'filesystem',
             message,
         });
+    } finally {
+        setOutputOptions({ isJson: false, colored: false });
+    }
+});
+
+test('warnings use stderr in text mode and join existing JSON notes without writing stderr', () => {
+    using output = captureTerminal();
+    const { stdout, stderr } = output;
+    try {
+        setOutputOptions({ isJson: false, colored: false });
+        printWarning('Check\u001B[2K again.');
+        expect(stderr).toStrictEqual(['[warn] Check again.\n']);
+        stderr.length = 0;
+        setOutputOptions({ isJson: true, colored: false });
+        printWarning('Check again.');
+        printResult({ text: '', json: { notes: ['Existing note.'] }, exitCode: 0 });
+        expect(stderr).toStrictEqual([]);
+        expect(JSON.parse(stdout.join(''))).toMatchObject({ notes: ['Check again.', 'Existing note.'] });
     } finally {
         setOutputOptions({ isJson: false, colored: false });
     }

@@ -3,21 +3,22 @@ import { EXIT_ERROR } from '#cli/config/terminal.ts';
 import { stripVTControlCharacters } from 'node:util';
 import cliPackage from '#cli-package' with { type: 'json' };
 
-import type {
-    CommandJson,
-    CommandResult,
-    OutputOptions,
-    CommandFailureJson,
-    CanceledCommandJson,
-} from '#cli/types/terminal.ts';
 import {
     SIGNAL_EXIT_CODES,
     RESULT_JSON_INDENT,
     TERMINAL_COLOR_SEQUENCE,
     TERMINAL_CONTROL_CHARACTERS,
 } from '#cli/config/system/system.ts';
+import type {
+    CommandJson,
+    OutputState,
+    CommandResult,
+    OutputOptions,
+    CommandFailureJson,
+    CanceledCommandJson,
+} from '#cli/types/terminal.ts';
 
-let options: OutputOptions = { isJson: false, colored: false };
+let options: OutputState = { isJson: false, colored: false, notes: [] };
 
 /**
 Read the palette for the configured command output.
@@ -34,7 +35,7 @@ Set the output mode for the process.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Output options stay private to this module.
 export function setOutputOptions(next: OutputOptions): void {
-    options = next;
+    options = { ...next, notes: [] };
 }
 
 /**
@@ -44,7 +45,7 @@ Print an error message to stderr without terminal control bytes, or a structured
 */
 export function printError(failure: string | CommandFailureJson): void {
     if (typeof failure !== 'string' && options.isJson) {
-        const fields: CommandJson = { version: cliPackage.version, exitCode: EXIT_ERROR, notes: [] };
+        const fields: CommandJson = { version: cliPackage.version, exitCode: EXIT_ERROR, notes: options.notes };
         process.stdout.write(`${JSON.stringify({ ...fields, ...failure }, null, RESULT_JSON_INDENT)}\n`);
         return;
     }
@@ -58,10 +59,23 @@ Print the command result in the chosen format.
 @param result the command output.
 */
 export function printResult(result: CommandResult): void {
-    const fields: CommandJson = { version: cliPackage.version, exitCode: result.exitCode, notes: [] };
-    if (options.isJson)
-        process.stdout.write(`${JSON.stringify({ ...fields, ...result.json }, null, RESULT_JSON_INDENT)}\n`);
-    else if (result.text !== '') print(result.text);
+    const fields: CommandJson = { version: cliPackage.version, exitCode: result.exitCode, notes: options.notes };
+    if (options.isJson) {
+        const notes = result.json.notes ?? [];
+        process.stdout.write(
+            `${JSON.stringify({ ...fields, ...result.json, notes: [...fields.notes, ...notes] }, null, RESULT_JSON_INDENT)}\n`,
+        );
+    } else if (result.text !== '') print(result.text);
+}
+
+/**
+Keep warnings in the JSON result, or print them without terminal controls on stderr.
+
+@param text the warning without its label.
+*/
+export function printWarning(text: string): void {
+    if (options.isJson) options.notes.push(text);
+    else printError(`${getColors().yellow('[warn]')} ${text}`);
 }
 
 /**
@@ -118,7 +132,7 @@ bidirectional overrides. Keep the color codes of the gspot palette. Repository t
 @returns the text without them.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Terminal writers share the same control-character removal.
-export function stripControlCharacters(text: string): string {
+function stripControlCharacters(text: string): string {
     return text
         .split(TERMINAL_COLOR_SEQUENCE)
         .map((segment) =>

@@ -3,8 +3,8 @@ import { LINE_BREAK } from '#cli/config/text.ts';
 import { EVERY_CHECK } from '#cli/config/ignores.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import { formatCount, quoteArgument } from '#cli/system/text.ts';
+import { getColors, printWarning } from '#cli/system/terminal.ts';
 import { type Finding, type CheckResult } from '#cli/types/runs/check.ts';
-import { getColors, stripControlCharacters } from '#cli/system/terminal.ts';
 import { type FixReport, type RunReport, type CheckProgress } from '#cli/types/commands/check.ts';
 
 import {
@@ -146,13 +146,13 @@ function formatNotChecked(notChecked: RunReport['notChecked']): string[] {
 Print failed fixer warnings, with the full diagnostics when requested.
 
 @param fixes the fixer results.
-@param options the diagnostic verbosity.
+@param options the details verbosity.
 @param options.verbose whether to include the full fixer output.
 */
 export function printFailedFixers(fixes: FixReport, { verbose }: { verbose: boolean }): void {
     for (const result of fixes.results) {
         if (result.status !== 'failed') continue;
-        const note = stripControlCharacters(result.note);
+        const note = result.note;
         const detail =
             note
                 .split('\n')
@@ -161,16 +161,16 @@ export function printFailedFixers(fixes: FixReport, { verbose }: { verbose: bool
             note.split('\n', 1)[0] ??
             '';
         const failure = detail.endsWith('.') ? detail.slice(0, -1) : detail;
-        process.stderr.write(
-            `${getColors().yellow('[warn]')} The ${stripControlCharacters(result.check)} fixer failed: ${failure}. Run gspot check --only ${quoteArgument(stripControlCharacters(result.check))} --fix --verbose.\n`,
+        const toolOutput = verbose
+            ? '\n' +
+              note
+                  .split('\n')
+                  .map((line) => '  ' + line)
+                  .join('\n')
+            : '';
+        printWarning(
+            `The ${result.check} fixer failed: ${failure}. Run gspot check --only ${quoteArgument(result.check)} --fix --verbose.${toolOutput}`,
         );
-        if (verbose)
-            process.stderr.write(
-                note
-                    .split('\n')
-                    .map((line) => '  ' + line)
-                    .join('\n') + '\n',
-            );
     }
 }
 

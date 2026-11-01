@@ -1,11 +1,12 @@
 import { join } from 'node:path';
+import { expect } from 'bun:test';
 import { Readable } from 'node:stream';
-import { spyOn, expect } from 'bun:test';
 import { runProgram } from '#cli/main.ts';
 import { type Sandbox } from '#tests/types/sandbox.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { captureTerminal } from '#tests/setup/system/terminal.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { type AsyncSpawnOptions } from '#cli/types/system/system.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/setup/environment.ts';
@@ -43,21 +44,8 @@ export async function runGspot(
     options: StdinOptions = {},
 ): Promise<ProcessOutput> {
     const previousFolder = process.cwd();
-    const stdout: string[] = [];
-    const stderr: string[] = [];
-    using resources = new DisposableStack();
-    resources.use(
-        spyOn(process.stdout, 'write').mockImplementation((chunk: string | Uint8Array) => {
-            stdout.push(Buffer.from(chunk).toString());
-            return true;
-        }),
-    );
-    resources.use(
-        spyOn(process.stderr, 'write').mockImplementation((chunk: string | Uint8Array) => {
-            stderr.push(Buffer.from(chunk).toString());
-            return true;
-        }),
-    );
+    using output = captureTerminal();
+    const { stdout, stderr } = output;
     const variables: Record<string, string> = { ...GSPOT_ENVIRONMENT, ...environment };
     const stdin = Object.getOwnPropertyDescriptor(process, 'stdin')!;
     using _environment = overrideEnvironment(variables);

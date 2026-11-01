@@ -1,8 +1,8 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { getColors } from '#cli/system/terminal.ts';
 import { type Session } from '#cli/types/session.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
+import { printWarning } from '#cli/system/terminal.ts';
 import { readHookStatus } from '#cli/installers/hooks.ts';
 import { findSettingsSkip } from '#cli/planning/skips.ts';
 import { type StageFilter } from '#cli/types/planning.ts';
@@ -112,10 +112,7 @@ async function warnMissingHooks(session: Session, revision: RevisionSource | und
         root: revision?.reportRoot ?? session.root,
         hasGit: revision?.reportRoot !== undefined || session.repository.hasGit,
     });
-    if (!hooks.ready)
-        process.stderr.write(
-            `${getColors().yellow('[warn]')} The Git hooks are not installed in this clone. Run gspot install.\n`,
-        );
+    if (!hooks.ready) printWarning('The Git hooks are not installed in this clone. Run gspot install.');
 }
 
 async function readChangedFilter(

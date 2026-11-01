@@ -4,6 +4,8 @@ export type PausedGit = { pid: number; checkout?: string };
 
 export type ProcessOutput = Pick<SpawnResult, 'code' | 'stdout' | 'stderr'>;
 
+export type TerminalCapture = DisposableStack & { stdout: string[]; stderr: string[] };
+
 export type StdinOptions = { stdin?: string | Uint8Array };
 
 export type ProcessCapture = Pick<
