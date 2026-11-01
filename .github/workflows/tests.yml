@@ -38,13 +38,6 @@ jobs:
                   "TEMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
                   "TMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
                   "npm_config_cache=$env:RUNNER_TEMP\npm-cache" >> $env:GITHUB_ENV
-            - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-              with:
-                  path: |
-                      ~/.bun/install/cache
-                      ~/.cache/uv
-                      ~/AppData/Local/uv/cache
-                  key: packages-${{ runner.os }}-${{ hashFiles('mise.toml', 'bun.lock', 'packages/cli/src/configurations/**/manifest.toml') }}
             - if: matrix.suite == 'integration' && runner.os == 'Linux'
               run: sudo apt-get update && sudo apt-get install --yes libxml2-utils zsh
             - if: runner.os == 'macOS'
