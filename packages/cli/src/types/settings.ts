@@ -117,7 +117,9 @@ export type WrittenScopeTable = { table: SettingsTable; scope: string; path: Key
 
 export type SettingDefault = { value: unknown; configuration: string };
 
-export type PathVisitor = (path: string, keys: KeyPath, role: NonNullable<Setting['path_role']>) => string;
+export type SettingLocation = { keys: KeyPath; names: string[] };
+
+export type PathVisitor = (path: string, location: SettingLocation, role: NonNullable<Setting['path_role']>) => string;
 
 export type SettingLanguage = (typeof SETTING_LANGUAGES)[number];
 

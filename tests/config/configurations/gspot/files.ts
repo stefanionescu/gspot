@@ -108,9 +108,9 @@ export const UNMATCHED_PATH_CASES = [
             ],
         },
         messages: [
+            '.reports/command.json under [[command_check]] matches no tracked file or folder.',
             '.reports/output.json under [[ignore]] matches no tracked file or folder.',
             '.reports/unused.json under [[ignore]] matches no tracked file or folder.',
-            '.reports/command.json under [[command_check]] matches no tracked file or folder.',
         ],
     },
 ] as const;

@@ -2,6 +2,10 @@ import type { Check } from '#cli/types/manifests.ts';
 
 export const GLOB_BRACKETS = /[()[\]]/u;
 
+export const RECORD_PATHS_KEY = 'paths';
+
+export const REASONED_VALUE_KEY = 'value';
+
 export const FIRST_READ: readonly string[] = [
     'general/engineering/rules/WORKING.md',
     'general/prose/rules/WRITING.md',

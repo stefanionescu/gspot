@@ -4,11 +4,11 @@ import { statSync } from 'node:fs';
 import { isTable } from '#cli/system/tables.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import type { KeyPath } from '#cli/types/parsers.ts';
-import type { PathVisitor } from '#cli/types/settings.ts';
+import { isReasonedValue } from '#cli/settings/file.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
-import { GLOB_BRACKETS } from '#cli/config/settings/validation.ts';
+import type { PathVisitor, SettingLocation } from '#cli/types/settings.ts';
+import { GLOB_BRACKETS, RECORD_PATHS_KEY, REASONED_VALUE_KEY } from '#cli/config/settings/validation.ts';
 
 function escapeLiteralPath(root: string, path: string): string {
     const segments = path.split('/');
@@ -21,30 +21,36 @@ function escapeLiteralPath(root: string, path: string): string {
     return path;
 }
 
-function mapNestedPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, keys: KeyPath): unknown {
+function mapNestedPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, location: SettingLocation): unknown {
+    const { keys, names } = location;
     if (schema instanceof z.ZodUnion) {
         const branch = schema.options.find((option) => z.safeParse(option, value).success) as z.ZodType;
-        return mapSettingPaths(branch, value, visit, keys);
+        return mapSettingPaths(branch, value, visit, location);
     }
     if (schema instanceof z.ZodArray && Array.isArray(value))
         return value.map((element: unknown, index) =>
-            mapSettingPaths(schema.element as z.ZodType, element, visit, [...keys, index]),
+            mapSettingPaths(schema.element as z.ZodType, element, visit, { keys: [...keys, index], names }),
         );
     if (!isTable(value)) return value;
     if (schema instanceof z.ZodRecord) {
         const role = (schema.keyType as z.ZodType).meta()?.path_role;
         return Object.fromEntries(
-            Object.entries(value).map(([key, child]) => [
-                role === undefined ? key : visit(key, [...keys, key], role),
-                mapSettingPaths(schema.valueType as z.ZodType, child, visit, [...keys, key]),
-            ]),
+            Object.entries(value).map(([key, child]) => {
+                const next = { keys: [...keys, key], names: [...names, key] };
+                return [
+                    role === undefined ? key : visit(key, next, role),
+                    mapSettingPaths(schema.valueType as z.ZodType, child, visit, next),
+                ];
+            }),
         );
     }
     if (schema instanceof z.ZodObject)
         return Object.fromEntries(
             Object.entries(value).map(([key, child]) => {
                 const field = schema.shape[key] as z.ZodType | undefined;
-                return [key, field === undefined ? child : mapSettingPaths(field, child, visit, [...keys, key])];
+                const isUnnamed = key === RECORD_PATHS_KEY || (key === REASONED_VALUE_KEY && isReasonedValue(value));
+                const next = { keys: [...keys, key], names: isUnnamed ? names : [...names, key] };
+                return [key, field === undefined ? child : mapSettingPaths(field, child, visit, next)];
             }),
         );
     return value;
@@ -56,16 +62,21 @@ Change the declared path leaves with the schemas that validation uses.
 @param schema the validator of the field.
 @param value the validated written setting.
 @param visit changes one path.
-@param keys where the field sits in its table.
+@param location where the field sits in its table, and the name of its setting or record.
 @returns the setting with only its declared path leaves changed.
 */
-export function mapSettingPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, keys: KeyPath): unknown {
-    if (schema instanceof z.ZodPipe) return mapSettingPaths(schema.in as z.ZodType, value, visit, keys);
+export function mapSettingPaths(
+    schema: z.ZodType,
+    value: unknown,
+    visit: PathVisitor,
+    location: SettingLocation,
+): unknown {
+    if (schema instanceof z.ZodPipe) return mapSettingPaths(schema.in as z.ZodType, value, visit, location);
     const role = schema.meta()?.path_role;
-    if (typeof value === 'string' && role !== undefined) return visit(value, keys, role);
+    if (typeof value === 'string' && role !== undefined) return visit(value, location, role);
     return schema instanceof z.ZodOptional || schema instanceof z.ZodDefault || schema instanceof z.ZodPrefault
-        ? mapSettingPaths(schema.unwrap() as z.ZodType, value, visit, keys)
-        : mapNestedPaths(schema, value, visit, keys);
+        ? mapSettingPaths(schema.unwrap() as z.ZodType, value, visit, location)
+        : mapNestedPaths(schema, value, visit, location);
 }
 
 /**
@@ -96,8 +107,8 @@ export function joinSettingPaths(key: string, value: unknown, scopePath: string,
         : mapSettingPaths(
               schema,
               value,
-              (path, _keys, role) => joinScopeSelector(path, role === 'build' ? buildFolder : scopePath),
-              key.split('.'),
+              (path, _location, role) => joinScopeSelector(path, role === 'build' ? buildFolder : scopePath),
+              { keys: key.split('.'), names: key.split('.') },
           );
 }
 

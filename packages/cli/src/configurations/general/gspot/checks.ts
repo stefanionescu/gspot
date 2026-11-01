@@ -11,7 +11,6 @@ import { INSTALL_HELP } from '#cli/config/tools/programs.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { Scope, PathVisitor } from '#cli/types/settings.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
@@ -24,8 +23,9 @@ import { mapSettingPaths, joinScopeSelector } from '#cli/settings/paths.ts';
 import { formatCount, getPosition, quoteArgument } from '#cli/system/text.ts';
 import { BASELINE_FILE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { parseComments, stripCommentEnd } from '#cli/parsers/code/comments.ts';
-import { findSettingLine, isReasonedValue, readSettingsFile } from '#cli/settings/file.ts';
+import { findSettingLine, readSettingsFile } from '#cli/settings/file.ts';
 import type { BaselineRun, CheckSession, CheckRunOptions } from '#cli/types/engine/run.ts';
+import type { Scope, PathVisitor, SettingLocation } from '#cli/types/settings.ts';
 import type { FindingPlace, SuppressionSyntax } from '#cli/types/configurations/general.ts';
 
 import {
@@ -288,42 +288,36 @@ export function checkUnmatchedPaths(session: Session, _planned: PlannedCheck): C
     const repositoryPaths = [...includeParentFolders(files.map((file) => file.path))];
     const { text } = readSettingsFile(session.root);
     return listSettingsTables(session.settings).flatMap(({ table, scope = '', path }) => {
-        const findings: CheckFinding[] = [];
-        const schema = scope === '' ? settingsSchema : scopeSchema;
-        const visit: PathVisitor = (pattern, keys, role) => {
-            const selector = keys[0] === 'path' ? pattern : joinScopeSelector(pattern, scope);
-            const matches = buildPathMatcher([selector.replace(NEGATED_PATTERN, '')]);
-            if (role === 'source' && repositoryPaths.every((repositoryPath) => !matches(repositoryPath))) {
-                const names = keys
-                    .filter(
-                        (field, index) =>
-                            field !== 'value' || !isReasonedValue(findValueAt(table.written, keys.slice(0, index))),
-                    )
-                    .filter((field): field is string => typeof field === 'string')
-                    .filter((field, index, fields) => field !== 'paths' || index !== fields.length - 1);
+        const sources: { pattern: string; selector: string; location: SettingLocation }[] = [];
+        const visit: PathVisitor = (pattern, location, role) => {
+            const selector = location.keys[0] === 'path' ? pattern : joinScopeSelector(pattern, scope);
+            if (role === 'source') sources.push({ pattern, selector, location });
+            return pattern;
+        };
+        const settings = Object.entries(table.written).filter(([key]) => key !== 'scope');
+        mapSettingPaths(scope === '' ? settingsSchema : scopeSchema, Object.fromEntries(settings), visit, {
+            keys: [],
+            names: [],
+        });
+        const unmatched = new Set(
+            [...new Set(sources.map(({ selector }) => selector))].filter((selector) => {
+                const matches = buildPathMatcher([selector.replace(NEGATED_PATTERN, '')]);
+                return repositoryPaths.every((repositoryPath) => !matches(repositoryPath));
+            }),
+        );
+        return sources
+            .filter(({ selector }) => unmatched.has(selector))
+            .map(({ pattern, selector, location: { keys, names } }) => {
                 const key = [...path, ...names].join('.');
                 const written = findValueAt(table.written, names);
                 const where =
                     Array.isArray(written) && written.some((element) => isTable(element)) ? `[[${key}]]` : key;
-                findings.push({
+                return {
                     file: SETTINGS_FILE,
                     line: findSettingLine(text, session.settings.written, [...path, ...keys]),
                     rule: GSPOT_RULES.unmatchedPath,
                     message: `${selector} under ${where} matches no tracked file or folder.${UNESCAPED_BRACKET.test(pattern) ? BRACKET_HELP : ''}`,
-                });
-            }
-            return pattern;
-        };
-        const settings = Object.entries(table.written).filter(([key]) => key !== 'scope');
-        mapSettingPaths(
-            schema,
-            Object.fromEntries([
-                ...settings.filter(([key]) => key === 'ignore'),
-                ...settings.filter(([key]) => key !== 'ignore'),
-            ]),
-            visit,
-            [],
-        );
-        return findings;
+                };
+            });
     });
 }
