@@ -35,7 +35,8 @@ function readDestructuredName(identifier: TSESTree.Node, module: string): string
     const { parent } = identifier;
     if (parent.type !== AST_NODE_TYPES.Property || parent.value !== identifier) return undefined;
     const property = ASTUtils.getPropertyName(parent);
-    return property === null ? undefined : `${module}.${property}`;
+    if (property === null) return undefined;
+    return property === 'default' ? module : `${module}.${property}`;
 }
 
 /**

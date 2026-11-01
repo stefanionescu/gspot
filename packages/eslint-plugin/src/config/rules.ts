@@ -250,3 +250,13 @@ export const POWERED_BY_FACTORIES = new Set(['express', 'express.default']);
 export const POWERED_BY_MIDDLEWARE = new Set(['helmet', 'helmet.default', 'helmet.hidePoweredBy', 'hide-powered-by']);
 
 export const INSECURE_RANDOM_GENERATOR = 'Math.random';
+
+export const DISABLED_SECURITY_HEADERS = new Set(['contentSecurityPolicy', 'noSniff', 'referrerPolicy', 'hsts']);
+
+export const UNSAFE_REFERRER_POLICIES = new Set(['', 'unsafe-url', 'no-referrer-when-downgrade']);
+
+export const MINIMUM_HSTS_AGE = 15_552_000;
+
+export const COOKIE_SECURITY_FLAGS = ['secure', 'httpOnly'] as const;
+
+export const COOKIE_SET_OPTIONS_POSITION = 2;

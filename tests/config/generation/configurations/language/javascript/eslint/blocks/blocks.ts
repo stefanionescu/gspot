@@ -167,7 +167,7 @@ export const DUPLICATE_RULE_CASES = [
     {
         file: 'nested-if.js',
         source: "export function run() { if (Date.now()) { if (Math.random()) { console.log('ready'); } } }\n",
-        kept: 'sonarjs/no-collapsible-if',
+        kept: 'unicorn/no-lonely-if',
         rules: ['unicorn/no-lonely-if', 'sonarjs/no-collapsible-if'],
     },
     {

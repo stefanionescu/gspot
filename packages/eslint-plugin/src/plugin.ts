@@ -11,18 +11,22 @@ import { importBoundaries } from './rules/import-boundaries.ts';
 import { noInsecureRandom } from './rules/no-insecure-random.ts';
 import { noRenamedExports } from './rules/no-renamed-exports.ts';
 import pluginPackage from '../package.json' with { type: 'json' };
+import { noInsecureCookies } from './rules/no-insecure-cookies.ts';
 import { requireServerOnly } from './rules/require-server-only.ts';
 import { noPoweredByHeader } from './rules/no-powered-by-header.ts';
 import { noTrivialFunctions } from './rules/no-trivial-functions.ts';
 import { noCommentsInImports } from './rules/no-comments-in-imports.ts';
 import { redundantTypeAliases } from './rules/redundant-type-aliases.ts';
 import { preferImmediateReturn } from './rules/prefer-immediate-return.ts';
+import { noUnsafeSecurityHeaders } from './rules/no-unsafe-security-headers.ts';
 
 const rules = {
     'no-comments-in-imports': noCommentsInImports,
     'no-client-env': noClientEnv,
     'no-powered-by-header': noPoweredByHeader,
     'no-insecure-random': noInsecureRandom,
+    'no-unsafe-security-headers': noUnsafeSecurityHeaders,
+    'no-insecure-cookies': noInsecureCookies,
     'import-boundaries': importBoundaries,
     'no-renamed-exports': noRenamedExports,
     'no-index-imports': noIndexImports,

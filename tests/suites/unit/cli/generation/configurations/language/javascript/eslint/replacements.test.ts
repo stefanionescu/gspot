@@ -198,3 +198,40 @@ test.each(ESLINT_LEVEL_CASES)(
         expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
     },
 );
+
+test.each(ESLINT_LEVEL_CASES)('%s preserves Helmet and cookie protections in %s', async (level, extension) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([extension === 'js' ? 'javascript' : 'typescript'], { level }),
+        'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
+        'package.json': '{"private":true,"type":"module"}',
+        [`headers.${extension}`]:
+            'import express from "express"; import helmet from "helmet"; const app = express(); app.use(helmet({ contentSecurityPolicy: false, noSniff: false, referrerPolicy: false, hsts: false }));',
+        [`cookies.${extension}`]: 'import session from "cookie-session"; session({ secure: false, httpOnly: false });',
+    });
+    const eslint = await buildEslint(sandbox.path);
+    const files = [`headers.${extension}`, `cookies.${extension}`];
+    const rules = [
+        'gspot/no-unsafe-security-headers',
+        'gspot/no-insecure-cookies',
+        'sonarjs/content-security-policy',
+        'sonarjs/no-mime-sniff',
+        'sonarjs/no-referrer-policy',
+        'sonarjs/strict-transport-security',
+        'sonarjs/insecure-cookie',
+        'sonarjs/cookie-no-httponly',
+    ];
+    expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([
+        { file: `cookies.${extension}`, rule: 'gspot/no-insecure-cookies', line: 1 },
+        { file: `cookies.${extension}`, rule: 'gspot/no-insecure-cookies', line: 1 },
+        { file: `headers.${extension}`, rule: 'gspot/no-unsafe-security-headers', line: 1 },
+        { file: `headers.${extension}`, rule: 'gspot/no-unsafe-security-headers', line: 1 },
+        { file: `headers.${extension}`, rule: 'gspot/no-unsafe-security-headers', line: 1 },
+        { file: `headers.${extension}`, rule: 'gspot/no-unsafe-security-headers', line: 1 },
+    ]);
+    await createFileTree(sandbox.path, {
+        [`headers.${extension}`]:
+            'import express from "express"; import helmet from "helmet"; const app = express(); app.use(helmet());',
+        [`cookies.${extension}`]: 'import session from "cookie-session"; session({ secure: true, httpOnly: true });',
+    });
+    expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
+});
