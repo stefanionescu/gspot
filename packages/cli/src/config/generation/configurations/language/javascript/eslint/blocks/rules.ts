@@ -149,6 +149,7 @@ export const UNICORN_RULES = {
     'unicorn/import-style': 'off',
     'unicorn/prefer-export-from': 'off',
     'unicorn/no-unnecessary-array-flat-map': 'off',
+    'unicorn/no-abusive-eslint-disable': 'off',
 
     'unicorn/prefer-ternary': ['error', 'only-single-line'],
     'unicorn/expiring-todo-comments': ['error', { allowWarningComments: false }],

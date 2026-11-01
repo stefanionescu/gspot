@@ -8,7 +8,7 @@
         "content": "import type { Cart } from './cart.js';\nimport { charge } from './payments.js';\n\nexport async function pay(cart: Cart) {\n    await charge(cart.total);\n}\n"
     },
     "insertedLines": [5],
-    "rejectedSummary": "Failed: 2 checks with 5 findings. Passed: 23 checks. Skipped: 8 checks.",
+    "rejectedSummary": "Failed: 2 checks with 4 findings. Passed: 23 checks. Skipped: 8 checks.",
     "passedSummary": "Passed: 25 checks. Skipped: 8 checks.",
     "findings": [
         {
@@ -26,13 +26,6 @@
             "column": 5,
             "rule": "sonarjs/no-try-promise",
             "message": "Consider using 'await' for the promise inside this 'try' or replace it with 'Promise.prototype.catch(...)' usage."
-        },
-        {
-            "check": "javascript/eslint",
-            "file": "src/checkout.ts",
-            "line": 6,
-            "rule": "unicorn/no-abusive-eslint-disable",
-            "message": "Specify the rules you want to disable."
         },
         {
             "check": "javascript/eslint",
@@ -61,7 +54,7 @@
             "title": "Linter off.",
             "text": "The comment turns off every rule for line 7 and gives no reason.",
             "lines": [6],
-            "rules": ["unicorn/no-abusive-eslint-disable", "eslint-all"]
+            "rules": ["eslint-all"]
         },
         {
             "title": "Errors dropped.",
