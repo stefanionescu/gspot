@@ -174,7 +174,7 @@ export const scopeSchema = z.strictObject({
 
 export const rootSettingSchemas = {
     level: levelSchema.default('basic').meta({
-        description: `${LEVEL_SUMMARY} ${ALL_LEVEL_SUMMARY} No level turns on experimental or preview lint rules.`,
+        description: `${LEVEL_SUMMARY} ${ALL_LEVEL_SUMMARY} Ruff PLW1514 is the one preview lint rule that a level turns on.`,
     }),
     tool_timeout_seconds: z.number().int().positive().default(600).meta({
         description:

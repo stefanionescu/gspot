@@ -1,5 +1,5 @@
 allowed_words = ["Python", "Ruff"]
-ignored_paths = ["**/.venv/**", "**/venv/**"]
+ignored_paths = ["**/.venv/**", "**/venv/**", "**/__pycache__/**", "**/.pytest_cache/**", "**/.ruff_cache/**", "**/.mypy_cache/**"]
 
 [configuration]
 description = "Python sources: lint, layout, strict types, docstrings that match their signatures, and no unused code or dependencies."
@@ -163,6 +163,7 @@ basic = [
     "PLW064",
     "PLW07",
     "PLW15",
+    "PLW1514",
     "PLW21",
     "PLW3",
     "PYI",
@@ -309,6 +310,8 @@ all = [
     "SLF",
     "SLOT",
     "TC",
+    "TID251",
+    "TID252",
     "TRY",
 ]
 
@@ -452,5 +455,5 @@ level = "all"
 name = "placeholder-docstrings"
 runs = "scope"
 stage = "commit"
-summary = "Finds docstrings that hold a placeholder word, or repeat the name of their function or class."
+summary = "Finds docstrings that hold a placeholder word, repeat the name of their function or class, or start a class docstring with `Class that`, `Class for`, or `A class`."
 why = "A docstring that says nothing satisfies the lint rule and wastes the line."

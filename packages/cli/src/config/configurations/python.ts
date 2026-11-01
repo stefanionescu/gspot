@@ -83,6 +83,14 @@ export const RUFF_ISORT = {
     'force-sort-within-sections': true,
 } as const;
 
+export const RUFF_TIDY_IMPORTS = {
+    'ban-relative-imports': 'parents',
+    'banned-api': {
+        'importlib.import_module': { msg: 'Import the module by name at the top of the file.' },
+        'builtins.__import__': { msg: 'Import the module by name at the top of the file.' },
+    },
+} as const;
+
 export const RUFF_PATH_RULES = {
     '**/test_*.py': ['S101'],
     '**/*_test.py': ['S101'],
@@ -149,6 +157,8 @@ export const PIP_INSTALL = /\bpip3? install\b/u;
 export const NON_WORD_RUN = /[^a-z\d]+/gu;
 
 export const PLACEHOLDERS = new Set(['todo', 'docstring', 'tbd', 'fixme', 'description', 'summary']);
+
+export const CLASS_DOCSTRING_OPENING = /^(?:class that|class for|a class)\b/u;
 
 export const GOOGLE_DOCSTRING = /^[ \t]*(?:Args|Arguments|Keyword Args):[ \t]*$/mu;
 

@@ -20,6 +20,7 @@ import {
     PYTHON_FILES,
     RUFF_ALWAYS_OFF,
     RUFF_PATH_RULES,
+    RUFF_TIDY_IMPORTS,
     RUFF_CONSOLE_RULES,
     BASEDPYRIGHT_CHECK,
     BASEDPYRIGHT_LEVELS,
@@ -120,9 +121,12 @@ export function buildRuffFile(planned: PlannedConfig): string {
             'docstring-code-format': true,
         },
         lint: {
+            preview: true,
+            'explicit-preview-rules': true,
             select: ruffRules,
             ignore: [...off, ...RUFF_ALWAYS_OFF],
             isort: RUFF_ISORT,
+            'flake8-tidy-imports': RUFF_TIDY_IMPORTS,
             mccabe: { 'max-complexity': getLimit(planned.scope.settings, 'max_cyclomatic_complexity', 'python') },
             ...(convention !== undefined && { pydocstyle: { convention } }),
             pylint: {

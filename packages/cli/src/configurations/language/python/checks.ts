@@ -43,6 +43,7 @@ import {
     PYDOCLINT_STYLE_FLAG,
     INSTALL_FILE_SUFFIXES,
     PYDOCLINT_TYPE_OPTIONS,
+    CLASS_DOCSTRING_OPENING,
     DEPTRY_FIRST_PARTY_FLAG,
     PYDOCLINT_DEFAULT_STYLE,
     REQUIREMENTS_FOLDER_FILE,
@@ -268,7 +269,8 @@ export async function checkPlaceholderDocstrings(session: Session, planned: Plan
         if (text === undefined) return [];
         const lowered = text.toLowerCase().replaceAll(NON_WORD_RUN, ' ').trim();
         const isName = lowered === splitWords(definition.name).join(' ');
-        if (lowered !== '' && !isName && !PLACEHOLDERS.has(lowered)) return [];
+        const isClassOpening = definition.node.type === 'class_definition' && CLASS_DOCSTRING_OPENING.test(lowered);
+        if (lowered !== '' && !isName && !isClassOpening && !PLACEHOLDERS.has(lowered)) return [];
         return [
             {
                 file: definition.path,

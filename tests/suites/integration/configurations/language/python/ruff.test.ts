@@ -109,7 +109,7 @@ test.each([...LEVELS])(
         const ruffText = await readFile(join(root, getManifestTarget('python', 'ruff.toml')), 'utf8');
         const contents: unknown = parse(ruffText);
         const config = ruffConfigurationSchema.parse(contents);
-        expect(config.lint.select.filter((code) => previewCodes.has(code))).toStrictEqual([]);
+        expect(config.lint.select.filter((code) => previewCodes.has(code))).toStrictEqual(['PLW1514']);
         const result = parseCheckReport(await spawnGspot(root, command));
         expect(result.code, result.stdout + result.stderr).toBe(1);
         expect(listFindingRows(result.report)).toStrictEqual([
