@@ -1,10 +1,11 @@
 import { basename } from 'node:path/posix';
-import { escapeGlob } from '#cli/system/paths.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { escapeGlob, extractParentFolder } from '#cli/system/paths.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { readScopeAliases } from '#cli/repository/javascript/aliases.ts';
 import { MISE_TASKS_GLOB } from '#cli/config/configurations/structure.ts';
+import { DENO_CONFIG_FILES } from '#cli/config/configurations/infrastructure.ts';
 import { SCRIPT_RULES, CONSOLE_RULES, JAVASCRIPT_RULES } from '#cli/config/configurations/eslint.ts';
 import { buildSelectorBlocks } from '#cli/configurations/language/javascript/eslint/blocks/selectors.ts';
 import { buildScopeFiles, listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
@@ -51,7 +52,15 @@ import {
 function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBlock[]): ConfigurationBlocks['blocks'] {
     const { session, projects } = planned;
     return [
-        ...buildImportStyleBlocks(session.scopes, planned.nodeFiles),
+        ...buildImportStyleBlocks(
+            session.scopes,
+            planned.nodeFiles,
+            new Set(
+                session.repository.files
+                    .filter((file) => (DENO_CONFIG_FILES as readonly string[]).includes(basename(file.path)))
+                    .map((file) => extractParentFolder(file.path)),
+            ),
+        ),
         ...buildScopeImportBlocks(planned),
         ...buildNodeScriptBlocks(planned),
         ...boundaryBlocks,

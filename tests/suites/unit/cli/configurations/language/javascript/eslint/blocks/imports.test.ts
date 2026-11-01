@@ -1,8 +1,10 @@
+import { ESLint } from 'eslint';
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { SORT_CASES, SORT_RULES, HOST_MODULE } from '#tests/config/configurations/javascript/blocks.ts';
 
@@ -69,6 +71,50 @@ test('a bundler scope drops only code suffixes, and its Node scripts keep every 
         filePath: 'app/tool.mjs',
     });
     expect(kept?.output).toBe('import { library } from "./library.mjs";\nexport { library };\n');
+});
+
+test('the import-cycles config runs import-x/no-cycle alone', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript']),
+        'package.json': '{"private":true,"type":"module"}',
+        'first.js': "import { second } from './second.js';\nexport const first = second;\nconst unused = 1;\n",
+        'second.js': "import { first } from './first.js';\nexport const second = first;\n",
+    });
+    await buildEslint(sandbox.path);
+    const eslint = new ESLint({
+        cwd: sandbox.path,
+        overrideConfigFile: join(sandbox.path, getManifestTarget('javascript', 'eslint/import-cycles.mjs')),
+    });
+    const [result] = await eslint.lintFiles(['first.js']);
+    expect(result?.messages.map(({ ruleId }) => ruleId)).toStrictEqual(['import-x/no-cycle']);
+});
+
+test('Supabase functions and a scope with deno.json ask for the real .ts extension', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript', 'supabase'], {
+            scopes: [{ path: 'edge', configurations: ['typescript'] }],
+        }),
+        'package.json': '{"private":true,"type":"module"}',
+        'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["**/*.ts"]}',
+        'edge/deno.json': '{}',
+        'edge/value.ts': 'export const value = 1;\n',
+        'edge/source.ts': '',
+        'supabase/functions/hello/value.ts': 'export const value = 1;\n',
+        'supabase/functions/hello/index.ts': '',
+    });
+    const eslint = await buildEslint(sandbox.path);
+    const rules = ['n/file-extension-in-import'];
+    const paths = ['edge/source.ts', 'supabase/functions/hello/index.ts'];
+    await createFileTree(
+        sandbox.path,
+        Object.fromEntries(paths.map((path) => [path, 'export { value } from "./value.ts";\n'])),
+    );
+    expect(await listLintFindings(eslint, sandbox.path, paths, rules)).toStrictEqual([]);
+    await createFileTree(
+        sandbox.path,
+        Object.fromEntries(paths.map((path) => [path, 'export { value } from "./value";\n'])),
+    );
+    expect(await listLintFindings(eslint, sandbox.path, paths, rules)).toHaveLength(paths.length);
 });
 
 test('a Node script imports through package.json imports, never through TypeScript paths', async () => {

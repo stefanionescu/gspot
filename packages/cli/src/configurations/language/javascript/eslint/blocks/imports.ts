@@ -16,6 +16,7 @@ import {
     EXTENSIONLESS_CODE,
     FILE_EXTENSION_RULE,
     NODE_SCRIPT_PATTERNS,
+    DENO_IMPORT_EXTENSION,
     PATH_SEPARATOR_PATTERN,
     IMPORT_BOUNDARIES_RULE,
     IMPORT_BOUNDARY_FOLDERS,
@@ -27,17 +28,22 @@ Build the n/file-extension-in-import blocks for each project and path style.
 
 @param scopes the projects and their import styles.
 @param nodeFiles your own scripts that run on Node.js.
+@param denoFolders the folders that hold a Deno config file, whose code imports the real `.ts` extension.
 */
-export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[]): EslintBlock[] {
-    const changed = scopes.filter((scope) => {
-        const parent = findParentScope(scopes, scope.path);
-        return (
-            scope.settings.tables.javascript?.import_extension !== parent?.settings.tables.javascript?.import_extension
-        );
+export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[], denoFolders: Set<string>): EslintBlock[] {
+    const styles = new Map(
+        scopes.map(({ path, settings }) => [
+            path,
+            denoFolders.has(path) ? DENO_IMPORT_EXTENSION : settings.tables.javascript?.import_extension,
+        ]),
+    );
+    const changed = scopes.filter(({ path }) => {
+        const parent = findParentScope(scopes, path);
+        return styles.get(path) !== (parent === undefined ? undefined : styles.get(parent.path));
     });
     return changed.flatMap((scope) => {
         const path = scope.path;
-        const importExtension = scope.settings.tables.javascript?.import_extension;
+        const importExtension = styles.get(path);
         return importExtension === undefined
             ? []
             : {

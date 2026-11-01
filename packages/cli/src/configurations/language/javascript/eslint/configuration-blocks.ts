@@ -17,6 +17,7 @@ import { buildDrizzleBlocks } from '#cli/configurations/library/drizzle/generate
 import { buildZustandBlocks } from '#cli/configurations/library/zustand/generate.ts';
 import { buildReactDomBlocks } from '#cli/configurations/framework/react-dom/generate.ts';
 import { buildTypescriptBlocks } from '#cli/configurations/language/typescript/generate.ts';
+import { IMPORT_EXTENSIONS, FILE_EXTENSION_RULE } from '#cli/config/configurations/blocks.ts';
 import { SUPABASE_RULES, PLUGIN_RULE_BLOCKS } from '#cli/config/configurations/javascript.ts';
 import { buildTanstackQueryBlocks } from '#cli/configurations/library/tanstack-query/generate.ts';
 import { buildTestingLibraryBlocks } from '#cli/configurations/library/testing-library/generate.ts';
@@ -76,6 +77,7 @@ function buildConfigurationBlocks(
             level: planned.blockWriter.level,
             settings: scope.settings,
             projects: planned.projects,
+            defaultProjectFiles: planned.defaultProjectFiles,
             path: scopePath,
             projectPath: configuration.name === 'nextjs' ? nextProject : scopePath,
             dependencies: listProjectDependencyNames(session.repository.dependencyFiles, scopePath),
@@ -180,7 +182,13 @@ Check the request body that each Supabase edge function reads.
 function buildSupabaseBlocks(scope: EslintScope): ConfigurationBlocks {
     const folder = escapeGlob(getTable(scope.settings, 'supabase').functions_folder);
     const files = scope.eslintFiles.code.map((pattern) => [`${folder}/**`, pattern]);
-    return { imports: {}, blocks: [{ fields: { files, rules: SUPABASE_RULES } }] };
+    const settings = { n: { tryExtensions: IMPORT_EXTENSIONS, typescriptExtensionMap: [] } };
+    return {
+        imports: {},
+        blocks: [
+            { fields: { files, settings, rules: { ...SUPABASE_RULES, [FILE_EXTENSION_RULE]: ['error', 'always'] } } },
+        ],
+    };
 }
 
 /**
