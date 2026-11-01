@@ -5,6 +5,7 @@ import { readCachedPackageJson } from '#cli/repository/dependencies.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { readScopeAliases } from '#cli/repository/javascript/aliases.ts';
 import { MISE_TASKS_GLOB } from '#cli/config/configurations/structure.ts';
+import { SCRIPT_RULES, CONSOLE_RULES, JAVASCRIPT_RULES } from '#cli/config/configurations/eslint.ts';
 import { buildSelectorBlocks } from '#cli/configurations/language/javascript/eslint/blocks/selectors.ts';
 import { buildScopeFiles, listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { buildRestrictedImportBlocks } from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
@@ -28,13 +29,10 @@ import {
 import {
     NODE_RULES,
     TEST_RULES,
-    SCRIPT_RULES,
-    CONSOLE_RULES,
     NODE_RUNTIMES,
     RUNTIME_GLOBALS,
     PIN_RANGES_RULE,
     TEST_CHECK_RULES,
-    JAVASCRIPT_RULES,
     GSPOT_RULE_PREFIX,
     GSPOT_PRESET_LEVELS,
     IMPORT_LAYOUT_RULES,

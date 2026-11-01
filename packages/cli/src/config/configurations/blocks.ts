@@ -11,28 +11,6 @@ export const RUNTIME_GLOBALS: Readonly<Record<string, string>> = { node: 'nodeBu
 
 export const NODE_RUNTIMES: readonly string[] = ['node', 'nodeBuiltin', 'commonjs'];
 
-export const JAVASCRIPT_RULES = {
-    'no-implied-eval': 'error',
-    'no-throw-literal': 'error',
-    'no-unused-expressions': 'error',
-    'no-unused-vars': [
-        'error',
-        {
-            args: 'all',
-            argsIgnorePattern: '^_',
-            varsIgnorePattern: '^_',
-            destructuredArrayIgnorePattern: '^_',
-        },
-    ],
-    'jsdoc/require-param-type': 'error',
-    'jsdoc/require-returns-type': 'error',
-    'jsdoc/check-types': 'error',
-    'jsdoc/no-undefined-types': 'error',
-    'jsdoc/valid-types': 'error',
-} as const;
-
-export const SCRIPT_RULES = { 'n/no-process-exit': 'off', 'unicorn/no-process-exit': 'off' } as const;
-
 export const TEST_CHECK_RULES = {
     'sonarjs/assertions-in-tests': 'error',
     'sonarjs/no-empty-test-file': 'error',
@@ -75,8 +53,6 @@ export const NODE_RULES = {
     'n/prefer-promises/dns': 'error',
     'n/prefer-promises/fs': 'error',
 } as const;
-
-export const CONSOLE_RULES = { 'no-console': 'error' } as const;
 
 export const IMPORT_BOUNDARIES_RULE = 'gspot/import-boundaries';
 

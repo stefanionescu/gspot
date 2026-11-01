@@ -1,3 +1,27 @@
+export const JAVASCRIPT_RULES = {
+    'no-implied-eval': 'error',
+    'no-throw-literal': 'error',
+    'no-unused-expressions': 'error',
+    'no-unused-vars': [
+        'error',
+        {
+            args: 'all',
+            argsIgnorePattern: '^_',
+            varsIgnorePattern: '^_',
+            destructuredArrayIgnorePattern: '^_',
+        },
+    ],
+    'jsdoc/require-param-type': 'error',
+    'jsdoc/require-returns-type': 'error',
+    'jsdoc/check-types': 'error',
+    'jsdoc/no-undefined-types': 'error',
+    'jsdoc/valid-types': 'error',
+} as const;
+
+export const SCRIPT_RULES = { 'n/no-process-exit': 'off', 'unicorn/no-process-exit': 'off' } as const;
+
+export const CONSOLE_RULES = { 'no-console': 'error' } as const;
+
 const ESLINT_RULES = {
     'array-callback-return': 'error',
     'block-scoped-var': 'error',

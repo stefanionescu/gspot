@@ -1,12 +1,13 @@
 import { z } from 'zod';
 import { RESERVED_SEGMENTS } from '#cli/config/system.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
+import { hooksSchema } from '#cli/schemas/settings/general.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { NO_CHECK_PATHS_MESSAGE } from '#cli/config/settings/validation.ts';
 import { levelSchema, commandCheckFields } from '#cli/schemas/manifests/tools.ts';
 import { toolsSchema as publicToolsSchema } from '#cli/schemas/settings/tools.ts';
 import { configurationTableSchemas } from '#cli/schemas/settings/configurations.ts';
-import { ciSchema, hooksSchema, rulesSchema, namingSchema, importRulesSchema } from '#cli/schemas/settings/tables.ts';
+import { ciSchema, rulesSchema, namingSchema, importRulesSchema } from '#cli/schemas/settings/tables.ts';
 
 import {
     formatSchema,

@@ -87,12 +87,6 @@ export const ciSchema = z
         ],
     });
 
-export const hooksSchema = z.strictObject({
-    enabled: z.boolean().default(false).meta({
-        description: 'Install and run the configured Git hooks.',
-    }),
-});
-
 const importRuleSchema = z.strictObject({
     name: z.string().min(1).meta({
         description: 'The name that other import rules use in can_import.',
@@ -129,33 +123,6 @@ export const importRulesSchema = importRuleSchema
         description:
             'Code may import its own files and the files of every import rule listed above it, never below. can_import replaces the rules above with an exact list. When import rules exist, every code file belongs to one, apart from tests, tool settings files, scripts, and generated files.',
     });
-
-export const javascriptSchema = z
-    .strictObject({
-        script_files: allowReasonedValue(relativePathSchema.array(), {
-            reason_when: 'adding',
-            configurations: ['javascript'],
-            description: 'Script files, which may print to the console and call process.exit.',
-            default: ['scripts/**', '**/*.config.{js,mjs,cjs,ts}'] as ['scripts/**', '**/*.config.{js,mjs,cjs,ts}'],
-        }),
-        import_boundaries: relativePathSchema
-            .array()
-            .default([] as [])
-            .meta({
-                configurations: ['javascript'],
-                description:
-                    'Folders, relative to the repository root, that a relative import may not leave, such as src/features/*. An import of a file outside them takes the alias, and eslint --fix writes it.',
-            }),
-        externals: allowReasonedValue(z.string().min(1).array(), {
-            reason_when: 'adding',
-            template: 'repository',
-            configurations: ['javascript'],
-            description:
-                'Import specifiers that the runtime provides, such as ../../scripts/app.js in a host application. Globs match several.',
-            default: [] as [],
-        }),
-    })
-    .optional();
 
 export const pythonSchema = z
     .strictObject({
