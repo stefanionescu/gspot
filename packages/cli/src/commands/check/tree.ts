@@ -185,9 +185,7 @@ export async function runTreeCheck(
         addRevisionNotes(result.report, revision);
         result.report.notes.push(...onlyNotes);
         if (filters.changed?.note !== undefined) result.report.notes.push(filters.changed.note);
-        const reportText = formatRunReport(result.report, {
-            verbose: options.verbose,
-        });
+        const reportText = formatRunReport(result.report, { verbose: options.verbose, canceled: cancelSignal.aborted });
         const text = result.fixes ? `${formatFixes(result.fixes).join('\n')}\n${reportText}` : reportText;
         return {
             text,

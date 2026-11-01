@@ -136,12 +136,14 @@ export async function runCancelableCommand<Json extends object>(
         },
     }));
     for (const { signal, onSignal } of cancellations) process.on(signal, onSignal);
-    let result: CommandResult<Json | CanceledCommandJson>;
     try {
-        result = await runCommand(controller.signal);
+        const result = await runCommand(controller.signal);
+        if (!controller.signal.aborted) return result;
+        const exitCode = Number(controller.signal.reason);
+        return { ...result, exitCode, json: { ...result.json, exitCode } };
     } catch (error) {
         if (!controller.signal.aborted) throw error;
-        result = {
+        return {
             text: `${canceledMessage}\n`,
             json: { error: 'canceled', message: canceledMessage },
             exitCode: Number(controller.signal.reason),
@@ -149,7 +151,6 @@ export async function runCancelableCommand<Json extends object>(
     } finally {
         for (const { signal, onSignal } of cancellations) process.removeListener(signal, onSignal);
     }
-    return result;
 }
 
 /**

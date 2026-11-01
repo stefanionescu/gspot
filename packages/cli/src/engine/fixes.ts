@@ -4,6 +4,7 @@ import type { Session } from '#cli/types/tools.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { isCanceled } from '#cli/system/processes.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -133,8 +134,7 @@ async function runFixer(
     selectCheckCode: RunOptions['selectCheckCode'],
 ): Promise<FixResult> {
     const check = planned.check.id;
-    if (session.cancelSignal?.aborted === true)
-        return { check, status: 'canceled', changed: [], note: FIX_CANCELED_MESSAGE };
+    if (isCanceled(session)) return { check, status: 'canceled', changed: [], note: FIX_CANCELED_MESSAGE };
     if (planned.skip !== undefined || planned.files.length + planned.triggerPaths.length === 0)
         return { check, status: 'skipped', changed: [] };
     const command = planned.check.fix as string[];

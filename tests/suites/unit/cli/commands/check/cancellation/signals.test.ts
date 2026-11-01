@@ -61,7 +61,7 @@ test.skipIf(isWindows).each(CANCELLATION_REPORT_CASES)(
         } else {
             const stdout = await capture.stdout;
             expect(stdout).toContain(`${process.execPath} was canceled.`);
-            expect(stdout).toContain(`Exit code ${String(exitCode)}.`);
+            expect(stdout).toContain('A signal stopped the run.');
         }
         await waitForExit(toolPid);
     },

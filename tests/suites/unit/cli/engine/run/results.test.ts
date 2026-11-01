@@ -43,7 +43,7 @@ test('an aborted run stops its command and reports cancellation on every system'
     expect(await waitForFile(marker)).toBe(true);
     controller.abort(143);
     const result = await running;
-    expect(result.report.exitCode).toBe(143);
+    expect(result.report.exitCode).toBe(2);
     expect(result.report.checks).toMatchObject([
         { check: 'project/cancel', status: 'error', note: `${process.execPath} was canceled.` },
     ]);

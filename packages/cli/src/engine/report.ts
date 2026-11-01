@@ -1,5 +1,6 @@
 import { EXIT_ERROR } from '#cli/config/system.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { isCanceled } from '#cli/system/processes.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { buildBaseResult, formatExplainCommand } from '#cli/engine/results.ts';
@@ -21,7 +22,7 @@ function listFailedChecks(results: CheckResult[], fixes: FixReport | undefined):
 
 function isIncomplete(session: Session, results: CheckResult[], fixes: FixReport | undefined): boolean {
     return (
-        session.cancelSignal?.aborted === true ||
+        isCanceled(session) ||
         results.some((result) => INCOMPLETE_STATUSES.has(result.status)) ||
         (fixes !== undefined && fixes.broken.length > 0) ||
         fixes?.results.some((result) => result.status === 'failed') === true
@@ -74,8 +75,6 @@ export function buildRunReport(run: FinishedRun): RunReport {
     const failed = listFailedChecks(checks, fixes);
     let code = failed.length > 0 ? EXIT_FINDINGS : 0;
     if (isIncomplete(session, ran, fixes)) code = EXIT_ERROR;
-    if (session.cancelSignal?.aborted === true && typeof session.cancelSignal.reason === 'number')
-        code = session.cancelSignal.reason;
     return {
         ...(options.comparison !== undefined && { comparison: options.comparison }),
         ...buildNotCheckedReport(session),

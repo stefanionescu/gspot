@@ -89,6 +89,17 @@ function buildSpawnResult(result: SpawnCompletion, started: number): SpawnResult
 }
 
 /**
+Check whether a cancel signal stopped this work.
+
+@param source the session or spawn options that hold the signal.
+@param source.cancelSignal the signal, when the caller can cancel.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The process runner and the check engine test for a cancel by this one rule.
+export function isCanceled({ cancelSignal }: { cancelSignal?: AbortSignal | undefined }): boolean {
+    return cancelSignal?.aborted === true;
+}
+
+/**
 Check a process without signaling it. A permission refusal still means that the process exists.
 
 @param pid the process that owns a copy.
@@ -167,7 +178,7 @@ function trackProcessTree(child: ChildProcess, options: AsyncSpawnOptions): Proc
     child.once('exit', startExitCleanup);
     for (const stream of streams) stream.once('error', stopTree);
     options.cancelSignal?.addEventListener('abort', stopOnAbort, { once: true });
-    if (options.cancelSignal?.aborted === true) stopOnAbort();
+    if (isCanceled(options)) stopOnAbort();
     return {
         state,
         stop: stopTree,
@@ -247,7 +258,7 @@ function findUnstartedProcess(
     started: number,
 ): SpawnResult | undefined {
     const missing = findMissingExecutable(command, options.cwd, started);
-    if (missing !== undefined || options.cancelSignal?.aborted !== true) return missing;
+    if (missing !== undefined || !isCanceled(options)) return missing;
     return buildSpawnResult(
         {
             code: undefined,

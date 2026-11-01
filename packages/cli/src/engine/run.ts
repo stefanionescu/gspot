@@ -9,7 +9,6 @@ import type { Session } from '#cli/types/tools.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildRunReport } from '#cli/engine/report.ts';
-import { spawnProcess } from '#cli/system/processes.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { isActive, planChecks } from '#cli/engine/plan.ts';
@@ -20,6 +19,7 @@ import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { formatUnexpectedError } from '#cli/system/terminal.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { buildMiseInstall } from '#cli/tools/installers/mise.ts';
+import { isCanceled, spawnProcess } from '#cli/system/processes.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { buildBaseResult, runBuiltInCheck, normalizeResultPaths } from '#cli/engine/results.ts';
 
@@ -61,7 +61,7 @@ async function findUnrunnableResult(
     planned: PlannedCheck,
     base: CheckResult,
 ): Promise<CheckResult | undefined> {
-    if (session.cancelSignal?.aborted === true) return { ...base, status: 'error', note: CANCELED_CHECK_NOTE };
+    if (isCanceled(session)) return { ...base, status: 'error', note: CANCELED_CHECK_NOTE };
     if (planned.check.needs?.includes('docker') !== true) return undefined;
     const docker = buildToolAvailability(
         getTool(session.configurationsByName.values(), DOCKER_TOOL),
@@ -111,7 +111,7 @@ async function runPlannedCheck(run: Run, planned: PlannedCheck): Promise<CheckRe
         return {
             ...base,
             duration: Math.round(performance.now() - started),
-            ...(session.cancelSignal?.aborted === true
+            ...(isCanceled(session)
                 ? { status: 'error', note: CANCELED_CHECK_NOTE }
                 : classifyCheckError(planned.check.id, error, run.options.verbose === true)),
         };
@@ -162,7 +162,7 @@ function finishResult(run: Run, result: CheckResult): void {
     removeOutsideFindings(result, run);
     removeIgnoredFindings(result, run.session.settings.ignore);
     normalizeResultPaths(run.session, result);
-    if (!FAILED_STATUSES.has(result.status) || run.session.cancelSignal?.aborted === true) return;
+    if (!FAILED_STATUSES.has(result.status) || isCanceled(run.session)) return;
     const scopeArgument =
         result.scope === ''
             ? undefined

@@ -26,6 +26,7 @@ import {
     FIXER_ERROR_PREFIX,
     STATUS_LABEL_WIDTH,
     CHECK_STATUS_COLORS,
+    CANCELED_RUN_MESSAGE,
     STANDARD_INSTALL_HELP,
     UNCHANGED_FIX_MESSAGE,
 } from '#cli/config/commands/reports.ts';
@@ -234,14 +235,19 @@ Format the check lines, the ignores, and the summary of a run.
 @param report the check results and totals.
 @param options how to show the report.
 @param options.verbose whether to show passing and skipped checks, their commands, every finding, and each ignore.
+@param options.canceled whether a signal stopped the run, so it ends without its exit code.
 */
-export function formatRunReport(report: RunReport, { verbose }: { verbose: boolean }): string {
+export function formatRunReport(
+    report: RunReport,
+    { verbose, canceled = false }: { verbose: boolean; canceled?: boolean },
+): string {
     const checks = report.checks.filter(
         (check) => verbose || (check.status !== 'passed' && check.status !== 'skipped'),
     );
     const lines = checks
         .filter((check) => check.status !== 'missing')
         .flatMap((check) => [...formatCheck(check, { verbose }), '']);
+    const ending = canceled ? CANCELED_RUN_MESSAGE : `Exit code ${String(report.exitCode)}.`;
     lines.push(
         ...formatMissingChecks(checks),
         ...formatNotChecked(report.notChecked),
@@ -249,7 +255,7 @@ export function formatRunReport(report: RunReport, { verbose }: { verbose: boole
         ...formatIgnores(report, { verbose }),
         ...formatUnstagedChanges(report),
         formatSummary(report),
-        `Time: ${(report.duration / MILLISECONDS_PER_SECOND).toFixed(1)}s. Exit code ${String(report.exitCode)}.`,
+        `Time: ${(report.duration / MILLISECONDS_PER_SECOND).toFixed(1)}s. ${ending}`,
     );
     return `${formatComparison(report.comparison)}${lines.join('\n')}\n`;
 }

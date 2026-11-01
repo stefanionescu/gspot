@@ -81,6 +81,8 @@ export const ASK_BEFORE_TURNING_OFF = 'Ask the user before you turn a check off.
 
 export const OFF_LABEL = 'off';
 
+export const CANCELED_RUN_MESSAGE = 'A signal stopped the run.';
+
 export const REASON_OPTION_TEXT = ' [--reason "<why>"]';
 
 export const OFF_CAUSES: ReadonlySet<string> = new Set(['level', 'ignore']);

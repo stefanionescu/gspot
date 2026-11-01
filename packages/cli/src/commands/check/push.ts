@@ -46,13 +46,10 @@ function buildPushReport(
     revisionCount: number,
 ): PushReport {
     const pendingRefs = pushed.revisions.slice(revisionCount).flatMap((revision) => revision.refs);
-    const exitCode = cancelSignal.aborted
-        ? Number(cancelSignal.reason)
-        : Math.max(0, ...revisions.map((revision) => revision.report.exitCode));
     return {
         revisions,
         skipped: pushed.skipped,
-        exitCode,
+        exitCode: Math.max(0, ...revisions.map((revision) => revision.report.exitCode)),
         ...(cancelSignal.aborted && { canceled: { pendingRefs } }),
     };
 }
