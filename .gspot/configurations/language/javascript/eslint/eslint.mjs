@@ -119,6 +119,7 @@ export default [
             "**/.env.*",
             "**/*.log",
             "packages/*/dist/**",
+            "packages/cli/README.md",
             "packages/cli/grammars/**",
             "docs/dist/**",
             "docs/.astro/**",
@@ -135,7 +136,6 @@ export default [
             "packages/cli/.markdownlint.jsonc",
             "packages/eslint-plugin/.markdownlint.jsonc",
             "tests/.markdownlint.jsonc",
-            "packages/cli/README.md",
             "packages/cli/LICENSE.md",
             "packages/eslint-plugin/LICENSE.md",
             "docs/worker-configuration.d.ts",
@@ -1157,6 +1157,12 @@ export default [
                         "category": "import-rule:shipped-config",
                         "pattern": [
                             "packages/cli/configurations/**/config/**"
+                        ]
+                    },
+                    {
+                        "category": "import-rule:package-builds",
+                        "pattern": [
+                            "packages/*/build.ts"
                         ]
                     },
                     {
@@ -2272,6 +2278,65 @@ export default [
                         {
                             "from": {
                                 "file": {
+                                    "categories": "import-rule:package-builds"
+                                }
+                            },
+                            "disallow": {
+                                "to": {
+                                    "file": {
+                                        "path": "**/*"
+                                    }
+                                }
+                            },
+                            "message": "Import rule \"package-builds\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"planning\", \"executables\", \"installers\", \"runs\", \"generation\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", \"tests-setup\", \"tests\", \"shipped-config\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        },
+                        {
+                            "from": {
+                                "file": {
+                                    "categories": "import-rule:package-builds"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "import-rule:package-builds",
+                                                "import-rule:cli-config",
+                                                "import-rule:cli-types",
+                                                "import-rule:system",
+                                                "import-rule:parsers",
+                                                "import-rule:manifests",
+                                                "import-rule:repository",
+                                                "import-rule:settings",
+                                                "import-rule:planning",
+                                                "import-rule:executables",
+                                                "import-rule:installers",
+                                                "import-rule:runs",
+                                                "import-rule:generation",
+                                                "import-rule:checks",
+                                                "import-rule:commands",
+                                                "import-rule:main",
+                                                "import-rule:plugin-config",
+                                                "import-rule:plugin-types",
+                                                "import-rule:plugin",
+                                                "import-rule:docs-config",
+                                                "import-rule:docs-types",
+                                                "import-rule:docs",
+                                                "import-rule:tests-data",
+                                                "import-rule:tests-types",
+                                                "import-rule:tests-setup",
+                                                "import-rule:tests",
+                                                "import-rule:shipped-config"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "from": {
+                                "file": {
                                     "isUnknown": true
                                 }
                             },
@@ -2447,7 +2512,8 @@ export default [
                                             "import-rule:tests-types",
                                             "import-rule:tests-setup",
                                             "import-rule:tests",
-                                            "import-rule:shipped-config"
+                                            "import-rule:shipped-config",
+                                            "import-rule:package-builds"
                                         ]
                                     }
                                 }
@@ -2491,7 +2557,8 @@ export default [
                                                 "import-rule:tests-types",
                                                 "import-rule:tests-setup",
                                                 "import-rule:tests",
-                                                "import-rule:shipped-config"
+                                                "import-rule:shipped-config",
+                                                "import-rule:package-builds"
                                             ]
                                         }
                                     }

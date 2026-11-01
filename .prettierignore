@@ -15,6 +15,7 @@ build/
 /findings/
 /packages/*/dist/
 /packages/cli/grammars/
+/packages/cli/README.md
 node_modules/
 
 # Files that gspot generates
@@ -34,7 +35,6 @@ node_modules/
 docs/cloudflare-env.d.ts
 docs/worker-configuration.d.ts
 packages/cli/LICENSE.md
-packages/cli/README.md
 packages/eslint-plugin/LICENSE.md
 
 # Paths that configurations leave out, such as installed dependencies and local secrets

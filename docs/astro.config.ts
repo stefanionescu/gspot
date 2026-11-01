@@ -20,14 +20,14 @@ import {
 } from '#docs/config/site.ts';
 
 function readReadmeSentence(): string {
-    const readme = readFileSync(new URL('../packages/cli/README.md', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
+    const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
     const [, paragraph] = readme.split('\n\n');
     if (paragraph === undefined || paragraph === '')
-        throw new Error('README.md in packages/cli must open with a paragraph after its title.');
+        throw new Error('README.md must open with a paragraph after its title.');
     const [first] = new Intl.Segmenter('en', { granularity: 'sentence' }).segment(
         paragraph.replaceAll('\n', ' ').trim(),
     );
-    if (first === undefined) throw new Error('README.md in packages/cli must contain an opening sentence.');
+    if (first === undefined) throw new Error('README.md must contain an opening sentence.');
     return first.segment.trim();
 }
 

@@ -169,7 +169,7 @@ import_extension = "ts"
 no-restricted-properties = [{ object = "Bun", property = "env" }, { object = "Deno", property = "env" }, { property = "localeCompare", message = "Use compareText for stable ordering." }]
 
 [tools.knip]
-entry = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/sandboxes/tool-project.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config/eslint-functions.ts", "packages/cli/src/bin.ts", "packages/cli/src/reference.ts", "packages/cli/configurations/language/markdown/config/markdownlint-cli2.ts", "packages/cli/configurations/framework/site/config/purgecss.ts"]
+entry = ["packages/cli/build.ts", "packages/eslint-plugin/build.ts", "tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/sandboxes/tool-project.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config/eslint-functions.ts", "packages/cli/src/bin.ts", "packages/cli/src/reference.ts", "packages/cli/configurations/language/markdown/config/markdownlint-cli2.ts", "packages/cli/configurations/framework/site/config/purgecss.ts"]
 
 [[scope]]
 path = "docs"
@@ -299,6 +299,10 @@ name = "shipped-config"
 paths = ["packages/cli/configurations/**/config/**"]
 can_import = ["cli-types"]
 
+[[import_rule]]
+name = "package-builds"
+paths = ["packages/*/build.ts"]
+
 [[ignore]]
 check = "dependencies/osv-scanner"
 rule = "GHSA-3g3m-2fjr-6pw4"
@@ -339,7 +343,7 @@ reason = "This sample URL holds a session identifier so that the Vale test sees 
 [[ignore]]
 check = "prose/vale"
 rule = "write-good.E-Prime"
-paths = ["README.md", "packages/cli/README.md", "docs/src/content/docs/start/overview.mdx"]
+paths = ["README.md", "docs/src/content/docs/start/overview.mdx"]
 reason = "These files open with the owner's product description, which keeps its wording."
 
 [[ignore]]

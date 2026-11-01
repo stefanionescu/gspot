@@ -28,5 +28,5 @@
             "#docs/*": ["./docs/src/*"]
         }
     },
-    "include": ["tests/**/*.ts", "packages/cli/src/types/**/*.d.ts"]
+    "include": ["tests/**/*.ts", "packages/*/build.ts", "packages/cli/src/types/**/*.d.ts"]
 }
