@@ -67,6 +67,7 @@ export type AsyncSpawnOptions = SpawnOptions & {
 
 export type ProcessTermination = {
     stopped: boolean;
+    stopping?: Promise<void>;
     failure: Error | undefined;
     drainTimer: ReturnType<typeof setTimeout> | undefined;
 };

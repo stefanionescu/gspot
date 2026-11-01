@@ -1,9 +1,7 @@
 import { statSync } from 'node:fs';
-import { onExit } from 'signal-exit';
+import { hasErrorCode } from '#cli/system/errors.ts';
 import { execa, execaSync, type Options } from 'execa';
-import type { ChildProcess } from 'node:child_process';
-import { setTimeout as delay } from 'node:timers/promises';
-import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { trackProcessTree } from '#cli/system/process-trees.ts';
 import { dirname, resolve, delimiter, isAbsolute } from 'node:path';
 import { foldVariableName, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
 
@@ -14,25 +12,17 @@ import type {
     RunningProcess,
     SpawnCompletion,
     AsyncSpawnOptions,
-    ProcessTermination,
     ProcessTreeControl,
 } from '#cli/types/system.ts';
 import {
     FAILED_CODE,
     OUTPUT_LIMIT,
     MISSING_CODE,
-    TASKKILL_FLAGS,
     PATHEXT_DEFAULT,
     PATH_SEPARATORS,
-    TASKKILL_PROGRAM,
-    TASKKILL_PID_FLAG,
-    TASKKILL_GONE_CODE,
     EMPTY_COMMAND_MESSAGE,
     CANCELED_START_MESSAGE,
     MILLISECONDS_PER_SECOND,
-    PROCESS_CLEANUP_MESSAGE,
-    EXIT_CLEANUP_MILLISECONDS,
-    OUTPUT_CLOSE_MILLISECONDS,
 } from '#cli/config/system.ts';
 
 function buildExecaOptions(options: SpawnOptions, executable: string) {
@@ -51,7 +41,6 @@ function buildExecaOptions(options: SpawnOptions, executable: string) {
         stripFinalNewline: false,
         reject: false,
         maxBuffer: OUTPUT_LIMIT,
-        killSignal: 'SIGKILL' as const,
     };
 }
 
@@ -113,89 +102,6 @@ export function isProcessRunning(pid: number): boolean {
         if (hasErrorCode(error, 'EPERM')) return true;
         throw error;
     }
-}
-
-function isGroupGone(error: Error, child: ChildProcess): boolean {
-    const hasExited = child.exitCode !== null || child.signalCode !== null;
-    if (error instanceof GspotError) return process.platform === 'win32' && hasExited;
-    if (hasErrorCode(error, 'ESRCH')) return true;
-    return hasErrorCode(error, 'EPERM') && process.platform === 'darwin' && hasExited;
-}
-
-function stopProcessTree(child: ChildProcess, termination: ProcessTermination): void {
-    if (termination.stopped || child.pid === undefined) return;
-    termination.stopped = true;
-    try {
-        if (process.platform === 'win32') {
-            const result = execaSync(TASKKILL_PROGRAM, [TASKKILL_PID_FLAG, String(child.pid), ...TASKKILL_FLAGS], {
-                reject: false,
-                timeout: OUTPUT_CLOSE_MILLISECONDS,
-            });
-            const code = result.exitCode ?? FAILED_CODE;
-            if (![0, TASKKILL_GONE_CODE].includes(code))
-                throw new GspotError('tool', `Cannot stop the tool and its child processes: ${result.stderr}`);
-        } else process.kill(-child.pid, 'SIGKILL');
-    } catch (error) {
-        if (!isGroupGone(error as Error, child)) termination.failure = error as Error;
-    }
-    child.kill('SIGKILL');
-    termination.drainTimer = setTimeout(() => {
-        const error = new Error(
-            `Tool output did not close within ${String(OUTPUT_CLOSE_MILLISECONDS / MILLISECONDS_PER_SECOND)} seconds after gspot stopped the tool.`,
-        );
-        for (const stream of child.stdio) stream?.destroy(error);
-    }, OUTPUT_CLOSE_MILLISECONDS);
-}
-
-function trackProcessTree(child: ChildProcess, options: AsyncSpawnOptions): ProcessTreeControl {
-    const state = { timedOut: false, canceled: false };
-    const termination: ProcessTermination = { stopped: false, failure: undefined, drainTimer: undefined };
-    const stopTree = stopProcessTree.bind(undefined, child, termination);
-    const stopOnAbort = () => {
-        if (termination.stopped) return;
-        state.canceled = true;
-        stopTree();
-    };
-    const removeExitListener = onExit(stopTree);
-    const timer =
-        options.timeoutSeconds === undefined
-            ? undefined
-            : setTimeout(() => {
-                  if (termination.stopped) return;
-                  state.timedOut = true;
-                  stopTree();
-              }, options.timeoutSeconds * MILLISECONDS_PER_SECOND);
-    let exitCleanup: Promise<void> | undefined;
-    const startExitCleanup = () => {
-        clearTimeout(timer);
-        exitCleanup = (async () => {
-            await delay(EXIT_CLEANUP_MILLISECONDS);
-            if (process.platform !== 'win32') stopTree();
-            termination.stopped = true;
-        })();
-    };
-    const streams = child.stdio.filter((stream) => stream !== null && stream !== undefined);
-    child.once('exit', startExitCleanup);
-    for (const stream of streams) stream.once('error', stopTree);
-    options.cancelSignal?.addEventListener('abort', stopOnAbort, { once: true });
-    if (isCanceled(options)) stopOnAbort();
-    return {
-        state,
-        stop: stopTree,
-        async release(processFailure: unknown) {
-            await exitCleanup;
-            clearTimeout(timer);
-            clearTimeout(termination.drainTimer);
-            removeExitListener();
-            options.cancelSignal?.removeEventListener('abort', stopOnAbort);
-            child.removeListener('exit', startExitCleanup);
-            for (const stream of streams) stream.removeListener('error', stopTree);
-            if (termination.failure === undefined || isGroupGone(termination.failure, child)) return;
-            throw processFailure === undefined
-                ? termination.failure
-                : new AggregateError([processFailure, termination.failure], PROCESS_CLEANUP_MESSAGE);
-        },
-    };
 }
 
 async function finishProcess(
@@ -331,6 +237,10 @@ export function spawnProcessBlocking(command: readonly string[], options: SpawnO
     const [executable, ...commandArguments] = command as readonly [string, ...string[]];
     const deadline =
         options.timeoutSeconds === undefined ? {} : { timeout: options.timeoutSeconds * MILLISECONDS_PER_SECOND };
-    const result = execaSync(executable, commandArguments, { ...buildExecaOptions(options, executable), ...deadline });
+    const result = execaSync(executable, commandArguments, {
+        ...buildExecaOptions(options, executable),
+        killSignal: 'SIGKILL',
+        ...deadline,
+    });
     return buildSpawnResult(result, started);
 }

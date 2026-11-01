@@ -4,11 +4,11 @@ import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import * as childProcess from 'node:child_process';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { fakePlatform } from '#tests/setup/system/platform.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { spawnProcess, streamProcess } from '#cli/system/processes.ts';
+import { isWindows, fakePlatform } from '#tests/setup/system/platform.ts';
 import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system.ts';
-import { STREAM_FAILURE, STOPPED_CAPTURES } from '#tests/config/system.ts';
+import { CLEANING_TOOL, STUBBORN_TOOL, STREAM_FAILURE, STOPPED_CAPTURES } from '#tests/config/system.ts';
 
 import {
     isStopped,
@@ -145,6 +145,36 @@ test('the stop after a normal exit accepts the macOS refusal to signal an exited
     });
     expect(result.code, result.stderr).toBe(0);
     expect(result.errored).toBe(false);
+});
+
+test.skipIf(isWindows)('a stopped tool gets SIGTERM, so it can clean up before it exits', async () => {
+    await using sandbox = await testdir();
+    const controller = new AbortController();
+    const running = spawnProcess(['sh', '-c', CLEANING_TOOL], {
+        cwd: sandbox.path,
+        cancelSignal: controller.signal,
+        timeoutSeconds: CHILD_TIMEOUT_SECONDS,
+    });
+    expect(await waitForFile(join(sandbox.path, 'ready'))).toBe(true);
+    controller.abort();
+    const result = await running;
+    expect(result.canceled).toBe(true);
+    expect(await readFile(join(sandbox.path, 'cleaned'), 'utf8')).toBe('cleaned\n');
+});
+
+test.skipIf(isWindows)('a tool that ignores SIGTERM stops with SIGKILL', async () => {
+    await using sandbox = await testdir();
+    const controller = new AbortController();
+    const running = spawnProcess(['sh', '-c', STUBBORN_TOOL], {
+        cwd: sandbox.path,
+        cancelSignal: controller.signal,
+        timeoutSeconds: CHILD_TIMEOUT_SECONDS,
+    });
+    expect(await waitForFile(join(sandbox.path, 'ready'))).toBe(true);
+    controller.abort();
+    const result = await running;
+    expect(result.canceled).toBe(true);
+    expect(result.code).not.toBe(0);
 });
 
 async function captureProcess(

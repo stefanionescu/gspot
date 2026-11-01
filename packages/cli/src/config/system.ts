@@ -89,6 +89,10 @@ export const EXIT_CLEANUP_MILLISECONDS = 10;
 
 export const OUTPUT_CLOSE_MILLISECONDS = 5000;
 
+export const STOP_GRACE_MILLISECONDS = 3000;
+
+export const STOP_POLL_MILLISECONDS = 20;
+
 export const TASKKILL_GONE_CODE = 128;
 
 export const FAILED_CODE = 1;

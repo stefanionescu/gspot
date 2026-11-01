@@ -38,3 +38,7 @@ export const STOPPED_CAPTURES = [
 export const BASH_MANIFEST = '[configuration]\nname = "bash"\n';
 
 export const PACKAGE_FOLDER = 'workspace % café';
+
+export const CLEANING_TOOL = `trap 'echo cleaned > cleaned; exit 3' TERM; echo ready > ready; while :; do sleep 0.02; done`;
+
+export const STUBBORN_TOOL = `trap '' TERM; echo ready > ready; while :; do sleep 0.02; done`;
