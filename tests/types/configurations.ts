@@ -14,7 +14,6 @@ export type RuffConfig = {
         pylint: {
             'max-statements': number;
             'max-args': number;
-            'max-positional-args': number;
             'max-branches': number;
             'max-returns': number;
         };

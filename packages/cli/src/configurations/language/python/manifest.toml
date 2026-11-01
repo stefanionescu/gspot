@@ -331,7 +331,7 @@ exit_codes = [1]
 files = { extensions = [".py", ".pyi"] }
 fix = ["ruff", "check", "--no-cache", "--fix", "--quiet", "{files}"]
 help = "Run `gspot check --fix` for the rules that fix themselves."
-limits = { "C901" = "max_cyclomatic_complexity", "PLR0915" = "max_function_statements", "PLR0913" = "max_function_parameters", "PLR0917" = "max_function_parameters", "PLR0912" = "max_function_branches", "PLR0911" = "max_function_returns" }
+limits = { "C901" = "max_cyclomatic_complexity", "PLR0915" = "max_function_statements", "PLR0913" = "max_function_parameters", "PLR0912" = "max_function_branches", "PLR0911" = "max_function_returns" }
 limit_languages = ["python"]
 name = "ruff"
 output = { format = "json", fields = { file = "filename", line = "location.row", column = "location.column", rule = "code", message = "message" } }

@@ -128,7 +128,6 @@ export function buildRuffFile(planned: PlannedConfig): string {
             pylint: {
                 'max-statements': getLimit(planned.scope.settings, 'max_function_statements', 'python'),
                 'max-args': getLimit(planned.scope.settings, 'max_function_parameters', 'python'),
-                'max-positional-args': getLimit(planned.scope.settings, 'max_function_parameters', 'python'),
                 'max-branches': getLimit(planned.scope.settings, 'max_function_branches', 'python'),
                 'max-returns': getLimit(planned.scope.settings, 'max_function_returns', 'python'),
             },
