@@ -30,18 +30,12 @@ import {
 
 const installedSandbox = shareInstalledSandbox(RUFF_SANDBOX);
 
-test('Ruff selects the pytest lint rules only in the scope that selects pytest, and an S101 ignore on app/tests stays in that scope', async () => {
+test('Ruff selects the pytest lint rules only in the scope that selects pytest, and accepts an assert only in a test file', async () => {
     const { root } = installedSandbox();
     const sourceFiles = {
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',
             scopes: [{ path: 'app', configurations: ['pytest'] }],
-            tables: `[[ignore]]
-check = "python/ruff"
-rule = "S101"
-paths = ["app/tests/**"]
-reason = "Test assertions deliberately verify the behavior."
-`,
         }),
         'tests/__init__.py': '"""Root test package."""\n',
         'app/__init__.py': '"""Application package."""\n',
@@ -68,19 +62,17 @@ reason = "Test assertions deliberately verify the behavior."
     );
     const corrected = await spawnGspot(root, ['check', 'app/tests/test_example.py', ...command]);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    for (const path of ['tests/test_example.py', 'app/tests/test_example.py'])
+    for (const path of ['app/__init__.py', 'app/tests/test_example.py'])
         await writeFile(join(root, path), '"""An assertion example."""\n\nassert True\n');
-    const rootAssertion = parseCheckReport(await spawnGspot(root, ['check', 'tests/test_example.py', ...command]));
+    const rootAssertion = parseCheckReport(await spawnGspot(root, ['check', 'app/__init__.py', ...command]));
     expect(rootAssertion.code, rootAssertion.stderr).toBe(1);
-    expect(listFindingRows(rootAssertion.report)).toStrictEqual([
-        { file: 'tests/test_example.py', line: 3, rule: 'S101' },
-    ]);
+    expect(listFindingRows(rootAssertion.report)).toStrictEqual([{ file: 'app/__init__.py', line: 3, rule: 'S101' }]);
     const testAssertion = await spawnGspot(root, ['check', 'app/tests/test_example.py', ...command]);
     expect(testAssertion.code, testAssertion.stderr).toBe(0);
 });
 
 test.each([...LEVELS])(
-    'Ruff at level %s selects no preview rule, reports correctness, and reports print calls only at level all',
+    'Ruff at level %s selects only the PLW1514 preview rule, and reports correctness and print calls',
     async (level) => {
         const { root } = installedSandbox();
         const sourceFiles = {
