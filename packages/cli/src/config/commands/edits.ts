@@ -57,6 +57,12 @@ export const READ_COMMITTED_MESSAGE =
 export const PRETTIER_SCRIPT_NOTE =
     'gspot cannot read this Prettier config, so set format.indent_width and format.print_width by hand';
 
+export const DROPPED_LINE_SETTINGS =
+    /^[ \t]*(?:end_of_line[ \t]*=[ \t]*crlf|insert_final_newline[ \t]*=[ \t]*false)[ \t]*$/imu;
+
+export const DROPPED_LINE_SETTINGS_NOTE =
+    'drops its crlf or missing final newline: gspot always writes lf and a final newline';
+
 export const DETECTED_SETTINGS = [
     'site.build_command',
     'swift.xcode_destination',

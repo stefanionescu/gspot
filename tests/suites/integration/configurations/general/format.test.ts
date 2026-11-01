@@ -47,10 +47,9 @@ test('Prettier writes each file with the tab width, quotes, semicolons, and line
     ).toStrictEqual(files.toSorted(compareText));
     const corrected = await spawnGspot(root, [...commandArguments, '--fix', '--', ...files]);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    for (const { file, tabWidth, singleQuote, semi, endOfLine } of PRETTIER_OPTIONS_BY_FILE) {
+    for (const { file, tabWidth, singleQuote, semi } of PRETTIER_OPTIONS_BY_FILE) {
         const quote = singleQuote ? "'" : '"';
         const terminator = semi ? ';' : '';
-        const ending = endOfLine === 'crlf' ? '\r\n' : '\n';
         expect(await readFile(join(root, file), 'utf8')).toBe(
             [
                 `const greeting = ${quote}hello${quote}${terminator}`,
@@ -58,7 +57,7 @@ test('Prettier writes each file with the tab width, quotes, semicolons, and line
                 `${' '.repeat(tabWidth)}console.log(greeting)${terminator}`,
                 '}',
                 '',
-            ].join(ending),
+            ].join('\n'),
         );
     }
     const editor = await spawnGspot(root, ['check', '--only', 'format/editorconfig-checker', '--json', '--', ...files]);

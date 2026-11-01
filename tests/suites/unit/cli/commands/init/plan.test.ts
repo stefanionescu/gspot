@@ -79,6 +79,17 @@ test('init plans no scope for an old lint folder, and --level all replaces the c
     ]);
 });
 
+test('init names the crlf setting of your .editorconfig as dropped', async () => {
+    await using sandbox = await createGitSandbox({ '.editorconfig': 'root = true\n\n[*]\nend_of_line = crlf\n' });
+    commitAll(sandbox.path);
+    const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const { plan } = JSON.parse(result.stdout) as InitJson;
+    expect(plan.write.find(({ path }) => path === '.editorconfig')?.note).toContain(
+        'gspot always writes lf and a final newline',
+    );
+});
+
 test('init lists your .editorconfig under write and not under delete when the generated one replaces it', async () => {
     const authored = 'root = true\n[*]\nindent_style = space\nindent_size = 2\n';
     await using sandbox = await createGitSandbox({ '.editorconfig': authored });

@@ -7,8 +7,14 @@ import { isEditedInPlace } from '#cli/repository/conflicts.ts';
 import type { Files, FileContents } from '#cli/types/system.ts';
 import { parsePrettierFile } from '#cli/commands/init/format.ts';
 import type { InitPlan, ConflictingConfigs } from '#cli/types/commands/edits.ts';
-import { VERIFY_FLAG, NAME_ONLY_FLAG, READ_COMMITTED_MESSAGE } from '#cli/config/commands/edits.ts';
 import type { WritePlan, ManagedKeys, RepositorySetup, ConflictingConfig } from '#cli/types/repository.ts';
+
+import {
+    VERIFY_FLAG,
+    NAME_ONLY_FLAG,
+    DROPPED_LINE_SETTINGS,
+    READ_COMMITTED_MESSAGE,
+} from '#cli/config/commands/edits.ts';
 
 function listCommittedPaths(root: string, paths: string[]): Set<string> {
     const head = runGitBlocking(root, ['rev-parse', VERIFY_FLAG, '--quiet', 'HEAD']);
@@ -22,19 +28,20 @@ function listCommittedPaths(root: string, paths: string[]): Set<string> {
 
 function addConflictingConfig(file: ConflictingConfig, conflicts: ConflictingConfigs): void {
     const { tool, path, shared } = file;
-    if (shared)
+    if (shared) {
         conflicts.kept.push({
             path,
             note: `${file.table ?? file.key ?? file.tool} settings stay here, and the generated file for ${tool} takes over. Delete the section; the generated file replaces it.`,
         });
-    else
-        conflicts.deleted.push({
-            path,
-            tool,
-            unreadablePrettier:
-                tool === 'prettier' &&
-                parsePrettierFile(path, conflicts.reviewed.get(path)?.bytes.toString('utf8') ?? '') === undefined,
-        });
+        return;
+    }
+    const text = conflicts.reviewed.get(path)?.bytes.toString('utf8') ?? '';
+    conflicts.deleted.push({
+        path,
+        tool,
+        unreadablePrettier: tool === 'prettier' && parsePrettierFile(path, text) === undefined,
+        dropsLineEndings: DROPPED_LINE_SETTINGS.test(text),
+    });
 }
 
 /**

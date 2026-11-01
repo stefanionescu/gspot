@@ -38,7 +38,7 @@ def double(value: int) -> int:
 export const RUFF_FORMAT_CASES = [
     {
         file: 'sample.py',
-        formatted: "VALUE = 'example'\r\n",
+        formatted: "VALUE = 'example'\n",
     },
     {
         file: 'app/sample.py',

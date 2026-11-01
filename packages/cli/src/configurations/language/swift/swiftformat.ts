@@ -42,7 +42,7 @@ export function buildSwiftformatFile(planned: PlannedConfig): string {
         indent: format.indent_style === 'tab' ? 'tab' : format.indent_width,
         maxwidth: format.print_width,
         commas: SWIFTFORMAT_COMMAS[format.trailing_commas],
-        linebreaks: format.line_ending,
+        linebreaks: 'lf',
         ...(version !== undefined && { swiftversion: version }),
     };
     const enabled = isAll ? SWIFTFORMAT_ALL_LEVEL_ON.filter((rule) => !ignored.includes(rule)) : [];

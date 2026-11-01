@@ -81,7 +81,6 @@ function listFormatOverrides(settings: Settings): FormatOverride[] {
                 singleQuote: format.quotes === undefined ? undefined : format.quotes === 'single',
                 trailingComma: format.trailing_commas,
                 semi: format.semicolons,
-                endOfLine: format.line_ending,
             },
         };
     });
@@ -107,8 +106,6 @@ export function buildEditorconfigFile(planned: PlannedConfig): string {
             path: '*',
             options: {
                 ...EDITORCONFIG_FIXED_SECTIONS['*'],
-                end_of_line: format.line_ending,
-                insert_final_newline: format.final_newline,
                 indent_style: format.indent_style,
                 indent_size: format.indent_width,
             },
@@ -120,8 +117,6 @@ export function buildEditorconfigFile(planned: PlannedConfig): string {
             const options = {
                 ...(format.indent_style !== undefined && { indent_style: format.indent_style }),
                 ...(format.indent_width !== undefined && { indent_size: format.indent_width }),
-                ...(format.line_ending !== undefined && { end_of_line: format.line_ending }),
-                ...(format.final_newline !== undefined && { insert_final_newline: format.final_newline }),
             };
             if (Object.keys(options).length === 0) return [];
             return includeFolderContents(paths).map((pattern) => ({
@@ -164,7 +159,6 @@ export function buildPrettierFile(planned: PlannedConfig): string {
         singleQuote: (format.quotes ?? DEFAULT_QUOTES.prettier) === 'single',
         trailingComma: format.trailing_commas,
         semi: format.semicolons,
-        endOfLine: format.line_ending,
         ...PRETTIER_FIXED_OPTIONS,
         ...buildPluginsOption(plugins),
         ...(overrides.length > 0 && { overrides }),

@@ -5,7 +5,6 @@ import { CASE_NAMES, SETTING_LANGUAGES, REASON_DESCRIPTIONS } from '#cli/config/
 
 import {
     INDENT_MAX,
-    LINE_ENDINGS,
     QUOTE_STYLES,
     MAX_PERCENTAGE,
     PRINT_WIDTH_MIN,
@@ -57,22 +56,6 @@ const formatFieldsSchema = z.strictObject({
         .meta({
             configurations: ['format'],
             description: 'The line width formatters wrap at.',
-        }),
-    line_ending: z
-        .enum(LINE_ENDINGS)
-        .optional()
-        .default('lf')
-        .meta({
-            configurations: ['format'],
-            description: 'The line ending every file uses: lf or crlf.',
-        }),
-    final_newline: z
-        .boolean()
-        .optional()
-        .default(true)
-        .meta({
-            configurations: ['format'],
-            description: 'Whether every file ends with a newline.',
         }),
     quotes: z
         .enum(QUOTE_STYLES)
@@ -187,12 +170,6 @@ const formatOverrideSchema = z
         print_width: formatFieldsSchema.shape.print_width
             .unwrap()
             .describe(formatFieldsSchema.shape.print_width.description as string),
-        line_ending: formatFieldsSchema.shape.line_ending
-            .unwrap()
-            .describe(formatFieldsSchema.shape.line_ending.description as string),
-        final_newline: formatFieldsSchema.shape.final_newline
-            .unwrap()
-            .describe(formatFieldsSchema.shape.final_newline.description as string),
         quotes: formatFieldsSchema.shape.quotes.describe(formatFieldsSchema.shape.quotes.description as string),
         trailing_commas: formatFieldsSchema.shape.trailing_commas
             .unwrap()

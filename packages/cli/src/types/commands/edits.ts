@@ -133,7 +133,7 @@ export type InitPlan = {
 export type ConflictingConfigs = {
     changed: InitFileRow[];
     reviewed: Map<string, FileContents | undefined>;
-    deleted: { path: string; tool: string; unreadablePrettier: boolean }[];
+    deleted: { path: string; tool: string; unreadablePrettier: boolean; dropsLineEndings: boolean }[];
     kept: InitFileRow[];
 };
 

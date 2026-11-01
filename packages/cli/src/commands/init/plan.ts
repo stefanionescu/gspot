@@ -29,6 +29,7 @@ import {
     LINT_FOLDERS_HEADING,
     CHANGE_LATER_MESSAGE,
     UNREAD_SUBMODULE_MESSAGE,
+    DROPPED_LINE_SETTINGS_NOTE,
 } from '#cli/config/commands/edits.ts';
 
 function buildToolProjectRows(configurations: Configuration[]): InitPlan['change'] {
@@ -92,6 +93,7 @@ function buildGeneratedRows(generated: Generation, conflicts: ConflictingConfigs
                     note: [
                         `replaces your file; read the old one with git show HEAD:${path}`,
                         ...(replaced.unreadablePrettier ? [PRETTIER_SCRIPT_NOTE] : []),
+                        ...(replaced.dropsLineEndings ? [DROPPED_LINE_SETTINGS_NOTE] : []),
                     ].join('; '),
                 };
             return {

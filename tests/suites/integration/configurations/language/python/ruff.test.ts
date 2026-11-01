@@ -135,11 +135,9 @@ test('Ruff run by an editor and through gspot formats each scope the same way', 
             scopes: [{ path: 'app' }],
             tables: `[format]
 quotes = "single"
-line_ending = "crlf"
 
 [scope.format]
 quotes = "double"
-line_ending = "lf"
 `,
         }),
         'sample.py': 'VALUE = "example"\n',

@@ -35,7 +35,7 @@ function listIgnoredGlobs(planned: PlannedConfig, checkId: string, root: string)
 
 function selectPythonFormat(
     scopeSettings: PlannedConfig['scope']['settings'],
-): Pick<FormatSettings, 'indent_style' | 'indent_width' | 'print_width' | 'line_ending' | 'quotes'> {
+): Pick<FormatSettings, 'indent_style' | 'indent_width' | 'print_width' | 'quotes'> {
     const format = scopeSettings.tables.format;
     const override = format.override.find(({ paths }) =>
         paths.every((path) => (PYTHON_FILES as readonly string[]).includes(path)),
@@ -45,7 +45,6 @@ function selectPythonFormat(
         indent_style: override.indent_style ?? format.indent_style,
         indent_width: override.indent_width ?? format.indent_width,
         print_width: override.print_width ?? format.print_width,
-        line_ending: override.line_ending ?? format.line_ending,
         quotes: override.quotes ?? format.quotes,
     };
 }
@@ -113,7 +112,7 @@ export function buildRuffFile(planned: PlannedConfig): string {
         format: {
             'indent-style': format.indent_style === 'tab' ? 'tab' : 'space',
             'quote-style': format.quotes ?? DEFAULT_QUOTES.ruff,
-            'line-ending': format.line_ending === 'crlf' ? 'cr-lf' : 'lf',
+            'line-ending': 'lf',
             'docstring-code-format': true,
         },
         lint: {

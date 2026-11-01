@@ -53,8 +53,6 @@ export const FORMAT_INDENT_STYLES = ['space', 'tab'] as const;
 
 export const REMOVAL_REASON_DESCRIPTION = 'Why you removed this configuration, in two or more words.';
 
-export const LINE_ENDINGS = ['lf', 'crlf'] as const;
-
 export const QUOTE_STYLES = ['single', 'double'] as const;
 
 export const TRAILING_COMMAS = ['all', 'es5', 'none'] as const;
