@@ -1,10 +1,8 @@
-import { join, dirname } from 'node:path';
-import { PLUGIN_PREFIX } from './config/plugin.ts';
 import { FUNCTION_NODES } from './config/rules.ts';
 import { readLocalFunction } from './functions.ts';
-import { existsSync, readFileSync } from 'node:fs';
+import { usesModule, readRequiredModule } from './packages.ts';
+import type { TestCall, TableCall, TestOrigin, TestCallee, FileContext } from './types/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { TestCall, TableCall, TestOrigin, TestCallee, FileContext, PackageFacts } from './types/rules.ts';
 
 import {
     CALL_STEP,
@@ -13,102 +11,13 @@ import {
     TABLE_ORIGINS,
     TABLE_MODULES,
     TABLE_TEST_NAMES,
-    PACKAGE_MANIFEST,
     TEST_FILE_MARKERS,
-    DEPENDENCY_FIELDS,
-    REPOSITORY_MARKER,
     TABLE_DEPENDENCIES,
     TEST_FILE_EXTENSIONS,
     RUNNING_TEST_MODIFIERS,
     PLAYWRIGHT_SUITE_MODES,
     TEST_FRAMEWORK_MODULES,
 } from './config/testing.ts';
-
-const manifestCache = new WeakMap<TSESLint.SourceCode, PackageFacts>();
-
-const importCache = new WeakMap<TSESLint.SourceCode, ReadonlySet<string>>();
-
-function readManifestDependencies(path: string): string[] {
-    const manifest = JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>;
-    const fields = DEPENDENCY_FIELDS.map((field) => manifest[field]);
-    return fields.flatMap((value) => (value !== null && typeof value === 'object' ? Object.keys(value) : []));
-}
-
-function listManifestFolders(context: FileContext): string[] {
-    const root = (context.settings[PLUGIN_PREFIX] as { root?: string } | undefined)?.root;
-    let folder = dirname(context.filename);
-    const folders = [folder];
-    while (folder !== root && dirname(folder) !== folder && !existsSync(join(folder, REPOSITORY_MARKER))) {
-        folder = dirname(folder);
-        folders.push(folder);
-    }
-    return folders;
-}
-
-/**
-Read the package.json files from the folder of the file up to the repository root. Count them, and list the package
-names they name.
-
-@param context the rule context of the file.
-*/
-export function readPackageFacts(context: FileContext): PackageFacts {
-    const cached = manifestCache.get(context.sourceCode);
-    if (cached !== undefined) return cached;
-    const manifests = listManifestFolders(context)
-        .map((folder) => join(folder, PACKAGE_MANIFEST))
-        .filter((path) => existsSync(path));
-    const dependencies = new Set(manifests.flatMap((path) => readManifestDependencies(path)));
-    const facts = { dependencies, manifests: manifests.length };
-    manifestCache.set(context.sourceCode, facts);
-    return facts;
-}
-
-function readRequiredModule(node: TSESTree.Node): string | undefined {
-    let value = node;
-    while (value.type === AST_NODE_TYPES.MemberExpression) value = value.object;
-    const call = value.type === AST_NODE_TYPES.CallExpression ? value : undefined;
-    if (call?.callee.type !== AST_NODE_TYPES.Identifier || call.callee.name !== 'require') return undefined;
-    const [module] = call.arguments.map((argument) => ASTUtils.getStringIfConstant(argument));
-    return module ?? undefined;
-}
-
-/**
-List the modules that a file imports or requires.
-
-@param source the file.
-*/
-export function listImportedModules(source: TSESLint.SourceCode): ReadonlySet<string> {
-    const cached = importCache.get(source);
-    if (cached !== undefined) return cached;
-    const globalScope = source.getScope(source.ast);
-    const references = [...globalScope.through, ...(globalScope.set.get('require')?.references ?? [])];
-    const modules = new Set([
-        ...source.ast.body.flatMap((statement) =>
-            statement.type === AST_NODE_TYPES.ImportDeclaration ? [statement.source.value] : [],
-        ),
-        ...references.flatMap((reference) => readRequiredModule(reference.identifier.parent) ?? []),
-    ]);
-    importCache.set(source, modules);
-    return modules;
-}
-
-/**
-Check whether the file imports one of the modules, or a package.json above it depends on one of the packages.
-
-@param context the rule context of the file.
-@param modules the module names to find in imports.
-@param dependencies the package names to find in the manifests.
-*/
-export function usesModule(
-    context: FileContext,
-    modules: readonly string[],
-    dependencies: readonly string[] = modules,
-): boolean {
-    const imported = listImportedModules(context.sourceCode);
-    if (modules.some((module) => imported.has(module))) return true;
-    const listed = readPackageFacts(context).dependencies;
-    return dependencies.some((dependency) => listed.has(dependency));
-}
 
 function readImportedName(definition: TSESLint.Scope.Definition): TestOrigin | undefined {
     const { node, parent } = definition;

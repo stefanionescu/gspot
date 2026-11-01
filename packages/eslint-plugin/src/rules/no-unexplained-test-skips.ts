@@ -1,6 +1,7 @@
 import { createRule } from '../rule.ts';
+import { readPackageFacts } from '../packages.ts';
+import { readTestCall, isPlaywrightSuite } from '../testing.ts';
 import { readLiteralValue, readOptionProperties } from '../values.ts';
-import { readTestCall, readPackageFacts, isPlaywrightSuite } from '../testing.ts';
 import type { TestCall, FileContext, FunctionNode, SkipFramework } from '../types/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { SKIP_FRAMEWORKS, NODE_TEST_MODULES, EXPLANATION_LETTER, SKIPPED_TEST_CALLS } from '../config/testing.ts';

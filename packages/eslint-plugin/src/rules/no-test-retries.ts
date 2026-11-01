@@ -1,5 +1,6 @@
 import { createRule } from '../rule.ts';
-import { usesModule, readTestCall } from '../testing.ts';
+import { usesModule } from '../packages.ts';
+import { readTestCall } from '../testing.ts';
 import { RETRY_MODULES, MARKED_TEST_MODIFIERS } from '../config/testing.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

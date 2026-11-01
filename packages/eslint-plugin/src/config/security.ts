@@ -43,3 +43,10 @@ export const SANITIZER_BYPASS_METHODS = new Set([
     'bypassSecurityTrustUrl',
     'bypassSecurityTrustResourceUrl',
 ]);
+
+export const JSON_BODY_READ =
+    'AwaitExpression[argument.type="CallExpression"][argument.arguments.length=0][argument.callee.type="MemberExpression"][argument.callee.property.name="json"][argument.callee.object.name=/^(?:req|request)$/]';
+
+export const SCHEMA_PARSERS = new Set(['parse', 'safeParse', 'parseAsync', 'safeParseAsync']);
+
+export const BODY_SCHEMA_PARSERS = new Set(['parse', 'safeParse']);

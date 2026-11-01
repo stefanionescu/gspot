@@ -1,7 +1,8 @@
 import { createRule } from '../rule.ts';
+import { usesModule } from '../packages.ts';
 import { FUNCTION_NODES } from '../config/rules.ts';
 import { readLocalFunction } from '../functions.ts';
-import { usesModule, readTestCall, listChildNodes } from '../testing.ts';
+import { readTestCall, listChildNodes } from '../testing.ts';
 import type { TestCall, TitleScan, FunctionNode } from '../types/rules.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { TEST_FRAMEWORK_MODULES, RUNNING_TEST_MODIFIERS } from '../config/testing.ts';

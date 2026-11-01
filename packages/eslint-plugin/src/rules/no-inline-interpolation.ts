@@ -1,5 +1,6 @@
 import { createRule } from '../rule.ts';
-import { usesModule, readCalleeName } from '../testing.ts';
+import { usesModule } from '../packages.ts';
+import { readCalleeName } from '../testing.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {

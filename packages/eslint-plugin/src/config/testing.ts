@@ -32,12 +32,6 @@ export const PLAYWRIGHT_MODULE = '@playwright/test';
 
 export const NODE_TEST_MODULES = new Set([undefined, 'node:test']);
 
-export const DEPENDENCY_FIELDS = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'];
-
-export const PACKAGE_MANIFEST = 'package.json';
-
-export const REPOSITORY_MARKER = '.git';
-
 export const RUNNING_TEST_MODIFIERS = new Set([
     'only',
     'concurrent',

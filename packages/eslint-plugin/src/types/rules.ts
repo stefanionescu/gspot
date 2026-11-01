@@ -84,7 +84,7 @@ export type SkipFramework = 'jasmine' | 'jest' | 'vitest' | 'mocha' | 'playwrigh
 
 export type EarlyReturnFramework = 'mocha' | 'vitest' | 'playwright' | 'nodeTest' | 'bun';
 
-export type PackageFacts = { dependencies: ReadonlySet<string>; manifests: number };
+export type PackageFacts = { dependencies: ReadonlyMap<string, string>; manifests: number };
 
 export type TestOrigin = { name: string; module: string | undefined };
 
@@ -116,3 +116,12 @@ export type ExpectSubject = { value: TSESTree.CallExpressionArgument; isNegated:
 export type UiFrameworks = { hasCypress: boolean; hasPlaywright: boolean };
 
 export type AssertionChain = { values: TSESTree.Node[]; hasAssertionProperty: boolean; root: TSESTree.Node };
+
+export type VersionCeiling = { version: number[]; isInclusive: boolean };
+
+export type StateHook = {
+    call: TSESTree.CallExpression;
+    value: TSESTree.Identifier;
+    setter: TSESTree.Identifier;
+    name: TSESTree.Node;
+};

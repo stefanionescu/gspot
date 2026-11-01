@@ -2,6 +2,7 @@ import type { RuleDocs } from './types/plugin.ts';
 import { PLUGIN_PREFIX } from './config/plugin.ts';
 import { noInMisuse } from './rules/no-in-misuse.ts';
 import { noClientEnv } from './rules/no-client-env.ts';
+import { noVueMixins } from './rules/no-vue-mixins.ts';
 import { noGlobalThis } from './rules/no-global-this.ts';
 import { noTryPromise } from './rules/no-try-promise.ts';
 import { useTypeAlias } from './rules/use-type-alias.ts';
@@ -19,6 +20,7 @@ import { noNestedSwitch } from './rules/no-nested-switch.ts';
 import { noTrivialFiles } from './rules/no-trivial-files.ts';
 import { testHooksFirst } from './rules/test-hooks-first.ts';
 import { noCommentedCode } from './rules/no-commented-code.ts';
+import { noGeneratedKeys } from './rules/no-generated-keys.ts';
 import { noIgnoredReturn } from './rules/no-ignored-return.ts';
 import { noUnthrownError } from './rules/no-unthrown-error.ts';
 import { preferTestTable } from './rules/prefer-test-table.ts';
@@ -38,7 +40,9 @@ import { requireServerOnly } from './rules/require-server-only.ts';
 import { noEarlyTestReturn } from './rules/no-early-test-return.ts';
 import { noEmptyTestTitles } from './rules/no-empty-test-titles.ts';
 import { noForcedUiActions } from './rules/no-forced-ui-actions.ts';
+import { noLeakedJsxNumber } from './rules/no-leaked-jsx-number.ts';
 import { noPoweredByHeader } from './rules/no-powered-by-header.ts';
+import { noSelfStateUpdate } from './rules/no-self-state-update.ts';
 import { noUiTestDebugging } from './rules/no-ui-test-debugging.ts';
 import { noAsyncConstructor } from './rules/no-async-constructor.ts';
 import { noDiscardedPostfix } from './rules/no-discarded-postfix.ts';
@@ -59,6 +63,7 @@ import { noUndefinedArgument } from './rules/no-undefined-argument.ts';
 import { preferBooleanReturn } from './rules/prefer-boolean-return.ts';
 import { noCommentsInImports } from './rules/no-comments-in-imports.ts';
 import { noDuplicateTestRows } from './rules/no-duplicate-test-rows.ts';
+import { noSetterInComponent } from './rules/no-setter-in-component.ts';
 import { noDuplicatedBranches } from './rules/no-duplicated-branches.ts';
 import { noInvertedAssertions } from './rules/no-inverted-assertions.ts';
 import { preferReadonlyStatic } from './rules/prefer-readonly-static.ts';
@@ -68,6 +73,7 @@ import { noEqualLoopCondition } from './rules/no-equal-loop-condition.ts';
 import { noPositiveIndexCheck } from './rules/no-positive-index-check.ts';
 import { noStringRegexPattern } from './rules/no-string-regex-pattern.ts';
 import { noUpdatedLoopCounter } from './rules/no-updated-loop-counter.ts';
+import { noVueClassComponents } from './rules/no-vue-class-components.ts';
 import { noInlineInterpolation } from './rules/no-inline-interpolation.ts';
 import { noKeywordDeclarations } from './rules/no-keyword-declarations.ts';
 import { noUselessIntersection } from './rules/no-useless-intersection.ts';
@@ -78,12 +84,14 @@ import { noAsyncSuiteCallbacks } from './rules/no-async-suite-callbacks.ts';
 import { noDuplicateTestTitles } from './rules/no-duplicate-test-titles.ts';
 import { noExcessCallArguments } from './rules/no-excess-call-arguments.ts';
 import { noPublicTemporaryPath } from './rules/no-public-temporary-path.ts';
+import { noUnvalidatedJsonBody } from './rules/no-unvalidated-json-body.ts';
 import { noIncompleteAssertions } from './rules/no-incomplete-assertions.ts';
 import { noTransposedAssignment } from './rules/no-transposed-assignment.ts';
 import { preferPromiseShorthand } from './rules/prefer-promise-shorthand.ts';
 import { noDuplicateInComposite } from './rules/no-duplicate-in-composite.ts';
 import { noMisplacedLoopCounter } from './rules/no-misplaced-loop-counter.ts';
 import { noUnexplainedTestSkips } from './rules/no-unexplained-test-skips.ts';
+import { noDefaultUtilityImports } from './rules/no-default-utility-imports.ts';
 import { noFloatingPointEquality } from './rules/no-floating-point-equality.ts';
 import { noUnsafeSanitizerBypass } from './rules/no-unsafe-sanitizer-bypass.ts';
 import { noUnsafeSecurityHeaders } from './rules/no-unsafe-security-headers.ts';
@@ -125,6 +133,14 @@ const rules = {
     'no-floating-point-equality': noFloatingPointEquality,
     'no-equal-loop-condition': noEqualLoopCondition,
     'no-small-switch': noSmallSwitch,
+    'no-setter-in-component': noSetterInComponent,
+    'no-self-state-update': noSelfStateUpdate,
+    'no-generated-keys': noGeneratedKeys,
+    'no-leaked-jsx-number': noLeakedJsxNumber,
+    'no-vue-class-components': noVueClassComponents,
+    'no-vue-mixins': noVueMixins,
+    'no-default-utility-imports': noDefaultUtilityImports,
+    'no-unvalidated-json-body': noUnvalidatedJsonBody,
     'no-incomplete-assertions': noIncompleteAssertions,
     'no-inverted-assertions': noInvertedAssertions,
     'no-self-comparing-assertions': noSelfComparingAssertions,

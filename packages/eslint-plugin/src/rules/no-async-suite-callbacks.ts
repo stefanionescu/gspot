@@ -1,7 +1,8 @@
 import { createRule } from '../rule.ts';
+import { usesModule } from '../packages.ts';
 import { readLocalFunction } from '../functions.ts';
 import type { LocalFunction } from '../types/plugin.ts';
-import { usesModule, readTestCall, listBodyNodes } from '../testing.ts';
+import { readTestCall, listBodyNodes } from '../testing.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { ASYNC_SUITE_MODULES, ASYNC_SUITE_ORIGINS, ASYNC_SUITE_MODIFIERS } from '../config/testing.ts';
 
