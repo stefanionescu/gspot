@@ -17,10 +17,14 @@ export const VALE_REGEX_SYMBOLS = /[.*+?^${}()|[\]\\/-]/gu;
 export const CAPITALIZATION_STYLES = {
     heading: {
         message: "Write headings below the title in sentence case: '%s'.",
-        scope: 'heading.h2',
+        scope: ['heading.h2', 'heading.h3', 'heading.h4', 'heading.h5', 'heading.h6'],
         match: '$sentence',
     },
-    title: { message: "Write the document title in title case: '%s'.", scope: 'heading.h1', match: '$title' },
+    title: {
+        message: "Write the document title in title case: '%s'.",
+        scope: ['heading.h1', 'text.frontmatter.title'],
+        match: '$title',
+    },
 } as const;
 
 export const LENGTH_STYLES = {

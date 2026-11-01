@@ -1,5 +1,5 @@
 ---
-title: Git hooks
+title: Git Hooks
 description: Run checks before commits and pushes and check commit messages.
 ---
 

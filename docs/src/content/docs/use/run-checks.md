@@ -1,5 +1,5 @@
 ---
-title: Run checks
+title: Run Checks
 description: Read a finding, explain it, fix it, and read the report.
 ---
 

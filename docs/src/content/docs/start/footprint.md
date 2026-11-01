@@ -1,5 +1,5 @@
 ---
-title: What gspot adds to your repository and machine
+title: What gspot Adds to Your Repository and Machine
 description: Find the generated files, installed tools, temporary copies, and caches of gspot, and reclaim their disk space.
 ---
 

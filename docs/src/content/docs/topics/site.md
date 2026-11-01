@@ -1,5 +1,5 @@
 ---
-title: Static sites
+title: Static Sites
 description: Check a built site, including sites deployed below a URL path.
 ---
 

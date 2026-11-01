@@ -1,5 +1,5 @@
 ---
-title: Generated files
+title: Generated Files
 description: Which files gspot writes, which to commit, and which to leave alone.
 ---
 

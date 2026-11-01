@@ -1,5 +1,5 @@
 ---
-title: Dependencies and licenses
+title: Dependencies and Licenses
 description: Check vulnerable packages, dependency licenses, and registry hosts.
 configurations: [dependencies, licenses]
 ---

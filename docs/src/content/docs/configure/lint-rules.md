@@ -1,5 +1,5 @@
 ---
-title: Lint rule options
+title: Lint Rule Options
 description: Set lint rule options in gspot.toml instead of the config files.
 ---
 

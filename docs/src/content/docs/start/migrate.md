@@ -1,5 +1,5 @@
 ---
-title: Migrate existing tools
+title: Migrate Existing Tools
 description: Review what init preserves, replaces, and leaves for you to migrate.
 ---
 

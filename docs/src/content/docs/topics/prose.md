@@ -1,5 +1,5 @@
 ---
-title: Spelling and prose
+title: Spelling and Prose
 description: Check spelling and prose, and allow words your project needs.
 configurations: [prose, spelling]
 ---
