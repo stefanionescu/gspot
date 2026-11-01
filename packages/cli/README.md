@@ -51,7 +51,7 @@ bunx --no-install gspot check
 4. `gspot check` runs the checks on every file. From then on, the Git hooks check each commit and push.
 
 gspot starts at level `basic`. To start at level `all`, add `--level all` to the init command. Init writes without
-asking. It asks nothing in CI or in a session of a coding agent either.
+asking.
 
 Commit `gspot.toml` and the files that `gspot init` and `gspot install` wrote. In each new clone, install the
 dependencies first, then run the install command above.

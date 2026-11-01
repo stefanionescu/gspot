@@ -20,6 +20,7 @@ export const CHECK_NEEDS_LABELS = {
     build: 'a build of the project',
     docker: 'Docker, running',
     network: 'network access',
+    'python-environment': 'the Python environment of the project',
 } as const;
 
 export const LEVEL_ADVICE = {
