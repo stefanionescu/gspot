@@ -209,16 +209,15 @@ export type ConfigurationChange = {
     state: string;
 };
 
-export type SettingsEditContext = {
+export type IgnoreEditContext = {
     root: string;
     edit: SettingsEdit;
     settings: Settings;
     cache: RunCache;
-    session: Session;
     listing: RepositoryListing;
-    scope: string;
-    scopeTable: TomlTable;
 };
+
+export type SettingsEditContext = IgnoreEditContext & { session: Session; scope: string; scopeTable: TomlTable };
 
 export type SettingsEditOptions = {
     edit: SettingsEdit;

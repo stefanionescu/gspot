@@ -2,6 +2,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { mergeIgnore } from '#cli/settings/text.ts';
 import { formatNameList } from '#cli/system/text.ts';
+import { openSession } from '#cli/engine/session.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
@@ -13,7 +14,7 @@ import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { EVERY_CHECK, RULE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
 import { listChecksById, assertCheckExists, readConfigurations } from '#cli/manifests/read.ts';
 import type { IgnoreFlags, IgnoreOptions, CommandDefinition } from '#cli/types/commands/edits.ts';
-import { pathsOption, buildIgnorePaths, writeSettingsEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
+import { pathsOption, buildIgnorePaths, writeSettingsEdit, readIgnoreEditContext } from '#cli/commands/edits.ts';
 
 function formatIgnoreSummary(options: IgnoreOptions, paths: string[] | undefined): string {
     const check = options.check ?? EVERY_CHECK;
@@ -48,11 +49,14 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
             'arguments',
             valid.error.issues.map((issue) => `--${issue.path.join('.')}: ${issue.message}`).join('\n'),
         );
-    const context = await readSettingsEditContext(options.root);
-    const { root, edit: input, settings } = context;
+    const context = await readIgnoreEditContext(options.root);
+    const { root, edit: input, settings, cache, listing } = context;
     if (options.check !== undefined) assertCheckExists(options.check, Object.values(settings.commandChecks));
-    if (options.rule !== undefined && options.check !== undefined)
-        await assertDocumentedRule(context.session, { checkId: options.check, rule: options.rule });
+    if (options.rule !== undefined && options.check !== undefined) {
+        const settingsFile = { settings, text: input.text };
+        const session = await openSession(root, { settingsFile, cache, listing });
+        await assertDocumentedRule(session, { checkId: options.check, rule: options.rule });
+    }
     const paths = buildIgnorePaths(context, options.cwd, options.paths);
     const list = (input.table['ignore'] as TomlTable[] | undefined) ?? [];
     mergeIgnore(list, {

@@ -33,11 +33,26 @@ import {
 } from '#cli/config/commands/edits.ts';
 import type {
     CommandOption,
+    IgnoreEditContext,
     SettingsEditOptions,
     ConfigurationChange,
     SettingsEditContext,
     ConfigurationsOptions,
 } from '#cli/types/commands/edits.ts';
+
+/**
+Read and parse gspot.toml and list the repository, without a session.
+
+@param root the validated repository root.
+*/
+export async function readIgnoreEditContext(root: string): Promise<IgnoreEditContext> {
+    const edit = readSettingsFile(root);
+    const cache = createRunCache(root);
+    cache.sources.set(SETTINGS_FILE, Buffer.from(edit.text));
+    const settings = readSettings(edit.text, root);
+    const listing = await listRepositoryFiles(cache);
+    return { root, edit, settings, cache, listing };
+}
 
 /**
 Read and validate the settings once before a command edits them, and find the table of the scope that the command
@@ -47,11 +62,8 @@ writes into.
 @param scopePath the --scope path relative to the repository root, or absent for the top level.
 */
 export async function readSettingsEditContext(root: string, scopePath?: string): Promise<SettingsEditContext> {
-    const input = readSettingsFile(root);
-    const cache = createRunCache(root);
-    cache.sources.set(SETTINGS_FILE, Buffer.from(input.text));
-    const settings = readSettings(input.text, root);
-    const listing = await listRepositoryFiles(cache);
+    const context = await readIgnoreEditContext(root);
+    const { edit: input, settings, cache, listing } = context;
     const session = await openSession(root, { settingsFile: { settings, text: input.text }, cache, listing });
     const path = scopePath === undefined ? '' : buildArgumentPath(root, root, scopePath);
     if (!session.scopes.some((scope) => scope.path === path))
@@ -59,8 +71,7 @@ export async function readSettingsEditContext(root: string, scopePath?: string):
             'arguments',
             `There is no scope called ${path}. Name a project folder or a written scope.`,
         );
-    const scopeTable = getScopeTable(input.table, path);
-    return { root, edit: input, settings, cache, listing, session, scope: path, scopeTable };
+    return { ...context, session, scope: path, scopeTable: getScopeTable(input.table, path) };
 }
 
 /**
@@ -71,7 +82,7 @@ Resolve ignore selectors from the calling folder and refuse mistaken checks or u
 @param paths the repeated --paths values.
 */
 export function buildIgnorePaths(
-    context: SettingsEditContext,
+    context: IgnoreEditContext,
     cwd: string,
     paths: string[] | undefined,
 ): string[] | undefined {

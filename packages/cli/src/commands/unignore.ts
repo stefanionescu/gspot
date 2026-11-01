@@ -25,7 +25,7 @@ import {
     buildIgnorePaths,
     writeSettingsEdit,
     buildUnchangedResult,
-    readSettingsEditContext,
+    readIgnoreEditContext,
 } from '#cli/commands/edits.ts';
 
 function removeIgnores(table: TomlTable, options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreRemoval {
@@ -79,7 +79,7 @@ function formatEverywhereNote(everywhere: number, check: string | undefined): st
 async function runUnignoreCommand(
     options: Pick<IgnoreOptions, 'root' | 'cwd' | 'check' | 'rule' | 'paths'>,
 ): Promise<CommandResult> {
-    const context = await readSettingsEditContext(options.root);
+    const context = await readIgnoreEditContext(options.root);
     const { root, edit: input, settings } = context;
     if (options.check !== undefined) assertCheckExists(options.check, Object.values(settings.commandChecks));
     const { kept, deleted, changedIgnores, removedPaths, everywhere } = removeIgnores(input.table, {
