@@ -21,7 +21,20 @@ export const STYLELINT_COMPONENTS: readonly StylelintComponent[] = [
     { files: ['**/*.astro'], customSyntax: 'postcss-html', ignorePseudoClasses: [] },
 ];
 
-export const STYLELINT_BASE_RULES = { 'import-notation': 'string', 'function-no-unknown': true } as const;
+export const STYLELINT_BASE_RULES = {
+    'import-notation': 'string',
+    'function-no-unknown': true,
+    'property-disallowed-list': ['/^(margin|padding|border|inset)-(left|right)/', 'left', 'right'],
+    'declaration-property-value-disallowed-list': {
+        float: ['left', 'right'],
+        clear: ['left', 'right'],
+        'text-align': ['left', 'right'],
+    },
+    'declaration-property-unit-allowed-list': { 'font-size': ['rem', 'em', '%'] },
+    'selector-max-id': 0,
+    'selector-max-specificity': '0,3,0',
+    'selector-disallowed-list': [String.raw`/^\.(is|has)-[\w-]+$/`],
+} as const;
 
 export const TAILWIND_AT_RULES = [
     'tailwind',
@@ -64,7 +77,10 @@ export const STYLELINT_DEFAULT_LEVEL_OFF: ReadonlySet<string> = new Set([
     'layer-name-pattern',
     'number-max-precision',
     'selector-class-pattern',
+    'selector-disallowed-list',
     'selector-id-pattern',
+    'selector-max-id',
+    'selector-max-specificity',
     'selector-not-notation',
 ]);
 

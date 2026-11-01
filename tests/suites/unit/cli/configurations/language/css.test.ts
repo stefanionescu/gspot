@@ -37,6 +37,49 @@ test.each(['vue'])('a CSS-only scope checks properties inside a %s component sty
     ]);
 });
 
+test.each([
+    [
+        'basic',
+        [
+            'declaration-property-unit-allowed-list',
+            'declaration-property-value-disallowed-list',
+            'property-disallowed-list',
+        ],
+    ],
+    [
+        'all',
+        [
+            'declaration-property-unit-allowed-list',
+            'declaration-property-value-disallowed-list',
+            'property-disallowed-list',
+            'selector-disallowed-list',
+            'selector-max-id',
+            'selector-max-specificity',
+        ],
+    ],
+] as const)(
+    'level %s reports physical properties, fixed font sizes, and ID and state selectors',
+    async (level, expected) => {
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings(['css'], { level }),
+            'site.css': 'a {\n    color: red;\n}\n',
+        });
+        const output = buildGeneratedFiles(await openSession(sandbox.path)).files.find(
+            (file) => file.path === getManifestTarget('css', 'stylelint.json'),
+        )!;
+        const result = await stylelint.lint({
+            code: '.is-active {\n    float: left;\n}\n\n#page {\n    font-size: 14px;\n}\n\n.a .b .c .d {\n    margin-left: 1rem;\n}\n',
+            codeFilename: `${sandbox.path}/site.css`,
+            config: JSON.parse(output.content) as Config,
+            configBasedir: toolModules,
+        });
+        const reported = new Set(result.results.flatMap(({ warnings }) => warnings.map(({ rule }) => rule)));
+        expect(
+            [...reported].filter((rule) => /disallowed|allowed|selector-max/u.test(rule)).toSorted(compareText),
+        ).toStrictEqual([...expected]);
+    },
+);
+
 test('a scope with CSS Modules files accepts composes, :global, and @value in them only', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['css'], { level: 'all' }),
