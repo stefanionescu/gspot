@@ -1,8 +1,12 @@
 import { posix } from 'node:path';
 import { relative } from 'node:path/posix';
+import { find } from '#cli/system/files/reads.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { UV_LOCKFILE } from '#cli/config/manifests.ts';
+import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
+import { pyprojectSchema } from '#cli/schemas/parsers.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { DEFAULT_QUOTES } from '#cli/config/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
@@ -16,6 +20,7 @@ import {
     PYTHON_FILES,
     RUFF_ALWAYS_OFF,
     RUFF_PATH_RULES,
+    RUFF_CONSOLE_RULES,
     BASEDPYRIGHT_CHECK,
     BASEDPYRIGHT_LEVELS,
     BASEDPYRIGHT_OPTIONS,
@@ -62,6 +67,15 @@ export function buildBasedpyrightFile(planned: PlannedConfig): string {
     );
 }
 
+function listConsoleModules(planned: PlannedConfig): string[] {
+    const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
+    const text = find(planned.session.cache, pyproject);
+    if (text === undefined) return [];
+    const scripts = parseTomlFile(pyproject, text, pyprojectSchema).project?.scripts;
+    if (scripts === undefined) return [];
+    return Object.values(scripts).map((target) => (target.split(':', 1)[0] as string).replaceAll('.', '/'));
+}
+
 /**
 Build ruff.toml: the Ruff lint rules, import settings, and source exclusions.
 
@@ -80,9 +94,13 @@ export function buildRuffFile(planned: PlannedConfig): string {
     const perFile = listIgnores(planned.scope.settings, RUFF_CHECK).filter(
         (each) => each.rule !== undefined && each.paths !== undefined,
     );
-    const byPath = new Map<string, string[]>(
-        Object.entries(RUFF_PATH_RULES).map(([path, rules]) => [`${root}/${path}`, [...rules]]),
-    );
+    const byPath = new Map<string, string[]>([
+        ...Object.entries(RUFF_PATH_RULES).map(([path, rules]): [string, string[]] => [`${root}/${path}`, [...rules]]),
+        ...listConsoleModules(planned).map((module): [string, string[]] => [
+            `${pythonScopePath}/**/${module}.py`,
+            [...RUFF_CONSOLE_RULES],
+        ]),
+    ]);
     const pathRules = perFile.flatMap((ignore) =>
         (ignore.paths ?? []).map((path) => ({ path, rule: ignore.rule as string })),
     );

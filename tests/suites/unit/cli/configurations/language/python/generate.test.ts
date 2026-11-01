@@ -59,7 +59,18 @@ test('Ruff accepts an assert in the Python test paths and no other file', async 
         '../../../../**/*_test.py': ['S101'],
         '../../../../**/tests/**': ['S101'],
         '../../../../**/conftest.py': ['S101'],
+        '../../../../**/__main__.py': ['T20'],
     });
+});
+
+test('Ruff accepts print in a module that pyproject.toml names as a console script', async () => {
+    const ruff = parse(
+        await buildGeneratedFile(buildSandboxSettings(['python']), getManifestTarget('python', 'ruff.toml'), {
+            'example.py': 'value = 1\n',
+            'pyproject.toml': '[project]\nname = "sample"\n[project.scripts]\nsample = "sample.cli:main"\n',
+        }),
+    ) as RuffConfig;
+    expect(ruff.lint['per-file-ignores']?.['../../../../**/sample/cli.py']).toStrictEqual(['T20']);
 });
 
 test('Ruff takes its style from a format override that names every Python file', async () => {

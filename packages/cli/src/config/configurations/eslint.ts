@@ -53,6 +53,8 @@ const ESLINT_RULES = {
     'prefer-const': 'error',
 
     'no-param-reassign': 'error',
+
+    'no-warning-comments': ['error', { terms: ['todo', 'fixme', 'xxx', 'hack'], location: 'anywhere' }],
 } as const;
 
 const SORTING_RULES = {
@@ -91,7 +93,7 @@ const UNICORN_RULES = {
     'unicorn/no-abusive-eslint-disable': 'off',
 
     'unicorn/prefer-ternary': ['error', 'only-single-line'],
-    'unicorn/expiring-todo-comments': ['error', { allowWarningComments: false }],
+    'unicorn/expiring-todo-comments': 'off',
 } as const;
 
 const SECURITY_RULES = {

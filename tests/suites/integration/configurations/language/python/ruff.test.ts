@@ -114,7 +114,7 @@ test.each([...LEVELS])(
         expect(result.code, result.stdout + result.stderr).toBe(1);
         expect(listFindingRows(result.report)).toStrictEqual([
             { file: 'sample.py', line: 3, rule: 'F821' },
-            ...(level === 'all' ? [{ file: 'sample.py', line: 4, rule: 'T201' }] : []),
+            { file: 'sample.py', line: 4, rule: 'T201' },
         ]);
         await writeFile(
             join(root, 'sample.py'),

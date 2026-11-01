@@ -97,6 +97,7 @@ version = "2.16"
 basic = [
     "A",
     "ARG",
+    "ANN401",
     "ASYNC",
     "B002",
     "B003",
@@ -138,6 +139,7 @@ basic = [
     "EXE",
     "F",
     "FA",
+    "FIX",
     "FLY",
     "FURB",
     "G",
@@ -232,6 +234,7 @@ basic = [
     "SIM4",
     "SIM9",
     "T1",
+    "T20",
     "UP",
     "W",
     "YTT",
@@ -270,7 +273,6 @@ all = [
     "EM",
     "ERA",
     "FBT",
-    "FIX",
     "I",
     "ICN",
     "INP",
@@ -306,9 +308,7 @@ all = [
     "SIM3",
     "SLF",
     "SLOT",
-    "T2",
     "TC",
-    "TD",
     "TRY",
 ]
 

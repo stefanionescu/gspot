@@ -88,7 +88,10 @@ export const RUFF_PATH_RULES = {
     '**/*_test.py': ['S101'],
     '**/tests/**': ['S101'],
     '**/conftest.py': ['S101'],
+    '**/__main__.py': ['T20'],
 } as const;
+
+export const RUFF_CONSOLE_RULES = ['T20'] as const;
 
 export const RUFF_ALWAYS_OFF = [
     'COM812',

@@ -40,7 +40,5 @@ and errors. Rewrite or delete a comment that describes behavior the code lacks, 
 
 ## Deferred work
 
-<!-- level: all -->
-
 Track unfinished work in the issue tracker. Do not leave `TODO`, `FIXME`, `XXX`, or `HACK` in comments. An issue link
 may explain an existing constraint, never promise a later implementation.
