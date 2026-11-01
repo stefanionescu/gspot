@@ -29,9 +29,14 @@ export function readNextStatement(node: TSESTree.VariableDeclaration): TSESTree.
     return statements[statements.indexOf(node) + 1];
 }
 
-function unwrap(node: TSESTree.Node | null): TSESTree.Node | null {
+/**
+Discard expression wrappers that preserve the referenced value.
+
+@param node the possibly wrapped expression.
+*/
+export function unwrapExpression(node: TSESTree.Node): TSESTree.Node {
     let value = node;
-    while (value !== null && isUnwrappable(value)) value = value.expression;
+    while (isUnwrappable(value)) value = value.expression;
     return value;
 }
 
@@ -59,9 +64,10 @@ Identify a direct alias of a value bound in this module.
 @param scope the expression's lexical scope
 */
 export function isAlias(node: TSESTree.Node | null, scope: TSESLint.Scope.Scope): boolean {
-    let value = unwrap(node);
-    while (value?.type === AST_NODE_TYPES.MemberExpression && !value.computed) value = unwrap(value.object);
-    if (value?.type !== AST_NODE_TYPES.Identifier) return false;
+    if (node === null) return false;
+    let value = unwrapExpression(node);
+    while (value.type === AST_NODE_TYPES.MemberExpression && !value.computed) value = unwrapExpression(value.object);
+    if (value.type !== AST_NODE_TYPES.Identifier) return false;
     const variable = ASTUtils.findVariable(scope, value);
     return (
         variable !== null &&

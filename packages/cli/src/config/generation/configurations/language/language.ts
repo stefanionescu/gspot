@@ -232,6 +232,7 @@ export const SQLFLUFF_DEFAULT_LEVEL_OFF = ['AM05', 'AM09', 'CV11', 'ST05', 'ST07
 export const SQLFLUFF_CHECK = 'sql/sqlfluff';
 
 export const TYPESCRIPT_RULES = {
+    'no-const-assign': 'error',
     '@typescript-eslint/no-misused-spread': ['error', { allow: ['string'] }],
     'sonarjs/deprecation': 'off',
     'jsdoc/require-param-type': 'off',
@@ -281,7 +282,7 @@ export const TYPESCRIPT_RULES = {
         },
     ],
     'sonarjs/no-duplicate-in-composite': 'error',
-    'sonarjs/redundant-type-aliases': 'error',
+    'sonarjs/redundant-type-aliases': 'off',
 } as const;
 
 export const TYPESCRIPT_TEST_RULES = {

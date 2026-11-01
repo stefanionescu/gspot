@@ -240,3 +240,13 @@ export const ONE_STATEMENT = '1 statement';
 export const SERVER_DIRECTIVE = 'use server';
 
 export const SERVER_ONLY_MODULE = 'server-only';
+
+export const POWERED_BY_HEADER = 'x-powered-by';
+
+export const POWERED_BY_SET_ARGUMENTS = 2;
+
+export const POWERED_BY_FACTORIES = new Set(['express', 'express.default']);
+
+export const POWERED_BY_MIDDLEWARE = new Set(['helmet', 'helmet.default', 'helmet.hidePoweredBy', 'hide-powered-by']);
+
+export const INSECURE_RANDOM_GENERATOR = 'Math.random';
