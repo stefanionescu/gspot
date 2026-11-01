@@ -1,4 +1,3 @@
-import { realpathSync } from 'node:fs';
 import { remember } from '#cli/system/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { RunCache } from '#cli/types/system.ts';
@@ -6,13 +5,14 @@ import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { FOLDER_CONTENTS } from '#cli/config/system.ts';
 import { join, posix, dirname, relative } from 'node:path';
 import type { TrackedFile } from '#cli/types/repository.ts';
+import { findContainedPath } from '#cli/system/files/reads.ts';
 import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool, type Package } from '@manypkg/tools';
 import { listSourceFiles, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { RUSH_FILE, LERNA_FILE, PNPM_WORKSPACE_FILE } from '#cli/config/repository/javascript.ts';
-import { isInside, convertToPosixPath, extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
+import { convertToPosixPath, extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 
 function listWorkspacePackages(root: string): Package[] {
     let file = PACKAGE_JSON;
@@ -124,7 +124,7 @@ List the folders of the npm workspaces that the repository declares, without the
 export function listWorkspaceFolders(root: string): string[] {
     const packages = listWorkspacePackages(root);
     for (const found of packages)
-        if (!isInside(relative(realpathSync(root), realpathSync(found.dir))))
+        if (findContainedPath(root, found.relativeDir) === undefined)
             throw new GspotError('filesystem', `Workspace package leaves the repository: ${found.relativeDir}`);
     return packages.map((found) => convertToPosixPath(found.relativeDir)).filter((path) => path !== '' && path !== '.');
 }

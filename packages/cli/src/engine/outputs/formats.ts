@@ -12,7 +12,7 @@ import { parseRegexFindings, parseGroupedFindings } from '#cli/engine/outputs/te
 import { FILE_GROUP, RULE_GROUP, TAPLO_OUTPUTS, MISSING_PATH_CODES } from '#cli/config/engine.ts';
 import type { Finding, CheckOutput, OutputPaths, ParsingCheck, OutputParser } from '#cli/types/engine/tool-runs.ts';
 
-function readCanonicalPath(path: string): string | undefined {
+function findCanonicalPath(path: string): string | undefined {
     try {
         return convertToPosixPath(realpathSync.native(path));
     } catch (error) {
@@ -25,14 +25,14 @@ function stripRoot(root: string, file: string): string {
     const prefix = `${root}/`;
     if (file.startsWith(prefix)) return file.slice(prefix.length);
     if (!isAbsolute(file)) return file;
-    const canonicalRoot = readCanonicalPath(root);
-    const canonicalFile = readCanonicalPath(file);
+    const canonicalRoot = findCanonicalPath(root);
+    const canonicalFile = findCanonicalPath(file);
     if (canonicalRoot === undefined || canonicalFile === undefined) return file;
     return canonicalFile.startsWith(`${canonicalRoot}/`) ? canonicalFile.slice(canonicalRoot.length + 1) : file;
 }
 
 function listRootPrefixes(root: string): string[] {
-    const roots = [root, readCanonicalPath(root) ?? root];
+    const roots = [root, findCanonicalPath(root) ?? root];
     const prefixes = new Set(roots.flatMap((form) => [`${form}/`, `${form.replaceAll('/', () => sep)}${sep}`]));
     return [...prefixes].toSorted((first, second) => second.length - first.length);
 }

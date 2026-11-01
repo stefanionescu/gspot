@@ -95,15 +95,28 @@ export function read(source: string | RunCache, path: string): string {
 }
 
 /**
+Resolve a path that may hold links, and keep it only when it stays inside the folder.
+
+@param root the folder.
+@param path the path relative to the folder.
+@returns the real path, or undefined for a path that leaves the folder.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The tracked file list, the repository setup, the workspaces, the site build, and file reads share this one containment test.
+export function findContainedPath(root: string, path: string): string | undefined {
+    const target = realpathSync.native(join(root, path));
+    return isInside(relative(realpathSync.native(root), target)) ? target : undefined;
+}
+
+/**
 Resolve a source path, and refuse links outside the root.
 
-@param root the real path of the repository folder.
+@param root the repository folder.
 @param path the root-relative file.
 @returns the real path of the file.
 */
 export function readContainedPath(root: string, path: string): string {
-    const target = realpathSync(join(root, ...splitSystemPath(path)));
-    if (!isInside(relative(root, target)))
+    const target = findContainedPath(root, join(...splitSystemPath(path)));
+    if (target === undefined)
         throw new GspotError(
             'filesystem',
             `${path} links to a file outside the repository. Replace the link with the file.`,

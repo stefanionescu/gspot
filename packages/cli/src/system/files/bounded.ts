@@ -49,7 +49,18 @@ function readRegularFile(absolutePath: string, stat: Stats, path: string): FileC
     return { bytes, mode: normalizeFileMode({ mode: stat.mode & MODE_BITS }) };
 }
 
-function walkParentFolders(bounds: FileBounds, path: string, statParent: (path: string) => Stats): string {
+/**
+Build the absolute path of a file after a check that every parent names a real folder, not a link.
+
+@param bounds the root.
+@param path the root-relative file.
+@param statParent reads each parent folder, which may create it.
+*/
+export function buildContainedPath(
+    bounds: FileBounds,
+    path: string,
+    statParent: (path: string) => Stats = lstatSync,
+): string {
     const segments = splitSystemPath(path);
     let folder = bounds.root;
     const parents = segments.slice(0, -1);
@@ -105,17 +116,6 @@ export function isSameContents(found: FileContents | undefined, expected: FileCo
 }
 
 /**
-Build the absolute path of a file after a check that every parent names a real folder, not a link.
-
-@param bounds the root.
-@param path the root-relative file.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: This operation supplies lstatSync to the parent walker for its callers.
-export function buildContainedPath(bounds: FileBounds, path: string): string {
-    return walkParentFolders(bounds, path, lstatSync);
-}
-
-/**
 Build the absolute path of a file, create missing parents, and refuse parents that link or name no folder.
 
 @param bounds the root.
@@ -123,7 +123,7 @@ Build the absolute path of a file, create missing parents, and refuse parents th
 */
 export function preparePath(bounds: FileBounds, path: string): string {
     try {
-        return walkParentFolders(bounds, path, prepareParentFolder);
+        return buildContainedPath(bounds, path, prepareParentFolder);
     } catch (error) {
         throw buildWriteError(path, error);
     }

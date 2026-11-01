@@ -1,17 +1,17 @@
-import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { RunCache } from '#cli/types/system.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseYamlDocuments } from '#cli/parsers/formats/yaml.ts';
-import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
+import { find, findContainedPath } from '#cli/system/files/reads.ts';
 import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
 import { join, dirname, resolve, basename, relative } from 'node:path';
+import { statSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 import { ciJobSchema, ciDocumentSchema } from '#cli/schemas/repository.ts';
 import { readGitSetting, readHooksFolder } from '#cli/repository/git/run.ts';
 import { EXECUTABLE_BITS, MARKDOWN_EXTENSION } from '#cli/config/repository/files.ts';
-import { statSync, lstatSync, readdirSync, realpathSync, readFileSync } from 'node:fs';
 import { readPackageJson, listToolOnlyPackages } from '#cli/repository/dependencies.ts';
 import type { CiJob, Repository, RepositoryHooks, RepositorySetup } from '#cli/types/repository.ts';
 
@@ -62,11 +62,9 @@ function isLintCommand(command: string): boolean {
 }
 
 function listFolder(root: string, folder: string): string[] {
-    const path = join(root, folder);
-    if (statSync(path, { throwIfNoEntry: false }) === undefined) return [];
-    const canonicalRoot = realpathSync(root);
-    const target = realpathSync(path);
-    if (!isInside(relative(canonicalRoot, target)) || !statSync(target).isDirectory()) return [];
+    if (statSync(join(root, folder), { throwIfNoEntry: false }) === undefined) return [];
+    const target = findContainedPath(root, folder);
+    if (target === undefined || !statSync(target).isDirectory()) return [];
     return readdirSync(target)
         .toSorted((left, right) => compareText(left, right))
         .filter((name) => !name.startsWith('.') || name === KEPT_DOT_FILE);

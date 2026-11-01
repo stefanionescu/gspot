@@ -1,13 +1,14 @@
+import { join, posix } from 'node:path';
+import { statSync, lstatSync } from 'node:fs';
 import { compareText } from '#cli/system/text.ts';
-import { join, posix, relative } from 'node:path';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
-import { statSync, lstatSync, realpathSync } from 'node:fs';
 import { decodeGitPaths } from '#cli/repository/git/output.ts';
+import { findContainedPath } from '#cli/system/files/reads.ts';
 import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/system.ts';
 import type { ListedFile, GitIndexFile } from '#cli/types/repository.ts';
 import { buildGitError, runGitForBytes } from '#cli/repository/git/run.ts';
-import { isInside, extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
+import { extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
 
 import {
     GITLINK_MODE,
@@ -19,14 +20,14 @@ import {
 
 function readSymlinkFile(root: string, path: string, isTracked: boolean): ListedFile | undefined {
     const link = { path, size: 0, executable: false, isSymlink: true };
-    let target: string;
+    let target: string | undefined;
     try {
-        target = realpathSync(join(root, path));
+        target = findContainedPath(root, path);
     } catch (error) {
         if (hasErrorCode(error, 'ENOENT') || hasErrorCode(error, 'ELOOP')) return isTracked ? link : undefined;
         throw error;
     }
-    if (!isInside(relative(realpathSync(root), target))) return undefined;
+    if (target === undefined) return undefined;
     const stat = statSync(target);
     return stat.isFile() ? { ...link, size: stat.size } : undefined;
 }

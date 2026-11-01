@@ -2,16 +2,17 @@ import { remember } from '#cli/system/cache.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { join, relative, normalize } from 'node:path';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { statSync, lstatSync, realpathSync } from 'node:fs';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { findContainedPath } from '#cli/system/files/reads.ts';
 import { compareText, quoteCommand } from '#cli/system/text.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import type { SiteBuild } from '#cli/types/configurations/language.ts';
 import { BUILD_RULE, UNBUILT_SITE_NOTE } from '#cli/config/configurations/framework.ts';
 
@@ -70,7 +71,7 @@ export function listBuiltFiles(folder: string): string[] {
     walkFiles(files, '', (path) => {
         const absolute = join(root, path);
         if (lstatSync(absolute).isDirectory()) return true;
-        if (!isInside(relative(root, realpathSync.native(absolute))))
+        if (findContainedPath(root, path) === undefined)
             throw new CheckStop('error', `The build output links outside the build folder: ${path}`);
         const stat = statSync(absolute);
         if (stat.isDirectory()) throw new CheckStop('error', `The build output entry is a directory link: ${path}`);
