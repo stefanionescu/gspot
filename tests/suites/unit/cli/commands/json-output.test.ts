@@ -52,6 +52,7 @@ test.each([
     });
     using _install = spyOn(installers, 'installTools').mockResolvedValue({
         installed: ['installed 1 npm tool'],
+        missing: [],
         notes: [],
         steps: [],
     });

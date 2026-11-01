@@ -105,6 +105,7 @@ test.skipIf(isWindows)(
         await writeFile(join(sandbox.path, 'source.sh'), 'echo second\n');
         runGitStep(sandbox.path, ['commit', '-qam', 'feat: second']);
         const second = runGitStep(sandbox.path, ['rev-parse', 'HEAD']);
+        await writeFile(join(sandbox.path, 'source.sh'), 'echo edited\n');
         const marker = join(sandbox.path, 'started.json');
         await using binaries = await testdir();
         const protocol = `refs/heads/first ${first} refs/heads/first ${'0'.repeat(first.length)}\nrefs/heads/second ${second} refs/heads/second ${'0'.repeat(second.length)}\n`;
