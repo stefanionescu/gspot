@@ -97,7 +97,6 @@ why = "Search engines find an unlisted page late, and a listed route with nothin
 example = "An image that no built page or stylesheet references reports an unused asset. Delete it from the source assets, and rebuild."
 files = { paths = ["**/*"], kinds = ["source", "binary"] }
 help = "Delete the file."
-level = "all"
 name = "unused-assets"
 runs = "scope"
 stage = "push"

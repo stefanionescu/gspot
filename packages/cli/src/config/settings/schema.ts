@@ -227,11 +227,9 @@ export const SPELLING_LOCALES = ['en', 'en-us', 'en-gb', 'en-au', 'en-ca'] as co
 
 export const REEXPORT_MODES = ['none', 'index-only'] as const;
 
-export const LEVEL_SUMMARY =
-    "Correctness, security, accessibility, type safety, routine formatting, and the project's own declared checks apply at both levels.";
+export const LEVEL_SUMMARY = 'Level basic holds rules that rarely misfire on working code.';
 
-export const ALL_LEVEL_SUMMARY =
-    'Level all adds checks and rules for word choice, architecture, naming, doc comments, declaration order, duplication, API style, and complexity.';
+export const ALL_LEVEL_SUMMARY = 'Level all adds rules with known false positives or taste.';
 
 export const ESLINT_SEVERITIES = ['off', 'warn', 'error'] as const;
 

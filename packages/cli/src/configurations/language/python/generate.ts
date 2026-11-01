@@ -15,6 +15,7 @@ import {
     RUFF_ISORT,
     PYTHON_FILES,
     RUFF_ALWAYS_OFF,
+    RUFF_PATH_RULES,
     BASEDPYRIGHT_CHECK,
     BASEDPYRIGHT_LEVELS,
     BASEDPYRIGHT_OPTIONS,
@@ -79,7 +80,9 @@ export function buildRuffFile(planned: PlannedConfig): string {
     const perFile = listIgnores(planned.scope.settings, RUFF_CHECK).filter(
         (each) => each.rule !== undefined && each.paths !== undefined,
     );
-    const byPath = new Map<string, string[]>();
+    const byPath = new Map<string, string[]>(
+        Object.entries(RUFF_PATH_RULES).map(([path, rules]) => [`${root}/${path}`, [...rules]]),
+    );
     const pathRules = perFile.flatMap((ignore) =>
         (ignore.paths ?? []).map((path) => ({ path, rule: ignore.rule as string })),
     );
@@ -111,7 +114,7 @@ export function buildRuffFile(planned: PlannedConfig): string {
                 'max-branches': getLimit(planned.scope.settings, 'max_function_branches', 'python'),
                 'max-returns': getLimit(planned.scope.settings, 'max_function_returns', 'python'),
             },
-            ...(byPath.size > 0 && { 'per-file-ignores': Object.fromEntries(byPath) }),
+            'per-file-ignores': Object.fromEntries(byPath),
         },
     };
 

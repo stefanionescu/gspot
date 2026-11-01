@@ -178,7 +178,7 @@ export const noClearTextProtocols = createRule<[], 'clearText' | 'transitEncrypt
         defaultOptions: [],
         type: 'problem',
         docs: {
-            level: 'all',
+            level: 'recommended',
             description:
                 'Finds clear-text network protocols: URLs of `http`, `ftp`, `ws`, `telnet`, `smtp`, `ldap`, and 11 other protocols that have a secure twin, except for local, cloud metadata, documentation, and namespace hosts; `nodemailer` transports without TLS; `ftp` connections with `secure: false`; the `telnet-client` package; and AWS CDK load balancers, listeners, ElastiCache groups, and Kinesis streams without TLS or encryption in transit.',
             why: 'A clear-text protocol sends data and credentials that anyone on the network path can read and change.',

@@ -18,10 +18,8 @@ decoration.
 Use `unknown` plus narrowing for untrusted values. Casts give way to runtime narrowing, typed helpers, or fixing the
 source type. Represent known variants with discriminated unions.
 
-Describe absence precisely: `property?: T` and `property: T | undefined` define different types under
-`exactOptionalPropertyTypes`. A nullable alias gets a name only when the domain defines the union. Add nullability where
-the public interface allows absence. Normalize external empty strings, missing fields, and nulls where they enter the
-program.
+A nullable alias gets a name only when the domain defines the union. Add nullability where the public interface allows
+absence. Normalize external empty strings, missing fields, and nulls where they enter the program.
 
 ### Value conventions
 
@@ -29,6 +27,8 @@ program.
 
 - Name every number other than `-1`, `0`, and `1` in a module-level constant, such as `MILLISECONDS_PER_DAY`.
 - Annotate the parameters and the return type of every exported function.
+- Describe absence precisely: `property?: T` and `property: T | undefined` define different types under
+  `exactOptionalPropertyTypes`.
 
 ## Functions and classes
 

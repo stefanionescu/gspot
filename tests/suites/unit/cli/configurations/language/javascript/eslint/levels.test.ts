@@ -109,27 +109,22 @@ test('apply refuses options for a rule of level all at level basic, and ESLint r
     });
 });
 
-test.each(['all'] as const)(
-    'empty-object fallbacks are reported at level %s and pass after correction',
-    async (level) => {
-        await using sandbox = await createGitSandbox({});
-        const settings = buildSandboxSettings(['javascript'], { level });
-        await createFileTree(sandbox.path, {
-            'gspot.toml': settings,
-            'package.json': '{"private":true,"type":"module"}',
-            'source.js': COALESCING_SOURCE,
-        });
-        const eslint = await buildEslint(sandbox.path);
-        expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['gspot/restricted-syntax'])).toStrictEqual([
-            { file: 'source.js', rule: 'gspot/restricted-syntax', line: 2 },
-            { file: 'source.js', rule: 'gspot/restricted-syntax', line: 3 },
-        ]);
-        await writeFile(join(sandbox.path, 'source.js'), COALESCING_CORRECTED);
-        expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['gspot/restricted-syntax'])).toStrictEqual(
-            [],
-        );
-    },
-);
+test.each(LEVELS)('empty-object fallbacks are reported at level %s and pass after correction', async (level) => {
+    await using sandbox = await createGitSandbox({});
+    const settings = buildSandboxSettings(['javascript'], { level });
+    await createFileTree(sandbox.path, {
+        'gspot.toml': settings,
+        'package.json': '{"private":true,"type":"module"}',
+        'source.js': COALESCING_SOURCE,
+    });
+    const eslint = await buildEslint(sandbox.path);
+    expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['gspot/restricted-syntax'])).toStrictEqual([
+        { file: 'source.js', rule: 'gspot/restricted-syntax', line: 2 },
+        { file: 'source.js', rule: 'gspot/restricted-syntax', line: 3 },
+    ]);
+    await writeFile(join(sandbox.path, 'source.js'), COALESCING_CORRECTED);
+    expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['gspot/restricted-syntax'])).toStrictEqual([]);
+});
 
 test('switching the level and back writes the same files', async () => {
     await using sandbox = await createGitSandbox({});

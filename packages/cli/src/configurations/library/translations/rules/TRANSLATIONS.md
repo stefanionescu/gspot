@@ -36,13 +36,17 @@ string, a display name, or an English source sentence.
 - User-generated content, proper names, identifiers, and developer logs supply interpolation data, not message keys, and
   stay untranslated.
 
-Translate every string the application authors and displays to the user. That covers headings, buttons, placeholders,
-toasts, validation errors, accessible names, image alternatives, navigation, metadata, list status controls, and the
-empty, error, and loading states.
-
 Translations land in the same change as their call sites; an incomplete locale leaves the supported list instead. Checks
 validate catalog structure. Show missing keys during development. Make the production fallback deliberate and visible in
 the logs, never a silent `catch` that hides a missing catalog.
+
+### Displayed strings
+
+<!-- level: all -->
+
+Translate every string the application authors and displays to the user. That covers headings, buttons, placeholders,
+toasts, validation errors, accessible names, image alternatives, navigation, metadata, list status controls, and the
+empty, error, and loading states.
 
 ## Rendering and formatting
 

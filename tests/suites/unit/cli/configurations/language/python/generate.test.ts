@@ -39,13 +39,27 @@ test('ignores of one test path share one Ruff per-file-ignores list', async () =
     const ignored = parse(
         await buildGeneratedFile(
             buildSandboxSettings(['python', 'pytest'], {
-                tables: '[[ignore]]\ncheck = "python/ruff"\nrule = "S101"\npaths = ["**/test_*.py"]\nreason = "The sandbox uses deliberate assertions."\n[[ignore]]\ncheck = "python/ruff"\nrule = "D103"\npaths = ["**/test_*.py"]\nreason = "Samples are documented by their names."\n',
+                tables: '[[ignore]]\ncheck = "python/ruff"\nrule = "D102"\npaths = ["**/test_*.py"]\nreason = "Samples are documented by their names."\n[[ignore]]\ncheck = "python/ruff"\nrule = "D103"\npaths = ["**/test_*.py"]\nreason = "Samples are documented by their names."\n',
             }),
             getManifestTarget('python', 'ruff.toml'),
             { 'example.py': 'value = 1\n' },
         ),
     ) as RuffConfig;
-    expect(ignored.lint['per-file-ignores']?.['../../../../**/test_*.py']).toStrictEqual(['S101', 'D103']);
+    expect(ignored.lint['per-file-ignores']?.['../../../../**/test_*.py']).toStrictEqual(['S101', 'D102', 'D103']);
+});
+
+test('Ruff accepts an assert in the Python test paths and no other file', async () => {
+    const ruff = parse(
+        await buildGeneratedFile(buildSandboxSettings(['python']), getManifestTarget('python', 'ruff.toml'), {
+            'example.py': 'value = 1\n',
+        }),
+    ) as RuffConfig;
+    expect(ruff.lint['per-file-ignores']).toStrictEqual({
+        '../../../../**/test_*.py': ['S101'],
+        '../../../../**/*_test.py': ['S101'],
+        '../../../../**/tests/**': ['S101'],
+        '../../../../**/conftest.py': ['S101'],
+    });
 });
 
 test('Ruff takes its style from a format override that names every Python file', async () => {

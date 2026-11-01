@@ -251,18 +251,9 @@ export const BASE_SELECTORS = [
         message: 'Do not assert to never to silence the type system.',
     },
     {
-        selector: String.raw`LogicalExpression[operator=/^(\|\||\?\?)$/][right.type="ObjectExpression"][right.properties.length=0]`,
-        message: 'An empty-object fallback hides a missing value. Handle the missing case.',
-    },
-    {
         selector:
             'NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type="ObjectExpression"]) > :matches(Literal.arguments:first-child[value=/^[a-z]/], TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/])',
         message: 'Start an error message with a capital letter.',
-    },
-    {
-        selector:
-            'CallExpression:matches([callee.property.name=/^(debug|info|warn|error|fatal|trace)$/], [callee.property.name="log"][callee.object.name!="console"]) > TemplateLiteral.arguments:first-child[expressions.length>0]',
-        message: 'Log a stable message and pass the values as fields.',
     },
 ] as const;
 

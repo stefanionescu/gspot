@@ -152,7 +152,6 @@ export const SWIFTLINT_DEFAULT_LEVEL_OFF = [
     'file_name_no_space',
     'file_types_order',
     'final_test_case',
-    'force_unwrapping',
     'function_body_length',
     'function_default_parameter_at_end',
     'function_parameter_count',

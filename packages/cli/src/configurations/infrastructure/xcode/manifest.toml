@@ -54,7 +54,6 @@ why = "An image set with no image draws nothing at run time."
 example = "An asset set that no source file or build setting names reports `unused-asset`. Delete it, or reference it where the app loads it."
 files = { paths = ["**/*.xcassets/**"], extensions = [".swift", ".storyboard", ".xib", ".plist", ".pbxproj", ".xcconfig"] }
 help = "Delete the asset, or name it in the code that loads it."
-level = "all"
 name = "unused-assets"
 runs = "scope"
 stage = "commit"

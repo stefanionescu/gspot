@@ -83,6 +83,13 @@ export const RUFF_ISORT = {
     'force-sort-within-sections': true,
 } as const;
 
+export const RUFF_PATH_RULES = {
+    '**/test_*.py': ['S101'],
+    '**/*_test.py': ['S101'],
+    '**/tests/**': ['S101'],
+    '**/conftest.py': ['S101'],
+} as const;
+
 export const RUFF_ALWAYS_OFF = [
     'COM812',
     'COM819',

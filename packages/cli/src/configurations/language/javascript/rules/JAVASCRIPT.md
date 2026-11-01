@@ -46,6 +46,11 @@ explain what each one does. Browser code imports no server implementation.
 - Use `??` when only `null` and `undefined` require a fallback. Do not use `||` when an empty string, zero, or false has
   a valid meaning.
 - Name regular expressions after the value or contract they validate.
+
+### Indexed reads
+
+<!-- level: all -->
+
 - Check indexed reads when a value can have no result.
 
 ## Objects and functions

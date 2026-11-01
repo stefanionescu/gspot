@@ -167,6 +167,7 @@ basic = [
     "Q",
     "RET501",
     "RET502",
+    "RET503",
     "RSE",
     "RUF005",
     "RUF006",
@@ -194,6 +195,7 @@ basic = [
     "RUF06",
     "RUF1",
     "RUF2",
+    "S101",
     "S102",
     "S103",
     "S104",
@@ -202,6 +204,7 @@ basic = [
     "S2",
     "S30",
     "S310",
+    "S311",
     "S312",
     "S313",
     "S314",
@@ -285,7 +288,6 @@ all = [
     "PLW16",
     "PLW29",
     "PTH",
-    "RET503",
     "RET504",
     "RET505",
     "RET506",
@@ -297,8 +299,6 @@ all = [
     "RUF012",
     "RUF046",
     "RUF059",
-    "S101",
-    "S311",
     "SIM108",
     "SIM114",
     "SIM116",
@@ -406,7 +406,6 @@ why = "An import that works through somebody else's dependency breaks the day th
 example = "A function that no Python file of the scope calls reports `unused-function`. Delete it. A file of hooks that a framework calls by name gets an ignore for its path."
 files = { extensions = [".py"] }
 help = "Delete the unused definition or the unreachable code."
-level = "all"
 name = "vulture"
 runs = "scope"
 stage = "push"
