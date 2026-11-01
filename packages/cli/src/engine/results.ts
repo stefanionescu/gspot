@@ -7,7 +7,7 @@ import { listCheckedFiles } from '#cli/engine/files.ts';
 import { INCOMPLETE_STATUSES } from '#cli/config/engine.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
-import { hasRuleOutput } from '#cli/engine/outputs/formats.ts';
+import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
 import type { CheckResult, CheckSession, BuiltInCheck, CheckRunOptions } from '#cli/types/engine/run.ts';
 
@@ -22,7 +22,7 @@ export function formatExplainCommand(finding: Pick<Finding, 'check' | 'rule'>): 
     if (
         finding.rule !== undefined &&
         found !== undefined &&
-        hasRuleOutput(found.check) &&
+        OUTPUT_FORMATS[found.check.output.format].namesRules(found.check.output) &&
         findToolName(found.check) !== undefined
     )
         argumentsList.push(finding.rule);

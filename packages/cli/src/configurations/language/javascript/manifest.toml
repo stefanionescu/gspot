@@ -276,7 +276,7 @@ filenames = ["package.json"]
 tags = ["shebang:node"]
 
 [check.output]
-children = "messages"
+children = ["messages"]
 format = "json"
 
 [check.output.fields]

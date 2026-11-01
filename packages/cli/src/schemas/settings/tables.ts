@@ -3,14 +3,10 @@ import semver from 'semver';
 import { isTable } from '#cli/system/tables.ts';
 import parseExpression from 'spdx-expression-parse';
 import { SETTING_LANGUAGES } from '#cli/config/manifests.ts';
+import { commandSchema } from '#cli/schemas/manifests/checks.ts';
 import type { ImportRule, SettingsError, NamingCategory, SettingLanguage } from '#cli/types/settings.ts';
+import { nonemptyStringSchema, namingOverrideSchema, operatingSystemSchema } from '#cli/schemas/manifests/tools.ts';
 
-import {
-    commandSchema,
-    nonemptyStringSchema,
-    namingOverrideSchema,
-    operatingSystemSchema,
-} from '#cli/schemas/manifests/tools.ts';
 import {
     allowReasonedValue,
     relativePathSchema,

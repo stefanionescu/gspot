@@ -284,7 +284,7 @@ export const CI_CHECKS = {
         id: 'project/syntax',
         stage: 'commit',
         paths: ['*.sh'],
-        output: { format: 'lines' },
+        output: { format: 'regex', pattern: '(?<message>.+)' },
     },
     audit: { id: 'project/audit', stage: 'manual', paths: ['*.sh'] },
     ignore: [

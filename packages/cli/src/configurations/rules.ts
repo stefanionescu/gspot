@@ -3,7 +3,7 @@ import type { Check } from '#cli/types/manifests.ts';
 import { readLintRuleDocs } from '#cli/tools/rules.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
-import { hasRuleOutput } from '#cli/engine/outputs/formats.ts';
+import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import type { Session, LintRuleDocs, RuleDocsOptions } from '#cli/types/tools.ts';
 
 /**
@@ -22,7 +22,7 @@ export async function readCheckRuleDocs(
 ): Promise<LintRuleDocs | undefined> {
     const ruleDocs = CHECK_CODE[check.id]?.ruleDocs;
     if (ruleDocs !== undefined) return Object.hasOwn(ruleDocs, identifier) ? ruleDocs[identifier] : undefined;
-    const tool = hasRuleOutput(check) ? findToolName(check) : undefined;
+    const tool = OUTPUT_FORMATS[check.output.format].namesRules(check.output) ? findToolName(check) : undefined;
     if (tool === undefined) return undefined;
     const options: RuleDocsOptions = {};
     if (session !== undefined) {

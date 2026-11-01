@@ -62,7 +62,7 @@ example = "A Compose service with the unknown key `bogus` fails to parse. Remove
 files = { paths = ["**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose.{yml,yaml}", "**/compose.*.{yml,yaml}", "**/compose-*.{yml,yaml}"] }
 help = "Read the message Compose prints; it names the key and the service."
 name = "compose"
-output = { format = "lines" }
+output = { format = "regex", pattern = "^\\s*(?<message>\\S.*)$" }
 runs = "scope"
 stage = "push"
 summary = "Parses every Compose file with `docker compose config`, which needs no running daemon."
@@ -84,7 +84,7 @@ exit_codes = [10]
 files = { paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "!**/*.dockerignore"] }
 help = "Change the file the way the message says."
 name = "trivy-config"
-output = { format = "json", list = "Results", children = "Misconfigurations", fields = { file = "Target", line = "CauseMetadata.StartLine", rule = "ID", message = "Message" } }
+output = { format = "json", list = "Results", children = ["Misconfigurations"], fields = { file = "Target", line = "CauseMetadata.StartLine", rule = "ID", message = "Message" } }
 run_in_copy = true
 runs = "scope"
 stage = "push"

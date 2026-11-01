@@ -4,9 +4,10 @@ import { commitsSchema } from '#cli/schemas/settings/rules.ts';
 import type { ToolTableSchemas } from '#cli/types/settings.ts';
 import { BUILD_SCRIPT } from '#cli/config/settings/detected.ts';
 import { FROZEN_ALL, FROZEN_NONE } from '#cli/config/parsers.ts';
+import { commandSchema } from '#cli/schemas/manifests/checks.ts';
+import { nonemptyStringSchema } from '#cli/schemas/manifests/tools.ts';
 import { FROZEN_VERSION, TABLE_DESCRIPTIONS } from '#cli/config/settings/schema.ts';
 import { hooksSchema, generalTableSchemas } from '#cli/schemas/settings/general.ts';
-import { commandSchema, nonemptyStringSchema } from '#cli/schemas/manifests/tools.ts';
 import { ciFields, namingSchema, pythonSchema, ruleFilesSchema } from '#cli/schemas/settings/tables.ts';
 import { toolsSchema, javascriptSchema, toolConfigurationSchemas } from '#cli/schemas/settings/tools.ts';
 

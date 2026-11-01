@@ -33,7 +33,7 @@ async function createVerbositySandbox(
                     {
                         id: 'example/findings',
                         command: findingsCommand,
-                        output: { format: 'lines' },
+                        output: { format: 'regex', pattern: '(?<message>.+)' },
                         paths: ['source.txt'],
                         stage: 'commit',
                     },

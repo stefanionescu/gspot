@@ -180,7 +180,7 @@ test('a check with malformed JSON reports an error, and the other checks keep th
         command: reporter,
         paths: ['source.txt'],
         stage: 'commit',
-        output: { format: name === 'broken' ? 'json' : 'lines' },
+        output: name === 'broken' ? { format: 'json' } : { format: 'regex', pattern: '(?<message>.+)' },
     }));
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: checks }) }),

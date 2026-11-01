@@ -1,11 +1,14 @@
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
-import { outputSchema } from '#cli/schemas/manifests/tools.ts';
 import { parseJsonFindings } from '#cli/engine/outputs/json.ts';
+import { outputSchema } from '#cli/schemas/manifests/checks.ts';
+import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 
 import {
     FIX_FIELD_CASES,
+    MARKDOWN_REPORT,
     TWO_LEVEL_FORMAT,
     EMPTY_JSON_CASES,
     FLAT_JSON_FINDINGS,
@@ -54,7 +57,7 @@ test.each([...FIX_FIELD_CASES])(
     (name, fields, expected) => {
         const output = {
             format: 'json' as const,
-            children: 'messages',
+            children: ['messages'],
             fields: { file: 'filePath', message: 'message', fixable: 'fix' },
         };
         const stdout = JSON.stringify([{ filePath: '/repo/a.js', messages: [{ message: name, ...fields }] }]);
@@ -93,7 +96,7 @@ test('lists nested two levels down read the file from the top and join several m
     expect([finding?.file, finding?.rule, finding?.message]).toStrictEqual([
         'bun.lock',
         'GHSA-1',
-        'qs 6.15.3 Denial of service.',
+        'qs: 6.15.3: Denial of service.',
     ]);
 });
 
@@ -107,3 +110,23 @@ test.each([...INVALID_FINDING_REPORTS])(
         expect(() => parseJsonReport('x/y', output, stdout)).toThrow(new Error(message));
     },
 );
+
+test('a markdownlint JSON result becomes a finding', async () => {
+    await using sandbox = await testdir({ 'sample.md': '<span>Content</span>\n' });
+
+    const check = getShippedCheck('markdown/markdownlint');
+    expect(
+        parseOutput(check, JSON.stringify([MARKDOWN_REPORT]), '', { root: sandbox.path, cwd: sandbox.path }),
+    ).toStrictEqual([
+        {
+            check: check.id,
+            file: 'sample.md',
+            line: 1,
+            column: 1,
+            rule: 'MD033',
+            message: 'Inline HTML: Element: span',
+            help: check.help,
+            fixable: false,
+        },
+    ]);
+});

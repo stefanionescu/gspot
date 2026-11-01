@@ -78,7 +78,7 @@ export function buildReportingCheck(
         command: buildProgramCommand('fakes/tool', '--print-arguments', '--exit', '1', '--', '{files}'),
         paths: options.paths,
         stage: options.stage,
-        output: { format: 'lines' },
+        output: { format: 'regex', pattern: '(?<message>.+)' },
     };
 }
 

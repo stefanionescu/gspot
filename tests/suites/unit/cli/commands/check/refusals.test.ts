@@ -169,7 +169,7 @@ test('a linked .gspot folder fails check, and nothing outside changes', async ()
                         paths: ['source.txt'],
                         stage: 'commit',
                         command: buildProgramCommand('fakes/tool', '--stdout', 'Exact finding\n', '--exit', '1'),
-                        output: { format: 'lines' },
+                        output: { format: 'regex', pattern: '(?<message>.+)' },
                     },
                 ],
             }),

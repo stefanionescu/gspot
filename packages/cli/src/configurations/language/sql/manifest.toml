@@ -40,7 +40,7 @@ exit_codes = [1]
 fix = ["sqlfluff", "fix", "--config", "{config_file:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "{files}"]
 help = "Run `gspot check --fix`."
 name = "sqlfluff"
-output = { format = "json", children = "violations", fields = { file = "filepath", line = "start_line_no", column = "start_line_pos", rule = "code", message = "description" } }
+output = { format = "json", children = ["violations"], fields = { file = "filepath", line = "start_line_no", column = "start_line_pos", rule = "code", message = "description" } }
 stage = "commit"
 summary = "Lints every SQL file for layout, capitalization, aliasing, and ambiguous references, in the dialect the database configuration names."
 why = "When every SQL file follows one style, a reviewer can focus on what each statement does."

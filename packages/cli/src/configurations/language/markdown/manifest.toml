@@ -34,7 +34,7 @@ exit_codes = [1]
 fix = ["markdownlint-cli2", "--fix", "--no-globs", "--config", "{config_file:markdownlint-cli2}", "{files:prefix=:}"]
 help = "Run `gspot check --fix` for the rules that fix themselves; read the rule name for the rest."
 name = "markdownlint"
-output = { format = "markdownlint" }
+output = { format = "json", fields = { file = "fileName", line = "lineNumber", column = "errorRange.0", rule = "ruleNames.0", message = ["ruleDescription", "errorDetail", "errorContext"], fixable = "fixInfo" } }
 run_in_copy = true
 stage = "commit"
 summary = "Checks every Markdown file against markdownlint with the shipped rule set. In an `.mdx` page, the rules start after the leading import and export blocks."

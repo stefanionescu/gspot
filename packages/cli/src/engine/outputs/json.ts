@@ -45,12 +45,9 @@ function buildJsonFinding(output: ToolOutput, sources: unknown[]): Finding {
     const { check, help, output: format } = output;
     if (sources.some((source) => source === null || typeof source !== 'object' || Array.isArray(source)))
         throw new GspotError('output', INVALID_FINDING_MESSAGE);
-    const fields: Record<string, string | undefined> | undefined = format.fields;
+    const fields: Record<string, string | string[] | undefined> | undefined = format.fields;
     const getFieldValues = (name: string) =>
-        (fields?.[name] ?? '')
-            .split(' ')
-            .filter((path) => path !== '')
-            .map((path) => sources.map((source) => findValueAt(source, path.split('.'))));
+        [fields?.[name] ?? []].flat().map((path) => sources.map((source) => findValueAt(source, path.split('.'))));
     const getField = (name: string): string | undefined => {
         const joined = getFieldValues(name)
             .map(
@@ -62,7 +59,7 @@ function buildJsonFinding(output: ToolOutput, sources: unknown[]): Finding {
                         .find((value) => value !== undefined) ?? '',
             )
             .filter((text) => text !== '')
-            .join(' ');
+            .join(': ');
         return joined === '' ? undefined : joined;
     };
     const message = getField('message');
@@ -73,7 +70,9 @@ function buildJsonFinding(output: ToolOutput, sources: unknown[]): Finding {
         file,
         message,
         help,
-        fixable: getFieldValues('fixable').some((values) => values.some((value) => value !== undefined)),
+        fixable: getFieldValues('fixable').some((values) =>
+            values.some((value) => value !== undefined && value !== null),
+        ),
     };
     setPosition(finding, format.line_base ?? 1, getField('line'), getField('column'));
     const rule = getField('rule');
@@ -98,8 +97,7 @@ export function parseJsonFindings(output: ToolOutput): Finding[] {
         if (!(error instanceof GspotError)) throw error;
         throw buildJsonSyntaxError(stdout, error);
     }
-    const keys = format.children === undefined ? [] : format.children.split('.');
     return listAt(parsed, format.list).flatMap((element) =>
-        listChains([element], keys).map((chain) => buildJsonFinding(output, chain)),
+        listChains([element], format.children ?? []).map((chain) => buildJsonFinding(output, chain)),
     );
 }

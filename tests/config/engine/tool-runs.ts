@@ -17,7 +17,7 @@ export const BASE_CHECK = {
     summary: '',
     why: '',
     help: '',
-    output: { format: 'lines' as const },
+    output: { format: 'regex' as const, pattern: '(?<message>.+)' },
 };
 
 export const LOCATED_CHECK = {
@@ -65,7 +65,7 @@ export const FILELESS_CHECKS = [
         id: 'sandbox/coverage',
         output: { format: 'regex', pattern: '^ERROR: (?<message>.*)$' },
     },
-    { ...BASE_CHECK, id: 'sandbox/lines', output: { format: 'lines' } },
+    { ...BASE_CHECK, id: 'sandbox/plain', output: { format: 'regex', pattern: '(?<message>.+)' } },
 ] as const;
 
 export const REGEX_OUTPUT_CASES = [

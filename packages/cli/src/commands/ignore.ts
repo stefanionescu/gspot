@@ -7,7 +7,7 @@ import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { ignoreSchema } from '#cli/schemas/settings/file.ts';
-import { hasRuleOutput } from '#cli/engine/outputs/formats.ts';
+import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { readCheckRuleDocs } from '#cli/configurations/rules.ts';
 import { IGNORE_CHECK_MESSAGE } from '#cli/config/commands/edits.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
@@ -30,7 +30,10 @@ async function assertDocumentedRule(
     const { root, settings } = session;
     const shippedCheck = listChecksById(readConfigurations().values()).get(checkId)?.check;
     const check = settings.commandChecks[checkId] ?? shippedCheck;
-    if (check === undefined || (!hasRuleOutput(check) && CHECK_CODE[checkId]?.ruleDocs === undefined))
+    if (
+        check === undefined ||
+        (!OUTPUT_FORMATS[check.output.format].namesRules(check.output) && CHECK_CODE[checkId]?.ruleDocs === undefined)
+    )
         throw new GspotError('arguments', `${checkId} does not report lint rules. Omit --rule.`);
     const docs = await readCheckRuleDocs(root, check, rule, session);
     if (docs === undefined) throw new GspotError('arguments', `gspot does not know rule ${rule} of ${checkId}.`);

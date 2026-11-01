@@ -4,7 +4,7 @@ import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { getTool, findToolName } from '#cli/tools/pins.ts';
 import type { CommandCheck } from '#cli/types/settings.ts';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
-import { hasRuleOutput } from '#cli/engine/outputs/formats.ts';
+import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { readCheckRuleDocs } from '#cli/configurations/rules.ts';
 import type { Session, LintRuleDocs } from '#cli/types/tools.ts';
 import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
@@ -231,7 +231,9 @@ export async function explainLintRule(
     const configurationsByName = readConfigurations();
     const found = listChecksById(configurationsByName.values()).get(checkId);
     if (found === undefined) return undefined;
-    const tool = hasRuleOutput(found.check) ? findToolName(found.check) : undefined;
+    const tool = OUTPUT_FORMATS[found.check.output.format].namesRules(found.check.output)
+        ? findToolName(found.check)
+        : undefined;
     const docs = await readCheckRuleDocs(root, found.check, identifier, session);
     if (docs === undefined) return undefined;
     const page = docs.url;

@@ -47,7 +47,7 @@ async function replaceChildScopeChecks(session: Session): Promise<void> {
         runs: 'scope',
         cwd: 'root',
         command: [join(session.root, `${GSPOT_FOLDER}/mock-tsc`)],
-        output: { format: 'lines' },
+        output: { format: 'regex', pattern: '(?<message>.+)' },
         files: configuration.files,
         fix: buildProgramCommand('fakes/tool', '--text', 'restored', '{scope}/source.ts'),
     };

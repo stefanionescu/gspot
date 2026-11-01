@@ -8,13 +8,11 @@ export const CHECK_OUTPUTS = [
         file_pattern: String.raw`^(?<file>\S.*):$`,
         pattern: String.raw`^\s+(?<line>\d+): (?<message>.*)$`,
     },
-    { format: 'lines' },
     { format: 'none' },
     { format: 'json', fields: { file: 'file', line: 'line', rule: 'rule', message: 'message' } },
     { format: 'knip' },
     { format: 'semgrep' },
     { format: 'typos' },
-    { format: 'markdownlint' },
 ] as const;
 
 export const OUTPUT_PARSE_RESULTS = {
@@ -25,20 +23,6 @@ export const OUTPUT_PARSE_RESULTS = {
     grouped: {
         empty: { findings: [] },
         foreign: { findings: [] },
-    },
-    lines: {
-        empty: { findings: [] },
-        foreign: {
-            findings: [
-                {
-                    check: 'sandbox/output',
-                    file: '',
-                    message: 'not the output of any tool {',
-                    help: 'Correct the sandbox file.',
-                    fixable: false,
-                },
-            ],
-        },
     },
     none: {
         empty: { findings: [] },
@@ -59,10 +43,6 @@ export const OUTPUT_PARSE_RESULTS = {
     typos: {
         empty: { findings: [] },
         foreign: { error: 'Typos printed output that gspot cannot read.' },
-    },
-    markdownlint: {
-        empty: { error: 'Markdownlint printed output that gspot cannot read.' },
-        foreign: { error: 'Markdownlint printed output that gspot cannot read.' },
     },
 } as const;
 
@@ -131,8 +111,8 @@ export const EMPTY_JSON_CASES = [
 export const TWO_LEVEL_FORMAT = {
     format: 'json' as const,
     list: 'results',
-    children: 'packages.vulnerabilities',
-    fields: { file: 'source.path', rule: 'id', message: 'package.name package.version summary' },
+    children: ['packages', 'vulnerabilities'],
+    fields: { file: 'source.path', rule: 'id', message: ['package.name', 'package.version', 'summary'] },
 } as const;
 
 export const NESTED_LIST_OUTPUT = {
@@ -152,13 +132,13 @@ export const NESTED_LIST_OUTPUT = {
 export const FIX_FIELD_CASES = [
     ['absent', {}, false],
     ['object', { fix: { range: [0, 1], text: '' } }, true],
-    ['null', { fix: null }, true],
+    ['null', { fix: null }, false],
 ] as const;
 
 export const NESTED_LIST_FORMAT = {
     format: 'json' as const,
     list: 'files',
-    children: 'violations',
+    children: ['violations'],
     fields: { file: 'filepath', line: 'start_line_no', rule: 'code', message: 'description' },
 } as const;
 
@@ -189,7 +169,7 @@ export const INVALID_FINDING_REPORTS = [
     },
     {
         name: 'a nested value that is not a list',
-        output: { format: 'json', children: 'messages' },
+        output: { format: 'json', children: ['messages'] },
         stdout: '[{"messages":{}}]',
         message: 'Required JSON report array messages is missing or invalid.',
     },

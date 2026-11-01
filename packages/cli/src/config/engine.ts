@@ -98,6 +98,8 @@ export const MISSING_PATH_CODES: ReadonlySet<string> = new Set(['ENOENT', 'ENOTD
 
 export const FILE_GROUP = '(?<file>';
 
+export const RULE_GROUP = '(?<rule>';
+
 export const TAPLO_OUTPUTS = [
     {
         format: 'regex',

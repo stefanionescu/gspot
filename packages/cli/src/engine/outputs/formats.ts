@@ -2,32 +2,15 @@ import { realpathSync } from 'node:fs';
 import { sep, posix, isAbsolute } from 'node:path';
 import { DRIVE_LETTER } from '#cli/config/system.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
-import type { Check } from '#cli/types/manifests.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { parseJsonFindings } from '#cli/engine/outputs/json.ts';
 import { parseKnipFindings } from '#cli/engine/outputs/knip.ts';
 import { parseTyposFindings } from '#cli/engine/outputs/typos.ts';
 import { parseSemgrepFindings } from '#cli/engine/outputs/semgrep.ts';
-import { parseMarkdownlintFindings } from '#cli/engine/outputs/markdownlint.ts';
-import { FILE_GROUP, TAPLO_OUTPUTS, MISSING_PATH_CODES } from '#cli/config/engine.ts';
-import { parseLineFindings, parseRegexFindings, parseGroupedFindings } from '#cli/engine/outputs/text.ts';
+import { parseRegexFindings, parseGroupedFindings } from '#cli/engine/outputs/text.ts';
+import { FILE_GROUP, RULE_GROUP, TAPLO_OUTPUTS, MISSING_PATH_CODES } from '#cli/config/engine.ts';
 import type { Finding, CheckOutput, OutputPaths, ParsingCheck, OutputParser } from '#cli/types/engine/tool-runs.ts';
-
-/**
-Tell whether the output of a check names the lint rule of each finding.
-
-@param check the output format and field mappings to inspect.
-@returns whether each finding of the check holds a rule.
-*/
-export function hasRuleOutput(check: Check): boolean {
-    const { output } = check;
-    if (['semgrep', 'knip', 'markdownlint'].includes(output.format)) return true;
-    if (output.format === 'json') return output.fields?.rule !== undefined;
-    if (output.format === 'regex' || output.format === 'grouped')
-        return output.fields?.rule !== undefined || output.pattern.includes('(?<rule>');
-    return false;
-}
 
 function readCanonicalPath(path: string): string | undefined {
     try {
@@ -55,22 +38,30 @@ function listRootPrefixes(root: string): string[] {
 }
 
 export const OUTPUT_FORMATS = {
-    none: { parse: () => [], namesFiles: () => false },
+    none: { parse: () => [], namesFiles: () => false, namesRules: () => false },
     json: {
         parse: parseJsonFindings,
         namesFiles: (output) => output.fields?.file !== undefined,
+        namesRules: (output) => output.fields?.rule !== undefined,
     },
-    typos: { parse: parseTyposFindings, namesFiles: () => true },
+    typos: { parse: parseTyposFindings, namesFiles: () => true, namesRules: () => false },
     taplo: {
         parse: (output) => TAPLO_OUTPUTS.flatMap((format) => parseRegexFindings({ ...output, output: format })),
         namesFiles: () => true,
+        namesRules: () => false,
     },
-    markdownlint: { parse: parseMarkdownlintFindings, namesFiles: () => true },
-    knip: { parse: parseKnipFindings, namesFiles: () => true },
-    semgrep: { parse: parseSemgrepFindings, namesFiles: () => true },
-    lines: { parse: parseLineFindings, namesFiles: () => false },
-    regex: { parse: parseRegexFindings, namesFiles: (output) => (output.pattern ?? '').includes(FILE_GROUP) },
-    grouped: { parse: parseGroupedFindings, namesFiles: (output) => (output.file_pattern ?? '').includes(FILE_GROUP) },
+    knip: { parse: parseKnipFindings, namesFiles: () => true, namesRules: () => true },
+    semgrep: { parse: parseSemgrepFindings, namesFiles: () => true, namesRules: () => true },
+    regex: {
+        parse: parseRegexFindings,
+        namesFiles: (output) => (output.pattern ?? '').includes(FILE_GROUP),
+        namesRules: (output) => (output.pattern ?? '').includes(RULE_GROUP),
+    },
+    grouped: {
+        parse: parseGroupedFindings,
+        namesFiles: (output) => (output.file_pattern ?? '').includes(FILE_GROUP),
+        namesRules: (output) => (output.pattern ?? '').includes(RULE_GROUP),
+    },
 } satisfies Record<CheckOutput['format'], OutputParser>;
 
 /**

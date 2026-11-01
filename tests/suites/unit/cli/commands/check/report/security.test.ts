@@ -47,7 +47,7 @@ test('GitHub Actions fences untrusted report text with a unique token and leaves
                         id: 'project/output',
                         stage: 'commit',
                         paths: ['source.txt'],
-                        output: { format: 'lines' },
+                        output: { format: 'regex', pattern: '(?<message>.+)' },
                         command: buildProgramCommand(
                             'fakes/tool',
                             '--stdout',

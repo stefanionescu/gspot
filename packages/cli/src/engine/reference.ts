@@ -1,7 +1,7 @@
 import { quoteArgument } from '#cli/system/text.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
 import { getTool, findToolName } from '#cli/tools/pins.ts';
-import { hasRuleOutput } from '#cli/engine/outputs/formats.ts';
+import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { SETTING_ONLY_PLACEHOLDER } from '#cli/config/engine.ts';
 import type { CheckDescription } from '#cli/types/engine/plan.ts';
 import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
@@ -41,7 +41,7 @@ export function describeCheck(check: Check, configurations: Configuration[]): Ch
         ),
         turnOff: {
             paths: `gspot ignore ${quoteArgument(check.id)} --paths "<path>" --reason "<why>"`,
-            rule: hasRuleOutput(check)
+            rule: OUTPUT_FORMATS[check.output.format].namesRules(check.output)
                 ? `gspot ignore ${quoteArgument(check.id)} --rule <rule> --reason "<why>"`
                 : undefined,
         },

@@ -60,17 +60,3 @@ export function parseGroupedFindings(output: ToolOutput): Finding[] {
     }
     return findings;
 }
-
-/**
-Read one finding from each nonempty output line.
-
-@param output the tool output to read.
-*/
-export function parseLineFindings(output: ToolOutput): Finding[] {
-    const { check, text, help } = output;
-    return text
-        .split('\n')
-        .map((line) => line.trim())
-        .filter((line) => line !== '')
-        .map((line) => ({ check, file: '', message: line, help, fixable: false }));
-}

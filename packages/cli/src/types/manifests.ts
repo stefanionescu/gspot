@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 import type { KeyPath } from '#cli/types/parsers.ts';
-import type { outputSchema } from '#cli/schemas/manifests/tools.ts';
+import type { outputSchema } from '#cli/schemas/manifests/checks.ts';
 import type { PATH_ROLES, REASON_DESCRIPTIONS } from '#cli/config/manifests.ts';
 import type { checkSchema, manifestSchema } from '#cli/schemas/manifests/manifest.ts';
 

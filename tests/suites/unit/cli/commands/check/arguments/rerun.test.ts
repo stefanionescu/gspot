@@ -16,7 +16,7 @@ test('a rerun line quotes a check name and protects a path beginning with a dash
                         stage: 'commit',
                         paths: ['*.txt'],
                         command: buildProgramCommand('fakes/tool', '--line', 'A finding.', '--exit', '1', '{file}'),
-                        output: { format: 'lines' },
+                        output: { format: 'regex', pattern: '(?<message>.+)' },
                     },
                 ],
             }),

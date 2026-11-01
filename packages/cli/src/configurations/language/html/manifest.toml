@@ -10,7 +10,7 @@ extensions = [".html", ".htm"]
 [[tool]]
 name = "html-validate"
 npm = "html-validate"
-output = { format = "json", children = "messages", fields = { file = "filePath", line = "line", column = "column", rule = "ruleId", message = "message" } }
+output = { format = "json", children = ["messages"], fields = { file = "filePath", line = "line", column = "column", rule = "ruleId", message = "message" } }
 replace = [".htmlvalidate.json", ".htmlvalidate.js", ".htmlvalidate.cjs"]
 suppression = { marker = "^<!--\\s*\\[?html-validate-disable(?:-next|-block)?(?=\\s|\\]|$)", reason = "(?: -- |: )(?<reason>\\S(?:[\\s\\S]*?\\S)?)\\s*\\]?\\s*(?:--!?>)?$", example = "<!-- [html-validate-disable-next no-inline-style -- reason: the email client strips classes] -->" }
 version = "11.16.2"

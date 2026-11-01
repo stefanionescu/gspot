@@ -1,13 +1,12 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers.ts';
+import { outputSchema, commandCheckFields } from '#cli/schemas/manifests/checks.ts';
 
 import {
     levelSchema,
     regexSchema,
-    outputSchema,
     conditionSchema,
-    commandCheckFields,
     manifestToolSchema,
     nonemptyStringSchema,
     operatingSystemSchema,
