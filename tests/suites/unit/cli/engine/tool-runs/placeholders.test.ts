@@ -230,3 +230,17 @@ test('scalar placeholders select generated link files, scope, boolean settings a
         join('app', 'prettier.config.mjs'),
     );
 });
+
+test('a setting value that holds a placeholder stays literal', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash']),
+        'entry.sh': 'echo ready\n',
+    });
+    const session = buildCheckSession(await openSession(sandbox.path), CHECK_GENERATION);
+    const planned = planChecks(session, { stage: 'all', only: ['bash/shellcheck'] })[0]!;
+    planned.scope.settings.valuesByKey['example'] = '{root}/{scope}/{config_file:shellcheckrc}';
+    const substitutions = { scope: 'app', files: [], root: sandbox.path, indent: 4 };
+    expect(replacePlaceholders(session, planned, '{root}:{setting:example}', substitutions)).toBe(
+        `${sandbox.path}:{root}/{scope}/{config_file:shellcheckrc}`,
+    );
+});

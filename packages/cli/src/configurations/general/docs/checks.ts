@@ -8,7 +8,6 @@ import { find, read } from '#cli/system/files/reads.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { LICENSE_FILE } from '#cli/config/repository/files.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
 import { parseMiseTasks } from '#cli/parsers/projects/mise.ts';
 import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
@@ -17,9 +16,10 @@ import { PACKAGE_JSON, WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { joinScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { readCachedPackageJson } from '#cli/repository/dependencies.ts';
+import { readScalarSetting } from '#cli/engine/tool-runs/placeholders.ts';
 import { buildGitignoreMatcher } from '#cli/repository/files/gitignore.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
-import { replaceSettingPlaceholders } from '#cli/engine/tool-runs/placeholders.ts';
+import { LICENSE_FILE, SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
 import type { PathIndex, TaskNames, ProseLine } from '#cli/types/configurations/general.ts';
 import { listExecutableNames, includeParentFolders, listEnclosingFolders } from '#cli/system/paths.ts';
 
@@ -56,7 +56,9 @@ function listGeneratorPaths(planned: PlannedCheck): string[] {
     );
     for (const output of generatorOutputs) {
         if (output.kind === 'pattern') continue;
-        const path = replaceSettingPlaceholders(planned.scope.settings, output.path);
+        const path = output.path.replaceAll(SETTING_PLACEHOLDER, (_placeholder, name: string) =>
+            readScalarSetting(planned.scope.settings, name),
+        );
         if (path !== '') paths.push(path);
     }
     return paths;

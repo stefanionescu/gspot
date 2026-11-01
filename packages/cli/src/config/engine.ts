@@ -214,15 +214,7 @@ export const CONFIG_PLACEHOLDER = /\{config_file:(?<name>[a-z0-9-]+)\}/gu;
 
 export const LINK_FILE_PLACEHOLDER = /\{pointer:(?<name>[^}]+)\}/gu;
 
-export const LEVEL_PLACEHOLDER = /\{level:(?<defaultLevel>[^{}:]+):(?<all>[^{}:]+)\}/gu;
-
-export const SCOPE_PLACEHOLDER = '{scope}';
-
-export const ROOT_PLACEHOLDER = '{root}';
-
-export const INDENT_PLACEHOLDER = '{indent}';
-
-export const MESSAGE_FILE_PLACEHOLDER = '{message_file}';
+export const COMMAND_PLACEHOLDER = /\{(?<name>[a-z_]+)(?::(?<value>[^{}]+))?\}/gu;
 
 export const SETTING_ONLY_PLACEHOLDER = /^\{setting:(?<name>[a-z\d_.-]+)\}$/u;
 

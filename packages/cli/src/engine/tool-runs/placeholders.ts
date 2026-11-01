@@ -9,23 +9,18 @@ import { extractConfigName } from '#cli/engine/files.ts';
 import type { ScopeSettings } from '#cli/types/settings.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import type { CommandLine, ConfigTargets, Substitutions, CommandArgument } from '#cli/types/engine/tool-runs.ts';
 
 import {
     FILE_PLACEHOLDER,
-    ROOT_PLACEHOLDER,
     EACH_PLACEHOLDER,
     FILES_PLACEHOLDER,
-    SCOPE_PLACEHOLDER,
-    LEVEL_PLACEHOLDER,
-    INDENT_PLACEHOLDER,
     CONFIG_PLACEHOLDER,
+    COMMAND_PLACEHOLDER,
     LINK_FILE_PLACEHOLDER,
     WORKSPACE_PLACEHOLDER,
-    MESSAGE_FILE_PLACEHOLDER,
     SETTING_ONLY_PLACEHOLDER,
 } from '#cli/config/engine.ts';
 
@@ -184,24 +179,41 @@ export function listCopyFiles(session: CheckSession, planned: PlannedCheck, comm
 }
 
 /**
-Replace scalar setting placeholders with their scope values.
+Read the text of a scalar setting for a placeholder.
 
 @param scopeSettings the values of the scope.
-@param text the text with placeholders.
+@param name the dotted key.
 */
-export function replaceSettingPlaceholders(scopeSettings: ScopeSettings, text: string): string {
-    return text.replaceAll(SETTING_PLACEHOLDER, (_match, name: string) => {
-        const found = scopeSettings.valuesByKey[name];
-        if (Array.isArray(found))
-            throw new GspotError('settings', `List setting ${name} must occupy a whole command argument.`);
-        return typeof found === 'string' || typeof found === 'number' || typeof found === 'boolean'
-            ? String(found)
-            : '';
-    });
+export function readScalarSetting(scopeSettings: ScopeSettings, name: string): string {
+    const found = scopeSettings.valuesByKey[name];
+    if (Array.isArray(found))
+        throw new GspotError('settings', `List setting ${name} must occupy a whole command argument.`);
+    return typeof found === 'string' || typeof found === 'number' || typeof found === 'boolean' ? String(found) : '';
+}
+
+function buildPlaceholderReaders(
+    session: CheckSession,
+    planned: PlannedCheck,
+    substitutions: Substitutions,
+): Record<string, (value: string) => string> {
+    return {
+        setting: (name) => readScalarSetting(planned.scope.settings, name),
+        level: (levels) => levels.split(':')[session.settings.level === 'all' ? 1 : 0] as string,
+        config_file: (name) =>
+            join(substitutions.root, getConfigPath(session, planned, name))
+                .split('/')
+                .join(sep),
+        pointer: (name) => selectLinkFilePath(session, substitutions.scope, name).split('/').join(sep),
+        scope: () => (substitutions.scope === '' ? '.' : substitutions.scope),
+        root: () => substitutions.root,
+        indent: () => String(substitutions.indent),
+        message_file: () => substitutions.messageFile ?? '',
+    };
 }
 
 /**
-Expands a scalar command argument or environment value from the check scope.
+Expands a scalar command argument or environment value from the check scope. One pass reads the whole text, so a value
+that a setting supplies stays literal.
 
 @param session the repository and settings.
 @param planned the check and its scope.
@@ -214,22 +226,11 @@ export function replacePlaceholders(
     argument: string,
     substitutions: Substitutions,
 ): string {
-    return replaceSettingPlaceholders(planned.scope.settings, argument)
-        .replaceAll(LEVEL_PLACEHOLDER, (_match, defaultLevel: string, all: string) =>
-            session.settings.level === 'all' ? all : defaultLevel,
-        )
-        .replaceAll(CONFIG_PLACEHOLDER, (_match, name: string) =>
-            join(substitutions.root, getConfigPath(session, planned, name))
-                .split('/')
-                .join(sep),
-        )
-        .replaceAll(LINK_FILE_PLACEHOLDER, (_match, name: string) =>
-            selectLinkFilePath(session, substitutions.scope, name).split('/').join(sep),
-        )
-        .replaceAll(SCOPE_PLACEHOLDER, () => (substitutions.scope === '' ? '.' : substitutions.scope))
-        .replaceAll(ROOT_PLACEHOLDER, () => substitutions.root)
-        .replaceAll(INDENT_PLACEHOLDER, () => String(substitutions.indent))
-        .replaceAll(MESSAGE_FILE_PLACEHOLDER, () => substitutions.messageFile ?? '');
+    const readers = buildPlaceholderReaders(session, planned, substitutions);
+    return argument.replaceAll(
+        COMMAND_PLACEHOLDER,
+        (placeholder, name: string, value: string | undefined) => readers[name]?.(value ?? '') ?? placeholder,
+    );
 }
 
 /**
