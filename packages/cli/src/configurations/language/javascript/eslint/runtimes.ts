@@ -1,5 +1,8 @@
-import { escapeGlob } from '#cli/system/paths.ts';
+import { posix } from 'node:path';
 import type { Scope } from '#cli/types/settings.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+import type { DependencyFile } from '#cli/types/parsers.ts';
+import { escapeGlob, listEnclosingFolders } from '#cli/system/paths.ts';
 import { MISE_TASKS_GLOB } from '#cli/config/configurations/structure.ts';
 import type { EslintRuntime } from '#cli/types/configurations/language.ts';
 import { joinScope, isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
@@ -9,7 +12,9 @@ import { splitGlobs } from '#cli/configurations/language/javascript/eslint/files
 import {
     COMMONJS_FILES,
     NEXTJS_CONFIGURATION,
+    COMMONJS_PACKAGE_TYPE,
     ESLINT_SETTINGS_TABLE,
+    TYPELESS_JAVASCRIPT_FILES,
     ESLINT_BROWSER_CONFIGURATIONS,
 } from '#cli/config/configurations/javascript.ts';
 
@@ -49,14 +54,39 @@ function buildFrameworkRuntime(scope: Scope, escaped: string): EslintRuntime | u
     };
 }
 
+function readNearestPackageType(dependencyFiles: DependencyFile[], scopePath: string): string | undefined {
+    const packages = new Map(
+        dependencyFiles.filter((file) => file.kind === PACKAGE_JSON).map((file) => [file.path, file]),
+    );
+    const owner = listEnclosingFolders(scopePath)
+        .map((folder) => packages.get(posix.join(folder, PACKAGE_JSON)))
+        .find((file) => file !== undefined);
+    return owner === undefined ? undefined : (owner.moduleType ?? COMMONJS_PACKAGE_TYPE);
+}
+
+function buildPackageRuntime(scope: Scope, escaped: string, packageType: string | undefined): EslintRuntime[] {
+    if (packageType === undefined || scope.settings.configurations.includes(NEXTJS_CONFIGURATION)) return [];
+    const isCommonjs = packageType === COMMONJS_PACKAGE_TYPE;
+    return isCommonjs || scope.path !== ''
+        ? [
+              {
+                  scope: scope.path,
+                  runtime: isCommonjs ? COMMONJS_PACKAGE_TYPE : 'node',
+                  ...splitGlobs([joinScope(escaped, TYPELESS_JAVASCRIPT_FILES)]),
+              },
+          ]
+        : [];
+}
+
 /**
-Resolve one runtime per file from scoped framework defaults and your own runtime settings. More specific scopes and
-your later selectors win. Build scripts keep Node.js unless your own runtime names them.
+Resolve one runtime per file from the package type, scoped framework defaults, and your own runtime settings. More
+specific scopes and your later selectors win. Build scripts keep Node.js unless your own runtime names them.
 
 @param scopes every project scope.
+@param dependencyFiles the package manifests, whose type field decides how Node.js reads a `.js` file.
 @returns the runtimes, lowest priority first.
 */
-export function buildRuntimes(scopes: Scope[]): EslintRuntime[] {
+export function buildRuntimes(scopes: Scope[], dependencyFiles: DependencyFile[]): EslintRuntime[] {
     const blocks: EslintRuntime[] = [];
     const orderedScopes = scopes.toSorted((left, right) => compareScopeDepth(left.path, right.path));
     for (const scope of orderedScopes) {
@@ -67,6 +97,7 @@ export function buildRuntimes(scopes: Scope[]): EslintRuntime[] {
                 { scope: scopePath, runtime: 'node', ...splitGlobs([joinScope(escaped, '**/*')]) },
                 { scope: scopePath, runtime: 'commonjs', ...splitGlobs([joinScope(escaped, COMMONJS_FILES)]) },
             );
+        blocks.push(...buildPackageRuntime(scope, escaped, readNearestPackageType(dependencyFiles, scopePath)));
         const framework = buildFrameworkRuntime(scope, escaped);
         if (framework !== undefined) blocks.push(framework);
         blocks.push(

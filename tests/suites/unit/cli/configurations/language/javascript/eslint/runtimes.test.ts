@@ -120,3 +120,17 @@ test.each([...FRAMEWORK_RUNTIME_CASES])(
         ).toStrictEqual([WINDOW_UNDEFINED_MESSAGE, PROCESS_UNDEFINED_MESSAGE]);
     },
 );
+
+test('a typeless package lints its .js files as CommonJS and its .mjs files as a module', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript']),
+        'package.json': '{"private":true}\n',
+        'server.js': '',
+        'tool.mjs': '',
+    });
+    const eslint = await buildEslint(sandbox.path);
+    const configs = (await Promise.all(
+        ['server.js', 'tool.mjs'].map((path) => eslint.calculateConfigForFile(path)),
+    )) as { languageOptions: { sourceType: string } }[];
+    expect(configs.map(({ languageOptions }) => languageOptions.sourceType)).toStrictEqual(['commonjs', 'module']);
+});

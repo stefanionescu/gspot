@@ -189,7 +189,7 @@ export function buildEslintFile(planned: PlannedConfig): ConfigOutput {
     const { session } = planned;
     const eslintFile = buildPlannedEslintFile(planned);
     const { blockWriter } = eslintFile;
-    const runtimes = buildRuntimes(session.scopes);
+    const runtimes = buildRuntimes(session.scopes, session.repository.dependencyFiles);
     blockWriter.runtimes = runtimes;
     const boundaryBlocks = buildBoundaryBlocks(eslintFile);
     const ignoredGlobs = convertToGlobs([

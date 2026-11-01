@@ -162,6 +162,10 @@ export const SUPABASE_RULES = { 'gspot/no-unvalidated-json-body': 'error' } as c
 
 export const COMMONJS_FILES = '**/*.{cjs,cts}';
 
+export const TYPELESS_JAVASCRIPT_FILES = '**/*.{js,jsx}';
+
+export const COMMONJS_PACKAGE_TYPE = 'commonjs';
+
 export const ESLINT_BROWSER_CONFIGURATIONS = ['react', 'vue', 'svelte'] as const;
 
 export const JAVASCRIPT_BUNDLED_IMPORTS = { module: 'ESNext', moduleResolution: 'Bundler' } as const;
