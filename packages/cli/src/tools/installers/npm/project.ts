@@ -38,6 +38,7 @@ import {
     PACKAGE_MANAGER_ARGUMENTS,
     NPM_CONFIG_FOLDER_VARIABLE,
     LOCKFILE_CREDENTIAL_MESSAGE,
+    PACKAGE_MANAGER_SETTINGS_NAME,
     NPM_LOCKFILE_CREDENTIAL_MESSAGE,
 } from '#cli/config/tools/installers.ts';
 
@@ -92,6 +93,18 @@ async function runPackageManager(install: ToolInstall, request: PackageManagerRe
         );
     }
     return { environment: env, credentials };
+}
+
+function assertSettingsFree(install: ToolInstall): void {
+    const paths = install.writer
+        .list(GSPOT_FOLDER)
+        .filter((name) => PACKAGE_MANAGER_SETTINGS_NAME.test(name))
+        .map((name) => `${GSPOT_FOLDER}/${name}`);
+    if (paths.length > 0)
+        throw new GspotError(
+            'install',
+            `gspot runs the package manager in ${GSPOT_FOLDER} only when no package manager settings file sits there. Delete ${paths.join(', ')}, then run gspot install.`,
+        );
 }
 
 /**
@@ -162,6 +175,7 @@ Install the npm tool project in .gspot.
 export async function installNpmTools(install: NpmToolInstall): Promise<string> {
     const { root, toolConfigurations } = install.session;
     const packageManager = install.packageManager;
+    assertSettingsFree(install);
     await runPackageManager(install, {
         runFolder: join(root, GSPOT_FOLDER),
         packageManager,

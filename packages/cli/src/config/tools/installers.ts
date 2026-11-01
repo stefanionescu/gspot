@@ -286,20 +286,29 @@ export const PACKAGE_MANAGER_ARGUMENTS = {
         ],
     },
     bun: {
-        lockfile: ['install', '--lockfile-only', '--linker', 'hoisted', '--network-concurrency=1'],
-        install: ['install', '--frozen-lockfile', '--linker', 'hoisted'],
+        lockfile: ['install', '--lockfile-only', '--ignore-scripts', '--linker', 'hoisted', '--network-concurrency=1'],
+        install: ['install', '--frozen-lockfile', '--ignore-scripts', '--linker', 'hoisted'],
     },
     pnpm: {
-        lockfile: ['install', '--lockfile-only', '--node-linker=hoisted', '--config.auto-install-peers=false'],
+        lockfile: [
+            'install',
+            '--lockfile-only',
+            '--ignore-scripts',
+            '--node-linker=hoisted',
+            '--config.auto-install-peers=false',
+        ],
         install: [
             'install',
             '--frozen-lockfile',
+            '--ignore-scripts',
             '--ignore-workspace',
             '--node-linker=hoisted',
             '--config.auto-install-peers=false',
         ],
     },
 } as const;
+
+export const PACKAGE_MANAGER_SETTINGS_NAME = /^(?:\.npmrc|\.yarnrc.*|pnpm-workspace\.yaml|bunfig\.toml)$/u;
 
 export const NPM_CONFIG_FOLDER_VARIABLE = 'XDG_CONFIG_HOME';
 
