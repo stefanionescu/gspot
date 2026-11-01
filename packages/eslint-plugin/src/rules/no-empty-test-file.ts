@@ -14,9 +14,9 @@ export const noEmptyTestFile = createRule<[], 'empty'>({
         defaultOptions: [],
         type: 'suggestion',
         docs: {
-            level: 'none',
+            level: 'recommended',
             description:
-                'Reports a file named `*.test.*`, `*.spec.*`, or `*.cy.*` that declares no test: no `it`, `test`, `specify`, or `Deno.test` call in any of their forms, no titled Playwright `test.skip`, `test.fail`, or `test.fixme`, and no `ruleTester.run`. No config turns it on; gspot turns it on for the test files of each project.',
+                'Reports a file named `*.test.*`, `*.spec.*`, or `*.cy.*` that declares no test: no `it`, `test`, `specify`, or `Deno.test` call in any of their forms, no titled Playwright `test.skip`, `test.fail`, or `test.fixme`, and no `ruleTester.run`.',
             why: 'A test file without tests passes and checks nothing, so it hides that the tests it should hold are gone.',
             fix: 'Add the tests that the file is named for, or delete the file.',
             example:
