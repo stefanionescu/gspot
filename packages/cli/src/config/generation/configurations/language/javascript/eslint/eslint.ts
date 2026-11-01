@@ -187,7 +187,7 @@ const JEST_RULE_NAMES = [
     'valid-title',
 ];
 
-export const TEST_RULE_NAMES = [
+const TEST_RULE_NAMES = [
     'no-focused-tests',
     'no-disabled-tests',
     'no-identical-title',

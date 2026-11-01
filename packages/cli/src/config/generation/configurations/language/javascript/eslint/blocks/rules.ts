@@ -27,7 +27,6 @@ export const ESLINT_RULES = {
     'no-duplicate-imports': 'off',
     eqeqeq: 'error',
     'prefer-const': 'error',
-    'no-empty': 'error',
 
     'no-param-reassign': 'error',
 } as const;
@@ -37,13 +36,9 @@ export const SORTING_RULES = {
         'error',
         {
             type: 'line-length',
-            order: 'asc',
             ignoreCase: false,
             groups: ['singleline-import', 'multiline-import'],
             fallbackSort: { type: 'alphabetical', order: 'asc' },
-            newlinesBetween: 1,
-            newlinesInside: 0,
-            sortSideEffects: false,
             useExperimentalDependencyDetection: false,
         },
     ],

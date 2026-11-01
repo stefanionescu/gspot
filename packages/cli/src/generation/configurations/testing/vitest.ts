@@ -1,9 +1,5 @@
 import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
-
-import {
-    TEST_RULE_NAMES,
-    CONFIGURATION_PLUGINS,
-} from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
+import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 
 /**
 Apply the Vitest recommended preset and the test rules to the test files.
@@ -18,7 +14,8 @@ export function buildVitestBlocks(scope: Pick<EslintScope, 'eslintFiles'>): Conf
                 files: eslintFiles.tests,
                 rules: {
                     'sonarjs/assertions-in-tests': 'off',
-                    ...Object.fromEntries(TEST_RULE_NAMES.map((name) => [`vitest/${name}`, 'error'])),
+                    'vitest/no-disabled-tests': 'error',
+                    'vitest/prefer-strict-equal': 'error',
                     'vitest/no-focused-tests': ['error', { fixable: false }],
                 },
             },

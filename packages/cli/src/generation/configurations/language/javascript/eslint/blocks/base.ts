@@ -228,13 +228,15 @@ export function buildClosingBlocks(
     const selectorGroups = buildSelectorBlocks(session.scopes, level);
     return [
         ...buildRuntimeBlocks(eslintFiles, runtimeBlocks),
-        ...selectorGroups.map((group): ConfigurationBlocks['blocks'][number] => ({
-            fields: {
-                files: buildScopeFiles(eslintFiles.code, group.scope, ['**/*']),
-                ignores: group.ignoredScopes.map((scope) => `${escapeGlob(scope)}/**`),
-                rules: { [RESTRICTED_SYNTAX_RULE]: ['error', ...group.selectors] },
-            },
-        })),
+        ...selectorGroups
+            .filter((group) => group.selectors.length > 0)
+            .map((group): ConfigurationBlocks['blocks'][number] => ({
+                fields: {
+                    files: buildScopeFiles(eslintFiles.code, group.scope, ['**/*']),
+                    ignores: group.ignoredScopes.map((scope) => `${escapeGlob(scope)}/**`),
+                    rules: { [RESTRICTED_SYNTAX_RULE]: ['error', ...group.selectors] },
+                },
+            })),
         ...buildConsoleBlocks(planned).map((block): ConfigurationBlocks['blocks'][number] => ({
             fields: block,
         })),
