@@ -50,21 +50,18 @@ assert_version_raised() {
 #   README files.
 assert_readme_images() {
     local readme
-    local images
-    local image
+    local urls
     local url
 
     for readme in "$@"; do
-        images=$(grep -oE '!\[[^]]*\]\([^)]+\)' "${readme}") || continue
-        while IFS= read -r image; do
-            url="${image#*](}"
-            url="${url%)}"
+        urls=$(grep -oE '!\[[^]]*\]\([^)]+\)' "${readme}" | sed -E 's/^.*\]\((.*)\)$/\1/') || continue
+        while IFS= read -r url; do
             if ! curl --fail --silent --show-error --location --connect-timeout 10 --max-time 60 \
                 --output /dev/null "${url}"; then
                 printf '%s shows %s, which does not load.\n' "${readme}" "${url}" >&2
                 return 1
             fi
-        done <<<"${images}"
+        done <<<"${urls}"
     done
 }
 
