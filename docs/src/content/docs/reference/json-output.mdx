@@ -108,7 +108,8 @@ gspot neither computes nor includes those diffs.
 | `failed`          | Check IDs that failed or stopped with an error, and the checks whose fixer failed.           |
 | `notChecked`      | When present, detected configurations that `gspot.toml` neither selects nor removes.         |
 
-Each `checks` item has `check`, `scope`, `status`, `fileCount`, `duration`, and `findings`. It can also have `files`,
+Each `checks` item has `check`, `scope`, `status`, `fileCount`, `duration`, and `findings`. It can also have `help`,
+which says how to fix its findings, `files`,
 `note`, `rerun`, `command`, and, for a skipped check, `cause`. Under `--verbose`, an internal check error also has
 `stack` with its message and stack. `status` holds `passed`, `failed`, `missing`,
 `error`, or `skipped`. `missing` and `error` make the run incomplete, with exit code `2`. `cause` holds `system`,
@@ -116,7 +117,7 @@ Each `checks` item has `check`, `scope`, `status`, `fileCount`, `duration`, and 
 
 Each finding has `check`, `file`, `message`, `fixable`, and `explain`. The `explain` field holds the command that
 explains its check or lint rule.
-It can also have `line`, `column`, `rule`, and `help`.
+It can also have `line`, `column`, `rule`, and `help`, which appears only where it differs from the `help` of its check.
 Lines and columns start at `1`. A finding without a source location can have an empty `file`.
 
 Each `notChecked` item has `configuration` and `evidence`. Run `gspot add <name>` to select one, or

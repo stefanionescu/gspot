@@ -43,6 +43,15 @@ function buildNotCheckedReport(session: Session): Pick<RunReport, 'notChecked'> 
     return { notChecked };
 }
 
+function finishResult(result: CheckResult, help: string): CheckResult {
+    const findings = result.findings.map(({ help: own, ...finding }) => ({
+        ...finding,
+        explain: formatExplainCommand(finding),
+        ...(own !== undefined && own !== help && { help: own }),
+    }));
+    return { ...result, ...(findings.length > 0 && { help }), findings };
+}
+
 /**
 Build the check results, detected configuration warning, and exit status of a finished run.
 
@@ -51,20 +60,17 @@ Build the check results, detected configuration warning, and exit status of a fi
 export function buildRunReport(run: FinishedRun): RunReport {
     const { session, options, started, planned, results: ran, fixes } = run;
     const results = new Map(run.active.map((check, index) => [check, ran[index] as CheckResult]));
-    const checks = planned
-        .map<CheckResult>(
-            (check) =>
-                results.get(check) ?? {
-                    ...buildBaseResult(check, session),
-                    status: 'skipped' as const,
-                    cause: check.skip?.cause ?? 'no-files',
-                    note: check.skip?.note ?? NO_FILES_MESSAGE,
-                },
-        )
-        .map((check) => ({
-            ...check,
-            findings: check.findings.map((finding) => ({ ...finding, explain: formatExplainCommand(finding) })),
-        }));
+    const checks = planned.map((check) =>
+        finishResult(
+            results.get(check) ?? {
+                ...buildBaseResult(check, session),
+                status: 'skipped',
+                cause: check.skip?.cause ?? 'no-files',
+                note: check.skip?.note ?? NO_FILES_MESSAGE,
+            },
+            check.check.help,
+        ),
+    );
     const failed = listFailedChecks(checks, fixes);
     let code = failed.length > 0 ? EXIT_FINDINGS : 0;
     if (isIncomplete(session, ran, fixes)) code = EXIT_ERROR;

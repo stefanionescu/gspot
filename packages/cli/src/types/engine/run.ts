@@ -98,6 +98,8 @@ export type CheckRunOptions = {
     listConfigs?: ((session: CheckSession, planned: PlannedCheck) => string[]) | undefined;
 };
 
+export type FindingOptions = { verbose: boolean; help: string | undefined };
+
 export type BuiltInCheckResult = { findings: CheckFinding[]; files: string[] };
 
 export type BuiltInCheck = (
@@ -114,6 +116,7 @@ export type CheckResult = {
     files?: readonly string[];
     duration: number;
     findings: readonly Finding[];
+    help?: string;
     note?: string;
     stack?: string;
     cause?: SkipCause | 'no-files';

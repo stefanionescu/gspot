@@ -132,7 +132,9 @@ test('a staged check reports a file name that is not UTF-8 and leaves no copy be
     const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(1);
     const { report } = parseCheckReport(refused);
-    expect(report.checks.find(({ check }) => check === 'repository/encoding')?.findings).toStrictEqual([
+    const encoding = report.checks.find(({ check }) => check === 'repository/encoding');
+    expect(encoding?.help).toBe('Save the reported file as UTF-8, then run the check again.');
+    expect(encoding?.findings).toStrictEqual([
         {
             check: 'repository/encoding',
             file: String.raw`"bad-\377.txt"`,
@@ -141,7 +143,6 @@ test('a staged check reports a file name that is not UTF-8 and leaves no copy be
             explain: 'gspot explain repository/encoding',
             message: String.raw`"bad-\377.txt" is not a UTF-8 path. Rename the file using UTF-8.`,
             fixable: false,
-            help: 'Save the reported file as UTF-8, then run the check again.',
         },
     ]);
     expect(await readdir(temporary.path)).toStrictEqual([]);

@@ -10,7 +10,7 @@ import { CODE_MARK, EVERY_CHECK } from '#cli/config/commands/help.ts';
 import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 import { print, printWarning, writeProgress } from '#cli/system/terminal.ts';
 import { formatCount, formatScope, quoteArgument } from '#cli/system/text.ts';
-import type { FixReport, RunReport, CheckResult, CheckProgress } from '#cli/types/engine/run.ts';
+import type { FixReport, RunReport, CheckResult, CheckProgress, FindingOptions } from '#cli/types/engine/run.ts';
 
 import {
     OFF_LABEL,
@@ -50,7 +50,8 @@ function formatLocation(finding: Finding): string {
     return `${finding.file}${line}${column}  `;
 }
 
-function formatFinding(finding: Finding, next: Finding | undefined, { verbose }: { verbose: boolean }): string[] {
+function formatFinding(finding: Finding, next: Finding | undefined, options: FindingOptions): string[] {
+    const { verbose, help: checkHelp } = options;
     const rule =
         finding.rule === undefined || finding.rule === finding.check || Object.hasOwn(CHECK_STATUS_COLORS, finding.rule)
             ? ''
@@ -68,15 +69,15 @@ function formatFinding(finding: Finding, next: Finding | undefined, { verbose }:
                 .split(LINE_BREAK)
                 .map((line) => `    ${line}`),
         );
-    const help = formatFindingHelp(finding);
-    if (next === undefined || formatFindingHelp(next) !== help)
+    const help = formatFindingHelp(finding, checkHelp);
+    if (next === undefined || formatFindingHelp(next, checkHelp) !== help)
         lines.push(`  ${styleText('dim', 'help:', { stream: process.stdout })} ${help}`);
     return lines;
 }
 
-function formatFindingHelp(finding: Finding): string {
+function formatFindingHelp(finding: Finding, checkHelp: string | undefined): string {
     const command = finding.explain ?? formatExplainCommand(finding);
-    const help = finding.help?.replaceAll(CODE_MARK, '');
+    const help = (finding.help ?? checkHelp)?.replaceAll(CODE_MARK, '');
     return help === undefined || help === '' ? command : `${help} ${command}`;
 }
 
@@ -87,9 +88,9 @@ function formatCheckTail(result: CheckResult): string {
         : `${formatCount(result.fileCount, 'file')}  ${(result.duration / MILLISECONDS_PER_SECOND).toFixed(1)}s`;
 }
 
-function formatFindings(findings: readonly Finding[], { verbose }: { verbose: boolean }): string[] {
+function formatFindings({ findings, help }: CheckResult, { verbose }: { verbose: boolean }): string[] {
     const shown = verbose ? findings : findings.slice(0, FINDINGS_SHOWN);
-    const lines = shown.flatMap((finding, index) => formatFinding(finding, shown[index + 1], { verbose }));
+    const lines = shown.flatMap((finding, index) => formatFinding(finding, shown[index + 1], { verbose, help }));
     const hidden = findings.length - shown.length;
     if (hidden > 0) {
         const message = `and ${String(hidden)} more (--verbose prints every finding)`;
@@ -113,8 +114,7 @@ function formatCheck(result: CheckResult, { verbose }: { verbose: boolean }): st
             lines.push(`  ${styleText('dim', '$ ' + result.command.join(' '), { stream: process.stdout })}`);
         if (result.stack !== undefined) lines.push(...result.stack.split('\n').map((line) => `  ${line}`));
     }
-    if (result.status === 'failed' || result.status === 'error')
-        lines.push(...formatFindings(result.findings, { verbose }));
+    if (result.status === 'failed' || result.status === 'error') lines.push(...formatFindings(result, { verbose }));
     if (result.rerun !== undefined)
         lines.push(`  ${styleText('dim', RERUN_LABEL, { stream: process.stdout })} ${result.rerun}`);
     return lines;
