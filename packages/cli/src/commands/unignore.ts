@@ -1,5 +1,7 @@
 import { isTable } from '#cli/system/tables.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { isEveryPath } from '#cli/settings/scopes.ts';
+import { removeRecordPaths } from '#cli/settings/edit.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { RULE_OPTION } from '#cli/config/commands/help.ts';
 import { assertCheckExists } from '#cli/manifests/read.ts';
@@ -27,42 +29,35 @@ import {
 } from '#cli/commands/edits.ts';
 
 function removeIgnores(table: TomlTable, options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreRemoval {
-    const removed = new Set(options.paths?.map((path) => path.replaceAll(ESCAPED_GLOB_CHARACTERS, '$1')));
+    const { check, rule, paths } = options;
     const ignores: unknown[] = Array.isArray(table['ignore']) ? table['ignore'] : [];
-    let deleted = 0;
-    let changedIgnores = 0;
-    let removedPaths = 0;
-    let everywhere = 0;
     const matching = new Set(
         ignores.filter(
-            (ignore) =>
-                isTable(ignore) &&
-                ignore['check'] === options.check &&
-                (options.rule === undefined || ignore['rule'] === options.rule),
+            (ignore) => isTable(ignore) && ignore['check'] === check && (rule === undefined || ignore['rule'] === rule),
         ),
     );
-    const kept = ignores.flatMap((ignore): unknown[] => {
+    const kept = ignores.flatMap((ignore) => {
         if (!matching.has(ignore)) return [ignore];
-        if (removed.size === 0) {
-            deleted += 1;
-            return [];
-        }
-        const record = ignore as IgnoreRecord;
-        if (record['paths'] === undefined) {
-            everywhere += 1;
-            return [ignore];
-        }
-        const paths = record['paths'].filter((path) => !removed.has(path.replaceAll(ESCAPED_GLOB_CHARACTERS, '$1')));
-        if (paths.length === record['paths'].length) return [ignore];
-        if (paths.length === 0) {
-            deleted += 1;
-            return [];
-        }
-        changedIgnores += 1;
-        removedPaths += record['paths'].length - paths.length;
-        return [{ ...record, paths }];
+        if (paths === undefined) return [];
+        return removeRecordPaths(
+            [ignore],
+            paths,
+            (recordPath, path) =>
+                recordPath.replaceAll(ESCAPED_GLOB_CHARACTERS, '$1') === path.replaceAll(ESCAPED_GLOB_CHARACTERS, '$1'),
+        );
     });
-    return { kept, deleted, changedIgnores, removedPaths, everywhere };
+    const changed = kept.filter((ignore) => !ignores.includes(ignore)) as IgnoreRecord[];
+    const narrowed = ignores.filter((ignore) => matching.has(ignore) && !kept.includes(ignore)) as IgnoreRecord[];
+    return {
+        kept,
+        deleted: ignores.length - kept.length,
+        changedIgnores: changed.length,
+        removedPaths:
+            narrowed.flatMap((ignore) => ignore.paths ?? []).length -
+            changed.flatMap((ignore) => ignore.paths ?? []).length,
+        everywhere:
+            paths === undefined ? 0 : [...matching].filter((ignore) => isEveryPath(ignore as IgnoreRecord)).length,
+    };
 }
 
 function formatIgnoreTarget(options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreTarget {

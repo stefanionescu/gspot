@@ -13,12 +13,6 @@ function splitKey(key: string): SettingKey {
     return { path: boundary === -1 ? [] : key.slice(0, boundary).split('.'), name: key.slice(boundary + 1) };
 }
 
-function removeRecordPaths(listed: unknown, gone: Set<string | undefined>): unknown[] {
-    if (!isTable(listed) || !Array.isArray(listed['paths'])) return [listed];
-    const paths = listed['paths'].filter((path) => !gone.has(JSON.stringify(path)));
-    return paths.length === 0 ? [] : [{ ...listed, paths }];
-}
-
 /**
 Apply a settings change to edit.table, check the result, and patch it into the previous gspot.toml text.
 
@@ -80,30 +74,45 @@ export function removeKey(table: TomlTable, key: string): void {
 }
 
 /**
-Remove list items by value or name, and remove single paths from structured items.
+Take paths out of the records of a list, and drop a record that loses its last path.
+
+@param records the records of the list.
+@param paths the paths to take out.
+@param matches compares the path of a record with one of the paths.
+@returns the records that remain, in order.
+*/
+export function removeRecordPaths(
+    records: readonly unknown[],
+    paths: readonly string[],
+    matches: (recordPath: string, path: string) => boolean,
+): unknown[] {
+    return records.flatMap((record) => {
+        if (!isTable(record) || !Array.isArray(record['paths'])) return [record];
+        const written = record['paths'] as string[];
+        const kept = written.filter((recordPath) => !paths.some((path) => matches(recordPath, path)));
+        if (kept.length === written.length) return [record];
+        return kept.length === 0 ? [] : [{ ...record, paths: kept }];
+    });
+}
+
+/**
+Remove items from a list: equal items from a plain list, records by name from a record list, and single paths from the
+records that hold them.
 
 @param table the table to edit.
 @param key the dotted name of the list.
 @param values the items to remove.
 */
-export function removeFromList(table: TomlTable, key: string, values: unknown[]): void {
+export function removeFromList(table: TomlTable, key: string, values: string[]): void {
     const { path, name } = splitKey(key);
     const parent = findValueAt(table, path);
     if (!isTable(parent)) return;
     const written = parent[name];
     const value = isReasonedValue(written) ? written.value : written;
     if (!Array.isArray(value)) return;
-    const gone = new Set(
-        values.flatMap((removed) =>
-            isTable(removed) && Array.isArray(removed['paths'])
-                ? removed['paths'].map((path) => JSON.stringify(path))
-                : [JSON.stringify(removed)],
-        ),
-    );
-    const kept = value.flatMap((listed: unknown) => {
-        const identity = JSON.stringify(isTable(listed) && 'name' in listed ? listed['name'] : listed);
-        return gone.has(identity) || gone.has(JSON.stringify(listed)) ? [] : removeRecordPaths(listed, gone);
-    });
+    const gone = new Set<unknown>(values);
+    const listed = value.filter((element: unknown) => !gone.has(isTable(element) ? element['name'] : element));
+    const kept = removeRecordPaths(listed, values, (recordPath, removed) => recordPath === removed);
     if (kept.length === 0) removeKey(table, key);
     else parent[name] = isReasonedValue(written) ? { ...written, value: kept } : kept;
 }

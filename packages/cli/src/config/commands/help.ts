@@ -149,7 +149,7 @@ export const COMMAND_HELP = {
         summary: 'Remove your value, so the default applies again',
         group: 'Change gspot.toml:',
         description:
-            'Remove your value of a setting from gspot.toml, then write the generated files again. The root value or the default applies again.\n\nWith items, remove only those list items or table keys.',
+            'Remove your value of a setting from gspot.toml, then write the generated files again. The root value or the default applies again.\n\nWith items, remove only those: equal items from a list, records by name from a record list, single paths from the records that hold them, and keys from a table.',
         arguments: {
             '<setting>': 'The setting name, such as naming.banned_words',
             '[items...]': 'List items or table keys to remove (default: the whole value)',
