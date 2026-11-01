@@ -34,6 +34,12 @@ export const JAVASCRIPT_CONFIGURATION = 'javascript';
 
 export const OPENAPI_CONFIGURATION = 'openapi';
 
+export const TRANSLATIONS_CONFIGURATION = 'translations';
+
+export const MESSAGES_FOLDER = 'messages';
+
+export const MESSAGES_FILE_SUFFIX = '.json';
+
 export const SITE_CONFIGURATION = 'site';
 
 export const SWIFT_CONFIGURATION = 'swift';

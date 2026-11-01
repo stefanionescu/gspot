@@ -33,6 +33,17 @@ test('init finds the Xcode project of the scope and picks the destination from i
     expect(await readFile(`${sandbox.path}/App.xcodeproj/project.pbxproj`, 'utf8')).toBe(source);
 });
 
+test('init finds the next-intl messages folder', async () => {
+    await using sandbox = await createGitSandbox({
+        'package.json': '{"private":true,"dependencies":{"next-intl":"4.0.0"}}',
+        'messages/en.json': '{"title":"Shop"}\n',
+    });
+    const result = await runGspot(sandbox.path, ['init', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settingsText'>>;
+    expect(parse(output.settingsText)).toMatchObject({ translations: { messages_folder: 'messages' } });
+});
+
 test.each([...IMPORT_STYLE_CASES])('init writes the import style of $name', async ({ files, expected }) => {
     await using sandbox = await createGitSandbox(files);
     const result = await runGspot(sandbox.path, ['init', '--json']);

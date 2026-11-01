@@ -17,16 +17,19 @@ import type { TomlTable, DetectedScopes, ScopeConfigurations, ImportExtensionSty
 
 import {
     BUILD_SCRIPT,
+    MESSAGES_FOLDER,
     OPENNEXT_PACKAGE,
     BUNDLER_PACKAGES,
     XCODE_DESTINATIONS,
     SITE_CONFIGURATION,
     SWIFT_CONFIGURATION,
+    MESSAGES_FILE_SUFFIX,
     OPENAPI_CONFIGURATION,
     OPENNEXT_TYPE_DEFAULTS,
     CLOUDFLARE_CONFIGURATION,
     IMPORT_EXTENSION_SETTING,
     JAVASCRIPT_CONFIGURATION,
+    TRANSLATIONS_CONFIGURATION,
 } from '#cli/config/settings/detected.ts';
 
 function buildOpenApiTable(selection: ScopeConfigurations, { repository, scopes }: DetectedScopes): TomlTable {
@@ -67,6 +70,15 @@ function buildCloudflareTable(selection: ScopeConfigurations, { repository }: De
     if (selection.selected.every(({ name }) => name !== CLOUDFLARE_CONFIGURATION)) return {};
     const dependencies = listProjectDependencyNames(repository.dependencyFiles, selection.scope);
     return dependencies.includes(OPENNEXT_PACKAGE) ? { cloudflare: { ...OPENNEXT_TYPE_DEFAULTS } } : {};
+}
+
+function buildTranslationsTable(selection: ScopeConfigurations, { repository }: DetectedScopes): TomlTable {
+    if (selection.selected.every(({ name }) => name !== TRANSLATIONS_CONFIGURATION)) return {};
+    const folder = joinScope(selection.scope, MESSAGES_FOLDER);
+    const hasMessages = repository.files.some(
+        ({ path }) => path.startsWith(`${folder}/`) && path.endsWith(MESSAGES_FILE_SUFFIX),
+    );
+    return hasMessages ? { translations: { messages_folder: folder } } : {};
 }
 
 function detectCompilerStyle(options: ts.CompilerOptions): ImportExtensionStyle | undefined {
@@ -123,6 +135,7 @@ export function buildDetectedTables(
                 ...buildOpenApiTable(selection, detected),
                 ...buildSiteTable(selection, detected),
                 ...buildCloudflareTable(selection, detected),
+                ...buildTranslationsTable(selection, detected),
                 ...buildImportExtensionTable(selection, detected.repository, cache),
             },
         ]),

@@ -53,7 +53,7 @@ help = "Restore the file with `git checkout`, and write the change as a new migr
 name = "edited-migrations"
 runs = "scope"
 stage = "commit"
-summary = "Checks that no migration at or before postgres.frozen_through differs from its committed text, and that later migrations use `IF NOT EXISTS` only on `CREATE INDEX CONCURRENTLY`."
+summary = "Checks that no migration of the base revision differs from its committed text, and that migrations after postgres.frozen_through use `IF NOT EXISTS` only on `CREATE INDEX CONCURRENTLY`."
 why = "An applied migration never runs again, so an edit reaches only new databases, and environments drift apart. `IF NOT EXISTS` hides that drift."
 
 [[check]]

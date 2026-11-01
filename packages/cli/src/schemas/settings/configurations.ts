@@ -122,7 +122,7 @@ export const configurationTableSchemas = {
                     leftOut: 'repository',
                     configurations: ['postgres'],
                     description:
-                        'The last migration version that has run everywhere (none, all, or a version); Squawk skips those migrations, and they may not change.',
+                        'The last migration version that has run everywhere (none, all, or a version); Squawk and the grants check skip those migrations.',
                 }),
             assume_in_transaction: z
                 .boolean()

@@ -10,9 +10,9 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { readMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
-import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 import {
     POSTGRES_CHECKS,
@@ -142,9 +142,9 @@ test.each(['prisma/migrations/20260101000000_init/migration.sql', 'drizzle/0001_
     },
 );
 
-test.each(['', 'V'])('unpadded %s migration versions replay and freeze in numeric order', async (prefix) => {
+test.each(['', 'V'])('unpadded %s migration versions replay in numeric order', async (prefix) => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['postgres'], { tables: '[postgres]\nfrozen_through = "9"\n' }),
+        'gspot.toml': buildSandboxSettings(['postgres']),
         [`migrations/${prefix}9_create.sql`]: 'CREATE TABLE teams (id int);',
         [`migrations/${prefix}10_secure.sql`]: ROW_SECURITY_SQL,
     });
@@ -161,12 +161,6 @@ test.each(['', 'V'])('unpadded %s migration versions replay and freeze in numeri
     expect(buildDatabaseSchema(migrations).secured.has('public.teams')).toBe(true);
     expect(await getBuiltInCheck('postgres/migration-order')(session, input)).toMatchObject([
         { file: `migrations/${prefix}8_earlier.sql`, rule: 'order' },
-    ]);
-    await writeFile(join(sandbox.path, `migrations/${prefix}10_secure.sql`), 'SELECT 10;');
-    expect(await runSandboxCheck(sandbox.path, 'postgres/edited-migrations')).toStrictEqual([]);
-    await writeFile(join(sandbox.path, `migrations/${prefix}9_create.sql`), 'CREATE TABLE teams (id bigint);');
-    expect(await runSandboxCheck(sandbox.path, 'postgres/edited-migrations')).toMatchObject([
-        { file: `migrations/${prefix}9_create.sql`, rule: 'frozen' },
     ]);
 });
 
