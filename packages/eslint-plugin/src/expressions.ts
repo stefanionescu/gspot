@@ -72,14 +72,21 @@ middleware lists.
 
 @param values the arguments.
 @param source the current file and scopes.
+@param seen arrays already expanded along this path.
 */
-export function listArgumentValues(values: readonly TSESTree.Node[], source: TSESLint.SourceCode): TSESTree.Node[] {
+export function listArgumentValues(
+    values: readonly TSESTree.Node[],
+    source: TSESLint.SourceCode,
+    seen: ReadonlySet<TSESTree.Node> = new Set(),
+): TSESTree.Node[] {
     return values.flatMap((value) => {
         const written = readExpressionValue(value, source) ?? value;
         if (written.type !== AST_NODE_TYPES.ArrayExpression) return [written];
+        if (seen.has(written)) return [];
         return listArgumentValues(
             written.elements.filter((element) => element !== null),
             source,
+            new Set([...seen, written]),
         );
     });
 }

@@ -18,5 +18,9 @@ buildRuleTester().run('csrf', plugin.rules['csrf'], {
             code: "import csrf from 'csurf';\nimport express from 'express';\nconst app = express();\napp.put('/x', h);\napp.get('/y', h);",
             errors: [{ messageId: 'unprotectedRoute', line: 4 }],
         },
+        {
+            code: "import csrf from 'csurf';\nimport express from 'express';\nconst app = express();\nconst stack = [stack];\napp.use(stack);\napp.post('/x', h);",
+            errors: [{ messageId: 'unprotectedRoute', line: 6 }],
+        },
     ],
 });
