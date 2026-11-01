@@ -55,7 +55,17 @@ export const YAML_MESSAGES = {
         'Move this comment above the key. Only a version comment after a uses value pinned to a full commit is allowed.',
 };
 
-export const GIT_COMMIT_MESSAGE_ARGUMENTS = ['show', '--no-patch', '--no-show-signature', '--format=%B'] as const;
+export const GIT_COMMIT_MESSAGE_ARGUMENTS = [
+    'log',
+    '--stdin',
+    '--no-walk=unsorted',
+    '--no-show-signature',
+    '--format=%H%x00%B%x00',
+] as const;
+
+export const COMMIT_FIELD_END = '\0';
+
+export const COMMIT_RECORD_END = '\0\n';
 
 export const MESSAGE_FILE = 'message.txt';
 

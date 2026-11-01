@@ -15,6 +15,8 @@ import { buildBaseResult, mergeCheckResults } from '#cli/engine/results.ts';
 import {
     MESSAGE_FILE,
     COMMIT_SCISSORS,
+    COMMIT_FIELD_END,
+    COMMIT_RECORD_END,
     MESSAGE_REFERENCES,
     GIT_COMMIT_MESSAGE_ARGUMENTS,
 } from '#cli/config/configurations/general.ts';
@@ -29,21 +31,24 @@ export async function checkCommitlintPushed(session: CheckSession, planned: Plan
     using folder = createTemporaryFolder();
     const commits = await listPushedCommits(session, planned);
     if (!Array.isArray(commits)) return commits;
+    const read = await session.limitProcess(() =>
+        runGit(session.root, GIT_COMMIT_MESSAGE_ARGUMENTS, {
+            stdin: `${commits.join('\n')}\n`,
+            cancelSignal: session.cancelSignal,
+        }),
+    );
+    if (read.code !== 0)
+        return {
+            ...buildBaseResult(planned, session),
+            status: 'error',
+            note: `Cannot read the pushed commit messages: ${read.stderr.trim()}`,
+        };
+    const records = read.stdout.split(COMMIT_RECORD_END).slice(0, commits.length);
     const results = await Promise.all(
-        commits.map(async (commit, index): Promise<CheckResult> => {
+        records.map(async (record, index): Promise<CheckResult> => {
+            const [commit, message] = record.split(COMMIT_FIELD_END) as [string, string];
             const commitFile = join(folder.path, `${String(index)}-${MESSAGE_FILE}`);
-            const read = await session.limitProcess(() =>
-                runGit(session.root, [...GIT_COMMIT_MESSAGE_ARGUMENTS, commit, '--'], {
-                    cancelSignal: session.cancelSignal,
-                }),
-            );
-            if (read.code !== 0)
-                return {
-                    ...buildBaseResult(planned, session),
-                    status: 'error',
-                    note: `Cannot read commit ${commit}: ${read.stderr.trim()}`,
-                };
-            writeFileSync(commitFile, read.stdout, { mode: PRIVATE_FILE });
+            writeFileSync(commitFile, message, { mode: PRIVATE_FILE });
             const checked = await runCommandCheck(session, { ...planned, messageFile: commitFile });
             return {
                 ...checked,
