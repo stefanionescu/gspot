@@ -1,6 +1,7 @@
 import { dirname } from 'node:path/posix';
 import { isDeepStrictEqual } from 'node:util';
 import { escapeGlob } from '#cli/system/paths.ts';
+import { getTable } from '#cli/settings/scopes.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
@@ -19,9 +20,12 @@ import { buildTypescriptBlocks } from '#cli/generation/configurations/language/t
 import { buildTanstackQueryBlocks } from '#cli/generation/configurations/library/tanstack-query.ts';
 import { buildTestingLibraryBlocks } from '#cli/generation/configurations/library/testing-library.ts';
 import { joinScope, isInScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
-import { PLUGIN_RULE_BLOCKS } from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 import { buildTestFiles, listCodeTestFiles } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 
+import {
+    SUPABASE_RULES,
+    PLUGIN_RULE_BLOCKS,
+} from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 import {
     type EslintScope,
     type EslintPlugins,
@@ -48,6 +52,7 @@ const CONFIGURATION_BUILDERS: Readonly<Record<string, ConfigurationBuilder | und
     nestjs: buildNestjsBlocks,
     drizzle: buildDrizzleBlocks,
     'tanstack-query': buildTanstackQueryBlocks,
+    supabase: buildSupabaseBlocks,
 };
 
 function buildConfigurationBlocks(
@@ -177,6 +182,17 @@ function buildPluginRuleBlocks(scope: EslintScope, configuration: string): Confi
             },
         ],
     };
+}
+
+/**
+Check the request body that each Supabase edge function reads.
+
+@param scope the planned ESLint file of the scope.
+*/
+function buildSupabaseBlocks(scope: EslintScope): ConfigurationBlocks {
+    const folder = escapeGlob(getTable(scope.settings, 'supabase').functions_folder);
+    const files = scope.eslintFiles.code.map((pattern) => [`${folder}/**`, pattern]);
+    return { imports: {}, blocks: [{ fields: { files, rules: SUPABASE_RULES } }] };
 }
 
 /**

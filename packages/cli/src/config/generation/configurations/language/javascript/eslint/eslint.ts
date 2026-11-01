@@ -237,6 +237,8 @@ export const PLUGIN_RULE_BLOCKS: Readonly<Record<string, PluginRuleBlock>> = {
     },
 };
 
+export const SUPABASE_RULES = { 'gspot/no-unvalidated-json-body': 'error' } as const;
+
 export const COMMONJS_FILES = '**/*.{cjs,cts}';
 
 export const ESLINT_BROWSER_CONFIGURATIONS = ['react', 'vue', 'svelte'] as const;
