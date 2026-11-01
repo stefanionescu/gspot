@@ -71,6 +71,7 @@ import { noEmptyReturnValue } from './rules/no-empty-return-value.ts';
 import { noMixedReturnTypes } from './rules/no-mixed-return-types.ts';
 import { noNestedVitestMock } from './rules/no-nested-vitest-mock.ts';
 import { noSwitchCaseLabels } from './rules/no-switch-case-labels.ts';
+import { noComponentDebounce } from './rules/no-component-debounce.ts';
 import { noIdenticalOperands } from './rules/no-identical-operands.ts';
 import { noNegatedComparison } from './rules/no-negated-comparison.ts';
 import { noRedundantOptional } from './rules/no-redundant-optional.ts';
@@ -193,6 +194,7 @@ const rules = {
     'require-test-assertions': requireTestAssertions,
     'no-misplaced-assertions': noMisplacedAssertions,
     'no-cypress-then-assertions': noCypressThenAssertions,
+    'no-component-debounce': noComponentDebounce,
     'no-setter-in-component': noSetterInComponent,
     'no-self-state-update': noSelfStateUpdate,
     'no-generated-keys': noGeneratedKeys,
