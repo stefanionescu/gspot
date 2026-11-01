@@ -191,7 +191,12 @@ export const JAVASCRIPT_OPTIONS = {
 
 export const SOURCE_SELECTION_FIELDS = ['files', 'include'] as const;
 
-export const KNIP_JAVASCRIPT_ENTRY_FILES = ['src/main.{ts,js}', 'src/index.{ts,js}'] as const;
+export const KNIP_JAVASCRIPT_ENTRY_FILES = [
+    '{index,cli,main}.{js,mjs,cjs,jsx,ts,tsx,mts,cts}',
+    'src/{index,cli,main}.{js,mjs,cjs,jsx,ts,tsx,mts,cts}',
+] as const;
+
+export const HIDDEN_FILE_GLOB = /^\.[^.]+(?:\.\*)?$/u;
 
 export const KNIP_IGNORED_DEPENDENCIES = ['@gspothq/cli'] as const;
 

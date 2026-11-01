@@ -1,3 +1,4 @@
+import { posix } from 'node:path';
 import { read } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
@@ -13,11 +14,13 @@ import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/blocks.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
+import { listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
 
 import {
     KNIP_CHECK,
     PACKAGE_RUNNERS,
     UNQUOTED_COMMENT,
+    HIDDEN_FILE_GLOB,
     KNIP_ESLINT_CONFIG,
     MISE_FILE_TASK_GLOBS,
     COMMAND_WORD_SEPARATORS,
@@ -36,7 +39,7 @@ function selectEntryFiles(settings: Settings, scopes: Scope[], scopePath: string
                 ? KNIP_JAVASCRIPT_ENTRY_FILES
                 : []
             ).map((pattern) => joinScopeSelector(pattern, scopePath)),
-            ...scopeSettings.test_files,
+            ...listCodeTestFiles(scopeSettings.test_files),
             ...(scopeSettings.tables.javascript?.script_files ?? []),
             ...(scopePath === '' ? [KNIP_ESLINT_CONFIG] : []),
         ]);
@@ -91,10 +94,9 @@ function listRunPackages(text: string): string[] {
     });
 }
 
-function listFileTaskPackages(planned: PlannedConfig): string[] {
-    const { files, dependencyFiles } = planned.session.repository;
+function listFileTaskPackages(planned: PlannedConfig, dependencyNames: Set<string>): string[] {
+    const { files } = planned.session.repository;
     const isFileTask = buildPathMatcher([...MISE_FILE_TASK_GLOBS]);
-    const dependencyNames = new Set(dependencyFiles.flatMap((file) => Object.keys(file.dependencies)));
     const names = files
         .filter((file) => file.kind === 'source' && isFileTask(file.path))
         .flatMap((file) => listRunPackages(read(planned.session.cache, file.path)));
@@ -118,27 +120,39 @@ export function buildKnipFile(planned: PlannedConfig): string {
         ...planned.ignoreSections,
         ...listCheckIgnoreSections(planned.scope.settings, KNIP_CHECK),
     ]);
+    const { dependencyFiles } = planned.session.repository;
+    const dependencyNames = new Set(dependencyFiles.flatMap((file) => Object.keys(file.dependencies)));
+    const scriptWords = new Set(
+        dependencyFiles
+            .flatMap((file) => file.scripts ?? [])
+            .flatMap((script) => script.split(COMMAND_WORD_SEPARATORS)),
+    );
     const tools = listDistinctTools(configurations);
     const toolBinaries = [
         ...tools.filter((tool) => tool.kind !== 'package').map((tool) => tool.name),
         startRunner.name,
     ];
-    const toolPackages = tools.flatMap((tool) => tool.installers['npm']?.name ?? []);
+    const importedPackages = tools
+        .filter((tool) => tool.kind === 'package')
+        .flatMap((tool) => tool.installers['npm']?.name ?? [])
+        .filter((name) => !dependencyNames.has(name));
     const workspaces = buildWorkspaces(root, settings, scopes);
     const externals = [...new Set(scopes.flatMap(({ settings }) => settings.tables.javascript?.externals ?? []))];
     return JSON.stringify(
         {
-            ignore: ignoredGlobs.filter((pattern) => pattern !== KNIP_ESLINT_CONFIG),
+            ignore: listCodeTestFiles(ignoredGlobs).filter(
+                (pattern) => pattern !== KNIP_ESLINT_CONFIG && !HIDDEN_FILE_GLOB.test(posix.basename(pattern)),
+            ),
             ignoreDependencies: [
                 ...new Set([
                     ...KNIP_IGNORED_DEPENDENCIES,
-                    ...toolPackages,
+                    ...importedPackages,
                     ...(scanner === undefined ? [] : [scanner]),
                     ...options.allowed_unused_dependencies,
-                    ...listFileTaskPackages(planned),
+                    ...listFileTaskPackages(planned, dependencyNames),
                 ]),
             ],
-            ignoreBinaries: [...new Set(toolBinaries)],
+            ignoreBinaries: [...new Set(toolBinaries)].filter((name) => scriptWords.has(name)),
             ...(planned.level === 'all' ? {} : { ignoreExportsUsedInFile: true }),
             ...(externals.length > 0 && { ignoreUnresolved: externals }),
             workspaces,

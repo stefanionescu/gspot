@@ -115,6 +115,7 @@ function parsePackageJson(path: string, text: string): DependencyFile {
         dependencies,
         installed,
         runtimes: detectPackageRuntimes(path, parsed),
+        ...(parsed.scripts !== undefined && { scripts: Object.values(parsed.scripts) }),
     };
 }
 

@@ -211,6 +211,7 @@ export type DependencyFile = {
     dependencies: Dependencies;
     installed: Dependencies;
     runtimes?: Record<string, string>;
+    scripts?: string[];
 };
 
 export type DependencyFileParser = (path: string, text: string) => DependencyFile | Promise<DependencyFile>;
