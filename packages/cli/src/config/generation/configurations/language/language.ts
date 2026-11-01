@@ -99,6 +99,7 @@ export const MARKDOWNLINT_RULES = {
     MD020: true,
     MD033: false,
     MD024: { siblings_only: true },
+    MD026: { punctuation: '.,;:!?。，；：！？' },
     MD046: { style: 'fenced' },
 } as const;
 
@@ -109,13 +110,6 @@ export const MARKDOWNLINT_CHECK = 'markdown/markdownlint';
 export const MARKDOWNLINT_PRETTIER_DISABLED = ['MD013'] as const;
 
 export const BASEDPYRIGHT_LEVELS = { basic: 'recommended', all: 'all' } as const;
-
-export const BASEDPYRIGHT_ALL_LEVEL_OPTIONS = {
-    reportImportCycles: 'error',
-    reportImplicitOverride: 'error',
-    reportUnusedClass: 'none',
-    reportUnusedFunction: 'none',
-} as const;
 
 export const BASEDPYRIGHT_OPTIONS = {
     strictParameterNoneValue: false,
@@ -129,55 +123,63 @@ export const BASEDPYRIGHT_OPTIONS = {
     reportSelfClsParameterName: 'none',
     reportUndefinedVariable: 'none',
     reportIgnoreCommentWithoutRule: 'none',
-    reportPropertyTypeMismatch: 'error',
     reportMissingTypeStubs: 'none',
-    reportImportCycles: 'none',
-    reportUnusedClass: 'error',
-    reportUnusedFunction: 'error',
-    reportDuplicateImport: 'error',
     reportWildcardImportFromLibrary: 'none',
-    reportUntypedFunctionDecorator: 'error',
-    reportUntypedClassDecorator: 'error',
-    reportUntypedBaseClass: 'error',
-    reportUntypedNamedTuple: 'error',
     reportTypeCommentUsage: 'none',
     reportPrivateImportUsage: 'none',
-    reportDeprecated: 'error',
     reportMissingSuperCall: 'none',
-    reportUnknownParameterType: 'error',
-    reportUnknownArgumentType: 'error',
-    reportUnknownLambdaType: 'error',
-    reportUnknownVariableType: 'error',
-    reportUnknownMemberType: 'error',
     reportMissingParameterType: 'none',
     reportMissingTypeArgument: 'none',
-    reportInvalidTypeVarUse: 'error',
     reportCallInDefaultInitializer: 'none',
-    reportUnnecessaryIsInstance: 'error',
-    reportUnnecessaryCast: 'error',
-    reportUnnecessaryComparison: 'error',
-    reportUnnecessaryContains: 'error',
     reportImplicitStringConcatenation: 'none',
-    reportInvalidStubStatement: 'error',
-    reportIncompleteStub: 'error',
-    reportUnsupportedDunderAll: 'error',
     reportUnusedCallResult: 'none',
-    reportUnusedCoroutine: 'error',
-    reportUnusedExpression: 'error',
-    reportUnnecessaryTypeIgnoreComment: 'error',
-    reportMatchNotExhaustive: 'error',
-    reportImplicitOverride: 'none',
-    reportUnreachable: 'error',
     reportAny: 'none',
     reportExplicitAny: 'none',
     reportPrivateLocalImportUsage: 'none',
     reportImplicitRelativeImport: 'none',
     reportUnusedParameter: 'none',
     reportUnannotatedClassAttribute: 'none',
+} as const;
+
+export const BASEDPYRIGHT_DEFAULT_OPTIONS = {
+    reportPropertyTypeMismatch: 'error',
+    reportImportCycles: 'none',
+    reportUnusedClass: 'error',
+    reportUnusedFunction: 'error',
+    reportDuplicateImport: 'error',
+    reportUntypedFunctionDecorator: 'error',
+    reportUntypedClassDecorator: 'error',
+    reportUntypedBaseClass: 'error',
+    reportUntypedNamedTuple: 'error',
+    reportDeprecated: 'error',
+    reportUnknownParameterType: 'none',
+    reportUnknownArgumentType: 'error',
+    reportUnknownLambdaType: 'error',
+    reportUnknownVariableType: 'error',
+    reportUnknownMemberType: 'error',
+    reportInvalidTypeVarUse: 'error',
+    reportUnnecessaryIsInstance: 'error',
+    reportUnnecessaryCast: 'error',
+    reportUnnecessaryComparison: 'error',
+    reportUnnecessaryContains: 'error',
+    reportInvalidStubStatement: 'error',
+    reportIncompleteStub: 'error',
+    reportUnsupportedDunderAll: 'error',
+    reportUnusedCoroutine: 'error',
+    reportUnusedExpression: 'error',
+    reportUnnecessaryTypeIgnoreComment: 'error',
+    reportMatchNotExhaustive: 'error',
+    reportImplicitOverride: 'none',
+    reportUnreachable: 'error',
     reportIncompatibleUnannotatedOverride: 'error',
     reportInvalidAbstractMethod: 'error',
     reportSelfClsDefault: 'error',
     reportEmptyAbstractUsage: 'error',
+} as const;
+
+export const BASEDPYRIGHT_ALL_LEVEL_OPTIONS = {
+    reportUnusedClass: 'none',
+    reportUnusedFunction: 'none',
 } as const;
 
 export const PYTHON_FILES = ['**/*.py'] as const;
@@ -295,8 +297,12 @@ export const HTML_VALIDATE_EXTENDS = ['html-validate:recommended'] as const;
 export const HTML_DEFAULT_LEVEL_OFF = ['no-inline-style', 'prefer-button', 'prefer-native-element'] as const;
 
 export const HTML_RULES = {
-    'doctype-style': ['error', { style: 'lowercase' }],
-    'void-style': ['error', { style: 'selfclosing' }],
+    'doctype-style': 'off',
+    'void-style': 'off',
+    'attr-quotes': 'off',
+    'attr-case': 'off',
+    'element-case': 'off',
+    'no-trailing-whitespace': 'off',
 } as const;
 
 export const HTML_VALIDATE_OVERRIDES: Readonly<Record<string, Readonly<Record<string, unknown>>>> = {

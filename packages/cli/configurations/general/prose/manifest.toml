@@ -191,11 +191,6 @@ tool = "vale"
 
 [[config_file]]
 level = "all"
-target = "styles/gspot/punctuated-headings.yml"
-tool = "vale"
-
-[[config_file]]
-level = "all"
 target = "styles/gspot/file-paths.yml"
 tool = "vale"
 

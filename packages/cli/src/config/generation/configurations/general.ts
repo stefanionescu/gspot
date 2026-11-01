@@ -31,20 +31,6 @@ export const TAPLO_FORMATTING = {
     array_auto_collapse: false,
 } as const;
 
-export const MISE_SCHEMA = {
-    name: 'mise',
-    description: 'The mise settings file',
-    fileMatch: [
-        'mise.toml',
-        '.mise.toml',
-        '.mise/conf.d/*.toml',
-        '.config/mise/config.toml',
-        '.config/mise/conf.d/*.toml',
-        GSPOT_PATHS.miseProject,
-    ],
-    location: 'https://mise.jdx.dev/schema/mise.json',
-} as const;
-
 export const V8R_NOTES = ['# The other selected tools check files without a known schema.'];
 
 export const YAMLLINT_RULE_OPTIONS = { truthy: { 'check-keys': false } } as const;

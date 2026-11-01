@@ -5,7 +5,6 @@ import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import {
     V8R_TABLE,
     V8R_NOTES,
-    MISE_SCHEMA,
     YAMLLINT_CHECK,
     YAMLLINT_RULES,
     YAMLLINT_YAML_OPTIONS,
@@ -27,7 +26,7 @@ export function buildV8rFile(planned: PlannedConfig): string {
         ...V8R_NOTES,
         stringifyYaml({
             ignoreErrors: true,
-            customCatalog: { schemas: [MISE_SCHEMA, ...schemas] },
+            ...(schemas.length > 0 && { customCatalog: { schemas } }),
         }),
     ].join('\n');
 }

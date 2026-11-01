@@ -58,7 +58,7 @@ Structs keep synthesized memberwise initializers where sufficient. Value types h
 only for identity, reference semantics, lifecycle, observable state, or framework requirements. An implicitly unwrapped
 optional appears only for Apple lifecycle cases such as `@IBOutlet`, Objective-C nullability gaps, and test data.
 
-Declare top-level access to match the public contract. An extension carries no blanket access modifier. Nest a type when
+Declare the access level of every declaration to match the public contract. An extension carries no blanket access modifier. Nest a type when
 it makes sense only inside its parent. Use a caseless enum only for closely related statics. Prefer methods and
 properties to free functions, except a symmetric function that follows the standard library.
 

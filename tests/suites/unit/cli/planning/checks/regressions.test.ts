@@ -1,5 +1,6 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -114,4 +115,31 @@ test('a skipped history check does not refuse a shallow push', async () => {
             skip: { cause: 'ignore', note: 'turned off by an ignore in gspot.toml: The server scans pushed history.' },
         },
     ]);
+});
+
+test('v8r keeps unowned schema files and excludes files validated by other tools', async () => {
+    const otherToolFiles = [
+        'package.json',
+        'app/package.json',
+        'tsconfig.json',
+        'app/tsconfig.build.json',
+        'jsconfig.json',
+        '.github/workflows/test.yml',
+        'mise.toml',
+        '.mise.toml',
+        '.mise/conf.d/tools.toml',
+        '.config/mise/config.toml',
+        '.mise.production.toml',
+    ];
+    const schemaFiles = ['compose.yaml', '.github/dependabot.yml', 'renovate.json', 'app/config.json'];
+    await using sandbox = await testdir({
+        ...Object.fromEntries(
+            [...otherToolFiles, ...schemaFiles].map((path) => [path, path.endsWith('.toml') ? '' : '{}']),
+        ),
+        'gspot.toml': buildSandboxSettings(['data-files']),
+    });
+    const planned = planChecks(await openSession(sandbox.path), { stage: 'push', only: ['data-files/v8r'] });
+    expect(planned.flatMap(({ files }) => files.map(({ path }) => path)).toSorted(compareText)).toStrictEqual(
+        schemaFiles.toSorted(compareText),
+    );
 });

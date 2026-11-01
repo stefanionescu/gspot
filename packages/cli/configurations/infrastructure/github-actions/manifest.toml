@@ -26,7 +26,7 @@ target = "zizmor.yml"
 tool = "zizmor"
 
 [[check]]
-command = ["actionlint", "-no-color", "{files}"]
+command = ["actionlint", "-ignore", "is potentially untrusted", "-no-color", "{files}"]
 example = "A workflow expression with the unknown context `${{ unknown.value }}` reports an error. Use a supported context and property there instead."
 exit_codes = [1]
 files = { paths = ["**/.github/workflows/*.{yml,yaml}"], kinds = ["source", "generated"] }

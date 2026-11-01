@@ -49,7 +49,7 @@ export const PACKAGE_STYLE_CASES = [
     { sample: 'And run this command.', findings: [[17, 'gspot.leading-conjunctions']] },
     { sample: 'Use the blacklist.', findings: [[19, 'gspot.conscious-language']] },
     { sample: "You can't run this command.", findings: [[21, 'gspot.contractions']] },
-    { sample: '## API.', findings: [[23, 'gspot.punctuated-headings']] },
+    { sample: '## API.', findings: [] },
     { sample: 'Use the Name field.', findings: [[25, 'gspot.obvious-fields']] },
     { sample: 'The tool allows you to work.', findings: [[27, 'gspot.product-centric-writing']] },
     { sample: 'Use resource?sessionId=12345678.', findings: [[29, 'gspot.session-identifiers']] },

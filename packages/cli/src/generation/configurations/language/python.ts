@@ -20,6 +20,7 @@ import {
     BASEDPYRIGHT_CHECK,
     BASEDPYRIGHT_LEVELS,
     BASEDPYRIGHT_OPTIONS,
+    BASEDPYRIGHT_DEFAULT_OPTIONS,
     BASEDPYRIGHT_ALL_LEVEL_OPTIONS,
 } from '#cli/config/generation/configurations/language/language.ts';
 
@@ -67,7 +68,7 @@ export function buildBasedpyrightFile(planned: PlannedConfig): string {
     return JSON.stringify(
         {
             ...BASEDPYRIGHT_OPTIONS,
-            ...(planned.level === 'all' && BASEDPYRIGHT_ALL_LEVEL_OPTIONS),
+            ...(planned.level === 'all' ? BASEDPYRIGHT_ALL_LEVEL_OPTIONS : BASEDPYRIGHT_DEFAULT_OPTIONS),
             typeCheckingMode: BASEDPYRIGHT_LEVELS[planned.level],
             ...(pythonVenv !== undefined && { venvPath: pythonScopePath, venv: pythonVenv }),
             include: [pythonScopePath],

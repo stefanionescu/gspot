@@ -92,7 +92,6 @@ const CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder | undefined>> = {
                 schema: { enabled: false },
                 formatting: {
                     indent_string: format.indent_style === 'tab' ? '\t' : ' '.repeat(format.indent_width),
-                    column_width: format.print_width,
                     ...TAPLO_FORMATTING,
                 },
             },

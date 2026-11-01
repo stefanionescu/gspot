@@ -33,5 +33,5 @@ lists every file gspot writes.
 ## Validate `gspot.toml`
 
 SchemaStore lists the [JSON Schema of `gspot.toml`](https://generativespotting.com/gspot.schema.json) for the newest
-gspot version. Editors that read SchemaStore, and the v8r check of `data-files`, validate `gspot.toml` against it. gspot
-itself checks `gspot.toml` against the version your repository pins on every run.
+gspot version. An editor that reads SchemaStore can use a schema one release ahead of or behind your pinned version.
+gspot checks `gspot.toml` against the version your repository pins on every run.

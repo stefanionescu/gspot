@@ -6,7 +6,6 @@ description = "Code in every language a configuration claims: unsafe patterns th
 title = "Security"
 
 [files]
-extensions = [".plist"]
 languages = true
 
 [[tool]]
