@@ -33,7 +33,7 @@ async function runSiteBuild(session: CheckSession, planned: PlannedCheck, copyRo
         );
     const isBuilt = built?.isDirectory() === true;
     const failure = result.code === 0 ? `It wrote no ${folderPath} folder.` : formatOutputTail(result);
-    return { cwd, command, folder, built: isBuilt, failure };
+    return { root: copyRoot, cwd, command, folder, built: isBuilt, failure };
 }
 
 function readSiteBuild(session: CheckSession, planned: PlannedCheck): Promise<SiteBuild> {

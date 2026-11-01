@@ -113,10 +113,10 @@ export async function checkLychee(session: CheckSession, planned: PlannedCheck):
         const result = await runCheckTool(session, planned, [...command, ...batch], { cwd: build.folder });
         const parsed = assertToolFindings(
             result,
-            parseOutput(planned.check, result.stdout, result.stderr, { root: build.folder, cwd: build.folder }),
+            parseOutput(planned.check, result.stdout, result.stderr, { root: build.root, cwd: build.folder }),
             LYCHEE_TOOL,
         );
-        findings.push(...parsed.map((finding) => ({ ...finding, file: toBuildPath(planned, finding.file) })));
+        findings.push(...parsed);
     }
     return findings;
 }
@@ -147,12 +147,12 @@ export async function checkHtmlValidate(session: CheckSession, planned: PlannedC
         const result = await runCheckTool(session, planned, [...command, ...batch], { cwd: build.cwd });
         if (![0, 1].includes(result.code)) throw new CheckStop('error', `HTML validation failed: ${result.stderr}`);
         const parsed = parseOutput(planned.check, readBytes(reports.path, HTML_VALIDATE_OUTPUT).toString('utf8'), '', {
-            root: build.folder,
+            root: build.root,
             cwd: build.folder,
         });
         if (result.code === 1 && parsed.length === 0)
             throw new CheckStop('error', `HTML validation failed without findings: ${result.stderr}`);
-        findings.push(...parsed.map((finding) => ({ ...finding, file: toBuildPath(planned, finding.file) })));
+        findings.push(...parsed);
     }
     return findings;
 }

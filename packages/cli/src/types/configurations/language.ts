@@ -18,6 +18,7 @@ import type { Level, Scope, Defined, Settings, ScopeSettings, ParsedSettings } f
 export type SitemapUrls = { urls: URL[]; findings: CheckFinding[] };
 
 export type SiteBuild = {
+    root: string;
     cwd: string;
     command: string[];
     folder: string;
