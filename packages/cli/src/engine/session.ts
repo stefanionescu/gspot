@@ -1,8 +1,8 @@
 import { readSettings } from '#cli/settings/read.ts';
+import { listPackagePins } from '#cli/tools/pins.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { listEnabledChecks } from '#cli/engine/plan.ts';
 import { readSettingsFile } from '#cli/settings/file.ts';
-import { listToolProjectPins } from '#cli/tools/pins.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import type { RunCache } from '#cli/types/system/system.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
@@ -135,7 +135,7 @@ export async function openSession(
         cache,
     };
     session.toolConfigurations = selectToolConfigurations(session, session.configuredChecks);
-    if (Object.keys(listToolProjectPins(session.toolConfigurations).npm).length > 0)
+    if (Object.keys(listPackagePins(session.toolConfigurations).npm).length > 0)
         session.packageManager = readPackageManager();
     return session;
 }

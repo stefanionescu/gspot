@@ -7,7 +7,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
-import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { unlink, symlink, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

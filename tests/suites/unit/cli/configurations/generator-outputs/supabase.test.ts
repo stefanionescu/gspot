@@ -7,7 +7,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

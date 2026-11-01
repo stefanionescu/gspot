@@ -96,8 +96,6 @@ export const COMPONENT_EXTENSION = /\.(?:vue|svelte|astro)$/u;
 export const COMPONENT_SCRIPT = /<script(?<attributes>[^>]*)>(?<body>[\s\S]*?)<\/script\s*>/giu;
 export const SCRIPT_LANGUAGE = /\blang\s*=\s*["'](?<language>[^"']+)["']/iu;
 
-export const HEXADECIMAL_RADIX = 16;
-export const OCTAL_RADIX = 8;
 export const MAXIMUM_CODE_POINT = 0x10_ff_ff;
 
 export const GRAMMAR_NAMES = ['typescript', 'tsx', 'javascript', 'bash', 'python', 'swift', 'html', 'css'] as const;

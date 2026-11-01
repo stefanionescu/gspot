@@ -4,9 +4,9 @@ import type { Configuration } from '#cli/types/manifests.ts';
 import type { Settings } from '#cli/types/settings/settings.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import type { Generation } from '#cli/types/generation/files.ts';
+import { listMisePins, listPackagePins } from '#cli/tools/pins.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import { listMisePins, listToolProjectPins } from '#cli/tools/pins.ts';
 import { GENERATED_FILE_NOUN } from '#cli/config/generation/generation.ts';
 import type { InitPlan, InitScan, InitFileRow, ConflictingConfigs } from '#cli/types/commands/init.ts';
 
@@ -31,7 +31,7 @@ import {
 } from '#cli/config/commands/init.ts';
 
 function buildToolProjectRows(configurations: Configuration[]): InitPlan['change'] {
-    const pins = listToolProjectPins(configurations);
+    const pins = listPackagePins(configurations);
     const mise = listMisePins(configurations).length;
     const npm = Object.keys(pins.npm).length;
     const python = pins.python.length;

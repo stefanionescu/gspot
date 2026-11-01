@@ -5,7 +5,7 @@ import { getTool } from '#cli/tools/pins.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

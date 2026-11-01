@@ -4,7 +4,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import * as environment from '#cli/system/environment.ts';
-import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { type RunResult } from '#cli/types/commands/check.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

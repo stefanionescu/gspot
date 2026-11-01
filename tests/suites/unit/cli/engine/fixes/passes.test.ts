@@ -5,7 +5,7 @@ import { runChecks } from '#cli/engine/run.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { LOWERCASE_SELECT_SQL } from '#tests/config/sql.ts';
 import { type RunOptions } from '#cli/types/commands/check.ts';

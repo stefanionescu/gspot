@@ -20,7 +20,7 @@ import { miseLockfileSchema } from '#cli/schemas/tools/installers/installers.ts'
 import { runInstallStep, runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
 import { buildMiseTrust, readMiseBinPaths, readToolBinPaths } from '#cli/tools/locate.ts';
 import type { MiseInstall, ToolInstall } from '#cli/types/tools/installers/installers.ts';
-import { findMisePin, listMisePins, findMissingBuild, listToolProjectPins } from '#cli/tools/pins.ts';
+import { findMisePin, listMisePins, listPackagePins, findMissingBuild } from '#cli/tools/pins.ts';
 
 import {
     UV_TOOL,
@@ -53,7 +53,7 @@ function selectMiseTools(install: ToolInstall) {
     const pins = listMisePins(configurations).filter(
         (pin) =>
             hookTools.some((tool) => findMisePin(tool)?.name === pin.name) ||
-            (pin.name === UV_TOOL && listToolProjectPins(configurations).python.length > 0),
+            (pin.name === UV_TOOL && listPackagePins(configurations).python.length > 0),
     );
     return { pins, hookTools };
 }

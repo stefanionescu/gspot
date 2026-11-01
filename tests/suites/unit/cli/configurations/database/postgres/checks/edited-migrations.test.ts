@@ -5,7 +5,7 @@ import { writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { createMigrationHistory } from '#tests/setup/sandboxes/repositories.ts';

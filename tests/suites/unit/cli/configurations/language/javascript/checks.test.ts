@@ -11,7 +11,7 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { fakeNpmTool, fakeCommands } from '#tests/setup/system/fakes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
+import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { runChecks, runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { cp, chmod, mkdir, unlink, copyFile, readFile, realpath, writeFile } from 'node:fs/promises';
 import { EMPTY_PROJECT_RESULT, IMPORTED_AMBIENT_FILES } from '#tests/config/checks/language/language.ts';

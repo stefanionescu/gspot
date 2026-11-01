@@ -16,7 +16,7 @@ import { formatFileValueError } from '#cli/settings/validation/messages.ts';
 import { validateSettingReasons } from '#cli/settings/validation/reasons.ts';
 import type { Settings, SettingsError } from '#cli/types/settings/settings.ts';
 import { validateKeys, formatUnknownSetting } from '#cli/settings/validation/keys.ts';
-import { RECORD_FIELDS, findChildSchema, unwrapSettingSchema } from '#cli/settings/schema/lookup.ts';
+import { RECORD_FIELDS, findChildSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
 
 import {
     validateScopePaths,
@@ -24,7 +24,7 @@ import {
     validateSettingRules,
     validateSwiftTargets,
     validateRuleFilePaths,
-} from '#cli/settings/validation/values.ts';
+} from '#cli/settings/validation/references.ts';
 
 function formatEmptyIgnorePaths(issue: z.core.$ZodIssue, path: KeyPath, syntax: TomlSyntax): SettingsError | undefined {
     const [record, index, field] = path;

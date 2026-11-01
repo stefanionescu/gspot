@@ -2,9 +2,9 @@ import { basename } from 'node:path/posix';
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
+import { listPackagePins } from '#cli/tools/pins.ts';
 import type { Session } from '#cli/types/session.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
-import { listToolProjectPins } from '#cli/tools/pins.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
@@ -165,7 +165,7 @@ export function buildGeneratedFiles(session: Session): Generation {
                   {
                       path: GSPOT_PATHS.npmProject,
                       content: `${JSON.stringify(
-                          { ...NPM_TOOL_PROJECT, devDependencies: listToolProjectPins(toolConfigurations).npm },
+                          { ...NPM_TOOL_PROJECT, devDependencies: listPackagePins(toolConfigurations).npm },
                           null,
                           JSON_INDENT,
                       )}\n`,

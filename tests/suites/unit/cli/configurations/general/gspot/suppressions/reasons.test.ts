@@ -5,7 +5,7 @@ import { writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/engine/run.ts';
 import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { COMPILER_SOURCE } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

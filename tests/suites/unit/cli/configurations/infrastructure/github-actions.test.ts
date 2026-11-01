@@ -15,7 +15,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
+import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { checkGeneratorOutputs } from '#cli/configurations/generator-outputs.ts';
 import { writeProgramCommand, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 

@@ -4,7 +4,7 @@ import { createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/typescript.ts';

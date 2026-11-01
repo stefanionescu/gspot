@@ -16,7 +16,7 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { join, dirname, extname, basename, delimiter } from 'node:path';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { getTool, listDistinctTools, findToolProjectPackage } from '#cli/tools/pins.ts';
+import { getTool, findPackagePin, listDistinctTools } from '#cli/tools/pins.ts';
 import { fakeToolExecutables, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 
 test('doctor reports no unowned gspot files in a fresh clone', async () => {
@@ -57,7 +57,7 @@ test.each(['ok', 'newer', 'outdated'] as const)(
                             JSON.stringify({ name, version: tool.name === pin.name ? version : tool.version }),
                         ];
                     }
-                    const installation = findToolProjectPackage(tool);
+                    const installation = findPackagePin(tool);
                     let folder = 'test-tools';
                     if (installation?.kind === 'npm') folder = join(GSPOT_PATHS.nodeModules, '.bin');
                     else if (installation?.kind === 'python')

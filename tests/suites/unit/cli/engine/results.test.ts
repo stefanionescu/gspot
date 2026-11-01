@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
 import { buildCheckSession } from '#cli/engine/run.ts';
 import { runBuiltInCheck } from '#cli/engine/results.ts';
-import { CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

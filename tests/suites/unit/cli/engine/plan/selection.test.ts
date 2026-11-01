@@ -8,7 +8,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
 import { TWO_WORDS } from '#tests/config/ignores.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
-import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { listAlwaysSelected } from '#tests/setup/cli/manifests.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { SCHEDULE_RELEASE_MARKDOWN } from '#tests/config/documents.ts';

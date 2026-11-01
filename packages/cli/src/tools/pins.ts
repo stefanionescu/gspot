@@ -4,15 +4,7 @@ import type { Host } from '#cli/types/engine/planning.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { NODE_TOOL } from '#cli/config/tools/installers/npm.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/system.ts';
-
-import type {
-    Tool,
-    Check,
-    MiseToolPin,
-    Configuration,
-    ToolProjectPins,
-    ToolProjectPackage,
-} from '#cli/types/manifests.ts';
+import type { Tool, Check, PackagePin, MiseToolPin, PackagePins, Configuration } from '#cli/types/manifests.ts';
 
 /**
 List the tools that mise installs, apart from those in the npm and Python tool projects, and add uv when a Python
@@ -23,10 +15,7 @@ tool project needs it.
 export function listMisePins(configurations: Configuration[]): MiseToolPin[] {
     const tools = listDistinctTools(configurations);
     const pins = tools.flatMap((tool) => findMisePin(tool) ?? []);
-    if (
-        tools.some((tool) => findToolProjectPackage(tool)?.kind === 'python') &&
-        tools.every((tool) => tool.name !== UV_TOOL)
-    ) {
+    if (tools.some((tool) => findPackagePin(tool)?.kind === 'python') && tools.every((tool) => tool.name !== UV_TOOL)) {
         pins.push(getUvPin());
     }
     return pins;
@@ -49,7 +38,7 @@ Find the mise pin of one tool: its version, its systems, and its backend options
 @returns undefined when mise does not install the tool.
 */
 export function findMisePin(tool: Tool): MiseToolPin | undefined {
-    if (tool.system === true || findToolProjectPackage(tool) !== undefined) return undefined;
+    if (tool.system === true || findPackagePin(tool) !== undefined) return undefined;
     const pin = tool.installers['mise'];
     return pin === undefined
         ? undefined
@@ -66,11 +55,11 @@ List the npm and Python tool project pins of the configurations.
 
 @param configurations the configurations in use.
 */
-export function listToolProjectPins(configurations: Configuration[]): ToolProjectPins {
+export function listPackagePins(configurations: Configuration[]): PackagePins {
     const npm: [string, string][] = [];
     const python: string[] = [];
     for (const tool of listDistinctTools(configurations)) {
-        const installation = findToolProjectPackage(tool);
+        const installation = findPackagePin(tool);
         if (installation === undefined) continue;
         if (installation.kind === 'npm') npm.push([installation.name, installation.version]);
         else python.push(`${installation.name}==${installation.version}`);
@@ -131,7 +120,7 @@ Find the npm or Python package that installs a tool.
 @param tool the tool to read.
 @returns undefined when the system or mise gives the tool.
 */
-export function findToolProjectPackage(tool: Tool): ToolProjectPackage | undefined {
+export function findPackagePin(tool: Tool): PackagePin | undefined {
     const python = tool.installers['pypi'];
     if (tool.system !== true && python !== undefined)
         return { kind: 'python', name: python.name, version: python.version };

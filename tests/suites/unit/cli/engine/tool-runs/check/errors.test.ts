@@ -13,7 +13,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
+import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { fakeCommands, writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { runCommandCheck, runCommandBatches } from '#cli/engine/tool-runs/check.ts';
 import { BATCH_CHECK, BATCH_IGNORE, BATCH_FINDINGS, CAFE_SOURCE_PATH } from '#tests/config/engine/tool-runs/check.ts';

@@ -13,7 +13,7 @@ import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
+import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { CHILD_SCOPE_SETTINGS } from '#tests/config/engine/tool-runs/check.ts';
 
 test('a command in a scope runs in the scope folder with paths relative to it', async () => {

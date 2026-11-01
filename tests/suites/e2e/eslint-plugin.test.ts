@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { listPackagePins } from '#cli/tools/pins.ts';
 import { cp, mkdir, writeFile } from 'node:fs/promises';
-import { listToolProjectPins } from '#cli/tools/pins.ts';
 import { PLUGIN_TYPES_SOURCE } from '#tests/config/e2e.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
@@ -44,7 +44,7 @@ test('the installed ESLint plugin loads through import and require and enforces 
     const peerPackages = [
         `eslint@${eslintPluginPackage.devDependencies.eslint}`,
         `typescript@${testsPackage.devDependencies.typescript}`,
-        `typescript-eslint@${listToolProjectPins(readConfigurations().values().toArray()).npm['typescript-eslint']!}`,
+        `typescript-eslint@${listPackagePins(readConfigurations().values().toArray()).npm['typescript-eslint']!}`,
     ];
     const installed = await runCommand(
         [

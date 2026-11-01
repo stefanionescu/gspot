@@ -41,7 +41,7 @@ Build the text of one config file, and of the files that it imports.
 @param generated the config paths and shared ignore sections.
 @returns the generated file, with paths relative to where it sits, and its companion files.
 */
-export function buildConfig(
+export function buildConfigFile(
     owned: OwnedSourceFile,
     targetPath: string,
     generated: Pick<ConfigBuildState, 'targets' | 'ignoreSections'>,
@@ -91,7 +91,7 @@ function buildOwnedOutput(
     generated: ConfigBuildState,
 ): BuiltConfig[] {
     try {
-        return [{ ...owned, ...buildConfig(owned, owned.config.target, generated) }];
+        return [{ ...owned, ...buildConfigFile(owned, owned.config.target, generated) }];
     } catch (error) {
         if (!(error instanceof GspotError)) throw error;
         for (const { owner, config } of owned.config.per_scope ? [owned] : ownedFiles) {
@@ -120,7 +120,7 @@ function listToolOutputs(ownedFiles: OwnedSourceFile[], generated: ConfigBuildSt
 function addToolOutput(target: string, group: BuiltConfig[], index: number, generated: ConfigBuildState): void {
     const [first] = group as [BuiltConfig, ...BuiltConfig[]];
     const written = index === 0 ? target : buildPerScopeTarget(first.config, first.owner.scope.path);
-    const { file, companions } = written === target ? first : buildConfig(first, written, generated);
+    const { file, companions } = written === target ? first : buildConfigFile(first, written, generated);
     for (const written of [file, ...companions]) generated.files.set(written.path, written);
     for (const { owner } of group) {
         const scope = owner.scope.path;

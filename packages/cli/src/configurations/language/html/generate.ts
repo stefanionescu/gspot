@@ -3,7 +3,7 @@ import { listIgnoredRules } from '#cli/settings/scopes.ts';
 import type { PlannedConfig } from '#cli/types/generation/files.ts';
 
 import {
-    HTML_RULES,
+    HTML_VALIDATE_RULES,
     HTML_VALIDATE_EXTENDS,
     HTML_DEFAULT_LEVEL_OFF,
     HTML_VALIDATE_OVERRIDES,
@@ -18,7 +18,7 @@ export function buildHtmlValidateFile(planned: PlannedConfig): string {
     const configuration = planned.configuration.name;
     const check = `${configuration}/html-validate`;
     const rules: Record<string, unknown> = {
-        ...(configuration === 'html' && HTML_RULES),
+        ...(configuration === 'html' && HTML_VALIDATE_RULES),
         ...HTML_VALIDATE_OVERRIDES[configuration],
     };
     for (const rule of [

@@ -1,14 +1,14 @@
 import semver from 'semver';
 import { buildProgram } from '#cli/main.ts';
+import { findPackagePin } from '#cli/tools/pins.ts';
 import { DOCS_PATHS } from '#cli/config/files/names.ts';
 import { describeCheck } from '#cli/engine/reference.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { findToolProjectPackage } from '#cli/tools/pins.ts';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { GROUP_LABELS } from '#cli/config/manifests/names.ts';
 import { STAGE_FILTERS } from '#cli/config/engine/planning.ts';
-import { buildJsonSchema } from '#cli/settings/schema/editor.ts';
+import { buildJsonSchema } from '#cli/settings/editor-schema.ts';
 import { compareText, quoteArgument } from '#cli/system/text.ts';
 import { buildSettingsReference } from '#cli/settings/reference.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
@@ -62,7 +62,7 @@ function buildConfigurationsReference(shipped: Configuration[]): ConfigurationRe
             name: tool.name,
             version: tool.version,
             source:
-                findToolProjectPackage(tool)?.kind ??
+                findPackagePin(tool)?.kind ??
                 (tool.system !== true && tool.installers['mise'] !== undefined ? 'mise' : 'system'),
         })),
     }));

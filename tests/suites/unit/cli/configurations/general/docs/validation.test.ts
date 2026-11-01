@@ -7,7 +7,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { type Finding } from '#cli/types/engine/check.ts';
-import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { README, LICENSE } from '#tests/config/documents.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

@@ -3,9 +3,9 @@ import semver from 'semver';
 import { join } from 'node:path';
 import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { listPackagePins } from '#cli/tools/pins.ts';
 import { TRAILING_PERIOD } from '#cli/config/text.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { listToolProjectPins } from '#cli/tools/pins.ts';
 import { VERSION_FLAG } from '#cli/config/tools/tools.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
@@ -79,7 +79,7 @@ async function runPackageManager(install: ToolInstall, request: PackageManagerRe
     const result = await runInstallStep(install, command, { cwd: runFolder, env });
     if (result.code !== 0) {
         const output = redactInstallOutput(result, credentials);
-        const pins = Object.entries(listToolProjectPins(install.session.toolConfigurations).npm).map(
+        const pins = Object.entries(listPackagePins(install.session.toolConfigurations).npm).map(
             ([name, version]) => `${name}@${version}`,
         );
         throw new GspotError(
@@ -142,7 +142,7 @@ export async function planNpmLockfile(
             extractRegistryCredentials(registryEnvironment),
             NPM_LOCKFILE_CREDENTIAL_MESSAGE,
         );
-        const dependencies = listToolProjectPins(install.session.toolConfigurations).npm;
+        const dependencies = listPackagePins(install.session.toolConfigurations).npm;
         if (isLockfileFresh(packageManager.name, saved, dependencies, registryEnvironment))
             return { path, next: { bytes: Buffer.from(saved), mode: OWNER_WRITABLE_FILE }, previous: previous };
     }
@@ -165,6 +165,6 @@ export async function installNpmTools(install: NpmToolInstall): Promise<string> 
         failure: INSTALL_FAILURE,
         environment: install.registryEnvironment,
     });
-    const count = Object.keys(listToolProjectPins(toolConfigurations).npm).length;
+    const count = Object.keys(listPackagePins(toolConfigurations).npm).length;
     return `installed ${formatCount(count, NPM_TOOL_NOUN)} in ${GSPOT_PATHS.nodeModules} (${packageManager.name} ${packageManager.version})`;
 }

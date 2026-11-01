@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
+import { listPackagePins } from '#cli/tools/pins.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { listToolProjectPins } from '#cli/tools/pins.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
@@ -128,7 +128,7 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
         'gspot.toml': buildSandboxSettings([]),
     });
     const session = await openSession(sandbox.path);
-    const pins = listToolProjectPins(session.toolConfigurations).npm;
+    const pins = listPackagePins(session.toolConfigurations).npm;
     const packageJson = JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: pins });
     const lockfile = JSON.stringify({
         workspaces: { '': { devDependencies: pins } },

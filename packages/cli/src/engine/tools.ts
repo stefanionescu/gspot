@@ -3,12 +3,12 @@ import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
 import { selectCheckFiles } from '#cli/engine/files.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
+import { getTool, findPackagePin } from '#cli/tools/pins.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Settings } from '#cli/types/settings/settings.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
-import { getTool, findToolProjectPackage } from '#cli/tools/pins.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { isCoverageOff, hasCoverageArguments } from '#cli/engine/plan.ts';
@@ -35,8 +35,7 @@ function isToolConditionMet(scope: Scope, conditions: Tool['when']): boolean {
 
 function addPeerPackages(names: Set<string>, configurations: readonly Configuration[]): void {
     for (const name of names)
-        for (const required of findToolProjectPackage(getTool(configurations, name))?.requires ?? [])
-            names.add(required);
+        for (const required of findPackagePin(getTool(configurations, name))?.requires ?? []) names.add(required);
 }
 
 /**

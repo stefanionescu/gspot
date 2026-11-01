@@ -8,7 +8,7 @@ import * as processes from '#cli/system/processes.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

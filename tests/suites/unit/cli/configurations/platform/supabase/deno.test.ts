@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/engine/run.ts';
-import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

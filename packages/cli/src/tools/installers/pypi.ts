@@ -8,10 +8,10 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { type Configuration } from '#cli/types/manifests.ts';
 import { formatUnavailableNote } from '#cli/tools/inspect.ts';
+import { getTool, listPackagePins } from '#cli/tools/pins.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
 import { type SpawnResult } from '#cli/types/system/system.ts';
 import { type UvLockfile } from '#cli/types/parsers/projects.ts';
-import { getTool, listToolProjectPins } from '#cli/tools/pins.ts';
 import { CONFIG_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import { uvLockfileSchema } from '#cli/schemas/parsers/projects.ts';
 import { type GeneratedFile } from '#cli/types/generation/files.ts';
@@ -79,7 +79,7 @@ async function runUv(
         );
     if (result.code !== 0) {
         const output = redactInstallOutput(result, credentials);
-        const pins = listToolProjectPins(install.session.toolConfigurations).python;
+        const pins = listPackagePins(install.session.toolConfigurations).python;
         throw new GspotError(
             'install',
             `${explainReleaseAgeHold(install, output, pins)}uv ${String(commandArguments[0])} failed (exit ${String(result.code)}).\n${output}`,
@@ -229,7 +229,7 @@ export async function installPythonTools(install: ToolInstall, executable: strin
             config: join(settings.path, UV_SETTINGS_FILE),
         });
     }
-    const count = listToolProjectPins(toolConfigurations).python.length;
+    const count = listPackagePins(toolConfigurations).python.length;
     return `installed ${formatCount(count, PYTHON_TOOL_NOUN)} in ${GSPOT_PATHS.pythonEnvironment}`;
 }
 
@@ -309,7 +309,7 @@ Build the project table of the Python tool project: its name, its Python version
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The written pyproject.toml and the lockfile state of the installers build the same table through it.
 export function buildPythonProjectTable(configurations: Configuration[]): PythonToolProject {
-    return { ...PYTHON_TOOL_PROJECT, dependencies: listToolProjectPins(configurations).python };
+    return { ...PYTHON_TOOL_PROJECT, dependencies: listPackagePins(configurations).python };
 }
 
 /**

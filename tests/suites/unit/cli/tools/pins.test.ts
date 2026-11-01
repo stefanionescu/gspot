@@ -1,11 +1,11 @@
 import { test, expect } from 'bun:test';
 import { buildProgramPin } from '#tests/setup/cli/tools.ts';
 import { TOOL_PROJECT_PACKAGES } from '#tests/config/manifests.ts';
-import { findMissingBuild, findToolProjectPackage } from '#cli/tools/pins.ts';
+import { findPackagePin, findMissingBuild } from '#cli/tools/pins.ts';
 
 test.each([...TOOL_PROJECT_PACKAGES])('$name: the installers give the expected tool project package', (row) => {
     const tool = { ...buildProgramPin(row.tool, row.version), system: row.system, installers: row.installers };
-    const placement = findToolProjectPackage(tool);
+    const placement = findPackagePin(tool);
     expect(placement).toStrictEqual(row.expected);
 });
 

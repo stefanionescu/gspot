@@ -33,7 +33,7 @@ export type ConfigurationCheck = ScopeCheck & { configuration: Configuration };
 
 export type WrittenConfiguration = { name: string; path: KeyPath };
 
-export type ToolProjectPackage = {
+export type PackagePin = {
     kind: Exclude<ToolFolderKind, 'vale'>;
     name: string;
     version: string;
@@ -51,7 +51,7 @@ export type ToolFolderKind = 'npm' | 'python' | 'vale';
 
 export type Level = (typeof LEVELS)[number];
 
-export type ToolProjectPins = { npm: Record<string, string>; python: string[] };
+export type PackagePins = { npm: Record<string, string>; python: string[] };
 
 type InstallerPin = {
     name: string;

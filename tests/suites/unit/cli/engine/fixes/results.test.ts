@@ -17,7 +17,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildProgramCommand, buildProgramArguments } from '#tests/setup/system/programs.ts';
-import { planFixer, buildRunOptions, CHECK_GENERATION, buildFixerSettings } from '#tests/setup/cli/runs.ts';
+import { planFixer, buildRunOptions, CHECK_GENERATION, buildFixerSettings } from '#tests/setup/cli/run.ts';
 
 test.each([0])('the fixer tool owns crash detection when exit is %p', async (code) => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });

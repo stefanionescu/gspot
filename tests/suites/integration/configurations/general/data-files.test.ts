@@ -8,7 +8,7 @@ import { runGitStep } from '#tests/setup/system/git.ts';
 import { UNCLOSED_SEQUENCE } from '#tests/config/yaml.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import { buildJsonSchema } from '#cli/settings/schema/editor.ts';
+import { buildJsonSchema } from '#cli/settings/editor-schema.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';

@@ -13,7 +13,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
+import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { fakeNpmTool, fakeCommands, writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 
 test('a Python check that runs in a copy uses the environment that the working tree installed', async () => {

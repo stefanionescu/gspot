@@ -7,7 +7,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { fakePlatform } from '#tests/setup/system/platform.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';

@@ -9,7 +9,7 @@ import { EMPTY_DEFAULT_SOURCE } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
+import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { runChecks, runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { checkGeneratorOutputs } from '#cli/configurations/generator-outputs.ts';
 import { BINARY_OUTPUT_HEX } from '#tests/config/checks/cross-configuration/generator-outputs.ts';

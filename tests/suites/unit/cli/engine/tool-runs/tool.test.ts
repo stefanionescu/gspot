@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { openSession } from '#cli/engine/session.ts';
 import { buildCheckSession } from '#cli/engine/run.ts';
-import { CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';

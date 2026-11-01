@@ -10,7 +10,7 @@ import type { Level } from '#cli/types/manifests.ts';
 import { type Session } from '#cli/types/session.ts';
 import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
-import { CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { type PlannedCheck } from '#cli/types/engine/planning.ts';

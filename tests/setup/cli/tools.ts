@@ -15,8 +15,8 @@ import { buildPythonProjectTable } from '#cli/tools/installers/pypi.ts';
 import type { NpmToolInstall } from '#cli/types/tools/installers/npm.ts';
 import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
 import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
+import { listMisePins, listPackagePins, listDistinctTools } from '#cli/tools/pins.ts';
 import { readToolPackageManager } from '#cli/repository/javascript/package-manager.ts';
-import { listMisePins, listDistinctTools, listToolProjectPins } from '#cli/tools/pins.ts';
 import type { ToolInstall, ToolPackageManager } from '#cli/types/tools/installers/installers.ts';
 
 /**
@@ -117,7 +117,7 @@ export function buildToolSearch(root: string, fields: Partial<ToolSearch> = {}):
 Build tool lockfiles that match the pins of the configurations, so that apply finds every lockfile current.
 */
 export function buildToolLockfiles(configurations: Configuration[]): Record<string, string> {
-    const dependencies = listToolProjectPins(configurations).npm;
+    const dependencies = listPackagePins(configurations).npm;
     const python = buildPythonProjectTable(configurations);
     return {
         [GSPOT_PATHS.miseLockfile]: stringify({

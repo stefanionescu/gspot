@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildCheckSession } from '#cli/engine/run.ts';
-import { CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

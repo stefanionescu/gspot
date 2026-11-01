@@ -6,7 +6,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
 import { buildCheckSession } from '#cli/engine/run.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
-import { CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { type CommandArgument } from '#cli/types/engine/tool-runs.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';

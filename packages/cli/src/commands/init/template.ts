@@ -15,7 +15,7 @@ import type { Template, LeftOutSetting } from '#cli/types/commands/init.ts';
 import type { SettingDefinition } from '#cli/types/settings/definitions.ts';
 import { LOCAL_RECORDS, LEFT_OUT_NOTES } from '#cli/config/commands/init.ts';
 import { parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
-import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/schema/lookup.ts';
+import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
 
 function isSettingsTable(schema: z.ZodType): boolean {
     let inner = unwrapSettingSchema(schema);

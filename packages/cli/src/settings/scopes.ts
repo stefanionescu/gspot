@@ -1,8 +1,8 @@
+import { findSettingSchema } from '#cli/settings/lookup.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { addTable, findValueAt } from '#cli/system/tables.ts';
 import { selectConfigurations } from '#cli/manifests/select.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
-import { findSettingSchema } from '#cli/settings/schema/lookup.ts';
 import { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
 import { namingCategorySchema } from '#cli/schemas/settings/fields.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';

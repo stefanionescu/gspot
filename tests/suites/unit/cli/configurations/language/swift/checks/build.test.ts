@@ -6,7 +6,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { CANCELED_CHECK_NOTE } from '#tests/config/messages.ts';
 import { rm, mkdir, readFile, writeFile } from 'node:fs/promises';

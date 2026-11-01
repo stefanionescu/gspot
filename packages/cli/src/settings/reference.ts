@@ -4,7 +4,7 @@ import { compareText } from '#cli/system/text.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { SETTING_NAME_PLACEHOLDER } from '#cli/config/settings/schema.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
-import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/schema/lookup.ts';
+import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
 import { buildAvailableSettings, SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import type { SettingVariant, SettingAccepted, SettingReference } from '#cli/types/reference.ts';
 

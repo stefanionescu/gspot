@@ -4,9 +4,9 @@ import { writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/engine/run.ts';
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { listToolProjectPins } from '#cli/tools/pins.ts';
+import { listPackagePins } from '#cli/tools/pins.ts';
 import { listSettingReaders } from '#cli/engine/skips.ts';
-import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { fakePlatform } from '#tests/setup/system/platform.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
@@ -109,7 +109,7 @@ test.each([false, true])('Semgrep tools follow local rules at plan time (custom 
                   note: 'No selected configuration or tools.semgrep.rule_files supplies local rules.',
               },
     );
-    expect(listToolProjectPins(session.toolConfigurations).python.some((pin) => pin.startsWith('semgrep=='))).toBe(
+    expect(listPackagePins(session.toolConfigurations).python.some((pin) => pin.startsWith('semgrep=='))).toBe(
         hasRuleFiles,
     );
 });
@@ -123,9 +123,7 @@ test('shipped Semgrep rules select its tool', async () => {
     });
     const session = await openSession(sandbox.path);
     expect(planChecks(session, { stage: 'push', only: ['security/semgrep'] })[0]?.skip).toBeUndefined();
-    expect(listToolProjectPins(session.toolConfigurations).python.some((pin) => pin.startsWith('semgrep=='))).toBe(
-        true,
-    );
+    expect(listPackagePins(session.toolConfigurations).python.some((pin) => pin.startsWith('semgrep=='))).toBe(true);
 });
 
 test('generated and vendored test files do not satisfy a source-tag condition', async () => {

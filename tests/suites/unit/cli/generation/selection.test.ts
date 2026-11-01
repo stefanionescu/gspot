@@ -6,8 +6,8 @@ import { writeFile } from 'node:fs/promises';
 import { findValueAt } from '#cli/system/tables.ts';
 import { join, extname, basename } from 'node:path';
 import { openSession } from '#cli/engine/session.ts';
+import { listPackagePins } from '#cli/tools/pins.ts';
 import { LEVELS } from '#cli/config/manifests/names.ts';
-import { listToolProjectPins } from '#cli/tools/pins.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
@@ -126,7 +126,7 @@ test('Go and Rust sources keep the files and tools of every selected configurati
         '.gspot/configurations/general/format/prettier.json',
         '.prettierignore',
     ]);
-    const npmTools = Object.keys(listToolProjectPins(session.toolConfigurations).npm);
+    const npmTools = Object.keys(listPackagePins(session.toolConfigurations).npm);
     expect(npmTools).toContain('prettier');
     expect(npmTools).toContain('v8r');
 });

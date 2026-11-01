@@ -9,7 +9,7 @@ import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
-import { planFixer, CHECK_GENERATION, buildFixerSettings } from '#tests/setup/cli/runs.ts';
+import { planFixer, CHECK_GENERATION, buildFixerSettings } from '#tests/setup/cli/run.ts';
 
 test('a fix in a copy writes only the selected file back and removes the copy', async () => {
     await using sandbox = await createGitSandbox({

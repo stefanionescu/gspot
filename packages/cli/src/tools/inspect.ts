@@ -1,9 +1,9 @@
 import which from 'which';
 import { join, relative } from 'node:path';
 import { isInside } from '#cli/system/paths.ts';
+import { findPackagePin } from '#cli/tools/pins.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { findToolProjectPackage } from '#cli/tools/pins.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { readToolVersion, classifyToolVersion } from '#cli/tools/versions.ts';
@@ -14,7 +14,7 @@ import type { ToolSearch, InspectedTool, ToolInspection } from '#cli/types/tools
 import { MISE_TOOL, INSTALL_HELP, MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/tools/tools.ts';
 
 function buildInstallHelp(tool: Tool): string {
-    const toolProjectPackage = findToolProjectPackage(tool);
+    const toolProjectPackage = findPackagePin(tool);
     if (toolProjectPackage !== undefined || tool.system !== true) {
         return toolProjectPackage === undefined && which.sync(MISE_TOOL, { nothrow: true }) === null
             ? `Install mise (${MISE_INSTALL_URL}), or install ${tool.name} ${tool.version ?? ''} yourself.`
@@ -80,7 +80,7 @@ function inspectExecutablePath(inspected: InspectedTool, path: string): ToolInsp
 function inspectProjectExecutable(inspected: InspectedTool): ToolInspection | undefined {
     const { root, cwd, tool, timeoutSeconds } = inspected;
     if (tool.system !== true) return undefined;
-    const toolProjectPackage = findToolProjectPackage(tool);
+    const toolProjectPackage = findPackagePin(tool);
     if (toolProjectPackage === undefined) return undefined;
     const [project] = listRepositoryExecutablePaths(root, tool.name, { folders: [cwd, root] });
     if (project !== undefined) return inspectExecutablePath(inspected, project);
@@ -107,7 +107,7 @@ function inspectExecutable(inspected: InspectedTool): ToolInspection {
         : {
               folders: [join(root, GSPOT_FOLDER)],
               miseBinPaths,
-              toolFolderKind: findToolProjectPackage(tool)?.kind,
+              toolFolderKind: findPackagePin(tool)?.kind,
           };
     const [path] = listExecutablePaths(root, tool.name, { timeoutSeconds, ...search });
     return path === undefined ? inspected.missing : inspectExecutablePath(inspected, path);
@@ -115,7 +115,7 @@ function inspectExecutable(inspected: InspectedTool): ToolInspection {
 
 function formatMissingProgram(tool: Tool, inspection: ToolInspection): string {
     const version = tool.version === undefined ? '' : ` ${tool.version}`;
-    const needsMise = tool.system !== true && findToolProjectPackage(tool) === undefined;
+    const needsMise = tool.system !== true && findPackagePin(tool) === undefined;
     if (inspection.state === 'missing' && needsMise && which.sync(MISE_TOOL, { nothrow: true }) === null)
         return 'mise is not on PATH.';
     return `${tool.name}${version} is not installed.`;

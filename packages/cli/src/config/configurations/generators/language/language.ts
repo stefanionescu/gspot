@@ -296,7 +296,7 @@ export const HTML_VALIDATE_EXTENDS = ['html-validate:recommended'] as const;
 
 export const HTML_DEFAULT_LEVEL_OFF = ['no-inline-style', 'prefer-button', 'prefer-native-element'] as const;
 
-export const HTML_RULES = {
+export const HTML_VALIDATE_RULES = {
     'doctype-style': 'off',
     'void-style': 'off',
     'attr-quotes': 'off',

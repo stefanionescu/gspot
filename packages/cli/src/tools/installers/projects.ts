@@ -5,10 +5,10 @@ import { openFiles } from '#cli/system/files/open.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { listExecutablePaths } from '#cli/tools/locate.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
+import { listMisePins, listPackagePins } from '#cli/tools/pins.ts';
 import { isMiseLockfileFresh } from '#cli/tools/installers/mise.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import { listMisePins, listToolProjectPins } from '#cli/tools/pins.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
 import type { NpmToolInstall } from '#cli/types/tools/installers/npm.ts';
 import type { PackageManager } from '#cli/types/repository/javascript.ts';
@@ -42,7 +42,7 @@ function readNpmLockfileState(
     const path = `${GSPOT_FOLDER}/${selectLockfileName(packageManager)}`;
     const saved = files.read(path);
     if (saved === undefined) return { path, kind: 'missing' };
-    const dependencies = listToolProjectPins(configurations).npm;
+    const dependencies = listPackagePins(configurations).npm;
     return isLockfileFresh(packageManager, saved.bytes.toString('utf8'), dependencies, environment)
         ? undefined
         : { path, kind: 'changed' };
@@ -137,7 +137,7 @@ export async function installToolProjects(install: ToolInstall, miseBinPaths: st
     const lockfiles = await planLockfiles(install, { npm, uvPath });
     writePlans(writer, planReplacements(writer, lockfiles));
     if (npm !== undefined) notes.push(await installNpmTools(npm));
-    if (uvPath !== undefined && listToolProjectPins(session.toolConfigurations).python.length > 0)
+    if (uvPath !== undefined && listPackagePins(session.toolConfigurations).python.length > 0)
         notes.push(await installPythonTools(install, uvPath));
     return notes;
 }

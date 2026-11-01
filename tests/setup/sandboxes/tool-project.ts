@@ -1,11 +1,11 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
-import { listToolProjectPins } from '#cli/tools/pins.ts';
+import { listPackagePins } from '#cli/tools/pins.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { NPM_TOOL_PROJECT } from '#cli/config/generation/generation.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
 
-const pins = Object.entries(listToolProjectPins(readConfigurations().values().toArray()).npm).filter(
+const pins = Object.entries(listPackagePins(readConfigurations().values().toArray()).npm).filter(
     ([name]) => name !== eslintPluginPackage.name,
 );
 
