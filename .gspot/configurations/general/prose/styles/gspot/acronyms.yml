@@ -109,6 +109,7 @@ exceptions:
   - writeable
   - styl
   - USAGE
+  - xdescribe
   - API
   - CLI
   - HTTP

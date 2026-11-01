@@ -16,11 +16,13 @@ import { noIndexImports } from './rules/no-index-imports.ts';
 import { noMagicNumbers } from './rules/no-magic-numbers.ts';
 import { noNestedSwitch } from './rules/no-nested-switch.ts';
 import { noTrivialFiles } from './rules/no-trivial-files.ts';
+import { testHooksFirst } from './rules/test-hooks-first.ts';
 import { noCommentedCode } from './rules/no-commented-code.ts';
 import { noIgnoredReturn } from './rules/no-ignored-return.ts';
 import { noUnthrownError } from './rules/no-unthrown-error.ts';
 import { preferTypeGuard } from './rules/prefer-type-guard.ts';
 import { importBoundaries } from './rules/import-boundaries.ts';
+import { noExclusiveTests } from './rules/no-exclusive-tests.ts';
 import { noInsecureRandom } from './rules/no-insecure-random.ts';
 import { noRenamedExports } from './rules/no-renamed-exports.ts';
 import pluginPackage from '../package.json' with { type: 'json' };
@@ -28,6 +30,8 @@ import { noFixedTestWaits } from './rules/no-fixed-test-waits.ts';
 import { noInsecureCookies } from './rules/no-insecure-cookies.ts';
 import { noNestedFunctions } from './rules/no-nested-functions.ts';
 import { requireServerOnly } from './rules/require-server-only.ts';
+import { noEarlyTestReturn } from './rules/no-early-test-return.ts';
+import { noEmptyTestTitles } from './rules/no-empty-test-titles.ts';
 import { noPoweredByHeader } from './rules/no-powered-by-header.ts';
 import { noAsyncConstructor } from './rules/no-async-constructor.ts';
 import { noDiscardedPostfix } from './rules/no-discarded-postfix.ts';
@@ -57,12 +61,14 @@ import { noKeywordDeclarations } from './rules/no-keyword-declarations.ts';
 import { noUselessIntersection } from './rules/no-useless-intersection.ts';
 import { preferImmediateReturn } from './rules/prefer-immediate-return.ts';
 import { noAdjacentMultilineIf } from './rules/no-adjacent-multiline-if.ts';
+import { noDuplicateTestTitles } from './rules/no-duplicate-test-titles.ts';
 import { noExcessCallArguments } from './rules/no-excess-call-arguments.ts';
 import { noPublicTemporaryPath } from './rules/no-public-temporary-path.ts';
 import { noTransposedAssignment } from './rules/no-transposed-assignment.ts';
 import { preferPromiseShorthand } from './rules/prefer-promise-shorthand.ts';
 import { noDuplicateInComposite } from './rules/no-duplicate-in-composite.ts';
 import { noMisplacedLoopCounter } from './rules/no-misplaced-loop-counter.ts';
+import { noUnexplainedTestSkips } from './rules/no-unexplained-test-skips.ts';
 import { noFloatingPointEquality } from './rules/no-floating-point-equality.ts';
 import { noUnsafeSanitizerBypass } from './rules/no-unsafe-sanitizer-bypass.ts';
 import { noUnsafeSecurityHeaders } from './rules/no-unsafe-security-headers.ts';
@@ -101,6 +107,12 @@ const rules = {
     'no-floating-point-equality': noFloatingPointEquality,
     'no-equal-loop-condition': noEqualLoopCondition,
     'no-small-switch': noSmallSwitch,
+    'no-exclusive-tests': noExclusiveTests,
+    'no-unexplained-test-skips': noUnexplainedTestSkips,
+    'no-early-test-return': noEarlyTestReturn,
+    'no-empty-test-titles': noEmptyTestTitles,
+    'no-duplicate-test-titles': noDuplicateTestTitles,
+    'test-hooks-first': testHooksFirst,
     'no-discarded-postfix': noDiscardedPostfix,
     'no-ignored-catch': noIgnoredCatch,
     'no-keyword-declarations': noKeywordDeclarations,

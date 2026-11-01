@@ -96,6 +96,7 @@ vertica
 Windows
 wrangler
 writeable
+xdescribe
 xmllint
 YAML
 yamllint

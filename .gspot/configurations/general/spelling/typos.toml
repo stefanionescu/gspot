@@ -18,6 +18,7 @@ certifi = "certifi"
 writeable = "writeable"
 styl = "styl"
 USAGE = "USAGE"
+xdescribe = "xdescribe"
 
 [files]
 extend-exclude = [

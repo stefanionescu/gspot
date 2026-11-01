@@ -1,7 +1,8 @@
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import * as parser from '@typescript-eslint/parser';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 import { RuleTester, type RuleTesterConfig } from '@typescript-eslint/rule-tester';
 
 import {
@@ -52,4 +53,19 @@ export function buildTypedRuleTester(): RuleTester {
         root,
         languageOptions: { parserOptions: { project: './tsconfig.json', tsconfigRootDir: root } },
     });
+}
+
+/**
+Write package.json files into a new folder of the test run, for the rules that read the dependencies of a project.
+
+@param manifests the package.json content of each folder, by its path in the new folder.
+@returns the new folder.
+*/
+export function writePackageFolders(manifests: Record<string, Record<string, unknown>>): string {
+    const root = mkdtempSync(join(TEST_RUN_FOLDER, 'rule-tester-'));
+    for (const [folder, manifest] of Object.entries(manifests)) {
+        mkdirSync(join(root, folder), { recursive: true });
+        writeFileSync(join(root, folder, 'package.json'), JSON.stringify(manifest));
+    }
+    return root;
 }

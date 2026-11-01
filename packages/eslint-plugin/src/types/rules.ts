@@ -57,3 +57,32 @@ export type NameSet = {
 };
 
 export type PromiseUse = 'blocking' | 'handled' | 'caught' | 'open';
+export type FileContext = Pick<RuleContext, 'filename' | 'settings' | 'sourceCode'>;
+
+export type SuiteMember = {
+    call: TSESTree.CallExpression;
+    index: number;
+    kind: 'test' | 'suite' | 'hook';
+    isAfter: boolean;
+};
+
+export type TitleScan = {
+    source: TSESLint.SourceCode;
+    path: Set<TSESTree.Node>;
+    report: (node: TSESTree.Node) => void;
+};
+
+export type SkipFramework = 'jasmine' | 'jest' | 'vitest' | 'mocha' | 'playwright';
+
+export type EarlyReturnFramework = 'mocha' | 'vitest' | 'playwright' | 'nodeTest' | 'bun';
+
+export type PackageFacts = { dependencies: ReadonlySet<string>; manifests: number };
+
+export type TestOrigin = { name: string; module: string | undefined };
+
+export type TestCallee = TestOrigin & { base: TSESTree.Identifier; modifiers: string[] };
+
+export type TestCall = TestCallee & {
+    kind: 'test' | 'suite' | 'hook';
+    callback: TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression | undefined;
+};

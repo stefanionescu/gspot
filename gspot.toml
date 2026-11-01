@@ -160,6 +160,7 @@ certifi = "The tests name the Python certificate bundle package certifi."
 writeable = "ESLint accepts writeable as the value of a global."
 styl = "The Stylus stylesheet extension is .styl."
 USAGE = "mise uses USAGE in task argument directives."
+xdescribe = "Jasmine, Jest, and Mocha name their disabled suite xdescribe."
 
 [tools.eslint]
 import_extension = "ts"
