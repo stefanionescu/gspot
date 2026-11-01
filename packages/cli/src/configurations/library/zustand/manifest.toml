@@ -9,5 +9,11 @@ title = "Zustand"
 dependencies = ["zustand"]
 
 [[eslint.selectors]]
-message = "Create stores only in the files of zustand.store_files."
+message = "Pass a selector, such as useCartStore((state) => state.items), so the component re-renders only for what it reads."
 selector = "CallExpression[callee.name=/^use[A-Z]\\w*Store$/][arguments.length=0], CallExpression[callee.name='useStore'][arguments.length=1]"
+
+[[eslint.selectors]]
+level = "all"
+message = "Create the store inside a factory that a provider owns, not at module level."
+paths_setting = "zustand.store_files"
+selector = ":matches(Program > VariableDeclaration, Program > ExportNamedDeclaration > VariableDeclaration) > VariableDeclarator > CallExpression[callee.name=/^(create|createStore)$/]"

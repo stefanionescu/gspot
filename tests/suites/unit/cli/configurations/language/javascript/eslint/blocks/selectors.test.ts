@@ -86,6 +86,19 @@ test('store, form and procedure selectors distinguish validated calls and unrela
     );
 });
 
+test('a module-level store in a store file is reported at level all, and a store in a factory is not', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'zustand'], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'cart.store.js':
+            "import { createStore } from 'zustand/vanilla';\n\nexport const cartStore = createStore(() => ({}));\n\nexport function buildStore() {\n    return createStore(() => ({}));\n}\n",
+    });
+    const eslint = await buildEslint(sandbox.path);
+    expect(await listLintFindings(eslint, sandbox.path, ['cart.store.js'], ['gspot/restricted-syntax'])).toStrictEqual([
+        { file: 'cart.store.js', line: 3, rule: 'gspot/restricted-syntax' },
+    ]);
+});
+
 test('library selectors at level basic report both whole-store reads and accept schema options and unrelated queries', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript', 'zustand', 'react-hook-form', 'trpc'], {
