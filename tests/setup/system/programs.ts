@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { executableLayout } from '#cli/system/paths.ts';
 import type { ProgramName } from '#tests/types/programs.ts';
 
 /**
@@ -24,4 +25,15 @@ export function splitProgramArguments(): { own: string[]; call: string[] } {
     const all = process.argv.slice(2);
     const separator = all.indexOf('--');
     return separator === -1 ? { own: all, call: [] } : { own: all.slice(0, separator), call: all.slice(separator + 1) };
+}
+
+/**
+Locate a console script inside a test's Python environment.
+
+@param folder the environment root.
+@param name the console script.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The console script path uses the virtual environment folder and launcher suffix of this system.
+export function buildVenvExecutablePath(folder: string, name: string): string {
+    return join(folder, executableLayout.environmentFolder, name + executableLayout.environmentSuffix);
 }

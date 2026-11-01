@@ -85,10 +85,15 @@ test.each([...LINE_ENDING_CASES])(
             },
         ]);
         expect(
-            parseCommandFindings({ check }, buildProcessResult({ ...FAILED_RUN, stderr: output }), {
-                cwd: sandbox.path,
-                root: sandbox.path,
-            }).findings,
+            parseCommandFindings(
+                { check },
+                buildProcessResult({ ...FAILED_RUN, stderr: output }),
+                {
+                    cwd: sandbox.path,
+                    root: sandbox.path,
+                },
+                {},
+            ).findings,
         ).toStrictEqual(findings);
     },
 );

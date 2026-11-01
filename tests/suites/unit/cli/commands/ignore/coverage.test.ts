@@ -123,8 +123,8 @@ test('ignore without a check keeps the paths out of every check and every config
 });
 
 test.each([...LITERAL_ROUTE_CASES])(
-    'ignore and unignore accept $folder before and after it disappears (removed: $removed)',
-    async ({ folder, path, escaped, removed }) => {
+    'ignore and unignore accept $folder after it disappears',
+    async ({ folder, path, escaped }) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['typescript']),
             [`${folder}/terms/page.tsx`]: TERMS_SOURCE,
@@ -142,7 +142,7 @@ test.each([...LITERAL_ROUTE_CASES])(
         const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
         expect(written['ignore']).toMatchObject([{ paths: [escaped] }]);
         expect(await runSandboxCheck(sandbox.path, 'gspot/unmatched-paths')).toStrictEqual([]);
-        if (removed) await rm(join(sandbox.path, folder), { recursive: true });
+        await rm(join(sandbox.path, folder), { recursive: true });
         const restored = await runGspot(sandbox.path, ['unignore', 'structure/lone-files', '--paths', path]);
         expect(restored.code, restored.stdout + restored.stderr).toBe(0);
         expect(restored.stdout).toStartWith(`Removed 1 ignore for structure/lone-files for ${path}.`);

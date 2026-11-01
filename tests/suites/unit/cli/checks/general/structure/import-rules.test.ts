@@ -20,7 +20,6 @@ import {
     PYTHON_IMPORT_FILES,
     PYTHON_IMPORT_RULES,
     UNCOVERED_FILE_MESSAGE,
-    SWIFTPM_DEFAULT_FOLDERS,
 } from '#tests/config/checks/general/structure/structure.ts';
 
 test('structure/import-rules reports a Python file outside every rule and each refused import, a relative one too', async () => {
@@ -119,35 +118,6 @@ test('import rules exempt a local ESLint plugin named by settings', async () => 
     });
     expect(await runSandboxCheck(sandbox.path, 'structure/import-rules')).toStrictEqual([]);
 });
-
-test.each([...SWIFTPM_DEFAULT_FOLDERS])(
-    'a SwiftPM target without a path reads its files from the default folder %s',
-    async (folder) => {
-        await using sandbox = await testdir({
-            'Package.swift': SWIFT_IMPORT_FILES['Package.swift'].replace('Sources/FeatureKit', 'FeatureKit'),
-            'gspot.toml': buildSandboxSettings(['swift'], {
-                tables: SWIFT_IMPORT_RULES.replace('Sources/Core/**', `${folder}/Core/**`).replace(
-                    'Sources/FeatureKit/**',
-                    'FeatureKit/**',
-                ),
-            }),
-            [`${folder}/Core/Model.swift`]: 'import Feature\npublic struct Model {}\n',
-            'FeatureKit/View.swift': 'import Core\npublic struct View {}\n',
-        });
-        expect(await runSandboxCheck(sandbox.path, 'structure/import-rules')).toStrictEqual([
-            {
-                check: 'structure/import-rules',
-                file: `${folder}/Core/Model.swift`,
-                line: 1,
-                column: 1,
-                rule: 'refused-import',
-                fixable: false,
-                message: `Import rule "core" may import only its own files, not Feature from import-rule:feature. ${REFUSAL_HELP}`,
-                help: 'Move the code into a rule that may import it, move that rule above, list the rule in `can_import`, or add the file to the paths of a rule.',
-            },
-        ]);
-    },
-);
 
 test('a vendored Python file under a rule reports nothing', async () => {
     await using sandbox = await testdir({

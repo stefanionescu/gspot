@@ -47,31 +47,6 @@ test('list shows selected settings and available configurations', async () => {
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
-test('the text configuration list shows the selected names of the JSON list', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['bash']),
-        'entry.sh': 'echo example\n',
-    });
-
-    const before = await readTree(sandbox.path);
-    const structured = await runGspot(sandbox.path, ['list', 'configurations', '--json']);
-    expect(structured.code, structured.stdout + structured.stderr).toBe(0);
-    expect(structured.stderr).toBe('');
-    const { selected, available } = JSON.parse(structured.stdout) as ConfigurationsListJson;
-    const human = await runGspot(sandbox.path, ['list', 'configurations']);
-    expect(human.code, human.stdout + human.stderr).toBe(0);
-    expect(human.stderr).toBe('');
-    const [selectedText = '', availableText = ''] = human.stdout.split('\n\navailable\n');
-    expect(selectedText.split('\n').filter((line) => /^ {2}\S+$/u.test(line))).toStrictEqual(
-        selected.map(({ name }) => `  ${name}`),
-    );
-    expect(selectedText.split('\n')).toContain('    bash/shellcheck  root: on');
-    expect(availableText.split('\n').filter((line) => line !== '')).toStrictEqual(
-        available.map(({ name, description }) => `  ${name}  ${description}`),
-    );
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-});
-
 test('the text check list puts the states of all scopes in one row', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], {

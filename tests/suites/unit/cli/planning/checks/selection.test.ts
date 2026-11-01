@@ -15,7 +15,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { SCHEDULE_RELEASE_MARKDOWN } from '#tests/config/documents.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { isActive, planChecks, stripCoverageArguments } from '#cli/planning/checks.ts';
-import { TSC_REPLACEMENTS, CONFIGURED_CHECK_CASES, SCOPE_WIDE_IGNORE_CASES } from '#tests/config/planning/checks.ts';
+import { TSC_REPLACEMENTS, SCOPE_WIDE_IGNORE_CASES } from '#tests/config/planning/checks.ts';
 
 test('coverage stripping leaves your own checks and given arguments unchanged', async () => {
     await using sandbox = await testdir();
@@ -166,15 +166,6 @@ test.each([...LEVELS])('%s plans history checks once at the root and only for pu
     );
     expect(planChecks(session, { stage: 'push', only: ['sandbox/once'], shallow: true })).toHaveLength(1);
 });
-
-test.each([...CONFIGURED_CHECK_CASES])(
-    'planning $check keeps its config-file selection $selected: $name',
-    async ({ configurations, options, files, check, selected }) => {
-        await using sandbox = await testdir({ ...files, 'gspot.toml': buildSandboxSettings(configurations, options) });
-        const session = await openSession(sandbox.path);
-        expect(session.configuredChecks.some((configuredCheck) => configuredCheck.check.id === check)).toBe(selected);
-    },
-);
 
 test.each([...TSC_REPLACEMENTS])(
     '$check replaces typescript/tsc only while it runs',

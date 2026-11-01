@@ -195,14 +195,6 @@ export const INVALID_RESOURCE_DOCUMENTS = [
     { check: 'xcode/assets', path: 'App/Assets.xcassets/Logo.imageset/Contents.json', text: '{' },
 ] as const;
 
-export const UNREADABLE_RESOURCES = [
-    {
-        check: 'xcode/assets',
-        path: 'App/Assets.xcassets/Logo.imageset/Contents.json',
-        text: '{"images":[{"filename":"logo.png"}]}\n',
-    },
-] as const;
-
 export const PARTLY_TRANSLATED_STRINGS = {
     sourceLanguage: 'en',
     version: '1.0',

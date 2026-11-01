@@ -51,7 +51,7 @@ test('a network crash keeps its output tail and states the network requirement s
     await using sandbox = await testdir();
     const check = { ...BASE_CHECK, needs: ['network' as const], exit_codes: [0] };
     const result = buildProcessResult({ code: 2, stdout: '{"Results":[]}', stderr: 'scan log\nrequest refused\n' });
-    expect(parseCommandFindings({ check }, result, { cwd: sandbox.path, root: sandbox.path }).note).toBe(
+    expect(parseCommandFindings({ check }, result, { cwd: sandbox.path, root: sandbox.path }, {}).note).toBe(
         `${check.id} failed with exit 2:\nscan log\nrequest refused\n{"Results":[]} This check needs network access.`,
     );
 });
@@ -74,6 +74,7 @@ test('astro check reads a TypeScript diagnostic from colored output, and its cra
         { check },
         buildProcessResult({ code: 1, stdout: ASTRO_CHECK_OUTPUT }),
         paths,
+        {},
     );
     expect(reported.findings).toMatchObject([
         {
@@ -88,6 +89,7 @@ test('astro check reads a TypeScript diagnostic from colored output, and its cra
         { check },
         buildProcessResult({ code: 1, stdout: ASTRO_CHECK_SUMMARY }),
         paths,
+        {},
     );
     expect(crashed).toStrictEqual({ note: 'astro/astro-check failed with exit 1:\nResult (1 file): \n- 1 error' });
 });

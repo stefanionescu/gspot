@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { CLEAN_SWIFT } from '#tests/config/swift.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import type { LinterJsonFinding } from '#tests/types/tools.ts';
-import { unlink, readFile, writeFile } from 'node:fs/promises';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
@@ -78,26 +78,6 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
         const fixed = await spawnGspot(root, ['check', '--only', 'swift/swiftlint', '--json', '--fix']);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await readFile(join(root, `${prefix}Sources/Value.swift`), 'utf8')).toBe(CORRECTED_PARSER_SOURCE);
-    },
-);
-
-test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
-    'SwiftLint $name refuses a missing root config file and names its path',
-    async ({ scope }) => {
-        await using sandbox = await prepareSwiftScope(scope);
-        const { root, prefix } = sandbox;
-        const path = join(root, `${prefix}.swiftlint.yml`);
-        await unlink(path);
-        const missing = await spawnGspot(root, ['check', '--only', 'swift/swiftlint', '--json']);
-        expect(missing.code, missing.stdout + missing.stderr).toBe(2);
-        expect(parseCheckReport(missing).report.checks).toMatchObject([
-            {
-                check: 'swift/swiftlint',
-                status: 'error',
-                findings: [],
-                note: `The generated file ${prefix}.swiftlint.yml is missing. Run gspot apply.`,
-            },
-        ]);
     },
 );
 

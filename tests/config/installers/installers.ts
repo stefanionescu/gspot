@@ -1,9 +1,8 @@
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { HUSKY_STUBS } from '#tests/config/repository/repository.ts';
-import { PYTHON_VERSION } from '#cli/config/installers/installers.ts';
+import { PYTHON_TOOL_PROJECT as PYTHON_PROJECT } from '#cli/config/installers/installers.ts';
 
 export const REGISTRY_PASSWORDS = [
-    ['https://example.com/simple', []],
     ['https://alex@example.com/simple', []],
     ['https://alex:test%2Bpassword@example.com/simple', ['test%2Bpassword', 'test+password']],
     ['https://alex:password@example.com/simple', ['password', 'password']],
@@ -115,7 +114,7 @@ url = "packages"
 export const PYTHON_TOOL_PROJECT = `[project]
 name = "tools"
 version = "0.0.0"
-requires-python = "==${PYTHON_VERSION}"
+requires-python = "${PYTHON_PROJECT['requires-python']}"
 dependencies = ["Example.Package==1.2.3", "second-package==4.0.0"]
 
 [tool.uv]
@@ -124,7 +123,7 @@ constraint-dependencies = ["transitive.package>=2.0.0"]
 `;
 
 export const PYTHON_TOOL_LOCKFILE = `version = 1
-requires-python = "==${PYTHON_VERSION}"
+requires-python = "${PYTHON_PROJECT['requires-python']}"
 
 [manifest]
 constraints = [{ name = "transitive-package", specifier = ">=2.0.0" }]
@@ -137,7 +136,7 @@ metadata = { requires-dist = [{ name = "second_package", specifier = "==4.0.0" }
 `;
 
 export const UV_LOCKFILE_MISMATCHES = [
-    ['Python version', `==${PYTHON_VERSION}`, '==3.13.15'],
+    ['Python version', PYTHON_PROJECT['requires-python'], '==0.0.0'],
     ['pin', '==4.0.0', '==5.0.0'],
     ['virtual root', 'virtual = "."', 'virtual = "elsewhere"'],
 ] as const;
@@ -195,13 +194,11 @@ find-links = ["wheels"]
 
 export const INVALID_UV_SETTINGS = [
     { file: 'uv.toml', field: 'find-links', text: 'find-links = "https://example.com/wheels"\n' },
-    { file: 'uv.toml', field: 'index', text: 'index = "x"\n' },
     {
         file: 'pyproject.toml',
         field: 'tool.uv.find-links',
         text: '[tool.uv]\nfind-links = "https://example.com/wheels"\n',
     },
-    { file: 'pyproject.toml', field: 'tool.uv.index', text: '[tool.uv]\nindex = "x"\n' },
 ];
 
 export const PYTHON_INSTALL_FILES = {

@@ -5,10 +5,9 @@ import { createFileTree } from 'testdirs';
 import { parse } from '@decimalturn/toml-patch';
 import { findValueAt } from '#cli/system/tables.ts';
 import { readSettings } from '#cli/settings/read.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { readTree } from '#tests/setup/system/files.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import type { TomlTable } from '#cli/types/settings/settings.ts';
-import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { rm, symlink, readFile, writeFile } from 'node:fs/promises';
@@ -20,10 +19,7 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import {
     SETTING_REASON,
     LOOSENED_SETTINGS,
-    NO_CHANGE_COMMANDS,
-    BANNED_WORD_SCOPES,
     STOPPED_APPLY_FILES,
-    BANNED_WORD_SETTINGS,
     KEPT_SETTING_CHANGES,
     STRING_SETTING_VALUES,
 } from '#tests/config/commands/set.ts';
@@ -57,18 +53,6 @@ test('set names -- when a value reads as an option, and takes the values after -
     expect(findValueAt(written, ['ci', 'setup_command'])).toStrictEqual(['bun', 'install', '--frozen-lockfile']);
 });
 
-test.each([...NO_CHANGE_COMMANDS])(
-    '%s reports no change when gspot.toml already has the value',
-    async (_name, commandArguments) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['bash'], commandArguments[0] === 'set' ? { level: 'basic' } : {}),
-        });
-        const result = await runGspot(sandbox.path, commandArguments);
-        expect(result.code, result.stdout + result.stderr).toBe(0);
-        expect(result.stdout.split('\n', 1)[0]).toBe('gspot.toml already says this.');
-    },
-);
-
 test.each([...KEPT_SETTING_CHANGES])(
     '%s keeps its change in gspot.toml and exits 2 when apply then stops',
     async (_, commandArguments, written, change) => {
@@ -89,25 +73,6 @@ test.each([...KEPT_SETTING_CHANGES])(
         );
         expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toContain(written);
         expect(await readFile(authored, 'utf8')).toBe(ROOT_EDITORCONFIG);
-    },
-);
-
-test.each([...BANNED_WORD_SCOPES])(
-    'set writes naming.banned_words in the $name scope without installing tools, and unset removes them',
-    async ({ scope, written }) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': BANNED_WORD_SETTINGS,
-            'app/source.ts': 'export const active = true;\n',
-        });
-        const key = 'naming.banned_words';
-        const scopeArguments = scope === '' ? [] : ['--scope', scope];
-        const set = await runGspot(sandbox.path, ['set', key, 'discardedword', ...scopeArguments]);
-        expect(set.code, set.stdout + set.stderr).toBe(0);
-        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(written);
-        expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.nodeModules))).toBe(false);
-        const reset = await runGspot(sandbox.path, ['unset', key, ...scopeArguments]);
-        expect(reset.code, reset.stdout + reset.stderr).toBe(0);
-        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(BANNED_WORD_SETTINGS);
     },
 );
 

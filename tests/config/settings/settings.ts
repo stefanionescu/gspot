@@ -107,13 +107,6 @@ export const OPENAPI_SCOPE_SETTINGS = {
     tables: 'removed_configurations = { openapi = "This scope does not publish an OpenAPI document." }\n',
 } as const;
 
-export const SCOPE_LIMIT_VALUES = {
-    '': [100, '5.0', ['Foundation']],
-    api: [80, '6.0', ['Foundation', 'UIKit']],
-    'api/v1': [60, '5.0', ['Foundation', 'UIKit', 'SwiftUI']],
-    web: [100, '5.0', ['Foundation']],
-} as const;
-
 export const NESTED_SCOPE_SETTINGS = `configurations = ["bash", "swift", "structure"]
 [rules]
 enabled = false

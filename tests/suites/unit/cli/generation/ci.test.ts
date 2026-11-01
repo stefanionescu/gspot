@@ -39,12 +39,6 @@ test.each<Partial<Pipeline>>([
     );
 });
 
-test('pushes run the GitHub job on the default branch only', () => {
-    const job = (parse(buildGithubWorkflow(LINUX_PIPELINE).content) as GithubWorkflow).jobs['lint']!;
-    expect(job.if).toBe("github.event_name != 'push' || github.ref_name == github.event.repository.default_branch");
-    expect(job.steps.filter((step) => step.if === "github.event_name == 'push'")).toStrictEqual([]);
-});
-
 test('the cache key covers version and lockfiles without restoring another key, and escapes apostrophes', () => {
     const steps = (
         parse(

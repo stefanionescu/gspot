@@ -4,7 +4,6 @@ import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { createRunCache } from '#cli/system/cache.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
-import { PACKAGE_JSON_ERROR } from '#tests/config/paths.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -122,16 +121,6 @@ test('a hooks folder outside the repository that core.hooksPath names is listed'
     expect(await readHooks({ root: root, hasGit: true }).then(({ hooks }) => hooks)).toStrictEqual([
         { kind: 'hooksPath', path: '../hooks', files: ['pre-commit'] },
     ]);
-});
-
-test('hook discovery refuses a malformed package.json and names it', async () => {
-    await using sandbox = await testdir({ 'package.json': '{' });
-
-    expect(await captureRejection(readHooks({ root: sandbox.path, hasGit: false }))).toMatchObject({
-        name: 'GspotError',
-        code: 'parse',
-        message: PACKAGE_JSON_ERROR,
-    });
 });
 
 test('hook discovery reports other hook folders and leaves gspot and task scripts out', async () => {

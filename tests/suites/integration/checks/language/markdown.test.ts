@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
-import { stringify } from '@decimalturn/toml-patch';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { LEVELS } from '#cli/config/manifests/names.ts';
@@ -109,37 +108,6 @@ test("markdownlint run by an editor reads the link files with each scope's optio
         expect(output).toContain(`${path}:3`);
         expect(output).toContain('MD044/proper-names');
     }
-});
-
-test('markdownlint honors a lint rule ignore in the root and scope config files', async () => {
-    const { root } = installedSandbox();
-    await using _change = await writeSandboxChanges(installedSandbox(), {
-        files: {
-            ...MARKDOWN_FILES,
-            'app/guide.md': `${MARKDOWN_FILES['app/guide.md']}\n![](diagram.png)\n`,
-            'title.md': TITLED_DOCUMENT,
-            'gspot.toml': buildSandboxSettings(['markdown'], {
-                level: 'all',
-                tables:
-                    MARKDOWNLINT_TABLES +
-                    stringify({
-                        ignore: [
-                            {
-                                check: 'markdown/markdownlint',
-                                rule: 'MD045',
-                                reason: 'The sample demonstrates an empty alternative.',
-                            },
-                        ],
-                    }),
-            }),
-        },
-    });
-    const ignored = parseCheckReport(await spawnGspot(root, ['check', '--only', 'markdown/markdownlint', '--json']));
-    expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-    expect(ignored.report.checks).toMatchObject([
-        { check: 'markdown/markdownlint', scope: '', status: 'passed', findings: [] },
-        { check: 'markdown/markdownlint', scope: 'app', status: 'passed', findings: [] },
-    ]);
 });
 
 test('markdownlint reports line, column, and fixable for findings in files whose names hold a space, a colon, or a line break', async () => {

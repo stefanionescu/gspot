@@ -16,7 +16,7 @@ test.each([...IGNORE_COMMENT_CASES, ...ARRAY_COMMENT_CASES, ...FIELD_COMMENT_CAS
     'a template keeps each comment of $name on its key',
     ({ source, target, expected }) => {
         const table = parseTomlFile('gspot.toml', target ?? source);
-        const written = buildSettingsText('', source, table);
+        const written = buildSettingsText(source, table);
         expect(written).toBe(expected);
     },
 );
@@ -24,7 +24,7 @@ test.each([...IGNORE_COMMENT_CASES, ...ARRAY_COMMENT_CASES, ...FIELD_COMMENT_CAS
 test('a template keeps authored spelling, record order, comments, and inline tables', () => {
     const source = '# Authored selection.\nconfigurations=["bash",]\n\n[format]\nindent_width=4 # Keep the indent.\n';
     const written = parseTomlFile('gspot.toml', source);
-    const output = buildSettingsText('', source, written);
+    const output = buildSettingsText(source, written);
     expect(output).toBe(source);
 });
 

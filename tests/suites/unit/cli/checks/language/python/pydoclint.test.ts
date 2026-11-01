@@ -13,10 +13,10 @@ import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
-import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
 import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 
 import {
@@ -35,7 +35,7 @@ test.each([...PYDOCLINT_PROJECT_CASES])('pydoclint $name', async ({ project, set
     );
     const { session, planned } = prepared;
     using run = spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult());
-    const result = await runCheckCode(buildCheckSession(session), planned, CHECK_CODE['python/pydoclint']);
+    const result = await runCheckCode(buildCheckSession(session), planned, CHECK_CODE['python/pydoclint'], {});
     expect(result.status).toBe('passed');
     const commandArguments = run.mock.calls[0]![0];
     expect(commandArguments[commandArguments.indexOf('--style') + 1]).toBe(expected);
@@ -53,7 +53,7 @@ test.each([
         { level },
     );
     using run = spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult());
-    await runCheckCode(buildCheckSession(prepared.session), prepared.planned, CHECK_CODE['python/pydoclint']);
+    await runCheckCode(buildCheckSession(prepared.session), prepared.planned, CHECK_CODE['python/pydoclint'], {});
     const commandArguments = run.mock.calls[0]![0];
     const index = commandArguments.indexOf('--skip-checking-short-docstrings');
     expect(index === -1 ? [] : commandArguments.slice(index, index + 2)).toStrictEqual([...checked]);
@@ -98,7 +98,7 @@ test('pydoclint keeps earlier style findings when a later style batch fails', as
             }),
         )
         .mockResolvedValueOnce(buildProcessResult(FAILED_STYLE_BATCH));
-    const result = await runCheckCode(buildCheckSession(session), planned, CHECK_CODE['python/pydoclint']);
+    const result = await runCheckCode(buildCheckSession(session), planned, CHECK_CODE['python/pydoclint'], {});
     expect(result.status).toBe('error');
     expect(result.fileCount).toBe(2);
     expect(result.findings).toStrictEqual([

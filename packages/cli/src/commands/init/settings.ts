@@ -137,7 +137,7 @@ export function buildInitSettings(
             `The settings copied from ${draft.template.file} do not fit this repository. Edit a copy of the file, then run gspot init again:\n${errors}`,
         );
     }
-    return buildSettingsText(PREFACE_BODY, draft.base, stripDefaults(document));
+    return `${PREFACE_BODY.trimEnd()}\n${buildSettingsText(draft.base, stripDefaults(document))}`;
 }
 
 /**

@@ -15,12 +15,6 @@ export const INDEX_PATH = 'folder/a\n"é.sql';
 export const INDEX_LINE_FAILURE =
     'The Git entry is unsupported or conflicted. Resolve index conflicts before checking this revision.';
 
-export const INVALID_INDEX_LINES = [
-    { name: 'unsupported mode', output: `100600 ${SHA1} 0\tsource.ts\0` },
-    { name: 'short object ID', output: '100644 aaaa 0\tsource.ts\0' },
-    { name: 'empty path', output: `100644 ${SHA1} 0\t\0` },
-] as const;
-
 export const BLOB_FAILURE = 'The Git object stream is incomplete or invalid.';
 
 export const INVALID_BLOBS = [

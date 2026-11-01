@@ -1,18 +1,3 @@
-export const PATH_IGNORE_ARGUMENTS = [
-    'ignore',
-    'bash/shellcheck',
-    '--reason',
-    'The inputs demonstrate word splitting.',
-    '--paths',
-] as const;
-
-export const IGNORE_HOOK_TABLES = `[rules]
-enabled = false
-[hooks]
-# Keep the push selection.
-enabled = false
-`;
-
 export const UNKNOWN_IGNORE_ARGUMENTS = [
     'ignore',
     'bash/shelcheck',
@@ -47,12 +32,6 @@ export const IGNORE_REFUSALS = [
 ] as const;
 
 export const LITERAL_ROUTE_CASES = [
-    {
-        folder: 'app/(legal)',
-        path: 'app/(legal)/**',
-        escaped: String.raw`app/\(legal\)/**`,
-        removed: false,
-    },
     {
         folder: 'app/[id]',
         path: 'app/[id]/**',

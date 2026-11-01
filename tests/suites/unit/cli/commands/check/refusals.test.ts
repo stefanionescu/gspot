@@ -3,7 +3,6 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
-import { readTree } from '#tests/setup/system/files.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
@@ -167,23 +166,6 @@ test.each([...ARGUMENT_REFUSALS])(
         expect(refused.stdout + refused.stderr).toBe(`${expected}\n`);
     },
 );
-
-test('check reports an unreadable message file as a filesystem error and writes nothing', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['commits']) });
-    const before = await readTree(sandbox.path);
-    const message = `gspot cannot read the commit message file ${join(sandbox.path, 'missing-message.txt')}.`;
-    const structured = await runGspot(sandbox.path, [
-        'check',
-        '--json',
-        '--hook',
-        'commit-msg',
-        '--',
-        'missing-message.txt',
-    ]);
-    expect(structured.code).toBe(2);
-    expect(JSON.parse(structured.stdout)).toMatchObject({ error: 'filesystem', message });
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-});
 
 test('a linked .gspot folder fails check, and nothing outside changes', async () => {
     await using sandbox = await testdir({

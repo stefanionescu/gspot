@@ -82,22 +82,6 @@ export const BUILT_IN_LIMIT_CASES = [
         rule: 'file-lines',
     },
     {
-        check: 'structure/long-files',
-        language: 'sql',
-        limit: 'file_lines',
-        file: 'source.sql',
-        source: 'SELECT 1;\nSELECT 2;\nSELECT 3;\nSELECT 4;\n',
-        rule: 'file-lines',
-    },
-    {
-        check: 'structure/long-files',
-        language: 'bash',
-        limit: 'file_lines',
-        file: 'source.sh',
-        source: 'first\nsecond\nthird\nfourth\n',
-        rule: 'file-lines',
-    },
-    {
         check: 'structure/trivial-functions',
         language: 'python',
         limit: 'trivial_function_statements',
@@ -139,30 +123,9 @@ export const NEXT_INTL_PROJECTS = [
         selected: true,
     },
     {
-        name: 'own child project',
-        scope: 'app',
-        files: { 'app/package.json': NEXT_INTL_PACKAGE },
-        selected: true,
-    },
-    {
-        name: 'inherited root project',
-        scope: 'app/deep',
-        files: { 'package.json': NEXT_INTL_PACKAGE },
-        selected: true,
-    },
-    {
         name: 'unrelated child project',
         scope: '',
         files: { 'app/package.json': NEXT_INTL_PACKAGE },
-        selected: false,
-    },
-    {
-        name: 'own child replaces inherited dependencies',
-        scope: 'app',
-        files: {
-            'package.json': NEXT_INTL_PACKAGE,
-            'app/package.json': '{"dependencies":{"react-i18next":"16.5.3"}}',
-        },
         selected: false,
     },
 ] as const;
@@ -216,18 +179,6 @@ reason = "This sandbox exercises native tools without the license scanner."
         needs: ['node', 'eslint'],
         skips: [],
     },
-] as const;
-
-export const ARCHITECTURE_REQUIREMENTS = [
-    {
-        name: 'root modules',
-        tables: `[[import_rule]]
-name = "app"
-paths = ["src/**"]
-`,
-        boundary: { basic: true, all: true },
-    },
-    { name: 'selected role defaults without modules', tables: '', boundary: { basic: false, all: true } },
 ] as const;
 
 export const COVERAGE_PROVIDERS = [

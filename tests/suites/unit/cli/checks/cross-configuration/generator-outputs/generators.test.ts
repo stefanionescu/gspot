@@ -47,16 +47,16 @@ test.each([...GENERATOR_CASES])(
         await using sandbox = await testdir();
         const { session, planned } = await prepareGeneratorCheck(sandbox.path, row);
         const error = await captureRejection(
-            runCheckCode(buildCheckSession(session), planned, { check: checkGeneratorOutputs }),
+            runCheckCode(buildCheckSession(session), planned, { check: checkGeneratorOutputs }, {}),
         );
         expect(error.message).toBe('The generator command failed: Generation failed\nfailure');
         await writeFile(join(sandbox.path, 'schema.txt'), 'changed');
-        const stale = await runCheckCode(buildCheckSession(session), planned, { check: checkGeneratorOutputs });
+        const stale = await runCheckCode(buildCheckSession(session), planned, { check: checkGeneratorOutputs }, {});
         expect(stale.findings.map(({ check, file, rule }) => ({ check, file, rule }))).toStrictEqual([
             { check: row.check, file: row.output, rule: 'stale' },
         ]);
         await writeFile(join(sandbox.path, 'schema.txt'), 'dirty');
-        const fresh = await runCheckCode(buildCheckSession(session), planned, { check: checkGeneratorOutputs });
+        const fresh = await runCheckCode(buildCheckSession(session), planned, { check: checkGeneratorOutputs }, {});
         expect(fresh.findings).toStrictEqual([]);
         expect(await readFile(join(sandbox.path, row.output), 'utf8')).toBe('dirty');
         expect(await readFile(join(sandbox.path, 'notes.txt'), 'utf8')).toBe(PROJECT_NOTES);

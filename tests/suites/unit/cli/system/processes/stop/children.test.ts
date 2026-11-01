@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
+import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import * as childProcess from 'node:child_process';
-import { readFile, writeFile } from 'node:fs/promises';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { fakePlatform } from '#tests/setup/system/platform.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
@@ -99,52 +99,6 @@ test('an exiting CLI stops its running process group', async () => {
     const output = await started.stdout;
     const pid = Number(output.trim());
     await waitForExit(pid);
-});
-
-test('live output arrives before the process ends while capture keeps the output and exit code', async () => {
-    await using sandbox = await testdir();
-    const stdout: string[] = [];
-    const stderr: string[] = [];
-    const ready = Promise.withResolvers<undefined>();
-    const release = join(sandbox.path, 'release');
-    const child = buildProgramCommand(
-        'fakes/tool',
-        '--line',
-        'ready',
-        '--stderr',
-        'diagnostic\n',
-        '--until',
-        release,
-        '--exit',
-        '7',
-    );
-    let isFinished = false;
-    const running = (async () => {
-        const result = await captureProcess('text', child, {
-            cwd: sandbox.path,
-            onStdout: (chunk) => {
-                stdout.push(chunk);
-                ready.resolve();
-            },
-            onStderr: (chunk) => {
-                stderr.push(chunk);
-            },
-        });
-        isFinished = true;
-        return result;
-    })();
-    try {
-        await Promise.race([ready.promise, running]);
-        expect(isFinished).toBe(false);
-        expect(stdout.join('')).toBe('ready\n');
-    } finally {
-        await writeFile(release, 'continue');
-    }
-    const result = await running;
-    expect(result.code).toBe(7);
-    expect(result.stdout).toBe(stdout.join(''));
-    expect(result.stderr).toBe(stderr.join(''));
-    expect(result.stderr).toBe('diagnostic\n');
 });
 
 test.each(['text', 'bytes'] as const)(

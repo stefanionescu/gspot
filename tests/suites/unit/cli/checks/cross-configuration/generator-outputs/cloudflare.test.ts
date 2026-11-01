@@ -58,6 +58,7 @@ test('custom Worker type settings reach wrangler types as --env-interface', asyn
         buildCheckSession(session),
         planned,
         planned.check.generator_outputs === undefined ? CHECK_CODE[planned.check.id] : { check: checkGeneratorOutputs },
+        {},
     );
     expect(result.findings).toStrictEqual([]);
     expect(run.mock.calls.map(([command]) => command.slice(1))).toStrictEqual([
@@ -90,6 +91,7 @@ test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and 
         untrackedCheck.check.generator_outputs === undefined
             ? CHECK_CODE[untrackedCheck.check.id]
             : { check: checkGeneratorOutputs },
+        {},
     );
     expect(untrackedResult.findings).toMatchObject([...UNTRACKED_CLOUDFLARE_FINDINGS]);
     expect(run).not.toHaveBeenCalled();
@@ -102,6 +104,7 @@ test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and 
         trackedCheck.check.generator_outputs === undefined
             ? CHECK_CODE[trackedCheck.check.id]
             : { check: checkGeneratorOutputs },
+        {},
     );
     expect(trackedResult.findings).toStrictEqual([]);
     expect(run.mock.calls.map(([command]) => command.slice(1))).toStrictEqual([

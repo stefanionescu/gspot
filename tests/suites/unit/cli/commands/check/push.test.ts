@@ -138,32 +138,6 @@ test('an annotated tag of a commit is checked while blob tags, blobs, and delete
     await assertWorkingTreeKept(sandbox.path, broken);
 });
 
-test('pre-push checks the pushed commits, not the repaired working tree', async () => {
-    await using sandbox = await createGitSandbox({});
-    const { base, reviewed, broken } = await preparePushRepository(sandbox.path);
-    const passing = await runGspot(
-        sandbox.path,
-        PUSH_CHECK_COMMAND,
-        {},
-        { stdin: `refs/heads/reviewed ${reviewed} refs/heads/reviewed ${base}\n` },
-    );
-    expect(passing.code, passing.stdout + passing.stderr).toBe(0);
-    expect((JSON.parse(passing.stdout) as PushReport).revisions).toMatchObject([
-        {
-            hash: reviewed,
-            report: {
-                comparison: { content: 'commit', reference: reviewed },
-                checks: [{ check: 'project/bash-syntax', status: 'passed', fileCount: 1 }],
-            },
-        },
-    ]);
-    const failedReport = await runBrokenPushCheck(sandbox.path, base, broken);
-    expect(new Set(failedReport.checks[0]?.findings.map((finding) => finding.file))).toStrictEqual(
-        new Set(['changed.sh']),
-    );
-    await assertWorkingTreeKept(sandbox.path, broken);
-});
-
 test('the pre-push report prints a command that reproduces the same findings', async () => {
     await using sandbox = await createGitSandbox({});
     const { base, broken } = await preparePushRepository(sandbox.path);

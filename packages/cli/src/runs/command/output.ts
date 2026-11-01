@@ -121,7 +121,7 @@ export function parseCommandFindings(
     planned: OutputCheck,
     result: SpawnResult,
     paths: OutputPaths,
-    options: { verbose?: boolean | undefined } = {},
+    options: { verbose?: boolean | undefined },
 ): ParsedFindings {
     try {
         return { findings: parseVerifiedFindings(planned, result, paths, options) };

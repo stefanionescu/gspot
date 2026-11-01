@@ -39,7 +39,7 @@ test.skipIf(!hasToolBuild('plutil'))(
         for (const path of PLUTIL_UNREADABLE_FILES) {
             const mixed = await runCommand(['plutil', '-lint', 'bad.plist', path], { cwd: sandbox.path });
             expect(mixed.code).toBe(1);
-            const { findings, note = '' } = parseCommandFindings(planned!, mixed, paths);
+            const { findings, note = '' } = parseCommandFindings(planned!, mixed, paths, {});
             expect(findings).toBeUndefined();
             expect(note).toStartWith('plutil failed with exit 1:\nbad.plist: ');
             expect(note).toContain(`\n${path}: `);
@@ -48,7 +48,7 @@ test.skipIf(!hasToolBuild('plutil'))(
 
         const failed = await runCommand(['plutil', '-lint', 'bad.plist'], { cwd: sandbox.path });
         expect(failed.code).toBe(1);
-        const { findings } = parseCommandFindings(planned!, failed, paths);
+        const { findings } = parseCommandFindings(planned!, failed, paths, {});
         expect(findings).toHaveLength(1);
         expect(findings).toMatchObject([
             { check: 'xcode/plutil', file: 'bad.plist', fixable: false, help: 'Fix the element plutil names.' },
@@ -58,6 +58,6 @@ test.skipIf(!hasToolBuild('plutil'))(
             cwd: sandbox.path,
         });
         expect(corrected.code).toBe(0);
-        expect(parseCommandFindings(planned!, corrected, paths).findings).toStrictEqual([]);
+        expect(parseCommandFindings(planned!, corrected, paths, {}).findings).toStrictEqual([]);
     },
 );

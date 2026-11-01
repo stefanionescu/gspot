@@ -41,7 +41,7 @@ test('actionlint copies root actions and unchanged actions outside .github with 
         return buildProcessResult();
     });
     const planned = planChecks(session, buildRunOptions({ only: ['github-actions/actionlint'] }))[0]!;
-    const result = await runCheckCode(buildCheckSession(session), planned, CHECK_CODE['github-actions/actionlint']);
+    const result = await runCheckCode(buildCheckSession(session), planned, CHECK_CODE['github-actions/actionlint'], {});
     expect(result.findings).toStrictEqual([]);
     expect(boundary).toHaveBeenCalledTimes(1);
     for (const [path, source] of Object.entries(OUTSIDE_GITHUB_ACTIONS))
@@ -74,6 +74,7 @@ test.each([...WORKFLOW_TEXT_CASES])(
             planned!.check.generator_outputs === undefined
                 ? CHECK_CODE[planned!.check.id]
                 : { check: checkGeneratorOutputs },
+            {},
         );
         expect(result.status, JSON.stringify(result)).toBe('passed');
         expect(run).toHaveBeenCalledTimes(1);
@@ -110,7 +111,12 @@ test.each([...ACTIONLINT_EXITS])(
         const plans = planChecks(session, { stage: 'commit', only: ['github-actions/actionlint'] });
         const planned = plans[0]!;
         planned.tool = { ...planned.tool!, name: executable };
-        const result = await runCheckCode(buildCheckSession(session), planned, CHECK_CODE['github-actions/actionlint']);
+        const result = await runCheckCode(
+            buildCheckSession(session),
+            planned,
+            CHECK_CODE['github-actions/actionlint'],
+            {},
+        );
         expect(result.status, JSON.stringify(result)).toBe(status);
         const workspace = await readFile(record, 'utf8');
         expect(workspace).not.toBe(sandbox.path);

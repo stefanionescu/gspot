@@ -9,12 +9,11 @@ import parseExpression from 'spdx-expression-parse';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { buildVenvPythonPath } from '#cli/system/paths.ts';
 import { listLicenseProjects } from '#cli/planning/tools.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
-import { PYTHON_EXECUTABLE } from '#cli/config/executables.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
-import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readDependencySpecifiers } from '#cli/repository/dependencies.ts';
@@ -122,7 +121,7 @@ async function scanPythonLicenses(
     const report = await readLicenseOutput(
         session,
         planned,
-        [...PIP_LICENSES_COMMAND, buildVenvExecutablePath(installed, PYTHON_EXECUTABLE)],
+        [...PIP_LICENSES_COMMAND, buildVenvPythonPath(installed)],
         scratch.path,
         pythonLicenseOutputSchema,
     );

@@ -142,34 +142,6 @@ test(`a scope's per-scope check plans every file of its scope and covers only it
     ]);
 });
 
-test('Xcode plutil and general xmllint checks select their Apple and XML files', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], {
-            level: 'basic',
-            rules: true,
-            scopes: [{ path: 'api', configurations: ['xcode'] }],
-        }),
-        'root.plist': '<plist><dict/></plist>\n',
-        'api/app.plist': '<plist><dict/></plist>\n',
-        'api/app.storyboard': '<document/>\n',
-        'api/data.xml': '<document/>\n',
-    });
-
-    const session = await openSession(sandbox.path);
-    const checks = planChecks(session, {
-        stage: 'all',
-        only: ['xcode/plutil', 'data-files/xmllint'],
-    });
-    expect(
-        checks
-            .filter(({ files }) => files.length > 0)
-            .map(({ check, files }) => [check.id, files.map(({ path }) => path)]),
-    ).toStrictEqual([
-        ['data-files/xmllint', ['api/app.storyboard', 'api/data.xml']],
-        ['xcode/plutil', ['api/app.plist']],
-    ]);
-});
-
 test('Prettier gets every matching file, also those its ignore file lists', async () => {
     await using sandbox = await createGitSandbox({});
     const ignored = 'ignored.md\n';

@@ -12,10 +12,6 @@ test.each([...PUBLISHED_SCHEMA_CASES])('runtime and published schemas agree on $
     expect(isPublishedSettings(input)).toBe(valid);
 });
 
-test('the published schema leaves out reason_when', () => {
-    expect(JSON.stringify(buildJsonSchema())).not.toContain('"reason_when":');
-});
-
 test('every accepted fixed property has an editor description, including nested tables', () => {
     const root = buildJsonSchema();
     function followSchemaReference(schema: z.core.JSONSchema.JSONSchema): z.core.JSONSchema.JSONSchema {

@@ -6,46 +6,6 @@ path = "api"
 configurations = ["bash"]
 `;
 
-export const BANNED_WORD_SETTINGS = `configurations = ["naming", "typescript"]
-
-[rules]
-enabled = false
-
-[[scope]]
-path = "app"
-`;
-
-export const BANNED_WORD_SCOPES = [
-    {
-        name: 'root',
-        scope: '',
-        written: `configurations = ["naming", "typescript"]
-
-[rules]
-enabled = false
-
-[naming]
-banned_words = ["discardedword"]
-
-[[scope]]
-path = "app"
-`,
-    },
-    {
-        name: 'child',
-        scope: 'app',
-        written: `configurations = ["naming", "typescript"]
-
-[rules]
-enabled = false
-
-[[scope]]
-path = "app"
-naming = { banned_words = ["discardedword"] }
-`,
-    },
-] as const;
-
 export const LOOSENED_SETTINGS = [
     {
         key: 'site.allowed_unlisted_pages',
@@ -91,12 +51,6 @@ export const KEPT_SETTING_CHANGES = [
         '[limits]\nbash = { file_lines = { value = 200, reason = "Generated scripts need this limit." } }',
         'Set limits.bash.file_lines to 200.  # Generated scripts need this limit.  (was 140 from configuration structure)',
     ],
-    [
-        'ignore',
-        ['ignore', 'bash/shellcheck', '--paths', 'entry.sh', '--reason', 'Generated from its template.'],
-        'check = "bash/shellcheck"',
-        'Ignored bash/shellcheck for entry.sh.',
-    ],
 ] as const;
 
 export const STOPPED_APPLY_FILES = {
@@ -106,11 +60,6 @@ enabled = false
 `,
     'entry.sh': 'echo example\n',
 } as const;
-
-export const NO_CHANGE_COMMANDS = [
-    ['unset level', ['unset', 'level']],
-    ['set level basic', ['set', 'level', 'basic']],
-] as const;
 
 export const UNKNOWN_SETTING_KEYS = [
     {

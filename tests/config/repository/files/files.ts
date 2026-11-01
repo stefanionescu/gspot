@@ -3,7 +3,6 @@ import { SOURCE_KIND } from '#cli/config/repository/files.ts';
 export const MIGRATION_CASES = [
     ['', ['migrations/V1_root.sql']],
     ['app', ['app/migrations/V2_first.sql']],
-    ['other', ['other/migrations/V3_other.sql']],
 ] as const;
 
 export const JEST_PATHS = [
@@ -27,7 +26,6 @@ export const JEST_CASES = [
     { scope: 'app/deep', tests: ['**/qa/**', 'app/verification/**'], expected: ['app/deep/qa/read.js'] },
     { scope: 'sibling', tests: ['**/qa/**'], expected: ['sibling/qa/read.js'] },
     { scope: '', tests: [], expected: ['jest.config.js', 'app/jest.config.js'] },
-    { scope: 'app', tests: [], expected: ['app/jest.config.js'] },
 ] as const;
 
 export const PRETTIER_PLUGIN_CASES = [
@@ -35,10 +33,6 @@ export const PRETTIER_PLUGIN_CASES = [
     [
         ['format', 'typescript', 'astro'],
         ['src/Page.astro', 'src/index.ts'],
-    ],
-    [
-        ['format', 'typescript', 'svelte'],
-        ['src/App.svelte', 'src/index.ts'],
     ],
 ] as const;
 

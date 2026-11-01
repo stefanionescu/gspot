@@ -19,19 +19,4 @@ path = "sibling"
 removed_configurations = { site = "This scope does not use the inherited site checks." }
 `;
 
-export const CSS_HTML_NAMING_SETTINGS = `configurations = ["css", "html"]
-[naming.css]
-max_words = 3
-max_characters = 20
-cases = { value = ["kebab"], reason = "CSS and HTML file names use kebab case." }
-[naming.css.files]
-max_words = 3
-max_characters = 20
-cases = { value = ["kebab"], reason = "CSS and HTML file names use kebab case." }
-[naming.html.folders]
-max_words = 3
-max_characters = 20
-cases = { value = ["kebab"], reason = "CSS and HTML file names use kebab case." }
-`;
-
 export const POSTGRES_ORIGIN = 'configuration postgres';

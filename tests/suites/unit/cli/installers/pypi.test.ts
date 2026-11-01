@@ -12,7 +12,6 @@ import { rm, readFile, writeFile } from 'node:fs/promises';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { PYTHON_VERSION } from '#cli/config/installers/installers.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { type PythonToolProject } from '#cli/types/installers/installers.ts';
@@ -105,7 +104,7 @@ test('uv installs the tool project with its own Python, whatever UV_PYTHON and .
     expect(runs.map(({ command }) => command[1])).toStrictEqual(['venv', 'sync']);
     for (const { command, env } of runs) {
         const flag = command.indexOf('--python');
-        expect(command.slice(flag, flag + 2)).toStrictEqual(['--python', PYTHON_VERSION]);
+        expect(command.slice(flag, flag + 2)).toStrictEqual(['--python', pythonProject['requires-python'].slice(2)]);
         expect(env).toHaveProperty('UV_PYTHON', undefined);
     }
 });

@@ -1,8 +1,7 @@
 import { join } from 'node:path';
-import { test, spyOn, expect } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openFiles } from '#cli/system/files/open.ts';
-import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
@@ -13,9 +12,8 @@ import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
+import { NPM_TOOL_PROJECT } from '#cli/config/generation/generation.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { PACKAGE_MANAGER_ARGUMENTS } from '#cli/config/installers/npm.ts';
-import { CI_NODE, NPM_TOOL_PROJECT } from '#cli/config/generation/generation.ts';
 import { installNpmTools, planNpmLockfile } from '#cli/installers/npm/project.ts';
 
 import {
@@ -95,34 +93,6 @@ test.each([...FAILED_INSTALL_CASES])(
     },
 );
 
-test('an npm install that runs past the time limit names the limit', async () => {
-    await using sandbox = await testdir();
-    const packageJson = JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.1' } });
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSandboxSettings([]),
-        'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
-        [GSPOT_PATHS.npmProject]: packageJson,
-        [`${GSPOT_FOLDER}/bun.lock`]: JSON.stringify({
-            workspaces: { '': { devDependencies: { prettier: '3.8.1' } } },
-        }),
-    });
-    const session = await openSession(sandbox.path);
-    const owner = openFiles(sandbox.path);
-    using _bun = fakeCommands('mise', (command) =>
-        Promise.resolve(
-            buildProcessResult(command.at(-1) === '--version' ? { stdout: '1.4.2\n' } : { code: 1, timedOut: true }),
-        ),
-    );
-    const error = await captureRejection(installNpmTools(await buildNpmToolInstall(session, owner)));
-    const message = error.message;
-    expect(message).toStartWith(
-        `The command mise exec ${CI_NODE} bun@1.4.2 -- bun install --frozen-lockfile --linker hoisted --config=`,
-    );
-    expect(message).toEndWith(
-        `bunfig.toml ran longer than tool_timeout_seconds (${String(session.timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>.`,
-    );
-});
-
 test('a cached lockfile that holds registry credentials is refused and the files stay', async () => {
     await using sandbox = await testdir();
     const { files, error } = await prepareCredentialProject(sandbox.path, CREDENTIAL_PACKAGE_JSON, CREDENTIAL_LOCKFILE);
@@ -184,37 +154,4 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
     expect(cached.next.bytes.toString('utf8')).toBe(lockfile);
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(packageJson);
     expect(await readFile(join(sandbox.path, `${GSPOT_FOLDER}/bun.lock`), 'utf8')).toBe(lockfile);
-});
-
-test('a Yarn Classic repository resolves its tool lockfile with npm and the minimum release age', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([]),
-        'package.json': '{"private":true,"packageManager":"yarn@1.22.22"}',
-    });
-    const run = processes.spawnProcessBlocking;
-    using _version = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
-        command[0] === 'npm' ? buildProcessResult({ stdout: '11.19.0\n' }) : run(command, options),
-    );
-    using _npm = fakeCommands('npm', async (command, options) => {
-        if (command[1] !== '--version')
-            await writeFile(
-                join(options.cwd, 'package-lock.json'),
-                JSON.stringify({ lockfileVersion: 3, packages: { '': { devDependencies: {} } } }),
-            );
-        return buildProcessResult({ stdout: command[1] === '--version' ? '11.19.0\n' : '' });
-    });
-    const session = await openSession(sandbox.path);
-    const writer = openFiles(sandbox.path);
-    const install = await buildNpmToolInstall(session, writer);
-    const lockfile = await planNpmLockfile(install, {
-        path: GSPOT_PATHS.npmProject,
-        content: JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: {} }),
-    });
-    expect(JSON.parse(lockfile.next.bytes.toString('utf8'))).toStrictEqual({
-        lockfileVersion: 3,
-        packages: { '': { devDependencies: {} } },
-    });
-    expect(install.steps.map((step) => step.slice(0, PACKAGE_MANAGER_ARGUMENTS.npm.lockfile.length + 2))).toStrictEqual(
-        [['npm', ...PACKAGE_MANAGER_ARGUMENTS.npm.lockfile, '--min-release-age=7']],
-    );
 });

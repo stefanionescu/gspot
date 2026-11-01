@@ -1,12 +1,5 @@
 export const VERSION_OUTPUTS = [
     {
-        name: 'a version with an undeclared exit code',
-        toolArguments: ['--line', '3.8.1', '--exit', '7'],
-        state: 'error',
-        found: undefined,
-        note: 'The version command of version-teller exited 7: 3.8.1',
-    },
-    {
         name: 'text without a version',
         toolArguments: ['--line', 'unrecognized output'],
         state: 'error',

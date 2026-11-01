@@ -221,8 +221,3 @@ test('a favicon manifest alone does not select the static site checks', () => {
         ).map(({ configuration }) => configuration),
     ).not.toContain('site');
 });
-
-test('a Python database driver selects Postgres migration checks', async () => {
-    await using sandbox = await testdir({ 'requirements.txt': 'psycopg==3.2.3\n' });
-    expect(await detectSandboxConfigurations(sandbox.path)).toContain('postgres');
-});

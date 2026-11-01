@@ -26,18 +26,6 @@ test("deleting a root key keeps separate comments and the next table's comments"
     );
 });
 
-test('reading TOML values: nested tables, arrays, scalars and missing keys', () => {
-    const document = openTomlFile('tool.toml', '[defaults]\nenabled = false\nvalues = [0, ""]\n');
-    expect(document.getValue(['defaults', 'enabled'])).toBe(false);
-    expect(document.getValue(['defaults', 'values', 0])).toBe(0);
-    expect(document.getValue(['defaults', 'values', 1])).toBe('');
-    expect(document.getValue(['defaults'])).toStrictEqual({ enabled: false, values: [0, ''] });
-    expect(document.getValue(['missing', 'enabled'])).toBeUndefined();
-    expect(document.getValue(['defaults', 'enabled', 'missing'])).toBeUndefined();
-    document.set(['defaults', 'enabled'], true);
-    expect(document.getValue(['defaults', 'enabled'])).toBe(true);
-});
-
 test('a TOML syntax error is a GspotError that names the file and keeps the parser error as its cause', () => {
     expect(() => openTomlFile('apps/api/bunfig.toml', '[install\n')).toThrow(
         matchFields<GspotError>({

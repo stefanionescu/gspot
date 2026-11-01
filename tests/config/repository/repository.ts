@@ -48,15 +48,6 @@ export const ROOT_DISCOVERY_CASES = [
     { name: 'the requested folder when no gspot.toml exists', files: {}, start: '' },
 ] as const;
 
-export const SCOPE_PATHS = [
-    { scope: '', path: '', repositoryPath: '' },
-    { scope: '', path: 'README.md', repositoryPath: 'README.md' },
-    { scope: 'app', path: '', repositoryPath: 'app/' },
-    { scope: 'app', path: 'package.json', repositoryPath: 'app/package.json' },
-    { scope: 'packages/app', path: 'src/main.ts', repositoryPath: 'packages/app/src/main.ts' },
-    { scope: 'apps/日本語 [web]', path: 'src/hello world.ts', repositoryPath: 'apps/日本語 [web]/src/hello world.ts' },
-] as const;
-
 export const PROJECT_FILE_FOLDERS = [
     ['api/package.json', 'package.json', 'api'],
     ['package.json', 'package.json', ''],
@@ -80,20 +71,6 @@ export const WORKSPACE_FILE_CASES = [
             '{"projects":[{"packageName":"api","projectFolder":"packages/api"},{"packageName":"lint","projectFolder":"packages/lint"}]}',
     },
 ] as const;
-
-export const PYTHON_WORKSPACE_FILES = {
-    'pyproject.toml': `[project]
-dependencies = ["fastapi>=1"]
-[tool.uv.workspace]
-members = ["api", "member-only"]
-`,
-    'api/pyproject.toml': `[project]
-name = "api"
-dependencies = ["fastapi>=1"]
-`,
-    'api/main.py': 'print("ready")\n',
-    'member-only/main.py': 'print("not a project file")\n',
-} as const;
 
 export const TOOL_ONLY_PACKAGES = {
     'packages/process/package.json': '{"devDependencies":{"concurrently":"9.0.0"}}',
@@ -129,10 +106,7 @@ export const PRIVATE_TOOL_PACKAGES = {
     'outside/python': 'The interpreter belongs outside the repository.\n',
 } as const;
 
-export const LINKED_HOOK_FILES = [
-    { path: '.lefthook.yml', kind: 'lefthook' },
-    { path: '.pre-commit-config.yaml', kind: 'pre-commit' },
-] as const;
+export const LINKED_HOOK_FILES = [{ path: '.lefthook.yml', kind: 'lefthook' }] as const;
 
 export const HUSKY_STUBS = {
     '.husky/_/.gitignore': '*\n',

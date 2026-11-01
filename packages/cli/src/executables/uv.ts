@@ -4,8 +4,8 @@ import { getTool } from '#cli/manifests/tools.ts';
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { buildVenvPythonPath } from '#cli/system/paths.ts';
 import type { ConfiguredCheck } from '#cli/types/planning.ts';
-import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
@@ -17,7 +17,6 @@ import {
     UV_FLAGS,
     UV_RUN_ARGUMENTS,
     INTERPRETER_FLAGS,
-    PYTHON_EXECUTABLE,
     UV_PROJECT_ENVIRONMENT,
     PYTHON_ENVIRONMENT_CHECKS,
     PROJECT_ENVIRONMENT_MESSAGE,
@@ -33,9 +32,7 @@ List the interpreter arguments for a tool in the Python environment of a copy.
 export function listCopyPythonArguments(tool: Tool, environment: Record<string, string>): string[] {
     const flag = Object.hasOwn(INTERPRETER_FLAGS, tool.name) ? INTERPRETER_FLAGS[tool.name] : undefined;
     const environmentPath = environment[UV_PROJECT_ENVIRONMENT];
-    return flag === undefined || environmentPath === undefined
-        ? []
-        : [flag, buildVenvExecutablePath(environmentPath, PYTHON_EXECUTABLE)];
+    return flag === undefined || environmentPath === undefined ? [] : [flag, buildVenvPythonPath(environmentPath)];
 }
 
 /**

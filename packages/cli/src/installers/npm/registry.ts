@@ -65,13 +65,12 @@ async function readRegistrySettings(root: string): Promise<Record<string, unknow
 Add a connection setting under an unused environment variable and return its reference.
 
 @param environment the install variables that get the value.
-@param prefix the start of each variable name.
 @param value the connection setting kept out of generated files.
 */
-function addEnvironmentReference(environment: Record<string, string>, prefix: string, value: string): string {
+function addEnvironmentReference(environment: Record<string, string>, value: string): string {
     let index = 0;
-    while (Object.hasOwn(environment, `${prefix}${String(index)}`)) index += 1;
-    const name = `${prefix}${String(index)}`;
+    while (Object.hasOwn(environment, `${NPM_SETTING_VARIABLE_PREFIX}${String(index)}`)) index += 1;
+    const name = `${NPM_SETTING_VARIABLE_PREFIX}${String(index)}`;
     environment[name] = value;
     return `\${${name}}`;
 }
@@ -116,7 +115,7 @@ export function writeNpmrc(settingsFolder: string, environment: Record<string, s
     const references: string[] = [];
     for (const [key, value] of Object.entries(environment)) {
         if (!key.startsWith(NPM_SETTING_PREFIX)) continue;
-        const reference = addEnvironmentReference(environment, NPM_SETTING_VARIABLE_PREFIX, value);
+        const reference = addEnvironmentReference(environment, value);
         references.push(`${key.slice(NPM_SETTING_PREFIX.length)}=${reference}`);
     }
     writeFileSync(join(settingsFolder, NPMRC_FILE), `${references.join('\n')}\n`, { mode: PRIVATE_FILE });

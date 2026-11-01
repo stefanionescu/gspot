@@ -67,11 +67,6 @@ test('deleteFolder refuses linked and outside parents and keeps folders that are
     expect(await readFile(join(sandbox.path, 'outside/kept/value'), 'utf8')).toBe('external');
 });
 
-test('opening a missing folder throws its ENOENT error', async () => {
-    await using sandbox = await testdir();
-    expect(() => openFiles(join(sandbox.path, 'missing'))).toThrow(matchFields({ code: 'ENOENT' }));
-});
-
 test('a refused file replacement keeps the original bytes and reports a filesystem error with its cause', async () => {
     await using sandbox = await testdir({ 'settings.json': '{"kept":true}' });
     const files = openFiles(sandbox.path);

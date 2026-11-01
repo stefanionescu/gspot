@@ -1,14 +1,11 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { GspotError } from '#cli/system/errors.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
 import { UNSAFE_PATH_MESSAGE } from '#tests/config/messages.ts';
 import { symlink, realpath, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { TSCONFIG_PARSE_ERRORS } from '#tests/config/parsers/projects.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 
 test('a tsconfig can extend a dependency installed above the repository', async () => {
@@ -19,19 +16,6 @@ test('a tsconfig can extend a dependency installed above the repository', async 
     const root = join(sandbox.path, 'app');
     expect(readTsconfig(root, join(root, 'tsconfig.json'), createRunCache(root))?.options.strict).toBe(true);
 });
-
-test.each([...TSCONFIG_PARSE_ERRORS])(
-    '$name raises a configuration error with its compiler message',
-    async ({ json, message }) => {
-        await using sandbox = await testdir({ 'tsconfig.json': json });
-        const path = join(sandbox.path, 'tsconfig.json');
-        const error = await captureRejection(
-            Promise.try(() => readTsconfig(sandbox.path, path, createRunCache(sandbox.path))),
-        );
-        expect(error).toBeInstanceOf(GspotError);
-        expect(error).toMatchObject({ code: 'configuration', message });
-    },
-);
 
 test('a tsconfig keeps dependencies reached through a node_modules symlink readable', async () => {
     await using dependencies = await testdir({

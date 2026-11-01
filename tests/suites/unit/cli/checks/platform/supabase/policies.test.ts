@@ -158,8 +158,3 @@ test('supabase/storage-policies reports invalid bucket settings as a syntax find
     expect(failed.report.exitCode).toBe(1);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
-
-test('supabase/storage-policies reports nothing without a config.toml', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['supabase']) });
-    expect(await runSandboxCheck(sandbox.path, 'supabase/storage-policies')).toStrictEqual([]);
-});

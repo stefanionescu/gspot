@@ -171,14 +171,6 @@ export const FILE_NAME_CASES = [
     },
 ] as const;
 
-export const NEXTJS_FOLDER_NAMES = [
-    'folders:app',
-    'folders:marketing',
-    'path_parameters:slug',
-    'folders:modal',
-    'folders:lib',
-] as const;
-
 export const NUMBERED_FILE_FINDINGS = [
     { file: '.mise/tasks/01-build.sh', rule: 'case' },
     { file: '.mise/tasks/01-build.sh', rule: 'digits' },

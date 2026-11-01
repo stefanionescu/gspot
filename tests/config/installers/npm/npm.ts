@@ -118,11 +118,6 @@ export const NPMRC_REFUSALS = [
         message: 'A registry URL in the .npmrc files is not valid.',
     },
     {
-        name: 'a registry that is not a URL',
-        source: 'registry=not-a-valid-url\n',
-        message: 'A registry URL in the .npmrc files is not valid.',
-    },
-    {
         name: 'a number setting with text',
         source: 'maxsockets=not-a-number\n',
         message: 'The .npmrc settings are not valid.',

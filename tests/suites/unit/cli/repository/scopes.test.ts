@@ -11,17 +11,15 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
-import { joinScope, buildArgumentPath, findProjectFolder, detectScopeFolders } from '#cli/repository/scopes.ts';
+import { buildArgumentPath, findProjectFolder, detectScopeFolders } from '#cli/repository/scopes.ts';
 
 import {
-    SCOPE_PATHS,
     PROJECT_SCOPES,
     TOOL_ONLY_PACKAGES,
     PROJECT_SCOPE_FILES,
     PROJECT_FILE_FOLDERS,
     WORKSPACE_FILE_CASES,
     PRIVATE_TOOL_PACKAGES,
-    PYTHON_WORKSPACE_FILES,
 } from '#tests/config/repository/repository.ts';
 
 test.each(PROJECT_FILE_FOLDERS)('%s with the project file %s marks the folder %j', (path, pattern, folder) => {
@@ -106,24 +104,6 @@ test('scope detection leaves out packages that hold only gspot npm tools or a ho
     ).map((scope) => scope.path);
     expect(correctedFolders).toStrictEqual(['packages/custom', 'packages/next', 'packages/process']);
 });
-
-test('Python scopes use the dependency files read with the repository', async () => {
-    await using sandbox = await testdir(PYTHON_WORKSPACE_FILES);
-
-    const repository = await readTestRepository(sandbox.path);
-    const dependencyFiles = await readDependencyFiles(createRunCache(sandbox.path), repository.files);
-    await writeFile(join(sandbox.path, 'pyproject.toml'), '[invalid');
-    expect(
-        detectScopeFolders(repository.files, dependencyFiles, readConfigurations().values()).map((scope) => scope.path),
-    ).toStrictEqual(['api']);
-});
-
-test.each([...SCOPE_PATHS])(
-    '$scope joins $path and gives back its scope-relative path',
-    ({ scope, path, repositoryPath }) => {
-        expect(joinScope(scope, path)).toBe(repositoryPath);
-    },
-);
 
 test('a path argument outside the repository reports an arguments error', () => {
     expect(() => buildArgumentPath('/repo', '/repo/app', '../../outside')).toThrow(

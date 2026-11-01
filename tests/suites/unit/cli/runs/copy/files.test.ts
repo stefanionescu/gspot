@@ -5,6 +5,7 @@ import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { createCheckCopy } from '#cli/runs/copy/files.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
@@ -12,7 +13,6 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
 import { listWorkspaceSources } from '#cli/repository/javascript/workspaces.ts';
-import { createCopy, createCheckCopy, selectCopyPaths } from '#cli/runs/copy/files.ts';
 import { TEST_WORKSPACE_FILES, WORKSPACE_SOURCE_FILES } from '#tests/config/runs/copy.ts';
 import { cp, mkdir, lstat, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 
@@ -35,13 +35,8 @@ test('a copy isolates workspace sources and links external dependencies and exec
     await symlink('../packages/core', join(sandbox.path, 'node_modules/core'));
     await symlink(external.path, join(sandbox.path, 'node_modules/external'));
     const session = await openSession(sandbox.path);
-    using copy = await createCopy(
-        selectCopyPaths(
-            session.root,
-            ['packages/core/value.js'],
-            session.repository.scopeFolders.map((scope) => scope.path),
-        ),
-    );
+    const planned = planSandboxCheck(session, 'gspot/generated-files', { paths: ['packages/core/value.js'] });
+    using copy = await createCheckCopy(session, planned);
     const scratch = copy.path;
     const result = runCommandBlocking([process.execPath, 'node_modules/.bin/tool'], { cwd: scratch });
     expect(result.code, result.stderr).toBe(0);
@@ -53,12 +48,14 @@ test('a copy isolates workspace sources and links external dependencies and exec
 });
 
 test('a workspace member that is no scope brings its own dependency store into the copy', async () => {
-    await using sandbox = await testdir(TEST_WORKSPACE_FILES);
+    await using sandbox = await testdir({ ...TEST_WORKSPACE_FILES, 'gspot.toml': buildSandboxSettings([]) });
 
     await mkdir(join(sandbox.path, 'tests/node_modules'));
     await symlink('../../node_modules/.bun/vue@3/node_modules/vue', join(sandbox.path, 'tests/node_modules/vue'));
     const paths = ['package.json', 'tests/package.json', 'tests/app.js', GSPOT_PATHS.npmProject];
-    using copy = await createCopy(selectCopyPaths(sandbox.path, paths, ['']));
+    const session = await openSession(sandbox.path);
+    const planned = planSandboxCheck(session, 'gspot/generated-files', { paths });
+    using copy = await createCheckCopy(session, planned, [GSPOT_PATHS.npmProject]);
     const scratch = copy.path;
     expect(await readFile(join(scratch, 'tests/node_modules/vue/package.json'), 'utf8')).toBe('{"name":"vue"}');
     expect(await readFile(join(scratch, `${GSPOT_PATHS.nodeModules}/prettier/package.json`), 'utf8')).toBe(
@@ -73,11 +70,13 @@ test('a link into another linked tree points at the copy of that tree, whatever 
         'next@16/node_modules/helpers/package.json': '{"name":"helpers"}',
     });
 
-    await createFileTree(sandbox.path, { 'package.json': '{"private":true}' });
+    await createFileTree(sandbox.path, { 'package.json': '{"private":true}', 'gspot.toml': buildSandboxSettings([]) });
     await mkdir(join(sandbox.path, 'node_modules'));
     await symlink(join(store.path, 'next@16/node_modules/next'), join(sandbox.path, 'node_modules/a-next'), 'dir');
     await symlink(store.path, join(sandbox.path, 'node_modules/z-store'), 'dir');
-    using copy = await createCopy(selectCopyPaths(sandbox.path, ['package.json'], ['']));
+    const session = await openSession(sandbox.path);
+    const planned = planSandboxCheck(session, 'gspot/generated-files', { paths: ['package.json'] });
+    using copy = await createCheckCopy(session, planned);
     const scratch = copy.path;
     const copied = await realpath(join(scratch, 'node_modules/a-next'));
     const exists = copied.startsWith(await realpath(join(scratch, 'node_modules/z-store')));
@@ -88,12 +87,15 @@ test('a link into another linked tree points at the copy of that tree, whatever 
 test('a copy sits beside the repository, so it shares a parent folder with the store package it links', async () => {
     await using sandbox = await testdir({
         'project/package.json': '{"private":true}',
+        'project/gspot.toml': buildSandboxSettings([]),
         'project/node_modules/.bun/tool@1/node_modules/tool/index.js': 'export {};',
     });
 
     const root = join(sandbox.path, 'project');
     await symlink('.bun/tool@1/node_modules/tool', join(root, 'node_modules/tool'), 'dir');
-    using copy = await createCopy(selectCopyPaths(root, ['package.json'], ['']));
+    const session = await openSession(root);
+    const planned = planSandboxCheck(session, 'gspot/generated-files', { paths: ['package.json'] });
+    using copy = await createCheckCopy(session, planned);
     const parent = await realpath(sandbox.path);
     expect(dirname(copy.path)).toBe(parent);
     expect(await realpath(join(copy.path, 'node_modules/tool/index.js'))).toBe(
@@ -105,10 +107,13 @@ test('a dependency link that points at nothing is left out of the copy', async (
     await using sandbox = await testdir({
         'package.json': '{"private":true}',
         'node_modules/.bin/tool': '#!/bin/sh\n',
+        'gspot.toml': buildSandboxSettings([]),
     });
 
     await symlink('../missing/bin/gspot', join(sandbox.path, 'node_modules/.bin/gspot'));
-    using copy = await createCopy(selectCopyPaths(sandbox.path, ['package.json'], ['']));
+    const session = await openSession(sandbox.path);
+    const planned = planSandboxCheck(session, 'gspot/generated-files', { paths: ['package.json'] });
+    using copy = await createCheckCopy(session, planned);
     const error = await captureRejection(lstat(join(copy.path, 'node_modules/.bin/gspot')));
     expect(error).toMatchObject({
         code: 'ENOENT',

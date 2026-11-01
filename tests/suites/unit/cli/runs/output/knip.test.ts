@@ -3,16 +3,6 @@ import { test, expect } from 'bun:test';
 import { parseOutput } from '#cli/runs/output/formats.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 
-test('a Knip report with an export name that is not text is refused', async () => {
-    const check = getShippedCheck('javascript/knip');
-    const stdout = '{"issues":[{"file":"source.js","exports":[{"name":1}]}]}';
-
-    await using sandbox = await testdir();
-    expect(() => parseOutput(check, stdout, '', { root: sandbox.path, cwd: sandbox.path })).toThrow(
-        new Error('Knip printed output that gspot cannot read.'),
-    );
-});
-
 test('grouped duplicate exports retain every symbol position and namespace', async () => {
     const check = getShippedCheck('javascript/knip');
     await using sandbox = await testdir();

@@ -106,6 +106,7 @@ export async function runSandboxCheck(
         buildCheckSession(session),
         planned,
         planned.check.generator_outputs === undefined ? CHECK_CODE[planned.check.id] : { check: checkGeneratorOutputs },
+        {},
     );
     return result.findings;
 }

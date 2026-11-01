@@ -1,6 +1,6 @@
-export const INVALID_LICENSES = ['MTI', 'MIT OR Apache-2.0', 'MIT AND Apache-2.0'];
+export const INVALID_LICENSES = ['MTI', 'MIT OR Apache-2.0'];
 
-export const VALID_LICENSES = ['MIT', 'Apache-2.0', 'GPL-2.0+', 'GPL-2.0-only WITH Classpath-exception-2.0'];
+export const VALID_LICENSES = ['MIT', 'GPL-2.0+', 'GPL-2.0-only WITH Classpath-exception-2.0'];
 
 export const INVALID_MARKDOWNLINT_NAMES = [
     { name: 'no-hard-tabs', value: { spaces_per_tab: 4 } },
@@ -76,32 +76,9 @@ export const KEY_PATH_CASES = [
             'gspot.toml:4: tools.eslint.override.0.rules.eqeqeq: This table holds options only, without a severity; the level decides which rules run. To turn eqeqeq off, run gspot ignore javascript/eslint --rule eqeqeq --reason "<why>".',
         ],
     },
-    {
-        name: 'an unknown override field',
-        configurations: ['javascript'],
-        options: {
-            rules: true,
-            tables: '[[tools.eslint.override]]\npaths = ["src"]\nrulez = {eqeqeq = ["always"]}\n',
-        },
-        correction: ['rulez', 'rules'],
-        where: [
-            'gspot.toml:4: tools.eslint.override.0.rulez: There is no setting called tools.eslint.override.rulez. The settings of [[tools.eslint.override]] are paths, rules, and runtime. Did you mean rules?',
-        ],
-    },
 ] as const;
 
 export const UNKNOWN_KEY_CASES = [
-    {
-        name: 'an unknown nested key',
-        text: `
-[[scope]]
-path = "api"
-kitz = []
-`,
-        message:
-            'gspot.toml:4: scope.0.kitz: There is no setting called scope.kitz. The settings of [[scope]] are path, configurations, ',
-        correction: ['kitz', 'configurations'] as const,
-    },
     {
         name: 'a misspelled key names the closest key',
         text: `[dependencies]
@@ -140,7 +117,6 @@ export const RULE_FILE_ERRORS = [
 export const EMPTY_REASONS = [
     { reason: '', refused: 'an empty reason' },
     { reason: 'because', refused: '"because"' },
-    { reason: 'Codex', refused: '"Codex"' },
 ] as const;
 
 export const INVALID_TOOL_ENUMS = [

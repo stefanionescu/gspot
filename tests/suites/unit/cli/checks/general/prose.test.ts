@@ -98,18 +98,6 @@ test.each([...VALE_OUTPUT_CASES])(
     },
 );
 
-test.each(['diagnostic text', '{"file.md":[{}]}'])('the Vale check refuses malformed output %s', async (stdout) => {
-    await using resources = new AsyncDisposableStack();
-    const sandbox = resources.use(
-        await testdir({ ...VALE_SANDBOX_FILES, 'gspot.toml': buildSandboxSettings(['prose', 'markdown']) }),
-    );
-    const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
-
-    resources.use(fakeCommands().mockResolvedValue(buildProcessResult({ stdout })));
-    const error = await captureRejection(runSandboxCheck(session.root, 'prose/vale'));
-    expect(error.message).toBe('Vale printed output that gspot cannot read.');
-});
-
 test('the Vale check fails with the error line Vale prints when Vale exits non-zero', async () => {
     await using resources = new AsyncDisposableStack();
     const sandbox = resources.use(

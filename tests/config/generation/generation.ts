@@ -1,5 +1,4 @@
 import { STYLELINT_FILES } from '#tests/config/authored-configs.ts';
-import { STRICT_COMPILER_OPTIONS } from '#tests/config/typescript.ts';
 
 export const SETUP_CASES = [
     ['github', 0],
@@ -63,16 +62,6 @@ export const STYLESHEET_CASES = [
         needsHtmlParser: false,
     },
 ] as const;
-
-export const REACT_NATIVE_TSCONFIG = {
-    compilerOptions: {
-        ...STRICT_COMPILER_OPTIONS,
-        module: 'ESNext',
-        moduleResolution: 'Bundler',
-        jsx: 'react-jsx',
-    },
-    include: ['src'],
-} as const;
 
 export const STYLELINT_PACKAGE_FIELDS = {
     project: {

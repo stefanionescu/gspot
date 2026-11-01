@@ -4,9 +4,9 @@ import { isReasonedValue } from '#cli/settings/file.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { RECORD_FIELDS } from '#cli/settings/schema/lookup.ts';
 import { stringify, parseDocument } from '@decimalturn/toml-patch';
+import type { TomlBlock, TomlValue } from '#cli/types/parsers/formats.ts';
 import { isTable, findValueAt, normalizeTables } from '#cli/system/tables.ts';
 import type { TomlTable, TaploLayout } from '#cli/types/settings/settings.ts';
-import type { TomlBlock, TomlValue, TomlSyntax } from '#cli/types/parsers/formats.ts';
 import { ROOT_KEYS, TOML_FORMAT, LAST_TABLES, FIRST_TABLES, SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 
 import {
@@ -188,26 +188,6 @@ function formatTaploValues(text: string, previous: Record<string, unknown>, layo
 }
 
 /**
-Write settings over the syntax of a gspot.toml text. Init and every edit command write gspot.toml this way. The entries of
-the text keep their order and layout. Each new top-level key or table goes where init places it, before the first later entry of
-the text. Each written list and inline table takes the Taplo layout, and a list longer than format.print_width puts one
-item on each line.
-
-@param previous the parsed text that the settings replace.
-@param written the settings to write.
-@returns the TOML text.
-*/
-export function buildSettingsToml(previous: TomlSyntax, written: TomlTable): string {
-    const sorted = sortTable(written);
-    const order = Object.keys(sorted);
-    const added = order.filter((key) => !Object.hasOwn(previous.value, key));
-    const kept = Object.fromEntries(Object.entries(sorted).filter(([key]) => !added.includes(key)));
-    let text = buildPatchedToml(previous, kept, TOML_FORMAT);
-    for (const key of added) text = insertTopLevelSetting(text, { key, value: sorted[key] }, order);
-    return formatTaploValues(text, previous.value, readTaploLayout(written));
-}
-
-/**
 Add an ignore to the list, or merge its paths into the record with the same check, rule, and reason.
 When either record has no paths, the merged record has none. Changes ignores in place.
 
@@ -232,18 +212,20 @@ export function mergeIgnore(ignores: TomlTable[], ignore: TomlTable): TomlTable 
 }
 
 /**
-Build the text of a new gspot.toml: the preface and the settings written over the template, whose comments stay.
+Write settings over the template while keeping its comments.
 
-@param preface the comment lines at the top.
 @param template the gspot.toml text that init copies with --from, or an empty text.
 @param written the values to write, before defaults.
 @returns the TOML 1.0 text.
 */
-export function buildSettingsText(preface: string, template: string, written: TomlTable): string {
+export function buildSettingsText(template: string, written: TomlTable): string {
     const syntax = parseTomlSyntax(template, parseTomlFile(SETTINGS_FILE, template));
-    const opening = preface === '' ? '' : preface.trimEnd() + '\n';
-    const body = isDeepStrictEqual(normalizeTables(written), normalizeTables(syntax.value))
-        ? template
-        : buildSettingsToml(syntax, written);
-    return `${opening}${body}`;
+    if (isDeepStrictEqual(normalizeTables(written), normalizeTables(syntax.value))) return template;
+    const sorted = sortTable(written);
+    const order = Object.keys(sorted);
+    const added = order.filter((key) => !Object.hasOwn(syntax.value, key));
+    const kept = Object.fromEntries(Object.entries(sorted).filter(([key]) => !added.includes(key)));
+    let text = buildPatchedToml(syntax, kept, TOML_FORMAT);
+    for (const key of added) text = insertTopLevelSetting(text, { key, value: sorted[key] }, order);
+    return formatTaploValues(text, syntax.value, readTaploLayout(written));
 }

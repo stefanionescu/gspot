@@ -28,6 +28,7 @@ import {
     YARN_CLASSIC_HEADER,
     LOCKFILE_URL_FIELDS,
     DEPENDENCY_SECTIONS,
+    JAVASCRIPT_LOCKFILES,
     YARN_CLASSIC_PROPERTY,
     PYTHON_NAME_SEPARATORS,
     type IMPORTER_LOCKFILES,
@@ -262,14 +263,9 @@ Read the versions that a project's direct dependencies resolve to in its nearest
 
 @param cache the run cache.
 @param folder the project folder relative to the repository.
-@param lockfiles the lockfile names in preference order.
 @returns undefined without a lockfile.
 */
-export function readLockedVersions(
-    cache: RunCache,
-    folder: string,
-    lockfiles: readonly LockfileName[],
-): Map<string, string> | undefined {
+export function readLockedVersions(cache: RunCache, folder: string): Map<string, string> | undefined {
     const parsers: Record<LockfileName, (path: string, text: string, importer: string) => Map<string, string>> = {
         'package-lock.json': parseNpmVersions,
         'npm-shrinkwrap.json': parseNpmVersions,
@@ -285,7 +281,7 @@ export function readLockedVersions(
             return parseYarnVersions(path, text, specifiers);
         },
     };
-    const found = findNearestLockfile(cache, folder, lockfiles);
+    const found = findNearestLockfile(cache, folder, JAVASCRIPT_LOCKFILES);
     return found === undefined
         ? undefined
         : parsers[found.lockfile](found.path, found.text, posix.relative(found.base, folder));

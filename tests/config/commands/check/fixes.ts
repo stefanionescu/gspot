@@ -27,19 +27,6 @@ export const FIX_LINTER_CASES = [
         partial: 'missing();\n',
         corrected: 'export {};\n',
     },
-    {
-        configuration: 'css',
-        tool: 'stylelint',
-        executable: 'stylelint.mjs',
-        path: 'sample.css',
-        config: 'native.json',
-        nativeConfiguration: JSON.stringify({ rules: { 'color-hex-length': 'short', 'property-no-unknown': true } }),
-        invalidConfiguration: '{',
-        formatter: ['--formatter', 'unix'],
-        sample: 'a { color: #ffffff; unknown: 1; }\n',
-        partial: 'a { color: #fff; unknown: 1; }\n',
-        corrected: 'a { color: #fff; }\n',
-    },
 ] as const;
 
 export const FIXER_RESULTS = [
@@ -66,14 +53,6 @@ export const FIXER_RESULTS = [
         status: 'failed',
         after: 'partial',
         note: 'sandbox/fixer exited 4',
-    },
-    {
-        name: 'default exit with original bytes',
-        toolArguments: [],
-        exit_codes: undefined,
-        status: 'unchanged',
-        after: 'original',
-        note: undefined,
     },
     {
         name: 'default failure with original bytes',

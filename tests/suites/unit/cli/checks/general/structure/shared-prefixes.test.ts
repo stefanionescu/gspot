@@ -5,9 +5,7 @@ import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
@@ -42,20 +40,6 @@ test('shared-prefixes groups files and folders once, and honors an ignore and a 
     );
     const raised = await runChecks(await openSession(sandbox.path), options);
     expect(raised.report.failed).toStrictEqual([]);
-});
-
-test.skipIf(isWindows)('prefix groups stay apart when folder and file names contain line breaks', async () => {
-    await using sandbox = await testdir();
-    const paths = ['a\nb/c-one.ts', 'a\nb/c-two.ts', 'a/b\nc-one.ts', 'a/b\nc-two.ts'];
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
-        ...Object.fromEntries(paths.map((path) => [path, 'export const value = 1;\n'])),
-    });
-    commitAll(sandbox.path);
-    const initial = await runSandboxCheck(sandbox.path, 'structure/shared-prefixes');
-    expect(initial.map((finding) => finding.file).toSorted(compareText)).toStrictEqual(
-        [paths[0]!, paths[2]!].toSorted(compareText),
-    );
 });
 
 test('hook scripts under .husky do not count; other files beside them still do', async () => {

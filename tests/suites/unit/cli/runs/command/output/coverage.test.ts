@@ -11,10 +11,15 @@ test.each(FILELESS_COVERAGE_CASES)(
     async ({ check: id, code, output, message }) => {
         await using sandbox = await testdir();
         const check = getShippedCheck(id);
-        const parsed = parseCommandFindings({ check }, buildProcessResult({ code, stdout: output }), {
-            root: sandbox.path,
-            cwd: sandbox.path,
-        });
+        const parsed = parseCommandFindings(
+            { check },
+            buildProcessResult({ code, stdout: output }),
+            {
+                root: sandbox.path,
+                cwd: sandbox.path,
+            },
+            {},
+        );
         expect(parsed.findings).toStrictEqual([{ check: id, file: '', message, help: check.help, fixable: false }]);
         expect(parsed.note).toBeUndefined();
         const result = buildCheckResult(check, {
@@ -39,9 +44,14 @@ test('grouped output that locates no existing file is an error', async () => {
         },
     };
     expect(
-        parseCommandFindings({ check }, buildProcessResult({ code: 1, stdout: 'missing.ts:\n  1: A defect.' }), {
-            root: sandbox.path,
-            cwd: sandbox.path,
-        }),
+        parseCommandFindings(
+            { check },
+            buildProcessResult({ code: 1, stdout: 'missing.ts:\n  1: A defect.' }),
+            {
+                root: sandbox.path,
+                cwd: sandbox.path,
+            },
+            {},
+        ),
     ).toStrictEqual({ note: 'sandbox/diagnostic failed with exit 1:\nmissing.ts:\n  1: A defect.' });
 });

@@ -11,10 +11,15 @@ test.each(TOOL_PATTERN_CASES)(
         await using sandbox = await testdir(Object.fromEntries(expected.map(({ file }) => [file, ''])));
         const check = getShippedCheck(id);
         expect(
-            parseCommandFindings({ check }, buildProcessResult({ code, stdout: output }), {
-                root: sandbox.path,
-                cwd: sandbox.path,
-            }),
+            parseCommandFindings(
+                { check },
+                buildProcessResult({ code, stdout: output }),
+                {
+                    root: sandbox.path,
+                    cwd: sandbox.path,
+                },
+                {},
+            ),
         ).toStrictEqual({ findings: expected.map((finding) => ({ ...finding, check: id, help: check.help })) });
     },
 );

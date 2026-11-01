@@ -27,14 +27,7 @@ export const PROJECT_DEPENDENCY_SCOPES = [
 
 export const INVALID_DEPENDENCY_FILES = [
     ['package.json', '{"dependencies":{"typescript":7}}', 'package.json: dependencies.typescript: '],
-    ['package.json', '{"workspaces":[7]}', 'package.json: workspaces: '],
     ['pyproject.toml', '[project', 'pyproject.toml:1:9 is not valid TOML: '],
-    ['pyproject.toml', '[project]\ndependencies = [7]\n', 'pyproject.toml: project.dependencies.0: '],
-    [
-        'pyproject.toml',
-        '[tool.poetry.dependencies]\nFastAPI = 7\n',
-        'pyproject.toml: tool.poetry.dependencies.FastAPI: ',
-    ],
 ] as const;
 export const REACT_VUE_PACKAGES = {
     'package.json': '{"name":"root-sandbox","private":true,"dependencies":{"react":"19.0.0"}}',

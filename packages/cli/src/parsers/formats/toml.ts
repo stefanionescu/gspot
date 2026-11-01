@@ -99,10 +99,10 @@ function findCommentAnchor(syntax: TomlSyntax, comment: TomlCommentNode): TomlPa
     return next?.node.loc.start.line === end + 1 ? next : undefined;
 }
 
-function insertTomlComments(comments: TomlComments, kind: string, keys: KeyPath, text: string): string {
+function insertTomlComments(comments: TomlComments, kind: string, keys: KeyPath): string {
     const id = JSON.stringify([kind, ...keys]);
     const block = comments.get(id);
-    if (block === undefined) return text;
+    if (block === undefined) return '';
     comments.delete(id);
     const free = block.free
         .toSorted((left, right) => left.start - right.start)
@@ -112,11 +112,7 @@ function insertTomlComments(comments: TomlComments, kind: string, keys: KeyPath,
         )
         .join('\n');
     const owned = block.owned.toSorted((left, right) => left.start - right.start).map(({ raw }) => raw);
-    return [
-        ...(free === '' ? [] : [free, ...(text === '' && owned.length === 0 ? [] : [''])]),
-        ...owned,
-        ...(text === '' ? [] : [text]),
-    ].join('\n');
+    return [...(free === '' ? [] : [free, ...(owned.length === 0 ? [] : [''])]), ...owned].join('\n');
 }
 
 function listAnchoredComments(syntax: TomlSyntax): TomlAnchoredComment[] {
@@ -204,7 +200,7 @@ export function buildPatchedToml(
         return [{ start, end: end + Number(patched[end] === '\n'), text: '' }];
     });
     for (const pathNode of reparsed.pathNodes) {
-        const text = insertTomlComments(comments, pathNode.kind, pathNode.path, '');
+        const text = insertTomlComments(comments, pathNode.kind, pathNode.path);
         if (text === '') continue;
         const start = getTomlRange(pathNode.node)[0];
         chunks.push({ start, end: start, text: text + '\n' });

@@ -1,14 +1,8 @@
 import { Readable } from 'node:stream';
 import { test, expect } from 'bun:test';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { parseGitBlobs, parseTreeFiles, mergeAttributes, parseAttributePatterns } from '#cli/parsers/git.ts';
 
-import {
-    parseGitBlobs,
-    decodeGitPaths,
-    parseTreeFiles,
-    mergeAttributes,
-    parseAttributePatterns,
-} from '#cli/parsers/git.ts';
 import {
     SHA1,
     SHA256,
@@ -33,13 +27,13 @@ test('tree entries keep full object IDs, modes and unquoted paths', () => {
         `100755 blob ${SHA256}\texecutable\0` +
         `120000 blob ${SHA1}\tlink\0` +
         `160000 commit ${SHA256}\tsubmodule\0`;
-    expect(parseTreeFiles(Buffer.from(output))).toStrictEqual([
+    expect(parseTreeFiles(Buffer.from(output), [])).toStrictEqual([
         { mode: '100644', hash: SHA1, path: INDEX_PATH },
         { mode: '100755', hash: SHA256, path: 'executable' },
         { mode: '120000', hash: SHA1, path: 'link' },
         { mode: '160000', hash: SHA256, path: 'submodule' },
     ]);
-    expect(parseTreeFiles(Buffer.alloc(0))).toStrictEqual([]);
+    expect(parseTreeFiles(Buffer.alloc(0), [])).toStrictEqual([]);
 });
 
 test.each([...INVALID_BLOBS])(`a batch is refused: $name`, async ({ output }) => {
@@ -80,13 +74,6 @@ test('a Git blob stream accepts empty chunks after the final object', async () =
     const chunks = [Buffer.from(`${SHA1} blob 0\n\n`), Buffer.alloc(0), Buffer.alloc(0)];
     const parsed = await Array.fromAsync(parseGitBlobs(Readable.from(chunks), [SHA1]));
     expect(parsed).toStrictEqual([[SHA1, Buffer.alloc(0)]]);
-});
-
-test('Git path decoding keeps readable entries and reports only invalid names', () => {
-    const unreadable: string[] = [];
-    const listing = decodeGitPaths(Buffer.from('good.ts\0bad\u00FF.ts\0other.ts\0', 'latin1'), unreadable);
-    expect(listing.split('\0')).toStrictEqual(['good.ts', 'other.ts']);
-    expect(unreadable).toStrictEqual([String.raw`"bad\377.ts"`]);
 });
 
 test('Git attributes apply unset and unspecified changes in order', () => {

@@ -93,10 +93,7 @@ test('a system library is read from the requested project, not from the tool pro
 
 test.each([...SYSTEM_PLUGIN_REPORTS])('a system plugin query classifies the $name report', async (report) => {
     await using sandbox = await testdir();
-    const tool = {
-        ...getTool(readConfigurations().values(), 'pytest-cov'),
-        ...('pattern' in report && { version_pattern: report.pattern }),
-    };
+    const tool = getTool(readConfigurations().values(), 'pytest-cov');
     using _which = fakeExecutableLookup('/native/pytest');
     using versionRun = spyOn(processes, 'spawnProcessBlocking').mockReturnValue(
         buildProcessResult({ code: report.code, stdout: report.stdout, missing: report.missing }),

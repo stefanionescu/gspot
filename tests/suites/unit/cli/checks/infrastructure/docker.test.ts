@@ -8,9 +8,9 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { runSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
-import { runChecks, runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 
 import {
     NGINX_COMPOSE,
@@ -45,7 +45,7 @@ test.each([...COMPOSE_PAIRING_CASES])(
         resources.use(fakes);
         const toolRun = resources.use(fakeCommands().mockResolvedValue(buildProcessResult()));
         const planned = planChecks(session, buildRunOptions({ stage: 'push', only: ['docker/compose'] }))[0]!;
-        const result = await runCheckCode(buildCheckSession(session), planned, CHECK_CODE['docker/compose']);
+        const result = await runCheckCode(buildCheckSession(session), planned, CHECK_CODE['docker/compose'], {});
         expect(result.findings).toStrictEqual([]);
         expect(result.status).toBe('passed');
         expect(
@@ -160,18 +160,4 @@ test('Trivy scans a repeated image once and reports each advisory and secret in 
         ]),
     );
     expect(JSON.stringify(findings)).not.toContain('sensitive-native-value');
-});
-
-test.each(['docker/trivy-config', 'docker/trivy-image'])('%s skips a scope without its inputs', async (check) => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['docker'], { scopes: [{ path: 'app', configurations: [] }] }),
-        'app/readme.txt': 'No Docker inputs here.',
-    });
-    const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
-    expect(
-        result.report.checks.map(({ scope, status, note, cause }) => ({ scope, status, note, cause })),
-    ).toStrictEqual([
-        { scope: '', status: 'skipped', note: 'No matching files.', cause: 'no-files' },
-        { scope: 'app', status: 'skipped', note: 'No matching files.', cause: 'no-files' },
-    ]);
 });

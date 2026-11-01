@@ -167,8 +167,6 @@ export const REFUSAL_HELP =
 export const UNCOVERED_FILE_MESSAGE =
     'No [[import_rule]] covers this file. Add a path that matches it to an import rule, or record an [[ignore]] for structure/import-rules with its paths and a reason.';
 
-export const SWIFTPM_DEFAULT_FOLDERS = ['Sources', 'Source', 'src', 'srcs'] as const;
-
 export const FRAMEWORK_COMPONENT_CASES = [
     { framework: 'astro', name: 'index.astro', folder: 'src/pages', content: '<main>Example</main>\n' },
     { framework: 'svelte', name: 'Card.svelte', folder: 'src/lib', content: '<p>Example</p>\n' },

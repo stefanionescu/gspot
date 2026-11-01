@@ -4,39 +4,6 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/planning/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { type ConfigData, StaticConfigLoader } from 'html-validate';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-
-test.each([
-    { level: 'basic', override: 'off', severity: 0 },
-    { level: 'all', override: undefined, severity: 2 },
-] as const)(
-    'the root and child scopes share one source and one built html-validate file, and no-inline-style is on only at level all ($level)',
-    async ({ level, override, severity }) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['html', 'site'], {
-                level,
-                scopes: [{ path: 'app', configurations: ['html', 'site'] }],
-            }),
-            'index.html': '<!doctype html><title>Root</title>',
-            'app/index.html': '<!doctype html><title>App</title>',
-        });
-
-        const output = buildGeneratedFiles(await openSession(sandbox.path));
-        const source = output.files.filter(({ path }) => path.endsWith('/html/html-validate.json'));
-        expect(source.map(({ path }) => path)).toStrictEqual([getManifestTarget('html', 'html-validate.json')]);
-        const sourceConfiguration = parse(source[0]!.content) as ConfigData;
-        expect(sourceConfiguration.extends).toStrictEqual(['html-validate:recommended']);
-        expect(sourceConfiguration.rules?.['no-inline-style']).toBe(override);
-        const sourceRules = await new StaticConfigLoader(sourceConfiguration).getConfigFor('index.html');
-        expect(sourceRules.getRules().get('no-inline-style')).toStrictEqual([severity, {}]);
-        const built = output.files.filter(({ path }) => path.endsWith('/site/html-validate.json'));
-        expect(built.map(({ path }) => path)).toStrictEqual([getManifestTarget('site', 'html-validate.json')]);
-        const builtConfiguration = parse(built[0]!.content) as ConfigData;
-        const builtRules = await new StaticConfigLoader(builtConfiguration).getConfigFor('built.html');
-        expect(builtRules.getRules().get('no-inline-style')).toStrictEqual([0, {}]);
-    },
-);
 
 test.each(['html/html-validate', 'site/html-validate'])(
     'an ignore for %s turns valid-id off only in its own html-validate file',

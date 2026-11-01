@@ -29,7 +29,7 @@ test.skipIf(isWindows)('a walk without Git leaves out named pipes', async () => 
     await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
 
     expect(runCommandBlocking(['mkfifo', 'stream.ts'], { cwd: sandbox.path }).code).toBe(0);
-    const files = await listTrackedFiles(sandbox.path, [], { hasGit: false });
+    const files = await listTrackedFiles(sandbox.path, [], { hasGit: false, unreadablePaths: [] });
     expect(files.map((file) => file.path)).toStrictEqual(['source.ts']);
 });
 
@@ -72,7 +72,7 @@ test.each(
         await symlink('source.ts', join(root, 'linked.ts'));
         await symlink('../../outside', join(root, 'blocked/external'), 'dir');
         await symlink(folder, join(root, 'linked-directory'), 'dir');
-        const files = await listTrackedFiles(root, [], { hasGit: false });
+        const files = await listTrackedFiles(root, [], { hasGit: false, unreadablePaths: [] });
         expect(files.map((file) => file.path)).toStrictEqual(
             [
                 '.gitignore',
@@ -91,7 +91,7 @@ test.each(
             isSymlink: true,
         });
         await symlink('../outside/private.ts', join(root, 'external.ts'));
-        const linked = await listTrackedFiles(root, [], { hasGit: false });
+        const linked = await listTrackedFiles(root, [], { hasGit: false, unreadablePaths: [] });
         expect(linked.map((file) => file.path)).toStrictEqual(files.map((file) => file.path));
     },
 );

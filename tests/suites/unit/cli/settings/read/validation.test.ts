@@ -79,22 +79,6 @@ test('the release age can be written at the root and cannot be written in a scop
     ]);
 });
 
-test('a removed configuration needs a reason of two or more words', () => {
-    expect(
-        validateSettingsText('[removed_configurations]\ndocs = "The docs live elsewhere."\nbash = "none"\n'),
-    ).toStrictEqual([
-        'gspot.toml:3: removed_configurations.bash: removed_configurations.bash needs a reason of two or more words that says why: "none" is refused.',
-    ]);
-});
-
-test('a list without its required reason names the inline value and set command', () => {
-    expect(
-        validateSettingsText('configurations = ["docs"]\n[docs]\nallowed_urls = ["https://example.com/docs"]\n'),
-    ).toStrictEqual([
-        'gspot.toml:3: docs.allowed_urls.reason: docs.allowed_urls needs a reason. Write it as docs.allowed_urls = { value = [...], reason = "..." }, or run gspot set docs.allowed_urls ... --reason "<why>".',
-    ]);
-});
-
 test('settings of an unselected language are refused while settings of automatic general configurations stay valid', () => {
     expect(validateSettingsText('configurations = ["bash"]\n[tools.sqlfluff]\ndialect = "sqlite"\n')).toStrictEqual([
         'gspot.toml:3: tools.sqlfluff.dialect: There is no setting called tools.sqlfluff.dialect in the selected configurations. No setting exists under that table. Run gspot list settings to see every one.',

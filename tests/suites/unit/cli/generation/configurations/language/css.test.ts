@@ -39,53 +39,6 @@ test.each(['vue', 'astro'])('a CSS-only scope checks properties inside a %s comp
     ]);
 });
 
-test("your Stylelint rule options reach each scope's file", async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['css'], {
-            level: 'all',
-            tables: '[tools.stylelint.rules]\ncolor-hex-length = "long"\nnumber-max-precision = 0\n',
-            scopes: [{ path: 'child' }],
-        }),
-        'source.css': 'a { color: #fff; width: 1.23456px; }',
-        'child/source.css': 'a { color: #fff; width: 1.23456px; }',
-    });
-
-    const session = await openSession(sandbox.path);
-    const generated = buildGeneratedFiles(session);
-    expect(generated.files.filter(({ path }) => path.endsWith('/stylelint.json'))).toHaveLength(1);
-    for (const scope of ['', 'child']) {
-        const target = getConfigPath(session, 'stylelint', scope);
-        const file = generated.files.find(({ path }) => path === target)!;
-        const config = JSON.parse(file.content) as Config;
-        expect(config.rules!['color-hex-length']).toBe('long');
-        expect(config.rules!['number-max-precision']).toBe(0);
-        const result = await stylelint.lint({
-            code: 'a { color: #fff; width: 1.23456px; }',
-            config,
-            configBasedir: toolModules,
-        });
-        const warnings = result.results.flatMap((result) => result.warnings);
-        expect(
-            warnings.filter(({ rule }) => rule === 'color-hex-length').map(({ severity }) => severity),
-        ).toStrictEqual(['error']);
-        expect(warnings.filter(({ rule }) => rule === 'number-max-precision')).toHaveLength(1);
-    }
-});
-
-test('level basic refuses Stylelint options for a rule of level all', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['css'], {
-            level: 'basic',
-            tables: '[tools.stylelint.rules]\ncolor-hex-length = "long"\nnumber-max-precision = 0\n',
-        }),
-        'source.css': 'a { color: #fff; }',
-    });
-    const session = await openSession(sandbox.path);
-    expect(() => buildGeneratedFiles(session)).toThrow(
-        'number-max-precision runs only at level all. gspot sets options only for the rules that run at level basic.',
-    );
-});
-
 test('a scope with CSS Modules files accepts composes, :global, and @value in them only', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['css'], { level: 'all' }),

@@ -20,29 +20,32 @@ test('the typos format tells findings from fatal exits', async () => {
     const planned = planChecks(session, { stage: 'all', only: ['spelling/typos'] })[0]!;
     const stdout = JSON.stringify(TYPO_REPORT);
     const result = buildProcessResult({ stdout, code: 2 });
-    expect(parseCommandFindings(planned, result, { cwd: sandbox.path, root: sandbox.path }).findings).toStrictEqual([
-        {
-            check: planned.check.id,
-            file: 'sample.txt',
-            line: 1,
-            column: 1,
-            message: `\`${TYPO.the}\` should be \`the\``,
-            help: planned.check.help,
-            fixable: true,
-        },
-    ]);
+    expect(parseCommandFindings(planned, result, { cwd: sandbox.path, root: sandbox.path }, {}).findings).toStrictEqual(
+        [
+            {
+                check: planned.check.id,
+                file: 'sample.txt',
+                line: 1,
+                column: 1,
+                message: `\`${TYPO.the}\` should be \`the\``,
+                help: planned.check.help,
+                fixable: true,
+            },
+        ],
+    );
     expect(
         parseCommandFindings(
             planned,
             { ...result, code: 78, stderr: 'Invalid native configuration.' },
             { cwd: sandbox.path, root: sandbox.path },
+            {},
         ).note,
     ).toBe(`typos failed with exit 78:\nInvalid native configuration.\n${stdout}`);
     expect(
-        parseCommandFindings(planned, { ...result, stdout: '' }, { cwd: sandbox.path, root: sandbox.path }).note,
+        parseCommandFindings(planned, { ...result, stdout: '' }, { cwd: sandbox.path, root: sandbox.path }, {}).note,
     ).toBe('typos failed with exit 2 and printed nothing.');
     expect(
-        parseCommandFindings(planned, { ...result, stdout: '', code: 0 }, { cwd: sandbox.path, root: sandbox.path })
+        parseCommandFindings(planned, { ...result, stdout: '', code: 0 }, { cwd: sandbox.path, root: sandbox.path }, {})
             .findings,
     ).toStrictEqual([]);
 });

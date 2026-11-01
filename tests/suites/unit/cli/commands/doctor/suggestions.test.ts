@@ -210,13 +210,12 @@ test.each([...REMOVED_CONFIGURATION_CASES])(
 
 test.each([...CI_PREFERENCE_CASES])(
     'with CI off, doctor names the commands for the CI of $name',
-    async ({ tracked, untracked, remote, ci }) => {
+    async ({ tracked, remote, ci }) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([]),
             ...Object.fromEntries(tracked.map((file) => [file, '{}\n'])),
         });
         if (tracked.length > 0) runGitStep(sandbox.path, ['add', '--', ...tracked]);
-        if (untracked !== '') await createFileTree(sandbox.path, { [untracked]: '{}\n' });
         runGitStep(sandbox.path, ['config', 'remote.origin.url', remote]);
         const result = await runGspot(sandbox.path, ['doctor', '--json']);
         expect((JSON.parse(result.stdout) as DoctorReport).ci).toBe(ci);

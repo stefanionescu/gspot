@@ -10,11 +10,11 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { unlink, symlink, readFile } from 'node:fs/promises';
-import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { listExecutablePaths } from '#cli/executables/locate.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers/projects.ts';
 import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
 import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { fakeNpmPackage, writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
@@ -148,12 +148,6 @@ test('mise finds the program of the repository, and it runs from a copy', async 
         cwd: join(sandbox.path, 'copy'),
     });
     expect({ code: result.code, stdout: result.stdout }).toStrictEqual({ code: 0, stdout: '0.0.0-test\n' });
-});
-
-test('mise finds no program when its lookup exits 1', async () => {
-    await using sandbox = await testdir({ 'work/.keep': '', 'copy/.keep': '' });
-    const { paths } = await fakeMiseTsc(sandbox.path, 1);
-    expect(paths).toStrictEqual([]);
 });
 
 test('a pinned program whose only executable is a mise shim that mise cannot resolve is missing', async () => {

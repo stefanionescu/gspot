@@ -87,14 +87,6 @@ export const COMPONENT_ENVIRONMENT_FINDINGS = [
     { file: 'worker.ts', line: 1, rule: 'missing-key' },
 ] as const;
 
-export const BUN_ENVIRONMENT_RESULTS = [
-    {
-        check: 'secrets/env-examples',
-        status: 'failed',
-        findings: [{ file: 'source.ts', line: 1, rule: 'missing-key' }],
-    },
-] as const;
-
 export const ENVIRONMENT_SCOPE_RESULTS = [
     { scope: '', status: 'failed', findings: [{ file: 'source.ts', line: 1, rule: 'missing-key' }] },
     { scope: 'app', status: 'failed', findings: [{ file: 'app/source.ts', line: 1, rule: 'missing-key' }] },

@@ -13,7 +13,6 @@ import type {
     SpawnOptions,
     StdoutReader,
     RunningProcess,
-    WatchedProcess,
     SpawnCompletion,
     AsyncSpawnOptions,
     ProcessTermination,
@@ -247,13 +246,6 @@ function findUnstartedProcess(
     );
 }
 
-function watchProcess(child: WatchedProcess, options: AsyncSpawnOptions): ProcessTreeControl {
-    const supervision = trackProcessTree(child, options);
-    if (options.onStdout !== undefined) child.stdout.on('data', options.onStdout);
-    if (options.onStderr !== undefined) child.stderr.on('data', options.onStderr);
-    return supervision;
-}
-
 function launchProcess(command: readonly string[], options: AsyncSpawnOptions, output: Pick<Options, 'buffer'>) {
     const [executable, ...commandArguments] = command as readonly [string, ...string[]];
     const child = execa(executable, commandArguments, {
@@ -261,7 +253,7 @@ function launchProcess(command: readonly string[], options: AsyncSpawnOptions, o
         ...output,
         detached: process.platform !== 'win32',
     });
-    const supervision = watchProcess(child, options);
+    const supervision = trackProcessTree(child, options);
     return { child, supervision };
 }
 

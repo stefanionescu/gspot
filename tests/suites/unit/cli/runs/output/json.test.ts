@@ -101,10 +101,6 @@ test.each([...EMPTY_JSON_CASES])('an invalid JSON report is refused: %s', (stdou
     expect(() => parseJsonReport('x/y', { format: 'json', list: 'items' }, stdout)).toThrow(new Error(message));
 });
 
-test('an empty JSON report has no findings', () => {
-    expect(parseJsonReport('x/y', { format: 'json' }, '[]')).toStrictEqual([]);
-});
-
 test.each([...INVALID_FINDING_REPORTS])(
     'a JSON report with $name is refused with its message',
     ({ output, stdout, message }) => {

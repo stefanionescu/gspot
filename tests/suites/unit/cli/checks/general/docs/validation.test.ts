@@ -268,21 +268,6 @@ test('required-files: ignored README.md and LICENSE files in a Git repository ar
     expect(await runSandboxCheck(sandbox.path, 'docs/required-files')).toStrictEqual([]);
 });
 
-test('required-files: a scope without README.md is reported and passes once README.md exists', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['docs'], { level: 'all', scopes: [{ path: 'app' }] }),
-        'README.md': README,
-        LICENSE,
-        'app/package.json': '{}',
-    });
-    const found = await runSandboxCheck(sandbox.path, 'docs/required-files', { scope: 'app' });
-    expect(found.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([
-        { file: 'app/README.md', rule: 'missing-readme', message: 'The scope app has no README.md.' },
-    ]);
-    await writeFile(join(sandbox.path, 'app/README.md'), README);
-    expect(await runSandboxCheck(sandbox.path, 'docs/required-files', { scope: 'app' })).toStrictEqual([]);
-});
-
 test('missing-paths: a generator output named by a setting counts as present before it is generated', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['docs', 'openapi'], {

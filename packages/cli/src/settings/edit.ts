@@ -1,13 +1,11 @@
-import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
-import { buildSettingsToml } from '#cli/settings/text.ts';
+import { buildSettingsText } from '#cli/settings/text.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { TomlTable } from '#cli/types/settings/settings.ts';
-import { parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
-import { SETTINGS_FILE, SETTINGS_PREFACE } from '#cli/config/settings/settings.ts';
-import { isTable, addTable, findValueAt, normalizeTables } from '#cli/system/tables.ts';
+import { SETTINGS_PREFACE } from '#cli/config/settings/settings.ts';
+import { isTable, addTable, findValueAt } from '#cli/system/tables.ts';
 import type { SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings/edits.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: setKey, removeKey, and removeFromList split a dotted key at its last dot through it.
@@ -30,12 +28,9 @@ Apply a settings change to edit.table, check the result, and patch it into the p
 */
 export function buildEditedSettings(root: string, edit: SettingsEdit): EditedSettings {
     const { text, table } = edit;
-    const previous = parseTomlFile(SETTINGS_FILE, text);
     const opening = SETTINGS_PREFACE.exec(text)?.[0] ?? '';
     const body = text.slice(opening.length);
-    const next = isDeepStrictEqual(normalizeTables(table), normalizeTables(previous))
-        ? text
-        : opening + buildSettingsToml(parseTomlSyntax(body, previous), table);
+    const next = opening + buildSettingsText(body, table);
     const settings = parseSettings(next, root);
     if (Array.isArray(settings))
         throw new GspotError(

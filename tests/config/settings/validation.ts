@@ -106,13 +106,6 @@ export const REFUSED_RULE_OPTIONS = [
             'gspot.toml:3: tools.markdownlint.rules.MD041: This table holds options only, without a severity; the level decides which rules run. To turn MD041 off, run gspot ignore markdown/markdownlint --rule MD041 --reason "<why>".',
     },
     {
-        tool: 'markdownlint',
-        configuration: 'markdown',
-        toml: '[tools.markdownlint.rules]\ndefault = {}\n',
-        message:
-            'gspot.toml:3: tools.markdownlint.rules.default: Name a rule by its ID, such as MD010 = { spaces_per_tab = 4 }. This table holds rule options only.',
-    },
-    {
         tool: 'stylelint',
         configuration: 'css',
         toml: '[tools.stylelint.rules]\ncolor-hex-length = ["short", { severity = "warning" }]\n',

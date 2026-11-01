@@ -94,7 +94,7 @@ test('nextjs/tsc in a child scope reports its finding, passes after the fix, and
     const routesSeen: string[] = [];
     using fakes = fakeNextjsCommands((command, options) => fakeNextjsBuild(command, options, routesSeen));
     const { folders } = fakes;
-    const { findings: found } = await runCheckCode(session, planned, CHECK_CODE['nextjs/tsc']);
+    const { findings: found } = await runCheckCode(session, planned, CHECK_CODE['nextjs/tsc'], {});
     expect(found.map(({ check, file, line, rule, message }) => ({ check, file, line, rule, message }))).toStrictEqual([
         {
             check: 'nextjs/tsc',
@@ -105,7 +105,7 @@ test('nextjs/tsc in a child scope reports its finding, passes after the fix, and
         },
     ]);
     await writeFile(join(sandbox.path, join(scope, 'src/app/page.ts')), 'corrected input\n');
-    expect(await runCheckCode(session, planned, CHECK_CODE['nextjs/tsc'])).toMatchObject({
+    expect(await runCheckCode(session, planned, CHECK_CODE['nextjs/tsc'], {})).toMatchObject({
         status: 'passed',
         findings: [],
     });
@@ -142,7 +142,9 @@ test('nextjs/tsc removes its copy after a failed type generation and keeps a con
         await writeFile(join(sandbox.path, 'tsconfig.json'), 'Concurrent developer edit\n');
         return buildProcessResult({ code: 1, stderr: `Error: ${message}` });
     });
-    const error = await captureRejection(runCheckCode(buildCheckSession(session), planned, CHECK_CODE['nextjs/tsc']));
+    const error = await captureRejection(
+        runCheckCode(buildCheckSession(session), planned, CHECK_CODE['nextjs/tsc'], {}),
+    );
     expect(error.message).toBe(`The next typegen command failed: Error: ${message}`);
     expect(scratch).not.toBe('');
     expect(await isOnDisk(scratch)).toBe(false);

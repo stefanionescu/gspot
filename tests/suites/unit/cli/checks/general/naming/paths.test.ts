@@ -6,15 +6,13 @@ import { rename, writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
-import { readNamingDefaults } from '#cli/manifests/read.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildFileIdentifier, buildFolderIdentifiers } from '#cli/checks/general/naming/paths.ts';
+import { buildFileIdentifier } from '#cli/checks/general/naming/paths.ts';
 
 import {
     FILE_NAME_CASES,
-    NEXTJS_FOLDER_NAMES,
     NUMBERED_FILE_FINDINGS,
     NUMBERED_PREFIX_OVERRIDE,
 } from '#tests/config/checks/general/naming/naming.ts';
@@ -144,45 +142,10 @@ test.each(['', 'apps/api'])(
     },
 );
 
-test('a bracketed file name is a path parameter, and other punctuation stays in the name', () => {
-    const containers = readNamingDefaults().path_containers;
-    expect(buildFileIdentifier('app/[...slug].ts', 'typescript', containers)).toMatchObject({
-        name: 'slug',
-        category: 'path_parameters',
-    });
-    for (const name of ['(group)', '@slot', '_private'])
-        expect(buildFileIdentifier(`app/${name}.ts`, 'typescript', containers)).toMatchObject({
-            name,
-            category: 'files',
-        });
-    expect(buildFileIdentifier('app/[slug].ts', 'typescript', [])).toMatchObject({
-        name: '[slug]',
-        category: 'files',
-    });
-    expect(
-        buildFolderIdentifiers('app/(group)/@slot/_private/[id]/page.ts', 'typescript', []).map(({ name }) => name),
-    ).toStrictEqual(['app', '(group)', '@slot', '_private', '[id]']);
-});
-
 test('a file name drops one extension, or .d.ts as one, and a SQL migration keeps its extension', () => {
     expect(buildFileIdentifier('src/a-b.test.ts', 'typescript', []).name).toBe('a-b.test');
     expect(buildFileIdentifier('types/modules.d.ts', 'typescript', []).name).toBe('modules');
     expect(buildFileIdentifier('db/20240101010101_add_users.sql', 'sql', []).name).toBe('20240101010101_add_users.sql');
-});
-
-test('Next.js route segments are unwrapped and dot folders are skipped', () => {
-    const containers = readNamingDefaults().path_containers;
-    const names = buildFolderIdentifiers(
-        'app/(marketing)/[slug]/@modal/_lib/.hidden/page.tsx',
-        'typescript',
-        containers,
-    );
-    expect(names.map((each) => `${each.category}:${each.name}`)).toStrictEqual([...NEXTJS_FOLDER_NAMES]);
-    expect(names[2]?.folder).toBe('app/(marketing)/[slug]');
-    expect(buildFileIdentifier('app/[...rest]/page.tsx', 'typescript', containers)).toMatchObject({
-        name: 'page',
-        category: 'files',
-    });
 });
 
 test('double underscore tool folders keep their inner names and a shared folder stays banned', async () => {

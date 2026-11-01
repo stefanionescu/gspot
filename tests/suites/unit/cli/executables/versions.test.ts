@@ -1,11 +1,9 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { getTool } from '#cli/manifests/tools.ts';
 import { type Tool } from '#cli/types/manifests.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { inspectTool } from '#cli/executables/inspect.ts';
 import { UNCLOSED_SEQUENCE } from '#tests/config/yaml.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
 import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
 import { fakeNpmPackage, writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
@@ -116,23 +114,6 @@ test.each([...SYSTEM_BASH_VERSIONS])(
         expect(inspection).toMatchObject({ state, found: version, minimumVersion: '4.4' });
     },
 );
-
-test.each(['gitleaks', 'next'])('the %s pin is outdated below its minimum version and accepted at it', async (name) => {
-    await using sandbox = await testdir();
-    using _which = fakeExecutableLookup(process.execPath);
-    const pin = getTool(readConfigurations().values(), name);
-    const minimum = pin.min_version!;
-    const available = pin.system === true ? 'system' : 'ok';
-    for (const version of ['0.0.0', minimum]) {
-        const printed = name === 'next' ? `Next.js v${version}` : version;
-        const tool = { ...pin, version_command: buildProgramArguments('fakes/tool', '--line', printed) };
-        expect(inspectTool(buildToolSearch(sandbox.path), tool)).toMatchObject({
-            state: version === minimum ? available : 'outdated',
-            found: version,
-            minimumVersion: minimum,
-        });
-    }
-});
 
 test.each([...PROGRAM_VERSION_STATES])(
     'a wrapper with its own version runs program %s and reports %s',

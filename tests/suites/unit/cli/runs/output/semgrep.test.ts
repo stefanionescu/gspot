@@ -13,10 +13,15 @@ test('Semgrep rule findings and source parse errors keep positions and Unicode p
     const check = configuration.checks.find((check) => check.id === 'security/semgrep')!;
     const stdout = JSON.stringify({ results: [SEMGREP_MATCH], errors: [SEMGREP_PARSE_ERROR] });
     expect(
-        parseCommandFindings({ check }, buildProcessResult({ code: 3, stdout }), {
-            cwd: sandbox.path,
-            root: sandbox.path,
-        }).findings,
+        parseCommandFindings(
+            { check },
+            buildProcessResult({ code: 3, stdout }),
+            {
+                cwd: sandbox.path,
+                root: sandbox.path,
+            },
+            {},
+        ).findings,
     ).toStrictEqual([
         {
             check: 'security/semgrep',
@@ -47,5 +52,5 @@ test.each([...SEMGREP_REFUSED_REPORTS])('a Semgrep report with %s is an error', 
         .get('security')!
         .checks.find((check) => check.id === 'security/semgrep')!;
     const paths = { cwd: sandbox.path, root: sandbox.path };
-    expect(parseCommandFindings({ check }, buildProcessResult({ code: 3, stdout }), paths).note).toBe(note);
+    expect(parseCommandFindings({ check }, buildProcessResult({ code: 3, stdout }), paths, {}).note).toBe(note);
 });

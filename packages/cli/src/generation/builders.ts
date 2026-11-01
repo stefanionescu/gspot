@@ -63,7 +63,7 @@ import {
     buildBannedHeadingsStyle,
 } from '#cli/generation/configurations/general/prose.ts';
 
-export const CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder | undefined>> = {
+const CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder | undefined>> = {
     'pytest/coveragerc': buildCoverageFile,
     'ansible/ansible-lint.yml': (planned) => {
         const ignored = listIgnoredRules(planned.scope, ANSIBLE_LINT_CHECK);

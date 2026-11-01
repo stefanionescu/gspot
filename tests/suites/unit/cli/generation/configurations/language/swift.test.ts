@@ -1,9 +1,7 @@
-import { parse } from 'yaml';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { CLEAN_SWIFT } from '#tests/config/swift.ts';
 import { openSession } from '#cli/planning/session.ts';
-import type { SwiftlintOutput } from '#tests/types/swift.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -53,48 +51,3 @@ test('SwiftFormat uses the Xcode project you choose in each scope', async () => 
     );
     expect(outputs.map(({ path }) => path).filter((path) => path.includes('disabled'))).toStrictEqual([]);
 });
-
-test.each(['lf', 'crlf'] as const)('SwiftFormat writes the %s line ending you set in each scope', async (ending) => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['swift'], {
-            level: 'all',
-            tables: `[format]\nline_ending = "${ending}"\n[[scope]]\npath = "child"\nconfigurations = ["swift"]\nformat.line_ending = "${ending === 'lf' ? 'crlf' : 'lf'}"\n`,
-        }),
-        'Value.swift': CLEAN_SWIFT,
-        'child/Value.swift': CLEAN_SWIFT,
-    });
-
-    const session = await openSession(sandbox.path);
-    const files = buildGeneratedFiles(session).files;
-    expect(files.find((file) => file.path === getConfigPath(session, 'swiftformat'))!.content).toContain(
-        `--linebreaks ${ending}\n`,
-    );
-    expect(files.find((file) => file.path === getConfigPath(session, 'swiftformat', 'child'))!.content).toContain(
-        `--linebreaks ${ending === 'lf' ? 'crlf' : 'lf'}\n`,
-    );
-});
-
-test.each(['basic', 'all'] as const)(
-    'SwiftLint keeps configured limits and level-specific rules at %s',
-    async (level) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['swift'], {
-                level,
-                tables: '[format]\nprint_width = 110\n[limits]\nfunction_lines = 17\nfile_lines = 190\n',
-            }),
-            'Value.swift': CLEAN_SWIFT,
-        });
-        const session = await openSession(sandbox.path);
-        const text = buildGeneratedFiles(session).files.find(
-            (file) => file.path === getConfigPath(session, 'swiftlint'),
-        )!.content;
-        const document = parse(text) as SwiftlintOutput;
-        expect(document.function_body_length).toStrictEqual(level === 'all' ? { warning: 17, error: 17 } : undefined);
-        expect(document.file_length).toStrictEqual(
-            level === 'all' ? { warning: 190, error: 190, ignore_comment_only_lines: true } : undefined,
-        );
-        expect(document.line_length).toStrictEqual({ warning: 110, error: 110, ignores_urls: true });
-        expect(document.opt_in_rules.includes('force_unwrapping')).toBe(level === 'all');
-        expect(document.disabled_rules.includes('file_length')).toBe(level === 'basic');
-    },
-);

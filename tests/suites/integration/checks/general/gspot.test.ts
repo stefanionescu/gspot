@@ -2,9 +2,9 @@ import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
 import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {

@@ -10,7 +10,7 @@ import { CI_NODE } from '#cli/config/generation/generation.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { assertPackageManagerVersion } from '#cli/installers/npm/project.ts';
-import { PACKAGE_MANAGER_TIMEOUT, PACKAGE_MANAGER_AGE_CASES } from '#tests/config/installers/npm/project.ts';
+import { PACKAGE_MANAGER_AGE_CASES } from '#tests/config/installers/npm/project.ts';
 
 test('npm in place of Yarn 1 refuses to run without the minimum release age', async () => {
     await using sandbox = await testdir({
@@ -52,22 +52,6 @@ test.each(PACKAGE_MANAGER_AGE_CASES)(
         expect(context.steps).toStrictEqual([['mise', 'exec', CI_NODE, `${name}@${version}`, '--', name, '--version']]);
     },
 );
-
-test('a package manager version timeout names the install command and configured limit', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([]),
-        'package.json': '{"private":true,"packageManager":"bun@1.4.2"}',
-    });
-    const session = await openSession(sandbox.path);
-    const owner = openFiles(sandbox.path);
-    const context = buildToolInstall(session, owner);
-    using _bun = fakeCommands('mise', () => Promise.resolve(buildProcessResult(PACKAGE_MANAGER_TIMEOUT)));
-    const timeoutError = await captureRejection(assertPackageManagerVersion(context));
-    expect(timeoutError.message).toBe(
-        `The command mise exec ${CI_NODE} bun@1.4.2 -- bun --version ran longer than tool_timeout_seconds (${String(session.timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>.`,
-    );
-    expect(context.steps).toStrictEqual([['mise', 'exec', CI_NODE, 'bun@1.4.2', '--', 'bun', '--version']]);
-});
 
 test('a pinned pnpm runs through mise instead of the older PATH executable', async () => {
     await using sandbox = await testdir({

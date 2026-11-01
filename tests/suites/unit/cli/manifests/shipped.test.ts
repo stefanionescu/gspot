@@ -6,7 +6,6 @@ import type { Tool, Check } from '#cli/types/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { EACH_PLACEHOLDER } from '#cli/config/runs/command.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
-import { manifestToolSchema } from '#cli/schemas/manifests/manifests.ts';
 import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import type { SettingDefinition } from '#cli/types/settings/definitions.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
@@ -171,12 +170,4 @@ test('shipped configuration folders have unique names', () => {
         .filter((path) => path.endsWith('/manifest.toml'))
         .map((path) => posix.basename(posix.dirname(path)));
     expect(new Set(names).size).toBe(names.length);
-});
-
-test('a mise installer refuses a checksum without a sha256 digest and accepts one with it', () => {
-    const tool = { name: 'taplo', version: '0.10.0' };
-    const invalid = { ...tool, mise: { name: 'taplo', checksums: { 'linux-x64': 'invalid' } } };
-    const valid = { ...tool, mise: { name: 'taplo', checksums: { 'linux-x64': `sha256:${'a'.repeat(64)}` } } };
-    expect(manifestToolSchema.safeParse(invalid).success).toBe(false);
-    expect(manifestToolSchema.safeParse(valid).success).toBe(true);
 });

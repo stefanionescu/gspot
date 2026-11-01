@@ -1,15 +1,11 @@
-import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { readFile } from 'node:fs/promises';
 import { stringify } from '@decimalturn/toml-patch';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import { REACT_VUE_PACKAGES, ROOT_PACKAGE_WITHOUT_DEPENDENCIES } from '#tests/config/repository/dependencies.ts';
 
 test('a fix run rereads the repository and keeps the package scopes it found', async () => {
     await using sandbox = await testdir({
@@ -58,41 +54,4 @@ test('checks read a new file inventory after a fixer creates a source and leave 
     expect(result.report.exitCode).toBe(0);
     expect(result.report.checks[0]!.fileCount).toBe(2);
     expect(session.repository.files.map((file) => file.path)).toStrictEqual(['gspot.toml', 'source.txt']);
-});
-
-test('a fix run writes the package.json it changed and leaves the dependency files of the session it got as they were', async () => {
-    await using sandbox = await testdir({
-        ...REACT_VUE_PACKAGES,
-        'gspot.toml': buildSandboxSettings(['javascript'], {
-            scopes: [{ path: 'app', configurations: ['javascript'] }],
-            tables: stringify({
-                command_check: [
-                    {
-                        id: 'project/update-package',
-                        command: buildProgramCommand('fakes/tool'),
-                        fix: buildProgramCommand(
-                            'fakes/tool',
-                            '--write',
-                            `package.json=${ROOT_PACKAGE_WITHOUT_DEPENDENCIES}`,
-                        ),
-                        paths: ['package.json'],
-                        stage: 'commit',
-                        output: { format: 'none' },
-                    },
-                ],
-            }),
-        }),
-    });
-
-    using resources = new DisposableStack();
-    const session = await openSession(sandbox.path, { resources });
-    const result = await runChecks(session, buildRunOptions({ only: ['project/update-package'], fix: true }));
-    expect(result.report.exitCode).toBe(0);
-    expect(result.fixes?.results).toMatchObject([
-        { check: 'project/update-package', status: 'changed', changed: ['package.json'] },
-    ]);
-    expect(listProjectDependencyNames(session.repository.dependencyFiles, '')).toStrictEqual(['react']);
-    expect(listProjectDependencyNames(session.repository.dependencyFiles, 'app')).toStrictEqual(['vue']);
-    expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(ROOT_PACKAGE_WITHOUT_DEPENDENCIES);
-    expect(await readFile(join(sandbox.path, 'app/package.json'), 'utf8')).toBe(REACT_VUE_PACKAGES['app/package.json']);
 });

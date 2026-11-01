@@ -6,13 +6,13 @@ import { planChecks } from '#cli/planning/checks.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { listSettingReaders } from '#cli/planning/skips.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listToolProjectPins } from '#cli/manifests/tools.ts';
 import { fakePlatform } from '#tests/setup/system/platform.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { isSettingEmpty, listSettingReaders } from '#cli/planning/skips.ts';
 
 import {
     VUE_TSC_SKIP,
@@ -158,13 +158,6 @@ test('explicit registry packs select Semgrep without local rules', async () => {
     );
 });
 
-test('a setting table containing only empty lists is empty', () => {
-    expect([isSettingEmpty({ paths: [], names: [] }), isSettingEmpty({ paths: [], names: ['entry'] })]).toStrictEqual([
-        true,
-        false,
-    ]);
-});
-
 test('generated and vendored test files do not satisfy a source-tag condition', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['swift']),
@@ -244,7 +237,7 @@ test.each(
 );
 
 test.each([...BUILT_IN_LIMIT_CASES])('$check reads the $limit limit of $language', async (sample) => {
-    const configuration = sample.language === 'sql' ? 'postgres' : sample.language;
+    const configuration = sample.language;
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([configuration], {
             level: 'all',

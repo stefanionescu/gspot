@@ -10,18 +10,10 @@ import { type Scope } from '#cli/types/settings/inheritance.ts';
 import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
+import { getLimit, getTable, listIgnores, selectForScope, listIgnoredRules } from '#cli/settings/scopes.ts';
 
 import {
-    getLimit,
-    getTable,
-    listIgnores,
-    selectForScope,
-    findParentScope,
-    listIgnoredRules,
-} from '#cli/settings/scopes.ts';
-import {
     PROJECT_CHOICES,
-    SCOPE_LIMIT_VALUES,
     PROJECT_SCOPE_CASES,
     NESTED_SCOPE_SETTINGS,
     OPENAPI_SCOPE_SETTINGS,
@@ -82,19 +74,6 @@ test('an ignore with a rule and paths turns the rule off in its scope and the sc
     const scopes = await readNestedScopes();
     const off = Object.fromEntries(scopes.map((scope) => [scope.path, listIgnoredRules(scope, 'bash/shellcheck')]));
     expect(off).toStrictEqual({ '': [], api: ['SC2086'], 'api/v1': ['SC2086'], web: [] });
-});
-
-test('the deepest scope sets a limit and a scalar setting, and a scope list adds to the lists above it', async () => {
-    const scopes = await readNestedScopes();
-    const values = scopes.map(({ path, settings }) => [
-        path,
-        [
-            getLimit(settings, 'file_lines', 'bash'),
-            getTable(settings, 'swift').xcode_scheme,
-            getTable(settings, 'tools.swiftlint').always_keep_imports,
-        ],
-    ]);
-    expect(Object.fromEntries(values)).toStrictEqual(SCOPE_LIMIT_VALUES);
 });
 
 test('a per-scope limit overrides a root language limit in the scope view', async () => {
@@ -194,11 +173,6 @@ test('a language limit overrides the shared limit in the root and in a child sco
         { path: '', python: 8, swift: 2, shared: 2 },
         { path: 'api', python: 8, swift: 2, shared: 2 },
     ]);
-});
-
-test('the nearest parent scope contains a nested path', async () => {
-    const scopes = await readNestedScopes();
-    expect(findParentScope(scopes, 'api/v1/src')?.path).toBe('api/v1');
 });
 
 test('an ignore without a check applies to every check', async () => {

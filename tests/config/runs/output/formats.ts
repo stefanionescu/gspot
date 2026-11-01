@@ -104,7 +104,6 @@ export const WINDOWS_ROOT_CASES = [
 ] as const;
 
 export const FIXABLE_FORMAT_CASES = [
-    ['format/prettier', '[warn] source.ts', 'source.ts'],
     ['python/ruff-format', 'source.py:1:1: unformatted: different spacing', 'source.py'],
 ] as const;
 

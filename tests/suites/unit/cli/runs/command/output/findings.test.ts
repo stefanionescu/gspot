@@ -27,14 +27,14 @@ test.each([...REGEX_OUTPUT_CASES])('$title', async ({ result, expected }) => {
     await using sandbox = await testdir({ 'source.txt': 'source' });
     const planned = { check: LOCATED_CHECK, tool: { name: 'tool', installers: {}, kind: 'program' as const } };
     expect(
-        parseCommandFindings(planned, buildProcessResult(result), { cwd: sandbox.path, root: sandbox.path }),
+        parseCommandFindings(planned, buildProcessResult(result), { cwd: sandbox.path, root: sandbox.path }, {}),
     ).toStrictEqual(expected);
 });
 
 test.each([...FILELESS_CHECKS])('$id accepts a fileless result without classifying it as a crash', async (check) => {
     await using sandbox = await testdir();
     expect(
-        parseCommandFindings({ check }, buildProcessResult(FAILED_RUN), { cwd: sandbox.path, root: sandbox.path })
+        parseCommandFindings({ check }, buildProcessResult(FAILED_RUN), { cwd: sandbox.path, root: sandbox.path }, {})
             .findings,
     ).toStrictEqual([]);
 });
@@ -57,14 +57,15 @@ test('an ESLint finding whose source text holds a module error word stays a find
         },
     ]);
     const result = buildProcessResult({ stdout, stderr: '', code: 1, missing: false, duration: 1 });
-    expect(parseCommandFindings(planned, result, { cwd: sandbox.path, root: sandbox.path }).findings).toMatchObject([
-        { file: path, rule: 'no-unused-vars', line: 1, column: 7 },
-    ]);
+    expect(parseCommandFindings(planned, result, { cwd: sandbox.path, root: sandbox.path }, {}).findings).toMatchObject(
+        [{ file: path, rule: 'no-unused-vars', line: 1, column: 7 }],
+    );
     expect(
         parseCommandFindings(
             planned,
             { ...result, code: 2, stderr: 'ConfigError: invalid configuration' },
             { cwd: sandbox.path, root: sandbox.path },
+            {},
         ).note,
     ).toBe(`eslint failed with exit 2:\nConfigError: invalid configuration\n${stdout}`);
     expect(
@@ -72,6 +73,7 @@ test('an ESLint finding whose source text holds a module error word stays a find
             planned,
             { ...result, stdout: '', code: 2, stderr: 'Oops! Something went wrong!\nERR_MODULE_NOT_FOUND: plugin' },
             { cwd: sandbox.path, root: sandbox.path },
+            {},
         ).note,
     ).toBe('eslint failed with exit 2:\nOops! Something went wrong!\nERR_MODULE_NOT_FOUND: plugin');
 });
@@ -181,11 +183,11 @@ pattern = '^(?<file>[^:]+):(?<line>\d+):(?<message>.*)$'
     const result = buildProcessResult(MISSING_LOCATED_FILE);
     const paths = { root: sandbox.path, cwd: sandbox.path };
     const expected = [{ check: 'notes/regex', file: 'notes/reported.txt', line: 1, message: 'A defect.' }];
-    expect(parseCommandFindings(planned, result, paths)).toStrictEqual({
+    expect(parseCommandFindings(planned, result, paths, {})).toStrictEqual({
         note: `${process.execPath} failed with exit 1:\nnotes/reported.txt:1:A defect.`,
     });
     await writeFile(join(sandbox.path, 'notes/reported.txt'), source);
-    expect(parseCommandFindings(planned, result, paths).findings).toMatchObject(expected);
+    expect(parseCommandFindings(planned, result, paths, {}).findings).toMatchObject(expected);
 });
 
 test('a finding in a folder outside the scope keeps its repository path when the check runs in the scope folder', async () => {

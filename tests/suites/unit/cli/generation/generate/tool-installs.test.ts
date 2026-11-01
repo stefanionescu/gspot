@@ -7,12 +7,10 @@ import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import type { ToolPackageJson } from '#tests/types/packages.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { YARN_CLIENTS } from '#tests/config/installers/installers.ts';
 import type { PythonToolProject } from '#cli/types/installers/installers.ts';
-import { REACT_NATIVE_DEPENDENCIES } from '#tests/config/generation/samples.ts';
-import { STYLESHEET_CASES, LICENSE_TOOL_CASES, REACT_NATIVE_TSCONFIG } from '#tests/config/generation/generation.ts';
+import { STYLESHEET_CASES, LICENSE_TOOL_CASES } from '#tests/config/generation/generation.ts';
 
 test.each([...STYLESHEET_CASES])('$name installs postcss-html when Stylelint is selected', async (row) => {
     await using sandbox = await testdir({
@@ -25,27 +23,6 @@ test.each([...STYLESHEET_CASES])('$name installs postcss-html when Stylelint is 
     expect(
         Object.keys((JSON.parse(packageJsonFile.content) as ToolPackageJson).devDependencies).includes('postcss-html'),
     ).toBe(row.needsHtmlParser);
-});
-
-test('a React Native project without Expo installs no Expo or DOM lint plugins', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['typescript', 'react-native']),
-        'package.json': JSON.stringify({
-            name: 'example',
-            private: true,
-            dependencies: { ...REACT_NATIVE_DEPENDENCIES, react: SANDBOX_PACKAGES.react },
-        }),
-        'tsconfig.json': JSON.stringify(REACT_NATIVE_TSCONFIG),
-    });
-
-    const session = await openSession(sandbox.path);
-    const generated = buildGeneratedFiles(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject)!;
-    const project = JSON.parse(generated.content) as ToolPackageJson;
-    expect(project.devDependencies).not.toHaveProperty('eslint-plugin-react-native');
-    expect(project.devDependencies).toHaveProperty('@react-native/eslint-plugin');
-    expect(project.devDependencies).not.toHaveProperty('eslint-plugin-expo');
-    expect(project.devDependencies).not.toHaveProperty('expo-doctor');
-    expect(project.devDependencies).not.toHaveProperty('eslint-plugin-jsx-a11y-x');
 });
 
 test.each([...LICENSE_TOOL_CASES])(

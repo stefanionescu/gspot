@@ -54,7 +54,7 @@ test('generator output patterns omit links to folders', async () => {
             generator_outputs: [{ kind: 'pattern' as const, path: 'generated/**' }],
         },
     };
-    const result = await runCheckCode(buildCheckSession(session), planned, { check: checkGeneratorOutputs });
+    const result = await runCheckCode(buildCheckSession(session), planned, { check: checkGeneratorOutputs }, {});
     expect(result.findings).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, 'generated/regular/output.txt'), 'utf8')).toBe('generated\n');
 });

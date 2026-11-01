@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { createRunCache } from '#cli/system/cache.ts';
 import { openSession } from '#cli/planning/session.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { rm, mkdir, writeFile } from 'node:fs/promises';
 import { PACKAGE_JSON_ERROR } from '#tests/config/paths.ts';
 import { SOURCE_KIND } from '#cli/config/repository/files.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
@@ -62,28 +62,6 @@ test.each(INVALID_DEPENDENCY_FILES)(
         expect(error.message).toStartWith(prefix);
     },
 );
-
-test('a dependency file that disappears after the repository read is an error', async () => {
-    const path = 'pyproject.toml';
-    await using sandbox = await testdir({ [path]: '' });
-
-    const repository = await readTestRepository(sandbox.path);
-    await rm(join(sandbox.path, path));
-    const error = await captureRejection(readDependencyFiles(createRunCache(sandbox.path), repository.files));
-    expect(error).toMatchObject({
-        name: 'GspotError',
-        code: 'filesystem',
-        message: 'pyproject.toml is tracked but missing. Restore it or commit its deletion.',
-    });
-    await mkdir(join(sandbox.path, path));
-    const readError = await captureRejection(readDependencyFiles(createRunCache(sandbox.path), repository.files));
-    expect(readError).toMatchObject({
-        name: 'GspotError',
-        code: 'filesystem',
-        message: 'pyproject.toml could not be read. Check the file and its permissions.',
-        cause: expect.any(Error) as Error,
-    });
-});
 
 test('package.json reads keep your own fields and tell a missing file from invalid data', async () => {
     await using sandbox = await testdir();

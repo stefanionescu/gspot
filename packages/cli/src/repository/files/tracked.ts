@@ -98,8 +98,8 @@ Read a Git file listing and separate names with invalid UTF-8.
 export async function listGitFiles(
     root: string,
     gitArguments: readonly string[],
-    cancelSignal?: AbortSignal,
-    unreadablePaths: string[] = [],
+    cancelSignal: AbortSignal | undefined,
+    unreadablePaths: string[],
 ): Promise<string> {
     const listed = await runGitForBytes(root, gitArguments, { cancelSignal });
     if (listed.code !== 0) throw buildGitError(root, gitArguments, listed);
@@ -132,7 +132,7 @@ List tracked and new files as sorted, root-relative paths. Outside Git, walk fil
 export async function listTrackedFiles(
     root: string,
     index: GitIndexFile[],
-    { hasGit, unreadablePaths }: { hasGit: boolean; unreadablePaths?: string[] },
+    { hasGit, unreadablePaths }: { hasGit: boolean; unreadablePaths: string[] },
 ): Promise<ListedFile[]> {
     const listed = hasGit
         ? await listGitFiles(root, GIT_UNTRACKED_FILES_ARGUMENTS, undefined, unreadablePaths)

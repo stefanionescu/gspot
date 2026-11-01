@@ -4,7 +4,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import type { Session } from '#cli/types/session.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import * as installers from '#cli/installers/install.ts';
+import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import type { ToolProjectFiles } from '#tests/types/packages.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildPythonProjectTable } from '#cli/installers/pypi.ts';
@@ -14,9 +14,10 @@ import { selectLockfileName } from '#cli/installers/npm/lockfiles.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import type { ToolSearch } from '#cli/types/executables/inspection.ts';
 import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
-import { listMisePins, listToolProjectPins } from '#cli/manifests/tools.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
+import { readToolPackageManager } from '#cli/repository/javascript/package-manager.ts';
 import type { ToolInstall, ToolPackageManager } from '#cli/types/installers/installers.ts';
+import { listMisePins, listDistinctTools, listToolProjectPins } from '#cli/manifests/tools.ts';
 
 /**
 Read a tool project file, its lockfile, and the lockfile mode.
@@ -46,10 +47,27 @@ Build the tool install for a sandbox.
 */
 
 export function buildToolInstall(session: Session, writer: Files): ToolInstall {
-    const generated = buildGeneratedFiles(session);
-    const install = installers.buildToolInstall(session, writer, generated);
-    install.misePath = null;
-    return install;
+    const pin = session.packageManager;
+    const packageManager =
+        pin === undefined
+            ? undefined
+            : readToolPackageManager(session.toolsRoot, pin, session.timeoutSeconds, session.cache);
+    return {
+        session,
+        packageManager:
+            packageManager === undefined
+                ? undefined
+                : {
+                      ...packageManager,
+                      command: pin?.name === packageManager.name ? pin : { name: packageManager.name },
+                  },
+        releaseAgeDays: getTable(getRootScope(session.scopes).settings, 'dependencies').min_release_age_days,
+        writer,
+        generated: buildGeneratedFiles(session),
+        tools: listDistinctTools(session.toolConfigurations),
+        misePath: null,
+        steps: [],
+    };
 }
 
 /**

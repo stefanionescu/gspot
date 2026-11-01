@@ -108,7 +108,7 @@ Selects the paths and installed dependency trees for a copy of the working tree.
 @param paths the tracked files to copy.
 @param scopes the folders that hold installed dependencies.
 */
-export function selectCopyPaths(root: string, paths: string[], scopes: string[]): CopyPaths {
+function selectCopyPaths(root: string, paths: string[], scopes: string[]): CopyPaths {
     const projects = paths.flatMap((path) =>
         DEPENDENCY_FILES.has(posix.basename(path)) && posix.basename(posix.dirname(path)) !== GSPOT_FOLDER
             ? [posix.dirname(path)]

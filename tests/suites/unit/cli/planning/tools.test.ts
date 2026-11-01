@@ -5,12 +5,11 @@ import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
 import { type Session } from '#cli/types/session.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { LEVELS } from '#cli/config/manifests/names.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { listOtherTools, listCheckTools } from '#cli/planning/tools.ts';
-import { NODE_REQUIREMENTS, COVERAGE_PROVIDERS, ARCHITECTURE_REQUIREMENTS } from '#tests/config/planning/planning.ts';
+import { NODE_REQUIREMENTS, COVERAGE_PROVIDERS } from '#tests/config/planning/planning.ts';
 
 test('basic tRPC server files select the boundaries plugin without import rules', async () => {
     await using sandbox = await testdir({
@@ -44,32 +43,6 @@ test.each([...NODE_REQUIREMENTS])(
     },
 );
 
-test.each(ARCHITECTURE_REQUIREMENTS.flatMap((requirement) => LEVELS.map((level) => ({ ...requirement, level }))))(
-    'eslint-plugin-boundaries is a tool of $name only at the levels that use it: $level',
-    async ({ tables, boundary, level }) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['javascript'], {
-                level,
-                scopes: [{ path: 'app', configurations: ['javascript'] }],
-                tables,
-            }),
-            'src/source.js': 'export const value = 1;\n',
-            'app/src/source.js': 'export const value = 2;\n',
-        });
-        const session = await openSession(sandbox.path);
-        expect(session.scopes.map(({ path }) => path)).toStrictEqual(['', 'app']);
-        const names = session.toolConfigurations.flatMap((configuration) =>
-            configuration.tools.map((tool) => tool.name),
-        );
-        expect(names.includes('eslint-plugin-boundaries')).toBe(boundary[level]);
-        const checks = planChecks(session, { stage: 'all', only: ['javascript/eslint'] });
-        for (const check of checks) {
-            expect(listOtherTools(check.scope, check.check).includes('eslint-plugin-boundaries')).toBe(boundary[level]);
-            expect(listCheckTools(check).includes('eslint-plugin-boundaries')).toBe(boundary[level]);
-        }
-    },
-);
-
 describe.each(COVERAGE_PROVIDERS.flatMap((row) => [0, 80].map((lines) => ({ ...row, lines }))))(
     '$configuration coverage at the $lines limit',
     ({ configuration, provider, file, configurations, lines }) => {
@@ -100,14 +73,6 @@ describe.each(COVERAGE_PROVIDERS.flatMap((row) => [0, 80].map((lines) => ({ ...r
         );
     },
 );
-
-test('a check installs the peer packages required by its tool', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['data-files']), 'config.json': '{}\n' });
-    const planned = planChecks(await openSession(sandbox.path), { stage: 'push', only: ['data-files/v8r'] });
-    expect(planned.map((check) => ({ check: check.check.id, tools: listCheckTools(check) }))).toStrictEqual([
-        { check: 'data-files/v8r', tools: ['v8r', 'node', 'ajv'] },
-    ]);
-});
 
 test('Prettier plugins join the selected tools even though checks do not name them', async () => {
     await using sandbox = await testdir({

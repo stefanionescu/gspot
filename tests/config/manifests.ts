@@ -1,8 +1,3 @@
-export const MINIMUM_VERSION_CASES = [
-    { minimum: '4', expected: '4.0.0' },
-    { minimum: '4.4', expected: '4.4.0' },
-] as const;
-
 export const CONFIGURATION_TABLE = `
 [configuration]
 title = "Local"

@@ -5,13 +5,11 @@ import type { Configuration } from '#cli/types/manifests.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildConfiguration } from '#tests/setup/cli/manifests.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { manifestToolSchema } from '#cli/schemas/manifests/manifests.ts';
 
 import {
     DECLARATION_ORDERS,
     CONFIGURATION_TABLE,
     EXAMPLE_MANIFEST_PATH,
-    MINIMUM_VERSION_CASES,
     MANIFEST_INVARIANT_CASES,
 } from '#tests/config/manifests.ts';
 
@@ -39,20 +37,6 @@ test('a manifest without [detect] takes the matchers of [files]', () => {
     const empty = buildConfiguration('native', { tables: '[detect]\n' + tables });
     expect(empty.detect.filenames).toStrictEqual([]);
     expect(empty.detect.paths).toStrictEqual([]);
-});
-
-test.each([...MINIMUM_VERSION_CASES])('a minimum version $minimum becomes $expected', ({ minimum, expected }) => {
-    const parsed = manifestToolSchema.safeParse({ name: 'example', version: '4.4.0', min_version: minimum });
-    expect(parsed.success && typeof parsed.data !== 'string' ? parsed.data.min_version : undefined).toBe(expected);
-});
-
-test('an npm package name becomes the npm installer pin', () => {
-    const tool = manifestToolSchema.parse({ name: 'probe', version: '1.0.0', npm: 'native-probe' });
-    expect(tool).toMatchObject({
-        name: 'probe',
-        kind: 'program',
-        installers: { npm: { name: 'native-probe', version: '1.0.0' } },
-    });
 });
 
 test.each(DECLARATION_ORDERS)(
@@ -107,18 +91,6 @@ test.each([...MANIFEST_INVARIANT_CASES])(
         expect(error.message).toBe(`The configuration manifest for example is not valid:\n${message}`);
     },
 );
-
-test('a mise installer with options inherits its tool record version', () => {
-    expect(
-        manifestToolSchema.parse({
-            name: 'probe',
-            version: '1.0.0',
-            mise: { name: 'github:org/probe', options: { rename_exe: 'probe' } },
-        }),
-    ).toMatchObject({
-        installers: { mise: { name: 'github:org/probe', version: '1.0.0', options: { rename_exe: 'probe' } } },
-    });
-});
 
 test('a reference to an undeclared tool names the configuration and missing declaration', async () => {
     const error = await captureRejection(

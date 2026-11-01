@@ -2,7 +2,6 @@ import { posix } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { createRunCache } from '#cli/system/cache.ts';
-import { JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects.ts';
 import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
 import { LOCKED_VERSION_CASES } from '#tests/config/parsers/projects.ts';
 
@@ -13,7 +12,7 @@ test.each([...LOCKED_VERSION_CASES])(
             [posix.join(folder, 'package.json')]: '{"dependencies":{"react":"^18.3.0","react-dom":"18.3.1"}}',
             [file]: text,
         });
-        expect(readLockedVersions(createRunCache(sandbox.path), folder, JAVASCRIPT_LOCKFILES)).toStrictEqual(
+        expect(readLockedVersions(createRunCache(sandbox.path), folder)).toStrictEqual(
             new Map([
                 ['react', '18.3.1'],
                 ['react-dom', '18.3.1'],

@@ -50,10 +50,8 @@ async function installTestTools(): Promise<string[]> {
         const result = await runCommand(commandArguments, {
             cwd: folder,
             env,
-            onStderr: (chunk) => {
-                process.stderr.write(chunk);
-            },
         });
+        process.stderr.write(result.stderr);
         if (result.code !== 0) throw new Error(`Test tools failed: ${result.stdout}${result.stderr}`);
     }
     const bins = await runCommand([...MISE_BIN_PATHS_ARGUMENTS, ...names], { cwd: folder, env });

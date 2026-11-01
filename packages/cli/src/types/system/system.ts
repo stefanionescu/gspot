@@ -1,6 +1,5 @@
 import type { Result } from 'execa';
 import type { Readable } from 'node:stream';
-import type { ChildProcess } from 'node:child_process';
 
 export type RunCache = {
     root: string;
@@ -47,8 +46,6 @@ export type SpawnOptions = {
 
 export type AsyncSpawnOptions = SpawnOptions & {
     cancelSignal?: AbortSignal | undefined;
-    onStdout?: (chunk: string) => void;
-    onStderr?: (chunk: string) => void;
 };
 
 export type ProcessTermination = {
@@ -71,8 +68,6 @@ export type ProcessTreeControl = {
 };
 
 export type RunningProcess = PromiseLike<SpawnCompletion> & { stdout: Readable };
-
-export type WatchedProcess = Omit<ChildProcess, 'stdout' | 'stderr'> & { stdout: Readable; stderr: Readable };
 
 export type GitEnvironment = { variables: Record<string, string | undefined> } | { failure: SpawnResult };
 

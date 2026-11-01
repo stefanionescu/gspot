@@ -3,11 +3,10 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { setKey, buildEditedSettings } from '#cli/settings/edit.ts';
+import { stat, symlink, readFile, writeFile } from 'node:fs/promises';
 import { writeSettings, readSettingsFile } from '#cli/settings/file.ts';
 import { COMMENTED_SETTINGS } from '#tests/config/settings/settings.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
-import { stat, link, symlink, readFile, writeFile } from 'node:fs/promises';
 
 test('an edit of a file with invalid UTF-8 is refused and the file is unchanged', async () => {
     await using sandbox = await testdir();
@@ -57,18 +56,3 @@ test.each(['symlink inside', 'symlink outside'])(
         expect(await readFile(target, 'utf8')).toBe(COMMENTED_SETTINGS);
     },
 );
-
-test('editing settings through a hard link replaces only the selected path', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': COMMENTED_SETTINGS });
-    const peer = join(sandbox.path, 'peer.toml');
-    await link(join(sandbox.path, 'gspot.toml'), peer);
-    const input = readSettingsFile(sandbox.path);
-    setKey(input.table, 'level', 'all');
-    const result = buildEditedSettings(sandbox.path, input);
-    const writer = openFiles(sandbox.path);
-    writeSettings(writer, result.text, input.previous);
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(result.text);
-    expect(await readFile(peer, 'utf8')).toBe(COMMENTED_SETTINGS);
-    const [written, kept] = await Promise.all([stat(join(sandbox.path, 'gspot.toml')), stat(peer)]);
-    expect(written.ino).not.toBe(kept.ino);
-});

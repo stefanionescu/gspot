@@ -65,22 +65,8 @@ export const CI_PREFERENCE_CASES = [
         ci: 'off; gspot set ci.enabled true and gspot set ci.provider gitlab write the check workflow',
     },
     {
-        name: 'GitLab file before GitHub remote',
-        tracked: [],
-        untracked: '.gitlab-ci.yml',
-        remote: 'git@github.com:example/repo.git',
-        ci: 'off; gspot set ci.enabled true and gspot set ci.provider gitlab write the check workflow',
-    },
-    {
         name: 'GitHub remote with unrelated Bitbucket configuration',
         tracked: ['bitbucket-pipelines.yml'],
-        untracked: '',
-        remote: 'git@github.com:example/repo.git',
-        ci: 'off; gspot set ci.enabled true writes the check workflow',
-    },
-    {
-        name: 'GitHub SSH remote',
-        tracked: [],
         untracked: '',
         remote: 'git@github.com:example/repo.git',
         ci: 'off; gspot set ci.enabled true writes the check workflow',

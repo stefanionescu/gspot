@@ -1,4 +1,5 @@
 import { sep, join, posix, isAbsolute } from 'node:path';
+import { PYTHON_EXECUTABLE } from '#cli/config/executables.ts';
 import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
 import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/files.ts';
 import { EXECUTABLE_LAYOUTS, DECLARATION_EXTENSIONS } from '#cli/config/system/system.ts';
@@ -102,15 +103,17 @@ export function listExecutableNames(name: string): string[] {
 }
 
 /**
-Locate one Python interpreter or console script inside its virtual environment.
+Locate the Python interpreter inside its virtual environment.
 
 @param folder the environment root.
-@param name the Python program or console script inside the environment.
 @returns the executable path, with the Python launcher suffix of this system.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Checks, tools, and tests find a program in a virtual environment by the folder and suffix of this system.
-export function buildVenvExecutablePath(folder: string, name: string): string {
-    return join(join(folder, executableLayout.environmentFolder), name + executableLayout.environmentSuffix);
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The interpreter path uses the virtual environment folder and launcher suffix of this system.
+export function buildVenvPythonPath(folder: string): string {
+    return join(
+        join(folder, executableLayout.environmentFolder),
+        PYTHON_EXECUTABLE + executableLayout.environmentSuffix,
+    );
 }
 
 /**

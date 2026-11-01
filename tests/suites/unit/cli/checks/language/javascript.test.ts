@@ -70,7 +70,7 @@ test('javascript/tsc excludes type roots inherited from folders above the reposi
     await applyGeneratedFiles(root);
     const session = await openSession(root);
     const planned = planChecks(session, buildRunOptions({ only: ['javascript/tsc'] }))[0]!;
-    const result = await runCheckCode(buildCheckSession(session), planned, CHECK_CODE['javascript/tsc']);
+    const result = await runCheckCode(buildCheckSession(session), planned, CHECK_CODE['javascript/tsc'], {});
     expect(result.findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
         { file: 'source.js', rule: 'TS2304' },
     ]);
@@ -95,7 +95,7 @@ test('a scope whose jsconfig lists no JavaScript file passes with nothing to com
         only: ['javascript/tsc'],
         staged: ['gspot.toml'],
     }).find((check) => check.scope.path === 'site')!;
-    expect(await runCheckCode(buildCheckSession(reopened), site, CHECK_CODE['javascript/tsc'])).toStrictEqual(
+    expect(await runCheckCode(buildCheckSession(reopened), site, CHECK_CODE['javascript/tsc'], {})).toStrictEqual(
         EMPTY_PROJECT_RESULT,
     );
 });

@@ -26,6 +26,7 @@ test('a missing OpenAPI document is reported before generation', async () => {
         buildCheckSession(session),
         input,
         input.check.generator_outputs === undefined ? CHECK_CODE[input.check.id] : { check: checkGeneratorOutputs },
+        {},
     );
     expect(missingResult.findings).toStrictEqual([...MISSING_OPENAPI_FINDINGS]);
     expect(run).not.toHaveBeenCalled();

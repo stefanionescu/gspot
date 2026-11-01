@@ -184,7 +184,7 @@ Split a Git path listing on null bytes. Separate paths with invalid UTF-8.
 @param output the bytes that Git printed.
 @param unreadablePaths receives quoted names with octal byte escapes
 */
-export function decodeGitPaths(output: Uint8Array, unreadablePaths: string[] = []): string {
+export function decodeGitPaths(output: Uint8Array, unreadablePaths: string[]): string {
     const records: string[] = [];
     for (const record of Buffer.from(output).toString('latin1').split('\0')) {
         if (record === '') continue;
@@ -206,7 +206,7 @@ Validate unquoted, null-delimited committed-tree entries.
 @param unreadablePaths receives names with invalid UTF-8.
 @returns supported modes, full object IDs, and UTF-8 paths.
 */
-export function parseTreeFiles(output: Uint8Array, unreadablePaths: string[] = []): GitFile[] {
+export function parseTreeFiles(output: Uint8Array, unreadablePaths: string[]): GitFile[] {
     const files: GitFile[] = [];
     for (const line of decodeGitPaths(output, unreadablePaths).split('\0')) {
         if (line === '') continue;

@@ -60,7 +60,7 @@ Build what every install step reads from the session.
 @param generated the files that apply wrote.
 @returns the install of the tools.
 */
-export function buildToolInstall(session: Session, writer: Files, generated: Generation): ToolInstall {
+function buildToolInstall(session: Session, writer: Files, generated: Generation): ToolInstall {
     const configurations = session.toolConfigurations;
     const steps: (readonly string[])[] = [];
     const tools = listDistinctTools(configurations);

@@ -3,8 +3,8 @@ import type { Tool } from '#cli/types/manifests.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import type { Generation } from '#cli/types/generation/files.ts';
+import type { uvProjectSettingsSchema } from '#cli/schemas/installers/installers.ts';
 import type { PackageManager, PackageManagerCommand } from '#cli/types/repository/javascript.ts';
-import type { miseLockfileSchema, uvProjectSettingsSchema } from '#cli/schemas/installers/installers.ts';
 
 export type ArchiveDownload = {
     url: string;
@@ -33,8 +33,6 @@ export type ToolInstall = {
     misePath: string | null;
     steps: (readonly string[])[];
 };
-
-export type MiseVersion = z.infer<typeof miseLockfileSchema>['tools'][string][number];
 
 export type MiseInstall = { installed: string; note: string; binPaths: string[] };
 

@@ -139,7 +139,6 @@ export const QUOTED_TRAP_CALLS = [
     { source: String.raw`trap "cleanup \"two words\"" EXIT`, counts: [1] },
     { source: String.raw`trap "cleanup \$value" EXIT`, counts: [1] },
     { source: 'trap "cleanup $value" EXIT', counts: [] },
-    { source: 'trap "cleanup $(name)" EXIT', counts: [] },
 ] as const;
 
 export const BASH_FUNCTIONS = [

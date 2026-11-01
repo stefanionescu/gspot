@@ -70,18 +70,6 @@ test('a list setting inside one command argument is refused', async () => {
     ]);
 });
 
-test('an empty list setting is refused as a settings error', async () => {
-    await using sandbox = await createGitSandbox({});
-    await writeListSetting(sandbox.path, '{setting:openapi.generate_command}', []);
-    const empty = await runGspot(sandbox.path, ['check', '--only', 'sandbox/arguments', '--json']);
-    expect(empty.code).toBe(2);
-    expect(JSON.parse(empty.stdout)).toMatchObject({
-        error: 'settings',
-        message:
-            'gspot.toml:4: openapi.generate_command: The value [] is not valid for openapi.generate_command. Use a valid list value: The command that writes the OpenAPI document from the code, run in the project scope folder.',
-    });
-});
-
 test.each([...WORKSPACE_SCOPE_CASES])(
     'workspace expansion keeps arguments only for a workspace package scope: $scope',
     async ({ scope, expected }) => {

@@ -84,13 +84,17 @@ test('partial ShellCheck output beside an unreadable file is an execution error'
     const paths = { cwd: sandbox.path, root: sandbox.path };
     const broken = runCommandBlocking([...command, 'missing.sh'], { cwd: sandbox.path });
     expect(broken.code, broken.stderr).toBe(2);
-    const note = parseCommandFindings(planned, broken, paths).note ?? '';
+    const note = parseCommandFindings(planned, broken, paths, {}).note ?? '';
     expect(note).toStartWith('shellcheck failed with exit 2:');
     expect(note).toContain('missing.sh');
     const failed = runCommandBlocking(command, { cwd: sandbox.path });
     expect(failed.code).toBe(1);
     expect(
-        parseCommandFindings(planned, failed, paths).findings!.map(({ file, line, rule }) => ({ file, line, rule })),
+        parseCommandFindings(planned, failed, paths, {}).findings!.map(({ file, line, rule }) => ({
+            file,
+            line,
+            rule,
+        })),
     ).toStrictEqual([
         { file: 'sample.sh', line: 2, rule: 'SC2154' },
         { file: 'sample.sh', line: 2, rule: 'SC2086' },
@@ -98,7 +102,7 @@ test('partial ShellCheck output beside an unreadable file is an execution error'
     await writeFile(join(sandbox.path, 'sample.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" "${1:-}"\n');
     const corrected = runCommandBlocking(command, { cwd: sandbox.path });
     expect(corrected.code).toBe(0);
-    expect(parseCommandFindings(planned, corrected, paths).findings).toStrictEqual([]);
+    expect(parseCommandFindings(planned, corrected, paths, {}).findings).toStrictEqual([]);
 });
 
 test.skipIf(isWindows).each([...SYNTAX_CASES])(

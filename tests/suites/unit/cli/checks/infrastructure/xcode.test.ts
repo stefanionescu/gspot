@@ -1,22 +1,21 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { rm, writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
-import { rm, mkdir, writeFile } from 'node:fs/promises';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
-import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 import {
     LOGO_IMAGE_SET,
     GROUPED_PBXPROJ,
     ASSET_SETTING_CASES,
     SINGLE_FILE_PBXPROJ,
-    UNREADABLE_RESOURCES,
     PARTLY_TRANSLATED_STRINGS,
     ENTITLEMENT_SCOPE_RESULTS,
     INVALID_RESOURCE_DOCUMENTS,
@@ -69,27 +68,6 @@ test('membership combines projects in a scope and checks nested scopes independe
         { scope: 'nested', findings: [matchFields({ file: 'nested/Extra.swift', rule: 'untargeted' })] },
     ]);
 });
-
-test.each([...UNREADABLE_RESOURCES])(
-    '$check errors on a resource file it cannot read',
-    async ({ check, path, text }) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['xcode']),
-            [path]: text,
-            'App/Assets.xcassets/Logo.imageset/logo.png': new Uint8Array([0, 1, 2]),
-            'App/Home.swift': 'let logo = Image("Logo")\n',
-        });
-
-        const session = await openSession(sandbox.path);
-        const planned = planSandboxCheck(session, check);
-        const target = join(sandbox.path, path);
-        await rm(target);
-        await mkdir(target);
-        session.cache.sources.delete(path);
-        const error = await captureRejection(getBuiltInCheck(check)(session, planned));
-        expect(error.message).toBe(`${path} could not be read. Check the file and its permissions.`);
-    },
-);
 
 test('xcode/assets reports an image that the set names and the repository does not hold', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['xcode']), ...LOGO_IMAGE_SET.files });

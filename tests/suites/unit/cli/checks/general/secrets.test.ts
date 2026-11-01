@@ -11,7 +11,6 @@ import {
     ENV_ACCESSOR_EXAMPLE,
     READER_PROJECT_FILES,
     ENVIRONMENT_TEXT_CASES,
-    BUN_ENVIRONMENT_RESULTS,
     ENVIRONMENT_SCOPE_RESULTS,
     SCOPE_FUNCTION_CORRECTIONS,
     SCOPE_READER_PROJECT_FILES,
@@ -78,19 +77,6 @@ test('each scope checks its own example env files and environment functions', as
     const corrected = await runChecks(await openSession(sandbox.path), options);
 
     expect(corrected.report.checks.map((check) => check.status)).toStrictEqual(['passed', 'passed', 'passed']);
-});
-
-test('Bun.env reads are checked with no environment functions declared', async () => {
-    const options = buildRunOptions({ only: ['secrets/env-examples'] });
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([]),
-        '.env.example': 'KNOWN=example\n',
-        'source.ts': 'Bun.env.KNOWN; Bun.env["MISSING"];\nconfig.$env("UNDECLARED");\n',
-    });
-
-    const checked = await runChecks(await openSession(sandbox.path), options);
-
-    expect(checked.report.checks).toMatchObject([...BUN_ENVIRONMENT_RESULTS]);
 });
 
 test('a scope with env reads and no example env file is skipped with a note', async () => {

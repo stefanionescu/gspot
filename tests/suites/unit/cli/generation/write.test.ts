@@ -10,6 +10,7 @@ import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { BUN_SCANNER_SETTINGS } from '#tests/config/toml.ts';
 import { MANAGED_KEYS_NOTE } from '#tests/config/messages.ts';
+import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { listOutdatedFiles } from '#cli/generation/outdated.ts';
 import { listStaleLockfiles } from '#cli/installers/projects.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
@@ -18,7 +19,6 @@ import type { PackageFieldScenario } from '#tests/types/write.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { formatUpToDate, writeGeneratedFiles } from '#cli/generation/write.ts';
 import { EDITED_STYLELINT_PACKAGE, STYLELINT_PACKAGE_FIELDS } from '#tests/config/generation/generation.ts';
 
 async function applyPackageFields(root: string, scenario: PackageFieldScenario): Promise<Map<string, string>> {
@@ -84,10 +84,6 @@ test('removing css drops its managed stylelint field and keeps authored fields b
     const output = buildGeneratedFiles(settled);
     expect(await listOutdatedFiles(settled, output)).toStrictEqual(await listStaleLockfiles(settled, output.files));
     expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).not.toContain('`stylelint`');
-});
-
-test('one up-to-date file uses the singular message', () => {
-    expect(formatUpToDate(1)).toBe('No change: the 1 generated file is up to date.');
 });
 
 test('writing a mise project preserves its lockfile and reports a changed hook', async () => {

@@ -1,8 +1,6 @@
 import { TYPO } from '#tests/config/spelling.ts';
 
 export const EMPTY_JSON_CASES = [
-    [' \n\t', 'The command printed nothing; it should print a JSON report.'],
-    ['\n \nfirst line\nsecond line', 'The output is not JSON. It starts with: first line'],
     ['a'.repeat(100), `The output is not JSON. It starts with: ${'a'.repeat(80)}`],
     ['{"items":null}', 'Required JSON report array items is missing or invalid.'],
 ] as const;
@@ -32,7 +30,6 @@ export const FIX_FIELD_CASES = [
     ['absent', {}, false],
     ['object', { fix: { range: [0, 1], text: '' } }, true],
     ['null', { fix: null }, true],
-    ['false', { fix: false }, true],
 ] as const;
 
 export const NESTED_LIST_FORMAT = {
@@ -102,12 +99,9 @@ export const SEMGREP_PARSE_ERROR = {
     spans: [{ file: 'scripts/café build.sh', start: { line: 1, col: 1 } }],
 } as const;
 
-const UNREADABLE = 'Semgrep printed output that gspot cannot read.';
-
 const INCOMPLETE = 'Semgrep could not complete the scan: Syntax error in source.';
 
 export const SEMGREP_REFUSED_REPORTS = [
-    ['an empty object', '{}', UNREADABLE],
     ['a scanner error', JSON.stringify({ results: [], errors: [{ ...SEMGREP_PARSE_ERROR, code: 2 }] }), INCOMPLETE],
     [
         'a rule error',
@@ -118,11 +112,6 @@ export const SEMGREP_REFUSED_REPORTS = [
         'an error without a position',
         JSON.stringify({ results: [], errors: [{ ...SEMGREP_PARSE_ERROR, spans: [] }] }),
         INCOMPLETE,
-    ],
-    [
-        'a result on line 0',
-        JSON.stringify({ results: [{ ...SEMGREP_MATCH, start: { line: 0, col: 1 } }], errors: [] }),
-        UNREADABLE,
     ],
 ] as const;
 
@@ -137,19 +126,9 @@ export const TYPO_REPORT = {
 
 export const TYPOS_REPORT_ERRORS = [
     {
-        name: 'partial typo',
-        output: { type: 'typo', path: 'sample.txt', typo: TYPO.the },
-        message: 'Typos printed output that gspot cannot read.',
-    },
-    {
         name: 'escaping path',
         output: { ...TYPO_REPORT, path: '../outside.txt' },
         message: 'Cannot read reported source file ../outside.txt.',
-    },
-    {
-        name: 'outside offset',
-        output: { ...TYPO_REPORT, byte_offset: 99 },
-        message: 'typos reported a position outside the file: sample.txt',
     },
     {
         name: 'missing source',

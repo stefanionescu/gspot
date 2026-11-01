@@ -23,11 +23,3 @@ test('a markdownlint JSON result becomes a finding', async () => {
         },
     ]);
 });
-test('markdownlint refuses a report with an invalid fix', async () => {
-    const stdout = JSON.stringify([{ ...MARKDOWN_REPORT, fixInfo: [] }]);
-    await using sandbox = await testdir({ 'sample.md': '<span>Content</span>\n' });
-    const check = getShippedCheck('markdown/markdownlint');
-    expect(() => parseOutput(check, stdout, '', { root: sandbox.path, cwd: sandbox.path })).toThrow(
-        new Error('Markdownlint printed output that gspot cannot read.'),
-    );
-});

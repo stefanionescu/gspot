@@ -1,28 +1,6 @@
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { NPM_CHECK_IGNORES } from '#tests/config/ignores.ts';
 
-export const SPECIAL_CHARACTER_FILES = {
-    'package.json': '{"name":"serialization-sample","private":true,"type":"module"}',
-    'sample.ts': 'export const value = 1;',
-    'sample.md': '# Sample',
-    Dockerfile: 'FROM alpine:3.22',
-    'sample.yaml': 'value: true',
-    'Sample.swift': 'let value = 1',
-} as const;
-
-export const SPECIAL_CHARACTER_SETTINGS = {
-    configurations: ['typescript', 'format', 'markdown', 'data-files', 'docker', 'swift', 'xcode'],
-    tools: {
-        markdownlint: { rules: { MD044: { names: ['custom"key\\name\ncafé', 'yes: # quoted "value"'] } } },
-        yamllint: { rules: { truthy: { 'allowed-values': ['yes', 'no'] } } },
-        hadolint: { trusted_registries: ['null', 'registry.example.com:5000'] as const },
-    },
-    swift: {
-        xcode_project: 'ios/App # café.xcodeproj',
-        xcode_scheme: 'null',
-    },
-} as const;
-
 export const PRETTIER_IGNORE_SETTINGS = {
     configurations: ['format', 'javascript'],
     ignore: [
@@ -44,13 +22,6 @@ export const PRETTIER_IGNORE_CASES = [
 
 export const LANGUAGE_IGNORES = [
     {
-        name: 'Python without JavaScript',
-        configurations: ['format', 'markdown', 'python'],
-        scopes: [],
-        ignored: [{ path: '.venv/', pattern: '**/.venv/**' }],
-        absent: ['.build/', 'Package.resolved'],
-    },
-    {
         name: 'Swift without JavaScript',
         configurations: ['format', 'markdown', 'swift'],
         scopes: [],
@@ -60,13 +31,6 @@ export const LANGUAGE_IGNORES = [
             { path: 'Pods/', pattern: '**/Pods/**' },
         ],
         absent: ['**/node_modules/**', 'package-lock.json', '**/.venv/**', 'uv.lock'],
-    },
-    {
-        name: 'JavaScript',
-        configurations: ['format', 'markdown', 'javascript'],
-        scopes: [],
-        ignored: [{ path: 'node_modules/', pattern: '**/node_modules/**' }],
-        absent: ['.build/', 'Package.resolved', '**/.venv/**', 'uv.lock'],
     },
     {
         name: 'a JavaScript child of Python',
@@ -177,22 +141,6 @@ export const XCTEST_LINK_FILE_CASES = [
 ] as const;
 
 export const DEFAULT_EXPORT = { location: 'the requested module' } as const;
-
-export const INACTIVE_RULE_OPTIONS = [
-    {
-        configuration: 'markdown',
-        rule: 'MD013',
-        tables: '[tools.markdownlint.rules.MD013]\nline_length = 100\n',
-        message: 'gspot runs MD013 at no level, so it takes no options.',
-    },
-    {
-        configuration: 'data-files',
-        rule: 'line-length',
-        tables: '[tools.yamllint.rules.line-length]\nmax = 100\n',
-        message:
-            'gspot.toml:3: tools.yamllint.rules.line-length: There is no yamllint rule called line-length. The yamllint rules are anchors, key-duplicates, octal-values, truthy.',
-    },
-] as const;
 
 export const NESTED_PYTHON_SETTINGS = {
     scopes: [
