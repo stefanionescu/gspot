@@ -95,6 +95,12 @@ function listInstalledDependencies(copyRoot: string, folders: string[]): string[
     });
 }
 
+function needsDependencyNote(selection: { isMismatched: boolean; isInstalled: boolean; changed: GitFile[] }): boolean {
+    const { isMismatched, isInstalled, changed } = selection;
+    if (isMismatched) return true;
+    return isInstalled && changed.length > 0;
+}
+
 async function selectRevisionDependencies(
     root: string,
     copyRoot: string,
@@ -135,18 +141,21 @@ async function selectRevisionDependencies(
     );
     const tracked = new Set(indexFiles.map(({ path }) => path));
     const untrackedArtifacts = artifacts.filter((path) => !tracked.has(path));
-    if (folders.length + environments.length + declarations.copies.length + untrackedArtifacts.length === 0)
-        return declarations.mismatched
-            ? { dependencies: [], dependencyNote: DEPENDENCY_REVISION_NOTE }
-            : { dependencies: [] };
+    const copied = [...folders, ...declarations.copies, ...untrackedArtifacts];
+    const needsNote = needsDependencyNote({
+        isMismatched: declarations.mismatched,
+        isInstalled: copied.length + environments.length > 0,
+        changed: dependencyFiles.filter(({ path }) => !unchangedPaths.has(path)),
+    });
+    const note = needsNote ? { dependencyNote: DEPENDENCY_REVISION_NOTE } : {};
+    if (copied.length === 0) return { dependencies: [], ...note };
     for (const folder of folders) assertDependencyReady(copyRoot, folder);
-    const matches = !declarations.mismatched && dependencyFiles.every(({ path }) => unchangedPaths.has(path));
     const dependencies: string[] = [
         ...declarations.copies,
         ...untrackedArtifacts,
         ...listInstalledDependencies(copyRoot, folders),
     ];
-    return matches ? { dependencies } : { dependencies, dependencyNote: DEPENDENCY_REVISION_NOTE };
+    return { dependencies, ...note };
 }
 
 function findCaseCollision(indexFiles: GitFile[]): [string, string] | undefined {
