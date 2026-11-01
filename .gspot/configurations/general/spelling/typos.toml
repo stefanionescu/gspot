@@ -31,7 +31,6 @@ extend-exclude = [
   "**/*.log",
   "packages/*/dist/**",
   "packages/*/LICENSE.md",
-  "packages/cli/README.md",
   "packages/cli/grammars/**",
   "docs/dist/**",
   "docs/.astro/**",
@@ -50,6 +49,7 @@ extend-exclude = [
   "packages/eslint-plugin/.markdownlint.jsonc",
   "tests/.markdownlint.jsonc",
   # Generator outputs
+  "packages/cli/README.md",
   "docs/worker-configuration.d.ts",
   "docs/cloudflare-env.d.ts",
   "**/*.pbxproj",

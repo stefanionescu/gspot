@@ -16,7 +16,6 @@ build/
 /packages/*/dist/
 /packages/*/LICENSE.md
 /packages/cli/grammars/
-/packages/cli/README.md
 node_modules/
 
 # Files that gspot generates
@@ -35,6 +34,7 @@ node_modules/
 # Generator outputs
 docs/cloudflare-env.d.ts
 docs/worker-configuration.d.ts
+packages/cli/README.md
 
 # Paths that configurations leave out, such as installed dependencies and local secrets
 **/.dev.vars
