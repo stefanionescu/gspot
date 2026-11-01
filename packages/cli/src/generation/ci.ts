@@ -10,19 +10,15 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { STRICT_MODE } from '#cli/config/configurations/bash.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
+import type { PackageManagerPin } from '#cli/types/repository.ts';
 import { frozenInstallArguments } from '#cli/repository/javascript/setup.ts';
 import { NEXTJS_CONFIGURATION } from '#cli/config/configurations/javascript.ts';
-import type { PackageManager, PackageManagerPin } from '#cli/types/repository.ts';
 import { type Session, type MiseToolPin, type GeneratedFile } from '#cli/types/tools.ts';
 import { Scalar, Document, type Node, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
 import { CI_NODE, FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/javascript.ts';
 import type { Pipeline, ActionPin, FrozenLockfile, GithubJobPurpose } from '#cli/types/generation.ts';
+import { findPackageManagerPin, buildPackageManagerCommand } from '#cli/repository/javascript/package-manager.ts';
 
-import {
-    findPackageManagerPin,
-    readPackageManagerVersion,
-    buildPackageManagerCommand,
-} from '#cli/repository/javascript/package-manager.ts';
 import {
     CI_JOB_NAME,
     GITLAB_RULES,
@@ -66,7 +62,7 @@ function buildActionPin({ name, sha, version }: ActionPin): Scalar {
 function buildGspotTools(pipeline: Pipeline): string {
     const { packageManager } = pipeline;
     const tools = [CI_NODE, `npm:${cliPackage.name}[allow_low_downloads=true]@${pipeline.version}`];
-    if (packageManager !== undefined && packageManager.name !== 'npm')
+    if (packageManager?.version !== undefined && packageManager.name !== 'npm')
         tools.push(`${packageManager.name}@${packageManager.version}`);
     return quoteCommand(tools);
 }
@@ -150,11 +146,10 @@ function readProjectPackageManager(
     session: Session,
     scopePath: string,
     name: PackageManagerPin['name'],
-): PackageManager {
+): PackageManagerPin {
     const packageJson = readPackageJson(session.root, joinScope(scopePath, PACKAGE_JSON));
     const written = packageJson === undefined ? undefined : findPackageManagerPin(packageJson);
-    const pin = [written, session.packageManager].find((each) => each?.name === name) ?? { name };
-    return readPackageManagerVersion(session.toolsRoot, pin, session.settings.tool_timeout_seconds, session.cache);
+    return [written, session.packageManager].find((each) => each?.name === name) ?? { name };
 }
 
 function buildFrozenInstall(session: Session, scopePath: string, lockfile: FrozenLockfile): readonly string[] {

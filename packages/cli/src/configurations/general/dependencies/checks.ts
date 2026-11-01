@@ -29,6 +29,7 @@ import {
     LOCKFILE_KEY_SUFFIX,
     STALE_LOCKFILE_SECTIONS,
     LOCKFILE_UPDATE_COMMANDS,
+    UNBUNDLED_PACKAGE_MANAGERS,
     PACKAGE_MANAGER_HASH_SEPARATOR,
     PACKAGE_MANAGER_VERSION_SEPARATOR,
 } from '#cli/config/configurations/general.ts';
@@ -164,8 +165,27 @@ export function checkLockfiles(session: Session, planned: PlannedCheck): CheckFi
     ];
 }
 
+function listMissingPins(session: Session, folder: string): CheckFinding[] {
+    const packageJsonPath = posix.join(folder, PACKAGE_JSON);
+    return LOCKFILES.filter(
+        ({ file, packageManager }) =>
+            UNBUNDLED_PACKAGE_MANAGERS.includes(packageManager) &&
+            find(session.cache, posix.join(folder, file)) !== undefined &&
+            find(session.cache, packageJsonPath) !== undefined,
+    ).map(({ packageManager }) => {
+        const { pin } = findMiseFilePin(session, folder, packageManager);
+        return {
+            file: packageJsonPath,
+            line: 1,
+            rule: DEPENDENCY_RULES.packageManagerPin,
+            message: `CI installs only a pinned ${packageManager}. Add "packageManager": "${packageManager}@${pin?.version ?? '<version>'}" to ${packageJsonPath}.`,
+        };
+    });
+}
+
 /**
-Reports a packageManager field that names another version than the mise pin of the same package manager.
+Reports a packageManager field that names another version than the mise pin of the same package manager. Also reports
+a missing field beside a lockfile of a package manager that Node.js does not bring.
 
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
@@ -174,7 +194,7 @@ export function checkPackageManagerPin(session: Session, planned: PlannedCheck):
     const folder = planned.scope.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
     const writtenPin = splitPackageManager(readPackageJson(session.cache, packageJsonPath)?.packageManager);
-    if (writtenPin === undefined) return [];
+    if (writtenPin === undefined) return listMissingPins(session, folder);
     const { tool, version } = writtenPin;
     const { pin, findings } = findMiseFilePin(session, folder, tool);
     if (pin === undefined || pin.version === version) return findings;

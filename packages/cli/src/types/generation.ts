@@ -15,6 +15,7 @@ import type {
     TrackedFile,
     PackageManager,
     RepositorySetup,
+    PackageManagerPin,
     InitConfigurations,
     ConfigurationOrigin,
     ConfigurationEvidence,
@@ -60,7 +61,7 @@ export type GithubJobPurpose = { condition: string; lastStep: Record<string, unk
 
 export type Pipeline = {
     version: string;
-    packageManager?: PackageManager | undefined;
+    packageManager?: PackageManagerPin | undefined;
     packageManagers: CiPackageManager[];
     setupCommand?: NonNullable<Settings['ci']>['setup_command'];
     projectInstall: string[];

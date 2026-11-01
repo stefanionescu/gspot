@@ -183,7 +183,7 @@ export const EMPHASIS_MARKERS = ['**', '*'] as const;
 export const RELATIVE_PATH_PREFIXES = ['./', '../'] as const;
 
 export const RUN_COMMAND = new RegExp(
-    String.raw`\b(?:${RUNNER_NAMES.join('|')}) run (?:--[\w-]+\s+)*[\w./][\w:/.-]*`,
+    String.raw`\b(?:${RUNNER_NAMES.join('|')}) run (?:(?:-[a-z]|--[\w-]+)\s+)*[\w./][\w:/.-]*`,
     'gu',
 );
 
@@ -344,6 +344,8 @@ export const MISE_TASK_FOLDERS = [
     '.mise/tasks',
     '.config/mise/tasks',
 ] as const;
+
+export const UNBUNDLED_PACKAGE_MANAGERS: readonly string[] = ['pnpm', 'yarn', 'bun'];
 
 export const MISE_FILES = [
     '.mise.local.toml',

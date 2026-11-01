@@ -219,6 +219,21 @@ test('without a setup command, CI installs the locked dependencies of each proje
     ]);
 });
 
+test('CI reads no local program version: npm runs bare, and an unpinned pnpm stays unpinned', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            tables: '[ci]\nenabled = true\nprovider = "github"\n',
+            scopes: [{ path: 'web' }],
+        }),
+        'package.json': '{"private":true}',
+        'package-lock.json': '{"lockfileVersion":3}',
+        'web/package.json': '{"private":true}',
+        'web/pnpm-lock.yaml': "lockfileVersion: '9.0'\n",
+    });
+    const session = await openSession(sandbox.path);
+    expect(listProjectInstallLines(session)).toStrictEqual(['npm ci', '(cd web && pnpm install --frozen-lockfile)']);
+});
+
 test('the GitHub workflow pins each action to a full commit and names its version in a comment', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { tables: '[ci]\nenabled = true\nprovider = "github"\n' }),

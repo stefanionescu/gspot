@@ -20,7 +20,6 @@ import { listPackagePins, buildMiseInstall } from '#cli/tools/pins.ts';
 import { buildPythonProjectTable } from '#cli/tools/installers/pypi.ts';
 import type { Session, Generation, GeneratedFile } from '#cli/types/tools.ts';
 import { JSON_INDENT, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
-import { readPackageManagerVersion } from '#cli/repository/javascript/package-manager.ts';
 import { buildBunScannerEdits } from '#cli/configurations/general/dependencies/generate.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { LFS_FILTER, FILTER_ATTRIBUTE, GITATTRIBUTES_FILE } from '#cli/config/repository/files.ts';
@@ -62,15 +61,7 @@ function addWorkflow(session: Session, generated: Generation): void {
     generated.files.push(
         (settings.ci.provider === 'github' ? buildGithubWorkflow : buildGitlabWorkflow)({
             version: cliPackage.version,
-            packageManager:
-                session.packageManager === undefined
-                    ? undefined
-                    : readPackageManagerVersion(
-                          session.toolsRoot,
-                          session.packageManager,
-                          session.settings.tool_timeout_seconds,
-                          session.cache,
-                      ),
+            packageManager: session.packageManager,
             setupCommand: settings.ci.setup_command,
             projectInstall: settings.ci.setup_command === undefined ? listProjectInstallLines(session) : [],
             operatingSystems: getSettingValue(

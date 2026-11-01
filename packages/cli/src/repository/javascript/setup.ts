@@ -18,9 +18,12 @@ Choose the frozen-install arguments for a lockfile and package-manager version.
 @param lockfile the project's dependency lockfile.
 @param version the package-manager version; docs select Yarn Berry explicitly.
 */
-export function frozenInstallArguments(lockfile: keyof typeof FROZEN_INSTALLS, version: string): readonly string[] {
+export function frozenInstallArguments(
+    lockfile: keyof typeof FROZEN_INSTALLS,
+    version: string | undefined,
+): readonly string[] {
     const command = FROZEN_INSTALLS[lockfile];
-    const usesBerry = command[0] === 'yarn' && semver.major(version) >= YARN_BERRY_MAJOR;
+    const usesBerry = command[0] === 'yarn' && version !== undefined && semver.major(version) >= YARN_BERRY_MAJOR;
     return (usesBerry ? YARN_BERRY_INSTALL : command).slice(1);
 }
 
