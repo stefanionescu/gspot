@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
 import { FUNCTION_NODES } from '../config/rules.ts';
 import { readLocalFunction } from '../functions.ts';
-import { usesModule, readTestCall } from '../testing.ts';
+import { usesModule, readTestCall, listChildNodes } from '../testing.ts';
 import type { TestCall, TitleScan, FunctionNode } from '../types/rules.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { TEST_FRAMEWORK_MODULES, RUNNING_TEST_MODIFIERS } from '../config/testing.ts';
@@ -10,15 +10,6 @@ function readRunning(call: TestCall | undefined, kind: TestCall['kind']): TestCa
     if (call?.kind !== kind) return undefined;
     const isRunning = call.modifiers.every((modifier) => RUNNING_TEST_MODIFIERS.has(modifier));
     return isRunning && (kind === 'suite' || call.callback !== undefined) ? call : undefined;
-}
-
-function listChildren(node: TSESTree.Node, scan: TitleScan): TSESTree.Node[] {
-    const keys = scan.source.visitorKeys[node.type] ?? [];
-    const values = keys.flatMap((key): unknown => node[key as keyof TSESTree.Node]);
-    return values.filter(
-        (value): value is TSESTree.Node =>
-            value !== null && typeof value === 'object' && 'type' in value && !FUNCTION_NODES.has(String(value.type)),
-    );
 }
 
 function checkTitle(node: TSESTree.CallExpression, titles: Map<string, TSESTree.Node>, scan: TitleScan): void {
@@ -34,7 +25,8 @@ function scanFunctionBody(node: TSESTree.Node, titles: Map<string, TSESTree.Node
         scanCall(node, titles, scan);
         return;
     }
-    for (const child of listChildren(node, scan)) scanFunctionBody(child, titles, scan);
+    const children = listChildNodes(node, scan.source).filter((child) => !FUNCTION_NODES.has(child.type));
+    for (const child of children) scanFunctionBody(child, titles, scan);
 }
 
 function scanCall(node: TSESTree.CallExpression, titles: Map<string, TSESTree.Node>, scan: TitleScan): void {
@@ -44,7 +36,8 @@ function scanCall(node: TSESTree.CallExpression, titles: Map<string, TSESTree.No
     if (call?.kind === 'suite') return;
     checkCall(node, titles, scan);
     if (readRunning(call, 'test') !== undefined) return;
-    for (const child of listChildren(node, scan)) scanFunctionBody(child, titles, scan);
+    const children = listChildNodes(node, scan.source).filter((child) => !FUNCTION_NODES.has(child.type));
+    for (const child of children) scanFunctionBody(child, titles, scan);
 }
 
 function checkCall(node: TSESTree.CallExpression, titles: Map<string, TSESTree.Node>, scan: TitleScan): void {

@@ -1,15 +1,22 @@
 import { join, dirname } from 'node:path';
 import { PLUGIN_PREFIX } from './config/plugin.ts';
+import { FUNCTION_NODES } from './config/rules.ts';
+import { readLocalFunction } from './functions.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { TestCall, TestOrigin, TestCallee, FileContext, PackageFacts } from './types/rules.ts';
+import type { TestCall, TableCall, TestOrigin, TestCallee, FileContext, PackageFacts } from './types/rules.ts';
 
 import {
     CALL_STEP,
     TEST_KINDS,
+    TABLE_ORIGINS,
+    TABLE_MODULES,
+    TABLE_TEST_NAMES,
     PACKAGE_MANIFEST,
     DEPENDENCY_FIELDS,
     REPOSITORY_MARKER,
+    TABLE_DEPENDENCIES,
+    RUNNING_TEST_MODIFIERS,
     PLAYWRIGHT_SUITE_MODES,
     TEST_FRAMEWORK_MODULES,
 } from './config/testing.ts';
@@ -127,7 +134,14 @@ function readOrigin(base: TSESTree.Identifier, source: TSESLint.SourceCode): Tes
     return readImportedName(definition) ?? readRequiredName(definition);
 }
 
-function readCalleeName(callee: TSESTree.Node, source: TSESLint.SourceCode): TestCallee | undefined {
+/**
+Read the name at the base of a callee, its module when a test framework exports it, and the member names after it.
+A call of `each` without its table call counts as no callee.
+
+@param callee the callee to read.
+@param source the file and its scopes.
+*/
+export function readCalleeName(callee: TSESTree.Node, source: TSESLint.SourceCode): TestCallee | undefined {
     const steps: string[] = [];
     let node = callee;
     while (node.type === AST_NODE_TYPES.CallExpression || node.type === AST_NODE_TYPES.MemberExpression) {
@@ -180,4 +194,67 @@ export function isPlaywrightSuite(node: TSESTree.Node): boolean {
     const name = ASTUtils.getPropertyName(node);
     if (name === 'describe') return node.object.type === AST_NODE_TYPES.Identifier && node.object.name === 'test';
     return PLAYWRIGHT_SUITE_MODES.has(name ?? '') && isPlaywrightSuite(node.object);
+}
+
+/**
+List the child nodes of a node, in source order.
+
+@param node the parent node.
+@param source the file, whose visitor keys name the children.
+*/
+export function listChildNodes(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node[] {
+    const keys = source.visitorKeys[node.type] ?? [];
+    const values = keys.flatMap((key): unknown => node[key as keyof TSESTree.Node]);
+    return values.filter((value): value is TSESTree.Node => value !== null && typeof value === 'object');
+}
+
+/**
+List a node and the nodes inside it in source order, without the inside of nested functions.
+
+@param root the node to read.
+@param source the file, whose visitor keys name the children.
+*/
+export function listBodyNodes(root: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node[] {
+    const nodes: TSESTree.Node[] = [];
+    const pending = [root];
+    let node = pending.pop();
+    while (node !== undefined) {
+        nodes.push(node);
+        const children = listChildNodes(node, source).filter((child) => !FUNCTION_NODES.has(child.type));
+        pending.push(...children.toReversed());
+        node = pending.pop();
+    }
+    return nodes;
+}
+
+function isTableTest(call: TestCall | undefined, context: FileContext): call is TestCall {
+    const isRunning = call?.modifiers.slice(0, -1).every((modifier) => RUNNING_TEST_MODIFIERS.has(modifier)) === true;
+    const isTable = isRunning && TABLE_TEST_NAMES.has(call.name);
+    return isTable && (TABLE_ORIGINS.has(call.module ?? '') || usesModule(context, TABLE_MODULES, TABLE_DEPENDENCIES));
+}
+
+/**
+Read the table of a parameterized test or suite of Bun, Jest, or Vitest: `test.each(table)(title, callback)`.
+
+@param node the call that declares the test, which `TABLE_CALL` selects.
+@param context the rule context of the file.
+*/
+export function readTestTable(node: TableCall, context: FileContext): TSESTree.Node | undefined {
+    const [table] = node.callee.arguments;
+    const callback = readLocalFunction(node.arguments[1] ?? node, context.sourceCode);
+    const isTable = isTableTest(readTestCall(node, context.sourceCode), context);
+    return isTable && callback !== undefined && table?.type !== AST_NODE_TYPES.SpreadElement ? table : undefined;
+}
+
+/**
+Check whether two nodes have one type and the same tokens.
+
+@param left the first node.
+@param right the second node.
+@param source the file that holds both nodes.
+*/
+export function isSameTokens(left: TSESTree.Node, right: TSESTree.Node, source: TSESLint.SourceCode): boolean {
+    const leftTokens = source.getTokens(left).map(({ value }) => value);
+    const rightTokens = source.getTokens(right).map(({ value }) => value);
+    return left.type === right.type && leftTokens.join('\0') === rightTokens.join('\0');
 }

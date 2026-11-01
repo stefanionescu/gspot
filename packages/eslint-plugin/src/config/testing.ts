@@ -15,6 +15,7 @@ export const TEST_KINDS = new Map<string, 'test' | 'suite' | 'hook'>([
     ['describe', 'suite'],
     ['context', 'suite'],
     ['suite', 'suite'],
+    ['fdescribe', 'suite'],
     ['before', 'hook'],
     ['after', 'hook'],
     ['beforeAll', 'hook'],
@@ -111,3 +112,129 @@ export const EARLY_RETURN_MODIFIERS = {
     nodeTest: new Set(['only']),
     bun: new Set(['only']),
 };
+
+export const ASYNC_SUITE_MODULES = ['jest', '@jest/globals', 'mocha', 'cypress'];
+
+export const ASYNC_SUITE_ORIGINS = new Set([undefined, 'jest', '@jest/globals', 'mocha']);
+
+export const ASYNC_SUITE_MODIFIERS = new Set(['only', 'each']);
+
+export const DONE_STOP_STATEMENTS = new Set([
+    'ReturnStatement',
+    'ThrowStatement',
+    'BreakStatement',
+    'ContinueStatement',
+]);
+
+export const MOCHA_CONSTRUCTS = new Set([
+    'describe',
+    'context',
+    'it',
+    'specify',
+    'before',
+    'after',
+    'beforeAll',
+    'afterAll',
+    'beforeEach',
+    'afterEach',
+]);
+
+export const MAXIMUM_TIMER_DELAY = 2_147_483_647;
+
+export const RETRY_MODULES = ['jest', '@jest/globals'];
+
+export const INLINE_EXPECT_MODULES = ['jest', '@jest/globals', 'vitest'];
+
+export const INLINE_EXPECT_ORIGINS = new Set([undefined, '@jest/globals', 'vitest']);
+
+export const INLINE_MATCHERS = new Set(['toMatchInlineSnapshot', 'toThrowErrorMatchingInlineSnapshot']);
+
+export const INLINE_EXPECT_MODIFIERS = new Set(['not', 'resolves', 'rejects']);
+
+export const VITEST_MOCK_RECEIVERS = new Set(['vi', 'vitest']);
+
+export const VITEST_IMPORT_ORIGINS = new Set<string | undefined>(['vitest']);
+
+export const VITEST_GLOBAL_ORIGINS = new Set([undefined, 'vitest']);
+
+export const TABLE_TEST_NAMES = new Set(['test', 'it', 'describe', 'suite']);
+
+export const TABLE_MODULES = ['bun:test', 'jest', '@jest/globals', 'vitest'];
+
+export const TABLE_DEPENDENCIES = ['bun:test', 'jest', 'vitest'];
+
+export const TABLE_ORIGINS = new Set(['bun:test', 'jest', '@jest/globals', 'vitest']);
+
+export const TABLE_CALL =
+    'CallExpression[callee.type="CallExpression"][callee.callee.type="MemberExpression"][callee.callee.property.name="each"][arguments.length>1]';
+
+export const SIMILAR_TEST_MODULES = [
+    { modules: ['jest', '@jest/globals'], dependencies: ['jest'], isGlobal: true },
+    { modules: ['vitest'], dependencies: ['vitest'], isGlobal: true },
+    { modules: ['@playwright/test'], dependencies: ['@playwright/test'], isGlobal: false },
+    { modules: ['bun:test'], dependencies: ['bun:test'], isGlobal: false },
+] as const;
+
+export const SIMILAR_TEST_ORIGINS = new Set(['bun:test', 'jest', '@jest/globals', 'vitest', '@playwright/test']);
+
+export const GLOBAL_TEST_BLOCKERS = ['cypress', 'jasmine', 'jasmine-core', 'jasmine-node', 'karma-jasmine', 'mocha'];
+
+export const SIMILAR_TEST_NAMES = new Set(['it', 'test']);
+
+export const CONCRETE_TEST_MODIFIERS = new Set([
+    'only',
+    'concurrent',
+    'failing',
+    'fail',
+    'slow',
+    'fails',
+    'sequential',
+]);
+
+export const SIMILAR_TEST_LIMITS = { tests: 3, statements: 2, parameters: 3 };
+
+export const TEST_FILE_PATTERN = /\.(?:test|spec|cy)\.(?:js|mjs|cjs|jsx|vue|ts|mts|cts|tsx)$/u;
+
+export const TEST_DECLARATIONS = new Set([
+    ...['it', 'test'].flatMap((name) =>
+        [
+            '',
+            '.concurrent',
+            '.concurrent.only',
+            '.concurrent.skip',
+            '.concurrent.each',
+            '.concurrent.only.each',
+            '.concurrent.skip.each',
+            '.each',
+            '.failing',
+            '.failing.each',
+            '.only.failing',
+            '.skip.failing',
+            '.only',
+            '.only.each',
+            '.skip.each',
+            '.todo',
+            '.runIf',
+            '.skipIf',
+            '.fails',
+            '.fails.each',
+            '.sequential',
+            '.sequential.each',
+            '.for',
+            '.prop',
+        ].map((suffix) => name + suffix),
+    ),
+    'it.skip',
+    'fit',
+    'xit',
+    'specify',
+    'specify.skip',
+    'specify.only',
+    'xspecify',
+    'ruleTester.run',
+    'Deno.test',
+    'Deno.test.only',
+    'Deno.test.ignore',
+]);
+
+export const TITLED_TEST_DECLARATIONS = new Set(['test.skip', 'test.fail', 'test.fail.only', 'test.fixme']);

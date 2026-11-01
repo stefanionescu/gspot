@@ -1,0 +1,48 @@
+import { createRule } from '../rule.ts';
+import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { TEST_FILE_PATTERN, TEST_DECLARATIONS, TITLED_TEST_DECLARATIONS } from '../config/testing.ts';
+
+function readChainName(node: TSESTree.Node): string {
+    if (node.type === AST_NODE_TYPES.Identifier) return node.name;
+    if (node.type !== AST_NODE_TYPES.MemberExpression || node.property.type !== AST_NODE_TYPES.Identifier) return '';
+    return `${readChainName(node.object)}.${node.property.name}`;
+}
+
+export const noEmptyTestFile = createRule<[], 'empty'>({
+    name: 'no-empty-test-file',
+    meta: {
+        defaultOptions: [],
+        type: 'suggestion',
+        docs: {
+            level: 'none',
+            description:
+                'Reports a file named `*.test.*`, `*.spec.*`, or `*.cy.*` that declares no test: no `it`, `test`, `specify`, or `Deno.test` call in any of their forms, no titled Playwright `test.skip`, `test.fail`, or `test.fixme`, and no `ruleTester.run`. No config turns it on; gspot turns it on for the test files of each project.',
+            why: 'A test file without tests passes and checks nothing, so it hides that the tests it should hold are gone.',
+            fix: 'Add the tests that the file is named for, or delete the file.',
+            example:
+                'A `cart.test.ts` that only exports helpers reports `empty`. Move the helpers to a file without the test suffix.',
+        },
+        schema: [],
+        messages: { empty: 'Add some tests to this file or delete it.' },
+    },
+    create(context) {
+        if (!TEST_FILE_PATTERN.test(context.filename)) return {};
+        let hasTest = false;
+        return {
+            'CallExpression, TaggedTemplateExpression'(
+                node: TSESTree.CallExpression | TSESTree.TaggedTemplateExpression,
+            ) {
+                const isCall = node.type === AST_NODE_TYPES.CallExpression;
+                const name = readChainName(isCall ? node.callee : node.tag);
+                const title = isCall ? node.arguments[0] : undefined;
+                const isTitled = title?.type === AST_NODE_TYPES.Literal && typeof title.value === 'string';
+                hasTest ||= TEST_DECLARATIONS.has(name) || (isTitled && TITLED_TEST_DECLARATIONS.has(name));
+            },
+            'Program:exit'() {
+                const isEmpty = !hasTest;
+                hasTest = false;
+                if (isEmpty) context.report({ loc: { line: 1, column: 0 }, messageId: 'empty' });
+            },
+        };
+    },
+});

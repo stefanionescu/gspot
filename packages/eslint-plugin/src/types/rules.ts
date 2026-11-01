@@ -66,6 +66,14 @@ export type SuiteMember = {
     isAfter: boolean;
 };
 
+export type TableCall = TSESTree.CallExpression & { callee: TSESTree.CallExpression };
+
+export type SimilarTest = {
+    title: TSESTree.Node;
+    body: TSESTree.Statement[];
+    literals: Map<number, TSESTree.Literal>;
+};
+
 export type TitleScan = {
     source: TSESLint.SourceCode;
     path: Set<TSESTree.Node>;

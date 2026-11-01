@@ -8,6 +8,7 @@ import { useTypeAlias } from './rules/use-type-alias.ts';
 import { preferLiteral } from './rules/prefer-literal.ts';
 import { noPathCommand } from './rules/no-path-command.ts';
 import { noSmallSwitch } from './rules/no-small-switch.ts';
+import { noTestRetries } from './rules/no-test-retries.ts';
 import { maxSwitchCases } from './rules/max-switch-cases.ts';
 import { noCompoundCase } from './rules/no-compound-case.ts';
 import { noDetachedCall } from './rules/no-detached-call.ts';
@@ -20,12 +21,16 @@ import { testHooksFirst } from './rules/test-hooks-first.ts';
 import { noCommentedCode } from './rules/no-commented-code.ts';
 import { noIgnoredReturn } from './rules/no-ignored-return.ts';
 import { noUnthrownError } from './rules/no-unthrown-error.ts';
+import { preferTestTable } from './rules/prefer-test-table.ts';
 import { preferTypeGuard } from './rules/prefer-type-guard.ts';
 import { importBoundaries } from './rules/import-boundaries.ts';
+import { noCodeAfterDone } from './rules/no-code-after-done.ts';
+import { noEmptyTestFile } from './rules/no-empty-test-file.ts';
 import { noExclusiveTests } from './rules/no-exclusive-tests.ts';
 import { noInsecureRandom } from './rules/no-insecure-random.ts';
 import { noRenamedExports } from './rules/no-renamed-exports.ts';
 import pluginPackage from '../package.json' with { type: 'json' };
+import { noEmptyTestTable } from './rules/no-empty-test-table.ts';
 import { noFixedTestWaits } from './rules/no-fixed-test-waits.ts';
 import { noInsecureCookies } from './rules/no-insecure-cookies.ts';
 import { noNestedFunctions } from './rules/no-nested-functions.ts';
@@ -42,6 +47,7 @@ import { noRedundantBoolean } from './rules/no-redundant-boolean.ts';
 import { noTrivialFunctions } from './rules/no-trivial-functions.ts';
 import { reduceInitialValue } from './rules/reduce-initial-value.ts';
 import { noEmptyReturnValue } from './rules/no-empty-return-value.ts';
+import { noNestedVitestMock } from './rules/no-nested-vitest-mock.ts';
 import { noSwitchCaseLabels } from './rules/no-switch-case-labels.ts';
 import { noIdenticalOperands } from './rules/no-identical-operands.ts';
 import { noNegatedComparison } from './rules/no-negated-comparison.ts';
@@ -49,6 +55,7 @@ import { noRedundantOptional } from './rules/no-redundant-optional.ts';
 import { noUndefinedArgument } from './rules/no-undefined-argument.ts';
 import { preferBooleanReturn } from './rules/prefer-boolean-return.ts';
 import { noCommentsInImports } from './rules/no-comments-in-imports.ts';
+import { noDuplicateTestRows } from './rules/no-duplicate-test-rows.ts';
 import { noDuplicatedBranches } from './rules/no-duplicated-branches.ts';
 import { preferReadonlyStatic } from './rules/prefer-readonly-static.ts';
 import { redundantTypeAliases } from './rules/redundant-type-aliases.ts';
@@ -57,10 +64,12 @@ import { noEqualLoopCondition } from './rules/no-equal-loop-condition.ts';
 import { noPositiveIndexCheck } from './rules/no-positive-index-check.ts';
 import { noStringRegexPattern } from './rules/no-string-regex-pattern.ts';
 import { noUpdatedLoopCounter } from './rules/no-updated-loop-counter.ts';
+import { noInlineInterpolation } from './rules/no-inline-interpolation.ts';
 import { noKeywordDeclarations } from './rules/no-keyword-declarations.ts';
 import { noUselessIntersection } from './rules/no-useless-intersection.ts';
 import { preferImmediateReturn } from './rules/prefer-immediate-return.ts';
 import { noAdjacentMultilineIf } from './rules/no-adjacent-multiline-if.ts';
+import { noAsyncSuiteCallbacks } from './rules/no-async-suite-callbacks.ts';
 import { noDuplicateTestTitles } from './rules/no-duplicate-test-titles.ts';
 import { noExcessCallArguments } from './rules/no-excess-call-arguments.ts';
 import { noPublicTemporaryPath } from './rules/no-public-temporary-path.ts';
@@ -74,6 +83,7 @@ import { noUnsafeSanitizerBypass } from './rules/no-unsafe-sanitizer-bypass.ts';
 import { noUnsafeSecurityHeaders } from './rules/no-unsafe-security-headers.ts';
 import { noMisleadingArrayReverse } from './rules/no-misleading-array-reverse.ts';
 import { noNestedTemplateLiterals } from './rules/no-nested-template-literals.ts';
+import { noOverflowingTestTimeout } from './rules/no-overflowing-test-timeout.ts';
 import { noImpossibleCollectionSize } from './rules/no-impossible-collection-size.ts';
 import { noInconsistentFunctionCall } from './rules/no-inconsistent-function-call.ts';
 import { noUnenclosedMultilineBlock } from './rules/no-unenclosed-multiline-block.ts';
@@ -107,6 +117,16 @@ const rules = {
     'no-floating-point-equality': noFloatingPointEquality,
     'no-equal-loop-condition': noEqualLoopCondition,
     'no-small-switch': noSmallSwitch,
+    'no-async-suite-callbacks': noAsyncSuiteCallbacks,
+    'no-code-after-done': noCodeAfterDone,
+    'no-overflowing-test-timeout': noOverflowingTestTimeout,
+    'no-test-retries': noTestRetries,
+    'no-inline-interpolation': noInlineInterpolation,
+    'no-nested-vitest-mock': noNestedVitestMock,
+    'no-empty-test-table': noEmptyTestTable,
+    'no-duplicate-test-rows': noDuplicateTestRows,
+    'prefer-test-table': preferTestTable,
+    'no-empty-test-file': noEmptyTestFile,
     'no-exclusive-tests': noExclusiveTests,
     'no-unexplained-test-skips': noUnexplainedTestSkips,
     'no-early-test-return': noEarlyTestReturn,
