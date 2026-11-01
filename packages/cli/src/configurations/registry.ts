@@ -27,6 +27,7 @@ import { checkReactVersions } from '#cli/configurations/framework/react-dom/chec
 import { checkAnsibleLint } from '#cli/configurations/infrastructure/ansible/checks.ts';
 import { checkPeriphery } from '#cli/configurations/language/swift/checks/periphery.ts';
 import { checkShellcheck } from '#cli/configurations/language/bash/checks/shellcheck.ts';
+import { checkCompose } from '#cli/configurations/infrastructure/docker/checks/compose.ts';
 import { checkIdentifiers } from '#cli/configurations/general/naming/checks/identifiers.ts';
 import { checkLoneFiles } from '#cli/configurations/general/structure/checks/lone-files.ts';
 import { checkLongFiles } from '#cli/configurations/general/structure/checks/long-files.ts';
@@ -38,6 +39,7 @@ import { checkSwiftlintAnalyze } from '#cli/configurations/language/swift/checks
 import { checkImportRules } from '#cli/configurations/general/structure/checks/import-rules.ts';
 import { checkBashDocComments } from '#cli/configurations/language/bash/checks/doc-comments.ts';
 import { checkHeaders, checkRedirects } from '#cli/configurations/platform/cloudflare/checks.ts';
+import { checkTrivyImage } from '#cli/configurations/infrastructure/docker/checks/trivy-image.ts';
 import { checkBashFunctionSize } from '#cli/configurations/language/bash/checks/function-size.ts';
 import { checkSwiftDocComments } from '#cli/configurations/language/swift/checks/doc-comments.ts';
 import { checkSiteUnusedAssets } from '#cli/configurations/framework/site/checks/unused-assets.ts';
@@ -46,6 +48,8 @@ import { checkFunctionOrder } from '#cli/configurations/general/structure/checks
 import { checkBashInlineScripts } from '#cli/configurations/language/bash/checks/inline-scripts.ts';
 import { checkUnreadArguments } from '#cli/configurations/language/bash/checks/unread-arguments.ts';
 import { checkUnusedFunctions } from '#cli/configurations/language/bash/checks/unused-functions.ts';
+import { checkDockerignore } from '#cli/configurations/infrastructure/docker/checks/dockerignore.ts';
+import { checkInstructions } from '#cli/configurations/infrastructure/docker/checks/instructions.ts';
 import { checkMigrationOrder } from '#cli/configurations/database/postgres/checks/migration-order.ts';
 import { checkEnvExamples, checkGitleaksPushed } from '#cli/configurations/general/secrets/checks.ts';
 import { checkSharedPrefixes } from '#cli/configurations/general/structure/checks/shared-prefixes.ts';
@@ -60,7 +64,6 @@ import { checkJavascriptTsc, checkJavascriptBiome } from '#cli/configurations/la
 import { checkEnvironmentReaders } from '#cli/configurations/general/structure/checks/environment-readers.ts';
 import { checkPassThroughFolders } from '#cli/configurations/general/structure/checks/pass-through-folders.ts';
 import { checkActionlint, checkWorkflowShape } from '#cli/configurations/infrastructure/github-actions/checks.ts';
-import { checkCompose, checkTrivyImage, checkDockerignore } from '#cli/configurations/infrastructure/docker/checks.ts';
 
 import {
     checkLockfiles,
@@ -131,6 +134,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'dependencies/stale-lockfile': { check: checkStaleLockfile },
     'docker/compose': { run: checkCompose },
     'docker/dockerignore': { check: checkDockerignore },
+    'docker/instructions': { check: checkInstructions },
     'docker/trivy-image': { check: checkTrivyImage },
     'docs/missing-paths': { check: checkMissingPaths },
     'docs/required-files': { check: checkRequiredFiles },

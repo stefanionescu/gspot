@@ -183,6 +183,45 @@ export const TRIVY_IMAGE_COMMAND = [
 
 export const TRIVY_CONFIG_FILE = 'trivy';
 
+export const INSTRUCTION_RULES = {
+    lockfile: 'lockfile-install',
+    pipedDownload: 'piped-download',
+    nginxTag: 'nginx-tag',
+    shellEntrypoint: 'shell-entrypoint',
+} as const;
+
+export const INSTRUCTION_MESSAGES = {
+    lockfile: 'This install can rewrite the lockfile. Use `npm ci`, or the frozen or locked flag of the tool.',
+    pipedDownload: 'Do not pipe a download into a shell. Download a pinned file, check it, then run it.',
+    nginxTag: 'Pin nginx to a full version, such as `nginx:1.27.3-alpine`.',
+    shellEntrypoint: 'Run the program as the first `ENTRYPOINT` element, so that it receives the stop signal.',
+} as const;
+
+export const NPM_COMMAND = 'npm';
+
+export const NPM_INSTALL_VERBS: ReadonlySet<string> = new Set(['install', 'i']);
+
+export const LOCKED_INSTALLS: Readonly<Record<string, { verbs: string[]; flags: string[] } | undefined>> = {
+    pnpm: { verbs: ['install', 'i'], flags: ['--frozen-lockfile'] },
+    bun: { verbs: ['install', 'i'], flags: ['--frozen-lockfile'] },
+    yarn: { verbs: ['install'], flags: ['--frozen-lockfile', '--immutable'] },
+    uv: { verbs: ['sync'], flags: ['--frozen', '--locked'] },
+};
+
+export const DOWNLOAD_COMMANDS: ReadonlySet<string> = new Set(['curl', 'wget']);
+
+export const INTERPRETER_COMMANDS: ReadonlySet<string> = new Set(['sh', 'bash', 'dash', 'ash', 'zsh']);
+
+export const NGINX_IMAGE = /(?:^|\/)nginx$/u;
+
+export const PATCH_LEVEL_VERSION = /^\d+\.\d+\.\d+/u;
+
+export const DOCKER_INSTRUCTION = /^[ \t]*(?<name>[A-Za-z]+)[ \t](?<text>(?:[^\n\\]|\\[\s\S])*)$/gmu;
+
+export const LINE_CONTINUATION = /\\\n/gu;
+
+export const EXEC_FORM_START = /^\[\s*"(?<program>[^"]+)"/u;
+
 export const DOCKER_RULES = { missingFile: 'missing-file', missingEntry: 'missing-entry', secret: 'secret' } as const;
 
 export const SELF_REPOSITORY_MARKER = /^(\s*["']?)(\$|\\x24|\\u0024|\\U00000024)/u;

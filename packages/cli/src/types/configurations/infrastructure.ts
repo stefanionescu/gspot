@@ -45,6 +45,8 @@ export type StoragePolicies = Map<string, SqlNodeFields['CreatePolicyStmt']>;
 
 export type WorkflowShapeHit = { kind: keyof typeof WORKFLOW_SHAPE_RULES; node: Scalar };
 
+export type DockerInstruction = { name: string; text: string; line: number };
+
 export type Location = { migration: Migration; statement: SqlStatement; table: string };
 
 export type MigrationRead = { migrations: Migration[]; findings: CheckFinding[] };

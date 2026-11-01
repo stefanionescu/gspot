@@ -35,7 +35,7 @@ export const DOCKERIGNORE_CASES = [
                 file: 'app/Dockerfile',
                 rule: 'missing-file',
                 message:
-                    'Add an ignore file at app/Dockerfile.dockerignore or app/.dockerignore that lists .git, .env, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*, **/.venv/**, **/venv/**.',
+                    'Add an ignore file at app/Dockerfile.dockerignore or app/.dockerignore that lists .git, .env, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*, **/.venv/**, **/venv/**, **/__pycache__/**, **/.pytest_cache/**, **/.ruff_cache/**, **/.mypy_cache/**.',
             },
         ],
     },
@@ -136,6 +136,10 @@ export const DOCKERIGNORE_CASES = [
 **/bower_components/**
 **/.venv/**
 **/venv/**
+**/__pycache__/**
+**/.pytest_cache/**
+**/.ruff_cache/**
+**/.mypy_cache/**
 `,
         },
         findings: [],

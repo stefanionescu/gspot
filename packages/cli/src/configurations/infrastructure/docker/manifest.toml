@@ -69,6 +69,15 @@ summary = "Parses every Compose file with `docker compose config`, which needs n
 why = "Valid YAML can still hold a key that Compose rejects, and otherwise the first sign comes during a deploy."
 
 [[check]]
+example = "`RUN npm install` reports `lockfile-install`. Write `RUN npm ci`, which installs the lockfile as it is."
+files = { paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "!**/*.dockerignore"] }
+help = "Apply the fix that the message names."
+name = "instructions"
+stage = "commit"
+summary = "Reads `RUN`, `FROM`, and `ENTRYPOINT`: an install that can rewrite the lockfile, a download piped into a shell, an nginx tag that is not a full version, and a shell as the first `ENTRYPOINT` element."
+why = "A build that rewrites its lockfile or runs a downloaded script ships code that nobody reviewed, and a shell as process 1 swallows the stop signal."
+
+[[check]]
 example = "A Dockerfile with no `.dockerignore` beside it reports a finding. Add one that excludes the paths the finding names, such as `.git` and installed dependencies."
 help = "Add a .dockerignore beside the Dockerfile with the paths the message names."
 name = "dockerignore"

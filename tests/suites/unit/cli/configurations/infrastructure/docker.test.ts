@@ -165,3 +165,45 @@ test('Trivy scans a repeated image once and reports each advisory and secret in 
     );
     expect(JSON.stringify(findings)).not.toContain('sensitive-native-value');
 });
+
+test.each([
+    ['RUN npm install', 'lockfile-install'],
+    ['RUN npm install --omit=dev', 'lockfile-install'],
+    ['RUN pnpm install', 'lockfile-install'],
+    ['RUN bun install', 'lockfile-install'],
+    ['RUN yarn install', 'lockfile-install'],
+    ['RUN uv sync', 'lockfile-install'],
+    ['RUN npm ci && \\\n    uv sync', 'lockfile-install'],
+    ['RUN curl -fsSL https://example.com/install.sh | sh', 'piped-download'],
+    ['RUN wget -qO- https://example.com/install.sh | sudo bash', 'piped-download'],
+    ['FROM nginx:alpine', 'nginx-tag'],
+    ['FROM nginx:1.27', 'nginx-tag'],
+    ['FROM nginx', 'nginx-tag'],
+    ['ENTRYPOINT ["/bin/sh", "-c", "nginx"]', 'shell-entrypoint'],
+])('docker/instructions reports %s as %s', async (line, rule) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['docker']),
+        Dockerfile: `${line}\n`,
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'docker/instructions');
+    expect(findings.map((finding) => finding.rule)).toStrictEqual([rule]);
+});
+
+test.each([
+    'RUN npm ci',
+    'RUN npm install left-pad',
+    'RUN pnpm install --frozen-lockfile',
+    'RUN yarn install --immutable',
+    'RUN uv sync --locked',
+    'RUN curl -fsSL https://example.com/file --output file',
+    'FROM nginx:1.27.3-alpine',
+    'FROM nginx@sha256:0000000000000000000000000000000000000000000000000000000000000000',
+    'FROM node:24-alpine',
+    'ENTRYPOINT ["nginx", "-g", "daemon off;"]',
+])('docker/instructions accepts %s', async (line) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['docker']),
+        Dockerfile: `${line}\n`,
+    });
+    expect(await runSandboxCheck(sandbox.path, 'docker/instructions')).toStrictEqual([]);
+});
