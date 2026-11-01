@@ -25,7 +25,7 @@ export type ProseRoute = { path: string; mode: 'path' | 'stdin'; extension: stri
 
 export type Host = { platform: string; arch: string };
 
-export type ConfiguredCheck = {
+export type ScopeCheck = {
     scope: Scope;
     check: Check;
     configuration?: Configuration | undefined;
@@ -78,7 +78,7 @@ export type Session = SessionBase & {
 };
 
 export type SessionBase = {
-    configuredChecks: ConfiguredCheck[];
+    configuredChecks: ScopeCheck[];
     root: string;
     startRunner: StartRunner;
     toolsRoot: string;

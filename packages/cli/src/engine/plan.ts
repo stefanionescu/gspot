@@ -1,12 +1,12 @@
 import { GspotError } from '#cli/system/errors.ts';
+import type { Check } from '#cli/types/manifests.ts';
 import { getTool, findToolName } from '#cli/tools/pins.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
+import type { Session, ScopeCheck } from '#cli/types/tools.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
-import type { Check, ScopeCheck } from '#cli/types/manifests.ts';
-import type { Session, ConfiguredCheck } from '#cli/types/tools.ts';
 import { findFirstSkip, findSettingsSkip } from '#cli/engine/skips.ts';
 import type { PlanOptions, PlannedScope, PlannedCheck } from '#cli/types/engine/plan.ts';
 import { isRootOnlyCheck, isRepositoryRun, selectCheckFiles } from '#cli/engine/files.ts';
@@ -17,16 +17,14 @@ function listScopeChecks(settings: Settings, scope: Scope, root: Scope): ScopeCh
     const atRoot = new Set(root.configurations.map(({ name }) => name));
     const configuredChecks = scope.configurations.flatMap((configuration) =>
         configuration.checks
-            .map((check) => ({ check, configuration }))
+            .map((check) => ({ scope, check, configuration }))
             .filter(
                 (configured) =>
                     isRoot || !atRoot.has(configuration.name) || !isRootOnlyCheck(configuration, configured.check),
             ),
     );
     if (!isRoot) return configuredChecks;
-    const own = Object.values(settings.commandChecks).map((commandCheck) => ({
-        check: commandCheck,
-    }));
+    const own = Object.values(settings.commandChecks).map((commandCheck) => ({ scope, check: commandCheck }));
     return [...configuredChecks, ...own];
 }
 
@@ -85,19 +83,17 @@ function enumerateScopeChecks(
     settings: Settings,
     scopes: Scope[],
     isKept: (scope: Scope, check: Check) => boolean,
-): (ScopeCheck & { scope: Scope })[] {
+): ScopeCheck[] {
     const root = getRootScope(scopes);
     const repositoryRuns = new Set<string>();
     return scopes.flatMap((scope) =>
-        listScopeChecks(settings, scope, root)
-            .filter(({ check }) => {
-                if (!isKept(scope, check)) return false;
-                if (!isRepositoryRun(check)) return true;
-                if (repositoryRuns.has(check.id)) return false;
-                repositoryRuns.add(check.id);
-                return true;
-            })
-            .map((scopeCheck) => ({ ...scopeCheck, scope })),
+        listScopeChecks(settings, scope, root).filter(({ check }) => {
+            if (!isKept(scope, check)) return false;
+            if (!isRepositoryRun(check)) return true;
+            if (repositoryRuns.has(check.id)) return false;
+            repositoryRuns.add(check.id);
+            return true;
+        }),
     );
 }
 
@@ -236,7 +232,7 @@ List each check that a scope runs at some stage, with no files.
 @param settings the authored selections, rule overrides, and stage choices.
 @returns one entry for each scope and check.
 */
-export function listEnabledChecks(scopes: Scope[], settings: Settings): ConfiguredCheck[] {
+export function listEnabledChecks(scopes: Scope[], settings: Settings): ScopeCheck[] {
     const root = getRootScope(scopes);
     const configurations = scopes.flatMap((each) => each.configurations);
     return enumerateScopeChecks(

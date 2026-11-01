@@ -1,14 +1,15 @@
 import { posix } from 'node:path';
 import { isUtf8 } from 'node:buffer';
 import type { Scope } from '#cli/types/settings.ts';
+import type { ScopeCheck } from '#cli/types/tools.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { getTable, listIgnores } from '#cli/settings/scopes.ts';
+import type { Check, Configuration } from '#cli/types/manifests.ts';
 import type { PlannedCheck, PlannedScope } from '#cli/types/engine/plan.ts';
-import type { Check, ScopeCheck, Configuration } from '#cli/types/manifests.ts';
 import { listCoveredFiles, listCoveredPaths } from '#cli/repository/files/selection.ts';
 import { ROOT_RUNS, BYTES_PER_KILOBYTE, IGNORED_PATHS_MESSAGE } from '#cli/config/engine.ts';
 

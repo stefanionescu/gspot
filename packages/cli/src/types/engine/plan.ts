@@ -1,7 +1,7 @@
 import type { RunCache } from '#cli/types/system.ts';
 import type { STAGE_FILTERS } from '#cli/config/engine.ts';
 import type { Tool, Check } from '#cli/types/manifests.ts';
-import type { Host, SessionBase, ConfiguredCheck } from '#cli/types/tools.ts';
+import type { Host, ScopeCheck, SessionBase } from '#cli/types/tools.ts';
 import type { TrackedFile, RepositoryListing } from '#cli/types/repository.ts';
 import type { Scope, Defined, Settings, TableValues } from '#cli/types/settings.ts';
 
@@ -35,7 +35,7 @@ export type PlannedScope = {
 
 export type SettingsSkip = { cause: 'level' | 'ignore' | 'setting'; note: string };
 
-export type PlannedCheck = ConfiguredCheck & {
+export type PlannedCheck = ScopeCheck & {
     base?: string | undefined;
     commits?: string[] | undefined;
     range?: string[] | undefined;

@@ -8,7 +8,7 @@ import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { buildVenvPythonPath } from '#cli/system/paths.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import type { Tool, VersionedInstaller } from '#cli/types/manifests.ts';
-import type { Session, ProcessFailure, ConfiguredCheck } from '#cli/types/tools.ts';
+import type { Session, ScopeCheck, ProcessFailure } from '#cli/types/tools.ts';
 import { UV_TOOL, UV_FLAGS, UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/installers.ts';
 import { UV_RUN_ARGUMENTS, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 
@@ -77,7 +77,7 @@ Require the project's Python environment before running checks that read its ins
 */
 export function findMissingEnvironment(
     session: Pick<Session, 'repository' | 'toolsRoot'>,
-    planned: Pick<ConfiguredCheck, 'check' | 'scope'>,
+    planned: Pick<ScopeCheck, 'check' | 'scope'>,
 ): ProcessFailure | undefined {
     if (planned.check.needs?.includes('python-environment') !== true) return undefined;
     const scope = planned.scope.path;

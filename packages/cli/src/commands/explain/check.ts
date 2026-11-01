@@ -6,11 +6,11 @@ import type { CommandCheck } from '#cli/types/settings.ts';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { readCheckRuleDocs } from '#cli/configurations/rules.ts';
-import type { Session, LintRuleDocs } from '#cli/types/tools.ts';
 import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
+import type { Check, Configuration } from '#cli/types/manifests.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
-import type { Check, ScopeCheck, Configuration } from '#cli/types/manifests.ts';
+import type { Session, ScopeCheck, LintRuleDocs } from '#cli/types/tools.ts';
 import { listRuleFiles, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
 import type { CheckFacts, CheckIgnore, Explanation } from '#cli/types/commands/reports.ts';
 
@@ -39,7 +39,7 @@ function listCheckIgnores(session: Session | undefined, checkId: string): CheckI
 
 function buildCheckFacts(
     check: Check,
-    configuration: ScopeCheck['configuration'],
+    configuration: Configuration | undefined,
     configurationsByName: ReadonlyMap<string, Configuration>,
     session: Session | undefined,
 ): CheckFacts {
@@ -77,7 +77,7 @@ function formatCheckIgnore(ignore: CheckIgnore): string {
 function formatRepositoryUse(
     session: Session | undefined,
     commandCheck: CommandCheck | undefined,
-    configuration: ScopeCheck['configuration'],
+    configuration: Configuration | undefined,
 ): string[] {
     const lines: string[] = [];
     if (commandCheck !== undefined)
@@ -93,7 +93,7 @@ function formatRepositoryUse(
 
 function formatCheckExplanation(
     session: Session | undefined,
-    found: ScopeCheck,
+    found: Pick<ScopeCheck, 'check' | 'configuration'>,
     commandCheck: CommandCheck | undefined,
     facts: CheckFacts,
 ): string {
@@ -179,7 +179,7 @@ Explain a shipped check or a command check.
 export function explainCheck(session: Session | undefined, checkId: string): Explanation | undefined {
     const configurationsByName = readConfigurations();
     const commandCheck = session?.settings.commandChecks[checkId];
-    const found: ScopeCheck | undefined =
+    const found: Pick<ScopeCheck, 'check' | 'configuration'> | undefined =
         listChecksById(configurationsByName.values()).get(checkId) ??
         (commandCheck === undefined ? undefined : { check: commandCheck, configuration: undefined });
     if (found === undefined) return undefined;

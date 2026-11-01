@@ -30,9 +30,7 @@ export type Check = Omit<z.infer<typeof checkSchema>, 'example' | 'name' | 'outp
 export type Configuration = Omit<ParsedManifest, 'tools' | 'configuration' | 'checks'> &
     ParsedManifest['configuration'] & { tools: Tool[]; checks: Check[] };
 
-export type ScopeCheck = { check: Check; configuration?: Configuration | undefined };
-
-export type ConfigurationCheck = ScopeCheck & { configuration: Configuration };
+export type ConfigurationCheck = { check: Check; configuration: Configuration };
 
 export type WrittenConfiguration = { name: string; path: KeyPath };
 

@@ -6,7 +6,7 @@ import { readHooks } from '#cli/repository/setup.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { runGitBlocking } from '#cli/repository/git/run.ts';
 import type { Repository, RepositorySetup } from '#cli/types/repository.ts';
-import type { Session, HookName, HookPlan, HookStatus, ConfiguredCheck } from '#cli/types/tools.ts';
+import type { Session, HookName, HookPlan, HookStatus, ScopeCheck } from '#cli/types/tools.ts';
 
 import {
     CHECK_HOOKS,
@@ -101,7 +101,7 @@ List the hooks that run at least one configured check.
 
 @returns the hook names, in the order Git runs them.
 */
-export function listHookNames(checks: ConfiguredCheck[]): HookName[] {
+export function listHookNames(checks: ScopeCheck[]): HookName[] {
     const stages = new Set<string>(checks.map((planned) => planned.check.stage));
     return CHECK_HOOKS.filter((name) => HOOK_CHECKS[name].stages.some((stage) => stages.has(stage)));
 }
