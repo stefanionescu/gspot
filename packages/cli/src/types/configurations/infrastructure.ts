@@ -34,9 +34,11 @@ export type Schema = {
     unprotectedViews: Map<string, SourceStatement>;
     foreignKeys: (SourceStatement & { table: string; columns: string[] })[];
     indexed: Map<string, string[][]>;
+    policies: Map<string, Map<string, SqlNodeFields['CreatePolicyStmt']>>;
+    functions: Map<string, FunctionSecurity>;
 };
 
-export type SchemaState = Pick<Schema, 'tables' | 'secured' | 'unprotectedViews'> & {
+export type SchemaState = Pick<Schema, 'tables' | 'secured' | 'unprotectedViews' | 'policies' | 'functions'> & {
     indexes: { schema: string | undefined; table: string; name: string; columns: string[]; constraint: string }[];
     constraints: Map<string, Map<string, Schema['foreignKeys'][number]>>;
 };

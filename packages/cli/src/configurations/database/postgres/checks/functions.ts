@@ -1,0 +1,84 @@
+import type { SqlStatement } from '#cli/types/parsers.ts';
+import type { Node, DefElem, TypeName } from '@pgsql/types';
+import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
+import { PUBLIC_SCHEMA } from '#cli/config/configurations/infrastructure.ts';
+import type { SchemaState, StatementReader, FunctionSecurity } from '#cli/types/configurations/infrastructure.ts';
+
+function buildFunctionKey(names: Node[] | undefined, parameters: (TypeName | undefined)[]): string {
+    const path = listNodeFields(names, 'String').map(({ sval = '' }) => sval);
+    const qualified = path.length === 1 ? [PUBLIC_SCHEMA, ...path] : path;
+    return JSON.stringify([
+        qualified,
+        parameters.map((parameter) => [
+            listNodeFields(parameter?.names, 'String').map(({ sval = '' }) => sval),
+            (parameter?.arrayBounds?.length ?? 0) > 0,
+        ]),
+    ]);
+}
+
+function setFunctionSecurity(security: FunctionSecurity, action: DefElem): boolean {
+    if (action.defname === 'security') {
+        security.definer = findNodeFields(action.arg, 'Boolean')?.boolval === true;
+        return true;
+    }
+    const setting = findNodeFields(action.arg, 'VariableSetStmt');
+    if (action.defname !== 'set' || setting === undefined) return false;
+    if (setting.name !== 'search_path' && setting.kind !== 'VAR_RESET_ALL') return false;
+    security.path = setting.kind !== 'VAR_RESET' && setting.kind !== 'VAR_RESET_ALL';
+    return true;
+}
+
+/**
+Record a new function with its security options.
+
+@param statement what the migration runs.
+@param state the schema so far.
+@param migration the file of the statement.
+*/
+export const readCreateFunction: StatementReader<'CreateFunctionStmt'> = (statement, state, migration) => {
+    const options = listNodeFields(statement.fields.options, 'DefElem');
+    const parameters = listNodeFields(statement.fields.parameters, 'FunctionParameter')
+        .filter(({ mode }) => mode !== 'FUNC_PARAM_OUT' && mode !== 'FUNC_PARAM_TABLE')
+        .map(({ argType }) => argType);
+    state.functions.set(buildFunctionKey(statement.fields.funcname, parameters), {
+        migration,
+        statement,
+        definer: options.some(
+            (option) => option.defname === 'security' && findNodeFields(option.arg, 'Boolean')?.boolval === true,
+        ),
+        path: options.some(
+            (option) =>
+                option.defname === 'set' && findNodeFields(option.arg, 'VariableSetStmt')?.name === 'search_path',
+        ),
+    });
+};
+
+/**
+Apply the changed security options of a function.
+
+@param statement what the migration runs.
+@param state the schema so far.
+@param migration the file of the statement.
+*/
+export const readAlterFunction: StatementReader<'AlterFunctionStmt'> = (statement, state, migration) => {
+    const { fields } = statement;
+    const key = buildFunctionKey(fields.func?.objname, listNodeFields(fields.func?.objargs, 'TypeName'));
+    const security = state.functions.get(key) ?? { migration, statement, definer: false, path: false };
+    for (const action of listNodeFields(fields.actions, 'DefElem')) {
+        if (!setFunctionSecurity(security, action)) continue;
+        security.migration = migration;
+        security.statement = statement;
+    }
+    state.functions.set(key, security);
+};
+
+/**
+Forget the functions that a statement drops.
+
+@param statement what the migration runs.
+@param state the schema so far.
+*/
+export function dropFunctions(statement: SqlStatement<'DropStmt'>, state: SchemaState): void {
+    for (const dropped of listNodeFields(statement.fields.objects, 'ObjectWithArgs'))
+        state.functions.delete(buildFunctionKey(dropped.objname, listNodeFields(dropped.objargs, 'TypeName')));
+}

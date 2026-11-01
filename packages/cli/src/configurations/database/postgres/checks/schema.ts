@@ -1,11 +1,17 @@
 import type { Node, Constraint } from '@pgsql/types';
-import type { SqlStatement } from '#cli/types/parsers.ts';
+import type { SqlStatement, SqlNodeFields } from '#cli/types/parsers.ts';
 import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 
+import {
+    dropFunctions,
+    readAlterFunction,
+    readCreateFunction,
+} from '#cli/configurations/database/postgres/checks/functions.ts';
 import {
     PUBLIC_SCHEMA,
     SCHEMA_NAME_INDEX,
     CONSTRAINT_SUFFIXES,
+    POLICY_SCHEMA_INDEX,
     DISABLED_OPTION_VALUES,
     SECURITY_INVOKER_OPTION,
 } from '#cli/config/configurations/infrastructure.ts';
@@ -28,6 +34,7 @@ function qualifyName(schema: string | undefined, name: string | undefined = ''):
 function removeTable(state: SchemaState, table: string): void {
     state.tables.delete(table);
     state.secured.delete(table);
+    state.policies.delete(table);
     state.constraints.delete(table);
     state.indexes = state.indexes.filter((index) => index.table !== table);
 }
@@ -54,6 +61,11 @@ function renameTable(state: SchemaState, table: string, renamed: string): void {
         state.tables.delete(table);
     }
     if (state.secured.delete(table)) state.secured.add(renamed);
+    const policies = state.policies.get(table);
+    if (policies !== undefined) {
+        state.policies.set(renamed, policies);
+        state.policies.delete(table);
+    }
     const constraints = state.constraints.get(table);
     if (constraints !== undefined) {
         state.constraints.set(
@@ -165,10 +177,15 @@ const readAlterTable: StatementReader<'AlterTableStmt'> = (statement, state, mig
 };
 
 const readDrop: StatementReader<'DropStmt'> = (statement, state) => {
+    if (statement.fields.removeType === 'OBJECT_FUNCTION') dropFunctions(statement, state);
     for (const nodeField of listNodeFields(statement.fields.objects, 'List')) {
         const names = listNodeFields(nodeField.items, 'String').map((stringNode) => stringNode.sval ?? '');
         const name = qualifyName(names.at(SCHEMA_NAME_INDEX), names.at(-1));
         const { removeType } = statement.fields;
+        if (removeType === 'OBJECT_POLICY')
+            state.policies
+                .get(qualifyName(names.at(POLICY_SCHEMA_INDEX), names.at(SCHEMA_NAME_INDEX)))
+                ?.delete(names.at(-1) ?? '');
         if (removeType === 'OBJECT_TABLE') removeTable(state, name);
         if (removeType === 'OBJECT_VIEW') state.unprotectedViews.delete(name);
         if (removeType === 'OBJECT_INDEX')
@@ -218,6 +235,19 @@ const STATEMENT_READERS: SqlStatementVisitors<void, [SchemaState, Migration]> = 
             text: migration.text,
         });
     },
+    CreateFunctionStmt: readCreateFunction,
+    AlterFunctionStmt: readAlterFunction,
+    CreatePolicyStmt: ({ fields }, state) => {
+        const table = qualifyName(fields.table?.schemaname, fields.table?.relname);
+        const policies = state.policies.get(table) ?? new Map<string, SqlNodeFields['CreatePolicyStmt']>();
+        policies.set(fields.policy_name ?? '', fields);
+        state.policies.set(table, policies);
+    },
+    AlterPolicyStmt: ({ fields }, state) => {
+        const policies = state.policies.get(qualifyName(fields.table?.schemaname, fields.table?.relname));
+        const policy = policies?.get(fields.policy_name ?? '');
+        if (policy !== undefined) policies?.set(fields.policy_name ?? '', { ...policy, ...fields });
+    },
     RenameStmt: ({ fields }, state) => {
         const { relation = {}, newname: name = '', subname: previous = '' } = fields;
         const table = qualifyName(relation.schemaname, relation.relname);
@@ -251,8 +281,8 @@ const STATEMENT_READERS: SqlStatementVisitors<void, [SchemaState, Migration]> = 
 };
 
 /**
-Replays the parsed migrations in version order and collects the tables, foreign keys, indexed columns, and tables
-with row security that they leave.
+Replays the parsed migrations in version order. Collects what they leave: tables, foreign keys, indexed columns, tables
+with row security, the policies of each table, and functions with their security options.
 
 @param migrations parsed SQL files in version order.
 */
@@ -263,6 +293,8 @@ export function buildDatabaseSchema(migrations: Migration[]): Schema {
         tables: new Map(),
         secured: new Set(),
         unprotectedViews: new Map(),
+        policies: new Map(),
+        functions: new Map(),
     };
     for (const migration of migrations)
         for (const statement of migration.statements) {
@@ -287,5 +319,7 @@ export function buildDatabaseSchema(migrations: Migration[]): Schema {
         unprotectedViews: state.unprotectedViews,
         foreignKeys,
         indexed,
+        policies: state.policies,
+        functions: state.functions,
     };
 }

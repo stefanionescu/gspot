@@ -16,11 +16,12 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Parsed, SqlNodeFields } from '#cli/types/parsers.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
-import type { Parsed, SqlStatement, SqlNodeFields } from '#cli/types/parsers.ts';
 import { formatOutputTail, assertToolFindings } from '#cli/engine/tool-runs/output.ts';
+import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
 import { denoLintOutputSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 
@@ -44,6 +45,7 @@ import {
     FUNCTION_ENTRYPOINT,
     SUPABASE_CHECK_RULES,
     DENO_IMPORT_MAP_FLAG,
+    STORAGE_POLICY_TABLE,
     SERVICE_ROLE_KEY_TAGS,
     SUPABASE_PROJECT_FILE,
     SERVICE_ROLE_KEY_NAMES,
@@ -83,36 +85,6 @@ function listBucketConditions(node: Node | undefined): string[] {
     const expression = findNodeFields(node, 'A_Expr');
     if (expression === undefined || listNodeFields(expression.name, 'String')[0]?.sval !== '=') return [];
     return expression.kind === 'AEXPR_OP' ? listEqualityBuckets(expression) : listMembershipBuckets(expression);
-}
-
-function removePolicies(fields: SqlNodeFields['DropStmt'], policies: StoragePolicies): void {
-    if (fields.removeType !== 'OBJECT_POLICY') return;
-    for (const names of listNodeFields(fields.objects, 'List')) {
-        const path = listNodeFields(names.items, 'String').map(({ sval }) => sval);
-        if (path[0] === 'storage' && path[1] === 'objects' && path[2] !== undefined) policies.delete(path[2]);
-    }
-}
-
-function setPolicy(statement: SqlStatement<'CreatePolicyStmt' | 'AlterPolicyStmt'>, policies: StoragePolicies): void {
-    const fields = statement.fields;
-    const { table, policy_name: name } = fields;
-    if (table?.schemaname !== 'storage' || table.relname !== 'objects' || name === undefined) return;
-    if (statement.kind === 'CreatePolicyStmt') policies.set(name, fields);
-    else if (policies.has(name)) policies.set(name, { ...policies.get(name), ...fields });
-}
-
-function listCoveredBuckets(statements: SqlStatement[]): Set<string> {
-    const policies: StoragePolicies = new Map();
-    for (const statement of statements) {
-        if (statement.kind === 'DropStmt') removePolicies(statement.fields, policies);
-        if (statement.kind === 'CreatePolicyStmt' || statement.kind === 'AlterPolicyStmt')
-            setPolicy(statement, policies);
-    }
-    return new Set(
-        [...policies.values()].flatMap((policy) =>
-            [policy.qual, policy.with_check].flatMap((node) => listBucketConditions(node)),
-        ),
-    );
 }
 
 function buildDenoJsonArguments(root: string, folder: string, importMap: string | undefined): string[] {
@@ -228,7 +200,12 @@ export async function checkStoragePolicies(session: Session, planned: PlannedChe
     if ('error' in parsed) return [parsed.error];
     const place = { file: joinScope(planned.scope.path, SUPABASE_PROJECT_FILE), line: 1 };
     const migrations = await readParsedMigrations(session, planned);
-    const policed = listCoveredBuckets(migrations.flatMap((migration) => migration.statements));
+    const policies = buildDatabaseSchema(migrations).policies.get(STORAGE_POLICY_TABLE)?.values() ?? [];
+    const policed = new Set(
+        [...policies].flatMap((policy) =>
+            [policy.qual, policy.with_check].flatMap((node) => listBucketConditions(node)),
+        ),
+    );
     return (parsed.value.storage?.buckets === undefined ? [] : Object.keys(parsed.value.storage.buckets))
         .filter((bucket) => !policed.has(bucket))
         .map((bucket) => ({

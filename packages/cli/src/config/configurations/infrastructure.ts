@@ -76,6 +76,10 @@ export const CONSTRAINT_SUFFIXES: Readonly<Record<string, string>> = {
 
 export const SCHEMA_NAME_INDEX = -2;
 
+export const POLICY_SCHEMA_INDEX = -3;
+
+export const STORAGE_POLICY_TABLE = 'storage.objects';
+
 export const SQUAWK_DEFAULT_LEVEL_OFF = [
     'prefer-bigint-over-int',
     'prefer-bigint-over-smallint',
