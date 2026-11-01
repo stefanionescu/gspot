@@ -11,7 +11,7 @@ import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import type { IndexedPythonProject } from '#tests/types/packages.ts';
+import type { IndexedPythonProject } from '#tests/types/integration.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
 import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';

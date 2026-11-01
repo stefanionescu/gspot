@@ -3,7 +3,7 @@ import { format } from 'prettier';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import type { GspotProject } from '#tests/types/packages.ts';
+import type { GspotProject } from '#tests/types/setup.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';

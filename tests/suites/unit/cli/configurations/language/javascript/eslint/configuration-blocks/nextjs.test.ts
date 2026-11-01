@@ -1,6 +1,6 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import type { EslintConfiguration } from '#tests/types/tools.ts';
+import type { EslintConfiguration } from '#tests/types/setup.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 

@@ -16,7 +16,7 @@ import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { GITHUB_EXPRESSION_MESSAGE } from '#cli/config/generation.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { type GithubWorkflow, type GitlabPipeline } from '#tests/types/ci.ts';
+import type { GithubWorkflow, GitlabPipeline } from '#tests/types/setup.ts';
 import { SETUP_CASES, LINUX_PIPELINE, SETUP_ARGUMENTS } from '#tests/config/generation/files.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/ci.ts';
 

@@ -3,15 +3,13 @@ import { join, dirname } from 'node:path';
 import { openSession } from '#cli/engine/session.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import type { Sandbox } from '#tests/types/sandbox.ts';
 import { runGspotStep } from '#tests/setup/cli/commands.ts';
-import type { SandboxWrite } from '#tests/types/changes.ts';
-import type { SandboxChanges } from '#tests/types/samples.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { runGitStep, markExecutable } from '#tests/setup/system/git.ts';
+import type { Sandbox, SandboxWrite, SandboxChanges } from '#tests/types/setup.ts';
 import { rm, mkdir, lstat, rmdir, unlink, readFile, writeFile } from 'node:fs/promises';
 
 async function deleteLeftover(root: string, path: string): Promise<void> {

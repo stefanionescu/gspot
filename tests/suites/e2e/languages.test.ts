@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
-import type { GspotProject } from '#tests/types/packages.ts';
+import type { GspotProject } from '#tests/types/setup.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { PROSE_CHECK, SWIFT_CHECK } from '#tests/config/e2e.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';

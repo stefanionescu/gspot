@@ -4,8 +4,8 @@ import { writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { type SizeCase } from '#tests/types/function-size.ts';
 import { BASH_HEADER } from '#tests/config/setup/languages.ts';
+import type { SizeCase } from '#tests/types/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 

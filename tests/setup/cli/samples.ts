@@ -2,13 +2,19 @@ import { join } from 'node:path';
 import { expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { type Sandbox } from '#tests/types/sandbox.ts';
 import type { CheckResult } from '#cli/types/engine/run.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
-import { type ProcessOutput } from '#tests/types/processes.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { changeSandbox, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
-import { type SampleFix, type CheckSample, type SampleResult, type SandboxChanges } from '#tests/types/samples.ts';
+
+import type {
+    Sandbox,
+    SampleFix,
+    CheckSample,
+    SampleResult,
+    ProcessOutput,
+    SandboxChanges,
+} from '#tests/types/setup.ts';
 
 /**
 Apply a check sample, run it before and after its fix, and restore its files when the caller leaves its scope.

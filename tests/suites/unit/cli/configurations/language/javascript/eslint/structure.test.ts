@@ -4,9 +4,10 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
+import type { LintFinding } from '#tests/types/setup.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import type { SourceRuleCase } from '#tests/types/configurations.ts';
 import { LINGUIST_GENERATED_PATTERN } from '#tests/config/setup/programs.ts';
-import { type LintFinding, type SourceRuleCase } from '#tests/types/tools.ts';
 import { buildEslint, listFindingRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { INDEX_ONLY_REEXPORTS } from '#tests/config/configurations/javascript/configuration-blocks.ts';
 

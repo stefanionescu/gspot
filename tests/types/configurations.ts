@@ -1,14 +1,4 @@
-import type { Linter } from 'eslint';
-
-export type LintFinding = { rule: Linter.LintMessage['ruleId']; file: string; line: Linter.LintMessage['line'] };
-
-export type EslintConfiguration = {
-    rules: Record<string, [Linter.Severity, ...unknown[]]>;
-    languageOptions: { globals: Record<string, string | boolean>; sourceType: string };
-    plugins: Record<string, unknown>;
-    settings: { next?: { rootDir: string } | undefined } & Record<string, unknown>;
-    linterOptions: { reportUnusedDisableDirectives: Linter.Severity };
-};
+export type SizeCase = { file: string; rule: string; line: number; source: string; corrected: string; message: string };
 
 export type SourceRuleCase = { name?: string; source: string; rule: string; count: number };
 
@@ -16,13 +6,6 @@ export type ScriptFindingCase = {
     file: string;
     everyLevel: readonly { ruleId: string | null; line: number }[];
     all?: readonly { ruleId: string | null; line: number }[];
-};
-
-export type LinterJsonFinding = {
-    code?: string;
-    rule_id?: string;
-    line?: number;
-    location?: { row: number };
 };
 
 export type RuffConfig = {

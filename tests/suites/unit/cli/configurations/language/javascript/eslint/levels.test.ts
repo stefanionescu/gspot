@@ -8,7 +8,7 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
-import type { EslintConfiguration } from '#tests/types/tools.ts';
+import type { EslintConfiguration } from '#tests/types/setup.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

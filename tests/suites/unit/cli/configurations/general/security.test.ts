@@ -3,9 +3,9 @@ import { parseDocument } from 'yaml';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
-import type { SemgrepRuleFile } from '#tests/types/tools.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import type { SemgrepRuleFile } from '#tests/types/configurations.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { getConfigPath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 

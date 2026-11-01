@@ -7,7 +7,7 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { LINE_BREAK } from '#tests/config/setup/sandboxes.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import type { ProcessOutput } from '#tests/types/processes.ts';
+import type { CiDocument } from '#tests/types/integration.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
@@ -15,7 +15,7 @@ import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { CLI_BIN, applyThenInstall } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { type CiDocument, type GithubWorkflow } from '#tests/types/ci.ts';
+import type { ProcessOutput, GithubWorkflow } from '#tests/types/setup.ts';
 import { CI_CHECKS, GITHUB_WORKFLOW } from '#tests/config/integration/infrastructure.ts';
 
 async function prepareCiProject(root: string, provider: 'gitlab' | 'github') {

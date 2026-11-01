@@ -8,7 +8,7 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
 import { runGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
-import type { LintFinding, EslintConfiguration } from '#tests/types/tools.ts';
+import type { LintFinding, EslintConfiguration } from '#tests/types/setup.ts';
 
 /**
 Lint the files and keep the findings of these rules and fatal errors, sorted.

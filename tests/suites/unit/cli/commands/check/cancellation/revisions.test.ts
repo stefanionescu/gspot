@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
+import type { PausedGit } from '#tests/types/setup.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { type PausedGit } from '#tests/types/processes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import type { PushReport } from '#cli/types/commands/reports.ts';

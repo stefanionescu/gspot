@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
-import { type NpmRegistry, type PackedPackage, type RegistryPackage } from '#tests/types/packages.ts';
+import type { NpmRegistry, PackedPackage, RegistryPackage } from '#tests/types/setup.ts';
 
 import {
     REGISTRY_HOST,

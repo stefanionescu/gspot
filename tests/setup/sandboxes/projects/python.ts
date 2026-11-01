@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { createFileTree } from 'testdirs';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import type { PythonProject } from '#tests/types/packages.ts';
+import type { PythonProject } from '#tests/types/setup.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';

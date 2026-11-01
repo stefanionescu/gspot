@@ -20,7 +20,7 @@ allow_digits = true
 reason = "Starlight routes the HTTP 404 page by this filename."
 
 [[naming.override]]
-paths = ["tests/types/tools.ts"]
+paths = ["tests/types/integration.ts"]
 allowed_names = ["rule_id"]
 reason = "SwiftLint JSON diagnostics identify the native rule using rule_id."
 
@@ -53,7 +53,7 @@ allowed_names = ["checkDenoCheck"]
 reason = "Check functions start with check and spell the check name of supabase/deno-check."
 
 [[naming.override]]
-paths = ["tests/types/ci.ts"]
+paths = ["tests/types/setup.ts"]
 allowed_names = ["with"]
 reason = "GitHub Actions calls its action argument record with."
 
@@ -103,7 +103,7 @@ allowed_names = ["raw"]
 reason = "toml-patch and the TypeScript compiler API name the source text raw."
 
 [[naming.override]]
-paths = ["packages/cli/src/config/configurations/javascript.ts", "packages/cli/src/configurations/language/javascript/knip.ts", "tests/types/tools.ts"]
+paths = ["packages/cli/src/config/configurations/javascript.ts", "packages/cli/src/configurations/language/javascript/knip.ts", "tests/types/configurations.ts"]
 allowed_names = ["KNIP_JAVASCRIPT_ENTRY_FILES", "selectEntryFiles", "entry", "entries"]
 reason = "knip names its start files entry, and tools.knip.entry passes them on."
 

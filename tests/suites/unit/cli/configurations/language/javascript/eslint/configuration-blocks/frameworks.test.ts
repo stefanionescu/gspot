@@ -1,6 +1,6 @@
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { type EslintConfiguration } from '#tests/types/tools.ts';
+import type { EslintConfiguration } from '#tests/types/setup.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { STRICT_TSCONFIG_TEXT } from '#tests/config/setup/languages.ts';
 import { buildEslint, readEslintRules, listLintFindings } from '#tests/setup/eslint/lint.ts';

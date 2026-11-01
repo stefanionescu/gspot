@@ -7,14 +7,13 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { formatSchema } from '#cli/schemas/settings/fields.ts';
-import type { ProcessOutput } from '#tests/types/processes.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkPackages } from '#tests/setup/sandboxes/node-modules.ts';
 import { commitAll, markExecutable } from '#tests/setup/system/git.ts';
 import { runGspot, spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
 import { SANDBOX_GITIGNORE, SANDBOX_PACKAGE_JSON } from '#tests/config/setup/sandboxes.ts';
-import { type Sandbox, type SandboxPlan, type InstalledSandboxPlan } from '#tests/types/sandbox.ts';
+import type { Sandbox, SandboxPlan, ProcessOutput, InstalledSandboxPlan } from '#tests/types/setup.ts';
 
 async function pinSandboxNpm(root: string): Promise<void> {
     const npm = await runCommand(['npm', '--version'], { cwd: root });

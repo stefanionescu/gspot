@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
+import type { Sandbox } from '#tests/types/setup.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { type Sandbox } from '#tests/types/sandbox.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';

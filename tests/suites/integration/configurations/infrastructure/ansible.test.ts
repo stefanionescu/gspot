@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { test, expect, describe } from 'bun:test';
-import type { Sandbox } from '#tests/types/sandbox.ts';
+import type { Sandbox } from '#tests/types/setup.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { COMMAND_PLAYBOOK } from '#tests/config/setup/configurations.ts';

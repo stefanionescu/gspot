@@ -2,7 +2,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { buildEslint } from '#tests/setup/eslint/lint.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import type { EslintConfiguration } from '#tests/types/tools.ts';
+import type { EslintConfiguration } from '#tests/types/setup.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 test('Astro and TypeScript parse together and report component defects', async () => {

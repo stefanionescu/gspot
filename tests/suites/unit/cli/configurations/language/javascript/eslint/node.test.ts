@@ -5,8 +5,9 @@ import { testdir, createFileTree } from 'testdirs';
 import type { Level } from '#cli/types/settings.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import type { ScriptFindingCase } from '#tests/types/configurations.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { type LintFinding, type ScriptFindingCase, type EslintConfiguration } from '#tests/types/tools.ts';
+import type { LintFinding, EslintConfiguration } from '#tests/types/setup.ts';
 
 import {
     ENGINE_PATHS,

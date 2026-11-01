@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { executableLayout } from '#cli/system/paths.ts';
-import type { ProgramName } from '#tests/types/programs.ts';
+import type { ProgramName } from '#tests/types/setup.ts';
 
 /**
 Build the arguments that run one of the test programs in tests/setup/programs, after the Bun executable.

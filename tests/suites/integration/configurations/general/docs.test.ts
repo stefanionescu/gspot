@@ -5,7 +5,7 @@ import { writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
-import type { LinkFailure } from '#tests/types/reports.ts';
+import type { LinkFailure } from '#tests/types/integration.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';

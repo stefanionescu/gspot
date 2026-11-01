@@ -11,7 +11,7 @@ import type { ApplyReport } from '#cli/types/generation.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { listOutdatedFiles } from '#cli/generation/outdated.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import type { PackageFieldScenario } from '#tests/types/write.ts';
+import type { PackageFieldScenario } from '#tests/types/setup.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { MANAGED_KEYS_NOTE } from '#tests/config/setup/sandboxes.ts';
