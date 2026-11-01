@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
 import { readModuleName } from '../modules.ts';
+import { ASTUtils, TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { readLiteralValue, readExpressionValue, readOptionProperties } from '../expressions.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
     MINIMUM_HSTS_AGE,
@@ -10,25 +10,13 @@ import {
     DISABLED_SECURITY_HEADERS,
 } from '../config/security.ts';
 
-function isModuleExport(node: TSESTree.Node): boolean {
-    if (node.type !== AST_NODE_TYPES.MemberExpression) return false;
-    if (node.object.type === AST_NODE_TYPES.Identifier)
-        return node.object.name === 'module' && ASTUtils.getPropertyName(node) === 'exports';
-    return isModuleExport(node.object);
-}
-
-function isInjectedApplication(node: TSESTree.Node, name: string): boolean {
-    if (name !== 'app' || node.parent?.type !== AST_NODE_TYPES.AssignmentExpression) return false;
-    return isModuleExport(node.parent.left);
-}
-
 function isApplication(identifier: TSESTree.Identifier, source: TSESLint.SourceCode): boolean {
     const variable = ASTUtils.findVariable(source.getScope(identifier), identifier);
     return (
         variable?.defs.some((definition) => {
             if (definition.node.range[0] > identifier.range[0]) return false;
-            if (definition.node.type !== AST_NODE_TYPES.VariableDeclarator)
-                return isInjectedApplication(definition.node, identifier.name);
+            if (definition.type === TSESLint.Scope.DefinitionType.Parameter) return identifier.name === 'app';
+            if (definition.node.type !== AST_NODE_TYPES.VariableDeclarator) return false;
             if (definition.node.init?.type !== AST_NODE_TYPES.CallExpression) return false;
             const name = readModuleName(definition.node.init.callee, source);
             return name !== undefined && POWERED_BY_FACTORIES.has(name);
