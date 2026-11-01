@@ -103,7 +103,6 @@ export const LINUX_PIPELINE = {
     operatingSystems: ['linux' as const],
     linuxRunner: 'ubuntu-24.04' as const,
     lockfiles: ['package-lock.json', 'web/pnpm-lock.yaml'],
-    hasSwift: false,
     projectInstall: [],
     packageManagers: ['npm' as const, 'pnpm' as const],
 };

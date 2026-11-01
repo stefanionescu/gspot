@@ -104,7 +104,7 @@ export const DEFAULT_CASES = [
         source: `level="basic"
 tool_timeout_seconds=600
 [hooks]
-enabled=false
+enabled=true
 [format]
 indent_style="space"
 indent_width=4

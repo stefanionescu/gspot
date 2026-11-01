@@ -159,6 +159,8 @@ export const RULE_OPENING_PREFIX = 'Read this rule ';
 
 export const MARKDOWN_HEADING = /^(#{1,5}) /u;
 
+export const CI_SYSTEMS_SETTING = 'ci.operating_systems';
+
 export const SETTINGS_COMMANDS = ['set', 'unset', 'unignore'] as const;
 
 export const COMMANDS_HEADING = '## Commands';

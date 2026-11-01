@@ -5,6 +5,7 @@ import { listPackagePins } from '#cli/tools/pins.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
+import { getSettingValue } from '#cli/settings/inherit.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { AGENTS_FILE } from '#cli/config/repository/setup.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
@@ -13,17 +14,17 @@ import { buildLinkFieldEdits } from '#cli/generation/links.ts';
 import { listHookNames } from '#cli/tools/installers/hooks.ts';
 import type { Session, Generation } from '#cli/types/tools.ts';
 import { buildMiseInstall } from '#cli/tools/installers/mise.ts';
-import { isConfigurationSelected } from '#cli/manifests/select.ts';
 import { buildPythonInstall } from '#cli/tools/installers/pypi.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
+import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { FROZEN_INSTALLS } from '#cli/config/repository/javascript.ts';
 import { parseAttributePatterns } from '#cli/repository/git/output.ts';
-import { SWIFT_CONFIGURATION } from '#cli/config/configurations/structure.ts';
 import { readPackageManagerVersion } from '#cli/repository/javascript/package-manager.ts';
-import type { RuleFile, FrozenLockfile, CiPackageManager } from '#cli/types/generation.ts';
 import { buildBunScannerEdits } from '#cli/configurations/general/dependencies/generate.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { LFS_FILTER, FILTER_ATTRIBUTE, GITATTRIBUTES_FILE } from '#cli/config/repository/files.ts';
+import type { Pipeline, RuleFile, FrozenLockfile, CiPackageManager } from '#cli/types/generation.ts';
 
 import {
     buildGithubWorkflow,
@@ -35,6 +36,7 @@ import {
     LF_ATTRIBUTES,
     NPM_TOOL_PROJECT,
     AUTO_LF_ATTRIBUTES,
+    CI_SYSTEMS_SETTING,
     TOOL_FOLDER_IGNORES,
     GIT_ATTRIBUTES_BLOCK,
     ATTRIBUTE_GLOB_CHARACTERS,
@@ -70,10 +72,14 @@ function addWorkflow(session: Session, generated: Generation): void {
                       ),
             setupCommand: settings.ci.setup_command,
             projectInstall: settings.ci.setup_command === undefined ? listProjectInstallLines(session) : [],
-            operatingSystems: settings.ci.operating_systems,
+            operatingSystems: getSettingValue(
+                buildAvailableSettings(listSelectedConfigurations(scopes), settings.level),
+                settings,
+                CI_SYSTEMS_SETTING,
+                '',
+            )?.value as Pipeline['operatingSystems'],
             linuxRunner: settings.ci.linux_runner,
             lockfiles,
-            hasSwift: isConfigurationSelected(scopes, SWIFT_CONFIGURATION),
             packageManagers,
         }),
     );
@@ -151,7 +157,7 @@ export function buildGeneratedFiles(session: Session): Generation {
         ...buildLinkFieldEdits(session, generated.files, configs),
     );
     generated.files.push(
-        ...(settings.hooks?.enabled === true
+        ...(settings.hooks.enabled
             ? buildHookFiles(session.startRunner, listHookNames(session.configuredChecks), {
                   hasLfsFiles: session.repository.attributes
                       .values()

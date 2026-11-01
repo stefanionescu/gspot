@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { join, delimiter } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import type { Pipeline } from '#cli/types/generation.ts';
@@ -49,14 +50,27 @@ test('the cache key escapes apostrophes without restoring another key', () => {
     expect(restore.with?.['restore-keys']).toBeUndefined();
 });
 
-test('a Swift scope adds a macOS job and the Linux job uses the configured runner', () => {
-    const pipeline = LINUX_PIPELINE;
-
+test('two operating systems get one job each, and the Linux job uses the configured runner', () => {
     const workflow = parse(
-        buildGithubWorkflow({ ...pipeline, hasSwift: true, linuxRunner: 'linux-large' }).content,
+        buildGithubWorkflow({
+            ...LINUX_PIPELINE,
+            operatingSystems: ['linux', 'macos'],
+            linuxRunner: 'linux-large',
+        }).content,
     ) as GithubWorkflow;
     expect(Object.keys(workflow.jobs)).toStrictEqual(['lint-linux', 'lint-macos']);
     expect(workflow.jobs['lint-linux']?.['runs-on']).toBe('linux-large');
+});
+
+test('the swift configuration defaults the CI jobs to Linux and macOS', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['swift'], { tables: '[ci]\nenabled = true\n' }),
+        'Package.swift': '// swift-tools-version: 6.0\n',
+    });
+    const applied = await runGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const workflow = parse(await readFile(join(sandbox.path, '.github/workflows/gspot.yml'), 'utf8')) as GithubWorkflow;
+    expect(Object.keys(workflow.jobs)).toStrictEqual(['lint-linux', 'lint-macos']);
 });
 
 test.each([...SETUP_CASES])(

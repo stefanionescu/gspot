@@ -128,7 +128,7 @@ async function readCiState(session: Session): Promise<CiState & { text: string }
 
 async function readHookState(session: Session): Promise<HookStatus> {
     const hooks = await readHookStatus(session, session.repository);
-    if (!hooks.ready || session.settings.hooks?.enabled !== true) return hooks;
+    if (!hooks.ready || !session.settings.hooks.enabled) return hooks;
     const { command, installCommand } = session.startRunner;
     const versionCommand = [...command.split(' '), VERSION_FLAG];
     const result = await spawnProcess(versionCommand, { cwd: session.root, timeoutSeconds: session.timeoutSeconds });

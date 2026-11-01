@@ -1,5 +1,4 @@
 import { posix } from 'node:path';
-import { setKey } from '#cli/settings/edit.ts';
 import { isTable } from '#cli/system/tables.ts';
 import { find } from '#cli/system/files/reads.ts';
 import { GspotError } from '#cli/system/errors.ts';
@@ -131,8 +130,6 @@ export function buildInitSettings(
     configurationsByName: Map<string, Configuration>,
 ): string {
     const document = buildSettingsTable(draft, repository, configurationsByName);
-    setKey(document, 'hooks.enabled', true);
-    setKey(document, 'rule_files.enabled', true);
     delete document['ci'];
     const checked = settingsSchema.safeParse(document);
     if (draft.template !== undefined && !checked.success) {

@@ -13,6 +13,9 @@ project_files = ["Package.swift"]
 extensions = [".swift"]
 filenames = ["Package.swift", "Package.resolved", "*.xctestplan"]
 
+[defaults]
+"ci.operating_systems" = ["linux", "macos"]
+
 [rules]
 "SWIFTUI.md" = { tags = ["swift-import:SwiftUI"] }
 "SWIFT-TESTS.md" = { tags = ["swift-test", "swift-test-target"] }

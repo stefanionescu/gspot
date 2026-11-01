@@ -137,7 +137,7 @@ export type Settings = Omit<
     test_files: string[];
     ignore: IgnoreRecord[];
     commandChecks: Record<string, CommandCheck>;
-    hooks?: Defined<Required<NonNullable<ParsedSettings['hooks']>>> | undefined;
+    hooks: Defined<Required<ParsedSettings['hooks']>>;
     ci?: ParsedSettings['ci'];
     scopes: Map<string, NonNullable<ParsedSettings['scope']>[number] & Pick<Settings, 'written'>>;
 };

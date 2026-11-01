@@ -235,7 +235,7 @@ export const settingsSchema = z
         limits: limitsSchema.prefault({}),
         naming: namingSchema.prefault({}),
         structure: rootStructure.unwrap().prefault({}),
-        hooks: hooksSchema.optional(),
+        hooks: hooksSchema.prefault({}),
         ci: ciSchema.optional(),
         rule_files: ruleFilesSchema.prefault({}),
     })

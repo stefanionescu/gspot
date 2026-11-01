@@ -225,7 +225,7 @@ export const generalTableSchemas = {
 };
 
 export const hooksSchema = z.strictObject({
-    enabled: z.boolean().default(false).meta({
+    enabled: z.boolean().default(true).meta({
         description: 'Install and run the configured Git hooks.',
     }),
 });

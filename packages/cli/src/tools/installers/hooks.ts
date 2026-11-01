@@ -35,7 +35,7 @@ async function planHooks(session: Session): Promise<HookPlan> {
     const { repository } = session;
     const { settings } = session;
     const { hooksPath, hooks } = await readHooks(repository);
-    if (settings.hooks?.enabled !== true)
+    if (!settings.hooks.enabled)
         return hooksPath === GSPOT_PATHS.hooks ? { command: UNSET_HOOKS_PATH, note: UNSET_HOOKS_NOTE } : { note: '' };
     if (hooksPath === GSPOT_PATHS.hooks) return { note: '' };
     if (hooks.length > 0) return { note: formatForeignHooks(hooks, session) };
@@ -79,7 +79,7 @@ Check whether the hooks in the settings run in this repository.
 */
 export async function readHookStatus(session: Session, repository: Pick<Repository, 'root'>): Promise<HookStatus> {
     const { settings } = session;
-    if (settings.hooks?.enabled !== true) return { ready: true, text: 'none' };
+    if (!settings.hooks.enabled) return { ready: true, text: 'none' };
     const { hooksPath, hooks: foreign } = await readHooks(repository);
     if (hooksPath === GSPOT_PATHS.hooks) return { ready: true, text: 'installed', tool: 'gspot' };
     if (foreign.length > 0) {

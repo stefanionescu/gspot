@@ -158,7 +158,7 @@ export function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
     const commands = [...(pipeline.setupCommand ?? []), ...pipeline.projectInstall, buildGspotTools(pipeline)];
     if (commands.some((command) => command.includes(GITHUB_EXPRESSION_START)))
         throw new GspotError('settings', GITHUB_EXPRESSION_MESSAGE);
-    const platforms = [...new Set([...pipeline.operatingSystems, ...(pipeline.hasSwift ? (['macos'] as const) : [])])];
+    const platforms = pipeline.operatingSystems;
     const jobs = platforms.map((platform): [string, Record<string, unknown>] =>
         platforms.length === 1
             ? [CI_JOB_NAME, buildJob(pipeline, platform)]
