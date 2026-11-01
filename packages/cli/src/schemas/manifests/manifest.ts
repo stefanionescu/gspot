@@ -50,6 +50,7 @@ const filesSchema = z.strictObject({
     tags: stringsSchema,
     paths: stringsSchema,
     languages: z.boolean().default(false),
+    test_files: z.boolean().default(false),
     prettier_plugins: z.boolean().default(false),
     eslint_plugins: z.boolean().default(false),
     kinds: fileKindSchema.array().default(['source']),

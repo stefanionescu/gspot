@@ -151,6 +151,8 @@ export const DETECTED_BY = 'Detected by';
 
 export const LANGUAGE_FILES_MESSAGE = 'every file a language configuration selects';
 
+export const TEST_FILES_MESSAGE = 'the files that test_files names';
+
 export const PRETTIER_FILES_MESSAGE = 'the file types of the selected Prettier plugins';
 
 export const ESLINT_FILES_MESSAGE = 'the file types of the selected ESLint plugins';

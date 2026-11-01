@@ -265,8 +265,6 @@ export const MARKDOWN_EXTENSION = '.md';
 
 export const TEXT_ATTRIBUTE = 'text';
 
-export const TEST_FILES_PLACEHOLDER = '{setting:test_files}';
-
 export const EXECUTABLE_BITS = 0o111;
 
 export const GIT_INDEX_FILES_ARGUMENTS = ['ls-files', '--stage', '-z'] as const;

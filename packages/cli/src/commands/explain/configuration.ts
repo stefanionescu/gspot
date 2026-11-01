@@ -12,6 +12,7 @@ import type { Explanation, ConfigurationExplanation } from '#cli/types/commands/
 import {
     TOOL_PINS,
     DETECTED_BY,
+    TEST_FILES_MESSAGE,
     ESLINT_FILES_MESSAGE,
     LANGUAGE_FILES_MESSAGE,
     PRETTIER_FILES_MESSAGE,
@@ -71,6 +72,7 @@ export function explainConfiguration(session: Session | undefined, name: string)
         { label: 'Exclusions', values: detection.exclusions.map((condition) => condition.replaceAll(CODE_MARK, '')) },
         { label: 'Files', values: [...files.extensions, ...files.filenames, ...files.paths, ...files.tags] },
         { label: 'Files', values: files.languages ? [LANGUAGE_FILES_MESSAGE] : [] },
+        { label: 'Files', values: files.test_files ? [TEST_FILES_MESSAGE] : [] },
         { label: 'Files', values: files.prettier_plugins ? [PRETTIER_FILES_MESSAGE] : [] },
         { label: 'Files', values: files.eslint_plugins ? [ESLINT_FILES_MESSAGE] : [] },
         { label: 'Requires', values: facts.requires },

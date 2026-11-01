@@ -3,9 +3,9 @@ import type { Configuration } from '#cli/types/manifests.ts';
 import { listPathTags } from '#cli/repository/files/classify.ts';
 import { listSourceConfigurations } from '#cli/manifests/select.ts';
 import { escapeGlob, extractExtension } from '#cli/system/paths.ts';
+import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
 import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/matchers.ts';
 import type { TrackedFile, CoveredFilesOptions } from '#cli/types/repository.ts';
-import { SETTING_PLACEHOLDER, TEST_FILES_PLACEHOLDER } from '#cli/config/repository/files.ts';
 
 function addPluginExtensions(table: Configuration['files'], configurations: Configuration[]): Configuration['files'] {
     if (!table.prettier_plugins && !table.eslint_plugins) return table;
@@ -35,11 +35,9 @@ function buildCoverageMatcher(
     table: Configuration['files'],
     { configurations, scopePath: scope, settings }: CoveredFilesOptions,
 ): (file: Pick<TrackedFile, 'path' | 'tags'>) => boolean {
-    const ownsTests = table.paths.includes(TEST_FILES_PLACEHOLDER);
-    const tests = buildPathMatcher(settings.test_files);
+    const tests = buildPathMatcher(table.test_files ? settings.test_files : []);
     const defaults: Configuration['files'][] = [];
     const settingPatterns = table.paths.flatMap((path) => {
-        if (path === TEST_FILES_PLACEHOLDER) return [];
         const name = path.matchAll(SETTING_PLACEHOLDER).toArray()[0]?.groups?.['name'];
         if (name === undefined) return [];
         const value = settings.valuesByKey[name];
@@ -55,9 +53,7 @@ function buildCoverageMatcher(
     const owners = addPluginExtensions(
         {
             ...table,
-            paths: table.paths.filter(
-                (path) => path !== TEST_FILES_PLACEHOLDER && path.matchAll(SETTING_PLACEHOLDER).toArray().length === 0,
-            ),
+            paths: table.paths.filter((path) => path.matchAll(SETTING_PLACEHOLDER).toArray().length === 0),
         },
         configurations,
     );
@@ -68,9 +64,7 @@ function buildCoverageMatcher(
     ].map((files) => buildFileMatcher(files));
     return (file) => {
         const scopeFile = { ...file, path: scope === '' ? file.path : file.path.slice(scope.length + 1) };
-        return (
-            (ownsTests && tests(file.path)) || settingMatches(file.path) || matches.some((match) => match(scopeFile))
-        );
+        return tests(file.path) || settingMatches(file.path) || matches.some((match) => match(scopeFile));
     };
 }
 

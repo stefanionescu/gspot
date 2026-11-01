@@ -46,6 +46,7 @@ export const COMMAND_CHECK_DEFAULTS = {
         filenames: [],
         tags: [],
         languages: false,
+        test_files: false,
         prettier_plugins: false,
         eslint_plugins: false,
         kinds: ['source', 'generated'],

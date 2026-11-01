@@ -8,7 +8,8 @@ dependencies = ["jest"]
 filenames = ["jest.config.*"]
 
 [files]
-paths = ["{setting:test_files}", "**/jest.config.*"]
+paths = ["**/jest.config.*"]
+test_files = true
 
 [[tool]]
 name = "jest"
