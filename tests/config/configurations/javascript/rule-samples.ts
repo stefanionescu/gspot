@@ -4,7 +4,7 @@ const IDENTICAL_BODY =
 const SHORT_BODY =
     '    const step1 = value + 1;\n    const step2 = value + 2;\n    const step3 = value + 3;\n    return step3;';
 
-export const SONAR_FLOW_SAMPLES = [
+export const FLOW_SAMPLES = [
     {
         name: 'switch',
         rule: 'gspot/no-small-switch',
@@ -175,7 +175,7 @@ export const SONAR_FLOW_SAMPLES = [
     },
 ] as const;
 
-export const SONAR_TYPE_SAMPLES = [
+export const TYPE_SAMPLES = [
     {
         name: 'ignored',
         rule: 'gspot/no-ignored-return',

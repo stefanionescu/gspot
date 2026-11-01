@@ -5,7 +5,7 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { ESLINT_LEVEL_CASES } from '#tests/config/configurations/javascript/configuration-blocks.ts';
 
-test.each(ESLINT_LEVEL_CASES)('%s preserves discarded postfix checks in %s', async (level, extension) => {
+test.each(ESLINT_LEVEL_CASES)('%s reports discarded postfix checks in %s', async (level, extension) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([extension === 'js' ? 'javascript' : 'typescript'], { level }),
         'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
@@ -15,7 +15,7 @@ test.each(ESLINT_LEVEL_CASES)('%s preserves discarded postfix checks in %s', asy
     });
     const eslint = await buildEslint(sandbox.path);
     const files = [`assignment.${extension}`, `return.${extension}`];
-    const rules = ['gspot/no-discarded-postfix', 'sonarjs/no-useless-increment'];
+    const rules = ['gspot/no-discarded-postfix'];
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([
         { file: `assignment.${extension}`, rule: 'gspot/no-discarded-postfix', line: 1 },
         { file: `return.${extension}`, rule: 'gspot/no-discarded-postfix', line: 1 },

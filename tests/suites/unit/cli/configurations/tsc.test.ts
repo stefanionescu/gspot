@@ -104,7 +104,7 @@ test('a solution builds referenced projects in a copy and leaves each scope its 
     ).toStrictEqual([{ file: 'neighbor/source.ts', rule: 'TS2322' }]);
 });
 
-test('a strict project reports the type errors that SonarJS rules also reported', async () => {
+test('a strict project reports argument, index, comparison, constructor, name, membership, and null errors', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
         'package.json': '{"private":true,"type":"module"}\n',

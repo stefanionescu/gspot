@@ -32,7 +32,6 @@ import {
     NODE_RUNTIMES,
     RUNTIME_GLOBALS,
     PIN_RANGES_RULE,
-    TEST_CHECK_RULES,
     GSPOT_RULE_PREFIX,
     GSPOT_PRESET_LEVELS,
     IMPORT_LAYOUT_RULES,
@@ -192,7 +191,6 @@ export function buildOpeningBlocks(
         {
             fields: { files: eslintFiles.javascript, rules: JAVASCRIPT_RULES },
         },
-        { fields: { files: eslintFiles.tests, rules: TEST_CHECK_RULES } },
         ...buildProjectBlocks(planned, boundaryBlocks),
         ...buildRestrictedImportBlocks(planned).map((block): ConfigurationBlocks['blocks'][number] => ({
             fields: block,

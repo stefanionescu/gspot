@@ -156,8 +156,8 @@ export function readModuleName(
 }
 
 /**
-Name the imported or global value that an expression reads, as SonarJS names it: the module path without a `node:`
-prefix and with its slashes written as dots, then the members. After `import * as s3 from 'aws-cdk-lib/aws-s3'`,
+Name the imported or global value that an expression reads: the module path without a `node:` prefix and with its
+slashes written as dots, then the members. After `import * as s3 from 'aws-cdk-lib/aws-s3'`,
 `new s3.Bucket()` reads `aws-cdk-lib.aws-s3.Bucket`.
 
 @param node the referenced value.

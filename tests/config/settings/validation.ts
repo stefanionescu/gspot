@@ -146,10 +146,10 @@ export const SETTING_RULE_OPTIONS = [
         setting: 'limits.max_file_lines',
     },
     {
-        tables: '[[scope]]\npath = "app"\n[scope.tools.eslint.rules]\n"sonarjs/no-identical-functions" = [50]\n',
-        path: 'scope.0.tools.eslint.rules.sonarjs/no-identical-functions',
+        tables: '[[scope]]\npath = "app"\n[scope.tools.eslint.rules]\n"gspot/no-identical-functions" = [50]\n',
+        path: 'scope.0.tools.eslint.rules.gspot/no-identical-functions',
         line: 5,
-        rule: 'sonarjs/no-identical-functions',
+        rule: 'gspot/no-identical-functions',
         setting: 'duplication.min_lines',
     },
 ] as const;

@@ -18,7 +18,7 @@ export const IMPORTED_AMBIENT_FILES = {
     'sibling/bad.js': 'unknownValue();\n',
 } as const;
 
-export const SONAR_REGEX_SAMPLES = [
+export const REGEX_SAMPLES = [
     {
         name: 'move',
         level: 'basic',

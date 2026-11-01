@@ -124,6 +124,5 @@ test.each(ASSERTION_RULE_OWNERS)('basic assertion ownership with $name', async (
     });
     const eslint = await buildEslint(sandbox.path);
     const tests = (await eslint.calculateConfigForFile('source.test.js')) as EslintConfiguration;
-    expect(tests.rules['sonarjs/assertions-in-tests']?.[0]).toBe(assertions);
     expect(tests.rules['gspot/require-test-assertions']?.[0]).toBe(assertions);
 });

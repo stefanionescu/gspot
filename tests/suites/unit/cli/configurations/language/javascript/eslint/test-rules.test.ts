@@ -5,7 +5,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
-test.each([...LEVELS])('%s runs the gspot test rules that replace SonarJS on every test file', async (level) => {
+test.each([...LEVELS])('%s runs the gspot test rules on every test file', async (level) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], { level }),
         'package.json': '{"private":true,"type":"module","devDependencies":{"mocha":"11.0.0","chai":"5.0.0"}}',
@@ -58,7 +58,7 @@ test.each([...LEVELS])('%s runs the gspot test rules that replace SonarJS on eve
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
 });
 
-test.each([...LEVELS])('%s runs the gspot assertion rules that replace SonarJS', async (level) => {
+test.each([...LEVELS])('%s runs the gspot assertion rules', async (level) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], { level }),
         'package.json': '{"private":true,"type":"module","devDependencies":{"vitest":"4.0.0"}}',

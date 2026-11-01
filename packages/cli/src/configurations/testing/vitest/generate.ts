@@ -13,7 +13,6 @@ export function buildVitestBlocks(scope: Pick<EslintScope, 'eslintFiles'>): Conf
             fields: {
                 files: eslintFiles.tests,
                 rules: {
-                    'sonarjs/assertions-in-tests': 'off',
                     'gspot/require-test-assertions': 'off',
                     'vitest/no-disabled-tests': 'error',
                     'vitest/prefer-strict-equal': 'error',

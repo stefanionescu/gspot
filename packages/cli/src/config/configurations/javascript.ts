@@ -119,7 +119,6 @@ export const PLUGIN_RULE_BLOCKS: Readonly<Record<string, PluginRuleBlock>> = {
         files: 'tests',
         rules: {
             ...Object.fromEntries([...TEST_RULE_NAMES, ...JEST_RULE_NAMES].map((name) => [`jest/${name}`, 'error'])),
-            'sonarjs/assertions-in-tests': 'off',
             'gspot/require-test-assertions': 'off',
             'jest/valid-expect': ['error', { maxArgs: 1 }],
         },

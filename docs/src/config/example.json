@@ -24,8 +24,8 @@
             "file": "src/checkout.ts",
             "line": 5,
             "column": 5,
-            "rule": "sonarjs/no-try-promise",
-            "message": "Consider using 'await' for the promise inside this 'try' or replace it with 'Promise.prototype.catch(...)' usage."
+            "rule": "gspot/no-try-promise",
+            "message": "The catch clause does not see this rejected promise. Await it, or use .catch instead of try."
         },
         {
             "check": "javascript/eslint",
@@ -48,7 +48,7 @@
             "title": "No await.",
             "text": "The function returns before the charge ends.",
             "lines": [4, 5],
-            "rules": ["@typescript-eslint/require-await", "sonarjs/no-try-promise"]
+            "rules": ["@typescript-eslint/require-await", "gspot/no-try-promise"]
         },
         {
             "title": "Linter off.",

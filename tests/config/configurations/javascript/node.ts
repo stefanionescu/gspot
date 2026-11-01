@@ -237,7 +237,6 @@ console.log(value);
 export const NODE_SCRIPT_RULES = [
     'no-unused-vars',
     '@typescript-eslint/no-unused-vars',
-    'sonarjs/no-unused-vars',
     'n/no-process-exit',
     'unicorn/no-process-exit',
     'no-console',

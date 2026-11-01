@@ -5,7 +5,7 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { ESLINT_LEVEL_CASES } from '#tests/config/configurations/javascript/configuration-blocks.ts';
 
-test.each(ESLINT_LEVEL_CASES)('%s preserves expression and return checks in %s', async (level, extension) => {
+test.each(ESLINT_LEVEL_CASES)('%s reports expression and return checks in %s', async (level, extension) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([extension === 'js' ? 'javascript' : 'typescript'], { level }),
         'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
@@ -21,10 +21,6 @@ test.each(ESLINT_LEVEL_CASES)('%s preserves expression and return checks in %s',
         'gspot/no-negated-comparison',
         'gspot/no-identical-operands',
         'gspot/prefer-boolean-return',
-        'sonarjs/no-global-this',
-        'sonarjs/no-inverted-boolean-check',
-        'sonarjs/no-identical-expressions',
-        'sonarjs/prefer-single-boolean-return',
     ];
     const files = ['global', 'negated', 'operands', 'return'].map((name) => `${name}.${extension}`);
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([
@@ -46,42 +42,39 @@ test.each(ESLINT_LEVEL_CASES)('%s preserves expression and return checks in %s',
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
 });
 
-test.each(ESLINT_LEVEL_CASES)(
-    '%s preserves invalid literal calls and template tags in %s',
-    async (level, extension) => {
-        const expressions = ['[]', 'class {}', '{}', '42', '"text"', 'true', 'null', '/pattern/', '`text`'];
-        const invalid = expressions.flatMap((expression) => [`(${expression})();`, `(${expression})\`text\`;`]);
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings([extension === 'js' ? 'javascript' : 'typescript'], { level }),
-            'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
-            'package.json': '{"private":true,"type":"module"}',
-            [`literal.${extension}`]: invalid.join('\n'),
-        });
-        const eslint = await buildEslint(sandbox.path);
-        const rules = ['gspot/restricted-syntax', 'sonarjs/no-literal-call'];
-        expect(await listLintFindings(eslint, sandbox.path, [`literal.${extension}`], rules)).toStrictEqual(
-            invalid.map((_, index) => ({
-                file: `literal.${extension}`,
-                rule: 'gspot/restricted-syntax',
-                line: index + 1,
-            })),
-        );
-        await createFileTree(sandbox.path, {
-            [`literal.${extension}`]: [
-                '(function() {})();',
-                '(() => {})();',
-                'new (class {})();',
-                'call();',
-                'receiver.call();',
-                'tag`text`;',
-                '[call][0]();',
-            ].join('\n'),
-        });
-        expect(await listLintFindings(eslint, sandbox.path, [`literal.${extension}`], rules)).toStrictEqual([]);
-    },
-);
+test.each(ESLINT_LEVEL_CASES)('%s reports invalid literal calls and template tags in %s', async (level, extension) => {
+    const expressions = ['[]', 'class {}', '{}', '42', '"text"', 'true', 'null', '/pattern/', '`text`'];
+    const invalid = expressions.flatMap((expression) => [`(${expression})();`, `(${expression})\`text\`;`]);
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([extension === 'js' ? 'javascript' : 'typescript'], { level }),
+        'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
+        'package.json': '{"private":true,"type":"module"}',
+        [`literal.${extension}`]: invalid.join('\n'),
+    });
+    const eslint = await buildEslint(sandbox.path);
+    const rules = ['gspot/restricted-syntax'];
+    expect(await listLintFindings(eslint, sandbox.path, [`literal.${extension}`], rules)).toStrictEqual(
+        invalid.map((_, index) => ({
+            file: `literal.${extension}`,
+            rule: 'gspot/restricted-syntax',
+            line: index + 1,
+        })),
+    );
+    await createFileTree(sandbox.path, {
+        [`literal.${extension}`]: [
+            '(function() {})();',
+            '(() => {})();',
+            'new (class {})();',
+            'call();',
+            'receiver.call();',
+            'tag`text`;',
+            '[call][0]();',
+        ].join('\n'),
+    });
+    expect(await listLintFindings(eslint, sandbox.path, [`literal.${extension}`], rules)).toStrictEqual([]);
+});
 
-test.each(ESLINT_LEVEL_CASES)('%s preserves executable and temporary-path checks in %s', async (level, extension) => {
+test.each(ESLINT_LEVEL_CASES)('%s reports executable and temporary-path checks in %s', async (level, extension) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([extension === 'js' ? 'javascript' : 'typescript'], { level }),
         'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
@@ -91,12 +84,7 @@ test.each(ESLINT_LEVEL_CASES)('%s preserves executable and temporary-path checks
     });
     const eslint = await buildEslint(sandbox.path);
     const files = [`command.${extension}`, `temporary.${extension}`];
-    const rules = [
-        'gspot/no-path-command',
-        'gspot/no-public-temporary-path',
-        'sonarjs/no-os-command-from-path',
-        'sonarjs/publicly-writable-directories',
-    ];
+    const rules = ['gspot/no-path-command', 'gspot/no-public-temporary-path'];
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual(
         level === 'all'
             ? [
@@ -113,7 +101,7 @@ test.each(ESLINT_LEVEL_CASES)('%s preserves executable and temporary-path checks
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
 });
 
-test.each(ESLINT_LEVEL_CASES)('%s preserves dynamic sanitizer bypass checks in %s', async (level, extension) => {
+test.each(ESLINT_LEVEL_CASES)('%s reports dynamic sanitizer bypass checks in %s', async (level, extension) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([extension === 'js' ? 'javascript' : 'typescript'], { level }),
         'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
@@ -123,7 +111,7 @@ test.each(ESLINT_LEVEL_CASES)('%s preserves dynamic sanitizer bypass checks in %
     });
     const eslint = await buildEslint(sandbox.path);
     const files = [`sanitizer.${extension}`];
-    const rules = ['gspot/no-unsafe-sanitizer-bypass', 'sonarjs/no-angular-bypass-sanitization'];
+    const rules = ['gspot/no-unsafe-sanitizer-bypass'];
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([
         { file: `sanitizer.${extension}`, rule: 'gspot/no-unsafe-sanitizer-bypass', line: 1 },
     ]);
@@ -135,7 +123,7 @@ test.each(ESLINT_LEVEL_CASES)('%s preserves dynamic sanitizer bypass checks in %
 });
 
 test.each(ESLINT_LEVEL_CASES)(
-    '%s preserves boolean operands and combined case checks in %s',
+    '%s reports boolean operands and combined case checks in %s',
     async (level, extension) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([extension === 'js' ? 'javascript' : 'typescript'], { level }),
@@ -146,12 +134,7 @@ test.each(ESLINT_LEVEL_CASES)(
         });
         const eslint = await buildEslint(sandbox.path);
         const files = [`boolean.${extension}`, `case.${extension}`];
-        const rules = [
-            'gspot/no-redundant-boolean',
-            'gspot/no-compound-case',
-            'sonarjs/no-redundant-boolean',
-            'sonarjs/comma-or-logical-or-case',
-        ];
+        const rules = ['gspot/no-redundant-boolean', 'gspot/no-compound-case'];
         expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([
             { file: `boolean.${extension}`, rule: 'gspot/no-redundant-boolean', line: 1 },
             { file: `case.${extension}`, rule: 'gspot/no-compound-case', line: 1 },
@@ -164,7 +147,7 @@ test.each(ESLINT_LEVEL_CASES)(
     },
 );
 
-test.each(ESLINT_LEVEL_CASES)('%s preserves condition and call line boundaries in %s', async (level, extension) => {
+test.each(ESLINT_LEVEL_CASES)('%s reports condition and call line boundaries in %s', async (level, extension) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([extension === 'js' ? 'javascript' : 'typescript'], { level }),
         'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
@@ -175,12 +158,7 @@ test.each(ESLINT_LEVEL_CASES)('%s preserves condition and call line boundaries i
     });
     const eslint = await buildEslint(sandbox.path);
     const files = ['call', 'condition', 'template'].map((name) => `${name}.${extension}`);
-    const rules = [
-        'gspot/no-detached-call',
-        'gspot/no-adjacent-multiline-if',
-        'sonarjs/call-argument-line',
-        'sonarjs/no-same-line-conditional',
-    ];
+    const rules = ['gspot/no-detached-call', 'gspot/no-adjacent-multiline-if'];
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([
         { file: `call.${extension}`, rule: 'gspot/no-detached-call', line: 2 },
         ...(level === 'all'
@@ -196,7 +174,7 @@ test.each(ESLINT_LEVEL_CASES)('%s preserves condition and call line boundaries i
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
 });
 
-test.each(ESLINT_LEVEL_CASES)('%s preserves package entry-point imports in %s', async (level, extension) => {
+test.each(ESLINT_LEVEL_CASES)('%s reports package entry-point imports in %s', async (level, extension) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([extension === 'js' ? 'javascript' : 'typescript'], { level }),
         'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
@@ -206,7 +184,7 @@ test.each(ESLINT_LEVEL_CASES)('%s preserves package entry-point imports in %s', 
     });
     const eslint = await buildEslint(sandbox.path);
     const files = [`imports.${extension}`, `require.${extension}`];
-    const rules = ['gspot/restricted-syntax', 'sonarjs/no-internal-api-use'];
+    const rules = ['gspot/restricted-syntax'];
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([
         { file: `imports.${extension}`, rule: 'gspot/restricted-syntax', line: 1 },
         { file: `require.${extension}`, rule: 'gspot/restricted-syntax', line: 1 },
@@ -218,7 +196,7 @@ test.each(ESLINT_LEVEL_CASES)('%s preserves package entry-point imports in %s', 
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
 });
 
-test.each(ESLINT_LEVEL_CASES)('%s preserves reserved binding checks in %s', async (level, extension) => {
+test.each(ESLINT_LEVEL_CASES)('%s reports reserved binding checks in %s', async (level, extension) => {
     const filename = extension === 'js' ? 'declarations.cjs' : 'declarations.ts';
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([extension === 'js' ? 'javascript' : 'typescript'], { level }),
@@ -229,7 +207,7 @@ test.each(ESLINT_LEVEL_CASES)('%s preserves reserved binding checks in %s', asyn
     });
     const eslint = await buildEslint(sandbox.path);
     const files = [filename, ...(extension === 'ts' ? ['type.ts'] : [])];
-    const rules = ['gspot/no-keyword-declarations', 'sonarjs/future-reserved-words'];
+    const rules = ['gspot/no-keyword-declarations'];
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([
         { file: filename, rule: 'gspot/no-keyword-declarations', line: 1 },
         ...(extension === 'ts' ? [{ file: 'type.ts', rule: 'gspot/no-keyword-declarations', line: 1 }] : []),
@@ -241,7 +219,7 @@ test.each(ESLINT_LEVEL_CASES)('%s preserves reserved binding checks in %s', asyn
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
 });
 
-test.each(ESLINT_LEVEL_CASES)('%s preserves ignored exception checks in %s', async (level, extension) => {
+test.each(ESLINT_LEVEL_CASES)('%s reports ignored exception checks in %s', async (level, extension) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([extension === 'js' ? 'javascript' : 'typescript'], { level }),
         'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
@@ -250,7 +228,7 @@ test.each(ESLINT_LEVEL_CASES)('%s preserves ignored exception checks in %s', asy
     });
     const eslint = await buildEslint(sandbox.path);
     const files = [`catch.${extension}`];
-    const rules = ['gspot/no-ignored-catch', 'sonarjs/no-ignored-exceptions'];
+    const rules = ['gspot/no-ignored-catch'];
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([
         { file: `catch.${extension}`, rule: 'gspot/no-ignored-catch', line: 1 },
     ]);

@@ -71,7 +71,6 @@ export const MARKDOWNLINT_PRETTIER_DISABLED = ['MD013'] as const;
 export const TYPESCRIPT_RULES = {
     'no-const-assign': 'error',
     '@typescript-eslint/no-misused-spread': ['error', { allow: ['string'] }],
-    'sonarjs/deprecation': 'off',
     'jsdoc/require-param-type': 'off',
     'jsdoc/require-returns-type': 'off',
     'jsdoc/check-types': 'off',
@@ -118,8 +117,6 @@ export const TYPESCRIPT_RULES = {
             'ts-expect-error': false,
         },
     ],
-    'sonarjs/no-duplicate-in-composite': 'error',
-    'sonarjs/redundant-type-aliases': 'off',
 } as const;
 
 export const TYPESCRIPT_TEST_RULES = {

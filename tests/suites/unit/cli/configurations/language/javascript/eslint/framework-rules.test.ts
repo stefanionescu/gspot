@@ -5,7 +5,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
-test.each([...LEVELS])('%s runs the gspot React, Vue, and library rules that replace SonarJS', async (level) => {
+test.each([...LEVELS])('%s runs the gspot React, Vue, and library rules', async (level) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['react'], { level }),
         'package.json':
@@ -53,7 +53,7 @@ test.each([...LEVELS])('%s runs the gspot React, Vue, and library rules that rep
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
 });
 
-test.each([...LEVELS])('%s runs the gspot timer, Vue state, and lodash rules that replace SonarJS', async (level) => {
+test.each([...LEVELS])('%s runs the gspot timer, Vue state, and lodash rules', async (level) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['react'], { level }),
         'package.json':

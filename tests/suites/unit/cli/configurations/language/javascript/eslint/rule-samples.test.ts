@@ -7,18 +7,9 @@ import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { ESLINT_LEVEL_CASES } from '#tests/config/configurations/javascript/configuration-blocks.ts';
 
 test.each(ESLINT_LEVEL_CASES)(
-    '%s preserves replaced Sonar findings in %s through core and Unicorn',
+    '%s reports scope, constant, generator, and nested-if mistakes in %s',
     async (level, extension) => {
-        const rules = [
-            'block-scoped-var',
-            'no-const-assign',
-            'require-yield',
-            'unicorn/no-lonely-if',
-            'sonarjs/block-scoped-var',
-            'sonarjs/updated-const-var',
-            'sonarjs/generator-without-yield',
-            'sonarjs/no-collapsible-if',
-        ];
+        const rules = ['block-scoped-var', 'no-const-assign', 'require-yield', 'unicorn/no-lonely-if'];
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([extension === 'js' ? 'javascript' : 'typescript'], { level }),
             'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
@@ -65,7 +56,7 @@ test.each([...LEVELS])('%s lints a JavaScript class, which the default parser gi
     );
 });
 
-test.each(ESLINT_LEVEL_CASES)('%s keeps the level of replaced style rules in %s', async (level, extension) => {
+test.each(ESLINT_LEVEL_CASES)('%s runs the style rules at their level in %s', async (level, extension) => {
     const rules = ['no-labels', 'no-new', 'no-nested-ternary', 'default-case-last', 'no-void'];
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([extension === 'js' ? 'javascript' : 'typescript'], { level }),
@@ -101,7 +92,7 @@ test.each(ESLINT_LEVEL_CASES)('%s keeps the level of replaced style rules in %s'
 });
 
 test.each(ESLINT_LEVEL_CASES)(
-    '%s preserves Express header protection in %s without requiring the Express configuration',
+    '%s reports Express header protection in %s without requiring the Express configuration',
     async (level, extension) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([extension === 'js' ? 'javascript' : 'typescript'], { level }),
@@ -110,7 +101,7 @@ test.each(ESLINT_LEVEL_CASES)(
             [`server.${extension}`]: 'import express from "express"; export const app = express();',
         });
         const eslint = await buildEslint(sandbox.path);
-        const rules = ['gspot/no-powered-by-header', 'sonarjs/x-powered-by'];
+        const rules = ['gspot/no-powered-by-header'];
         expect(await listLintFindings(eslint, sandbox.path, [`server.${extension}`], rules)).toStrictEqual([
             { file: `server.${extension}`, rule: 'gspot/no-powered-by-header', line: 1 },
         ]);
@@ -122,34 +113,31 @@ test.each(ESLINT_LEVEL_CASES)(
     },
 );
 
-test.each(ESLINT_LEVEL_CASES)(
-    '%s preserves label targets and while-loop candidates in %s',
-    async (level, extension) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings([extension === 'js' ? 'javascript' : 'typescript'], { level }),
-            'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
-            'package.json': '{"private":true,"type":"module"}',
-            [`label.${extension}`]: 'outer: { run(); }',
-            [`loop.${extension}`]: 'for (; ready; ) run();',
-            [`allowed.${extension}`]:
-                'outer: while (ready) run(); doLoop: do { run(); } while (ready); forLoop: for (let i = 0; ready; i++) run(); inLoop: for (const key in value) run(); ofLoop: for (const item of values) run(); switchLabel: switch (value) { case 1: run(); } for (;;) break; for (let i = 0; ready;) run(); for (;ready;i++) run();',
-        });
-        const eslint = await buildEslint(sandbox.path);
-        const files = ['label', 'loop', 'allowed'].map((name) => `${name}.${extension}`);
-        const rules = ['gspot/restricted-syntax', 'sonarjs/label-position', 'sonarjs/prefer-while'];
-        expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([
-            { file: `label.${extension}`, rule: 'gspot/restricted-syntax', line: 1 },
-            ...(level === 'all' ? [{ file: `loop.${extension}`, rule: 'gspot/restricted-syntax', line: 1 }] : []),
-        ]);
-        await createFileTree(sandbox.path, {
-            [`label.${extension}`]: 'run();',
-            [`loop.${extension}`]: 'while (ready) run();',
-        });
-        expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
-    },
-);
+test.each(ESLINT_LEVEL_CASES)('%s reports label targets and while-loop candidates in %s', async (level, extension) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([extension === 'js' ? 'javascript' : 'typescript'], { level }),
+        'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
+        'package.json': '{"private":true,"type":"module"}',
+        [`label.${extension}`]: 'outer: { run(); }',
+        [`loop.${extension}`]: 'for (; ready; ) run();',
+        [`allowed.${extension}`]:
+            'outer: while (ready) run(); doLoop: do { run(); } while (ready); forLoop: for (let i = 0; ready; i++) run(); inLoop: for (const key in value) run(); ofLoop: for (const item of values) run(); switchLabel: switch (value) { case 1: run(); } for (;;) break; for (let i = 0; ready;) run(); for (;ready;i++) run();',
+    });
+    const eslint = await buildEslint(sandbox.path);
+    const files = ['label', 'loop', 'allowed'].map((name) => `${name}.${extension}`);
+    const rules = ['gspot/restricted-syntax'];
+    expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([
+        { file: `label.${extension}`, rule: 'gspot/restricted-syntax', line: 1 },
+        ...(level === 'all' ? [{ file: `loop.${extension}`, rule: 'gspot/restricted-syntax', line: 1 }] : []),
+    ]);
+    await createFileTree(sandbox.path, {
+        [`label.${extension}`]: 'run();',
+        [`loop.${extension}`]: 'while (ready) run();',
+    });
+    expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
+});
 
-test.each(ESLINT_LEVEL_CASES)('%s preserves cryptographic randomness enforcement in %s', async (level, extension) => {
+test.each(ESLINT_LEVEL_CASES)('%s reports cryptographic randomness enforcement in %s', async (level, extension) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([extension === 'js' ? 'javascript' : 'typescript'], { level }),
         'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
@@ -158,7 +146,7 @@ test.each(ESLINT_LEVEL_CASES)('%s preserves cryptographic randomness enforcement
         [`shadow.${extension}`]: 'export function draw(Math) { return Math.random(); }',
     });
     const eslint = await buildEslint(sandbox.path);
-    const rules = ['gspot/no-insecure-random', 'sonarjs/pseudo-random'];
+    const rules = ['gspot/no-insecure-random'];
     const files = [`random.${extension}`, `shadow.${extension}`];
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([
         { file: `random.${extension}`, rule: 'gspot/no-insecure-random', line: 1 },
@@ -168,7 +156,7 @@ test.each(ESLINT_LEVEL_CASES)('%s preserves cryptographic randomness enforcement
 });
 
 test.each(ESLINT_LEVEL_CASES)(
-    '%s preserves all five plugin ports without duplicate Sonar findings in %s',
+    '%s runs the commented-code, switch, literal, return, and alias rules in %s',
     async (level, extension) => {
         const names = [
             'no-commented-code',
@@ -177,7 +165,7 @@ test.each(ESLINT_LEVEL_CASES)(
             'prefer-immediate-return',
             'redundant-type-aliases',
         ];
-        const rules = names.flatMap((name) => [`gspot/${name}`, `sonarjs/${name}`]);
+        const rules = names.map((name) => `gspot/${name}`);
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([extension === 'js' ? 'javascript' : 'typescript'], { level }),
             'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
@@ -213,7 +201,7 @@ test.each(ESLINT_LEVEL_CASES)(
     },
 );
 
-test.each(ESLINT_LEVEL_CASES)('%s preserves Helmet and cookie protections in %s', async (level, extension) => {
+test.each(ESLINT_LEVEL_CASES)('%s reports Helmet and cookie protections in %s', async (level, extension) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([extension === 'js' ? 'javascript' : 'typescript'], { level }),
         'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
@@ -224,16 +212,7 @@ test.each(ESLINT_LEVEL_CASES)('%s preserves Helmet and cookie protections in %s'
     });
     const eslint = await buildEslint(sandbox.path);
     const files = [`headers.${extension}`, `cookies.${extension}`];
-    const rules = [
-        'gspot/no-unsafe-security-headers',
-        'gspot/no-insecure-cookies',
-        'sonarjs/content-security-policy',
-        'sonarjs/no-mime-sniff',
-        'sonarjs/no-referrer-policy',
-        'sonarjs/strict-transport-security',
-        'sonarjs/insecure-cookie',
-        'sonarjs/cookie-no-httponly',
-    ];
+    const rules = ['gspot/no-unsafe-security-headers', 'gspot/no-insecure-cookies'];
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([
         { file: `cookies.${extension}`, rule: 'gspot/no-insecure-cookies', line: 1 },
         { file: `cookies.${extension}`, rule: 'gspot/no-insecure-cookies', line: 1 },

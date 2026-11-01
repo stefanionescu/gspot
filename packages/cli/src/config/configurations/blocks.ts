@@ -11,11 +11,6 @@ export const RUNTIME_GLOBALS: Readonly<Record<string, string>> = { node: 'nodeBu
 
 export const NODE_RUNTIMES: readonly string[] = ['node', 'nodeBuiltin', 'commonjs'];
 
-export const TEST_CHECK_RULES = {
-    'sonarjs/assertions-in-tests': 'error',
-    'sonarjs/no-empty-test-file': 'error',
-} as const;
-
 export const TEST_RULES = {
     'jsdoc/require-jsdoc': 'off',
     'jsdoc/require-param': 'off',
@@ -224,7 +219,6 @@ export const PRESETS_AFTER_CONFIGURATIONS = [
 
 export const PRESETS_BEFORE_CONFIGURATIONS = [
     { importName: 'eslint', package: '@eslint/js', path: 'configs.recommended' },
-    { importName: 'sonarjs', package: 'eslint-plugin-sonarjs', path: 'configs.recommended' },
     { importName: 'unicorn', package: 'eslint-plugin-unicorn', path: 'configs.recommended' },
 ] as const;
 
