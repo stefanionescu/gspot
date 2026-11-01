@@ -124,6 +124,7 @@ export const IGNORE_SECTION_TITLES = {
     generators: 'Generator outputs',
     configurations: 'Paths that configurations leave out',
     lockfiles: 'Lockfiles',
+    submodules: 'Git submodules',
 } as const;
 
 export const NESTJS_CONFIGURATION = 'nestjs';

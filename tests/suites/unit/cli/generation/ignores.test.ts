@@ -211,6 +211,15 @@ test('the ignore lists name only the files that gspot writes, and Ruff gets only
     expect(excluded.filter((pattern) => !pattern.endsWith('/**') && !pattern.endsWith('.py'))).toStrictEqual([]);
 });
 
+test('each submodule checkout gets an ignore pattern of its own', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['javascript']) });
+    runGitStep(sandbox.path, ['update-index', '--add', '--cacheinfo', `160000,${'a'.repeat(40)},vendor/library`]);
+    const session = await openSession(sandbox.path);
+    expect(buildIgnoreSections(session).find(({ key }) => key === 'submodules')?.patterns).toStrictEqual([
+        '/vendor/library/',
+    ]);
+});
+
 test('a second apply writes the same files when .prettierignore covers every source file', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),

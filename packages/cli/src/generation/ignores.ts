@@ -4,6 +4,7 @@ import type { Session } from '#cli/types/tools.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { listLinkFilePaths } from '#cli/generation/links.ts';
+import { GITLINK_MODE } from '#cli/config/repository/files.ts';
 import { convertToGlob } from '#cli/configurations/ignores.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
 import { listOwnedConfigs } from '#cli/generation/selection.ts';
@@ -90,6 +91,11 @@ export function buildIgnoreSections(session: Session): IgnoreSection[] {
             patterns: LOCKFILES.filter((lockfile) =>
                 repository.files.some(({ path }) => !isGspotPath(path) && basename(path) === lockfile.file),
             ).map(({ file }) => file),
+        },
+        {
+            key: 'submodules',
+            title: IGNORE_SECTION_TITLES.submodules,
+            patterns: repository.index.filter(({ mode }) => mode === GITLINK_MODE).map(({ path }) => `/${path}/`),
         },
         ...session.settings.ignore
             .filter((ignore) => ignore.check === undefined)
