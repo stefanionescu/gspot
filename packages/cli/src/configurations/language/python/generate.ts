@@ -8,7 +8,7 @@ import { DEFAULT_QUOTES } from '#cli/config/configurations/general.ts';
 import { JSON_INDENT, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
 import type { PlannedConfig, FormatSettings } from '#cli/types/configurations/language.ts';
-import { getTable, getLimit, listIgnores, listIgnoredRules } from '#cli/settings/scopes.ts';
+import { getTable, getLimit, isEveryPath, listIgnores, listIgnoredRules } from '#cli/settings/scopes.ts';
 
 import {
     RUFF_TABLE,
@@ -95,10 +95,12 @@ export function buildRuffFile(planned: PlannedConfig): string {
     const scope = planned.scope.path;
     const off = listIgnoredRules(planned.scope, RUFF_CHECK);
     const perFile = listIgnores(planned.scope.settings, RUFF_CHECK).filter(
-        (each) => each.rule !== undefined && each.paths.length > 0,
+        (each) => each.rule !== undefined && !isEveryPath(each),
     );
     const byPath = new Map<string, string[]>();
-    const pathRules = perFile.flatMap((ignore) => ignore.paths.map((path) => ({ path, rule: ignore.rule as string })));
+    const pathRules = perFile.flatMap((ignore) =>
+        (ignore.paths ?? []).map((path) => ({ path, rule: ignore.rule as string })),
+    );
     for (const { path, rule } of pathRules) {
         const target = `${pythonScopePath}/${relative(scope, path)}`;
         byPath.set(target, [...(byPath.get(target) ?? []), rule]);

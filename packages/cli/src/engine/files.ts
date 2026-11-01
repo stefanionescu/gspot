@@ -76,7 +76,7 @@ function listRunFiles(planned: PlannedScope, scopeCheck: ScopeCheck, scopePath: 
 
 function stripIgnoredFiles(files: TrackedFile[], check: Check, scope: Scope): Pick<PlannedCheck, 'files' | 'skip'> {
     const paths = listIgnores(scope.settings, check.id).flatMap((ignore) =>
-        ignore.rule === undefined ? ignore.paths : [],
+        ignore.rule === undefined ? (ignore.paths ?? []) : [],
     );
     const isIgnored = buildPathMatcher(paths);
     const selected = files.filter((file) => !isIgnored(file.path));

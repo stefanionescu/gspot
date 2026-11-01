@@ -29,7 +29,7 @@ List the path ignores of one check, each with its written reason.
 export function listCheckIgnoreSections(scopeSettings: ScopeSettings, checkId: string): IgnoreSection[] {
     return listIgnores(scopeSettings, checkId)
         .filter((ignore) => ignore.rule === undefined)
-        .map(({ reason, paths }): IgnoreSection => ({ key: 'settings', title: reason, patterns: paths }));
+        .map(({ reason, paths }): IgnoreSection => ({ key: 'settings', title: reason, patterns: paths ?? [] }));
 }
 
 /**

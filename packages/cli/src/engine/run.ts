@@ -7,6 +7,7 @@ import { runFixers } from '#cli/engine/fixes.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { isEveryPath } from '#cli/settings/scopes.ts';
 import { buildRunReport } from '#cli/engine/report.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
@@ -51,7 +52,7 @@ import {
 function isIgnoreMatch(record: IgnoreRecord, finding: Finding): boolean {
     if ((['check', 'rule'] as const).some((key) => record[key] !== undefined && record[key] !== finding[key]))
         return false;
-    return record.paths === undefined || record.paths.length === 0 || buildPathMatcher(record.paths)(finding.file);
+    return isEveryPath(record) || buildPathMatcher(record.paths ?? [])(finding.file);
 }
 
 const DOCKER_AVAILABILITY = Symbol('docker availability');

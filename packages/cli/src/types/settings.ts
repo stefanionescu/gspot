@@ -81,7 +81,7 @@ export type ScopeSettings = {
     test_files: Settings['test_files'];
     valuesByKey: Record<string, unknown>;
     tables: TableValues;
-    ignores: (IgnoreRecord & { paths: string[] })[];
+    ignores: IgnoreRecord[];
 };
 
 export type InheritedSetting = {

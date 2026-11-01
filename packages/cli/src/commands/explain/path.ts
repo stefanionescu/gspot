@@ -2,6 +2,7 @@ import { formatScope } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import type { Scope } from '#cli/types/settings.ts';
+import { isEveryPath } from '#cli/settings/scopes.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { EVERY_CHECK } from '#cli/config/commands/help.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
@@ -48,10 +49,7 @@ function buildPathExplanation(session: Session, file: TrackedFile): PathExplanat
             ...(check.configuration !== undefined && { configuration: check.configuration.name }),
         })),
         ignores: session.settings.ignore
-            .filter(
-                (ignore) =>
-                    ignore.paths === undefined || ignore.paths.length === 0 || buildPathMatcher(ignore.paths)(path),
-            )
+            .filter((ignore) => isEveryPath(ignore) || buildPathMatcher(ignore.paths ?? [])(path))
             .map((ignore) => ({
                 ...(ignore.check !== undefined && { check: ignore.check }),
                 ...(ignore.rule !== undefined && { rule: ignore.rule }),

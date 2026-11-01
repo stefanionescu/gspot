@@ -16,6 +16,7 @@ import type {
     Scope,
     Settings,
     TableValues,
+    IgnoreRecord,
     TableSettings,
     ScopeSettings,
     InheritedSetting,
@@ -164,7 +165,7 @@ export function buildScopeSettings(
         valuesByKey: valuesByKey,
         tables: tableValuesSchema.parse(namespaces),
         test_files: rootSettingSchemas.test_files.unwrap().parse(valuesByKey['test_files']),
-        ignores: settings.ignore.map((ignore) => ({ ...ignore, paths: ignore.paths ?? [] })),
+        ignores: settings.ignore,
     };
 }
 
@@ -206,11 +207,21 @@ List the written ignores that apply to a check or to every check.
 
 @param scopeSettings the merged scope data.
 @param check the check name.
-@returns the matching ignores with normalized paths.
+@returns the matching ignores.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Planning and five generators select the ignores of one check by this rule: an ignore without a check covers every check.
 export function listIgnores(scopeSettings: ScopeSettings, check: string): ScopeSettings['ignores'] {
     return scopeSettings.ignores.filter((ignore) => ignore.check === check || ignore.check === undefined);
+}
+
+/**
+Check whether an ignore covers every path.
+
+@param ignore the ignore to read.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Planning, generators, and reports read an ignore without paths by this one rule.
+export function isEveryPath(ignore: Pick<IgnoreRecord, 'paths'>): boolean {
+    return ignore.paths === undefined;
 }
 
 /**
@@ -222,7 +233,7 @@ List the lint rules disabled throughout the selected scope.
 export function listIgnoredRules(scope: Scope, checkId: string): string[] {
     return scope.settings.ignores
         .filter((ignore) => ignore.check === checkId)
-        .filter((ignore) => ignore.paths.length === 0 || isScopeCovered(ignore.paths, scope.path))
+        .filter((ignore) => isEveryPath(ignore) || isScopeCovered(ignore.paths ?? [], scope.path))
         .map((ignore) => ignore.rule)
         .filter((rule) => rule !== undefined);
 }

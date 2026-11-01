@@ -1,11 +1,11 @@
 import type { Session } from '#cli/types/tools.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import type { ManagedKeys } from '#cli/types/repository.ts';
-import { getTable, listIgnores } from '#cli/settings/scopes.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import { getTable, isEveryPath, listIgnores } from '#cli/settings/scopes.ts';
 import { SCANNER_KEY, BUNFIG_FILE, OSV_SCANNER_CHECK, OSV_SCANNER_NOTES } from '#cli/config/configurations/general.ts';
 
 /**
@@ -15,7 +15,7 @@ Build osv-scanner.toml: a note on why the file exists, and the package ignores a
 */
 export function buildOsvScannerFile(planned: PlannedConfig): string {
     const ignores = listIgnores(planned.scope.settings, OSV_SCANNER_CHECK).filter(
-        (ignore) => ignore.rule !== undefined && ignore.paths.length === 0,
+        (ignore) => ignore.rule !== undefined && isEveryPath(ignore),
     );
     const vulnerabilities = ignores.map((ignore) => ({
         id: ignore.rule,

@@ -195,7 +195,7 @@ function buildSettingsBlocks(planned: Pick<PlannedEslintFile, 'session' | 'scope
             : [
                   {
                       scope: '',
-                      ...splitGlobs(ignore.paths === undefined || ignore.paths.length === 0 ? ['**/*'] : ignore.paths),
+                      ...splitGlobs(ignore.paths ?? ['**/*']),
                       rules: { [ignore.rule]: 'off' },
                   },
               ],
