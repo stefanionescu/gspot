@@ -5,7 +5,7 @@ export const ESLINT_MANIFEST_TOOL = 'eslint';
 
 export const STYLELINT_MANIFEST_TOOL = 'stylelint';
 
-export const CONFIGURATIONS_FOLDER = 'configurations';
+export const CONFIGURATIONS_FOLDER = 'src/configurations';
 
 export const GROUPS = [
     'language',
@@ -45,7 +45,7 @@ export const PYTHON_CONFIGURATION = 'python';
 
 export const TOOL_BUILDS = OPERATING_SYSTEMS.map((system) => system.name);
 
-export const SHIPPED_CONFIG_FOLDER = 'config';
+export const SHIPPED_FILES_FOLDER = 'files';
 
 export const SWIFT_CONFIGURATION = 'swift';
 

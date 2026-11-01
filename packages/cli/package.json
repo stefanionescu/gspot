@@ -32,7 +32,9 @@
     },
     "files": [
         "dist/purgecss-process.js",
-        "configurations",
+        "src/configurations/*/*/manifest.toml",
+        "src/configurations/*/*/rules/**",
+        "src/configurations/*/*/files/**",
         "grammars"
     ],
     "engines": {

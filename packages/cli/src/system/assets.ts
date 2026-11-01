@@ -10,7 +10,7 @@ const packageFolder = dirname(createRequire(import.meta.url).resolve(CLI_PACKAGE
 /**
 Build the path of one asset in the package, for a tool that reads it by path.
 
-@param path the asset, such as `configurations/language/bash/manifest.toml`.
+@param path the asset, such as `src/configurations/language/bash/manifest.toml`.
 @returns the absolute path.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers find a package asset from the package folder that this module finds once.
@@ -21,7 +21,7 @@ export function buildAssetPath(path: string): string {
 /**
 List the asset paths under a prefix, relative to the package, sorted.
 
-@param prefix the start of the paths, such as `configurations/`.
+@param prefix the start of the paths, such as `src/configurations/`.
 */
 export function listAssets(prefix: string): string[] {
     const folder = join(packageFolder, prefix);

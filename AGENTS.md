@@ -115,8 +115,9 @@ You can edit the other keys of that file.
 - Write every type as a TypeScript `type` alias.
 - Use the types that a package publishes when the code already depends on that package. Do not add a dependency for its
   types alone.
-- Write a JavaScript module that gspot ships as a TypeScript source in `packages/cli/configurations/`. The manifest
-  names it as the `source` of its config file, and gspot transpiles it.
+- Write a JavaScript module that gspot ships as a TypeScript source in the `files/` folder of its configuration,
+  `packages/cli/src/configurations/<group>/<configuration>/files/`. The manifest names it as the `source` of its config
+  file, and gspot transpiles it.
 - Do not use subagents or parallel agents unless asked in the conversation.
 - Keep the owner's descriptions word for word: the first sentence of `README.md`, and the `description` in
   `packages/cli/package.json`. The docs, `llms.txt`, `gspot --help`, and the GitHub repository description build their
@@ -157,7 +158,7 @@ repository.
 ### Checks and generators
 
 - `packages/cli/src/checks/` has one file per configuration, `checks/<group>/<configuration>.ts`, under the group of
-  its folder in `packages/cli/configurations/`.
+  its folder in `packages/cli/src/configurations/`.
 - When the checks of a configuration pass the file length limit, they move to a folder
   `checks/<group>/<configuration>/`. That folder has one file per check, named after it, or per input that several
   checks read.
@@ -165,7 +166,7 @@ repository.
 - Code that belongs to one configuration stays in its folder when another configuration reuses it, such as the
   Postgres migrations reader that supabase reads.
 - The code of one configuration sits at `<group>/<configuration>` in every tree: its shipped files in
-  `packages/cli/configurations/`, its checks, its generators, and its tests. One code file sits at
+  `packages/cli/src/configurations/`, its checks, its generators, and its tests. One code file sits at
   `<group>/<configuration>.ts`, and more files make the folder `<group>/<configuration>/`.
 - The code that writes a config file sits in `packages/cli/src/generation/configurations/<group>/<configuration>/`,
   named for the file it writes. gspot writes that file to `.gspot/configurations/<group>/<configuration>/`.

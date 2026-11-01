@@ -4,5 +4,5 @@
         "types": ["node"],
         "lib": ["ESNext"]
     },
-    "include": ["src/**/*.ts", "configurations/**/*.ts", "pin-ages.ts"]
+    "include": ["src/**/*.ts", "pin-ages.ts"]
 }

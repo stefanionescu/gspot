@@ -4,7 +4,7 @@ title = "Local"
 description = "A local configuration used by manifest loading."
 `;
 
-export const EXAMPLE_MANIFEST_PATH = 'configurations/language/example/manifest.toml';
+export const EXAMPLE_MANIFEST_PATH = 'src/configurations/language/example/manifest.toml';
 
 export const MANIFEST_INVARIANT_CASES = [
     {

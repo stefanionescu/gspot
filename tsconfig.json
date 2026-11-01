@@ -19,7 +19,6 @@
         "resolveJsonModule": true,
         "paths": {
             "#cli/*": ["./packages/cli/src/*"],
-            "#cli-configurations/*": ["./packages/cli/configurations/*"],
             "#tests/*": ["./tests/*"],
             "#cli-package": ["./packages/cli/package.json"],
             "#eslint-plugin/*": ["./packages/eslint-plugin/src/*"],

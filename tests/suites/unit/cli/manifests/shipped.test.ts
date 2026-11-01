@@ -168,7 +168,7 @@ test('each check waits for declared settings and runs at a stage that has the re
 });
 
 test('shipped configuration folders have unique names', () => {
-    const names = listAssets('configurations/')
+    const names = listAssets('src/configurations/')
         .filter((path) => path.endsWith('/manifest.toml'))
         .map((path) => posix.basename(posix.dirname(path)));
     expect(new Set(names).size).toBe(names.length);
@@ -176,7 +176,7 @@ test('shipped configuration folders have unique names', () => {
 
 test('every shipped Markdown table parses as a table instead of a paragraph', () => {
     const errors: string[] = [];
-    const rules = listAssets('configurations/').filter((path) => path.includes('/rules/') && path.endsWith('.md'));
+    const rules = listAssets('src/configurations/').filter((path) => path.includes('/rules/') && path.endsWith('.md'));
     for (const path of rules) {
         const text = readFileSync(buildAssetPath(path), 'utf8');
         const document = fromMarkdown(text, {

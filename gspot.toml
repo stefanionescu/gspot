@@ -73,7 +73,7 @@ allowed_names = ["objects"]
 reason = "Xcode project files name the object table objects."
 
 [[naming.override]]
-paths = ["packages/cli/configurations/language/markdown/config/markdownlint-cli2.ts", "packages/cli/src/types/generation/markdownlint-cli2.ts"]
+paths = ["packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts", "packages/cli/src/types/generation/markdownlint-cli2.ts"]
 allowed_names = ["markdownlint-cli2"]
 reason = "The manifest names the source after its markdownlint-cli2 target, and the placeholder uses that name."
 
@@ -113,7 +113,7 @@ allowed_names = ["reason_when"]
 reason = "gspot list settings --json and the shipped setting definitions name this field reason_when."
 
 [[naming.override]]
-paths = ["packages/cli/configurations/general/data-files/**", "packages/cli/src/checks/general/data-files.ts", "packages/cli/src/config/checks/general/data-files.ts", "packages/cli/src/types/checks/general/data-files.ts", "packages/cli/src/generation/configurations/general/data-files.ts", "tests/suites/unit/cli/checks/general/data-files.test.ts", "tests/config/integration/checks/general/data-files.ts", "tests/suites/integration/checks/general/data-files.test.ts", "tests/config/integration/checks/general/security/sensitive-data.ts", "tests/suites/integration/checks/general/security/sensitive-data.test.ts"]
+paths = ["packages/cli/src/configurations/general/data-files/**", "packages/cli/src/checks/general/data-files.ts", "packages/cli/src/config/checks/general/data-files.ts", "packages/cli/src/types/checks/general/data-files.ts", "packages/cli/src/generation/configurations/general/data-files.ts", "tests/suites/unit/cli/checks/general/data-files.test.ts", "tests/config/integration/checks/general/data-files.ts", "tests/suites/integration/checks/general/data-files.test.ts", "tests/config/integration/checks/general/security/sensitive-data.ts", "tests/suites/integration/checks/general/security/sensitive-data.test.ts"]
 allowed_names = ["data-files", "data-files.test", "sensitive-data", "sensitive-data.test"]
 reason = "These files and folders take the names of the data-files configuration and the security/sensitive-data check."
 
@@ -170,7 +170,7 @@ import_extension = "ts"
 no-restricted-properties = [{ object = "Bun", property = "env" }, { object = "Deno", property = "env" }, { property = "localeCompare", message = "Use compareText for stable ordering." }]
 
 [tools.knip]
-entry = ["packages/cli/build.ts", "packages/cli/pin-ages.ts", "packages/eslint-plugin/build.ts", "tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/sandboxes/tool-project.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config/eslint-functions.ts", "packages/cli/src/bin.ts", "packages/cli/src/reference.ts", "packages/cli/configurations/language/markdown/config/markdownlint-cli2.ts", "packages/cli/configurations/framework/site/config/purgecss.ts"]
+entry = ["packages/cli/build.ts", "packages/cli/pin-ages.ts", "packages/eslint-plugin/build.ts", "tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/sandboxes/tool-project.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/src/configurations/language/javascript/files/eslint-functions.ts", "packages/cli/src/bin.ts", "packages/cli/src/reference.ts", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts", "packages/cli/src/configurations/framework/site/files/purgecss.ts"]
 
 [[scope]]
 path = "docs"
@@ -297,7 +297,7 @@ paths = ["tests/suites/**"]
 
 [[import_rule]]
 name = "shipped-config"
-paths = ["packages/cli/configurations/**/config/**"]
+paths = ["packages/cli/src/configurations/*/*/files/**"]
 can_import = ["cli-types"]
 
 [[import_rule]]
@@ -321,7 +321,7 @@ reason = "As checked on 2026-10-31, only minimatch 11.0.1 fixes the globparts de
 
 [[ignore]]
 check = "docs/missing-paths"
-paths = ["packages/cli/configurations/infrastructure/docker/rules/DOCKER.md", "packages/cli/configurations/language/html/rules/HTML.md", "packages/cli/configurations/platform/supabase/rules/SUPABASE.md"]
+paths = ["packages/cli/src/configurations/infrastructure/docker/rules/DOCKER.md", "packages/cli/src/configurations/language/html/rules/HTML.md", "packages/cli/src/configurations/platform/supabase/rules/SUPABASE.md"]
 reason = "Paths in shipped rules are examples for user projects."
 
 [[ignore]]
@@ -332,7 +332,7 @@ reason = "A published library uses ranges for dependencies and peers."
 
 [[ignore]]
 check = "prose/vale"
-paths = ["packages/cli/configurations/general/prose/config/styles/LICENSES.md"]
+paths = ["packages/cli/src/configurations/general/prose/files/styles/LICENSES.md"]
 reason = "This file reproduces upstream license notices and terms whose wording must remain unchanged."
 
 [[ignore]]
@@ -397,8 +397,8 @@ reason = "AGENTS.md keeps every schema in a schemas folder, and the docs site de
 [[ignore]]
 check = "structure/lone-files"
 rule = "lone-file"
-paths = ["packages/cli/configurations/framework/site/config/purgecss.ts", "packages/cli/configurations/language/markdown/config/markdownlint-cli2.ts"]
-reason = "The manifest loader discovers config files in config/ and names each of these modules as the source of its config file target."
+paths = ["packages/cli/src/configurations/framework/site/files/purgecss.ts", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts"]
+reason = "The manifest loader discovers config files in files/ and names each of these modules as the source of its config file target."
 
 [[ignore]]
 check = "structure/pass-through-folders"

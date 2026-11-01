@@ -44,7 +44,7 @@ jobs:
                       ~/.bun/install/cache
                       ~/.cache/uv
                       ~/AppData/Local/uv/cache
-                  key: packages-${{ runner.os }}-${{ hashFiles('mise.toml', 'bun.lock', 'packages/cli/configurations/**/manifest.toml') }}
+                  key: packages-${{ runner.os }}-${{ hashFiles('mise.toml', 'bun.lock', 'packages/cli/src/configurations/**/manifest.toml') }}
             - if: matrix.suite == 'integration' && runner.os == 'Linux'
               run: sudo apt-get update && sudo apt-get install --yes libxml2-utils zsh
             - if: runner.os == 'macOS'

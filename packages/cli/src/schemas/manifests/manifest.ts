@@ -12,7 +12,7 @@ import {
     CHECK_RUNS,
     CHECK_NEEDS,
     CHECK_CWD_VALUES,
-    SHIPPED_CONFIG_FOLDER,
+    SHIPPED_FILES_FOLDER,
 } from '#cli/config/manifests/names.ts';
 import {
     levelSchema,
@@ -94,7 +94,7 @@ const configSchema = z
         return {
             ...config,
             file: config.target,
-            source: posix.join(SHIPPED_CONFIG_FOLDER, config.source ?? config.target),
+            source: posix.join(SHIPPED_FILES_FOLDER, config.source ?? config.target),
         };
     });
 

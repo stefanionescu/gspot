@@ -23,7 +23,7 @@ export function buildConfiguration(
 ): Configuration {
     const parsed = manifestSchema.parse({
         ...parse(fields.tables ?? ''),
-        folder: `configurations/${fields.group ?? 'language'}/${name}`,
+        folder: `src/configurations/${fields.group ?? 'language'}/${name}`,
         configuration: {
             name,
             title: name,

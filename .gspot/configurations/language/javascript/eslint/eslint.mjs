@@ -520,7 +520,6 @@ export default [
                     ],
                     "aliases": {
                         "#cli/*": "packages/cli/src/*",
-                        "#cli-configurations/*": "packages/cli/configurations/*",
                         "#tests/*": "tests/*",
                         "#cli-package": "packages/cli/package.json",
                         "#eslint-plugin/*": "packages/eslint-plugin/src/*",
@@ -614,7 +613,6 @@ export default [
                     ],
                     "aliases": {
                         "#cli/*": "packages/cli/src/*",
-                        "#cli-configurations/*": "packages/cli/configurations/*",
                         "#tests/*": "tests/*",
                         "#cli-package": "packages/cli/package.json",
                         "#eslint-plugin/*": "packages/eslint-plugin/src/*",
@@ -644,7 +642,6 @@ export default [
                     ],
                     "aliases": {
                         "#cli/*": "packages/cli/src/*",
-                        "#cli-configurations/*": "packages/cli/configurations/*",
                         "#tests/*": "tests/*",
                         "#cli-package": "packages/cli/package.json",
                         "#eslint-plugin/*": "packages/eslint-plugin/src/*",
@@ -1155,7 +1152,7 @@ export default [
                     {
                         "category": "import-rule:shipped-config",
                         "pattern": [
-                            "packages/cli/configurations/**/config/**"
+                            "packages/cli/src/configurations/*/*/files/**"
                         ]
                     },
                     {

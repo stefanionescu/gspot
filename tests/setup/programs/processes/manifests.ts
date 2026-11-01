@@ -15,7 +15,7 @@ for (const [path, text] of Object.entries(input.files)) {
 
 const buildAssetPath = assets.buildAssetPath;
 using listing = spyOn(assets, 'listAssets').mockImplementation((prefix) =>
-    prefix === 'configurations/' ? paths : input.assets.filter((path) => path.startsWith(prefix)),
+    prefix === 'src/configurations/' ? paths : input.assets.filter((path) => path.startsWith(prefix)),
 );
 using locating = spyOn(assets, 'buildAssetPath').mockImplementation((path) =>
     path in input.files ? join(folder, path) : buildAssetPath(path),

@@ -21,18 +21,21 @@ async function writePackageFolder(folder: string): Promise<string> {
             join(root, 'packages/cli/package.json'),
             'utf8',
         ),
-        [`${PACKAGE_FOLDER}/packages/cli/configurations/language/bash/manifest.toml`]: BASH_MANIFEST,
+        [`${PACKAGE_FOLDER}/packages/cli/src/configurations/language/bash/manifest.toml`]: BASH_MANIFEST,
         ...Object.fromEntries(
             Object.entries({
-                'packages/cli/configurations/.index.json': '{}',
-                'packages/cli/configurations/language/bash/.meta/state.json': '{}',
+                'packages/cli/src/configurations/.index.json': '{}',
+                'packages/cli/src/configurations/language/bash/.meta/state.json': '{}',
             }).map(([path, text]) => [`${PACKAGE_FOLDER}/${path}`, text]),
         ),
     });
     const cwd = join(folder, PACKAGE_FOLDER);
     const [program = ''] = buildProgramArguments('processes/assets');
     await cp(program, join(cwd, 'assets.ts'));
-    await cp(join(root, 'packages/cli/src'), join(cwd, 'packages/cli/src'), { recursive: true });
+    await cp(join(root, 'packages/cli/src'), join(cwd, 'packages/cli/src'), {
+        recursive: true,
+        filter: (source) => !source.startsWith(join(root, 'packages/cli/src/configurations')),
+    });
     await symlink(join(root, 'packages/cli/node_modules'), join(cwd, 'packages/cli/node_modules'), 'junction');
     await symlink(join(root, 'node_modules'), join(cwd, 'node_modules'), 'junction');
     return cwd;
@@ -48,9 +51,9 @@ test('a package folder with spaces, percent signs, and Unicode reads and lists i
     expect(JSON.parse(result.stdout)).toStrictEqual({
         text: BASH_MANIFEST,
         files: [
-            'configurations/.index.json',
-            'configurations/language/bash/.meta/state.json',
-            'configurations/language/bash/manifest.toml',
+            'src/configurations/.index.json',
+            'src/configurations/language/bash/.meta/state.json',
+            'src/configurations/language/bash/manifest.toml',
         ],
     });
 });

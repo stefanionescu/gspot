@@ -42,8 +42,8 @@ test('a manifest without [detect] takes the matchers of [files]', () => {
 test.each(DECLARATION_ORDERS)(
     'a tool name links to the configuration that declares it, listed $order',
     async ({ ownerFirst }) => {
-        const consumer = 'configurations/infrastructure/consumer/manifest.toml';
-        const owner = 'configurations/general/owner/manifest.toml';
+        const consumer = 'src/configurations/infrastructure/consumer/manifest.toml';
+        const owner = 'src/configurations/general/owner/manifest.toml';
         const consumed = CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\n';
         const manifest = CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\nsystem = true\n';
         const paths = ownerFirst ? [owner, consumer] : [consumer, owner];
@@ -65,16 +65,16 @@ test('only declared config files are loaded and each record sets its tool and sc
                 '[[tool]]\nname = "semgrep"\nversion = "1.0.0"\n',
         },
         [
-            'configurations/language/example/config/semgrep/first.yml',
-            'configurations/language/example/config/semgrep/second.yml',
-            'configurations/language/example/config/semgrep/not-a-pack.txt',
+            'src/configurations/language/example/files/semgrep/first.yml',
+            'src/configurations/language/example/files/semgrep/second.yml',
+            'src/configurations/language/example/files/semgrep/not-a-pack.txt',
         ] as const,
     );
     const configuration = configurationsByName.get('example')!;
     expect(configuration.configs.map(({ source, target }) => [source, target])).toStrictEqual([
-        ['config/other.yml', `${GSPOT_PATHS.configurations}/language/example/other.yml`],
-        ['config/semgrep/first.yml', `${GSPOT_PATHS.configurations}/language/example/semgrep/first.yml`],
-        ['config/semgrep/second.yml', `${GSPOT_PATHS.configurations}/language/example/semgrep/second.yml`],
+        ['files/other.yml', `${GSPOT_PATHS.configurations}/language/example/other.yml`],
+        ['files/semgrep/first.yml', `${GSPOT_PATHS.configurations}/language/example/semgrep/first.yml`],
+        ['files/semgrep/second.yml', `${GSPOT_PATHS.configurations}/language/example/semgrep/second.yml`],
     ]);
     expect(configuration.configs.slice(1, 3)).toMatchObject([
         { tool: ['semgrep'], per_scope: true },
