@@ -110,3 +110,10 @@ export const HTTP_EXPECTATIONS = new Set(['expectOne', 'expectNone', 'verify']);
 
 export const DONE_CALLBACKS =
     'CallExpression[arguments.length>0] > Identifier.callee, CallExpression[callee.property.name="catch"] > Identifier.arguments:first-child, CallExpression[callee.property.name=/^(?:then|subscribe)$/] > Identifier.arguments:nth-child(2), CallExpression[callee.property.name="subscribe"] > ObjectExpression > Property[key.name="error"] > Identifier.value';
+
+export const STATEMENT_LINKS = new Set<string>([
+    'ChainExpression',
+    'AwaitExpression',
+    'YieldExpression',
+    'TSNonNullExpression',
+]);

@@ -100,6 +100,7 @@ import { noUpdatedLoopCounter } from './rules/no-updated-loop-counter.ts';
 import { noVueClassComponents } from './rules/no-vue-class-components.ts';
 import { noInlineInterpolation } from './rules/no-inline-interpolation.ts';
 import { noKeywordDeclarations } from './rules/no-keyword-declarations.ts';
+import { noMisplacedAssertions } from './rules/no-misplaced-assertions.ts';
 import { noRedundantAssignment } from './rules/no-redundant-assignment.ts';
 import { noUselessIntersection } from './rules/no-useless-intersection.ts';
 import { preferImmediateReturn } from './rules/prefer-immediate-return.ts';
@@ -189,6 +190,7 @@ const rules = {
     'no-mismatched-assertion-types': noMismatchedAssertionTypes,
     'valid-throw-assertions': validThrowAssertions,
     'require-test-assertions': requireTestAssertions,
+    'no-misplaced-assertions': noMisplacedAssertions,
     'no-setter-in-component': noSetterInComponent,
     'no-self-state-update': noSelfStateUpdate,
     'no-generated-keys': noGeneratedKeys,

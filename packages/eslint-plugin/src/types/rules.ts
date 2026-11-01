@@ -281,3 +281,9 @@ export type AssertionSearch = {
     types: TypeReader | undefined;
     visited: Map<TSESTree.Node, boolean>;
 };
+
+export type PlacementState = {
+    reported: Set<TSESTree.Node>;
+    topLevel: Map<TSESTree.Node, boolean>;
+    hasTests: boolean;
+};

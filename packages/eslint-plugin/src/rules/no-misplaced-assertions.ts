@@ -1,0 +1,76 @@
+import { createRule } from '../rule.ts';
+import { usesModule } from '../packages.ts';
+import { readTestCall } from '../testing.ts';
+import { readAssertionKind } from '../assertions.ts';
+import type { FileContext, PlacementState } from '../types/rules.ts';
+import { STATEMENT_LINKS, EVIDENCE_IMPORTS, EVIDENCE_DEPENDENCIES } from '../config/evidence.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+
+function isStatementLink(parent: TSESTree.Node, child: TSESTree.Node): boolean {
+    const isReceiver = parent.type === AST_NODE_TYPES.MemberExpression && parent.object === child;
+    const isCallee = parent.type === AST_NODE_TYPES.CallExpression && parent.callee === child;
+    return STATEMENT_LINKS.has(parent.type) || isReceiver || isCallee;
+}
+
+function readStatement(node: TSESTree.CallExpression): TSESTree.ExpressionStatement | undefined {
+    let child: TSESTree.Node = node;
+    let parent: TSESTree.Node | undefined = node.parent;
+    while (parent !== undefined && isStatementLink(parent, child)) {
+        child = parent;
+        parent = parent.parent;
+    }
+    return parent?.type === AST_NODE_TYPES.ExpressionStatement ? parent : undefined;
+}
+
+function readPlacement(node: TSESTree.Node, source: TSESLint.SourceCode): 'top' | 'suite' | 'function' {
+    const callback = source.getAncestors(node).findLast((ancestor) => ASTUtils.isFunction(ancestor));
+    const owner =
+        callback?.parent.type === AST_NODE_TYPES.CallExpression ? readTestCall(callback.parent, source) : undefined;
+    if (callback === undefined) return 'top';
+    return owner?.kind === 'suite' ? 'suite' : 'function';
+}
+
+function trackAssertion(node: TSESTree.CallExpression, context: FileContext, state: PlacementState): void {
+    const kind = readAssertionKind(node, context);
+    const statement = kind === undefined || kind === 'type' ? undefined : readStatement(node);
+    if (statement === undefined) return;
+    const placement = readPlacement(node, context.sourceCode);
+    if (placement === 'suite') state.reported.add(statement);
+    if (placement === 'top') state.topLevel.set(statement, state.topLevel.get(statement) === true || kind === 'script');
+}
+
+export const noMisplacedAssertions = createRule<[], 'misplaced'>({
+    name: 'no-misplaced-assertions',
+    meta: {
+        defaultOptions: [],
+        type: 'problem',
+        docs: {
+            level: 'recommended',
+            description:
+                'Reports an assertion statement of chai, sinon, supertest, node:assert, node:test, uvu, aws-cdk, Vitest, Bun, Cypress, or a global `expect` that runs in the callback of a suite such as `describe`, or at the top of a file that declares tests. At the top of a file without tests, it reports only the assertions that need a test runner, such as `expect` of Vitest, and leaves a script that asserts with node:assert or chai.',
+            why: 'A suite callback runs while the runner collects the tests, and the top of a file runs when the runner loads it, so a failure there aborts the whole file instead of failing one test, or runs before the setup that the tests need.',
+            fix: 'Move the assertion into a test, or into a hook such as `beforeEach`.',
+            example:
+                '`describe("cart", () => { expect(cart.items).toHaveLength(0); })` reports `misplaced`. Move the assertion into an `it` callback.',
+        },
+        schema: [],
+        messages: { misplaced: 'Move this assertion into a test or a lifecycle hook.' },
+    },
+    create(context) {
+        const source = context.sourceCode;
+        const state: PlacementState = { reported: new Set(), topLevel: new Map(), hasTests: false };
+        if (!usesModule(context, EVIDENCE_IMPORTS, EVIDENCE_DEPENDENCIES)) return {};
+        return {
+            CallExpression(node) {
+                const test = readTestCall(node, source);
+                state.hasTests ||= test !== undefined && test.kind !== 'hook';
+                trackAssertion(node, context, state);
+            },
+            'Program:exit'() {
+                for (const [statement, isScript] of state.topLevel)
+                    if (state.hasTests || !isScript) state.reported.add(statement);
+                for (const statement of state.reported) context.report({ node: statement, messageId: 'misplaced' });
+            },
+        };
+    },
+});
