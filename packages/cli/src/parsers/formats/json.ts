@@ -5,7 +5,7 @@ import { JSONC_OPTIONS } from '#cli/config/parsers.ts';
 import type { EditableFile } from '#cli/types/parsers.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import { isTable, findValueAt, normalizeTables } from '#cli/system/tables.ts';
-import { parse, modify, applyEdits, type ParseError, printParseErrorCode } from 'jsonc-parser';
+import { parse, modify, applyEdits, type ParseError, printParseErrorCode } from 'jsonc-parser/lib/esm/main.js';
 
 export function parseJsonFile(path: string, text: string): Record<string, unknown>;
 

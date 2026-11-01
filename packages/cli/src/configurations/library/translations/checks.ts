@@ -3,12 +3,12 @@ import { read } from '#cli/system/files/reads.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { parseTree, findNodeAtLocation } from 'jsonc-parser';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { getPosition, compareText } from '#cli/system/text.ts';
 import { messagesSchema } from '#cli/schemas/configurations.ts';
 import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { parseTree, findNodeAtLocation } from 'jsonc-parser/lib/esm/main.js';
 import type { MessageFiles, ParsedMessage } from '#cli/types/configurations/language.ts';
 import { TYPE, parse, type MessageFormatElement } from '@formatjs/icu-messageformat-parser';
 

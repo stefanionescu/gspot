@@ -10,7 +10,7 @@ import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { SYNTAX_RULE } from '#cli/config/configurations/infrastructure.ts';
 import type { CodeFence, ParseCache, GrammarName } from '#cli/types/parsers.ts';
-import { parse, type ParseError, type ParseOptions, printParseErrorCode } from 'jsonc-parser';
+import { parse, type ParseError, type ParseOptions, printParseErrorCode } from 'jsonc-parser/lib/esm/main.js';
 
 import type {
     FenceParser,

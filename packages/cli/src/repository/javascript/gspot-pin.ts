@@ -1,7 +1,6 @@
 import semver from 'semver';
 import { find } from '#cli/system/files/reads.ts';
 import type { Files } from '#cli/types/system.ts';
-import { modify, applyEdits } from 'jsonc-parser';
 import { GspotError } from '#cli/system/errors.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { createRunCache } from '#cli/system/cache.ts';
@@ -11,6 +10,7 @@ import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { modify, applyEdits } from 'jsonc-parser/lib/esm/main.js';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
 import { selectStartRunner } from '#cli/repository/javascript/package-manager.ts';

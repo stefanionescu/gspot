@@ -42,11 +42,20 @@
         "node": ">=22.22.3"
     },
     "dependencies": {
+        "libpg-query": "18.1.4",
+        "typescript": "5.9.3",
+        "web-tree-sitter": "0.27.0"
+    },
+    "devDependencies": {
         "@commander-js/extra-typings": "15.0.0",
         "@decimalturn/toml-patch": "3.0.5",
         "@formatjs/icu-messageformat-parser": "2.11.4",
         "@manypkg/tools": "2.1.2",
         "@npmcli/config": "10.12.0",
+        "@pgsql/types": "18.0.0",
+        "@types/picomatch": "4.0.2",
+        "@types/semver": "7.7.1",
+        "@types/which": "3.0.4",
         "@yarnpkg/parsers": "3.1.0",
         "commander": "15.0.0",
         "diff": "9.0.0",
@@ -54,7 +63,6 @@
         "execa": "9.6.1",
         "ignore": "7.0.9",
         "jsonc-parser": "3.3.1",
-        "libpg-query": "18.1.4",
         "mdast-util-from-markdown": "2.0.3",
         "p-limit": "7.3.2",
         "picomatch": "4.0.7",
@@ -64,19 +72,10 @@
         "spdx-expression-parse": "5.0.0",
         "spdx-satisfies": "6.0.0",
         "tinyglobby": "0.2.17",
-        "typescript": "5.9.3",
         "unist-util-visit": "5.1.0",
-        "web-tree-sitter": "0.27.0",
         "which": "7.0.0",
         "yaml": "2.9.0",
         "zod": "4.6.7"
-    },
-    "devDependencies": {
-        "@pgsql/types": "18.0.0",
-        "@types/npmcli__config": "6.0.4",
-        "@types/picomatch": "4.0.2",
-        "@types/semver": "7.7.1",
-        "@types/which": "3.0.4"
     },
     "sideEffects": true
 }
