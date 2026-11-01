@@ -29,7 +29,7 @@ export type FixRounds = { results: FixResult[]; before: PathBytes; after: PathBy
 
 export type PushInput = { stdin: string; remote?: string };
 
-export type FixReport = { results: FixResult[]; changed: string[]; broken: string[] };
+export type FixReport = { results: FixResult[]; changed: string[]; broken: string[]; conflicted: string[] };
 
 export type FixResult = { check: string; changed: string[] } & (
     | { status: 'changed' | 'unchanged' | 'skipped' }

@@ -13,10 +13,10 @@ import { runToolProcess } from '#cli/engine/tool-runs/tool.ts';
 import { isReportedCrash } from '#cli/engine/tool-runs/output.ts';
 import { listCopyFiles } from '#cli/engine/tool-runs/placeholders.ts';
 import type { SpawnResult, FileContents } from '#cli/types/system.ts';
-import { FIX_ROUNDS, FIX_CANCELED_MESSAGE } from '#cli/config/engine.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 import { buildCommandLaunch, selectCommandFolder } from '#cli/engine/tool-runs/check.ts';
 import type { FixReport, FixResult, FixRounds, PathBytes, CheckSession, CommandLaunch } from '#cli/types/engine/run.ts';
+import { FIX_ROUNDS, CONFLICT_MARKER_LINE, FIX_CANCELED_MESSAGE } from '#cli/config/engine.ts';
 
 function findFixFailure(planned: PlannedCheck, result: SpawnResult): string | undefined {
     const { check } = planned;
@@ -172,6 +172,11 @@ function restoreBrokenFiles(root: string, broken: string[], rounds: FixRounds): 
     }
 }
 
+function listConflictedPaths(root: string, paths: string[]): string[] {
+    const contents = readContents(root, paths);
+    return paths.filter((path) => CONFLICT_MARKER_LINE.test(contents.get(path)?.toString('utf8') ?? ''));
+}
+
 function buildFixResult(
     check: string,
     changed: string[],
@@ -190,7 +195,15 @@ Runs fixes in passes and collects their results.
 @param planned the checks to fix.
 */
 export async function runFixers(session: CheckSession, planned: PlannedCheck[]): Promise<FixReport> {
-    const checks = planned.filter((check) => check.check.fix !== undefined);
+    const fixable = planned.filter((check) => check.check.fix !== undefined);
+    const conflicted = listConflictedPaths(session.root, [
+        ...new Set(fixable.flatMap((check) => listPlannedPaths(check))),
+    ]);
+    const checks = fixable.map((check) => ({
+        ...check,
+        files: check.files.filter((file) => !conflicted.includes(file.path)),
+        triggerPaths: check.triggerPaths.filter((path) => !conflicted.includes(path)),
+    }));
     const paths = [...new Set(checks.flatMap((check) => listPlannedPaths(check)))].toSorted((a, b) =>
         compareText(a, b),
     );
@@ -199,5 +212,5 @@ export async function runFixers(session: CheckSession, planned: PlannedCheck[]):
     const changed = listChangedPaths(before, after);
     const broken = await listBrokenFiles(changed, before, after);
     restoreBrokenFiles(session.root, broken, rounds);
-    return { results, changed: changed.filter((path) => !broken.includes(path)), broken };
+    return { results, changed: changed.filter((path) => !broken.includes(path)), broken, conflicted };
 }

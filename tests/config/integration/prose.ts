@@ -63,21 +63,6 @@ export const PACKAGE_STYLE_CASES = [
             [31, 'gspot.straight-quotes'],
         ],
     },
-    {
-        sample: `${'<'.repeat(7)} HEAD
-One native branch.
-${'='.repeat(7)}
-The other native branch.
-${'>'.repeat(7)} native`,
-        findings: [
-            [33, 'gspot.title-case'],
-            [33, 'gspot.merge-conflict-markers'],
-            [33, 'gspot.acronyms'],
-            [34, 'Google.HeadingPunctuation'],
-            [35, 'gspot.merge-conflict-markers'],
-            [37, 'gspot.merge-conflict-markers'],
-        ],
-    },
 ] as const;
 
 export const STYLE_CASES = [

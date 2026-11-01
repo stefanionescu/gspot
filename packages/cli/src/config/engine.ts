@@ -10,6 +10,8 @@ export const BASE_FLAG = '--base';
 
 export const FIX_ROUNDS = 3;
 
+export const CONFLICT_MARKER_LINE = /^(?:<{7}|={7}|>{7})(?: |$)/mu;
+
 export const FIX_CANCELED_MESSAGE = 'The fix was canceled.';
 
 export const STAGED_FLAG = '--staged';

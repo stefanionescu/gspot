@@ -177,9 +177,10 @@ repository.
 - Code that several configurations share sits at the top of `configurations/`, such as `registry.ts`, `syntax.ts`, and
   `tsc/`. Code that belongs to one configuration stays in its folder when another configuration reuses it, such as the
   Postgres migrations reader that supabase reads.
-- `packages/cli/src/configurations/registry.ts` joins the check and config file names of the manifests to their code.
-  The engine gets the check code through `RunOptions.selectCheckCode`, and a check reads the generated files through
-  `CheckSession.generation`, so neither layer imports a layer above it.
+- `packages/cli/src/configurations/registry.ts` joins the check names of the manifests to their code, and
+  `packages/cli/src/generation/configs.ts` joins the config file names to their generators. The engine gets the check
+  code through `RunOptions.selectCheckCode`, and a check reads the generated files through `CheckSession.generation`, so
+  neither layer imports a layer above it.
 - The npm package ships `manifest.toml`, `rules/`, and `files/` of each configuration from their paths under
   `packages/cli/src/configurations/`, where the runtime reads them.
 

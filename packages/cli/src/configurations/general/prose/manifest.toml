@@ -131,11 +131,6 @@ tool = "vale"
 
 [[config_file]]
 level = "all"
-target = "styles/gspot/merge-conflict-markers.yml"
-tool = "vale"
-
-[[config_file]]
-level = "all"
 target = "styles/gspot/tree-blocks.yml"
 tool = "vale"
 
@@ -251,6 +246,6 @@ example = "`Release on 03/04/2026.` reports an ambiguous date. Write `Release on
 help = "Rewrite the sentence the alert names, or add a real name and its reason to the `spelling.allowed_words` setting."
 name = "vale"
 stage = "commit"
-summary = "In Markdown, checks ambiguous dates, link text and alternative text at level basic, and the complete gspot style and upstream packages at level all. At level all, code comments get the comment rules: conscious language, placeholders, merge-conflict markers, session identifiers, straight quotes and em dashes."
+summary = "In Markdown, checks ambiguous dates, link text and alternative text at level basic, and the complete gspot style and upstream packages at level all. At level all, code comments get the comment rules: conscious language, placeholders, session identifiers, straight quotes and em dashes."
 tool = "vale"
 why = "An ambiguous date, a link that reads \"here\", or an image without alternative text fails some readers, and no other check catches it."

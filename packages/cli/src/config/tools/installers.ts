@@ -219,12 +219,11 @@ export const VALE_OFF_RULES: Readonly<Record<string, string>> = {
     'Harper.NumericRangeEnDash': 'gspot.en-dashes owns ranges',
 };
 
-export const VALE_MARKUP_RULES = ['gspot.merge-conflict-markers', 'gspot.tree-blocks'] as const;
+export const VALE_MARKUP_RULES = ['gspot.tree-blocks'] as const;
 
 export const VALE_COMMENT_RULES = [
     'gspot.conscious-language',
     'gspot.placeholders',
-    'gspot.merge-conflict-markers',
     'gspot.session-identifiers',
     'gspot.straight-quotes',
     'gspot.em-dashes',

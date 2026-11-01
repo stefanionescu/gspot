@@ -39,6 +39,22 @@ test(`local-files reports each tracked path that a scope's configurations leave 
     );
 });
 
+test('conflict-markers reports each marker line of a text file at level basic, and passes once resolved', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { level: 'basic' }),
+        'notes.txt': 'intro\n<<<<<<< HEAD\nours\n=======\ntheirs\n>>>>>>> branch\n',
+        'heading.md': '=== Three signs\n<<<<<<<< eight signs\n',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'repository/conflict-markers');
+    expect(findings.map(({ file, line }) => [file, line])).toStrictEqual([
+        ['notes.txt', 2],
+        ['notes.txt', 4],
+        ['notes.txt', 6],
+    ]);
+    await writeFile(join(sandbox.path, 'notes.txt'), 'intro\nours\n');
+    expect(await runSandboxCheck(sandbox.path, 'repository/conflict-markers')).toStrictEqual([]);
+});
+
 test('large files are reported in every scope except LFS, generated and vendored files, and pass once shrunk', async () => {
     await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['javascript'], {

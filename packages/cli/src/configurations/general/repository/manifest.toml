@@ -1,6 +1,6 @@
 [configuration]
 always_selected = true
-description = "Tracked files: large files outside Git LFS, and paths that a configuration keeps out of Git."
+description = "Tracked files: large files outside Git LFS, merge-conflict markers, and paths that a configuration keeps out of Git."
 title = "Repository"
 
 [[check]]
@@ -21,6 +21,15 @@ runs = "once"
 stage = "commit"
 summary = "Reports a tracked file at a path that a configuration keeps out of Git, and each tracked symbolic link that leaves the repository."
 why = "Machine-local values and installed packages belong outside shared Git history."
+
+[[check]]
+example = "A line `<<<<<<< HEAD` left in a file reports `conflict-marker`. Resolve the conflict, and delete the markers."
+help = "Keep the side of the conflict that you want, and delete the marker lines."
+name = "conflict-markers"
+runs = "once"
+stage = "commit"
+summary = "Reports each line of a tracked text file that a Git merge conflict leaves behind."
+why = "A file with conflict markers holds both sides of a merge, and a fixer can turn the markers into content that passes."
 
 [[check]]
 binary_files = true

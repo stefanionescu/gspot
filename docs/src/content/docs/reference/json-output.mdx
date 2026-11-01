@@ -118,20 +118,20 @@ To inspect generated-file differences without writing them, run
 of its generated content or managed block. A mode-only change shows the old and new modes. Without `--verbose`,
 gspot neither computes nor includes those diffs.
 
-| Field             | Meaning                                                                                      |
-| ----------------- | -------------------------------------------------------------------------------------------- |
-| `stages`          | The stages that ran, such as `commit` and `push`.                                            |
-| `started`         | Start time as an ISO 8601 timestamp.                                                         |
-| `duration`        | Elapsed run time in milliseconds.                                                            |
-| `comparison`      | When present, the selected content (`working-tree`, `index`, or `commit`) and its reference. |
-| `checks`          | The result of every planned check, skipped ones included, with their findings.               |
-| `ignores`         | Ignores in effect, with their check, optional lint rule, paths, and reason.                  |
-| `baselined`       | The findings that `gspot.baseline.json` subtracted, as a count per check.                    |
-| `unstagedChanges` | Number of changed files left out when the run reads the staging area.                        |
-| `partial`         | Whether the run selected only staged files, changed files, or named paths.                   |
-| `fixes`           | When present, the changed files, files restored after broken fixes, and fixer errors.        |
-| `failed`          | Check IDs that failed or stopped with an error, and the checks whose fixer failed.           |
-| `notChecked`      | When present, detected configurations that `gspot.toml` neither selects nor removes.         |
+| Field             | Meaning                                                                                                                         |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `stages`          | The stages that ran, such as `commit` and `push`.                                                                               |
+| `started`         | Start time as an ISO 8601 timestamp.                                                                                            |
+| `duration`        | Elapsed run time in milliseconds.                                                                                               |
+| `comparison`      | When present, the selected content (`working-tree`, `index`, or `commit`) and its reference.                                    |
+| `checks`          | The result of every planned check, skipped ones included, with their findings.                                                  |
+| `ignores`         | Ignores in effect, with their check, optional lint rule, paths, and reason.                                                     |
+| `baselined`       | The findings that `gspot.baseline.json` subtracted, as a count per check.                                                       |
+| `unstagedChanges` | Number of changed files left out when the run reads the staging area.                                                           |
+| `partial`         | Whether the run selected only staged files, changed files, or named paths.                                                      |
+| `fixes`           | When present, the changed files, files restored after broken fixes, files skipped for merge-conflict markers, and fixer errors. |
+| `failed`          | Check IDs that failed or stopped with an error, and the checks whose fixer failed.                                              |
+| `notChecked`      | When present, detected configurations that `gspot.toml` neither selects nor removes.                                            |
 
 Each `checks` item has `check`, `scope`, `status`, `fileCount`, `duration`, and `findings`. It can also have `help`,
 which says how to fix its findings, `files`,

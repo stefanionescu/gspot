@@ -38,6 +38,7 @@ export const REPOSITORY_RULES = {
     pathEncoding: 'path-encoding',
     absoluteLink: 'absolute-link',
     outwardLink: 'outward-link',
+    conflictMarker: 'conflict-marker',
     encoding: 'encoding',
     size: 'size',
     trackedFile: 'tracked-file',

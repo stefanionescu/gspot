@@ -276,7 +276,7 @@ Format the fixes as lines: the changed files and the files that the fixers broke
 */
 export function formatFixes(fixes: FixReport): string[] {
     const count = fixes.changed.length;
-    if (count === 0 && fixes.broken.length === 0) return [UNCHANGED_FIX_MESSAGE];
+    if (count === 0 && fixes.broken.length === 0 && fixes.conflicted.length === 0) return [UNCHANGED_FIX_MESSAGE];
     return [
         ...(count === 0
             ? []
@@ -284,5 +284,6 @@ export function formatFixes(fixes: FixReport): string[] {
         ...fixes.broken.map(
             (path) => `The fixers left a syntax error in ${path}; gspot put back the file as it was before the fixers.`,
         ),
+        ...fixes.conflicted.map((path) => `The fixers skipped ${path}, because it holds merge-conflict markers.`),
     ];
 }

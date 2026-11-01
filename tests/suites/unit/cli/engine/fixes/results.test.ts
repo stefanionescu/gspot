@@ -210,6 +210,21 @@ test('a fixer that breaks a file with an unstaged edit puts the file back and ex
     expect(result.report.failed).toStrictEqual([]);
 });
 
+test('a file with merge-conflict markers stays out of every fixer, and the fix report names it', async () => {
+    const conflict = 'one\n<<<<<<< HEAD\ntwo\n=======\nthree\n>>>>>>> branch\n';
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildFixerSettings(['*.txt']),
+        'conflict.txt': conflict,
+    });
+    const session = await openSession(sandbox.path);
+    const planned = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'conflict.txt=lost\n'));
+    const fixed = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned], selectCheckCode);
+    expect(await readFile(join(sandbox.path, 'conflict.txt'), 'utf8')).toBe(conflict);
+    expect(formatFixes(fixed)).toStrictEqual([
+        'The fixers skipped conflict.txt, because it holds merge-conflict markers.',
+    ]);
+});
+
 test('a fixer that leaves a code file that fails to parse is named in the fix report', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildFixerSettings(['*.ts']),
