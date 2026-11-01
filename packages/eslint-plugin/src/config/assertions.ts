@@ -212,3 +212,109 @@ export const UNCERTAIN_CHAI_PAIRS = [
     { first: 'not', second: 'by', minimum: 0, needsShape: false },
     { first: 'not', second: 'finite', minimum: 0, needsShape: false },
 ];
+
+export const EXPECT_STYLES = [
+    { style: 'jest-like', modules: ['vitest', 'bun:test', '@jest/globals'], dependencies: ['jest'] },
+    {
+        style: 'jasmine',
+        modules: ['jasmine'],
+        dependencies: ['jasmine', 'jasmine-core', 'jasmine-node', 'karma-jasmine'],
+    },
+    { style: 'playwright', modules: ['@playwright/test'], dependencies: ['@playwright/test'] },
+] as const;
+
+export const CHAI_MODULES = ['chai', 'chai/register-assert', 'chai/register-expect', 'chai/register-should', 'cypress'];
+
+export const NODE_ASSERT_MODULES = ['assert', 'node:assert', 'assert/strict', 'node:assert/strict'];
+
+export const EXPECT_PREDICATES = [
+    ['toBeTruthy', 'truthy'],
+    ['toBeFalsy', 'falsy'],
+    ['toBeDefined', 'defined'],
+    ['toBeUndefined', 'undefined'],
+    ['toBeNull', 'null'],
+] as const;
+
+export const EXPECT_COMPARISONS = [
+    ['toBe', 'strict'],
+    ['toEqual', 'deep'],
+    ['toStrictEqual', 'deep'],
+] as const;
+
+export const CHAI_PREDICATES = [
+    ['ok', 'truthy'],
+    ['true', 'true'],
+    ['false', 'false'],
+    ['null', 'null'],
+    ['undefined', 'undefined'],
+    ['exist', 'exists'],
+    ['exists', 'exists'],
+] as const;
+
+export const CHAI_COMPARISONS = [
+    ['equal', 'strict'],
+    ['equals', 'strict'],
+    ['eq', 'strict'],
+    ['eql', 'deep'],
+    ['eqls', 'deep'],
+] as const;
+
+export const ASSERT_FUNCTION = /^(?:chai\.|node:)?assert(?:\/strict)?$/u;
+
+export const CHAI_ASSERTION = /^(?:chai\.)?assert(?:\.|$)/u;
+
+export const NODE_ASSERTION = /^(?:node:)?assert(?:\/strict)?(?:\.|$)/u;
+
+export const CHAI_ASSERT_CHECKS = [
+    ['assert', { predicate: 'truthy', negated: false }],
+    ['ok', { predicate: 'truthy', negated: false }],
+    ['isOk', { predicate: 'truthy', negated: false }],
+    ['isNotOk', { predicate: 'truthy', negated: true }],
+    ['isTrue', { predicate: 'true', negated: false }],
+    ['isFalse', { predicate: 'false', negated: false }],
+    ['isNull', { predicate: 'null', negated: false }],
+    ['isNotNull', { predicate: 'null', negated: true }],
+    ['isUndefined', { predicate: 'undefined', negated: false }],
+    ['isDefined', { predicate: 'defined', negated: false }],
+    ['exists', { predicate: 'exists', negated: false }],
+    ['notExists', { predicate: 'exists', negated: true }],
+    ['equal', { comparison: 'loose', negated: false }],
+    ['notEqual', { comparison: 'loose', negated: true }],
+    ['strictEqual', { comparison: 'strict', negated: false }],
+    ['notStrictEqual', { comparison: 'strict', negated: true }],
+    ['deepEqual', { comparison: 'deep', negated: false }],
+    ['notDeepEqual', { comparison: 'deep', negated: true }],
+] as const;
+
+export const NODE_ASSERT_CHECKS = [
+    ['assert', { predicate: 'truthy', negated: false }],
+    ['ok', { predicate: 'truthy', negated: false }],
+    ['strictEqual', { comparison: 'strict', negated: false }],
+    ['notStrictEqual', { comparison: 'strict', negated: true }],
+    ['deepStrictEqual', { comparison: 'deep', negated: false }],
+    ['notDeepStrictEqual', { comparison: 'deep', negated: true }],
+    ['deepEqual', { comparison: 'loose', negated: false }],
+    ['notDeepEqual', { comparison: 'loose', negated: true }],
+] as const;
+
+export const FRESH_VALUES = new Set<string>([
+    'ArrayExpression',
+    'ObjectExpression',
+    'FunctionExpression',
+    'ArrowFunctionExpression',
+    'ClassExpression',
+    'NewExpression',
+]);
+
+export const FRESH_PREDICATES = new Set<string>(['truthy', 'defined', 'exists']);
+
+export const IDENTITY_STYLES = new Set<string>(['jest-like', 'playwright', 'node-assert']);
+
+export const DEEP_MATCHERS = new Map([
+    ['jest-like', ['toEqual', 'not.toEqual']],
+    ['jasmine', ['toEqual', 'not.toEqual']],
+    ['playwright', ['toEqual', 'not.toEqual']],
+    ['chai-bdd', ['deep.equal', 'not.deep.equal']],
+    ['chai-assert', ['deepEqual', 'notDeepEqual']],
+    ['node-assert', ['deepStrictEqual', 'notDeepStrictEqual']],
+]);

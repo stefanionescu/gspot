@@ -218,3 +218,39 @@ export type PathFrame = {
     assignments: AssignmentFrame[];
     segments: TSESLint.CodePathSegment[];
 };
+
+type AssertionStyle = 'jest-like' | 'jasmine' | 'playwright' | 'chai-bdd' | 'chai-assert' | 'node-assert';
+
+export type AssertionPredicate = 'truthy' | 'falsy' | 'true' | 'false' | 'defined' | 'undefined' | 'null' | 'exists';
+
+export type AssertionComparison = 'strict' | 'deep' | 'loose';
+
+export type AssertionSubject = { received: TSESTree.Expression; negated: boolean };
+
+export type Assertion = AssertionSubject & { style: AssertionStyle; node: TSESTree.Node; report: TSESTree.Node } & (
+        | { kind: 'predicate'; predicate: AssertionPredicate }
+        | { kind: 'comparison'; comparison: AssertionComparison; expected: TSESTree.Expression }
+    );
+
+export type AssertionChecks = {
+    style: AssertionStyle;
+    predicate?: AssertionPredicate | undefined;
+    comparison?: AssertionComparison | undefined;
+    negated: boolean;
+};
+
+export type AssertionStyles = {
+    expect: 'jest-like' | 'jasmine' | 'playwright' | undefined;
+    chai: boolean;
+    nodeAssert: boolean;
+};
+
+export type ChaiChain = { received: TSESTree.Expression; names: string[] };
+
+export type AssertedValue = { isFresh: boolean; isConstant: boolean; value: unknown };
+
+export type ConstantFinding = {
+    node: TSESTree.Node;
+    messageId: 'constant' | 'fresh' | 'identity';
+    matcher?: string;
+};

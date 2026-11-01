@@ -83,6 +83,7 @@ import { noSetterInComponent } from './rules/no-setter-in-component.ts';
 import { noUnknownRegexGroup } from './rules/no-unknown-regex-group.ts';
 import { noVoidArrayCallback } from './rules/no-void-array-callback.ts';
 import { embedAlternativeText } from './rules/embed-alternative-text.ts';
+import { noConstantAssertions } from './rules/no-constant-assertions.ts';
 import { noDuplicatedBranches } from './rules/no-duplicated-branches.ts';
 import { noIdenticalFunctions } from './rules/no-identical-functions.ts';
 import { noInvertedAssertions } from './rules/no-inverted-assertions.ts';
@@ -179,6 +180,7 @@ const rules = {
     'require-memoize-key': requireMemoizeKey,
     'prefer-native-jquery': preferNativeJquery,
     'prefer-native-axios': preferNativeAxios,
+    'no-constant-assertions': noConstantAssertions,
     'no-setter-in-component': noSetterInComponent,
     'no-self-state-update': noSelfStateUpdate,
     'no-generated-keys': noGeneratedKeys,
