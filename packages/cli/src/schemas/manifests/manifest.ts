@@ -34,7 +34,11 @@ const pathContainerSchema = z.strictObject({
     category: z.enum(NAMED_CATEGORIES),
 });
 
-const wordListSchema = z.strictObject({ words: z.string().array() });
+const wordListSchema = z.strictObject({
+    words: z.string().array(),
+    categories: z.string().array().optional(),
+    first_word: z.boolean().optional(),
+});
 
 const categoryCasesSchema = z.strictObject({ cases: z.enum(CASE_NAMES).array() });
 

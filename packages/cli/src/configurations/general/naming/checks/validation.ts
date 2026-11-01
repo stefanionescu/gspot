@@ -5,6 +5,7 @@ import { SQL_EXTENSION } from '#cli/config/configurations/infrastructure.ts';
 import { splitWords } from '#cli/configurations/general/naming/checks/settings.ts';
 
 import type {
+    BannedWord,
     NamingCase,
     Identifier,
     FileNaming,
@@ -32,7 +33,9 @@ import {
     RUFF_CATEGORIES,
     MIGRATION_DIGITS,
     BANNED_WORD_FORMS,
+    CAMEL_ACRONYM_WORD,
     WORD_FORM_SUFFIXES,
+    PASCAL_ACRONYM_WORD,
     WORD_FORM_CONSONANT,
     SWIFTLINT_CATEGORIES,
 } from '#cli/config/configurations/naming.ts';
@@ -47,8 +50,10 @@ function isSnakeMigration(name: string): boolean {
 
 const CASE_TESTS = {
     camel: (name) => CAMEL_WORD.test(name),
+    'camel-acronym': (name) => CAMEL_ACRONYM_WORD.test(name),
     pascal: (name) => PASCAL_WORD.test(name),
-    'pascal-extension': (name) => name.includes('+') && name.split('+').every((word) => PASCAL_WORD.test(word)),
+    'pascal-acronym': (name) => PASCAL_ACRONYM_WORD.test(name),
+    'pascal-extension': (name) => name.includes('+') && name.split('+').every((word) => PASCAL_ACRONYM_WORD.test(word)),
     kebab: (name) => name !== '' && name.split('-').every((word) => LOWER_WORD.test(word)),
     snake: (name) => name !== '' && name.split('_').every((word) => LOWER_WORD.test(word)),
     'upper-snake': (name) => name !== '' && name.split('_').every((word) => UPPER_WORD.test(word)),
@@ -71,9 +76,10 @@ function isWordForm(word: string, term: string): boolean {
     });
 }
 
-function hasTerm(words: string[], termWords: string[]): boolean {
-    for (let start = 0; start + termWords.length <= words.length; start += 1) {
-        if (termWords.every((termWord, index) => isWordForm(words[start + index] as string, termWord))) return true;
+function hasTerm(words: string[], term: BannedWord): boolean {
+    const lastStart = term.firstWord === true ? 0 : words.length - term.words.length;
+    for (let start = 0; start <= lastStart && start + term.words.length <= words.length; start += 1) {
+        if (term.words.every((termWord, index) => isWordForm(words[start + index] as string, termWord))) return true;
     }
     return false;
 }
@@ -181,7 +187,7 @@ function validateBannedWords(checked: CheckedIdentifier, nameWords: string[]): C
     const banned = terms.find(
         (term) =>
             (term.categories === undefined || term.categories.includes(checked.identifier.category)) &&
-            hasTerm(words, term.words),
+            hasTerm(words, term),
     );
     return banned === undefined
         ? undefined

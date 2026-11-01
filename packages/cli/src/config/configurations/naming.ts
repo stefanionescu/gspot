@@ -172,9 +172,13 @@ export const MIGRATION_DIGITS = 14;
 
 export const LOWER_WORD = /^[a-z]+$/u;
 
-export const CAMEL_WORD = /^[a-z][A-Za-z]*$/u;
+export const CAMEL_WORD = /^[a-z]+(?:[A-Z][a-z]+)*[A-Z]?$/u;
 
-export const PASCAL_WORD = /^[A-Z][A-Za-z]*$/u;
+export const CAMEL_ACRONYM_WORD = /^[a-z][A-Za-z]*$/u;
+
+export const PASCAL_WORD = /^(?=[A-Z])(?:[A-Z][a-z]+)*[A-Z]?$/u;
+
+export const PASCAL_ACRONYM_WORD = /^[A-Z][A-Za-z]*$/u;
 
 export const UPPER_WORD = /^[A-Z]+$/u;
 

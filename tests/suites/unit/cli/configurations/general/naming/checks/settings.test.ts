@@ -16,7 +16,7 @@ test('category limits inherit root and scope language settings while explicit ca
     ] as const) {
         const naming = await buildScopeNamingSettings(text, scope);
         expect(naming.limitLookup('swift', 'functions')).toStrictEqual({
-            cases: ['camel'],
+            cases: ['camel-acronym'],
             maxCharacters: functions,
             maxWords: words,
         });

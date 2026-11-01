@@ -46,7 +46,7 @@ reason = "A leading underscore marks an unused parameter or variable."
 categories = ["functions", "methods"]
 ignored_prefix = "^handle(?=[A-Z])"
 languages = ["typescript", "javascript"]
-paths = ["**"]
+paths = ["**/*.{tsx,jsx,vue,svelte,astro}"]
 reason = "A handler starts with handle and then names the event."
 
 [[tool]]

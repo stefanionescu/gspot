@@ -71,7 +71,7 @@ export const NAMING_LIMIT_CASES = [
 ] as const;
 
 export const HANDLE_ROUTE_IDENTIFIER = {
-    file: 'src/routes/auth.ts',
+    file: 'src/routes/auth.tsx',
     line: 1,
     column: 1,
     language: 'typescript',

@@ -297,7 +297,7 @@ Name a deployment function `deploy_api` and its local target `target_environment
 ### Bash variables
 
 - Name each loop variable after its item.
-- Name a temporary path after what it holds, such as `download_file` or `work_dir`; `tmp` and `temp` say nothing.
+- Name a temporary path after what it holds, such as `download_file` or `work_folder`; `tmp` and `temp` say nothing.
 - Avoid reserved and special shell names for unrelated values.
 
 Use `migration_file` when iterating migration paths and `report_output` for captured report text. Check the report

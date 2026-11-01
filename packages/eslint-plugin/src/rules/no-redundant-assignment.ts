@@ -168,7 +168,7 @@ function indexIdentifiers(
     }
 }
 
-function processReference(
+function addReference(
     reference: TSESLint.Scope.Reference,
     frame: PathFrame | undefined,
     flows: ReadonlyMap<string, SegmentFlow>,
@@ -235,12 +235,12 @@ export const noRedundantAssignment = createRule<[], 'redundant'>({
             ':matches(AssignmentExpression, VariableDeclarator[init]):exit': () => {
                 const assignment = frames.at(-1)?.assignments.pop();
                 for (const reference of [...(assignment?.right ?? []), ...(assignment?.left ?? [])])
-                    processReference(reference, frames.at(-1), flows, source);
+                    addReference(reference, frames.at(-1), flows, source);
             },
             Identifier: (node) => {
                 if (enumDepth > 0) return;
                 const reference = references.get(node);
-                if (reference !== undefined) processReference(reference, frames.at(-1), flows, source);
+                if (reference !== undefined) addReference(reference, frames.at(-1), flows, source);
                 const variable = reference === undefined ? definitions.get(node) : (reference.resolved ?? undefined);
                 recordUsage(usages, variable, frames.at(-1));
             },

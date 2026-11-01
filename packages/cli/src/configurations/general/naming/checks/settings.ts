@@ -66,7 +66,7 @@ function buildLimitLookup(scopeSettings: ScopeSettings): NamingSettings['limitLo
 
 function compileBannedWords(
     words: string[],
-    origin: Pick<BannedWord, 'setting' | 'list' | 'categories'>,
+    origin: Pick<BannedWord, 'setting' | 'list' | 'categories' | 'firstWord'>,
 ): BannedWord[] {
     return words
         .map((term) => ({ word: term.trim().toLowerCase(), words: splitWords(term), ...origin }))
@@ -85,11 +85,12 @@ export function readNamingSettings(settings: Settings, scope: Scope): NamingSett
     const tables = listApplicableTables(settings, scopePath).map(({ table }) => table.naming);
     const bannedWords = [...new Set(tables.flatMap((table) => table?.banned_words ?? []))];
     const terms = [
-        ...Object.entries(shipped.lists).flatMap(([group, { words: terms }]) =>
-            compileBannedWords(terms, {
-                setting: `${group} list`,
+        ...Object.entries(shipped.lists).flatMap(([group, list]) =>
+            compileBannedWords(list.words, {
+                setting: `${group.replaceAll('_', ' ')} list`,
                 list: group,
-                ...(group === 'folders' && { categories: ['folders'] }),
+                firstWord: list.first_word === true,
+                ...(list.categories !== undefined && { categories: list.categories }),
             }),
         ),
         ...compileBannedWords(bannedWords, { setting: 'naming.banned_words' }),

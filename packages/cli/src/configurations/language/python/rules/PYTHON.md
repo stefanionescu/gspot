@@ -341,7 +341,7 @@ conditions for shared state, which stays small and explicit.
 ### Python types and dataclasses
 
 - Give `Path` variables names that reveal whether they point to a folder, file, report, output, or repository root.
-- Use `*_path` for filesystem paths and `*_dir` only for folders.
+- Use `*_path` for filesystem paths and `*_folder` only for folders.
 - Use `*_id` only for real identifiers. Never use it for arbitrary names or labels.
 - Use `*_name` for display or provider names.
 - Use `*_key` for dictionary and supported variant keys.

@@ -87,7 +87,9 @@ export const NAMED_CATEGORIES = [
 
 export const CASE_NAMES = [
     'camel',
+    'camel-acronym',
     'pascal',
+    'pascal-acronym',
     'pascal-extension',
     'kebab',
     'snake',

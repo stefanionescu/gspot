@@ -42,7 +42,7 @@ them. Never build a remote command from user input.
 Good, for a remote Bash login shell:
 
 ```bash
-printf -v remote_command 'bash -- %q %q %q' "${remote_script}" "${dir}" "${service}"
+printf -v remote_command 'bash -- %q %q %q' "${remote_script}" "${target_folder}" "${service}"
 ssh -- "${host}" "${remote_command}"
 ```
 

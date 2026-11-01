@@ -77,7 +77,14 @@ export type ProseRouteBatch = [ProseRoute, ...ProseRoute[]];
 
 export type ValeAlert = { file: string; line: number; column: number; check: string; message: string };
 
-export type BannedWord = { word: string; words: string[]; setting: string; list?: string; categories?: string[] };
+export type BannedWord = {
+    word: string;
+    words: string[];
+    setting: string;
+    list?: string;
+    categories?: string[];
+    firstWord?: boolean;
+};
 
 export type FileNaming = { settings: NamingSettings; isTestFile: boolean };
 

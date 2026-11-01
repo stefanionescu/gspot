@@ -76,6 +76,44 @@ test('the JavaScript handle override and a repository use override strip their p
     ]);
 });
 
+test.each([
+    ['userID', 'variables', 'case'],
+    ['parseHttpURL', 'functions', 'case'],
+    ['HTTPServer', 'classes', 'case'],
+    ['msgText', 'variables', 'banned-word'],
+    ['tempPath', 'variables', 'banned-word'],
+    ['processOrder', 'functions', 'banned-word'],
+    ['loadSettings', 'functions', 'banned-word'],
+    ['toPosix', 'functions', 'banned-word'],
+    ['fromRow', 'functions', 'banned-word'],
+    ['isNotReady', 'variables', 'banned-word'],
+    ['hasNoRows', 'functions', 'banned-word'],
+] as const)('%s, a %s, reports %s', async (name, category, rule) => {
+    const findings = listRuleMessages(buildIdentifier({ name, category }), await readNaming(''));
+    expect(findings.map((finding) => finding.rule)).toStrictEqual([rule]);
+});
+
+test.each([
+    ['runToolProcess', 'functions'],
+    ['processOrder', 'variables'],
+    ['toJSON', 'methods'],
+    ['isNotable', 'variables'],
+    ['userId', 'variables'],
+    ['pointA', 'variables'],
+] as const)('%s, a %s, passes', async (name, category) => {
+    expect(listRuleMessages(buildIdentifier({ name, category }), await readNaming(''))).toStrictEqual([]);
+});
+
+test('a Swift name keeps its acronym', async () => {
+    const identifier = buildIdentifier({
+        name: 'avatarURL',
+        category: 'functions',
+        language: 'swift',
+        file: 'a.swift',
+    });
+    expect(listRuleMessages(identifier, await readNaming(''))).toStrictEqual([]);
+});
+
 test('a number word such as base64 counts as one word', async () => {
     const naming = await buildScopeNamingSettings(buildSandboxSettings(['naming'], { rules: true }));
     const context = buildFileNaming({ ...naming, limitLookup: () => ({ cases: [], maxCharacters: 35, maxWords: 4 }) });
