@@ -39,13 +39,18 @@ test.each([...NGINX_MOUNT_CASES])(
             image: string | undefined;
         }[] = [];
         using _run = fakeCommands().mockImplementation(async (command) => {
-            const volumes = command.filter((_, index) => command[index - 1] === '-v');
-            const configuration = volumes.find((volume) => volume.endsWith(':/etc/nginx/nginx.conf:ro'));
+            const mounts = command
+                .filter((_, index) => command[index - 1] === '--mount')
+                .map(
+                    (mount) =>
+                        /^type=bind,"source=(?<source>.+)","target=(?<target>.+)",readonly$/u.exec(mount)?.groups,
+                );
+            const configuration = mounts.find((mount) => mount?.['target'] === '/etc/nginx/nginx.conf');
             if (configuration === undefined) return buildProcessResult();
             containers.push({
                 hosts: command.filter((_, index) => command[index - 1] === '--add-host'),
-                targets: volumes.map((volume) => volume.split(':').slice(-2).join(':')),
-                configuration: await readFile(configuration.slice(0, -':/etc/nginx/nginx.conf:ro'.length), 'utf8'),
+                targets: mounts.map((mount) => mount?.['target'] ?? ''),
+                configuration: await readFile(configuration['source'] ?? '', 'utf8'),
                 tail: command.slice(-2),
                 image: command.at(-3),
             });
@@ -55,7 +60,7 @@ test.each([...NGINX_MOUNT_CASES])(
         expect(containers).toStrictEqual([
             {
                 hosts: [...hosts],
-                targets: ['/etc/nginx/nginx.conf:ro', ...certificates.map((target) => `${target}:ro`)],
+                targets: ['/etc/nginx/nginx.conf', ...certificates],
                 configuration: source,
                 tail: ['nginx', '-T'],
                 image: expect.stringMatching(/^nginx:[^@]+@sha256:[0-9a-f]{64}$/u) as string,

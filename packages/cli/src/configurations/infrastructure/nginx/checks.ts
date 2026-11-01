@@ -18,16 +18,15 @@ import type { Mount, NginxMounts } from '#cli/types/configurations/infrastructur
 
 import {
     NGINX_CONF,
+    MOUNT_FLAG,
     SYNTAX_RULE,
     LOCAL_NAMES,
-    VOLUME_FLAG,
     NGINX_FOLDER,
     ADD_HOST_FLAG,
     HOST_PATTERNS,
     NGINX_KEY_FILE,
     ERROR_LOCATION,
     OPENSSL_PROGRAM,
-    READ_ONLY_MOUNT,
     LOOPBACK_ADDRESS,
     OPENSSL_KEY_FLAG,
     NGINX_COPY_PREFIX,
@@ -154,18 +153,22 @@ function buildNginxTestArguments(text: string, mounts: NginxMounts, image: strin
     const certificates = new Map(
         Object.entries(CERTIFICATE_DIRECTIVES).map(([directive, kind]) => [directive, mounts[kind]]),
     );
-    const volumes = [
-        ...mounts.configs.map(({ source, target }) => `${source}:${target}${READ_ONLY_MOUNT}`),
+    const mountFields = [
+        ...mounts.configs.map(({ source, target }) => [`source=${source}`, `target=${target}`]),
         ...parsed.flatMap(([name, path]) => {
             if (path === undefined || path.includes(NGINX_VARIABLE_MARK)) return [];
             const source = certificates.get(name);
-            return source === undefined ? [] : [`${source}:${posix.resolve(NGINX_FOLDER, path)}${READ_ONLY_MOUNT}`];
+            return source === undefined ? [] : [[`source=${source}`, `target=${posix.resolve(NGINX_FOLDER, path)}`]];
         }),
     ];
+    const volumes = mountFields.map((fields) => {
+        const quoted = fields.map((field) => `"${field.replaceAll('"', '""')}"`);
+        return `type=bind,${quoted.join(',')},readonly`;
+    });
     return [
         ...DOCKER_RUN_ARGUMENTS,
         ...[...hosts].flatMap((host) => [ADD_HOST_FLAG, `${host}:${LOOPBACK_ADDRESS}`]),
-        ...[...new Set(volumes)].flatMap((volume) => [VOLUME_FLAG, volume]),
+        ...[...new Set(volumes)].flatMap((mount) => [MOUNT_FLAG, mount]),
         image,
         ...NGINX_TEST_COMMAND,
     ];

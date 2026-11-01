@@ -81,8 +81,9 @@ export const SQUAWK_DEFAULT_LEVEL_OFF = [
     'prefer-bigint-over-smallint',
     'prefer-identity',
     'prefer-text-field',
-    'require-table-schema',
 ] as const;
+
+export const SQUAWK_ALL_LEVEL_ON = ['require-table-schema'] as const;
 
 export const HADOLINT_FAILURE_THRESHOLD = 'style';
 
@@ -274,7 +275,7 @@ export const OPENSSL_CERTIFICATE_FLAG = '-out';
 
 export const ADD_HOST_FLAG = '--add-host';
 
-export const VOLUME_FLAG = '-v';
+export const MOUNT_FLAG = '--mount';
 
 export const NGINX_MAIN_TARGET = `${NGINX_FOLDER}/${NGINX_CONF}`;
 
@@ -287,8 +288,6 @@ export const CERTIFICATE_DIRECTIVES = {
 export const DOCKER_RUN_ARGUMENTS = ['run', '--rm'] as const;
 
 export const LOOPBACK_ADDRESS = '127.0.0.1';
-
-export const READ_ONLY_MOUNT = ':ro';
 
 export const NGINX_TEST_COMMAND = ['nginx', '-T'] as const;
 
