@@ -200,7 +200,9 @@ export function validateSwiftTargets(settings: Settings, availableSettings: Avai
         .map((target, index) => ({ target, index }))
         .filter(
             ({ target }) =>
-                typeof coverageLines === 'number' && target.lines < coverageLines && target.reason === undefined,
+                typeof coverageLines === 'number' &&
+                target.min_line_percent < coverageLines &&
+                target.reason === undefined,
         )
         .map(({ index }) => ({
             path: ['coverage', 'swift_target', index, 'reason'],

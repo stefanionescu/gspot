@@ -21,7 +21,7 @@ test('Bash function-size counts C-style loops as branches and nesting, not their
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], {
             level: 'all',
-            tables: '[limits.bash]\nfunction_branches = 3\nblock_nesting = 3\nfunction_assignments = 1\n',
+            tables: '[limits.bash]\nmax_function_branches = 3\nmax_block_nesting = 3\nmax_function_assignments = 1\n',
             scopes: [{ path: 'api' }],
         }),
         'source.sh': COUNTED_LOOPS,
@@ -61,7 +61,7 @@ test.each(buildSizeCases())(
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['bash'], {
                 level: 'all',
-                tables: '[limits.bash]\nfunction_lines = 12\nfunction_branches = 4\nblock_nesting = 2\nfunction_assignments = 3\n',
+                tables: '[limits.bash]\nmax_function_lines = 12\nmax_function_branches = 4\nmax_block_nesting = 2\nmax_function_assignments = 3\n',
             }),
             [file]: source,
         });

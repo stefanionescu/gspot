@@ -131,7 +131,7 @@ export const COMMAND_HELP = {
         description:
             'Change one setting in gspot.toml, then write the generated files again. gspot checks the value first.\n\ngspot replaces the value. For a list, give every item: gspot replaces the whole list, so gspot.toml holds exactly the items you typed, and the same command always writes the same list. To remove single items, run gspot unset <setting> <items...>. For a setting that holds a table, such as spelling.allowed_words, give one TOML inline table, and gspot adds its keys.\n\nFor an ignore, run gspot ignore <check> --reason "<why>". Write other records, such as [[command_check]], by hand.',
         arguments: {
-            '<setting>': 'The setting name, such as limits.file_lines. Run gspot list settings to see them',
+            '<setting>': 'The setting name, such as limits.max_file_lines. Run gspot list settings to see them',
             '<values...>': 'The new value: every item of a list, or the table keys to add',
         },
         options: {
@@ -229,7 +229,7 @@ export const COMMAND_HELP = {
             'Explain one thing: what it means, its state in this repository, and the commands that change it.\n\nexplain changes nothing.',
         arguments: {
             '<subject>':
-                'A check (python/ruff), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts)',
+                'A check (python/ruff), a configuration (python), a setting (limits.max_file_lines), or a file (./src/app.ts)',
             '[rule]': 'A lint rule of the named check, such as E501 for python/ruff',
         },
         options: {

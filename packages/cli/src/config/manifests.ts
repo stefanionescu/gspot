@@ -161,6 +161,11 @@ export const REASON_DESCRIPTIONS = {
     adding: 'Why these entries belong; required when you add an entry.',
 } as const;
 
+export const BOUND_REASON_DESCRIPTION =
+    'Why this code needs a looser bound than the default; required when you loosen it.';
+
+export const BOUND_PREFIXES = { max_: 'raising', min_: 'lowering' } as const;
+
 export const SETTING_LANGUAGES = ['typescript', 'javascript', 'python', 'bash', 'swift', 'sql', 'css', 'html'] as const;
 
 export const PATH_ROLES = ['source', 'destination', 'build'] as const;

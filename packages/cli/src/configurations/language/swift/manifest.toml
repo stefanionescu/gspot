@@ -28,7 +28,7 @@ mise = "swiftlint"
 name = "swiftlint"
 replace = [".swiftlint.yml", ".swiftlint.yaml"]
 rule_url = "https://realm.github.io/SwiftLint/{rule}.html"
-suppression = { marker = "\\bswiftlint:disable\\b(?::(?:next|this|previous))?(?<rules>.*)", reason = " - (?<reason>\\S.*)", example = "// swiftlint:disable:next force_unwrapping - reason: the URL is a literal", separator = "\\s-\\s", all_rules = "^all(?=$|\\s)", limit_rules = "(?:^|[\\s,])(?:cyclomatic_complexity|function_body_length|file_length|type_body_length|function_parameter_count)(?=$|[\\s,])" }
+suppression = { marker = "\\bswiftlint:disable\\b(?::(?:next|this|previous))?(?<rules>.*)", reason = " - (?<reason>\\S.*)", example = "// swiftlint:disable:next force_unwrapping - reason: the URL is a literal", separator = "\\s-\\s", all_rules = "^all(?=$|\\s)", limit_rules = "(?:^|[\\s,])(?:max_cyclomatic_complexity|function_body_length|file_length|type_body_length|function_parameter_count)(?=$|[\\s,])" }
 version = "0.65.1"
 version_command = ["version"]
 
@@ -94,7 +94,7 @@ example = "`value as! NSString` reports `force_cast`. Use `as?` and handle the f
 files = { extensions = [".swift"] }
 fix = ["swiftlint", "lint", "--fix", "--quiet", "--no-cache", "{files}"]
 help = "Run `gspot check --fix` for the rules that fix themselves."
-limits = { "file_length" = "file_lines", "function_parameter_count" = "function_parameters", "function_body_length" = "function_lines", "type_body_length" = "type_lines", "closure_body_length" = "closure_lines", "cyclomatic_complexity" = "cyclomatic_complexity" }
+limits = { "file_length" = "max_file_lines", "function_parameter_count" = "max_function_parameters", "function_body_length" = "max_function_lines", "type_body_length" = "max_type_lines", "closure_body_length" = "max_closure_lines", "max_cyclomatic_complexity" = "max_cyclomatic_complexity" }
 limit_languages = ["swift"]
 name = "swiftlint"
 output = { format = "json", fields = { file = "file", line = "line", column = "character", rule = "rule_id", message = "reason" } }
@@ -177,6 +177,6 @@ needs = ["build"]
 operating_systems = ["macos", "linux"]
 runs = "scope"
 stage = "push"
-summary = "Measures each source target in Xcode projects and Swift packages against `coverage.lines` and its `coverage.swift_target` minimum."
+summary = "Measures each source target in Xcode projects and Swift packages against `coverage.min_line_percent` and its `coverage.swift_target` minimum."
 when = { tags = ["swift-test", "swift-test-target"] }
 why = "A coverage minimum for each target exposes Swift code that no test runs."

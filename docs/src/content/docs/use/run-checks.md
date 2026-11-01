@@ -25,7 +25,7 @@ Fix the file, then run the check again.
 | -------------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | `gspot explain bash/shellcheck`                          | What the check looks for, why it matters, and what to do.                            |
 | `gspot explain javascript/eslint gspot/no-trivial-files` | Why the rule exists, how to fix its finding, an example, and its documentation link. |
-| `gspot explain limits.file_lines`                        | The value of a setting, its default, and where the value comes from.                 |
+| `gspot explain limits.max_file_lines`                    | The value of a setting, its default, and where the value comes from.                 |
 | `gspot explain ./<file>`                                 | The checks that read a file and the ignores that match it.                           |
 
 ## Choose what to check

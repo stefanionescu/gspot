@@ -142,20 +142,20 @@ path = "notes"
     {
         name: `language default restores root limit`,
         source: `[limits]
-file_lines={value=500,reason="Reviewed root files need this ceiling."}
+max_file_lines={value=500,reason="Reviewed root files need this ceiling."}
 [[scope]]
 path="app"
-limits.python.file_lines=300
+limits.python.max_file_lines=300
 [[scope]]
 path="app/worker"
-limits.python.file_lines=300
+limits.python.max_file_lines=300
 `,
         expected: `[limits]
-file_lines = { value = 500, reason = "Reviewed root files need this ceiling." }
+max_file_lines = { value = 500, reason = "Reviewed root files need this ceiling." }
 
 [[scope]]
 path = "app"
-limits = { python = { file_lines = 300 } }
+limits = { python = { max_file_lines = 300 } }
 
 [[scope]]
 path = "app/worker"
@@ -207,7 +207,7 @@ test_files = ["**/*.spec.ts"]
 
 # The parsers are state machines.
 [limits]
-function_lines = { value = 80, reason = "The parsers are state machines." }
+max_function_lines = { value = 80, reason = "The parsers are state machines." }
 
 [javascript]
 import_extension = "js"
@@ -298,7 +298,7 @@ configurations = ['typescript']
 
 # Keep modules short.
 [limits]
-file_lines = 100
+max_file_lines = 100
 `;
 
 export const SIMULATOR_DESTINATION = 'generic/platform=iOS Simulator';

@@ -9,8 +9,8 @@ Keep Biome limited to cognitive complexity, with the scope's language thresholds
 @param planned the config file and the scope it checks.
 */
 export function buildBiomeFile(planned: PlannedConfig): string {
-    const javascript = getLimit(planned.scope.settings, 'cognitive_complexity', 'javascript');
-    const typescript = getLimit(planned.scope.settings, 'cognitive_complexity', 'typescript');
+    const javascript = getLimit(planned.scope.settings, 'max_cognitive_complexity', 'javascript');
+    const typescript = getLimit(planned.scope.settings, 'max_cognitive_complexity', 'typescript');
     const rules = {
         preset: 'none',
         complexity: {

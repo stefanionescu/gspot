@@ -58,10 +58,10 @@ export const DOC_COMMENT_RULES = {
 } as const;
 
 export const COUNT_LIMITS = [
-    { limit: 'function_lines', rule: 'function-lines', noun: 'code lines' },
-    { limit: 'function_branches', rule: 'function-branches', noun: 'branches' },
-    { limit: 'block_nesting', rule: 'block-nesting', noun: 'levels of nesting' },
-    { limit: 'function_assignments', rule: 'function-assignments', noun: 'assignments' },
+    { limit: 'max_function_lines', rule: 'function-lines', noun: 'code lines' },
+    { limit: 'max_function_branches', rule: 'function-branches', noun: 'branches' },
+    { limit: 'max_block_nesting', rule: 'block-nesting', noun: 'levels of nesting' },
+    { limit: 'max_function_assignments', rule: 'function-assignments', noun: 'assignments' },
 ] as const;
 
 export const RUNTIME_EMBEDS = [

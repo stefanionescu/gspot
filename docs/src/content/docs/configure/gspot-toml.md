@@ -28,7 +28,7 @@ the order of untouched settings and tables.
 | Keep generated or vendored files out                      | Mark them `linguist-generated` or `linguist-vendored` in `.gitattributes`  | [Exclude files](/configure/files/)          |
 | Keep your own files out of every check                    | `gspot ignore --paths "<path>" --reason "<why>"`                           | [Exclude files](/configure/files/)          |
 | Change the options of a lint rule                         | `tools.<tool>.rules`, or `[[tools.eslint.override]]` for some paths        | [Lint rule options](/configure/lint-rules/) |
-| Raise a size or complexity limit                          | `gspot set limits.<key> <value> --reason "<why>"`                          | [Settings](/reference/gspot-toml/#limits)   |
+| Raise a size or complexity limit                          | `gspot set limits.max_<name> <value> --reason "<why>"`                     | [Settings](/reference/gspot-toml/#limits)   |
 | Change indentation, line length, or quotes                | `[format]`, and `[[format.override]]` for some files                       | [Settings](/reference/gspot-toml/#format)   |
 | Accept a word that the spelling checks report             | `gspot set spelling.allowed_words <word> --reason "<why>"`                 | [Spelling and prose](/topics/prose/)        |
 | Refuse words in names                                     | `gspot set naming.banned_words <word>...`, with every word of the list     | [Settings](/reference/gspot-toml/#naming)   |
@@ -173,12 +173,12 @@ value that loosens nothing.
 At level `all`, raise the function length limit with a reason:
 
 ```shell
-gspot set limits.function_lines 80 --reason "The parser is one state machine."
+gspot set limits.max_function_lines 80 --reason "The parser is one state machine."
 ```
 
 ```toml title="gspot.toml"
 [limits]
-function_lines = { value = 80, reason = "The parser is one state machine." }
+max_function_lines = { value = 80, reason = "The parser is one state machine." }
 ```
 
 `spelling.allowed_words` holds one reason per word. A scope adds its words to the root words:

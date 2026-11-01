@@ -57,7 +57,7 @@ describe.each(COVERAGE_PROVIDERS.flatMap((row) => [0, 80].map((lines) => ({ ...r
                 join(sandbox.path, 'gspot.toml'),
                 buildSandboxSettings(configurations, {
                     scopes: [{ path: 'app', configurations }],
-                    tables: `[coverage]\nlines = ${String(lines)}\n`,
+                    tables: `[coverage]\nmin_line_percent = ${String(lines)}\n`,
                 }),
             );
             session = await openSession(sandbox.path);

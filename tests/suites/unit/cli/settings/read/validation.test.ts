@@ -131,15 +131,15 @@ test.each([...FIRST_READ.slice(0, 1), 'general/prose'])(
 
 test('a limit looser than the default needs a reason, and a tighter one does not', () => {
     using sandbox = createTemporaryFolder();
-    expect(() => readSettings('configurations = ["bash"]\n[limits]\nfile_lines = 1000\n', sandbox.path)).toThrow(
+    expect(() => readSettings('configurations = ["bash"]\n[limits]\nmax_file_lines = 1000\n', sandbox.path)).toThrow(
         matchFields<GspotError>({
             name: 'GspotError',
             code: 'settings',
             message:
-                'gspot.toml:3: limits.file_lines: 1000 is looser than the shipped default 300, so it needs a reason. Run gspot set limits.file_lines 1000 --reason "<why>"',
+                'gspot.toml:3: limits.max_file_lines: 1000 is looser than the shipped default 300, so it needs a reason. Run gspot set limits.max_file_lines 1000 --reason "<why>"',
         }),
     );
-    expect(validateSettingsText('configurations = ["bash"]\n[limits]\nfile_lines = 100\n')).toStrictEqual([]);
+    expect(validateSettingsText('configurations = ["bash"]\n[limits]\nmax_file_lines = 100\n')).toStrictEqual([]);
 });
 
 test.each([...UNKNOWN_KEY_CASES])('an unknown key is refused: $name', (row) => {

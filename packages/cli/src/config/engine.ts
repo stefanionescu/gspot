@@ -160,7 +160,12 @@ export const REPORT_STAGES = {
     all: ['commit', 'push'],
 } as const;
 
-export const COVERAGE_DIMENSIONS = ['lines', 'branches', 'functions', 'statements'] as const;
+export const COVERAGE_DIMENSIONS = [
+    'min_line_percent',
+    'min_branch_percent',
+    'min_function_percent',
+    'min_statement_percent',
+] as const;
 
 export const ROOT_RUNS = ['once', 'history'] as const;
 

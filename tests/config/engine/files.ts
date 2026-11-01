@@ -194,7 +194,7 @@ export const TYPESCRIPT_SCOPES_SETTINGS = TWO_SCOPES_SETTINGS.replace(
 export const LAYERED_SCOPE_SETTINGS = `level = "all"
 configurations = ["format"]
 [limits]
-file_lines = 250
+max_file_lines = 250
 [format]
 indent_width = 4
 [rule_files]
@@ -202,12 +202,12 @@ enabled = false
 [[scope]]
 path = "api"
 configurations = ["bash"]
-limits.file_lines = 200
+limits.max_file_lines = 200
 format.indent_width = 2
 [[scope]]
 path = "api/worker"
 configurations = ["sql"]
-limits.sql.file_lines = 30
+limits.sql.max_file_lines = 30
 sql.dialect = "postgres"
 `;
 

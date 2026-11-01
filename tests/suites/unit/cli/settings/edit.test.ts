@@ -28,12 +28,12 @@ test('setting a nested key, then deleting it, removes the empty table', async ()
     const path = join(sandbox.path, 'gspot.toml');
     await writeFile(path, INITIAL_SETTINGS);
     const addedEdit = readSettingsFile(sandbox.path);
-    setKey(addedEdit.table, 'limits.bash.file_lines', 100);
+    setKey(addedEdit.table, 'limits.bash.max_file_lines', 100);
     const written = buildEditedSettings(sandbox.path, addedEdit).text;
-    expect(written).toBe(`${INITIAL_SETTINGS}\n[limits]\nbash = { file_lines = 100 }\n`);
+    expect(written).toBe(`${INITIAL_SETTINGS}\n[limits]\nbash = { max_file_lines = 100 }\n`);
     await writeFile(path, written);
     const removedEdit = readSettingsFile(sandbox.path);
-    removeKey(removedEdit.table, 'limits.bash.file_lines');
+    removeKey(removedEdit.table, 'limits.bash.max_file_lines');
     const removed = buildEditedSettings(sandbox.path, removedEdit).text;
     expect(removed).toBe(INITIAL_SETTINGS);
 });
@@ -44,12 +44,15 @@ test.each([...SCOPE_SETTING_WRITES])(
         await using sandbox = await testdir();
         await writeFile(join(sandbox.path, 'gspot.toml'), `${INITIAL_SETTINGS}[[scope]]\npath = "api"\n${scope}\n`);
         const edit = readSettingsFile(sandbox.path);
-        setKey(getScopeTable(edit.table, 'api'), 'limits.function_lines', 20);
+        setKey(getScopeTable(edit.table, 'api'), 'limits.max_function_lines', 20);
         const result = buildEditedSettings(sandbox.path, edit);
-        expect(result.settings.scopes.get('api')?.limits).toMatchObject({ file_lines: 100, function_lines: 20 });
+        expect(result.settings.scopes.get('api')?.limits).toMatchObject({
+            max_file_lines: 100,
+            max_function_lines: 20,
+        });
         await writeFile(join(sandbox.path, 'gspot.toml'), result.text);
         expect(readSettingsFile(sandbox.path).table['scope']).toMatchObject([
-            { path: 'api', limits: { file_lines: 100, function_lines: 20 } },
+            { path: 'api', limits: { max_file_lines: 100, max_function_lines: 20 } },
         ]);
     },
 );
@@ -58,11 +61,11 @@ test('an invalid edit reports the setting without inventing a saved line', async
     await using sandbox = await testdir();
     await writeFile(
         join(sandbox.path, 'gspot.toml'),
-        `${INITIAL_SETTINGS}# Authored limits.\n[limits]\nfile_lines = 100\n`,
+        `${INITIAL_SETTINGS}# Authored limits.\n[limits]\nmax_file_lines = 100\n`,
     );
     const invalid = readSettingsFile(sandbox.path);
-    setKey(invalid.table, 'limits.function_lines', 'long');
-    expect(() => buildEditedSettings(sandbox.path, invalid)).toThrow('limits.function_lines:');
+    setKey(invalid.table, 'limits.max_function_lines', 'long');
+    expect(() => buildEditedSettings(sandbox.path, invalid)).toThrow('limits.max_function_lines:');
 });
 
 test('reordering keys does not change the file', async () => {

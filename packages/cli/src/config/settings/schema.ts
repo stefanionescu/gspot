@@ -113,7 +113,7 @@ export const SETTINGS_EXAMPLES = [
     { configurations: ['typescript', 'nextjs', 'markdown'] },
     { test_files: ['tests/**/*.test.ts'] },
     { scope: [{ path: 'services/api', configurations: ['python', 'fastapi'] }] },
-    { configurations: ['typescript', 'python'], limits: { function_lines: 60, python: { file_lines: 300 } } },
+    { configurations: ['typescript', 'python'], limits: { max_function_lines: 60, python: { max_file_lines: 300 } } },
     {
         configurations: ['naming'],
         naming: {

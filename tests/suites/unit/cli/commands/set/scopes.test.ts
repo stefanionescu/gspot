@@ -22,25 +22,26 @@ test.each(['packages/api'])(
                 'packages/api',
             )?.configurations,
         ).toStrictEqual(['bash']);
-        const set = await runGspot(cwd, ['set', 'limits.function_lines', '30', '--scope', scope]);
+        const set = await runGspot(cwd, ['set', 'limits.max_function_lines', '30', '--scope', scope]);
         expect(set.code, set.stdout + set.stderr).toBe(0);
         expect(
             readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path).scopes.get(
                 'packages/api',
-            )?.limits?.function_lines,
+            )?.limits?.max_function_lines,
         ).toBe(30);
-        const unset = await runGspot(cwd, ['unset', 'limits.function_lines', '--scope', scope]);
+        const unset = await runGspot(cwd, ['unset', 'limits.max_function_lines', '--scope', scope]);
         expect(unset.code, unset.stdout + unset.stderr).toBe(0);
-        expect(unset.stdout).toStartWith(`Removed your value for limits.function_lines in scope ${scope}.\n`);
+        expect(unset.stdout).toStartWith(`Removed your value for limits.max_function_lines in scope ${scope}.\n`);
         expect(
             readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path).scopes.get(
                 'packages/api',
-            )?.limits?.function_lines,
+            )?.limits?.max_function_lines,
         ).toBeUndefined();
-        const root = await runGspot(cwd, ['set', 'limits.function_lines', '31', '--scope', '.']);
+        const root = await runGspot(cwd, ['set', 'limits.max_function_lines', '31', '--scope', '.']);
         expect(root.code, root.stdout + root.stderr).toBe(0);
         expect(
-            readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path).limits.function_lines,
+            readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path).limits
+                .max_function_lines,
         ).toBe(31);
         const removed = await runGspot(cwd, [
             'remove',

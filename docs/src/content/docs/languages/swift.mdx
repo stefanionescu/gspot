@@ -68,10 +68,10 @@ To set a line coverage limit for a Swift target, write a record by hand; `gspot 
 ```toml title="gspot.toml"
 [[coverage.swift_target]]
 name = "Orders"
-lines = 80
+min_line_percent = 80
 ```
 
-Replace `Orders` with the target named in the coverage report. Add `reason` when `lines` falls below `coverage.lines`.
+Replace `Orders` with the target named in the coverage report. Add `reason` when `lines` falls below `coverage.min_line_percent`.
 Then apply the record and run the check:
 
 ```shell

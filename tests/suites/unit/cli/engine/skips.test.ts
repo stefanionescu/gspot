@@ -165,10 +165,10 @@ test('limit readers belong to the requested language', async () => {
         'gspot.toml': buildSandboxSettings(['javascript', 'python', 'swift'], { level: 'all' }),
     });
     const session = await openSession(sandbox.path);
-    expect(listSettingReaders(session.settings, session.scopes[0]!, 'limits.python.file_lines')).toStrictEqual([
+    expect(listSettingReaders(session.settings, session.scopes[0]!, 'limits.python.max_file_lines')).toStrictEqual([
         { check: 'structure/long-files', enabled: true },
     ]);
-    expect(listSettingReaders(session.settings, session.scopes[0]!, 'limits.swift.file_lines')).toStrictEqual([
+    expect(listSettingReaders(session.settings, session.scopes[0]!, 'limits.swift.max_file_lines')).toStrictEqual([
         { check: 'swift/swiftlint', enabled: true },
     ]);
 });
@@ -178,11 +178,15 @@ test('limit readers report their enabled state and exact level note', async () =
         'gspot.toml': buildSandboxSettings(['python'], { level: 'basic' }),
     });
     const session = await openSession(sandbox.path);
-    expect(listSettingReaders(session.settings, session.scopes[0]!, 'limits.python.function_lines')).toStrictEqual([
+    expect(listSettingReaders(session.settings, session.scopes[0]!, 'limits.python.max_function_lines')).toStrictEqual([
         { check: 'python/function-size', enabled: false, note: 'off at level basic' },
     ]);
     expect(
-        listSettingReaders({ ...session.settings, level: 'all' }, session.scopes[0]!, 'limits.python.function_lines'),
+        listSettingReaders(
+            { ...session.settings, level: 'all' },
+            session.scopes[0]!,
+            'limits.python.max_function_lines',
+        ),
     ).toStrictEqual([{ check: 'python/function-size', enabled: true }]);
 });
 
@@ -193,9 +197,9 @@ test.each(
 )(
     '$check writes the configured $limit limit of $language into its generated file',
     async ({ check, file, language, limit }) => {
-        const value = limit === 'cognitive_complexity' ? '101' : '1001';
+        const value = limit === 'max_cognitive_complexity' ? '101' : '1001';
         const written =
-            limit === 'trivial_function_statements'
+            limit === 'min_function_statements'
                 ? value
                 : `{ value = ${value}, reason = "The generated limit must retain this distinctive value." }`;
         await using sandbox = await createGitSandbox({
@@ -226,7 +230,7 @@ test.each([...BUILT_IN_LIMIT_CASES])('$check reads the $limit limit of $language
         join(sandbox.path, 'gspot.toml'),
         buildSandboxSettings([configuration], {
             level: 'all',
-            tables: `[limits.${sample.language}]\n${sample.limit} = ${sample.limit === 'trivial_function_statements' ? '2' : '{ value = 1001, reason = "The sample falls below this configured threshold." }'}\n`,
+            tables: `[limits.${sample.language}]\n${sample.limit} = ${sample.limit === 'min_function_statements' ? '2' : '{ value = 1001, reason = "The sample falls below this configured threshold." }'}\n`,
         }),
     );
     expect(await runSandboxCheck(sandbox.path, sample.check)).toStrictEqual([]);
@@ -236,7 +240,7 @@ test('shared-prefixes reads its configured sibling limit', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
-            tables: '[limits]\nshared_prefix_files = { value = 3, reason = "Three related files form the configured group." }\n',
+            tables: '[limits]\nmin_shared_prefix_files = { value = 3, reason = "Three related files form the configured group." }\n',
         }),
         'order-first.js': 'export const first = 1;\n',
         'order-second.js': 'export const second = 2;\n',
@@ -247,7 +251,7 @@ test('shared-prefixes reads its configured sibling limit', async () => {
         join(sandbox.path, 'gspot.toml'),
         buildSandboxSettings(['javascript'], {
             level: 'all',
-            tables: '[limits]\nshared_prefix_files = { value = 5, reason = "Five related files form the configured group." }\n',
+            tables: '[limits]\nmin_shared_prefix_files = { value = 5, reason = "Five related files form the configured group." }\n',
         }),
     );
     expect(await runSandboxCheck(sandbox.path, 'structure/shared-prefixes')).toStrictEqual([]);

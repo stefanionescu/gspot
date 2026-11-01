@@ -99,7 +99,10 @@ test('doctor lists a tool once when two scopes find the same install', async () 
 
 test('doctor names a missing coverage plugin and leaves it out when every coverage limit is zero', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['python', 'pytest'], { level: 'all', tables: '[coverage]\nlines = 80\n' }),
+        'gspot.toml': buildSandboxSettings(['python', 'pytest'], {
+            level: 'all',
+            tables: '[coverage]\nmin_line_percent = 80\n',
+        }),
         'test_math.py': '',
     });
 
@@ -136,7 +139,7 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
         join(sandbox.path, 'gspot.toml'),
         buildSandboxSettings(['python', 'pytest'], {
             level: 'all',
-            tables: '[coverage]\nlines = { value = 0, reason = "This sandbox tests optional coverage." }\n',
+            tables: '[coverage]\nmin_line_percent = { value = 0, reason = "This sandbox tests optional coverage." }\n',
         }),
     );
     const zero = await runGspot(sandbox.path, ['doctor', '--json']);

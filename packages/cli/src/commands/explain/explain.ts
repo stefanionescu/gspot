@@ -24,7 +24,7 @@ function formatUnknownSubject(session: Session | undefined, subject: string): st
         ) ?? []),
     ];
     const similar = formatSimilarNames(subject, [...new Set(subjects)]);
-    return `There is no check, lint rule, configuration, setting, or file called ${subject}. Give a check (python/ruff), a lint rule (python/ruff E501), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).${similar}`;
+    return `There is no check, lint rule, configuration, setting, or file called ${subject}. Give a check (python/ruff), a lint rule (python/ruff E501), a configuration (python), a setting (limits.max_file_lines), or a file (./src/app.ts).${similar}`;
 }
 
 async function runExplainCommand(

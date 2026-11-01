@@ -133,7 +133,7 @@ test('Swift package coverage runs swift test, reads the custom target paths, and
     const reportPath = join(sandbox.path, 'coverage-input.json');
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['swift'], {
-            tables: '[coverage]\nlines = 0\n[[coverage.swift_target]]\nname = "Core"\nlines = 51\n[[coverage.swift_target]]\nname = "API"\nlines = 67\n',
+            tables: '[coverage]\nmin_line_percent = 0\n[[coverage.swift_target]]\nname = "Core"\nmin_line_percent = 51\n[[coverage.swift_target]]\nname = "API"\nmin_line_percent = 67\n',
         }),
         'Package.swift': SWIFT_PACKAGE_HEADER,
         'Custom/Core/First.swift': 'func first() -> Int { 1 }\n',

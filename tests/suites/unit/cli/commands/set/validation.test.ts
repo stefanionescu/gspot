@@ -11,7 +11,7 @@ test.each(VALUE_VALIDATION_CASES)('set validates the value before its reason: $n
     await using sandbox = await createGitSandbox({ 'gspot.toml': settings });
     const result = await runGspot(sandbox.path, [
         'set',
-        'limits.file_lines',
+        'limits.max_file_lines',
         'abc',
         ...(hasReason ? ['--reason', 'Generated files need more lines.'] : []),
         '--json',
@@ -19,7 +19,7 @@ test.each(VALUE_VALIDATION_CASES)('set validates the value before its reason: $n
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toMatchObject({
         error: 'arguments',
-        message: 'The value abc is not valid for limits.file_lines. Use a whole number of 0 or more.',
+        message: 'The value abc is not valid for limits.max_file_lines. Use a whole number of 0 or more.',
     });
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });

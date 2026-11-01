@@ -21,7 +21,7 @@ test('Swift reports constructors, accessors, decorated methods, and nested funct
         ['example.swift']: ACCESSOR_DECLARATIONS,
         'gspot.toml': buildSandboxSettings(['swift'], {
             level: 'all',
-            tables: `[limits.swift]\ntrivial_function_statements = ${String(2)}\n`,
+            tables: `[limits.swift]\nmin_function_statements = ${String(2)}\n`,
         }),
     });
     const initial = await runSandboxCheck(initialSandbox.path, 'structure/trivial-functions');
@@ -32,7 +32,7 @@ test('Swift reports constructors, accessors, decorated methods, and nested funct
         ['example.swift']: ACCESSOR_DECLARATIONS,
         'gspot.toml': buildSandboxSettings(['swift'], {
             level: 'all',
-            tables: `[limits.swift]\ntrivial_function_statements = ${String(3)}\n`,
+            tables: `[limits.swift]\nmin_function_statements = ${String(3)}\n`,
         }),
     });
     const increased = await runSandboxCheck(increasedSandbox.path, 'structure/trivial-functions');
@@ -48,7 +48,7 @@ test.each([...TRIVIAL_FUNCTION_CASES])(
             ['Source.swift']: source,
             'gspot.toml': buildSandboxSettings(['swift'], {
                 level: 'all',
-                tables: `[limits.swift]\ntrivial_function_statements = ${String(2)}\n`,
+                tables: `[limits.swift]\nmin_function_statements = ${String(2)}\n`,
             }),
         });
         const result = await runSandboxCheck(sandbox.path, 'structure/trivial-functions');
@@ -63,7 +63,7 @@ test('Python counts the statements of nested functions, lambdas, and control flo
         ['example.py']: NESTED_PYTHON_FUNCTIONS,
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',
-            tables: `[limits.python]\ntrivial_function_statements = ${String(2)}\n`,
+            tables: `[limits.python]\nmin_function_statements = ${String(2)}\n`,
         }),
     });
     const initial = await runSandboxCheck(initialSandbox.path, 'structure/trivial-functions');
@@ -72,7 +72,7 @@ test('Python counts the statements of nested functions, lambdas, and control flo
         ['example.py']: NESTED_PYTHON_FUNCTIONS,
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',
-            tables: `[limits.python]\ntrivial_function_statements = ${String(3)}\n`,
+            tables: `[limits.python]\nmin_function_statements = ${String(3)}\n`,
         }),
     });
     const increased = await runSandboxCheck(increasedSandbox.path, 'structure/trivial-functions');
@@ -86,7 +86,7 @@ test('Python reports overloads, abstract and protocol methods, properties, sette
         ['interfaces.py']: PYTHON_INTERFACES,
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',
-            tables: `[limits.python]\ntrivial_function_statements = ${String(2)}\n`,
+            tables: `[limits.python]\nmin_function_statements = ${String(2)}\n`,
         }),
     });
     const findings = await runSandboxCheck(sandbox.path, 'structure/trivial-functions');
@@ -103,7 +103,7 @@ test.each([...STATEMENT_COUNT_CASES])(
             [`example.${extension}`]: source,
             'gspot.toml': buildSandboxSettings([language], {
                 level: 'all',
-                tables: `[limits.${language}]\ntrivial_function_statements = ${String(2)}\n`,
+                tables: `[limits.${language}]\nmin_function_statements = ${String(2)}\n`,
             }),
         });
         const findings = await runSandboxCheck(sandbox.path, 'structure/trivial-functions');
@@ -123,7 +123,7 @@ test.each([...TRIVIAL_FILES])('$name gets the findings $expected', async ({ lang
         [file]: source,
         'gspot.toml': buildSandboxSettings([language], {
             level: 'all',
-            tables: `[limits.${language}]\ntrivial_function_statements = ${String(2)}\n`,
+            tables: `[limits.${language}]\nmin_function_statements = ${String(2)}\n`,
         }),
     });
     const findings = await runSandboxCheck(sandbox.path, 'structure/trivial-functions');

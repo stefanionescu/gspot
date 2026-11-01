@@ -95,9 +95,9 @@ export const INVALID_SETTING_MESSAGES = [
     },
     {
         name: 'a wrong inline reasoned value',
-        text: '[limits]\nfile_lines = { value = "large", reason = "The generated source has more lines." }\n',
+        text: '[limits]\nmax_file_lines = { value = "large", reason = "The generated source has more lines." }\n',
         message:
-            'gspot.toml:2: limits.file_lines.value: The value "large" is not valid for limits.file_lines.value. Use a whole number of 0 or more.',
+            'gspot.toml:2: limits.max_file_lines.value: The value "large" is not valid for limits.max_file_lines.value. Use a whole number of 0 or more.',
     },
 ] as const;
 
@@ -136,14 +136,14 @@ export const SETTING_RULE_OPTIONS = [
         path: 'tools.eslint.rules.complexity',
         line: 3,
         rule: 'complexity',
-        setting: 'limits.cyclomatic_complexity',
+        setting: 'limits.max_cyclomatic_complexity',
     },
     {
         tables: '[[tools.eslint.override]]\npaths = ["src/**"]\nrules = { max-lines = [{ max = 900 }] }\n',
         path: 'tools.eslint.override.0.rules.max-lines',
         line: 4,
         rule: 'max-lines',
-        setting: 'limits.file_lines',
+        setting: 'limits.max_file_lines',
     },
     {
         tables: '[[scope]]\npath = "app"\n[scope.tools.eslint.rules]\n"sonarjs/no-identical-functions" = [50]\n',
@@ -221,7 +221,7 @@ export const SWIFT_TARGET_REASON_CASES = [
         lines: 60,
         reason: '',
         errors: [
-            'gspot.toml:4: coverage.swift_target.0.reason: A Swift target with a lower line minimum than coverage.lines needs a reason.',
+            'gspot.toml:4: coverage.swift_target.0.reason: A Swift target with a lower line minimum than coverage.min_line_percent needs a reason.',
         ],
     },
     {

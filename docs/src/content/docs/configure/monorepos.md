@@ -15,7 +15,7 @@ This `gspot.toml` has two scopes and no configurations at the root:
 [[scope]]
 path = "api"
 configurations = ["typescript", "express", "vitest"]
-limits.function_lines = { value = 80, reason = "The API parser is one state machine." }
+limits.max_function_lines = { value = 80, reason = "The API parser is one state machine." }
 
 [[scope]]
 path = "ios"
@@ -53,7 +53,7 @@ file.
 At level `all`, raise the function length limit with a reason:
 
 ```shell
-gspot set limits.function_lines 80 --scope api --reason "The parser is one state machine."
+gspot set limits.max_function_lines 80 --scope api --reason "The parser is one state machine."
 ```
 
 Root settings cover every scope. Paths in a root table start at the repository root, and paths in a `[[scope]]` table

@@ -268,7 +268,7 @@ example = "The declaration `const unused = 1;` reports no-unused-vars. Delete th
 exit_codes = [1]
 fix = ["eslint", "--fix", "--config", "{config_file:eslint}", "{files}"]
 help = "Run `gspot check --fix` for the rules that fix themselves, then read each remaining line; `gspot explain javascript/eslint <rule>` links the rule documentation."
-limits = { "max-lines" = "file_lines", "max-lines-per-function" = "function_lines", "max-params" = "function_parameters", "max-statements" = "function_statements", "max-depth" = "block_nesting", "max-nested-callbacks" = "callback_nesting", "complexity" = "cyclomatic_complexity", "gspot/no-trivial-files" = "index_exports", "gspot/no-trivial-functions" = "trivial_function_statements" }
+limits = { "max-lines" = "max_file_lines", "max-lines-per-function" = "max_function_lines", "max-params" = "max_function_parameters", "max-statements" = "max_function_statements", "max-depth" = "max_block_nesting", "max-nested-callbacks" = "max_callback_nesting", "complexity" = "max_cyclomatic_complexity", "gspot/no-trivial-files" = "max_index_exports", "gspot/no-trivial-functions" = "min_function_statements" }
 limit_languages = ["javascript", "typescript"]
 name = "eslint"
 stage = "commit"
@@ -333,7 +333,7 @@ exit_codes = [1]
 files = { extensions = [".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".mts", ".cts", ".astro", ".vue", ".svelte"], tags = ["shebang:node"] }
 help = "Separate the tasks in the reported function to reduce its cognitive complexity."
 level = "all"
-limits = { "complexity/noExcessiveCognitiveComplexity" = "cognitive_complexity" }
+limits = { "complexity/noExcessiveCognitiveComplexity" = "max_cognitive_complexity" }
 limit_languages = ["javascript", "typescript"]
 name = "biome"
 runs = "scope"

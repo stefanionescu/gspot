@@ -216,7 +216,7 @@ test('a nested Next.js check replaces TypeScript only in its own scope', async (
 test('the jest, vitest, and pytest coverage checks drop exactly their coverage arguments when every limit is 0', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'jest', 'vitest', 'python', 'pytest'], {
-            tables: '[coverage]\nlines = 0\nbranches = 0\nfunctions = 0\nstatements = 0\n',
+            tables: '[coverage]\nmin_line_percent = 0\nmin_branch_percent = 0\nmin_function_percent = 0\nmin_statement_percent = 0\n',
         }),
         'math.test.js': '',
         'test_math.py': '',

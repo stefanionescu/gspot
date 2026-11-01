@@ -96,7 +96,7 @@ final class ValueTests: XCTestCase {
 export const COVERAGE_TARGET_SETTINGS = {
     tables: `[[coverage.swift_target]]
 name = "Inspection.xctest"
-lines = 100
+min_line_percent = 100
 
 [swift]
 xcode_project = "Inspection.xcodeproj"

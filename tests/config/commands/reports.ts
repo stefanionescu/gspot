@@ -14,7 +14,7 @@ export const LIST_SCOPE_SETTINGS = `level = "all"
 configurations = ["bash", "format", "dependencies"]
 test_files = ["checks/**"]
 [limits]
-file_lines = 250
+max_file_lines = 250
 [format]
 indent_width = 4
 [dependencies]
@@ -25,12 +25,12 @@ enabled = false
 [[scope]]
 path = "api"
 configurations = ["bash"]
-limits.file_lines = 200
+limits.max_file_lines = 200
 format.indent_width = 2
 [[scope]]
 path = "api/worker"
 configurations = ["sql"]
-limits.sql.file_lines = 30
+limits.sql.max_file_lines = 30
 sql.dialect = "postgres"
 `;
 
@@ -159,14 +159,14 @@ configurations = ["swift"]
 
 export const REASON_VALUES = [
     {
-        key: 'limits.file_lines',
+        key: 'limits.max_file_lines',
         root: '200',
         child: '400',
         value: [200, 400],
         needsReason: true,
     },
     {
-        key: 'limits.trivial_function_statements',
+        key: 'limits.min_function_statements',
         root: '3',
         child: '1',
         value: [3, 1],
@@ -228,7 +228,7 @@ export const SYNTAX_CHECK_TABLES =
 export const UNKNOWN_SUBJECT_CASES = [
     [
         'unknown/no-such-rule',
-        'There is no check, lint rule, configuration, setting, or file called unknown/no-such-rule. Give a check (python/ruff), a lint rule (python/ruff E501), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).',
+        'There is no check, lint rule, configuration, setting, or file called unknown/no-such-rule. Give a check (python/ruff), a lint rule (python/ruff E501), a configuration (python), a setting (limits.max_file_lines), or a file (./src/app.ts).',
     ],
     ['./missing.sh', 'missing.sh is not a file in this repository.'],
 ] as const;

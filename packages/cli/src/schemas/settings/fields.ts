@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { nonemptyStringSchema } from '#cli/schemas/manifests/tools.ts';
 import type { ReasonedValue, ReasonedSettingDefinition } from '#cli/types/settings.ts';
-import { CASE_NAMES, SETTING_LANGUAGES, REASON_DESCRIPTIONS } from '#cli/config/manifests.ts';
+import { CASE_NAMES, SETTING_LANGUAGES, REASON_DESCRIPTIONS, BOUND_REASON_DESCRIPTION } from '#cli/config/manifests.ts';
 
 import {
     INDENT_MAX,
@@ -119,7 +119,13 @@ export function allowReasonedValue<Output, Input>(
             z
                 .strictObject({
                     value: schema.describe(definition.description),
-                    reason: z.string().describe(REASON_DESCRIPTIONS[definition.reason_when]),
+                    reason: z
+                        .string()
+                        .describe(
+                            definition.reason_when === undefined
+                                ? BOUND_REASON_DESCRIPTION
+                                : REASON_DESCRIPTIONS[definition.reason_when],
+                        ),
                 })
                 .transform((reasoned) => reasoned.value),
         ])
@@ -131,7 +137,6 @@ export const namingCategorySchema = z.strictObject({
     max_characters: allowReasonedValue(z.number().int().positive(), {
         configurations: ['naming'],
         description: 'The most characters one identifier may have.',
-        reason_when: 'raising',
         languages: SETTING_LANGUAGES,
         language_defaults: { swift: 40, sql: 55 },
         default: 35,
@@ -139,7 +144,6 @@ export const namingCategorySchema = z.strictObject({
     max_words: allowReasonedValue(z.number().int().positive(), {
         configurations: ['naming'],
         description: 'The most words one identifier may have.',
-        reason_when: 'raising',
         languages: SETTING_LANGUAGES,
         language_defaults: { swift: 5, sql: 7 },
         default: 4,

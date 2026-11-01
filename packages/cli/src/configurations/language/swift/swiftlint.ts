@@ -18,30 +18,30 @@ function buildSwiftlintOptions(planned: PlannedConfig, offSet: Set<string>) {
     const options = {
         line_length: { warning: format.print_width, error: format.print_width, ignores_urls: true },
         file_length: {
-            warning: getLimit(planned.scope.settings, 'file_lines', 'swift'),
-            error: getLimit(planned.scope.settings, 'file_lines', 'swift'),
+            warning: getLimit(planned.scope.settings, 'max_file_lines', 'swift'),
+            error: getLimit(planned.scope.settings, 'max_file_lines', 'swift'),
             ignore_comment_only_lines: true,
         },
         type_body_length: {
-            warning: getLimit(planned.scope.settings, 'type_lines', 'swift'),
-            error: getLimit(planned.scope.settings, 'type_lines', 'swift'),
+            warning: getLimit(planned.scope.settings, 'max_type_lines', 'swift'),
+            error: getLimit(planned.scope.settings, 'max_type_lines', 'swift'),
         },
         function_parameter_count: {
-            warning: getLimit(planned.scope.settings, 'function_parameters', 'swift'),
-            error: getLimit(planned.scope.settings, 'function_parameters', 'swift'),
+            warning: getLimit(planned.scope.settings, 'max_function_parameters', 'swift'),
+            error: getLimit(planned.scope.settings, 'max_function_parameters', 'swift'),
             ignores_default_parameters: false,
         },
         function_body_length: {
-            warning: getLimit(planned.scope.settings, 'function_lines', 'swift'),
-            error: getLimit(planned.scope.settings, 'function_lines', 'swift'),
+            warning: getLimit(planned.scope.settings, 'max_function_lines', 'swift'),
+            error: getLimit(planned.scope.settings, 'max_function_lines', 'swift'),
         },
-        cyclomatic_complexity: {
-            warning: getLimit(planned.scope.settings, 'cyclomatic_complexity', 'swift'),
-            error: getLimit(planned.scope.settings, 'cyclomatic_complexity', 'swift'),
+        max_cyclomatic_complexity: {
+            warning: getLimit(planned.scope.settings, 'max_cyclomatic_complexity', 'swift'),
+            error: getLimit(planned.scope.settings, 'max_cyclomatic_complexity', 'swift'),
         },
         closure_body_length: {
-            warning: getLimit(planned.scope.settings, 'closure_lines', 'swift'),
-            error: getLimit(planned.scope.settings, 'closure_lines', 'swift'),
+            warning: getLimit(planned.scope.settings, 'max_closure_lines', 'swift'),
+            error: getLimit(planned.scope.settings, 'max_closure_lines', 'swift'),
         },
         identifier_name: {
             min_length: 1,

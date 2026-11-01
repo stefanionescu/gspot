@@ -2,12 +2,12 @@ import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { mergeValue } from '#cli/settings/inherit.ts';
 import { readNamingDefaults } from '#cli/manifests/read.ts';
-import { SETTING_LANGUAGES } from '#cli/config/manifests.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { importRulesSchema } from '#cli/schemas/settings/tables.ts';
 import type { Setting, Configuration } from '#cli/types/manifests.ts';
 import type { Level, AvailableSettings } from '#cli/types/settings.ts';
+import { BOUND_PREFIXES, SETTING_LANGUAGES } from '#cli/config/manifests.ts';
 import { getSettingType, unwrapSettingSchema } from '#cli/settings/lookup.ts';
 import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/settings/configurations.ts';
 import { TABLE_KEY_SEGMENTS, LANGUAGE_GROUP_TABLES, SHIPPED_DEFAULT_ORIGIN } from '#cli/config/settings/schema.ts';
@@ -106,6 +106,13 @@ function addToolSettings(availableSettings: AvailableSettings, configurations: C
     }
 }
 
+function readBoundReason(name: string, definition: z.GlobalMeta | undefined): Pick<Setting, 'reason_when'> | undefined {
+    if (definition?.['reasoned'] !== true) return undefined;
+    const field = name.slice(name.lastIndexOf('.') + 1);
+    const direction = Object.entries(BOUND_PREFIXES).find(([prefix]) => field.startsWith(prefix))?.[1];
+    return direction === undefined ? undefined : { reason_when: direction };
+}
+
 function addSchemaSettings(settingsByConfiguration: Map<string, Setting[]>, schema: z.ZodType, name: string): void {
     const definition = schema.meta();
     const owners = definition?.['configurations'] as readonly string[] | undefined;
@@ -114,6 +121,7 @@ function addSchemaSettings(settingsByConfiguration: Map<string, Setting[]>, sche
         name,
         ...getSettingType(schema),
         default: schema.parse(undefined),
+        ...readBoundReason(name, definition),
         ...definition,
         description: schema.description ?? '',
     };

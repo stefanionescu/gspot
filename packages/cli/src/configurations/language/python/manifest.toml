@@ -330,7 +330,7 @@ exit_codes = [1]
 files = { extensions = [".py", ".pyi"] }
 fix = ["ruff", "check", "--no-cache", "--fix", "--quiet", "{files}"]
 help = "Run `gspot check --fix` for the rules that fix themselves."
-limits = { "C901" = "cyclomatic_complexity", "PLR0915" = "function_statements", "PLR0913" = "function_parameters", "PLR0917" = "function_parameters", "PLR0912" = "function_branches", "PLR0911" = "function_returns" }
+limits = { "C901" = "max_cyclomatic_complexity", "PLR0915" = "max_function_statements", "PLR0913" = "max_function_parameters", "PLR0917" = "max_function_parameters", "PLR0912" = "max_function_branches", "PLR0911" = "max_function_returns" }
 limit_languages = ["python"]
 name = "ruff"
 output = { format = "json", fields = { file = "filename", line = "location.row", column = "location.column", rule = "code", message = "message" } }
@@ -412,16 +412,16 @@ tool = "vulture"
 why = "Code that nothing calls still costs a reader time and still has to compile and pass review."
 
 [[check]]
-example = "A Python function over `limits.python.function_lines` reports `function-lines` with its count. Split it into functions that each do one job."
+example = "A Python function over `limits.python.max_function_lines` reports `function-lines` with its count. Split it into functions that each do one job."
 files = { extensions = [".py"] }
-help = "Split the function by responsibility, or raise `limits.python.function_lines` with a reason."
+help = "Split the function by responsibility, or raise `limits.python.max_function_lines` with a reason."
 level = "all"
-limits = ["function_lines"]
+limits = ["max_function_lines"]
 limit_languages = ["python"]
 name = "function-size"
 runs = "scope"
 stage = "commit"
-summary = "Checks the code line count of each Python function against `limits.function_lines`."
+summary = "Checks the code line count of each Python function against `limits.max_function_lines`."
 why = "A long function does more than one job, and a reader has to hold all of it at once."
 
 [[check]]

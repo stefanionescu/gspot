@@ -37,8 +37,7 @@ export type SettingReference = {
     children: SettingReference[];
 };
 
-export type ReasonedSettingDefinition = SettingDefinition &
-    Required<Pick<SettingDefinition, 'description' | 'reason_when'>>;
+export type ReasonedSettingDefinition = SettingDefinition & Required<Pick<SettingDefinition, 'description'>>;
 
 export type SettingDefinition = {
     leftOut?: keyof typeof LEFT_OUT_NOTES;

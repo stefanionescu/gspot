@@ -37,29 +37,29 @@ test('a setting explanation lists settings set only in scopes and each inherited
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             rules: true,
-            tables: '[[scope]]\npath = "api"\nconfigurations = ["jest"]\n[scope.coverage]\nlines = 90\n[[scope]]\npath = "api/worker"\nconfigurations = []\n[scope.coverage]\nlines = 95\n',
+            tables: '[[scope]]\npath = "api"\nconfigurations = ["jest"]\n[scope.coverage]\nmin_line_percent = 90\n[[scope]]\npath = "api/worker"\nconfigurations = []\n[scope.coverage]\nmin_line_percent = 95\n',
         }),
         'api/example.test.js': 'test("example", () => {});\n',
         'api/worker/example.test.js': 'test("worker", () => {});\n',
     });
 
-    const result = await runGspot(sandbox.path, ['explain', 'coverage.lines', '--json']);
+    const result = await runGspot(sandbox.path, ['explain', 'coverage.min_line_percent', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(JSON.parse(result.stdout)).toMatchObject(SCOPE_SETTING_EXPLANATION);
 });
 
-test('explain reads an inherited limits.function_lines value and its reason, and writes nothing', async () => {
+test('explain reads an inherited limits.max_function_lines value and its reason, and writes nothing', async () => {
     await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['structure'], {
         scopes: [{ path: 'app' }],
-        tables: `[limits]\nfunction_lines = { value = 100, reason = ${JSON.stringify(SETTING_REASON)} }\n`,
+        tables: `[limits]\nmax_function_lines = { value = 100, reason = ${JSON.stringify(SETTING_REASON)} }\n`,
     });
     await createFileTree(sandbox.path, { 'gspot.toml': settings, 'app/source.ts': 'export const active = true;\n' });
-    const explained = await runGspot(sandbox.path, ['explain', 'limits.function_lines', '--json']);
+    const explained = await runGspot(sandbox.path, ['explain', 'limits.max_function_lines', '--json']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
     expect(JSON.parse(explained.stdout)).toMatchObject({
         kind: 'setting',
-        key: 'limits.function_lines',
+        key: 'limits.max_function_lines',
         type: 'number',
         scopes: ['', 'app'].map((scope) => ({ scope, value: 100, source: 'gspot.toml', reason: SETTING_REASON })),
     });
@@ -137,7 +137,7 @@ test('a neutral format setting stays settable without a reason', async () => {
 
 test.each([
     { key: 'level', flag: '' },
-    { key: 'limits.file_lines', flag: ' [--reason "<why>"]' },
+    { key: 'limits.max_file_lines', flag: ' [--reason "<why>"]' },
 ])('explain offers --reason for $key only when the setting can need one', async ({ key, flag }) => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     const result = await runGspot(sandbox.path, ['explain', key]);
@@ -180,16 +180,16 @@ test.each(['basic', 'all'] as const)('set and explain report whether a limit run
     });
     const changed = await runGspot(sandbox.path, [
         'set',
-        'limits.bash.function_lines',
+        'limits.bash.max_function_lines',
         '50',
         '--reason',
         'The script keeps one operation together.',
     ]);
     expect(changed.code, changed.stdout + changed.stderr).toBe(0);
-    const note = 'note     No selected check reads limits.bash.function_lines at level basic.';
+    const note = 'note     No selected check reads limits.bash.max_function_lines at level basic.';
     if (level === 'basic') expect(changed.stdout.split('\n')).toContain(note);
     else expect(changed.stdout).not.toContain('No selected check reads');
-    const machine = await runGspot(sandbox.path, ['explain', 'limits.bash.function_lines', '--json']);
+    const machine = await runGspot(sandbox.path, ['explain', 'limits.bash.max_function_lines', '--json']);
     expect(machine.code, machine.stdout + machine.stderr).toBe(0);
     expect(JSON.parse(machine.stdout)).toMatchObject({
         scopes: [
@@ -214,9 +214,9 @@ test('explain shows a setting that no scope accepts, such as level, only at the 
 
 test('explain reads a shipped default before init and prints plain command examples', async () => {
     await using sandbox = await createGitSandbox({});
-    const result = await runGspot(sandbox.path, ['explain', 'limits.file_lines', '--json']);
+    const result = await runGspot(sandbox.path, ['explain', 'limits.max_file_lines', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(JSON.parse(result.stdout)).toMatchObject({ kind: 'setting', key: 'limits.file_lines' });
+    expect(JSON.parse(result.stdout)).toMatchObject({ kind: 'setting', key: 'limits.max_file_lines' });
     const rules = await runGspot(sandbox.path, ['explain', 'tools.eslint.rules']);
     expect(rules.code, rules.stdout + rules.stderr).toBe(0);
     expect(rules.stdout).toContain('gspot ignore javascript/eslint --rule <rule> --reason "<why>"');

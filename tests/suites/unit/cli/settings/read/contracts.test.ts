@@ -22,11 +22,11 @@ test('a generator command must declare at least one output', () => {
 
 test('pytest refuses a function coverage limit because it supports line coverage only', () => {
     using sandbox = createTemporaryFolder();
-    const text = buildSandboxSettings(['python', 'pytest'], { tables: '[coverage]\nfunctions = 100\n' });
+    const text = buildSandboxSettings(['python', 'pytest'], { tables: '[coverage]\nmin_function_percent = 100\n' });
     expect(parseSettings(text, sandbox.path)).toStrictEqual([
         {
-            path: ['coverage', 'functions'],
-            message: expect.stringContaining('There is no setting called coverage.functions.') as string,
+            path: ['coverage', 'min_function_percent'],
+            message: expect.stringContaining('There is no setting called coverage.min_function_percent.') as string,
         },
     ]);
 });

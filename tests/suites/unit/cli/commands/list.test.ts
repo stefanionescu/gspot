@@ -102,8 +102,8 @@ test('the settings list reports inherited values and their source scope', async 
     expect(structured.stderr).toBe('');
     const { settings } = JSON.parse(structured.stdout) as SettingsListJson;
     expect(settings.find((row) => row.key === 'test_files')?.reasonRequirement).toBeUndefined();
-    expect(settings.find((row) => row.key === 'limits.file_lines')?.reasonRequirement).toBe('raising');
-    expect(settings.find((row) => row.scope === 'api/worker' && row.key === 'limits.file_lines')).toMatchObject({
+    expect(settings.find((row) => row.key === 'limits.max_file_lines')?.reasonRequirement).toBe('raising');
+    expect(settings.find((row) => row.scope === 'api/worker' && row.key === 'limits.max_file_lines')).toMatchObject({
         value: 200,
         source: 'scope api',
     });
@@ -149,7 +149,7 @@ test('the text lists group equal scope states on one line', async () => {
     expect(checks.stdout).toContain('bash/shellcheck  on in . and 3 scopes\n');
     expect(checks.stdout).toContain(`bash/shfmt  on in ., web; ${OFF_BY_IGNORE} in api, api/worker\n`);
     const settings = await runGspot(sandbox.path, ['list', 'settings']);
-    expect(settings.stdout).toMatch(/^limits\.file_lines .* in \. and 3 scopes$/mu);
+    expect(settings.stdout).toMatch(/^limits\.max_file_lines .* in \. and 3 scopes$/mu);
 });
 
 test('list without gspot.toml refuses the command and writes nothing', async () => {

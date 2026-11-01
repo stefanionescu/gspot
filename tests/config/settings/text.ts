@@ -6,8 +6,8 @@ export const SEMGREP_IGNORE = {
 };
 
 export const SCOPE_SETTING_WRITES = [
-    ['a dotted key', 'limits.file_lines = 100'],
-    ['an inline table', 'limits = { file_lines = 100 }'],
+    ['a dotted key', 'limits.max_file_lines = 100'],
+    ['an inline table', 'limits = { max_file_lines = 100 }'],
 ] as const;
 
 export const INITIAL_SETTINGS = 'configurations = ["bash", "naming", "format"]\n';

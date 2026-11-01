@@ -18,10 +18,10 @@ export async function checkBashFunctionSize(session: Session, planned: PlannedCh
     return scripts.flatMap((file) =>
         file.functions.flatMap((scriptFunction) => {
             const counts = {
-                function_lines: listCodeLines(file.code.slice(scriptFunction.start - 1, scriptFunction.end)).length,
-                function_branches: scriptFunction.branches,
-                block_nesting: scriptFunction.nesting,
-                function_assignments: scriptFunction.assignments,
+                max_function_lines: listCodeLines(file.code.slice(scriptFunction.start - 1, scriptFunction.end)).length,
+                max_function_branches: scriptFunction.branches,
+                max_block_nesting: scriptFunction.nesting,
+                max_function_assignments: scriptFunction.assignments,
             };
             return COUNT_LIMITS.flatMap(({ limit, rule, noun }) => {
                 const maximum = getLimit(planned.scope.settings, limit, 'bash');

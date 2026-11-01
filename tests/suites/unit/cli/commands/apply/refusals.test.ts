@@ -50,12 +50,12 @@ test('apply --json prints one error object when an unowned file blocks generatio
 test('a malformed reason reports a settings error and apply preserves the authored settings', async () => {
     await using sandbox = await createGitSandbox({});
     const source = buildSandboxSettings(['site'], {
-        tables: '[limits]\nfile_lines = { value = 1000, reason = 42 }\n',
+        tables: '[limits]\nmax_file_lines = { value = 1000, reason = 42 }\n',
     });
     await createFileTree(sandbox.path, { 'gspot.toml': source });
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(2);
-    expect(applied.stdout + applied.stderr).toStartWith('gspot.toml:3: limits.file_lines.reason:');
+    expect(applied.stdout + applied.stderr).toStartWith('gspot.toml:3: limits.max_file_lines.reason:');
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(source);
     expect(await isOnDisk(join(sandbox.path, GSPOT_FOLDER))).toBe(false);
 });

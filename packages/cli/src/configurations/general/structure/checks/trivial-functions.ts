@@ -116,7 +116,7 @@ function formatAccessorName(node: Node, label: string): string {
 }
 
 function listTrivialFunctions(planned: PlannedCheck, source: ParsedSource): CheckFinding[] {
-    const limit = getLimit(planned.scope.settings, 'trivial_function_statements', source.language);
+    const limit = getLimit(planned.scope.settings, 'min_function_statements', source.language);
     return (source.captures.get(FUNCTION_LABEL) ?? []).flatMap((node) => {
         const body = extractFunctionBody(node, source.language);
         const count = countExecutableStatements(body, source.language);

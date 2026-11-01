@@ -7,7 +7,7 @@ const settings = buildSettingsReference(readConfigurations().values().toArray())
 test('settings reference keeps reasoned values as leaves and names language and category inheritance', () => {
     const limits = settings.find(({ key }) => key === 'limits');
     const naming = settings.find(({ key }) => key === 'naming');
-    expect(limits?.children.find(({ name }) => name === 'file_lines')).toMatchObject({
+    expect(limits?.children.find(({ name }) => name === 'max_file_lines')).toMatchObject({
         kind: 'value',
         reasoned: true,
         children: [],

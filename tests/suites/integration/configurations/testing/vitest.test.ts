@@ -45,7 +45,7 @@ async function createVitestProject(tables: string): Promise<TestdirResult> {
 }
 
 test('vitest/coverage reports coverage under its limit and passes after the fix, in the root and a scope', async () => {
-    await using sandbox = await createVitestProject('[coverage]\nlines = 100\nfunctions = 100\n');
+    await using sandbox = await createVitestProject('[coverage]\nmin_line_percent = 100\nmin_function_percent = 100\n');
     const source = join(sandbox.path, 'app/src/public.ts');
     await writeFile(source, UNTESTED_SOURCE);
     const failed = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'vitest/coverage', '--json']));

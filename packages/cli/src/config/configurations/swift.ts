@@ -142,7 +142,7 @@ export const SWIFTLINT_ALWAYS_OFF = [
 
 export const SWIFTLINT_DEFAULT_LEVEL_OFF = [
     'closure_body_length',
-    'cyclomatic_complexity',
+    'max_cyclomatic_complexity',
     'discouraged_direct_init',
     'enum_case_associated_values_count',
     'explicit_acl',

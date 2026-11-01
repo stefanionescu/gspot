@@ -8,7 +8,7 @@ import { isActive, planChecks, stripCoverageArguments } from '#cli/engine/plan.t
 test('a shared function coverage limit enables Jest coverage without enabling pytest coverage', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python', 'pytest', 'jest'], {
-            tables: '[coverage]\nlines = 0\nfunctions = 100\n',
+            tables: '[coverage]\nmin_line_percent = 0\nmin_function_percent = 100\n',
         }),
         'test_math.py': 'def test_math():\n    assert 1 + 1 == 2\n',
         'math.test.js': 'test("sum", () => expect(1 + 1).toBe(2));\n',

@@ -167,7 +167,7 @@ export const SET_REFUSALS = [
     ],
     [
         'an undeclared scope',
-        ['set', 'limits.file_lines', '100', '--scope', 'web'],
+        ['set', 'limits.max_file_lines', '100', '--scope', 'web'],
         'There is no scope called web. Name a project folder or a written scope.',
     ],
     [
@@ -190,8 +190,8 @@ export const SET_REFUSALS = [
 export const KEPT_SETTING_CHANGES = [
     [
         'set',
-        ['set', 'limits.bash.file_lines', '200', '--reason', 'Generated scripts need this limit.'],
-        '[limits]\nbash = { file_lines = { value = 200, reason = "Generated scripts need this limit." } }',
+        ['set', 'limits.bash.max_file_lines', '200', '--reason', 'Generated scripts need this limit.'],
+        '[limits]\nbash = { max_file_lines = { value = 200, reason = "Generated scripts need this limit." } }',
     ],
 ] as const;
 

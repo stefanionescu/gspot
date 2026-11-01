@@ -10,7 +10,7 @@ test.each(['.sh', ''])('Bash %s heredocs and multiline strings count as code lin
     const source = '#!/bin/sh\n# comment\ncat <<\'EOF\'\n# literal\nEOF\nvalue="first\n# literal\nlast"\n';
     const file = `run${extension}`;
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['bash'], { level: 'all', tables: '[limits.bash]\nfile_lines = 5\n' }),
+        'gspot.toml': buildSandboxSettings(['bash'], { level: 'all', tables: '[limits.bash]\nmax_file_lines = 5\n' }),
         [file]: source,
     });
     const found = await runSandboxCheck(sandbox.path, 'structure/long-files');
@@ -30,7 +30,7 @@ test('long files checks authored covered languages and leaves generated, vendore
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python', 'javascript'], {
             level: 'all',
-            tables: '[limits]\nfile_lines = 2\n',
+            tables: '[limits]\nmax_file_lines = 2\n',
         }),
         'source.py': LONG_PYTHON_FILE,
         '.gspot/configurations/language/javascript/eslint/eslint.mjs': LONG_JAVASCRIPT_FILE,
@@ -46,7 +46,7 @@ test('long files checks authored covered languages and leaves generated, vendore
 
 test('SQL strings count while multiline SQL comments do not', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['sql'], { level: 'all', tables: '[limits.sql]\nfile_lines = 2\n' }),
+        'gspot.toml': buildSandboxSettings(['sql'], { level: 'all', tables: '[limits.sql]\nmax_file_lines = 2\n' }),
         'query.sql': '/* This comment\nspans two lines. */\nSELECT $$first\n-- string content\nlast$$;\n',
     });
     expect(await runSandboxCheck(sandbox.path, 'structure/long-files')).toMatchObject([
@@ -56,7 +56,10 @@ test('SQL strings count while multiline SQL comments do not', async () => {
 
 test('a Python string line that starts with # counts as code', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['python'], { level: 'all', tables: '[limits.python]\nfile_lines = 2\n' }),
+        'gspot.toml': buildSandboxSettings(['python'], {
+            level: 'all',
+            tables: '[limits.python]\nmax_file_lines = 2\n',
+        }),
         'source.py': 'value = """first\n# string content\nlast"""\n',
     });
     const findings = await runSandboxCheck(sandbox.path, 'structure/long-files');

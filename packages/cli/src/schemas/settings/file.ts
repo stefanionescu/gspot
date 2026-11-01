@@ -107,10 +107,10 @@ const scopeBody = {
     prose: configurationTableSchemas.prose.unwrap().omit({ banned_headings: true }).optional(),
     coverage: z
         .strictObject({
-            lines: configurationTableSchemas.coverage.unwrap().shape.lines,
-            branches: configurationTableSchemas.coverage.unwrap().shape.branches,
-            functions: configurationTableSchemas.coverage.unwrap().shape.functions,
-            statements: configurationTableSchemas.coverage.unwrap().shape.statements,
+            min_line_percent: configurationTableSchemas.coverage.unwrap().shape.min_line_percent,
+            min_branch_percent: configurationTableSchemas.coverage.unwrap().shape.min_branch_percent,
+            min_function_percent: configurationTableSchemas.coverage.unwrap().shape.min_function_percent,
+            min_statement_percent: configurationTableSchemas.coverage.unwrap().shape.min_statement_percent,
         })
         .optional(),
     licenses: configurationTableSchemas.licenses.unwrap().omit({ allowed_package: true }).optional(),

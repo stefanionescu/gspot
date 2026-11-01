@@ -19,7 +19,7 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 test('remove deletes settings that only the removed configuration exposes and names the deleted keys', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['sql', 'bash'], {
-            tables: '[sql]\ndialect = "sqlite"\n[limits]\nfile_lines = 250\n',
+            tables: '[sql]\ndialect = "sqlite"\n[limits]\nmax_file_lines = 250\n',
         }),
         'query.sql': 'SELECT 1;\n',
         'source.sh': 'echo example\n',
@@ -34,7 +34,7 @@ test('remove deletes settings that only the removed configuration exposes and na
     expect(result.stdout).toContain('Removed settings sql.dialect.');
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
     expect((written['tools'] as TomlTable | undefined)?.['sqlfluff']).toBeUndefined();
-    expect(written['limits']).toStrictEqual({ file_lines: 250 });
+    expect(written['limits']).toStrictEqual({ max_file_lines: 250 });
 });
 
 test('remove names only removed configurations in a mixed request', async () => {

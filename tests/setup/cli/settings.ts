@@ -101,12 +101,12 @@ export async function prepareParameterProject(
     const { value: defaultMaximum } = buildAvailableSettings(
         [readConfigurations().get('structure')!],
         'all',
-    ).defaults.get('limits.function_parameters')!;
+    ).defaults.get('limits.max_function_parameters')!;
     const maximum = supplied === 'default' ? defaultMaximum : supplied;
     const limits =
         maximum === defaultMaximum
             ? ''
-            : `[limits.${scenario.language}]\nfunction_parameters = { value = ${String(maximum)}, reason = "The project API declares eight required parameters." }\n`;
+            : `[limits.${scenario.language}]\nmax_function_parameters = { value = ${String(maximum)}, reason = "The project API declares eight required parameters." }\n`;
     await createFileTree(root, {
         'gspot.toml': buildSandboxSettings([scenario.language], { tables: limits, level: 'all' }),
         [scenario.file]: scenario.source,

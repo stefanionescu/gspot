@@ -39,15 +39,15 @@ test('a value comes from the configuration default, then the root table, then th
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], {
             rules: true,
-            tables: '[limits]\nfile_lines = 250\n[[scope]]\npath = "api"\nlimits.file_lines = 200\n',
+            tables: '[limits]\nmax_file_lines = 250\n[[scope]]\npath = "api"\nlimits.max_file_lines = 200\n',
         }),
         'api/run.sh': '',
     });
     const { settings, scopes } = await openSession(sandbox.path);
     const [root, api] = scopes;
-    expect(getSettingValue(root!.availableSettings, settings, 'limits.file_lines', '')?.value).toBe(250);
-    expect(getSettingValue(api!.availableSettings, settings, 'limits.file_lines', 'api')?.value).toBe(200);
-    expect(getSettingValue(root!.availableSettings, settings, 'limits.function_lines', '')?.source).toBe(
+    expect(getSettingValue(root!.availableSettings, settings, 'limits.max_file_lines', '')?.value).toBe(250);
+    expect(getSettingValue(api!.availableSettings, settings, 'limits.max_file_lines', 'api')?.value).toBe(200);
+    expect(getSettingValue(root!.availableSettings, settings, 'limits.max_function_lines', '')?.source).toBe(
         'configuration structure',
     );
 });

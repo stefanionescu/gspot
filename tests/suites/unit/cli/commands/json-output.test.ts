@@ -43,7 +43,7 @@ test.each([
         kind: true,
     },
     { commandArguments: ['explain', 'markdown', '--json'], headings: ['### `configuration`'], kind: true },
-    { commandArguments: ['explain', 'limits.file_lines', '--json'], headings: ['### `setting`'], kind: true },
+    { commandArguments: ['explain', 'limits.max_file_lines', '--json'], headings: ['### `setting`'], kind: true },
     { commandArguments: ['explain', './README.md', '--json'], headings: ['### `path`'], kind: true },
 ])('$commandArguments prints the fields of its section of json-output.mdx', async (row) => {
     await using sandbox = await createGitSandbox({

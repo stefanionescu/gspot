@@ -27,7 +27,7 @@ test("jest/coverage at level all uses the scope's coverage limits and runs only 
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
             scopes: [{ path: 'app', configurations: ['jest'] }],
-            tables: '[scope.coverage]\nfunctions = 100\n',
+            tables: '[scope.coverage]\nmin_function_percent = 100\n',
         }),
         'package.json': '{"name":"jest-scoped-acceptance","private":true}\n',
         'sibling.test.cjs': 'throw new Error("Tests outside the selected project must not execute");\n',

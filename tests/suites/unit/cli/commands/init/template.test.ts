@@ -37,7 +37,7 @@ test('init --from copies the settings that fit any repository and lists each one
     const table = parseTomlFile('gspot.toml', written);
     expect(table).toMatchObject({
         configurations: ['typescript'],
-        limits: { function_lines: { value: 80, reason: 'The parsers are state machines.' } },
+        limits: { max_function_lines: { value: 80, reason: 'The parsers are state machines.' } },
     });
     expect(written).toContain('# The parsers are state machines.');
     expect(written).not.toContain('test_files');

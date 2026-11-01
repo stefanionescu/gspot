@@ -72,7 +72,7 @@ define the behavior instead of adding speculative protection.
 Keep one implementation of each concept, and one copy of each table of values, in the module that uses it. Extract
 shared code only when two or more callers need the same behavior now.
 
-- Delete each named function of `limits.trivial_function_statements` statements or fewer, exported or
+- Delete each named function of `limits.min_function_statements` statements or fewer, exported or
   not, and inline its body at each call site. Class methods, accessors, constructors, and recursive functions count
   too.
 - Keep a callback written inline and a member of an object literal. Keep the implementation of an overload set, and
@@ -84,7 +84,7 @@ shared code only when two or more callers need the same behavior now.
 - An abstraction that gains flags, modes, or caller-specific branches needs a different design. Do not combine loosely
   related behaviors in a function behind a parameter that picks one.
 - A function takes no positional boolean. Pass more than a few values as named fields: an options object, keyword-only
-  parameters, or argument labels. `limits.function_parameters` sets the ceiling.
+  parameters, or argument labels. `limits.max_function_parameters` sets the ceiling.
 - To remove a wrong abstraction, inline it into each caller, delete the unused branches there, and extract only the
   common behavior that remains.
 - Pass data, not a callback, unless it replaces several flags across real callers.

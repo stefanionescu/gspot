@@ -2,10 +2,10 @@ import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { ARITHMETIC_MODULE } from '#tests/config/integration/python.ts';
 
 export const COVERAGE_ZERO_LIMITS = `[coverage]
-lines = { value = 0, reason = "This test checks execution without coverage collection." }
-branches = { value = 0, reason = "This test checks execution without coverage collection." }
-functions = { value = 0, reason = "This test checks execution without coverage collection." }
-statements = { value = 0, reason = "This test checks execution without coverage collection." }
+min_line_percent = { value = 0, reason = "This test checks execution without coverage collection." }
+min_branch_percent = { value = 0, reason = "This test checks execution without coverage collection." }
+min_function_percent = { value = 0, reason = "This test checks execution without coverage collection." }
+min_statement_percent = { value = 0, reason = "This test checks execution without coverage collection." }
 `;
 
 export const MATH_SOURCE = `function total(values) { let sum = 0; for (const value of values) { if (value > 0) sum += value; } return sum; }
@@ -27,10 +27,10 @@ export const JEST_PROJECT_FILES = {
 } as const;
 
 export const JEST_COVERAGE_TABLES = `[coverage]
-lines = 80
-branches = 80
-functions = 80
-statements = 80
+min_line_percent = 80
+min_branch_percent = 80
+min_function_percent = 80
+min_statement_percent = 80
 `;
 
 export const COVERAGE_THRESHOLD_MESSAGE = 'coverage threshold for lines (80%) not met: ';
@@ -77,7 +77,7 @@ export const PYTEST_CASES = [
             'example/math.py': HALF_COVERED_SOURCE,
             'tests/test_math.py': `from example.math import first, second, third, fourth\n\ndef test_functions():\n${Array.from({ length: 40 }, () => '    assert callable(first) and callable(second) and callable(third) and callable(fourth)').join('\n')}\n`,
         },
-        settings: '[coverage]\nlines = 80\n',
+        settings: '[coverage]\nmin_line_percent = 80\n',
         expected: {},
         corrected: {
             files: {
@@ -93,7 +93,7 @@ export const PYTEST_CASES = [
 export const COVERAGE_LIMIT_CASES = [
     {
         limit: 80,
-        coverage: '[coverage]\nlines = 80\n',
+        coverage: '[coverage]\nmin_line_percent = 80\n',
         code: 2,
         result: {
             status: 'missing',
@@ -104,7 +104,7 @@ export const COVERAGE_LIMIT_CASES = [
     {
         limit: 0,
         coverage:
-            '[coverage]\nlines = { value = 0, reason = "This test checks execution without coverage collection." }\n',
+            '[coverage]\nmin_line_percent = { value = 0, reason = "This test checks execution without coverage collection." }\n',
         code: 0,
         result: { status: 'passed', note: undefined, coverage: false },
     },

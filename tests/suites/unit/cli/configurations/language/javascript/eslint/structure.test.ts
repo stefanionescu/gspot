@@ -109,7 +109,7 @@ test('level all skips build output and files marked linguist-generated in .gitat
 test.each(['all'] as const)('size limits apply to test files only at level all (%s)', async (level) => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], {
-            tables: '[limits]\nfile_lines = 8\nfunction_lines = 5\nfunction_statements = 3\n',
+            tables: '[limits]\nmax_file_lines = 8\nmax_function_lines = 5\nmax_function_statements = 3\n',
             level,
         }),
         'package.json': '{"private":true,"type":"module"}\n',
@@ -160,7 +160,7 @@ test.each([...LEVEL_REEXPORT_CASES])(
             ...IMPORT_FILES,
             'gspot.toml': buildSandboxSettings(['typescript'], {
                 level,
-                tables: `[structure]\nreexports = ${reexports === 'index-only' ? INDEX_ONLY_REEXPORTS : '"none"'}\n[limits]\nindex_exports = 2\n[[scope]]\npath = "app"\nconfigurations = ["typescript"]\n`,
+                tables: `[structure]\nreexports = ${reexports === 'index-only' ? INDEX_ONLY_REEXPORTS : '"none"'}\n[limits]\nmax_index_exports = 2\n[[scope]]\npath = "app"\nconfigurations = ["typescript"]\n`,
             }),
         });
         const eslint = await buildEslint(sandbox.path);

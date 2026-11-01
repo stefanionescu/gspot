@@ -26,7 +26,7 @@ findings and exit with `1`. A missing report or a command that cannot run exits 
 To require full function coverage:
 
 ```shell
-gspot set coverage.functions 100
+gspot set coverage.min_function_percent 100
 ```
 
 Add `--scope app` to set it for the scope `app` only. The [settings reference](/reference/gspot-toml/) lists every
@@ -57,7 +57,7 @@ add pytest`. Install pytest and pytest-cov in the `.venv` of your project. Then 
 gspot check --only pytest/coverage
 ```
 
-`coverage.lines` sets the line coverage limit. The check runs pytest with `--strict-markers` and `--strict-config`.
+`coverage.min_line_percent` sets the line coverage limit. The check runs pytest with `--strict-markers` and `--strict-config`.
 The generated coverage defaults omit paths matched by `test_files`, so tests do not raise the measured coverage.
 When the project provides its own coverage configuration, that configuration decides which files to omit.
 

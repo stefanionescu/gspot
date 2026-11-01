@@ -185,14 +185,14 @@ export async function checkDeptry(session: CheckSession, planned: PlannedCheck):
 }
 
 /**
-Checks each Python function against limits.function_lines, counting code lines only.
+Checks each Python function against limits.max_function_lines, counting code lines only.
 
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 @returns one finding per function over the limit.
 */
 export async function checkPythonFunctionSize(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
-    const limit = getLimit(planned.scope.settings, 'function_lines', 'python');
+    const limit = getLimit(planned.scope.settings, 'max_function_lines', 'python');
     const files = planned.files.filter((file) => file.path.endsWith(PYTHON_EXTENSION));
     const findings = await Promise.all(
         files.map((file) => listLongFunctions(session, planned.files, file.path, limit)),

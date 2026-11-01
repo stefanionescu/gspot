@@ -140,7 +140,7 @@ async function measureCoverage(session: CheckSession, planned: PlannedCheck): Pr
 
 function listCoverageShortfalls(
     output: CoverageOutput,
-    settings: Pick<TableSettings<'coverage'>, 'lines' | 'swift_target'>,
+    settings: Pick<TableSettings<'coverage'>, 'min_line_percent' | 'swift_target'>,
 ): string[] {
     const limits = [
         ...settings.swift_target,
@@ -151,7 +151,7 @@ function listCoverageShortfalls(
                         (limit) => target.name === limit.name || target.name === `${limit.name}${APP_TARGET_SUFFIX}`,
                     ),
             )
-            .map((target) => ({ name: target.name, lines: settings.lines })),
+            .map((target) => ({ name: target.name, min_line_percent: settings.min_line_percent })),
     ];
     return limits.flatMap((limit) => {
         const target = output.targets.find(
@@ -159,9 +159,11 @@ function listCoverageShortfalls(
         );
         if (target === undefined) return [`The coverage report has no target named ${limit.name}.`];
         const covered = Math.floor(target.lineCoverage * MAX_PERCENTAGE);
-        return covered >= limit.lines
+        return covered >= limit.min_line_percent
             ? []
-            : [`${limit.name} covers ${String(covered)}% of its lines, under the limit of ${String(limit.lines)}%.`];
+            : [
+                  `${limit.name} covers ${String(covered)}% of its lines, under the limit of ${String(limit.min_line_percent)}%.`,
+              ];
     });
 }
 

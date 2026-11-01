@@ -80,14 +80,14 @@ test('a per-scope limit overrides a root language limit in the scope view', asyn
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python'], {
             rules: true,
-            tables: '[limits.python]\nfile_lines = 300\n[[scope]]\npath = "api"\nlimits.file_lines = 100\n',
+            tables: '[limits.python]\nmax_file_lines = 300\n[[scope]]\npath = "api"\nlimits.max_file_lines = 100\n',
         }),
         'api/source.py': 'value = 1\n',
     });
 
     const session = await openSession(sandbox.path);
     const scope = session.scopes.find((scope) => scope.path === 'api')!;
-    expect(getLimit(scope.settings, 'file_lines', 'python')).toBe(100);
+    expect(getLimit(scope.settings, 'max_file_lines', 'python')).toBe(100);
 });
 
 test('OpenAPI stays off without a document and in a scope that removes it', async () => {
@@ -156,7 +156,7 @@ test('a rule option named reason is passed on and is not a gspot reason', async 
 test('a language limit overrides the shared limit in the root and in a child scope', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python', 'swift'], {
-            tables: '[limits]\nfunction_parameters = 2\n[limits.python]\nfunction_parameters = { value = 8, reason = "The project API declares eight required parameters." }\n[[scope]]\npath = "api"\n',
+            tables: '[limits]\nmax_function_parameters = 2\n[limits.python]\nmax_function_parameters = { value = 8, reason = "The project API declares eight required parameters." }\n[[scope]]\npath = "api"\n',
         }),
         'source.py': 'value = 1\n',
         'api/source.py': 'value = 2\n',
@@ -165,9 +165,9 @@ test('a language limit overrides the shared limit in the root and in a child sco
     expect(
         session.scopes.map(({ path, settings }) => ({
             path,
-            python: getLimit(settings, 'function_parameters', 'python'),
-            swift: getLimit(settings, 'function_parameters', 'swift'),
-            shared: getLimit(settings, 'function_parameters'),
+            python: getLimit(settings, 'max_function_parameters', 'python'),
+            swift: getLimit(settings, 'max_function_parameters', 'swift'),
+            shared: getLimit(settings, 'max_function_parameters'),
         })),
     ).toStrictEqual([
         { path: '', python: 8, swift: 2, shared: 2 },

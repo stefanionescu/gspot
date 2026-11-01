@@ -23,7 +23,7 @@ test('javascript/biome checks shebang scripts, TypeScript, and component files i
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript', 'vue', 'svelte', 'astro'], {
             level: 'all',
-            tables: '[limits.javascript]\ncognitive_complexity = 2\n[limits.typescript]\ncognitive_complexity = 2\n',
+            tables: '[limits.javascript]\nmax_cognitive_complexity = 2\n[limits.typescript]\nmax_cognitive_complexity = 2\n',
             scopes: [{ path: 'app' }],
         }),
         'bin/run': `#!/usr/bin/env node\nfunction count(value) { ${nested} }\n`,

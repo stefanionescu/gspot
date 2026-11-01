@@ -19,8 +19,8 @@ test.each(['', 'app'])('Biome applies language limits in scope "%s" without enab
         'gspot.toml': buildSandboxSettings(['javascript', 'typescript'], {
             level: 'all',
             tables:
-                '[limits.javascript]\ncognitive_complexity = 2\n[limits.typescript]\ncognitive_complexity = 8\n' +
-                '[[scope]]\npath = "app"\n[scope.limits.javascript]\ncognitive_complexity = 8\n[scope.limits.typescript]\ncognitive_complexity = 2\n',
+                '[limits.javascript]\nmax_cognitive_complexity = 2\n[limits.typescript]\nmax_cognitive_complexity = 8\n' +
+                '[[scope]]\npath = "app"\n[scope.limits.javascript]\nmax_cognitive_complexity = 8\n[scope.limits.typescript]\nmax_cognitive_complexity = 2\n',
         }),
         [`${prefix}source.js`]: source,
         [`${prefix}source.ts`]: source,

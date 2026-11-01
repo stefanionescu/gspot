@@ -121,10 +121,10 @@ summary = "Finds shell functions called with arguments they never read."
 why = "An unread argument misleads the caller, who expects it to change the result."
 
 [[check]]
-example = "A function over `limits.bash.function_lines` reports `function-lines` with the count and the limit. Split it by job."
+example = "A function over `limits.bash.max_function_lines` reports `function-lines` with the count and the limit. Split it by job."
 help = "Split the script or the function, or raise the named limits.bash setting with a reason."
 level = "all"
-limits = ["function_lines", "function_branches", "block_nesting", "function_assignments"]
+limits = ["max_function_lines", "max_function_branches", "max_block_nesting", "max_function_assignments"]
 limit_languages = ["bash"]
 name = "function-size"
 stage = "commit"

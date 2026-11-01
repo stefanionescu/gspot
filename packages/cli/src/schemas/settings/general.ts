@@ -32,32 +32,28 @@ export const generalTableSchemas = {
         .optional(),
     coverage: z
         .strictObject({
-            lines: allowReasonedValue(percentageSchema, {
+            min_line_percent: allowReasonedValue(percentageSchema, {
                 configurations: ['jest', 'pytest', 'vitest', 'swift'],
                 description: 'The minimum percentage of source lines covered by tests.',
                 default_all: 80,
-                reason_when: 'lowering',
                 default: 0,
             }),
-            branches: allowReasonedValue(percentageSchema, {
+            min_branch_percent: allowReasonedValue(percentageSchema, {
                 configurations: ['jest', 'vitest'],
                 description: 'The minimum percentage of source branches covered by tests.',
                 default_all: 80,
-                reason_when: 'lowering',
                 default: 0,
             }),
-            functions: allowReasonedValue(percentageSchema, {
+            min_function_percent: allowReasonedValue(percentageSchema, {
                 configurations: ['jest', 'vitest'],
                 description: 'The minimum percentage of source functions covered by tests.',
                 default_all: 80,
-                reason_when: 'lowering',
                 default: 0,
             }),
-            statements: allowReasonedValue(percentageSchema, {
+            min_statement_percent: allowReasonedValue(percentageSchema, {
                 configurations: ['jest', 'vitest'],
                 description: 'The minimum percentage of source statements covered by tests.',
                 default_all: 80,
-                reason_when: 'lowering',
                 default: 0,
             }),
             swift_target: z
@@ -65,9 +61,9 @@ export const generalTableSchemas = {
                     name: nonemptyStringSchema.meta({
                         description: 'A Swift target named in the coverage report.',
                     }),
-                    lines: percentageSchema.meta({
+                    min_line_percent: percentageSchema.meta({
                         description:
-                            'The least share of lines that the target must cover, in place of `coverage.lines`.',
+                            'The least share of lines that the target must cover, in place of `coverage.min_line_percent`.',
                     }),
                     reason: z.string().optional().meta({
                         description: 'Why this target may cover less.',
@@ -88,7 +84,6 @@ export const generalTableSchemas = {
                 configurations: ['dependencies'],
                 description:
                     'How many days a package waits after its release before gspot installs it in .gspot. The hold covers the pinned tools and the packages they pull in; only the gspot packages install at the version of the CLI. A pinned tool that came out later stops the install. Bun does not hold back a package pinned to one version. gspot applies the hold when it writes a tool lockfile: a committed tool lockfile that matches the pins installs as it is, without the hold.',
-                reason_when: 'lowering',
                 default: 7,
             }),
             allowed_registries: allowReasonedValue(nonemptyStringsSchema, {
@@ -171,7 +166,6 @@ export const generalTableSchemas = {
                 configurations: ['repository'],
                 description:
                     'The largest file, in kilobytes, that Git may track without Git LFS or a linguist-generated or linguist-vendored mark in .gitattributes.',
-                reason_when: 'raising',
                 default: 1024,
             }),
         })
@@ -189,19 +183,16 @@ export const generalTableSchemas = {
             max_sentence_words: allowReasonedValue(nonnegativeIntegerSchema, {
                 configurations: ['prose'],
                 description: 'The most words one sentence of documentation may have.',
-                reason_when: 'raising',
                 default: 30,
             }),
             max_list_item_words: allowReasonedValue(nonnegativeIntegerSchema, {
                 configurations: ['prose'],
                 description: 'The most words one list item may have.',
-                reason_when: 'raising',
                 default: 45,
             }),
             max_paragraph_sentences: allowReasonedValue(nonnegativeIntegerSchema, {
                 configurations: ['prose'],
                 description: 'The most sentences one paragraph may have.',
-                reason_when: 'raising',
                 default: 6,
             }),
         })

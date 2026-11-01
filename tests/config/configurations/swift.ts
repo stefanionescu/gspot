@@ -128,7 +128,7 @@ export const FAILED_BUILD_FINDINGS = [
 
 export const SWIFT_REPLACEMENT_CASES = [{ checkId: 'swift/build', rule: 'compiler' }] as const;
 
-const EXAMPLE_TARGET_LIMIT = '[[coverage.swift_target]]\nname = "Example"\nlines = 80\n';
+const EXAMPLE_TARGET_LIMIT = '[[coverage.swift_target]]\nname = "Example"\nmin_line_percent = 80\n';
 
 export const XCTEST_TABLES = `${EXAMPLE_TARGET_LIMIT}[swift]\nxcode_project = "Example.xcodeproj"\nxcode_scheme = "Example"\n`;
 
@@ -212,37 +212,37 @@ export const COVERAGE_LIMIT_CASES = [
     {
         name: 'a named target passes its limit',
         report: { targets: [{ name: 'App.app', lineCoverage: 0.617 }] },
-        tables: '[coverage]\nlines = 0\n[[coverage.swift_target]]\nname = "App"\nlines = 61\nreason = "Required target coverage."\n',
+        tables: '[coverage]\nmin_line_percent = 0\n[[coverage.swift_target]]\nname = "App"\nmin_line_percent = 61\nreason = "Required target coverage."\n',
         expected: [],
     },
     {
         name: 'a named target misses its limit',
         report: { targets: [{ name: 'App.app', lineCoverage: 0.617 }] },
-        tables: '[coverage]\nlines = 0\n[[coverage.swift_target]]\nname = "App"\nlines = 62\nreason = "Required target coverage."\n',
+        tables: '[coverage]\nmin_line_percent = 0\n[[coverage.swift_target]]\nname = "App"\nmin_line_percent = 62\nreason = "Required target coverage."\n',
         expected: ['App covers 61% of its lines, under the limit of 62%.'],
     },
     {
         name: 'a named target is absent',
         report: { targets: [{ name: 'App.app', lineCoverage: 0.617 }] },
-        tables: '[coverage]\nlines = 0\n[[coverage.swift_target]]\nname = "Widget"\nlines = 10\nreason = "Required target coverage."\n',
+        tables: '[coverage]\nmin_line_percent = 0\n[[coverage.swift_target]]\nname = "Widget"\nmin_line_percent = 10\nreason = "Required target coverage."\n',
         expected: ['The coverage report has no target named Widget.'],
     },
     {
         name: 'a target misses the shared limit',
         report: SWIFT_TARGET_COVERAGE_OUTPUT,
-        tables: '[coverage]\nlines = 70\nswift_target = []\n',
+        tables: '[coverage]\nmin_line_percent = 70\nswift_target = []\n',
         expected: ['App covers 60% of its lines, under the limit of 70%.'],
     },
     {
         name: 'a named target overrides the shared limit',
         report: SWIFT_TARGET_COVERAGE_OUTPUT,
-        tables: '[coverage]\nlines = 70\n[[coverage.swift_target]]\nname = "App"\nlines = 60\nreason = "Required target coverage."\n',
+        tables: '[coverage]\nmin_line_percent = 70\n[[coverage.swift_target]]\nname = "App"\nmin_line_percent = 60\nreason = "Required target coverage."\n',
         expected: [],
     },
     {
         name: 'no coverage limit is enabled',
         report: SWIFT_TARGET_COVERAGE_OUTPUT,
-        tables: '[coverage]\nlines = 0\nswift_target = []\n',
+        tables: '[coverage]\nmin_line_percent = 0\nswift_target = []\n',
         expected: [],
     },
 ] as const;

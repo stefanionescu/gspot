@@ -16,7 +16,7 @@ test.each([{ language: 'typescript', maximum: 8 }])(
                 return `export function ${name}(${parameters.join(', ')}) { return ${names.join(' + ')}; }`;
             })
             .join('\n');
-        const limits = `[limits.${language}]\nfunction_parameters = { value = ${String(maximum)}, reason = "This sandbox tests the authored parameter ceiling." }\n`;
+        const limits = `[limits.${language}]\nmax_function_parameters = { value = ${String(maximum)}, reason = "This sandbox tests the authored parameter ceiling." }\n`;
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings([language], { tables: limits, level: 'all' }),
             'package.json': '{"private":true,"type":"module"}',
@@ -34,7 +34,7 @@ test('a JavaScript file takes the JavaScript limits, and a TypeScript file the T
     const body = '(value) { if (value > 1) return 1; if (value > 0) return 2; return 3; }';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['javascript', 'typescript'], {
-            tables: '[limits.javascript]\ncyclomatic_complexity = 2\n',
+            tables: '[limits.javascript]\nmax_cyclomatic_complexity = 2\n',
             level: 'all',
         }),
         'package.json': '{"private":true,"type":"module"}',
@@ -54,7 +54,7 @@ test('a scope that lowers a limit gets it in its own files, and the root keeps i
     const typedSource = source.replace('(first, second, third)', '(first: number, second: number, third: number)');
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['javascript', 'typescript'], {
-            tables: '[[scope]]\npath = "child"\nlimits.function_parameters = 2\n',
+            tables: '[[scope]]\npath = "child"\nlimits.max_function_parameters = 2\n',
             level: 'all',
         }),
         'package.json': '{"private":true,"type":"module"}',

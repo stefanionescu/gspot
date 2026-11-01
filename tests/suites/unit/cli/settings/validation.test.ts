@@ -149,7 +149,7 @@ test.each(['latest'])('the freeze cutoff refuses an invalid version: %s', (throu
 });
 
 test.each(SWIFT_TARGET_REASON_CASES)('a Swift target validates $name', ({ lines, reason, errors }) => {
-    const text = `configurations = ["swift"]\n[coverage]\nlines = 80\n[[coverage.swift_target]]\nname = "App"\nlines = ${String(lines)}${reason}\n`;
+    const text = `configurations = ["swift"]\n[coverage]\nmin_line_percent = 80\n[[coverage.swift_target]]\nname = "App"\nmin_line_percent = ${String(lines)}${reason}\n`;
     expect(validateSettingsText(text)).toStrictEqual([...errors]);
 });
 

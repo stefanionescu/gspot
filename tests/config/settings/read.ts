@@ -45,10 +45,10 @@ export const RULE_OPTION_REASON_TABLES = [
 
 export const DUPLICATED_REASON_ERRORS = [
     {
-        key: 'limits.file_lines',
-        text: '[limits]\nfile_lines = { value = 400, reason = "x" }\n',
+        key: 'limits.max_file_lines',
+        text: '[limits]\nmax_file_lines = { value = 400, reason = "x" }\n',
         message:
-            'gspot.toml:3: limits.file_lines.reason: limits.file_lines needs a reason of two or more words that says why: "x" is refused.',
+            'gspot.toml:3: limits.max_file_lines.reason: limits.max_file_lines needs a reason of two or more words that says why: "x" is refused.',
     },
     {
         key: 'docs.allowed_urls',
@@ -225,7 +225,7 @@ export const NESTED_SCOPE_SETTINGS = `configurations = ["bash", "swift", "struct
 [rule_files]
 enabled = false
 [limits.bash]
-file_lines = 100
+max_file_lines = 100
 [swift]
 allowed_unused_imports = ["Foundation"]
 xcode_scheme = "5.0"
@@ -237,13 +237,13 @@ reason = "The api scripts pass word lists on purpose."
 [[scope]]
 path = "api"
 configurations = ["bash"]
-limits.bash.file_lines = 80
+limits.bash.max_file_lines = 80
 swift.xcode_scheme = "6.0"
 swift.allowed_unused_imports = ["UIKit"]
 [[scope]]
 path = "api/v1"
 configurations = ["bash"]
-limits.bash.file_lines = 60
+limits.bash.max_file_lines = 60
 swift.xcode_scheme = "5.0"
 swift.allowed_unused_imports = ["SwiftUI"]
 [[scope]]
