@@ -1,7 +1,9 @@
+import { basename } from 'node:path';
 import type { Node } from 'web-tree-sitter';
 import { getLimit } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { isDocstring } from '#cli/parsers/code/python.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { ParsedSource, ParsedLanguage } from '#cli/types/configurations/general.ts';
@@ -15,10 +17,12 @@ import {
     FORWARDING_NODES,
     PYTHON_EXPORT_LIST,
     BASH_COMMAND_NODES,
+    PYTHON_PACKAGE_FILE,
     TRIVIAL_FILE_MESSAGE,
     SWIFT_ACCESSOR_NODES,
     TYPE_REFERENCE_NODES,
     BASH_SOURCE_COMMANDS,
+    DECORATED_PYTHON_NODE,
     SWIFT_FUNCTION_LABELS,
     SWIFT_ACCESSOR_OWNERS,
     TRIVIAL_FUNCTION_RULES,
@@ -117,7 +121,10 @@ function formatAccessorName(node: Node, label: string): string {
 
 function listTrivialFunctions(planned: PlannedCheck, source: ParsedSource): CheckFinding[] {
     const limit = getLimit(planned.scope.settings, 'min_function_statements', source.language);
-    return (source.captures.get(FUNCTION_LABEL) ?? []).flatMap((node) => {
+    const functions = (source.captures.get(FUNCTION_LABEL) ?? []).filter(
+        (node) => node.parent?.type !== DECORATED_PYTHON_NODE,
+    );
+    return functions.flatMap((node) => {
         const body = extractFunctionBody(node, source.language);
         const count = countExecutableStatements(body, source.language);
         if (count > limit) return [];
@@ -144,10 +151,14 @@ Report named functions at the statement limit and files that only forward code.
 @param planned the scope files and statement limits.
 */
 export async function checkTrivialFunctions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
-    const parsed = await readParsedSources(session, planned);
+    const isTest = buildPathMatcher(planned.scope.settings.test_files);
+    const sources = await readParsedSources(session, planned);
+    const parsed = sources.filter((source) => source.language !== 'python' || !isTest(source.path));
     const functions = parsed.flatMap((source) => listTrivialFunctions(planned, source));
+    const hasPackageExports = session.settings.structure.reexports === 'index-only';
     const files = parsed
         .filter((source) => isTrivialFile(source.tree.rootNode, source.language))
+        .filter((source) => !hasPackageExports || basename(source.path) !== PYTHON_PACKAGE_FILE)
         .map((source) => {
             const line =
                 source.language === 'bash'

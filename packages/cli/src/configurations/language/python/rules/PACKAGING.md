@@ -18,7 +18,8 @@ A standalone script has a shebang and the executable bit.
 - Flatten packages that contain only `__init__.py` and one other module.
 - Do not use package `__init__.py` files to hide expensive imports.
 - Keep `__init__.py` files small and import-stable.
-- Barrel `__init__.py` files may contain imports and `__all__`.
+- A package `__init__.py` holds no re-exports. A library that publishes its API through `__init__.py` asks the user to
+  set `structure.reexports` to `index-only`.
 - Keep lower-level packages independent of higher-level workflows.
 
 ## Source layout

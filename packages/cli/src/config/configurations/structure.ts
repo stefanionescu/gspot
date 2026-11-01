@@ -124,6 +124,10 @@ export const COMPANION_SUFFIX = /\.(?:test|spec|stories|story|module|styles?|moc
 
 export const SHARED_PREFIX_RULE = 'shared-prefix';
 
+export const PYTHON_PACKAGE_FILE = '__init__.py';
+
+export const DECORATED_PYTHON_NODE = 'decorated_definition';
+
 export const TYPE_FILE_CASE = 'pascal';
 
 export const SWIFTPM_TARGET_FOLDERS: Readonly<Record<string, readonly string[]>> = {

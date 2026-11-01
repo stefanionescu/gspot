@@ -58,7 +58,7 @@ test.each([...TRIVIAL_FUNCTION_CASES])(
     },
 );
 
-test('Python counts the statements of nested functions, lambdas, and control flow, reports decorated methods, and skips lambdas in a dict', async () => {
+test('Python counts the statements of nested functions, lambdas, and control flow, and skips decorated methods and lambdas in a dict', async () => {
     await using initialSandbox = await createGitSandbox({
         ['example.py']: NESTED_PYTHON_FUNCTIONS,
         'gspot.toml': buildSandboxSettings(['python'], {
@@ -67,7 +67,7 @@ test('Python counts the statements of nested functions, lambdas, and control flo
         }),
     });
     const initial = await runSandboxCheck(initialSandbox.path, 'structure/trivial-functions');
-    expect(initial.map(({ rule, line }) => ({ rule, line }))).toStrictEqual([{ rule: 'trivial-function', line: 3 }]);
+    expect(initial).toStrictEqual([]);
     await using increasedSandbox = await createGitSandbox({
         ['example.py']: NESTED_PYTHON_FUNCTIONS,
         'gspot.toml': buildSandboxSettings(['python'], {
@@ -77,11 +77,11 @@ test('Python counts the statements of nested functions, lambdas, and control flo
     });
     const increased = await runSandboxCheck(increasedSandbox.path, 'structure/trivial-functions');
     expect(increased.map(({ rule, line }) => ({ rule, line }))).toStrictEqual(
-        [3, 6, 11].map((line) => ({ rule: 'trivial-function', line })),
+        [6, 11].map((line) => ({ rule: 'trivial-function', line })),
     );
 });
 
-test('Python reports overloads, abstract and protocol methods, properties, setters, and stubs', async () => {
+test('Python reports protocol methods and stubs, and skips what carries a decorator', async () => {
     await using sandbox = await createGitSandbox({
         ['interfaces.py']: PYTHON_INTERFACES,
         'gspot.toml': buildSandboxSettings(['python'], {
@@ -91,8 +91,24 @@ test('Python reports overloads, abstract and protocol methods, properties, sette
     });
     const findings = await runSandboxCheck(sandbox.path, 'structure/trivial-functions');
     expect(findings.map(({ rule, line }) => ({ rule, line }))).toStrictEqual(
-        [5, 9, 14, 17, 19, 22, 24, 25].map((line) => ({ rule: 'trivial-function', line })),
+        [5, 19, 25].map((line) => ({ rule: 'trivial-function', line })),
     );
+});
+
+test('a Python test file reports nothing, and a re-export __init__.py reports only without index-only', async () => {
+    const settings = buildSandboxSettings(['python'], { level: 'all' });
+    const files = {
+        'tests/test_cart.py': 'def test_total():\n    assert total() == 1\n',
+        'shop/__init__.py': 'from .cart import Cart\n',
+    };
+    await using reported = await createGitSandbox({ ...files, 'gspot.toml': settings });
+    const findings = await runSandboxCheck(reported.path, 'structure/trivial-functions');
+    expect(findings.map(({ file }) => file)).toStrictEqual(['shop/__init__.py']);
+    await using kept = await createGitSandbox({
+        ...files,
+        'gspot.toml': `${settings}[structure]\nreexports = { value = "index-only", reason = "The library publishes its API here." }\n`,
+    });
+    expect(await runSandboxCheck(kept.path, 'structure/trivial-functions')).toStrictEqual([]);
 });
 
 test.each([...STATEMENT_COUNT_CASES])(
