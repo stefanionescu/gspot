@@ -11,6 +11,7 @@ import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { buildJsonSchema } from '#cli/settings/editor-schema.ts';
 import { compareText, quoteArgument } from '#cli/system/text.ts';
 import { buildSettingsReference } from '#cli/settings/reference.ts';
+import { RELEASE_AGE_VERSIONS } from '#cli/config/tools/installers.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/main.ts';
 import { buildSetupReference } from '#cli/repository/javascript/setup.ts';
@@ -125,6 +126,7 @@ export function readCliReference(): CliReference {
             node: semver.minVersion(cliPackage.engines.node)?.version as string,
             bun: semver.minVersion(cliPackage.engines.bun)?.version as string,
         },
+        packageManagerMinimums: RELEASE_AGE_VERSIONS,
         levelSummaries: { basic: LEVEL_SUMMARY, all: ALL_LEVEL_SUMMARY },
         allLevelTools: [...new Set(checks.flatMap(({ tools }) => tools))]
             .filter((tool) => !minimumLevelTools.has(tool))

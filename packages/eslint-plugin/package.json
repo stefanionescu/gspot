@@ -34,12 +34,12 @@
         "eslint": "10.13.0"
     },
     "peerDependencies": {
-        "@typescript-eslint/eslint-plugin": "^8.70.0",
-        "eslint": ">=9.38.0"
+        "@typescript-eslint/eslint-plugin": "^8.71.0",
+        "eslint": ">=10.13.0"
     },
     "author": "Stefan Ionescu",
     "engines": {
-        "node": ">=22.12"
+        "node": ">=22.22.3"
     },
     "peerDependenciesMeta": {
         "@typescript-eslint/eslint-plugin": {

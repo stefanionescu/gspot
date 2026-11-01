@@ -13,22 +13,34 @@ jobs:
         defaults:
             run:
                 shell: bash
-        name: ${{ matrix.suite }} (${{ matrix.os }})
+        name: ${{ matrix.suite }} (${{ matrix.os }}, ${{ matrix.node }} Node)
         strategy:
             fail-fast: false
             matrix:
                 os: [ubuntu-24.04, macos-26, windows-2025]
                 suite: [unit, integration, e2e]
+                node: [pinned]
+                include:
+                    - os: ubuntu-24.04
+                      suite: unit
+                      node: minimum
+                    - os: ubuntu-24.04
+                      suite: e2e
+                      node: minimum
         runs-on: ${{ matrix.os }}
         timeout-minutes: 60
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
+            - if: matrix.node == 'minimum'
+              run: jq --raw-output '"MISE_NODE_VERSION=\(.engines.node | ltrimstr(">="))"' packages/cli/package.json >>"${GITHUB_ENV}"
             - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
               with:
                   version: '2026.10.7'
                   install_args: bun node
+            - if: matrix.node == 'minimum'
+              run: mise exec -- npm install --global npm@11.19.0
             - if: runner.os == 'Windows'
               shell: pwsh
               run: |

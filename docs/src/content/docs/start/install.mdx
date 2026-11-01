@@ -8,6 +8,7 @@ import { RELEASE_AGE_EXCLUSIONS } from '#docs/config/reference.ts';
 import {
     setup,
     runtimeMinimums,
+    packageManagerMinimums,
     yarnClassicInstall,
 } from '#docs/reference/setup.ts';
 
@@ -29,6 +30,10 @@ The tools that your checks run need these:
 | Tools from PyPI                                          | uv; gspot installs its pinned Python version when needed.                                                                                                                                                                     |
 | Other programs                                           | mise, or the exact pinned tools on `PATH`. `gspot doctor` lists missing tools.                                                                                                                                                |
 | Your project's own commands, such as its tests and build | Your project's runtime, dependencies, and build tools.                                                                                                                                                                        |
+
+`gspot install` needs a package manager that can hold back new releases:
+{`npm ${packageManagerMinimums.npm}, pnpm ${packageManagerMinimums.pnpm}, or Bun ${packageManagerMinimums.bun}`} or newer.
+Node.js 22 ships an older npm, so run `npm install --global npm@latest` there.
 
 `gspot init` prints the configurations it selects and writes its plan without asking. After init, `gspot doctor` lists
 the missing tools.

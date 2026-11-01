@@ -24,7 +24,7 @@ gspot is a command-line tool that lints AI-generated code and installs rules for
 
 ## Requirements
 
-You need Git and Node.js 24.15 or newer. The commands below use Bun 1.4.2 or newer. gspot runs on macOS, Linux,
+You need Git and Node.js 22.22.3 or newer. The commands below use Bun 1.4.3 or newer. gspot runs on macOS, Linux,
 and Windows. Some checks need more, such as the Swift toolchain or a running Docker daemon;
 [Installation](https://generativespotting.com/start/install/) lists what each kind of check needs.
 

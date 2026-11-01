@@ -4,6 +4,7 @@ import type { SetupReference } from '#cli/types/repository.ts';
 
 import {
     LOCKFILES,
+    SETUP_NODE,
     START_RUNNERS,
     FROZEN_INSTALLS,
     YARN_BERRY_MAJOR,
@@ -27,12 +28,10 @@ export function frozenInstallArguments(lockfile: keyof typeof FROZEN_INSTALLS, v
 Build setup and clone commands from the same runner and frozen-install records used by the CLI and CI.
 */
 export function buildSetupReference(): SetupReference[] {
-    const node = semver.minVersion(cliPackage.engines.node);
-    if (node === null) throw new Error('The CLI must declare a minimum Node.js version.');
     return Object.entries(PACKAGE_MANAGER_LABELS).map(([name, label]) => {
         const runner = START_RUNNERS[name as keyof typeof START_RUNNERS];
         const lockfile = LOCKFILES.find((file) => file.packageManager === name && 'copied' in file)?.file;
-        const prerequisites = name === 'mise' ? [`mise use --pin node@${String(node.major)}`] : [];
+        const prerequisites = name === 'mise' ? [`mise use --pin ${SETUP_NODE}`] : [];
         const add = runner.installCommand.replace('<package>@<version>', () => cliPackage.name);
         const frozen =
             lockfile === undefined

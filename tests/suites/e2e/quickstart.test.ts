@@ -34,6 +34,8 @@ async function runQuickstart(tutorial: typeof PYTHON_TUTORIAL | typeof SWIFT_TUT
         MISE_STATE_DIR: join(sandbox.path, 'state'),
         MISE_CACHE_DIR: join(sandbox.path, 'cache'),
         MISE_CEILING_PATHS: dirname(root),
+        // The quickstart page pins Node.js, so the version that the CI job on the minimum Node.js sets does not apply.
+        MISE_NODE_VERSION: undefined,
     };
     const runtimePins = runtimePinsSchema.parse(
         parse(await readFile(join(REPOSITORY_ROOT, TOOL_PINS_FILE), 'utf8')),
@@ -79,7 +81,7 @@ async function runQuickstart(tutorial: typeof PYTHON_TUTORIAL | typeof SWIFT_TUT
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 }
 
-function assertCommitRejected(root: string, rule: string, environment: Record<string, string>): void {
+function assertCommitRejected(root: string, rule: string, environment: Record<string, string | undefined>): void {
     runGitStep(root, ['add', '-A']);
     const refused = runCommandBlocking(['git', 'commit', '-qm', 'feat: Add invalid source'], {
         cwd: root,

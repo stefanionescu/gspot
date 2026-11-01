@@ -106,8 +106,7 @@ export const TAPLO_OUTPUTS = [
     },
     {
         format: 'regex',
-        pattern:
-            '^(?:--- a/(?<file>.+)|ERROR taplo:format_files: the file is not properly formatted path="(?<file>[^"]+)")$',
+        pattern: '^(?:--- a/|ERROR taplo:format_files: the file is not properly formatted path=")(?<file>.+?)"?$',
         message: 'Not formatted the way Taplo formats it.',
         fixable: '^(?:--- a/|ERROR taplo:format_files)',
     },

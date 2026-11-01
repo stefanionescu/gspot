@@ -45,6 +45,8 @@ export const LOCKFILES = [
 
 export const CI_NODE = 'node@24.20.0';
 
+export const SETUP_NODE = 'node@24';
+
 export const PACKAGE_MANAGER_HASH_SUFFIX = '+sha';
 
 export const YARN_BERRY_MAJOR = 2;

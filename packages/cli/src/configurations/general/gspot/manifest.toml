@@ -6,8 +6,8 @@ description = "gspot itself: path patterns in gspot.toml that match files, curre
 title = "gspot"
 
 [[tool]]
-install_help = "Install Node.js 24.2.0 or newer. On macOS, run brew install node@24. On Windows, run winget install OpenJS.NodeJS.LTS."
-min_version = "24.2.0"
+install_help = "Install Node.js 22.22.3 or newer. On macOS, run brew install node@24. On Windows, run winget install OpenJS.NodeJS.LTS."
+min_version = "22.22.3"
 name = "node"
 system = true
 version_command = ["--version"]

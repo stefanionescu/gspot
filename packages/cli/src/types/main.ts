@@ -8,6 +8,7 @@ import type { SetupReference } from '#cli/types/repository.ts';
 import type { CheckDescription } from '#cli/types/engine/plan.ts';
 import type { Level, SettingReference } from '#cli/types/settings.ts';
 import type { START_RUNNERS } from '#cli/config/repository/javascript.ts';
+import type { RELEASE_AGE_VERSIONS } from '#cli/config/tools/installers.ts';
 import type { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/main.ts';
 import type { Tool, ConfigurationCheck, ConfigurationReference } from '#cli/types/manifests.ts';
 
@@ -42,6 +43,7 @@ export type CliReference = {
     setup: SetupReference[];
     runners: typeof START_RUNNERS;
     runtimeMinimums: { node: string; bun: string };
+    packageManagerMinimums: typeof RELEASE_AGE_VERSIONS;
     levelSummaries: Record<Level, string>;
     allLevelTools: string[];
     yarnClassicInstall: string;
