@@ -342,6 +342,8 @@ conditions for shared state, which stays small and explicit.
 
 - Give `Path` variables names that reveal whether they point to a folder, file, report, output, or repository root.
 - Use `*_path` for filesystem paths and `*_folder` only for folders.
+- Make boolean parameters keyword-only.
+- Pass `urlopen` a `Request` built inline from a literal `https://` URL, so that Ruff S310 can read the scheme.
 - Use `*_id` only for real identifiers. Never use it for arbitrary names or labels.
 - Use `*_name` for display or provider names.
 - Use `*_key` for dictionary and supported variant keys.

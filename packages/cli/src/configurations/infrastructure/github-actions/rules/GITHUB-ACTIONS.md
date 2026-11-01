@@ -25,6 +25,7 @@ Read this rule when you change a GitHub Actions workflow or action.
   `uses: actions/checkout@<sha> # v5.0.0`.
 - Set `permissions:` at the top of each workflow to the least that its jobs need, such as `contents: read`. Widen it
   only in the job that needs more.
+- Never check out pull request code in `pull_request_target` or `workflow_run`.
 - Give every `actions/checkout` step `persist-credentials: false`. A later step that pushes gets its token through
   `env`.
 - Write no `${{ }}` expression inside `run:`. Pass the value through the step's `env`, and read it as a quoted shell

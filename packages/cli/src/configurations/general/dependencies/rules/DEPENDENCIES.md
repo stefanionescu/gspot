@@ -8,6 +8,7 @@ Read this rule before you add, upgrade, or remove a dependency.
   the platform first, then what the repository already depends on.
 - A new dependency needs a reason in the commit: what it does that the platform and existing dependencies do not.
 - Prefer a package that does one thing, receives maintenance, publishes types, and has no install scripts.
+- Run the install after you edit a dependency file, so that the lockfile matches it.
 - Each project uses one package manager and commits its lockfile. CI and Docker builds install from the lockfile without
   changing it, such as `npm ci` or `uv sync --frozen`.
 

@@ -53,6 +53,7 @@ Read this rule when code handles input, authentication, redirects, or downloads.
 ## Builds
 
 - No default credentials, sample admin users, debug endpoints, or auth bypasses in any build.
+- Never pair a wildcard Cross-Origin Resource Sharing (CORS) origin with credentials.
 
 ## Supply chain
 

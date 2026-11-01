@@ -68,7 +68,7 @@ Write a JSDoc comment as `/**` on its own line, then lines with no leading `*`, 
   `@param <name> <what it is>` for each parameter.
 - In TypeScript, write no type in braces. In JavaScript, write the type in braces, such as `@param {<type>} <name>`, so tsc
   checks it.
-- Document a destructured parameter and each of its properties, such as `@param props` and `@param props.items`.
+- Document a destructured options parameter with `@param options` plus one `@param options.<field>` line per field.
 - Put the functions that a module does not export, and constants set to a function, above its exported functions.
 - Do not add optional parameters to hide a broken caller contract.
 - Use early returns when they make missing-value and error handling clearer.

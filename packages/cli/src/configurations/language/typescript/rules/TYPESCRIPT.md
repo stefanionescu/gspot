@@ -27,6 +27,7 @@ absence. Normalize external empty strings, missing fields, and nulls where they 
 
 - Name every number other than `-1`, `0`, and `1` in a module-level constant, such as `MILLISECONDS_PER_DAY`.
 - Annotate the parameters and the return type of every exported function.
+- Compare explicitly in a condition, such as `count > 0` or `value !== undefined`.
 - Describe absence precisely: `property?: T` and `property: T | undefined` define different types under
   `exactOptionalPropertyTypes`.
 

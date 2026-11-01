@@ -18,6 +18,12 @@ Read this rule when you change Xcode project settings, schemes, or build phases.
 - `Info.plist` values that vary by configuration come from build settings such as `$(PRODUCT_BUNDLE_IDENTIFIER)`, not
   from edited plist copies.
 
+## Strings and capabilities
+
+- Translate each new string of a catalog in the same change.
+- Ask the user before you add an entitlement.
+- Never allow arbitrary loads in App Transport Security.
+
 ## Build phases and scripts
 
 - Run-script phases declare their interpreter and pass the checks for that language.

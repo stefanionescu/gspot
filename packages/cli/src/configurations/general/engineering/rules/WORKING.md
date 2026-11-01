@@ -111,3 +111,8 @@ When you replace or rename something:
 <!-- level: all -->
 
 Group constants, types, and schemas by the behavior they belong to.
+
+- Put private functions above the public function that calls them.
+- A folder holds more than one code file, and not only one folder.
+- Move siblings with a shared prefix into a folder of that name.
+- A file and a folder never share a name.

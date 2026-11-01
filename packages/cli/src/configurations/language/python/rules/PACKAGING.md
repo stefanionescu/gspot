@@ -6,6 +6,10 @@ Read this rule when you change Python dependencies, lockfiles, or package layout
 
 Update lockfiles only when the task includes dependency maintenance.
 
+## Scripts
+
+A standalone script has a shebang and the executable bit.
+
 ## Packages and architecture
 
 <!-- level: all -->
