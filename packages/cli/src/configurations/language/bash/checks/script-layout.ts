@@ -1,4 +1,5 @@
 import type { Session } from '#cli/types/tools.ts';
+import { formatNameList } from '#cli/system/text.ts';
 import { listCodeLines } from '#cli/parsers/code/bash.ts';
 import type { NumberedLine } from '#cli/types/parsers.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
@@ -85,7 +86,7 @@ function validateScriptFile(file: ScriptFile): CheckFinding[] {
         issues.push({
             line: 1,
             rule: SCRIPT_LAYOUT_RULES.shebang,
-            message: `The first line is not one of ${[...BASH_SHEBANGS].join(' or ')}.`,
+            message: `The first line is not one of ${formatNameList([...BASH_SHEBANGS], 'disjunction')}.`,
         });
     const code = listCodeLines(file.code);
     if (file.executable) issues.push(...validateStrictMode(code), ...validateMainFunction(file, code));

@@ -13,6 +13,7 @@ import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { removeKey, getScopeTable } from '#cli/settings/edit.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
+import { formatNameList, formatCountVerb } from '#cli/system/text.ts';
 import { SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
 import { selectForInit, listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { GSPOT_REMOVE, REMOVE_CONFIGURATION_MESSAGE } from '#cli/config/commands/edits.ts';
@@ -91,10 +92,8 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     const kept = selected.filter((name) => !options.configurations.includes(name));
     assertRemovable(options.configurations, kept, configurationsByName);
     if (options.configurations.every((name) => !selected.includes(name))) {
-        const names = new Intl.ListFormat('en', { type: 'conjunction' }).format(options.configurations);
-        return buildUnchangedResult(
-            `No change: ${names} ${options.configurations.length === 1 ? 'is' : 'are'} not selected.`,
-        );
+        const verb = formatCountVerb(options.configurations.length, 'is', 'are');
+        return buildUnchangedResult(`No change: ${formatNameList(options.configurations)} ${verb} not selected.`);
     }
     const previous = scopeTable['removed_configurations'];
     const removed = options.configurations.filter((name) => selected.includes(name));

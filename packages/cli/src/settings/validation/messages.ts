@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { formatNameList } from '#cli/system/text.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import type { TomlSyntax } from '#cli/types/parsers.ts';
 import type { SettingsError } from '#cli/types/settings.ts';
@@ -11,7 +12,7 @@ function formatValueAdvice(
     error: z.ZodError,
 ): string {
     const issue = error.issues.find((issue) => issue.code === 'invalid_value');
-    if (issue !== undefined) return issue.values.map(String).join(' or ');
+    if (issue !== undefined) return formatNameList(issue.values.map(String), 'disjunction');
     let inner = schema === undefined ? undefined : unwrapSettingSchema(schema);
     if (inner instanceof z.ZodUnion) inner = inner.options[0] as z.ZodType;
     if (inner instanceof z.ZodNumber) return `a whole number of ${String(inner.minValue ?? 0)} or more`;

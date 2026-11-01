@@ -112,8 +112,6 @@ export const DETECTION_LABELS = {
     project_files: 'project files',
 } as const;
 
-export const DETECTION_ALTERNATIVES = new Intl.ListFormat('en', { type: 'disjunction' });
-
 export const CONFIGURATIONS_FOLDER = 'src/configurations';
 
 export const GROUPS = [

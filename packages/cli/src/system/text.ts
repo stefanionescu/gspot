@@ -118,6 +118,29 @@ export function getPosition(text: string, offset: number): TextPosition {
 }
 
 /**
+Join names in a sentence, such as `a, b, and c`.
+
+@param names the names to join.
+@param type `conjunction` joins with and, and `disjunction` with or.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Messages in many layers join names by this one rule.
+export function formatNameList(names: readonly string[], type: Intl.ListFormatType = 'conjunction'): string {
+    return new Intl.ListFormat('en', { type }).format(names);
+}
+
+/**
+Choose the verb form that agrees with a count.
+
+@param count the quantity that the verb agrees with.
+@param singular the form for one.
+@param plural the form for any other count.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Messages in many layers agree a verb with a count by this one rule.
+export function formatCountVerb(count: number, singular: string, plural: string): string {
+    return count === 1 ? singular : plural;
+}
+
+/**
 Format a count with its singular or plural noun.
 
 @param count the quantity that selects the noun ending.

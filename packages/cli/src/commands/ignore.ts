@@ -1,6 +1,7 @@
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { mergeIgnore } from '#cli/settings/text.ts';
+import { formatNameList } from '#cli/system/text.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
@@ -17,7 +18,7 @@ import { pathsOption, buildIgnorePaths, writeSettingsEdit, readSettingsEditConte
 function formatIgnoreSummary(options: IgnoreOptions, paths: string[] | undefined): string {
     const check = options.check ?? EVERY_CHECK;
     const target = options.rule === undefined ? check : `rule ${options.rule} of ${check}`;
-    const suffix = paths === undefined ? '' : ` for ${paths.join(' and ')}`;
+    const suffix = paths === undefined ? '' : ` for ${formatNameList(paths)}`;
     return `Ignored ${target}${suffix}.`;
 }
 

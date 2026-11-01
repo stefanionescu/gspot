@@ -1,7 +1,6 @@
 import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { visit } from 'unist-util-visit';
-import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { listRuleFiles } from '#cli/manifests/read.ts';
@@ -14,6 +13,7 @@ import type { SourcePosition } from '#cli/types/parsers.ts';
 import { detectConditions } from '#cli/repository/detect.ts';
 import { GROUPS, GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { FIRST_READ } from '#cli/config/settings/validation.ts';
+import { compareText, formatNameList } from '#cli/system/text.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import type { ShippedRule, Configuration } from '#cli/types/manifests.ts';
 import type { RuleFile, RuleSection, AgentsBlockContent } from '#cli/types/generation.ts';
@@ -102,7 +102,10 @@ List the commands that change gspot.toml, as the AGENTS.md block and the gspot.t
 */
 export function formatSettingsCommands(): string {
     const commands = SETTINGS_COMMANDS.map((command, index) => (index === 0 ? `gspot ${command}` : command));
-    return new Intl.ListFormat('en', { type: 'disjunction' }).format(commands.map((command) => '`' + command + '`'));
+    return formatNameList(
+        commands.map((command) => '`' + command + '`'),
+        'disjunction',
+    );
 }
 
 function parseHeadingSections(text: string): RuleSection[] {
@@ -196,7 +199,7 @@ export function buildAgentsBlock({ files, managedKeys, startCommand, hasOwnTitle
         'Do not edit these files. Change `gspot.toml`, then run `gspot apply`.',
         ...managedKeys.flatMap(({ path, keys }) => [
             '',
-            `gspot also sets ${keys.length === 1 ? 'one key' : 'these keys'} in \`${path}\`: ${keys.map((key) => '`' + key + '`').join(' and ')}.`,
+            `gspot also sets ${keys.length === 1 ? 'one key' : 'these keys'} in \`${path}\`: ${formatNameList(keys.map((key) => '`' + key + '`'))}.`,
             EDIT_KEYS_LINE,
         ]),
     ];

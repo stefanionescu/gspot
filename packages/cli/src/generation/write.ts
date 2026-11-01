@@ -1,4 +1,3 @@
-import { formatCount } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import { readHooks } from '#cli/repository/setup.ts';
@@ -12,6 +11,7 @@ import type { Session, Generation } from '#cli/types/tools.ts';
 import { listExpectedPaths } from '#cli/generation/outdated.ts';
 import type { Files, FileContents } from '#cli/types/system.ts';
 import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
+import { formatCount, formatCountVerb } from '#cli/system/text.ts';
 import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
 import { SCANNER_KEY, BUNFIG_FILE } from '#cli/config/configurations/general.ts';
 import { OWNER_WRITABLE_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/repository/setup.ts';
@@ -94,7 +94,7 @@ export function formatApplyReport(report: ApplyReport): string {
     if (lines.length === 0) {
         const count = report.unchanged.length;
         lines.push(
-            `No change: the ${formatCount(count, GENERATED_FILE_NOUN)} ${count === 1 ? 'is' : 'are'} up to date.`,
+            `No change: the ${formatCount(count, GENERATED_FILE_NOUN)} ${formatCountVerb(count, 'is', 'are')} up to date.`,
         );
     }
     lines.push(...report.notes.map((note) => `note     ${note}`));

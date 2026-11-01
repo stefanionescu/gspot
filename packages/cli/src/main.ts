@@ -3,6 +3,7 @@ import { setCommand } from '#cli/commands/set.ts';
 import { EXIT_ERROR } from '#cli/config/system.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { listCommand } from '#cli/commands/list.ts';
+import { formatNameList } from '#cli/system/text.ts';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { unsetCommand } from '#cli/commands/unset.ts';
 import type { InvalidValue } from '#cli/types/main.ts';
@@ -54,8 +55,7 @@ function formatInvalidValue(message: string, command: string | undefined): strin
     if (groups === undefined) return undefined;
     const { option, value, detail } = groups;
     const choices = ALLOWED_CHOICES.exec(detail)?.[1]?.split(', ');
-    const fix =
-        choices === undefined ? detail : `Use ${new Intl.ListFormat('en', { type: 'disjunction' }).format(choices)}.`;
+    const fix = choices === undefined ? detail : `Use ${formatNameList(choices, 'disjunction')}.`;
     const subject = option ?? `gspot ${String(command)}`;
     return `The value ${value} is not valid for ${subject}. ${fix}`;
 }

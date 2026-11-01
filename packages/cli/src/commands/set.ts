@@ -1,6 +1,7 @@
 import { setKey } from '#cli/settings/edit.ts';
 import { parse } from '@decimalturn/toml-patch';
 import { GspotError } from '#cli/system/errors.ts';
+import { formatNameList } from '#cli/system/text.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { listSettingReaders } from '#cli/engine/skips.ts';
@@ -126,7 +127,8 @@ function formatSettingChange(
     const where = scope === '' ? '' : ` in scope ${scope}`;
     const was =
         previous?.value === undefined ? '' : `  (was ${JSON.stringify(previous.value)} from ${previous.source})`;
-    if (setting.reason_values === true) return `Added ${options.values.join(' and ')} to ${displayKey}${where}.${was}`;
+    if (setting.reason_values === true)
+        return `Added ${formatNameList(options.values)} to ${displayKey}${where}.${was}`;
     const reason = options.reason === undefined ? '' : `  # ${options.reason}`;
     return `Set ${displayKey} to ${JSON.stringify(change.value)}${where}.${reason}${was}`;
 }

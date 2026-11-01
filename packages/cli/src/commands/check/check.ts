@@ -11,6 +11,7 @@ import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { TRAILING_NEWLINE } from '#cli/config/repository/git.ts';
 import { InvalidArgumentError } from '@commander-js/extra-typings';
+import { formatNameList, formatCountVerb } from '#cli/system/text.ts';
 import { readGitText, readGitPaths } from '#cli/repository/git/run.ts';
 import { readStagedPaths } from '#cli/repository/revisions/changes.ts';
 import { writeProgress, runCancelableCommand } from '#cli/system/terminal.ts';
@@ -165,7 +166,7 @@ async function assertSetupStaged(root: string, cancelSignal: AbortSignal): Promi
     if (unstaged.length > 0)
         throw new GspotError(
             'git',
-            `${unstaged.join(' and ')} ${unstaged.length === 1 ? 'is' : 'are'} not staged. ${STAGE_SETUP_MESSAGE}`,
+            `${formatNameList(unstaged)} ${formatCountVerb(unstaged.length, 'is', 'are')} not staged. ${STAGE_SETUP_MESSAGE}`,
         );
 }
 

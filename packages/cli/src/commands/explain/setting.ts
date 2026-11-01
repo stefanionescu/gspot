@@ -3,11 +3,11 @@ import { buildSettings } from '#cli/settings/read.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import { listSettingReaders } from '#cli/engine/skips.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { formatScope, quoteArgument } from '#cli/system/text.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { RECORD_FIELDS, findSettingSchema } from '#cli/settings/lookup.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
+import { formatScope, quoteArgument, formatNameList } from '#cli/system/text.ts';
 import { NOT_SET, REASON_HELP, REASON_OPTION_TEXT } from '#cli/config/commands/reports.ts';
 import { findSetting, getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 import type { Explanation, SettingScope, ExplainedSetting } from '#cli/types/commands/reports.ts';
@@ -55,10 +55,7 @@ function readShippedSetting(key: string): ExplainedSetting | undefined {
     const shipped = findSettingDefault(available, settings, match, '')?.value;
     const scope = { scope: '', shipped, inherited: undefined, readBy: [] };
     const owners = findSettingSchema(key)?.meta()?.['configurations'] as string[] | undefined;
-    const ownership =
-        owners === undefined
-            ? []
-            : [`Configurations: ${new Intl.ListFormat('en', { type: 'conjunction' }).format(owners)}`];
+    const ownership = owners === undefined ? [] : [`Configurations: ${formatNameList(owners)}`];
     return {
         setting: match.setting,
         scopes: [{ scope: '', default: shipped }],

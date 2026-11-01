@@ -1,6 +1,7 @@
 import type { Session } from '#cli/types/tools.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { formatCount, formatNameList, formatCountVerb } from '#cli/system/text.ts';
 import { READS_NO_POSITIONAL, UNREAD_ARGUMENTS_RULE } from '#cli/config/configurations/bash.ts';
 import { readScripts, listFunctionCalls } from '#cli/configurations/language/bash/checks/scripts.ts';
 
@@ -24,14 +25,14 @@ export async function checkUnreadArguments(session: Session, planned: PlannedChe
             if (width <= highest) return [];
             const unread = Array.from({ length: width - highest }, (_, offset) => String(highest + offset + 1));
             const read = highest === 0 ? READS_NO_POSITIONAL : `reads none past $${String(highest)}`;
-            const positions =
-                unread.length === 1 ? `position ${unread.join('')} is` : `positions ${unread.join(' and ')} are`;
+            const noun = formatCountVerb(unread.length, 'position', 'positions');
+            const positions = `${noun} ${formatNameList(unread)} ${formatCountVerb(unread.length, 'is', 'are')}`;
             return [
                 {
                     file: file.path,
                     line: scriptFunction.start,
                     rule: UNREAD_ARGUMENTS_RULE,
-                    message: `${scriptFunction.name} is called with up to ${String(width)} ${width === 1 ? 'argument' : 'arguments'} but ${read}: ${positions} never read.`,
+                    message: `${scriptFunction.name} is called with up to ${formatCount(width, 'argument')} but ${read}: ${positions} never read.`,
                 },
             ];
         }),

@@ -3,6 +3,7 @@ import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
+import { formatNameList, formatCountVerb } from '#cli/system/text.ts';
 import type { ScopeFlags, CommandDefinition, ConfigurationsOptions } from '#cli/types/commands/edits.ts';
 
 import {
@@ -24,19 +25,16 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
     const { root, input, scope, scopeTable, scopeSettings, selected, context } =
         await readConfigurationEditContext(options);
     if (options.configurations.every((name) => selected.includes(name))) {
-        const names = new Intl.ListFormat('en', { type: 'conjunction' }).format(options.configurations);
-        return buildUnchangedResult(
-            `No change: ${names} ${options.configurations.length === 1 ? 'is' : 'are'} already selected.`,
-        );
+        const verb = formatCountVerb(options.configurations.length, 'is', 'are');
+        return buildUnchangedResult(`No change: ${formatNameList(options.configurations)} ${verb} already selected.`);
     }
     const scopeConfigurations = scopeSettings.configurations;
     const list = [...scopeConfigurations];
-    const additions = options.configurations.filter((name) => !selected.includes(name));
-    list.push(...additions.filter((name) => !list.includes(name)));
+    const added = options.configurations.filter((name) => !selected.includes(name));
+    list.push(...added.filter((name) => !list.includes(name)));
     scopeTable['configurations'] = list;
     restoreConfigurations(scopeTable, options.configurations);
     const where = scope === '' ? '' : ` to scope ${scope}`;
-    const added = options.configurations.filter((name) => !selected.includes(name));
     const unchanged = options.configurations.filter((name) => selected.includes(name));
     const summary = formatConfigurationChange({
         action: 'Added',

@@ -2,6 +2,7 @@ import { join, posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import type { Scope } from '#cli/types/settings.ts';
+import { formatNameList } from '#cli/system/text.ts';
 import { listCheckFiles } from '#cli/engine/files.ts';
 import { read, find } from '#cli/system/files/reads.ts';
 import { FILE_PLACEHOLDER } from '#cli/config/engine.ts';
@@ -222,7 +223,7 @@ export function checkDockerignore(session: Session, planned: PlannedCheck): Chec
                             file: dockerfile,
                             line: 1,
                             rule: DOCKER_RULES.missingFile,
-                            message: `Add an ignore file at ${paths.join(' or ')} that lists ${required.join(', ')}.`,
+                            message: `Add an ignore file at ${formatNameList(paths, 'disjunction')} that lists ${required.join(', ')}.`,
                         },
                     ];
                 const missing = listMissingPatterns(required, ignore.text);

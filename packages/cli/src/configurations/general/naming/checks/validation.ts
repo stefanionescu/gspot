@@ -1,3 +1,4 @@
+import { formatNameList } from '#cli/system/text.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { SQL_EXTENSION } from '#cli/config/configurations/infrastructure.ts';
@@ -100,7 +101,7 @@ function validateCase(checked: CheckedIdentifier, name: string, limits: Category
         : {
               ...checked.place,
               rule: RULES.case,
-              message: `${checked.prefix}expected ${limits.cases.join(' or ')} case.`,
+              message: `${checked.prefix}expected ${formatNameList(limits.cases, 'disjunction')} case.`,
           };
 }
 

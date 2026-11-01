@@ -6,6 +6,7 @@ import { SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { removeKey, removeFromList } from '#cli/settings/edit.ts';
+import { formatNameList, formatCountVerb } from '#cli/system/text.ts';
 import { readSetting, writeSettingsEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
 import type { ScopeFlags, UnsetOptions, CommandDefinition, SettingsEditOptions } from '#cli/types/commands/edits.ts';
 
@@ -23,12 +24,12 @@ function formatUnsetSummary(
     scope: string,
 ): Pick<SettingsEditOptions, 'summary' | 'unchangedSummary'> {
     const where = scope === '' ? '' : ` in scope ${scope}`;
-    const names = keys.join(' and ');
+    const names = formatNameList(keys);
     return {
         summary: keys.length === 0 ? `Removed your value for ${key}${where}.` : `Removed ${names} from ${key}${where}.`,
         ...(keys.length === 0
             ? {}
-            : { unchangedSummary: `${names} ${keys.length === 1 ? 'is' : 'are'} not in ${key}${where}.` }),
+            : { unchangedSummary: `${names} ${formatCountVerb(keys.length, 'is', 'are')} not in ${key}${where}.` }),
     };
 }
 

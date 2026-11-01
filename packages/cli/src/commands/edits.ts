@@ -1,5 +1,4 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { quoteArgument } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { createRunCache } from '#cli/system/cache.ts';
@@ -22,6 +21,7 @@ import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
 import { getScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
 import { formatApplyReport, writeGeneratedFiles } from '#cli/generation/write.ts';
+import { quoteArgument, formatNameList, formatCountVerb } from '#cli/system/text.ts';
 import { assertConfigurationsExist, assertConfigurationsEditable } from '#cli/manifests/select.ts';
 import type { Scope, Settings, TomlTable, SettingsEdit, SettingMatch, AvailableSettings } from '#cli/types/settings.ts';
 
@@ -138,10 +138,9 @@ Summarize an add or remove edit: the configurations it changed, and the ones it 
 @param change.state the state of those configurations, such as already selected.
 */
 export function formatConfigurationChange({ action, changed, where, unchanged, state }: ConfigurationChange): string {
-    const list = new Intl.ListFormat('en', { type: 'conjunction' });
-    const summary = `${action} ${list.format(changed)}${where}.`;
+    const summary = `${action} ${formatNameList(changed)}${where}.`;
     if (unchanged.length === 0) return summary;
-    return `${summary} ${list.format(unchanged)} ${unchanged.length === 1 ? 'is' : 'are'} ${state}.`;
+    return `${summary} ${formatNameList(unchanged)} ${formatCountVerb(unchanged.length, 'is', 'are')} ${state}.`;
 }
 
 /**

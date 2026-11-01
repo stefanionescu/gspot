@@ -1,4 +1,5 @@
 import type { Host } from '#cli/types/tools.ts';
+import { formatNameList } from '#cli/system/text.ts';
 import { listIgnores } from '#cli/settings/scopes.ts';
 import { findMissingBuild } from '#cli/tools/pins.ts';
 import { LIMIT_READERS } from '#cli/manifests/limits.ts';
@@ -27,7 +28,9 @@ function findTagSkip(tags: string[] | undefined, scopePath: string, files: Repos
         (file) =>
             file.kind === 'source' && isInScope(file.path, scopePath) && file.tags.some((tag) => tags.includes(tag)),
     );
-    return marked ? undefined : { cause: 'condition', note: `Needs files marked ${tags.join(' or ')} in this scope.` };
+    return marked
+        ? undefined
+        : { cause: 'condition', note: `Needs files marked ${formatNameList(tags, 'disjunction')} in this scope.` };
 }
 
 function findConditionSkip(planned: PlannedCheck, repository: Repository): Skip | undefined {

@@ -1,9 +1,9 @@
 import { isTable } from '#cli/system/tables.ts';
-import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { RULE_OPTION } from '#cli/config/commands/help.ts';
 import { assertCheckExists } from '#cli/manifests/read.ts';
+import { formatCount, formatNameList } from '#cli/system/text.ts';
 import type { TomlTable, IgnoreRecord } from '#cli/types/settings.ts';
 
 import {
@@ -68,7 +68,7 @@ function removeIgnores(table: TomlTable, options: Pick<IgnoreOptions, 'check' | 
 function formatIgnoreTarget(options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreTarget {
     if (options.check === undefined) return NO_CHECK_IGNORE_TEXTS;
     const subject = options.rule === undefined ? options.check : `rule ${options.rule} of ${options.check}`;
-    const paths = options.paths === undefined ? '' : ` for ${options.paths.join(' and ')}`;
+    const paths = options.paths === undefined ? '' : ` for ${formatNameList(options.paths)}`;
     return { unmatched: `${subject} has no matching ignore`, removed: `for ${subject}${paths}` };
 }
 

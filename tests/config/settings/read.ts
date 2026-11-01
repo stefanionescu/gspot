@@ -146,7 +146,7 @@ export const INVALID_TOOL_ENUMS = [
         configuration: 'docker',
         tables: '[tools.trivy]\nseverity = ["SEVERE"]\n',
         message:
-            'gspot.toml:3: tools.trivy.severity.0: The value "SEVERE" is not valid for tools.trivy.severity.0. Use UNKNOWN or LOW or MEDIUM or HIGH or CRITICAL.',
+            'gspot.toml:3: tools.trivy.severity.0: The value "SEVERE" is not valid for tools.trivy.severity.0. Use UNKNOWN, LOW, MEDIUM, HIGH, or CRITICAL.',
     },
 ] as const;
 
