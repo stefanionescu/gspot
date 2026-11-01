@@ -2,11 +2,11 @@ import { posix } from 'node:path';
 import { relative } from 'node:path/posix';
 import { find } from '#cli/system/files/reads.ts';
 import { stringify } from '@decimalturn/toml-patch';
-import { joinScope } from '#cli/repository/scopes.ts';
 import { UV_LOCKFILE } from '#cli/config/manifests.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { pyprojectSchema } from '#cli/schemas/parsers.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { DEFAULT_QUOTES } from '#cli/config/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
@@ -22,9 +22,12 @@ import {
     RUFF_PATH_RULES,
     RUFF_TIDY_IMPORTS,
     RUFF_CONSOLE_RULES,
+    PYDANTIC_PACKAGE,
+    RUFF_RUNTIME_TYPES,
     BASEDPYRIGHT_CHECK,
     BASEDPYRIGHT_LEVELS,
     BASEDPYRIGHT_OPTIONS,
+    FASTAPI_CONFIGURATION,
     BASEDPYRIGHT_DEFAULT_OPTIONS,
     BASEDPYRIGHT_ALL_LEVEL_OPTIONS,
 } from '#cli/config/configurations/python.ts';
@@ -75,6 +78,17 @@ function listConsoleModules(planned: PlannedConfig): string[] {
     const scripts = parseTomlFile(pyproject, text, pyprojectSchema).project?.scripts;
     if (scripts === undefined) return [];
     return Object.values(scripts).map((target) => (target.split(':', 1)[0] as string).replaceAll('.', '/'));
+}
+
+function buildRuntimeTypeOptions(planned: PlannedConfig): Record<string, unknown> {
+    const { configurations } = planned.scope.settings;
+    const { dependencyFiles } = planned.session.repository;
+    const hasPydantic = dependencyFiles.some(
+        (file) => isInScope(file.path, planned.scope.path) && file.dependencies[PYDANTIC_PACKAGE] !== undefined,
+    );
+    return hasPydantic || configurations.includes(FASTAPI_CONFIGURATION)
+        ? { 'flake8-type-checking': RUFF_RUNTIME_TYPES }
+        : {};
 }
 
 /**
@@ -129,6 +143,7 @@ export function buildRuffFile(planned: PlannedConfig): string {
             'flake8-tidy-imports': RUFF_TIDY_IMPORTS,
             mccabe: { 'max-complexity': getLimit(planned.scope.settings, 'max_cyclomatic_complexity', 'python') },
             ...(convention !== undefined && { pydocstyle: { convention } }),
+            ...buildRuntimeTypeOptions(planned),
             pylint: {
                 'max-statements': getLimit(planned.scope.settings, 'max_function_statements', 'python'),
                 'max-args': getLimit(planned.scope.settings, 'max_function_parameters', 'python'),

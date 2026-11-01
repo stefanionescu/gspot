@@ -73,6 +73,27 @@ test('Ruff accepts print in a module that pyproject.toml names as a console scri
     expect(ruff.lint['per-file-ignores']?.['../../../../**/sample/cli.py']).toStrictEqual(['T20']);
 });
 
+test.each([
+    { configurations: ['python', 'fastapi'], files: { 'example.py': 'value = 1\n' } },
+    {
+        configurations: ['python'],
+        files: { 'pyproject.toml': '[project]\nname = "shop"\ndependencies = ["pydantic>=2"]\n' },
+    },
+])(
+    'Ruff keeps the runtime imports that Pydantic and FastAPI read: $configurations',
+    async ({ configurations, files }) => {
+        const ruff = parse(
+            await buildGeneratedFile(
+                buildSandboxSettings(configurations),
+                getManifestTarget('python', 'ruff.toml'),
+                files,
+            ),
+        ) as { lint: Record<string, Record<string, string[]>> };
+        expect(ruff.lint['flake8-type-checking']?.['runtime-evaluated-base-classes']).toContain('pydantic.BaseModel');
+        expect(ruff.lint['flake8-type-checking']?.['runtime-evaluated-decorators']).toContain('fastapi.APIRouter.get');
+    },
+);
+
 test('Ruff takes its style from a format override that names every Python file', async () => {
     const tables =
         '[format]\nprint_width = 120\n[[format.override]]\npaths = ["**/*.py"]\nquotes = "single"\nprint_width = 88\n';

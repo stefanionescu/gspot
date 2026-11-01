@@ -77,6 +77,19 @@ export const BASEDPYRIGHT_ALL_LEVEL_OPTIONS = {
 
 export const PYTHON_FILES = ['**/*.py'] as const;
 
+export const FASTAPI_CONFIGURATION = 'fastapi';
+
+export const PYDANTIC_PACKAGE = 'pydantic';
+
+export const RUFF_RUNTIME_TYPES = {
+    'runtime-evaluated-base-classes': ['pydantic.BaseModel', 'pydantic_settings.BaseSettings'],
+    'runtime-evaluated-decorators': ['fastapi.FastAPI', 'fastapi.APIRouter'].flatMap((owner) =>
+        ['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'api_route', 'websocket'].map(
+            (method) => `${owner}.${method}`,
+        ),
+    ),
+} as const;
+
 export const RUFF_ISORT = {
     'length-sort': true,
     'length-sort-straight': true,
