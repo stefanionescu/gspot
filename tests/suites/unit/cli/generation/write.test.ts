@@ -81,7 +81,7 @@ test('removing css drops its managed stylelint field and keeps authored fields b
     }
     const settled = await openSession(sandbox.path);
     const output = buildGeneratedFiles(settled);
-    expect(await listOutdatedFiles(settled, output)).toStrictEqual(await listStaleLockfiles(settled, output.files));
+    expect(listOutdatedFiles(settled, output)).toStrictEqual(listStaleLockfiles(settled, output.files));
     expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).not.toContain('`stylelint`');
 });
 

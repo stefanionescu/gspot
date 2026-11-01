@@ -141,7 +141,12 @@ export type HookStatus = { ready: boolean; text: string; tool?: string; lines?: 
 
 export type HookPlan = { command?: readonly string[]; note: string };
 
-export type InstallResult = { installed: string[]; notes: string[]; steps: readonly (readonly string[])[] };
+export type InstallResult = {
+    installed: string[];
+    missing: string[];
+    notes: string[];
+    steps: readonly (readonly string[])[];
+};
 
 export type ToolPackageManager = PackageManager & {
     name: Exclude<PackageManager['name'], 'yarn'>;
@@ -153,7 +158,7 @@ export type ToolInstall = {
     packageManager: ToolPackageManager | undefined;
     releaseAgeDays: number;
     writer: Files;
-    generated: Generation;
+    generated: Pick<Generation, 'files'>;
     tools: Tool[];
     checkTools: Set<string>;
     misePath: string | undefined;

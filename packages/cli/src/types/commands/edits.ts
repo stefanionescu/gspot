@@ -76,6 +76,7 @@ export type InstallCommandJson = {
     installed: string[];
     steps: readonly (readonly string[])[];
     notes: string[];
+    missing: string[];
 };
 
 export type SetOptions = {

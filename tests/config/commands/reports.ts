@@ -1,7 +1,3 @@
-export const OUTDATED_TOOL_PROJECTS = [
-    { name: 'an edited mise.toml', path: '.gspot/mise.toml', text: '[tools]\n' },
-] as const;
-
 export const FAILED_NPM_VERSION = {
     code: 7,
     missing: false,
@@ -234,5 +230,3 @@ export const UNKNOWN_SUBJECT_CASES = [
 ] as const;
 
 export const API_SCOPE_FILES = { 'README.md': '# Example\n', 'api/entry.sh': 'echo api\n' } as const;
-
-export const TOOL_PROJECTS_MESSAGE = 'The tool projects in .gspot do not match gspot.toml. Run gspot apply first.';

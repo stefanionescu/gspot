@@ -71,14 +71,14 @@ test('a fixed run keeps the injected generation and reads the reopened file inve
                 listOutdatedFiles: (session, options) => {
                     generated = session;
                     expect(options.verbose).toBe(true);
-                    return Promise.resolve([]);
+                    return [];
                 },
             },
             selectCheckCode: (check) => {
                 selected.push(check.id);
                 return {
-                    check: async (session, _planned, options = {}) => {
-                        await session.generation.listOutdatedFiles(session, options);
+                    check: (session, _planned, options = {}) => {
+                        session.generation.listOutdatedFiles(session, options);
                         return [];
                     },
                 };

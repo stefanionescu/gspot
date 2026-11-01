@@ -156,12 +156,12 @@ Reports each generated file on disk that does not match what the settings genera
 @param _planned the configured check and selected scope files.
 @param options whether to include the differences.
 */
-export async function checkGeneratedFiles(
+export function checkGeneratedFiles(
     session: CheckSession,
     _planned: PlannedCheck,
     options: CheckRunOptions = {},
-): Promise<CheckFinding[]> {
-    const outdated = await session.generation.listOutdatedFiles(session, options);
+): CheckFinding[] {
+    const outdated = session.generation.listOutdatedFiles(session, options);
     return outdated.map((outdatedFile) => {
         const { diff } = outdatedFile;
         return {

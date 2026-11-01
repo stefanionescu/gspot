@@ -5,7 +5,9 @@ import { installHooks } from '#cli/tools/installers/hooks.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import { installMiseTools } from '#cli/tools/installers/mise.ts';
 import { installValePackages } from '#cli/tools/installers/vale.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { installToolProjects } from '#cli/tools/installers/projects.ts';
+import { writePlans, planReplacements } from '#cli/repository/writer.ts';
 import { assertPackageManagerVersion } from '#cli/tools/installers/npm/project.ts';
 import { readToolPackageManager } from '#cli/repository/javascript/package-manager.ts';
 import type { Session, ToolInstall, InstallResult, ToolPackageManager } from '#cli/types/tools.ts';
@@ -15,6 +17,15 @@ function readInstallPackageManager(session: Session): ToolPackageManager | undef
     if (pin === undefined) return undefined;
     const packageManager = readToolPackageManager(session.toolsRoot, pin, session.timeoutSeconds, session.cache);
     return { ...packageManager, command: pin.name === packageManager.name ? pin : { name: packageManager.name } };
+}
+
+function writeToolProjects({ writer, generated }: ToolInstall): void {
+    const requests = generated.files.map(({ path, content }) => ({
+        path,
+        next: { bytes: Buffer.from(content), mode: OWNER_WRITABLE_FILE },
+        previous: writer.read(path),
+    }));
+    writePlans(writer, planReplacements(writer, requests));
 }
 
 /**
@@ -30,6 +41,7 @@ export async function installTools(
     const context = buildToolInstall(session, input);
     const { steps } = context;
     await assertPackageManagerVersion(context);
+    writeToolProjects(context);
     const mise = await installMiseTools(context);
     const installed = [
         mise.installed,
@@ -38,8 +50,14 @@ export async function installTools(
     ];
     const hooks = await installHooks(session, steps);
     if (hooks.command !== undefined) installed.push(hooks.note);
-    const notes = [hooks.command === undefined ? hooks.note : '', mise.note];
-    return { installed: installed.filter(Boolean), notes: notes.filter(Boolean), steps };
+    const notes = [hooks.command === undefined ? hooks.note : ''];
+    const missing = [mise.note];
+    return {
+        installed: installed.filter(Boolean),
+        missing: missing.filter(Boolean),
+        notes: notes.filter(Boolean),
+        steps,
+    };
 }
 
 /**

@@ -149,7 +149,7 @@ export type OutdatedFile = {
 
 export type CheckGeneration = {
     buildConfigs: (session: Session) => ConfigTargets;
-    listOutdatedFiles: (session: Session, options: Pick<CheckRunOptions, 'verbose'>) => Promise<OutdatedFile[]>;
+    listOutdatedFiles: (session: Session, options: Pick<CheckRunOptions, 'verbose'>) => OutdatedFile[];
 };
 
 export type CheckSession = Session & {

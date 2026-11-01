@@ -238,19 +238,19 @@ Compare a Python tool project with the pins recorded in its uv lockfile.
 
 @param project the project table of the tool project.
 @param lockfile the recorded uv.lock contents.
-@param indexes the configured Python index settings.
+@param indexes the configured Python index settings, which the download addresses must match when given.
 @param minimumReleaseAge the required relative release age in days.
 */
 export function isPythonLockfileFresh(
     project: PythonToolProject,
     lockfile: string | undefined,
-    indexes: PythonIndexSettings['settings'],
+    indexes?: PythonIndexSettings['settings'],
     minimumReleaseAge?: number,
 ): lockfile is string {
     if (lockfile === undefined) return false;
     const saved = parsePythonToolLockfile(lockfile, minimumReleaseAge);
     if (saved === undefined) return false;
-    if (!hasAllowedPythonOrigins(saved, indexes)) return false;
+    if (indexes !== undefined && !hasAllowedPythonOrigins(saved, indexes)) return false;
     const projectPackage = saved.package.find(
         (lockedPackage) => lockedPackage.name === project.name && lockedPackage.source?.virtual === '.',
     );

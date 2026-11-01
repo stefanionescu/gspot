@@ -15,7 +15,7 @@ test('changed managed keys are reported without a whole-file replacement', async
         blocks: [],
         managedKeys: [{ path: 'package.json', keys: [{ key: ['stylelint'], value: 'managed' }] }],
     };
-    expect(await listOutdatedFiles(session, output)).toStrictEqual([{ path: 'package.json', kind: 'changed' }]);
+    expect(listOutdatedFiles(session, output)).toStrictEqual([{ path: 'package.json', kind: 'changed' }]);
 });
 
 test('the expected paths keep the lockfile of the generated mise project', async () => {

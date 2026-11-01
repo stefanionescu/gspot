@@ -27,7 +27,7 @@ test.each([...YARN_CLIENTS])(
         const session = await openSession(sandbox.path);
         const generated = buildGeneratedFiles(session);
         expect(generated.files.some(({ path }) => path === '.gspot/.yarnrc.yml')).toBe(false);
-        const lockfiles = await listStaleLockfiles(session, generated.files);
+        const lockfiles = listStaleLockfiles(session, generated.files);
         expect(
             lockfiles.filter(({ path }) => path !== GSPOT_PATHS.uvLockfile && path !== GSPOT_PATHS.miseLockfile),
         ).toStrictEqual([{ path: '.gspot/package-lock.json', kind: 'absent' }]);
@@ -42,12 +42,10 @@ test('tool lockfiles report missing and changed projects and omit current projec
     const session = await openSession(sandbox.path);
     const generated = buildGeneratedFiles(session).files;
     const paths = [GSPOT_PATHS.miseLockfile, '.gspot/bun.lock', GSPOT_PATHS.uvLockfile];
-    expect(await listStaleLockfiles(session, generated)).toStrictEqual(paths.map((path) => ({ path, kind: 'absent' })));
+    expect(listStaleLockfiles(session, generated)).toStrictEqual(paths.map((path) => ({ path, kind: 'absent' })));
     const lockfiles = buildToolLockfiles(session.toolConfigurations);
     await createFileTree(sandbox.path, lockfiles);
-    expect(await listStaleLockfiles(session, generated)).toStrictEqual([]);
+    expect(listStaleLockfiles(session, generated)).toStrictEqual([]);
     await createFileTree(sandbox.path, Object.fromEntries(paths.map((path) => [path, 'invalid ='])));
-    expect(await listStaleLockfiles(session, generated)).toStrictEqual(
-        paths.map((path) => ({ path, kind: 'changed' })),
-    );
+    expect(listStaleLockfiles(session, generated)).toStrictEqual(paths.map((path) => ({ path, kind: 'changed' })));
 });

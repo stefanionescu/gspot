@@ -5,7 +5,6 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { UV_TOOL } from '#cli/config/tools/installers.ts';
 import { listExecutablePaths } from '#cli/tools/locate.ts';
-import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import { listMisePins, listPackagePins } from '#cli/tools/pins.ts';
 import { isMiseLockfileFresh } from '#cli/tools/installers/mise.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
@@ -13,17 +12,9 @@ import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
 import type { PackageManager, ReplacementRequest } from '#cli/types/repository.ts';
 import { installNpmTools, planNpmLockfile } from '#cli/tools/installers/npm/project.ts';
 import { isLockfileFresh, selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
+import type { Session, ToolInstall, GeneratedFile, StaleLockfile, NpmToolInstall } from '#cli/types/tools.ts';
 
-import type {
-    Session,
-    ToolInstall,
-    GeneratedFile,
-    StaleLockfile,
-    NpmToolInstall,
-    PythonIndexSettings,
-} from '#cli/types/tools.ts';
 import {
-    readPythonSettings,
     installPythonTools,
     planPythonLockfile,
     isPythonLockfileFresh,
@@ -41,13 +32,12 @@ function readNpmLockfileState(
     files: Files,
     packageManager: Exclude<PackageManager['name'], 'yarn'>,
     configurations: Session['toolConfigurations'],
-    environment: Record<string, string>,
 ): StaleLockfile | undefined {
     const path = `${GSPOT_FOLDER}/${selectLockfileName(packageManager)}`;
     const saved = files.read(path);
     if (saved === undefined) return { path, kind: 'absent' };
     const dependencies = listPackagePins(configurations).npm;
-    return isLockfileFresh(packageManager, saved.bytes.toString('utf8'), dependencies, environment)
+    return isLockfileFresh(packageManager, saved.bytes.toString('utf8'), dependencies)
         ? undefined
         : { path, kind: 'changed' };
 }
@@ -55,18 +45,11 @@ function readNpmLockfileState(
 function readPythonLockfileState(
     files: Files,
     configurations: Session['toolConfigurations'],
-    indexes: PythonIndexSettings['settings'],
-    minimumReleaseAge: number,
 ): StaleLockfile | undefined {
     const path = GSPOT_PATHS.uvLockfile;
     const saved = files.read(path);
     if (saved === undefined) return { path, kind: 'absent' };
-    const matches = isPythonLockfileFresh(
-        buildPythonProjectTable(configurations),
-        saved.bytes.toString('utf8'),
-        indexes,
-        minimumReleaseAge,
-    );
+    const matches = isPythonLockfileFresh(buildPythonProjectTable(configurations), saved.bytes.toString('utf8'));
     return matches ? undefined : { path, kind: 'changed' };
 }
 
@@ -84,18 +67,16 @@ async function planLockfiles(
 }
 
 /**
-List the state of each tool project lockfile. It resolves and writes nothing.
+List the state of each tool project lockfile: whether it exists and names every pin at its version. It resolves and
+writes nothing, and it reads no package manager settings.
 
 @param session the repository, its tool configurations, and its package manager.
 @param generated the tool project files that apply writes.
 */
-export async function listStaleLockfiles(
-    session: Pick<
-        Session,
-        'root' | 'toolsRoot' | 'packageManager' | 'timeoutSeconds' | 'cache' | 'toolConfigurations' | 'scopes'
-    >,
+export function listStaleLockfiles(
+    session: Pick<Session, 'root' | 'packageManager' | 'toolConfigurations'>,
     generated: GeneratedFile[],
-): Promise<StaleLockfile[]> {
+): StaleLockfile[] {
     const { root, packageManager, toolConfigurations } = session;
     const projects = new Set(generated.map((file) => file.path));
     const files = openFiles(root);
@@ -103,17 +84,9 @@ export async function listStaleLockfiles(
     if (projects.has(GSPOT_PATHS.miseProject)) lockfiles.push(readMiseLockfileState(files, toolConfigurations));
     if (projects.has(GSPOT_PATHS.npmProject) && packageManager !== undefined) {
         const name = packageManager.name === 'yarn' ? 'npm' : packageManager.name;
-        lockfiles.push(readNpmLockfileState(files, name, toolConfigurations, await readRegistryEnvironment(root)));
+        lockfiles.push(readNpmLockfileState(files, name, toolConfigurations));
     }
-    if (projects.has(GSPOT_PATHS.pythonProject))
-        lockfiles.push(
-            readPythonLockfileState(
-                files,
-                toolConfigurations,
-                readPythonSettings(root).settings,
-                getTable(getRootScope(session.scopes).settings, 'dependencies').min_release_age_days,
-            ),
-        );
+    if (projects.has(GSPOT_PATHS.pythonProject)) lockfiles.push(readPythonLockfileState(files, toolConfigurations));
     return lockfiles.filter((lockfile): lockfile is StaleLockfile => lockfile !== undefined);
 }
 

@@ -1,47 +1,33 @@
-import { GspotError } from '#cli/system/errors.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { EXIT_FINDINGS } from '#cli/config/engine.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import type { Generation } from '#cli/types/tools.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
-import { isSameContents } from '#cli/system/files/bounded.ts';
+import type { CommandResult } from '#cli/types/system.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
+import { buildToolProjects } from '#cli/generation/generate.ts';
 import { installTools } from '#cli/tools/installers/install.ts';
-import type { Files, CommandResult } from '#cli/types/system.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import type { CommandDefinition, InstallCommandJson } from '#cli/types/commands/edits.ts';
 
 import {
-    TOOL_PROJECT_FILES,
-    TOOL_PROJECTS_MESSAGE,
     TOOLS_CHANGED_MESSAGE,
+    TOOLS_MISSING_MESSAGE,
     TOOLS_INSTALLED_MESSAGE,
     INSTALLATION_STOPPED_MESSAGE,
 } from '#cli/config/commands/edits.ts';
 
-function hasOutdatedToolProjects(files: Files, generated: Generation): boolean {
-    return [...TOOL_PROJECT_FILES].some((path) => {
-        const file = generated.files.find((each) => each.path === path);
-        const next = file === undefined ? undefined : { bytes: Buffer.from(file.content), mode: OWNER_WRITABLE_FILE };
-        return !isSameContents(files.read(path), next);
-    });
-}
-
 async function runInstallCommand(root: string, cancelSignal: AbortSignal): Promise<CommandResult<InstallCommandJson>> {
     const session = await openSession(root, { cancelSignal });
-    const generated = buildGeneratedFiles(session);
-    const writer = openFiles(root);
-    if (hasOutdatedToolProjects(writer, generated)) throw new GspotError('install', TOOL_PROJECTS_MESSAGE);
-    const { installed, notes, steps } = await installTools(session, {
-        writer,
-        generated,
+    const { installed, missing, notes, steps } = await installTools(session, {
+        writer: openFiles(root),
+        generated: { files: buildToolProjects(session) },
         checkTools: listHostCheckTools(session.configuredChecks),
     });
+    const unchanged = missing.length === 0 ? TOOLS_INSTALLED_MESSAGE : TOOLS_MISSING_MESSAGE;
     const isUnchanged = installed.length === 0;
     return {
-        text: `${[...(isUnchanged ? [TOOLS_INSTALLED_MESSAGE] : installed), ...notes].join('\n')}\n`,
-        json: { summary: isUnchanged ? TOOLS_INSTALLED_MESSAGE : TOOLS_CHANGED_MESSAGE, installed, steps, notes },
-        exitCode: 0,
+        text: `${[...(isUnchanged ? [unchanged] : installed), ...notes, ...missing].join('\n')}\n`,
+        json: { summary: isUnchanged ? unchanged : TOOLS_CHANGED_MESSAGE, installed, steps, notes, missing },
+        exitCode: missing.length === 0 ? 0 : EXIT_FINDINGS,
     };
 }
 

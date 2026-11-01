@@ -100,14 +100,14 @@ Find changed, absent, or stray generated files. Managed blocks and file edits co
 @param options.verbose includes text and mode differences for changed files.
 @returns the outdated files in path order.
 */
-export async function listOutdatedFiles(
+export function listOutdatedFiles(
     session: Session,
     generated: Generation,
     options: { verbose?: boolean | undefined } = {},
-): Promise<OutdatedFile[]> {
+): OutdatedFile[] {
     const files = openFiles(session.root);
     const expected = listExpectedPaths(session, generated);
-    const lockfiles = await listStaleLockfiles(session, generated.files);
+    const lockfiles = listStaleLockfiles(session, generated.files);
     const strays = listStrayPaths(session, expected, listOwnablePaths(session)).map(
         (path): OutdatedFile => ({
             path,

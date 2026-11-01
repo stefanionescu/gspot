@@ -95,28 +95,19 @@ function getBunPackageName(key: string): string {
     return scope.startsWith('@') ? `${scope}/${name}` : name;
 }
 
-function isBunLockfileFresh(
-    document: Record<string, unknown>,
-    dependencies: Dependencies,
-    environment: Record<string, string>,
-): boolean {
+function hasStandardBunPackages(document: Record<string, unknown>, environment: Record<string, string>): boolean {
     const packages = document['packages'] as Record<string, unknown[]>;
-    for (const [key, value] of Object.entries(packages)) {
+    return Object.entries(packages).every(([key, value]) => {
         const parsed = bunPackageSchema.safeParse(value);
         if (!parsed.success) return false;
         const identity = splitIdentity(parsed.data[0]);
-        if (identity?.[0] !== getBunPackageName(key) || !isStandardBunTarball(parsed.data, environment)) return false;
-    }
-    return Object.entries(dependencies).every(([name, version]) => packages[name]?.[0] === `${name}@${version}`);
+        return identity?.[0] === getBunPackageName(key) && isStandardBunTarball(parsed.data, environment);
+    });
 }
 
-function isNpmLockfileFresh(
-    document: Record<string, unknown>,
-    dependencies: Dependencies,
-    environment: Record<string, string>,
-): boolean {
+function hasStandardNpmPackages(document: Record<string, unknown>, environment: Record<string, string>): boolean {
     const packages = document['packages'] as Record<string, Record<string, unknown>>;
-    const matches = Object.entries(packages).every(([key, lockedPackage]) => {
+    return Object.entries(packages).every(([key, lockedPackage]) => {
         if (!key.includes(NPM_PACKAGE_FOLDER)) return true;
         const name = key.slice(key.lastIndexOf(NPM_PACKAGE_FOLDER) + NPM_PACKAGE_FOLDER.length);
         const parsed = npmToolPackageSchema.safeParse(lockedPackage);
@@ -124,21 +115,11 @@ function isNpmLockfileFresh(
         const { version, resolved = '', integrity, name: identity = name } = parsed.data;
         return identity === name && isStandardTarball({ name, version, address: resolved, integrity }, environment);
     });
-    return (
-        matches &&
-        Object.entries(dependencies).every(
-            ([name, version]) => packages[`${NPM_PACKAGE_FOLDER}${name}`]?.['version'] === version,
-        )
-    );
 }
 
-function isPnpmLockfileFresh(
-    document: Record<string, unknown>,
-    dependencies: Dependencies,
-    environment: Record<string, string>,
-): boolean {
+function hasStandardPnpmPackages(document: Record<string, unknown>, environment: Record<string, string>): boolean {
     const packages = document['packages'] as Record<string, unknown>;
-    const matches = Object.entries(packages).every(([key, lockedPackage]) => {
+    return Object.entries(packages).every(([key, lockedPackage]) => {
         const identity = splitIdentity((key.startsWith('/') ? key.slice(1) : key).split(PNPM_PEER_START, 1).join(''));
         const parsed = pnpmToolPackageSchema.safeParse(lockedPackage);
         if (identity === undefined || !parsed.success) return false;
@@ -149,22 +130,21 @@ function isPnpmLockfileFresh(
         } = parsed.data;
         return installed === name && isStandardTarball({ name, version, address: tarball, integrity }, environment);
     });
+}
+
+function isPinLocked(
+    packageManager: Exclude<PackageManager['name'], 'yarn'>,
+    document: Record<string, unknown>,
+    [name, version]: [string, string],
+): boolean {
+    const packages = document['packages'] as Record<string, unknown>;
+    if (packageManager === 'bun') return findValueAt(packages, [name, '0']) === `${name}@${version}`;
+    if (packageManager === 'npm') return findValueAt(packages, [`${NPM_PACKAGE_FOLDER}${name}`, 'version']) === version;
+    const locked = findValueAt(document, ['importers', PNPM_ROOT_IMPORTER, 'devDependencies', name, 'version']);
     return (
-        matches &&
-        Object.entries(dependencies).every(([name, pin]) => {
-            const version = findValueAt(document, [
-                'importers',
-                PNPM_ROOT_IMPORTER,
-                'devDependencies',
-                name,
-                'version',
-            ]);
-            return (
-                typeof version === 'string' &&
-                version.split(PNPM_PEER_START, 1)[0] === pin &&
-                Object.hasOwn(packages, `${name}@${pin}`)
-            );
-        })
+        typeof locked === 'string' &&
+        locked.split(PNPM_PEER_START, 1)[0] === version &&
+        Object.hasOwn(packages, `${name}@${version}`)
     );
 }
 
@@ -200,19 +180,24 @@ Check whether a lockfile pins every generated dependency and no extra root depen
 @param packageManager the package manager that wrote the lockfile.
 @param lockfile the lockfile text.
 @param dependencies what the tool project declares.
-@param environment the configured package registry addresses.
+@param environment the configured package registry addresses, which each download must match when given.
 */
 export function isLockfileFresh(
     packageManager: Exclude<PackageManager['name'], 'yarn'>,
     lockfile: string,
     dependencies: Dependencies,
-    environment: Record<string, string>,
+    environment?: Record<string, string>,
 ): boolean {
     try {
         const document = parseToolLockfile(packageManager, lockfile);
         if (!isDeepStrictEqual(parseRootDependencies(packageManager, document), dependencies)) return false;
-        const validatePackages = { bun: isBunLockfileFresh, npm: isNpmLockfileFresh, pnpm: isPnpmLockfileFresh };
-        return validatePackages[packageManager](document, dependencies, environment);
+        const validatePackages = {
+            bun: hasStandardBunPackages,
+            npm: hasStandardNpmPackages,
+            pnpm: hasStandardPnpmPackages,
+        };
+        if (environment !== undefined && !validatePackages[packageManager](document, environment)) return false;
+        return Object.entries(dependencies).every((pin) => isPinLocked(packageManager, document, pin));
     } catch (error) {
         if (isInvalidLockfile(error)) return false;
         throw error;

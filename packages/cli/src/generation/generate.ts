@@ -12,7 +12,6 @@ import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { listWrittenPaths } from '#cli/generation/ignores.ts';
 import { buildLinkFieldEdits } from '#cli/generation/links.ts';
 import { listHookNames } from '#cli/tools/installers/hooks.ts';
-import type { Session, Generation } from '#cli/types/tools.ts';
 import { buildMiseInstall } from '#cli/tools/installers/mise.ts';
 import { buildPythonInstall } from '#cli/tools/installers/pypi.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
@@ -20,6 +19,7 @@ import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { FROZEN_INSTALLS } from '#cli/config/repository/javascript.ts';
 import { parseAttributePatterns } from '#cli/repository/git/output.ts';
+import type { Session, Generation, GeneratedFile } from '#cli/types/tools.ts';
 import { readPackageManagerVersion } from '#cli/repository/javascript/package-manager.ts';
 import { buildBunScannerEdits } from '#cli/configurations/general/dependencies/generate.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
@@ -136,6 +136,22 @@ function addManagedBlocks(session: Session, rules: RuleFile[], generated: Genera
 }
 
 /**
+Build the project files that the tool installers read: the npm, Python, and mise projects in .gspot.
+
+@param session the package manager and the configurations in use.
+*/
+export function buildToolProjects(session: Pick<Session, 'packageManager' | 'toolConfigurations'>): GeneratedFile[] {
+    const { packageManager, toolConfigurations } = session;
+    const project = { ...NPM_TOOL_PROJECT, devDependencies: listPackagePins(toolConfigurations).npm };
+    const npmProject = { path: GSPOT_PATHS.npmProject, content: `${JSON.stringify(project, null, JSON_INDENT)}\n` };
+    return [
+        ...(packageManager === undefined ? [] : [npmProject]),
+        ...buildPythonInstall(toolConfigurations),
+        buildMiseInstall(toolConfigurations),
+    ];
+}
+
+/**
 Generate every file in memory, and write nothing.
 
 @param session the repository to generate for.
@@ -144,7 +160,6 @@ Generate every file in memory, and write nothing.
 */
 export function buildGeneratedFiles(session: Session): Generation {
     const { settings } = session;
-    const { packageManager, toolConfigurations } = session;
     const generated: Generation = {
         files: [{ path: GSPOT_PATHS.gitignore, content: TOOL_FOLDER_IGNORES.join('\n') + '\n' }],
         blocks: [],
@@ -166,20 +181,7 @@ export function buildGeneratedFiles(session: Session): Generation {
                       .some((attributes) => attributes[FILTER_ATTRIBUTE] === LFS_FILTER),
               })
             : []),
-        ...(packageManager === undefined
-            ? []
-            : [
-                  {
-                      path: GSPOT_PATHS.npmProject,
-                      content: `${JSON.stringify(
-                          { ...NPM_TOOL_PROJECT, devDependencies: listPackagePins(toolConfigurations).npm },
-                          null,
-                          JSON_INDENT,
-                      )}\n`,
-                  },
-              ]),
-        ...buildPythonInstall(toolConfigurations),
-        buildMiseInstall(toolConfigurations),
+        ...buildToolProjects(session),
     );
     addWorkflow(session, generated);
     const rules = selectRuleFiles(session);

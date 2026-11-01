@@ -1,4 +1,3 @@
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { SWIFT_FILES } from '#cli/config/configurations/swift.ts';
 import { GITATTRIBUTES_FILE } from '#cli/config/repository/files.ts';
 import { SQL_FILES, PYTHON_FILES } from '#cli/config/configurations/python.ts';
@@ -13,17 +12,11 @@ export const REPAIRED_FILES_MESSAGE = 'gspot.toml already says this.';
 export const RULE_WITHOUT_CHECK_MESSAGE =
     'An ignore without a check cannot take --rule. Name the check that owns the rule.';
 
-export const TOOL_PROJECT_FILES: ReadonlySet<string> = new Set([
-    GSPOT_PATHS.miseProject,
-    GSPOT_PATHS.npmProject,
-    GSPOT_PATHS.pythonProject,
-]);
-
-export const TOOL_PROJECTS_MESSAGE = 'The tool projects in .gspot do not match gspot.toml. Run gspot apply first.';
-
 export const TOOLS_INSTALLED_MESSAGE = 'No change: every tool is installed.';
 
 export const TOOLS_CHANGED_MESSAGE = 'Installed the tools.';
+
+export const TOOLS_MISSING_MESSAGE = 'Some tools are still missing.';
 
 export const INSTALLATION_STOPPED_MESSAGE = 'Installation stopped before every tool was installed.';
 

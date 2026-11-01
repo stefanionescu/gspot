@@ -38,7 +38,8 @@ export const COMMAND_HELP = {
             '--json': 'Print the result as JSON',
         },
         exitCodes: [
-            ['0', 'The tools are installed, or the missing tools are named.'],
+            ['0', 'The tools are installed.'],
+            ['1', 'A tool is still missing. The output names it and what to do.'],
             ['2', 'install could not finish. The error names the step that failed.'],
             ['130, 143', 'Installation stopped because of Ctrl-C or SIGTERM.'],
         ],
