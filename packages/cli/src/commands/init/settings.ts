@@ -16,7 +16,7 @@ import { LEADING_COMMENTS, HAND_EDIT_RECORDS } from '#cli/config/commands/edits.
 function buildSettingsTable(
     draft: SettingsDraft,
     repository: Repository,
-    configurationsByName: Map<string, Configuration>,
+    configurationsByName: ReadonlyMap<string, Configuration>,
 ): TomlTable {
     const selected = {
         configurations: draft.configurations,
@@ -55,7 +55,7 @@ Build the gspot.toml text for a settings draft.
 export function buildInitSettings(
     draft: SettingsDraft,
     repository: Repository,
-    configurationsByName: Map<string, Configuration>,
+    configurationsByName: ReadonlyMap<string, Configuration>,
 ): string {
     const document = buildSettingsTable(draft, repository, configurationsByName);
     delete document['ci'];

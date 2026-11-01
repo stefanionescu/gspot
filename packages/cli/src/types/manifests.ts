@@ -13,7 +13,7 @@ export type ShippedRule = {
 export type LimitCheck = { check: string; languages: readonly string[]; limits: readonly string[] };
 
 export type RequirementWalk = {
-    configurationsByName: Map<string, Configuration>;
+    configurationsByName: ReadonlyMap<string, Configuration>;
     errors: string[];
     order: Configuration[];
     seen: Set<string>;

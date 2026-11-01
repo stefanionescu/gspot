@@ -91,7 +91,7 @@ function listManifestTools(manifests: Iterable<ParsedManifest>): Map<string, Too
 /**
 Read every configuration once per process.
 */
-export function readConfigurations(): Map<string, Configuration> {
+export function readConfigurations(): ReadonlyMap<string, Configuration> {
     if (shippedConfigurations !== undefined) return shippedConfigurations;
     const manifests = new Map<string, ParsedManifest>();
     const paths = listAssets(`${CONFIGURATIONS_FOLDER}/`).filter((path) => path.endsWith(`/${MANIFEST_FILE}`));

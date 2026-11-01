@@ -107,7 +107,7 @@ first.
 */
 export function validateRuleExcludes(
     exclude: string[],
-    configurationsByName: Map<string, Configuration>,
+    configurationsByName: ReadonlyMap<string, Configuration>,
 ): SettingsError[] {
     if (exclude.length === 0) return [];
     const paths = configurationsByName

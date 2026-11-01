@@ -1,4 +1,3 @@
-import type { Session } from '#cli/types/tools.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { listPackagePins } from '#cli/tools/pins.ts';
 import type { RunCache } from '#cli/types/system.ts';
@@ -10,6 +9,7 @@ import type { Configuration } from '#cli/types/manifests.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import { selectToolConfigurations } from '#cli/engine/tools.ts';
 import type { SessionOptions } from '#cli/types/engine/plan.ts';
+import type { Session, SessionBase } from '#cli/types/tools.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
 import { selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
@@ -21,7 +21,7 @@ import { selectStartRunner, detectPackageManager } from '#cli/repository/javascr
 function buildScopes(
     settings: Settings,
     repository: Repository,
-    configurationsByName: Map<string, Configuration>,
+    configurationsByName: ReadonlyMap<string, Configuration>,
 ): Scope[] {
     const { scopeFolders } = repository;
     const automatic = listAutomaticConfigurations(configurationsByName, repository);
@@ -45,31 +45,41 @@ async function readSessionRepository({
     configurationsByName,
     cache,
     listing,
+    unreadablePaths,
 }: {
     settings: Settings;
-    configurationsByName: Map<string, Configuration>;
+    configurationsByName: ReadonlyMap<string, Configuration>;
     cache: RunCache;
-    listing: RepositoryListing;
+    listing: RepositoryListing | undefined;
+    unreadablePaths: string[];
 }): Promise<Repository> {
+    const listed = listing ?? (await listRepositoryFiles(cache));
     const selected = new Map(
         ['', ...settings.scopes.keys()].map((path) => [path, selectForScope(settings, path, configurationsByName)]),
     );
-    return readRepository(cache, listing, {
-        generatedPaths: listConfigurationGeneratedPaths(selected),
-        scopes: [...settings.scopes].map(([path, scope]) => ({
-            path,
-            configurations: scope.configurations,
-        })),
-        configurationsByName,
-    });
+    return readRepository(
+        cache,
+        { ...listed, unreadablePaths: [...listed.unreadablePaths, ...unreadablePaths] },
+        {
+            generatedPaths: listConfigurationGeneratedPaths(selected),
+            scopes: [...settings.scopes].map(([path, scope]) => ({
+                path,
+                configurations: scope.configurations,
+            })),
+            configurationsByName,
+        },
+    );
 }
 
-function addPackageManagers(session: Session): void {
-    if (Object.keys(listPackagePins(session.toolConfigurations).npm).length === 0) return;
-    const sources = session.repository.files.filter((file) => file.kind === 'source').map((file) => file.path);
-    const packageManager = detectPackageManager(session.root, sources);
-    session.packageManager = packageManager;
-    session.toolPackageManager = packageManager.name === 'yarn' ? 'npm' : packageManager.name;
+function selectPackageManagers(
+    base: SessionBase,
+    toolConfigurations: Configuration[],
+): Pick<Session, 'packageManager' | 'toolPackageManager'> {
+    if (Object.keys(listPackagePins(toolConfigurations).npm).length === 0)
+        return { packageManager: undefined, toolPackageManager: undefined };
+    const sources = base.repository.files.filter((file) => file.kind === 'source').map((file) => file.path);
+    const packageManager = detectPackageManager(base.root, sources);
+    return { packageManager, toolPackageManager: packageManager.name === 'yarn' ? 'npm' : packageManager.name };
 }
 
 /**
@@ -82,6 +92,7 @@ Refuse invalid settings or configuration choices.
 @param options.toolCache the cache of the tool lookups, which pushed revisions and a --fix session share.
 @param options.listing the files of the repository, or none to list them.
 @param options.settings the settings to use, or none to read them from the repository.
+@param options.unreadablePaths the paths of a copy with names outside UTF-8.
 @param options.resources the resources that the caller disposes when the run ends.
 @param options.cancelSignal stops the operations of this session.
 */
@@ -93,6 +104,7 @@ export async function openSession(
         toolCache = createRunCache(toolsRoot),
         listing,
         settings = readSettings(readSettingsFile(root).text, root),
+        unreadablePaths = [],
         resources = [],
         cancelSignal,
     }: SessionOptions = {},
@@ -102,16 +114,15 @@ export async function openSession(
         settings,
         configurationsByName,
         cache,
-        listing: listing ?? (await listRepositoryFiles(cache)),
+        listing,
+        unreadablePaths,
     });
     const scopes = buildScopes(settings, repository, configurationsByName);
-    const session: Session = {
-        toolConfigurations: [],
-        configuredChecks: listEnabledChecks(scopes, settings),
+    const configuredChecks = listEnabledChecks(scopes, settings);
+    const base: SessionBase = {
+        configuredChecks,
         resources,
         cancelSignal,
-        packageManager: undefined,
-        toolPackageManager: undefined,
         root,
         toolsRoot,
         startRunner: selectStartRunner(root),
@@ -121,7 +132,6 @@ export async function openSession(
         cache,
         toolCache,
     };
-    session.toolConfigurations = selectToolConfigurations(session, session.configuredChecks);
-    addPackageManagers(session);
-    return session;
+    const toolConfigurations = selectToolConfigurations(base, configuredChecks);
+    return { ...base, toolConfigurations, ...selectPackageManagers(base, toolConfigurations) };
 }

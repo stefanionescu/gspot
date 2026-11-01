@@ -113,18 +113,21 @@ async function runPlannedCheck(run: Run, planned: PlannedCheck): Promise<CheckRe
     }
 }
 
-function removeIgnoredFindings(result: CheckResult, ignores: IgnoreRecord[]): void {
-    result.findings = result.findings.filter((finding) => ignores.every((record) => !isIgnoreMatch(record, finding)));
-    if (result.status === 'passed' || result.status === 'failed')
-        result.status = result.findings.length > 0 ? 'failed' : 'passed';
+function removeIgnoredFindings(result: CheckResult, ignores: IgnoreRecord[]): CheckResult {
+    const findings = result.findings.filter((finding) => ignores.every((record) => !isIgnoreMatch(record, finding)));
+    if (result.status !== 'passed' && result.status !== 'failed') return { ...result, findings };
+    return { ...result, findings, status: findings.length > 0 ? 'failed' : 'passed' };
 }
 
-function removeOutsideFindings(result: CheckResult, run: Run): void {
+function removeOutsideFindings(result: CheckResult, run: Run): CheckResult {
     const { options, session } = run;
-    if (options.paths === undefined) return;
+    if (options.paths === undefined) return result;
     const paths = new Set(options.paths);
     const tracked = new Set(session.repository.files.map((file) => file.path));
-    result.findings = result.findings.filter((finding) => paths.has(finding.file) || !tracked.has(finding.file));
+    return {
+        ...result,
+        findings: result.findings.filter((finding) => paths.has(finding.file) || !tracked.has(finding.file)),
+    };
 }
 
 function buildReproduceOptions(options: RunOptions): ReproduceOptions {
@@ -153,24 +156,27 @@ function formatReproduceCommand(checkId: string, scopeArgument: string | undefin
     return words.join(' ');
 }
 
-function finishResult(run: Run, result: CheckResult): void {
-    removeOutsideFindings(result, run);
-    removeIgnoredFindings(result, run.session.settings.ignore);
-    normalizeResultPaths(run.session, result);
-    if (!FAILED_STATUSES.has(result.status) || run.session.cancelSignal?.aborted === true) return;
+function finishResult(run: Run, ran: CheckResult): CheckResult {
+    const result = normalizeResultPaths(
+        run.session,
+        removeIgnoredFindings(removeOutsideFindings(ran, run), run.session.settings.ignore),
+    );
+    if (!FAILED_STATUSES.has(result.status) || run.session.cancelSignal?.aborted === true) return result;
     const scopeArgument =
         result.scope === ''
             ? undefined
             : convertToPosixPath(relative(run.options.cwd, join(run.session.toolsRoot, result.scope))) || '.';
-    result.rerun = formatReproduceCommand(result.check, scopeArgument, buildReproduceOptions(run.options));
+    return {
+        ...result,
+        rerun: formatReproduceCommand(result.check, scopeArgument, buildReproduceOptions(run.options)),
+    };
 }
 
 async function runActiveChecks(run: Run, checks: PlannedCheck[]): Promise<CheckResult[]> {
     let finished = 0;
     const settled = await Promise.allSettled(
         checks.map(async (planned) => {
-            const result = await runPlannedCheck(run, planned);
-            finishResult(run, result);
+            const result = finishResult(run, await runPlannedCheck(run, planned));
             run.options.onProgress?.({
                 check: result.check,
                 scope: result.scope,

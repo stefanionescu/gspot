@@ -1,7 +1,7 @@
 import type { RunCache } from '#cli/types/system.ts';
 import type { STAGE_FILTERS } from '#cli/config/engine.ts';
 import type { Tool, Check } from '#cli/types/manifests.ts';
-import type { Host, Session, ConfiguredCheck } from '#cli/types/tools.ts';
+import type { Host, SessionBase, ConfiguredCheck } from '#cli/types/tools.ts';
 import type { TrackedFile, RepositoryListing } from '#cli/types/repository.ts';
 import type { Scope, Defined, Settings, TableValues } from '#cli/types/settings.ts';
 
@@ -25,7 +25,7 @@ export type PlanOptions = {
 };
 
 export type PlannedScope = {
-    session: Session;
+    session: SessionBase;
     scope: Scope;
     options: PlanOptions;
     host: Host;
@@ -79,6 +79,7 @@ export type SessionOptions = {
     toolCache?: RunCache | undefined;
     listing?: RepositoryListing | undefined;
     settings?: Settings;
+    unreadablePaths?: string[] | undefined;
     resources?: Disposable[];
     cancelSignal?: AbortSignal | undefined;
 };

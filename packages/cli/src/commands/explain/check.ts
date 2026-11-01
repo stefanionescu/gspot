@@ -40,7 +40,7 @@ function listCheckIgnores(session: Session | undefined, checkId: string): CheckI
 function buildCheckFacts(
     check: Check,
     configuration: ScopeCheck['configuration'],
-    configurationsByName: Map<string, Configuration>,
+    configurationsByName: ReadonlyMap<string, Configuration>,
     session: Session | undefined,
 ): CheckFacts {
     const reference = describeCheck(check, configurationsByName.values().toArray());

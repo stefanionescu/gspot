@@ -172,7 +172,7 @@ export type DetectionSummary = {
     repositorySetup: RepositorySetup;
     owned: string[];
     unowned: string[];
-    configurationsByName: Map<string, Configuration>;
+    configurationsByName: ReadonlyMap<string, Configuration>;
 };
 
 export type InitFileRow = { path: string; note: string };

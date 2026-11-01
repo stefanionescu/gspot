@@ -27,7 +27,7 @@ export type InitConfigurations = {
 
 export type InitRepository = {
     repository: Repository;
-    configurationsByName: Map<string, Configuration>;
+    configurationsByName: ReadonlyMap<string, Configuration>;
     options: {
         configurations?: string[] | undefined;
         template?: { configurations: string[]; removed: string[] } | undefined;
@@ -144,7 +144,7 @@ export type DetectionEvidence = { evidence: string; count?: number };
 export type RepositoryReadOptions = {
     generatedPaths: GeneratedPaths[];
     scopes: Pick<ScopeFolder, 'path' | 'configurations'>[];
-    configurationsByName: Map<string, Configuration>;
+    configurationsByName: ReadonlyMap<string, Configuration>;
 };
 
 export type RepositoryListing = Pick<Repository, 'root' | 'index' | 'attributes' | 'unreadablePaths'> & {

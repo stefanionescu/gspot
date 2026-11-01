@@ -157,7 +157,7 @@ async function readEslintPluginRule(root: string, identifier: string): Promise<u
     return findValueAt(rules, [identifier.slice(prefix.length + 1)]);
 }
 
-function findRulePlugin(prefix: string, configurationsByName: Map<string, Configuration>): Tool | undefined {
+function findRulePlugin(prefix: string, configurationsByName: ReadonlyMap<string, Configuration>): Tool | undefined {
     return configurationsByName
         .values()
         .flatMap((configuration) => configuration.tools)
@@ -167,7 +167,7 @@ function findRulePlugin(prefix: string, configurationsByName: Map<string, Config
 function findRulePage(
     tool: string,
     rule: string,
-    configurationsByName: Map<string, Configuration>,
+    configurationsByName: ReadonlyMap<string, Configuration>,
 ): string | undefined {
     const prefix = extractRulePrefix(rule);
     if (prefix === undefined) {

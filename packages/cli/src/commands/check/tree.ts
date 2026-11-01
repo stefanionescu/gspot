@@ -143,12 +143,6 @@ async function readRunFilters(
     return { changed, staging, stage, paths: paths.length === 0 ? undefined : paths };
 }
 
-function addRevisionPaths(session: Session, revision: RevisionSource | undefined): void {
-    const paths = revision?.unreadablePaths;
-    if (paths === undefined) return;
-    session.repository.unreadablePaths.push(...paths);
-}
-
 function addRevisionNotes(report: RunReport, revision: RevisionSource | undefined): void {
     const note = revision?.dependencyNote;
     if (note === undefined) return;
@@ -172,12 +166,12 @@ export async function runTreeCheck(
     const resources: Disposable[] = [];
     try {
         const session = await openSession(treeFolder, {
-            toolsRoot: revision?.toolsRoot ?? treeFolder,
+            toolsRoot: treeFolder,
+            ...revision,
             toolCache: options.toolCache,
             resources,
             cancelSignal,
         });
-        addRevisionPaths(session, revision);
         const onlyNotes = assertNamedChecks(session, options);
         const filters = await readRunFilters(session, options, cancelSignal, revision);
         await warnMissingHooks(session, revision);

@@ -108,7 +108,7 @@ Select the configurations of the root and each parent scope, each once, in order
 export function selectForScope(
     selected: SelectedConfigurations,
     scopePath: string,
-    configurationsByName: Map<string, Configuration>,
+    configurationsByName: ReadonlyMap<string, Configuration>,
 ): Configuration[] {
     const automatic = listAutomaticConfigurations(configurationsByName);
     const choices = new Set<string>([...selected.configurations, ...automatic]);

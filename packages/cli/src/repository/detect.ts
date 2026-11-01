@@ -155,7 +155,7 @@ Propose configurations from the files and the dependencies, with the evidence fo
 */
 export function detectConfigurations(
     repository: Pick<Repository, 'root' | 'files' | 'dependencyFiles'>,
-    configurationsByName: Map<string, Configuration>,
+    configurationsByName: ReadonlyMap<string, Configuration>,
     scopePath = '',
 ): ConfigurationEvidence[] {
     const { root, files, dependencyFiles } = repository;
@@ -202,7 +202,7 @@ List the general configurations that gspot adds without an explicit selection.
 @returns the automatic configurations, each once
 */
 export function listAutomaticConfigurations(
-    configurationsByName: Map<string, Configuration>,
+    configurationsByName: ReadonlyMap<string, Configuration>,
     repository?: Pick<Repository, 'root' | 'files' | 'dependencyFiles'>,
 ): string[] {
     const general = new Map([...configurationsByName].filter(([, configuration]) => configuration.group === 'general'));
@@ -213,16 +213,8 @@ export function listAutomaticConfigurations(
             .map((configuration) => configuration.name),
     );
     if (repository === undefined) return [...automatic];
-    const toolOnlyPackages = listToolOnlyPackages(repository.dependencyFiles, configurationsByName.values());
     const detected = new Set(
-        detectConfigurations(
-            {
-                ...repository,
-                files: repository.files.filter((file) => !toolOnlyPackages.has(file.path)),
-                dependencyFiles: repository.dependencyFiles.filter((file) => !toolOnlyPackages.has(file.path)),
-            },
-            general,
-        ).map(({ configuration }) => configuration),
+        detectConfigurations(repository, configurationsByName).map(({ configuration }) => configuration),
     );
     for (const configuration of general.values())
         if (detected.has(configuration.name)) automatic.add(configuration.name);

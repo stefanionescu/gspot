@@ -122,7 +122,7 @@ export async function readConfigurationEditContext(options: ConfigurationsOption
     scopeTable: TomlTable;
     scopeSettings: Pick<Settings, 'configurations' | 'removed_configurations'>;
     selected: string[];
-    configurationsByName: Map<string, Configuration>;
+    configurationsByName: ReadonlyMap<string, Configuration>;
     context: SettingsEditContext;
 }> {
     const context = await readSettingsEditContext(options.root, options.scope);

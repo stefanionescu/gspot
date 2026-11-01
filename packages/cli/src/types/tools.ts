@@ -71,17 +71,20 @@ export type UvLockfile = z.infer<typeof uvLockfileSchema>;
 
 export type MiseLockfile = z.infer<typeof miseLockfileSchema>;
 
-export type Session = {
-    configuredChecks: ConfiguredCheck[];
+export type Session = SessionBase & {
     toolConfigurations: Configuration[];
+    packageManager: PackageManagerPin | undefined;
+    toolPackageManager: ToolPackageManagerName | undefined;
+};
+
+export type SessionBase = {
+    configuredChecks: ConfiguredCheck[];
     root: string;
     startRunner: StartRunner;
     toolsRoot: string;
     cache: RunCache;
     toolCache: RunCache;
     resources: Disposable[];
-    packageManager: PackageManagerPin | undefined;
-    toolPackageManager: ToolPackageManagerName | undefined;
     cancelSignal?: AbortSignal | undefined;
     settings: Settings;
     repository: Repository;

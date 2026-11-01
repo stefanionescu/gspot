@@ -27,7 +27,11 @@ import {
     readConfigurationEditContext,
 } from '#cli/commands/edits.ts';
 
-function assertRemovable(names: string[], kept: string[], configurationsByName: Map<string, Configuration>): void {
+function assertRemovable(
+    names: string[],
+    kept: string[],
+    configurationsByName: ReadonlyMap<string, Configuration>,
+): void {
     for (const configuration of names) {
         const chain = kept
             .map((name) => findRequirementChain(configuration, name, configurationsByName))
@@ -42,7 +46,7 @@ function assertRemovable(names: string[], kept: string[], configurationsByName: 
 
 function removeUnusedSettings(
     table: TomlTable,
-    configurationsByName: Map<string, Configuration>,
+    configurationsByName: ReadonlyMap<string, Configuration>,
     scopePath: string,
 ): string {
     const edited = buildSettings(settingsSchema.parse(table), table);
@@ -66,7 +70,12 @@ function removeUnusedSettings(
 
 function listReturningConfigurations(
     session: Session,
-    removal: { scope: string; removed: string[]; written: string[]; configurationsByName: Map<string, Configuration> },
+    removal: {
+        scope: string;
+        removed: string[];
+        written: string[];
+        configurationsByName: ReadonlyMap<string, Configuration>;
+    },
 ): string[] {
     const { scope, removed, written, configurationsByName } = removal;
     const proposed = selectForInit({ repository: session.repository, configurationsByName, options: {} });
@@ -127,7 +136,7 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
 function findRequirementChain(
     required: string,
     from: string,
-    configurationsByName: Map<string, Configuration>,
+    configurationsByName: ReadonlyMap<string, Configuration>,
 ): string[] | undefined {
     const seen = new Set<string>();
     function findChain(start: string): string[] | undefined {

@@ -119,13 +119,15 @@ export function restoreCommandPaths(result: CheckResult, copyRoot: string, sourc
 Replace temporary revision paths with the repository path in reported commands and notes.
 
 @param session the working and temporary repository folders.
-@param result the result to update.
+@param result the result to read.
+@returns the result with repository paths.
 */
-export function normalizeResultPaths(session: Session, result: CheckResult): void {
-    if (session.root === session.toolsRoot) return;
+export function normalizeResultPaths(session: Session, result: CheckResult): CheckResult {
+    if (session.root === session.toolsRoot) return result;
+    let { command, note } = result;
     for (const root of new Set([session.root, realpathSync(session.root)])) {
-        if (result.command !== undefined)
-            result.command = result.command.map((argument) => argument.replaceAll(root, session.toolsRoot));
-        if (result.note !== undefined) result.note = result.note.replaceAll(root, session.toolsRoot);
+        command = command?.map((argument) => argument.replaceAll(root, session.toolsRoot));
+        note = note?.replaceAll(root, session.toolsRoot);
     }
+    return { ...result, ...(command !== undefined && { command }), ...(note !== undefined && { note }) };
 }

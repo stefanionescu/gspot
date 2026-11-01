@@ -26,7 +26,7 @@ Resolve configuration names to configurations in order, and throw for unknown na
 */
 export function selectConfigurations(
     names: string[],
-    configurationsByName: Map<string, Configuration>,
+    configurationsByName: ReadonlyMap<string, Configuration>,
 ): Configuration[] {
     const walk: RequirementWalk = {
         configurationsByName,
@@ -97,7 +97,10 @@ Refuse explicit edits to configurations that gspot selects itself.
 @param names the configurations that the command edits.
 @param configurationsByName the shipped configurations
 */
-export function assertConfigurationsEditable(names: string[], configurationsByName: Map<string, Configuration>): void {
+export function assertConfigurationsEditable(
+    names: string[],
+    configurationsByName: ReadonlyMap<string, Configuration>,
+): void {
     const name = names.find((each) => configurationsByName.get(each)?.always_selected === true);
     if (name !== undefined)
         throw new GspotError(
@@ -112,7 +115,10 @@ Refuse every unknown configuration named by a command.
 @param names the requested configuration names.
 @param configurationsByName every available configuration.
 */
-export function assertConfigurationsExist(names: string[], configurationsByName: Map<string, Configuration>): void {
+export function assertConfigurationsExist(
+    names: string[],
+    configurationsByName: ReadonlyMap<string, Configuration>,
+): void {
     const unknown = listUnknownConfigurations(
         names.map((name) => ({ name })),
         configurationsByName,
@@ -130,7 +136,7 @@ Include suggested configurations when their detection has evidence or they need 
 */
 export function expandSuggestions(
     names: string[],
-    configurationsByName: Map<string, Configuration>,
+    configurationsByName: ReadonlyMap<string, Configuration>,
     detected: Set<string>,
 ): string[] {
     const suggestions = names.flatMap((name) => configurationsByName.get(name)?.suggests ?? []);

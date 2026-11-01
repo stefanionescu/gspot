@@ -8,10 +8,10 @@ import { getTool, findPackagePin } from '#cli/tools/pins.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
-import type { Session, ConfiguredCheck } from '#cli/types/tools.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { ESLINT_MANIFEST_TOOL } from '#cli/config/repository/setup.ts';
+import type { SessionBase, ConfiguredCheck } from '#cli/types/tools.ts';
 import { isCoverageOff, hasCoverageArguments } from '#cli/engine/plan.ts';
 import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
 import { selectScopePath, listNestedScopes } from '#cli/repository/scopes.ts';
@@ -118,7 +118,7 @@ output does not depend on this machine.
 @param checks the plans for every supported system.
 @returns the configurations with only the tools they need.
 */
-export function selectToolConfigurations(session: Session, checks: ConfiguredCheck[]): Configuration[] {
+export function selectToolConfigurations(session: SessionBase, checks: ConfiguredCheck[]): Configuration[] {
     const licenses = checks
         .filter((each) => each.configuration?.name === LICENSES_CONFIGURATION)
         .flatMap((configured) => {

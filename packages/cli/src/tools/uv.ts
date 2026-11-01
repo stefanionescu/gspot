@@ -76,7 +76,7 @@ Require the project's Python environment before running checks that read its ins
 @returns the missing-environment result, or undefined when the check can run.
 */
 export function findMissingEnvironment(
-    session: Session,
+    session: Pick<Session, 'repository' | 'toolsRoot'>,
     planned: Pick<ConfiguredCheck, 'check' | 'scope'>,
 ): ProcessFailure | undefined {
     if (planned.check.needs?.includes('python-environment') !== true) return undefined;
