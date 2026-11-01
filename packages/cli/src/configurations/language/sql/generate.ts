@@ -1,7 +1,8 @@
-import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import { getTable, selectFormat, listIgnoredRules } from '#cli/settings/scopes.ts';
 
 import {
+    SQL_FILES,
     SQLFLUFF_CHECK,
     SQL_FILE_EXTENSIONS,
     SQLFLUFF_CAPITALISATION,
@@ -14,7 +15,7 @@ Build sqlfluff.cfg: the SQL dialect, formatting choices, and SQLFluff rule exclu
 @param planned the config file to build.
 */
 export function buildSqlfluffFile(planned: PlannedConfig): string {
-    const { format } = planned.scope.settings.tables;
+    const format = selectFormat(planned.scope.settings, SQL_FILES);
     const isAll = planned.level === 'all';
 
     const off = [...listIgnoredRules(planned.scope, SQLFLUFF_CHECK), ...(isAll ? [] : SQLFLUFF_DEFAULT_LEVEL_OFF)];

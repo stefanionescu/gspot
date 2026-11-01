@@ -31,9 +31,11 @@ init reads static Prettier options from supported JSON, YAML, or TOML files, the
 and `.editorconfig`. It copies the indent style, indent width, line width, quote style, semicolons, and trailing
 commas into `[format]`, and each Prettier `overrides` entry into a `[[format.override]]` record.
 
-For a repository that already uses Prettier, unspecified widths and quotes follow the defaults of Prettier: 2 spaces,
-80 columns, and double quotes. Without Prettier settings or `.editorconfig`, init writes no `[format]` table and
-the defaults of gspot apply: 4 spaces and 120 columns. Review the first `gspot check` before using `--fix`.
+For a repository that has code, unspecified widths and quotes follow the defaults of Prettier: 2 spaces, 80 columns,
+and double quotes. Python files follow the defaults of Ruff, through a `[[format.override]]` record: 4 spaces, 88
+columns, and double quotes. Swift and SQL files keep the defaults of their formatters in the same way. Only a
+repository without code gets the defaults of gspot: 4 spaces, 120 columns, and single quotes. Review the first
+`gspot check` before using `--fix`.
 
 For Python, init reads the quote style from `[tool.ruff.format]` in `pyproject.toml`, or from `[format]` in a Ruff
 settings file. It does not execute a JavaScript Prettier configuration. The plan names config files that need your

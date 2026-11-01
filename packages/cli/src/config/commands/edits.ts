@@ -1,5 +1,7 @@
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { SWIFT_FILES } from '#cli/config/configurations/swift.ts';
 import { GITATTRIBUTES_FILE } from '#cli/config/repository/files.ts';
+import { SQL_FILES, PYTHON_FILES } from '#cli/config/configurations/python.ts';
 import { GITHUB_WORKFLOW, GITLAB_WORKFLOW, HOOKS_CHANGED_NOTE, TOOLS_CHANGED_NOTE } from '#cli/config/generation.ts';
 
 export const IGNORE_CHECK_MESSAGE = 'Run gspot ignore <check> --reason "<why>".';
@@ -115,7 +117,19 @@ export const PRETTIER_FILE_FORMATS: Readonly<Record<string, 'yaml' | 'json' | 't
     '.prettierrc.toml': 'toml',
 };
 
-export const PRETTIER_DEFAULTS = { tabWidth: 2, printWidth: 80, singleQuote: false } as const;
+export const PRETTIER_DEFAULTS = { tabWidth: 2, printWidth: 80, singleQuote: false, useTabs: false } as const;
+
+export const FORMATTER_DEFAULTS = [
+    {
+        tag: 'python',
+        paths: PYTHON_FILES,
+        format: { indent_style: 'space', indent_width: 4, print_width: 88, quotes: 'double' },
+    },
+    { tag: 'swift', paths: SWIFT_FILES, format: { indent_style: 'space', indent_width: 4, print_width: 120 } },
+    { tag: 'sql', paths: SQL_FILES, format: { indent_style: 'space', indent_width: 4, print_width: 80 } },
+] as const;
+
+export const PROSE_TAGS: ReadonlySet<string> = new Set(['text', 'markdown']);
 
 export const BUNDLER_PACKAGES: ReadonlySet<string> = new Set([
     'esbuild',

@@ -185,6 +185,26 @@ export function getTable<Name extends keyof TableValues>(
 }
 
 /**
+Read the format settings of one language: the scope's values, with its override for that language's files on top.
+
+@param scopeSettings the merged scope data.
+@param files the file patterns of the language.
+*/
+export function selectFormat(scopeSettings: ScopeSettings, files: readonly string[]): TableValues['format'] {
+    const { format } = scopeSettings.tables;
+    const override = format.override.find(({ paths }) => paths.every((path) => files.includes(path)));
+    if (override === undefined) return format;
+    return {
+        ...format,
+        indent_style: override.indent_style ?? format.indent_style,
+        indent_width: override.indent_width ?? format.indent_width,
+        print_width: override.print_width ?? format.print_width,
+        trailing_commas: override.trailing_commas ?? format.trailing_commas,
+        quotes: override.quotes ?? format.quotes,
+    };
+}
+
+/**
 Read a language's limit, falling back to the scope's general limit.
 
 @param scopeSettings the merged scope data.

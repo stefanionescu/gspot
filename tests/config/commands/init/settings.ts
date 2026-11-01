@@ -82,8 +82,15 @@ export const PRETTIER_FORMAT_OPTIONS = {
     quotes: 'double',
     override: [
         { paths: ['**/*.ts', 'src/**/*.css'], indent_width: 2, print_width: 100 },
-        { paths: ['**/*.py'], quotes: 'single' },
+        { paths: ['**/*.py'], print_width: 88, quotes: 'single' },
     ],
+} as const;
+
+export const WORKSPACE_PYTHON_FILES = {
+    'package.json': '{"private":true,"workspaces":["service"]}',
+    'source.ts': 'export {};\n',
+    'service/package.json': '{"private":true}',
+    'service/main.py': 'value = 1\n',
 } as const;
 
 export const FORMAT_WORKSPACE_FILES = {

@@ -1,8 +1,9 @@
 import { stringify } from 'yaml';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { getTable, getLimit, listIgnoredRules } from '#cli/settings/scopes.ts';
+import { getTable, getLimit, selectFormat, listIgnoredRules } from '#cli/settings/scopes.ts';
 
 import {
+    SWIFT_FILES,
     SWIFTLINT_CHECK,
     SWIFTLINT_OPT_IN,
     SWIFTLINT_ANALYZER,
@@ -14,7 +15,7 @@ import {
 } from '#cli/config/configurations/swift.ts';
 
 function buildSwiftlintOptions(planned: PlannedConfig, offSet: Set<string>) {
-    const { format } = planned.scope.settings.tables;
+    const format = selectFormat(planned.scope.settings, SWIFT_FILES);
     const options = {
         line_length: { warning: format.print_width, error: format.print_width, ignores_urls: true },
         file_length: {

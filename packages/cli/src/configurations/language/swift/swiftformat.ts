@@ -3,10 +3,11 @@ import { find } from '#cli/system/files/reads.ts';
 import type { RunCache } from '#cli/types/system.ts';
 import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
 import { PBXPROJ_FILE, PACKAGE_SWIFT } from '#cli/config/parsers.ts';
-import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import { getTable, selectFormat, listIgnoredRules } from '#cli/settings/scopes.ts';
 
 import {
+    SWIFT_FILES,
     SWIFTFORMAT_CHECK,
     SWIFTFORMAT_COMMAS,
     SWIFT_TOOLS_VERSION,
@@ -33,7 +34,7 @@ Build swiftformat: the SwiftFormat settings of the repository.
 export function buildSwiftformatFile(planned: PlannedConfig): string {
     const { scope } = planned;
     const { cache } = planned.session;
-    const { format } = scope.settings.tables;
+    const format = selectFormat(scope.settings, SWIFT_FILES);
     const isAll = planned.level === 'all';
     const version = readSwiftVersion(cache, scope.path, getTable(scope.settings, 'swift').xcode_project ?? '');
     const ignored = listIgnoredRules(scope, SWIFTFORMAT_CHECK);

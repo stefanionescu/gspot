@@ -5,10 +5,10 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { UV_LOCKFILE } from '#cli/config/manifests.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { DEFAULT_QUOTES } from '#cli/config/configurations/general.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { JSON_INDENT, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
-import type { PlannedConfig, FormatSettings } from '#cli/types/configurations/language.ts';
-import { getTable, getLimit, isEveryPath, listIgnores, listIgnoredRules } from '#cli/settings/scopes.ts';
+import { getTable, getLimit, isEveryPath, listIgnores, selectFormat, listIgnoredRules } from '#cli/settings/scopes.ts';
 
 import {
     RUFF_CHECK,
@@ -30,22 +30,6 @@ function listIgnoredGlobs(planned: PlannedConfig, checkId: string, root: string)
     );
     const own = listCheckIgnoreSections(planned.scope.settings, checkId).flatMap(({ patterns }) => patterns);
     return [...shared, ...own].map((path) => `${root}/${path}`);
-}
-
-function selectPythonFormat(
-    scopeSettings: PlannedConfig['scope']['settings'],
-): Pick<FormatSettings, 'indent_style' | 'indent_width' | 'print_width' | 'quotes'> {
-    const format = scopeSettings.tables.format;
-    const override = format.override.find(({ paths }) =>
-        paths.every((path) => (PYTHON_FILES as readonly string[]).includes(path)),
-    );
-    if (override === undefined) return format;
-    return {
-        indent_style: override.indent_style ?? format.indent_style,
-        indent_width: override.indent_width ?? format.indent_width,
-        print_width: override.print_width ?? format.print_width,
-        quotes: override.quotes ?? format.quotes,
-    };
 }
 
 /**
@@ -83,7 +67,7 @@ Build ruff.toml: the Ruff lint rules, import settings, and source exclusions.
 @param planned the config file to build.
 */
 export function buildRuffFile(planned: PlannedConfig): string {
-    const format = selectPythonFormat(planned.scope.settings);
+    const format = selectFormat(planned.scope.settings, PYTHON_FILES);
     const root = posix.relative(posix.dirname(planned.targetPath), '.');
     const pythonScopePath = posix.join(root, planned.scope.path);
     const ruffRules = planned.scope.configurations.flatMap((configuration) => [

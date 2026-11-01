@@ -116,6 +116,8 @@ export const SQLFLUFF_CAPITALISATION = {
 
 export const SQL_FILE_EXTENSIONS = '.sql,.pgsql,.psql';
 
+export const SQL_FILES = ['**/*.sql', '**/*.pgsql', '**/*.psql'] as const;
+
 export const SQLFLUFF_DEFAULT_LEVEL_OFF = ['AM05', 'AM09', 'CV11', 'ST05', 'ST07', 'ST09'] as const;
 
 export const SQLFLUFF_CHECK = 'sql/sqlfluff';

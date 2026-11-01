@@ -98,6 +98,8 @@ export const SWIFTFORMAT_OPTIONS = {
 
 export const SWIFTFORMAT_CHECK = 'swift/swiftformat';
 
+export const SWIFT_FILES = ['**/*.swift'] as const;
+
 export const SWIFTLINT_FUNCTION_NESTING = 2;
 
 export const SWIFTLINT_COMMENTS = {

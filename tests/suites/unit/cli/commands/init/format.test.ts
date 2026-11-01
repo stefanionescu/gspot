@@ -14,6 +14,7 @@ import type { FormatSettings } from '#cli/types/configurations/language.ts';
 import {
     FORMAT_FILE_CASES,
     SCOPE_FORMAT_FILES,
+    WORKSPACE_PYTHON_FILES,
     FORMAT_WORKSPACE_FILES,
     PRETTIER_FORMAT_OPTIONS,
     INVALID_PRETTIER_OPTIONS,
@@ -126,4 +127,42 @@ test('init preserves tabs, semicolons and trailing commas from Prettier', async 
         semicolons: false,
         trailing_commas: 'none',
     });
+});
+
+test('init gives code without a style config the defaults of each formatter', async () => {
+    await using sandbox = await testdir({
+        'main.py': 'value = 1\n',
+        'App.swift': 'let value = 1\n',
+        'schema.sql': 'select 1;\n',
+        'source.ts': 'export {};\n',
+    });
+    commitAll(sandbox.path);
+    const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(parse((JSON.parse(result.stdout) as InitJson).settings) as TomlTable).toHaveProperty('format', {
+        indent_width: 2,
+        print_width: 80,
+        quotes: 'double',
+        override: [
+            { paths: ['**/*.py'], indent_width: 4, print_width: 88 },
+            { paths: ['**/*.swift'], indent_width: 4, print_width: 120 },
+            { paths: ['**/*.sql', '**/*.pgsql', '**/*.psql'], indent_width: 4 },
+        ],
+    });
+});
+
+test('init writes the formatter defaults once, for the Python files of every scope', async () => {
+    await using sandbox = await testdir(WORKSPACE_PYTHON_FILES);
+    commitAll(sandbox.path);
+    const options = await readInitFormatOptions(sandbox.path, ['init', '--configurations', 'format']);
+    const override = [{ paths: ['**/*.py'], indent_width: 4, print_width: 88 }];
+    expect(options).toMatchObject([{ override }, { override }]);
+});
+
+test('init keeps the house style for a repository without code', async () => {
+    await using sandbox = await testdir({ 'README.md': '# Project\n', '.gitignore': 'dist/\n' });
+    commitAll(sandbox.path);
+    const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(parse((JSON.parse(result.stdout) as InitJson).settings) as TomlTable).not.toHaveProperty('format');
 });
