@@ -17,7 +17,7 @@ export function listMisePins(configurations: Configuration[]): MiseToolPin[] {
     const tools = listDistinctTools(configurations);
     const pins = tools.flatMap((tool) => findMisePin(tool) ?? []);
     if (tools.some((tool) => findPackagePin(tool)?.kind === 'python') && tools.every((tool) => tool.name !== UV_TOOL)) {
-        pins.push(getUvPin());
+        pins.push(findMisePin(getTool(readConfigurations().values(), UV_TOOL)) as MiseToolPin);
     }
     return pins;
 }
@@ -40,16 +40,6 @@ export function buildMiseInstall(configurations: Configuration[]): GeneratedFile
         path: GSPOT_PATHS.miseProject,
         content: stringify({ tools, settings: { lockfile: true } }, { ...CONFIG_TOML_FORMAT, inlineTableStart: 1 }),
     };
-}
-
-/**
-Get the mise pin that the shipped Python configuration declares for uv.
-
-@returns the uv installer pin.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The mise pins and the CI install take the uv pin of the Python configuration through it.
-export function getUvPin(): MiseToolPin {
-    return findMisePin(getTool(readConfigurations().values(), UV_TOOL)) as MiseToolPin;
 }
 
 /**

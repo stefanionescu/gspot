@@ -4,8 +4,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { createRunCache } from '#cli/system/cache.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
+import { find, read, readBytes } from '#cli/system/files/reads.ts';
 import { rm, link, mkdir, symlink, writeFile } from 'node:fs/promises';
-import { find, read, readBytes, readCachedPrefix } from '#cli/system/files/reads.ts';
 
 test('reads tell a missing optional file, required bytes, and invalid UTF-8 apart', async () => {
     await using sandbox = await testdir();
@@ -32,7 +32,7 @@ test('reads tell a missing optional file, required bytes, and invalid UTF-8 apar
     expect(() => read(createRunCache(sandbox.path), 'source.txt')).toThrow(failure);
     await writeFile(target, 'valid café\n');
     expect(read(sandbox.path, 'source.txt')).toBe('valid café\n');
-    expect(readCachedPrefix(createRunCache(sandbox.path), 'source.txt', 5)).toStrictEqual(Buffer.from('valid'));
+    expect(readBytes(createRunCache(sandbox.path), 'source.txt', { limit: 5 })).toStrictEqual(Buffer.from('valid'));
     await rm(target);
     await mkdir(target);
     const unreadable = matchFields<GspotError>({
@@ -69,7 +69,7 @@ test('reads refuse a link chain that leaves the folder and work after the link i
     expect(() => read(root, 'linked.txt')).toThrow(
         matchFields({ message: 'linked.txt links to a file outside the repository. Replace the link with the file.' }),
     );
-    expect(() => readCachedPrefix(createRunCache(root), 'linked.txt', 4)).toThrow(
+    expect(() => readBytes(createRunCache(root), 'linked.txt', { limit: 4 })).toThrow(
         'linked.txt links to a file outside the repository. Replace the link with the file.',
     );
     await rm(join(root, 'linked.txt'));

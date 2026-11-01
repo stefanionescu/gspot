@@ -36,9 +36,14 @@ function findFixFailure(planned: PlannedCheck, result: SpawnResult): string | un
     return detail === '' ? `${planned.check.id} exited ${String(result.code)}` : detail;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Each fixer round and each run reads the same paths of a planned check through it.
+function listPlannedPaths(planned: PlannedCheck): string[] {
+    return [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
+}
+
 async function runFixCommands(session: Session, planned: PlannedCheck, setup: CommandLaunch): Promise<FixResult> {
     const check = planned.check.id;
-    const paths = [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
+    const paths = listPlannedPaths(planned);
     const before = readContents(setup.root, paths);
     let note: string | undefined;
     for (const command of setup.commandLines) {
@@ -166,15 +171,7 @@ async function runFixerRounds(
         firstBefore ??= before;
         for (const { check, index } of pending) {
             results.set(index, mergeResults(results.get(index), await runFixer(session, check, selectCheckCode)));
-            fixedContents.set(
-                index,
-                readContents(session.root, [
-                    ...new Set([
-                        ...(checks[index] as PlannedCheck).files.map((file) => file.path),
-                        ...(checks[index] as PlannedCheck).triggerPaths,
-                    ]),
-                ]),
-            );
+            fixedContents.set(index, readContents(session.root, listPlannedPaths(checks[index] as PlannedCheck)));
         }
         after = readContents(session.root, paths);
         pending = checks.flatMap((check, index) => {
@@ -239,11 +236,9 @@ export async function runFixers(
     selectCheckCode: RunOptions['selectCheckCode'],
 ): Promise<FixReport> {
     const checks = planned.filter((check) => check.check.fix !== undefined);
-    const paths = [
-        ...new Set(
-            checks.flatMap((check) => [...new Set([...check.files.map((file) => file.path), ...check.triggerPaths])]),
-        ),
-    ].toSorted((a, b) => compareText(a, b));
+    const paths = [...new Set(checks.flatMap((check) => listPlannedPaths(check)))].toSorted((a, b) =>
+        compareText(a, b),
+    );
     const rounds = await runFixerRounds(session, checks, paths, selectCheckCode);
     const { before, after, results } = rounds;
     const changed = listChangedPaths(before, after);

@@ -26,6 +26,11 @@ import {
     JSCPD_REPORT_FILE,
 } from '#cli/config/configurations/general.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Both files of a clone convert their path through it.
+function toRepositoryPath(root: string, name: string): string {
+    return convertToPosixPath(isAbsolute(name) ? relative(toNamespacedPath(root), toNamespacedPath(name)) : name);
+}
+
 /**
 Runs jscpd over the scope and reports the clones.
 
@@ -68,17 +73,9 @@ export async function checkJscpd(session: CheckSession, planned: PlannedCheck): 
     const report = parseToolOutput(JSCPD_TOOL, bytes.toString('utf8'), jscpdOutputSchema);
 
     return report.duplicates.flatMap((clone): CheckFinding[] => {
-        const secondName = clone.secondFile.name;
-        const file = convertToPosixPath(
-            isAbsolute(secondName)
-                ? relative(toNamespacedPath(session.root), toNamespacedPath(secondName))
-                : secondName,
-        );
+        const file = toRepositoryPath(session.root, clone.secondFile.name);
         if (!owned.has(file)) return [];
-        const firstName = clone.firstFile.name;
-        const first = convertToPosixPath(
-            isAbsolute(firstName) ? relative(toNamespacedPath(session.root), toNamespacedPath(firstName)) : firstName,
-        );
+        const first = toRepositoryPath(session.root, clone.firstFile.name);
         const other = `${first}:${String(clone.firstFile.start)}`;
         return [
             {

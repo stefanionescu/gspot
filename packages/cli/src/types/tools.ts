@@ -167,6 +167,7 @@ export type ToolPackageManager = PackageManager & {
 export type ToolInstall = {
     session: Session;
     packageManager: ToolPackageManager | undefined;
+    pythonSettings: PythonIndexSettings;
     releaseAgeDays: number;
     writer: Files;
     generated: Pick<Generation, 'files'>;

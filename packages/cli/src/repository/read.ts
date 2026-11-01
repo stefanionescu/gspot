@@ -9,10 +9,10 @@ import { detectSwiftTags } from '#cli/parsers/code/swift.ts';
 import { detectScopeFolders } from '#cli/repository/scopes.ts';
 import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
+import { read, find, readBytes } from '#cli/system/files/reads.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { runGit, isNotRepository } from '#cli/repository/git/run.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
-import { read, find, readCachedPrefix } from '#cli/system/files/reads.ts';
 import { listGitFiles, listTrackedFiles } from '#cli/repository/files/tracked.ts';
 import { INDEX_LINE, GIT_LOCALE, TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/repository/git.ts';
 
@@ -73,7 +73,9 @@ export async function listRepositoryFiles(cache: RunCache): Promise<RepositoryLi
     );
     const files = listedFiles.map((listedFile) => ({
         ...listedFile,
-        prefix: listedFile.isSymlink ? Buffer.alloc(0) : readCachedPrefix(cache, listedFile.path, FILE_PREFIX_BYTES),
+        prefix: listedFile.isSymlink
+            ? Buffer.alloc(0)
+            : readBytes(cache, listedFile.path, { limit: FILE_PREFIX_BYTES }),
     }));
     return { root, index, attributes, files, unreadablePaths };
 }

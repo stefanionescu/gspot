@@ -173,11 +173,10 @@ export async function planPythonLockfile(
     toolProjectFile: GeneratedFile,
     executable: string,
 ): Promise<ReplacementRequest> {
-    const { root } = install.session;
     const project = buildPythonProjectTable(install.session.toolConfigurations);
     const previous = install.writer.read(GSPOT_PATHS.uvLockfile);
     const saved = previous?.bytes.toString('utf8');
-    const { settings: indexes, credentials } = readPythonSettings(root);
+    const { settings: indexes, credentials } = install.pythonSettings;
     if (isPythonLockfileFresh(project, saved, indexes, install.releaseAgeDays)) {
         assertCredentialFreeLockfile(saved, credentials, UV_LOCKFILE_CREDENTIAL_MESSAGE);
         return {
@@ -221,7 +220,7 @@ export async function installPythonTools(
     const runFolder = join(root, GSPOT_FOLDER);
 
     using settings = createTemporaryFolder();
-    const { settings: indexes, credentials } = readPythonSettings(root);
+    const { settings: indexes, credentials } = install.pythonSettings;
     writeUvSettings(settings.path, indexes, install.releaseAgeDays);
     await runUv(install, {
         runFolder,

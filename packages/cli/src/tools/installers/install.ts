@@ -4,6 +4,7 @@ import { MISE_TOOL } from '#cli/config/tools/installers.ts';
 import { installHooks } from '#cli/tools/installers/hooks.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
+import { readPythonSettings } from '#cli/tools/installers/pypi.ts';
 import { installGrammars } from '#cli/tools/installers/grammars.ts';
 import { installValePackages } from '#cli/tools/installers/vale.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
@@ -116,6 +117,7 @@ function buildToolInstall(
     return {
         session,
         packageManager: readInstallPackageManager(session),
+        pythonSettings: readPythonSettings(session.root),
         releaseAgeDays: getTable(getRootScope(session.scopes).settings, 'dependencies').min_release_age_days,
         ...input,
         tools,

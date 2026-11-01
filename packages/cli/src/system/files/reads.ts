@@ -29,29 +29,19 @@ function readFilePrefix(path: string, limit: number): Buffer {
 }
 
 /**
-Read the first bytes of a file, with the resolved root of the run and any cached bytes.
-
-@param cache the run cache.
-@param path the root-relative file.
-@param limit the maximum byte count.
-@returns the bytes read.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Doctor and the repository read take a file prefix through the run cache and the link check of this module.
-export function readCachedPrefix(cache: RunCache, path: string, limit: number): Buffer {
-    const held = cache.sources.get(path);
-    return held === undefined ? readFilePrefix(readContainedPath(cache.root, path), limit) : held.subarray(0, limit);
-}
-
-/**
 Read file bytes inside a folder, and refuse a link outside it. A run cache keeps the bytes of the first read.
 
 @param source the folder of the relative path, or the run cache of that folder.
 @param path the root-relative file.
+@param options the limit of a read that needs only the first bytes and keeps nothing.
+@param options.limit the maximum byte count.
 @returns the file bytes.
 */
-export function readBytes(source: string | RunCache, path: string): Buffer {
+export function readBytes(source: string | RunCache, path: string, options?: { limit: number }): Buffer {
     if (typeof source === 'string') return readFileSync(readContainedPath(realpathSync(source), path));
     const held = source.sources.get(path);
+    if (options !== undefined)
+        return held?.subarray(0, options.limit) ?? readFilePrefix(readContainedPath(source.root, path), options.limit);
     if (held !== undefined) return held;
     const bytes = readFileSync(readContainedPath(source.root, path));
     source.sources.set(path, bytes);

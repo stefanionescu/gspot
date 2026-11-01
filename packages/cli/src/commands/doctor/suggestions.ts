@@ -1,6 +1,6 @@
 import { isInScope } from '#cli/repository/scopes.ts';
+import { readBytes } from '#cli/system/files/reads.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import { readCachedPrefix } from '#cli/system/files/reads.ts';
 import { BANNER_BYTES } from '#cli/config/repository/files.ts';
 import { isEditedInPlace } from '#cli/repository/conflicts.ts';
 import type { Session, Generation } from '#cli/types/tools.ts';
@@ -135,7 +135,7 @@ function listUnownedConfigs(
         .filter((config) => !isEditedInPlace(config, generated.managedKeys))
         .filter(
             (config) =>
-                !hasGeneratedHeader(readCachedPrefix(session.cache, config.path, BANNER_BYTES).toString('utf8')),
+                !hasGeneratedHeader(readBytes(session.cache, config.path, { limit: BANNER_BYTES }).toString('utf8')),
         )
         .flatMap((config) => {
             const configuration = session.configurationsByName
