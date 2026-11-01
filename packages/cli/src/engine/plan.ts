@@ -22,12 +22,16 @@ import {
     COVERAGE_INI_SECTION,
 } from '#cli/config/engine.ts';
 
-function listScopeChecks(settings: Settings, scope: Scope): ScopeCheck[] {
+function listScopeChecks(settings: Settings, scope: Scope, root: Scope): ScopeCheck[] {
     const isRoot = scope.path === '';
+    const atRoot = new Set(root.configurations.map(({ name }) => name));
     const configuredChecks = scope.configurations.flatMap((configuration) =>
         configuration.checks
             .map((check) => ({ check, configuration }))
-            .filter((configured) => isRoot || !isRootOnlyCheck(configuration, configured.check)),
+            .filter(
+                (configured) =>
+                    isRoot || !atRoot.has(configuration.name) || !isRootOnlyCheck(configuration, configured.check),
+            ),
     );
     if (!isRoot) return configuredChecks;
     const own = Object.values(settings.commandChecks).map((commandCheck) => ({
@@ -90,7 +94,8 @@ function skipReplacedChecks(planned: PlannedCheck[]): PlannedCheck[] {
 
 function planScope(planned: PlannedScope, plannedRepositoryChecks: Set<string>): PlannedCheck[] {
     const checks: PlannedCheck[] = [];
-    const wanted = listScopeChecks(planned.session.settings, planned.scope).filter((configured) =>
+    const root = getRootScope(planned.session.scopes);
+    const wanted = listScopeChecks(planned.session.settings, planned.scope, root).filter((configured) =>
         isWanted(configured.check, planned.options),
     );
     for (const configured of wanted) {
@@ -235,7 +240,7 @@ export function listEnabledChecks(scopes: Scope[], settings: Settings): Configur
     const root = getRootScope(scopes);
     const singleRuns = new Set<string>();
     return scopes.flatMap((scope) =>
-        listScopeChecks(settings, scope).flatMap(({ check, configuration }) => {
+        listScopeChecks(settings, scope, root).flatMap(({ check, configuration }) => {
             if (!isWanted(check, { stage: 'any' }) || findSettingsSkip(settings, scope, check) !== undefined) return [];
             const rootOnly = (ROOT_RUNS as readonly string[]).includes(check.runs);
             if (rootOnly && singleRuns.has(check.id)) return [];

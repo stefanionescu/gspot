@@ -24,9 +24,9 @@ import {
     STRING_SETTING_VALUES,
 } from '#tests/config/commands/edits.ts';
 
-test('set writes and unset removes a setting of a configuration that detection selects from package.json', async () => {
+test('set writes and unset removes a setting of a selected configuration', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([]),
+        'gspot.toml': buildSandboxSettings(['licenses']),
         'package.json': '{ "name": "example", "private": true }\n',
     });
     const set = await runGspot(sandbox.path, ['set', 'licenses.allowed', 'MIT']);

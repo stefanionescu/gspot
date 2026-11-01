@@ -1,5 +1,7 @@
 import type { Host } from '#cli/types/tools.ts';
+import { ROOT_RUNS } from '#cli/config/engine.ts';
 import { formatNameList } from '#cli/system/text.ts';
+import { findValueAt } from '#cli/system/tables.ts';
 import { findMissingBuild } from '#cli/tools/pins.ts';
 import { LIMIT_READERS } from '#cli/manifests/limits.ts';
 import type { Tool, Check } from '#cli/types/manifests.ts';
@@ -57,10 +59,13 @@ function findIgnoreSkip(scope: Scope, check: Check): SettingsSkip | undefined {
     return { cause: 'ignore', note: `turned off by an ignore in gspot.toml: ${ignored.reason}` };
 }
 
-function findEmptySetting(scope: Scope, check: Check): string | undefined {
+function findEmptySetting(settings: Settings, scope: Scope, check: Check): string | undefined {
     const setting = check.when?.setting;
-    if (setting === undefined) return undefined;
-    return isSettingEmpty(scope.settings.valuesByKey[setting]) ? setting : undefined;
+    if (setting === undefined || !isSettingEmpty(scope.settings.valuesByKey[setting])) return undefined;
+    const isSetInScope =
+        (ROOT_RUNS as readonly string[]).includes(check.runs) &&
+        settings.scopes.values().some(({ written }) => !isSettingEmpty(findValueAt(written, setting.split('.'))));
+    return isSetInScope ? undefined : setting;
 }
 
 function findConfigSkip(settings: Settings, scope: Scope, check: Check): SettingsSkip | undefined {
@@ -123,7 +128,7 @@ export function findSettingsSkip(settings: Settings, scope: Scope, check: Check)
     if (ignored !== undefined) return ignored;
     const ruleFiles = findConfigSkip(settings, scope, check);
     if (ruleFiles !== undefined) return ruleFiles;
-    const setting = findEmptySetting(scope, check);
+    const setting = findEmptySetting(settings, scope, check);
     return setting === undefined ? undefined : { cause: 'setting', note: `needs the setting ${setting}` };
 }
 

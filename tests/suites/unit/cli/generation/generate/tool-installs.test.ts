@@ -30,8 +30,7 @@ test.each([...LICENSE_TOOL_CASES])(
     async ({ configurations }) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([...configurations], {
-                tables: '[[licenses.allowed_package]]\nname = "example"\nversion = "1.0.0"\nreason = "Reviewed installed metadata."\n',
-                scopes: [{ path: 'docs', configurations: ['licenses'] }],
+                tables: '[[licenses.allowed_package]]\nname = "example"\nversion = "1.0.0"\nreason = "Reviewed installed metadata."\n[[scope]]\npath = "docs"\nconfigurations = ["licenses"]\n[scope.licenses]\nallowed = ["MIT"]\n',
             }),
             'docs/package.json': '{"name":"docs","private":true}',
         });
