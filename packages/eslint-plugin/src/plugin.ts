@@ -78,6 +78,7 @@ import { noRedundantOptional } from './rules/no-redundant-optional.ts';
 import { noSelectorParameter } from './rules/no-selector-parameter.ts';
 import { noUndefinedArgument } from './rules/no-undefined-argument.ts';
 import { preferBooleanReturn } from './rules/prefer-boolean-return.ts';
+import { preferReadonlyProps } from './rules/prefer-readonly-props.ts';
 import { noCommentsInImports } from './rules/no-comments-in-imports.ts';
 import { noDuplicateTestRows } from './rules/no-duplicate-test-rows.ts';
 import { noSetterInComponent } from './rules/no-setter-in-component.ts';
@@ -195,6 +196,7 @@ const rules = {
     'no-misplaced-assertions': noMisplacedAssertions,
     'no-cypress-then-assertions': noCypressThenAssertions,
     'no-component-debounce': noComponentDebounce,
+    'prefer-readonly-props': preferReadonlyProps,
     'no-setter-in-component': noSetterInComponent,
     'no-self-state-update': noSelfStateUpdate,
     'no-generated-keys': noGeneratedKeys,

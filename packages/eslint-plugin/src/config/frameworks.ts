@@ -99,3 +99,14 @@ export const SPACES = /\s+/gu;
 
 export const CLASS_OUTPUT_METHOD =
     ':matches(ClassDeclaration, ClassExpression) > ClassBody > :matches(MethodDefinition, PropertyDefinition)[computed=false][static=false][key.name="render"] > :matches(FunctionExpression, ArrowFunctionExpression)';
+
+export const COMPONENT_DECLARATION = 'FunctionDeclaration[id.name=/^[A-Z]/][params.length=1]';
+
+export const JSX_NODE_PREFIX = 'JSX';
+
+export const READONLY_UTILITY = 'Readonly';
+
+export const READONLY_MAPPED = /^\{\s*(?:\+\s*)?readonly\s*\[/u;
+
+export const READONLY_MEMBER =
+    /^(?:(?:public|protected|private|static|declare|override|abstract)\s+)*(?:readonly|get)\s+[^\s:?(]/u;
