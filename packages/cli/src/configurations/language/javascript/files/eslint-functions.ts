@@ -1,3 +1,4 @@
+// eslint-disable-next-line n/no-unpublished-import -- reason: This module runs from .gspot, and the tool project there installs picomatch through ESLint.
 import picomatch from 'picomatch';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

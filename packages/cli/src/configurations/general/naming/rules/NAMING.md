@@ -16,7 +16,8 @@ concept reads alike throughout the program.
   snake_case for Python packages; PascalCase for Swift folders, which mirror type names.
 - On the wire: camelCase JSON fields and kebab-case URL segments. Log event names and fields: `snake_case`, unless an
   existing logging interface defines their spelling.
-- Environment variables: `UPPER_SNAKE_CASE`, with no application prefix.
+- Environment variables: `UPPER_SNAKE_CASE`. An application's own variables take no prefix; a variable that a tool writes
+  into another project's environment takes the tool's prefix.
 - Constants: a module-level constant bound to a literal or a frozen object uses `UPPER_SNAKE_CASE` in TypeScript,
   JavaScript, Python, and Bash, and camelCase in Swift.
 
