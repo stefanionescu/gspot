@@ -86,6 +86,7 @@ target = "semgrep.yml"
 tool = "semgrep"
 
 [[check]]
+cwd = "scope"
 example = "`const count: number = \"one\";` reports an incompatible assignment. Assign a number, such as `const count: number = 1;`."
 help = "Fix the first error tsc prints; later errors often come from the same mistake."
 instead_of = "typescript/tsc"
@@ -93,5 +94,5 @@ name = "tsc"
 runs = "scope"
 stage = "push"
 summary = "Has Next.js write its types, then type-checks the app with the strict compiler options."
-tool = "next"
+tool = ["tsc", "next"]
 why = "A fresh clone holds no next-env.d.ts and no route types, so a plain tsc run fails on imports the framework resolves."

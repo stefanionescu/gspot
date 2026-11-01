@@ -48,10 +48,6 @@ summary = "Runs tsc on each tsconfig project, or on the TypeScript files of a sc
 tool = "tsc"
 why = "A type error left in a file can crash the program at run time, though the editor already showed it."
 
-[check.output]
-format = "regex"
-pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"
-
 [[check]]
 example = "A tsconfig with `strict` set to `false` reports a finding. Set `strict` to `true`, and fix the new type errors."
 help = "Turn on the reported compiler option in your tsconfig."

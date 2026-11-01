@@ -13,8 +13,8 @@ import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { readPushedRange } from '#cli/repository/revisions/push.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
+import { listPushedCommits } from '#cli/configurations/pushed-commits.ts';
 import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
-import { getSiblingCommand, listPushedCommits } from '#cli/configurations/pushed-commits.ts';
 import { listPythonEnvironmentReads, listJavascriptEnvironmentReads } from '#cli/parsers/code/environment.ts';
 
 import {
@@ -22,8 +22,6 @@ import {
     MISSING_KEY_RULE,
     GITLEAKS_LOG_FLAG,
     GITLEAKS_LOG_OPTIONS,
-    GITLEAKS_STAGED_FLAG,
-    GITLEAKS_STAGED_CHECK,
     ENVIRONMENT_READ_LANGUAGES,
 } from '#cli/config/configurations/general.ts';
 
@@ -68,15 +66,16 @@ Scans each pushed commit with Gitleaks, so a secret removed before the last comm
 @param planned the configured check and selected scope files.
 */
 export async function checkGitleaksPushed(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
-    const command = getSiblingCommand(planned, GITLEAKS_STAGED_CHECK).filter(
-        (argument) => argument !== GITLEAKS_STAGED_FLAG,
-    );
     const commits = await listPushedCommits(session, planned);
     if (!Array.isArray(commits)) return commits;
     if (commits.length === 0) return buildBaseResult(planned, session);
     const range = planned.range ?? (await readPushedRange(session.toolsRoot, session.cancelSignal));
     return runCommandCheck(session, planned, {
-        command: [...command, GITLEAKS_LOG_FLAG, `${GITLEAKS_LOG_OPTIONS} ${range.join(' ')} --`],
+        command: [
+            ...(planned.check.command as string[]),
+            GITLEAKS_LOG_FLAG,
+            `${GITLEAKS_LOG_OPTIONS} ${range.join(' ')} --`,
+        ],
     });
 }
 

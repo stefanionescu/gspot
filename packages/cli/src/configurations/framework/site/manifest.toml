@@ -55,7 +55,6 @@ example = "A template that writes `<img src=\"logo.png\">` without alternative t
 help = "Fix the template or the content that writes the markup the rule names."
 name = "html-validate"
 needs = ["build"]
-output = { format = "json", children = "messages", fields = { file = "filePath", line = "line", column = "column", rule = "ruleId", message = "message" } }
 runs = "scope"
 stage = "push"
 summary = "Validates every built page with html-validate."
@@ -78,7 +77,6 @@ example = "A link to `/missing/` reports a broken destination when that page doe
 help = "Fix the link, or the page it points at."
 name = "lychee"
 needs = ["build"]
-output = { format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$" }
 runs = "scope"
 stage = "push"
 summary = "Checks the links between built pages, stylesheets, and fragments without a server or network requests."

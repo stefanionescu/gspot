@@ -12,6 +12,7 @@ paths = ["**/ansible.cfg", "**/galaxy.yml", "**/requirements.yml", "**/roles/*/t
 builds = ["macos", "linux"]
 min_version = "24.0.0"
 name = "ansible-lint"
+output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):[\\d:]* (?<rule>[^:]+): (?<message>.*)$" }
 pypi = "ansible-lint"
 version = "26.10.1"
 
@@ -26,7 +27,6 @@ example = "A task with `ansible.builtin.command: systemctl restart nginx` report
 files = { extensions = [".yml", ".yaml", ".cfg", ".j2"] }
 help = "Change the task the way the rule says."
 name = "ansible-lint"
-output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):[\\d:]* (?<rule>[^:]+): (?<message>.*)$" }
 runs = "scope"
 stage = "commit"
 summary = "Runs the moderate ansible-lint profile beside each ansible.cfg or at the scope root."
@@ -40,7 +40,6 @@ help = "Change the task the way the rule says."
 instead_of = "ansible/ansible-lint"
 level = "all"
 name = "ansible-lint-production"
-output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):[\\d:]* (?<rule>[^:]+): (?<message>.*)$" }
 runs = "scope"
 stage = "commit"
 summary = "Runs the production ansible-lint profile beside each ansible.cfg or at the scope root."

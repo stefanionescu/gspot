@@ -6,7 +6,7 @@ import { listAssets, buildAssetPath } from '#cli/system/assets.ts';
 import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
 import { manifestSchema } from '#cli/schemas/manifests/manifest.ts';
 import { compareText, formatSimilarNames } from '#cli/system/text.ts';
-import { RULES_FOLDER, MANIFEST_FILE, CONFIGURATIONS_FOLDER } from '#cli/config/manifests.ts';
+import { RULES_FOLDER, MANIFEST_FILE, CONFIGURATIONS_FOLDER, DEFAULT_OUTPUT_FORMAT } from '#cli/config/manifests.ts';
 
 import type {
     Tool,
@@ -22,11 +22,18 @@ let shippedConfigurations: Map<string, Configuration> | undefined;
 function buildConfigurations(manifests: ParsedManifest[]): Map<string, Configuration> {
     const toolsByName = listManifestTools(manifests);
     return new Map(
-        manifests.map(({ configuration, tools, ...fields }) => [
+        manifests.map(({ configuration, tools, checks, ...fields }) => [
             configuration.name,
             {
                 ...fields,
                 ...configuration,
+                checks: checks.map((check) => ({
+                    ...check,
+                    output:
+                        check.output ??
+                        toolsByName.get(check.tool ?? check.command?.[0] ?? '')?.output ??
+                        DEFAULT_OUTPUT_FORMAT,
+                })),
                 tools: tools.map((tool) => {
                     if (typeof tool !== 'string') return tool;
                     const found = toolsByName.get(tool);

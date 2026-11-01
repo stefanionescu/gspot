@@ -1,26 +1,21 @@
 import { join } from 'node:path';
-import { getTool } from '#cli/tools/pins.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { createRunCache } from '#cli/system/cache.ts';
-import { listChecksById } from '#cli/manifests/read.ts';
 import { runTsc } from '#cli/configurations/tsc/compiler.ts';
 import { restoreCommandPaths } from '#cli/engine/results.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { ConfigurationCheck } from '#cli/types/manifests.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 
 import {
-    TSC_TOOL,
     CAUSE_MARKS,
     SHOWN_LINES,
     MARKED_LINES,
     TYPESCRIPT_TAG,
     CI_ENVIRONMENT,
-    TYPESCRIPT_TSC_CHECK,
     NEXT_TYPEGEN_COMMAND,
 } from '#cli/config/configurations/framework.ts';
 
@@ -49,16 +44,9 @@ export async function checkNextjsTsc(session: CheckSession, planned: PlannedChec
     const output = `${generated.stdout}${generated.stderr}`;
     if (generated.code !== 0)
         throw new CheckStop('error', `The next typegen command failed: ${formatNextjsFailure(output)}`);
-    const compiler = listChecksById(session.configurationsByName.values()).get(
-        TYPESCRIPT_TSC_CHECK,
-    ) as ConfigurationCheck;
     const result = await runTsc(
         scratchSession,
-        {
-            ...planned,
-            check: { ...compiler.check, ...planned.check, output: compiler.check.output },
-            tool: getTool(session.configurationsByName.values(), TSC_TOOL),
-        },
+        planned,
         root,
         readTsconfigProject(
             root,

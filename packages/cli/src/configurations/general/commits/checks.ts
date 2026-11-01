@@ -7,14 +7,13 @@ import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { runGit, readGitSetting } from '#cli/repository/git/run.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { listPushedCommits } from '#cli/configurations/pushed-commits.ts';
 import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/engine/results.ts';
-import { getSiblingCommand, listPushedCommits } from '#cli/configurations/pushed-commits.ts';
 
 import {
     MESSAGE_FILE,
     COMMIT_SCISSORS,
-    COMMITLINT_CHECK,
     MESSAGE_REFERENCES,
     GIT_COMMIT_MESSAGE_ARGUMENTS,
 } from '#cli/config/configurations/general.ts';
@@ -44,11 +43,7 @@ export async function checkCommitlintPushed(session: CheckSession, planned: Plan
                     note: `Cannot read commit ${commit}: ${read.stderr.trim()}`,
                 };
             writeFileSync(commitFile, read.stdout, { mode: PRIVATE_FILE });
-            const checked = await runCommandCheck(
-                session,
-                { ...planned, messageFile: commitFile },
-                { command: getSiblingCommand(planned, COMMITLINT_CHECK) },
-            );
+            const checked = await runCommandCheck(session, { ...planned, messageFile: commitFile });
             return {
                 ...checked,
                 findings: checked.findings.map((finding) => ({

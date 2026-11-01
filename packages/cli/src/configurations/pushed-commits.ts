@@ -18,15 +18,3 @@ export async function listPushedCommits(session: Session, planned: PlannedCheck)
         ? commits
         : { ...buildBaseResult(planned, session), fileCount: 0, status: 'error', note: commits.error };
 }
-
-/**
-Get the command of another check in the same shipped configuration.
-
-@param planned the history check.
-@param checkId the ID of the check whose command to read.
-*/
-export function getSiblingCommand(planned: PlannedCheck, checkId: string): string[] {
-    const configuration = planned.configuration as NonNullable<PlannedCheck['configuration']>;
-    const sibling = configuration.checks.find(({ id }) => id === checkId) as (typeof configuration.checks)[number];
-    return sibling.command as string[];
-}

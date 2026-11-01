@@ -1,4 +1,5 @@
 import { parse } from '@decimalturn/toml-patch';
+import { DEFAULT_OUTPUT_FORMAT } from '#cli/config/manifests.ts';
 import { manifestSchema } from '#cli/schemas/manifests/manifest.ts';
 import { type Check, type Configuration } from '#cli/types/manifests.ts';
 import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
@@ -36,6 +37,7 @@ export function buildConfiguration(
     return {
         ...rest,
         ...configuration,
+        checks: rest.checks.map((check) => ({ ...check, output: check.output ?? DEFAULT_OUTPUT_FORMAT })),
         tools: [],
     };
 }

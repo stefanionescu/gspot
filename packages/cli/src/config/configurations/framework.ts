@@ -31,10 +31,6 @@ export const NEXT_TYPEGEN_COMMAND = ['next', 'typegen'] as const;
 
 export const CI_ENVIRONMENT = { CI: '1' } as const;
 
-export const TYPESCRIPT_TSC_CHECK = 'typescript/tsc';
-
-export const TSC_TOOL = 'tsc';
-
 export const REACT_PACKAGE = 'react';
 
 export const REACT_DOM_PACKAGE = 'react-dom';

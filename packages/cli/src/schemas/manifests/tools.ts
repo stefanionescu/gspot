@@ -252,6 +252,7 @@ const toolSchema = z
         finding_header_pattern: regexSchema.optional(),
         rule_url: z.string().includes(RULE_PLACEHOLDER, { message: 'A rule page names where {rule} goes.' }).optional(),
         rule_prefix: z.string().min(1).optional(),
+        output: outputSchema.optional(),
         suppression: z
             .strictObject({
                 marker: regexSchema,

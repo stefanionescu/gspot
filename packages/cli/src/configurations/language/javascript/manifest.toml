@@ -200,6 +200,7 @@ version = "6.41.0"
 [[tool]]
 name = "tsc"
 npm = "typescript"
+output = { format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$" }
 system = true
 version = "5.9.3"
 version_command = ["--version"]
@@ -299,10 +300,6 @@ why = "A wrong call in JavaScript crashes at run time, and written types let the
 
 [check.files]
 extensions = [".js", ".mjs", ".cjs", ".jsx"]
-
-[check.output]
-format = "regex"
-pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"
 
 [[check]]
 command = ["knip", "--config", "{config_file:knip}", "--no-progress", "--reporter", "json", "{workspace:--workspace}"]

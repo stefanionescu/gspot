@@ -1,5 +1,6 @@
 import type { z } from 'zod';
 import type { KeyPath } from '#cli/types/parsers.ts';
+import type { outputSchema } from '#cli/schemas/manifests/tools.ts';
 import type { PATH_ROLES, REASON_DESCRIPTIONS } from '#cli/config/manifests.ts';
 import type { checkSchema, manifestSchema } from '#cli/schemas/manifests/manifest.ts';
 
@@ -20,9 +21,10 @@ export type RequirementWalk = {
 
 export type ParsedManifest = z.infer<typeof manifestSchema>;
 
-export type Check = Omit<z.infer<typeof checkSchema>, 'example' | 'name'> & {
+export type Check = Omit<z.infer<typeof checkSchema>, 'example' | 'name' | 'output'> & {
     id: string;
     example?: string;
+    output: z.output<typeof outputSchema>;
 };
 
 export type Configuration = Omit<ParsedManifest, 'tools' | 'configuration' | 'checks'> &

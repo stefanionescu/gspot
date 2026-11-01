@@ -5,6 +5,7 @@ import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers.ts';
 import {
     levelSchema,
     regexSchema,
+    outputSchema,
     conditionSchema,
     commandCheckFields,
     manifestToolSchema,
@@ -117,6 +118,7 @@ const generatorOutputSchema = z.union([
 
 const checkFieldsSchema = z.strictObject({
     ...commandCheckFields,
+    output: outputSchema.optional(),
     name: z.string().regex(NAME_PATTERN),
     level: levelSchema.default('basic'),
     runs: z.enum(CHECK_RUNS).default('files'),
