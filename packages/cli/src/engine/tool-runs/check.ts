@@ -2,12 +2,12 @@ import { join, relative } from 'node:path';
 import { getTool } from '#cli/tools/pins.ts';
 import { find } from '#cli/system/files/reads.ts';
 import type { Tool } from '#cli/types/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { listOtherTools } from '#cli/engine/tools.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
 import type { Session, ProcessFailure } from '#cli/types/tools.ts';
 import { buildCommandLines } from '#cli/engine/tool-runs/batches.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
@@ -92,7 +92,7 @@ function findMissingConfig(
 ): CheckResult | undefined {
     const files = openFiles(session.root);
     const missing = [...configs, ...listCommandConfigs(session, planned, command)].find(
-        (path) => (path.startsWith(`${GSPOT_FOLDER}/`) ? files.read(path) : find(session.cache, path)) === undefined,
+        (path) => (isGspotPath(path) ? files.read(path) : find(session.cache, path)) === undefined,
     );
     if (missing === undefined) return undefined;
     return { ...base, status: 'error', note: `The generated file ${missing} is missing. Run gspot apply.` };

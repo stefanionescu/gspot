@@ -8,6 +8,7 @@ import type { Settings } from '#cli/types/settings.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { GENERATED_FILE_NOUN } from '#cli/config/generation.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { listMisePins, listPackagePins } from '#cli/tools/pins.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import type { InitPlan, InitScan, InitFileRow, ConflictingConfigs } from '#cli/types/commands/edits.ts';
@@ -117,7 +118,7 @@ function formatConfigurationSection(rows: InitPlan['configurations'], level: Ini
 
 function buildGeneratedRows(generated: Generation, conflicts: ConflictingConfigs, tracked: Set<string>): InitFileRow[] {
     return [...generated.files, ...generated.blocks.filter(({ path }) => !tracked.has(path))]
-        .filter(({ path }) => !path.startsWith(`${GSPOT_FOLDER}/`) && path !== ATTRIBUTES_ROW.path)
+        .filter(({ path }) => !isGspotPath(path) && path !== ATTRIBUTES_ROW.path)
         .map(({ path }) => {
             const replaced = conflicts.deleted.find((row) => row.path === path);
             if (replaced !== undefined)

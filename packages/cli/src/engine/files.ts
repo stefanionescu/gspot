@@ -1,17 +1,23 @@
 import { posix } from 'node:path';
 import { isUtf8 } from 'node:buffer';
 import type { Scope } from '#cli/types/settings.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { getTable, listIgnores } from '#cli/settings/scopes.ts';
 import type { PlannedCheck, PlannedScope } from '#cli/types/engine/plan.ts';
 import type { Check, ScopeCheck, Configuration } from '#cli/types/manifests.ts';
 import { listCoveredFiles, listCoveredPaths } from '#cli/repository/files/selection.ts';
-import { isInScope, joinScope, selectScopePath, listNestedScopes } from '#cli/repository/scopes.ts';
 
+import {
+    isInScope,
+    joinScope,
+    selectScopePath,
+    listNestedScopes,
+    isOutsideChildScopes,
+} from '#cli/repository/scopes.ts';
 import {
     ROOT_RUNS,
     ENCODING_CHECK,
@@ -36,8 +42,7 @@ function listScopeFiles(planned: PlannedScope, scopePath: string, runs: Check['r
     const prefix = joinScope(scopePath, '');
     return planned.session.repository.files.filter(
         (file) =>
-            file.path.startsWith(prefix) &&
-            (runs !== 'scope' || planned.children.every((child) => !isInScope(file.path, child))),
+            file.path.startsWith(prefix) && (runs !== 'scope' || isOutsideChildScopes(file.path, planned.children)),
     );
 }
 
@@ -47,9 +52,7 @@ function listProjectCheckFiles(planned: PlannedScope, scopeCheck: ScopeCheck, sc
     const owners = check.files ?? (configuration?.group === 'language' ? configuration.files : undefined);
     const scopeFiles = listScopeFiles(planned, scopePath, check.runs);
     const projectFiles =
-        configuration === undefined
-            ? scopeFiles
-            : scopeFiles.filter((file) => !file.path.startsWith(`${GSPOT_FOLDER}/`));
+        configuration === undefined ? scopeFiles : scopeFiles.filter((file) => !isGspotPath(file.path));
     const matches =
         owners === undefined
             ? projectFiles
@@ -94,8 +97,7 @@ function stripIgnoredFiles<File extends Pick<TrackedFile, 'path'>>(
 function listNarrowedFiles(planned: PlannedScope, scopeCheck: ScopeCheck, files: TrackedFile[]): TrackedFile[] {
     const { narrowedPaths } = planned;
     if (!narrowedPaths) return files;
-    const isTouched =
-        narrowedPaths.has(SETTINGS_FILE) || narrowedPaths.values().some((path) => path.startsWith(`${GSPOT_FOLDER}/`));
+    const isTouched = narrowedPaths.has(SETTINGS_FILE) || narrowedPaths.values().some((path) => isGspotPath(path));
     if (isTouched) return files;
     const inNarrowed = files.filter((file) => narrowedPaths.has(file.path));
     if (inNarrowed.length === 0) return [];
@@ -110,9 +112,9 @@ function listDeletedTriggers(planned: PlannedScope, scopeCheck: ScopeCheck, scop
     const paths = [...planned.narrowedPaths].filter(
         (path) =>
             !readable.has(path) &&
-            (configuration === undefined || !path.startsWith(`${GSPOT_FOLDER}/`)) &&
+            (configuration === undefined || !isGspotPath(path)) &&
             isInScope(path, scopePath) &&
-            (check.runs !== 'scope' || children.every((child) => !isInScope(path, child))),
+            (check.runs !== 'scope' || isOutsideChildScopes(path, children)),
     );
     const owners = check.files ?? configuration?.files;
     if (owners === undefined) return paths;
@@ -163,7 +165,7 @@ export function listCheckedFiles(scopes: Scope[], planned: PlannedCheck): Tracke
                   planned.scope.path,
               )
             : [];
-    const files = planned.files.filter((file) => children.every((child) => !isInScope(file.path, child)));
+    const files = planned.files.filter((file) => isOutsideChildScopes(file.path, children));
     return owners === undefined ||
         [owners.extensions, owners.filenames, owners.paths, owners.tags, owners.languages].every((values) =>
             Array.isArray(values) ? values.length === 0 : !values,
@@ -174,6 +176,16 @@ export function listCheckedFiles(scopes: Scope[], planned: PlannedCheck): Tracke
               scopePath: planned.scope.path,
               settings: planned.scope.settings,
           });
+}
+
+/**
+Check whether a check runs once for the whole repository.
+
+@param check the check to inspect.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Planning, skips, the file selection, and list share this one test of the run kind.
+export function isRepositoryRun(check: Pick<Check, 'runs'>): boolean {
+    return (ROOT_RUNS as readonly string[]).includes(check.runs);
 }
 
 /**
@@ -206,8 +218,7 @@ export function selectCheckFiles(
 ): Pick<PlannedCheck, 'files' | 'triggerPaths' | 'skip'> {
     const { scope, children } = planned;
     const { check, configuration } = scopeCheck;
-    const isRootCheck = (ROOT_RUNS as readonly string[]).includes(check.runs);
-    const scopePath = isRootCheck ? '' : scope.path;
+    const scopePath = isRepositoryRun(check) ? '' : scope.path;
     const triggerPaths = listDeletedTriggers(planned, scopeCheck, scopePath);
     const keepsChildScopes = check.runs !== 'files' || isRootOnlyCheck(configuration, check);
     let files =
@@ -215,7 +226,7 @@ export function selectCheckFiles(
             ? listRunFiles(planned, scopeCheck, scopePath)
             : listScopeFiles(planned, scopePath, check.runs);
     files = listToolFiles(planned, scopeCheck, files);
-    if (!keepsChildScopes) files = files.filter((file) => children.every((child) => !isInScope(file.path, child)));
+    if (!keepsChildScopes) files = files.filter((file) => isOutsideChildScopes(file.path, children));
     const unreadablePaths = check.id === ENCODING_CHECK ? planned.session.repository.unreadablePaths : [];
     return { ...stripIgnoredFiles(files, check, scope), triggerPaths: [...triggerPaths, ...unreadablePaths] };
 }

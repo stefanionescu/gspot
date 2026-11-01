@@ -11,16 +11,15 @@ import type { Check, ScopeCheck } from '#cli/types/manifests.ts';
 import type { Session, ConfiguredCheck } from '#cli/types/tools.ts';
 import { findFirstSkip, findSettingsSkip } from '#cli/engine/skips.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
-import { isRootOnlyCheck, selectCheckFiles } from '#cli/engine/files.ts';
 import type { PlanOptions, PlannedScope, PlannedCheck } from '#cli/types/engine/plan.ts';
 
 import {
-    ROOT_RUNS,
     OFF_BY_LEVEL,
     NO_MATCHING_FILES,
     COVERAGE_DIMENSIONS,
     COVERAGE_INI_SECTION,
 } from '#cli/config/engine.ts';
+import { isRootOnlyCheck, isRepositoryRun, selectCheckFiles } from '#cli/engine/files.ts';
 
 function listScopeChecks(settings: Settings, scope: Scope, root: Scope): ScopeCheck[] {
     const isRoot = scope.path === '';
@@ -52,12 +51,11 @@ function isWanted(check: Check, options: PlanOptions): boolean {
 function planCheck(planned: PlannedScope, scopeCheck: ScopeCheck): PlannedCheck {
     const { session, scope, options } = planned;
     const { check, configuration } = scopeCheck;
-    const isRootCheck = (ROOT_RUNS as readonly string[]).includes(check.runs);
     const rootScope = getRootScope(session.scopes);
     const name = findToolName(check);
     const tool = name === undefined ? undefined : getTool(session.configurationsByName.values(), name);
     const plannedCheck: PlannedCheck = {
-        scope: isRootCheck ? rootScope : scope,
+        scope: isRepositoryRun(check) ? rootScope : scope,
         check,
         ...selectCheckFiles(planned, scopeCheck),
         configuration,
@@ -92,28 +90,36 @@ function skipReplacedChecks(planned: PlannedCheck[]): PlannedCheck[] {
     });
 }
 
-function planScope(planned: PlannedScope, plannedRepositoryChecks: Set<string>): PlannedCheck[] {
-    const checks: PlannedCheck[] = [];
-    const root = getRootScope(planned.session.scopes);
-    const wanted = listScopeChecks(planned.session.settings, planned.scope, root).filter((configured) =>
-        isWanted(configured.check, planned.options),
+function enumerateScopeChecks(
+    settings: Settings,
+    scopes: Scope[],
+    isKept: (scope: Scope, check: Check) => boolean,
+): (ScopeCheck & { scope: Scope })[] {
+    const root = getRootScope(scopes);
+    const repositoryRuns = new Set<string>();
+    return scopes.flatMap((scope) =>
+        listScopeChecks(settings, scope, root)
+            .filter(({ check }) => {
+                if (!isKept(scope, check)) return false;
+                if (!isRepositoryRun(check)) return true;
+                if (repositoryRuns.has(check.id)) return false;
+                repositoryRuns.add(check.id);
+                return true;
+            })
+            .map((scopeCheck) => ({ ...scopeCheck, scope })),
     );
-    for (const configured of wanted) {
-        const isRootCheck = (ROOT_RUNS as readonly string[]).includes(configured.check.runs);
-        if (isRootCheck && plannedRepositoryChecks.has(configured.check.id)) continue;
-        const check = planCheck(planned, configured);
-        if (isRootCheck) plannedRepositoryChecks.add(configured.check.id);
-        checks.push(check);
-    }
-    return planned.options.keepLevelOff === true ? checks : checks.filter(({ skip }) => skip?.cause !== 'level');
 }
 
 function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
-    const plannedRepositoryChecks = new Set<string>();
+    const { settings, scopes } = session;
     const host = { platform: getOperatingSystem(), arch: process.arch };
     const narrowedPaths = buildNarrowedPaths(options);
-    const scopePaths = session.scopes.map(({ path }) => path);
-    return session.scopes.map((scope) => {
+    const scopePaths = scopes.map(({ path }) => path);
+    const enumerated = Map.groupBy(
+        enumerateScopeChecks(settings, scopes, (_scope, check) => isWanted(check, options)),
+        ({ scope }) => scope.path,
+    );
+    return scopes.map((scope) => {
         const context: PlannedScope = {
             session,
             scope,
@@ -122,7 +128,8 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
             narrowedPaths,
             children: listNestedScopes(scopePaths, scope.path),
         };
-        return planScope(context, plannedRepositoryChecks);
+        const checks = (enumerated.get(scope.path) ?? []).map((configured) => planCheck(context, configured));
+        return options.keepLevelOff === true ? checks : checks.filter(({ skip }) => skip?.cause !== 'level');
     });
 }
 
@@ -238,24 +245,16 @@ List each check that a scope runs at some stage, with no files.
 */
 export function listEnabledChecks(scopes: Scope[], settings: Settings): ConfiguredCheck[] {
     const root = getRootScope(scopes);
-    const singleRuns = new Set<string>();
-    return scopes.flatMap((scope) =>
-        listScopeChecks(settings, scope, root).flatMap(({ check, configuration }) => {
-            if (!isWanted(check, { stage: 'any' }) || findSettingsSkip(settings, scope, check) !== undefined) return [];
-            const rootOnly = (ROOT_RUNS as readonly string[]).includes(check.runs);
-            if (rootOnly && singleRuns.has(check.id)) return [];
-            if (rootOnly) singleRuns.add(check.id);
-            const name = findToolName(check);
-            const tool =
-                name === undefined
-                    ? undefined
-                    : getTool(
-                          scopes.flatMap((each) => each.configurations),
-                          name,
-                      );
-            return [{ scope: rootOnly ? root : scope, check, configuration, tool }];
-        }),
-    );
+    const configurations = scopes.flatMap((each) => each.configurations);
+    return enumerateScopeChecks(
+        settings,
+        scopes,
+        (scope, check) => isWanted(check, { stage: 'any' }) && findSettingsSkip(settings, scope, check) === undefined,
+    ).map(({ scope, check, configuration }) => {
+        const name = findToolName(check);
+        const tool = name === undefined ? undefined : getTool(configurations, name);
+        return { scope: isRepositoryRun(check) ? root : scope, check, configuration, tool };
+    });
 }
 
 /**

@@ -12,8 +12,8 @@ import { decodeUtf8Text } from '#cli/system/files/reads.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
 import type { Files, FileContents } from '#cli/types/system.ts';
 import { GSPOT_FOLDER, LEADING_NEWLINE } from '#cli/config/parsers.ts';
-import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
 import { parseAttributePatterns } from '#cli/repository/git/output.ts';
+import { isGspotPath, hasGeneratedHeader } from '#cli/repository/files/classify.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/files.ts';
 import { openFiles, walkFiles, deleteEmptyFolders } from '#cli/system/files/open.ts';
 import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
@@ -73,7 +73,7 @@ function readGeneratedPatterns(files: Files): string[] {
 
 function isOwned(path: string, files: Files, generatedPatterns: string[], ownablePaths: ReadonlySet<string>): boolean {
     if (!isInside(path)) return false;
-    if (path.startsWith(`${GSPOT_FOLDER}/`)) return true;
+    if (isGspotPath(path)) return true;
     if (!ownablePaths.has(path)) return false;
     const file = files.readKeepingLinks(path);
     if (file !== undefined && file.isSymlink !== true && hasGeneratedHeader(file.bytes.toString('utf8'))) return true;

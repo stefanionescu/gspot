@@ -174,6 +174,17 @@ export function findProjectFolder(path: string, pattern: string): string | undef
 }
 
 /**
+Check whether a path sits outside every child scope.
+
+@param path the repository-relative path.
+@param children the nested scope folders.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The file selection, the generators, and the checks of several languages share this one test.
+export function isOutsideChildScopes(path: string, children: readonly string[]): boolean {
+    return children.every((child) => !isInScope(path, child));
+}
+
+/**
 Find the scope of a file: the deepest scope that contains it, else the root.
 
 @param path the file to place.

@@ -1,7 +1,5 @@
-import { ROOT_RUNS } from '#cli/config/engine.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { isRootOnlyCheck } from '#cli/engine/files.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -12,6 +10,7 @@ import { planChecks, formatCheckState } from '#cli/engine/plan.ts';
 import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
+import { isRootOnlyCheck, isRepositoryRun } from '#cli/engine/files.ts';
 import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/reports.ts';
 
 import {
@@ -55,10 +54,7 @@ function listCheckStates(
     return session.scopes.flatMap((scope) => {
         if (!scope.configurations.includes(configuration)) return [];
         return configuration.checks.flatMap((check) => {
-            const path =
-                (ROOT_RUNS as readonly string[]).includes(check.runs) || isRootOnlyCheck(configuration, check)
-                    ? ''
-                    : scope.path;
+            const path = isRepositoryRun(check) || isRootOnlyCheck(configuration, check) ? '' : scope.path;
             const key = `${path}\0${check.id}`;
             if (listed.has(key)) return [];
             listed.add(key);

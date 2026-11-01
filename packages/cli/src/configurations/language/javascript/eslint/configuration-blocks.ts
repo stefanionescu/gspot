@@ -10,7 +10,6 @@ import { buildVueBlocks } from '#cli/configurations/framework/vue/generate.ts';
 import { buildAstroBlocks } from '#cli/configurations/framework/astro/generate.ts';
 import { buildReactBlocks } from '#cli/configurations/framework/react/generate.ts';
 import { buildVitestBlocks } from '#cli/configurations/testing/vitest/generate.ts';
-import { joinScope, isInScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { buildNestjsBlocks } from '#cli/configurations/framework/nestjs/generate.ts';
 import { buildNextjsBlocks } from '#cli/configurations/framework/nextjs/generate.ts';
 import { buildSvelteBlocks } from '#cli/configurations/framework/svelte/generate.ts';
@@ -21,6 +20,7 @@ import { buildTypescriptBlocks } from '#cli/configurations/language/typescript/g
 import { SUPABASE_RULES, PLUGIN_RULE_BLOCKS } from '#cli/config/configurations/javascript.ts';
 import { buildTanstackQueryBlocks } from '#cli/configurations/library/tanstack-query/generate.ts';
 import { buildTestingLibraryBlocks } from '#cli/configurations/library/testing-library/generate.ts';
+import { joinScope, isInScope, listNestedScopes, isOutsideChildScopes } from '#cli/repository/scopes.ts';
 import { buildTestFiles, listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
 
 import type {
@@ -88,7 +88,7 @@ function buildConfigurationBlocks(
                 .filter((path) =>
                     configuration.name === 'nextjs'
                         ? isInScope(path, nextProject)
-                        : isInScope(path, scopePath) && children.every((child) => !isInScope(path, child)),
+                        : isInScope(path, scopePath) && isOutsideChildScopes(path, children),
                 ),
         },
         configuration.name,

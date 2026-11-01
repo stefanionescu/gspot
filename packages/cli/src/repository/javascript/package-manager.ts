@@ -5,11 +5,12 @@ import { remember } from '#cli/system/cache.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { RunCache } from '#cli/types/system.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import type { PackageJson } from '#cli/types/parsers.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
-import { GSPOT_FOLDER, PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { packageManagerSchema, packageManagerPinSchema } from '#cli/schemas/repository.ts';
 
 import type {
@@ -101,7 +102,7 @@ export function detectPackageManager(root: string, trackedPaths: string[]): Pack
     const packageJsonPaths = [
         PACKAGE_JSON,
         ...trackedPaths
-            .filter((path) => path.endsWith(`/${PACKAGE_JSON}`) && !path.startsWith(`${GSPOT_FOLDER}/`))
+            .filter((path) => path.endsWith(`/${PACKAGE_JSON}`) && !isGspotPath(path))
             .toSorted((left, right) => compareText(left, right)),
     ];
     const selected = readFirstPackageManager(root, packageJsonPaths);

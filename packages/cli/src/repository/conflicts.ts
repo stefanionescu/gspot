@@ -3,13 +3,13 @@ import { posix, extname } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
 import { find } from '#cli/system/files/reads.ts';
 import { escapeRegExp } from '#cli/system/text.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { listProjectFolders } from '#cli/repository/scopes.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
 import type { TrackedFile, ManagedKeys, ConflictingConfig } from '#cli/types/repository.ts';
 import { TOML_EXTENSION, JSON_EXTENSION, INI_EXTENSIONS, YAML_EXTENSIONS } from '#cli/config/repository/setup.ts';
 
@@ -100,9 +100,7 @@ export function listConflictingConfigs(
     configurations: Iterable<Configuration>,
 ): ConflictingConfig[] {
     const inventory = new Set(
-        files
-            .filter((file) => file.kind === 'source' && !file.path.startsWith(`${GSPOT_FOLDER}/`))
-            .map((file) => file.path),
+        files.filter((file) => file.kind === 'source' && !isGspotPath(file.path)).map((file) => file.path),
     );
     const selected = [...configurations];
     const located = { inventory, projectFolders: new Set(['.', ...listProjectFolders(inventory, selected)]) };

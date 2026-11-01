@@ -5,10 +5,11 @@ import { packageJsonSchema } from '#cli/schemas/parsers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
 import type { PackageJson, DependencyFile } from '#cli/types/parsers.ts';
+import { PACKAGE_JSON, DEPENDENCY_SECTIONS } from '#cli/config/parsers.ts';
 import { isInInstalledFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 import { HOOK_PACKAGES, REQUIREMENTS_FILE } from '#cli/config/repository/files.ts';
-import { GSPOT_FOLDER, PACKAGE_JSON, DEPENDENCY_SECTIONS } from '#cli/config/parsers.ts';
 import { parseRequirements, DEPENDENCY_FILE_PARSERS } from '#cli/parsers/projects/dependencies.ts';
 
 /**
@@ -46,8 +47,7 @@ Read the supported dependency files.
 export async function readDependencyFiles(cache: RunCache, files: TrackedFile[]): Promise<DependencyFile[]> {
     const dependencies: DependencyFile[] = [];
     for (const file of files) {
-        if (file.kind !== 'source' || file.path.startsWith(`${GSPOT_FOLDER}/`) || isInInstalledFolder(file.path))
-            continue;
+        if (file.kind !== 'source' || isGspotPath(file.path) || isInInstalledFolder(file.path)) continue;
         const dependencyFile = await readDependencyFile(cache, file);
         if (dependencyFile !== undefined) dependencies.push(dependencyFile);
     }

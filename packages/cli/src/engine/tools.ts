@@ -1,11 +1,12 @@
 import { basename } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { selectCheckFiles } from '#cli/engine/files.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import { getTool, findPackagePin } from '#cli/tools/pins.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
-import { GSPOT_FOLDER, PACKAGE_JSON } from '#cli/config/parsers.ts';
 import type { Session, ConfiguredCheck } from '#cli/types/tools.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
@@ -185,10 +186,7 @@ export function listLicenseProjects(
 ): LicenseProject[] {
     return scopes.flatMap((scope) =>
         files
-            .filter(
-                (file) =>
-                    !file.path.startsWith(`${GSPOT_FOLDER}/`) && selectScopePath(file.path, scopes) === scope.path,
-            )
+            .filter((file) => !isGspotPath(file.path) && selectScopePath(file.path, scopes) === scope.path)
             .flatMap((file) => {
                 if (
                     !scope.configurations.some(

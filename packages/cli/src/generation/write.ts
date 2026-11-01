@@ -9,6 +9,7 @@ import type { ApplyReport } from '#cli/types/generation.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import type { Session, Generation } from '#cli/types/tools.ts';
 import { listExpectedPaths } from '#cli/generation/outdated.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
 import type { Files, FileContents } from '#cli/types/system.ts';
 import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
 import { formatCount, formatCountVerb } from '#cli/system/text.ts';
@@ -71,8 +72,8 @@ function hasUnmanagedScanner(session: Session, writer: Files): boolean {
 }
 
 function formatGeneratedChanges(action: string, paths: string[]): string[] {
-    const gspotCount = paths.filter((path) => path.startsWith(`${GSPOT_FOLDER}/`)).length;
-    const outside = paths.filter((path) => !path.startsWith(`${GSPOT_FOLDER}/`));
+    const gspotCount = paths.filter((path) => isGspotPath(path)).length;
+    const outside = paths.filter((path) => !isGspotPath(path));
     const label = action.padEnd(CHANGE_LABEL_WIDTH);
     return [
         ...(gspotCount === 0 ? [] : [`${label}${formatCount(gspotCount, GENERATED_FILE_NOUN)} in ${GSPOT_FOLDER}/`]),

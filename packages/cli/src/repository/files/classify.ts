@@ -84,7 +84,7 @@ function isLicenseFile(path: string): boolean {
 
 function findGeneratedKind(path: string, prefix: Buffer): FileClassification | undefined {
     if (path.startsWith(`${GSPOT_PATHS.valePackages}/`)) return { kind: 'vendored', origin: KIND_ORIGINS.gspot };
-    if (path.startsWith(`${GSPOT_FOLDER}/`)) return { kind: 'generated', origin: KIND_ORIGINS.gspot };
+    if (isGspotPath(path)) return { kind: 'generated', origin: KIND_ORIGINS.gspot };
     if (BUILD_LAUNCHERS.has(posix.basename(path))) return { kind: 'generated', origin: KIND_ORIGINS.buildLauncher };
     const start = prefix.subarray(0, BANNER_BYTES).toString('utf8');
     return hasGeneratedHeader(start) || GENERATOR_OUTPUT_BANNERS.some((banner) => banner.test(start))
@@ -198,6 +198,16 @@ export function listPathTags(path: string): string[] {
         ...(FILENAME_TAGS.get(base) ?? []),
         ...flags.filter(([isSet]) => isSet).map(([, tag]) => tag),
     ];
+}
+
+/**
+Check whether a path sits in the folder of gspot.
+
+@param path the repository-relative path.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: More than twenty readers in every layer above this one test a path against the gspot folder.
+export function isGspotPath(path: string): boolean {
+    return path.startsWith(`${GSPOT_FOLDER}/`);
 }
 
 /**

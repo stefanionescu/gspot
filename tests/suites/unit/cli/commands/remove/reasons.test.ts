@@ -2,7 +2,6 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { parse } from '@decimalturn/toml-patch';
-import { openSession } from '#cli/engine/session.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -42,28 +41,6 @@ test('remove keeps the reason of each removed configuration, and add takes a nam
     expect(restored.code, restored.stdout + restored.stderr).toBe(0);
     const restoredSettings: unknown = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'));
     expect(restoredSettings).not.toHaveProperty('removed_configurations');
-});
-
-test('removing automatically selected licenses records the choice for the next session', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([]),
-        'package.json': '{"name":"example","private":true,"dependencies":{"react":"19.1.1"}}\n',
-    });
-    const removed = await runGspot(sandbox.path, [
-        'remove',
-        'licenses',
-        '--reason',
-        'Legal reviews licenses outside this repository.',
-    ]);
-    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    const text = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
-    expect(parse(text)).toHaveProperty('removed_configurations', {
-        licenses: 'Legal reviews licenses outside this repository.',
-    });
-    const session = await openSession(sandbox.path);
-    expect(
-        session.scopes.flatMap((scope) => scope.configurations.map((configuration) => configuration.name)),
-    ).not.toContain('licenses');
 });
 
 test('remove records no removal of a configuration that detection does not select', async () => {

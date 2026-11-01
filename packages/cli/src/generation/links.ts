@@ -1,20 +1,21 @@
 import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { compareText } from '#cli/system/text.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { listCheckTools } from '#cli/engine/tools.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
 import type { PlannedLinkField } from '#cli/types/generation.ts';
 import type { Session, GeneratedFile } from '#cli/types/tools.ts';
-import { GSPOT_FOLDER, PACKAGE_JSON } from '#cli/config/parsers.ts';
 import type { Config, ManagedKeys } from '#cli/types/repository.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
 import type { ConfigOwner } from '#cli/types/configurations/language.ts';
-import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
+import { isInScope, joinScope, listNestedScopes, isOutsideChildScopes } from '#cli/repository/scopes.ts';
 import { escapeGlob, findOutermostFolder, extractParentFolder, buildModuleSpecifier } from '#cli/system/paths.ts';
 
 import {
@@ -108,7 +109,7 @@ export function listLinkFilePaths(owner: ConfigOwner, config: Config): string[] 
         configurations: scope.configurations,
         scopePath: '',
         settings: scope.settings,
-    }).filter((file) => isInScope(file.path, scopePath) && children.every((child) => !isInScope(file.path, child)));
+    }).filter((file) => isInScope(file.path, scopePath) && isOutsideChildScopes(file.path, children));
     const folders = new Set(
         owned.flatMap(({ path }) => {
             const folder = findOutermostFolder(extractParentFolder(path), isMatch);
@@ -138,7 +139,7 @@ export function listOwnablePaths(session: Session): Set<string> {
             .toArray(),
     );
     const paths = configs.flatMap(({ owner, config }) => [
-        ...(config.source === undefined || config.target.startsWith(`${GSPOT_FOLDER}/`)
+        ...(config.source === undefined || isGspotPath(config.target)
             ? []
             : [config.per_scope ? joinScope(owner.scope.path, config.target) : config.target]),
         ...listLinkFilePaths(owner, config),
@@ -188,7 +189,7 @@ export function buildLinkFieldEdits(
                 (row) =>
                     Object.hasOwn(document, row.key) &&
                     isInScope(path, row.scope) &&
-                    row.children.every((child) => !isInScope(path, child)) &&
+                    isOutsideChildScopes(path, row.children) &&
                     (paths.has(row.target) || isDeepStrictEqual(document[row.key], { extends: row.extends })),
             )
             .map((row) => ({

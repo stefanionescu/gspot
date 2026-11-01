@@ -17,12 +17,12 @@ import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import { PATH_SEPARATOR_PATTERN } from '#cli/config/configurations/blocks.ts';
 import { splitWords } from '#cli/configurations/general/naming/checks/settings.ts';
-import { joinScope, isInScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { runCommandCheck, runCommandBatches } from '#cli/engine/tool-runs/check.ts';
 import { deptrySchema, docstringStyleSchema } from '#cli/schemas/configurations.ts';
 import { GSPOT_FOLDER, PYPROJECT_TOML, PYTHON_EXTENSION } from '#cli/config/parsers.ts';
 import { findDocstring, readPythonFiles, parsePythonModule } from '#cli/parsers/code/python.ts';
 import type { PydoclintOptions, PythonDocstringStyle } from '#cli/types/configurations/language.ts';
+import { joinScope, isInScope, listNestedScopes, isOutsideChildScopes } from '#cli/repository/scopes.ts';
 
 import {
     PIP_INSTALL,
@@ -323,7 +323,7 @@ export async function checkVulture(session: CheckSession, planned: PlannedCheck)
     );
     const sources = session.repository.files
         .filter((file) => file.kind === 'source' && file.path.endsWith(PYTHON_EXTENSION))
-        .filter((file) => isInScope(file.path, scope) && children.every((child) => !isInScope(file.path, child)))
+        .filter((file) => isInScope(file.path, scope) && isOutsideChildScopes(file.path, children))
         .map((file) => file.path);
     if (sources.length === 0) return [];
     const result = await runCheckTool(session, planned, [...VULTURE_COMMAND, ...sources], { cwd: session.root });

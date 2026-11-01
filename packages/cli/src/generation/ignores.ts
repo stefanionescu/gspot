@@ -1,13 +1,13 @@
 import { join, basename } from 'node:path/posix';
 import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { listLinkFilePaths } from '#cli/generation/links.ts';
 import { convertToGlob } from '#cli/configurations/ignores.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
 import { listOwnedConfigs } from '#cli/generation/selection.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import type { IgnoreSection } from '#cli/types/configurations/general.ts';
 import { IGNORE_SECTION_TITLES } from '#cli/config/configurations/registry.ts';
@@ -32,7 +32,7 @@ export function listWrittenPaths(session: Session): string[] {
     const paths = configs.flatMap((owned) => {
         const { config, owner } = owned;
         const sourceTargets =
-            config.source === undefined || config.target.startsWith(`${GSPOT_FOLDER}/`)
+            config.source === undefined || isGspotPath(config.target)
                 ? []
                 : [config.per_scope ? joinScope(owner.scope.path, config.target) : config.target];
         return [...sourceTargets, ...(isMarkdownlintShared(owned, configs) ? [] : listLinkFilePaths(owner, config))];
@@ -88,9 +88,7 @@ export function buildIgnoreSections(session: Session): IgnoreSection[] {
             key: 'lockfiles',
             title: IGNORE_SECTION_TITLES.lockfiles,
             patterns: LOCKFILES.filter((lockfile) =>
-                repository.files.some(
-                    ({ path }) => !path.startsWith(`${GSPOT_FOLDER}/`) && basename(path) === lockfile.file,
-                ),
+                repository.files.some(({ path }) => !isGspotPath(path) && basename(path) === lockfile.file),
             ).map(({ file }) => file),
         },
         ...session.settings.ignore

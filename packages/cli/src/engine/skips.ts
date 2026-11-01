@@ -1,8 +1,8 @@
 import type { Host } from '#cli/types/tools.ts';
-import { ROOT_RUNS } from '#cli/config/engine.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import { findMissingBuild } from '#cli/tools/pins.ts';
+import { isRepositoryRun } from '#cli/engine/files.ts';
 import { LIMIT_READERS } from '#cli/manifests/limits.ts';
 import type { Tool, Check } from '#cli/types/manifests.ts';
 import type { Repository } from '#cli/types/repository.ts';
@@ -63,7 +63,7 @@ function findEmptySetting(settings: Settings, scope: Scope, check: Check): strin
     const setting = check.when?.setting;
     if (setting === undefined || !isSettingEmpty(scope.settings.valuesByKey[setting])) return undefined;
     const isSetInScope =
-        (ROOT_RUNS as readonly string[]).includes(check.runs) &&
+        isRepositoryRun(check) &&
         settings.scopes.values().some(({ written }) => !isSettingEmpty(findValueAt(written, setting.split('.'))));
     return isSetInScope ? undefined : setting;
 }
