@@ -26,6 +26,7 @@ import {
     ADDS_BLOCK_NOTE,
     PYTHON_PIN_NOUN,
     GSPOT_FOLDER_NOTE,
+    FOREIGN_HOOK_NOTE,
     DELETED_RULES_NOTE,
     CONFIGURATION_WIDTH,
     LINT_FOLDER_MESSAGE,
@@ -192,6 +193,7 @@ export function planInitFiles(
             ...conflicts.kept,
             ...listSubmodulePaths(repository.index).map((path) => ({ path, note: UNREAD_SUBMODULE_MESSAGE })),
             ...repositorySetup.ci.map((path) => ({ path, note: CI_FILE_NOTE })),
+            ...repositorySetup.hooks.map(({ path }) => ({ path, note: FOREIGN_HOOK_NOTE })),
         ],
         change: [
             ...(hasAttributes ? [ATTRIBUTES_ROW] : []),
@@ -227,6 +229,7 @@ export function formatInitPlan(plan: InitPlan, settingsText: string): string {
         ...formatFileSection('change', plan.change),
         ...formatFileSection(LINT_FOLDERS_HEADING, plan.lintFolders),
         CI_OFF_MESSAGE,
+        FOREIGN_HOOK_NOTE,
         CHANGE_LATER_MESSAGE,
         '',
         SETTINGS_FILE,

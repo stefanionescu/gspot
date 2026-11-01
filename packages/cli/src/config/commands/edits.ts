@@ -79,6 +79,8 @@ export const OWN_HOOKS = 'your own';
 
 export const HOOKS_LABEL = 'existing hooks';
 
+export const FOREIGN_HOOK_NOTE = 'keeps running your hooks; add the lines of gspot install to call .gspot/hooks';
+
 export const CI_LABEL = 'existing ci';
 
 export const AGENT_FILES_LABEL = 'agent files';

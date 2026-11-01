@@ -18,7 +18,6 @@ import { HOOK_REPOSITORIES, STOCK_LFS_PRE_PUSH, HOOK_CONFIGURATION_CASES } from 
 test.each([...HOOK_REPOSITORIES])(
     'a repository with $name keeps its hooks, gets the lines to add, and is ready only after both lines',
     async (provider) => {
-        const { startProgram } = provider;
         await using sandbox = await createGitSandbox({});
         const { files, setting, gitHook } = provider;
         await createFileTree(sandbox.path, {
@@ -42,10 +41,9 @@ test.each([...HOOK_REPOSITORIES])(
         const steps: (readonly string[])[] = [];
         const session = await openSession(sandbox.path);
         const { note: text } = await installHooks(session, steps);
-        const command = startProgram === 'mise' ? 'mise exec -- gspot' : 'npm exec --no -- gspot';
         expect({ steps, text }).toStrictEqual({
             steps: [],
-            text: `hooks already run from ${provider.location}; add these gspot lines to them:\n  pre-commit: ${command} check --staged --stage commit\n  pre-push: ${command} check --hook pre-push -- "$@"\n  commit-msg: ${command} check --hook commit-msg -- "$1"`,
+            text: `hooks already run from ${provider.location}; add these gspot lines to them:\n  pre-commit: .gspot/hooks/pre-commit "$@"\n  pre-push: .gspot/hooks/pre-push "$@"\n  commit-msg: .gspot/hooks/commit-msg "$@"`,
         });
         expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBe(before);
         for (const { path, content } of authored)
@@ -56,21 +54,18 @@ test.each([...HOOK_REPOSITORIES])(
             text: `not installed; ${text}`,
         });
         const first = authored.find(({ path }) => path !== 'package.json');
-        await writeFile(
-            join(sandbox.path, first!.path),
-            `${first!.content}\n${command} check --staged --stage commit\n`,
-        );
+        await writeFile(join(sandbox.path, first!.path), `${first!.content}\n.gspot/hooks/pre-commit\n`);
         expect(await readHookStatus(session, session.repository)).toMatchObject({
             ready: false,
         });
         await writeFile(
             join(sandbox.path, first!.path),
-            `${first!.content}\n${command} check --staged --stage commit\n${command} check --hook pre-push\n${command} check --hook commit-msg\n`,
+            `${first!.content}\n.gspot/hooks/pre-commit\n.gspot/hooks/pre-push\n.gspot/hooks/commit-msg\n`,
         );
         if (first!.path.endsWith('/pre-commit'))
             for (const hook of ['pre-push', 'commit-msg']) {
                 const path = join(sandbox.path, dirname(first!.path), hook);
-                await writeFile(path, `${command} check --hook ${hook}\n`);
+                await writeFile(path, `.gspot/hooks/${hook}\n`);
                 await chmod(path, 0o755);
             }
         expect(await readHookStatus(session, session.repository)).toMatchObject({ ready: true });
@@ -182,18 +177,15 @@ test('hooks already set to .gspot/hooks need no command or note', async () => {
 test('hook status ignores commented commands and commands in the wrong hook file', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
-        '.githooks/pre-commit': '# gspot check --staged --stage commit\ngspot check --hook pre-push\n',
+        '.githooks/pre-commit': '# .gspot/hooks/pre-commit\n.gspot/hooks/pre-push\n',
     });
     const session = await openSession(sandbox.path);
     expect(await readHookStatus(session, session.repository).then(({ ready }) => ready)).toBe(false);
-    await writeFile(
-        join(sandbox.path, '.githooks/pre-commit'),
-        'gspot check --staged --stage commit\ngspot check --hook pre-push\n',
-    );
+    await writeFile(join(sandbox.path, '.githooks/pre-commit'), '.gspot/hooks/pre-commit\n.gspot/hooks/pre-push\n');
     expect(await readHookStatus(session, session.repository).then(({ ready }) => ready)).toBe(false);
-    await writeFile(join(sandbox.path, '.githooks/pre-push'), 'gspot check --hook pre-push\n');
+    await writeFile(join(sandbox.path, '.githooks/pre-push'), '.gspot/hooks/pre-push\n');
     expect(await readHookStatus(session, session.repository).then(({ ready }) => ready)).toBe(false);
-    await writeFile(join(sandbox.path, '.githooks/commit-msg'), 'gspot check --hook commit-msg\n');
+    await writeFile(join(sandbox.path, '.githooks/commit-msg'), '.gspot/hooks/commit-msg\n');
     expect(await readHookStatus(session, session.repository).then(({ ready }) => ready)).toBe(true);
 });
 

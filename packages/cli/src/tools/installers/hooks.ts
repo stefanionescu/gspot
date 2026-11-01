@@ -20,10 +20,7 @@ import {
 } from '#cli/config/tools/installers.ts';
 
 function listGspotHookLines(session: Session): string[] {
-    const runner = session.startRunner;
-    return listHookNames(session.configuredChecks).map(
-        (name) => `${name}: ${runner.command} ${HOOK_CHECKS[name].arguments}`,
-    );
+    return listHookNames(session.configuredChecks).map((name) => `${name}: ${GSPOT_PATHS.hooks}/${name} "$@"`);
 }
 
 function formatForeignHooks(hooks: RepositorySetup['hooks'], session: Session): string {
@@ -50,7 +47,7 @@ function hasHookCommand(root: string, hook: RepositorySetup['hooks'][number], na
         ? hook.files.filter((file) => file === name).map((file) => resolve(root, hook.path, file))
         : [resolve(root, hook.path)];
     const lines = paths.flatMap((path) => readFileSync(path, 'utf8').split(LINE_BREAK));
-    const command = HOOK_CHECKS[name].arguments.split(' -- ', 1)[0] as string;
+    const command = `${GSPOT_PATHS.hooks}/${name}`;
     return lines.some((line) => !HOOK_COMMENT_LINE.test(line) && line.includes(command));
 }
 
