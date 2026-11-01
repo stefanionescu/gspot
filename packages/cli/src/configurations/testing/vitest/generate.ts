@@ -14,6 +14,7 @@ export function buildVitestBlocks(scope: Pick<EslintScope, 'eslintFiles'>): Conf
                 files: eslintFiles.tests,
                 rules: {
                     'sonarjs/assertions-in-tests': 'off',
+                    'gspot/require-test-assertions': 'off',
                     'vitest/no-disabled-tests': 'error',
                     'vitest/prefer-strict-equal': 'error',
                     'vitest/no-focused-tests': ['error', { fixable: false }],

@@ -57,3 +57,56 @@ test.each([...LEVELS])('%s runs the gspot test rules that replace SonarJS on eve
     });
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
 });
+
+test.each([...LEVELS])('%s runs the gspot assertion rules that replace SonarJS', async (level) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], { level }),
+        'package.json': '{"private":true,"type":"module","devDependencies":{"vitest":"4.0.0"}}',
+        'cart.test.js': '',
+        'list.cy.js': '',
+    });
+    const eslint = await buildEslint(sandbox.path);
+    const files = ['cart.test.js', 'list.cy.js'];
+    const rules = [
+        'gspot/no-misplaced-assertions',
+        'gspot/no-constant-assertions',
+        'gspot/prefer-matcher-assertions',
+        'gspot/valid-throw-assertions',
+        'gspot/require-test-assertions',
+        'gspot/no-cypress-then-assertions',
+    ];
+    await createFileTree(sandbox.path, {
+        'cart.test.js': [
+            'import { expect } from "vitest";',
+            'describe("cart", () => {',
+            '    expect(total).toBe(1);',
+            '    it("adds", () => { expect(true).toBe(true); });',
+            '    it("sizes", () => { expect(rows.length).toBe(2); });',
+            '    it("loads", () => { expect(async () => load()).toThrow(); });',
+            '    it("saves", () => { save(); });',
+            '});',
+        ].join('\n'),
+        'list.cy.js': 'cy.get("li").then(($rows) => { expect($rows).to.exist; });\n',
+    });
+    expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([
+        { file: 'cart.test.js', rule: 'gspot/no-misplaced-assertions', line: 3 },
+        { file: 'cart.test.js', rule: 'gspot/no-constant-assertions', line: 4 },
+        ...(level === 'all' ? [{ file: 'cart.test.js', rule: 'gspot/prefer-matcher-assertions', line: 5 }] : []),
+        { file: 'cart.test.js', rule: 'gspot/valid-throw-assertions', line: 6 },
+        { file: 'cart.test.js', rule: 'gspot/require-test-assertions', line: 7 },
+        { file: 'list.cy.js', rule: 'gspot/no-cypress-then-assertions', line: 1 },
+    ]);
+    await createFileTree(sandbox.path, {
+        'cart.test.js': [
+            'import { expect } from "vitest";',
+            'describe("cart", () => {',
+            '    it("totals", () => { expect(total).toBe(1); });',
+            '    it("adds", () => { expect(add(1, 2)).toBe(3); });',
+            '    it("sizes", () => { expect(rows).toHaveLength(2); });',
+            '    it("loads", async () => { await expect(load()).rejects.toThrow(); });',
+            '});',
+        ].join('\n'),
+        'list.cy.js': 'cy.get("li").should(($rows) => { expect($rows).to.exist; });\n',
+    });
+    expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
+});

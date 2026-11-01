@@ -53,6 +53,57 @@ test.each([...LEVELS])('%s runs the gspot React, Vue, and library rules that rep
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
 });
 
+test.each([...LEVELS])('%s runs the gspot timer, Vue state, and lodash rules that replace SonarJS', async (level) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['react'], { level }),
+        'package.json':
+            '{"private":true,"type":"module","dependencies":{"react":"^19.0.0","vue":"^3.4.0","lodash":"^4.17.21"}}',
+        'search.jsx': '',
+        'state.js': '',
+    });
+    const eslint = await buildEslint(sandbox.path);
+    const rules = ['gspot/no-component-debounce', 'gspot/no-vue-updated-writes', 'gspot/prefer-native-lodash'];
+    const files = ['search.jsx', 'state.js'];
+    await createFileTree(sandbox.path, {
+        'search.jsx': [
+            'import { debounce } from "lodash";',
+            'export function Search({ load }) {',
+            '    const onChange = debounce(load, 300);',
+            '    return <input onChange={onChange} />;',
+            '}',
+        ].join('\n'),
+        'state.js': [
+            'import { isArray } from "lodash";',
+            'import { onUpdated, ref } from "vue";',
+            'const count = ref(0);',
+            'onUpdated(() => { count.value++; });',
+            'export const isList = isArray(count);',
+        ].join('\n'),
+    });
+    expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([
+        { file: 'search.jsx', rule: 'gspot/no-component-debounce', line: 3 },
+        { file: 'state.js', rule: 'gspot/no-vue-updated-writes', line: 4 },
+        ...(level === 'all' ? [{ file: 'state.js', rule: 'gspot/prefer-native-lodash', line: 5 }] : []),
+    ]);
+    await createFileTree(sandbox.path, {
+        'search.jsx': [
+            'import { debounce } from "lodash";',
+            'import { useMemo } from "react";',
+            'export function Search({ load }) {',
+            '    const onChange = useMemo(() => debounce(load, 300), [load]);',
+            '    return <input onChange={onChange} />;',
+            '}',
+        ].join('\n'),
+        'state.js': [
+            'import { onUpdated, ref } from "vue";',
+            'const count = ref(0);',
+            'onUpdated(() => { if (count.value < 3) count.value++; });',
+            'export const isList = Array.isArray(count);',
+        ].join('\n'),
+    });
+    expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
+});
+
 test('the Supabase configuration checks the JSON body of each edge function', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['supabase'], { level: 'basic' }),
