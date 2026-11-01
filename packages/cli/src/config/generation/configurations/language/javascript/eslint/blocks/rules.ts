@@ -246,6 +246,7 @@ export const REGEXP_RULES = {
     'regexp/prefer-result-array-groups': 'error',
     'regexp/prefer-named-replacement': 'error',
     'regexp/prefer-named-backreference': 'error',
+    'regexp/no-unused-capturing-group': 'error',
 } as const;
 
 export const IMPORT_X_RULES = {

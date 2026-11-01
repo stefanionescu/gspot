@@ -1,3 +1,9 @@
+const IDENTICAL_BODY =
+    '    const step1 = value + 1;\n    const step2 = value + 2;\n    const step3 = value + 3;\n    const step4 = value + 4;\n    const step5 = value + 5;\n    const step6 = value + 6;\n    const step7 = value + 7;\n    return step7;';
+
+const SHORT_BODY =
+    '    const step1 = value + 1;\n    const step2 = value + 2;\n    const step3 = value + 3;\n    return step3;';
+
 export const ESLINT_LEVEL_CASES = [
     ['basic', 'js'],
     ['all', 'js'],
@@ -125,6 +131,55 @@ export const SONAR_FLOW_SAMPLES = [
         bad: 'export function read(value) { let result = value; result = 2; return result; }',
         good: 'export function read(value) { return value; }',
     },
+    {
+        name: 'identical',
+        rule: 'gspot/no-identical-functions',
+        level: 'all',
+        bad: `export function first(value) {\n${IDENTICAL_BODY}\n}\nexport function second(value) {\n${IDENTICAL_BODY}\n}`,
+        good: `export function first(value) {\n${SHORT_BODY}\n}\nexport function second(value) {\n${SHORT_BODY}\n}`,
+    },
+    {
+        name: 'emptied',
+        rule: 'gspot/no-empty-collection',
+        level: 'basic',
+        bad: 'export function list() {\n    const names = [];\n    return names.join();\n}',
+        good: 'export function list(name) {\n    const names = [name];\n    return names.join();\n}',
+    },
+    {
+        name: 'filled',
+        rule: 'gspot/no-unused-collection',
+        level: 'basic',
+        bad: 'export function list(name) {\n    const names = [];\n    names.push(name);\n}',
+        good: 'export function list(name) {\n    const names = [];\n    names.push(name);\n    return names;\n}',
+    },
+    {
+        name: 'decided',
+        rule: 'gspot/no-gratuitous-expressions',
+        level: 'basic',
+        bad: 'export function start(ready) {\n    if (ready) {\n        if (ready) run();\n    }\n}',
+        good: 'export function start(ready) {\n    if (ready) run();\n}',
+    },
+    {
+        name: 'swapped',
+        rule: 'gspot/no-swapped-arguments',
+        level: 'basic',
+        bad: 'function divide(dividend, divisor) {\n    return dividend / divisor;\n}\nexport const ratio = (dividend, divisor) => divide(divisor, dividend);',
+        good: 'function divide(dividend, divisor) {\n    return dividend / divisor;\n}\nexport const ratio = (dividend, divisor) => divide(dividend, divisor);',
+    },
+    {
+        name: 'clone',
+        rule: 'gspot/no-shallow-clone-mutation',
+        level: 'basic',
+        bad: "import _ from 'lodash';\nexport function save(settings) {\n    const copy = _.clone(settings);\n    copy.theme.color = 'red';\n    return copy;\n}",
+        good: "export function save(settings) {\n    const copy = structuredClone(settings);\n    copy.theme.color = 'red';\n    return copy;\n}",
+    },
+    {
+        name: 'repeated',
+        rule: 'gspot/no-redundant-assignment',
+        level: 'basic',
+        bad: "export function pick(ready) {\n    let mode = 'fast';\n    if (ready) mode = 'fast';\n    return mode;\n}",
+        good: "export function pick(ready) {\n    let mode = 'fast';\n    if (ready) mode = 'slow';\n    return mode;\n}",
+    },
 ] as const;
 
 export const SONAR_TYPE_SAMPLES = [
@@ -219,79 +274,25 @@ export const SONAR_TYPE_SAMPLES = [
         bad: '/** @deprecated Use read. */\nfunction fetchItem() { return 1; }\nexport const item = fetchItem();',
         good: 'function readItem() { return 1; }\nexport const item = readItem();',
     },
-] as const;
-
-export const SONAR_REGEX_SAMPLES = [
     {
-        name: 'move',
-        rule: 'regexp/no-super-linear-move',
-        bad: 'export const found = /a+b/.test(text);',
-        good: 'export const found = /^a+b/.test(text);',
+        name: 'selector',
+        rule: 'gspot/no-selector-parameter',
+        level: 'all',
+        bad: 'declare function store(): void;\ndeclare function publish(): void;\nexport function save(draft: boolean) {\n    if (draft) store();\n    else publish();\n}',
+        good: 'declare function store(): void;\nexport function save() {\n    store();\n}',
     },
     {
-        name: 'alternation',
-        rule: 'regexp/prefer-character-class',
-        bad: 'export const found = /a|b/.test(text);',
-        good: 'export const found = /[ab]/.test(text);',
+        name: 'mixed',
+        rule: 'gspot/no-mixed-return-types',
+        level: 'basic',
+        bad: "export function read(raw: boolean) {\n    if (raw) return '1';\n    return 1;\n}",
+        good: "export function read(raw: boolean) {\n    if (raw) return '1';\n    return '2';\n}",
     },
     {
-        name: 'digit',
-        rule: 'regexp/prefer-d',
-        bad: 'export const found = /[0-9]/.test(text);',
-        good: String.raw`export const found = /\d/.test(text);`,
-    },
-    {
-        name: 'plus',
-        rule: 'regexp/prefer-plus-quantifier',
-        bad: 'export const found = /a{1,}/.test(text);',
-        good: 'export const found = /a+/.test(text);',
-    },
-    {
-        name: 'any',
-        rule: 'regexp/match-any',
-        bad: String.raw`export const found = /[\w\W]/.test(text);`,
-        good: String.raw`export const found = /[\s\S]/.test(text);`,
-    },
-    {
-        name: 'dot',
-        rule: 'gspot/restricted-syntax',
-        bad: String.raw`export const found = /a[\s\S]b/s.test(text);`,
-        good: 'export const found = /a.b/s.test(text);',
-    },
-    {
-        name: 'duplicate',
-        rule: 'regexp/no-dupe-characters-character-class',
-        bad: 'export const found = /[aab]/.test(text);',
-        good: 'export const found = /[ab]/.test(text);',
-    },
-    {
-        name: 'lazy',
-        rule: 'regexp/no-lazy-ends',
-        bad: 'export const pattern = /a+?/;',
-        good: 'export const pattern = /a/;',
-    },
-    {
-        name: 'named',
-        rule: 'regexp/prefer-named-replacement',
-        bad: String.raw`export const year = "2024".replace(/(?<year>\d+)/, "$1");`,
-        good: String.raw`export const year = "2024".replace(/(?<year>\d+)/, "$<year>");`,
-    },
-    {
-        name: 'group',
-        rule: 'regexp/no-useless-dollar-replacements',
-        bad: String.raw`export const year = "2024".replace(/(\d+)/, "$2");`,
-        good: String.raw`export const year = "2024".replace(/(\d+)/, "$1");`,
-    },
-    {
-        name: 'invalid',
-        rule: 'no-invalid-regexp',
-        bad: 'export const pattern = new RegExp("[");',
-        good: String.raw`export const pattern = new RegExp("\\[");`,
-    },
-    {
-        name: 'spaces',
-        rule: 'no-regex-spaces',
-        bad: 'export const found = /a  b/.test(text);',
-        good: 'export const found = /a {2}b/.test(text);',
+        name: 'callback',
+        rule: 'gspot/no-void-array-callback',
+        level: 'basic',
+        bad: 'declare function log(value: number): void;\nexport const logged = [1, 2].map(log);',
+        good: 'declare function log(value: number): void;\n[1, 2].forEach(log);',
     },
 ] as const;

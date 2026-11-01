@@ -4,11 +4,8 @@ import { compareText } from '#cli/system/text.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-
-import {
-    ESLINT_LEVEL_CASES,
-    SONAR_REGEX_SAMPLES,
-} from '#tests/config/generation/configurations/language/javascript/eslint/replacements.ts';
+import { SONAR_REGEX_SAMPLES } from '#tests/config/generation/configurations/language/javascript/eslint/regex.ts';
+import { ESLINT_LEVEL_CASES } from '#tests/config/generation/configurations/language/javascript/eslint/replacements.ts';
 
 test.each(ESLINT_LEVEL_CASES)(
     '%s preserves replaced Sonar regular expression checks in %s',
@@ -21,10 +18,12 @@ test.each(ESLINT_LEVEL_CASES)(
         });
         const eslint = await buildEslint(sandbox.path);
         const files = SONAR_REGEX_SAMPLES.map((sample) => `${sample.name}.${extension}`);
-        const rules = SONAR_REGEX_SAMPLES.map((sample) => sample.rule);
+        const rules = [...new Set(SONAR_REGEX_SAMPLES.map((sample) => sample.rule))];
         const findings = await listLintFindings(eslint, sandbox.path, files, rules);
         const reported = findings.map(({ file, rule }) => `${file} ${String(rule)}`);
-        const expected = SONAR_REGEX_SAMPLES.map((sample) => `${sample.name}.${extension} ${sample.rule}`);
+        const expected = SONAR_REGEX_SAMPLES.filter((sample) => level === 'all' || sample.level === 'basic').map(
+            (sample) => `${sample.name}.${extension} ${sample.rule}`,
+        );
         expect([...new Set(reported)].toSorted(compareText)).toStrictEqual(expected.toSorted(compareText));
         await createFileTree(
             sandbox.path,
