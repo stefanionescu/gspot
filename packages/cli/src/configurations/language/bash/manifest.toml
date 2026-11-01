@@ -142,8 +142,8 @@ why = "No check reads code inside a heredoc."
 
 [[check]]
 example = "`killall worker` reports `broad-kill`. Stop the one process by its ID, or ignore the rule for that script with a reason."
-help = "Stop one process by its ID, delete only paths the script created, and handle each failure."
+help = "Stop one process by its ID, delete only paths the script created, handle each failure, and write the form that the message names."
 name = "safety"
 stage = "commit"
-summary = "Finds broad process kills and recursive deletes, except traps that remove mktemp paths. At level all, also reports discarded failures."
+summary = "Finds broad process kills, recursive deletes outside traps that remove mktemp paths, and the syntax that BASH.md forbids: `function`, `typeset`, `&>`, `|&`, brace `for`, `echo`, `bash -lc`, GNU `timeout`, and `curl` without `--fail`. At level all, also reports discarded failures, `set -x`, `seq` loops, and a script-level or saved `IFS`."
 why = "Each of these lets a script silently destroy something by mistake."

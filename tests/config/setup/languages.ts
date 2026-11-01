@@ -11,7 +11,7 @@ export const CLEAN_BASH_SCRIPT = `${BASH_HEADER}# main: runs the script.
 main() {
     local name="world"
     local greeting="hello \${name}"
-    echo "\${greeting}"
+    printf '%s\\n' "\${greeting}"
 }
 
 main "$@"

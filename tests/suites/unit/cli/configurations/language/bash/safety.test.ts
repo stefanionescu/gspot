@@ -76,6 +76,14 @@ test.each(COMMAND_SAFETY_CASES)('Bash safety parses the command $source', async 
     expect(findings.map((finding) => finding.rule)).toStrictEqual(rule === undefined ? [] : [rule]);
 });
 
+test.each(['set -x', 'for index in $(seq 1 3); do :; done', 'IFS=,'])('level basic permits %s', async (source) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash']),
+        'run.sh': `#!/usr/bin/env bash\n${source}\n`,
+    });
+    expect(await runSandboxCheck(sandbox.path, 'bash/safety')).toStrictEqual([]);
+});
+
 test('the default level permits an explicitly ignored failure', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),

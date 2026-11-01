@@ -2,13 +2,6 @@ import type { Node } from 'web-tree-sitter';
 import { replaceRanges } from '#cli/system/text.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 
-import {
-    findSourceLine,
-    parseTrapScripts,
-    buildCommandCalls,
-    listScriptCommands,
-    listSwallowedLines,
-} from '#cli/parsers/code/traps.ts';
 import type {
     ParseCache,
     TrapScript,
@@ -18,6 +11,14 @@ import type {
     TemporaryPath,
     ScriptTemporaryPaths,
 } from '#cli/types/parsers.ts';
+import {
+    findSourceLine,
+    listScriptForms,
+    parseTrapScripts,
+    buildCommandCalls,
+    listScriptCommands,
+    listSwallowedLines,
+} from '#cli/parsers/code/traps.ts';
 import {
     SHIFT_COMMAND,
     NOT_LINE_BREAK,
@@ -276,6 +277,7 @@ export async function parseBashScript(text: string, cache?: ParseCache): Promise
         return {
             code: codeText.split('\n'),
             commands: listScriptCommands(commands, traps),
+            forms: listScriptForms(tree.rootNode),
             swallowedLines: listSwallowedLines(tree.rootNode, traps),
             statements: tree.rootNode.namedChildren
                 .filter((node) => node.type !== 'comment')

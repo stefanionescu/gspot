@@ -1,3 +1,6 @@
+import type { BashForm } from '#cli/types/parsers.ts';
+import type { BashCommandForm } from '#cli/types/configurations/language.ts';
+
 export const SHELLCHECK_OPTIONS = [
     ['source-path', 'SCRIPTDIR'],
     ['external-sources', 'true'],
@@ -98,7 +101,51 @@ export const SAFETY_RULES = {
     broadKill: 'broad-kill',
     recursiveRemove: 'recursive-remove',
     ignoredFailure: 'ignored-failure',
+    echo: 'echo',
+    loginShell: 'login-shell',
+    gnuTimeout: 'gnu-timeout',
+    curlFail: 'curl-fail',
+    traceMode: 'trace-mode',
 } as const;
+
+export const BASH_FORM_MESSAGES: Readonly<Record<BashForm, string>> = {
+    'function-keyword': 'Write `name() { ...; }`, without the `function` keyword.',
+    typeset: 'Use `local`, `declare`, or `readonly` instead of `typeset`.',
+    'combined-redirect': 'Write `>file 2>&1` instead of `&>`.',
+    'combined-pipe': 'Write `2>&1 |` instead of `|&`.',
+    'brace-for': 'Write `for arg in "$@"; do ... done`.',
+    'seq-loop': 'Count with `for (( index = 0; index < count; index++ ))`, not `seq`.',
+    'script-ifs': 'Set `IFS` with `local IFS` in a function or in a subshell, and do not save it to restore it.',
+};
+
+export const ALL_LEVEL_FORMS: ReadonlySet<BashForm> = new Set(['seq-loop', 'script-ifs']);
+
+const GNU_TIMEOUT = {
+    rule: SAFETY_RULES.gnuTimeout,
+    message: 'macOS has no `timeout`. Use the time limit of the tool, such as `--max-time` or `ConnectTimeout`.',
+};
+
+export const COMMAND_FORMS: Readonly<Record<string, BashCommandForm | undefined>> = {
+    echo: { rule: SAFETY_RULES.echo, message: 'Write messages with `printf`, not `echo`.' },
+    timeout: GNU_TIMEOUT,
+    gtimeout: GNU_TIMEOUT,
+    curl: {
+        rule: SAFETY_RULES.curlFail,
+        message: 'Pass `--fail`, so that an HTTP error stops the script.',
+        absent: /^(?:--fail(?:-with-body)?|-[A-Za-eg-z]*f[A-Za-z]*)$/u,
+    },
+    bash: {
+        rule: SAFETY_RULES.loginShell,
+        message: 'Run the command without a login shell, which reads the profile of the host.',
+        present: [/^(?:--login|-(?=[a-z]*l))/u, /^-(?=[a-z]*c)/u],
+    },
+    set: {
+        rule: SAFETY_RULES.traceMode,
+        message: 'Keep `set -x` out of committed code.',
+        present: [/^(?:xtrace|-[A-Za-wyz]*x[A-Za-z]*)$/u],
+        allLevel: true,
+    },
+};
 
 const SET_COMMAND = 'set ';
 

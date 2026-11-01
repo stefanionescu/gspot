@@ -1,4 +1,5 @@
 import { NODE_MODULES } from '#cli/config/system.ts';
+import type { BashForm } from '#cli/types/parsers.ts';
 
 export const GSPOT_FOLDER = '.gspot';
 
@@ -50,6 +51,22 @@ export const BASH_COMPOUND_NODES: readonly string[] = [
 ];
 
 export const FOR_HEADER_FIELDS = ['initializer', 'condition', 'update'] as const;
+
+export const BASH_TOKEN_FORMS: Readonly<Record<string, Readonly<Record<string, BashForm>>>> = {
+    function_definition: { function: 'function-keyword' },
+    declaration_command: { typeset: 'typeset' },
+    file_redirect: { '&>': 'combined-redirect', '&>>': 'combined-redirect' },
+    pipeline: { '|&': 'combined-pipe' },
+    ERROR: { for: 'brace-for' },
+};
+
+export const IFS_VARIABLE = 'IFS';
+
+export const SAVED_IFS = /\$\{?IFS\}?/u;
+
+export const INLINE_ASSIGNMENT_NODES = ['command', 'declaration_command'] as const;
+
+export const SEQUENCE_COMMAND = 'seq';
 
 export const EXPANSION_NODES: readonly string[] = ['simple_expansion', 'expansion'];
 

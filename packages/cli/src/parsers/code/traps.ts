@@ -3,12 +3,17 @@ import { parseSource } from '#cli/parsers/code/grammars.ts';
 import type { ParseCache, TrapScript, ScriptSyntax } from '#cli/types/parsers.ts';
 
 import {
+    SAVED_IFS,
+    IFS_VARIABLE,
     TRAP_COMMAND,
     END_OF_OPTIONS,
+    BASH_TOKEN_FORMS,
+    SEQUENCE_COMMAND,
     TRAP_SOURCE_ROWS,
     FORWARDED_ARGUMENTS,
     TRAP_STRING_ESCAPES,
     TRAP_EXPANSION_NODES,
+    INLINE_ASSIGNMENT_NODES,
 } from '#cli/config/parsers.ts';
 
 function readTrapBody(body: Node): { text: string; sourceRows: TrapScript['sourceRows'] } {
@@ -165,4 +170,56 @@ export function findSourceLine(node: Node, sourceRows?: TrapScript['sourceRows']
     if (sourceRows === undefined) return node.startPosition.row + 1;
     const source = sourceRows.findLast((row) => row.offset <= node.startIndex);
     return source?.line ?? node.startPosition.row + 1;
+}
+
+function isScriptLevel(node: Node): boolean {
+    for (let parent = node.parent; parent !== null; parent = parent.parent)
+        if (parent.type === 'function_definition' || parent.type === 'subshell') return false;
+    return true;
+}
+
+function listIfsWrites(syntaxRoot: Node): Node[] {
+    return syntaxRoot.descendantsOfType('variable_assignment').filter((assignment) => {
+        if (SAVED_IFS.test(assignment.childForFieldName('value')?.text ?? '')) return true;
+        return (
+            assignment.childForFieldName('name')?.text === IFS_VARIABLE &&
+            !INLINE_ASSIGNMENT_NODES.includes((assignment.parent as Node).type as 'command') &&
+            isScriptLevel(assignment)
+        );
+    });
+}
+
+function listSequenceLoops(syntaxRoot: Node): Node[] {
+    return syntaxRoot.descendantsOfType('for_statement').filter((loop) =>
+        loop
+            .childrenForFieldName('value')
+            .flatMap((value) => value.descendantsOfType('command'))
+            .some((command) => command.childForFieldName('name')?.text === SEQUENCE_COMMAND),
+    );
+}
+
+/**
+List the syntax forms that the Bash rules forbid.
+
+@param syntaxRoot the parsed script.
+*/
+export function listScriptForms(syntaxRoot: Node): ScriptSyntax['forms'] {
+    return [
+        ...Object.entries(BASH_TOKEN_FORMS)
+            .flatMap(([type, forms]) =>
+                syntaxRoot.descendantsOfType(type).flatMap((node) => node.children.map((token) => ({ token, forms }))),
+            )
+            .flatMap(({ token, forms }) => {
+                const form = forms[token.type];
+                return form === undefined ? [] : [{ form, line: token.startPosition.row + 1 }];
+            }),
+        ...listSequenceLoops(syntaxRoot).map((loop) => ({
+            form: 'seq-loop' as const,
+            line: loop.startPosition.row + 1,
+        })),
+        ...listIfsWrites(syntaxRoot).map((write) => ({
+            form: 'script-ifs' as const,
+            line: write.startPosition.row + 1,
+        })),
+    ];
 }

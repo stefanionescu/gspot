@@ -127,6 +127,14 @@ type EslintBoundaryFile = {
 
 export type PathExpressions = { includes: string[]; excludes: string[] };
 
+export type BashCommandForm = {
+    rule: string;
+    message: string;
+    present?: readonly RegExp[];
+    absent?: RegExp;
+    allLevel?: true;
+};
+
 export type SelectorPaths = Pick<ParsedManifest['eslint']['selectors'][number], 'selector' | 'message'> & {
     files?: string[];
     ignores?: string[];

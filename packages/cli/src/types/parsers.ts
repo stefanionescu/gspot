@@ -53,8 +53,18 @@ export type TrapCleanup = {
     lines: Map<number, Array<TemporaryPath | undefined>>;
 };
 
+export type BashForm =
+    | 'function-keyword'
+    | 'typeset'
+    | 'combined-redirect'
+    | 'combined-pipe'
+    | 'brace-for'
+    | 'seq-loop'
+    | 'script-ifs';
+
 export type ScriptSyntax = {
     commands: { name: string; arguments: (string | undefined)[]; line: number }[];
+    forms: { form: BashForm; line: number }[];
     swallowedLines: number[];
     statements: { kind: string; text: string; line: number }[];
     code: string[];
