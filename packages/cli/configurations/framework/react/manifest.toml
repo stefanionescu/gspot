@@ -55,10 +55,14 @@ version = "0.5.7"
 required_tools = ["eslint-plugin-react-hooks", "@eslint-react/eslint-plugin", "eslint-plugin-react-refresh"]
 all_level_rules = ["@eslint-react/no-missing-component-display-name", "@eslint-react/no-array-index-key"]
 
+[[eslint.forwarding_files]]
+files = ["**/*.tsx", "**/*.jsx"]
+reason = "React renders a component by its name, so a component of one statement, alone in its file, is the shape React asks for."
+
 [[eslint.rules_off]]
 files = ["**/*.tsx", "**/*.jsx"]
 reason = "React renders a component by its name, so a component of one statement, alone in its file, is the shape React asks for."
-rules = ["gspot/no-trivial-files", "gspot/no-trivial-functions"]
+rules = ["gspot/no-trivial-functions"]
 
 [[eslint.rules_off]]
 reason = "eslint-plugin-react-hooks reports the same hook mistakes under its react-hooks/ names."

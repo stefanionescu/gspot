@@ -19,7 +19,9 @@ export type TrivialFunctionsOptions = [
     },
 ];
 
-export type TrivialFilesOptions = [{ allowIndex: boolean }];
+export type TrivialFilesOptions = [
+    { reexports: 'none' | 'index-only'; indexExports: number; forwardingFiles: readonly string[] },
+];
 
 export type MagicNumbersOptions = [Record<string, unknown>];
 

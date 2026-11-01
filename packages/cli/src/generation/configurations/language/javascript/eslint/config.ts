@@ -8,24 +8,28 @@ import { requireTypescript } from '#cli/system/typescript.ts';
 import { join, dirname, basename, relative } from 'node:path/posix';
 import { refuseIdleRuleOptions } from '#cli/generation/rule-options.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/generation/ignores.ts';
-import type { BlockWriter, PlannedEslintBlock } from '#cli/types/generation/eslint.ts';
 import type { ConfigOutput, GeneratedFile, PlannedConfig } from '#cli/types/generation/files.ts';
 import { buildRuntimes } from '#cli/generation/configurations/language/javascript/eslint/runtimes.ts';
 import { buildBlockCalls } from '#cli/generation/configurations/language/javascript/eslint/block-calls.ts';
 import { buildPlannedEslintFile } from '#cli/generation/configurations/language/javascript/eslint/plan.ts';
 import { splitSettingsBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
+import type { BlockWriter, EslintBlock, EslintPlugins, PlannedEslintBlock } from '#cli/types/generation/eslint.ts';
 import { buildBoundaryBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/boundaries.ts';
 import { listConfigurationBlocks } from '#cli/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
+import {
+    buildClosingBlocks,
+    buildOpeningBlocks,
+} from '#cli/generation/configurations/language/javascript/eslint/blocks/base.ts';
 import {
     listLocalPlugins,
     buildLocalPluginBlocks,
 } from '#cli/generation/configurations/language/javascript/eslint/blocks/local-plugins.ts';
 import {
-    selectPlugins,
-    buildClosingBlocks,
-    buildOpeningBlocks,
-} from '#cli/generation/configurations/language/javascript/eslint/blocks/base.ts';
+    ESLINT_PLUGIN_IMPORTS,
+    BOUNDARIES_PLUGIN_IMPORT,
+    LEVEL_ALL_PLUGIN_IMPORTS,
+} from '#cli/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
 import {
     NAME_HYPHEN,
     ESLINT_CHECK,
@@ -138,6 +142,40 @@ function serializeImports(
 }
 
 /**
+Choose the imports of the eslint.mjs module: the presets, the shipped plugins that its blocks use, the local plugins
+of the scopes, and the plugins of the configuration files.
+
+@param planned the config file to build.
+@param writer the block writer, which holds the level.
+@param boundaryBlocks the project classifications that need the boundaries plugin.
+@param configurationImports the plugins that the configuration files import.
+*/
+function listEslintImports(
+    planned: PlannedConfig,
+    writer: BlockWriter,
+    boundaryBlocks: EslintBlock[],
+    configurationImports: EslintPlugins,
+): { plugins: EslintPlugins; imports: (readonly [string, string])[] } {
+    const shipped = {
+        ...ESLINT_PLUGIN_IMPORTS,
+        ...(writer.level === 'all' && LEVEL_ALL_PLUGIN_IMPORTS),
+        ...(boundaryBlocks.length > 0 && BOUNDARIES_PLUGIN_IMPORT),
+    };
+    const plugins = { ...shipped, ...listLocalPlugins(planned.session.scopes, planned.targetPath, shipped) };
+    return {
+        plugins,
+        imports: [
+            GLOBALS_IMPORT,
+            ...[...PRESETS_BEFORE_CONFIGURATIONS, ...PRESETS_AFTER_CONFIGURATIONS].map(
+                (preset) => [preset.importName, preset.package] as const,
+            ),
+            ...Object.values(plugins),
+            ...Object.values(configurationImports),
+        ],
+    };
+}
+
+/**
 Build the eslint.mjs of a configuration: its imports, and the calls of the shipped functions that build
 its blocks.
 
@@ -155,16 +193,7 @@ export function buildEslintFile(planned: PlannedConfig): ConfigOutput {
         ...listCheckIgnoreSections(planned.scope.settings, ESLINT_CHECK),
     ]);
     const { configurationBlocks, configurationImports } = listConfigurationBlocks(eslintFile);
-    const shipped = selectPlugins(eslintFile, boundaryBlocks);
-    const plugins = { ...shipped, ...listLocalPlugins(session.scopes, planned.targetPath, shipped) };
-    const imports = [
-        GLOBALS_IMPORT,
-        ...[...PRESETS_BEFORE_CONFIGURATIONS, ...PRESETS_AFTER_CONFIGURATIONS].map(
-            (preset) => [preset.importName, preset.package] as const,
-        ),
-        ...Object.values(plugins),
-        ...Object.values(configurationImports),
-    ];
+    const { plugins, imports } = listEslintImports(planned, blockWriter, boundaryBlocks, configurationImports);
     const configurationFiles = buildConfigurationFiles(planned, configurationBlocks, imports, blockWriter);
     const blockTexts = [
         `${ESLINT_INDENT}buildBlock(${JSON.stringify({ ignores: ignoredGlobs }, null, JSON_INDENT)})`,

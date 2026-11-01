@@ -1,17 +1,11 @@
-import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { escapeGlob } from '#cli/system/paths.ts';
 import type { Level } from '#cli/types/manifests.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import type { Settings } from '#cli/types/settings/settings.ts';
 import { type SelectorBlock, type SelectorPaths } from '#cli/types/generation/eslint.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 
 import {
-    INDEX_PATTERN,
-    REEXPORT_MESSAGE,
-    REEXPORT_SELECTORS,
     ENVIRONMENT_SELECTOR,
     ALIAS_IMPORT_SELECTORS,
 } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
@@ -77,16 +71,10 @@ Resolve the syntax selectors that the configurations and settings add in each pr
 
 @param scopes every project scope.
 @param level the selected lint rule level.
-@param reexports the export convention.
 */
-export function buildSelectorBlocks(
-    scopes: Scope[],
-    level: Level,
-    reexports: Settings['structure']['reexports'],
-): SelectorBlock[] {
+export function buildSelectorBlocks(scopes: Scope[], level: Level): SelectorBlock[] {
     const scopePaths = scopes.map((each) => each.path);
     return scopes.flatMap((scope) => {
-        const prefix = escapeGlob(scope.path);
         const declarations = scope.configurations.flatMap((configuration) =>
             configuration.eslint.selectors.filter((selector) => level === 'all' || selector.level === 'basic'),
         );
@@ -103,10 +91,6 @@ export function buildSelectorBlocks(
                 }),
             )
             .toArray();
-        if (level === 'all') {
-            const except = reexports === 'index-only' ? [posix.join(prefix, INDEX_PATTERN)] : [];
-            applied.push(...REEXPORT_SELECTORS.map((selector) => ({ selector, message: REEXPORT_MESSAGE, except })));
-        }
         applied.push(...listSettingSelectors(scope, level));
         return listSelectorBlocks(applied).map((group) => ({
             ...group,

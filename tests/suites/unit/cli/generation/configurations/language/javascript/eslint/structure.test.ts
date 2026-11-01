@@ -153,7 +153,7 @@ test('a JSON import attribute is accepted where your import extensions need a su
 });
 
 test.each([...LEVEL_REEXPORT_CASES])(
-    'at %s with reexports = %s, import, re-export and barrel rules apply in root and child scopes',
+    'at %s with reexports = %s, the import rules, re-exports, and index limits apply in root and child scopes',
     async (level, reexports) => {
         await using sandbox = await testdir({
             ...IMPORT_FILES,
@@ -177,30 +177,17 @@ test.each([...LEVEL_REEXPORT_CASES])(
                 [file],
                 REEXPORT_CASES.map(([source, count]) => ({
                     source,
-                    rule: 'no-restricted-syntax',
+                    rule: 'gspot/no-trivial-files',
                     count: isBanned ? count : 0,
                 })),
             );
         }
-        const isBarrels = level === 'all' && reexports === 'index-only';
-        if (isBarrels)
+        if (level === 'all' && reexports === 'index-only')
             await assertSourceRules(
                 eslint,
                 sandbox.path,
                 ['src/index.ts', 'app/src/index.ts'],
-                REEXPORT_CASES.map(([source]) => ({ source, rule: 'gspot/no-trivial-files', count: 0 })),
+                BARREL_CASES.map(([name, source, count]) => ({ name, source, rule: 'gspot/no-trivial-files', count })),
             );
-
-        await assertSourceRules(
-            eslint,
-            sandbox.path,
-            ['src/index.ts', 'app/src/index.ts'],
-            BARREL_CASES.map(([name, source, count]) => ({
-                name,
-                source,
-                rule: 'barrel-files/avoid-barrel-files',
-                count: isBarrels ? count : 0,
-            })),
-        );
     },
 );

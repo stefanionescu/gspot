@@ -69,9 +69,9 @@ export function buildPlannedEslintFile(planned: PlannedConfig): PlannedEslintFil
             code: {
                 ...BASE_RULES,
                 'no-restricted-syntax': ['error', ...(level === 'all' ? BASE_SELECTORS : [])],
-                ...buildScopeLimitRules(settings, repositorySettings.structure.reexports).code,
+                ...buildScopeLimitRules(settings).code,
             },
-            javascript: buildScopeLimitRules(settings, repositorySettings.structure.reexports).javascript,
+            javascript: buildScopeLimitRules(settings).javascript,
         },
         blockWriter: {
             allLevelRules: new Set(

@@ -184,6 +184,11 @@ const clientEnvironmentSchema = z.strictObject({
     allowed_names: z.string().min(1).array().optional(),
 });
 
+const forwardingFilesSchema = z.strictObject({
+    files: z.string().min(1).array().min(1),
+    reason: nonemptyStringSchema,
+});
+
 const exportNamesSchema = z.strictObject({
     files: z.string().min(1).array().min(1),
     names: z.string().min(1).array().min(1),
@@ -200,6 +205,7 @@ export const manifestSchema = z
                 selectors: selectorSchema.array().default([]),
                 rules_off: rulesOffSchema.array().default([]),
                 export_names: exportNamesSchema.array().default([]),
+                forwarding_files: forwardingFilesSchema.array().default([]),
                 client_env: clientEnvironmentSchema.array().default([]),
                 required_tools: z.string().min(1).array().default([]),
             })

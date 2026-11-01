@@ -117,35 +117,61 @@ function buildEnvironmentRuleBlocks(planned: Pick<PlannedEslintFile, 'session' |
     });
 }
 
+function buildTrivialRules(
+    scope: Scope,
+    language: (typeof CODE_LANGUAGES)[number],
+    reexports: Settings['structure']['reexports'],
+): Record<string, unknown> {
+    const limitRules = LIMIT_RULES_BY_CHECK.get(ESLINT_CHECK) as Record<string, string>;
+    const tables = scope.configurations.map(({ eslint }) => eslint);
+    const exportNames = tables.flatMap(({ export_names }) => export_names);
+    const forwardingFiles = tables.flatMap(({ forwarding_files }) => forwarding_files.flatMap(({ files }) => files));
+    return {
+        [TRIVIAL_FILES_RULE]: [
+            'error',
+            {
+                reexports,
+                indexExports: getLimit(scope.settings, limitRules[TRIVIAL_FILES_RULE] as string, language),
+                ...(forwardingFiles.length > 0 && { forwardingFiles }),
+            },
+        ],
+        [TRIVIAL_FUNCTIONS_RULE]: [
+            'error',
+            {
+                trivialFunctionStatements: getLimit(
+                    scope.settings,
+                    limitRules[TRIVIAL_FUNCTIONS_RULE] as string,
+                    language,
+                ),
+                ...(exportNames.length > 0 && { exportNames }),
+            },
+        ],
+    };
+}
+
+function groupTrivialRules(
+    scope: Scope,
+    parent: Scope | undefined,
+    reexports: Settings['structure']['reexports'],
+): { rules: Record<string, unknown>; languages: string[] }[] {
+    const groups = new Map<string, { rules: Record<string, unknown>; languages: string[] }>();
+    for (const language of CODE_LANGUAGES) {
+        const rules = buildTrivialRules(scope, language, reexports);
+        if (parent !== undefined && isDeepStrictEqual(rules, buildTrivialRules(parent, language, reexports))) continue;
+        const key = JSON.stringify(rules);
+        groups.set(key, { rules, languages: [...(groups.get(key)?.languages ?? []), language] });
+    }
+    return [...groups.values()];
+}
+
 function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintRuleBlock[] {
     const { session, nodeFiles } = planned;
     if (session.settings.level !== 'all') return [];
     const { scopes } = session;
     const blocks: EslintRuleBlock[] = [];
-    const trivialFunctionLimit = (LIMIT_RULES_BY_CHECK.get(ESLINT_CHECK) as Record<string, string>)[
-        TRIVIAL_FUNCTIONS_RULE
-    ] as string;
-    const isAllowIndex = session.settings.structure.reexports === 'index-only';
-    const orderedScopes = scopes.toSorted((a, b) => compareScopeDepth(a.path, b.path));
-    for (const scope of orderedScopes) {
+    for (const scope of scopes.toSorted((a, b) => compareScopeDepth(a.path, b.path))) {
         const parent = findParentScope(scopes, scope.path);
-        const exportNames = scope.configurations.flatMap((configuration) => configuration.eslint.export_names);
-        const isExportNamesChanged =
-            parent === undefined ||
-            !isDeepStrictEqual(
-                exportNames,
-                parent.configurations.flatMap((configuration) => configuration.eslint.export_names),
-            );
-        const limits = CODE_LANGUAGES.map((language) => ({
-            language,
-            value: getLimit(scope.settings, trivialFunctionLimit, language),
-        })).filter(
-            ({ language, value }) =>
-                isExportNamesChanged || value !== getLimit(parent.settings, trivialFunctionLimit, language),
-        );
-        const groups = new Map<number, string[]>();
-        for (const { language, value } of limits) groups.set(value, [...(groups.get(value) ?? []), language]);
-        for (const [trivialFunctionStatements, languages] of groups) {
+        for (const { rules, languages } of groupTrivialRules(scope, parent, session.settings.structure.reexports)) {
             const patterns = languages.flatMap((language) =>
                 language === 'javascript'
                     ? [
@@ -158,17 +184,7 @@ function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'no
                           .map((extension) => extension.slice(1))
                           .join(',')}}`,
             );
-            blocks.push({
-                scope: scope.path,
-                ...splitGlobs(patterns),
-                rules: {
-                    [TRIVIAL_FILES_RULE]: ['error', { allowIndex: isAllowIndex }],
-                    [TRIVIAL_FUNCTIONS_RULE]: [
-                        'error',
-                        { trivialFunctionStatements, ...(exportNames.length > 0 && { exportNames }) },
-                    ],
-                },
-            });
+            blocks.push({ scope: scope.path, ...splitGlobs(patterns), rules });
         }
     }
     return blocks;

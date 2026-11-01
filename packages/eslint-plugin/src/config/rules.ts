@@ -194,13 +194,38 @@ export const MAGIC_NUMBER_OPTIONS_SCHEMA = {
 export const TRIVIAL_FILE_OPTIONS_SCHEMA = {
     type: 'object',
     properties: {
-        allowIndex: {
-            description: 'Skip files named index.',
-            type: 'boolean',
+        reexports: {
+            description:
+                'Where `export … from` may go: `none` reports each one, and `index-only` allows them in files named index.',
+            type: 'string',
+            enum: ['none', 'index-only'],
+        },
+        indexExports: {
+            description:
+                'With `index-only`, the most names an index file may export when it exports more names than it declares.',
+            type: 'integer',
+            minimum: 0,
+        },
+        forwardingFiles: {
+            description:
+                'Globs of files that may only forward, such as route files that a framework discovers by name. They still report each re-export. Paths are relative to `settings.gspot.root`, or to the working folder of ESLint.',
+            type: 'array',
+            items: { type: 'string' },
         },
     },
     additionalProperties: false,
 } satisfies JSONSchema4;
+
+export const INDEX_EXPORTS = 20;
+
+export const BARREL_DECLARATIONS = new Set<string>([
+    'FunctionDeclaration',
+    'ClassDeclaration',
+    'TSTypeAliasDeclaration',
+    'TSInterfaceDeclaration',
+]);
+
+export const DECLARING_DEFAULT_EXPORTS = new Set<string>(['FunctionDeclaration', 'CallExpression']);
 
 export const TRIVIAL_FUNCTION_OPTIONS_SCHEMA = {
     type: 'object',

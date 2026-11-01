@@ -47,12 +47,9 @@ import {
     PRIVATE_PIN_OPTIONS,
     PACKAGE_JSON_PATTERN,
     PUBLISHED_PIN_OPTIONS,
-    ESLINT_PLUGIN_IMPORTS,
     IMPORT_BOUNDARIES_RULE,
     ROOT_PACKAGE_JSON_RULES,
     BOUNDARIES_FILES_SETTING,
-    BOUNDARIES_PLUGIN_IMPORT,
-    LEVEL_ALL_PLUGIN_IMPORTS,
 } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
 
 function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBlock[]): ConfigurationBlocks['blocks'] {
@@ -228,7 +225,7 @@ export function buildClosingBlocks(
                 readCachedPackageJson(session.cache, file.path)?.['private'] === true,
         )
         .map((file) => escapeGlob(file.path));
-    const selectorGroups = buildSelectorBlocks(session.scopes, level, session.settings.structure.reexports);
+    const selectorGroups = buildSelectorBlocks(session.scopes, level);
     return [
         ...buildRuntimeBlocks(eslintFiles, runtimeBlocks),
         ...selectorGroups.map((group): ConfigurationBlocks['blocks'][number] => ({
@@ -264,24 +261,4 @@ export function buildClosingBlocks(
             },
         },
     ];
-}
-
-/**
-Choose the plugin imports and names for the module header and the lint blocks.
-
-@param planned the ESLint context of the scope.
-@param boundaryBlocks the project classifications that require the boundaries plugin.
-*/
-export function selectPlugins(planned: PlannedEslintFile, boundaryBlocks: EslintBlock[]): EslintPlugins {
-    const isAll = planned.blockWriter.level === 'all';
-    const repositorySettings = planned.session.settings;
-    return {
-        ...ESLINT_PLUGIN_IMPORTS,
-        ...(isAll && { perfectionist: LEVEL_ALL_PLUGIN_IMPORTS.perfectionist }),
-        ...(isAll &&
-            repositorySettings.structure.reexports === 'index-only' && {
-                'barrel-files': LEVEL_ALL_PLUGIN_IMPORTS['barrel-files'],
-            }),
-        ...(boundaryBlocks.length > 0 && BOUNDARIES_PLUGIN_IMPORT),
-    };
 }

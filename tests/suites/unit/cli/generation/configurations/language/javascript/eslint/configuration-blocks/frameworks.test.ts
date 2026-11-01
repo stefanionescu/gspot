@@ -102,10 +102,17 @@ test.each(['all'] as const)(
 );
 
 test.each(['none', 'index-only'])(
-    'Next.js page files skip no-trivial-files and follow reexports = %s in nested scopes',
+    'Next.js page files may only forward and follow reexports = %s in nested scopes',
     async (reexports) => {
         await using sandbox = await testdir();
-        const files = ['app/page.tsx', 'app/index.ts', 'app/format.ts', 'library/page.tsx'];
+        const files = [
+            'app/page.tsx',
+            'app/index.ts',
+            'app/format.ts',
+            'app/value.ts',
+            'library/page.tsx',
+            'library/value.ts',
+        ];
         await createFileTree(sandbox.path, {
             'tsconfig.json': STRICT_TSCONFIG_TEXT,
             'gspot.toml': buildSandboxSettings(['typescript'], {
@@ -121,18 +128,21 @@ configurations = ["nextjs"]
             ...Object.fromEntries(files.map((file) => [file, 'export const value = 1;\n'])),
         });
         const eslint = await buildEslint(sandbox.path);
-        const rules = await readEslintRules(eslint, files);
-        expect(rules['app/page.tsx']!['gspot/no-trivial-files']![0]).toBe(0);
-        for (const file of ['app/page.tsx', 'app/index.ts']) {
-            await createFileTree(sandbox.path, { [file]: 'export * from "./format.js";\n' });
-            expect(await listLintFindings(eslint, sandbox.path, [file], ['no-restricted-syntax'])).toStrictEqual(
-                file === 'app/index.ts' && reexports === 'index-only'
-                    ? []
-                    : [{ file, rule: 'no-restricted-syntax', line: 1 }],
+        const forwarding = 'import { value } from "./value.js";\nexport { value };\n';
+        for (const file of ['app/page.tsx', 'app/format.ts', 'library/page.tsx']) {
+            await createFileTree(sandbox.path, { [file]: forwarding });
+            expect(await listLintFindings(eslint, sandbox.path, [file], ['gspot/no-trivial-files'])).toStrictEqual(
+                file === 'app/page.tsx' ? [] : [{ file, rule: 'gspot/no-trivial-files', line: 1 }],
             );
         }
-        expect(rules['app/format.ts']!['gspot/no-trivial-files']![0]).toBe(2);
-        expect(rules['library/page.tsx']!['gspot/no-trivial-files']![0]).toBe(2);
+        for (const file of ['app/page.tsx', 'app/index.ts']) {
+            await createFileTree(sandbox.path, { [file]: 'export * from "./format.js";\n' });
+            expect(await listLintFindings(eslint, sandbox.path, [file], ['gspot/no-trivial-files'])).toStrictEqual(
+                file === 'app/index.ts' && reexports === 'index-only'
+                    ? []
+                    : [{ file, rule: 'gspot/no-trivial-files', line: 1 }],
+            );
+        }
     },
 );
 

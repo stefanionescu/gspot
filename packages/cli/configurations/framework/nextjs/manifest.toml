@@ -76,10 +76,9 @@ names = ["default", "middleware", "proxy"]
 files = ["**/instrumentation.{js,ts}"]
 names = ["register", "onRequestError"]
 
-[[eslint.rules_off]]
+[[eslint.forwarding_files]]
 files = ["**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"]
 reason = "Next.js discovers route files by name, so each file can hold one export in its own folder."
-rules = ["gspot/no-trivial-files"]
 
 [[config_file]]
 per_scope = true

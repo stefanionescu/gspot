@@ -16,7 +16,6 @@ function listRenamedProperties(pattern: TSESTree.ObjectPattern): RenamedValue[] 
 }
 
 function findSourceName(node: TSESTree.ExportSpecifier, local: string, sourceCode: TSESLint.SourceCode): string {
-    if (node.parent.source !== null) return local;
     const definition = ASTUtils.findVariable(sourceCode.getScope(node), local)?.defs[0]?.node;
     if (definition?.type !== AST_NODE_TYPES.ImportSpecifier) return local;
     const { imported } = definition;
@@ -40,7 +39,7 @@ export const noRenamedExports = createRule<[], 'renamed'>({
             example:
                 'The declaration `import { b } from "./owner"; export const a = b;` reports `renamed`, and so do `export { b as a };`, `export const { b: a } = owner;`, and `import { b as a } from "./owner"; export { a };`. Remove `a` and update its consumers to use `b` from its owner. A declaration that owns a value, such as `export const a = 1;`, does not report this finding, and neither does `export { main as default };`.',
             description:
-                'Finds an export that only renames another value: an exported constant set to a bound value, a property that an exported destructuring pattern renames, or an export specifier written `a as b`, re-exports included, or an export specifier whose import renamed the value.',
+                'Finds an export that only renames another value: an exported constant set to a bound value, a property that an exported destructuring pattern renames, or an export specifier written `a as b`, or an export specifier whose import renamed the value. A re-export is the job of `gspot/no-trivial-files`.',
             why: 'Two names for one value split every search and every reader in two.',
             fix: 'Export the source value under its own name, or import the source where the renamed constant was used.',
         },
@@ -57,6 +56,7 @@ export const noRenamedExports = createRule<[], 'renamed'>({
                         context.report({ node: renamed, messageId: 'renamed', data: { name, source } });
             },
             ExportSpecifier(node) {
+                if (node.parent.source !== null) return;
                 const local = node.local.type === AST_NODE_TYPES.Identifier ? node.local.name : node.local.value;
                 const name =
                     node.exported.type === AST_NODE_TYPES.Identifier ? node.exported.name : node.exported.value;

@@ -31,7 +31,6 @@ export const NODE_RUNTIMES: readonly string[] = ['node', 'nodeBuiltin', 'commonj
 
 export const LEVEL_ALL_PLUGIN_IMPORTS = {
     perfectionist: ['perfectionist', 'eslint-plugin-perfectionist'],
-    'barrel-files': ['barrelFiles', 'eslint-plugin-barrel-files'],
 } as const;
 
 export const BOUNDARIES_PLUGIN_IMPORT = { boundaries: ['boundaries', 'eslint-plugin-boundaries'] } as const;
@@ -222,8 +221,6 @@ export const TYPESCRIPT_EXTENSION_MAP = [
 
 export const IMPORT_BOUNDARY_FOLDERS = ['*/*'] as const;
 
-export const BARREL_FILES_RULE = 'barrel-files/avoid-barrel-files';
-
 export const ESLINT_LIMIT_OPTIONS: Readonly<Record<string, Readonly<Record<string, boolean>>>> = {
     'max-lines': { skipBlankLines: true, skipComments: true },
     'max-lines-per-function': { skipBlankLines: true, skipComments: true, IIFEs: true },
@@ -251,12 +248,6 @@ export const ALIAS_IMPORT_SELECTORS = {
         message: 'Keep alias imports extensionless in bundled code.',
     },
 } as const;
-
-export const REEXPORT_SELECTORS = ['ExportAllDeclaration', 'ExportNamedDeclaration[source!=null]'] as const;
-
-export const REEXPORT_MESSAGE = 'Export values at their declaration instead of re-exporting them.';
-
-export const INDEX_PATTERN = '**/index.*';
 
 export const TYPED_LANGUAGES = ['typescript', 'vue', 'svelte', 'astro'] as const;
 
