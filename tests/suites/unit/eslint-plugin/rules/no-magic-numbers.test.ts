@@ -26,6 +26,29 @@ buildRuleTester().run<keyof (typeof plugin.rules)['no-magic-numbers']['meta']['m
             { code: 'function area(radius) { return radius * 3.14; }', errors: [{ messageId: 'noMagic' }] },
             { code: 'const HANDLERS = [() => wait(500)];', errors: [{ messageId: 'noMagic' }] },
             {
+                name: 'call argument in a module constant',
+                code: 'export const server = app.listen(8080);',
+                errors: [{ messageId: 'noMagic', data: { raw: '8080' } }],
+            },
+            {
+                name: 'method arguments on a module constant array',
+                code: 'export const page = [1, 2, 3, 4, 5, 6].slice(0, 50);',
+                errors: [
+                    { messageId: 'noMagic', data: { raw: '0' } },
+                    { messageId: 'noMagic', data: { raw: '50' } },
+                ],
+            },
+            {
+                name: 'timer delay in a module constant',
+                code: 'export const timer = setTimeout(() => undefined, 3000);',
+                errors: [{ messageId: 'noMagic', data: { raw: '3000' } }],
+            },
+            {
+                name: 'constructor argument in a module constant',
+                code: 'const BUFFER = new ArrayBuffer(1024);',
+                errors: [{ messageId: 'noMagic', data: { raw: '1024' } }],
+            },
+            {
                 code: 'function build() { const SIZES = [16, 32]; return SIZES; }',
                 errors: [{ messageId: 'noMagic' }, { messageId: 'noMagic' }],
             },

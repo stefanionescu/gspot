@@ -18,6 +18,9 @@ function isModuleConstant(declaration: TSESTree.VariableDeclaration): boolean {
 function isConstantValue(node: TSESTree.Node): boolean {
     for (let ancestor: TSESTree.Node = node; ancestor.type !== AST_NODE_TYPES.Program; ancestor = ancestor.parent) {
         if (FUNCTION_NODES.has(ancestor.type)) return false;
+        const { parent } = ancestor;
+        const isCall = parent.type === AST_NODE_TYPES.CallExpression || parent.type === AST_NODE_TYPES.NewExpression;
+        if (isCall && parent.arguments.includes(ancestor as TSESTree.CallExpressionArgument)) return false;
         if (ancestor.type === AST_NODE_TYPES.VariableDeclarator) return isModuleConstant(ancestor.parent);
     }
     return false;
@@ -30,10 +33,10 @@ export const noMagicNumbers = createRule<MagicNumbersOptions, 'noMagic' | 'useCo
         type: 'suggestion',
         docs: {
             example:
-                'The call `setTimeout(retry, 3000)` reports `noMagic`. Name the delay, such as `const RETRY_DELAY_MS = 3000;` at module level, and pass the constant. `const SIZES = [16, 32, 64];` and `const TIMEOUT_MS = 60 * 1000;` pass, because the constant names its numbers.',
+                'The call `setTimeout(retry, 3000)` reports `noMagic`. Name the delay, such as `const RETRY_DELAY_MS = 3000;` at module level, and pass the constant. `const SIZES = [16, 32, 64];` and `const TIMEOUT_MS = 60 * 1000;` pass, because the constant names its numbers. `export const server = app.listen(8080);` reports `noMagic`, because `server` names the server, not the port.',
             level: 'none',
             description:
-                'Reports the numbers that @typescript-eslint/no-magic-numbers reports, except inside the initializer of a module-level `const`, including arrays and arithmetic. It takes the options of @typescript-eslint/no-magic-numbers and needs that package installed.',
+                'Reports the numbers that @typescript-eslint/no-magic-numbers reports, except inside the initializer of a module-level `const`: literals, arrays, object property values, arithmetic, unary minus, and `as` or `satisfies`. An argument of a call or of `new` is reported there too, because the constant names the result, not the number. It takes the options of @typescript-eslint/no-magic-numbers and needs that package installed.',
             why: 'A bare number hides what it measures, and a module-level constant gives it a name that callers share.',
             fix: 'Move the number into a module-level constant whose name says what it measures.',
         },
