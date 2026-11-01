@@ -113,6 +113,7 @@
         ".": {
             "entry": [
                 "packages/cli/build.ts",
+                "packages/cli/pin-ages.ts",
                 "packages/eslint-plugin/build.ts",
                 "tests/setup/runner/unit.ts",
                 "tests/setup/programs/**/*.ts",
@@ -162,6 +163,7 @@
         "packages/cli": {
             "entry": [
                 "build.ts",
+                "pin-ages.ts",
                 "src/checks/framework/site/purgecss-process.ts",
                 "configurations/language/javascript/config/eslint-functions.ts",
                 "src/bin.ts",

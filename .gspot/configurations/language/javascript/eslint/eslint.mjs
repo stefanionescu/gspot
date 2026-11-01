@@ -1159,9 +1159,10 @@ export default [
                         ]
                     },
                     {
-                        "category": "import-rule:package-builds",
+                        "category": "import-rule:package-scripts",
                         "pattern": [
-                            "packages/*/build.ts"
+                            "packages/*/build.ts",
+                            "packages/cli/pin-ages.ts"
                         ]
                     },
                     {
@@ -2277,7 +2278,7 @@ export default [
                         {
                             "from": {
                                 "file": {
-                                    "categories": "import-rule:package-builds"
+                                    "categories": "import-rule:package-scripts"
                                 }
                             },
                             "disallow": {
@@ -2287,12 +2288,12 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"package-builds\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"planning\", \"executables\", \"installers\", \"runs\", \"generation\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", \"tests-setup\", \"tests\", \"shipped-config\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"package-scripts\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"planning\", \"executables\", \"installers\", \"runs\", \"generation\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", \"tests-setup\", \"tests\", \"shipped-config\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
                                 "file": {
-                                    "categories": "import-rule:package-builds"
+                                    "categories": "import-rule:package-scripts"
                                 }
                             },
                             "allow": {
@@ -2300,7 +2301,7 @@ export default [
                                     "file": {
                                         "categories": {
                                             "anyOf": [
-                                                "import-rule:package-builds",
+                                                "import-rule:package-scripts",
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types",
                                                 "import-rule:system",
@@ -2512,7 +2513,7 @@ export default [
                                             "import-rule:tests-setup",
                                             "import-rule:tests",
                                             "import-rule:shipped-config",
-                                            "import-rule:package-builds"
+                                            "import-rule:package-scripts"
                                         ]
                                     }
                                 }
@@ -2557,7 +2558,7 @@ export default [
                                                 "import-rule:tests-setup",
                                                 "import-rule:tests",
                                                 "import-rule:shipped-config",
-                                                "import-rule:package-builds"
+                                                "import-rule:package-scripts"
                                             ]
                                         }
                                     }

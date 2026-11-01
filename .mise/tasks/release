@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Tag a tested main commit, publish both npm packages, deploy the docs site, and create the GitHub release."
+#MISE description="Check the tool pins against the release-age hold, tag a tested main commit, publish both npm packages, deploy the docs site, and create the GitHub release."
 #MISE depends=["build"]
 set -euo pipefail
 
@@ -122,6 +122,7 @@ main() {
     local cli_tag
 
     assert_release_commit
+    bun packages/cli/pin-ages.ts || exit 1
     plugin_spec=$(npm pkg get name version --prefix packages/eslint-plugin | jq -r '"\(.name)@\(.version)"') || exit 1
     cli_spec=$(npm pkg get name version --prefix packages/cli | jq -r '"\(.name)@\(.version)"') || exit 1
     plugin_tag="eslint-plugin-v${plugin_spec##*@}"
