@@ -1,6 +1,6 @@
 import { realpathSync } from 'node:fs';
+import { findToolName } from '#cli/tools/pins.ts';
 import { quoteArgument } from '#cli/system/text.ts';
-import { findToolName } from '#cli/manifests/tools.ts';
 import { listCheckedFiles } from '#cli/planning/files.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { hasRuleOutput } from '#cli/runs/output/formats.ts';

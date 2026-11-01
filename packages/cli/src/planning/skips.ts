@@ -1,6 +1,6 @@
 import { listIgnores } from '#cli/settings/scopes.ts';
+import { findMissingBuild } from '#cli/tools/pins.ts';
 import { LIMIT_READERS } from '#cli/manifests/limits.ts';
-import { findMissingBuild } from '#cli/manifests/tools.ts';
 import type { Tool, Check } from '#cli/types/manifests.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Settings } from '#cli/types/settings/settings.ts';

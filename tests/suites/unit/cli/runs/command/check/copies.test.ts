@@ -8,7 +8,7 @@ import { openSession } from '#cli/planning/session.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { buildCheckSession } from '#cli/commands/check/run.ts';
-import { UV_PROJECT_ENVIRONMENT } from '#cli/config/executables.ts';
+import { UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';

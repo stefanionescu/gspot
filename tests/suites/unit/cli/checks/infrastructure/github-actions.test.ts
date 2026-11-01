@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { createFileTree } from 'testdirs';
+import { getTool } from '#cli/tools/pins.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { getTool } from '#cli/manifests/tools.ts';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { planChecks } from '#cli/planning/checks.ts';
 import * as processes from '#cli/system/processes.ts';

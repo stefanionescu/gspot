@@ -1,4 +1,4 @@
-import { getUvPin } from '#cli/manifests/tools.ts';
+import { getUvPin } from '#cli/tools/pins.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';

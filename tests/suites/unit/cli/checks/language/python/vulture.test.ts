@@ -1,6 +1,6 @@
 import { join } from 'node:path';
+import { getTool } from '#cli/tools/pins.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { getTool } from '#cli/manifests/tools.ts';
 import { compareText } from '#cli/system/text.ts';
 import { OS_SOURCE } from '#tests/config/python.ts';
 import * as processes from '#cli/system/processes.ts';

@@ -1,16 +1,16 @@
 import { join } from 'node:path';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { buildMiseInstall } from '#cli/installers/mise.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
+import { buildMiseInstall } from '#cli/tools/installers/mise.ts';
 import { runNpmPack } from '#tests/setup/runner/npm-registry.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
-import { MISE_BIN_PATHS_ARGUMENTS } from '#cli/config/executables.ts';
-import { findMisePin, listDistinctTools } from '#cli/manifests/tools.ts';
-import { MISE_INSTALL_ARGUMENTS } from '#cli/config/installers/installers.ts';
+import { findMisePin, listDistinctTools } from '#cli/tools/pins.ts';
+import { MISE_BIN_PATHS_ARGUMENTS } from '#cli/config/tools/tools.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
+import { MISE_INSTALL_ARGUMENTS } from '#cli/config/tools/installers/installers.ts';
 import { REPOSITORY_ROOT, TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 
 import {

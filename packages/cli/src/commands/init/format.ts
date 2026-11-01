@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
+import { getTool } from '#cli/tools/pins.ts';
 import { isTable } from '#cli/system/tables.ts';
-import { getTool } from '#cli/manifests/tools.ts';
 import { find } from '#cli/system/files/reads.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';

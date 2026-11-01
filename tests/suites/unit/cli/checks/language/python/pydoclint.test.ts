@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { chmod } from 'node:fs/promises';
 import { createFileTree } from 'testdirs';
+import { getTool } from '#cli/tools/pins.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { getTool } from '#cli/manifests/tools.ts';
 import { PYPROJECT } from '#tests/config/python.ts';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { planChecks } from '#cli/planning/checks.ts';

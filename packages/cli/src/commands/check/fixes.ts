@@ -1,4 +1,4 @@
-import { getTool } from '#cli/manifests/tools.ts';
+import { getTool } from '#cli/tools/pins.ts';
 import { compareText } from '#cli/system/text.ts';
 import { type Tool } from '#cli/types/manifests.ts';
 import { createCopy } from '#cli/runs/copy/files.ts';
@@ -13,9 +13,9 @@ import { type SpawnResult } from '#cli/types/system/system.ts';
 import { type CommandLaunch } from '#cli/types/runs/command.ts';
 import { listCopyFiles } from '#cli/runs/command/placeholders.ts';
 import { type Session, type CheckSession } from '#cli/types/session.ts';
+import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { type CheckCode, type CheckRunOptions } from '#cli/types/runs/check.ts';
 import { FIX_ROUNDS, FIX_CANCELED_MESSAGE } from '#cli/config/commands/check.ts';
-import { inspectTool, buildToolAvailability } from '#cli/executables/inspect.ts';
 import { buildCommandSetup, buildCommandLaunch } from '#cli/runs/command/check.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 

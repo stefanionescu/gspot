@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { getTool } from '#cli/manifests/tools.ts';
+import { getTool } from '#cli/tools/pins.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { createRunCache } from '#cli/system/cache.ts';

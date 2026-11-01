@@ -1,5 +1,5 @@
 import { join, relative } from 'node:path';
-import { getTool } from '#cli/manifests/tools.ts';
+import { getTool } from '#cli/tools/pins.ts';
 import { find } from '#cli/system/files/reads.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import { createCopy } from '#cli/runs/copy/files.ts';
@@ -8,18 +8,18 @@ import { listOtherTools } from '#cli/planning/tools.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import type { ProcessFailure } from '#cli/types/tools/tools.ts';
 import { buildCommandLines } from '#cli/runs/command/batches.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { PYTHON_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/runs/results.ts';
-import type { ProcessFailure } from '#cli/types/executables/executables.ts';
+import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import type { CheckResult, CheckRunOptions } from '#cli/types/runs/check.ts';
 import { RAN_STATUSES, FILES_PLACEHOLDER } from '#cli/config/runs/command.ts';
-import { inspectTool, buildToolAvailability } from '#cli/executables/inspect.ts';
 import { hasProjectCoverage, stripCoverageArguments } from '#cli/planning/checks.ts';
 import { runToolProcess, buildOtherToolEnvironment } from '#cli/runs/command/tool.ts';
 import { addCommandLine, buildCheckResult, parseCommandFindings } from '#cli/runs/command/output.ts';
-import { findMissingEnvironment, listCopyPythonArguments, buildCopyPythonEnvironment } from '#cli/executables/uv.ts';
+import { findMissingEnvironment, listCopyPythonArguments, buildCopyPythonEnvironment } from '#cli/tools/uv.ts';
 
 import type {
     FolderRun,

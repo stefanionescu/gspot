@@ -11,7 +11,7 @@ import type { Session, CheckSession } from '#cli/types/session.ts';
 import { parseNginxDirectives } from '#cli/parsers/formats/nginx.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { DOCKER_TOOL, DOCKER_DAEMON_NOTE } from '#cli/config/executables.ts';
+import { DOCKER_TOOL, DOCKER_DAEMON_NOTE } from '#cli/config/tools/tools.ts';
 import type { Mount, NginxMounts } from '#cli/types/checks/infrastructure.ts';
 import { type CheckFinding, type BuiltInCheckResult } from '#cli/types/runs/check.ts';
 import { SYNTAX_RULE } from '#cli/config/checks/cross-configuration/cross-configuration.ts';

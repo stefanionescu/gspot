@@ -1,4 +1,4 @@
-import type { LintRuleDocs } from '#cli/types/executables/executables.ts';
+import type { LintRuleDocs } from '#cli/types/tools/tools.ts';
 
 export const YAML_REQUIRED_NAMES = new Set([
     'action.yaml',

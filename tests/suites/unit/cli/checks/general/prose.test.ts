@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { getTool } from '#cli/manifests/tools.ts';
+import { getTool } from '#cli/tools/pins.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { readBytes } from '#cli/system/files/reads.ts';

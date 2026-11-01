@@ -5,19 +5,19 @@ import type { Session } from '#cli/types/session.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { listHostCheckTools } from '#cli/planning/tools.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
+import type { ToolSearch } from '#cli/types/tools/inspection.ts';
 import type { ToolProjectFiles } from '#tests/types/packages.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { buildPythonProjectTable } from '#cli/installers/pypi.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
-import type { NpmToolInstall } from '#cli/types/installers/npm.ts';
 import type { Tool, Configuration } from '#cli/types/manifests.ts';
-import { selectLockfileName } from '#cli/installers/npm/lockfiles.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import type { ToolSearch } from '#cli/types/executables/inspection.ts';
-import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
+import { buildPythonProjectTable } from '#cli/tools/installers/pypi.ts';
+import type { NpmToolInstall } from '#cli/types/tools/installers/npm.ts';
+import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
+import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
 import { readToolPackageManager } from '#cli/repository/javascript/package-manager.ts';
-import type { ToolInstall, ToolPackageManager } from '#cli/types/installers/installers.ts';
-import { listMisePins, listDistinctTools, listToolProjectPins } from '#cli/manifests/tools.ts';
+import { listMisePins, listDistinctTools, listToolProjectPins } from '#cli/tools/pins.ts';
+import type { ToolInstall, ToolPackageManager } from '#cli/types/tools/installers/installers.ts';
 
 /**
 Read a tool project file, its lockfile, and the lockfile mode.

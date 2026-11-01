@@ -6,8 +6,8 @@ import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import type { Generation } from '#cli/types/generation/files.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
+import { listMisePins, listToolProjectPins } from '#cli/tools/pins.ts';
 import { GENERATED_FILE_NOUN } from '#cli/config/generation/generation.ts';
-import { listMisePins, listToolProjectPins } from '#cli/manifests/tools.ts';
 import type { InitPlan, InitScan, InitFileRow, ConflictingConfigs } from '#cli/types/commands/init.ts';
 
 import {

@@ -7,7 +7,7 @@ import { find, read } from '#cli/system/files/reads.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { NPM_BIN_FOLDER } from '#cli/config/executables.ts';
+import { NPM_BIN_FOLDER } from '#cli/config/tools/tools.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { LICENSE_FILE } from '#cli/config/repository/files.ts';

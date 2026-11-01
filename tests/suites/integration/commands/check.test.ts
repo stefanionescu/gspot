@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
-import { getTool } from '#cli/manifests/tools.ts';
+import { getTool } from '#cli/tools/pins.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { join, dirname, delimiter } from 'node:path';

@@ -3,10 +3,10 @@ import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { dirname, relative } from 'node:path/posix';
 import type { Session } from '#cli/types/session.ts';
-import { buildValeIni } from '#cli/installers/vale.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { buildValeIni } from '#cli/tools/installers/vale.ts';
 import type { PlannedConfig } from '#cli/types/generation/files.ts';
-import { VALE_PACKAGES, VALE_PACKAGE_URLS } from '#cli/config/installers/installers.ts';
+import { VALE_PACKAGES, VALE_PACKAGE_URLS } from '#cli/config/tools/installers/installers.ts';
 
 import {
     ACRONYMS,

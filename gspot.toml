@@ -194,7 +194,7 @@ can_import = ["cli-types"]
 [[import_rule]]
 name = "cli-types"
 paths = ["packages/cli/src/types/**"]
-can_import = ["cli-config", "parsers", "manifests", "repository", "settings", "executables", "installers", "runs", "checks", "commands"]
+can_import = ["cli-config", "parsers", "manifests", "repository", "settings", "tools", "runs", "checks", "commands"]
 
 [[import_rule]]
 name = "system"
@@ -217,16 +217,12 @@ name = "settings"
 paths = ["packages/cli/src/settings/**", "packages/cli/src/schemas/settings/**"]
 
 [[import_rule]]
+name = "tools"
+paths = ["packages/cli/src/tools/**", "packages/cli/src/schemas/tools/**"]
+
+[[import_rule]]
 name = "planning"
 paths = ["packages/cli/src/planning/**"]
-
-[[import_rule]]
-name = "executables"
-paths = ["packages/cli/src/executables/**", "packages/cli/src/schemas/executables.ts"]
-
-[[import_rule]]
-name = "installers"
-paths = ["packages/cli/src/installers/**", "packages/cli/src/schemas/installers/**"]
 
 [[import_rule]]
 name = "runs"

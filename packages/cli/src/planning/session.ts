@@ -1,11 +1,11 @@
 import { readSettings } from '#cli/settings/read.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { readSettingsFile } from '#cli/settings/file.ts';
+import { listToolProjectPins } from '#cli/tools/pins.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listEnabledChecks } from '#cli/planning/checks.ts';
 import type { RunCache } from '#cli/types/system/system.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import { listToolProjectPins } from '#cli/manifests/tools.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Settings } from '#cli/types/settings/settings.ts';
 import type { Repository } from '#cli/types/repository/files.ts';

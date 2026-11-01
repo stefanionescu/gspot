@@ -1,6 +1,6 @@
 import { join } from 'node:path';
+import { getTool } from '#cli/tools/pins.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { getTool } from '#cli/manifests/tools.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openFiles } from '#cli/system/files/open.ts';
 import * as processes from '#cli/system/processes.ts';
@@ -17,10 +17,10 @@ import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { PREVIOUS_BYTES } from '#tests/config/installers/installers.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { hasValePackages, installValePackages } from '#cli/installers/vale.ts';
+import { PREVIOUS_BYTES } from '#tests/config/tools/installers/installers.ts';
+import { hasValePackages, installValePackages } from '#cli/tools/installers/vale.ts';
 
 import {
     AUTHORED_STYLE,

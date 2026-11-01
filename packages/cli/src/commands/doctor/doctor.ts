@@ -1,34 +1,34 @@
 import { join } from 'node:path';
 import { styleText } from 'node:util';
+import { inspectTool } from '#cli/tools/inspect.ts';
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { EXIT_FINDINGS } from '#cli/config/terminal.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
-import { inspectTool } from '#cli/executables/inspect.ts';
-import { readHookStatus } from '#cli/installers/hooks.ts';
+import { readToolBinPaths } from '#cli/tools/locate.ts';
+import { findMissingEnvironment } from '#cli/tools/uv.ts';
 import type { Command } from '@commander-js/extra-typings';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
-import { buildMiseInstall } from '#cli/installers/mise.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { readGitSetting } from '#cli/repository/git/run.ts';
-import { readToolBinPaths } from '#cli/executables/locate.ts';
-import { findMissingEnvironment } from '#cli/executables/uv.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
+import { readHookStatus } from '#cli/tools/installers/hooks.ts';
 import { compareText, quoteArgument } from '#cli/system/text.ts';
+import { buildMiseInstall } from '#cli/tools/installers/mise.ts';
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';
+import type { ToolInspection } from '#cli/types/tools/inspection.ts';
 import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
-import type { HookStatus } from '#cli/types/installers/installers.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import type { CommandLocation } from '#cli/types/commands/commands.ts';
-import type { ToolInspection } from '#cli/types/executables/inspection.ts';
-import { findMissingBuild, listDistinctTools } from '#cli/manifests/tools.ts';
+import { findMissingBuild, listDistinctTools } from '#cli/tools/pins.ts';
+import type { HookStatus } from '#cli/types/tools/installers/installers.ts';
 import type { Suggestions, DoctorReport } from '#cli/types/commands/doctor.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/repository.ts';
-import { VERSION_FLAG, AVAILABLE_TOOL_STATES, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/executables.ts';
+import { VERSION_FLAG, AVAILABLE_TOOL_STATES, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/tools.ts';
 
 import {
     VERSION_GAP,

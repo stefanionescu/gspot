@@ -1,0 +1,171 @@
+import { join } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { getTool } from '#cli/tools/pins.ts';
+import { test, spyOn, expect } from 'bun:test';
+import { existsSync, utimesSync } from 'node:fs';
+import { JSON_INDENT } from '#cli/config/text.ts';
+import { testdir, createFileTree } from 'testdirs';
+import { openFiles } from '#cli/system/files/open.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { LEVELS } from '#cli/config/manifests/names.ts';
+import { isOnDisk } from '#tests/setup/system/files.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { VALE_PACKAGES_INI } from '#tests/config/vale.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { buildToolInstall } from '#tests/setup/cli/tools.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { PREVIOUS_BYTES } from '#tests/config/tools/installers/installers.ts';
+import { downloadArchive, hasValePackages, installValePackages } from '#cli/tools/installers/vale.ts';
+import { VALE_PACKAGE_FOLDERS, VALE_PACKAGE_RELEASES } from '#cli/config/tools/installers/installers.ts';
+
+test.each([...LEVELS])(
+    'Vale packages are ready at %s only with the generated vale.ini and the installed folders',
+    async (level) => {
+        await using sandbox = await testdir();
+        expect(hasValePackages(sandbox.path, level)).toBe(false);
+        await createFileTree(sandbox.path, { [GSPOT_PATHS.valeConfig]: VALE_PACKAGES_INI });
+        expect(hasValePackages(sandbox.path, level)).toBe(level === 'basic');
+        for (const folder of VALE_PACKAGE_FOLDERS)
+            await createFileTree(sandbox.path, { [`${GSPOT_PATHS.valePackages}/${folder}/.keep`]: '' });
+        expect(hasValePackages(sandbox.path, level)).toBe(true);
+    },
+);
+
+test.each([VALE_PACKAGE_FOLDERS[0]])(
+    'level all needs the shipped %s folder whatever the Packages line says',
+    async (missing) => {
+        await using sandbox = await testdir({ [GSPOT_PATHS.valeConfig]: 'Packages = \n' });
+
+        for (const folder of VALE_PACKAGE_FOLDERS) {
+            if (folder === missing) continue;
+            await createFileTree(sandbox.path, { [`${GSPOT_PATHS.valePackages}/${folder}/.keep`]: '' });
+        }
+        expect(hasValePackages(sandbox.path, 'all')).toBe(false);
+    },
+);
+
+test('at level basic install installs no Vale packages', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['prose'], { level: 'basic' }) });
+
+    const session = await openSession(sandbox.path);
+    const writer = openFiles(sandbox.path);
+    const context = buildToolInstall(session, writer);
+    expect(await installValePackages(context, [])).toBe('');
+    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.valePackages))).toBe(false);
+});
+
+test('install reclaims interrupted Vale downloads while preserving live downloads', async () => {
+    const exited = 12_345;
+    const stale = `.gspot/vale-${String(exited)}-abcdef`;
+    const active = `.gspot/vale-${String(process.pid)}-abcdef`;
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['prose'], { level: 'basic' }),
+        [`${stale}/archive.zip`]: 'interrupted',
+        [`${active}/archive.zip`]: 'active',
+        '.gspot/vale-ABCDEF/archive.zip': 'old download',
+        '.gspot/vale-notes/notes.txt': 'authored',
+    });
+    utimesSync(join(sandbox.path, '.gspot/vale-ABCDEF'), new Date(0), new Date(0));
+    using _processes = spyOn(process, 'kill').mockImplementation((pid) => {
+        if (pid === exited) throw Object.assign(new Error('The process exited.'), { code: 'ESRCH' });
+        return true;
+    });
+    const session = await openSession(sandbox.path);
+    await installValePackages(buildToolInstall(session, openFiles(sandbox.path)), []);
+    expect(existsSync(join(sandbox.path, stale))).toBe(false);
+    expect(existsSync(join(sandbox.path, '.gspot/vale-ABCDEF'))).toBe(false);
+    expect(existsSync(join(sandbox.path, `${active}/archive.zip`))).toBe(true);
+    expect(existsSync(join(sandbox.path, '.gspot/vale-notes/notes.txt'))).toBe(true);
+});
+
+test('a changed Vale archive is refused before sync and preserves installed packages', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
+        [GSPOT_PATHS.valeConfig]: VALE_PACKAGES_INI,
+        [`${GSPOT_PATHS.valePackages}/Google/terms.yml`]: PREVIOUS_BYTES,
+    });
+    const session = await openSession(sandbox.path);
+    const tool = getTool(session.configurationsByName.values(), 'vale');
+    const miseBin = await writeProgramCommand(
+        sandbox.path,
+        'mise/bin/vale',
+        'fakes/tool',
+        '--line',
+        String(tool.version),
+    );
+    using _request = spyOn(globalThis, 'fetch').mockResolvedValue(new Response('replaced archive'));
+    const writer = openFiles(sandbox.path);
+    const install = buildToolInstall(session, writer);
+    const error = await captureRejection(installValePackages(install, [miseBin]));
+    expect(error.message).toBe(
+        'The Vale package Google failed SHA-256 verification. gspot kept the installed packages.',
+    );
+    expect(install.steps).toStrictEqual([]);
+    expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.valePackages}/Google/terms.yml`), 'utf8')).toBe(
+        PREVIOUS_BYTES,
+    );
+});
+
+test.each(['the pinned releases', 'a deleted folder', 'other releases'] as const)(
+    'the Vale release file skips downloads only while it names the pinned releases and every package folder exists (%s)',
+    async (state) => {
+        const [first, ...kept] = VALE_PACKAGE_FOLDERS;
+        const releases = state === 'other releases' ? {} : VALE_PACKAGE_RELEASES;
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
+            [GSPOT_PATHS.valeReleases]: `${JSON.stringify(releases, null, JSON_INDENT)}\n`,
+            [GSPOT_PATHS.valeConfig]: VALE_PACKAGES_INI,
+            ...Object.fromEntries(
+                (state === 'a deleted folder' ? kept : [first, ...kept]).map((folder) => [
+                    `${GSPOT_PATHS.valePackages}/${folder}/terms.yml`,
+                    'installed bytes',
+                ]),
+            ),
+        });
+        const writer = openFiles(sandbox.path);
+        using request = spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected download'));
+        const install = buildToolInstall(await openSession(sandbox.path), writer);
+        if (state !== 'the pinned releases') {
+            const failure = await captureRejection(installValePackages(install, []));
+            expect(failure.message).toContain('vale');
+            return;
+        }
+        expect(await installValePackages(install, [])).toBe('');
+        expect(request).not.toHaveBeenCalled();
+        expect(install.steps).toStrictEqual([]);
+    },
+);
+
+test('an oversized archive cancels its response stream before reporting the size error', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const session = await openSession(sandbox.path);
+    const writer = openFiles(sandbox.path);
+    const install = buildToolInstall(session, writer);
+    let canceled = false;
+    const stream = new ReadableStream<Uint8Array>({
+        start: (controller) => {
+            controller.enqueue(new Uint8Array([1, 2, 3]));
+        },
+        cancel: () => {
+            canceled = true;
+        },
+    });
+    using _request = spyOn(globalThis, 'fetch').mockImplementation(
+        Object.assign(() => Promise.resolve(new Response(stream)), { preconnect: fetch.preconnect }),
+    );
+    const error = await captureRejection(
+        downloadArchive(install, {
+            url: 'https://example.com/styles.zip',
+            name: 'styles',
+            limit: 2,
+        }),
+    );
+    expect(error).toMatchObject({
+        code: 'install',
+        message: 'https://example.com/styles.zip exceeds the size limit for styles.',
+    });
+    expect(canceled).toBe(true);
+    expect(stream.locked).toBe(false);
+});

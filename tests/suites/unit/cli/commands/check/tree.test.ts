@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
-import { installHooks } from '#cli/installers/hooks.ts';
 import { HOOKS_SETTINGS } from '#tests/config/hooks.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { installHooks } from '#cli/tools/installers/hooks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 

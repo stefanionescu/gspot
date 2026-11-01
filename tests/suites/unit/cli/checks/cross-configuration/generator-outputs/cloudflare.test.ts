@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
 import { createFileTree } from 'testdirs';
-import { getTool } from '#cli/manifests/tools.ts';
+import { getTool } from '#cli/tools/pins.ts';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';

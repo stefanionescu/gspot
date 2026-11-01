@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { getTool } from '#cli/tools/pins.ts';
 import { writeFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
-import { getTool } from '#cli/manifests/tools.ts';
 import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';

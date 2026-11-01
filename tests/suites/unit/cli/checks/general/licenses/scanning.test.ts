@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { join, relative } from 'node:path';
 import { realpath } from 'node:fs/promises';
-import { getTool } from '#cli/manifests/tools.ts';
+import { getTool } from '#cli/tools/pins.ts';
 import { compareText } from '#cli/system/text.ts';
 import * as processes from '#cli/system/processes.ts';
 import { APP_PYPROJECT } from '#tests/config/toml.ts';

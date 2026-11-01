@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { realpathSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { getTool } from '#cli/manifests/tools.ts';
+import { getTool } from '#cli/tools/pins.ts';
 import { planChecks } from '#cli/planning/checks.ts';
 import { type Check } from '#cli/types/manifests.ts';
 import { openSession } from '#cli/planning/session.ts';

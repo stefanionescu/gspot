@@ -6,7 +6,7 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { NPM_BIN_FOLDER } from '#cli/config/executables.ts';
+import { NPM_BIN_FOLDER } from '#cli/config/tools/tools.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import { COMPILER_SOURCE } from '#tests/config/typescript.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';

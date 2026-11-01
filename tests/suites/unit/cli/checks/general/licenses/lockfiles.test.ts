@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { join, relative } from 'node:path';
-import { getTool } from '#cli/manifests/tools.ts';
+import { getTool } from '#cli/tools/pins.ts';
 import { executableLayout } from '#cli/system/paths.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';

@@ -1,7 +1,7 @@
 import { read } from '#cli/system/files/reads.ts';
-import { findToolName } from '#cli/manifests/tools.ts';
+import { findToolName } from '#cli/tools/pins.ts';
 import { mapSettingPaths } from '#cli/settings/paths.ts';
-import { INSTALL_HELP } from '#cli/config/executables.ts';
+import { INSTALL_HELP } from '#cli/config/tools/tools.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { TOOL_LOCKFILES } from '#cli/config/files/gspot.ts';

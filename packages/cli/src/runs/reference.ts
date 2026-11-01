@@ -1,6 +1,6 @@
 import { quoteArgument } from '#cli/system/text.ts';
+import { getTool, findToolName } from '#cli/tools/pins.ts';
 import { hasRuleOutput } from '#cli/runs/output/formats.ts';
-import { getTool, findToolName } from '#cli/manifests/tools.ts';
 import type { CheckDescription } from '#cli/types/reference.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/system.ts';
 import { SETTING_ONLY_PLACEHOLDER } from '#cli/config/runs/command.ts';

@@ -4,7 +4,7 @@ import { openSession } from '#cli/planning/session.ts';
 import { ROOT_LABEL } from '#tests/config/messages.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
-import { extractConfigName } from '#cli/manifests/tools.ts';
+import { extractConfigName } from '#cli/planning/files.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { getConfigTarget } from '#cli/runs/command/placeholders.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

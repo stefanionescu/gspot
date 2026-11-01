@@ -1,15 +1,15 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { getTool } from '#cli/manifests/tools.ts';
+import { getTool } from '#cli/tools/pins.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import type { ToolPackageJson } from '#tests/types/packages.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { YARN_CLIENTS } from '#tests/config/installers/installers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { YARN_CLIENTS } from '#tests/config/tools/installers/installers.ts';
 import { STYLESHEET_CASES, LICENSE_TOOL_CASES } from '#tests/config/generation/generation.ts';
 
 test.each([...STYLESHEET_CASES])('$name installs postcss-html when Stylelint is selected', async (row) => {

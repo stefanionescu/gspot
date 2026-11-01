@@ -6,7 +6,7 @@ import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { buildMiseInstall } from '#cli/installers/mise.ts';
+import { buildMiseInstall } from '#cli/tools/installers/mise.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

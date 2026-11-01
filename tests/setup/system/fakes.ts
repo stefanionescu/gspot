@@ -1,5 +1,5 @@
 import executables from 'which';
-import { getTool } from '#cli/manifests/tools.ts';
+import { getTool } from '#cli/tools/pins.ts';
 import { mock, spyOn, type Mock } from 'bun:test';
 import { quoteArgument } from '#cli/system/text.ts';
 import { type Tool } from '#cli/types/manifests.ts';

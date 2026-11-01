@@ -1,9 +1,9 @@
+import { posix } from 'node:path';
 import { isUtf8 } from 'node:buffer';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { extractConfigName } from '#cli/manifests/tools.ts';
 import { getTable, listIgnores } from '#cli/settings/scopes.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
@@ -14,6 +14,18 @@ import type { PlannedCheck, PlannedScope } from '#cli/types/planning.ts';
 import type { Check, ScopeCheck, Configuration } from '#cli/types/manifests.ts';
 import { isInScope, joinScope, selectScopePath, listNestedScopes } from '#cli/repository/scopes.ts';
 import { ROOT_RUNS, ENCODING_CHECK, LARGE_FILES_CHECK, IGNORED_PATHS_MESSAGE } from '#cli/config/planning.ts';
+
+/**
+Get the name that a config-file placeholder uses for a config file.
+
+@param file the path that the manifest names.
+@returns the file name without its folder and extensions.
+*/
+export function extractConfigName(file: string): string {
+    const name = posix.basename(file);
+    const dot = name.indexOf('.');
+    return dot === -1 ? name : name.slice(0, dot);
+}
 
 function listScopeFiles(planned: PlannedScope, scopePath: string, runs: Check['runs']): TrackedFile[] {
     const prefix = joinScope(scopePath, '');
