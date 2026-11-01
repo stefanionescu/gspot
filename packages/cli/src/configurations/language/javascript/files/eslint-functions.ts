@@ -1,5 +1,3 @@
-// eslint-disable-next-line n/no-unpublished-import -- reason: This module runs from .gspot, and the tool project there installs picomatch through ESLint.
-import picomatch from 'picomatch';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
@@ -81,16 +79,16 @@ export function stripRuntimeGlobals(
 Select the files that one runtime declaration covers. A later matching declaration wins.
 
 @param index the position of the runtime declaration that this matcher stands for.
-@param runtimes the runtime declarations, in order.
+@param runtimes the runtime declarations, in order, with their globs compiled to regular expression sources.
 */
 export function buildRuntimeMatcher(index: number, runtimes: EslintRuntime[]): (file: string) => boolean {
     const matchers = runtimes.map(({ scope, includes, excludes }) => {
-        const included = includes.map((glob) => picomatch(glob, { dot: true, flags: 's' }));
-        const excluded = excludes.map((glob) => picomatch(glob, { dot: true, flags: 's' }));
+        const included = includes.map((source) => new RegExp(source, 's'));
+        const excluded = excludes.map((source) => new RegExp(source, 's'));
         return (path: string) =>
             (scope === '' || path.startsWith(`${scope}/`)) &&
-            included.some((pattern) => pattern(path)) &&
-            excluded.every((pattern) => !pattern(path));
+            included.some((pattern) => pattern.test(path)) &&
+            excluded.every((pattern) => !pattern.test(path));
     });
     return (file) => matchers.findLastIndex((matches) => matches(relative(root, file).split(sep).join('/'))) === index;
 }

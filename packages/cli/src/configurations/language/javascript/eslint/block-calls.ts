@@ -1,3 +1,4 @@
+import picomatch from 'picomatch';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
@@ -28,6 +29,15 @@ function serializeArgument(argument: EslintCallArgument): string {
         .join(', ')} }`;
 }
 
+function serializeRuntimes(runtimes: EslintRuntime[]): string {
+    const compiled = runtimes.map((runtime) => ({
+        ...runtime,
+        includes: runtime.includes.map((glob) => picomatch.makeRe(glob, { dot: true }).source),
+        excludes: runtime.excludes.map((glob) => picomatch.makeRe(glob, { dot: true }).source),
+    }));
+    return JSON.stringify(compiled, null, JSON_INDENT);
+}
+
 function serializeFields(block: EslintBlockFields, runtimes: EslintRuntime[]): string {
     const { files, ...fields } = block;
     const members = Object.entries(fields).map(
@@ -38,7 +48,7 @@ function serializeFields(block: EslintBlockFields, runtimes: EslintRuntime[]): s
             if (Array.isArray(value)) return `[${value.map((pattern) => matcher(pattern)).join(', ')}]`;
             if (typeof value === 'string') return JSON.stringify(value);
             if ('runtime' in value)
-                return `buildRuntimeMatcher(${String(value.runtime)}, ${JSON.stringify(runtimes, null, JSON_INDENT)})`;
+                return `buildRuntimeMatcher(${String(value.runtime)}, ${serializeRuntimes(runtimes)})`;
             return value.component === 'vue'
                 ? 'buildComponentMatcher(vueParser)'
                 : 'buildComponentMatcher(importSvelteParser(), readPreset(tseslint, "parser"))';
