@@ -109,7 +109,7 @@ export async function readRepository(
     const written: ScopeFolder[] = [
         { ...ROOT_SCOPE, configurations: [] },
         ...scopes
-            .filter((each) => files.readStats(each.path)?.isDirectory() === true)
+            .filter((each) => files.findStats(each.path)?.isDirectory() === true)
             .map(
                 (each): ScopeFolder => ({
                     path: each.path,

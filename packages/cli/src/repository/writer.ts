@@ -144,7 +144,7 @@ export function listStrayPaths(
     const disk = openFiles(session.root);
     const blockPaths = new Set([AGENTS_FILE, GITIGNORE_FILE, GITATTRIBUTES_FILE]);
     const installations = Object.values(INSTALLED_TOOL_FOLDERS);
-    const ownFolder = disk.readStats(GSPOT_FOLDER);
+    const ownFolder = disk.findStats(GSPOT_FOLDER);
     const ownPaths: string[] = [];
     if (ownFolder !== undefined) {
         walkFiles(disk, GSPOT_FOLDER, (path) => {

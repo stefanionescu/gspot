@@ -44,7 +44,7 @@ function listDependencyFolders(installed: Files, projects: string[]): string[] {
     return projects.flatMap((path) => {
         const folder = dirname(path);
         if (basename(path) !== PACKAGE_JSON) return [];
-        return installed.readStats(posix.join(folder, NODE_MODULES)) === undefined ? [] : [folder];
+        return installed.findStats(posix.join(folder, NODE_MODULES)) === undefined ? [] : [folder];
     });
 }
 
@@ -113,7 +113,7 @@ async function selectRevisionDependencies(
         .filter(
             (path) =>
                 basename(path) === PYPROJECT_TOML &&
-                installed.readStats(posix.join(dirname(path), PYTHON_ENVIRONMENT_FOLDER))?.isDirectory() === true,
+                installed.findStats(posix.join(dirname(path), PYTHON_ENVIRONMENT_FOLDER)) !== undefined,
         )
         .map((path) => dirname(path));
     const unchangedPaths = await listUnchangedDependencies(

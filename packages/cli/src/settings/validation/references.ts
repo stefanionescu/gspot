@@ -1,4 +1,5 @@
 import type { Files } from '#cli/types/system.ts';
+import { LINK_REFUSAL } from '#cli/config/system.ts';
 import type { KeyPath } from '#cli/types/parsers.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -19,9 +20,10 @@ import {
     COVERAGE_LINES_SETTING,
 } from '#cli/config/settings/validation.ts';
 
-function readPathStats(files: Files, path: string): ReturnType<Files['readStats']> | Error {
+function readPathStats(files: Files, path: string): ReturnType<Files['findStats']> | Error {
     try {
-        return files.readStats(path);
+        const stats = files.findStats(path);
+        return stats?.isSymbolicLink() === true ? new Error(`${path} ${LINK_REFUSAL}`) : stats;
     } catch (error) {
         if (!(error instanceof Error)) throw error;
         return error;

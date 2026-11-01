@@ -9,7 +9,7 @@ export type FileBounds = { root: string };
 export type Files = {
     readCanonicalPath(path: string): string;
     list(path: string): string[];
-    readStats(path: string): Stats | undefined;
+    findStats(path: string): Stats | undefined;
     readKeepingLinks(path: string): FileContents | undefined;
     read(path: string): FileContents | undefined;
     write(path: string, value: FileContents): void;

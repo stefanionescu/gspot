@@ -23,7 +23,7 @@ test('a batch writes binary bytes, and a removal plan deletes one file and keeps
     expect(await readFile(join(sandbox.path, `${GSPOT_FOLDER}/first.bin`))).toStrictEqual(first);
     expect(await readFile(join(sandbox.path, `${GSPOT_FOLDER}/second.bin`))).toStrictEqual(second);
     writePlans(writer, [{ path: `${GSPOT_FOLDER}/first.bin`, status: 'changed' }]);
-    expect(writer.readStats(`${GSPOT_FOLDER}/first.bin`)).toBeUndefined();
+    expect(writer.findStats(`${GSPOT_FOLDER}/first.bin`)).toBeUndefined();
     expect(await readFile(join(sandbox.path, `${GSPOT_FOLDER}/second.bin`))).toStrictEqual(second);
 });
 

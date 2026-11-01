@@ -98,7 +98,7 @@ export function hasValePackages(root: string, level: Settings['level']): boolean
     if (files.read(GSPOT_PATHS.valeConfig) === undefined) return false;
     if (level === 'basic') return true;
     return VALE_PACKAGE_FOLDERS.every(
-        (name) => files.readStats(`${GSPOT_PATHS.valePackages}/${name}`)?.isDirectory() === true,
+        (name) => files.findStats(`${GSPOT_PATHS.valePackages}/${name}`)?.isDirectory() === true,
     );
 }
 

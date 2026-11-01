@@ -1,7 +1,7 @@
 import { compareText } from '#cli/system/text.ts';
-import { PRIVATE_FOLDER } from '#cli/config/system.ts';
 import type { Files, FileBounds } from '#cli/types/system.ts';
 import { readContainedPath } from '#cli/system/files/reads.ts';
+import { LINK_REFUSAL, PRIVATE_FOLDER } from '#cli/config/system.ts';
 import { extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 import { GspotError, hasErrorCode, buildWriteError } from '#cli/system/errors.ts';
 import { rmSync, chmodSync, lstatSync, mkdirSync, rmdirSync, unlinkSync, readdirSync, realpathSync } from 'node:fs';
@@ -55,7 +55,8 @@ export function openFiles(root: string): Files {
         },
         deleteTree(path) {
             try {
-                const stat = files.readStats(path);
+                const stat = files.findStats(path);
+                if (stat?.isSymbolicLink() === true) throw new GspotError('filesystem', `${path} ${LINK_REFUSAL}`);
                 if (stat?.isDirectory() === false)
                     throw new GspotError('filesystem', `${path} is not a folder. Choose a folder.`);
                 if (stat !== undefined) rmSync(buildContainedPath(bounds, path), { recursive: true, force: true });
@@ -75,12 +76,9 @@ export function openFiles(root: string): Files {
                 throw error;
             }
         },
-        readStats(path) {
+        findStats(path) {
             try {
-                const stat = lstatSync(buildContainedPath(bounds, path));
-                if (stat.isSymbolicLink())
-                    throw new GspotError('filesystem', `${path} is a link. gspot does not write through links.`);
-                return stat;
+                return lstatSync(buildContainedPath(bounds, path));
             } catch (error) {
                 if (hasErrorCode(error, 'ENOENT')) return undefined;
                 throw error;

@@ -143,3 +143,17 @@ test('a shallow index copy reads newly staged blobs and preserves its shallow hi
     expect(runGitStep(copy.root, ['rev-list', '--count', 'HEAD'])).toBe('1');
     expect(runGitStep(copy.root, ['write-tree'])).toBe(copy.tree);
 });
+
+test.skipIf(isWindows)('a revision copy links the packages of a node_modules that is a link', async () => {
+    await using sandbox = await testdir({
+        'project/package.json': '{"private":true}',
+        'project/package-lock.json': '{}',
+        'project/.gitignore': 'node_modules\n',
+        'installed/example/index.js': SELECTED_SOURCE,
+    });
+    const project = join(sandbox.path, 'project');
+    await symlink(join(sandbox.path, 'installed'), join(project, 'node_modules'), 'dir');
+    commitAll(project);
+    using copy = await copyRevision(project, { kind: 'index' });
+    expect(await readFile(join(copy.root, 'node_modules/example/index.js'), 'utf8')).toBe(SELECTED_SOURCE);
+});

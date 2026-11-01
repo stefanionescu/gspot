@@ -58,7 +58,7 @@ test('deleteFolder refuses linked and outside parents and keeps folders that are
     );
     files.createPrivateFolder('cache/empty');
     files.deleteFolder('cache/empty');
-    expect(files.readStats('cache/empty')).toBeUndefined();
+    expect(files.findStats('cache/empty')).toBeUndefined();
     files.write('cache/kept/value', { bytes: Buffer.from('retained'), mode: 0o600 });
     expect(() => {
         files.deleteFolder('cache/kept');
@@ -132,7 +132,7 @@ test.skipIf(isWindows)('writing and removing a linked file replace the link and 
     root.write('linked', written);
     expect(root.readKeepingLinks('linked')).toStrictEqual(written);
     root.deleteFile('linked');
-    expect(root.readStats('linked')).toBeUndefined();
+    expect(root.findStats('linked')).toBeUndefined();
     expect(await readFile(join(sandbox.path, 'outside/sentinel'), 'utf8')).toBe('authored\n');
 });
 

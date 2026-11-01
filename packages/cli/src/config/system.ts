@@ -117,6 +117,8 @@ export const RUNTIME_NAMES = { node: 'Node.js', bun: 'Bun' } as const;
 
 export const RESULT_JSON_INDENT = 2;
 
+export const LINK_REFUSAL = 'is a link. gspot does not write through links.';
+
 export const SIGNAL_EXIT_CODES = { SIGHUP: 129, SIGINT: 130, SIGTERM: 143 } as const;
 
 export const TERMINAL_CONTROL_CHARACTERS = /[^\P{Cc}\t\n]|\p{Cf}/gu;
