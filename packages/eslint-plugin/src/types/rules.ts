@@ -264,3 +264,10 @@ export type MatcherSuggestion = {
     expected?: TSESTree.Node | undefined;
     negated: boolean;
 };
+
+export type ThrowAssertion = {
+    expect: TSESTree.CallExpression;
+    received: TSESTree.Expression;
+    target: TSESTree.Node;
+    matcher: string;
+};

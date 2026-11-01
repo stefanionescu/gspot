@@ -90,6 +90,7 @@ import { noInvertedAssertions } from './rules/no-inverted-assertions.ts';
 import { preferReadonlyStatic } from './rules/prefer-readonly-static.ts';
 import { redundantTypeAliases } from './rules/redundant-type-aliases.ts';
 import { tableHeaderReference } from './rules/table-header-reference.ts';
+import { validThrowAssertions } from './rules/valid-throw-assertions.ts';
 import { noBitwiseInCondition } from './rules/no-bitwise-in-condition.ts';
 import { noEqualLoopCondition } from './rules/no-equal-loop-condition.ts';
 import { noLazyBeforeOptional } from './rules/no-lazy-before-optional.ts';
@@ -185,6 +186,7 @@ const rules = {
     'no-constant-assertions': noConstantAssertions,
     'prefer-matcher-assertions': preferMatcherAssertions,
     'no-mismatched-assertion-types': noMismatchedAssertionTypes,
+    'valid-throw-assertions': validThrowAssertions,
     'no-setter-in-component': noSetterInComponent,
     'no-self-state-update': noSelfStateUpdate,
     'no-generated-keys': noGeneratedKeys,
