@@ -12,7 +12,7 @@ import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { parseProjectSources } from '#cli/parsers/projects/xcode.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { PACKAGE_SWIFT, PBXPROJ_SUFFIX, SWIFT_EXTENSION } from '#cli/config/parsers.ts';
-import { stringsFileSchema, assetContentsSchema } from '#cli/schemas/configurations/infrastructure.ts';
+import { stringsFileSchema, assetContentsSchema } from '#cli/schemas/configurations.ts';
 
 import {
     PLIST_KEY,

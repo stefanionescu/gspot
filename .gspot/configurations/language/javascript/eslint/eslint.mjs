@@ -985,12 +985,6 @@ export default [
                         "stopMatching": true
                     },
                     {
-                        "category": "import-rule:cli-schemas",
-                        "pattern": [
-                            "packages/cli/src/schemas/**"
-                        ]
-                    },
-                    {
                         "category": "import-rule:cli-types",
                         "pattern": [
                             "packages/cli/src/types/*.d.ts"
@@ -1009,7 +1003,8 @@ export default [
                         "pattern": [
                             "packages/cli/src/parsers/**",
                             "packages/cli/src/config/parsers.ts",
-                            "packages/cli/src/types/parsers.ts"
+                            "packages/cli/src/types/parsers.ts",
+                            "packages/cli/src/schemas/parsers.ts"
                         ]
                     },
                     {
@@ -1017,7 +1012,8 @@ export default [
                         "pattern": [
                             "packages/cli/src/manifests/**",
                             "packages/cli/src/config/manifests.ts",
-                            "packages/cli/src/types/manifests.ts"
+                            "packages/cli/src/types/manifests.ts",
+                            "packages/cli/src/schemas/manifests/**"
                         ]
                     },
                     {
@@ -1025,7 +1021,8 @@ export default [
                         "pattern": [
                             "packages/cli/src/repository/**",
                             "packages/cli/src/config/repository/**",
-                            "packages/cli/src/types/repository.ts"
+                            "packages/cli/src/types/repository.ts",
+                            "packages/cli/src/schemas/repository.ts"
                         ]
                     },
                     {
@@ -1033,7 +1030,8 @@ export default [
                         "pattern": [
                             "packages/cli/src/settings/**",
                             "packages/cli/src/config/settings/**",
-                            "packages/cli/src/types/settings.ts"
+                            "packages/cli/src/types/settings.ts",
+                            "packages/cli/src/schemas/settings/**"
                         ]
                     },
                     {
@@ -1041,7 +1039,8 @@ export default [
                         "pattern": [
                             "packages/cli/src/tools/**",
                             "packages/cli/src/config/tools/**",
-                            "packages/cli/src/types/tools.ts"
+                            "packages/cli/src/types/tools.ts",
+                            "packages/cli/src/schemas/tools.ts"
                         ]
                     },
                     {
@@ -1049,7 +1048,8 @@ export default [
                         "pattern": [
                             "packages/cli/src/engine/**",
                             "packages/cli/src/config/engine.ts",
-                            "packages/cli/src/types/engine/**"
+                            "packages/cli/src/types/engine/**",
+                            "packages/cli/src/schemas/engine.ts"
                         ]
                     },
                     {
@@ -1057,7 +1057,8 @@ export default [
                         "pattern": [
                             "packages/cli/src/configurations/**",
                             "packages/cli/src/config/configurations/**",
-                            "packages/cli/src/types/configurations/**"
+                            "packages/cli/src/types/configurations/**",
+                            "packages/cli/src/schemas/configurations.ts"
                         ]
                     },
                     {
@@ -1079,7 +1080,8 @@ export default [
                         "pattern": [
                             "packages/cli/src/commands/**",
                             "packages/cli/src/config/commands/**",
-                            "packages/cli/src/types/commands/**"
+                            "packages/cli/src/types/commands/**",
+                            "packages/cli/src/schemas/commands.ts"
                         ]
                     },
                     {
@@ -1222,51 +1224,6 @@ export default [
                         {
                             "from": {
                                 "file": {
-                                    "categories": "import-rule:cli-schemas"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"cli-schemas\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:cli-schemas"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:cli-schemas",
-                                                "import-rule:cli-types",
-                                                "import-rule:system",
-                                                "import-rule:parsers",
-                                                "import-rule:manifests",
-                                                "import-rule:repository",
-                                                "import-rule:settings",
-                                                "import-rule:tools",
-                                                "import-rule:engine",
-                                                "import-rule:configurations",
-                                                "import-rule:generation",
-                                                "import-rule:commands",
-                                                "import-rule:main"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
                                     "categories": "import-rule:cli-types"
                                 }
                             },
@@ -1321,7 +1278,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"system\" may import its own files and \"cli-schemas\", \"cli-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"system\" may import its own files and \"cli-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1335,7 +1292,6 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:system",
-                                                "import-rule:cli-schemas",
                                                 "import-rule:cli-types"
                                             ]
                                         }
@@ -1356,7 +1312,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"parsers\" may import its own files and \"cli-schemas\", \"cli-types\", \"system\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"parsers\" may import its own files and \"cli-types\", \"system\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1370,7 +1326,6 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:parsers",
-                                                "import-rule:cli-schemas",
                                                 "import-rule:cli-types",
                                                 "import-rule:system"
                                             ]
@@ -1392,7 +1347,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"manifests\" may import its own files and \"cli-schemas\", \"cli-types\", \"system\", \"parsers\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"manifests\" may import its own files and \"cli-types\", \"system\", \"parsers\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1406,7 +1361,6 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:manifests",
-                                                "import-rule:cli-schemas",
                                                 "import-rule:cli-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers"
@@ -1429,7 +1383,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"repository\" may import its own files and \"cli-schemas\", \"cli-types\", \"system\", \"parsers\", \"manifests\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"repository\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1443,7 +1397,6 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:repository",
-                                                "import-rule:cli-schemas",
                                                 "import-rule:cli-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
@@ -1467,7 +1420,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"settings\" may import its own files and \"cli-schemas\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"settings\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1481,7 +1434,6 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:settings",
-                                                "import-rule:cli-schemas",
                                                 "import-rule:cli-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
@@ -1506,7 +1458,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"tools\" may import its own files and \"cli-schemas\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"tools\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1520,7 +1472,6 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:tools",
-                                                "import-rule:cli-schemas",
                                                 "import-rule:cli-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
@@ -1546,7 +1497,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"engine\" may import its own files and \"cli-schemas\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"engine\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1560,7 +1511,6 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:engine",
-                                                "import-rule:cli-schemas",
                                                 "import-rule:cli-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
@@ -1587,7 +1537,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"configurations\" may import its own files and \"cli-schemas\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"configurations\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1601,7 +1551,6 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:configurations",
-                                                "import-rule:cli-schemas",
                                                 "import-rule:cli-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
@@ -1663,7 +1612,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"generation\" may import its own files and \"cli-schemas\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"shipped-config\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"generation\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"shipped-config\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1677,7 +1626,6 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:generation",
-                                                "import-rule:cli-schemas",
                                                 "import-rule:cli-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
@@ -1707,7 +1655,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"commands\" may import its own files and \"cli-schemas\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"shipped-config\", \"generation\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"commands\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"shipped-config\", \"generation\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1721,7 +1669,6 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:commands",
-                                                "import-rule:cli-schemas",
                                                 "import-rule:cli-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
@@ -1752,7 +1699,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"main\" may import its own files and \"cli-schemas\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"shipped-config\", \"generation\", \"commands\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"main\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"shipped-config\", \"generation\", \"commands\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1766,7 +1713,6 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:main",
-                                                "import-rule:cli-schemas",
                                                 "import-rule:cli-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
@@ -1899,7 +1845,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"docs-config\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-schemas\", \"cli-types\", \"docs-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"docs-config\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-types\", \"docs-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1924,7 +1870,6 @@ export default [
                                                 "import-rule:generation",
                                                 "import-rule:commands",
                                                 "import-rule:main",
-                                                "import-rule:cli-schemas",
                                                 "import-rule:cli-types",
                                                 "import-rule:docs-types"
                                             ]
@@ -1946,7 +1891,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"docs-types\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-schemas\", \"cli-types\", \"docs-config\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"docs-types\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-types\", \"docs-config\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1971,7 +1916,6 @@ export default [
                                                 "import-rule:generation",
                                                 "import-rule:commands",
                                                 "import-rule:main",
-                                                "import-rule:cli-schemas",
                                                 "import-rule:cli-types",
                                                 "import-rule:docs-config"
                                             ]
@@ -1993,7 +1937,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"docs\" may import its own files and \"cli-schemas\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"shipped-config\", \"generation\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"docs\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"shipped-config\", \"generation\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -2007,7 +1951,6 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:docs",
-                                                "import-rule:cli-schemas",
                                                 "import-rule:cli-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
@@ -2045,7 +1988,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"tests-data\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-schemas\", \"cli-types\", \"tests-setup\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"tests-data\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-types\", \"tests-setup\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -2070,7 +2013,6 @@ export default [
                                                 "import-rule:generation",
                                                 "import-rule:commands",
                                                 "import-rule:main",
-                                                "import-rule:cli-schemas",
                                                 "import-rule:cli-types",
                                                 "import-rule:tests-setup"
                                             ]
@@ -2092,7 +2034,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"tests-types\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-schemas\", \"cli-types\", \"plugin-types\", \"tests-data\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"tests-types\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-types\", \"plugin-types\", \"tests-data\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -2117,7 +2059,6 @@ export default [
                                                 "import-rule:generation",
                                                 "import-rule:commands",
                                                 "import-rule:main",
-                                                "import-rule:cli-schemas",
                                                 "import-rule:cli-types",
                                                 "import-rule:plugin-types",
                                                 "import-rule:tests-data"
@@ -2140,7 +2081,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"tests-setup\" may import its own files and \"cli-schemas\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"shipped-config\", \"generation\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"tests-setup\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"shipped-config\", \"generation\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -2154,7 +2095,6 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:tests-setup",
-                                                "import-rule:cli-schemas",
                                                 "import-rule:cli-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
@@ -2195,7 +2135,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"tests\" may import its own files and \"cli-schemas\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"shipped-config\", \"generation\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", \"tests-setup\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"tests\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"shipped-config\", \"generation\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", \"tests-setup\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -2209,7 +2149,6 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:tests",
-                                                "import-rule:cli-schemas",
                                                 "import-rule:cli-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
@@ -2251,7 +2190,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"package-scripts\" may import its own files and \"cli-schemas\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"shipped-config\", \"generation\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", \"tests-setup\", \"tests\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"package-scripts\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"shipped-config\", \"generation\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", \"tests-setup\", \"tests\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -2265,7 +2204,6 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:package-scripts",
-                                                "import-rule:cli-schemas",
                                                 "import-rule:cli-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
@@ -2448,7 +2386,6 @@ export default [
                                 "file": {
                                     "categories": {
                                         "noneOf": [
-                                            "import-rule:cli-schemas",
                                             "import-rule:cli-types",
                                             "import-rule:system",
                                             "import-rule:parsers",
@@ -2491,7 +2428,6 @@ export default [
                                     "file": {
                                         "categories": {
                                             "noneOf": [
-                                                "import-rule:cli-schemas",
                                                 "import-rule:cli-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",

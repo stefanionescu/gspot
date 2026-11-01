@@ -18,7 +18,7 @@ import {
     pnpmLockfileSchema,
     yarnLockfileSchema,
     dependencySectionsSchema,
-} from '#cli/schemas/parsers/projects.ts';
+} from '#cli/schemas/parsers.ts';
 import {
     PACKAGE_JSON,
     LEADING_SLASH,

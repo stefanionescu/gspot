@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { markdownlintOutputSchema } from '#cli/schemas/engine.ts';
 import type { Finding, ToolOutput } from '#cli/types/engine/tool-runs.ts';
-import { markdownlintOutputSchema } from '#cli/schemas/engine/markdownlint.ts';
 
 /**
 Read the findings in the markdownlint JSON report.

@@ -21,7 +21,7 @@ import type { PlannedCheck, LicenseProject } from '#cli/types/engine/plan.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { PIP_LICENSES_COMMAND, LICENSE_CHECKER_COMMAND } from '#cli/config/engine.ts';
 import { splitIdentity, PACKAGE_PARSERS, findNearestLockfile } from '#cli/parsers/projects/lockfiles.ts';
-import { pythonLicenseOutputSchema, javascriptLicenseOutputSchema } from '#cli/schemas/configurations/general.ts';
+import { pythonLicenseOutputSchema, javascriptLicenseOutputSchema } from '#cli/schemas/configurations.ts';
 import { PACKAGE_JSON, PYTHON_LOCKFILES, JAVASCRIPT_LOCKFILES, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers.ts';
 
 import type {

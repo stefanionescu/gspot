@@ -1,6 +1,6 @@
+import { knipOutputSchema } from '#cli/schemas/engine.ts';
 import { KNIP_ISSUE_MESSAGES } from '#cli/config/engine.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
-import { knipOutputSchema } from '#cli/schemas/engine/knip.ts';
 import type { Finding, ToolOutput } from '#cli/types/engine/tool-runs.ts';
 
 /**

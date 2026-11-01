@@ -21,8 +21,8 @@ import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 import type { Parsed, SqlStatement, SqlNodeFields } from '#cli/types/parsers.ts';
 import { formatOutputTail, assertToolFindings } from '#cli/engine/tool-runs/output.ts';
+import { denoLintOutputSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
-import { denoLintOutputSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations/platform.ts';
 import type { FunctionEntrypoint, SupabaseProjectFile } from '#cli/types/configurations/infrastructure.ts';
 
 import {

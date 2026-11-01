@@ -18,7 +18,7 @@ import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
-import { composeSchema, trivyImageOutputSchema } from '#cli/schemas/configurations/infrastructure.ts';
+import { composeSchema, trivyImageOutputSchema } from '#cli/schemas/configurations.ts';
 
 import type {
     ImageFinding,

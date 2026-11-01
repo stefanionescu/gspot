@@ -1,23 +1,24 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers.ts';
-import { manifestToolSchema, writtenNamingOverrideSchema } from '#cli/schemas/manifests/manifests.ts';
 
 import {
     levelSchema,
     regexSchema,
     conditionSchema,
     commandCheckFields,
+    manifestToolSchema,
     nonemptyStringSchema,
     operatingSystemSchema,
-} from '#cli/schemas/manifests/fields.ts';
+    writtenNamingOverrideSchema,
+} from '#cli/schemas/manifests/tools.ts';
 import {
     GROUPS,
-    FILE_KINDS,
     CASE_NAMES,
+    FILE_KINDS,
     CHECK_RUNS,
-    GSPOT_PATHS,
     CHECK_NEEDS,
+    GSPOT_PATHS,
     NAME_PATTERN,
     NAMED_CATEGORIES,
     CHECK_CWD_VALUES,

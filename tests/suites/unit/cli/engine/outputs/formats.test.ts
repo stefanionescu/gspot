@@ -12,7 +12,7 @@ import { isLinux } from '#tests/setup/system/platform.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { FAILED_RUN } from '#tests/config/engine/samples.ts';
 import { GREETING_SOURCE } from '#tests/config/typescript.ts';
-import { outputSchema } from '#cli/schemas/manifests/output.ts';
+import { outputSchema } from '#cli/schemas/manifests/tools.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BASE_CHECK } from '#tests/config/engine/tool-runs/check.ts';

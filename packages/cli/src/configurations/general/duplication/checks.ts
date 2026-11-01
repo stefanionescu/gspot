@@ -8,13 +8,13 @@ import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
+import { jscpdOutputSchema } from '#cli/schemas/configurations.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { listSourceConfigurations } from '#cli/manifests/select.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
-import { jscpdOutputSchema } from '#cli/schemas/configurations/general.ts';
 import { parseJsonFile, parseToolOutput } from '#cli/parsers/formats/json.ts';
 
 import {

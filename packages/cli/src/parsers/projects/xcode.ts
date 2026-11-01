@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
+import { pbxprojSchema } from '#cli/schemas/parsers.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
-import { pbxprojSchema } from '#cli/schemas/parsers/projects.ts';
 
 import type {
     PbxElement,

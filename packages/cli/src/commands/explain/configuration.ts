@@ -2,7 +2,7 @@ import type { Session } from '#cli/types/tools.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { CODE_MARK } from '#cli/config/commands/help.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
-import { checkStageSchema } from '#cli/schemas/manifests/fields.ts';
+import { checkStageSchema } from '#cli/schemas/manifests/tools.ts';
 import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { formatDetectionConditions } from '#cli/manifests/reference.ts';

@@ -1,13 +1,11 @@
 import type { z } from 'zod';
 import type { Scope, Settings } from '#cli/types/settings.ts';
+import type { uvLockfileSchema } from '#cli/schemas/parsers.ts';
 import type { CHECK_HOOKS } from '#cli/config/tools/installers.ts';
 import type { LOCKFILES } from '#cli/config/repository/javascript.ts';
-import type { lintRuleDocsSchema } from '#cli/schemas/tools/tools.ts';
-import type { uvLockfileSchema } from '#cli/schemas/parsers/projects.ts';
 import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
-import type { bunPackageSchema } from '#cli/schemas/tools/installers/npm.ts';
 import type { Files, RunCache, AsyncSpawnOptions } from '#cli/types/system.ts';
-import type { uvProjectSettingsSchema } from '#cli/schemas/tools/installers/installers.ts';
+import type { bunPackageSchema, lintRuleDocsSchema, uvProjectSettingsSchema } from '#cli/schemas/tools.ts';
 
 import type {
     Repository,

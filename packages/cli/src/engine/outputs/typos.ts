@@ -3,8 +3,8 @@ import { GspotError } from '#cli/system/errors.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { LINE_FEED } from '#cli/config/repository/git.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { reportedTypoSchema } from '#cli/schemas/engine.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
-import { reportedTypoSchema } from '#cli/schemas/engine/typos.ts';
 import type { Finding, ToolOutput, ReportedTypo } from '#cli/types/engine/tool-runs.ts';
 
 function readSourceLines(root: string, path: string, cache: Map<string, Buffer[]>): Buffer[] {

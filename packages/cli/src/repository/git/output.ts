@@ -2,7 +2,7 @@ import type { z } from 'zod';
 import { posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
-import { gitFileSchema } from '#cli/schemas/parsers/parsers.ts';
+import { gitFileSchema } from '#cli/schemas/repository.ts';
 import { OCTAL_RADIX, LEADING_SLASH, WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import type { GitFile, GitStream, GitIndexFile, AttributePattern } from '#cli/types/repository.ts';
 

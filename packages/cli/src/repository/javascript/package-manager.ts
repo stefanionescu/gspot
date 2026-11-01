@@ -10,7 +10,7 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { GSPOT_FOLDER, PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { packageManagerSchema, packageManagerPinSchema } from '#cli/schemas/repository/javascript.ts';
+import { packageManagerSchema, packageManagerPinSchema } from '#cli/schemas/repository.ts';
 
 import type {
     StartRunner,

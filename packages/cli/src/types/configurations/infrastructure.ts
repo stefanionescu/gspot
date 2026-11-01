@@ -2,8 +2,7 @@ import type { z } from 'zod';
 import type { AlterTableCmd } from '@pgsql/types';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import type { composeSchema } from '#cli/schemas/configurations/infrastructure.ts';
-import type { supabaseProjectFileSchema } from '#cli/schemas/configurations/platform.ts';
+import type { composeSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations.ts';
 import type { SqlFile, SqlStatement, NumberedLine, SqlNodeFields } from '#cli/types/parsers.ts';
 
 type SourceStatement = { path: string; offset: number; text: string };

@@ -4,13 +4,13 @@ import { isDeepStrictEqual } from 'node:util';
 import { modify, applyEdits } from 'jsonc-parser';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Dependencies } from '#cli/types/parsers.ts';
+import { bunLockfileSchema } from '#cli/schemas/parsers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import type { PackageManager } from '#cli/types/repository.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
-import { bunLockfileSchema } from '#cli/schemas/parsers/projects.ts';
 import { PNPM_PEER_START, NPM_PACKAGE_FOLDER, PNPM_ROOT_IMPORTER } from '#cli/config/parsers.ts';
 import type { Lockfile, BunPackage, LockedTarball, ToolProjectLockfileName } from '#cli/types/tools.ts';
 import { INTEGRITY, BUN_LOCKFILE, NPM_SETTING_PREFIX, LOCKFILE_WORKSPACE_KEYS } from '#cli/config/tools/installers.ts';
@@ -20,7 +20,7 @@ import {
     npmToolLockSchemas,
     npmToolPackageSchema,
     pnpmToolPackageSchema,
-} from '#cli/schemas/tools/installers/npm.ts';
+} from '#cli/schemas/tools.ts';
 
 function findPackageRegistry(name: string, environment: Record<string, string>): string | undefined {
     const scope = name.startsWith('@') ? name.split('/', 1)[0] : undefined;

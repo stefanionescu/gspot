@@ -12,7 +12,7 @@ import type {
     tsconfigSchema,
     pyprojectSchema,
     packageJsonSchema,
-} from '#cli/schemas/parsers/projects.ts';
+} from '#cli/schemas/parsers.ts';
 
 export type TrapScript = {
     trap: Node;

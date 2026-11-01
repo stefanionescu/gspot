@@ -12,7 +12,7 @@ import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { buildTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
-import { svelteFindingSchema, failureMessageSchema } from '#cli/schemas/configurations/framework/framework.ts';
+import { svelteFindingSchema, failureMessageSchema } from '#cli/schemas/configurations.ts';
 
 import {
     FAILURE_LINE,

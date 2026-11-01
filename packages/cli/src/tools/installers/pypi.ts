@@ -6,6 +6,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { readFileSync, writeFileSync } from 'node:fs';
 import type { SpawnResult } from '#cli/types/system.ts';
+import { uvLockfileSchema } from '#cli/schemas/parsers.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { formatUnavailableNote } from '#cli/tools/inspect.ts';
@@ -13,13 +14,12 @@ import { getTool, listPackagePins } from '#cli/tools/pins.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
 import type { ReplacementRequest } from '#cli/types/repository.ts';
 import { GSPOT_PATHS, UV_LOCKFILE } from '#cli/config/manifests.ts';
-import { uvLockfileSchema } from '#cli/schemas/parsers/projects.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { PRIVATE_FILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { uvSettingsSchema, uvProjectSettingsSchema } from '#cli/schemas/tools.ts';
 import { runInstallStep, explainReleaseAgeHold } from '#cli/tools/installers/steps.ts';
 import { GSPOT_FOLDER, PYPROJECT_TOML, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers.ts';
-import { uvSettingsSchema, uvProjectSettingsSchema } from '#cli/schemas/tools/installers/installers.ts';
 
 import {
     redactInstallOutput,

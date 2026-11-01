@@ -7,12 +7,12 @@ import type { formatSchema } from '#cli/schemas/settings/fields.ts';
 import type { Check, Configuration } from '#cli/types/manifests.ts';
 import type { Config, TrackedFile } from '#cli/types/repository.ts';
 import type { ConfigurationTables } from '#cli/types/engine/plan.ts';
+import type { namingOverrideSchema } from '#cli/schemas/manifests/tools.ts';
 import type { CASE_NAMES, NAMED_CATEGORIES } from '#cli/config/manifests.ts';
 import type { Finding, Substitutions } from '#cli/types/engine/tool-runs.ts';
-import type { namingOverrideSchema } from '#cli/schemas/manifests/manifests.ts';
+import type { pythonLicenseOutputSchema } from '#cli/schemas/configurations.ts';
 import type { SqlFile, NumberedLine, ParsedTsconfig } from '#cli/types/parsers.ts';
 import type { IGNORE_SECTION_TITLES } from '#cli/config/configurations/registry.ts';
-import type { pythonLicenseOutputSchema } from '#cli/schemas/configurations/general.ts';
 import type { Level, ImportRule, TableSettings, SettingLanguage } from '#cli/types/settings.ts';
 import type { ConfigOutput, PlannedConfig, FormatSettings } from '#cli/types/configurations/language.ts';
 

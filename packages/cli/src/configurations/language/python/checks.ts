@@ -19,9 +19,9 @@ import { PATH_SEPARATOR_PATTERN } from '#cli/config/configurations/blocks.ts';
 import { splitWords } from '#cli/configurations/general/naming/checks/settings.ts';
 import { joinScope, isInScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { runCommandCheck, runCommandBatches } from '#cli/engine/tool-runs/check.ts';
+import { deptrySchema, docstringStyleSchema } from '#cli/schemas/configurations.ts';
 import { findDocstring, readPythonFiles, parsePythonModule } from '#cli/parsers/code/python.ts';
 import type { PydoclintOptions, PythonDocstringStyle } from '#cli/types/configurations/language.ts';
-import { deptrySchema, docstringStyleSchema } from '#cli/schemas/configurations/language/language.ts';
 
 import {
     RUFF_TABLE,

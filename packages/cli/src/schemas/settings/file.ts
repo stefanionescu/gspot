@@ -3,10 +3,10 @@ import { RESERVED_SEGMENTS } from '#cli/config/system.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { NO_CHECK_PATHS_MESSAGE } from '#cli/config/settings/validation.ts';
-import { configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
-import { levelSchema, commandCheckFields } from '#cli/schemas/manifests/fields.ts';
-import { toolsSchema as publicToolsSchema } from '#cli/schemas/settings/tools/tables.ts';
-import { ciSchema, hooksSchema, rulesSchema, namingSchema, importRulesSchema } from '#cli/schemas/settings/settings.ts';
+import { levelSchema, commandCheckFields } from '#cli/schemas/manifests/tools.ts';
+import { toolsSchema as publicToolsSchema } from '#cli/schemas/settings/tools.ts';
+import { configurationTableSchemas } from '#cli/schemas/settings/configurations.ts';
+import { ciSchema, hooksSchema, rulesSchema, namingSchema, importRulesSchema } from '#cli/schemas/settings/tables.ts';
 
 import {
     formatSchema,
@@ -20,8 +20,8 @@ import {
     UNSAFE_PATH_END,
     COMMAND_CHECK_ID,
     UNSAFE_CHARACTERS,
-    ALL_LEVEL_SUMMARY,
     GSPOT_FOLDER_PATH,
+    ALL_LEVEL_SUMMARY,
     SETTINGS_EXAMPLES,
     TABLE_DESCRIPTIONS,
     SCOPE_PATH_MESSAGES,

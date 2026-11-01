@@ -18,12 +18,8 @@ import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { join, resolve, relative, basename, isAbsolute } from 'node:path';
 import type { CoverageOutput, SwiftBuildPlan } from '#cli/types/configurations/language.ts';
 import { prepareBuild, planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
+import { xccovSchema, swiftCoverageSchema, packageDescriptionSchema } from '#cli/schemas/configurations.ts';
 
-import {
-    xccovSchema,
-    swiftCoverageSchema,
-    packageDescriptionSchema,
-} from '#cli/schemas/configurations/language/swift.ts';
 import {
     XCCOV_COMMAND,
     COVERAGE_RULE,

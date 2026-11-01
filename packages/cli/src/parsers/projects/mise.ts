@@ -1,6 +1,6 @@
 import { isTable } from '#cli/system/tables.ts';
+import { miseTasksSchema } from '#cli/schemas/parsers.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { miseTasksSchema } from '#cli/schemas/parsers/projects.ts';
 
 /**
 Read task names and aliases from a mise document.

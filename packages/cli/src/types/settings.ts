@@ -2,12 +2,12 @@ import type { z } from 'zod';
 import type { KeyPath } from '#cli/types/parsers.ts';
 import type { FileContents } from '#cli/types/system.ts';
 import type { ScopeFolder } from '#cli/types/repository.ts';
+import type { toolsSchema } from '#cli/schemas/settings/tools.ts';
 import type { limitFields } from '#cli/schemas/settings/limits.ts';
 import type { settingsSchema } from '#cli/schemas/settings/file.ts';
-import type { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
-import type { toolsSchema } from '#cli/schemas/settings/tools/tables.ts';
+import type { importRulesSchema } from '#cli/schemas/settings/tables.ts';
 import type { LEVELS, SETTING_LANGUAGES } from '#cli/config/manifests.ts';
-import type { importRulesSchema } from '#cli/schemas/settings/settings.ts';
+import type { tableValuesSchema } from '#cli/schemas/settings/configurations.ts';
 import type { LEFT_OUT_NOTES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';
 import type { Check, Setting, Configuration, ReasonRequirement } from '#cli/types/manifests.ts';
 

@@ -4,11 +4,16 @@ import type { GROUPS, FILE_KINDS } from '#cli/config/manifests.ts';
 import type { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { KeyPath, DependencyFile } from '#cli/types/parsers.ts';
 import type { SpawnResult, FileContents } from '#cli/types/system.ts';
-import type { ciJobSchema } from '#cli/schemas/repository/repository.ts';
 import type { START_RUNNERS } from '#cli/config/repository/javascript.ts';
 import type { Configuration, ParsedManifest } from '#cli/types/manifests.ts';
-import type { gitFileSchema, gitIndexFileSchema } from '#cli/schemas/parsers/parsers.ts';
-import type { packageManagerSchema, packageManagerPinSchema } from '#cli/schemas/repository/javascript.ts';
+
+import type {
+    ciJobSchema,
+    gitFileSchema,
+    gitIndexFileSchema,
+    packageManagerSchema,
+    packageManagerPinSchema,
+} from '#cli/schemas/repository.ts';
 
 export type ConfigurationOrigin = 'named' | 'template' | 'detected' | 'suggested' | 'required' | 'always';
 

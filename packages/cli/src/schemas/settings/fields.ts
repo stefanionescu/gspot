@@ -1,16 +1,16 @@
 import { z } from 'zod';
-import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
+import { nonemptyStringSchema } from '#cli/schemas/manifests/tools.ts';
 import type { ReasonedValue, ReasonedSettingDefinition } from '#cli/types/settings.ts';
 import { CASE_NAMES, SETTING_LANGUAGES, REASON_DESCRIPTIONS } from '#cli/config/manifests.ts';
 
 import {
     INDENT_MAX,
-    QUOTE_STYLES,
     LINE_ENDINGS,
+    QUOTE_STYLES,
     MAX_PERCENTAGE,
-    TRAILING_COMMAS,
-    PRINT_WIDTH_MAX,
     PRINT_WIDTH_MIN,
+    PRINT_WIDTH_MAX,
+    TRAILING_COMMAS,
     FORMAT_INDENT_STYLES,
     RELATIVE_PATH_PATTERN,
     REMOVAL_REASON_DESCRIPTION,
@@ -119,6 +119,31 @@ const relativePathsSchema = relativePathSchema.array();
 
 export const nonemptyPathsSchema = relativePathsSchema.min(1);
 
+/**
+Accept a setting value, or a reasoned value with the same value schema.
+
+@param schema the value validator.
+@param definition the description of the setting and the change that needs a reason.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlining repeats the reasoned-value schema and exceeds file length and duplication limits.
+export function allowReasonedValue<Output, Input>(
+    schema: z.ZodType<Output, Input>,
+    definition: ReasonedSettingDefinition & { default: z.util.NoUndefined<Output> },
+): z.ZodDefault<z.ZodUnion<readonly [z.ZodType<Output, Input>, z.ZodType<Output, ReasonedValue<Input>>]>> {
+    return z
+        .union([
+            schema,
+            z
+                .strictObject({
+                    value: schema.describe(definition.description),
+                    reason: z.string().describe(REASON_DESCRIPTIONS[definition.reason_when]),
+                })
+                .transform((reasoned) => reasoned.value),
+        ])
+        .default(definition.default)
+        .meta({ ...definition, reasoned: true });
+}
+
 export const namingCategorySchema = z.strictObject({
     max_characters: allowReasonedValue(z.number().int().positive(), {
         configurations: ['naming'],
@@ -190,28 +215,3 @@ export const formatSchema = formatFieldsSchema.extend({
             description: 'Formatting options for repository-relative paths, in order.',
         }),
 });
-
-/**
-Accept a setting value, or a reasoned value with the same value schema.
-
-@param schema the value validator.
-@param definition the description of the setting and the change that needs a reason.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlining repeats the reasoned-value schema and exceeds file length and duplication limits.
-export function allowReasonedValue<Output, Input>(
-    schema: z.ZodType<Output, Input>,
-    definition: ReasonedSettingDefinition & { default: z.util.NoUndefined<Output> },
-): z.ZodDefault<z.ZodUnion<readonly [z.ZodType<Output, Input>, z.ZodType<Output, ReasonedValue<Input>>]>> {
-    return z
-        .union([
-            schema,
-            z
-                .strictObject({
-                    value: schema.describe(definition.description),
-                    reason: z.string().describe(REASON_DESCRIPTIONS[definition.reason_when]),
-                })
-                .transform((reasoned) => reasoned.value),
-        ])
-        .default(definition.default)
-        .meta({ ...definition, reasoned: true });
-}

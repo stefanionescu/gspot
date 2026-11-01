@@ -1,9 +1,5 @@
 import { z } from 'zod';
-import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
-import { buildRuleTableSchema } from '#cli/schemas/settings/tools/rules.ts';
-import { commitlintSchema } from '#cli/schemas/settings/tools/commitlint.ts';
-import { stylelintRulesSchema } from '#cli/schemas/settings/tools/stylelint.ts';
-import { eslintRulesSchema, eslintPluginsSchema } from '#cli/schemas/settings/tools/eslint.ts';
+import { nonemptyStringSchema } from '#cli/schemas/manifests/tools.ts';
 
 import {
     relativePathSchema,
@@ -12,9 +8,16 @@ import {
     nonemptyStringsSchema,
 } from '#cli/schemas/settings/fields.ts';
 import {
+    commitlintSchema,
+    eslintRulesSchema,
+    eslintPluginsSchema,
+    buildRuleTableSchema,
+    stylelintRulesSchema,
+} from '#cli/schemas/settings/rules.ts';
+import {
     TRIVY_SEVERITIES,
-    SQLFLUFF_DIALECTS,
     KNIP_PACKAGE_NAME,
+    SQLFLUFF_DIALECTS,
     MARKDOWNLINT_RULE_ID,
     DOCSTRING_CONVENTIONS,
     IMPORT_EXTENSION_STYLES,

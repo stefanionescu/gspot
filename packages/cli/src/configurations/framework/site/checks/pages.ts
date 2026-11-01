@@ -17,8 +17,8 @@ import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { splitFileArguments } from '#cli/engine/tool-runs/batches.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
+import { purgecssOutputSchema } from '#cli/schemas/configurations.ts';
 import { join, extname, relative, normalize, isAbsolute } from 'node:path';
-import { purgecssOutputSchema } from '#cli/schemas/configurations/framework/site.ts';
 import { readSitemapUrls } from '#cli/configurations/framework/site/checks/sitemap.ts';
 import { listBuiltFiles, readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
 

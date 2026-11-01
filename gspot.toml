@@ -187,11 +187,6 @@ path = "tests"
 configurations = ["zod"]
 
 [[import_rule]]
-name = "cli-schemas"
-paths = ["packages/cli/src/schemas/**"]
-can_import = ["cli-types", "system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main"]
-
-[[import_rule]]
 name = "cli-types"
 paths = ["packages/cli/src/types/*.d.ts"]
 can_import = ["system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main"]
@@ -202,31 +197,31 @@ paths = ["packages/cli/src/system/**", "packages/cli/src/config/system.ts", "pac
 
 [[import_rule]]
 name = "parsers"
-paths = ["packages/cli/src/parsers/**", "packages/cli/src/config/parsers.ts", "packages/cli/src/types/parsers.ts"]
+paths = ["packages/cli/src/parsers/**", "packages/cli/src/config/parsers.ts", "packages/cli/src/types/parsers.ts", "packages/cli/src/schemas/parsers.ts"]
 
 [[import_rule]]
 name = "manifests"
-paths = ["packages/cli/src/manifests/**", "packages/cli/src/config/manifests.ts", "packages/cli/src/types/manifests.ts"]
+paths = ["packages/cli/src/manifests/**", "packages/cli/src/config/manifests.ts", "packages/cli/src/types/manifests.ts", "packages/cli/src/schemas/manifests/**"]
 
 [[import_rule]]
 name = "repository"
-paths = ["packages/cli/src/repository/**", "packages/cli/src/config/repository/**", "packages/cli/src/types/repository.ts"]
+paths = ["packages/cli/src/repository/**", "packages/cli/src/config/repository/**", "packages/cli/src/types/repository.ts", "packages/cli/src/schemas/repository.ts"]
 
 [[import_rule]]
 name = "settings"
-paths = ["packages/cli/src/settings/**", "packages/cli/src/config/settings/**", "packages/cli/src/types/settings.ts"]
+paths = ["packages/cli/src/settings/**", "packages/cli/src/config/settings/**", "packages/cli/src/types/settings.ts", "packages/cli/src/schemas/settings/**"]
 
 [[import_rule]]
 name = "tools"
-paths = ["packages/cli/src/tools/**", "packages/cli/src/config/tools/**", "packages/cli/src/types/tools.ts"]
+paths = ["packages/cli/src/tools/**", "packages/cli/src/config/tools/**", "packages/cli/src/types/tools.ts", "packages/cli/src/schemas/tools.ts"]
 
 [[import_rule]]
 name = "engine"
-paths = ["packages/cli/src/engine/**", "packages/cli/src/config/engine.ts", "packages/cli/src/types/engine/**"]
+paths = ["packages/cli/src/engine/**", "packages/cli/src/config/engine.ts", "packages/cli/src/types/engine/**", "packages/cli/src/schemas/engine.ts"]
 
 [[import_rule]]
 name = "configurations"
-paths = ["packages/cli/src/configurations/**", "packages/cli/src/config/configurations/**", "packages/cli/src/types/configurations/**"]
+paths = ["packages/cli/src/configurations/**", "packages/cli/src/config/configurations/**", "packages/cli/src/types/configurations/**", "packages/cli/src/schemas/configurations.ts"]
 
 [[import_rule]]
 name = "shipped-config"
@@ -239,7 +234,7 @@ paths = ["packages/cli/src/generation/**", "packages/cli/src/config/generation.t
 
 [[import_rule]]
 name = "commands"
-paths = ["packages/cli/src/commands/**", "packages/cli/src/config/commands/**", "packages/cli/src/types/commands/**"]
+paths = ["packages/cli/src/commands/**", "packages/cli/src/config/commands/**", "packages/cli/src/types/commands/**", "packages/cli/src/schemas/commands.ts"]
 
 [[import_rule]]
 name = "main"
@@ -263,12 +258,12 @@ can_import = ["plugin-config", "plugin-types"]
 [[import_rule]]
 name = "docs-config"
 paths = ["docs/src/config/**"]
-can_import = ["system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main", "cli-schemas", "cli-types", "docs-types"]
+can_import = ["system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main", "cli-types", "docs-types"]
 
 [[import_rule]]
 name = "docs-types"
 paths = ["docs/src/types/**"]
-can_import = ["system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main", "cli-schemas", "cli-types", "docs-config"]
+can_import = ["system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main", "cli-types", "docs-config"]
 
 [[import_rule]]
 name = "docs"
@@ -277,12 +272,12 @@ paths = ["docs/src/*.*", "docs/src/!(config|types)/**"]
 [[import_rule]]
 name = "tests-data"
 paths = ["tests/config/**"]
-can_import = ["system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main", "cli-schemas", "cli-types", "tests-setup"]
+can_import = ["system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main", "cli-types", "tests-setup"]
 
 [[import_rule]]
 name = "tests-types"
 paths = ["tests/types/**"]
-can_import = ["system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main", "cli-schemas", "cli-types", "plugin-types", "tests-data"]
+can_import = ["system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main", "cli-types", "plugin-types", "tests-data"]
 
 [[import_rule]]
 name = "tests-setup"

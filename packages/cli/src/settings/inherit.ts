@@ -5,7 +5,7 @@ import { isReasonedValue } from '#cli/settings/file.ts';
 import { joinDefaultPaths } from '#cli/settings/paths.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { commandSchema } from '#cli/schemas/manifests/fields.ts';
+import { commandSchema } from '#cli/schemas/manifests/tools.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
 import { CATEGORY_PARENTS, CATEGORY_KEY_SEGMENTS } from '#cli/config/settings/validation.ts';

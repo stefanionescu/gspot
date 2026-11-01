@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
+import { outputSchema } from '#cli/schemas/manifests/tools.ts';
 import { parseJsonFindings } from '#cli/engine/outputs/json.ts';
-import { outputSchema } from '#cli/schemas/manifests/output.ts';
 
 import {
     FIX_FIELD_CASES,
