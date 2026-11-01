@@ -11,7 +11,7 @@ import { GSPOT_FOLDER, PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { VERSION_FLAG } from '#cli/config/repository/javascript.ts';
 import { readHostPackage, readToolProjectPackage } from '#cli/tools/packages.ts';
 import type { InspectedTool, ToolInspection, ParsedToolVersion } from '#cli/types/tools.ts';
-import { NO_VERSION, NPM_BIN_FOLDER, TOOL_ENVIRONMENT } from '#cli/config/tools/programs.ts';
+import { NO_VERSION, NPM_BIN_FOLDER, STACK_FRAME_LINE, TOOL_ENVIRONMENT } from '#cli/config/tools/programs.ts';
 
 function findVersionAbove(files: Files | undefined, root: string, start: string, name: string): string | undefined {
     for (let folder = start; folder !== dirname(folder); folder = dirname(folder)) {
@@ -62,7 +62,11 @@ function findRunFailure(result: SpawnResult, tool: Tool, text: string): ParsedTo
     if (text.includes(NO_VERSION)) return { state: 'missing', note: 'not installed' };
     if (result.code === (tool.version_exit_code ?? 0)) return undefined;
     const exited = `The version command of ${tool.name} exited ${String(result.code)}`;
-    return { state: 'error', note: text === '' ? `${exited}.` : `${exited}: ${text}` };
+    const detail = text
+        .split('\n')
+        .filter((line) => !STACK_FRAME_LINE.test(line))
+        .join('\n');
+    return { state: 'error', note: text === '' ? `${exited}.` : `${exited}: ${detail}` };
 }
 
 function isBelowMinimum(found: string | undefined, minimum: string | undefined): boolean {

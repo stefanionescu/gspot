@@ -2,6 +2,8 @@ import { MISE_LOCKFILE, MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 
 export const STYLELINT_MANIFEST_TOOL = 'stylelint';
 
+export const STACK_FRAME_LINE = /^\s+at /u;
+
 export const MISE_INSTALL_URL = 'https://mise.jdx.dev/getting-started.html';
 
 export const AVAILABLE_TOOL_STATES: ReadonlySet<string> = new Set(['ok', 'system', 'newer']);

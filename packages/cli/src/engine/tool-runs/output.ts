@@ -7,13 +7,13 @@ import type { Tool, Check } from '#cli/types/manifests.ts';
 import type { CheckResult } from '#cli/types/engine/run.ts';
 import { CheckStop, GspotError } from '#cli/system/errors.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { STACK_FRAME_LINE } from '#cli/config/tools/programs.ts';
 import { parseOutput, OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 
 import {
     TAIL_LINES,
     OUT_OF_MEMORY,
     FILE_PLACEHOLDER,
-    STACK_FRAME_LINE,
     OUT_OF_MEMORY_MESSAGE,
     NO_ERROR_OUTPUT_MESSAGE,
 } from '#cli/config/engine.ts';
@@ -76,6 +76,20 @@ function isSilentCrash(check: Check, result: SpawnResult, parsed: Finding[], pat
     );
 }
 
+function formatReportRefusal(
+    planned: OutputCheck,
+    result: SpawnResult,
+    refusal: string,
+    options: { verbose?: boolean | undefined },
+): string {
+    const tail = formatOutputTail({ stdout: '', stderr: result.stderr }, '', options);
+    if (tail === '') return refusal;
+    const name = planned.tool?.name ?? planned.check.id;
+    const opening =
+        planned.check.output.format === 'json' ? `${name} exited ${String(result.code)} without a JSON report:` : refusal;
+    return `${opening}\n${tail}`;
+}
+
 /**
 Builds the check result from what the runs collected.
 
@@ -125,7 +139,8 @@ export function parseCommandFindings(
             ? { note: formatCrash(planned, result, options) }
             : { findings: parsed };
     } catch (error) {
-        if (error instanceof GspotError && error.code === 'output') return { note: error.message };
+        if (error instanceof GspotError && error.code === 'output')
+            return { note: formatReportRefusal(planned, result, error.message, options) };
         throw error;
     }
 }

@@ -6,8 +6,10 @@ import { listOtherTools } from '#cli/engine/tools.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import type { ProcessFailure, ToolRunOptions } from '#cli/types/tools.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
+import { PROCESS_KILLED_LINE, RAISE_TIMEOUT_MESSAGE } from '#cli/config/engine.ts';
 import { foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { CheckTool, CheckToolOptions, CheckToolProgram, ToolProcessResult } from '#cli/types/engine/tool-runs.ts';
 
@@ -35,7 +37,12 @@ function findProcessFailure(result: SpawnResult, name: string, timeoutSeconds: n
     if (result.timedOut)
         return {
             status: 'error',
-            note: `${name} ran longer than tool_timeout_seconds (${String(timeoutSeconds)}s), so gspot stopped it.`,
+            note: [
+                `${name} ran longer than tool_timeout_seconds (${String(timeoutSeconds)}s), so gspot stopped it. ${RAISE_TIMEOUT_MESSAGE}`,
+                ...formatOutputTail(result, '').split('\n'),
+            ]
+                .filter((line) => line !== '' && !PROCESS_KILLED_LINE.test(line))
+                .join('\n'),
         };
     if (result.missing) return { status: 'missing', note: `gspot could not start ${name}: ${result.stderr.trim()}` };
     if (result.errored)

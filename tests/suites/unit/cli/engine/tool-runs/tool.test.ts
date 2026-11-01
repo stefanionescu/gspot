@@ -19,7 +19,7 @@ test('a timed-out tool carries the configured time limit in its failure', async 
     });
     expect(failure).toStrictEqual({
         status: 'error',
-        note: 'waiting-tool ran longer than tool_timeout_seconds (0.2s), so gspot stopped it.',
+        note: 'waiting-tool ran longer than tool_timeout_seconds (0.2s), so gspot stopped it. Raise the limit with gspot set tool_timeout_seconds <seconds>.',
     });
 });
 
@@ -46,4 +46,14 @@ test('companion tool folders precede the existing PATH in declared order', async
             delimiter,
         ),
     );
+});
+
+test('a timeout note holds the last output of the tool', async () => {
+    await using sandbox = await testdir();
+    const { failure } = await runToolProcess(buildProgramCommand('fakes/tool', '--line', 'running test 3', '--wait'), {
+        cwd: sandbox.path,
+        name: 'waiting-tool',
+        timeoutSeconds: 0.5,
+    });
+    expect(failure?.note).toEndWith('\nrunning test 3');
 });
