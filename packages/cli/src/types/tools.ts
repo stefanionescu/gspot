@@ -5,8 +5,13 @@ import type { CHECK_HOOKS } from '#cli/config/tools/installers.ts';
 import type { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
 import type { Files, RunCache, AsyncSpawnOptions } from '#cli/types/system.ts';
-import type { bunPackageSchema, lintRuleDocsSchema, uvProjectSettingsSchema } from '#cli/schemas/tools.ts';
 
+import type {
+    bunPackageSchema,
+    lintRuleDocsSchema,
+    miseLockfileSchema,
+    uvProjectSettingsSchema,
+} from '#cli/schemas/tools.ts';
 import type {
     Repository,
     ManagedKeys,
@@ -63,6 +68,8 @@ type ToolFolderKind = 'npm' | 'python' | 'vale';
 export type PackagePins = { npm: Record<string, string>; python: string[] };
 
 export type UvLockfile = z.infer<typeof uvLockfileSchema>;
+
+export type MiseLockfile = z.infer<typeof miseLockfileSchema>;
 
 export type Session = {
     configuredChecks: ConfiguredCheck[];

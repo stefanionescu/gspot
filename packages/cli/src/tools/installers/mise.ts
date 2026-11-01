@@ -17,8 +17,8 @@ import { redactInstallOutput } from '#cli/tools/installers/credentials.ts';
 import { GSPOT_PATHS, MISE_LOCKFILE, MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { runInstallStep, runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
 import { buildMiseTrust, readMiseBinPaths, readToolBinPaths } from '#cli/tools/locate.ts';
-import type { MiseToolPin, MiseInstall, ToolInstall, GeneratedFile } from '#cli/types/tools.ts';
 import { findMisePin, listMisePins, listPackagePins, findMissingBuild } from '#cli/tools/pins.ts';
+import type { MiseToolPin, MiseInstall, ToolInstall, MiseLockfile, GeneratedFile } from '#cli/types/tools.ts';
 
 import {
     UV_TOOL,
@@ -94,12 +94,23 @@ function writeChecksums(lockfile: string, pins: MiseToolPin[]): string {
     return stringify(document);
 }
 
+function parseMiseLockfile(lockfile: string): MiseLockfile | undefined {
+    try {
+        return parseTomlFile(GSPOT_PATHS.miseLockfile, lockfile, miseLockfileSchema);
+    } catch (error) {
+        if (!(error instanceof GspotError) || error.code !== 'parse') throw error;
+        return undefined;
+    }
+}
+
 async function writeMiseLockfile(install: ToolInstall, project: GeneratedFile): Promise<void> {
     const saved = install.writer.read(GSPOT_PATHS.miseLockfile);
-    if (isMiseLockfileFresh(listMisePins(install.session.toolConfigurations), saved?.bytes.toString('utf8'))) return;
+    const savedText = saved?.bytes.toString('utf8');
+    if (isMiseLockfileFresh(listMisePins(install.session.toolConfigurations), savedText)) return;
     using scratch = createTemporaryFolder();
     writeFileSync(join(scratch.path, MISE_CONFIG_FILE), project.content);
-    if (saved !== undefined) writeFileSync(join(scratch.path, MISE_LOCKFILE), saved.bytes);
+    if (savedText !== undefined && parseMiseLockfile(savedText) !== undefined)
+        writeFileSync(join(scratch.path, MISE_LOCKFILE), savedText);
     const result = await runInstallStep(install, MISE_LOCK_ARGUMENTS, {
         step: `locking the mise tools in ${GSPOT_PATHS.miseLockfile}`,
         cwd: scratch.path,
@@ -160,20 +171,12 @@ host over HTTPS, and each locked checksum must equal the audited checksum of the
 */
 export function isMiseLockfileFresh(pins: MiseToolPin[], lockfile: string | undefined): boolean {
     if (pins.length === 0) return true;
-    if (lockfile === undefined) return false;
-    let parsed;
-    try {
-        parsed = miseLockfileSchema.safeParse(parseTomlFile(GSPOT_PATHS.miseLockfile, lockfile));
-    } catch (error) {
-        if (!(error instanceof GspotError) || error.code !== 'parse') throw error;
-        return false;
-    }
-    if (!parsed.success) return false;
+    const parsed = lockfile === undefined ? undefined : parseMiseLockfile(lockfile);
+    if (parsed === undefined) return false;
     return pins.every(
         (pin) =>
-            parsed.data.tools[pin.name]?.some(
-                (locked) => locked.version === pin.version && isLockedRelease(pin, locked),
-            ) === true,
+            parsed.tools[pin.name]?.some((locked) => locked.version === pin.version && isLockedRelease(pin, locked)) ===
+            true,
     );
 }
 

@@ -14,12 +14,12 @@ import type { MiseProject } from '#tests/types/setup.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
-import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { MISE_PROJECT_MESSAGE } from '#cli/config/tools/installers.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildToolInstall, buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { installMiseTools, isMiseLockfileFresh } from '#cli/tools/installers/mise.ts';
 
 test('mise lock freshness needs the tool, its version, a URL and a sha256 checksum', () => {
@@ -222,3 +222,31 @@ test.each(['pin', 'checksum'])('mise refuses a lock that omits a %s and keeps th
     expect(install.steps.filter((command) => command[1] === 'install')).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.miseLockfile), 'utf8')).toBe('[tools]\n');
 });
+
+test.each(['tools = [', '<<<<<<< HEAD\n[tools]\n=======\n[tools]\n>>>>>>> branch\n'])(
+    'mise lock starts fresh from the broken lockfile %j',
+    async (broken) => {
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings(['spelling']),
+            [GSPOT_PATHS.miseLockfile]: broken,
+        });
+        const session = await openSession(sandbox.path);
+        const install = buildToolInstall(session, openFiles(sandbox.path));
+        install.misePath = 'mise';
+        const project = install.generated.files.find(({ path }) => path === GSPOT_PATHS.miseProject)!;
+        await createFileTree(sandbox.path, { [project.path]: project.content });
+        const lockfiles = buildToolLockfiles(session.toolConfigurations);
+        const copied: boolean[] = [];
+        using _commands = fakeCommands('mise', async (command, options) => {
+            if (command[1] === 'lock') {
+                copied.push(await isOnDisk(join(options.cwd, 'mise.lock')));
+                await writeFile(join(options.cwd, 'mise.lock'), lockfiles[GSPOT_PATHS.miseLockfile]!);
+            }
+            return buildProcessResult();
+        });
+        await installMiseTools(install);
+        expect(copied).toStrictEqual([false]);
+        const lockfile = await readFile(join(sandbox.path, GSPOT_PATHS.miseLockfile), 'utf8');
+        expect(isMiseLockfileFresh(listMisePins(session.toolConfigurations), lockfile)).toBe(true);
+    },
+);
