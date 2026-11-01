@@ -27,7 +27,10 @@ export async function readCheckRuleDocs(
     const options: RuleDocsOptions = {};
     if (session !== undefined) {
         options.timeoutSeconds = session.timeoutSeconds;
-        options.readMiseBinPaths = () => readToolBinPaths(session);
+        options.readMiseBinPaths = async () => {
+            const { folders } = await readToolBinPaths(session);
+            return folders;
+        };
     }
     return await readLintRuleDocs(root, tool, identifier, options);
 }

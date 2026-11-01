@@ -102,8 +102,8 @@ async function findUvPath(install: ToolInstall, miseBinPaths: string[]): Promise
     const { session, misePath } = install;
     if (misePath === undefined && which.sync(UV_TOOL, { nothrow: true }) === null) return undefined;
     const search = { folders: [], miseBinPaths, timeoutSeconds: session.timeoutSeconds };
-    const [path = UV_TOOL] = await listExecutablePaths(session.toolsRoot, UV_TOOL, search);
-    return path;
+    const { paths } = await listExecutablePaths(session.toolsRoot, UV_TOOL, search);
+    return paths[0] ?? UV_TOOL;
 }
 
 async function buildNpmInstall(install: ToolInstall): Promise<NpmToolInstall | undefined> {

@@ -29,7 +29,6 @@ import {
     MISE_LOCK_ARGUMENTS,
     GITHUB_TOKEN_MESSAGE,
     MISE_PLATFORM_PREFIX,
-    MISE_PROJECT_MESSAGE,
     MISE_CHECKSUM_PATTERN,
     MISE_RELEASE_PROTOCOL,
     MISE_INSTALL_ARGUMENTS,
@@ -59,10 +58,10 @@ async function runMiseInstall(install: ToolInstall, command: string[]): Promise<
     const { root } = install.session;
     const [project] = install.generated.files.filter(({ path }) => path === GSPOT_PATHS.miseProject) as [GeneratedFile];
     const trust = buildMiseTrust(root, project.content);
-    if (trust === undefined) throw new GspotError('install', MISE_PROJECT_MESSAGE);
+    if ('refusal' in trust) throw new GspotError('install', trust.refusal);
     await runRequiredInstallStep(install, command, {
         cwd: join(root, GSPOT_FOLDER),
-        env: { ...MISE_LOCKED_ENVIRONMENT, ...trust },
+        env: { ...MISE_LOCKED_ENVIRONMENT, ...trust.variables },
         step: `installing mise tools from ${GSPOT_PATHS.miseProject}`,
         name: `The command ${command.join(' ')}`,
     });
@@ -215,17 +214,21 @@ export async function installMiseTools(install: ToolInstall): Promise<MiseInstal
     }
     const [project] = install.generated.files.filter(({ path }) => path === GSPOT_PATHS.miseProject) as [GeneratedFile];
     if (listMisePins(session.toolConfigurations).length > 0) await writeMiseLockfile(install, project);
-    if (pins.length === 0) return { installed: '', note: '', binPaths: await readToolBinPaths(session), tools: [] };
+    if (pins.length === 0) {
+        const { folders, failure = '' } = await readToolBinPaths(session);
+        return { installed: '', note: failure, binPaths: folders, tools: [] };
+    }
     await runMiseInstall(install, [...MISE_INSTALL_ARGUMENTS, ...pins.map((pin) => pin.name)]);
     const names = pins.map((pin) => pin.name);
     steps.push([...MISE_BIN_PATHS_ARGUMENTS, ...names]);
+    const { folders, failure = '' } = await readMiseBinPaths(session.root, names, {
+        timeoutSeconds: session.timeoutSeconds,
+        project: project.content,
+    });
     return {
         installed: `installed ${formatCount(names.length, MISE_TOOL_NOUN)} with mise`,
-        note: '',
-        binPaths: await readMiseBinPaths(session.root, names, {
-            timeoutSeconds: session.timeoutSeconds,
-            project: project.content,
-        }),
+        note: failure,
+        binPaths: folders,
         tools: hookTools,
     };
 }

@@ -138,7 +138,7 @@ async function fakeMiseTsc(root: string, status: number) {
             join(root, name === 'mise' ? 'bin' : 'mise/shims', `${name}${isWindows ? '.cmd' : ''}`),
         ),
     );
-    const paths = await listExecutablePaths(join(root, 'work'), 'tsc', {
+    const { paths } = await listExecutablePaths(join(root, 'work'), 'tsc', {
         timeoutSeconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined),
         folders: [join(root, 'work')],
     });
@@ -156,7 +156,7 @@ test('mise finds the program of the repository, and it runs from a copy', async 
     expect({ code: result.code, stdout: result.stdout }).toStrictEqual({ code: 0, stdout: '0.0.0-test\n' });
 });
 
-test('a pinned program whose only executable is a mise shim that mise cannot resolve is missing', async () => {
+test('a pinned program whose only executable is a mise shim that mise cannot resolve gives the mise error', async () => {
     await using sandbox = await testdir({ 'work/.keep': '' });
     const root = sandbox.path;
     const failure = ['--stderr', 'mise ERROR Config files are not trusted.\n', '--exit', '1'];
@@ -172,6 +172,7 @@ test('a pinned program whose only executable is a mise shim that mise cannot res
         state: 'missing',
         want: '0.0.0-test',
         help: 'Run gspot install.',
+        note: 'mise which failed (exit 1): mise ERROR Config files are not trusted.',
     });
 });
 

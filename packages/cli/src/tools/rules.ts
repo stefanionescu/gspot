@@ -101,7 +101,9 @@ async function readSwiftlintRule(
 ): Promise<LintRuleDocs | undefined> {
     if (!SWIFTLINT_RULE_IDENTIFIER.test(identifier)) return undefined;
     const { timeoutSeconds } = options;
-    const [path] = await listExecutablePaths(root, 'swiftlint', {
+    const {
+        paths: [path],
+    } = await listExecutablePaths(root, 'swiftlint', {
         folders: [],
         timeoutSeconds,
         miseBinPaths: await options.readMiseBinPaths?.(),

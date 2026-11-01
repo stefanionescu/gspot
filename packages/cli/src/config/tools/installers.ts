@@ -87,6 +87,9 @@ export const MISE_RELEASE_PROTOCOL = 'https:';
 export const MISE_PROJECT_MESSAGE =
     'gspot runs mise in .gspot only when no other mise config sits beside .gspot/mise.toml. Delete the other mise files in .gspot, such as mise.local.toml, then run gspot install.';
 
+export const MISE_STALE_PROJECT_MESSAGE =
+    'gspot runs mise in .gspot only while .gspot/mise.toml is the file that gspot generates. Run gspot apply.';
+
 export const GITHUB_RATE_LIMIT = /rate limit/iu;
 
 export const GITHUB_TOKEN_MESSAGE =
