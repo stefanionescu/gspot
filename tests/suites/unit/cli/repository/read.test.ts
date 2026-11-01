@@ -3,8 +3,8 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { rm, chmod, writeFile } from 'node:fs/promises';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
-import { fakePlatform } from '#tests/setup/system/platform.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { listTrackedFiles } from '#cli/repository/files/tracked.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
@@ -91,7 +91,7 @@ test('a missing git program is reported instead of a successful walk', async () 
     );
 });
 
-test('on Windows the executable bit comes from the Git index', async () => {
+test.skipIf(!isWindows)('on Windows the executable bit comes from the Git index', async () => {
     await using sandbox = await testdir({ 'indexed.sh': '#!/bin/sh\n', 'local.sh': '#!/bin/sh\n' });
 
     for (const commandArguments of [
@@ -101,8 +101,6 @@ test('on Windows the executable bit comes from the Git index', async () => {
     ])
         runGitStep(sandbox.path, commandArguments);
     await chmod(join(sandbox.path, 'local.sh'), 0o700);
-    using resources = new DisposableStack();
-    resources.use(fakePlatform('win32'));
     const files = await listTrackedFiles(
         sandbox.path,
         await readTestRepository(sandbox.path).then(({ index }) => index),

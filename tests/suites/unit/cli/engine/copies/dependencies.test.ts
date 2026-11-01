@@ -6,8 +6,8 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
-import { fakePlatform } from '#tests/setup/system/platform.ts';
 import { copyDependencies } from '#cli/engine/copies/dependencies.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { DEPENDENCY_FILES_MESSAGE } from '#tests/config/setup/sandboxes.ts';
@@ -86,29 +86,31 @@ test('an installed package links to the working tree and a dot folder stays out'
     expect(await readFile(join(external.path, 'private.txt'), 'utf8')).toBe('outside bytes');
 });
 
-test('a Windows dependency copy links folders and copies executable files without file symlinks', async () => {
-    await using sandbox = await testdir({
-        'source/node_modules/package/index.js': 'export {};',
-        'target/.keep': '',
-    });
-    const root = join(sandbox.path, 'source');
-    const target = join(sandbox.path, 'target');
-    const names = ['eslint.cmd', 'eslint.ps1', 'eslint.exe'];
-    await createFileTree(root, Object.fromEntries(names.map((name) => [`node_modules/.bin/${name}`, name])));
-    using _platform = fakePlatform('win32');
-    await copyDependencies({ root, target, dependencies: ['node_modules'] });
-    const packageStats = await lstat(join(target, 'node_modules/package'));
-    expect(packageStats.isSymbolicLink()).toBe(true);
-    expect(await realpath(join(target, 'node_modules/package'))).toBe(
-        await realpath(join(root, 'node_modules/package')),
-    );
-    for (const name of names) {
-        const copied = join(target, 'node_modules/.bin', name);
-        const copiedStats = await lstat(copied);
-        expect(copiedStats.isFile()).toBe(true);
-        expect(await readFile(copied, 'utf8')).toBe(name);
-    }
-});
+test.skipIf(!isWindows)(
+    'a Windows dependency copy links folders and copies executable files without file symlinks',
+    async () => {
+        await using sandbox = await testdir({
+            'source/node_modules/package/index.js': 'export {};',
+            'target/.keep': '',
+        });
+        const root = join(sandbox.path, 'source');
+        const target = join(sandbox.path, 'target');
+        const names = ['eslint.cmd', 'eslint.ps1', 'eslint.exe'];
+        await createFileTree(root, Object.fromEntries(names.map((name) => [`node_modules/.bin/${name}`, name])));
+        await copyDependencies({ root, target, dependencies: ['node_modules'] });
+        const packageStats = await lstat(join(target, 'node_modules/package'));
+        expect(packageStats.isSymbolicLink()).toBe(true);
+        expect(await realpath(join(target, 'node_modules/package'))).toBe(
+            await realpath(join(root, 'node_modules/package')),
+        );
+        for (const name of names) {
+            const copied = join(target, 'node_modules/.bin', name);
+            const copiedStats = await lstat(copied);
+            expect(copiedStats.isFile()).toBe(true);
+            expect(await readFile(copied, 'utf8')).toBe(name);
+        }
+    },
+);
 
 test('a nested revision copy links each package of .gspot/node_modules', async () => {
     await using sandbox = await testdir(TOOL_PROJECT_FILES);

@@ -8,10 +8,10 @@ import { listPackagePins } from '#cli/tools/pins.ts';
 import { listSettingReaders } from '#cli/engine/skips.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { fakePlatform } from '#tests/setup/system/platform.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { isWindows, fakePlatform } from '#tests/setup/system/platform.ts';
 
 import {
     VUE_TSC_SKIP,
@@ -76,14 +76,12 @@ test('vue/vue-tsc without the typescript configuration is skipped with its condi
     ).toStrictEqual([...VUE_TSC_SKIP]);
 });
 
-test('a check whose tool has no Windows build is skipped on Windows', async () => {
-    using mockResources = new DisposableStack();
+test.skipIf(!isWindows)('a check whose tool has no Windows build is skipped on Windows', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python'], { tables: '[security]\nrule_files = ["rules.yml"]\n' }),
         'rules.yml': 'rules: []\n',
         'source.py': 'PORT = 8080\n',
     });
-    mockResources.use(fakePlatform('win32'));
     const session = await openSession(sandbox.path);
     expect(planChecks(session, { stage: 'all', only: ['security/semgrep'] }).map(({ skip }) => skip)).toStrictEqual([
         { cause: 'system', note: 'semgrep has no Windows build' },

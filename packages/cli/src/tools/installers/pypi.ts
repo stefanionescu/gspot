@@ -47,7 +47,6 @@ import {
     INDEX_SETTINGS,
     PYTHON_TOOL_NOUN,
     UV_SETTINGS_FILE,
-    CONFIG_TOML_FORMAT,
     PYTHON_TOOL_PROJECT,
     UV_INSTALL_ARGUMENTS,
     UV_LOCKFILE_ARGUMENTS,
@@ -334,21 +333,4 @@ Build the project table of the Python tool project: its name, its Python version
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The written pyproject.toml and the lockfile state of the installers build the same table through it.
 export function buildPythonProjectTable(configurations: Configuration[]): PythonToolProject {
     return { ...PYTHON_TOOL_PROJECT, dependencies: listPackagePins(configurations).python };
-}
-
-/**
-Build the Python install that holds the Python lint tools.
-
-@param configurations the configurations in use.
-@returns an empty list without Python tools.
-*/
-export function buildPythonInstall(configurations: Configuration[]): GeneratedFile[] {
-    const project = buildPythonProjectTable(configurations);
-    if (project.dependencies.length === 0) return [];
-    return [
-        {
-            path: GSPOT_PATHS.pythonProject,
-            content: stringify({ project }, CONFIG_TOML_FORMAT),
-        },
-    ];
 }

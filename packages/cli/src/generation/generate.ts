@@ -1,24 +1,25 @@
 import { basename } from 'node:path/posix';
 import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
+import { stringify } from '@decimalturn/toml-patch';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
 import { getSettingValue } from '#cli/settings/inherit.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { AGENTS_FILE } from '#cli/config/repository/setup.ts';
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { listWrittenPaths } from '#cli/generation/ignores.ts';
 import { buildLinkFieldEdits } from '#cli/generation/links.ts';
 import { listHookNames } from '#cli/tools/installers/hooks.ts';
-import { buildPythonInstall } from '#cli/tools/installers/pypi.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { FROZEN_INSTALLS } from '#cli/config/repository/javascript.ts';
 import { parseAttributePatterns } from '#cli/repository/git/output.ts';
 import { listPackagePins, buildMiseInstall } from '#cli/tools/pins.ts';
+import { buildPythonProjectTable } from '#cli/tools/installers/pypi.ts';
 import type { Session, Generation, GeneratedFile } from '#cli/types/tools.ts';
+import { JSON_INDENT, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import { readPackageManagerVersion } from '#cli/repository/javascript/package-manager.ts';
 import { buildBunScannerEdits } from '#cli/configurations/general/dependencies/generate.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
@@ -143,9 +144,11 @@ export function buildToolProjects(session: Pick<Session, 'packageManager' | 'too
     const { packageManager, toolConfigurations } = session;
     const project = { ...NPM_TOOL_PROJECT, devDependencies: listPackagePins(toolConfigurations).npm };
     const npmProject = { path: GSPOT_PATHS.npmProject, content: `${JSON.stringify(project, null, JSON_INDENT)}\n` };
+    const python = buildPythonProjectTable(toolConfigurations);
+    const pythonContent = stringify({ project: python }, CONFIG_TOML_FORMAT);
     return [
         ...(packageManager === undefined ? [] : [npmProject]),
-        ...buildPythonInstall(toolConfigurations),
+        ...(python.dependencies.length === 0 ? [] : [{ path: GSPOT_PATHS.pythonProject, content: pythonContent }]),
         buildMiseInstall(toolConfigurations),
     ];
 }
