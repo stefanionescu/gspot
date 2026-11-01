@@ -121,6 +121,7 @@ import { noShallowCloneMutation } from './rules/no-shallow-clone-mutation.ts';
 import { noUnexplainedTestSkips } from './rules/no-unexplained-test-skips.ts';
 import { noGratuitousExpressions } from './rules/no-gratuitous-expressions.ts';
 import { preferMatcherAssertions } from './rules/prefer-matcher-assertions.ts';
+import { noCypressThenAssertions } from './rules/no-cypress-then-assertions.ts';
 import { noDefaultUtilityImports } from './rules/no-default-utility-imports.ts';
 import { noFloatingPointEquality } from './rules/no-floating-point-equality.ts';
 import { noUnsafeSanitizerBypass } from './rules/no-unsafe-sanitizer-bypass.ts';
@@ -191,6 +192,7 @@ const rules = {
     'valid-throw-assertions': validThrowAssertions,
     'require-test-assertions': requireTestAssertions,
     'no-misplaced-assertions': noMisplacedAssertions,
+    'no-cypress-then-assertions': noCypressThenAssertions,
     'no-setter-in-component': noSetterInComponent,
     'no-self-state-update': noSelfStateUpdate,
     'no-generated-keys': noGeneratedKeys,
