@@ -219,7 +219,7 @@ export type PathFrame = {
     segments: TSESLint.CodePathSegment[];
 };
 
-type AssertionStyle = 'jest-like' | 'jasmine' | 'playwright' | 'chai-bdd' | 'chai-assert' | 'node-assert';
+type AssertionStyle = 'jest-like' | 'jasmine' | 'playwright' | 'chai-bdd' | 'chai-assert' | 'node-assert' | 'cypress';
 
 export type AssertionPredicate = 'truthy' | 'falsy' | 'true' | 'false' | 'defined' | 'undefined' | 'null' | 'exists';
 
@@ -243,6 +243,7 @@ export type AssertionStyles = {
     expect: 'jest-like' | 'jasmine' | 'playwright' | undefined;
     chai: boolean;
     nodeAssert: boolean;
+    cypress: boolean;
 };
 
 export type ChaiChain = { received: TSESTree.Expression; names: string[] };
@@ -253,4 +254,13 @@ export type ConstantFinding = {
     node: TSESTree.Node;
     messageId: 'constant' | 'fresh' | 'identity';
     matcher?: string;
+};
+
+export type ComparisonAssertion = Assertion & { kind: 'comparison' };
+
+export type MatcherSuggestion = {
+    kind: string;
+    received: TSESTree.Node;
+    expected?: TSESTree.Node | undefined;
+    negated: boolean;
 };

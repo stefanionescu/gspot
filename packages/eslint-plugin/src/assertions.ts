@@ -1,5 +1,5 @@
-import { isCallOf } from './testing.ts';
 import { readModuleName } from './modules.ts';
+import { isCallOf, isCypressChain } from './testing.ts';
 import { usesModule, listImportedModules } from './packages.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
@@ -20,11 +20,13 @@ import {
     NODE_ASSERTION,
     CHAI_PREDICATES,
     ASSERT_FUNCTION,
+    CYPRESS_MODULES,
     CHAI_COMPARISONS,
     EXPECT_PREDICATES,
     EXPECT_COMPARISONS,
     NODE_ASSERT_CHECKS,
     CHAI_ASSERT_CHECKS,
+    CYPRESS_ASSERTIONS,
     NODE_ASSERT_MODULES,
 } from './config/assertions.ts';
 
@@ -57,6 +59,7 @@ function readAssertionStyles(context: FileContext): AssertionStyles {
         expect: expect?.style,
         chai: usesModule(context, CHAI_MODULES),
         nodeAssert: NODE_ASSERT_MODULES.some((module) => imported.has(module)),
+        cypress: usesModule(context, CYPRESS_MODULES),
     };
     styleCache.set(context.sourceCode, styles);
     return styles;
@@ -80,7 +83,8 @@ function readExpectAssertion(node: TSESTree.CallExpression, style: AssertionStyl
     if (predicate !== undefined)
         return { ...subject, style, kind: 'predicate', predicate, node, report: subject.received };
     const checks = { style, comparison: expectComparisons.get(matcher), negated: subject.negated };
-    return node.arguments.length === 1 ? readCheckedCall(node, checks, callee, subject.received) : undefined;
+    const values = [subject.received, ...node.arguments];
+    return node.arguments.length === 1 ? readCheckedCall(node, checks, callee.property, values) : undefined;
 }
 
 function readChaiChain(node: TSESTree.Node): ChaiChain | undefined {
@@ -124,20 +128,37 @@ function readChaiCall(node: TSESTree.CallExpression, styles: AssertionStyles): A
         comparison: chain.names.includes('deep') ? 'deep' : comparison,
         negated,
     };
-    return readCheckedCall(node, checks, member, chain.received);
+    return readCheckedCall(node, checks, member.property, [chain.received, ...node.arguments]);
+}
+
+function readCypressChecks(chainer: TSESTree.Node | undefined): AssertionChecks | undefined {
+    const names =
+        chainer?.type === AST_NODE_TYPES.Literal && typeof chainer.value === 'string' ? chainer.value.split('.') : [];
+    const comparison = chaiComparisons.get(names.at(-1) ?? '');
+    const negated = names.includes('not');
+    if (comparison === undefined) return undefined;
+    return { style: 'cypress', comparison: names.includes('deep') ? 'deep' : comparison, negated };
+}
+
+function readCypressCall(node: TSESTree.CallExpression, styles: AssertionStyles): Assertion | undefined {
+    const callee = node.callee;
+    const [chainer, ...values] = node.arguments;
+    const method = callee.type === AST_NODE_TYPES.MemberExpression ? ASTUtils.getPropertyName(callee) : null;
+    const isAssertion = styles.cypress && CYPRESS_ASSERTIONS.has(method ?? '') && values.length === 1;
+    if (!isAssertion || callee.type !== AST_NODE_TYPES.MemberExpression || !isCypressChain(callee.object))
+        return undefined;
+    return readCheckedCall(node, readCypressChecks(chainer), callee.property, [callee.object, ...values]);
 }
 
 function readCheckedCall(
     node: TSESTree.CallExpression,
     checks: AssertionChecks | undefined,
-    callee: TSESTree.Node,
-    subject?: TSESTree.Node,
+    report: TSESTree.Node,
+    values: readonly TSESTree.CallExpressionArgument[],
 ): Assertion | undefined {
-    const values = subject === undefined ? node.arguments : [subject, ...node.arguments];
     const [received, expected] = values.filter(
         (value): value is TSESTree.Expression => value.type !== AST_NODE_TYPES.SpreadElement,
     );
-    const report = callee.type === AST_NODE_TYPES.MemberExpression ? callee.property : callee;
     if (received === undefined || checks === undefined) return undefined;
     const { style, predicate, comparison, negated } = checks;
     if (predicate !== undefined)
@@ -155,7 +176,7 @@ function readAssertChecks(name: string, styles: AssertionStyles): AssertionCheck
 }
 
 /**
-Read an assertion of Jest, Vitest, Bun, Jasmine, Playwright, chai, or node:assert that the file can use. It reads a
+Read an assertion of Jest, Vitest, Bun, Jasmine, Playwright, chai, Cypress, or node:assert that the file can use. It reads a
 predicate on one value or a comparison of two values.
 
 @param node the call or member to read.
@@ -170,6 +191,7 @@ export function readAssertion(node: TSESTree.Node, context: FileContext): Assert
     return (
         readExpectAssertion(node, styles.expect) ??
         readChaiCall(node, styles) ??
-        readCheckedCall(node, checks, node.callee)
+        readCypressCall(node, styles) ??
+        readCheckedCall(node, checks, node.callee, node.arguments)
     );
 }

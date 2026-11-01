@@ -225,6 +225,10 @@ export const EXPECT_STYLES = [
 
 export const CHAI_MODULES = ['chai', 'chai/register-assert', 'chai/register-expect', 'chai/register-should', 'cypress'];
 
+export const CYPRESS_MODULES = ['cypress'];
+
+export const CYPRESS_ASSERTIONS = new Set(['should', 'and']);
+
 export const NODE_ASSERT_MODULES = ['assert', 'node:assert', 'assert/strict', 'node:assert/strict'];
 
 export const EXPECT_PREDICATES = [
@@ -315,6 +319,7 @@ export const DEEP_MATCHERS = new Map([
     ['jasmine', ['toEqual', 'not.toEqual']],
     ['playwright', ['toEqual', 'not.toEqual']],
     ['chai-bdd', ['deep.equal', 'not.deep.equal']],
+    ['cypress', ['deep.equal', 'not.deep.equal']],
     ['chai-assert', ['deepEqual', 'notDeepEqual']],
     ['node-assert', ['deepStrictEqual', 'notDeepStrictEqual']],
 ]);

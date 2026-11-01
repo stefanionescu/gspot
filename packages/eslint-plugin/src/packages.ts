@@ -172,6 +172,28 @@ export function allowsVersion(range: string, minimum: readonly number[]): boolea
 }
 
 /**
+Check whether every version that a package.json range allows sits at or above a minimum. A range without a lower bound,
+or one that does not have the form of a version range, does not.
+
+@param range the range from package.json.
+@param minimum the lowest version, as major, minor, and patch numbers.
+*/
+export function requiresVersion(range: string, minimum: readonly number[]): boolean {
+    const alternatives = range
+        .split(VERSION_ALTERNATIVES)
+        .map((alternative) => alternative.trim().split(VERSION_SPACES));
+    const lowerBounds = alternatives.map((comparators) =>
+        comparators.flatMap((comparator) => {
+            const groups = VERSION_PATTERN.exec(comparator)?.groups;
+            const isLowerBound = groups !== undefined && !(groups['operator'] ?? '').startsWith('<');
+            const fields = (groups?.['number'] ?? '').split('.');
+            return isLowerBound ? [fields.map((field) => (VERSION_WILDCARD.test(field) ? 0 : Number(field)))] : [];
+        }),
+    );
+    return lowerBounds.every((versions) => versions.some((version) => compareVersions(version, minimum) >= 0));
+}
+
+/**
 Check whether the package.json files above the file allow Vue 3 or newer. Count a Vue range that does not have the
 form of a version range as Vue 3.
 

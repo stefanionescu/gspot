@@ -117,6 +117,7 @@ import { noMisplacedLoopCounter } from './rules/no-misplaced-loop-counter.ts';
 import { noShallowCloneMutation } from './rules/no-shallow-clone-mutation.ts';
 import { noUnexplainedTestSkips } from './rules/no-unexplained-test-skips.ts';
 import { noGratuitousExpressions } from './rules/no-gratuitous-expressions.ts';
+import { preferMatcherAssertions } from './rules/prefer-matcher-assertions.ts';
 import { noDefaultUtilityImports } from './rules/no-default-utility-imports.ts';
 import { noFloatingPointEquality } from './rules/no-floating-point-equality.ts';
 import { noUnsafeSanitizerBypass } from './rules/no-unsafe-sanitizer-bypass.ts';
@@ -181,6 +182,7 @@ const rules = {
     'prefer-native-jquery': preferNativeJquery,
     'prefer-native-axios': preferNativeAxios,
     'no-constant-assertions': noConstantAssertions,
+    'prefer-matcher-assertions': preferMatcherAssertions,
     'no-setter-in-component': noSetterInComponent,
     'no-self-state-update': noSelfStateUpdate,
     'no-generated-keys': noGeneratedKeys,
