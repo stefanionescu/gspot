@@ -1,5 +1,6 @@
 import { posix } from 'node:path';
 import type { RunCache } from '#cli/types/system.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { find, read } from '#cli/system/files/reads.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
@@ -7,7 +8,6 @@ import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import type { PackageJson, DependencyFile } from '#cli/types/parsers.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { isInInstalledFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 import { HOOK_PACKAGES, REQUIREMENTS_FILE } from '#cli/config/repository/files.ts';
 import { parseRequirements, DEPENDENCY_FILE_PARSERS } from '#cli/parsers/projects/dependencies.ts';

@@ -13,8 +13,8 @@ import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
 import { selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
-import type { Repository, RepositoryListing } from '#cli/types/repository.ts';
 import type { SettingsFile, SessionOptions } from '#cli/types/engine/plan.ts';
+import type { Repository, RepositoryListing } from '#cli/types/repository.ts';
 import { listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { selectStartRunner, detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
 

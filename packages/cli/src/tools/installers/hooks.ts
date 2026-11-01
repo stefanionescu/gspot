@@ -19,6 +19,7 @@ import {
     NOT_INSTALLED_STATUS,
 } from '#cli/config/tools/installers.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The hook instructions and the hook status list the same lines through it.
 function listGspotHookLines(session: Session): string[] {
     return listHookNames(session.configuredChecks).map((name) => `${name}: ${GSPOT_PATHS.hooks}/${name} "$@"`);
 }

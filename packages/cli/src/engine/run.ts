@@ -8,6 +8,7 @@ import type { Session } from '#cli/types/tools.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { findToolPath } from '#cli/tools/inspect.ts';
+import { isEveryPath } from '#cli/settings/scopes.ts';
 import { buildRunReport } from '#cli/engine/report.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
