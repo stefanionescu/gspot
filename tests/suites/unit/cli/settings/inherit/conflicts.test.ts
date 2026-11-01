@@ -75,6 +75,6 @@ test('a scope value settles the scopes below it, and a sibling scope still repor
     ).toStrictEqual([{ path: ['scope', 2, 'configurations'], message: CONFLICTING_DEFAULT_ERRORS[0].message }]);
     expect(getSettingValue(conflictingSettings, settings, 'tools.sqlfluff.dialect', 'app/db')).toMatchObject({
         value: 'sqlite',
-        source: '[scope "app"]',
+        source: 'scope app',
     });
 });

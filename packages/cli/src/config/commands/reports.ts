@@ -61,7 +61,11 @@ export const CHECK_STATUS_COLORS = {
 
 export const FIXER_ERROR_PREFIX = /^(?:[\w.]*(?:Error|error))(?: \[[^\]]+\])?:\s*/u;
 
-export const TOOL_MISSING_MESSAGE = ' (a tool is missing; run gspot install)';
+export const INSTALL_REMINDER = ' (run gspot install)';
+
+export const STATUS_LABEL_WIDTH = 7;
+
+export const SENTENCE_END = /\.(?= |$)/u;
 
 export const STAGED_FILES = 'the staged files';
 

@@ -1,6 +1,7 @@
 import { join, posix } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
 import { statSync, readdirSync } from 'node:fs';
+import { formatScope } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { TRAILING_SLASH } from '#cli/config/system.ts';
 import { find, read } from '#cli/system/files/reads.ts';
@@ -36,7 +37,6 @@ import {
     MISE_CONF_FILES,
     CODE_SPAN_START,
     TITLE_ATTRIBUTE,
-    ROOT_SCOPE_LABEL,
     EMPHASIS_MARKERS,
     PATH_TOKEN_SKIPS,
     REMOTE_ARGUMENTS,
@@ -266,7 +266,7 @@ export function checkRequiredFiles(session: Session, planned: PlannedCheck): Che
         findings.push({
             file: readme,
             rule: DOCS_RULES.missingReadme,
-            message: `The scope ${planned.scope.path === '' ? ROOT_SCOPE_LABEL : planned.scope.path} has no README.md.`,
+            message: `The scope ${formatScope(planned.scope.path)} has no README.md.`,
         });
     if (
         planned.scope.path === '' &&

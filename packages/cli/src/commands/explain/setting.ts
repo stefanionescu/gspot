@@ -1,13 +1,12 @@
 import type { Session } from '#cli/types/tools.ts';
-import { quoteArgument } from '#cli/system/text.ts';
 import { buildSettings } from '#cli/settings/read.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import { listSettingReaders } from '#cli/engine/skips.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { formatScope, quoteArgument } from '#cli/system/text.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { NOT_SET, REASON_HELP } from '#cli/config/commands/reports.ts';
-import { ROOT_SCOPE_LABEL } from '#cli/config/configurations/general.ts';
 import { RECORD_FIELDS, findSettingSchema } from '#cli/settings/lookup.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import { findSetting, getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
@@ -19,7 +18,7 @@ function formatSettingScope(key: string, setting: Setting, scopeSetting: Setting
         inherited?.value === undefined ? NOT_SET : `${JSON.stringify(inherited.value)} (from ${inherited.source})`;
     return [
         '',
-        `Scope: ${scope === '' ? ROOT_SCOPE_LABEL : scope}`,
+        `Scope: ${formatScope(scope)}`,
         `Shipped default: ${shipped === undefined ? NOT_SET : JSON.stringify(shipped)}`,
         `Current value: ${shown}`,
         ...(scopeSetting.readBy.length === 0 ? [] : [`Read by: ${scopeSetting.readBy.join(', ')}`]),

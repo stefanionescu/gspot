@@ -79,7 +79,7 @@ function mergeTable(
     const written = possibleKeys
         .map((writtenKey) => ({ writtenKey, found: findWrittenSetting(table.table, writtenKey) }))
         .filter((row): row is typeof row & { found: NonNullable<typeof row.found> } => row.found !== undefined);
-    const owner = table.scope === '' ? SETTINGS_FILE : `[scope ${JSON.stringify(table.scope)}]`;
+    const owner = table.scope === '' ? SETTINGS_FILE : `scope ${table.scope}`;
     const origin = table.scope === '' ? 'root' : 'scope';
     const originScope = table.scope === '' ? {} : { originScope: table.scope };
     for (const { writtenKey, found } of written) {

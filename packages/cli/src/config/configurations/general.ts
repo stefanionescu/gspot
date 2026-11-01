@@ -327,5 +327,3 @@ export const MISE_FILES = [
 ] as const;
 
 export const SITE_CONFIGURATION = 'site';
-
-export const ROOT_SCOPE_LABEL = 'root';

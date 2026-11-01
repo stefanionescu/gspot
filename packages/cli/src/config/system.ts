@@ -126,6 +126,8 @@ export const TERMINAL_COLOR_SEQUENCE = new RegExp(
     'u',
 );
 
+export const ROOT_SCOPE_MARK = '.';
+
 export const TYPO_MIN = 1;
 
 export const TYPO_FRACTION = 3;

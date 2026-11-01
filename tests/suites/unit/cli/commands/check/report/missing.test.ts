@@ -9,12 +9,12 @@ test.each([
         installCount: 0,
     },
     {
-        name: 'says the install hint once for the notes that end with it',
+        name: 'adds the install reminder to the summary of the tools that need it',
         checks: [
             ENVIRONMENT_CHECK,
             { ...ENVIRONMENT_CHECK, check: 'python/ruff', note: 'ruff is not installed. Run gspot install.' },
         ],
-        installCount: 1,
+        installCount: 2,
     },
 ])('a report with missing checks $name', ({ checks, installCount }) => {
     const report = { ...FAILED_CHECK_REPORT, ignores: [], failed: [], exitCode: 2, checks };

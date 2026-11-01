@@ -105,7 +105,7 @@ test('the settings list reports inherited values and their source scope', async 
     expect(settings.find((row) => row.key === 'limits.file_lines')?.reasonRequirement).toBe('raising');
     expect(settings.find((row) => row.scope === 'api/worker' && row.key === 'limits.file_lines')).toMatchObject({
         value: 200,
-        source: '[scope "api"]',
+        source: 'scope api',
     });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

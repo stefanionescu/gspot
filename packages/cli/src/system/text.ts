@@ -4,6 +4,7 @@ import {
     TYPO_MIN,
     LIST_LIMIT,
     TYPO_FRACTION,
+    ROOT_SCOPE_MARK,
     UNQUOTED_ARGUMENT,
     SIMILAR_NAME_LIMIT,
     REGEXP_SYNTAX_CHARACTERS,
@@ -126,6 +127,17 @@ Format a count with its singular or plural noun.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Messages in many layers form a counted noun with this one plural rule.
 export function formatCount(count: number, noun: string): string {
     return `${String(count)} ${noun}${count === 1 ? '' : 's'}`;
+}
+
+/**
+Format a scope the way --scope accepts it.
+
+@param path the scope path, empty at the repository root.
+@returns the path, or the mark of the root.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Reports, lists, explanations, and settings print a scope by this one rule.
+export function formatScope(path: string): string {
+    return path === '' ? ROOT_SCOPE_MARK : path;
 }
 
 /**

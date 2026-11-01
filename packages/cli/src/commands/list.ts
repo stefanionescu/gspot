@@ -1,4 +1,5 @@
 import { ROOT_RUNS } from '#cli/config/engine.ts';
+import { formatScope } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { isRootOnlyCheck } from '#cli/engine/files.ts';
@@ -11,7 +12,6 @@ import { listInheritedSettings } from '#cli/settings/inherit.ts';
 import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
-import { ROOT_SCOPE_LABEL } from '#cli/config/configurations/general.ts';
 import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/reports.ts';
 
 import {
@@ -34,7 +34,7 @@ function buildSettingsResult(session: Session): CommandResult {
     const lines = displayed.map((row) => {
         const value = row.value === undefined ? NOT_SET : JSON.stringify(row.value);
         const shortened = value.length > VALUE_WIDTH ? `${value.slice(0, VALUE_WIDTH - 1)}…` : value;
-        const scope = row.scope === '' ? '' : `  [scope ${row.scope}]`;
+        const scope = row.scope === '' ? '' : `  scope ${row.scope}`;
         return `${row.key.padEnd(width)}${shortened.padEnd(VALUE_WIDTH)} ${(row.reasonRequirement ?? '').padEnd(REASON_HEADER.length)}  ${row.source}${scope}`;
     });
     lines.unshift(`${'setting'.padEnd(width)}${'value'.padEnd(VALUE_WIDTH)} ${REASON_HEADER}  source`);
@@ -81,16 +81,14 @@ function buildConfigurationsResult(session: Session): CommandResult {
         lines.push(`  ${configuration.name}`);
         const groups = Map.groupBy(configuration.checks, ({ check }) => check);
         for (const [name, checks] of groups) {
-            const states = checks.map(
-                (check) => `${check.scope === '' ? ROOT_SCOPE_LABEL : check.scope}: ${check.status}`,
-            );
+            const states = checks.map((check) => `${formatScope(check.scope)}: ${check.status}`);
             lines.push(`    ${name}  ${states.join(', ')}`);
         }
     }
     const removed = listRemovedConfigurations(session.settings);
     if (removed.length > 0) lines.push('', 'removed');
     for (const { name, scope, reason } of removed)
-        lines.push(['', name, ...(scope === '' ? [] : [`[scope ${scope}]`]), reason].join('  '));
+        lines.push(['', name, ...(scope === '' ? [] : [`scope ${scope}`]), reason].join('  '));
     lines.push('', 'available');
     for (const configuration of available) lines.push(`  ${configuration.name}  ${configuration.description}`);
     return {

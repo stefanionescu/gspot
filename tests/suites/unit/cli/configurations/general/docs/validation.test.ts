@@ -264,7 +264,7 @@ test('required-files: ignored README.md and LICENSE files in a Git repository ar
     commitAll(sandbox.path);
     const found = await runSandboxCheck(sandbox.path, 'docs/required-files');
     expect(found.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([
-        { file: 'README.md', rule: 'missing-readme', message: 'The scope root has no README.md.' },
+        { file: 'README.md', rule: 'missing-readme', message: 'The scope . has no README.md.' },
         { file: 'LICENSE', rule: 'missing-license', message: 'The root has no LICENSE file.' },
     ]);
 

@@ -3,14 +3,14 @@ title: Run checks
 description: Read a finding, explain it, fix it, and read the report.
 ---
 
-A failed check prints one line with its check ID, `failed`, and the number of findings. In a nested scope, the line
-starts with the scope path. Under it, each finding prints its file, line and column, lint rule, and message.
+A failed check prints one line with `failed`, its check ID, and the number of findings. In a nested scope, the scope
+path comes before the check ID. Under the line, each finding prints its file, line and column, lint rule, and message.
 
 `help:` says what to do, and `rerun:` gives the command that runs that check alone. Without `--verbose`, the report
 prints the first 200 findings of each check.
 
 ```text
-javascript/eslint  failed  2 findings
+failed   javascript/eslint  2 findings
   src/checkout.ts:4:8  @typescript-eslint/require-await  Async function 'pay' has no 'await' expression.
   src/checkout.ts:8:13  no-empty  Empty block statement.
   help: Run `gspot check --fix` for the rules that fix themselves, then read each remaining line; `gspot explain javascript/eslint <rule>` links the rule documentation.

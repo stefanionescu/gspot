@@ -187,7 +187,6 @@ export async function runTreeCheck(
         if (filters.changed?.note !== undefined) result.report.notes.push(filters.changed.note);
         const reportText = formatRunReport(result.report, {
             verbose: options.verbose,
-            selectedOnly: options.only !== undefined,
         });
         const text = result.fixes ? `${formatFixes(result.fixes).join('\n')}\n${reportText}` : reportText;
         return {

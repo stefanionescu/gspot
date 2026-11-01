@@ -5,24 +5,27 @@ import { SHORT_HASH_LENGTH } from '#cli/config/engine.ts';
 import { formatExplainCommand } from '#cli/engine/results.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
-import { formatCount, quoteArgument } from '#cli/system/text.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { CODE_MARK, EVERY_CHECK } from '#cli/config/commands/help.ts';
+import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 import { print, printWarning, writeProgress } from '#cli/system/terminal.ts';
+import { formatCount, formatScope, quoteArgument } from '#cli/system/text.ts';
 import type { FixReport, RunReport, CheckResult, CheckProgress } from '#cli/types/engine/run.ts';
 
 import {
     OFF_LABEL,
     OFF_CAUSES,
     RERUN_LABEL,
+    SENTENCE_END,
     STAGED_FILES,
     WORKING_TREE,
     NOTE_STATUSES,
     PROGRESS_CLEAR,
     FINDINGS_SHOWN,
+    INSTALL_REMINDER,
     FIXER_ERROR_PREFIX,
+    STATUS_LABEL_WIDTH,
     CHECK_STATUS_COLORS,
-    TOOL_MISSING_MESSAGE,
     STANDARD_INSTALL_HELP,
     UNCHANGED_FIX_MESSAGE,
 } from '#cli/config/commands/reports.ts';
@@ -49,7 +52,7 @@ function formatLocation(finding: Finding): string {
 
 function formatFinding(finding: Finding, next: Finding | undefined, { verbose }: { verbose: boolean }): string[] {
     const rule =
-        finding.rule === undefined || finding.rule === finding.check
+        finding.rule === undefined || finding.rule === finding.check || Object.hasOwn(CHECK_STATUS_COLORS, finding.rule)
             ? ''
             : `${styleText('cyan', finding.rule, { stream: process.stdout })}  `;
     const lines = [
@@ -95,15 +98,16 @@ function formatFindings(findings: readonly Finding[], { verbose }: { verbose: bo
     return lines;
 }
 
-function formatCheckLine(result: CheckResult): string {
+function formatReportLine(result: CheckResult, tail: string): string {
     const label = OFF_CAUSES.has(result.cause ?? '') ? OFF_LABEL : result.status;
-    const status = styleText(CHECK_STATUS_COLORS[result.status], label, { stream: process.stdout });
-    const scope = result.scope === '' ? '' : `${result.scope}  `;
-    return `${scope}${result.check}  ${status}  ${formatCheckTail(result)}`.trimEnd();
+    const status = label.padEnd(STATUS_LABEL_WIDTH);
+    const shown = styleText(CHECK_STATUS_COLORS[result.status], status, { stream: process.stdout });
+    const scope = result.scope === '' ? '' : `${formatScope(result.scope)}  `;
+    return `${shown}  ${scope}${result.check}  ${tail}`.trimEnd();
 }
 
 function formatCheck(result: CheckResult, { verbose }: { verbose: boolean }): string[] {
-    const lines = [formatCheckLine(result)];
+    const lines = [formatReportLine(result, formatCheckTail(result))];
     if (verbose) {
         if (result.command)
             lines.push(`  ${styleText('dim', '$ ' + result.command.join(' '), { stream: process.stdout })}`);
@@ -126,28 +130,36 @@ function formatIgnores(report: RunReport, { verbose }: { verbose: boolean }): st
     });
 }
 
-function formatSummary(report: RunReport, { selectedOnly }: { selectedOnly: boolean }): string {
+function formatIncompleteCounts({ checks }: RunReport): string[] {
+    const missing = checks.filter((check) => check.status === 'missing');
+    const environments = missing.filter((check) => check.note === PROJECT_ENVIRONMENT_MESSAGE);
+    const tools = new Set(
+        missing.filter((check) => check.note !== PROJECT_ENVIRONMENT_MESSAGE).map(({ note }) => note),
+    );
+    const needsInstall = [...tools].some((note) => note?.endsWith(STANDARD_INSTALL_HELP) === true);
+    const errors = checks.filter((check) => check.status === 'error').length;
+    return [
+        ...(tools.size === 0 ? [] : [`Missing tools: ${String(tools.size)}${needsInstall ? INSTALL_REMINDER : ''}.`]),
+        ...(environments.length === 0 ? [] : [`Missing environments: ${String(environments.length)}.`]),
+        ...(errors === 0 ? [] : [`Errors: ${String(errors)}.`]),
+    ];
+}
+
+function formatSummary(report: RunReport): string {
     const failed = report.checks.filter((check) => check.status === 'failed');
-    const missing = report.checks.filter((check) => check.status === 'missing');
-    const needsInstall = missing.some((check) => (check.note ?? '').endsWith(STANDARD_INSTALL_HELP));
-    const errors = report.checks.filter((check) => check.status === 'error').length;
     const passed = report.checks.filter((check) => check.status === 'passed').length;
     const off = report.checks.filter((check) => OFF_CAUSES.has(check.cause ?? '')).length;
     const skipped = report.checks.filter((check) => check.status === 'skipped').length - off;
     const findings = failed.reduce((count, check) => count + check.findings.length, 0);
-    const sentences = [];
-    if (failed.length > 0)
-        sentences.push(`Failed: ${formatCount(failed.length, 'check')} with ${formatCount(findings, 'finding')}.`);
-    if (missing.length + errors > 0)
-        sentences.push(
-            `Could not run: ${formatCount(missing.length + errors, 'check')}${needsInstall && !selectedOnly ? TOOL_MISSING_MESSAGE : ''}.`,
-        );
-    sentences.push(
+    const text = [
+        ...(failed.length === 0
+            ? []
+            : [`Failed: ${formatCount(failed.length, 'check')} with ${formatCount(findings, 'finding')}.`]),
+        ...formatIncompleteCounts(report),
         `Passed: ${formatCount(passed, 'check')}.`,
         ...(off === 0 ? [] : [`Off: ${formatCount(off, 'check')}.`]),
         `Skipped: ${formatCount(skipped, 'check')}.`,
-    );
-    const text = sentences.join(' ');
+    ].join(' ');
     return report.exitCode === 0 ? text : styleText('red', text, { stream: process.stdout });
 }
 
@@ -158,18 +170,24 @@ function formatComparison(comparison: RunReport['comparison']): string {
         : `Checked ${formatCheckedContent(comparison)}.\n`;
 }
 
-function formatMissingChecks(checks: readonly CheckResult[], { selectedOnly }: { selectedOnly: boolean }): string[] {
-    const grouped = new Map<string, CheckResult[]>();
-    for (const check of checks) {
-        if (check.status !== 'missing') continue;
-        const note = check.note ?? '';
-        grouped.set(note, [...(grouped.get(note) ?? []), check]);
-    }
-    return [...grouped].flatMap(([note, missing]) => [
-        `missing  ${missing.map((check) => [check.check, check.scope].filter(Boolean).join(' ')).join(', ')}`,
-        `  ${!selectedOnly && note.endsWith(STANDARD_INSTALL_HELP) ? note.slice(0, -STANDARD_INSTALL_HELP.length) : note}`,
-        '',
-    ]);
+function formatMissingGroup(note: string, missing: readonly CheckResult[]): string {
+    const [first] = missing as readonly [CheckResult];
+    if (missing.length === 1) return formatReportLine(first, note);
+    const names = [...new Set(missing.map(({ check }) => check))].join(', ');
+    const scopes = new Set(missing.map(({ scope }) => scope)).size;
+    const where = scopes === 1 ? names : `${names} in ${String(scopes)} scopes`;
+    const label = styleText('red', first.status.padEnd(STATUS_LABEL_WIDTH), { stream: process.stdout });
+    const sentence = note.replace(SENTENCE_END, ` (${where}).`);
+    return `${label}  ${sentence}`;
+}
+
+function formatMissingChecks(checks: readonly CheckResult[]): string[] {
+    const groups = Map.groupBy(
+        checks.filter((check) => check.status === 'missing'),
+        ({ note }) => note ?? '',
+    );
+    const lines = [...groups].map(([note, missing]) => formatMissingGroup(note, missing));
+    return lines.length === 0 ? [] : [...lines, ''];
 }
 
 function formatNotChecked(notChecked: RunReport['notChecked']): string[] {
@@ -215,11 +233,9 @@ Format the check lines, the ignores, and the summary of a run.
 
 @param report the check results and totals.
 @param options how to show the report.
-@param options.selectedOnly whether the user selected checks explicitly.
 @param options.verbose whether to show passing and skipped checks, their commands, every finding, and each ignore.
 */
-export function formatRunReport(report: RunReport, options: { verbose: boolean; selectedOnly?: boolean }): string {
-    const { verbose, selectedOnly = false } = options;
+export function formatRunReport(report: RunReport, { verbose }: { verbose: boolean }): string {
     const checks = report.checks.filter(
         (check) => verbose || (check.status !== 'passed' && check.status !== 'skipped'),
     );
@@ -227,12 +243,12 @@ export function formatRunReport(report: RunReport, options: { verbose: boolean; 
         .filter((check) => check.status !== 'missing')
         .flatMap((check) => [...formatCheck(check, { verbose }), '']);
     lines.push(
-        ...formatMissingChecks(checks, { selectedOnly }),
+        ...formatMissingChecks(checks),
         ...formatNotChecked(report.notChecked),
         ...report.notes.map((note) => `note     ${note}`),
         ...formatIgnores(report, { verbose }),
         ...formatUnstagedChanges(report),
-        formatSummary(report, { selectedOnly }),
+        formatSummary(report),
         `Time: ${(report.duration / MILLISECONDS_PER_SECOND).toFixed(1)}s. Exit code ${String(report.exitCode)}.`,
     );
     return `${formatComparison(report.comparison)}${lines.join('\n')}\n`;

@@ -1,4 +1,3 @@
-import { quoteArgument } from '#cli/system/text.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { readCachedPrefix } from '#cli/system/files/reads.ts';
@@ -6,9 +5,9 @@ import { BANNER_BYTES } from '#cli/config/repository/files.ts';
 import { isEditedInPlace } from '#cli/repository/conflicts.ts';
 import type { Session, Generation } from '#cli/types/tools.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
+import { formatScope, quoteArgument } from '#cli/system/text.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
-import { ROOT_SCOPE_LABEL } from '#cli/config/configurations/general.ts';
 import { readLintJobs, readRepositorySetup } from '#cli/repository/setup.ts';
 import { LEVEL_COMMAND, LINT_JOB_NOTE } from '#cli/config/commands/reports.ts';
 import type { Suggestions, SuggestionRow } from '#cli/types/commands/reports.ts';
@@ -60,7 +59,7 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'dete
                 return [
                     {
                         configuration: name,
-                        evidence: `no files in ${path === '' ? ROOT_SCOPE_LABEL : path} yet; remove it if none are planned`,
+                        evidence: `no files in ${formatScope(path)} yet; remove it if none are planned`,
                         command: `gspot remove ${name}${scopeArgument} --reason "<why>"`,
                     },
                 ];

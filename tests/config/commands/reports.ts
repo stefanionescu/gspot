@@ -86,7 +86,7 @@ export const REMOVED_CONFIGURATION_CASES = [
 export const REMOVE_SUGGESTIONS = [
     {
         configuration: 'bash',
-        evidence: 'no files in root yet; remove it if none are planned',
+        evidence: 'no files in . yet; remove it if none are planned',
         command: 'gspot remove bash --reason "<why>"',
     },
     {
@@ -193,8 +193,8 @@ export const REASON_VALUES = [
 
 export const SCOPE_SETTING_EXPLANATION = {
     scopes: [
-        { scope: 'api', value: 90, source: '[scope "api"]' },
-        { scope: 'api/worker', value: 95, source: '[scope "api/worker"]' },
+        { scope: 'api', value: 90, source: 'scope api' },
+        { scope: 'api/worker', value: 95, source: 'scope api/worker' },
     ],
 } as const;
 

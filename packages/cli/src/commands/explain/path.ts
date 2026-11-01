@@ -1,4 +1,5 @@
 import { planChecks } from '#cli/engine/plan.ts';
+import { formatScope } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import type { Scope } from '#cli/types/settings.ts';
@@ -6,7 +7,6 @@ import { listCheckedFiles } from '#cli/engine/files.ts';
 import { EVERY_CHECK } from '#cli/config/commands/help.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
-import { ROOT_SCOPE_LABEL } from '#cli/config/configurations/general.ts';
 import { selectScopePath, buildArgumentPath } from '#cli/repository/scopes.ts';
 import type { Explanation, PathExplanation } from '#cli/types/commands/reports.ts';
 
@@ -37,7 +37,7 @@ function buildPathExplanation(session: Session, file: TrackedFile): PathExplanat
     );
     const report: PathExplanation = {
         path,
-        scope: scopePath === '' ? ROOT_SCOPE_LABEL : scopePath,
+        scope: scopePath,
         fileKind: file.kind,
         tags: file.tags,
         configurations: scope.configurations.map(({ name }) => name).filter((name) => covering.has(name)),
@@ -78,7 +78,7 @@ function formatPathExplanation(explanation: PathExplanation): string {
         return `  ${ignore.check ?? EVERY_CHECK}${rule}${reason}`;
     });
     const lines = [
-        `${explanation.path}  (scope ${explanation.scope}, ${explanation.fileKind}${by})`,
+        `${explanation.path}  (scope ${formatScope(explanation.scope)}, ${explanation.fileKind}${by})`,
         '',
         ...(explanation.unchecked === undefined ? [] : [explanation.unchecked]),
         ...(explanation.configurations.length === 0 ? [] : [`Checked by: ${explanation.configurations.join(', ')}`]),

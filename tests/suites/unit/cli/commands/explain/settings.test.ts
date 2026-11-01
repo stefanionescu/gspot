@@ -108,7 +108,7 @@ test.each([...REASON_VALUES])(
             {
                 scope: 'app',
                 value: row.value[1],
-                source: '[scope "app"]',
+                source: 'scope app',
                 reason: row.needsReason ? explanation : undefined,
             },
         ]);
