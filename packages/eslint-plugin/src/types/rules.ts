@@ -1,4 +1,4 @@
-import type { TableCell } from './plugin.ts';
+import type { TableCell, TypeReader } from './plugin.ts';
 import { type TSESTree, type TSESLint } from '@typescript-eslint/utils';
 
 export type ClientEnvOptions = [
@@ -244,7 +244,10 @@ export type AssertionStyles = {
     chai: boolean;
     nodeAssert: boolean;
     cypress: boolean;
+    globalExpect: boolean;
 };
+
+export type AssertionKind = 'script' | 'runner' | 'type';
 
 export type ChaiChain = { received: TSESTree.Expression; names: string[] };
 
@@ -270,4 +273,11 @@ export type ThrowAssertion = {
     received: TSESTree.Expression;
     target: TSESTree.Node;
     matcher: string;
+};
+
+export type AssertionSearch = {
+    context: FileContext;
+    source: TSESLint.SourceCode;
+    types: TypeReader | undefined;
+    visited: Map<TSESTree.Node, boolean>;
 };

@@ -103,6 +103,7 @@ import { noKeywordDeclarations } from './rules/no-keyword-declarations.ts';
 import { noRedundantAssignment } from './rules/no-redundant-assignment.ts';
 import { noUselessIntersection } from './rules/no-useless-intersection.ts';
 import { preferImmediateReturn } from './rules/prefer-immediate-return.ts';
+import { requireTestAssertions } from './rules/require-test-assertions.ts';
 import { testingLibraryQueries } from './rules/testing-library-queries.ts';
 import { noAdjacentMultilineIf } from './rules/no-adjacent-multiline-if.ts';
 import { noAsyncSuiteCallbacks } from './rules/no-async-suite-callbacks.ts';
@@ -187,6 +188,7 @@ const rules = {
     'prefer-matcher-assertions': preferMatcherAssertions,
     'no-mismatched-assertion-types': noMismatchedAssertionTypes,
     'valid-throw-assertions': validThrowAssertions,
+    'require-test-assertions': requireTestAssertions,
     'no-setter-in-component': noSetterInComponent,
     'no-self-state-update': noSelfStateUpdate,
     'no-generated-keys': noGeneratedKeys,
