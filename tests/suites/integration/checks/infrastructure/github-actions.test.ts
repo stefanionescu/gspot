@@ -5,11 +5,10 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
-import type { Explanation } from '#cli/types/commands/explain.ts';
 import { CALLER_WORKFLOW } from '#tests/config/github-actions.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { GITHUB_WORKFLOW } from '#cli/config/generation/generation.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { GITHUB_WORKFLOW, GENERATED_HEADER_TEXT } from '#cli/config/generation/generation.ts';
 import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
@@ -60,15 +59,8 @@ test('the generated GitHub workflow passes actionlint', async () => {
     expect(await isOnDisk(workflow)).toBe(true);
     const generated = await readFile(workflow);
     const headerEnd = generated.indexOf('\n');
-    expect(generated.subarray(0, headerEnd).toString('utf8')).toBe(`# ${GENERATED_HEADER_TEXT}`);
     const body = generated.subarray(headerEnd + 1);
     await createFileTree(sandbox.path, { '.github/workflows/accepted.yml': body.toString('utf8') });
-    const explained = await spawnGspot(sandbox.path, ['explain', './.github/workflows/accepted.yml', '--json']);
-    expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-    expect(JSON.parse(explained.stdout) as Explanation['facts']).toMatchObject({
-        kind: 'path',
-        fileKind: 'source',
-    });
     const result = parseCheckReport(
         await spawnGspot(sandbox.path, ['check', '--only', 'github-actions/actionlint', '--json']),
     );

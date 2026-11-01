@@ -13,16 +13,13 @@ test('react-versions reports react and react-dom that lock different versions, a
         'gspot.toml': buildSandboxSettings(['react-dom']),
     });
     expect(await runSandboxCheck(sandbox.path, 'react-dom/react-versions')).toStrictEqual([
-        {
-            check: 'react-dom/react-versions',
-            fixable: false,
-            help: 'Install the same version of react and react-dom.',
+        expect.objectContaining({
             file: 'package.json',
             line: 1,
             rule: 'react-versions',
             message:
                 'react 19.1.0 and react-dom 19.0.0 differ, and React stops at run time when they do. Install the same version of both.',
-        },
+        }),
     ]);
     for (const [path, text] of Object.entries(BUN_PROJECT_FILES))
         await writeFile(join(sandbox.path, path), text.replaceAll('19.0.0', '19.1.0'));

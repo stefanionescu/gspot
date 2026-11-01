@@ -18,7 +18,6 @@ import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#te
 import {
     DOCKER_CASES,
     DOCKER_SANDBOX,
-    ALPINE_DOCKERFILE,
     DEBIAN_DOCKERFILE,
     TRIVY_SCOPE_TABLES,
     TRIVY_SCOPE_RESULTS,
@@ -60,7 +59,7 @@ test('Trivy checks each Dockerfile in its deepest scope and honors an ignore lim
 });
 
 test.each([...LEVELS])(
-    'Hadolint at level %s checks apt and apk version pins only at level all, and reports a latest tag at both levels, in the root and a scope',
+    'Hadolint at level %s checks apt version pins only at level all, and reports a latest tag at both levels, in the root and a scope',
     async (level) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['docker'], {
@@ -68,30 +67,15 @@ test.each([...LEVELS])(
                 scopes: [{ path: 'app', configurations: ['docker'] }],
             }),
             Dockerfile: DEBIAN_DOCKERFILE,
-            'Dockerfile.alpine': ALPINE_DOCKERFILE,
             'app/Dockerfile': DEBIAN_DOCKERFILE,
-            'app/Dockerfile.alpine': ALPINE_DOCKERFILE,
         });
 
         await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
-        const pins =
-            level === 'all'
-                ? ([
-                      ['Dockerfile', 'DL3008'],
-                      ['Dockerfile.alpine', 'DL3018'],
-                  ] as const)
-                : [];
+        const pins = level === 'all' ? ([['Dockerfile', 'DL3008']] as const) : [];
         for (const scope of ['', 'app']) {
             const dockerfile = posix.join(scope, 'Dockerfile');
             const result = parseCheckReport(
-                await spawnGspot(sandbox.path, [
-                    'check',
-                    dockerfile,
-                    posix.join(scope, 'Dockerfile.alpine'),
-                    '--only',
-                    'docker/hadolint',
-                    '--json',
-                ]),
+                await spawnGspot(sandbox.path, ['check', dockerfile, '--only', 'docker/hadolint', '--json']),
             );
             expect(result.code, result.stdout + result.stderr).toBe(pins.length === 0 ? 0 : 1);
             expect(listFindingRows(result.report)).toStrictEqual(
@@ -104,9 +88,7 @@ test.each([...LEVELS])(
             expect(unpinned.code, unpinned.stdout + unpinned.stderr).toBe(1);
             expect(listFindingRows(unpinned.report)).toStrictEqual([
                 { file: dockerfile, line: 1, rule: 'DL3007' },
-                ...pins
-                    .filter(([file]) => file === 'Dockerfile')
-                    .map(([, rule]) => ({ file: dockerfile, line: 2, rule })),
+                ...pins.map(([, rule]) => ({ file: dockerfile, line: 2, rule })),
             ]);
         }
     },

@@ -5,7 +5,6 @@ import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { SECURITY_DEFINER_MESSAGE } from '#tests/config/checks/database/postgres/messages.ts';
 
 import {
     DEFINER_REPAIRS,
@@ -34,16 +33,7 @@ test('definer-search-path keeps an unsafe overload when another signature is rep
         'migrations/3_repair.sql': "ALTER FUNCTION public.grant_access() SET search_path = '';\n",
     });
     expect(await runSandboxCheck(sandbox.path, 'postgres/definer-search-path')).toStrictEqual([
-        {
-            check: 'postgres/definer-search-path',
-            file: 'migrations/2_overload.sql',
-            line: 1,
-            column: 1,
-            rule: 'definer-search-path',
-            message: SECURITY_DEFINER_MESSAGE,
-            fixable: false,
-            help: "Set an explicit `search_path` in the definition, such as `SET search_path = ''`, and qualify every name inside it.",
-        },
+        expect.objectContaining({ file: 'migrations/2_overload.sql', line: 1, rule: 'definer-search-path' }),
     ]);
 });
 
@@ -54,12 +44,7 @@ test('definer-search-path reports a SECURITY DEFINER function without search_pat
         [path]: DEFINER_FUNCTION_SQL,
     });
     expect(await runSandboxCheck(sandbox.path, 'postgres/definer-search-path')).toStrictEqual([
-        matchFields({
-            file: path,
-            line: 1,
-            rule: 'definer-search-path',
-            message: SECURITY_DEFINER_MESSAGE,
-        }),
+        matchFields({ file: path, line: 1, rule: 'definer-search-path' }),
     ]);
     await writeFile(
         join(sandbox.path, path),

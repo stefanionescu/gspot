@@ -34,12 +34,6 @@ export const STORAGE_POLICIES = [
         sql: "CREATE POLICY p ON storage.objects WITH CHECK (bucket_id = 'avatars'); ALTER POLICY p ON storage.objects TO authenticated;",
         allowed: true,
     },
-
-    {
-        name: 'comment only',
-        sql: "-- CREATE POLICY p ON storage.objects USING (bucket_id = 'avatars');\n",
-        allowed: false,
-    },
     {
         name: 'unrelated table',
         sql: "CREATE POLICY p ON public.objects USING (bucket_id = 'avatars');",

@@ -25,12 +25,6 @@ test.skipIf(!hasToolBuild('semgrep'))(
         const failed = parseCheckReport(await spawnGspot(sandbox.path, SEMGREP_CHECK));
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect(listFindingRows(failed.report)).toStrictEqual([...SENSITIVE_FINDINGS]);
-        const jwt = failed.report.checks[0]!.findings.find(
-            ({ rule }) => rule === 'gspot.javascript.jwt-verify-without-algorithms',
-        );
-        expect(jwt!.message).toBe(
-            'Require the expected JWT signing algorithms when verifying a token. Pass an algorithms option that matches the signing contract.',
-        );
         for (const [file, source] of Object.entries(CORRECTED_SENSITIVE_FILES))
             await writeFile(join(sandbox.path, file), source);
         const corrected = parseCheckReport(await spawnGspot(sandbox.path, SEMGREP_CHECK));

@@ -108,6 +108,10 @@ test.each(NGINX_FAILURE_CASES)('nginx/syntax reports $name', async ({ stderr, st
     );
     const { report } = await runChecks(session, buildRunOptions({ only: ['nginx/syntax'] }));
     expect(
-        report.checks.map((check) => ({ status: check.status, note: check.note, findings: check.findings })),
-    ).toStrictEqual([{ status, note, findings }]);
+        report.checks.map((check) => ({
+            status: check.status,
+            note: check.note,
+            findings: check.findings.map(({ file, line, rule, message }) => ({ file, line, rule, message })),
+        })),
+    ).toStrictEqual([{ status, note, findings: [...findings] }]);
 });

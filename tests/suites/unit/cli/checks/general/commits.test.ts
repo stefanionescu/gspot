@@ -30,17 +30,9 @@ test('references reports each line that links to an AI session, and skips commen
             '',
         ].join('\n'),
     );
-    expect(findings).toStrictEqual([
-        {
-            rule: 'session-link',
-            message:
-                'Line 3 links to an AI session. Remove the link: a reader cannot open the chat, and the link shares it.',
-        },
-        {
-            rule: 'session-link',
-            message:
-                'Line 5 links to an AI session. Remove the link: a reader cannot open the chat, and the link shares it.',
-        },
+    expect(findings.map(({ rule, message }) => ({ rule, line: message.split(' ', 2)[1] }))).toStrictEqual([
+        { rule: 'session-link', line: '3' },
+        { rule: 'session-link', line: '5' },
     ]);
 });
 

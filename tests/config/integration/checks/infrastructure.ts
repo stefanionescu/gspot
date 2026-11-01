@@ -68,11 +68,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf 
 USER 1000
 `;
 
-export const ALPINE_DOCKERFILE = `FROM alpine:3.20.3
-RUN apk add --no-cache curl
-USER 1000
-`;
-
 export const TRIVY_SCOPE_TABLES = `[[scope]]
 path = "app"
 

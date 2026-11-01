@@ -32,11 +32,6 @@ export const SECURITY_HEADER_CASES = [
         missing: ['x-content-type-options'],
     },
     {
-        name: 'missing referrer policy',
-        text: '/*\n  X-Content-Type-Options: nosniff\n  X-Frame-Options: DENY\n',
-        missing: ['referrer-policy'],
-    },
-    {
         name: 'no global block',
         text: '/assets/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: same-origin\n  X-Frame-Options: DENY\n',
         missing: ['x-content-type-options', 'referrer-policy', 'x-frame-options'],

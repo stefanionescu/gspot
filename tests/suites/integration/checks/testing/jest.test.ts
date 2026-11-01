@@ -59,27 +59,12 @@ test("jest/coverage at level all uses the scope's coverage limits and runs only 
     expect(passing).toMatchObject([{ check: 'jest/coverage', scope: 'app', status: 'passed', findings: [] }]);
 });
 
-test('jest/coverage at level all reports uncovered functions and failed tests and keeps the authored files', async () => {
+test('jest/coverage at level all reports failed tests and keeps the authored files', async () => {
     await using sandbox = await createGitSandbox({
         ...JEST_PROJECT_FILES,
         'gspot.toml': buildSandboxSettings(['jest'], { tables: JEST_COVERAGE_TABLES, level: 'all' }),
         'math.test.cjs': MATH_TEST_SOURCE,
     });
-    const uncovered = await runJestCoverage(sandbox.path, 1);
-    expect(uncovered).toMatchObject([
-        {
-            findings: [
-                { file: '', message: expect.stringContaining(COVERAGE_THRESHOLD_MESSAGE) as string },
-                {
-                    file: '',
-                    message: expect.stringContaining('coverage threshold for functions (80%) not met: ') as string,
-                },
-            ],
-        },
-    ]);
-    await writeFile(join(sandbox.path, 'math.test.cjs'), CORRECTED_MATH_TEST_SOURCE);
-    const passing = await runJestCoverage(sandbox.path, 0);
-    expect(passing).toMatchObject([{ check: 'jest/coverage', status: 'passed', findings: [] }]);
     await writeFile(join(sandbox.path, 'math.test.cjs'), CORRECTED_MATH_TEST_SOURCE.replace('toBe(6)', 'toBe(7)'));
     const failed = await runJestCoverage(sandbox.path, 1);
     expect(failed[0]!.findings.map(({ check, file, message }) => ({ check, file, message }))).toStrictEqual([

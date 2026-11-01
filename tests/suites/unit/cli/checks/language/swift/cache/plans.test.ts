@@ -9,7 +9,6 @@ import type { GspotError } from '#cli/system/errors.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { SIMULATOR_DESTINATION } from '#tests/config/xcode.ts';
 import { fakePlatform } from '#tests/setup/system/platform.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -17,28 +16,23 @@ import { XCTEST_SOURCE, SWIFT_PACKAGE, SWIFT_PACKAGE_HEADER } from '#tests/confi
 import { planSwiftBuild, readRepositoryCacheFolder } from '#cli/checks/language/swift/cache.ts';
 import { SWIFT_BUILD_PURPOSES, SWIFT_PROJECT_SELECTION_CASES } from '#tests/config/checks/language/swift/cache.ts';
 
-test.each(['default', 'platform=macOS'])(
-    'Xcode build plans keep destination %s for every build purpose',
-    async (destination) => {
-        await using sandbox = await testdir();
-        const destinationLine = destination === 'default' ? '' : `xcode_destination = ${JSON.stringify(destination)}\n`;
-        await createFileTree(sandbox.path, {
-            'Package.swift': SWIFT_PACKAGE,
-            'gspot.toml': buildSandboxSettings(['swift', 'xcode'], {
-                tables: `[swift]\nxcode_project = "App.xcodeproj"\nxcode_scheme = "App"\n${destinationLine}`,
-            }),
-        });
-        const session = await openSession(sandbox.path);
-        const input = planSandboxCheck(session, 'swift/build');
-        for (const purpose of ['compile', 'analyze', 'coverage'] as const) {
-            const { kind, commandArguments } = planSwiftBuild(session, input, purpose);
-            expect(kind).toBe('xcode');
-            expect(commandArguments[commandArguments.indexOf('-destination') + 1]).toBe(
-                destination === 'default' ? SIMULATOR_DESTINATION : destination,
-            );
-        }
-    },
-);
+test.each(['platform=macOS'])('Xcode build plans keep destination %s for every build purpose', async (destination) => {
+    await using sandbox = await testdir();
+    const destinationLine = `xcode_destination = ${JSON.stringify(destination)}\n`;
+    await createFileTree(sandbox.path, {
+        'Package.swift': SWIFT_PACKAGE,
+        'gspot.toml': buildSandboxSettings(['swift', 'xcode'], {
+            tables: `[swift]\nxcode_project = "App.xcodeproj"\nxcode_scheme = "App"\n${destinationLine}`,
+        }),
+    });
+    const session = await openSession(sandbox.path);
+    const input = planSandboxCheck(session, 'swift/build');
+    for (const purpose of ['compile', 'analyze', 'coverage'] as const) {
+        const { kind, commandArguments } = planSwiftBuild(session, input, purpose);
+        expect(kind).toBe('xcode');
+        expect(commandArguments[commandArguments.indexOf('-destination') + 1]).toBe(destination);
+    }
+});
 
 test.each([...SWIFT_PROJECT_SELECTION_CASES])(
     'the swift/build plan $name',

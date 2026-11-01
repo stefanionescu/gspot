@@ -97,9 +97,6 @@ export const SWIFT_REASON_CASES = [
 
 export const TYPESCRIPT_SUPPRESSIONS = ['ignore', 'expect-error', 'nocheck'] as const;
 
-export const SUPPRESSION_HELP =
-    'Fix the finding and remove the suppression, or add a reason in the syntax of the tool. Never suppress a size or complexity limit: split the code by its steps, or ask the user to raise it in gspot.toml.';
-
 const ESLINT_SUPPRESSIONS = [
     ['// Example eslint-disable-next-line no-console', false],
     ['// eslint-disable no-console', false],

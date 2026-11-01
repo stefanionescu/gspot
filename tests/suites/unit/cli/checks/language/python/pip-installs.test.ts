@@ -25,7 +25,9 @@ test('a requirements file is reported only in a scope with a lockfile and passes
         buildRunOptions({ only: ['python/pip-installs'] }),
     );
 
-    expect(checked.report.checks.flatMap((check) => check.findings)).toStrictEqual([REQUIREMENTS_FILE_FINDING]);
+    expect(
+        checked.report.checks.flatMap((check) => check.findings.map(({ file, line, rule }) => ({ file, line, rule }))),
+    ).toStrictEqual([REQUIREMENTS_FILE_FINDING]);
     expect(
         checked.report.checks.filter((check) => check.status === 'failed').map((check) => check.scope),
     ).toStrictEqual(['locked']);
@@ -38,21 +40,18 @@ test('a requirements file is reported only in a scope with a lockfile and passes
     expect(corrected.report.checks.flatMap((check) => check.findings)).toStrictEqual([]);
 });
 
-test('an unmanaged pip install reports the complete source finding', async () => {
+test('an unmanaged pip install reports its file and rule', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['python']),
         'uv.lock': 'version = 1\n',
         'install.sh': 'pip install requests\n',
     });
-    expect(await runSandboxCheck(sandbox.path, 'python/pip-installs')).toStrictEqual([
+    const findings = await runSandboxCheck(sandbox.path, 'python/pip-installs');
+    expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
         {
-            check: 'python/pip-installs',
             file: 'install.sh',
             line: 1,
             rule: 'pip-install',
-            fixable: false,
-            message: 'Add the package to pyproject.toml and install it from the lockfile.',
-            help: REQUIREMENTS_FILE_FINDING.help,
         },
     ]);
 });

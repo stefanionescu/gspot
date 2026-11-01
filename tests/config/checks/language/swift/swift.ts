@@ -16,22 +16,15 @@ export const PRIVATE_MAIN_FINDING = {
 
 export const FAILED_BUILD_FINDINGS = [
     {
-        check: 'swift/build',
         file: 'Main.swift',
         line: 4,
         column: 2,
         rule: 'compiler',
         message: 'Missing value',
-        fixable: false,
-        help: 'Fix the first compiler error; later ones often come from the same mistake.',
     },
 ] as const;
 
-export const SWIFT_REPLACEMENT_CASES = [
-    { checkId: 'swift/build', rule: 'compiler' },
-    { checkId: 'swift/swiftlint-analyze', rule: 'analyzer' },
-    { checkId: 'swift/periphery', rule: 'unused' },
-] as const;
+export const SWIFT_REPLACEMENT_CASES = [{ checkId: 'swift/build', rule: 'compiler' }] as const;
 
 const EXAMPLE_TARGET_LIMIT = '[[coverage.swift_target]]\nname = "Example"\nlines = 80\n';
 

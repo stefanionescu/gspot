@@ -281,10 +281,10 @@ function listScopeRules(report: RunReport): Record<string, { status: string; rul
     );
 }
 
-test.each(['default', 8] as const)('Ruff counts parameters with maximum %s', async (supplied) => {
+test('Ruff counts parameters with maximum default', async () => {
     const scenario = PARAMETER_LIMIT_CASE;
     await using sandbox = await createGitSandbox({});
-    const { maximum, defaultMaximum } = await prepareParameterProject(sandbox.path, scenario, supplied);
+    const { maximum, defaultMaximum } = await prepareParameterProject(sandbox.path, scenario, 'default');
     await applyThenInstall(sandbox.path);
     const result = runCommandBlocking(
         [

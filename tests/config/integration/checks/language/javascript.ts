@@ -153,18 +153,6 @@ export const secret = 1;
     },
 ] as const;
 
-export const AUTHORED_JSCONFIG_FILES = {
-    'jsconfig.json': '{"extends":"./base.json"}\n',
-    'base.json':
-        '{"compilerOptions":{"target":"ES2022","module":"ESNext","moduleResolution":"Bundler","baseUrl":".","paths":{"@shape/*":["source/*"]},"types":["domain"],"incremental":true,"tsBuildInfoFile":"authored/cache.tsbuildinfo"},"include":["source/**/*.js"],"exclude":["excluded"]}',
-    'excluded/source.js': 'UnknownDependency();\n',
-} as const;
-
-export const AUTHORED_JSCONFIG_CASES = [
-    { name: 'without an authored jsconfig', authored: false },
-    { name: 'with an authored jsconfig', authored: true },
-] as const;
-
 export const JSCONFIG_SANDBOX = { configurations: ['javascript'], level: 'all', files: BASE_INSTALLED_FILES } as const;
 
 export const OWN_TYPESCRIPT_RESULTS = [

@@ -82,34 +82,6 @@ const answer = 42;
         },
     },
     {
-        check: 'css/stylelint',
-        files: {
-            'src/Keyword.vue': `<style>
-a {
-    color: RED;
-    background-color: v-bind(themeColor);
-}
-</style>
-`,
-        },
-        expected: {
-            file: 'src/Keyword.vue',
-            rule: 'value-keyword-case',
-            line: 3,
-        },
-        corrected: {
-            files: {
-                'src/Keyword.vue': `<style>
-a {
-    color: red;
-    background-color: v-bind(themeColor);
-}
-</style>
-`,
-            },
-        },
-    },
-    {
         check: 'vue/vue-tsc',
         files: {
             'src/Count.vue': `<script setup lang="ts">

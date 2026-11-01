@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
@@ -13,16 +14,7 @@ test('grants reports GRANT ALL in both direct and default privileges', async () 
     });
     const findings = await runSandboxCheck(sandbox.path, 'postgres/grants');
     expect(findings).toStrictEqual(
-        [1, 2].map((line) => ({
-            check: 'postgres/grants',
-            file: 'migrations/1_grants.sql',
-            line,
-            column: 1,
-            rule: 'grant-all',
-            message: 'GRANT ALL gives every privilege, present and future; name the privileges.',
-            fixable: false,
-            help: 'Name the privileges the role needs, such as `SELECT` alone.',
-        })),
+        [1, 2].map((line) => matchFields({ file: 'migrations/1_grants.sql', line, rule: 'grant-all' })),
     );
 });
 

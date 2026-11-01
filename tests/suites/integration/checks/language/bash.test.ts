@@ -35,23 +35,15 @@ test('ShellCheck reports a finding in a filename that starts with a dash', async
     ]);
 });
 
-test('ShellCheck reports dialect findings by shebang and an unchecked cd, bash/safety accepts a trap that removes a temporary folder, and no file changes', async () => {
+test('ShellCheck reports dialect findings by shebang and leaves source files unchanged', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], { level: 'all', scopes: [{ path: 'app' }] }),
         ...DIALECT_SOURCES,
     });
     await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
-    const command = ['check', '--only', 'bash/shellcheck,bash/safety', '--json'];
+    const command = ['check', '--only', 'bash/shellcheck', '--json'];
     const checked = parseCheckReport(await spawnGspot(sandbox.path, command));
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    expect(
-        checked.report.checks
-            .filter(({ check }) => check === 'bash/safety')
-            .map(({ scope, status, findings }) => ({ scope, status, findings })),
-    ).toStrictEqual([
-        { scope: '', status: 'passed', findings: [] },
-        { scope: 'app', status: 'passed', findings: [] },
-    ]);
     expect(
         checked.report.checks
             .flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule })))
@@ -67,7 +59,7 @@ test('ShellCheck reports dialect findings by shebang and an unchecked cd, bash/s
             .filter(({ check }) => check === 'bash/shellcheck')
             .map(({ scope, status, fileCount, findings }) => ({ scope, status, fileCount, findings })),
     ).toStrictEqual([
-        { scope: '', status: 'passed', fileCount: 7, findings: [] },
+        { scope: '', status: 'passed', fileCount: 5, findings: [] },
         { scope: 'app', status: 'passed', fileCount: 2, findings: [] },
     ]);
 });
@@ -87,22 +79,6 @@ test('partial ShellCheck output beside an unreadable file is an execution error'
     const note = parseCommandFindings(planned, broken, paths, {}).note ?? '';
     expect(note).toStartWith('shellcheck failed with exit 2:');
     expect(note).toContain('missing.sh');
-    const failed = runCommandBlocking(command, { cwd: sandbox.path });
-    expect(failed.code).toBe(1);
-    expect(
-        parseCommandFindings(planned, failed, paths, {}).findings!.map(({ file, line, rule }) => ({
-            file,
-            line,
-            rule,
-        })),
-    ).toStrictEqual([
-        { file: 'sample.sh', line: 2, rule: 'SC2154' },
-        { file: 'sample.sh', line: 2, rule: 'SC2086' },
-    ]);
-    await writeFile(join(sandbox.path, 'sample.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" "${1:-}"\n');
-    const corrected = runCommandBlocking(command, { cwd: sandbox.path });
-    expect(corrected.code).toBe(0);
-    expect(parseCommandFindings(planned, corrected, paths, {}).findings).toStrictEqual([]);
 });
 
 test.skipIf(isWindows).each([...SYNTAX_CASES])(

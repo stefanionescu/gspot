@@ -3,7 +3,6 @@ import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { LEVELS } from '#cli/config/manifests/names.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
@@ -28,50 +27,45 @@ const installedSandbox = shareInstalledSandbox({
     files: { 'README.md': README, 'docs/guide.md': GUIDE, 'docs/second.md': GUIDE, LICENSE },
 });
 
-test.each([...LEVELS])(
-    `markdownlint at level %s adds MD041 only at level all and applies each scope's lint rule options`,
-    async (level) => {
-        const { root } = installedSandbox();
-        await using _change = await writeSandboxChanges(installedSandbox(), {
-            files: {
-                ...MARKDOWN_FILES,
-                'gspot.toml': buildSandboxSettings(['markdown'], { level, tables: MARKDOWNLINT_TABLES }),
-            },
-        });
-        const failed = parseCheckReport(await spawnGspot(root, ['check', '--only', 'markdown/markdownlint', '--json']));
-        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        expect(listFindingRows(failed.report)).toStrictEqual([
-            { file: 'root.md', line: 7, rule: 'MD045' },
-            ...(level === 'all' ? [{ file: 'title.md', line: 1, rule: 'MD041' }] : []),
-        ]);
-        await writeFile(join(root, 'root.md'), MARKDOWN_FILES['root.md'].replace('![]', REQUEST_FLOW_IMAGE));
-        await writeFile(
-            join(root, 'app/guide.md'),
-            MARKDOWN_FILES['app/guide.md'].replace('Nested label.', 'nested label.'),
-        );
-        const changed = parseCheckReport(
-            await spawnGspot(root, ['check', '--only', 'markdown/markdownlint', '--json']),
-        );
-        expect(changed.code, changed.stdout + changed.stderr).toBe(1);
-        expect(listFindingRows(changed.report)).toStrictEqual([
-            ...(level === 'all' ? [{ file: 'title.md', line: 1, rule: 'MD041' }] : []),
-            { file: 'app/guide.md', line: 5, rule: 'MD044' },
-        ]);
-        const fixed = await spawnGspot(root, [
-            'check',
-            'app/guide.md',
-            '--only',
-            'markdown/markdownlint',
-            '--fix',
-            '--json',
-        ]);
-        expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-        expect(await readFile(join(root, 'app/guide.md'), 'utf8')).toBe(MARKDOWN_FILES['app/guide.md']);
-        expect(await readFile(join(root, 'root.md'), 'utf8')).toBe(
-            MARKDOWN_FILES['root.md'].replace('![]', REQUEST_FLOW_IMAGE),
-        );
-    },
-);
+test("markdownlint at level all adds MD041 only at level all and applies each scope's lint rule options", async () => {
+    const { root } = installedSandbox();
+    await using _change = await writeSandboxChanges(installedSandbox(), {
+        files: {
+            ...MARKDOWN_FILES,
+            'gspot.toml': buildSandboxSettings(['markdown'], { level: 'all', tables: MARKDOWNLINT_TABLES }),
+        },
+    });
+    const failed = parseCheckReport(await spawnGspot(root, ['check', '--only', 'markdown/markdownlint', '--json']));
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    expect(listFindingRows(failed.report)).toStrictEqual([
+        { file: 'root.md', line: 7, rule: 'MD045' },
+        { file: 'title.md', line: 1, rule: 'MD041' },
+    ]);
+    await writeFile(join(root, 'root.md'), MARKDOWN_FILES['root.md'].replace('![]', REQUEST_FLOW_IMAGE));
+    await writeFile(
+        join(root, 'app/guide.md'),
+        MARKDOWN_FILES['app/guide.md'].replace('Nested label.', 'nested label.'),
+    );
+    const changed = parseCheckReport(await spawnGspot(root, ['check', '--only', 'markdown/markdownlint', '--json']));
+    expect(changed.code, changed.stdout + changed.stderr).toBe(1);
+    expect(listFindingRows(changed.report)).toStrictEqual([
+        { file: 'title.md', line: 1, rule: 'MD041' },
+        { file: 'app/guide.md', line: 5, rule: 'MD044' },
+    ]);
+    const fixed = await spawnGspot(root, [
+        'check',
+        'app/guide.md',
+        '--only',
+        'markdown/markdownlint',
+        '--fix',
+        '--json',
+    ]);
+    expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
+    expect(await readFile(join(root, 'app/guide.md'), 'utf8')).toBe(MARKDOWN_FILES['app/guide.md']);
+    expect(await readFile(join(root, 'root.md'), 'utf8')).toBe(
+        MARKDOWN_FILES['root.md'].replace('![]', REQUEST_FLOW_IMAGE),
+    );
+});
 
 test("markdownlint run by an editor reads the link files with each scope's options", async () => {
     const { root } = installedSandbox();

@@ -28,15 +28,7 @@ test("an asset in a scope's assets folder counts as used when a file outside the
     const root = await prepareAssetRepository(resources, SCOPE_ASSET_FILES);
 
     expect(await runSandboxCheck(root, 'site/unused-assets', { scope: 'docs' })).toStrictEqual([
-        {
-            file: 'docs/assets/unused.svg',
-            line: 1,
-            check: 'site/unused-assets',
-            rule: 'unused-asset',
-            fixable: false,
-            help: 'Delete the file.',
-            message: 'No page, stylesheet or script names this file.',
-        },
+        expect.objectContaining({ file: 'docs/assets/unused.svg', line: 1, rule: 'unused-asset' }),
     ]);
 });
 

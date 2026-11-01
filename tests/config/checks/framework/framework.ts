@@ -54,23 +54,17 @@ export const SVELTE_CHECK_OUTPUT = `1758823456789 START "/repo"
 
 export const SVELTE_CHECK_FINDINGS = [
     {
-        check: 'svelte/svelte-check',
         file: 'src/Count.svelte',
         line: 2,
         column: 11,
         rule: 'TS2322',
         message: "Type 'string' is not assignable to type 'number'.",
-        fixable: false,
-        help: 'Fix each warning and error svelte-check prints; both fail the check.',
     },
     {
-        check: 'svelte/svelte-check',
         file: 'src/Product.svelte',
         line: 5,
         column: 1,
         rule: 'a11y_missing_attribute',
         message: '`<img>` element should have an alt attribute',
-        fixable: false,
-        help: 'Fix each warning and error svelte-check prints; both fail the check.',
     },
 ] as const;

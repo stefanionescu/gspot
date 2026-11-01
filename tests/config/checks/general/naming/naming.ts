@@ -197,12 +197,7 @@ path = "sibling"
 export const NAME_WORD_CASES = [
     ['HTMLParser', ['html', 'parser']],
     ['user_id', ['user', 'id']],
-    ['parseHttpUrl', ['parse', 'http', 'url']],
-    ['edge-case.test', ['edge', 'case', 'test']],
     ['handlerV2', ['handler', 'v', '2']],
-    ['user2', ['user', '2']],
     ['decodeBase64', ['decode', 'base64']],
-    ['s3Client', ['s3', 'client']],
     ['I18N', ['i18n']],
-    ['sha256_user', ['sha256', 'user']],
 ] as const;

@@ -66,20 +66,17 @@ async function prepareSwiftScope(scopePath: string) {
     return { root, prefix, [Symbol.asyncDispose]: lifetime[Symbol.asyncDispose].bind(lifetime) };
 }
 
-test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
-    'SwiftLint $name fixes an explicit init call with --fix',
-    async ({ scope }) => {
-        await using sandbox = await prepareSwiftScope(scope);
-        const { root, prefix } = sandbox;
-        await writeFile(
-            join(root, `${prefix}Sources/Value.swift`),
-            CORRECTED_PARSER_SOURCE.replace('Int(value)', 'Int.init(value)'),
-        );
-        const fixed = await spawnGspot(root, ['check', '--only', 'swift/swiftlint', '--json', '--fix']);
-        expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-        expect(await readFile(join(root, `${prefix}Sources/Value.swift`), 'utf8')).toBe(CORRECTED_PARSER_SOURCE);
-    },
-);
+test.skipIf(!hasToolBuild('swiftlint'))('SwiftLint at the root fixes an explicit init call with --fix', async () => {
+    await using sandbox = await prepareSwiftScope('');
+    const { root, prefix } = sandbox;
+    await writeFile(
+        join(root, `${prefix}Sources/Value.swift`),
+        CORRECTED_PARSER_SOURCE.replace('Int(value)', 'Int.init(value)'),
+    );
+    const fixed = await spawnGspot(root, ['check', '--only', 'swift/swiftlint', '--json', '--fix']);
+    expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
+    expect(await readFile(join(root, `${prefix}Sources/Value.swift`), 'utf8')).toBe(CORRECTED_PARSER_SOURCE);
+});
 
 test.skipIf(!hasToolBuild('swiftlint')).each(['AppTests', 'AppTests/Helpers'])(
     'a Swift test scope %s gets one complete SwiftLint config file',

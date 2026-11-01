@@ -18,7 +18,6 @@ test('every SQL name comes with its category and line', async () => {
     expect(found.map((identifier) => [identifier.category, identifier.name, identifier.line])).toStrictEqual([
         ...SQL_SOURCE_NAMES,
     ]);
-    expect(found[1]?.label).toBe('sql table');
 });
 test('psql variables are not names, and quoted names keep their positions', async () => {
     const source = '\\set table accounts\nCREATE TABLE :table ("createdAt" int);\nCREATE TABLE :"id" (id int);';

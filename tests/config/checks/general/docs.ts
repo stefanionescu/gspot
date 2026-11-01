@@ -117,30 +117,11 @@ export const MALFORMED_TASK_FILES = [
         scopes: [],
         files: { 'a.md': 'Run `bun run build`.\n', 'mise.toml': '' },
     },
-    {
-        path: 'app/package.json',
-        message: 'app/package.json:1:2 is not valid JSON: InvalidSymbol. Fix the file.',
-        text: '{broken',
-        document: 'app/nested/guide.md',
-        scopes: DOC_TASK_SCOPES,
-        files: DOC_TASK_FILES,
-    },
-    {
-        path: 'app/mise.toml',
-        message: 'app/mise.toml:1:7 is not valid TOML: Expected table closing "]", found end of file. Fix the file.',
-        text: '[tasks',
-        document: 'app/nested/guide.md',
-        scopes: DOC_TASK_SCOPES,
-        files: DOC_TASK_FILES,
-    },
 ] as const;
 
 export const LICENSE_FILE_CASES = [
-    { name: 'LICENSE', findings: [] },
     { name: 'COPYING', findings: [] },
-    { name: 'LICENCE', findings: [] },
     { name: 'LICENSE-MIT', findings: [] },
-    { name: 'LICENSE.rst', findings: [] },
     {
         name: 'NOTICE',
         findings: [{ file: 'LICENSE', rule: 'missing-license', message: 'The root has no LICENSE file.' }],

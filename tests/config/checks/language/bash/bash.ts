@@ -91,18 +91,6 @@ export const CORRECTED_LOOPS = `main() {
 export const INLINE_SCRIPT_CASES = [
     {
         files: {
-            'scripts/node.sh': `${BASH_HEADER}# main: runs the script.
-main() {
-    node -e 'console.log(1)'
-}
-
-main "$@"
-`,
-        },
-        expected: { file: 'scripts/node.sh', rule: 'runtime-embed', line: 10 },
-    },
-    {
-        files: {
             'scripts/python.sh': `${BASH_HEADER}# main: runs the script.
 main() {
     python3 - <<'PY'

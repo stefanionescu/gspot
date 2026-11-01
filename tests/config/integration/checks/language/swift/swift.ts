@@ -201,8 +201,6 @@ export const SPACED_COMMENT_FINDINGS = [
     [9, 1, 'spaceInsideComments'],
 ] as const;
 
-export const IMPORTED_SOURCE_REASON = 'The imported source retains its documentation layout.';
-
 export const PARSER_SOURCE = `public func parsed(_ value: String) -> Int {
     Int(value)! + 42
 }

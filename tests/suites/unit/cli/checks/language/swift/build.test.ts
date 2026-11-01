@@ -83,7 +83,9 @@ test('compiler: a later Swift session reads a failed build after an earlier succ
 
     expect(await getBuiltInCheck('swift/build')(prepared.session, first)).toStrictEqual([]);
     expect(await getBuiltInCheck('swift/build')(prepared.session, first)).toStrictEqual([]);
-    expect(await runSandboxCheck(sandbox.path, 'swift/build')).toStrictEqual([...FAILED_BUILD_FINDINGS]);
+    expect(await runSandboxCheck(sandbox.path, 'swift/build')).toStrictEqual(
+        FAILED_BUILD_FINDINGS.map((finding) => matchFields(finding)),
+    );
 });
 
 test('compiler: canceled Swift compilation refuses to launch the compiler', async () => {

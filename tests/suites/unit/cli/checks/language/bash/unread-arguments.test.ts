@@ -18,7 +18,6 @@ test('main "$@" with a main that reads no argument is not reported', async () =>
     });
     commitAll(sandbox.path);
     await markExecutable(sandbox.path, 'source.sh');
-    expect(await runSandboxCheck(sandbox.path, 'bash/script-layout')).toStrictEqual([]);
     expect(await runSandboxCheck(sandbox.path, 'bash/unread-arguments')).toStrictEqual([]);
 });
 

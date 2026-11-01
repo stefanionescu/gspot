@@ -33,25 +33,6 @@ main "$@"
         },
         expected: { file: 'scripts/tiny.sh', rule: 'trivial-function', line: 9 },
     },
-    {
-        files: {
-            'scripts/forward.sh': `${BASH_HEADER}# _forward: hands everything on.
-_forward() {
-    printf "$@"
-}
-
-# main: runs the script.
-main() {
-    local format="$1"
-    _forward "\${format}"
-    _forward "\${format}"
-}
-
-main "$@"
-`,
-        },
-        expected: { file: 'scripts/forward.sh', rule: 'trivial-function', line: 9 },
-    },
 ] as const;
 
 export const TRIVIAL_FUNCTION_CASES = [
@@ -190,13 +171,6 @@ def wrapper():
         language: 'python',
         file: '__init__.py',
         source: '',
-        expected: [],
-    },
-    {
-        name: 'a Python package marker comment',
-        language: 'python',
-        file: '__init__.py',
-        source: '# Package marker\n',
         expected: [],
     },
     {

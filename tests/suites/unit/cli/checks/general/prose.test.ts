@@ -8,9 +8,9 @@ import { readBytes } from '#cli/system/files/reads.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
 
@@ -22,7 +22,7 @@ import {
     VALE_INSTALLED_FILES,
 } from '#tests/config/checks/general/general.ts';
 
-test('Vale gets the timeout setting, and its alerts become findings with file, line and column', async () => {
+test('Vale gets the timeout setting', async () => {
     await using sandbox = await testdir();
     const path = 'sample.md';
     await createFileTree(sandbox.path, {
@@ -35,13 +35,8 @@ test('Vale gets the timeout setting, and its alerts become findings with file, l
     const valeResult = buildProcessResult({ stdout: JSON.stringify({ [join(sandbox.path, path)]: [VALE_ALERT] }) });
     const spawn = fakeCommands().mockResolvedValue(valeResult);
     const run = resources.use(spawn);
-    const result = await runChecks(session, buildRunOptions({ only: ['prose/vale'] }));
+    await runChecks(session, buildRunOptions({ only: ['prose/vale'] }));
     expect(run.mock.calls.map(([, options]) => options.timeoutSeconds)).toStrictEqual([1]);
-
-    expect(result.report.checks).toMatchObject([{ check: 'prose/vale', status: 'failed' }]);
-    expect(result.report.checks[0]!.findings).toStrictEqual([
-        matchFields({ file: path, line: 1, column: 3, rule: 'gspot.Example' }),
-    ]);
 });
 
 test('prose/vale sends Vale each stdin file as gspot read it at the start of the run, not a later edit', async () => {

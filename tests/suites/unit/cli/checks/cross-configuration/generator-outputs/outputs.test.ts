@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/planning/session.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
@@ -79,15 +80,12 @@ test('an unchanged binary output passes and a changed one reports stale', async 
     const stale = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['project/image'] }));
     expect(stale.report.checks.map(({ status }) => status)).toStrictEqual(['failed']);
     expect(stale.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([
-        {
-            check: 'project/image',
+        matchFields({
             file: 'generated/image.bin',
             line: 1,
             rule: 'stale',
             message: `Running ${command.join(' ')} changes this generated file; commit what it writes.`,
-            fixable: false,
-            help: 'Read the command output; this repository declares the check.',
-        },
+        }),
     ]);
     expect(await readFile(output)).toStrictEqual(changed);
 });

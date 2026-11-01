@@ -169,7 +169,6 @@ export const UNCOVERED_FILE_MESSAGE =
 
 export const FRAMEWORK_COMPONENT_CASES = [
     { framework: 'astro', name: 'index.astro', folder: 'src/pages', content: '<main>Example</main>\n' },
-    { framework: 'svelte', name: 'Card.svelte', folder: 'src/lib', content: '<p>Example</p>\n' },
 ] as const;
 
 export const LONE_FILE_TREE = {

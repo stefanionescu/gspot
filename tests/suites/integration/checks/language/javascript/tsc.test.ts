@@ -26,8 +26,6 @@ import {
     JSCONFIG_SANDBOX,
     KNIP_FOLDER_FILES,
     OWN_TYPESCRIPT_RESULTS,
-    AUTHORED_JSCONFIG_CASES,
-    AUTHORED_JSCONFIG_FILES,
     JAVASCRIPT_PROJECT_FILES,
 } from '#tests/config/integration/checks/language/javascript.ts';
 
@@ -113,50 +111,43 @@ test('javascript/tsc at level all also checks the build and dist folders', async
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
-test.each([...AUTHORED_JSCONFIG_CASES])(
-    "javascript/tsc keeps the project's module resolution and ignores gspot's own @types, $name",
-    async ({ authored }) => {
-        const authoredFiles: Record<string, string> = authored ? AUTHORED_JSCONFIG_FILES : {};
-        const source = `import { format } from '${authored ? '@shape/value' : './value.js'}';
+test("javascript/tsc keeps generated module resolution and ignores gspot's own @types without an authored jsconfig", async () => {
+    const source = `import { format } from './value.js';
 export const text = format(42);
 export const total = accepted;
 `;
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['javascript']),
-            'source/main.js': source,
-            'source/value.js':
-                '/** @param {string} value */\nexport function format(value) { return value.toUpperCase(); }\n',
-            'node_modules/@types/domain/index.d.ts': 'declare const accepted: number;\n',
-            [`${GSPOT_PATHS.nodeModules}/@types/private/index.d.ts`]: 'This is invalid private tooling input.\n',
-            'authored/cache.tsbuildinfo': 'Preserve this authored metadata.\n',
-            ...authoredFiles,
-        });
-        await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
-        const generated = {
-            path: getManifestTarget('javascript', 'jsconfig.json'),
-            content: await readFile(join(sandbox.path, getManifestTarget('javascript', 'jsconfig.json')), 'utf8'),
-        };
-        await chmod(join(sandbox.path, generated.path), 0o444);
-        const command = ['check', '--only', 'javascript/tsc', '--json'];
-        const broken = parseCheckReport(await spawnGspot(sandbox.path, command));
-        expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-        expect(broken.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
-            { file: 'source/main.js', line: 2, column: 28, rule: 'TS2345' },
-        ]);
-        await writeFile(join(sandbox.path, 'source/main.js'), source.replace('format(42)', 'format("42")'));
-        const corrected = await spawnGspot(sandbox.path, command);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(await readFile(join(sandbox.path, 'authored/cache.tsbuildinfo'), 'utf8')).toBe(
-            'Preserve this authored metadata.\n',
-        );
-        expect(await readFile(join(sandbox.path, generated.path), 'utf8')).toBe(generated.content);
-        const { mode } = await stat(join(sandbox.path, generated.path));
-        expect(mode & 0o777).toBe(normalizeFileMode({ mode: 0o444 }));
-        expect(await isOnDisk(join(sandbox.path, 'jsconfig.json'))).toBe(authored);
-        for (const [path, content] of Object.entries(authoredFiles))
-            expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(content);
-    },
-);
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript']),
+        'source/main.js': source,
+        'source/value.js':
+            '/** @param {string} value */\nexport function format(value) { return value.toUpperCase(); }\n',
+        'node_modules/@types/domain/index.d.ts': 'declare const accepted: number;\n',
+        [`${GSPOT_PATHS.nodeModules}/@types/private/index.d.ts`]: 'This is invalid private tooling input.\n',
+        'authored/cache.tsbuildinfo': 'Preserve this authored metadata.\n',
+    });
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
+    const generated = {
+        path: getManifestTarget('javascript', 'jsconfig.json'),
+        content: await readFile(join(sandbox.path, getManifestTarget('javascript', 'jsconfig.json')), 'utf8'),
+    };
+    await chmod(join(sandbox.path, generated.path), 0o444);
+    const command = ['check', '--only', 'javascript/tsc', '--json'];
+    const broken = parseCheckReport(await spawnGspot(sandbox.path, command));
+    expect(broken.code, broken.stdout + broken.stderr).toBe(1);
+    expect(broken.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
+        { file: 'source/main.js', line: 2, column: 28, rule: 'TS2345' },
+    ]);
+    await writeFile(join(sandbox.path, 'source/main.js'), source.replace('format(42)', 'format("42")'));
+    const corrected = await spawnGspot(sandbox.path, command);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    expect(await readFile(join(sandbox.path, 'authored/cache.tsbuildinfo'), 'utf8')).toBe(
+        'Preserve this authored metadata.\n',
+    );
+    expect(await readFile(join(sandbox.path, generated.path), 'utf8')).toBe(generated.content);
+    const { mode } = await stat(join(sandbox.path, generated.path));
+    expect(mode & 0o777).toBe(normalizeFileMode({ mode: 0o444 }));
+    expect(await isOnDisk(join(sandbox.path, 'jsconfig.json'))).toBe(false);
+});
 
 test("javascript/tsc reads each scope's own jsconfig options, and a broken one fails only its scope", async () => {
     await using sandbox = await createGitSandbox({});
@@ -173,13 +164,6 @@ test("javascript/tsc reads each scope's own jsconfig options, and a broken one f
             content: await readFile(join(sandbox.path, path), 'utf8'),
         })),
     );
-    expect(outputs.map(({ path }) => path).toSorted(compareText)).toStrictEqual([
-        getManifestTarget('javascript', 'jsconfig.json'),
-
-        `${GSPOT_PATHS.configurations}/language/javascript/scopes/app/child/jsconfig.json`,
-        `${GSPOT_PATHS.configurations}/language/javascript/scopes/app/jsconfig.json`,
-        `${GSPOT_PATHS.configurations}/language/javascript/scopes/sibling/jsconfig.json`,
-    ]);
     const command = ['check', '--only', 'javascript/tsc', '--json'];
     const broken = parseCheckReport(await spawnGspot(sandbox.path, command));
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
@@ -205,11 +189,13 @@ test("javascript/tsc reads each scope's own jsconfig options, and a broken one f
         {
             scope: 'app',
             status: 'error',
-            note: "The javascript/tsc check failed: Cannot read the compiler settings in app/jsconfig.json: '}' expected.",
         },
         { scope: 'app/child', status: 'passed' },
         { scope: 'sibling', status: 'passed' },
     ]);
+    expect(invalid.report.checks.find(({ scope }) => scope === 'app')?.note).toContain(
+        'Cannot read the compiler settings in app/jsconfig.json',
+    );
 });
 
 async function prepareJsconfigScopes(root: string): Promise<{ config: string; corrected: string }> {

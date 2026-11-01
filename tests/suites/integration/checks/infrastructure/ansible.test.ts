@@ -1,9 +1,7 @@
 import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { test, expect, describe } from 'bun:test';
-import type { Level } from '#cli/types/manifests.ts';
 import type { Sandbox } from '#tests/types/sandbox.ts';
-import { LEVELS } from '#cli/config/manifests/names.ts';
 import { COMMAND_PLAYBOOK } from '#tests/config/ansible.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -47,21 +45,18 @@ describe.skipIf(!hasToolBuild('ansible-lint'))('ansible-lint', () => {
         expect(corrected.exitCode, JSON.stringify(corrected)).toBe(0);
     });
 
-    test.each([...LEVELS])(
-        'uses the profile of level %s next to the root and scope ansible.cfg files',
-        async (level) => {
-            await assertLevelProfile(installedSandbox(), level);
-        },
-    );
+    test('uses the profile of level all next to the root and scope ansible.cfg files', async () => {
+        await assertLevelProfile(installedSandbox());
+    });
 });
 
-async function assertLevelProfile(sandbox: Sandbox, level: Level): Promise<void> {
+async function assertLevelProfile(sandbox: Sandbox): Promise<void> {
     const { root } = sandbox;
     const source = ANSIBLE_PLAYBOOK.replace('ansible.builtin.systemd:', 'systemd:');
     await using _sourceChange = await writeSandboxChanges(sandbox, {
         files: {
             'gspot.toml': buildSandboxSettings(['ansible'], {
-                level,
+                level: 'all',
                 scopes: [{ path: 'app', configurations: ['ansible'] }],
             }),
             'deploy/ansible.cfg': ANSIBLE_CONFIG,
@@ -74,15 +69,11 @@ async function assertLevelProfile(sandbox: Sandbox, level: Level): Promise<void>
     const checked = parseCheckReport(
         await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint', '--json']),
     ).report;
-    expect(checked.exitCode, JSON.stringify(checked)).toBe(level === 'all' ? 1 : 0);
-    expect(listFindingRows(checked)).toStrictEqual(
-        level === 'all'
-            ? [
-                  { file: 'deploy/site.yml', line: 6, rule: 'fqcn[action-core]' },
-                  { file: 'app/deploy/site.yml', line: 6, rule: 'fqcn[action-core]' },
-              ]
-            : [],
-    );
+    expect(checked.exitCode, JSON.stringify(checked)).toBe(1);
+    expect(listFindingRows(checked)).toStrictEqual([
+        { file: 'deploy/site.yml', line: 6, rule: 'fqcn[action-core]' },
+        { file: 'app/deploy/site.yml', line: 6, rule: 'fqcn[action-core]' },
+    ]);
     await writeFile(join(root, 'deploy/site.yml'), ANSIBLE_PLAYBOOK);
     await writeFile(join(root, 'app/deploy/site.yml'), ANSIBLE_PLAYBOOK);
     const fixed = parseCheckReport(

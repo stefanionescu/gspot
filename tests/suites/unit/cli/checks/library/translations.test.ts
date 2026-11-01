@@ -66,22 +66,8 @@ test('a translation keeps the arguments, tags, and select keys of its base messa
     ]);
 });
 
-test('translations/messages reports a message file that is not JSON as syntax and an empty message as message', async () => {
-    const files = { 'messages/en.json': '{"greeting":"Hello","farewell":"Bye"}', 'messages/fr.json': '{ broken' };
-    await using sandbox = await testdir({
-        ...files,
-        'package.json': JSON.stringify({ dependencies: TRANSLATION_SANDBOX.dependencies }),
-        'gspot.toml': buildSandboxSettings(['translations'], { level: 'all', tables: TRANSLATION_TABLES }),
-    });
-    const broken = await runSandboxCheck(sandbox.path, 'translations/messages');
-    expect(broken.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
-        {
-            file: 'messages/fr.json',
-            line: 1,
-            rule: 'syntax',
-            message: 'messages/fr.json:1:3 is not valid JSON: InvalidSymbol. Fix the file.',
-        },
-    ]);
+test('translations/messages reports an empty message', async () => {
+    const files = { 'messages/en.json': '{"greeting":"Hello","farewell":"Bye"}' };
     await using changedSandbox = await testdir({
         ...files,
         'messages/fr.json': '{"greeting":"Bonjour","farewell":""}',

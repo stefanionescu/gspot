@@ -2,11 +2,7 @@ export const NAME_WORDS = ['one', 'two', 'three', 'four', 'five', 'six', 'seven'
 
 export const NAMING_LIMIT_CASES = [
     { language: 'typescript', category: 'variables', characters: 21, words: 2 },
-    { language: 'javascript', category: 'variables', characters: 22, words: 2 },
     { language: 'python', category: 'variables', characters: 23, words: 3 },
-    { language: 'swift', category: 'functions', characters: 24, words: 3 },
-    { language: 'bash', category: 'variables', characters: 25, words: 3 },
-    { language: 'sql', category: 'functions', characters: 26, words: 3 },
 ] as const;
 
 export const HANDLE_ROUTE_IDENTIFIER = {

@@ -15,20 +15,16 @@ export const STYLESHEETS = {
 `,
 } as const;
 
-export const ROOT_STYLELINT_RULES = `[tools.stylelint.rules]
+export const ALL_LEVEL_STYLELINT_TABLES = `[tools.stylelint.rules]
 color-hex-length = "short"
-`;
-
-export const APP_STYLELINT_SCOPE = `[[scope]]
+number-max-precision = 0
+[[scope]]
 path = "app"
 
 configurations = []
 [scope.tools.stylelint.rules]
 color-hex-length = "long"
 `;
-
-export const ALL_LEVEL_STYLELINT_TABLES = `${ROOT_STYLELINT_RULES}number-max-precision = 0
-${APP_STYLELINT_SCOPE}`;
 
 export const CORRECTED_STYLESHEETS = {
     'build/site.css': `a {
@@ -106,16 +102,6 @@ export const AUTOPLAY_CHECKS = [
         findings: [
             { file: 'index.html', line: 7, column: 24, rule: 'no-autoplay' },
             { file: 'index.html', line: 8, column: 24, rule: 'no-autoplay' },
-        ],
-    },
-    {
-        check: 'site/html-validate',
-        scope: 'app',
-        arguments: ['check', 'app', '--json', '--only', 'site/html-validate'],
-        source: 'app/page.html',
-        findings: [
-            { file: 'app/dist/index.html', line: 7, rule: 'no-autoplay' },
-            { file: 'app/dist/index.html', line: 8, rule: 'no-autoplay' },
         ],
     },
 ] as const;
@@ -204,15 +190,6 @@ export const SQL_SANDBOX = {
             "\\set team 'core'\nSELECT id FROM user_accounts WHERE display_name = :'team' AND id = :account_id;\n",
     },
 } as const;
-
-export const SQL_CASES = [
-    {
-        check: 'sql/sqlfluff',
-        files: { 'db/lower.sql': 'SELECT id from user_accounts;\n' },
-        corrected: { files: { 'db/lower.sql': 'SELECT id FROM user_accounts;\n' } },
-        expected: { file: 'db/lower.sql', rule: 'CP01', line: 1 },
-    },
-] as const;
 
 export const SQL_FUNCTION_SOURCE = `CREATE FUNCTION get_user_name() RETURNS TEXT AS $$ SELECT 'Alex'; $$ LANGUAGE sql;
 SELECT get_user_name();

@@ -75,8 +75,9 @@ test.each(['relative', 'absolute', 'namespaced'])(
             return buildProcessResult();
         });
         const result = await runChecks(session, buildRunOptions({ only: ['duplication/jscpd'] }));
-        expect(result.report.checks[0]!.findings, JSON.stringify(result.report)).toStrictEqual([
-            ...JSCPD_SCOPE_FINDINGS,
-        ]);
+        expect(
+            result.report.checks[0]!.findings.map(({ file, line, rule, message }) => ({ file, line, rule, message })),
+            JSON.stringify(result.report),
+        ).toStrictEqual([...JSCPD_SCOPE_FINDINGS]);
     },
 );

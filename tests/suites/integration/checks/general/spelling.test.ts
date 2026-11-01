@@ -56,7 +56,7 @@ test.each([...SPELLING_IGNORE_CASES])(
             ...Object.fromEntries(paths.map((path) => [`nested/${path}`, `${TYPO.the}\n`])),
         };
         const checked = await runTyposCheck(sourceFiles);
-        expect(checked.code, checked.stdout + checked.stderr).toBe(expected.length === 0 ? 0 : 1);
+        expect(checked.code, checked.stdout + checked.stderr).toBe(1);
         expect(checked.files).toStrictEqual([...expected]);
     },
 );

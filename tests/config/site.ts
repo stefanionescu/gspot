@@ -67,19 +67,6 @@ const STATIC_SITE_FILES = {
     'logo.svg': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><path d="M0 0h8v8H0z"/></svg>',
 } as const;
 
-export const SITE_BUILD_ARGUMENTS = [
-    '--copy',
-    'index.html=dist/index.html',
-    '--copy',
-    'about.html=dist/about.html',
-    '--copy',
-    'site.css=dist/site.css',
-    '--copy',
-    'sitemap.xml=dist/sitemap.xml',
-    '--copy',
-    'logo.svg=dist/logo.svg',
-] as const;
-
 export const SITE_SANDBOX = {
     configurations: ['site'],
 

@@ -27,8 +27,4 @@ swift = { xcode_project = "app/Choice.xcworkspace", xcode_scheme = "App" }
     },
 ] as const;
 
-export const SWIFT_BUILD_PURPOSES = [
-    { purpose: 'compile', check: 'swift/build' },
-    { purpose: 'analyze', check: 'swift/swiftlint-analyze' },
-    { purpose: 'coverage', check: 'swift/coverage' },
-] as const;
+export const SWIFT_BUILD_PURPOSES = [{ purpose: 'compile', check: 'swift/build' }] as const;

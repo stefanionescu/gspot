@@ -4,9 +4,9 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/planning/session.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
 import { STRICT_TSCONFIG_TEXT } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 import {
@@ -43,7 +43,9 @@ test('a scope needs no tsconfig of its own but still checks one that is added', 
         join(sandbox.path, 'tsconfig.json'),
         STRICT_TSCONFIG_TEXT.replace('"strict":true', '"strict":false'),
     );
-    expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig')).toStrictEqual([...STRICT_OFF_FINDINGS]);
+    expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig')).toStrictEqual(
+        STRICT_OFF_FINDINGS.map((finding) => matchFields(finding)),
+    );
     await writeFile(join(sandbox.path, 'tsconfig.json'), STRICT_TSCONFIG_TEXT);
     expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig')).toStrictEqual([]);
 });
@@ -185,14 +187,7 @@ test('a child excluded from the root project is its own compiler project', async
         'app/source.ts': CHILD_PORT_SOURCE,
     });
     expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig', { scope: 'app' })).toStrictEqual([
-        {
-            check: 'typescript/tsconfig',
-            file: 'app/tsconfig.json',
-            rule: 'missing',
-            message: MISSING_TSCONFIG_MESSAGE,
-            help: 'Turn on the reported compiler option in your tsconfig.',
-            fixable: false,
-        },
+        expect.objectContaining({ file: 'app/tsconfig.json', rule: 'missing', message: MISSING_TSCONFIG_MESSAGE }),
     ]);
     await writeFile(join(sandbox.path, 'app/tsconfig.json'), STRICT_TSCONFIG_TEXT);
     expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig', { scope: 'app' })).toStrictEqual([]);

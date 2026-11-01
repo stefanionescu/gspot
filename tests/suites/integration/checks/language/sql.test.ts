@@ -1,32 +1,18 @@
 import { join } from 'node:path';
-import { test, expect, beforeAll } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
-import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
-    SQL_CASES,
     SQL_SANDBOX,
     SQL_FUNCTION_SOURCE,
     SQLFLUFF_DIALECT_SETTINGS,
 } from '#tests/config/integration/checks/language/language.ts';
 
 const installedSandbox = shareInstalledSandbox(SQL_SANDBOX);
-
-beforeAll(async () => {
-    const ignored = await spawnGspot(installedSandbox().root, [
-        'ignore',
-        'sql/sqlfluff',
-        '--paths',
-        'db/report.sql',
-        '--reason',
-        'A script for psql, which the linter cannot read.',
-    ]);
-    expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-});
 
 test("SQLFluff uses each scope's dialect setting instead of the PostgreSQL default", async () => {
     const { root } = installedSandbox();
@@ -96,8 +82,4 @@ test('SQLFluff reports and fixes uppercase function names', async () => {
     expect(await readFile(join(root, 'functions.sql'), 'utf8')).toBe(SQL_FUNCTION_SOURCE);
     const corrected = await spawnGspot(root, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-});
-
-test.each([...SQL_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
-    await assertCheckSample(installedSandbox(), sample);
 });

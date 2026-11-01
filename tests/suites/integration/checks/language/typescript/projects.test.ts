@@ -2,7 +2,6 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
-import { LEVELS } from '#cli/config/manifests/names.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import type { TypecheckResult } from '#tests/types/reports.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
@@ -50,55 +49,52 @@ test('typescript/tsc reports a type error in a tsconfig.json project without fil
     expect(await readFile(join(root, 'tsconfig.json'), 'utf8')).toBe(IMPLICIT_PROJECT_FILES['tsconfig.json']);
 });
 
-test.each([...LEVELS])(
-    'typescript/tsc at level %s keeps the authored tsconfig.json in a scope and reports its type errors',
-    async (level) => {
-        const { root } = installedSandbox();
-        const scope = 'apps/web';
-        const authored = AUTHORED_TSCONFIG.replace('%BUILD_INFO%', () =>
-            JSON.stringify(join(root, scope, 'build/cache.tsbuildinfo')),
-        );
-        const sourceFiles = {
-            'gspot.toml': buildSandboxSettings(['javascript'], {
-                level,
-                scopes: [{ path: scope, configurations: ['typescript'] }],
-            }),
-            '.gitignore': `node_modules/\n${GSPOT_FOLDER}/\n`,
-            [`${scope}/tsconfig.json`]: authored,
-            [`${scope}/src/main.ts`]: 'export const echo: number = "wrong";\n',
-            [`${scope}/build/cache.tsbuildinfo`]: 'authored metadata\n',
-        };
-        await using _sourceChange = await writeSandboxChanges(
-            installedSandbox(),
-            buildSandboxChanges(TYPESCRIPT_PROJECTS_SANDBOX.files, sourceFiles),
-        );
-        await chmod(join(root, scope, 'tsconfig.json'), 0o640);
-        const failed = await runTscCheck(root);
-        expect(failed.code, failed.output).toBe(1);
-        expect(failed.findings).toMatchObject([
-            { check: 'typescript/tsc', file: `${scope}/src/main.ts`, rule: 'TS2322', line: 1, column: 14 },
-        ]);
-        await writeFile(
-            join(root, scope, 'src/main.ts'),
-            'export function echo(value: string) { return value; }\nexport const first: number = "wrong";\n',
-        );
-        const second = await runTscCheck(root);
-        expect(second.code, second.output).toBe(1);
-        expect(second.findings).toMatchObject([
-            { check: 'typescript/tsc', file: `${scope}/src/main.ts`, rule: 'TS2322', line: 2, column: 14 },
-        ]);
-        await writeFile(
-            join(root, scope, 'src/main.ts'),
-            'export function echo(value: string) { return value; }\nexport const first: number = 1;\n',
-        );
-        const corrected = await runTscCheck(root);
-        expect(corrected.code, corrected.output).toBe(0);
-        expect(await readFile(join(root, scope, 'tsconfig.json'), 'utf8')).toBe(authored);
-        const { mode } = await stat(join(root, scope, 'tsconfig.json'));
-        expect(mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
-        expect(await readFile(join(root, scope, 'build/cache.tsbuildinfo'), 'utf8')).toBe('authored metadata\n');
-    },
-);
+test('typescript/tsc at level all keeps the authored tsconfig.json in a scope and reports its type errors', async () => {
+    const { root } = installedSandbox();
+    const scope = 'apps/web';
+    const authored = AUTHORED_TSCONFIG.replace('%BUILD_INFO%', () =>
+        JSON.stringify(join(root, scope, 'build/cache.tsbuildinfo')),
+    );
+    const sourceFiles = {
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            level: 'all',
+            scopes: [{ path: scope, configurations: ['typescript'] }],
+        }),
+        '.gitignore': `node_modules/\n${GSPOT_FOLDER}/\n`,
+        [`${scope}/tsconfig.json`]: authored,
+        [`${scope}/src/main.ts`]: 'export const echo: number = "wrong";\n',
+        [`${scope}/build/cache.tsbuildinfo`]: 'authored metadata\n',
+    };
+    await using _sourceChange = await writeSandboxChanges(
+        installedSandbox(),
+        buildSandboxChanges(TYPESCRIPT_PROJECTS_SANDBOX.files, sourceFiles),
+    );
+    await chmod(join(root, scope, 'tsconfig.json'), 0o640);
+    const failed = await runTscCheck(root);
+    expect(failed.code, failed.output).toBe(1);
+    expect(failed.findings).toMatchObject([
+        { check: 'typescript/tsc', file: `${scope}/src/main.ts`, rule: 'TS2322', line: 1, column: 14 },
+    ]);
+    await writeFile(
+        join(root, scope, 'src/main.ts'),
+        'export function echo(value: string) { return value; }\nexport const first: number = "wrong";\n',
+    );
+    const second = await runTscCheck(root);
+    expect(second.code, second.output).toBe(1);
+    expect(second.findings).toMatchObject([
+        { check: 'typescript/tsc', file: `${scope}/src/main.ts`, rule: 'TS2322', line: 2, column: 14 },
+    ]);
+    await writeFile(
+        join(root, scope, 'src/main.ts'),
+        'export function echo(value: string) { return value; }\nexport const first: number = 1;\n',
+    );
+    const corrected = await runTscCheck(root);
+    expect(corrected.code, corrected.output).toBe(0);
+    expect(await readFile(join(root, scope, 'tsconfig.json'), 'utf8')).toBe(authored);
+    const { mode } = await stat(join(root, scope, 'tsconfig.json'));
+    expect(mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
+    expect(await readFile(join(root, scope, 'build/cache.tsbuildinfo'), 'utf8')).toBe('authored metadata\n');
+});
 
 test.each([...OUTDIR_CASES])('$name', async ({ kind }) => {
     await using outside = await createGitSandbox({ 'value.js': 'authored output\n' });

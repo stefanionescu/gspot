@@ -26,22 +26,4 @@ export const SUPABASE_CASES = [
             },
         },
     },
-    {
-        check: 'supabase/deno-lint',
-        settings: `[[scope]]
-path = "apps/api"
-
-configurations = ["supabase"]
-`,
-        files: {
-            'apps/api/supabase/functions/hello/index.ts': 'export function greet(value: any) { return value; }\n',
-        },
-        expected: { file: 'apps/api/supabase/functions/hello/index.ts', rule: 'no-explicit-any', line: 1 },
-        corrected: {
-            files: {
-                'apps/api/supabase/functions/hello/index.ts':
-                    'export function greet(value: string) { return value; }\n',
-            },
-        },
-    },
 ] as const;

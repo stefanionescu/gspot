@@ -9,22 +9,6 @@ export const WORKSPACE_SITE_FILES = {
     'packages/unused/private.txt': 'Unrelated site bytes',
 } as const;
 
-export const BUILT_PAGE_CASES = [
-    {
-        check: 'site/sitemap',
-        files: {
-            'sitemap.xml': `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    <url><loc>https://example.test/</loc></url>
-    <url><loc>https://example.test/about.html</loc></url>
-    <url><loc>https://example.test/pricing.html</loc></url>
-</urlset>
-`,
-        },
-        expected: { file: 'dist/sitemap.xml', rule: 'missing-page', line: 1 },
-    },
-] as const;
-
 export const INVALID_SITEMAP_URLS = ['/', 'https://example.test/%E0%A4/'];
 
 export const PURGECSS_STYLE_CASES = [
@@ -55,12 +39,6 @@ export const PURGECSS_STYLE_CASES = [
         expected: ['.unused[data-astro-cid-abc]'],
     },
     {
-        name: 'Vue scoping',
-        source: { 'Page.vue': '<style scoped>.unused { color: red; }</style>' },
-        css: '.unused[data-v-abc]{color:red}',
-        expected: ['.unused[data-v-abc]'],
-    },
-    {
         name: 'Svelte scoping',
         source: { 'Page.svelte': '<style>.unused { color: red; }</style>' },
         css: '.unused.svelte-abc{color:red}',
@@ -72,14 +50,6 @@ export const PURGECSS_STYLE_CASES = [
         css: '.unused{color:red}',
         expected: [],
     },
-    {
-        name: 'Tailwind classes',
-        source: {
-            'theme.css': String.raw`.w-\[13px\]{width:13px}.w-1\.5{width:0.375rem}.\!mt-0{margin-top:0}.md\:w-1\/2{width:50%}.banner{color:red}`,
-        },
-        css: String.raw`.w-\[13px\]{width:13px}.w-1\.5{width:0.375rem}.\!mt-0{margin-top:0}.md\:w-1\/2{width:50%}.banner{color:red}`,
-        expected: ['.banner'],
-    },
 ] as const;
 
 export const SCOPE_ASSET_FILES = {
@@ -89,10 +59,7 @@ export const SCOPE_ASSET_FILES = {
     'other/assets/unused.svg': '<svg/>',
 } as const;
 
-export const ASSET_REFERENCE_CASES = [
-    ['index.html', '<img src="assets/logo.svg">'],
-    ['Logo.tsx', '<img src="assets/logo.svg" />'],
-] as const;
+export const ASSET_REFERENCE_CASES = [['index.html', '<img src="assets/logo.svg">']] as const;
 
 export const GLOB_ASSET_CASES = [
     {

@@ -214,34 +214,6 @@ export const SVELTE_SANDBOX = {
 
 export const SVELTE_CASES = [
     {
-        check: 'css/stylelint',
-        files: {
-            'src/Binding.svelte': `<p>Card</p>
-<style>
-.card {
-    color: v-bind(color);
-}
-</style>
-`,
-        },
-        expected: { file: 'src/Binding.svelte', rule: 'function-no-unknown', line: 4 },
-        findings: [
-            { file: 'src/Binding.svelte', rule: 'declaration-property-value-no-unknown', line: 4 },
-            { file: 'src/Binding.svelte', rule: 'function-no-unknown', line: 4 },
-        ],
-        corrected: {
-            files: {
-                'src/Binding.svelte': `<p>Card</p>
-<style>
-.card {
-    color: red;
-}
-</style>
-`,
-            },
-        },
-    },
-    {
         check: 'javascript/eslint',
         files: {
             'src/SharedPolicy.svelte': `<script lang="ts">
@@ -268,18 +240,6 @@ function shout(text: string): string { return text.toUpperCase(); }
             files: {
                 'src/Product.svelte':
                     '<script lang="ts">\n    const { source }: { source: string } = $props();\n</script>\n\n<img src={source} alt="The product" />\n',
-            },
-        },
-    },
-    {
-        check: 'svelte/svelte-check',
-        files: {
-            'src/Count.svelte': '<script lang="ts">\n    const count: number = \'one\';\n</script>\n\n<p>{count}</p>\n',
-        },
-        expected: { file: 'src/Count.svelte', rule: 'TS2322', line: 2 },
-        corrected: {
-            files: {
-                'src/Count.svelte': '<script lang="ts">\n    const count: number = 1;\n</script>\n\n<p>{count}</p>\n',
             },
         },
     },

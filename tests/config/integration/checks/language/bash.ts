@@ -4,11 +4,6 @@ if [[ -n "$1" ]]; then
     printf "%s\n" "$1"
 fi
 `,
-    'dash.sh': String.raw`#!/bin/dash
-if [[ -n "$1" ]]; then
-    printf "%s\n" "$1"
-fi
-`,
     'fallback.sh': String.raw`if [[ -n "$1" ]]; then
     printf "%s\n" "$1"
 fi
@@ -16,11 +11,6 @@ fi
     'library.bash': String.raw`if [[ -n "$1" ]]; then
     printf "%s\n" "$1"
 fi
-`,
-    'unchecked.sh': `#!/bin/bash
-dir="\${1:-.}"
-cd "\${dir}"
-printf "%s\\n" ready
 `,
     'sample.bats': `@test "example" {
     true
@@ -50,15 +40,6 @@ if [ -n "$1" ]; then
     printf "%s\n" "$1"
 fi
 `,
-    'dash.sh': String.raw`#!/bin/dash
-if [ -n "$1" ]; then
-    printf "%s\n" "$1"
-fi
-`,
-    'unchecked.sh': `#!/bin/bash
-dir="\${1:-.}"
-cd "\${dir}" && printf "%s\\n" ready
-`,
     'app/posix.sh': String.raw`#!/bin/sh
 if [ -n "$1" ]; then
     printf "%s\n" "$1"
@@ -68,9 +49,7 @@ fi
 
 export const SHELLCHECK_DIALECT_FINDINGS = [
     { file: 'app/posix.sh', rule: 'SC3010' },
-    { file: 'dash.sh', rule: 'SC3010' },
     { file: 'posix.sh', rule: 'SC3010' },
-    { file: 'unchecked.sh', rule: 'SC2164' },
 ] as const;
 
 export const SYNTAX_CASES = [

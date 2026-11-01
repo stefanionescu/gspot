@@ -1,5 +1,6 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
@@ -50,15 +51,14 @@ test.each(SECURITY_HEADER_CASES)(
         });
         const findings = await runSandboxCheck(sandbox.path, 'cloudflare/headers');
         expect(findings).toStrictEqual(
-            missing.map((name) => ({
-                check: 'cloudflare/headers',
-                file: '_headers',
-                line: 1,
-                rule: 'missing-header',
-                fixable: false,
-                message: `The block for /* sets no valid ${name} header.`,
-                help: 'Write each block as a path, then indented lines of a name, a colon, and a value. Add each missing security header to the block for `/*`.',
-            })),
+            missing.map((name) =>
+                matchFields({
+                    file: '_headers',
+                    line: 1,
+                    rule: 'missing-header',
+                    message: `The block for /* sets no valid ${name} header.`,
+                }),
+            ),
         );
     },
 );

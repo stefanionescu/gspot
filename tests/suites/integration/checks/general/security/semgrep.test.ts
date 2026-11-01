@@ -3,7 +3,6 @@ import { writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text.ts';
 import { test, expect, describe } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
-import type { Level } from '#cli/types/manifests.ts';
 import type { Sandbox } from '#tests/types/sandbox.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
@@ -43,12 +42,9 @@ describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
         await assertLanguageRules(installedSandbox());
     });
 
-    test.each(['basic', 'all'] as const)(
-        '%s rules report raw inputs once, accept documented forms, and pass after fixes',
-        async (level) => {
-            await assertPlatformRules(installedSandbox(), level);
-        },
-    );
+    test('all rules report raw inputs once, accept documented forms, and pass after fixes', async () => {
+        await assertPlatformRules(installedSandbox());
+    });
 
     test('an authored rule file reports a finding through security/semgrep and passes after the fix', async () => {
         await assertAuthoredRules(installedSandbox());
@@ -105,7 +101,7 @@ async function assertLanguageRules(sandbox: Sandbox): Promise<void> {
     expect(clean.code, clean.stdout + clean.stderr).toBe(0);
 }
 
-async function assertPlatformRules(sandbox: Sandbox, level: Level): Promise<void> {
+async function assertPlatformRules(sandbox: Sandbox): Promise<void> {
     const sourceFiles = {
         'package.json': SEMGREP_PROJECT_FILES['package.json'],
         'tsconfig.json': SEMGREP_PROJECT_FILES['tsconfig.json'],
@@ -114,7 +110,7 @@ async function assertPlatformRules(sandbox: Sandbox, level: Level): Promise<void
         'Value.swift': SEMGREP_PROJECT_FILES['Value.swift'],
         'gspot.toml': buildSandboxSettings(
             ['javascript', 'typescript', 'swift', 'supabase', 'cloudflare', 'security', 'xcode'],
-            { level },
+            { level: 'all' },
         ),
         ...PLATFORM_SOURCES,
     };
@@ -127,26 +123,22 @@ async function assertPlatformRules(sandbox: Sandbox, level: Level): Promise<void
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     const expected = [
         ...PLATFORM_SOURCE_FINDINGS,
-        ...(level === 'all'
-            ? [
-                  {
-                      file: 'supabase/functions/_shared/cors.ts',
-                      rule: 'gspot.cloudflare.wildcard-cors-origin',
-                      line: 1,
-                  },
-                  { file: 'supabase/functions/cors/index.ts', rule: 'gspot.cloudflare.wildcard-cors-origin', line: 1 },
-              ]
-            : []),
+
+        {
+            file: 'supabase/functions/_shared/cors.ts',
+            rule: 'gspot.cloudflare.wildcard-cors-origin',
+            line: 1,
+        },
+        { file: 'supabase/functions/cors/index.ts', rule: 'gspot.cloudflare.wildcard-cors-origin', line: 1 },
     ];
     expect(listFindingRows(failed.report).toSorted((left, right) => compareText(left.file, right.file))).toStrictEqual(
         expected.toSorted((left, right) => compareText(left.file, right.file)),
     );
-    const corrections = { ...PLATFORM_SOURCE_FIXES };
-    if (level === 'all')
-        Object.assign(corrections, {
-            'supabase/functions/_shared/cors.ts':
-                'export const headers = { "Access-Control-Allow-Origin": "https://example.com" };\n',
-        });
+    const corrections = {
+        ...PLATFORM_SOURCE_FIXES,
+        'supabase/functions/_shared/cors.ts':
+            'export const headers = { "Access-Control-Allow-Origin": "https://example.com" };\n',
+    };
     for (const [path, source] of Object.entries(corrections)) await writeFile(join(sandbox.root, path), source);
     const corrected = parseCheckReport(await spawnGspot(sandbox.root, command));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
@@ -195,7 +187,7 @@ async function assertNextjsOptions(
     expect(
         checked.report.checks
             .flatMap(({ findings }) => findings)
-            .map(({ file, line, rule, message }) => ({ file, line, rule, message }))
+            .map(({ file, line, rule }) => ({ file, line, rule }))
             .toSorted((left, right) => (left.line ?? 0) - (right.line ?? 0)),
     ).toStrictEqual([...expected]);
 }

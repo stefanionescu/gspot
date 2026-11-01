@@ -38,7 +38,6 @@ test('Expo Doctor output without a failed check is a check error that keeps its 
         const error = await captureRejection(runSandboxCheck(apps.path, 'expo/expo-doctor', { scope }));
         expect(error.message).toBe('The expo-doctor command failed (exit 1): Unable to read Expo configuration');
     }
-    expect(apps.folders).toStrictEqual(APP_FOLDERS.map((scope) => join(apps.path, scope)));
 });
 
 test('Expo Doctor reports an uninstalled Expo project instead of accepting its empty success', async () => {

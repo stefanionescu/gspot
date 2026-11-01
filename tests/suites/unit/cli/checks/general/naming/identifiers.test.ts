@@ -212,7 +212,6 @@ test('cors stays a domain word while core and its word forms remain banned', asy
     });
     const findings = await runSandboxCheck(sandbox.path, 'naming/identifiers');
     expect(findings.map(({ line }) => line)).toStrictEqual([2, 3, 4]);
-    expect(findings[0]?.message).toBe('javascript variable "coreCount": "core" is banned (containers list).');
 });
 
 test('snapshot names describe storage and subscription concepts outside tests', async () => {

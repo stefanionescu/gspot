@@ -1,12 +1,10 @@
 export const PROSE_COMMENT_CASES = [
     ['mts', '//', 'const text = "delve";'],
-    ['mjs', '//', 'const text = "delve";'],
     ['', '#', 'text = "delve"'],
 ] as const;
 
 export const MARKDOWN_COMMENT_CASES = [
     ['ts', '//', 'const text = "whitelist";'],
-    ['mts', '//', 'const text = "whitelist";'],
     ['py', '#', 'text = "whitelist"'],
 ] as const;
 

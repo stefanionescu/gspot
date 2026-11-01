@@ -277,14 +277,11 @@ test('missing-paths: a generator output named by a setting counts as present bef
         'README.md': 'Read `generated/openapi.json` and `generated/missing.d.ts`.\n',
     });
     expect(await runSandboxCheck(sandbox.path, 'docs/missing-paths', { paths: ['README.md'] })).toStrictEqual([
-        {
-            check: 'docs/missing-paths',
+        expect.objectContaining({
             file: 'README.md',
             line: 1,
             rule: 'missing-path',
-            fixable: false,
             message: 'generated/missing.d.ts names no tracked file or folder.',
-            help: 'Fix the path or the task name. To keep an example code block out of the check, give it a `title=` attribute.',
-        },
+        }),
     ]);
 });

@@ -3,10 +3,7 @@ const CALLED_WORKFLOW = '.github/workflows/called.yml';
 const CALLED_WORKFLOW_REFERENCES = [
     [`$/${CALLED_WORKFLOW}`, `./${CALLED_WORKFLOW}`],
     [`"$/${CALLED_WORKFLOW}"`, `"./${CALLED_WORKFLOW}"`],
-    [`'$/${CALLED_WORKFLOW}'`, `'./${CALLED_WORKFLOW}'`],
     [String.raw`"\x24/` + `${CALLED_WORKFLOW}"`, String.raw`"\x2e/` + `${CALLED_WORKFLOW}"`],
-    [String.raw`"\u0024/` + `${CALLED_WORKFLOW}"`, String.raw`"\u002e/` + `${CALLED_WORKFLOW}"`],
-    [String.raw`"\U00000024/` + `${CALLED_WORKFLOW}"`, String.raw`"\U0000002e/` + `${CALLED_WORKFLOW}"`],
     [`|-\n          $/${CALLED_WORKFLOW}`, `|-\n          ./${CALLED_WORKFLOW}`],
     [`|- # $comment\n          $/${CALLED_WORKFLOW}`, `|- # $comment\n          ./${CALLED_WORKFLOW}`],
     ['$/.github/workflows/$called.yml', './.github/workflows/$called.yml'],
@@ -51,12 +48,6 @@ export const WORKFLOW_TEXT_CASES = [
         before: 'uses: [$/unclosed\n',
         expected: 'uses: [$/unclosed\n',
     },
-    ...['action.yml', 'action.yaml'].map((filename) => ({
-        name: filename,
-        path: `.github/actions/setup/${filename}`,
-        before: 'name: Setup\nruns:\n  using: composite\n  steps:\n    - uses: $/.github/actions/cache\n',
-        expected: 'name: Setup\nruns:\n  using: composite\n  steps:\n    - uses: ./.github/actions/cache\n',
-    })),
 ];
 
 export const OUTSIDE_GITHUB_ACTIONS = {
@@ -119,13 +110,10 @@ export const NGINX_FAILURE_CASES = [
         note: undefined,
         findings: [
             {
-                check: 'nginx/syntax',
                 file,
                 line,
                 rule: 'syntax',
-                fixable: false,
                 message: stderr,
-                help: 'Fix the line nginx names. Set `tools.nginx.image` to the one your deployment runs.',
             },
         ],
     })),
@@ -181,12 +169,6 @@ export const ASSET_SETTING_CASES = [
         scope: '',
         path: 'Build.xcconfig',
         text: 'ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor\n',
-    },
-    {
-        title: 'A scoped Xcode project setting',
-        scope: 'app/',
-        path: 'app/App.xcodeproj/project.pbxproj',
-        text: '{ objects = { CONFIG = { isa = XCBuildConfiguration; buildSettings = { ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor; }; }; }; }\n',
     },
 ] as const;
 

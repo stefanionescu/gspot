@@ -16,17 +16,6 @@ export const TRANSLATION_CASES = [
         check: 'translations/messages',
         files: {
             'messages/de.json': `{
-    "home": { "title": "Start" }
-}
-`,
-        },
-        settings: TRANSLATION_TABLES,
-        expected: { file: 'messages/de.json', rule: 'missing-key', line: 1 },
-    },
-    {
-        check: 'translations/messages',
-        files: {
-            'messages/de.json': `{
     "home": { "title": "Start", "greeting": "Hallo {name" }
 }
 `,

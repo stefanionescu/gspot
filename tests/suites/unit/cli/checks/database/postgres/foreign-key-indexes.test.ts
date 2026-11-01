@@ -33,16 +33,12 @@ test('foreign-key-indexes reports a foreign key column that no index leads with 
             'CREATE TABLE teams (id bigint PRIMARY KEY);\nCREATE TABLE members (id bigint PRIMARY KEY, team_id bigint REFERENCES teams (id));\n',
     });
     expect(await runSandboxCheck(sandbox.path, 'postgres/foreign-key-indexes')).toStrictEqual([
-        {
-            check: 'postgres/foreign-key-indexes',
-            fixable: false,
-            help: 'Create an index that starts with all columns of the foreign key.',
-            column: 1,
+        expect.objectContaining({
             file: 'migrations/1_members.sql',
             line: 2,
             rule: 'foreign-key-index',
             message: 'public.members (team_id) is a foreign key and no index leads with these columns.',
-        },
+        }),
     ]);
     await writeFile(
         join(sandbox.path, 'migrations/2_index.sql'),

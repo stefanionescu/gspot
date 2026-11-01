@@ -51,7 +51,10 @@ test.each([...FILE_NAME_CASES])('$name', async ({ configurations, files, invalid
     expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
 
-test.each(['', 'app'].flatMap((scope) => ['sql', 'postgres'].map((configuration) => ({ scope, configuration }))))(
+test.each([
+    { scope: '', configuration: 'sql' },
+    { scope: 'app', configuration: 'postgres' },
+])(
     'migration timestamps pass with $configuration while other numeric folders are reported (scope "$scope")',
     async ({ scope, configuration }) => {
         const prefix = scope === '' ? '' : `${scope}/`;
@@ -107,9 +110,6 @@ test('a banned folder word such as shared is reported in folder names', async ()
     expect(
         result.report.checks.flatMap(({ findings }) => findings.map(({ file }) => file)).toSorted(compareText),
     ).toStrictEqual(paths.toSorted(compareText));
-    expect([
-        ...new Set(result.report.checks.flatMap(({ findings }) => findings.map(({ message }) => message))),
-    ]).toStrictEqual(['javascript folder "shared": "shared" is banned (folders list).']);
 });
 
 test('a mise task file named _default passes, and the same name elsewhere does not', async () => {

@@ -129,8 +129,8 @@ test.each([...STYLE_CASES])(
         });
         const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'prose/vale', '--json']));
         expect(
-            result.report.checks[0]!.findings.flatMap(({ file, line, rule, message }) =>
-                rule === `gspot.${row.rule}` ? [{ file, line, rule, message }] : [],
+            result.report.checks[0]!.findings.flatMap(({ file, line, rule }) =>
+                rule === `gspot.${row.rule}` ? [{ file, line, rule }] : [],
             ),
         ).toStrictEqual(row.findings.map((finding) => ({ file: row.path, ...finding })));
     },

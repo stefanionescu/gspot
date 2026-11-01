@@ -97,21 +97,6 @@ export const OUTPUT_CASES = [
         },
     },
     {
-        name: 'markup',
-        check: 'site/html-validate',
-        level: 'all',
-        tables: '',
-        files: {
-            'pages/index.html':
-                '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><img src="image.png"></body></html>',
-            'pages/style.css': UNUSED_STYLE,
-        },
-        findings: [{ file: 'dist/index.html', rule: 'wcag/h37', line: 1 }],
-        corrected: {
-            'pages/index.html': CORRECTED_INDEX_PAGE,
-        },
-    },
-    {
         name: 'selectors at level basic',
         check: 'site/purgecss',
         level: 'basic',

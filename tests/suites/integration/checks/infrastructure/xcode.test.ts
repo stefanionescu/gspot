@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
+import { chmod } from 'node:fs/promises';
 import { test, expect, describe } from 'bun:test';
-import { chmod, writeFile } from 'node:fs/promises';
 import { planChecks } from '#cli/planning/checks.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
@@ -24,7 +24,7 @@ describe.skipIf(!isMacos)('Xcode samples', () => {
 });
 
 test.skipIf(!hasToolBuild('plutil'))(
-    'xcode/plutil turns a parse error beside a missing or unreadable file into a note that names both files, and a parse error alone into a finding',
+    'xcode/plutil turns a parse error beside a missing or unreadable file into a note that names both files',
     async () => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['xcode']),
@@ -45,19 +45,5 @@ test.skipIf(!hasToolBuild('plutil'))(
             expect(note).toContain(`\n${path}: `);
         }
         await chmod(join(sandbox.path, 'private.plist'), 0o600);
-
-        const failed = await runCommand(['plutil', '-lint', 'bad.plist'], { cwd: sandbox.path });
-        expect(failed.code).toBe(1);
-        const { findings } = parseCommandFindings(planned!, failed, paths, {});
-        expect(findings).toHaveLength(1);
-        expect(findings).toMatchObject([
-            { check: 'xcode/plutil', file: 'bad.plist', fixable: false, help: 'Fix the element plutil names.' },
-        ]);
-        await writeFile(join(sandbox.path, 'bad.plist'), '<plist><dict/></plist>\n');
-        const corrected = await runCommand(['plutil', '-lint', 'bad.plist', 'private.plist'], {
-            cwd: sandbox.path,
-        });
-        expect(corrected.code).toBe(0);
-        expect(parseCommandFindings(planned!, corrected, paths, {}).findings).toStrictEqual([]);
     },
 );

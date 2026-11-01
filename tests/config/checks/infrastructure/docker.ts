@@ -177,24 +177,18 @@ export const INVALID_COMPOSE_SOURCES = [
     {
         name: 'malformed YAML',
         source: 'services: [',
-        message:
-            'compose.yaml is not valid YAML: Flow sequence in block collection must be sufficiently indented and end with a ] at line 1, column 12. Fix the file.',
     },
     {
         name: 'a non-string image',
         source: 'services: {app: {image: 12}}',
-        message: 'compose.yaml: services.app.image: Invalid input: expected string, received number. Fix the field.',
     },
 ] as const;
 
 export const TRIVY_IMAGE_FINDINGS = [
     {
-        check: 'docker/trivy-image',
-        help: 'Move to a newer tag of the image. Accept one advisory with `gspot ignore docker/trivy-image --rule <rule> --reason "<why>"`.',
         file: 'compose.yaml',
         line: 1,
         rule: 'CVE-example',
         message: 'nginx:1.27.2: CVE-example (example)',
-        fixable: false,
     },
 ] as const;

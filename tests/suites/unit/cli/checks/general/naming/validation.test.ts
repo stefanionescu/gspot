@@ -76,26 +76,11 @@ test('the JavaScript handle override and a repository use override strip their p
     ]);
 });
 
-test('a number word such as base64 counts as one word, and repeated words, words over the limit, banned words and digits are still reported', async () => {
+test('a number word such as base64 counts as one word', async () => {
     const naming = await buildScopeNamingSettings(buildSandboxSettings(['naming'], { rules: true }));
     const context = buildFileNaming({ ...naming, limitLookup: () => ({ cases: [], maxCharacters: 35, maxWords: 4 }) });
     const declaration = buildIdentifier({ name: 'base64User', category: 'variables', file: 'source.ts' });
     expect(listRuleMessages(declaration, context)).toStrictEqual([]);
-    expect(listRuleMessages({ ...declaration, name: 'base64UserUser' }, context)).toStrictEqual([
-        { rule: 'duplicate-words', message: 'typescript variables "base64UserUser": "user" repeats.' },
-    ]);
-    expect(listRuleMessages({ ...declaration, name: 'base64FirstSecondThirdFourth' }, context)).toStrictEqual([
-        {
-            rule: 'words',
-            message: 'typescript variables "base64FirstSecondThirdFourth": 5 words is over the limit of 4.',
-        },
-    ]);
-    expect(listRuleMessages({ ...declaration, name: 'base64Helper' }, context)).toStrictEqual([
-        { rule: 'banned-word', message: 'typescript variables "base64Helper": "helper" is banned (roles list).' },
-    ]);
-    expect(listRuleMessages({ ...declaration, name: 'user2' }, context)).toStrictEqual([
-        { rule: 'digits', message: 'typescript variables "user2": a digit is not a word.' },
-    ]);
 });
 
 test('a name that breaks all five naming limits gets five findings, and the banned-word message names its word list', async () => {

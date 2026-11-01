@@ -34,16 +34,8 @@ test(`local-files reports each tracked path that a scope's configurations leave 
         ...indexOnly.map((path) => ({ ...session.repository.index[0]!, path })),
     ];
     const found = await getBuiltInCheck('repository/local-files')(session, input);
-    expect(found.toSorted((left, right) => compareText(left.file, right.file))).toStrictEqual(
-        [...refused, ...indexOnly].toSorted(compareText).map((file) => ({
-            check: 'repository/local-files',
-            file,
-            line: 1,
-            rule: 'tracked-file',
-            fixable: false,
-            help: 'Add the reported file or folder to .gitignore and remove it from the index with `git rm --cached`.',
-            message: `${file} is tracked; its selected configuration declares it untracked. Remove it from the Git index and add it to .gitignore.`,
-        })),
+    expect(found.map(({ file }) => file).toSorted(compareText)).toStrictEqual(
+        [...refused, ...indexOnly].toSorted(compareText),
     );
 });
 
@@ -107,15 +99,12 @@ test('a tracked outward symlink is a local-files finding', async () => {
     runGitStep(sandbox.path, ['add', '-A']);
     const findings = await runSandboxCheck(sandbox.path, 'repository/local-files');
     expect(findings).toStrictEqual([
-        {
-            check: 'repository/local-files',
+        expect.objectContaining({
             file: 'outside',
             line: 1,
             rule: 'outward-link',
-            fixable: false,
             message: 'outside links outside the repository.',
-            help: 'Replace the link with the file or folder it points to, or delete it.',
-        },
+        }),
     ]);
 });
 
@@ -131,15 +120,12 @@ test('oversized and invalid UTF-8 files get one repository finding and leave oth
     expect(planned.files.map(({ path }) => path)).not.toContain('large.md');
     expect(planned.files.map(({ path }) => path)).not.toContain('latin1.md');
     expect(await runSandboxCheck(sandbox.path, 'repository/encoding')).toStrictEqual([
-        {
-            check: 'repository/encoding',
+        expect.objectContaining({
             file: 'latin1.md',
             line: 1,
-            fixable: false,
-            help: 'Save the reported file as UTF-8, then run the check again.',
             rule: 'encoding',
             message: 'latin1.md is not UTF-8 text. Save it as UTF-8, then run the command again.',
-        },
+        }),
     ]);
 });
 
@@ -164,15 +150,12 @@ test('absolute links inside the repository are reported and an indexed link repl
     await symlink(join(sandbox.path, 'source.txt'), join(sandbox.path, 'link.txt'));
     runGitStep(sandbox.path, ['add', 'link.txt']);
     expect(await runSandboxCheck(sandbox.path, 'repository/local-files')).toStrictEqual([
-        {
-            check: 'repository/local-files',
+        expect.objectContaining({
             file: 'link.txt',
             rule: 'absolute-link',
             line: 1,
-            fixable: false,
             message: 'link.txt uses an absolute link target.',
-            help: 'Use a relative link target inside the repository.',
-        },
+        }),
     ]);
     await unlink(join(sandbox.path, 'link.txt'));
     await writeFile(join(sandbox.path, 'link.txt'), 'Now a regular file.\n');

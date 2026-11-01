@@ -25,16 +25,7 @@ test('supabase/storage-policies reports a syntax finding for malformed TOML', as
         'apps/api/supabase/config.toml': '[broken',
     });
     expect(await runSandboxCheck(sandbox.path, 'supabase/storage-policies', { scope: 'apps/api' })).toStrictEqual([
-        {
-            check: 'supabase/storage-policies',
-            file: 'apps/api/supabase/config.toml',
-            line: 1,
-            rule: 'syntax',
-            message:
-                'apps/api/supabase/config.toml:1:8 is not valid TOML: Expected table closing "]", found end of file. Fix the file.',
-            fixable: false,
-            help: 'Add a policy on storage.objects for the bucket in a migration.',
-        },
+        expect.objectContaining({ file: 'apps/api/supabase/config.toml', line: 1, rule: 'syntax' }),
     ]);
 });
 

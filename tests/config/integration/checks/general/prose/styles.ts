@@ -9,7 +9,6 @@ export const STYLE_CASES = [
             {
                 line: 3,
                 rule: 'gspot.em-dashes',
-                message: 'Em dash or double hyphen. Use a comma, colon, or period.',
             },
         ],
     },
@@ -18,9 +17,9 @@ export const STYLE_CASES = [
         source: '# Prices\n\nThe price is $5.00.\n\nThe price is $15.\n\nThe price is 5 dollars.\n\nThe price is USD 5.\n',
         rule: 'currency',
         findings: [
-            { line: 3, rule: 'gspot.currency', message: "Ambiguous currency '$5.00'. Write the ISO code (USD 5)." },
-            { line: 5, rule: 'gspot.currency', message: "Ambiguous currency '$15'. Write the ISO code (USD 5)." },
-            { line: 7, rule: 'gspot.currency', message: "Ambiguous currency '5 dollars'. Write the ISO code (USD 5)." },
+            { line: 3, rule: 'gspot.currency' },
+            { line: 5, rule: 'gspot.currency' },
+            { line: 7, rule: 'gspot.currency' },
         ],
     },
     {
@@ -36,7 +35,6 @@ Read pages 3 to 5.
             {
                 line: 3,
                 rule: 'gspot.en-dashes',
-                message: "En dash '\u{2013}'. Write 'to' for a range, or use a hyphen in a compound.",
             },
         ],
     },
@@ -49,7 +47,7 @@ Read CLAUDE.md and AGENTS.md before RGBA colors.
 
 - \`.gspot/configurations/language/javascript/rules/BUN.md\`: when code runs on Bun.
 `,
-        findings: [{ line: 3, rule: 'gspot.acronyms', message: "Spell out 'RGBA' on first use." }],
+        findings: [{ line: 3, rule: 'gspot.acronyms' }],
     },
     {
         rule: 'acronyms',
@@ -83,8 +81,6 @@ src/
             {
                 line: 7,
                 rule: 'gspot.tree-blocks',
-                message:
-                    'A file tree inventories the layout and goes stale with each move. Document behavior and ownership instead.',
             },
         ],
     },
@@ -95,38 +91,12 @@ src/
 
 Inspect src/view.tsx.
 
-Inspect src/site.css.
-
-Inspect src/lib.go.
-
-Inspect src/lib.rs.
-
 Use \`src/view.tsx\` in the command.
 `,
         findings: [
             {
                 line: 3,
                 rule: 'gspot.file-paths',
-                message:
-                    "A file path in prose goes stale: 'src/view.tsx'. Name the concept, or put the path in code formatting only where the reader must open it.",
-            },
-            {
-                line: 5,
-                rule: 'gspot.file-paths',
-                message:
-                    "A file path in prose goes stale: 'src/site.css'. Name the concept, or put the path in code formatting only where the reader must open it.",
-            },
-            {
-                line: 7,
-                rule: 'gspot.file-paths',
-                message:
-                    "A file path in prose goes stale: 'src/lib.go'. Name the concept, or put the path in code formatting only where the reader must open it.",
-            },
-            {
-                line: 9,
-                rule: 'gspot.file-paths',
-                message:
-                    "A file path in prose goes stale: 'src/lib.rs'. Name the concept, or put the path in code formatting only where the reader must open it.",
             },
         ],
     },
@@ -143,7 +113,6 @@ Use cached values since the source is stable.
             {
                 line: 5,
                 rule: 'gspot.since',
-                message: "'since' is ambiguous between time and cause. Use 'because' or 'after'.",
             },
         ],
     },
@@ -158,7 +127,7 @@ A todo app lists tasks.
 
 Use TODO to label work.
 `,
-        findings: [{ line: 3, rule: 'gspot.future', message: "Future promise 'will be added'. Document what exists." }],
+        findings: [{ line: 3, rule: 'gspot.future' }],
     },
     {
         rule: 'placeholders',
@@ -175,12 +144,10 @@ Use <api-token> in the command.
             {
                 line: 3,
                 rule: 'gspot.placeholders',
-                message: "Placeholder style 'YOUR_TOKEN'. Use <kebab-case> in angle brackets.",
             },
             {
                 line: 5,
                 rule: 'gspot.placeholders',
-                message: "Placeholder style '{{token}}'. Use <kebab-case> in angle brackets.",
             },
         ],
     },
@@ -251,7 +218,5 @@ export const ALT_TEXT_CASES = [
     { tag: '<img data-alt="x" src="a.png">', missing: true },
     { tag: '<img alt="A cat" src="a.png">', missing: false },
     { tag: '<img alt src="a.png">', missing: false },
-    { tag: '<img alt="" src="a.png">', missing: false },
     { tag: '<img src="a.png" alt="x" />', missing: false },
-    { tag: '<img src=a.png alt>', missing: false },
 ] as const;

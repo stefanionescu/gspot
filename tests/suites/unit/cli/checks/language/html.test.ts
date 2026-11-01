@@ -1,5 +1,6 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { URL_MARKUP_CASES, SCRIPT_TYPE_CASES, INLINE_SCRIPT_PAGE } from '#tests/config/checks/language/language.ts';
@@ -26,16 +27,15 @@ test.each([...URL_MARKUP_CASES])(
 
         const findings = await runSandboxCheck(sandbox.path, 'html/inline-scripts', { paths: ['page.html'] });
         expect(findings).toStrictEqual(
-            columns.map((column) => ({
-                check: 'html/inline-scripts',
-                file: 'page.html',
-                line: 1,
-                rule: 'script-link',
-                column,
-                message: `A ${scheme} URL embeds executable content. Use an external file.`,
-                fixable: false,
-                help: 'Move the script into its own file, and attach the handler there. Structured data of type `application/ld+json` stays inline.',
-            })),
+            columns.map((column) =>
+                matchFields({
+                    file: 'page.html',
+                    line: 1,
+                    rule: 'script-link',
+                    column,
+                    message: `A ${scheme} URL embeds executable content. Use an external file.`,
+                }),
+            ),
         );
     },
 );

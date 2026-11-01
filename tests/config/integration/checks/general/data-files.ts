@@ -19,7 +19,6 @@ export const FILES_CASES = [
         files: { 'settings/layout.toml': 'a    =     1\nb=2\n' },
         expected: {
             file: 'settings/layout.toml',
-            message: 'Not formatted the way Taplo formats it.',
         },
         corrected: { files: { 'settings/layout.toml': 'a = 1\nb = 2\n' } },
     },

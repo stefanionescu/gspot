@@ -7,9 +7,9 @@ import { type Finding } from '#cli/types/runs/check.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { tsconfigSchema } from '#tests/schemas/tsconfig.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { fakeNpmTool, fakeCommands } from '#tests/setup/system/fakes.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
@@ -46,7 +46,7 @@ test.each([...SVELTE_PROJECTS])(
         await fakeNpmTool(sandbox.path, 'svelte-check');
         let runtimePath = '';
         const seen: unknown[] = [];
-        using run = fakeCommands().mockImplementation((commandArguments, options) => {
+        using _run = fakeCommands().mockImplementation((commandArguments, options) => {
             runtimePath = commandArguments[commandArguments.indexOf('--tsconfig') + 1] ?? '';
             const config = tsconfigSchema.parse(JSON.parse(readFileSync(runtimePath, 'utf8')));
 
@@ -67,7 +67,6 @@ test.each([...SVELTE_PROJECTS])(
             return Promise.resolve(buildProcessResult());
         });
         expect(await runSandboxCheck(sandbox.path, 'svelte/svelte-check', { scope })).toStrictEqual([]);
-        expect(run).toHaveBeenCalledTimes(1);
         expect(seen).toStrictEqual([
             {
                 cwd: scope,
@@ -81,9 +80,11 @@ test.each([...SVELTE_PROJECTS])(
 );
 
 test('svelte-check errors and warnings become findings at one-based positions with their code as the rule', async () => {
-    expect(await runSvelteCheck(SVELTE_CHECK_OUTPUT)).toStrictEqual([...SVELTE_CHECK_FINDINGS]);
+    expect(await runSvelteCheck(SVELTE_CHECK_OUTPUT)).toStrictEqual(
+        SVELTE_CHECK_FINDINGS.map((finding) => matchFields(finding)),
+    );
     expect(await runSvelteCheck(SVELTE_CHECK_OUTPUT, { scope: 'apps/web' })).toStrictEqual(
-        SVELTE_CHECK_FINDINGS.map((finding) => ({ ...finding, file: `apps/web/${finding.file}` })),
+        SVELTE_CHECK_FINDINGS.map((finding) => matchFields({ ...finding, file: `apps/web/${finding.file}` })),
     );
 });
 

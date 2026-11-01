@@ -6,11 +6,11 @@ import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { COMPILER_SOURCE } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 import {
-    SUPPRESSION_HELP,
     SWIFT_REASON_CASES,
     SUPPRESSION_REASONS,
     TYPESCRIPT_SUPPRESSIONS,
@@ -33,15 +33,17 @@ test('@ts-ignore, @ts-expect-error and @ts-nocheck need a reason; the same text 
     });
     const missing = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['gspot/suppressions'] }));
 
-    expect(missing.report.checks.flatMap(({ findings }) => findings)).toStrictEqual(
+    expect(
+        missing.report.checks
+            .flatMap(({ findings }) => findings)
+            .map(({ check, file, line, rule, message }) => ({ check, file, line, rule, message })),
+    ).toStrictEqual(
         paths.toSorted(compareText).map((file) => ({
             check: 'gspot/suppressions',
             file,
             line: 1,
             rule: 'tsc-no-reason',
             message: 'This tsc suppression has no reason of two or more words.',
-            fixable: false,
-            help: SUPPRESSION_HELP,
         })),
     );
     for (const [index, directive] of TYPESCRIPT_SUPPRESSIONS.entries())
@@ -66,13 +68,15 @@ test.each([...SUPPRESSION_REASON_CASES])('$name', async ({ path, source, finding
     expect(result.report.checks.map(({ status }) => status)).toStrictEqual([
         findings.length === 0 ? 'passed' : 'failed',
     ]);
-    expect(result.report.checks.flatMap(({ findings }) => findings)).toStrictEqual(
+    expect(
+        result.report.checks
+            .flatMap(({ findings }) => findings)
+            .map(({ check, file, line, rule, message }) => ({ check, file, line, rule, message })),
+    ).toStrictEqual(
         findings.map((finding) => ({
             ...finding,
             check: 'gspot/suppressions',
             file: path,
-            fixable: false,
-            help: SUPPRESSION_HELP,
         })),
     );
 });
@@ -99,24 +103,21 @@ test('a nosemgrep comment is reported even with a reason', async () => {
         'gspot.toml': buildSandboxSettings(['typescript', 'security'], { level: 'all' }),
         [path]: source,
     });
-    const failed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['gspot/suppressions'] }));
+    const failed = await runSandboxCheck(sandbox.path, 'gspot/suppressions');
 
-    expect(failed.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([
+    expect(failed.map(({ check, file, line, rule, message }) => ({ check, file, line, rule, message }))).toStrictEqual([
         {
             check: 'gspot/suppressions',
             file: path,
             line: 1,
             rule: 'semgrep',
-            fixable: false,
             message: 'semgrep suppression is not allowed; fix the finding or configure an explicit ignore.',
-            help: SUPPRESSION_HELP,
         },
     ]);
     const corrected = 'const value = 1;\n';
     await writeFile(join(sandbox.path, path), corrected);
-    const passed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['gspot/suppressions'] }));
 
-    expect(passed.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
+    expect(await runSandboxCheck(sandbox.path, 'gspot/suppressions')).toStrictEqual([]);
 });
 
 test.each([...SWIFT_REASON_CASES])(
@@ -133,15 +134,17 @@ test.each([...SWIFT_REASON_CASES])(
             buildRunOptions({ only: ['gspot/suppressions'] }),
         );
 
-        expect(failed.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([
+        expect(
+            failed.report.checks
+                .flatMap(({ findings }) => findings)
+                .map(({ check, file, line, rule, message }) => ({ check, file, line, rule, message })),
+        ).toStrictEqual([
             {
                 check: 'gspot/suppressions',
                 file: 'Value.swift',
                 line: 1,
                 rule,
-                fixable: false,
                 message: `This ${tool} suppression has no reason of two or more words.`,
-                help: SUPPRESSION_HELP,
             },
         ]);
         const correction = source.replace(
@@ -169,15 +172,17 @@ test.each([...SUPPRESSION_REASONS])(
             await openSession(sandbox.path),
             buildRunOptions({ only: ['gspot/suppressions'] }),
         );
-        expect(result.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([
+        expect(
+            result.report.checks
+                .flatMap(({ findings }) => findings)
+                .map(({ check, file, line, rule, message }) => ({ check, file, line, rule, message })),
+        ).toStrictEqual([
             {
                 check: 'gspot/suppressions',
                 file,
                 line: 1,
                 rule,
-                fixable: false,
                 message: `This ${tool} suppression has no reason of two or more words.`,
-                help: SUPPRESSION_HELP,
             },
         ]);
     },

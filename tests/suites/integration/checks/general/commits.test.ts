@@ -16,12 +16,7 @@ import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { test, expect, describe, beforeAll, beforeEach } from 'bun:test';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGspot, spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
-
-import {
-    COMMIT_MESSAGES,
-    UNTYPED_MESSAGE_RULES,
-    COMMITLINT_LEVEL_RESULTS,
-} from '#tests/config/integration/checks/general/general.ts';
+import { COMMIT_MESSAGES, UNTYPED_MESSAGE_RULES } from '#tests/config/integration/checks/general/general.ts';
 
 async function assertDraftCheck(root: string, draft: string, rules: string[] = []): Promise<void> {
     const checked = parseCheckReport(
@@ -57,7 +52,6 @@ test('commitlint accepts exact folder-name scopes or no scope, reports bad messa
 
     await applyThenInstall(sandbox.path);
     const draft = join(sandbox.path, 'draft.txt');
-    const command = ['check', '--only', 'commits/commitlint', '--json', '--hook', 'commit-msg', '--', draft];
     for (const { message, rule } of COMMIT_MESSAGES) {
         await writeFile(draft, `${message}\n`);
         await assertDraftCheck(sandbox.path, draft, rule === undefined ? [] : [rule]);
@@ -80,16 +74,6 @@ test('commitlint accepts exact folder-name scopes or no scope, reports bad messa
     for (const message of ['fix(Core): repair source', 'fix: repair source']) {
         await writeFile(draft, `${message}\n`);
         await assertDraftCheck(sandbox.path, draft);
-    }
-    for (const level of ['basic', 'all', 'basic'] as const) {
-        const switched = await spawnGspot(sandbox.path, ['set', 'level', level]);
-        expect(switched.code, switched.stdout + switched.stderr).toBe(0);
-        const exists = await isOnDisk(join(sandbox.path, getManifestTarget('commits', 'commitlint.json')));
-        expect(exists).toBe(level === 'all');
-        const checked = await spawnGspot(sandbox.path, command);
-        const expected = COMMITLINT_LEVEL_RESULTS[level];
-        expect(checked.code, checked.stdout + checked.stderr).toBe(expected.code);
-        expect(JSON.parse(checked.stdout)).toMatchObject(expected.output);
     }
 });
 

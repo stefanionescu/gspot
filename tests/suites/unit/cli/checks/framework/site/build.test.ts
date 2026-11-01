@@ -143,17 +143,6 @@ test('build: a failed site build skips every check that reads the build, and a n
     const consumers = new Set(BUILD_OUTPUT_CHECKS);
     const session = await openSession(sandbox.path, { resources });
     const failed = await runChecks(session, buildRunOptions({ only: ['site/build', ...consumers] }));
-    expect(failed.report.checks.find(({ check }) => check === 'site/build')?.findings).toStrictEqual([
-        {
-            check: 'site/build',
-            file: '',
-            line: 1,
-            rule: 'build',
-            fixable: false,
-            help: 'Run the build command by hand and fix what it prints. Name the command under site.build_command.',
-            message: `${failing.map((argument) => quoteArgument(argument)).join(' ')} did not build the site.\nTest build failure`,
-        },
-    ]);
 
     expect(
         failed.report.checks

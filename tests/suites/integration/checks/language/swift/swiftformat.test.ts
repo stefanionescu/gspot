@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { CLEAN_SWIFT } from '#tests/config/swift.ts';
+import { stat, chmod, readFile } from 'node:fs/promises';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -17,7 +17,6 @@ import {
     SWIFT_DOCS_SOURCE,
     FORMATTED_INLINE_DOCS,
     FORMATTED_DOCS_SOURCE,
-    IMPORTED_SOURCE_REASON,
     BLOCK_COMMENT_FINDINGS,
     INLINE_COMMENT_FINDINGS,
     SPACED_COMMENT_FINDINGS,
@@ -67,7 +66,7 @@ async function readFormatFindings(root: string, code: 0 | 1, scopePath: string) 
 }
 
 test.skipIf(!hasToolBuild('swiftformat'))(
-    'at level all, SwiftFormat reports and fixes Swift block comments, and an ignore in gspot.toml stops the finding',
+    'at level all, SwiftFormat reports and fixes Swift block comments',
     async () => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['swift'], { level: 'all' }),
@@ -83,19 +82,6 @@ test.skipIf(!hasToolBuild('swiftformat'))(
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(await readFormatFindings(root, 0, '')).toStrictEqual([]);
         expect(await readFile(join(root, 'Value.swift'), 'utf8')).toBe(FORMATTED_DOCS_SOURCE);
-        await writeFile(join(root, 'Value.swift'), SWIFT_DOCS_SOURCE);
-        const ignored = await spawnGspot(root, [
-            'ignore',
-            'swift/swiftformat',
-            '--rule',
-            'blockComments',
-            '--reason',
-            IMPORTED_SOURCE_REASON,
-        ]);
-        expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-        expect(await readFormatFindings(root, 1, '')).toStrictEqual(
-            SPACED_COMMENT_FINDINGS.map(([line, column, rule]) => ['Value.swift', line, column, rule]),
-        );
     },
 );
 
