@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-#MISE description="Build the ESLint plugin package: dist/plugin.js in a clean dist folder, and the license."
+#MISE description="Build the ESLint plugin into a clean dist folder."
 #MISE dir="{{config_root}}/packages/eslint-plugin"
 set -euo pipefail
 
-bun ./build.ts
+mkdir -p dist
+rm -f -- dist/*
+bun build src/plugin.ts --outdir dist --target node --format esm --packages external

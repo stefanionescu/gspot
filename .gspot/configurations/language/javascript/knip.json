@@ -7,7 +7,6 @@
         "**/.env.*",
         "**/*.log",
         "packages/*/dist/**",
-        "packages/*/LICENSE.md",
         "packages/cli/grammars/**",
         "docs/dist/**",
         "docs/.astro/**",
@@ -111,9 +110,6 @@
     "workspaces": {
         ".": {
             "entry": [
-                "packages/cli/build.ts",
-                "packages/cli/pin-ages.ts",
-                "packages/eslint-plugin/build.ts",
                 "tests/setup/runner/unit.ts",
                 "tests/setup/programs/**/*.ts",
                 "packages/eslint-plugin/src/plugin.ts",
@@ -161,8 +157,6 @@
         },
         "packages/cli": {
             "entry": [
-                "build.ts",
-                "pin-ages.ts",
                 "src/configurations/framework/site/checks/purgecss-process.ts",
                 "src/configurations/language/javascript/files/eslint-functions.ts",
                 "src/bin.ts",
@@ -186,7 +180,6 @@
         },
         "packages/eslint-plugin": {
             "entry": [
-                "build.ts",
                 "src/plugin.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",

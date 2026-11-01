@@ -119,7 +119,6 @@ export default [
             "**/.env.*",
             "**/*.log",
             "packages/*/dist/**",
-            "packages/*/LICENSE.md",
             "packages/cli/grammars/**",
             "docs/dist/**",
             "docs/.astro/**",
@@ -1157,13 +1156,6 @@ export default [
                         ]
                     },
                     {
-                        "category": "import-rule:package-scripts",
-                        "pattern": [
-                            "packages/*/build.ts",
-                            "packages/cli/pin-ages.ts"
-                        ]
-                    },
-                    {
                         "category": "other",
                         "pattern": [
                             "**/*"
@@ -2178,62 +2170,6 @@ export default [
                         {
                             "from": {
                                 "file": {
-                                    "categories": "import-rule:package-scripts"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"package-scripts\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"shipped-config\", \"generation\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", \"tests-setup\", \"tests\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:package-scripts"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:package-scripts",
-                                                "import-rule:cli-types",
-                                                "import-rule:system",
-                                                "import-rule:parsers",
-                                                "import-rule:manifests",
-                                                "import-rule:repository",
-                                                "import-rule:settings",
-                                                "import-rule:tools",
-                                                "import-rule:engine",
-                                                "import-rule:configurations",
-                                                "import-rule:shipped-config",
-                                                "import-rule:generation",
-                                                "import-rule:commands",
-                                                "import-rule:main",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:plugin",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:docs",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
-                                                "import-rule:tests-setup",
-                                                "import-rule:tests"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
                                     "isUnknown": true
                                 }
                             },
@@ -2406,8 +2342,7 @@ export default [
                                             "import-rule:tests-data",
                                             "import-rule:tests-types",
                                             "import-rule:tests-setup",
-                                            "import-rule:tests",
-                                            "import-rule:package-scripts"
+                                            "import-rule:tests"
                                         ]
                                     }
                                 }
@@ -2448,8 +2383,7 @@ export default [
                                                 "import-rule:tests-data",
                                                 "import-rule:tests-types",
                                                 "import-rule:tests-setup",
-                                                "import-rule:tests",
-                                                "import-rule:package-scripts"
+                                                "import-rule:tests"
                                             ]
                                         }
                                     }

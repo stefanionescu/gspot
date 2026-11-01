@@ -13,7 +13,6 @@ build/
 /docs/.wrangler/
 /docs/dist/
 /packages/*/dist/
-/packages/*/LICENSE.md
 /packages/cli/grammars/
 node_modules/
 

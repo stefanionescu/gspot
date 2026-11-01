@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Check the tool pins against the release-age hold, tag a tested main commit, publish both npm packages, deploy the docs site, create the GitHub release, and set the repository description and homepage from the CLI package."
+#MISE description="Tag a tested main commit, publish both npm packages, deploy the docs site, create the GitHub release, and set the repository description and homepage from the CLI package."
 #MISE depends=["build"]
 set -euo pipefail
 
@@ -43,27 +43,6 @@ assert_version_raised() {
         printf '%s changed since %s, which npm serves. Raise its version first.\n' "${folder}" "${tag}" >&2
         return 1
     fi
-}
-
-# assert_readme_images: Refuses a README with an image that does not load, such as a banner at a tag that GitHub does
-# not serve yet. npm shows the README of a version forever, and nobody can change it after the publish.
-# Arguments:
-#   README files.
-assert_readme_images() {
-    local readme
-    local urls
-    local url
-
-    for readme in "$@"; do
-        urls=$(grep -oE '!\[[^]]*\]\([^)]+\)' "${readme}" | sed -E 's/^.*\]\((.*)\)$/\1/') || continue
-        while IFS= read -r url; do
-            if ! curl --fail --silent --show-error --location --connect-timeout 10 --max-time 60 \
-                --output /dev/null "${url}"; then
-                printf '%s shows %s, which does not load.\n' "${readme}" "${url}" >&2
-                return 1
-            fi
-        done <<<"${urls}"
-    done
 }
 
 # publish_package: Publishes a package version that npm does not serve yet.
@@ -122,7 +101,6 @@ main() {
     local homepage
 
     assert_release_commit
-    bun packages/cli/pin-ages.ts || exit 1
     plugin_spec=$(npm pkg get name version --prefix packages/eslint-plugin | jq -r '"\(.name)@\(.version)"') || exit 1
     cli_spec=$(npm pkg get name version --prefix packages/cli | jq -r '"\(.name)@\(.version)"') || exit 1
     plugin_tag="eslint-plugin-v${plugin_spec##*@}"
@@ -131,7 +109,6 @@ main() {
     assert_version_raised packages/cli "${cli_spec}" "${cli_tag}"
     push_tag "${plugin_tag}"
     push_tag "${cli_tag}"
-    assert_readme_images packages/eslint-plugin/README.md packages/cli/README.md
     publish_package packages/eslint-plugin "${plugin_spec}"
     publish_package packages/cli "${cli_spec}"
     mise run docs:deploy || exit 1

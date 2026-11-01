@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
-#MISE description="Build the CLI package and the ESLint plugin package."
+#MISE description="Build the CLI and the ESLint plugin, and write the npm README of the CLI."
 #MISE depends=["packages:cli:build", "packages:eslint-plugin:build"]
 set -euo pipefail
+
+sed \
+    -e 's|(docs/public/|(../../docs/public/|g' \
+    README.md >packages/cli/README.md

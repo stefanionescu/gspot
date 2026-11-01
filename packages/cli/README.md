@@ -1,4 +1,4 @@
-# ![gspot](https://raw.githubusercontent.com/stefanionescu/gspot/v0.3.8/docs/public/banner.svg)
+# ![gspot](../../docs/public/banner.svg)
 
 gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents.
 

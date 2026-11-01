@@ -170,7 +170,7 @@ import_extension = "ts"
 no-restricted-properties = [{ object = "Bun", property = "env" }, { object = "Deno", property = "env" }, { property = "localeCompare", message = "Use compareText for stable ordering." }]
 
 [tools.knip]
-entry = ["packages/cli/build.ts", "packages/cli/pin-ages.ts", "packages/eslint-plugin/build.ts", "tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/sandboxes/tool-project.ts", "tests/setup/runner/integration.ts", "packages/cli/src/configurations/framework/site/checks/purgecss-process.ts", "packages/cli/src/configurations/language/javascript/files/eslint-functions.ts", "packages/cli/src/bin.ts", "packages/cli/src/reference.ts", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts", "packages/cli/src/configurations/framework/site/files/purgecss.ts"]
+entry = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/sandboxes/tool-project.ts", "tests/setup/runner/integration.ts", "packages/cli/src/configurations/framework/site/checks/purgecss-process.ts", "packages/cli/src/configurations/language/javascript/files/eslint-functions.ts", "packages/cli/src/bin.ts", "packages/cli/src/reference.ts", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts", "packages/cli/src/configurations/framework/site/files/purgecss.ts"]
 
 [[scope]]
 path = "docs"
@@ -286,10 +286,6 @@ paths = ["tests/setup/**", "tests/schemas/**"]
 [[import_rule]]
 name = "tests"
 paths = ["tests/suites/**"]
-
-[[import_rule]]
-name = "package-scripts"
-paths = ["packages/*/build.ts", "packages/cli/pin-ages.ts"]
 
 [[command_check]]
 id = "unit-tests"

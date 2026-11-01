@@ -6,7 +6,6 @@ node_modules/
 *.log
 
 /packages/*/dist/
-/packages/*/LICENSE.md
 /packages/cli/grammars/
 /docs/dist/
 /docs/.astro/
