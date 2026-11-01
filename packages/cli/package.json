@@ -34,8 +34,7 @@
         "dist/purgecss-process.js",
         "src/configurations/*/*/manifest.toml",
         "src/configurations/*/*/rules/**",
-        "src/configurations/*/*/files/**",
-        "grammars"
+        "src/configurations/*/*/files/**"
     ],
     "engines": {
         "bun": ">=1.4.3",

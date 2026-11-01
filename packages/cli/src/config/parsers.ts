@@ -140,6 +140,62 @@ export const GRAMMAR_EXTENSIONS: Readonly<Record<string, readonly string[]>> = {
 
 export const GRAMMAR_FILE_EXTENSION = '.wasm';
 
+export const GRAMMAR_RELEASES: Readonly<Record<(typeof GRAMMAR_NAMES)[number], { sha256: string; url: string }>> = {
+    bash: {
+        sha256: '8292919c88a0f7d3fb31d0cd0253ca5a9531bc1ede82b0537f2c63dd8abe6a7a',
+        url: 'https://github.com/tree-sitter/tree-sitter-bash/releases/download/v0.25.1/tree-sitter-bash.wasm',
+    },
+    css: {
+        sha256: '8a23977fe271357cce6f254ef88c9bebf3854602d8046605aef6a45c02135c59',
+        url: 'https://github.com/tree-sitter/tree-sitter-css/releases/download/v0.25.0/tree-sitter-css.wasm',
+    },
+    html: {
+        sha256: 'c48fcd82c7ea8bf943180088ba7f28c48b2bb5287874179168bf9d31e394cf85',
+        url: 'https://github.com/tree-sitter/tree-sitter-html/releases/download/v0.23.2/tree-sitter-html.wasm',
+    },
+    javascript: {
+        sha256: '5fb488d0cabb4775a594bab85682de5ad6ce83c0d6ac997a9f82dd084d571240',
+        url: 'https://github.com/tree-sitter/tree-sitter-javascript/releases/download/v0.25.0/tree-sitter-javascript.wasm',
+    },
+    python: {
+        sha256: '16108b50df4ee9a30168794252ab55e7c93bfc5765d7fa0aa3e335752c515f47',
+        url: 'https://github.com/tree-sitter/tree-sitter-python/releases/download/v0.25.0/tree-sitter-python.wasm',
+    },
+    typescript: {
+        sha256: '778025db5a8be0e70f8ccc3671e486dfeddd048c25d9e8a70c26de2e1bf6f97d',
+        url: 'https://github.com/tree-sitter/tree-sitter-typescript/releases/download/v0.23.2/tree-sitter-typescript.wasm',
+    },
+    tsx: {
+        sha256: '79e5da75ea62855a0cd67177685f0164eac87d5f630b3cbe1e0a099751ad30f8',
+        url: 'https://github.com/tree-sitter/tree-sitter-typescript/releases/download/v0.23.2/tree-sitter-tsx.wasm',
+    },
+    swift: {
+        sha256: '0258a7ef17303a8079ffe0748b3583d59656b5c3e8653fca7b6451b3e6689eb2',
+        url: 'https://github.com/alex-pinkus/tree-sitter-swift/releases/download/0.7.3/tree-sitter-swift.wasm',
+    },
+};
+
+export const GRAMMAR_ARCHIVE_LIMIT = 32 * 1024 * 1024;
+
+export const FENCE_GRAMMARS = ['bash', 'typescript', 'tsx', 'javascript', 'python'] as const;
+
+export const CONFIGURATION_GRAMMARS: Readonly<Record<string, readonly (typeof GRAMMAR_NAMES)[number][]>> = {
+    bash: ['bash'],
+    css: ['css'],
+    html: ['html'],
+    javascript: ['javascript', 'typescript', 'tsx', 'html'],
+    markdown: FENCE_GRAMMARS,
+    python: ['python'],
+    site: ['html'],
+    swift: ['swift'],
+    typescript: ['javascript', 'typescript', 'tsx', 'html'],
+};
+
+export const TAG_GRAMMARS: Readonly<Record<string, (typeof GRAMMAR_NAMES)[number]>> = {
+    shell: 'bash',
+    python: 'python',
+};
+
 export const GRAMMARS_FOLDER = 'grammars';
 
 export const PYTHON_EXTENSION = '.py';

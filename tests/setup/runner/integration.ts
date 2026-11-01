@@ -4,10 +4,10 @@ import { afterAll, setDefaultTimeout } from 'bun:test';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { rm, mkdtemp, readFile } from 'node:fs/promises';
 import { SIGNAL_EXIT_CODES } from '#cli/config/system.ts';
-import { TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { startNpmRegistry } from '#tests/setup/runner/npm-registry.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { linkGrammars, TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 import { toolModules, workspaceModules } from '#tests/setup/sandboxes/node-modules.ts';
 
 import {
@@ -44,6 +44,7 @@ resources.defer(() => {
 
 const cache = await mkdtemp(join(TEST_RUN_FOLDER, `${CACHE_FOLDER}-`));
 const temporary = await mkdtemp(join(TEST_RUN_FOLDER, `${TEMPORARY_FOLDER}-`));
+await linkGrammars(cache);
 resources.defer(() => rm(cache, { recursive: true, force: true }));
 resources.defer(() => rm(temporary, { recursive: true, force: true }));
 resources.use(overrideEnvironment({ ...GIT_ISOLATION_ENVIRONMENT, XDG_CACHE_HOME: cache, TMPDIR: temporary }));

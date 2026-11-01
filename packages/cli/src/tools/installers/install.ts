@@ -4,6 +4,7 @@ import { MISE_TOOL } from '#cli/config/tools/installers.ts';
 import { installHooks } from '#cli/tools/installers/hooks.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
+import { installGrammars } from '#cli/tools/installers/grammars.ts';
 import { installValePackages } from '#cli/tools/installers/vale.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
@@ -78,7 +79,12 @@ export async function installTools(
     writeToolProjects(context);
     const mise = await installMiseTools(context);
     const projects = await installToolProjects(context, mise.binPaths);
-    const installed = [mise.installed, ...projects.installed, await installValePackages(context, mise.binPaths)];
+    const installed = [
+        mise.installed,
+        ...projects.installed,
+        await installValePackages(context, mise.binPaths),
+        await installGrammars(context),
+    ];
     const broken = await repairTools(context, [...mise.tools, ...projects.tools], mise.binPaths);
     const hooks = await installHooks(session, steps);
     if (hooks.command !== undefined) installed.push(hooks.note);

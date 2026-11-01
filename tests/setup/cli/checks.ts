@@ -8,6 +8,7 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
+import { linkGrammars } from '#tests/setup/runner/run-folder.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
@@ -26,6 +27,7 @@ Keep the compiler cache in a temporary folder until the test ends.
 export async function redirectCacheFolder(): Promise<AsyncDisposableStack> {
     await using resources = new AsyncDisposableStack();
     const cache = resources.use(await testdir());
+    await linkGrammars(cache.path);
     resources.use(overrideEnvironment({ XDG_CACHE_HOME: cache.path }));
     return resources.move();
 }

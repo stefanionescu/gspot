@@ -2,12 +2,12 @@ import { parseAllDocuments } from 'yaml';
 import { read } from '#cli/system/files/reads.ts';
 import { getPosition } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
-import { JSONC_OPTIONS } from '#cli/config/parsers.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { JSONC_OPTIONS, FENCE_GRAMMARS } from '#cli/config/parsers.ts';
 import { SYNTAX_RULE } from '#cli/config/configurations/infrastructure.ts';
 import type { CodeFence, ParseCache, GrammarName } from '#cli/types/parsers.ts';
 import { parse, type ParseError, type ParseOptions, printParseErrorCode } from 'jsonc-parser/lib/esm/main.js';
@@ -29,7 +29,6 @@ import {
     JSON_FENCE_OPTIONS,
     CAMEL_CASE_BOUNDARY,
     SYNTAX_ERROR_MESSAGE,
-    GRAMMAR_FENCE_PARSERS,
     CAMEL_CASE_REPLACEMENT,
 } from '#cli/config/configurations/language.ts';
 
@@ -91,7 +90,7 @@ async function findFenceSyntaxError(
         .join('\n')
         .replaceAll(ELLIPSIS_ARGUMENTS, () => EMPTY_ARGUMENTS);
     if (parser === 'bash') body = body.replaceAll(ANGLE_PLACEHOLDER, () => PLACEHOLDER_VALUE);
-    const error = (GRAMMAR_FENCE_PARSERS as readonly string[]).includes(parser)
+    const error = (FENCE_GRAMMARS as readonly string[]).includes(parser)
         ? await findTreeSyntaxError(parser as GrammarFenceParser, body, cache)
         : FORMAT_FENCE_READERS[parser as keyof typeof FORMAT_FENCE_READERS](body);
     return error === undefined ? undefined : { ...error, line: fence.startLine + error.line };

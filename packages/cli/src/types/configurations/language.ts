@@ -3,6 +3,7 @@ import type { Node } from 'web-tree-sitter';
 import type { Files } from '#cli/types/system.ts';
 import type { Config } from '#cli/types/repository.ts';
 import type { ScriptSyntax } from '#cli/types/parsers.ts';
+import type { FENCE_GRAMMARS } from '#cli/config/parsers.ts';
 import type { xccovSchema } from '#cli/schemas/configurations.ts';
 import type { Session, GeneratedFile } from '#cli/types/tools.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
@@ -10,7 +11,6 @@ import type { settingsSchema } from '#cli/schemas/settings/file.ts';
 import type { Configuration, ParsedManifest } from '#cli/types/manifests.ts';
 import type { MessageFormatElement } from '@formatjs/icu-messageformat-parser';
 import type { DOCSTRING_STYLES } from '#cli/config/configurations/registry.ts';
-import type { GRAMMAR_FENCE_PARSERS } from '#cli/config/configurations/language.ts';
 import type { COMPONENT_CONFIGURATIONS } from '#cli/config/configurations/javascript.ts';
 import type { IgnoreSection, SourcedConfig } from '#cli/types/configurations/general.ts';
 import type { Level, Scope, Defined, Settings, ScopeSettings, ParsedSettings } from '#cli/types/settings.ts';
@@ -47,7 +47,7 @@ export type MarkupAttribute = { name: string; value: string; element: string; no
 
 export type FormatFenceParser = 'json' | 'jsonc' | 'toml' | 'yaml';
 
-export type GrammarFenceParser = (typeof GRAMMAR_FENCE_PARSERS)[number];
+export type GrammarFenceParser = (typeof FENCE_GRAMMARS)[number];
 
 export type FenceParser = FormatFenceParser | GrammarFenceParser;
 

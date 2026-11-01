@@ -18,6 +18,8 @@ export const CONFIG_TOML_FORMAT = { inlineTableStart: Number.MAX_SAFE_INTEGER, b
 
 export const VALE_TOOL = 'vale';
 
+export const GRAMMAR_TOOL_NOUN = 'grammar';
+
 export const PROSE_GRAMMARS: Readonly<Record<string, Omit<ProseRoute, 'path'> & { format?: string }>> = {
     '.md': { mode: 'path', extension: '.md' },
     '.mdx': { mode: 'path', extension: '.md' },

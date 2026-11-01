@@ -2,9 +2,9 @@ import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { mkdtemp } from 'node:fs/promises';
 import { setDefaultTimeout } from 'bun:test';
-import { TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 import { OFFLINE_ENVIRONMENT } from '#tests/config/setup/programs.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { linkGrammars, TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 
 import {
     CACHE_FOLDER,
@@ -17,6 +17,7 @@ setDefaultTimeout(UNIT_TEST_TIMEOUT_MILLISECONDS);
 
 const cache = await mkdtemp(join(TEST_RUN_FOLDER, `${CACHE_FOLDER}-`));
 const temporary = await mkdtemp(join(TEST_RUN_FOLDER, `${TEMPORARY_FOLDER}-`));
+await linkGrammars(cache);
 const environment = overrideEnvironment({
     ...OFFLINE_ENVIRONMENT,
     ...GIT_ISOLATION_ENVIRONMENT,

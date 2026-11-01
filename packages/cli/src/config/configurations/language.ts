@@ -198,8 +198,6 @@ export const HTML_RULES = {
     handlerAttribute: 'handler-attribute',
 } as const;
 
-export const GRAMMAR_FENCE_PARSERS = ['bash', 'typescript', 'tsx', 'javascript', 'python'] as const;
-
 export const ELLIPSIS_LINE = /^[\s#/]*\.\.\.\s*$/u;
 
 export const ELLIPSIS_ARGUMENTS = '(...)';

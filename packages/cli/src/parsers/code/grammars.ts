@@ -1,11 +1,12 @@
-import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
+import { join, posix } from 'node:path';
 import { remember } from '#cli/system/cache.ts';
 import { read } from '#cli/system/files/reads.ts';
 import { setImmediate } from 'node:timers/promises';
-import { buildAssetPath } from '#cli/system/assets.ts';
+import { readCacheFolder } from '#cli/system/environment.ts';
 import { Parser, Language, type Tree } from 'web-tree-sitter';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import type { ParseCache, SourceTree, GrammarName, ParserGrammars, GrammarSourceFiles } from '#cli/types/parsers.ts';
 
 import {
@@ -24,11 +25,19 @@ const grammars: ParserGrammars = {
     parses: 0,
 };
 
+function readGrammar(grammar: GrammarName): Buffer {
+    try {
+        return readFileSync(buildGrammarPath(grammar));
+    } catch (error) {
+        if (!hasErrorCode(error, 'ENOENT')) throw error;
+        throw new GspotError('tool', `The ${grammar} grammar is not installed. Run gspot install.`, { cause: error });
+    }
+}
+
 async function buildParser(grammar: GrammarName): Promise<Parser> {
     grammars.runtime ??= Parser.init();
     await grammars.runtime;
-    const grammarPath = posix.join(GRAMMARS_FOLDER, `${grammar}${GRAMMAR_FILE_EXTENSION}`);
-    const language = await Language.load(readFileSync(buildAssetPath(grammarPath)));
+    const language = await Language.load(readGrammar(grammar));
     const parser = new Parser();
     parser.setLanguage(language);
     return parser;
@@ -41,6 +50,16 @@ function getParser(grammar: GrammarName): Promise<Parser> {
         grammars.parsers.set(grammar, parser);
     }
     return parser;
+}
+
+/**
+Build the path of an installed grammar. Every repository of this user shares the folder.
+
+@param grammar the language syntax.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The parser reads the path through it, and the installer writes that path.
+export function buildGrammarPath(grammar: GrammarName): string {
+    return join(readCacheFolder(), GRAMMARS_FOLDER, `${grammar}${GRAMMAR_FILE_EXTENSION}`);
 }
 
 /**
