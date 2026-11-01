@@ -113,7 +113,7 @@ function buildJob(
             ...(pipeline.projectInstall.length === 0
                 ? []
                 : [{ name: CI_STEP_NAMES.projectInstall, run: pipeline.projectInstall.join('\n') }]),
-            { name: CI_STEP_NAMES.install, run: [CI_INSTALL_COMMAND, ...CI_DIFF_LINES].join('\n') },
+            { name: CI_STEP_NAMES.install, run: [CI_INSTALL_COMMAND, ...CI_DIFF_LINES.github].join('\n') },
             {
                 name: CI_STEP_NAMES.saveCache,
                 if: CI_CACHE_MISS_CONDITION,
@@ -235,7 +235,7 @@ export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
             variables: GITLAB_VARIABLES,
             cache: GITLAB_CACHE,
             rules: GITLAB_RULES,
-            script: [STRICT_MODE, ...install, ...setup, CI_INSTALL_COMMAND, ...CI_DIFF_LINES, check],
+            script: [STRICT_MODE, ...install, ...setup, CI_INSTALL_COMMAND, ...CI_DIFF_LINES.gitlab, check],
         },
     });
     return { path: GITLAB_WORKFLOW, content: `${formatHeader(GITLAB_WORKFLOW)}${content}`, kind: 'workflow' };
