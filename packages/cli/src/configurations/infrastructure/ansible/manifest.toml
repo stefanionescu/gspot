@@ -36,7 +36,7 @@ why = "Playbooks run as root on production hosts, and a non-idempotent task chan
 command = ["ansible-lint", "-c", "{config_file:ansible-lint}", "--offline", "--nocolor", "-f", "pep8", "--profile", "production"]
 example = "A task with `ansible.builtin.command: systemctl restart nginx` reports `command-instead-of-module`. Use `ansible.builtin.systemd` with `name: nginx` and `state: restarted` instead."
 files = { extensions = [".yml", ".yaml", ".cfg", ".j2"] }
-help = "Change the task the way the rule says. Turn one rule off with `gspot ignore ansible/ansible-lint --rule <rule> --reason \"<why>\"`."
+help = "Change the task the way the rule says."
 instead_of = "ansible/ansible-lint"
 level = "all"
 name = "ansible-lint-production"

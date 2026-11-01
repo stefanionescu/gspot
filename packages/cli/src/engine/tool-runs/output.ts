@@ -86,7 +86,9 @@ function formatReportRefusal(
     if (tail === '') return refusal;
     const name = planned.tool?.name ?? planned.check.id;
     const opening =
-        planned.check.output.format === 'json' ? `${name} exited ${String(result.code)} without a JSON report:` : refusal;
+        planned.check.output.format === 'json'
+            ? `${name} exited ${String(result.code)} without a JSON report:`
+            : refusal;
     return `${opening}\n${tail}`;
 }
 

@@ -139,7 +139,7 @@ test('init gives code without a style config the defaults of each formatter', as
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(parse((JSON.parse(result.stdout) as InitJson).settings) as TomlTable).toHaveProperty('format', {
+    expect(parse((JSON.parse(result.stdout) as InitJson).settingsText) as TomlTable).toHaveProperty('format', {
         indent_width: 2,
         print_width: 80,
         quotes: 'double',
@@ -164,5 +164,5 @@ test('init keeps the house style for a repository without code', async () => {
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(parse((JSON.parse(result.stdout) as InitJson).settings) as TomlTable).not.toHaveProperty('format');
+    expect(parse((JSON.parse(result.stdout) as InitJson).settingsText) as TomlTable).not.toHaveProperty('format');
 });

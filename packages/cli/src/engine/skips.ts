@@ -1,6 +1,6 @@
 import type { Host } from '#cli/types/tools.ts';
-import { formatNameList } from '#cli/system/text.ts';
 import { findValueAt } from '#cli/system/tables.ts';
+import { formatNameList } from '#cli/system/text.ts';
 import { findMissingBuild } from '#cli/tools/pins.ts';
 import { isRepositoryRun } from '#cli/engine/files.ts';
 import { LIMIT_READERS } from '#cli/manifests/limits.ts';

@@ -55,8 +55,8 @@ test('a nodenext tsconfig wins over the React import extension', async () => {
     });
     const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { settings: text } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settings'>>;
+    const { settingsText: text } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settingsText'>>;
     expect(parse(text)).toMatchObject({
-        scope: [{ path: 'packages/ui', tools: { eslint: { import_extension: 'js' } } }],
+        scope: [{ path: 'packages/ui', javascript: { import_extension: 'js' } }],
     });
 });

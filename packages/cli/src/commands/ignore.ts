@@ -1,8 +1,8 @@
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { mergeIgnore } from '#cli/settings/text.ts';
-import { formatNameList } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { formatNameList } from '#cli/system/text.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';

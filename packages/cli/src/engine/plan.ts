@@ -12,14 +12,8 @@ import type { Session, ConfiguredCheck } from '#cli/types/tools.ts';
 import { findFirstSkip, findSettingsSkip } from '#cli/engine/skips.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import type { PlanOptions, PlannedScope, PlannedCheck } from '#cli/types/engine/plan.ts';
-
-import {
-    OFF_BY_LEVEL,
-    NO_MATCHING_FILES,
-    COVERAGE_DIMENSIONS,
-    COVERAGE_INI_SECTION,
-} from '#cli/config/engine.ts';
 import { isRootOnlyCheck, isRepositoryRun, selectCheckFiles } from '#cli/engine/files.ts';
+import { OFF_BY_LEVEL, NO_MATCHING_FILES, COVERAGE_DIMENSIONS, COVERAGE_INI_SECTION } from '#cli/config/engine.ts';
 
 function listScopeChecks(settings: Settings, scope: Scope, root: Scope): ScopeCheck[] {
     const isRoot = scope.path === '';

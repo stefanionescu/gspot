@@ -1,11 +1,11 @@
 import { styleText } from 'node:util';
-import { formatCount, formatScope } from '#cli/system/text.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import type { Generation } from '#cli/types/tools.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { Settings } from '#cli/types/settings.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
+import { formatCount, formatScope } from '#cli/system/text.ts';
 import { GENERATED_FILE_NOUN } from '#cli/config/generation.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
