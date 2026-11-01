@@ -193,3 +193,28 @@ export type CallNode = TSESTree.CallExpression | TSESTree.NewExpression;
 export type ParameterNames = readonly (string | undefined)[];
 
 export type SwappedPair = readonly [string, string];
+
+export type Isolation = 'deep' | 'shallow' | 'written';
+
+export type AssignedValues = ReadonlySet<string> | null;
+
+export type ValueState = Map<TSESLint.Scope.Variable, AssignedValues>;
+
+export type SegmentFlow = {
+    segment: TSESLint.CodePathSegment;
+    incoming: ValueState;
+    outgoing: ValueState;
+    references: Set<TSESLint.Scope.Reference>;
+};
+
+export type AssignmentFrame = {
+    node: TSESTree.AssignmentExpression | TSESTree.VariableDeclarator;
+    left: Set<TSESLint.Scope.Reference>;
+    right: Set<TSESLint.Scope.Reference>;
+};
+
+export type PathFrame = {
+    codePath: TSESLint.CodePath;
+    assignments: AssignmentFrame[];
+    segments: TSESLint.CodePathSegment[];
+};

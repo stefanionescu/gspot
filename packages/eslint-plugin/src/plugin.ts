@@ -81,6 +81,7 @@ import { noCommentsInImports } from './rules/no-comments-in-imports.ts';
 import { noDuplicateTestRows } from './rules/no-duplicate-test-rows.ts';
 import { noSetterInComponent } from './rules/no-setter-in-component.ts';
 import { noUnknownRegexGroup } from './rules/no-unknown-regex-group.ts';
+import { noVoidArrayCallback } from './rules/no-void-array-callback.ts';
 import { embedAlternativeText } from './rules/embed-alternative-text.ts';
 import { noDuplicatedBranches } from './rules/no-duplicated-branches.ts';
 import { noIdenticalFunctions } from './rules/no-identical-functions.ts';
@@ -97,6 +98,7 @@ import { noUpdatedLoopCounter } from './rules/no-updated-loop-counter.ts';
 import { noVueClassComponents } from './rules/no-vue-class-components.ts';
 import { noInlineInterpolation } from './rules/no-inline-interpolation.ts';
 import { noKeywordDeclarations } from './rules/no-keyword-declarations.ts';
+import { noRedundantAssignment } from './rules/no-redundant-assignment.ts';
 import { noUselessIntersection } from './rules/no-useless-intersection.ts';
 import { preferImmediateReturn } from './rules/prefer-immediate-return.ts';
 import { testingLibraryQueries } from './rules/testing-library-queries.ts';
@@ -111,6 +113,7 @@ import { noTransposedAssignment } from './rules/no-transposed-assignment.ts';
 import { preferPromiseShorthand } from './rules/prefer-promise-shorthand.ts';
 import { noDuplicateInComposite } from './rules/no-duplicate-in-composite.ts';
 import { noMisplacedLoopCounter } from './rules/no-misplaced-loop-counter.ts';
+import { noShallowCloneMutation } from './rules/no-shallow-clone-mutation.ts';
 import { noUnexplainedTestSkips } from './rules/no-unexplained-test-skips.ts';
 import { noGratuitousExpressions } from './rules/no-gratuitous-expressions.ts';
 import { noDefaultUtilityImports } from './rules/no-default-utility-imports.ts';
@@ -129,6 +132,9 @@ import { noUnenclosedMultilineBlock } from './rules/no-unenclosed-multiline-bloc
 const rules = {
     ...securityRules,
     ...awsRules,
+    'no-void-array-callback': noVoidArrayCallback,
+    'no-redundant-assignment': noRedundantAssignment,
+    'no-shallow-clone-mutation': noShallowCloneMutation,
     'no-mixed-return-types': noMixedReturnTypes,
     'no-selector-parameter': noSelectorParameter,
     'no-swapped-arguments': noSwappedArguments,

@@ -317,3 +317,10 @@ export const LITERAL_UNION_SIZE = 2;
 export const GLOBAL_THIS_NAME = 'globalThis';
 
 export const LOOP_STATEMENTS: ReadonlySet<string> = new Set(['WhileStatement', 'DoWhileStatement']);
+
+export const LOOP_BODY_PARENTS: ReadonlySet<string> = new Set([
+    ...LOOP_STATEMENTS,
+    'ForStatement',
+    'ForInStatement',
+    'ForOfStatement',
+]);
