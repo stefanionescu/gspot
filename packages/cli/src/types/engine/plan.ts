@@ -42,6 +42,7 @@ export type PlannedCheck = ScopeCheck & {
     files: TrackedFile[];
     skip?: Skip | undefined;
     triggerPaths: string[];
+    narrowedLinks?: string[] | undefined;
     messageFile?: string | undefined;
 };
 

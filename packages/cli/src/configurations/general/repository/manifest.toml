@@ -19,6 +19,7 @@ help = "Add the reported file or folder to .gitignore and remove it from the ind
 name = "local-files"
 runs = "once"
 stage = "commit"
+symlink_files = true
 summary = "Reports a tracked file at a path that a configuration keeps out of Git, and each tracked symbolic link that leaves the repository."
 why = "Machine-local values and installed packages belong outside shared Git history."
 

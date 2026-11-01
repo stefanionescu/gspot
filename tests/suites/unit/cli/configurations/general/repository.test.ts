@@ -1,18 +1,20 @@
 import { test, expect } from 'bun:test';
 import { join, relative } from 'node:path';
-import { runChecks } from '#cli/engine/run.ts';
 import { planChecks } from '#cli/engine/plan.ts';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/engine.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { unlink, symlink, writeFile } from 'node:fs/promises';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runChecks, runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { LOCAL_FILE_PATHS, LARGE_FILE_TABLES } from '#tests/config/configurations/general.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildRunOptions, CHECK_GENERATION, createRunResources } from '#tests/setup/cli/run.ts';
 
 test(`local-files reports each tracked path that a scope's configurations leave untracked, once, including a path only in the Git index`, async () => {
     await using sandbox = await createGitSandbox({});
@@ -96,6 +98,31 @@ vendor/** linguist-vendored
     );
 
     expect(fixed.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
+});
+
+test('a staged outward link plans local-files, and a run that stages another file leaves the link alone', async () => {
+    await using outside = await testdir({ 'external.ts': 'export {};\n' });
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([]),
+        'notes.txt': 'notes\n',
+    });
+    await symlink(relative(sandbox.path, outside.path), join(sandbox.path, 'outside'), 'dir');
+    runGitStep(sandbox.path, ['add', '-A']);
+    using resources = createRunResources();
+    const session = await openSession(sandbox.path, { resources });
+    const run = async (staged: string[]): Promise<string[]> => {
+        const [planned] = planChecks(session, { stage: 'commit', staged, only: ['repository/local-files'] });
+        const check = planned as PlannedCheck;
+        const result = await runCheckCode(
+            buildCheckSession(session, CHECK_GENERATION),
+            check,
+            selectCheckCode(check.check),
+            {},
+        );
+        return result.findings.map(({ file }) => file);
+    };
+    expect(await run(['outside'])).toStrictEqual(['outside']);
+    expect(await run(['notes.txt'])).toStrictEqual([]);
 });
 
 test('a tracked outward symlink is a local-files finding', async () => {

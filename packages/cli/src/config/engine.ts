@@ -160,8 +160,6 @@ export const ROOT_RUNS = ['once', 'history'] as const;
 
 export const TYPOS_CODE_HELP = "Rename it with your editor's rename, and update its callers.";
 
-export const LOCAL_FILES_CHECK = 'repository/local-files';
-
 export const IGNORED_PATHS_MESSAGE = 'every selected path is ignored in gspot.toml';
 
 export const INCOMPLETE_STATUSES = new Set<CheckStatus>(['missing', 'error']);

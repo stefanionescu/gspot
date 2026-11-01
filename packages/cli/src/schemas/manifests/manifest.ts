@@ -133,6 +133,7 @@ const checkFieldsSchema = z.strictObject({
     limit_languages: z.enum(SETTING_LANGUAGES).array().optional(),
     run_in_copy: z.boolean().optional(),
     binary_files: z.boolean().optional(),
+    symlink_files: z.boolean().optional(),
     env: z.record(z.string(), z.string()).optional(),
     instead_of: z.string().optional(),
     when: conditionSchema

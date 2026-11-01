@@ -5,11 +5,11 @@ import type { ScopeCheck } from '#cli/types/tools.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { getTable, listIgnores } from '#cli/settings/scopes.ts';
 import type { Check, Configuration } from '#cli/types/manifests.ts';
 import type { PlannedCheck, PlannedScope } from '#cli/types/engine/plan.ts';
+import { SYMLINK_MODE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { listCoveredFiles, listCoveredPaths } from '#cli/repository/files/selection.ts';
 import { ROOT_RUNS, BYTES_PER_KILOBYTE, IGNORED_PATHS_MESSAGE } from '#cli/config/engine.ts';
 
@@ -218,6 +218,18 @@ export function isRootOnlyCheck(configuration: Configuration | undefined, check:
     );
 }
 
+function addNarrowedLinks(
+    { narrowedPaths, session }: PlannedScope,
+    check: Check,
+    selection: Pick<PlannedCheck, 'files' | 'triggerPaths' | 'skip'>,
+): Pick<PlannedCheck, 'files' | 'triggerPaths' | 'skip' | 'narrowedLinks'> {
+    if (check.symlink_files !== true || narrowedPaths === undefined) return selection;
+    const narrowedLinks = session.repository.index
+        .filter(({ path, mode }) => mode === SYMLINK_MODE && narrowedPaths.has(path))
+        .map(({ path }) => path);
+    return { ...selection, triggerPaths: [...selection.triggerPaths, ...narrowedLinks], narrowedLinks };
+}
+
 /**
 Select the files and deleted trigger paths of a planned check.
 
@@ -227,7 +239,7 @@ Select the files and deleted trigger paths of a planned check.
 export function selectCheckFiles(
     planned: PlannedScope,
     scopeCheck: ScopeCheck,
-): Pick<PlannedCheck, 'files' | 'triggerPaths' | 'skip'> {
+): Pick<PlannedCheck, 'files' | 'triggerPaths' | 'skip' | 'narrowedLinks'> {
     const { scope, children } = planned;
     const { check, configuration } = scopeCheck;
     const scopePath = isRepositoryRun(check) ? '' : scope.path;
@@ -240,7 +252,10 @@ export function selectCheckFiles(
     files = listToolFiles(planned, scopeCheck, files);
     if (!keepsChildScopes) files = files.filter((file) => isOutsideChildScopes(file.path, children));
     const unreadablePaths = check.binary_files === true ? planned.session.repository.unreadablePaths : [];
-    return { ...stripIgnoredFiles(files, check, scope), triggerPaths: [...triggerPaths, ...unreadablePaths] };
+    return addNarrowedLinks(planned, check, {
+        ...stripIgnoredFiles(files, check, scope),
+        triggerPaths: [...triggerPaths, ...unreadablePaths],
+    });
 }
 
 /**

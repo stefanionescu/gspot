@@ -16,9 +16,9 @@ import { BYTES_PER_KILOBYTE, CONFLICT_MARKER_LINE } from '#cli/config/engine.ts'
 import { LFS_FILTER, SYMLINK_MODE, FILTER_ATTRIBUTE } from '#cli/config/repository/files.ts';
 import { REPOSITORY_RULES, OUTWARD_LINK_HELP, ABSOLUTE_LINK_HELP } from '#cli/config/configurations/structure.ts';
 
-function listInvalidLinks(session: Session): CheckFinding[] {
+function listInvalidLinks(session: Session, narrowedLinks: string[] | undefined): CheckFinding[] {
     return session.repository.index
-        .filter((file) => file.mode === SYMLINK_MODE)
+        .filter((file) => file.mode === SYMLINK_MODE && (narrowedLinks?.includes(file.path) ?? true))
         .flatMap(({ path }): CheckFinding[] => {
             const source = join(session.root, path);
             if (lstatSync(source, { throwIfNoEntry: false })?.isSymbolicLink() !== true) return [];
@@ -85,12 +85,13 @@ export function checkLargeFiles(session: Session, planned: PlannedCheck): CheckF
 }
 
 /**
-Reports indexed files that the scope configurations mark as untracked.
+Reports indexed files that the scope configurations mark as untracked, and the links that leave the repository. A
+commit or a push reports only its staged or pushed links.
 
 @param session the repository and its tools.
-@param _planned the configured check and selected scope files.
+@param planned the configured check and the links of its run.
 */
-export function checkLocalFiles(session: Session, _planned: PlannedCheck): CheckFinding[] {
+export function checkLocalFiles(session: Session, planned: PlannedCheck): CheckFinding[] {
     const scopes = session.repository.scopeFolders;
     const matchers = new Map(
         session.scopes.map(({ path: scopePath, configurations, settings }): [string, (path: string) => boolean] => {
@@ -119,7 +120,7 @@ export function checkLocalFiles(session: Session, _planned: PlannedCheck): Check
             rule: REPOSITORY_RULES.trackedFile,
             message: `${path} is tracked; its selected configuration declares it untracked. Remove it from the Git index and add it to .gitignore.`,
         }));
-    const links = listInvalidLinks(session);
+    const links = listInvalidLinks(session, planned.narrowedLinks);
     return [...tracked, ...links];
 }
 
