@@ -68,10 +68,6 @@ extension Message {
   again.
 - Delete a test that nobody plans to turn back on.
 
-## Time
-
-- Inject the clock, so a test advances time and never waits for it.
-
 ## Snapshot and interface tests
 
 - Snapshot test reusable visual states and regressions that unit tests cannot cover.

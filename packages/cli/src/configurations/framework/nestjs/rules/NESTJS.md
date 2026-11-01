@@ -4,7 +4,6 @@ Read this rule when you change NestJS modules, controllers, providers, or their 
 
 ## Request handling
 
-- Return the documented HTTP status. Do not report a failed operation as a successful response.
 - Validate body, query, and route parameters before using them. Configure `ValidationPipe` transformation and
   unknown-field handling for the declared input contract.
 - Do not expose password hashes, tokens, or internal fields in responses.
@@ -39,7 +38,6 @@ Read this rule when you change NestJS modules, controllers, providers, or their 
 
 - Use `Test.createTestingModule` and `overrideProvider` to isolate service dependencies.
 - Exercise HTTP behavior with the real pipes, guards, and filters.
-- Do not mock the class under test or assert on private methods.
 - Close test applications in teardown.
 
 See the NestJS [response handling](https://docs.nestjs.com/controllers) and

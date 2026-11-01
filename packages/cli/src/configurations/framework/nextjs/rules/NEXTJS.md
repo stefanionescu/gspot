@@ -22,9 +22,8 @@ See [Server and Client Components](https://nextjs.org/docs/app/getting-started/s
 
 ## Loading and failures
 
-Put a loading boundary around the section that waits. Keep useful content mounted during refresh, and reset pending
-state when the user switches resources. Start independent work early without moving protected reads before
-authorization.
+Put a loading boundary around the section that waits. Start independent work early without moving protected reads
+before authorization.
 
 Decide status, headers, cookies, redirects, and not-found behavior before streaming commits the response. Preserve
 framework control-flow exceptions. Check direct load, client navigation, refresh, Back, and failed prefetch; those paths

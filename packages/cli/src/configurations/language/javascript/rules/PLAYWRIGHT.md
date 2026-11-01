@@ -7,7 +7,7 @@ Read this rule when you write or change a Playwright test.
 - Give each test a coherent user journey with independent setup and observable assertions.
 - Query by role and accessible name such as `getByRole('button', { name: 'Submit' })`, then by label, placeholder, or
   text.
-- Do not use fixed waits such as `waitForTimeout`. Wait for the visible state, response, or URL that proves the
+- `waitForTimeout` counts as a fixed wait. Wait for the visible state, response, or URL that proves the
   operation finished. Network inactivity alone does not establish readiness.
 - Start every test from a known state that the application creates through its API or its UI. Never start from shared
   seed data or leftovers.

@@ -8,7 +8,6 @@ Read TESTING.md too. Use the Vitest APIs for runtime boundaries.
   through `vi.unstubAllGlobals()`.
 - Use `vi.mocked()` for typed access to a mocked dependency. A partial module mock calls `importOriginal` when the
   unchanged exports still matter.
-- Restore fake timers with `vi.useRealTimers()` and mock implementations with `vi.restoreAllMocks()`.
 - Use `it.each` for one behavior across several inputs. Stop `describe()` nesting when it separates no distinct
   behavior.
 
