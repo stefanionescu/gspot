@@ -1,7 +1,7 @@
 import { Readable } from 'node:stream';
 import { test, expect } from 'bun:test';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { parseGitBlobs, parseTreeFiles, mergeAttributes, parseAttributePatterns } from '#cli/parsers/git.ts';
+import { parseGitBlobs, parseTreeFiles, mergeAttributes, parseAttributePatterns } from '#cli/repository/git/output.ts';
 
 import {
     SHA1,

@@ -1,4 +1,4 @@
-import { readGitLines } from '#cli/system/git.ts';
+import { readGitLines } from '#cli/repository/git/run.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';

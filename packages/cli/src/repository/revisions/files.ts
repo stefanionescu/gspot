@@ -4,9 +4,9 @@ import type { GitFile } from '#cli/types/parsers/parsers.ts';
 import { listGitFiles } from '#cli/repository/files/tracked.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';
 import { gitIndexFileSchema } from '#cli/schemas/parsers/parsers.ts';
-import { runGit, runGitStream, runGitForBytes } from '#cli/system/git.ts';
 import { GIT_INDEX_FILES_ARGUMENTS } from '#cli/config/repository/files.ts';
-import { parseGitBlobs, parseTreeFiles, parseListingLine, stripIndexStages } from '#cli/parsers/git.ts';
+import { runGit, runGitStream, runGitForBytes } from '#cli/repository/git/run.ts';
+import { parseGitBlobs, parseTreeFiles, parseListingLine, stripIndexStages } from '#cli/repository/git/output.ts';
 
 import {
     GIT_HEAD_ARGUMENTS,

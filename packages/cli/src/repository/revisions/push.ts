@@ -7,7 +7,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { WHITESPACE_RUN } from '#cli/config/text.ts';
 import { readHead } from '#cli/repository/revisions/files.ts';
 import { readMergeBase, readDefaultRef } from '#cli/repository/revisions/changes.ts';
-import { runGit, readGitText, readGitLines, readGitPaths } from '#cli/system/git.ts';
+import { runGit, readGitText, readGitLines, readGitPaths } from '#cli/repository/git/run.ts';
 
 import {
     type PushLine,

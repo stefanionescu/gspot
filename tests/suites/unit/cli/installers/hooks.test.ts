@@ -1,13 +1,13 @@
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { readGitSetting } from '#cli/system/git.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { HOOKS_SETTINGS } from '#tests/config/hooks.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { readGitSetting } from '#cli/repository/git/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { chmod, symlink, readFile, writeFile } from 'node:fs/promises';
 import { installHooks, readHookStatus } from '#cli/installers/hooks.ts';

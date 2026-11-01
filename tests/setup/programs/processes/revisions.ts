@@ -3,7 +3,7 @@ import { runTool } from '#cli/executables/run.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { runGit, readGitText, runGitBlocking, runGitForBytes } from '#cli/system/git.ts';
+import { runGit, readGitText, runGitBlocking, runGitForBytes } from '#cli/repository/git/run.ts';
 
 const [timeoutSeconds = '', reportPath = ''] = process.argv.slice(2);
 

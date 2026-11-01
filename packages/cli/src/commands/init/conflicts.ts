@@ -1,7 +1,7 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { runGitBlocking } from '#cli/system/git.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { writePlans } from '#cli/repository/writer.ts';
+import { runGitBlocking } from '#cli/repository/git/run.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
 import { isEditedInPlace } from '#cli/repository/conflicts.ts';
 import { parsePrettierFile } from '#cli/commands/init/format.ts';

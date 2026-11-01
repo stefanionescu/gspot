@@ -6,11 +6,11 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { INDEX_LINE } from '#cli/config/parsers/parsers.ts';
 import { type RunCache } from '#cli/types/system/system.ts';
 import { detectSwiftTags } from '#cli/parsers/code/swift.ts';
-import { runGit, isNotRepository } from '#cli/system/git.ts';
 import { detectScopeFolders } from '#cli/repository/scopes.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
+import { runGit, isNotRepository } from '#cli/repository/git/run.ts';
 import { gitIndexFileSchema } from '#cli/schemas/parsers/parsers.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { read, find, readCachedPrefix } from '#cli/system/files/reads.ts';
@@ -19,8 +19,13 @@ import { listGitFiles, listTrackedFiles } from '#cli/repository/files/tracked.ts
 import { GIT_LOCALE, TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/system.ts';
 import { type Repository, type ScopeFolder, type TrackedFile } from '#cli/types/repository/files.ts';
 import { type RepositoryListing, type RepositoryReadOptions } from '#cli/types/repository/repository.ts';
-import { mergeAttributes, parseListingLine, parsePathAttributes, parseAttributePatterns } from '#cli/parsers/git.ts';
 
+import {
+    mergeAttributes,
+    parseListingLine,
+    parsePathAttributes,
+    parseAttributePatterns,
+} from '#cli/repository/git/output.ts';
 import {
     SET_VALUES,
     VENDORED_ATTRIBUTE,

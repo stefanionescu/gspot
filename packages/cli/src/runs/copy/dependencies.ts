@@ -1,6 +1,6 @@
 import { cp } from 'node:fs/promises';
-import { runGit } from '#cli/system/git.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { runGit } from '#cli/repository/git/run.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import type { RunCache } from '#cli/types/system/system.ts';
 import { splitSystemPath } from '#cli/system/files/reads.ts';

@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { styleText } from 'node:util';
-import { readGitSetting } from '#cli/system/git.ts';
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -13,6 +12,7 @@ import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { buildMiseInstall } from '#cli/installers/mise.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { readGitSetting } from '#cli/repository/git/run.ts';
 import { readToolBinPaths } from '#cli/executables/locate.ts';
 import { findMissingEnvironment } from '#cli/executables/uv.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';

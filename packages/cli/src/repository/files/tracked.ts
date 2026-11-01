@@ -1,12 +1,12 @@
 import { compareText } from '#cli/system/text.ts';
 import { join, posix, relative } from 'node:path';
-import { decodeGitPaths } from '#cli/parsers/git.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { statSync, lstatSync, realpathSync } from 'node:fs';
+import { decodeGitPaths } from '#cli/repository/git/output.ts';
 import type { ListedFile } from '#cli/types/repository/files.ts';
 import type { GitIndexFile } from '#cli/types/parsers/parsers.ts';
-import { buildGitError, runGitForBytes } from '#cli/system/git.ts';
+import { buildGitError, runGitForBytes } from '#cli/repository/git/run.ts';
 import { isInside, extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
 import { GITLINK_MODE, GIT_FILE_MODES, EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
 
