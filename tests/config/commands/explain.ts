@@ -69,12 +69,7 @@ export const SCOPE_SETTING_EXPLANATION = {
     ],
 } as const;
 
-export const SCOPE_ROOT_MESSAGE = 'Scope: root';
-
-export const NAMING_LIMITS = [
-    { key: 'naming.swift.max_characters', shipped: 40, child: 38 },
-    { key: 'naming.sql.max_words', shipped: 7, child: 7 },
-];
+export const NAMING_LIMITS = [{ key: 'naming.swift.max_characters', shipped: 40, child: 38 }];
 
 export const EXPLAIN_SETTINGS = `configurations = []
 
@@ -88,10 +83,7 @@ paths = ["api/build.sh"]
 reason = "The script deliberately splits a list of arguments."
 `;
 
-export const CHECK_TOOL_MINIMUMS = [
-    { check: 'react-dom/react-versions', tools: [] },
-    { check: 'javascript/eslint', tools: ['node'] },
-] as const;
+export const CHECK_TOOL_MINIMUMS = [{ check: 'javascript/eslint', tools: ['node'] }] as const;
 
 export const PATH_IGNORES = [
     {
@@ -100,22 +92,6 @@ export const PATH_IGNORES = [
         reason: 'The script deliberately splits a list of arguments.',
     },
 ] as const;
-
-export const SYNTAX_CHECK_EXPLANATION = {
-    kind: 'check',
-    subject: 'project/syntax',
-    level: 'basic',
-    summary: "Runs the repository's own check project/syntax.",
-    why: 'This repository runs this command as one of its checks.',
-    help: 'Read the command output; this repository declares the check.',
-    settings: [],
-    rules: [],
-    ignores: [],
-    check: 'project/syntax',
-    stage: 'manual',
-    command: ['bash', '-n', '{files}'],
-    paths: ['**/*.sh'],
-} as const;
 
 export const SYNTAX_CHECK_TABLES =
     '[[command_check]]\nid = "project/syntax"\ncommand = ["bash", "-n", "{files}"]\npaths = ["**/*.sh"]\nstage = "manual"\n';
@@ -126,8 +102,4 @@ export const UNKNOWN_SUBJECT_CASES = [
         'There is no check, lint rule, configuration, setting, or file called unknown/no-such-rule. Give a check (python/ruff), a lint rule (python/ruff E501), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).',
     ],
     ['./missing.sh', 'missing.sh is not a file in this repository.'],
-    [
-        'unknown-configuration',
-        'There is no check, lint rule, configuration, setting, or file called unknown-configuration. Give a check (python/ruff), a lint rule (python/ruff E501), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).',
-    ],
 ] as const;

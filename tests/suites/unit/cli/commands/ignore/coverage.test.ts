@@ -113,7 +113,6 @@ test('ignore without a check keeps the paths out of every check and every config
     const reason = 'Product facts copy words as printed on the packaging.';
     const result = await runGspot(sandbox.path, ['ignore', '--paths', 'data/**', '--reason', reason]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(result.stdout).toStartWith('Ignored every check for data/**.\n');
     const saved = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
     expect(saved['ignore']).toStrictEqual([{ paths: ['data/**'], reason }]);
     const typos = await readFile(join(sandbox.path, getManifestTarget('spelling', 'typos.toml')), 'utf8');

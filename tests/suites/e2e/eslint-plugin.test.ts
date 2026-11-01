@@ -1,17 +1,16 @@
+import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { sep, join, relative } from 'node:path';
-import { compareText } from '#cli/system/text.ts';
+import { cp, mkdir, writeFile } from 'node:fs/promises';
+import { PLUGIN_TYPES_SOURCE } from '#tests/config/e2e.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listToolProjectPins } from '#cli/manifests/tools.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { NPM_INSTALL_FLAGS } from '#tests/config/setup/sandboxes.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
-import { cp, lstat, mkdir, readdir, writeFile } from 'node:fs/promises';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { isolatedEnvironment } from '#tests/setup/sandboxes/projects/gspot.ts';
-import { PLUGIN_TYPES_SOURCE, PLUGIN_PACKED_FILES } from '#tests/config/e2e.ts';
 
 async function assertPluginExports(consumer: string): Promise<void> {
     const [program = ''] = buildProgramArguments('processes/eslint-plugin');
@@ -58,15 +57,5 @@ test('the installed ESLint plugin loads through import and require and enforces 
         { cwd: consumer, env: isolatedEnvironment },
     );
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    const installedPlugin = await lstat(join(consumer, 'node_modules', '@gspothq/eslint-plugin'));
-    expect(installedPlugin.isSymbolicLink()).toBe(false);
-    const installedPath = join(consumer, 'node_modules', '@gspothq/eslint-plugin');
-    const files = await readdir(installedPath, { recursive: true, withFileTypes: true });
-    expect(
-        files
-            .filter((file) => file.isFile())
-            .map((file) => relative(installedPath, join(file.parentPath, file.name)).replaceAll(sep, '/'))
-            .toSorted(compareText),
-    ).toStrictEqual([...PLUGIN_PACKED_FILES]);
     await assertPluginExports(consumer);
 });

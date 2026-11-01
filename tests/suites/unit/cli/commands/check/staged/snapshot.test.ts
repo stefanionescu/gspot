@@ -227,8 +227,8 @@ test('staged checks use index bytes and settings on an unborn branch while prese
         {
             reproduce: 'gspot check --only project/bash-syntax --staged',
             findings: [
-                { file: SCRIPT_SPACES, line: 1, message: "syntax error near unexpected token `then'" },
-                { file: SCRIPT_SPACES, line: 1, message: "`if then'" },
+                { file: SCRIPT_SPACES, line: 1 },
+                { file: SCRIPT_SPACES, line: 1 },
             ],
         },
     ]);

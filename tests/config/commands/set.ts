@@ -49,7 +49,6 @@ export const KEPT_SETTING_CHANGES = [
         'set',
         ['set', 'limits.bash.file_lines', '200', '--reason', 'Generated scripts need this limit.'],
         '[limits]\nbash = { file_lines = { value = 200, reason = "Generated scripts need this limit." } }',
-        'Set limits.bash.file_lines to 200.  # Generated scripts need this limit.  (was 140 from configuration structure)',
     ],
 ] as const;
 

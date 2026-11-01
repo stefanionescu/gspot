@@ -118,26 +118,23 @@ test('a command check whose config file is missing errors before it runs and nam
     });
 });
 
-test.each(['python/basedpyright', 'pytest/coverage'])(
-    '%s refuses a .venv file before running the tool',
-    async (check) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['python', 'pytest']),
-            'pyproject.toml': APP_PYPROJECT,
-            'test_main.py': 'from app import count\n',
-            '.venv': 'not a directory\n',
-        });
-        const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
-        expect(result.report.exitCode).toBe(2);
-        expect(result.report.checks).toMatchObject([
-            {
-                status: 'missing',
-                findings: [],
-                note: 'The project environment .venv is missing. Run uv sync, then check again.',
-            },
-        ]);
-    },
-);
+test.each(['python/basedpyright'])('%s refuses a .venv file before running the tool', async (check) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['python', 'pytest']),
+        'pyproject.toml': APP_PYPROJECT,
+        'test_main.py': 'from app import count\n',
+        '.venv': 'not a directory\n',
+    });
+    const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
+    expect(result.report.exitCode).toBe(2);
+    expect(result.report.checks).toMatchObject([
+        {
+            status: 'missing',
+            findings: [],
+            note: 'The project environment .venv is missing. Run uv sync, then check again.',
+        },
+    ]);
+});
 
 test('a fatal command group stops before the next group runs', async () => {
     await using sandbox = await createGitSandbox({

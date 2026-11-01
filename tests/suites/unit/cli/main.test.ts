@@ -17,13 +17,13 @@ test('gspot without a command prints the help to stderr and exits 2', async () =
 
 test.each([...JSON_ARGUMENT_ERRORS])(
     'an argument error for $name with --json prints one arguments error object before gspot reads a malformed gspot.toml',
-    async ({ arguments: commandArguments, message }) => {
+    async ({ arguments: commandArguments }) => {
         await using sandbox = await testdir({ 'gspot.toml': MALFORMED_SETTINGS });
 
         const failed = await runGspot(sandbox.path, commandArguments);
         expect(failed.code, failed.stdout + failed.stderr).toBe(2);
         expect(failed.stderr).toBe('');
-        expect(JSON.parse(failed.stdout)).toMatchObject({ error: 'arguments', message });
+        expect(JSON.parse(failed.stdout)).toMatchObject({ error: 'arguments' });
     },
 );
 

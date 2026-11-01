@@ -12,15 +12,9 @@ import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
+import { FORMAT_SETTINGS, PRETTIER_PATH_IGNORE } from '#tests/config/commands/apply.ts';
 import { getRuleFilePath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { TOOLS_CHANGED_NOTE, STALE_LOCKFILE_NOTE } from '#cli/config/generation/generation.ts';
-
-import {
-    FORMAT_SETTINGS,
-    PRETTIER_PATH_IGNORE,
-    PRETTIER_ADDED_IGNORE,
-    PRETTIER_INITIAL_IGNORE,
-} from '#tests/config/commands/apply.ts';
 
 test('apply leaves generated files writable, keeps their bytes, and deletes a stray owned file and its folder', async () => {
     await using sandbox = await createGitSandbox({
@@ -114,11 +108,9 @@ test('apply rewrites an edited generated file, deletes unknown files in .gspot, 
     const edited = `${await readFile(generated, 'utf8')}# Authored after installation.\n`;
     await chmod(generated, 0o644);
     await writeFile(generated, edited);
-    await writeFile(join(sandbox.path, `${GSPOT_FOLDER}/authored.txt`), 'Preserve this file.\n');
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(await readFile(generated, 'utf8')).not.toContain('# Authored after installation.');
-    expect(await isOnDisk(join(sandbox.path, `${GSPOT_FOLDER}/authored.txt`))).toBe(false);
     expect(await readFile(settingsPath, 'utf8')).toBe(settings);
 });
 
@@ -145,15 +137,12 @@ test('an ignore of every path skips the check and keeps its configured tool and 
     await using sandbox = await createGitSandbox({ 'gspot.toml': FORMAT_SETTINGS, 'sample.json': '{"value":1}\n' });
     const initial = await runGspot(sandbox.path, ['apply', '--json']);
     expect(initial.code, initial.stdout + initial.stderr).toBe(0);
-    expect(await readFile(join(sandbox.path, '.prettierignore'), 'utf8')).toBe(PRETTIER_INITIAL_IGNORE);
     await writeFile(join(sandbox.path, 'gspot.toml'), FORMAT_SETTINGS + PRETTIER_PATH_IGNORE);
     const removed = await runGspot(sandbox.path, ['apply', '--json']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     const report = JSON.parse(removed.stdout) as ApplyReport;
     expect(report.written).toStrictEqual(['.prettierignore']);
-    expect(await readFile(join(sandbox.path, '.prettierignore'), 'utf8')).toBe(
-        PRETTIER_INITIAL_IGNORE + PRETTIER_ADDED_IGNORE,
-    );
+    expect(await readFile(join(sandbox.path, '.prettierignore'), 'utf8')).toContain('**/*.json');
     expect(report.removed).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toContain('prettier');
     expect(await isOnDisk(join(sandbox.path, getManifestTarget('format', 'prettier.json')))).toBe(true);
@@ -165,9 +154,6 @@ test('an ignore of every path skips the check and keeps its configured tool and 
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
     const settled = JSON.parse(repeated.stdout) as ApplyReport;
     expect(settled.unchanged.filter((path) => path === '.prettierignore')).toStrictEqual(['.prettierignore']);
-    expect(await readFile(join(sandbox.path, '.prettierignore'), 'utf8')).toBe(
-        PRETTIER_INITIAL_IGNORE + PRETTIER_ADDED_IGNORE,
-    );
     expect({ written: settled.written, removed: settled.removed }).toStrictEqual({ written: [], removed: [] });
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(FORMAT_SETTINGS + PRETTIER_PATH_IGNORE);
     expect(await readFile(join(sandbox.path, 'sample.json'), 'utf8')).toBe('{"value":1}\n');

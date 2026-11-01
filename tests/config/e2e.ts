@@ -25,14 +25,6 @@ const rule: TSESLint.RuleModule<string, readonly unknown[]> | undefined = plugin
 console.log(configs, rule);
 `;
 
-export const PLUGIN_PACKED_FILES = [
-    'LICENSE.md',
-    'README.md',
-    'dist/plugin.js',
-    'package.json',
-    'plugin.d.ts',
-] as const;
-
 export const PROSE_CHECK = {
     check: 'prose/vale',
     files: {

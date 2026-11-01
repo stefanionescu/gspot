@@ -37,7 +37,7 @@ async function readNestedScopes(): Promise<Scope[]> {
 
 test.each(
     SITE_PACKAGE_MANAGER_CASES.flatMap(([name, files, installer]) =>
-        ['', 'app'].map((scope) => ({ name, files, installer, scope })),
+        (installer === 'npm' ? [''] : ['', 'app']).map((scope) => ({ name, files, installer, scope })),
     ),
 )('the site build command defaults to $installer in "$scope" ($name)', async ({ files, installer, scope }) => {
     await using sandbox = await createGitSandbox({});

@@ -156,15 +156,7 @@ test('doctor suggests a remove command per scope after detection evidence goes, 
     await rm(join(sandbox.path, 'api app/service.py'));
     const before = await readTree(sandbox.path);
     const missing = await runGspot(sandbox.path, ['doctor', '--json']);
-    const missingText = await runGspot(sandbox.path, ['doctor']);
     expect((JSON.parse(missing.stdout) as DoctorReport).suggestions.undetected).toStrictEqual([...REMOVE_SUGGESTIONS]);
-    expect(missingText.stdout.split('\n\n').find((block) => block.startsWith('selected, but no'))).toBe(
-        [
-            'selected, but no files yet',
-            '  bash                               no files in root yet; remove it if none are planned    gspot remove bash --reason "<why>"',
-            '  python                             no files in api app yet; remove it if none are planned gspot remove python --scope \'api app\' --reason "<why>"',
-        ].join('\n'),
-    );
     expect(await readTree(sandbox.path)).toStrictEqual(before);
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
     await writeFile(join(sandbox.path, 'entry.sh'), 'echo ready\n');

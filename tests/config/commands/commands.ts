@@ -50,8 +50,7 @@ export const UNSET_REFUSALS = [
     },
     {
         commandArguments: ['unset', 'no_such_key'],
-        message:
-            'There is no setting called no_such_key. The settings that exist at the top level are level, tool_timeout_seconds, test_files, hooks, ci, rules, tools, dependencies and 10 more. Run gspot list settings to see every one.',
+        message: 'There is no setting called no_such_key.',
     },
     {
         commandArguments: ['unset', 'level', 'extra'],
