@@ -8,7 +8,7 @@ import {
     POWERED_BY_FACTORIES,
     UNSAFE_REFERRER_POLICIES,
     DISABLED_SECURITY_HEADERS,
-} from '../config/rules.ts';
+} from '../config/security.ts';
 
 function isModuleExport(node: TSESTree.Node): boolean {
     if (node.type !== AST_NODE_TYPES.MemberExpression) return false;

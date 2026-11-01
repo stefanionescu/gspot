@@ -28,3 +28,5 @@ export type FunctionNode =
 export type ImportBlock = { first: TSESTree.Statement; last: TSESTree.Statement };
 
 export type CommentGroup = { first: TSESTree.Comment; last: TSESTree.Comment; comments: TSESTree.Comment[] };
+
+export type SwitchCasesOptions = [number];

@@ -241,22 +241,56 @@ export const SERVER_DIRECTIVE = 'use server';
 
 export const SERVER_ONLY_MODULE = 'server-only';
 
-export const POWERED_BY_HEADER = 'x-powered-by';
+export const READONLY_STATIC_FILES = /\.tsx?$/iu;
 
-export const POWERED_BY_SET_ARGUMENTS = 2;
+export const DEFAULT_SWITCH_CASES = 30;
+export const SWITCH_CASES_OPTIONS_SCHEMA = { type: 'integer', minimum: 0 } as const;
+export const ERROR_CONSTRUCTOR_SUFFIX = /(?:Error|Exception)$/u;
+export const TRANSPOSED_UNARY_OPERATORS = new Set(['+', '-', '!']);
 
-export const POWERED_BY_FACTORIES = new Set(['express', 'express.default']);
+export const EMPTY_RETURN_TYPES = new Set(['TSVoidKeyword', 'TSNeverKeyword', 'TSUndefinedKeyword']);
+export const UNUSED_CALL_PARENTS = new Set([
+    'ExpressionStatement',
+    'ArrowFunctionExpression',
+    'UnaryExpression',
+    'AwaitExpression',
+    'ReturnStatement',
+    'ThrowStatement',
+]);
 
-export const POWERED_BY_MIDDLEWARE = new Set(['helmet', 'helmet.default', 'helmet.hidePoweredBy', 'hide-powered-by']);
+export const COLLECTION_SIZE_MEMBERS = new Set(['length', 'size']);
+export const COLLECTION_TYPE_NAMES = new Set(['Array', 'Map', 'Set', 'WeakMap', 'WeakSet']);
 
-export const INSECURE_RANDOM_GENERATOR = 'Math.random';
+export const FIXED_WAIT_EXTENSIONS = ['js', 'mjs', 'cjs', 'jsx', 'vue', 'ts', 'mts', 'cts', 'tsx'];
+export const FIXED_WAIT_MARKERS = ['test', 'spec', 'cy', 'e2e', 'mock'];
+export const SIGNED_NUMBER_OPERATORS = new Set(['+', '-']);
 
-export const DISABLED_SECURITY_HEADERS = new Set(['contentSecurityPolicy', 'noSniff', 'referrerPolicy', 'hsts']);
+export const EQUALITY_OPERATORS = new Set(['==', '===', '!=', '!==']);
+export const REPEATED_OPERATORS = new Set(['&&', '||', '/', '-', '<<', '>>', '<', '<=', '>', '>=']);
+export const COMPARISON_OPERATORS = new Set([...EQUALITY_OPERATORS, '<', '<=', '>', '>=']);
 
-export const UNSAFE_REFERRER_POLICIES = new Set(['', 'unsafe-url', 'no-referrer-when-downgrade']);
+export const UNIT_SHIFT_VALUES = new Set<unknown>([1, 1n]);
 
-export const MINIMUM_HSTS_AGE = 15_552_000;
+export const LOOSE_EQUALITY_OPERATORS = new Set(['==', '!=']);
 
-export const COOKIE_SECURITY_FLAGS = ['secure', 'httpOnly'] as const;
+export const RESERVED_DECLARATION_NAMES = new Set([
+    'implements',
+    'interface',
+    'package',
+    'private',
+    'protected',
+    'public',
+    'enum',
+    'class',
+    'const',
+    'export',
+    'extends',
+    'import',
+    'super',
+    'let',
+    'static',
+    'yield',
+    'await',
+]);
 
-export const COOKIE_SET_OPTIONS_POSITION = 2;
+export const COMPLEX_TRY_STATEMENTS = /^(?:Block|For(?:In|Of)?|While|DoWhile|Switch)Statement$/u;

@@ -14,3 +14,9 @@ export type ImportSource =
     | TSESTree.ExportNamedDeclaration
     | TSESTree.ImportExpression
     | TSESTree.TSImportType;
+
+export type LocalFunction =
+    | TSESTree.FunctionDeclaration
+    | TSESTree.FunctionExpression
+    | TSESTree.ArrowFunctionExpression
+    | TSESTree.TSDeclareFunction;

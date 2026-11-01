@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
 import { readModuleName } from '../modules.ts';
-import { COOKIE_SECURITY_FLAGS, COOKIE_SET_OPTIONS_POSITION } from '../config/rules.ts';
+import { COOKIE_SECURITY_FLAGS, COOKIE_SET_OPTIONS_POSITION } from '../config/security.ts';
 import { readLiteralValue, readExpressionValue, readOptionProperties } from '../values.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

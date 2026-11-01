@@ -7,7 +7,7 @@ import {
     POWERED_BY_FACTORIES,
     POWERED_BY_MIDDLEWARE,
     POWERED_BY_SET_ARGUMENTS,
-} from '../config/rules.ts';
+} from '../config/security.ts';
 
 function protectsVariable(node: TSESTree.Identifier, source: TSESLint.SourceCode, seen: Set<TSESTree.Node>): boolean {
     const variable = ASTUtils.findVariable(source.getScope(node), node);
