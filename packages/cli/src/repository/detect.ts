@@ -7,7 +7,7 @@ import type { Configuration } from '#cli/types/manifests.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
 import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/matchers.ts';
 import { isInScope, joinScope, findProjectFolder } from '#cli/repository/scopes.ts';
-import { RUNTIME_TAG, SHEBANG_TAG, EVERY_REPOSITORY_EVIDENCE } from '#cli/config/repository/files.ts';
+import { RUNTIME_TAG, EVERY_REPOSITORY_EVIDENCE } from '#cli/config/repository/files.ts';
 
 import type {
     Repository,
@@ -23,11 +23,6 @@ function buildScopeContents(files: TrackedFile[], dependencyFiles: DependencyFil
             file.kind === 'source' && !file.path.startsWith(`${GSPOT_FOLDER}/`) && isInScope(file.path, scopePath),
     );
     const extensionCounts = new Map<string, number>();
-    const shebangs = new Set(
-        scopeFiles.flatMap((file) =>
-            file.tags.filter((tag) => tag.startsWith(SHEBANG_TAG)).map((tag) => tag.slice(SHEBANG_TAG.length)),
-        ),
-    );
     const paths = new Set(scopeFiles.map((file) => file.path));
     const scopeDependencyFiles = dependencyFiles.filter((dependencyFile) => paths.has(dependencyFile.path));
     const runtimes = new Map([
@@ -47,7 +42,6 @@ function buildScopeContents(files: TrackedFile[], dependencyFiles: DependencyFil
     return {
         files: scopeFiles,
         extensionCounts,
-        shebangs,
         runtimes,
         dependencies: new Map(
             scopeDependencyFiles.flatMap((file) => Object.keys(file.dependencies).map((name) => [name, file.path])),
@@ -123,11 +117,6 @@ function findDependencyEvidence(
     return undefined;
 }
 
-function findShebangEvidence(detect: Configuration['detect'], contents: ScopeContents): DetectionEvidence | undefined {
-    const shebang = detect.shebangs.find((name) => contents.shebangs.has(name));
-    return shebang === undefined ? undefined : { evidence: `${shebang} shebang` };
-}
-
 function findRuntimeEvidence(detect: Configuration['detect'], contents: ScopeContents): DetectionEvidence | undefined {
     for (const name of detect.runtimes) {
         const evidence = contents.runtimes.get(name);
@@ -153,7 +142,6 @@ const EVIDENCE_FINDERS = [
     findProjectEvidence,
     findFilenameEvidence,
     findDependencyEvidence,
-    findShebangEvidence,
     findRuntimeEvidence,
     findTagEvidence,
     findPathEvidence,

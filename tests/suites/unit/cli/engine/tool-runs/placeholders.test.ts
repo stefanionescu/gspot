@@ -201,7 +201,7 @@ test.each([...SHFMT_INDENT_CASES])(
     },
 );
 
-test('scalar placeholders select generated link files, scope, boolean settings and the chosen level', async () => {
+test('scalar placeholders select generated link files, scope, and boolean settings', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['swift'], { scopes: [{ path: 'app' }] }),
         'app/main.swift': 'let value = 1\n',
@@ -215,9 +215,6 @@ test('scalar placeholders select generated link files, scope, boolean settings a
     expect(replacePlaceholders(session, planned, '{pointer:prettier.config.mjs}', substitutions)).toBe(
         'prettier.config.mjs',
     );
-    expect(replacePlaceholders(session, planned, '{level:moderate:production}', substitutions)).toBe('moderate');
-    session.settings.level = 'all';
-    expect(replacePlaceholders(session, planned, '{level:moderate:production}', substitutions)).toBe('production');
     planned.scope.settings.valuesByKey['enabled'] = true;
     expect(replacePlaceholders(session, planned, '{setting:enabled}', substitutions)).toBe('true');
     expect(replacePlaceholders(session, planned, '{scope}', { ...substitutions, scope: '' })).toBe('.');

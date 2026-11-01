@@ -8,7 +8,7 @@ title = "Python"
 [detect]
 extensions = [".py"]
 project_files = ["pyproject.toml", "requirements*.txt", "Pipfile"]
-shebangs = ["python", "python3"]
+tags = ["shebang:python"]
 
 [files]
 extensions = [".py", ".pyi"]

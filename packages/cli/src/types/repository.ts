@@ -126,7 +126,6 @@ export type PackageManagerCommand = { name: string; version?: string | undefined
 export type ScopeContents = {
     files: TrackedFile[];
     extensionCounts: Map<string, number>;
-    shebangs: Set<string>;
     runtimes: Map<string, string>;
     dependencies: Map<string, string>;
     scope: string;

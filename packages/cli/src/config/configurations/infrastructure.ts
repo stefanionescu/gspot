@@ -336,4 +336,4 @@ export const GIXY_CHECK = 'nginx/gixy';
 
 export const ANSIBLE_LINT_ALWAYS_OFF = ['experimental'] as const;
 
-export const ANSIBLE_LINT_CHECK = 'ansible/ansible-lint';
+export const ANSIBLE_LINT_CHECKS = ['ansible/ansible-lint', 'ansible/ansible-lint-production'] as const;

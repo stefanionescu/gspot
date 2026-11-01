@@ -8,7 +8,7 @@ title = "JavaScript"
 [detect]
 extensions = [".js", ".jsx", ".mjs", ".cjs"]
 project_files = ["package.json"]
-shebangs = ["node"]
+tags = ["shebang:node"]
 
 [files]
 eslint_plugins = true

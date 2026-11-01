@@ -166,7 +166,6 @@ const detectionSchema = z.strictObject({
     filenames: stringsSchema,
     dependencies: stringsSchema,
     absent_dependencies: stringsSchema,
-    shebangs: stringsSchema,
     runtimes: z.enum(JAVASCRIPT_RUNTIMES).array().default([]),
     tags: stringsSchema,
     paths: stringsSchema,

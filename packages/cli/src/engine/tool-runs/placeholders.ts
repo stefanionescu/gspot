@@ -198,7 +198,6 @@ function buildPlaceholderReaders(
 ): Record<string, (value: string) => string> {
     return {
         setting: (name) => readScalarSetting(planned.scope.settings, name),
-        level: (levels) => levels.split(':')[session.settings.level === 'all' ? 1 : 0] as string,
         config_file: (name) =>
             join(substitutions.root, getConfigPath(session, planned, name))
                 .split('/')

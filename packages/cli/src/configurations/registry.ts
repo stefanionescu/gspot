@@ -191,6 +191,7 @@ export const CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder | undefined>
 
 export const CHECK_CODE: Record<string, CheckCode> = {
     'ansible/ansible-lint': { check: checkAnsibleLint },
+    'ansible/ansible-lint-production': { check: checkAnsibleLint },
     'bash/doc-comments': { check: checkBashDocComments },
     'bash/function-size': { check: checkBashFunctionSize },
     'bash/inline-scripts': { check: checkBashInlineScripts },
