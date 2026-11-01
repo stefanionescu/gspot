@@ -141,3 +141,16 @@ export async function readChangedPaths(
         commits,
     };
 }
+
+/**
+Check whether the working tree holds what the index holds, with no untracked file.
+
+@param root the folder where Git runs.
+@param cancelSignal stops the Git commands.
+*/
+export async function isWorkingTreeClean(root: string, cancelSignal?: AbortSignal): Promise<boolean> {
+    const changed = await readGitPaths(root, GIT_DIFF_NAMES_ARGUMENTS, { cancelSignal });
+    if (changed.length > 0) return false;
+    const untracked = await readGitPaths(root, GIT_UNTRACKED_FILES_ARGUMENTS, { cancelSignal });
+    return untracked.length === 0;
+}

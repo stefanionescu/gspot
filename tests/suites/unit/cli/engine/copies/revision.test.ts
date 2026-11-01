@@ -178,3 +178,16 @@ test.skipIf(isWindows)('a revision copy on Windows without link rights writes th
     using copy = await copyRevision(sandbox.path, { kind: 'index' });
     expect(await readFile(join(copy.root, 'linked.txt'), 'utf8')).toBe('target.txt');
 });
+
+test('an index copy clones the files that match the index, and takes a changed file from its blob', async () => {
+    await using sandbox = await testdir({ 'kept.txt': SELECTED_SOURCE, 'edited.txt': 'staged\n' });
+    commitAll(sandbox.path);
+    await writeFile(join(sandbox.path, 'edited.txt'), 'unstaged\n');
+    const clone = spyOn(fs, 'copyFileSync');
+    using copy = await copyRevision(sandbox.path, { kind: 'index' });
+    const cloned = clone.mock.calls.map(([source]) => String(source));
+    clone.mockRestore();
+    expect(cloned.some((source) => source.endsWith('kept.txt'))).toBe(true);
+    expect(cloned.some((source) => source.endsWith('edited.txt'))).toBe(false);
+    expect(await readFile(join(copy.root, 'edited.txt'), 'utf8')).toBe('staged\n');
+});

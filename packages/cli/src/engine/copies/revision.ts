@@ -8,17 +8,17 @@ import { splitSystemPath } from '#cli/system/files/reads.ts';
 import { copyValePackages } from '#cli/engine/copies/vale.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { createCopyFolder } from '#cli/engine/copies/folders.ts';
-import { runGit, readGitText } from '#cli/repository/git/run.ts';
 import type { GitFile, Revision } from '#cli/types/repository.ts';
 import { join, posix, dirname, basename, relative } from 'node:path';
 import { listPackageFiles } from '#cli/repository/javascript/workspaces.ts';
 import { SYMLINK_MODE, GITLINK_MODE } from '#cli/config/repository/files.ts';
+import { runGit, readGitText, readGitPaths } from '#cli/repository/git/run.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { PACKAGE_JSON, PACKAGE_SWIFT, PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { visitGitBlobs, listRevisionFiles } from '#cli/repository/revisions/files.ts';
-import { TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/repository/git.ts';
 import { statSync, chmodSync, lstatSync, mkdirSync, realpathSync, copyFileSync, writeFileSync } from 'node:fs';
 import type { CopyFile, RevisionCopy, CopyIndexFile, RevisionDependencies } from '#cli/types/engine/tool-runs.ts';
+import { TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS, GIT_DIFF_NAMES_ARGUMENTS } from '#cli/config/repository/git.ts';
 import { copyDependencies, readIgnoredPaths, readDeclarationDependencies } from '#cli/engine/copies/dependencies.ts';
 
 import {
@@ -159,10 +159,21 @@ function findCaseCollision(indexFiles: GitFile[]): [string, string] | undefined 
     return undefined;
 }
 
+async function listWorkingTreeMatches(
+    root: string,
+    indexFiles: GitFile[],
+    cancelSignal: AbortSignal | undefined,
+): Promise<ReadonlySet<GitFile>> {
+    const changed = new Set(await readGitPaths(root, GIT_DIFF_NAMES_ARGUMENTS, { cancelSignal }));
+    return new Set(
+        indexFiles.filter(({ path, mode }) => mode !== GITLINK_MODE && mode !== SYMLINK_MODE && !changed.has(path)),
+    );
+}
+
 async function writeRevisionFiles(
     root: string,
     copyRoot: string,
-    indexFiles: GitFile[],
+    { indexFiles, cloned }: { indexFiles: GitFile[]; cloned: ReadonlySet<GitFile> },
     cancelSignal?: AbortSignal,
 ): Promise<void> {
     const collision = findCaseCollision(indexFiles);
@@ -178,11 +189,15 @@ async function writeRevisionFiles(
         mkdirSync(target, { recursive: true, mode: OWNER_WRITABLE_FOLDER });
         chmodSync(target, OWNER_WRITABLE_FOLDER);
     }
+    const clonedPaths = [...cloned].map(({ path }) => path);
+    await writeCopyFiles({ root, target: copyRoot, files: clonedPaths, dependencies: [], cancelSignal });
     for (const linked of [false, true]) {
         const selected = Map.groupBy(
             indexFiles.filter(
                 (indexFile): indexFile is CopyIndexFile =>
-                    indexFile.mode !== GITLINK_MODE && (indexFile.mode === SYMLINK_MODE) === linked,
+                    indexFile.mode !== GITLINK_MODE &&
+                    (indexFile.mode === SYMLINK_MODE) === linked &&
+                    !cloned.has(indexFile),
             ),
             (indexFile) => indexFile.hash,
         );
@@ -233,8 +248,9 @@ async function initializeRevisionCopy(
 }
 
 /**
-Writes a Git revision into a private copy without checkout filters, stashing, or changes to authored files. The copy
-has its own Git directory, so Git commands use the copied revision.
+Writes a Git revision into a private copy and leaves the authored files alone. The copy clones each file that matches
+the index from the working tree, and takes every other file from its Git blob. The copy has its own Git directory, so
+Git commands use the copied revision.
 
 @param root the checkout with the Git objects and installed dependencies.
 @param source the revision to copy.
@@ -254,7 +270,11 @@ export async function copyRevision(root: string, source: Revision, cancelSignal?
         await readGitText(copy.path, GIT_UPDATE_INDEX_ARGUMENTS, { cancelSignal, stdin: index });
         const treeLine = await readGitText(copy.path, GIT_WRITE_TREE_ARGUMENTS, { cancelSignal });
         const tree = treeLine.replace(TRAILING_NEWLINE, '');
-        await writeRevisionFiles(toplevel, copy.path, indexFiles, cancelSignal);
+        const cloned =
+            source.kind === 'index'
+                ? await listWorkingTreeMatches(toplevel, indexFiles, cancelSignal)
+                : new Set<GitFile>();
+        await writeRevisionFiles(toplevel, copy.path, { indexFiles, cloned }, cancelSignal);
         copyValePackages(
             toplevel,
             copy.path,

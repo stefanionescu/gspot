@@ -96,7 +96,7 @@ test('a staged check reads index bytes and file modes, converts no line endings,
     expect(await isOnDisk(join(sandbox.path, 'created.txt'))).toBe(false);
 });
 
-test('a staged check reuses the locked dependencies and isolates source edits', async () => {
+test('a staged check with unstaged work reuses the locked dependencies and isolates source edits', async () => {
     await using sandbox = await createGitSandbox({});
     const lockfile = JSON.stringify({
         name: STAGED_PACKAGE_JSON.name,
@@ -127,6 +127,7 @@ test('a staged check reuses the locked dependencies and isolates source edits', 
         }),
     });
     runGitStep(sandbox.path, ['add', '-A']);
+    await writeFile(join(sandbox.path, 'notes.txt'), 'unstaged\n');
     const commandArguments = ['check', '--staged', '--only', 'project/dependencies', '--json'];
     const first = await runGspot(sandbox.path, commandArguments);
     expect(first.code, first.stdout + first.stderr).toBe(0);

@@ -2,11 +2,40 @@ import { readGitLines } from '#cli/repository/git/run.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
+import { readHead } from '#cli/repository/revisions/files.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { readPushedRevisions } from '#cli/repository/revisions/push.ts';
+import { isWorkingTreeClean } from '#cli/repository/revisions/changes.ts';
 import type { PushRevision, PushedRevisions } from '#cli/types/repository.ts';
 import { NO_PENDING_REFS, EMPTY_PUSH_MESSAGE } from '#cli/config/commands/reports.ts';
 import type { PushReport, CheckOptions, RevisionCheckResult } from '#cli/types/commands/reports.ts';
+
+async function checkRevisionTree(
+    root: string,
+    options: CheckOptions,
+    cancelSignal: AbortSignal,
+    revision: PushRevision,
+): Promise<RevisionCheckResult> {
+    const source = {
+        base: revision.base,
+        commits: revision.commits,
+        range: revision.range,
+        shallow: revision.shallow,
+        content: 'commit',
+        toolsRoot: root,
+        reference: revision.hash,
+        ...(revision.paths !== undefined && { changed: revision.paths }),
+    } as const;
+    const head = await readHead(root, cancelSignal);
+    if (revision.hash === head && (await isWorkingTreeClean(root, cancelSignal)))
+        return await runTreeCheck(root, options, cancelSignal, source);
+    using copy = await copyRevision(root, { kind: 'commit', hash: revision.hash }, cancelSignal);
+    return await runTreeCheck(copy.root, options, cancelSignal, {
+        ...source,
+        ...(copy.dependencyNote !== undefined && { dependencyNote: copy.dependencyNote }),
+        unreadablePaths: copy.unreadablePaths,
+    });
+}
 
 async function runRevisionCheck(
     root: string,
@@ -20,19 +49,7 @@ async function runRevisionCheck(
             cancelSignal,
         });
         if (settings.length === 0) return { skipped: 'the commit has no gspot.toml' };
-        using copy = await copyRevision(root, { kind: 'commit', hash: revision.hash }, cancelSignal);
-        return await runTreeCheck(copy.root, options, cancelSignal, {
-            ...(copy.dependencyNote !== undefined && { dependencyNote: copy.dependencyNote }),
-            unreadablePaths: copy.unreadablePaths,
-            base: revision.base,
-            commits: revision.commits,
-            range: revision.range,
-            shallow: revision.shallow,
-            content: 'commit',
-            toolsRoot: root,
-            reference: revision.hash,
-            ...(revision.paths !== undefined && { changed: revision.paths }),
-        });
+        return await checkRevisionTree(root, options, cancelSignal, revision);
     } catch (error) {
         if (!cancelSignal.aborted) throw error;
         return undefined;

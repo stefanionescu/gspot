@@ -13,10 +13,10 @@ import { TRAILING_NEWLINE } from '#cli/config/repository/git.ts';
 import { InvalidArgumentError } from '@commander-js/extra-typings';
 import { formatNameList, formatCountVerb } from '#cli/system/text.ts';
 import { readGitText, readGitPaths } from '#cli/repository/git/run.ts';
-import { readStagedPaths } from '#cli/repository/revisions/changes.ts';
 import { writeProgress, runCancelableCommand } from '#cli/system/terminal.ts';
 import type { CommandLocation, CommandDefinition } from '#cli/types/commands/edits.ts';
 import { BASE_FLAG, STAGED_FLAG, GIT_WRITE_TREE_ARGUMENTS } from '#cli/config/engine.ts';
+import { readStagedPaths, isWorkingTreeClean } from '#cli/repository/revisions/changes.ts';
 import type { CheckFlags, CheckOptions, CheckCommandJson } from '#cli/types/commands/reports.ts';
 
 import {
@@ -186,7 +186,7 @@ async function runStagedCheck(
         staged,
         started,
     } as const;
-    if (staged.staged.length === 0) {
+    if (staged.staged.length === 0 || (await isWorkingTreeClean(root, cancelSignal))) {
         const tree = await readGitText(root, GIT_WRITE_TREE_ARGUMENTS, { cancelSignal });
         return await runTreeCheck(root, options, cancelSignal, {
             ...revision,
