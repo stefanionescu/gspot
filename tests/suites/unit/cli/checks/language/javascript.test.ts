@@ -17,14 +17,21 @@ import { cp, chmod, mkdir, unlink, copyFile, readFile, realpath, writeFile } fro
 import { EMPTY_PROJECT_RESULT, IMPORTED_AMBIENT_FILES } from '#tests/config/checks/language/language.ts';
 import { toolModules, linkTypescript, linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 
-test('javascript/biome checks Node shebang scripts and reports their original paths', async () => {
+test('javascript/biome checks shebang scripts, TypeScript, and component files in each scope', async () => {
+    const nested = 'if (value) { if (value.ready) { if (value.id) return 1; } } return 0;';
+    const typed = `function count(value: { ready: boolean; id: number }) { ${nested} }`;
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript'], {
+        'gspot.toml': buildSandboxSettings(['typescript', 'vue', 'svelte', 'astro'], {
             level: 'all',
-            tables: '[limits.javascript]\ncognitive_complexity = 2\n',
+            tables: '[limits.javascript]\ncognitive_complexity = 2\n[limits.typescript]\ncognitive_complexity = 2\n',
+            scopes: [{ path: 'app' }],
         }),
-        'bin/run':
-            '#!/usr/bin/env node\nfunction count(value) { if (value) { if (value.ready) { if (value.id) return 1; } } return 0; }\n',
+        'bin/run': `#!/usr/bin/env node\nfunction count(value) { ${nested} }\n`,
+        'source.ts': `export ${typed}\n`,
+        'Widget.vue': `<script setup lang="ts">\n${typed}\n</script>\n`,
+        'Widget.svelte': `<script lang="ts">\n${typed}\n</script>\n`,
+        'Page.astro': `---\n${typed}\n---\n<p>Page</p>\n`,
+        'app/source.ts': `export ${typed}\n`,
     });
     const modules = join(sandbox.path, '.gspot/node_modules');
     await cp(dirname(await realpath(join(toolModules, '@biomejs/biome'))), join(modules, '@biomejs'), {
@@ -38,14 +45,18 @@ test('javascript/biome checks Node shebang scripts and reports their original pa
     if (isWindows) await writeFile(`${launcher}.cmd`, `@"${process.execPath}" "%~dp0biome" %*\r\n`);
     await applyGeneratedFiles(sandbox.path);
     const findings = await runSandboxCheck(sandbox.path, 'javascript/biome');
-    expect(findings).toMatchObject([
-        {
-            file: 'bin/run',
-            line: 2,
-            rule: 'lint/complexity/noExcessiveCognitiveComplexity',
-        },
-    ]);
-    expect(findings[0]?.message).toContain('(max: 2)');
+    const nestedFindings = await runSandboxCheck(sandbox.path, 'javascript/biome', { scope: 'app' });
+    expect([...findings, ...nestedFindings].map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual(
+        [
+            { file: 'Page.astro', line: 2 },
+            { file: 'Widget.svelte', line: 2 },
+            { file: 'Widget.vue', line: 2 },
+            { file: 'source.ts', line: 1 },
+            { file: 'bin/run', line: 2 },
+            { file: 'app/source.ts', line: 1 },
+        ].map((finding) => ({ ...finding, rule: 'lint/complexity/noExcessiveCognitiveComplexity' })),
+    );
+    expect(findings.find(({ file }) => file === 'bin/run')?.message).toContain('(max: 2)');
     expect(await readFile(join(sandbox.path, 'bin/run'), 'utf8')).toStartWith('#!/usr/bin/env node');
 });
 

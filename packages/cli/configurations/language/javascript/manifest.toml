@@ -382,3 +382,15 @@ selector = "ImportDeclaration[source.value=/node_modules/]"
 [[eslint.selectors]]
 message = "Use the package's public name instead of a node_modules path."
 selector = "CallExpression[callee.type='Identifier'][callee.name='require'][arguments.length=1][arguments.0.type='Literal'][arguments.0.value=type(string)][arguments.0.value=/node_modules/]"
+
+[[eslint.selectors]]
+message = "This continue ends the loop body, so it does nothing. Remove it."
+selector = ':matches(WhileStatement, DoWhileStatement, ForStatement, ForInStatement, ForOfStatement) > BlockStatement[body.length>1] > ContinueStatement[label=null]:last-child'
+
+[[eslint.selectors]]
+message = "This continue ends the loop body, so it does nothing. Remove it."
+selector = ':matches(WhileStatement, DoWhileStatement, ForStatement, ForInStatement, ForOfStatement) > BlockStatement > IfStatement:last-child > BlockStatement[body.length>1] > ContinueStatement[label=null]:last-child'
+
+[[eslint.selectors]]
+message = "The s flag makes . match every character. Write . instead of this character class."
+selector = 'Literal[regex.flags=/s/][regex.pattern=/\[(?:\\s\\S|\\S\\s)\]/]'
