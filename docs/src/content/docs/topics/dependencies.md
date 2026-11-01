@@ -60,6 +60,9 @@ not matter. When init replaces `.license-checker.json`, move packages you still 
 `dependencies/osv-scanner` reads your lockfiles and reports known vulnerable packages at push. Update the package, then
 check again. An accepted advisory needs an [ignore with a reason](/use/ignore/).
 
+The check skips `.gspot/`, because you cannot change the versions that gspot pins for its tools. The maintainers of
+gspot scan the tool lockfiles of every configuration each week.
+
 ## Lockfiles and package managers
 
 These checks read the project files, without the network:

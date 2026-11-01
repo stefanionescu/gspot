@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+#MISE description="Build the tool lockfiles of every configuration from the manifests, and scan them for known advisories."
+#MISE depends=["packages:cli:build"]
+set -euo pipefail
+
+repository_root="${PWD}"
+work_folder="$(mktemp -d)" || exit 1
+trap 'rm -rf -- "${work_folder}"' EXIT
+tools_folder="${work_folder}/.gspot"
+export MISE_TRUSTED_CONFIG_PATHS="${tools_folder}/mise.toml"
+
+declare -a configurations
+for manifest in packages/cli/src/configurations/*/*/manifest.toml; do
+    configuration_folder="${manifest%/*}"
+    configurations+=("${configuration_folder##*/}")
+done
+{
+    printf 'level = "all"\nconfigurations = ['
+    printf '"%s",' "${configurations[@]}"
+    printf ']\n'
+} >"${work_folder}/gspot.toml"
+
+git -C "${work_folder}" init --quiet
+cd -- "${work_folder}" || exit 1
+node "${repository_root}/packages/cli/dist/gspot.js" apply
+cd -- "${tools_folder}" || exit 1
+
+# The plugin of this commit may be newer than npm, and the scan of the repository lockfile already covers its packages.
+tool_project="$(jq 'del(.devDependencies["@gspothq/eslint-plugin"])' package.json)" || exit 1
+printf '%s\n' "${tool_project}" >package.json
+
+bun install --lockfile-only
+mise install uv osv-scanner
+mise exec -- uv lock
+mise exec -- osv-scanner scan source \
+    --config "${repository_root}/.gspot/configurations/general/dependencies/osv-scanner.toml" \
+    --lockfile bun.lock \
+    --lockfile uv.lock

@@ -4,10 +4,12 @@ on:
         branches: [main]
     schedule:
         - cron: '0 4 * * *'
+        - cron: '0 5 * * 1'
 permissions:
     contents: read
 jobs:
     test:
+        if: github.event.schedule != '0 5 * * 1'
         defaults:
             run:
                 shell: bash
@@ -45,5 +47,25 @@ jobs:
                   docker compose version
             - run: mise run setup
             - run: mise run test ${{ matrix.suite }}
+              env:
+                  GITHUB_TOKEN: ${{ github.token }}
+    tool-lockfiles:
+        if: github.event.schedule == '0 5 * * 1'
+        defaults:
+            run:
+                shell: bash
+        name: tool lockfiles
+        runs-on: ubuntu-24.04
+        timeout-minutes: 30
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  persist-credentials: false
+            - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+              with:
+                  version: '2026.10.7'
+                  install_args: bun node
+            - run: mise run setup
+            - run: mise run scan-tool-lockfiles
               env:
                   GITHUB_TOKEN: ${{ github.token }}
