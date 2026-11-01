@@ -20,7 +20,7 @@ import { MISE_PROJECT_MESSAGE } from '#cli/config/tools/installers.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildToolInstall, buildToolLockfiles } from '#tests/setup/cli/tools.ts';
-import { installMiseTools, isMiseLockfileFresh } from '#cli/tools/installers/mise.ts';
+import { installMiseTools, reinstallMiseTools, isMiseLockfileFresh } from '#cli/tools/installers/mise.ts';
 
 test('mise lock freshness needs the tool, its version, a URL and a sha256 checksum', () => {
     const checksum = `sha256:${'a'.repeat(64)}`;
@@ -250,3 +250,15 @@ test.each(['tools = [', '<<<<<<< HEAD\n[tools]\n=======\n[tools]\n>>>>>>> branch
         expect(isMiseLockfileFresh(listMisePins(session.toolConfigurations), lockfile)).toBe(true);
     },
 );
+
+test('a failed mise tool installs again at its pin with the force flag', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['spelling']) });
+    const session = await openSession(sandbox.path);
+    const install = buildToolInstall(session, openFiles(sandbox.path));
+    const project = install.generated.files.find(({ path }) => path === GSPOT_PATHS.miseProject)!;
+    await createFileTree(sandbox.path, { [project.path]: project.content });
+    const [pin] = listMisePins(session.toolConfigurations) as [MiseToolPin];
+    using _commands = fakeCommands('mise', () => Promise.resolve(buildProcessResult()));
+    await reinstallMiseTools(install, [pin]);
+    expect(install.steps).toStrictEqual([['mise', 'install', '--force', `${pin.name}@${pin.version}`]]);
+});

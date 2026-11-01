@@ -210,8 +210,13 @@ Install the frozen Python tool project in .gspot.
 
 @param install what install needs for this step.
 @param executable the path of uv.
+@param flags the flags after the install command.
 */
-export async function installPythonTools(install: ToolInstall, executable: string): Promise<string> {
+export async function installPythonTools(
+    install: ToolInstall,
+    executable: string,
+    flags: readonly string[] = [],
+): Promise<string> {
     const { root, toolConfigurations } = install.session;
     const runFolder = join(root, GSPOT_FOLDER);
 
@@ -224,7 +229,7 @@ export async function installPythonTools(install: ToolInstall, executable: strin
     );
     await runUv(install, {
         runFolder,
-        commandArguments: UV_INSTALL_ARGUMENTS,
+        commandArguments: [...UV_INSTALL_ARGUMENTS, ...flags],
         executable,
         credentials,
         config: join(settings.path, UV_SETTINGS_FILE),

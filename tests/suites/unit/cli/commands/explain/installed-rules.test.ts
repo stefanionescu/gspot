@@ -1,4 +1,4 @@
-import { devNull } from 'node:os';
+import { tmpdir, devNull } from 'node:os';
 import { join, dirname } from 'node:path';
 import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
@@ -60,7 +60,7 @@ test('SwiftLint validates rules with installed metadata and an empty explicit co
     });
     using _lookup = fakeExecutableLookup((name) => {
         if (name === 'swiftlint') return null;
-        return name === 'mise' ? join(sandbox.path, 'mise') : undefined;
+        return name === 'mise' ? join(tmpdir(), 'mise') : undefined;
     });
     const blocking = processes.spawnProcessBlocking;
     using _bins = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>

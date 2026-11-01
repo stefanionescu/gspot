@@ -165,7 +165,11 @@ export type ToolInstall = {
     steps: (readonly string[])[];
 };
 
-export type MiseInstall = { installed: string; note: string; binPaths: string[] };
+export type MiseInstall = { installed: string; note: string; binPaths: string[]; tools: Tool[] };
+
+export type ToolProjectsInstall = { installed: string[]; tools: Tool[] };
+
+export type BrokenTool = { tool: Tool; inspection: ToolInspection };
 
 export type StaleLockfile = { path: string; kind: 'absent' | 'changed' };
 

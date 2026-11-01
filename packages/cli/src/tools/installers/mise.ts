@@ -23,6 +23,7 @@ import type { MiseToolPin, MiseInstall, ToolInstall, MiseLockfile, GeneratedFile
 import {
     UV_TOOL,
     MISE_TOOL_NOUN,
+    MISE_FORCE_FLAG,
     GITHUB_RATE_LIMIT,
     CONFIG_TOML_FORMAT,
     MISE_RELEASE_HOSTS,
@@ -53,6 +54,19 @@ function selectMiseTools(install: ToolInstall) {
             (pin.name === UV_TOOL && listPackagePins(configurations).python.length > 0),
     );
     return { pins, hookTools };
+}
+
+async function runMiseInstall(install: ToolInstall, command: string[]): Promise<void> {
+    const { root } = install.session;
+    const [project] = install.generated.files.filter(({ path }) => path === GSPOT_PATHS.miseProject) as [GeneratedFile];
+    const trust = buildMiseTrust(root, project.content);
+    if (trust === undefined) throw new GspotError('install', MISE_PROJECT_MESSAGE);
+    await runRequiredInstallStep(install, command, {
+        cwd: join(root, GSPOT_FOLDER),
+        env: { ...MISE_LOCKED_ENVIRONMENT, ...trust },
+        step: `installing mise tools from ${GSPOT_PATHS.miseProject}`,
+        name: `The command ${command.join(' ')}`,
+    });
 }
 
 function isReleaseAddress(address: unknown): boolean {
@@ -198,20 +212,13 @@ export async function installMiseTools(install: ToolInstall): Promise<MiseInstal
             return which.sync(name, { nothrow: true }) === null ? [`${name} ${pin.version}`] : [];
         });
         const note = missing.length === 0 ? '' : `Install mise, or install these tools yourself: ${missing.join(', ')}`;
-        return { installed: '', note, binPaths: [] };
+        return { installed: '', note, binPaths: [], tools: [] };
     }
     const [project] = install.generated.files.filter(({ path }) => path === GSPOT_PATHS.miseProject) as [GeneratedFile];
     if (listMisePins(session.toolConfigurations).length > 0) await writeMiseLockfile(install, project);
-    if (pins.length === 0) return { installed: '', note: '', binPaths: readToolBinPaths(session, project.content) };
-    const trust = buildMiseTrust(session.root, project.content);
-    if (trust === undefined) throw new GspotError('install', MISE_PROJECT_MESSAGE);
-    const command = [...MISE_INSTALL_ARGUMENTS, ...pins.map((pin) => pin.name)];
-    await runRequiredInstallStep(install, command, {
-        cwd: join(session.root, GSPOT_FOLDER),
-        env: { ...MISE_LOCKED_ENVIRONMENT, ...trust },
-        step: `installing mise tools from ${GSPOT_PATHS.miseProject}`,
-        name: `The command ${command.join(' ')}`,
-    });
+    if (pins.length === 0)
+        return { installed: '', note: '', binPaths: readToolBinPaths(session, project.content), tools: [] };
+    await runMiseInstall(install, [...MISE_INSTALL_ARGUMENTS, ...pins.map((pin) => pin.name)]);
     const names = pins.map((pin) => pin.name);
     steps.push([...MISE_BIN_PATHS_ARGUMENTS, ...names]);
     return {
@@ -221,7 +228,20 @@ export async function installMiseTools(install: ToolInstall): Promise<MiseInstal
             timeoutSeconds: session.timeoutSeconds,
             project: project.content,
         }),
+        tools: hookTools,
     };
+}
+
+/**
+Install the mise tools again over what the mise install folder holds.
+
+@param install what install needs for this step.
+@param pins the mise pins to install again.
+*/
+export async function reinstallMiseTools(install: ToolInstall, pins: MiseToolPin[]): Promise<void> {
+    if (pins.length === 0) return;
+    const versions = pins.map((pin) => `${pin.name}@${pin.version}`);
+    await runMiseInstall(install, [...MISE_INSTALL_ARGUMENTS, MISE_FORCE_FLAG, ...versions]);
 }
 
 /**

@@ -68,6 +68,8 @@ export const MISE_TOOL = 'mise';
 
 export const MISE_INSTALL_ARGUMENTS = [MISE_TOOL, 'install'] as const;
 
+export const MISE_FORCE_FLAG = '--force';
+
 const MISE_PLATFORMS = ['linux-x64', 'linux-arm64', 'macos-x64', 'macos-arm64', 'windows-x64'] as const;
 
 export const MISE_LOCK_ARGUMENTS = [MISE_TOOL, 'lock', '--platform', MISE_PLATFORMS.join(',')] as const;
@@ -100,6 +102,8 @@ const PYTHON_VERSION = '3.13.16';
 export const UV_LOCKFILE_ARGUMENTS = ['lock', '--python', PYTHON_VERSION] as const;
 
 export const UV_INSTALL_ARGUMENTS = ['sync', '--locked', '--no-install-project', '--python', PYTHON_VERSION] as const;
+
+export const UV_REINSTALL_FLAG = '--reinstall';
 
 export const REQUIREMENT_PACKAGE_NAME = /^[^=]+/u;
 

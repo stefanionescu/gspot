@@ -1,16 +1,19 @@
+import type { Tool } from '#cli/types/manifests.ts';
 import { findProgram } from '#cli/system/programs.ts';
-import { listDistinctTools } from '#cli/tools/pins.ts';
 import { MISE_TOOL } from '#cli/config/tools/installers.ts';
 import { installHooks } from '#cli/tools/installers/hooks.ts';
+import { getOperatingSystem } from '#cli/system/environment.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
-import { installMiseTools } from '#cli/tools/installers/mise.ts';
 import { installValePackages } from '#cli/tools/installers/vale.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
-import { installToolProjects } from '#cli/tools/installers/projects.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
+import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { assertPackageManagerVersion } from '#cli/tools/installers/npm/project.ts';
+import { installMiseTools, reinstallMiseTools } from '#cli/tools/installers/mise.ts';
+import { findMisePin, findMissingBuild, listDistinctTools } from '#cli/tools/pins.ts';
 import { readToolPackageManager } from '#cli/repository/javascript/package-manager.ts';
-import type { Session, ToolInstall, InstallResult, ToolPackageManager } from '#cli/types/tools.ts';
+import { repairToolProjects, installToolProjects } from '#cli/tools/installers/projects.ts';
+import type { Session, BrokenTool, ToolInstall, InstallResult, ToolPackageManager } from '#cli/types/tools.ts';
 
 function readInstallPackageManager(session: Session): ToolPackageManager | undefined {
     const pin = session.packageManager;
@@ -28,8 +31,32 @@ function writeToolProjects({ writer, generated }: ToolInstall): void {
     writePlans(writer, planReplacements(writer, requests));
 }
 
+function listBrokenTools(install: ToolInstall, tools: Tool[], miseBinPaths: string[]): BrokenTool[] {
+    const { session } = install;
+    const host = { platform: getOperatingSystem(), arch: process.arch };
+    return tools
+        .filter((tool) => findMissingBuild(tool, host) === undefined)
+        .map((tool) => ({ tool, inspection: inspectTool({ ...session, inspections: new Map(), miseBinPaths }, tool) }))
+        .filter(({ tool, inspection }) => 'status' in buildToolAvailability(tool, inspection));
+}
+
+async function repairTools(install: ToolInstall, tools: Tool[], miseBinPaths: string[]): Promise<string[]> {
+    const broken = listBrokenTools(install, tools, miseBinPaths).map(({ tool }) => tool);
+    if (broken.length === 0) return [];
+    await repairToolProjects(install, miseBinPaths, broken);
+    await reinstallMiseTools(
+        install,
+        broken.flatMap((tool) => findMisePin(tool) ?? []),
+    );
+    return listBrokenTools(install, tools, miseBinPaths).map(({ tool, inspection }) => {
+        const reason = inspection.note ?? `gspot found ${inspection.found ?? 'no program'}`;
+        return `${tool.name} ${tool.version ?? ''} still fails after a forced install. ${reason}`;
+    });
+}
+
 /**
-Install the tools in their tool projects and set the hooks of this clone.
+Install the tools in their tool projects, inspect each one, reinstall the ones that fail, and set the hooks of this
+clone.
 
 @param session the repository to install for.
 @param input the repository handle, generated files, and tools of the checks.
@@ -43,15 +70,13 @@ export async function installTools(
     await assertPackageManagerVersion(context);
     writeToolProjects(context);
     const mise = await installMiseTools(context);
-    const installed = [
-        mise.installed,
-        ...(await installToolProjects(context, mise.binPaths)),
-        await installValePackages(context, mise.binPaths),
-    ];
+    const projects = await installToolProjects(context, mise.binPaths);
+    const installed = [mise.installed, ...projects.installed, await installValePackages(context, mise.binPaths)];
+    const broken = await repairTools(context, [...mise.tools, ...projects.tools], mise.binPaths);
     const hooks = await installHooks(session, steps);
     if (hooks.command !== undefined) installed.push(hooks.note);
     const notes = [hooks.command === undefined ? hooks.note : ''];
-    const missing = [mise.note];
+    const missing = [mise.note, ...broken];
     return {
         installed: installed.filter(Boolean),
         missing: missing.filter(Boolean),
