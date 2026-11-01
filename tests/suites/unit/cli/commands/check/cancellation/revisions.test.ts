@@ -5,13 +5,13 @@ import type { PausedGit } from '#tests/types/setup.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+import { readdir, readFile, writeFile } from 'node:fs/promises';
 import type { PushReport } from '#cli/types/commands/reports.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { CLI_BIN, runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { GSPOT_ENVIRONMENT, SIGNAL_MARKER_OPTION } from '#tests/config/setup/programs.ts';
 import { BASH_SYNTAX_CHECK, UNIT_TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/sandboxes.ts';
@@ -23,16 +23,16 @@ async function prepareStagedCancellation(root: string, operation: 'diff' | 'init
         'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'source.sh': 'echo indexed\n',
         scratch: {},
-        bin: {},
     });
     runGitStep(root, ['init', '-q']);
     runGitStep(root, ['add', '-A']);
     const indexed = runGitStep(root, ['ls-files', '--stage', '-z']);
     await writeFile(join(root, 'source.sh'), AUTHORED_SCRIPT);
     const marker = join(root, 'started.json');
-    const environment = await fakePausingGit(join(root, 'bin'), { operation, marker, pauseOnCall: 1 });
-    const scratch = join(root, 'scratch');
     await using resources = new AsyncDisposableStack();
+    const binaries = resources.use(await testdir());
+    const environment = await fakePausingGit(binaries.path, { operation, marker, pauseOnCall: 1 });
+    const scratch = join(root, 'scratch');
     const capture = resources.use(
         spawnCommand([process.execPath, CLI_BIN, 'check', '--staged', '--only', 'project/bash-syntax', '--json'], {
             cwd: root,
@@ -106,8 +106,7 @@ test.skipIf(isWindows)(
         runGitStep(sandbox.path, ['commit', '-qam', 'feat: second']);
         const second = runGitStep(sandbox.path, ['rev-parse', 'HEAD']);
         const marker = join(sandbox.path, 'started.json');
-        const binaryFolder = join(sandbox.path, 'bin');
-        await mkdir(binaryFolder);
+        await using binaries = await testdir();
         const protocol = `refs/heads/first ${first} refs/heads/first ${'0'.repeat(first.length)}\nrefs/heads/second ${second} refs/heads/second ${'0'.repeat(second.length)}\n`;
         await using capture = spawnCommand(
             [process.execPath, CLI_BIN, 'check', '--hook', 'pre-push', '--only', 'project/bash-syntax', '--json'],
@@ -116,7 +115,7 @@ test.skipIf(isWindows)(
                 timeoutSeconds: (UNIT_TEST_TIMEOUT_MILLISECONDS - MILLISECONDS_PER_SECOND) / MILLISECONDS_PER_SECOND,
                 env: {
                     ...GSPOT_ENVIRONMENT,
-                    ...(await fakePausingGit(binaryFolder, {
+                    ...(await fakePausingGit(binaries.path, {
                         operation: 'init',
                         marker,
                         pauseOnCall: 2,

@@ -1,4 +1,5 @@
 import executables from 'which';
+import { tmpdir } from 'node:os';
 import { getTool } from '#cli/tools/pins.ts';
 import { mock, spyOn, type Mock } from 'bun:test';
 import { quoteArgument } from '#cli/system/text.ts';
@@ -45,7 +46,7 @@ export function fakeToolExecutables(tools: Tool[]): DisposableStack {
     resources.use(
         fakeExecutableLookup((name) => {
             if (name === 'mise') return null;
-            return tools.some((tool) => tool.name === name) ? join(process.cwd(), 'test-tools', name) : undefined;
+            return tools.some((tool) => tool.name === name) ? join(tmpdir(), 'test-tools', name) : undefined;
         }),
     );
     resources.use(
@@ -113,7 +114,7 @@ export async function fakeNpmPackage(
 }
 
 /**
-Make executable lookup return one path, or the path a function picks for each name.
+Make executable lookup return one path, or the path a function picks for each name. Git keeps its real lookup.
 
 @param path the path, or a function of the name; when the function gives undefined, the real lookup runs.
 */
@@ -127,7 +128,7 @@ export function fakeExecutableLookup(
         // eslint-disable-next-line sonarjs/function-return-type -- reason: which.sync returns one path, all paths, or null.
     ): string | string[] | null => {
         const found = typeof path === 'function' ? path(name) : path;
-        if (found === undefined) return locate(name, options);
+        if (found === undefined || name === GIT_PROGRAM) return locate(name, options);
         if (options?.all === true) return found === null ? [] : [found];
         return found;
     }) as typeof executables.sync);

@@ -101,6 +101,10 @@ export const MISSING_CODE = 127;
 
 export const PATHEXT_DEFAULT = '.COM;.EXE;.BAT;.CMD';
 
+export const OUTSIDE_PROGRAMS: ReadonlySet<string> = new Set(['git', 'mise', 'node', 'npm']);
+
+export const GIT_METADATA_NAME = '.git';
+
 export const PATH_SEPARATORS = /[\\/]/u;
 
 export const TASKKILL_PROGRAM = 'taskkill';

@@ -64,7 +64,7 @@ export function buildToolInstall(session: Session, writer: Files): ToolInstall {
         generated: buildGeneratedFiles(session),
         tools: listDistinctTools(session.toolConfigurations),
         checkTools: listHostCheckTools(session.configuredChecks),
-        misePath: null,
+        misePath: undefined,
         steps: [],
     };
 }

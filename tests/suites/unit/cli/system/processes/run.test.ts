@@ -1,14 +1,16 @@
-import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { chmod } from 'node:fs/promises';
+import { join, delimiter } from 'node:path';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import type { ProcessBackend } from '#tests/types/setup.ts';
 import type { AsyncSpawnOptions } from '#cli/types/system.ts';
 import { limitCommand } from '#tests/setup/system/processes.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
 
 test.each(buildProcessBackends())(
@@ -24,6 +26,39 @@ test.each(buildProcessBackends())(
         });
         expect(result.code, result.stderr).toBe(0);
         expect(result.stdout.trim()).toBe('selected');
+    },
+);
+
+test.each(buildProcessBackends())('$name: Git runs from outside the repository of the folder', async (backend) => {
+    await using sandbox = await createGitSandbox({});
+    await writeProgramCommand(sandbox.path, 'bin/git', 'fakes/tool', '--line', 'committed git');
+    const previous = process.cwd();
+    process.chdir(sandbox.path);
+    try {
+        const env = { PATH: `${join(sandbox.path, 'bin')}${delimiter}${readEnvironmentVariable('PATH') ?? ''}` };
+        const result = await backend.run(['git', '--version'], { cwd: sandbox.path, env });
+        expect(result.stdout).toStartWith('git version');
+    } finally {
+        process.chdir(previous);
+    }
+});
+
+test.each(buildProcessBackends())(
+    '$name: a program with no copy outside the repository is missing',
+    async (backend) => {
+        await using sandbox = await createGitSandbox({});
+        await writeProgramCommand(sandbox.path, 'bin/mise', 'fakes/tool', '--line', 'committed mise');
+        const previous = process.cwd();
+        process.chdir(sandbox.path);
+        try {
+            const result = await backend.run(['mise', '--version'], {
+                cwd: sandbox.path,
+                env: { PATH: join(sandbox.path, 'bin') },
+            });
+            expect(result.missing).toBe(true);
+        } finally {
+            process.chdir(previous);
+        }
     },
 );
 

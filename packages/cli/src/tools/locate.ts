@@ -10,6 +10,7 @@ import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import type { Session, ExecutableSearch } from '#cli/types/tools.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { GSPOT_PATHS, MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
+import { findProgram, filterOutsidePaths } from '#cli/system/programs.ts';
 import { join, dirname, basename, relative, isAbsolute } from 'node:path';
 import { executableLayout, convertToPosixPath, listExecutableNames } from '#cli/system/paths.ts';
 
@@ -52,10 +53,10 @@ function isExecutablePresent(files: Files, root: string, path: string): boolean 
 }
 
 function listSystemExecutablePaths(cwd: string, name: string, timeoutSeconds: number): string[] {
-    const paths = which.sync(name, { nothrow: true, all: true }) ?? [];
-    const mise = which.sync(MISE_TOOL, { nothrow: true });
+    const paths = filterOutsidePaths(which.sync(name, { nothrow: true, all: true }) ?? [], GSPOT_FOLDER);
+    const mise = findProgram(MISE_TOOL);
     return paths.flatMap((path) => {
-        if (mise === null || basename(dirname(path)) !== MISE_LAUNCHER_FOLDER) return [path];
+        if (mise === undefined || basename(dirname(path)) !== MISE_LAUNCHER_FOLDER) return [path];
         const result = spawnProcessBlocking([mise, MISE_WHICH, name], {
             cwd: cwd,
             env: TOOL_ENVIRONMENT,
@@ -118,7 +119,7 @@ export function readMiseBinPaths(
     toolNames: string[],
     options: { timeoutSeconds: number; project: string },
 ): string[] {
-    if (toolNames.length === 0 || which.sync(MISE_TOOL, { nothrow: true }) === null) return [];
+    if (toolNames.length === 0 || findProgram(MISE_TOOL) === undefined) return [];
     const trust = buildMiseTrust(root, options.project);
     if (trust === undefined) return [];
     const command = [...MISE_BIN_PATHS_ARGUMENTS, ...toolNames];

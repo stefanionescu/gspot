@@ -186,7 +186,7 @@ Install the mise tools, and read their executable folders.
 export async function installMiseTools(install: ToolInstall): Promise<MiseInstall> {
     const { session, misePath, steps } = install;
     const { pins, hookTools } = selectMiseTools(install);
-    if (misePath === null) {
+    if (misePath === undefined) {
         const missing = pins.flatMap((pin) => {
             const name =
                 pin.name === UV_TOOL

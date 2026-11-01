@@ -1,6 +1,6 @@
-import which from 'which';
 import { join, dirname, resolve } from 'node:path';
 import { PRIVATE_FILE } from '#cli/config/system.ts';
+import { findProgram } from '#cli/system/programs.ts';
 import { realpathSync, writeFileSync } from 'node:fs';
 import { NPM_TOOL } from '#cli/config/repository/javascript.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
@@ -8,6 +8,7 @@ import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { extractUrlPasswords } from '#cli/tools/installers/credentials.ts';
 
 import {
+    NODE_TOOL,
     NPMRC_FILE,
     CREDENTIAL_KEY,
     CONNECTION_KEYS,
@@ -32,7 +33,7 @@ async function readRegistrySettings(root: string): Promise<Record<string, unknow
     const npmPath = readNpmPath();
     const config = new npmConfig.default({
         npmPath,
-        execPath: realpathSync(which.sync('node', { nothrow: true }) ?? process.execPath),
+        execPath: realpathSync(findProgram(NODE_TOOL) ?? process.execPath),
         definitions: npmDefinitions.definitions,
         flatten: npmDefinitions.flatten,
         shorthands: npmDefinitions.shorthands,
@@ -76,8 +77,8 @@ function addEnvironmentReference(environment: Record<string, string>, value: str
 }
 
 function readNpmPath(): string {
-    const npm = which.sync(NPM_TOOL, { nothrow: true });
-    if (npm === null) return dirname(process.execPath);
+    const npm = findProgram(NPM_TOOL);
+    if (npm === undefined) return dirname(process.execPath);
     return process.platform === 'win32'
         ? join(dirname(npm), 'node_modules', 'npm')
         : dirname(dirname(realpathSync(npm)));

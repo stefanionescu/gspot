@@ -1,9 +1,9 @@
-import which from 'which';
 import semver from 'semver';
 import { join } from 'node:path';
 import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { listPackagePins } from '#cli/tools/pins.ts';
+import { findProgram } from '#cli/system/programs.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { ReplacementRequest } from '#cli/types/repository.ts';
@@ -47,7 +47,7 @@ async function createNpmLockfile(
     { toolProjectFile, lockfileName }: { toolProjectFile: GeneratedFile; lockfileName: string },
 ): Promise<string> {
     const packageManager = install.packageManager;
-    if (which.sync(NODE_TOOL, { nothrow: true }) === null) throw new GspotError('install', NODE_MISSING_MESSAGE);
+    if (findProgram(NODE_TOOL) === undefined) throw new GspotError('install', NODE_MISSING_MESSAGE);
     using scratch = createTemporaryFolder();
     const runFolder = scratch.path;
     writeFileSync(join(runFolder, PACKAGE_JSON), toolProjectFile.content);

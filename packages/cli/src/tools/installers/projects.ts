@@ -127,7 +127,7 @@ export async function installToolProjects(install: ToolInstall, miseBinPaths: st
     const { session, writer, misePath: mise, packageManager } = install;
     const notes: string[] = [];
     const uvPath =
-        mise !== null || which.sync(UV_TOOL, { nothrow: true }) !== null
+        mise !== undefined || which.sync(UV_TOOL, { nothrow: true }) !== null
             ? (listExecutablePaths(session.toolsRoot, UV_TOOL, {
                   folders: [],
                   miseBinPaths,

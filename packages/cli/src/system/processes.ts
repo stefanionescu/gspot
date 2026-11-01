@@ -1,6 +1,7 @@
 import { statSync } from 'node:fs';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { execa, execaSync, type Options } from 'execa';
+import { selectProgram } from '#cli/system/programs.ts';
 import { trackProcessTree } from '#cli/system/process-trees.ts';
 import { dirname, resolve, delimiter, isAbsolute } from 'node:path';
 import { foldVariableName, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
@@ -129,10 +130,15 @@ async function readProcessOutput(
     return child;
 }
 
-function findMissingExecutable(command: readonly string[], cwd: string, started: number): SpawnResult | undefined {
+function findMissingExecutable(
+    command: readonly string[],
+    options: SpawnOptions,
+    started: number,
+): SpawnResult | undefined {
     const executable = command[0];
     if (executable === undefined) throw new Error(EMPTY_COMMAND_MESSAGE);
-    if (!isExecutableAbsent(executable, cwd)) return undefined;
+    if (!isExecutableAbsent(executable, options.cwd) && selectProgram(command, options.env) !== undefined)
+        return undefined;
     return buildSpawnResult(
         {
             code: 'ENOENT',
@@ -152,7 +158,7 @@ function findUnstartedProcess(
     options: AsyncSpawnOptions,
     started: number,
 ): SpawnResult | undefined {
-    const missing = findMissingExecutable(command, options.cwd, started);
+    const missing = findMissingExecutable(command, options, started);
     if (missing !== undefined || options.cancelSignal?.aborted !== true) return missing;
     return buildSpawnResult(
         {
@@ -169,9 +175,9 @@ function findUnstartedProcess(
 }
 
 function launchProcess(command: readonly string[], options: AsyncSpawnOptions, output: Pick<Options, 'buffer'>) {
-    const [executable, ...commandArguments] = command as readonly [string, ...string[]];
+    const [executable, ...commandArguments] = selectProgram(command, options.env) as readonly [string, ...string[]];
     const child = execa(executable, commandArguments, {
-        ...buildExecaOptions(options, executable),
+        ...buildExecaOptions(options, command[0] as string),
         ...output,
         detached: process.platform !== 'win32',
     });
@@ -221,13 +227,13 @@ Run a process and wait.
 */
 export function spawnProcessBlocking(command: readonly string[], options: SpawnOptions): SpawnResult {
     const started = performance.now();
-    const missing = findMissingExecutable(command, options.cwd, started);
+    const missing = findMissingExecutable(command, options, started);
     if (missing !== undefined) return missing;
-    const [executable, ...commandArguments] = command as readonly [string, ...string[]];
+    const [executable, ...commandArguments] = selectProgram(command, options.env) as readonly [string, ...string[]];
     const deadline =
         options.timeoutSeconds === undefined ? {} : { timeout: options.timeoutSeconds * MILLISECONDS_PER_SECOND };
     const result = execaSync(executable, commandArguments, {
-        ...buildExecaOptions(options, executable),
+        ...buildExecaOptions(options, command[0] as string),
         killSignal: 'SIGKILL',
         ...deadline,
     });

@@ -149,7 +149,7 @@ export type ToolInstall = {
     generated: Generation;
     tools: Tool[];
     checkTools: Set<string>;
-    misePath: string | null;
+    misePath: string | undefined;
     steps: (readonly string[])[];
 };
 

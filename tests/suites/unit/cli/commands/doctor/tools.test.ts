@@ -108,7 +108,8 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
 
     const session = await openSession(sandbox.path);
     const tools = listDistinctTools(session.toolConfigurations);
-    using _which = fakeExecutableLookup(join(sandbox.path, 'tool-bin', 'pytest'));
+    await using programs = await testdir();
+    using _which = fakeExecutableLookup(join(programs.path, 'pytest'));
     const nativeVersion = processes.spawnProcessBlocking;
     let isPresent = false;
     using _version = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) => {
@@ -122,7 +123,7 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
     const pytestCov = {
         name: 'pytest-cov',
         kind: 'package' as const,
-        path: join(sandbox.path, 'tool-bin', 'pytest'),
+        path: join(programs.path, 'pytest'),
         help: 'Install pytest-cov in the Python environment used by pytest.',
     };
     expect((JSON.parse(missing.stdout) as DoctorReport).tools.find(({ name }) => name === 'pytest-cov')).toStrictEqual({

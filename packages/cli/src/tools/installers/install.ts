@@ -1,4 +1,4 @@
-import which from 'which';
+import { findProgram } from '#cli/system/programs.ts';
 import { listDistinctTools } from '#cli/tools/pins.ts';
 import { MISE_TOOL } from '#cli/config/tools/installers.ts';
 import { installHooks } from '#cli/tools/installers/hooks.ts';
@@ -56,7 +56,7 @@ function buildToolInstall(
     const configurations = session.toolConfigurations;
     const steps: (readonly string[])[] = [];
     const tools = listDistinctTools(configurations);
-    const misePath = which.sync(MISE_TOOL, { nothrow: true });
+    const misePath = findProgram(MISE_TOOL);
     return {
         session,
         packageManager: readInstallPackageManager(session),
