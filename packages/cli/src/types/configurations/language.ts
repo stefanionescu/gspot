@@ -254,6 +254,7 @@ export type PlannedEslintBlock = {
 };
 
 export type EslintScope = {
+    level: Level;
     projectPath: string;
     path: string;
     settings: ScopeSettings;
@@ -278,6 +279,7 @@ export type PluginRuleBlock = {
     files: 'code' | 'tests' | readonly string[];
     ignoresTests?: true;
     rules: Readonly<Record<string, unknown>>;
+    allLevelRules?: Readonly<Record<string, unknown>>;
 };
 
 export type ConfigOwner = { session: Session; scope: Scope; configuration: Configuration };

@@ -73,6 +73,7 @@ function buildConfigurationBlocks(
     );
     return builder(
         {
+            level: planned.blockWriter.level,
             settings: scope.settings,
             projects: planned.projects,
             path: scopePath,
@@ -169,7 +170,7 @@ function buildPluginRuleBlocks(scope: EslintScope, configuration: string): Confi
                             ),
                         ],
                     }),
-                    rules: declaration.rules,
+                    rules: { ...declaration.rules, ...(scope.level === 'all' && declaration.allLevelRules) },
                 },
                 calls: declaration.calls,
             },

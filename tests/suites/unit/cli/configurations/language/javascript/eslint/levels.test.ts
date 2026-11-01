@@ -126,6 +126,21 @@ test.each(LEVELS)('empty-object fallbacks are reported at level %s and pass afte
     expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['gspot/restricted-syntax'])).toStrictEqual([]);
 });
 
+test.each([
+    ['vitest', 'vitest/valid-title'],
+    ['jest', 'jest/valid-title'],
+])('%s at level all refuses a title that says nothing or names a removal', async (configuration, rule) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([configuration], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module"}',
+        'tests/sum.test.js':
+            "test('works', () => {});\ntest('no longer takes a callback', () => {});\ntest('adds two numbers', () => {});\n",
+    });
+    const eslint = await buildEslint(sandbox.path);
+    const findings = await listLintFindings(eslint, sandbox.path, ['tests/sum.test.js'], [rule]);
+    expect(findings.map(({ line }) => line)).toStrictEqual([1, 2]);
+});
+
 test('switching the level and back writes the same files', async () => {
     await using sandbox = await createGitSandbox({});
     await writeFile(join(sandbox.path, 'source.js'), 'export const value = 1;\n');

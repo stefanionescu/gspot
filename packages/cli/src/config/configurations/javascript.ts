@@ -108,6 +108,19 @@ const TEST_RULE_NAMES = [
     'prefer-strict-equal',
 ] as const;
 
+export const VAGUE_TEST_TITLE_WORDS = [
+    'works',
+    'happy path',
+    'edge case',
+    'edge cases',
+    'test1',
+    'removed',
+    'no longer',
+    'anymore',
+    'deprecated',
+    'legacy',
+] as const;
+
 export const PLUGIN_RULE_BLOCKS: Readonly<Record<string, PluginRuleBlock>> = {
     jest: {
         imports: CONFIGURATION_PLUGINS.jest,
@@ -122,6 +135,7 @@ export const PLUGIN_RULE_BLOCKS: Readonly<Record<string, PluginRuleBlock>> = {
             'gspot/require-test-assertions': 'off',
             'jest/valid-expect': ['error', { maxArgs: 1 }],
         },
+        allLevelRules: { 'jest/valid-title': ['error', { disallowedWords: VAGUE_TEST_TITLE_WORDS }] },
     },
     expo: {
         imports: CONFIGURATION_PLUGINS.expo,
