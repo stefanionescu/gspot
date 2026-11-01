@@ -1,5 +1,6 @@
 import { isInScope } from '#cli/repository/scopes.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
+import { listPathTags } from '#cli/repository/files/classify.ts';
 import { listSourceConfigurations } from '#cli/manifests/select.ts';
 import { escapeGlob, extractExtension } from '#cli/system/paths.ts';
 import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/matchers.ts';
@@ -21,7 +22,7 @@ Build one matcher for the extensions, filenames, tags, and paths of a files tabl
 
 @param table the file patterns.
 */
-export function buildFileMatcher(table: Configuration['files']): (file: TrackedFile) => boolean {
+export function buildFileMatcher(table: Configuration['files']): (file: Pick<TrackedFile, 'path' | 'tags'>) => boolean {
     const filenames = buildFilenameMatcher(table.filenames);
     const paths = buildPathMatcher(table.paths);
     return (file) =>
@@ -30,21 +31,10 @@ export function buildFileMatcher(table: Configuration['files']): (file: TrackedF
         table.tags.some((tag) => file.tags.includes(tag)) ||
         paths(file.path);
 }
-/**
-List the files that the patterns match in one scope, within its `kinds` and `languages` limits.
-
-@param table the file patterns.
-@param files the tracked inventory.
-@param options the scope to match in.
-@param options.configurations configurations that declare languages and Prettier plugins.
-@param options.scopePath the folder to match in.
-@param options.settings settings and repository-relative test paths for the scope.
-*/
-export function listCoveredFiles(
+function buildCoverageMatcher(
     table: Configuration['files'],
-    files: TrackedFile[],
     { configurations, scopePath: scope, settings }: CoveredFilesOptions,
-): TrackedFile[] {
+): (file: Pick<TrackedFile, 'path' | 'tags'>) => boolean {
     const ownsTests = table.paths.includes(TEST_FILES_PLACEHOLDER);
     const tests = buildPathMatcher(settings.test_files);
     const defaults: Configuration['files'][] = [];
@@ -71,19 +61,56 @@ export function listCoveredFiles(
         },
         configurations,
     );
-    const scopeFiles = files.filter((file) => isInScope(file.path, scope) && owners.kinds.includes(file.kind));
     const matches = [
         owners,
         ...defaults,
         ...(owners.languages ? listSourceConfigurations(configurations).map(({ files }) => files) : []),
-    ].map((table) => buildFileMatcher(table));
-    return scopeFiles.filter((file) => {
+    ].map((files) => buildFileMatcher(files));
+    return (file) => {
         const scopeFile = { ...file, path: scope === '' ? file.path : file.path.slice(scope.length + 1) };
         return (
             (ownsTests && tests(file.path)) || settingMatches(file.path) || matches.some((match) => match(scopeFile))
         );
-    });
+    };
 }
+
+/**
+List the files that the patterns match in one scope, within its `kinds` and `languages` limits.
+
+@param table the file patterns.
+@param files the tracked inventory.
+@param options the scope to match in.
+@param options.configurations configurations that declare languages and Prettier plugins.
+@param options.scopePath the folder to match in.
+@param options.settings settings and repository-relative test paths for the scope.
+*/
+export function listCoveredFiles(
+    table: Configuration['files'],
+    files: TrackedFile[],
+    options: CoveredFilesOptions,
+): TrackedFile[] {
+    const isCovered = buildCoverageMatcher(table, options);
+    return files.filter(
+        (file) => isInScope(file.path, options.scopePath) && table.kinds.includes(file.kind) && isCovered(file),
+    );
+}
+
+/**
+List the paths that the patterns match in one scope, for paths that have no file to read.
+
+@param table the file patterns.
+@param paths the root-relative paths.
+@param options the scope to match in.
+*/
+export function listCoveredPaths(
+    table: Configuration['files'],
+    paths: string[],
+    options: CoveredFilesOptions,
+): string[] {
+    const isCovered = buildCoverageMatcher(table, options);
+    return paths.filter((path) => isInScope(path, options.scopePath) && isCovered({ path, tags: listPathTags(path) }));
+}
+
 /**
 Select source paths by extension or whole file name.
 

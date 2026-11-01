@@ -168,24 +168,36 @@ function parseShebang(firstLine: string): string | undefined {
 }
 
 function tagFile(file: ListedFile, prefix: Buffer): FileTags {
-    const extension = extractExtension(file.path);
-    const base = posix.basename(file.path);
-    const flags: [boolean, string][] = [
-        [file.isSymlink, 'symlink'],
-        [LOCKFILES.some((lockfile) => lockfile.file === base), 'lockfile'],
-        [base.startsWith(DOCKERFILE_NAME) || extension === DOCKERFILE_EXTENSION, 'dockerfile'],
-        [base.startsWith(DOTENV_PREFIX), 'dotenv'],
-        [file.executable, 'executable'],
-    ];
     const tags = new Set<string>([
-        ...(EXTENSION_TAGS[extension] ?? []),
-        ...(FILENAME_TAGS.get(base) ?? []),
-        ...flags.filter(([isSet]) => isSet).map(([, tag]) => tag),
+        ...listPathTags(file.path),
+        ...(file.isSymlink ? ['symlink'] : []),
+        ...(file.executable ? ['executable'] : []),
     ]);
-    if (BINARY_EXTENSIONS.has(extension) || prefix.includes(0)) return { tags: [BINARY_TAG, ...tags], isBinary: true };
+    if (BINARY_EXTENSIONS.has(extractExtension(file.path)) || prefix.includes(0))
+        return { tags: [BINARY_TAG, ...tags], isBinary: true };
     const text = prefix.toString('utf8');
     const newline = text.indexOf('\n');
     return tagTextFile(tags, newline === -1 ? text : text.slice(0, newline));
+}
+
+/**
+List the inventory tags that a path alone gives.
+
+@param path the root-relative path.
+*/
+export function listPathTags(path: string): string[] {
+    const extension = extractExtension(path);
+    const base = posix.basename(path);
+    const flags: [boolean, string][] = [
+        [LOCKFILES.some((lockfile) => lockfile.file === base), 'lockfile'],
+        [base.startsWith(DOCKERFILE_NAME) || extension === DOCKERFILE_EXTENSION, 'dockerfile'],
+        [base.startsWith(DOTENV_PREFIX), 'dotenv'],
+    ];
+    return [
+        ...(EXTENSION_TAGS[extension] ?? []),
+        ...(FILENAME_TAGS.get(base) ?? []),
+        ...flags.filter(([isSet]) => isSet).map(([, tag]) => tag),
+    ];
 }
 
 /**

@@ -7,10 +7,9 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { getTable, listIgnores } from '#cli/settings/scopes.ts';
-import { classifyFile } from '#cli/repository/files/classify.ts';
-import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import type { PlannedCheck, PlannedScope } from '#cli/types/engine/plan.ts';
 import type { Check, ScopeCheck, Configuration } from '#cli/types/manifests.ts';
+import { listCoveredFiles, listCoveredPaths } from '#cli/repository/files/selection.ts';
 import { isInScope, joinScope, selectScopePath, listNestedScopes } from '#cli/repository/scopes.ts';
 
 import {
@@ -74,7 +73,11 @@ function listRunFiles(planned: PlannedScope, scopeCheck: ScopeCheck, scopePath: 
     return session.repository.files.filter((file) => isMatch(file.path));
 }
 
-function stripIgnoredFiles(files: TrackedFile[], check: Check, scope: Scope): Pick<PlannedCheck, 'files' | 'skip'> {
+function stripIgnoredFiles<File extends Pick<TrackedFile, 'path'>>(
+    files: File[],
+    check: Check,
+    scope: Scope,
+): { files: File[]; skip?: PlannedCheck['skip'] } {
     const paths = listIgnores(scope.settings, check.id).flatMap((ignore) =>
         ignore.rule === undefined ? (ignore.paths ?? []) : [],
     );
@@ -113,20 +116,13 @@ function listDeletedTriggers(planned: PlannedScope, scopeCheck: ScopeCheck, scop
     );
     const owners = check.files ?? configuration?.files;
     if (owners === undefined) return paths;
-    const missing = paths.map((path): TrackedFile => {
-        const listedFile = { path, size: 0, executable: false, isSymlink: false };
-        const prefix = Buffer.alloc(0);
-        return classifyFile(session.root, listedFile, prefix, {
-            generatedPaths: [],
-            attributes: session.repository.attributes,
-        });
+    const covered = listCoveredPaths(owners, paths, {
+        configurations: scope.configurations,
+        scopePath,
+        settings: scope.settings,
     });
     return stripIgnoredFiles(
-        listCoveredFiles(owners, missing, {
-            configurations: scope.configurations,
-            scopePath,
-            settings: scope.settings,
-        }),
+        covered.map((path) => ({ path })),
         check,
         scope,
     ).files.map((file) => file.path);
