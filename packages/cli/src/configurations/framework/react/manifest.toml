@@ -53,7 +53,7 @@ version = "0.5.7"
 
 [eslint]
 required_tools = ["eslint-plugin-react-hooks", "@eslint-react/eslint-plugin", "eslint-plugin-react-refresh"]
-all_level_rules = ["@eslint-react/no-missing-component-display-name", "@eslint-react/no-array-index-key"]
+all_level_rules = ["@eslint-react/naming-convention-context-name", "@eslint-react/naming-convention-id-name", "@eslint-react/naming-convention-ref-name", "@eslint-react/no-array-index-key", "@eslint-react/no-missing-component-display-name", "@eslint-react/use-state"]
 
 [[eslint.forwarding_files]]
 files = ["**/*.tsx", "**/*.jsx"]
