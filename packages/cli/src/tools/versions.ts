@@ -8,10 +8,11 @@ import { spawnProcess } from '#cli/system/processes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import type { Files, SpawnResult } from '#cli/types/system.ts';
+import { readToolProjectPackage } from '#cli/tools/packages.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { GSPOT_FOLDER, PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { VERSION_FLAG } from '#cli/config/repository/javascript.ts';
 import { normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
-import { readHostPackage, readToolProjectPackage } from '#cli/tools/packages.ts';
 import type { InspectedTool, ToolInspection, ParsedToolVersion } from '#cli/types/tools.ts';
 
 import {
@@ -31,7 +32,7 @@ function findVersionAbove(files: Files | undefined, root: string, start: string,
             return undefined;
         const parsed =
             files === undefined
-                ? readHostPackage(packageJsonPath)
+                ? readPackageJson(folder, PACKAGE_JSON)
                 : readToolProjectPackage(files, root, packageJsonPath);
         if (parsed?.name === name) return parsed.version;
     }

@@ -7,12 +7,13 @@ import { findProgram } from '#cli/system/programs.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { MISE_TOOL } from '#cli/config/tools/installers.ts';
 import { findMisePin, findPackagePin } from '#cli/tools/pins.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { PACKAGE_JSON, GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { START_RUNNERS } from '#cli/config/repository/javascript.ts';
 import { readToolVersion, classifyToolVersion } from '#cli/tools/versions.ts';
 import { detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
+import { readToolProjectPackage, findInstalledDependency } from '#cli/tools/packages.ts';
 import { INSTALL_HELP, MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/tools/programs.ts';
-import { readHostPackage, readToolProjectPackage, findInstalledDependency } from '#cli/tools/packages.ts';
 import { readToolBinPaths, listExecutablePaths, listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
 
 import type {
@@ -29,7 +30,7 @@ const TOOL_LOOKUPS = Symbol('tool lookups');
 
 function buildProjectInstallHelp(folders: ToolFolders, name: string): string {
     const { root, cwd } = folders;
-    const project = readHostPackage(join(cwd, PACKAGE_JSON));
+    const project = readPackageJson(cwd, PACKAGE_JSON);
     if (project?.dependencies?.[name] !== undefined || project?.devDependencies?.[name] !== undefined) {
         const scope = relative(root, cwd);
         return `Install the project dependencies first: node_modules is missing in ${scope === '' ? 'the repository root' : scope}.`;

@@ -9,8 +9,8 @@ import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { modify, applyEdits } from 'jsonc-parser/lib/esm/main.js';
+import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
 import { PNPM_PEER_START, NPM_PACKAGE_FOLDER, PNPM_ROOT_IMPORTER } from '#cli/config/parsers.ts';
-import { stripPnpmKey, splitIdentity, readNpmKeyName } from '#cli/parsers/projects/lockfiles.ts';
 import { INTEGRITY, BUN_LOCKFILE, NPM_SETTING_PREFIX, LOCKFILE_WORKSPACE_KEYS } from '#cli/config/tools/installers.ts';
 
 import {
@@ -111,7 +111,7 @@ function hasStandardNpmPackages(document: Record<string, unknown>, environment: 
     const packages = document['packages'] as Record<string, Record<string, unknown>>;
     return Object.entries(packages).every(([key, lockedPackage]) => {
         if (!key.includes(NPM_PACKAGE_FOLDER)) return true;
-        const name = readNpmKeyName(key);
+        const name = key.slice(key.lastIndexOf(NPM_PACKAGE_FOLDER) + NPM_PACKAGE_FOLDER.length);
         const parsed = npmToolPackageSchema.safeParse(lockedPackage);
         if (!parsed.success) return false;
         const { version, resolved = '', integrity, name: identity = name } = parsed.data;
@@ -122,7 +122,7 @@ function hasStandardNpmPackages(document: Record<string, unknown>, environment: 
 function hasStandardPnpmPackages(document: Record<string, unknown>, environment: Record<string, string>): boolean {
     const packages = document['packages'] as Record<string, unknown>;
     return Object.entries(packages).every(([key, lockedPackage]) => {
-        const identity = splitIdentity(stripPnpmKey(key));
+        const identity = splitIdentity((key.startsWith('/') ? key.slice(1) : key).split(PNPM_PEER_START, 1).join(''));
         const parsed = pnpmToolPackageSchema.safeParse(lockedPackage);
         if (identity === undefined || !parsed.success) return false;
         const [name, version] = identity;

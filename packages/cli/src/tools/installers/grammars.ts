@@ -18,11 +18,6 @@ import {
     CONFIGURATION_GRAMMARS,
 } from '#cli/config/parsers.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The installed file and the download compare their SHA-256 values through it.
-function hashBytes(bytes: Buffer): string {
-    return createHash('sha256').update(bytes).digest('hex');
-}
-
 function listRepositoryGrammars(install: ToolInstall): GrammarName[] {
     const { repository, scopes } = install.session;
     const names = new Set<string | undefined>([
@@ -44,12 +39,15 @@ Download each grammar that the repository needs and the shared folder lacks, and
 export async function installGrammars(install: ToolInstall): Promise<string> {
     const missing = listRepositoryGrammars(install).filter((grammar) => {
         const path = buildGrammarPath(grammar);
-        return !existsSync(path) || hashBytes(readFileSync(path)) !== GRAMMAR_RELEASES[grammar].sha256;
+        return (
+            !existsSync(path) ||
+            createHash('sha256').update(readFileSync(path)).digest('hex') !== GRAMMAR_RELEASES[grammar].sha256
+        );
     });
     for (const grammar of missing) {
         const { url, sha256 } = GRAMMAR_RELEASES[grammar];
         const bytes = await downloadArchive(install, { url, name: grammar, limit: GRAMMAR_ARCHIVE_LIMIT });
-        if (hashBytes(bytes) !== sha256)
+        if (createHash('sha256').update(bytes).digest('hex') !== sha256)
             throw new GspotError('install', `The ${grammar} grammar failed SHA-256 verification.`);
         const path = buildGrammarPath(grammar);
         mkdirSync(dirname(path), { recursive: true });

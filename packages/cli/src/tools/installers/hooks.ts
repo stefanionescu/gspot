@@ -19,14 +19,16 @@ import {
     NOT_INSTALLED_STATUS,
 } from '#cli/config/tools/installers.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The hook instructions and the hook status list the same lines through it.
-function listGspotHookLines(session: Session): string[] {
-    return listHookNames(session.configuredChecks).map((name) => `${name}: ${GSPOT_PATHS.hooks}/${name} "$@"`);
-}
-
-function formatForeignHooks(hooks: RepositorySetup['hooks'], session: Session): string {
-    const lines = listGspotHookLines(session).map((line) => `  ${line}`);
-    return `hooks already run from ${hooks.map((hook) => hook.path).join(', ')}; add these gspot lines to them:\n${lines.join('\n')}`;
+function describeForeignHooks(
+    hooks: RepositorySetup['hooks'],
+    session: Session,
+): Required<Pick<HookStatus, 'lines' | 'text'>> {
+    const lines = listHookNames(session.configuredChecks).map((name) => `${name}: ${GSPOT_PATHS.hooks}/${name} "$@"`);
+    const indented = lines.map((line) => `  ${line}`).join('\n');
+    return {
+        lines,
+        text: `hooks already run from ${hooks.map((hook) => hook.path).join(', ')}; add these gspot lines to them:\n${indented}`,
+    };
 }
 
 async function planHooks(session: Session): Promise<HookPlan> {
@@ -36,7 +38,7 @@ async function planHooks(session: Session): Promise<HookPlan> {
     if (!settings.hooks.enabled)
         return hooksPath === GSPOT_PATHS.hooks ? { command: UNSET_HOOKS_PATH, note: UNSET_HOOKS_NOTE } : { note: '' };
     if (hooksPath === GSPOT_PATHS.hooks) return { note: '' };
-    if (hooks.length > 0) return { note: formatForeignHooks(hooks, session) };
+    if (hooks.length > 0) return { note: describeForeignHooks(hooks, session).text };
     return {
         command: [...SET_HOOKS_PATH, GSPOT_PATHS.hooks],
         note: `set core.hooksPath to ${GSPOT_PATHS.hooks}`,
@@ -85,14 +87,9 @@ export async function readHookStatus(session: Session, repository: Pick<Reposito
             foreign.some((hook) => hasHookCommand(repository.root, hook, name)),
         );
         const tool = foreign.map((hook) => hook.kind).join(', ');
-        return ready
-            ? { ready, tool, text: `run from ${foreign.map((hook) => hook.path).join(', ')}` }
-            : {
-                  ready,
-                  tool,
-                  lines: listGspotHookLines(session),
-                  text: `not installed; ${formatForeignHooks(foreign, session)}`,
-              };
+        if (ready) return { ready, tool, text: `run from ${foreign.map((hook) => hook.path).join(', ')}` };
+        const { lines, text } = describeForeignHooks(foreign, session);
+        return { ready, tool, lines, text: `not installed; ${text}` };
     }
     return { ready: false, text: NOT_INSTALLED_STATUS };
 }

@@ -1,10 +1,10 @@
 import { print } from '#cli/system/terminal.ts';
-import { LEVELS } from '#cli/config/manifests.ts';
 import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readSettings } from '#cli/settings/read.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -18,13 +18,15 @@ import { readRepositorySetup } from '#cli/repository/setup.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { formatDetection } from '#cli/commands/init/detection.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { InvalidArgumentError } from '@commander-js/extra-typings';
+import { LEVELS, MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { planInitFiles, formatInitPlan } from '#cli/commands/init/plan.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
-import { selectInitRunner } from '#cli/repository/javascript/package-manager.ts';
+import { readGspotPin, writeGspotPin } from '#cli/repository/javascript/gspot-pin.ts';
 import { buildInitSettings, buildSettingsDraft } from '#cli/commands/init/settings.ts';
-import { readGspotPin, writeGspotPin, selectPinPath } from '#cli/repository/javascript/gspot-pin.ts';
+import { buildStartRunner, detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
 
 import {
     assertFilesCommitted,
@@ -105,7 +107,11 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
     const settings = readSettings(settingsText, root);
     const planned = await openSession(root, { settingsFile: { settings, text: settingsText }, cache, listing });
     const hasPin = readGspotPin(root) !== undefined;
-    const session = hasPin ? planned : { ...planned, startRunner: selectInitRunner(root) };
+    const hasManifest = readPackageJson(root, PACKAGE_JSON) !== undefined;
+    const session = hasPin
+        ? planned
+        : { ...planned, startRunner: buildStartRunner(hasManifest ? detectPackageManager(root, []).name : 'mise') };
+    const pinPath = hasManifest ? PACKAGE_JSON : MISE_CONFIG_FILE;
     const everySelected = listSelectedConfigurations(session.scopes);
     const applicable = session.toolConfigurations;
     const tools = new Set(applicable.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));
@@ -135,7 +141,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
         everySelected,
         conflicts,
         template: options.template,
-        pinPath: hasPin ? undefined : selectPinPath(root),
+        pinPath: hasPin ? undefined : pinPath,
     };
     const plan = planInitFiles(planning, { settings, settingsText, requirements: applicable, generated });
     return { detection, session, generated, plan, settingsText, reviewed: conflicts.reviewed };

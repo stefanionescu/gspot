@@ -2,27 +2,16 @@ import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import type { Files } from '#cli/types/system.ts';
 import type { Tool } from '#cli/types/manifests.ts';
+import { join, dirname, relative } from 'node:path';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { PackageJson } from '#cli/types/parsers.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { join, dirname, basename, relative } from 'node:path';
 import type { InstalledDependency } from '#cli/types/tools.ts';
 import { BIN_FOLDER_NAME } from '#cli/config/tools/programs.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
-
-/**
-Read and validate a package.json outside the tool project, without its boundary.
-
-@param path the absolute package.json file.
-@returns undefined when the file does not exist.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The tool lookups read a package.json outside the tool project through it.
-export function readHostPackage(path: string): PackageJson | undefined {
-    return readPackageJson(dirname(path), basename(path));
-}
 
 /**
 Read and validate an installed package.json through the tool-project boundary.
@@ -80,5 +69,5 @@ export function findInstalledDependency(
         .paths(name)
         ?.map((folder) => join(folder, name, PACKAGE_JSON))
         .find((packagePath) => existsSync(packagePath));
-    return path === undefined ? undefined : { path, version: readHostPackage(path)?.version };
+    return path === undefined ? undefined : { path, version: readPackageJson(dirname(path), PACKAGE_JSON)?.version };
 }

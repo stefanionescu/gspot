@@ -60,16 +60,6 @@ export function assertGspotPin(root: string): void {
 }
 
 /**
-Select the file that takes the pin of init.
-
-@param root the repository root.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The init plan names the file that writeGspotPin changes through it.
-export function selectPinPath(root: string): string {
-    return readPackageJson(root, PACKAGE_JSON) === undefined ? MISE_CONFIG_FILE : PACKAGE_JSON;
-}
-
-/**
 Pin this gspot where the hooks start it: as a development dependency, or as a mise tool without a package.json.
 
 @param writer the repository handle.
