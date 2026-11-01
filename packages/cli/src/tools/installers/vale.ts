@@ -229,7 +229,7 @@ Download a release archive within the install timeout and a size limit.
 export async function downloadArchive(install: ToolInstall, download: ArchiveDownload): Promise<Buffer> {
     const advice = selectProxyAdvice();
     try {
-        const signals = [AbortSignal.timeout(install.session.timeoutSeconds * MILLISECONDS_PER_SECOND)];
+        const signals = [AbortSignal.timeout(install.session.settings.tool_timeout_seconds * MILLISECONDS_PER_SECOND)];
         if (install.session.cancelSignal !== undefined) signals.push(install.session.cancelSignal);
         const response = await fetch(download.url, { signal: AbortSignal.any(signals) });
         if (!response.ok)

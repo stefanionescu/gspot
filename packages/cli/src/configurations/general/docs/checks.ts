@@ -7,6 +7,7 @@ import { TRAILING_SLASH } from '#cli/config/system.ts';
 import { find, read } from '#cli/system/files/reads.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
 import { parseMiseTasks } from '#cli/parsers/projects/mise.ts';
@@ -71,7 +72,9 @@ function listRepositoryPaths(session: Session, planned: PlannedCheck): Set<strin
     const configs = planned.scope.configurations.flatMap((configuration) => configuration.configs);
     for (const config of configs) repositoryPaths.add(config.target);
     for (const path of listGeneratorPaths(planned)) repositoryPaths.add(path);
-    const checks = session.configurationsByName.values().flatMap((configuration) => configuration.checks);
+    const checks = readConfigurations()
+        .values()
+        .flatMap((configuration) => configuration.checks);
     for (const check of checks) repositoryPaths.add(check.id);
     for (const check of Object.values(session.settings.commandChecks)) repositoryPaths.add(check.id);
     return repositoryPaths;

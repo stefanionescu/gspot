@@ -215,7 +215,7 @@ export async function installMiseTools(install: ToolInstall): Promise<MiseInstal
     const names = pins.map((pin) => pin.name);
     steps.push([...MISE_BIN_PATHS_ARGUMENTS, ...names]);
     const { folders, failure = '' } = await readMiseBinPaths(session.root, names, {
-        timeoutSeconds: session.timeoutSeconds,
+        timeoutSeconds: session.settings.tool_timeout_seconds,
         project: project.content,
     });
     return {

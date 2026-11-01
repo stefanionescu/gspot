@@ -20,7 +20,12 @@ import type { Session, BrokenTool, ToolInstall, InstallResult, ToolPackageManage
 function readInstallPackageManager(session: Session): ToolPackageManager | undefined {
     const pin = session.packageManager;
     if (pin === undefined) return undefined;
-    const packageManager = readToolPackageManager(session.toolsRoot, pin, session.timeoutSeconds, session.cache);
+    const packageManager = readToolPackageManager(
+        session.toolsRoot,
+        pin,
+        session.settings.tool_timeout_seconds,
+        session.cache,
+    );
     return { ...packageManager, command: pin.name === packageManager.name ? pin : { name: packageManager.name } };
 }
 

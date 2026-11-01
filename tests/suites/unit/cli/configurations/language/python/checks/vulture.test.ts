@@ -8,6 +8,7 @@ import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { executableLayout } from '#cli/system/paths.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -23,7 +24,7 @@ test('vulture reads every Python file of the scope and reports unused definition
         [join(join(GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder), 'vulture')]: 'stub',
     });
     const session = await openSession(sandbox.path);
-    using resources = fakeToolExecutables([getTool(session.configurationsByName.values(), 'vulture')]);
+    using resources = fakeToolExecutables([getTool(readConfigurations().values(), 'vulture')]);
     const output = [...VULTURE_OUTPUT].join('\n');
     const spawn = resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout: output, code: 3 })),

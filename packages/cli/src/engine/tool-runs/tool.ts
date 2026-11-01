@@ -5,6 +5,7 @@ import { CheckStop } from '#cli/system/errors.ts';
 import { listOtherTools } from '#cli/engine/tools.ts';
 import { listToolStart } from '#cli/tools/packages.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { lookUpTool, findToolPath } from '#cli/tools/inspect.ts';
@@ -20,7 +21,7 @@ async function getCheckTool(
     name: string,
     options: CheckToolOptions,
 ): Promise<CheckTool> {
-    const tool = getTool(session.configurationsByName.values(), name);
+    const tool = getTool(readConfigurations().values(), name);
     const env = { ...planned.check.env, ...options.env };
     const availability = await findToolPath(session, tool, options.cwd);
     if ('status' in availability) {
@@ -80,7 +81,7 @@ export async function buildOtherToolEnvironment(
     names: string[],
     environment: Record<string, string>,
 ): Promise<Record<string, string>> {
-    const tools = names.map((name) => getTool(session.configurationsByName.values(), name));
+    const tools = names.map((name) => getTool(readConfigurations().values(), name));
     const inspections = await Promise.all(tools.map((tool) => lookUpTool(session, tool, session.root)));
     const folders = inspections
         .map((inspection) => inspection.path)
@@ -123,7 +124,7 @@ export async function runCheckTool(
             ...options,
             env: toolEnvironment,
             cancelSignal: session.cancelSignal,
-            timeoutSeconds: session.timeoutSeconds,
+            timeoutSeconds: session.settings.tool_timeout_seconds,
             name,
         }),
     );

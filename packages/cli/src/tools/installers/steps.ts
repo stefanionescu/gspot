@@ -26,7 +26,7 @@ export async function runInstallStep(
     const { step = `the command ${command.join(' ')}`, ...spawn } = options;
     install.steps.push(command);
     if (options.step !== undefined) writeProgress(`${step}\n`);
-    const timeoutSeconds = install.session.timeoutSeconds;
+    const timeoutSeconds = install.session.settings.tool_timeout_seconds;
     const started = performance.now();
     const result = await runTool(command, { ...spawn, cancelSignal: install.session.cancelSignal, timeoutSeconds });
     install.session.cancelSignal?.throwIfAborted();
@@ -67,9 +67,8 @@ export async function runRequiredInstallStep(
 }
 
 async function readPublishedTime(install: ToolInstall, release: ToolRelease): Promise<Date | 'absent' | undefined> {
-    const { timeoutSeconds } = install.session;
     const response = await fetch(release.url, {
-        signal: AbortSignal.timeout(timeoutSeconds * MILLISECONDS_PER_SECOND),
+        signal: AbortSignal.timeout(install.session.settings.tool_timeout_seconds * MILLISECONDS_PER_SECOND),
     });
     if (response.status === NOT_FOUND_STATUS) return 'absent';
     if (!response.ok) return undefined;

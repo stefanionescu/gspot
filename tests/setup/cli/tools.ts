@@ -49,7 +49,7 @@ export function buildToolInstall(session: Session, writer: Files): ToolInstall {
     const packageManager =
         pin === undefined
             ? undefined
-            : readToolPackageManager(session.toolsRoot, pin, session.timeoutSeconds, session.cache);
+            : readToolPackageManager(session.toolsRoot, pin, session.settings.tool_timeout_seconds, session.cache);
     return {
         session,
         packageManager:
@@ -106,7 +106,7 @@ What tool search reads, for tests that inspect installed tools.
 export function buildToolSearch(root: string, fields: Partial<ToolSearch> = {}): ToolSearch {
     return {
         root,
-        timeoutSeconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined),
+        settings: { tool_timeout_seconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined) },
         ...fields,
     };
 }

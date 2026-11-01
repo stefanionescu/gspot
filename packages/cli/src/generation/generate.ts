@@ -68,7 +68,7 @@ function addWorkflow(session: Session, generated: Generation): void {
                     : readPackageManagerVersion(
                           session.toolsRoot,
                           session.packageManager,
-                          session.timeoutSeconds,
+                          session.settings.tool_timeout_seconds,
                           session.cache,
                       ),
             setupCommand: settings.ci.setup_command,

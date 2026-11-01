@@ -1,3 +1,4 @@
+import { readConfigurations } from '#cli/manifests/read.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { isInScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { detectConfigurations, listAutomaticConfigurations } from '#cli/repository/detect.ts';
@@ -153,7 +154,7 @@ export function listDetectedAdditions(
 ): { scope: string; configurations: string[]; evidence: ConfigurationEvidence[] }[] {
     const proposed = selectForInit({
         repository: session.repository,
-        configurationsByName: session.configurationsByName,
+        configurationsByName: readConfigurations(),
         options: {},
     });
     return [

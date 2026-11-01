@@ -3,6 +3,7 @@ import { findToolName } from '#cli/tools/pins.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { SourceComment } from '#cli/types/parsers.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
@@ -17,11 +18,11 @@ import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';
-import { findSettingLine, isReasonedValue } from '#cli/settings/file.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import { mapSettingPaths, joinScopeSelector } from '#cli/settings/paths.ts';
 import type { CheckSession, CheckRunOptions } from '#cli/types/engine/run.ts';
 import { parseComments, stripCommentEnd } from '#cli/parsers/code/comments.ts';
+import { findSettingLine, isReasonedValue, readSettingsFile } from '#cli/settings/file.ts';
 import type { FindingPlace, SuppressionSyntax } from '#cli/types/configurations/general.ts';
 
 import {
@@ -139,7 +140,7 @@ export function checkConflictingConfigs(session: Session, _planned: PlannedCheck
         session.toolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
     );
     const generated = listGeneratedPaths(session.repository.files);
-    return listConflictingConfigs(session.root, session.repository.files, session.configurationsByName.values())
+    return listConflictingConfigs(session.root, session.repository.files, readConfigurations().values())
         .filter(({ tool, path, shared }) => !shared && tools.has(tool) && !generated.has(path))
         .map(({ tool, path }) => ({
             file: path,
@@ -218,6 +219,7 @@ Reports setting paths that match no tracked file or folder.
 export function checkUnmatchedPaths(session: Session, _planned: PlannedCheck): CheckFinding[] {
     const files = session.repository.files;
     const repositoryPaths = [...includeParentFolders(files.map((file) => file.path))];
+    const { text } = readSettingsFile(session.root);
     return listSettingsTables(session.settings).flatMap(({ table, scope = '', path }) => {
         const findings: CheckFinding[] = [];
         const schema = scope === '' ? settingsSchema : scopeSchema;
@@ -238,7 +240,7 @@ export function checkUnmatchedPaths(session: Session, _planned: PlannedCheck): C
                     Array.isArray(written) && written.some((element) => isTable(element)) ? `[[${key}]]` : key;
                 findings.push({
                     file: SETTINGS_FILE,
-                    line: findSettingLine(session.settingsText, session.settings.written, [...path, ...keys]),
+                    line: findSettingLine(text, session.settings.written, [...path, ...keys]),
                     rule: GSPOT_RULES.unmatchedPath,
                     message: `${selector} under ${where} matches no tracked file or folder.${UNESCAPED_BRACKET.test(pattern) ? BRACKET_HELP : ''}`,
                 });

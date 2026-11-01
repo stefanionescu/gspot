@@ -8,6 +8,7 @@ import type { CheckStop } from '#cli/system/errors.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { fakePlatform } from '#tests/setup/system/platform.ts';
 import { SWIFT_PACKAGE } from '#tests/config/setup/programs.ts';
@@ -73,7 +74,7 @@ test.each([...SWIFT_BUILD_PURPOSES])(
             }),
         );
         using _executables = fakeToolExecutables(
-            session.configurationsByName
+            readConfigurations()
                 .values()
                 .flatMap((configuration) => configuration.tools)
                 .toArray(),

@@ -3,6 +3,7 @@ import { find } from '#cli/system/files/reads.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { getTool, findToolName } from '#cli/tools/pins.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
@@ -47,7 +48,7 @@ function planCheck(planned: PlannedScope, scopeCheck: ScopeCheck): PlannedCheck 
     const { check, configuration } = scopeCheck;
     const rootScope = getRootScope(session.scopes);
     const name = findToolName(check);
-    const tool = name === undefined ? undefined : getTool(session.configurationsByName.values(), name);
+    const tool = name === undefined ? undefined : getTool(readConfigurations().values(), name);
     const plannedCheck: PlannedCheck = {
         scope: isRepositoryRun(check) ? rootScope : scope,
         check,

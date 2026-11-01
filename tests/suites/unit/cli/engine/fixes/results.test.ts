@@ -1,8 +1,9 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { test, spyOn, expect } from 'bun:test';
 import { runFixers } from '#cli/engine/fixes.ts';
 import { stringify } from '@decimalturn/toml-patch';
+import * as manifests from '#cli/manifests/read.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -27,11 +28,17 @@ test.each([0])('the fixer tool owns crash detection when exit is %p', async (cod
         buildProgramCommand('fakes/tool', '--stderr', 'Fatal: cannot write\n', '--exit', String(code)),
     );
     planned.check = { ...planned.check, exit_codes: [3] };
-    const configuration = session.configurationsByName.values().next().value!;
-    session.configurationsByName.set(configuration.name, {
-        ...configuration,
-        tools: [{ ...planned.tool!, crash_pattern: '^Fatal:' }, ...configuration.tools],
-    });
+    const shipped = manifests.readConfigurations();
+    const configuration = shipped.values().next().value!;
+    using _configurations = spyOn(manifests, 'readConfigurations').mockReturnValue(
+        new Map([
+            ...shipped,
+            [
+                configuration.name,
+                { ...configuration, tools: [{ ...planned.tool!, crash_pattern: '^Fatal:' }, ...configuration.tools] },
+            ],
+        ]),
+    );
     planned.tool = { ...planned.tool!, name: 'different-checker', crash_pattern: '^Checker-only:' };
     const failedRun = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned]);
     const failed = failedRun.results[0];

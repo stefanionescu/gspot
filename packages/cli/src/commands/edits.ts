@@ -64,7 +64,7 @@ writes into.
 export async function readSettingsEditContext(root: string, scopePath?: string): Promise<SettingsEditContext> {
     const context = await readIgnoreEditContext(root);
     const { edit: input, settings, cache, listing } = context;
-    const session = await openSession(root, { settingsFile: { settings, text: input.text }, cache, listing });
+    const session = await openSession(root, { settings, cache, listing });
     const path = scopePath === undefined ? '' : buildArgumentPath(root, root, scopePath);
     if (!session.scopes.some((scope) => scope.path === path))
         throw new GspotError(
@@ -245,7 +245,7 @@ export async function writeSettingsEdit(
     const session = await openSession(root, {
         cache: options.cache,
         listing: options.listing,
-        settingsFile: { settings: result.settings, text: result.text },
+        settings: result.settings,
     });
     const generated = buildGeneratedFiles(session);
     writeSettings(writer, result.text, edit.previous);

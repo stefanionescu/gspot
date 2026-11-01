@@ -1,5 +1,6 @@
 import { isInScope } from '#cli/repository/scopes.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { BANNER_BYTES } from '#cli/config/repository/files.ts';
 import { isEditedInPlace } from '#cli/repository/conflicts.ts';
@@ -15,8 +16,9 @@ import { expandSuggestions, listSelectedConfigurations } from '#cli/manifests/se
 import type { RepositorySetup, ConflictingConfig, ConfigurationEvidence } from '#cli/types/repository.ts';
 
 function listDetectedConfigurations(session: Session): ConfigurationEvidence[] {
-    const { root, repository, configurationsByName, settings } = session;
+    const { root, repository, settings } = session;
     const { dependencyFiles } = repository;
+    const configurationsByName = readConfigurations();
     return detectConfigurations(repository, configurationsByName).flatMap((detection) => {
         if (settings.removed_configurations.includes(detection.configuration)) return [];
         const removedScopes = [...settings.scopes]
@@ -33,7 +35,8 @@ function listDetectedConfigurations(session: Session): ConfigurationEvidence[] {
 }
 
 function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'detected' | 'suggested' | 'undetected'> {
-    const { repository, configurationsByName, settings } = session;
+    const { repository, settings } = session;
+    const configurationsByName = readConfigurations();
     const selectedConfigurations = listSelectedConfigurations(session.scopes);
     const selected = new Set(selectedConfigurations.map((configuration) => configuration.name));
     const detected = listDetectedConfigurations(session);
@@ -138,7 +141,7 @@ function listUnownedConfigs(
                 !hasGeneratedHeader(readBytes(session.cache, config.path, { limit: BANNER_BYTES }).toString('utf8')),
         )
         .flatMap((config) => {
-            const configuration = session.configurationsByName
+            const configuration = readConfigurations()
                 .values()
                 .find((configuration) => configuration.tools.some((tool) => tool.name === config.tool));
             return configuration === undefined ? [] : [buildFileRow(session, config, tools, configuration)];

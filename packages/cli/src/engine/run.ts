@@ -15,6 +15,7 @@ import { findMissingEnvironment } from '#cli/tools/uv.ts';
 import { isActive, planChecks } from '#cli/engine/plan.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { IgnoreRecord } from '#cli/types/settings.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { CheckStop, GspotError } from '#cli/system/errors.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
@@ -64,16 +65,12 @@ async function findUnrunnableResult(
     const environment = findMissingEnvironment(session, planned);
     if (environment !== undefined) return { ...base, ...environment };
     if (planned.check.needs?.includes('docker') !== true) return undefined;
-    const docker = await findToolPath(
-        session,
-        getTool(session.configurationsByName.values(), DOCKER_TOOL),
-        session.root,
-    );
+    const docker = await findToolPath(session, getTool(readConfigurations().values(), DOCKER_TOOL), session.root);
     if ('status' in docker) return { ...base, status: 'missing', note: DOCKER_MISSING_MESSAGE };
     const result = await remember(session.cache, DOCKER_AVAILABILITY, session.root, () =>
         spawnProcess([docker.path, 'info'], {
             cwd: session.root,
-            timeoutSeconds: session.timeoutSeconds,
+            timeoutSeconds: session.settings.tool_timeout_seconds,
             cancelSignal: session.cancelSignal,
         }),
     );

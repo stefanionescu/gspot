@@ -8,6 +8,7 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -55,7 +56,7 @@ test('prose/vale sends Vale each stdin file as gspot read it at the start of the
     for (const path of paths) await writeFile(join(session.root, path), '// Changed after the run read it.\n');
 
     using resources = new DisposableStack();
-    const fakes = fakeToolExecutables([getTool(session.configurationsByName.values(), 'vale')]);
+    const fakes = fakeToolExecutables([getTool(readConfigurations().values(), 'vale')]);
     resources.use(fakes);
     const scanned: string[] = [];
     resources.use(

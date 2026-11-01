@@ -9,11 +9,11 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import { selectToolConfigurations } from '#cli/engine/tools.ts';
+import type { SessionOptions } from '#cli/types/engine/plan.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
 import { selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
-import type { SettingsFile, SessionOptions } from '#cli/types/engine/plan.ts';
 import type { Repository, RepositoryListing } from '#cli/types/repository.ts';
 import { listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { selectStartRunner, detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
@@ -72,12 +72,6 @@ function addPackageManagers(session: Session): void {
     session.toolPackageManager = packageManager.name === 'yarn' ? 'npm' : packageManager.name;
 }
 
-function readSessionSettings(root: string, requested: SettingsFile | undefined): SettingsFile {
-    if (requested !== undefined) return requested;
-    const { text } = readSettingsFile(root);
-    return { text, settings: readSettings(text, root) };
-}
-
 /**
 Refuse invalid settings or configuration choices.
 
@@ -87,7 +81,7 @@ Refuse invalid settings or configuration choices.
 @param options.cache the run cache.
 @param options.toolCache the cache of the tool lookups, which pushed revisions and a --fix session share.
 @param options.listing the files of the repository, or none to list them.
-@param options.settingsFile the settings to use, or none to read them from the repository.
+@param options.settings the settings to use, or none to read them from the repository.
 @param options.resources the resources that the caller disposes when the run ends.
 @param options.cancelSignal stops the operations of this session.
 */
@@ -98,14 +92,12 @@ export async function openSession(
         cache = createRunCache(root),
         toolCache = createRunCache(toolsRoot),
         listing,
-        settingsFile: requestedSettings,
+        settings = readSettings(readSettingsFile(root).text, root),
         resources = [],
         cancelSignal,
     }: SessionOptions = {},
 ): Promise<Session> {
-    const settingsFile = readSessionSettings(root, requestedSettings);
     const configurationsByName = readConfigurations();
-    const settings = settingsFile.settings;
     const repository = await readSessionRepository({
         settings,
         configurationsByName,
@@ -118,15 +110,12 @@ export async function openSession(
         configuredChecks: listEnabledChecks(scopes, settings),
         resources,
         cancelSignal,
-        timeoutSeconds: settings.tool_timeout_seconds,
         packageManager: undefined,
         toolPackageManager: undefined,
         root,
         toolsRoot,
         startRunner: selectStartRunner(root),
-        settings: settingsFile.settings,
-        settingsText: settingsFile.text,
-        configurationsByName,
+        settings,
         repository,
         scopes,
         cache,

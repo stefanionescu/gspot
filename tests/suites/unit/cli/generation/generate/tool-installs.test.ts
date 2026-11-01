@@ -5,6 +5,7 @@ import { getTool } from '#cli/tools/pins.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import type { ToolPackageJson } from '#tests/types/setup.ts';
 import { YARN_CLIENTS } from '#tests/config/setup/programs.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
@@ -59,7 +60,7 @@ test('Next ESLint plugin keeps its shipped pin when two folders declare differen
     const session = await openSession(join(sandbox.path, 'project'));
     const generated = buildGeneratedFiles(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject);
     expect((JSON.parse(generated!.content) as ToolPackageJson).devDependencies['@next/eslint-plugin-next']).toBe(
-        getTool(session.configurationsByName.values(), '@next/eslint-plugin-next').version,
+        getTool(readConfigurations().values(), '@next/eslint-plugin-next').version,
     );
 });
 

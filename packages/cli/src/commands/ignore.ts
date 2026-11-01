@@ -56,8 +56,7 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
     const { root, edit: input, settings, cache, listing } = context;
     if (options.check !== undefined) assertCheckExists(options.check, Object.values(settings.commandChecks));
     if (options.rule !== undefined && options.check !== undefined) {
-        const settingsFile = { settings, text: input.text };
-        const session = await openSession(root, { settingsFile, cache, listing });
+        const session = await openSession(root, { settings, cache, listing });
         await assertDocumentedRule(session, { checkId: options.check, rule: options.rule });
     }
     const paths = buildIgnorePaths(context, options.cwd, options.paths);

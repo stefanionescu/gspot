@@ -193,7 +193,6 @@ export type ManagedKeys = { path: string; keys: { key: KeyPath; value: JsonValue
 
 export type ConfigurationSelection = {
     repository: Repository;
-    configurationsByName: Map<string, Configuration>;
     scopes: readonly { path: string; configurations: Configuration[] }[];
     settings: {
         removed_configurations: string[];

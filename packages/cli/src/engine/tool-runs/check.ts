@@ -8,6 +8,7 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { listToolStart } from '#cli/tools/packages.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import type { Session, ProcessFailure } from '#cli/types/tools.ts';
@@ -55,7 +56,7 @@ async function runCommands(
             runToolProcess(commandLine.commandArguments, {
                 ...launch,
                 cancelSignal: session.cancelSignal,
-                timeoutSeconds: session.timeoutSeconds,
+                timeoutSeconds: session.settings.tool_timeout_seconds,
                 name: tool.name,
             }),
         );
@@ -129,7 +130,7 @@ async function findMissingOtherTool(
     cwd: string,
 ): Promise<ProcessFailure | undefined> {
     for (const name of listOtherTools(planned.scope, planned.check, command)) {
-        const required = getTool(session.configurationsByName.values(), name);
+        const required = getTool(readConfigurations().values(), name);
         const availability = await findToolPath(session, required, cwd);
         if ('status' in availability) return availability;
     }

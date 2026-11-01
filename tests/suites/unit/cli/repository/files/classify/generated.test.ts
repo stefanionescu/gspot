@@ -6,6 +6,7 @@ import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { formatHeader } from '#cli/generation/header.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -42,7 +43,7 @@ test('generated Gradle and Maven launchers are classified generated and never se
     expect(
         detectConfigurations(
             { root: session.root, files: session.repository.files, dependencyFiles: [] },
-            session.configurationsByName,
+            readConfigurations(),
         ).map(({ configuration }) => configuration),
     ).not.toContain('bash');
     await writeFile(join(sandbox.path, '.gitattributes'), 'mvnw linguist-vendored\n');

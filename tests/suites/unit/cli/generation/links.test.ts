@@ -5,6 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
 import { buildLinkFiles } from '#cli/generation/links.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { XCTEST_SOURCE } from '#tests/config/setup/languages.ts';
@@ -57,7 +58,7 @@ test('JavaScript link files import modules from folders with URI characters and 
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['javascript']) });
 
     const session = await openSession(sandbox.path);
-    const configuration = session.configurationsByName.get('javascript')!;
+    const configuration = readConfigurations().get('javascript')!;
     const config = configuration.configs
         .filter((file): file is SourcedConfig => file.source !== undefined)
         .find((file) => file.pointer?.body.includes('{target_module}') === true)!;

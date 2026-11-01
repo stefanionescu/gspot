@@ -1,6 +1,7 @@
 import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
 import type { CommandResult } from '#cli/types/system.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
@@ -82,7 +83,7 @@ function buildConfigurationsResult(session: Session): CommandResult {
         name: configuration.name,
         checks: listCheckStates(session, configuration, planned),
     }));
-    const available = session.configurationsByName
+    const available = readConfigurations()
         .values()
         .filter((configuration) => !names.has(configuration.name))
         .map((configuration) => ({ name: configuration.name, description: configuration.description }))

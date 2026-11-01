@@ -8,6 +8,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { LEVELS, GSPOT_PATHS } from '#cli/config/manifests.ts';
@@ -87,7 +88,7 @@ test('a changed Vale archive is refused before sync and preserves installed pack
         [`${GSPOT_PATHS.valePackages}/Google/terms.yml`]: PREVIOUS_BYTES,
     });
     const session = await openSession(sandbox.path);
-    const tool = getTool(session.configurationsByName.values(), 'vale');
+    const tool = getTool(readConfigurations().values(), 'vale');
     const miseBin = await writeProgramCommand(
         sandbox.path,
         'mise/bin/vale',

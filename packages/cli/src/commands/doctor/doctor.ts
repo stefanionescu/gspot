@@ -128,7 +128,10 @@ async function readHookState(session: Session): Promise<HookStatus> {
     if (!hooks.ready || !session.settings.hooks.enabled) return hooks;
     const { command, installCommand } = session.startRunner;
     const versionCommand = [...command.split(' '), VERSION_FLAG];
-    const result = await spawnProcess(versionCommand, { cwd: session.root, timeoutSeconds: session.timeoutSeconds });
+    const result = await spawnProcess(versionCommand, {
+        cwd: session.root,
+        timeoutSeconds: session.settings.tool_timeout_seconds,
+    });
     if (result.code === 0) return hooks;
     const install = installCommand.replace('<version>', () => cliPackage.version);
     const failure = `${versionCommand.join(' ')} fails. Install gspot with: ${install}`;

@@ -3,6 +3,7 @@ import { CheckStop } from '#cli/system/errors.ts';
 import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -51,7 +52,7 @@ Lists the SwiftLint files a copy keeps: the scope link file, the config file, an
 export function listSwiftlintConfigs(session: CheckSession, planned: PlannedCheck): string[] {
     const paths = [
         joinScope(planned.scope.path, SWIFTLINT_CONFIG_FILE),
-        ...session.configurationsByName
+        ...readConfigurations()
             .values()
             .flatMap((configuration) => configuration.configs)
             .filter((config) => config.pointer?.path === SWIFTLINT_CONFIG_FILE)

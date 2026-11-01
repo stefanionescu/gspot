@@ -8,6 +8,7 @@ import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { executableLayout } from '#cli/system/paths.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -65,9 +66,7 @@ test('deptry excludes nested scopes and keeps your own exclude patterns', async 
 
 async function runFakeDeptry(root: string) {
     const session = await openSession(root);
-    using resources = fakeToolExecutables(
-        ['uv', 'deptry'].map((name) => getTool(session.configurationsByName.values(), name)),
-    );
+    using resources = fakeToolExecutables(['uv', 'deptry'].map((name) => getTool(readConfigurations().values(), name)));
     const spawn = resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout: '[]' })),
     );

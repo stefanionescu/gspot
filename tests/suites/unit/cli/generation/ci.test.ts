@@ -8,6 +8,7 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import type { Pipeline } from '#cli/types/generation.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { CI_NODE } from '#cli/config/repository/javascript.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
@@ -198,7 +199,9 @@ test('without a setup command, CI installs the locked dependencies of each proje
     });
 
     const session = await openSession(sandbox.path);
-    const uv = session.configurationsByName.get('python')!.tools.find(({ name }) => name === 'uv')?.version;
+    const uv = readConfigurations()
+        .get('python')!
+        .tools.find(({ name }) => name === 'uv')?.version;
     expect(listProjectInstallLines(session)).toStrictEqual([
         `mise exec ${CI_NODE} npm@11.10.1 -- npm ci`,
         `mise exec ${CI_NODE} uv@${String(uv)} -- uv sync --locked`,

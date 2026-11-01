@@ -14,8 +14,8 @@ import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import { isInScope, buildArgumentPath } from '#cli/repository/scopes.ts';
-import { listChecksById, assertCheckExists } from '#cli/manifests/read.ts';
 import type { FixReport, RunReport, RunOptions } from '#cli/types/engine/run.ts';
+import { listChecksById, assertCheckExists, readConfigurations } from '#cli/manifests/read.ts';
 import type { RunFilters, CheckOptions, RevisionSource } from '#cli/types/commands/reports.ts';
 import { formatFixes, formatRunReport, printFailedFixers } from '#cli/commands/check/report.ts';
 
@@ -89,7 +89,7 @@ function assertNamedChecks(session: Session, options: Pick<CheckOptions, 'only' 
     const selected = session.scopes.flatMap((scope) =>
         scope.configurations.flatMap((configuration) => configuration.checks.map((check) => ({ check, scope }))),
     );
-    const shipped = listChecksById(session.configurationsByName.values());
+    const shipped = listChecksById(readConfigurations().values());
     const settings = session.settings;
     const commandChecks = Object.values(settings.commandChecks);
     for (const id of options.skip ?? []) assertCheckExists(id, commandChecks);

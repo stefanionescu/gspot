@@ -2,6 +2,7 @@ import { test, expect } from 'bun:test';
 import { getTool } from '#cli/tools/pins.ts';
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
@@ -39,9 +40,7 @@ test.each([...COMPOSE_PAIRING_CASES])(
         });
         const session = await openSession(sandbox.path);
         using resources = new DisposableStack();
-        const fakes = fakeToolExecutables([
-            { ...getTool(session.configurationsByName.values(), 'docker'), version: '29.0.0' },
-        ]);
+        const fakes = fakeToolExecutables([{ ...getTool(readConfigurations().values(), 'docker'), version: '29.0.0' }]);
         resources.use(fakes);
         const toolRun = resources.use(fakeCommands().mockResolvedValue(buildProcessResult()));
         const planned = planChecks(session, buildRunOptions({ stage: 'push', only: ['docker/compose'] }))[0]!;

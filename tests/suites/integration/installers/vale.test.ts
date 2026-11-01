@@ -6,6 +6,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { PREVIOUS_BYTES } from '#tests/config/setup/programs.ts';
@@ -84,7 +85,7 @@ test.each([...VALE_INSTALL_FAILURES])(
         });
 
         const session = await openSession(sandbox.path);
-        const tool = getTool(session.configurationsByName.values(), 'vale');
+        const tool = getTool(readConfigurations().values(), 'vale');
         const miseBin = join(sandbox.path, 'mise/bin');
         const version = String(tool.version);
         await writeProgramCommand(

@@ -203,7 +203,7 @@ export async function inspectTool(search: ToolSearch, tool: Tool): Promise<ToolI
         tool,
         help,
         missing: buildMissingInspection(search, tool, { help, want }),
-        timeoutSeconds: search.timeoutSeconds,
+        timeoutSeconds: search.settings.tool_timeout_seconds,
         want,
         miseBinPaths: search.miseBinPaths,
     };

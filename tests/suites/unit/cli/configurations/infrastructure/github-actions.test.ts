@@ -31,7 +31,7 @@ test('actionlint copies root actions and unchanged actions outside .github with 
     });
     const session = await openSession(sandbox.path);
     using _pins = fakeToolExecutables(
-        ['actionlint', 'shellcheck'].map((name) => getTool(session.configurationsByName.values(), name)),
+        ['actionlint', 'shellcheck'].map((name) => getTool(readConfigurations().values(), name)),
     );
     using boundary = spyOn(processes, 'spawnProcess').mockImplementation(async (_command, options) => {
         expect(await readFile(join(options.cwd, 'action.yml'), 'utf8')).toContain('uses: ./actions/setup');
@@ -64,8 +64,8 @@ test.each([...WORKFLOW_TEXT_CASES])(
         });
         const session = await openSession(sandbox.path);
         using _pins = fakeToolExecutables([
-            getTool(session.configurationsByName.values(), 'actionlint'),
-            getTool(session.configurationsByName.values(), 'shellcheck'),
+            getTool(readConfigurations().values(), 'actionlint'),
+            getTool(readConfigurations().values(), 'shellcheck'),
         ]);
         using run = spyOn(processes, 'spawnProcess').mockImplementation(async (_command, options) => {
             const written = await readFile(join(options.cwd, path), 'utf8');
@@ -110,7 +110,7 @@ test.each([...ACTIONLINT_EXITS])(
         );
         await chmod(join(sandbox.path, '.github/workflows/caller.yml'), 0o444);
         const session = await openSession(sandbox.path);
-        using _pins = fakeToolExecutables([getTool(session.configurationsByName.values(), 'shellcheck')]);
+        using _pins = fakeToolExecutables([getTool(readConfigurations().values(), 'shellcheck')]);
         const plans = planChecks(session, { stage: 'commit', only: ['github-actions/actionlint'] });
         const planned = plans[0]!;
         planned.tool = { ...planned.tool!, name: executable };

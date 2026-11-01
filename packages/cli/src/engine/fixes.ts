@@ -7,6 +7,7 @@ import { findToolPath } from '#cli/tools/inspect.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { runToolProcess } from '#cli/engine/tool-runs/tool.ts';
 import { isReportedCrash } from '#cli/engine/tool-runs/output.ts';
@@ -39,7 +40,7 @@ async function runFixCommands(session: Session, planned: PlannedCheck, setup: Co
         const { result, failure } = await runToolProcess(command.commandArguments, {
             ...setup,
             cancelSignal: session.cancelSignal,
-            timeoutSeconds: session.timeoutSeconds,
+            timeoutSeconds: session.settings.tool_timeout_seconds,
             name: planned.check.id,
         });
         note = failure?.note ?? findFixFailure(planned, result);
@@ -91,7 +92,7 @@ async function runFixer(session: CheckSession, planned: PlannedCheck): Promise<F
         return { check, status: 'skipped', changed: [] };
     const command = planned.check.fix as string[];
     const name = command[0] as string;
-    const tool = planned.tool?.name === name ? planned.tool : getTool(session.configurationsByName.values(), name);
+    const tool = planned.tool?.name === name ? planned.tool : getTool(readConfigurations().values(), name);
     return runFixTool(session, planned, { command, tool });
 }
 

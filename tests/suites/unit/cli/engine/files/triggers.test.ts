@@ -8,6 +8,7 @@ import type { Check } from '#cli/types/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { isActive, planChecks } from '#cli/engine/plan.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { BASE_CHECK } from '#tests/config/engine/tool-runs.ts';
 import { runChecks, buildCheckSession } from '#cli/engine/run.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
@@ -39,7 +40,7 @@ async function replaceChildScopeChecks(session: Session): Promise<void> {
         '--exit',
         '1',
     );
-    const configuration = session.configurationsByName.get('typescript')!;
+    const configuration = readConfigurations().get('typescript')!;
     const check: Check = {
         ...BASE_CHECK,
         id: 'typescript/tsc',

@@ -74,7 +74,6 @@ export type MiseLockfile = z.infer<typeof miseLockfileSchema>;
 export type Session = {
     configuredChecks: ConfiguredCheck[];
     toolConfigurations: Configuration[];
-    timeoutSeconds: number;
     root: string;
     startRunner: StartRunner;
     toolsRoot: string;
@@ -85,8 +84,6 @@ export type Session = {
     toolPackageManager: ToolPackageManagerName | undefined;
     cancelSignal?: AbortSignal | undefined;
     settings: Settings;
-    settingsText: string;
-    configurationsByName: Map<string, Configuration>;
     repository: Repository;
     scopes: Scope[];
 };
@@ -116,7 +113,7 @@ export type ToolInspection = {
 };
 
 export type ToolSearch = {
-    timeoutSeconds: number;
+    settings: Pick<Settings, 'tool_timeout_seconds'>;
     root: string;
     toolsRoot?: string;
     cwd?: string;
@@ -248,7 +245,7 @@ export type RuleDocsOptions = {
 
 export type ToolLookupSession = Pick<
     Session,
-    'root' | 'scopes' | 'toolCache' | 'toolsRoot' | 'timeoutSeconds' | 'toolConfigurations'
+    'root' | 'scopes' | 'toolCache' | 'toolsRoot' | 'settings' | 'toolConfigurations'
 >;
 
 export type RuleToolSearch = RuleDocsOptions & { timeoutSeconds: number };

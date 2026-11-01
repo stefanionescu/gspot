@@ -2,6 +2,7 @@ import { basename } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { selectCheckFiles } from '#cli/engine/files.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import { getTool, findPackagePin } from '#cli/tools/pins.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
@@ -151,11 +152,11 @@ export function selectToolConfigurations(session: Session, checks: ConfiguredChe
     const selectedTools = new Set(
         configurations.flatMap((configuration) => configuration.tools.map(({ name }) => name)),
     );
-    addPeerPackages(toolNames, [...session.configurationsByName.values()]);
+    addPeerPackages(toolNames, [...readConfigurations().values()]);
     const unselected = [...toolNames].flatMap((name) =>
         selectedTools.has(name)
             ? []
-            : ([...session.configurationsByName.values()].find((configuration) =>
+            : ([...readConfigurations().values()].find((configuration) =>
                   configuration.tools.some((tool) => tool.name === name),
               ) ?? []),
     );

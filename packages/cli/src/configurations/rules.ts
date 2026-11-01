@@ -26,7 +26,7 @@ export async function readCheckRuleDocs(
     if (tool === undefined) return undefined;
     const options: RuleDocsOptions = {};
     if (session !== undefined) {
-        options.timeoutSeconds = session.timeoutSeconds;
+        options.timeoutSeconds = session.settings.tool_timeout_seconds;
         options.readMiseBinPaths = async () => {
             const { folders } = await readToolBinPaths(session);
             return folders;

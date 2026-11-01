@@ -67,12 +67,12 @@ test.each(['.d.ts'])('TypeScript declarations in %s need a tsconfig.json to prop
 
     const before = await openSession(sandbox.path);
     expect(
-        detectConfigurations(before.repository, before.configurationsByName).map(({ configuration }) => configuration),
+        detectConfigurations(before.repository, readConfigurations()).map(({ configuration }) => configuration),
     ).not.toContain('typescript');
     await writeFile(join(sandbox.path, 'tsconfig.json'), '{"compilerOptions":{"strict":true}}\n');
     const configured = await openSession(sandbox.path);
     expect(
-        detectConfigurations(configured.repository, configured.configurationsByName).find(
+        detectConfigurations(configured.repository, readConfigurations()).find(
             ({ configuration }) => configuration === 'typescript',
         )?.evidence,
     ).toBe('tsconfig.json');
@@ -160,7 +160,7 @@ test('Testing Library is detected only in the scope that declares it', async () 
         ['child', 'neighbor'].map((scope) =>
             detectConfigurations(
                 { root: sandbox.path, files: session.repository.files, dependencyFiles: projects },
-                session.configurationsByName,
+                readConfigurations(),
                 scope,
             ).find((row) => row.configuration === 'testing-library'),
         ),

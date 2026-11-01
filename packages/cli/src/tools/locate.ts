@@ -185,7 +185,7 @@ export function readToolBinPaths(session: ToolLookupSession): Promise<MiseBinPat
     return remember(session.toolCache, MISE_FOLDERS, session.toolsRoot, async () => {
         const pins = listMisePins(listSelectedConfigurations(session.scopes));
         return readMiseBinPaths(session.toolsRoot, [...new Set(pins.map((pin) => pin.name))], {
-            timeoutSeconds: session.timeoutSeconds,
+            timeoutSeconds: session.settings.tool_timeout_seconds,
             project: buildMiseInstall(session.toolConfigurations).content,
         });
     });

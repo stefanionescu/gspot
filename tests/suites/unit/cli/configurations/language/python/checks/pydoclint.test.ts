@@ -9,6 +9,7 @@ import type { Level } from '#cli/types/settings.ts';
 import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { PYPROJECT } from '#tests/config/setup/languages.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -88,7 +89,7 @@ async function preparePydoclintCheck(
     const session = await openSession(root, { resources: resources.use(createRunResources()) });
     const [planned] = planChecks(session, { stage: 'all', only: ['python/pydoclint'] });
     if (planned === undefined) throw new Error('The Python sandbox does not plan pydoclint.');
-    const fakes = fakeToolExecutables([getTool(session.configurationsByName.values(), 'pydoclint')]);
+    const fakes = fakeToolExecutables([getTool(readConfigurations().values(), 'pydoclint')]);
     resources.use(fakes);
     return Object.assign(cleanup.move(), { session, planned });
 }

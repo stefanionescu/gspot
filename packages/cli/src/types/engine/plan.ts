@@ -78,14 +78,9 @@ export type SessionOptions = {
     cache?: RunCache | undefined;
     toolCache?: RunCache | undefined;
     listing?: RepositoryListing | undefined;
-    settingsFile?: SettingsFile;
+    settings?: Settings;
     resources?: Disposable[];
     cancelSignal?: AbortSignal | undefined;
-};
-
-export type SettingsFile = {
-    settings: Settings;
-    text: string;
 };
 
 export type ConfigurationTables = Defined<

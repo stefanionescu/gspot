@@ -105,7 +105,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
     const draft = buildSettingsDraft(initConfigurations, options);
     const settingsText = buildInitSettings(draft, repository, configurationsByName);
     const settings = readSettings(settingsText, root);
-    const planned = await openSession(root, { settingsFile: { settings, text: settingsText }, cache, listing });
+    const planned = await openSession(root, { settings, cache, listing });
     const hasPin = readGspotPin(root) !== undefined;
     const hasManifest = readPackageJson(root, PACKAGE_JSON) !== undefined;
     const session = hasPin

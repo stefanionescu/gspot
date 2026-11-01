@@ -138,7 +138,7 @@ List every managed path, with the lockfiles of the tool projects in use.
 @param generated the files that this run generates.
 */
 export function listExpectedPaths(
-    session: Pick<Session, 'toolPackageManager' | 'toolsRoot' | 'timeoutSeconds' | 'cache'>,
+    session: Pick<Session, 'toolPackageManager' | 'toolsRoot' | 'settings' | 'cache'>,
     generated: Generation,
 ): Set<string> {
     const paths = new Set([...generated.files, ...generated.blocks, ...generated.managedKeys].map((file) => file.path));

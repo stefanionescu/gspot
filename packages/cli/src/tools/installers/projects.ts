@@ -101,7 +101,7 @@ export function listStaleLockfiles(
 async function findUvPath(install: ToolInstall, miseBinPaths: string[]): Promise<string | undefined> {
     const { session, misePath } = install;
     if (misePath === undefined && which.sync(UV_TOOL, { nothrow: true }) === null) return undefined;
-    const search = { folders: [], miseBinPaths, timeoutSeconds: session.timeoutSeconds };
+    const search = { folders: [], miseBinPaths, timeoutSeconds: session.settings.tool_timeout_seconds };
     const { paths } = await listExecutablePaths(session.toolsRoot, UV_TOOL, search);
     return paths[0] ?? UV_TOOL;
 }

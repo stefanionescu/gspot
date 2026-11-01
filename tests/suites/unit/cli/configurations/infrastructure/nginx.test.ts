@@ -6,6 +6,7 @@ import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -26,10 +27,9 @@ test.each([...NGINX_MOUNT_CASES])(
             'gspot.toml': buildSandboxSettings(['nginx']),
             'nginx.conf': source,
         });
-        const session = await openSession(sandbox.path);
         using _pins = fakeToolExecutables([
-            getTool(session.configurationsByName.values(), 'openssl'),
-            getTool(session.configurationsByName.values(), 'docker'),
+            getTool(readConfigurations().values(), 'openssl'),
+            getTool(readConfigurations().values(), 'docker'),
         ]);
         const containers: {
             hosts: string[];
@@ -75,8 +75,8 @@ test('a failed certificate step reports its error text, removes the scratch file
 
     using resources = new DisposableStack();
     const fakes = fakeToolExecutables([
-        getTool(session.configurationsByName.values(), 'openssl'),
-        getTool(session.configurationsByName.values(), 'docker'),
+        getTool(readConfigurations().values(), 'openssl'),
+        getTool(readConfigurations().values(), 'docker'),
     ]);
     resources.use(fakes);
     const folders: string[] = [];
@@ -104,7 +104,7 @@ test.each(NGINX_FAILURE_CASES)('nginx/syntax reports $name', async ({ stderr, st
     });
     const session = await openSession(sandbox.path);
     using _pins = fakeToolExecutables(
-        ['openssl', 'docker'].map((name) => getTool(session.configurationsByName.values(), name)),
+        ['openssl', 'docker'].map((name) => getTool(readConfigurations().values(), name)),
     );
     using _spawn = fakeCommands().mockImplementation((command) =>
         Promise.resolve(buildProcessResult(command.includes('--rm') ? { code: 1, stderr } : {})),

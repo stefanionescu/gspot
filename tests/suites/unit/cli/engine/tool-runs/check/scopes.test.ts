@@ -5,6 +5,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { runChecks, buildCheckSession } from '#cli/engine/run.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
@@ -24,7 +25,7 @@ test('a command in a scope runs in the scope folder with paths relative to it', 
         [`${scope}/--config=x.swift`]: 'let value = 2\n',
     });
     const session = await openSession(sandbox.path);
-    using _pins = fakeToolExecutables([getTool(session.configurationsByName.values(), 'swiftlint')]);
+    using _pins = fakeToolExecutables([getTool(readConfigurations().values(), 'swiftlint')]);
     const calls: { cwd: string; files: string[] }[] = [];
     using _spawn = spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
         calls.push({ cwd: options.cwd, files: command.filter((argument) => argument.endsWith('.swift')) });

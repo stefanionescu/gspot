@@ -61,7 +61,7 @@ export function planSandboxCheck(
         check,
         files,
         triggerPaths: [],
-        ...(tool !== undefined && { tool: getTool(session.configurationsByName.values(), tool) }),
+        ...(tool !== undefined && { tool: getTool(readConfigurations().values(), tool) }),
     };
 }
 
@@ -122,7 +122,7 @@ export async function openFakeToolSession(
     resources: Pick<DisposableStack, 'use'>,
 ): Promise<Session> {
     const session = await openSession(root, { resources: resources.use(createRunResources()) });
-    resources.use(fakeToolExecutables(toolNames.map((name) => getTool(session.configurationsByName.values(), name))));
+    resources.use(fakeToolExecutables(toolNames.map((name) => getTool(readConfigurations().values(), name))));
     return session;
 }
 

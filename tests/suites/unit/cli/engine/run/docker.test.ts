@@ -3,6 +3,7 @@ import { getTool } from '#cli/tools/pins.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -14,7 +15,7 @@ test('Docker checks report an unavailable daemon before running', async () => {
         'nginx.conf': 'events {}',
     });
     const session = await openSession(sandbox.path);
-    const docker = getTool(session.configurationsByName.values(), 'docker');
+    const docker = getTool(readConfigurations().values(), 'docker');
     using _tools = fakeToolExecutables([docker]);
     for (const scope of session.scopes) {
         const configuration = scope.configurations.find(({ name }) => name === 'nginx')!;

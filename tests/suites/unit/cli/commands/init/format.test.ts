@@ -43,7 +43,7 @@ async function readInitFormatOptions(root: string, commandArguments: string[]): 
     const result = await runGspot(root, [...commandArguments, '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const text = (JSON.parse(result.stdout) as InitJson).settingsText;
-    const session = await openSession(root, { settingsFile: { settings: readSettings(text, root), text } });
+    const session = await openSession(root, { settings: readSettings(text, root) });
     return session.scopes.map(({ settings }) => getTable(settings, 'format'));
 }
 
@@ -62,7 +62,7 @@ test('init reads the format settings of each scope', async () => {
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const text = (JSON.parse(result.stdout) as InitJson).settingsText;
     const session = await openSession(sandbox.path, {
-        settingsFile: { settings: readSettings(text, sandbox.path), text },
+        settings: readSettings(text, sandbox.path),
     });
     expect(
         session.scopes.map(({ path, settings }) => {

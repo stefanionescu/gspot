@@ -6,6 +6,7 @@ import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import type { Config } from '#cli/types/repository.ts';
 import { extractConfigName } from '#cli/engine/files.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import type { ScopeSettings } from '#cli/types/settings.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -54,11 +55,11 @@ function expandEachPlaceholder(planned: PlannedCheck, argument: string): string[
     ]);
 }
 
-function listConfigs(session: CheckSession, planned: PlannedCheck): Config[] {
+function listConfigs(planned: PlannedCheck): Config[] {
     const own = planned.scope.configurations
         .filter((configuration) => configuration.checks.some((check) => check.id === planned.check.id))
         .flatMap((configuration) => configuration.configs);
-    const every = session.configurationsByName
+    const every = readConfigurations()
         .values()
         .flatMap((configuration) => configuration.configs)
         .toArray();
@@ -116,7 +117,7 @@ Find the path of the config file that {config_file:<name>} names, with the confi
 @throws the build failure of that config file in the scope.
 */
 export function getConfigPath(session: CheckSession, planned: PlannedCheck, name: string): string {
-    const config = listConfigs(session, planned).find(({ file }) => extractConfigName(file) === name);
+    const config = listConfigs(planned).find(({ file }) => extractConfigName(file) === name);
     if (!config)
         throw new GspotError(
             'settings',
