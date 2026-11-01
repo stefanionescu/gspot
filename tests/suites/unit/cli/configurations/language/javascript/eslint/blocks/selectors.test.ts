@@ -99,6 +99,19 @@ test('a module-level store in a store file is reported at level all, and a store
     ]);
 });
 
+test('a raw sql statement is reported at level all, and a sql fragment inside the query builder is not', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'drizzle'], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'source.js':
+            'await db.execute(sql`select 1`);\nawait db.update(orders).set({ total: sql`${orders.total} + 1` });\n',
+    });
+    const eslint = await buildEslint(sandbox.path);
+    expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['gspot/restricted-syntax'])).toStrictEqual([
+        { file: 'source.js', line: 1, rule: 'gspot/restricted-syntax' },
+    ]);
+});
+
 test('library selectors at level basic report both whole-store reads and accept schema options and unrelated queries', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript', 'zustand', 'react-hook-form', 'trpc'], {

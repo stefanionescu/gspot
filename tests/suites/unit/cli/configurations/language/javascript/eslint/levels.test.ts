@@ -33,7 +33,7 @@ test.each(['all'] as const)('%s keeps the syntax selectors of a configuration in
     });
 
     const eslint = await buildEslint(sandbox.path);
-    const source = 'export const query = sql`select 1`;';
+    const source = 'await db.execute(sql`select 1`);';
     await createFileTree(sandbox.path, { 'app/client.jsx': source, 'root.jsx': source });
     expect(await listLintFindings(eslint, sandbox.path, ['app/client.jsx'], ['gspot/restricted-syntax'])).toStrictEqual(
         [{ file: 'app/client.jsx', rule: 'gspot/restricted-syntax', line: 1 }],

@@ -20,7 +20,7 @@ See [column types](https://orm.drizzle.team/docs/column-types) and [relations](h
 
 <!-- level: all -->
 
-Build queries with the query builder, not the `sql` template, which skips the types of the schema.
+Run no raw `sql` statement through `db.execute`; use `sql` only for a fragment inside the query builder.
 
 ## Authorized operations
 
