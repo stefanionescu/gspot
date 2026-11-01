@@ -126,3 +126,27 @@ test.each(ASSERTION_RULE_OWNERS)('basic assertion ownership with $name', async (
     const tests = (await eslint.calculateConfigForFile('source.test.js')) as EslintConfiguration;
     expect(tests.rules['gspot/require-test-assertions']?.[0]).toBe(assertions);
 });
+
+test('Testing Library rules read Testing Library queries and leave a Playwright page alone', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'testing-library'], { level: 'all' }),
+        'package.json': JSON.stringify({
+            private: true,
+            type: 'module',
+            dependencies: { '@testing-library/react': '1.0.0' },
+        }),
+        'rtl.test.js':
+            "import { render } from '@testing-library/react';\nconst { getByRole } = render(null);\ngetByRole('button');\n",
+        'page.test.js':
+            "import { test } from '@playwright/test';\ntest('opens', ({ page }) => page.getByRole('button'));\n",
+    });
+    const eslint = await buildEslint(sandbox.path);
+    expect(
+        await listLintFindings(
+            eslint,
+            sandbox.path,
+            ['rtl.test.js', 'page.test.js'],
+            ['testing-library/prefer-screen-queries'],
+        ),
+    ).toStrictEqual([{ file: 'rtl.test.js', rule: 'testing-library/prefer-screen-queries', line: 3 }]);
+});

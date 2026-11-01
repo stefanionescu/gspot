@@ -4,6 +4,7 @@ import {
     CONFIGURATION_PLUGINS,
     TESTING_LIBRARY_SCOPE,
     TESTING_LIBRARY_PRESETS,
+    TESTING_LIBRARY_SETTINGS,
     TESTING_LIBRARY_DEFAULT_PRESET,
 } from '#cli/config/configurations/framework.ts';
 
@@ -25,7 +26,7 @@ export function buildTestingLibraryBlocks(
             ? []
             : [...new Set(presetNames.length === 0 ? [TESTING_LIBRARY_DEFAULT_PRESET] : presetNames)];
     const blocks: ConfigurationBlocks['blocks'] = selected.map((name) => ({
-        fields: { files: eslintFiles.tests },
+        fields: { files: eslintFiles.tests, settings: TESTING_LIBRARY_SETTINGS },
         presets: [{ importName: 'testingLibrary', path: `configs.flat/${name}`, merge: 'rules' }],
         calls: [{ name: 'addPlugins', args: [{ imports: { 'testing-library': 'testingLibrary' } }] }],
     }));
