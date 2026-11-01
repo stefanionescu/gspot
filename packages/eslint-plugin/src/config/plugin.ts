@@ -16,3 +16,10 @@ export const IMPORT_SELECTOR =
 export const IMPORT_EQUALS_SELECTOR = 'TSExternalModuleReference';
 
 export const REQUIRE_SELECTOR = 'CallExpression[callee.type="Identifier"][callee.name="require"][arguments.length=1]';
+
+export const MODULE_DECLARATION_NODES = [
+    'ImportDeclaration',
+    'ExportAllDeclaration',
+    'ExportDefaultDeclaration',
+    'ExportNamedDeclaration',
+] as const;

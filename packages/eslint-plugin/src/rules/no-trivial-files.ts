@@ -1,6 +1,6 @@
 import { basename } from 'node:path';
-import { isAlias } from '../syntax.ts';
 import { createRule } from '../rule.ts';
+import { isAlias, isTypeAlias } from '../syntax.ts';
 import type { TrivialFilesOptions } from '../types/rules.ts';
 import { INDEX_BASENAMES, TRIVIAL_FILE_OPTIONS_SCHEMA } from '../config/rules.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
@@ -20,22 +20,6 @@ function listBoundValues(statement: TSESTree.Node): (TSESTree.Node | null)[] {
             return [];
         }
     }
-}
-
-function isTypeAlias(node: TSESTree.TSTypeAliasDeclaration): boolean {
-    const type = node.typeAnnotation;
-    if (type.type !== AST_NODE_TYPES.TSTypeReference) return false;
-    const parameters = (node.typeParameters?.params ?? []).map((parameter) =>
-        parameter.constraint === undefined && parameter.default === undefined ? parameter.name.name : null,
-    );
-    const passed = (type.typeArguments?.params ?? []).map((argument) =>
-        argument.type === AST_NODE_TYPES.TSTypeReference &&
-        argument.typeName.type === AST_NODE_TYPES.Identifier &&
-        argument.typeArguments === undefined
-            ? argument.typeName.name
-            : undefined,
-    );
-    return passed.length === parameters.length && passed.every((name, index) => name === parameters[index]);
 }
 
 function isForwarding(statement: TSESTree.Node, source: TSESLint.SourceCode): boolean {

@@ -1,5 +1,55 @@
 import { TYPE_ASSERTION_NODES } from './plugin.ts';
+import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { JSONSchema4 } from '@typescript-eslint/utils/json-schema';
+
+export const IMMEDIATE_RETURN_DECLARATION =
+    'VariableDeclaration[kind=/^(const|let|var)$/][declarations.length=1] > VariableDeclarator[id.type="Identifier"]:not([id.typeAnnotation])[init]';
+
+export const EMPTY_LITERAL_DECLARATION =
+    'VariableDeclaration > VariableDeclarator[id.type="Identifier"][init.type="ObjectExpression"][init.properties.length=0]';
+
+export const REDUNDANT_TYPE_KEYWORDS: ReadonlySet<string> = new Set([
+    AST_NODE_TYPES.TSAnyKeyword,
+    AST_NODE_TYPES.TSBigIntKeyword,
+    AST_NODE_TYPES.TSBooleanKeyword,
+    AST_NODE_TYPES.TSNeverKeyword,
+    AST_NODE_TYPES.TSNullKeyword,
+    AST_NODE_TYPES.TSNumberKeyword,
+    AST_NODE_TYPES.TSStringKeyword,
+    AST_NODE_TYPES.TSSymbolKeyword,
+    AST_NODE_TYPES.TSUndefinedKeyword,
+    AST_NODE_TYPES.TSUnknownKeyword,
+    AST_NODE_TYPES.TSVoidKeyword,
+]);
+
+export const COMMENT_DIRECTIVES = [
+    /^(?:\*|@|SPDX-)/u,
+    /^eslint(?:-[\w-]+)?(?:\s|$)(?!\s*=)/u,
+    /^(?:istanbul|c8|v8|prettier|noinspection)(?:\s|$)(?!\s*=)/u,
+    /^(?:TODO|FIXME)\s*:/u,
+];
+
+export const COMMENT_DOCUMENTATION = /^(?:e\.g[.:]|for example\b|examples?:)/iu;
+
+export const COMMENT_CODE = /[=;{}()<>]|\b(?:return|throw|import|export)\b/u;
+
+export const COMMENT_CODE_PATTERNS = [
+    /^(?:if|for|while|switch|catch)\s*\([^)]*\)\s*\{$/u,
+    /^(?:async\s+)?function\s+[\w$]+\s*\([^)]*\)\s*\{$/u,
+    /^(?:try|else|finally)\s*\{$/u,
+];
+
+export const COMMENT_PARSE_ERRORS = new Set(['SyntaxError', 'TSError']);
+
+export const COMMENT_PARSER_OPTIONS = {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+    ecmaFeatures: { globalReturn: true, jsx: true },
+    project: false,
+    projectService: false,
+    comment: false,
+    tokens: false,
+};
 
 export const IMPORT_BOUNDARY_OPTIONS_SCHEMA = {
     type: 'object',

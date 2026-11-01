@@ -1,15 +1,20 @@
 import type { RuleDocs } from './types/plugin.ts';
 import { PLUGIN_PREFIX } from './config/plugin.ts';
 import { noClientEnv } from './rules/no-client-env.ts';
+import { preferLiteral } from './rules/prefer-literal.ts';
 import { noIndexImports } from './rules/no-index-imports.ts';
 import { noMagicNumbers } from './rules/no-magic-numbers.ts';
+import { noNestedSwitch } from './rules/no-nested-switch.ts';
 import { noTrivialFiles } from './rules/no-trivial-files.ts';
+import { noCommentedCode } from './rules/no-commented-code.ts';
 import { importBoundaries } from './rules/import-boundaries.ts';
 import { noRenamedExports } from './rules/no-renamed-exports.ts';
 import pluginPackage from '../package.json' with { type: 'json' };
 import { requireServerOnly } from './rules/require-server-only.ts';
 import { noTrivialFunctions } from './rules/no-trivial-functions.ts';
 import { noCommentsInImports } from './rules/no-comments-in-imports.ts';
+import { redundantTypeAliases } from './rules/redundant-type-aliases.ts';
+import { preferImmediateReturn } from './rules/prefer-immediate-return.ts';
 
 const rules = {
     'no-comments-in-imports': noCommentsInImports,
@@ -19,6 +24,11 @@ const rules = {
     'no-index-imports': noIndexImports,
     'no-magic-numbers': noMagicNumbers,
     'no-trivial-files': noTrivialFiles,
+    'no-nested-switch': noNestedSwitch,
+    'prefer-object-literal': preferLiteral,
+    'prefer-immediate-return': preferImmediateReturn,
+    'redundant-type-aliases': redundantTypeAliases,
+    'no-commented-code': noCommentedCode,
     'no-trivial-functions': noTrivialFunctions,
     'require-server-only': requireServerOnly,
 };

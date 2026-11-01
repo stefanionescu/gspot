@@ -1,0 +1,29 @@
+import plugin from '#eslint-plugin/plugin.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+
+buildRuleTester().run('redundant-type-aliases', plugin.rules['redundant-type-aliases'], {
+    valid: [
+        'type State = "ready" | "pending";',
+        'type User = { name: string };',
+        'type Users = User[];',
+        'type Result = Promise<User>;',
+        'type Result<T extends User> = Promise<T>;',
+        'type Result<T = User> = Promise<T>;',
+        'type UserId = string & { readonly userId: unique symbol };',
+        'type Name = User["name"];',
+    ],
+    invalid: [
+        {
+            code: 'type Base = { value: string }; type Alias<T> = Base;',
+            errors: [{ messageId: 'redundant', data: { type: 'Base' } }],
+        },
+        {
+            code: 'type Base = { value: string }; type Alias<T extends Base = Base> = Base;',
+            errors: [{ messageId: 'redundant', data: { type: 'Base' } }],
+        },
+        { code: 'type Name = string;', errors: [{ messageId: 'redundant', data: { type: 'string' } }] },
+        { code: 'type Payload = unknown;', errors: [{ messageId: 'redundant', data: { type: 'unknown' } }] },
+        { code: 'type Result = User;', errors: [{ messageId: 'redundant', data: { type: 'User' } }] },
+        { code: 'type Result<T> = Promise<T>;', errors: [{ messageId: 'redundant', data: { type: 'Promise<T>' } }] },
+    ],
+});

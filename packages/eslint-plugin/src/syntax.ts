@@ -1,8 +1,33 @@
 import type { ImportSource } from './types/plugin.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { IMPORT_SELECTOR, REQUIRE_SELECTOR, UNWRAPPABLE_NODES, IMPORT_EQUALS_SELECTOR } from './config/plugin.ts';
+
+import {
+    IMPORT_SELECTOR,
+    REQUIRE_SELECTOR,
+    UNWRAPPABLE_NODES,
+    IMPORT_EQUALS_SELECTOR,
+    MODULE_DECLARATION_NODES,
+} from './config/plugin.ts';
+
+const isModuleDeclaration = ASTUtils.isNodeOfTypes(MODULE_DECLARATION_NODES.map((type) => AST_NODE_TYPES[type]));
 
 const isUnwrappable = ASTUtils.isNodeOfTypes(UNWRAPPABLE_NODES.map((type) => AST_NODE_TYPES[type]));
+
+/**
+Read the statement after a declaration in its block, module, or switch case.
+
+@param node the declaration to locate.
+*/
+export function readNextStatement(node: TSESTree.VariableDeclaration): TSESTree.Statement | undefined {
+    const { parent } = node;
+    if (parent.type === AST_NODE_TYPES.SwitchCase) return parent.consequent[parent.consequent.indexOf(node) + 1];
+    if (parent.type !== AST_NODE_TYPES.BlockStatement && parent.type !== AST_NODE_TYPES.Program) return undefined;
+    const statements =
+        parent.type === AST_NODE_TYPES.Program
+            ? parent.body.filter((statement) => !isModuleDeclaration(statement))
+            : parent.body;
+    return statements[statements.indexOf(node) + 1];
+}
 
 function unwrap(node: TSESTree.Node | null): TSESTree.Node | null {
     let value = node;
@@ -67,4 +92,26 @@ export function buildSourceVisitors(checkSource: (source: TSESTree.Node) => void
             if (argument !== undefined) checkSource(argument);
         },
     };
+}
+
+/**
+Identify a type that only forwards its name and generic parameters to another type.
+
+@param node the alias declaration.
+*/
+export function isTypeAlias(node: TSESTree.TSTypeAliasDeclaration): boolean {
+    const type = node.typeAnnotation;
+    if (type.type !== AST_NODE_TYPES.TSTypeReference) return false;
+    if (type.typeArguments === undefined) return true;
+    const parameters = (node.typeParameters?.params ?? []).map((parameter) =>
+        parameter.constraint === undefined && parameter.default === undefined ? parameter.name.name : null,
+    );
+    const passed = type.typeArguments.params.map((argument) =>
+        argument.type === AST_NODE_TYPES.TSTypeReference &&
+        argument.typeName.type === AST_NODE_TYPES.Identifier &&
+        argument.typeArguments === undefined
+            ? argument.typeName.name
+            : undefined,
+    );
+    return passed.length === parameters.length && passed.every((name, index) => name === parameters[index]);
 }
