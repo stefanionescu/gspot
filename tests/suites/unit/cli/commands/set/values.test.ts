@@ -74,6 +74,23 @@ test.each([...KEPT_SETTING_CHANGES])(
     },
 );
 
+test('set takes each word of a list as an item, without one pair of TOML quotes', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const set = await runGspot(sandbox.path, ['set', 'ci.setup_command', '"bun"', "'install'", 'plain']);
+    expect(set.code, set.stdout + set.stderr).toBe(0);
+    const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
+    expect(findValueAt(written, ['ci', 'setup_command'])).toStrictEqual(['bun', 'install', 'plain']);
+});
+
+test('set takes one word for a scalar', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const before = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
+    const refused = await runGspot(sandbox.path, ['set', 'level', 'all', 'basic']);
+    expect(refused.code).toBe(2);
+    expect(refused.stderr).toBe('level takes one value. Quote a value with spaces.\n');
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(before);
+});
+
 test('set writes a TOML list of tables as tables and refuses a list of strings', async () => {
     await using sandbox = await createGitSandbox({
         'README.md': '# test\n',

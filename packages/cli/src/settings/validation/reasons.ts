@@ -1,15 +1,17 @@
+import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { isTable } from '#cli/system/tables.ts';
 import type { KeyPath } from '#cli/types/parsers.ts';
 import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
-import { listSettingsTables } from '#cli/settings/inherit.ts';
-import type { Settings, SettingsError } from '#cli/types/settings.ts';
+import { findChildSchema } from '#cli/settings/lookup.ts';
+import type { SettingsError } from '#cli/types/settings.ts';
 import type { Setting, ReasonRequirement } from '#cli/types/manifests.ts';
 
 import {
     EMPTY_REASON,
     REASON_WORDS_MIN,
     ADD_REASON_MESSAGE,
+    REMOVED_CONFIGURATIONS,
     REMOVAL_REASON_SUGGESTION,
 } from '#cli/config/settings/validation.ts';
 
@@ -18,13 +20,41 @@ function isLimitLoosening(direction: Exclude<ReasonRequirement, 'adding'>, value
     return direction === 'raising' ? value > shipped : value < shipped;
 }
 
-function validateRemovedConfigurations(value: unknown, keys: KeyPath): SettingsError[] {
-    const where = keys.map(String).join('.');
+function readReason(reason: unknown, where: KeyPath, path: KeyPath, suggestion?: string): SettingsError[] {
+    const written = typeof reason === 'string' ? reason : undefined;
+    const message = validateReason(where.map(String).join('.'), written, suggestion);
+    return message === undefined ? [] : [{ path, message }];
+}
+
+function readReasonTable(table: unknown, keys: KeyPath): SettingsError[] {
+    const suggestion = keys.at(-1) === REMOVED_CONFIGURATIONS ? REMOVAL_REASON_SUGGESTION : undefined;
+    if (!isTable(table)) return [];
+    return Object.entries(table).flatMap(([name, reason]) =>
+        readReason(reason, [...keys, name], [...keys, name], suggestion),
+    );
+}
+
+/**
+Find missing or invalid reasons in each shape that gspot.toml keeps them: a record's `reason`, `{ value, reason }` on a
+value, and a `name = "reason"` table.
+
+@param schema the schema of the value.
+@param value the written settings.
+@param keys where the value sits.
+*/
+export function validateSettingReasons(schema: z.ZodType | undefined, value: unknown, keys: KeyPath): SettingsError[] {
+    if (Array.isArray(value))
+        return value.flatMap((element, index) =>
+            validateSettingReasons(findChildSchema(schema, index), element, [...keys, index]),
+        );
     if (!isTable(value)) return [];
-    return Object.entries(value).flatMap(([name, reason]) => {
-        const written = typeof reason === 'string' ? reason : undefined;
-        const message = validateReason(`${where}.${name}`, written, REMOVAL_REASON_SUGGESTION);
-        return message === undefined ? [] : [{ path: [...keys, name], message }];
+    return Object.entries(value).flatMap(([key, child]) => {
+        const field = findChildSchema(schema, key);
+        if (field === undefined || (key === 'rules' && keys.includes('tools'))) return [];
+        if (key === 'reason') return readReason(child, keys, [...keys, key]);
+        return field.meta()?.['reason_values'] === true || key === REMOVED_CONFIGURATIONS
+            ? readReasonTable(child, [...keys, key])
+            : validateSettingReasons(field, child, [...keys, key]);
     });
 }
 
@@ -45,50 +75,6 @@ export function validateReason(
     if (isReasonAccepted(reason)) return undefined;
     const refused = reason.trim() === '' ? EMPTY_REASON : `"${reason}"`;
     return `${where} needs a reason of two or more words that says why: ${refused} is refused.`;
-}
-
-/**
-Find missing or invalid reasons on ignores, reasoned values, and naming overrides.
-
-@param settings the normalized gspot.toml.
-*/
-export function validateSettingReasons(settings: Settings): SettingsError[] {
-    function visit(value: unknown, keys: KeyPath): SettingsError[] {
-        const field = keys.at(-1);
-        if (field === 'rules' && keys.includes('tools')) return [];
-        if (Array.isArray(value)) return value.flatMap((element, index) => visit(element, [...keys, index]));
-        if (!isTable(value)) return [];
-        const children = Object.entries(value)
-            .filter(([key]) => key !== 'reason' && !(key === 'ignore' && keys.length === 0))
-            .flatMap(([key, child]) => visit(child, [...keys, key]));
-        const reason = value['reason'];
-        if (reason === undefined) return children;
-        const message = validateReason(keys.map(String).join('.'), typeof reason === 'string' ? reason : undefined);
-        return message === undefined ? children : [{ path: [...keys, 'reason'], message }, ...children];
-    }
-    return [
-        ...validateRemovedConfigurations(settings.written['removed_configurations'], ['removed_configurations']),
-        ...[...settings.scopes.values()].flatMap((scope, index) =>
-            validateRemovedConfigurations(scope.written['removed_configurations'], [
-                'scope',
-                index,
-                'removed_configurations',
-            ]),
-        ),
-        ...settings.ignore.flatMap((ignore, index) => {
-            const message = validateReason(`ignore.${String(index)}`, ignore.reason);
-            return message === undefined ? [] : [{ path: ['ignore', index, 'reason'], message }];
-        }),
-        ...listSettingsTables(settings).flatMap(({ table, path }) => {
-            const words = table.spelling?.allowed_words;
-            if (words === undefined) return [];
-            return Object.entries(words).flatMap(([word, reason]) => {
-                const message = validateReason(`spelling.allowed_words.${word}`, reason);
-                return message === undefined ? [] : [{ path: [...path, 'spelling', 'allowed_words', word], message }];
-            });
-        }),
-        ...visit(settings.written, []),
-    ];
 }
 
 /**

@@ -77,6 +77,8 @@ export const ROOT_KEYS = [
     'tool_timeout_seconds',
 ] as const;
 
+export const REMOVED_CONFIGURATIONS = 'removed_configurations';
+
 export const FIRST_TABLES = [
     'hooks',
     'ci',

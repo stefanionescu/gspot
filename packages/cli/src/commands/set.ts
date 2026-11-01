@@ -14,8 +14,8 @@ import type { TomlTable, InheritedSetting } from '#cli/types/settings.ts';
 import { SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
 import { getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 import { formatSettingValueError } from '#cli/settings/validation/messages.ts';
-import { NUMBER_TEXT, TOML_COMPOUND_START } from '#cli/config/commands/edits.ts';
 import { readSetting, writeSettingsEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
+import { TOML_QUOTES, NUMBER_TEXT, BOOLEAN_WORDS, TOML_COMPOUND_START } from '#cli/config/commands/edits.ts';
 
 import type {
     SetOptions,
@@ -38,44 +38,44 @@ function parseInlineValue(text: string): unknown {
     }
 }
 
-function parseValueArgument(text: string): unknown {
-    if (text === 'true') return true;
-    if (text === 'false') return false;
-    if (NUMBER_TEXT.test(text)) return Number(text);
-    return TOML_COMPOUND_START.test(text) ? parseInlineValue(text) : text;
+function parseScalarWord(word: string, setting: Setting): unknown {
+    if (setting.type === 'boolean' && BOOLEAN_WORDS.has(word)) return word === 'true';
+    return setting.type === 'number' && NUMBER_TEXT.test(word) ? Number(word) : word;
 }
 
-function buildSettingValue(words: unknown[], setting: Setting): ParsedSettingValue {
-    const scalar = words.length === 1 ? words[0] : words;
-    if (setting.type === 'list') return { type: 'list', value: Array.isArray(scalar) ? scalar : words };
-    return { type: 'scalar', value: scalar };
+function parseWords(values: string[], setting: Setting): ParsedSettingValue {
+    const [first, ...rest] = values as [string, ...string[]];
+    const isCompound = rest.length === 0 && TOML_COMPOUND_START.test(first);
+    if (setting.type === 'list') {
+        const value = isCompound ? parseInlineValue(first) : values.map((word) => word.replace(TOML_QUOTES, '$2'));
+        return { type: 'list', value: value as unknown[] };
+    }
+    if (rest.length > 0)
+        throw new GspotError('arguments', `${setting.name} takes one value. Quote a value with spaces.`);
+    return {
+        type: 'scalar',
+        value: setting.type === 'table' && isCompound ? parseInlineValue(first) : parseScalarWord(first, setting),
+    };
 }
 
 function parseSettingValue(values: string[], setting: Setting): ParsedSettingValue {
-    const typed = buildSettingValue(
-        values.map((text) => parseValueArgument(text)),
-        setting,
-    );
+    const parsed = parseWords(values, setting);
     const schema = findSettingSchema(setting.name);
-    if (schema === undefined) return typed;
-    const validation = schema.safeParse(typed.value);
-    if (validation.success) return typed;
-    const untyped = buildSettingValue(values, setting);
-    if (schema.safeParse(untyped.value).success) return untyped;
+    const validation = schema?.safeParse(parsed.value);
+    if (schema === undefined || validation?.success !== false) return parsed;
     throw new GspotError(
         'arguments',
         formatSettingValueError(values.join(' '), setting, { schema, error: validation.error }),
     );
 }
 
-function buildReasonTable(options: SetOptions): ParsedSettingValue {
-    const { reason } = options;
+function requireReason({ key, reason }: SetOptions): string {
     if (reason === undefined)
         throw new GspotError(
             'arguments',
-            `${options.key} keeps a reason for each entry. Add --reason "<why>" with why each one belongs.`,
+            `${key} keeps a reason for each entry. Add --reason "<why>" with why each one belongs.`,
         );
-    return { type: 'scalar', value: Object.fromEntries(options.values.map((value) => [value, reason])) };
+    return reason;
 }
 
 function setSettingValue(scopeTable: TomlTable, change: ParsedSettingValue, setting: Setting, key: string): void {
@@ -140,8 +140,13 @@ function readSettingChange(
     const { settings } = edit;
     const { availableSettings, match, scope } = readSetting(edit, options.key);
     const setting = match.setting;
-    const change =
-        setting.reason_values === true ? buildReasonTable(options) : parseSettingValue(options.values, setting);
+    const change: ParsedSettingValue =
+        setting.reason_values === true
+            ? {
+                  type: 'scalar',
+                  value: Object.fromEntries(options.values.map((name) => [name, requireReason(options)])),
+              }
+            : parseSettingValue(options.values, setting);
     const previous = getSettingValue(availableSettings, settings, options.key, edit.scope);
     const shippedDefault = findSettingDefault(availableSettings, settings, match, edit.scope)?.value;
     assertReason({ options, setting, change, previous, shippedDefault });

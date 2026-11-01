@@ -132,7 +132,7 @@ export function assertSettings(settings: Settings, root: string): SettingsError[
         .toArray();
     const errors: SettingsError[] = [
         ...listRemovedSelections(settings),
-        ...validateSettingReasons(settings),
+        ...validateSettingReasons(settingsSchema, settings.written, []),
         ...validateSettingRules(settings),
         ...validateSwiftTargets(settings, rootKeys),
         ...Object.values(settings.commandChecks).flatMap((commandCheck, index) =>
