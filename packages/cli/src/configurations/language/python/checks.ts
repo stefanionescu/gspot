@@ -25,7 +25,6 @@ import { findDocstring, readPythonFiles, parsePythonModule } from '#cli/parsers/
 import type { PydoclintOptions, PythonDocstringStyle } from '#cli/types/configurations/language.ts';
 
 import {
-    RUFF_TABLE,
     PIP_INSTALL,
     PYTHON_RULES,
     PLACEHOLDERS,
@@ -294,7 +293,7 @@ export async function checkPydoclint(session: CheckSession, planned: PlannedChec
     const configured = parsePydoclintOptions(
         pyproject,
         find(session.cache, pyproject) ?? '',
-        planned.scope.settings.tables[RUFF_TABLE]?.docstring_convention,
+        planned.scope.settings.tables.python?.docstring_convention,
         session.settings.level,
     );
     const groups = await groupByDocstringStyle(session, planned.files, configured.style);

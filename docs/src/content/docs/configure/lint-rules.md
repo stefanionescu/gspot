@@ -34,9 +34,9 @@ gspot writes the options of some rules from a setting, and refuses them in these
 | `gspot/no-trivial-functions`                                                                                                                             | `limits.trivial_function_statements`                                                                               |
 | `gspot/no-trivial-files`                                                                                                                                 | `structure.reexports` and `limits.index_exports`                                                                   |
 | `sonarjs/no-identical-functions`                                                                                                                         | `duplication.min_lines`                                                                                            |
-| `no-restricted-imports`                                                                                                                                  | `tools.eslint.restricted_imports`                                                                                  |
+| `no-restricted-imports`                                                                                                                                  | `javascript.banned_imports`                                                                                        |
 | `gspot/import-boundaries`                                                                                                                                | `javascript.import_boundaries`, see [Import rules](/configure/import-rules/#keep-relative-imports-inside-a-folder) |
-| `n/file-extension-in-import`                                                                                                                             | `tools.eslint.import_extension`                                                                                    |
+| `n/file-extension-in-import`                                                                                                                             | `javascript.import_extension`                                                                                      |
 | `n/no-process-env`, `no-restricted-properties`, `gspot/restricted-syntax`                                                                                | `structure.environment_readers`                                                                                    |
 
 ## ESLint
@@ -110,7 +110,7 @@ ESLint then reports `local/no-legacy-api`.
 ## Ruff
 
 Ruff takes no lint rule options from `gspot.toml`. Its limits, such as `limits.cyclomatic_complexity` and
-`limits.function_parameters`, come from [limits](/reference/gspot-toml/#limits), and `tools.ruff.docstring_convention`
+`limits.function_parameters`, come from [limits](/reference/gspot-toml/#limits), and `python.docstring_convention`
 sets the pydocstyle convention. To turn a Ruff lint rule off, ignore it by its code:
 `gspot ignore python/ruff --rule <code> --reason "<why>"`.
 

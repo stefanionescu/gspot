@@ -62,7 +62,7 @@ export function validateRuleFilePaths(root: string, settings: Settings): Setting
     const files = openFiles(root);
     return listSettingsTables(settings).flatMap(({ table, scope, path }) => {
         const plugins = table.tools?.['eslint']?.['plugins'];
-        const ruleFiles = table.tools?.['semgrep']?.['rule_files'];
+        const ruleFiles = table.security?.rule_files;
         const paths = [
             ...(plugins ?? []).map((plugin, index) => ({
                 value: plugin.path,
@@ -72,7 +72,7 @@ export function validateRuleFilePaths(root: string, settings: Settings): Setting
             ...(ruleFiles ?? []).map((value, index) => ({
                 value,
                 key: 'rule_files',
-                path: [...path, 'tools', 'semgrep', 'rule_files', index],
+                path: [...path, 'security', 'rule_files', index],
             })),
         ];
         return paths.flatMap(({ value, key, path }) => {

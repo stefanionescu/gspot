@@ -94,7 +94,7 @@ export const commandCheckSchema = z.strictObject({
     }),
 });
 
-const { structure: rootStructure, ...scopeTables } = configurationTableSchemas;
+const { structure: rootStructure, data_files: rootSchemas, ...scopeTables } = configurationTableSchemas;
 
 const rootBody = {
     ...scopeTables,
@@ -118,7 +118,6 @@ const scopeBody = {
     structure: rootStructure.unwrap().pick({ environment_readers: true }).optional(),
     format: formatSchema.omit({ override: true }).optional(),
     tools: publicToolsSchema
-        .omit({ v8r: true })
         .extend({
             eslint: publicToolsSchema.shape.eslint
                 .unwrap()
@@ -234,6 +233,7 @@ export const settingsSchema = z
         format: formatSchema.prefault({}),
         limits: limitsSchema.prefault({}),
         naming: namingSchema.prefault({}),
+        data_files: rootSchemas,
         structure: rootStructure.unwrap().prefault({}),
         hooks: hooksSchema.prefault({}),
         ci: ciSchema.optional(),

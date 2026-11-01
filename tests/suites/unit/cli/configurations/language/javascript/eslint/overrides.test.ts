@@ -79,7 +79,7 @@ test.each(IGNORE_CASES)(
 );
 
 test.each(['all'] as const)(
-    "a scope's tools.eslint.restricted_imports ban reports the import only in that scope (%s)",
+    "a scope's javascript.banned_imports ban reports the import only in that scope (%s)",
     async (level) => {
         await using sandbox = await createGitSandbox({
             ...SCOPE_IMPORT_FILES,
@@ -102,7 +102,7 @@ test('a JavaScript child applies its import restrictions under a Python root', a
         'app/source.js': SCOPE_IMPORT_FILES['app/source.js'],
         'gspot.toml': buildSandboxSettings(['python'], {
             scopes: [{ path: 'app', configurations: ['javascript'] }],
-            tables: '[scope.tools.eslint]\nrestricted_imports = [{ name = "node:fs", message = "Use the storage service." }]\n',
+            tables: '[scope.javascript]\nbanned_imports = [{ name = "node:fs", message = "Use the storage service." }]\n',
         }),
     });
     const eslint = await buildEslint(sandbox.path);

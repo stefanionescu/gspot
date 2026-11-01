@@ -53,8 +53,6 @@ export const SQUAWK_DEFAULT_LEVEL_OFF = [
     'require-table-schema',
 ] as const;
 
-export const SQUAWK_TABLE = 'tools.squawk';
-
 export const HADOLINT_FAILURE_THRESHOLD = 'style';
 
 export const HADOLINT_DEFAULT_LEVEL_OFF = [
@@ -73,8 +71,6 @@ export const GIT_FOLDER = '.git';
 export const TRIVY_SKIPPED_FOLDERS = [NODE_MODULES, GSPOT_FOLDER, GIT_FOLDER] as const;
 
 export const HADOLINT_CHECK = 'docker/hadolint';
-
-export const TRIVY_TABLE = 'tools.trivy';
 
 export const SPECTRAL_DEFAULT_LEVEL_OFF = [
     'info-contact',
@@ -201,8 +197,6 @@ export const NGINX_DUMP_FILE_LINE = /^# configuration file (?<path>[^\n]+):$/gmu
 export const NGINX_EMERGENCY_MARK = '[emerg]';
 
 export const NGINX_VARIABLE_MARK = '$';
-
-export const NGINX_TABLE = 'tools.nginx';
 
 export const DOCKER_DAEMON_ERROR = /cannot connect to the docker daemon/iu;
 

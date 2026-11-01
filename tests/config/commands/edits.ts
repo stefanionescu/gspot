@@ -209,9 +209,9 @@ export const UNKNOWN_SETTING_KEYS = [
         message: 'There is no setting called tools.eslint.unknown_key. No setting exists under that table.',
     },
     {
-        key: 'tools.v8r.unknown_key',
+        key: 'data_files.unknown_key',
         message:
-            'There is no setting called tools.v8r.unknown_key. The settings that exist under that table are schema.',
+            'There is no setting called data_files.unknown_key. The settings that exist under that table are schemas.',
     },
 ] as const;
 

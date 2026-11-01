@@ -13,7 +13,7 @@ dependencies = ["pg", "postgres", "psycopg*", "asyncpg", "@neondatabase/serverle
 paths = ["db/migrations/*.sql", "migrations/*.sql", "prisma/migrations/*/migration.sql", "drizzle/*.sql", "**/supabase/migrations/*.sql"]
 
 [defaults]
-"tools.sqlfluff.dialect" = "postgres"
+"sql.dialect" = "postgres"
 
 [[tool]]
 min_version = "2.0.0"

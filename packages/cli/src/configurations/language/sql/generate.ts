@@ -20,7 +20,7 @@ export function buildSqlfluffFile(planned: PlannedConfig): string {
     const off = [...listIgnoredRules(planned.scope, SQLFLUFF_CHECK), ...(isAll ? [] : SQLFLUFF_DEFAULT_LEVEL_OFF)];
     const sections = {
         sqlfluff: {
-            dialect: getTable(planned.scope.settings, 'tools.sqlfluff').dialect,
+            dialect: getTable(planned.scope.settings, 'sql').dialect,
             templater: 'raw',
             sql_file_exts: SQL_FILE_EXTENSIONS,
             max_line_length: format.print_width,

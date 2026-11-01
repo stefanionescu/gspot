@@ -64,7 +64,7 @@ export function buildRuleTableSchema<Schema extends z.ZodType>(
 
 const commitlintRulesSchema = buildRuleTableSchema(commitlintValuesSchema, 'commits/commitlint');
 
-export const commitlintSchema = z
+export const commitsSchema = z
     .strictObject({
         types: allowReasonedValue(nonemptyStringsSchema, {
             reason_when: 'adding',
@@ -90,6 +90,11 @@ export const commitlintSchema = z
             description:
                 'Commit scopes that the scope-enum rule accepts, and a message may leave out its scope. When empty, gspot uses the last segment of each project scope path, or no list without project scopes.',
         }),
+    })
+    .optional();
+
+export const commitlintSchema = z
+    .strictObject({
         rules: commitlintRulesSchema.default({}).meta({
             configurations: ['commits'],
             description:

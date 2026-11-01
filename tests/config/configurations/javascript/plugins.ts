@@ -221,14 +221,14 @@ export const LEVEL_REEXPORT_CASES = [
     ['all', 'index-only'],
 ] as const;
 
-export const ENTRYPOINT_TABLES = `[tools.knip]
-entry = ["src/main.js"]
+export const ENTRYPOINT_TABLES = `[javascript]
+entry_files = ["src/main.js"]
 
 [[scope]]
 path = "api"
 configurations = ["javascript"]
 
-tools.knip.entry = ["src/main.js"]
+javascript.entry_files = ["src/main.js"]
 `;
 
 export const TRIVIAL_RULES = ['gspot/no-trivial-files', 'gspot/no-trivial-functions'] as const;

@@ -13,14 +13,14 @@ Use the roles and schemas the application declares.
 - Never change a migration that a commit holds. Write the change as a new migration with a later version.
 - Start every migration with `SET lock_timeout = '5s';` and `SET statement_timeout = '60s';`, or the limits that the
   project uses.
-- Run each migration in one transaction. With `tools.squawk.assume_in_transaction = false`, wrap the migration in
+- Run each migration in one transaction. With `postgres.assume_in_transaction = false`, wrap the migration in
   `BEGIN;` and `COMMIT;`.
 - Use `IF NOT EXISTS` only on a statement that cannot run in a transaction, such as `CREATE INDEX CONCURRENTLY`. Do not
   hide schema drift with `IF NOT EXISTS` anywhere else.
 - To index a table that an earlier migration created:
-    - With `tools.squawk.assume_in_transaction = false`, write `CREATE INDEX CONCURRENTLY IF NOT EXISTS` alone in its
+    - With `postgres.assume_in_transaction = false`, write `CREATE INDEX CONCURRENTLY IF NOT EXISTS` alone in its
       own migration, after the timeouts and without `BEGIN`.
-    - With `tools.squawk.assume_in_transaction = true`, a plain `CREATE INDEX` blocks writes while it builds. Ask the user to accept that, then run
+    - With `postgres.assume_in_transaction = true`, a plain `CREATE INDEX` blocks writes while it builds. Ask the user to accept that, then run
       `gspot ignore postgres/squawk --rule require-concurrent-index-creation --paths <migration> --reason "<why>"`.
 
 ## Tables

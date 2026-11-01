@@ -1,5 +1,4 @@
 import { getTable } from '#cli/settings/scopes.ts';
-import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/javascript.ts';
 import type { EslintScope, ConfigurationBlocks } from '#cli/types/configurations/language.ts';
 
 import {
@@ -25,7 +24,7 @@ export function buildZustandBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'set
                         'error',
                         {
                             paths: [
-                                ...getTable(settings, ESLINT_SETTINGS_TABLE).restricted_imports,
+                                ...getTable(settings, 'javascript').banned_imports,
                                 ...ZUSTAND_STORE_IMPORTS.map((store) => ({ ...store, message: CREATE_STORE_MESSAGE })),
                             ],
                         },

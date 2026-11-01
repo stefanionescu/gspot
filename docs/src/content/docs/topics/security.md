@@ -26,6 +26,6 @@ Run the shipped Semgrep rules and your own:
 gspot check --only security/semgrep
 ```
 
-Add your rule files with `tools.semgrep.rule_files`, as paths of files in the repository; gspot refuses a path that
+Add your rule files with `security.rule_files`, as paths of files in the repository; gspot refuses a path that
 names no file. Without shipped or local rules, gspot does not install Semgrep.
 To turn a lint rule off for some paths, add an ignore with a reason. See [Ignore findings](/use/ignore/).

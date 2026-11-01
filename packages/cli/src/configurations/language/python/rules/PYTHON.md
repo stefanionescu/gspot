@@ -67,7 +67,7 @@ a disambiguated generic name also count.
 
 ## Docstrings
 
-Write docstrings in the style that `tools.ruff.docstring_convention` names; Ruff and pydoclint both check it. Each
+Write docstrings in the style that `python.docstring_convention` names; Ruff and pydoclint both check it. Each
 docstring matches its signature and behavior. The examples here use Google style.
 
 A docstring that a library reads at run time, such as a pydantic model description or Click help, counts as product

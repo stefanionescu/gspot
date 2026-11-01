@@ -82,10 +82,10 @@ test('the release age can be written at the root and cannot be written in a scop
 });
 
 test('settings of an unselected language are refused while settings of automatic general configurations stay valid', () => {
-    expect(validateSettingsText('configurations = ["bash"]\n[tools.sqlfluff]\ndialect = "sqlite"\n')).toStrictEqual([
-        'gspot.toml:3: tools.sqlfluff.dialect: There is no setting called tools.sqlfluff.dialect. No setting exists under that table. Run gspot list settings to see every one.',
+    expect(validateSettingsText('configurations = ["bash"]\n[sql]\ndialect = "sqlite"\n')).toStrictEqual([
+        'gspot.toml:3: sql.dialect: There is no setting called sql.dialect. No setting exists under that table. Run gspot list settings to see every one.',
     ]);
-    expect(validateSettingsText('[tools.commitlint]\ntypes = ["feat", "fix"]\n')).toStrictEqual([]);
+    expect(validateSettingsText('[commits]\ntypes = ["feat", "fix"]\n')).toStrictEqual([]);
 });
 
 test.each([...SCOPE_CONFIGURATION_SETTINGS])('$name', ({ text, messages }) => {
@@ -263,16 +263,14 @@ test('linked ESLint plugins and Semgrep rule files fail settings validation at t
         validateSettingsText(
             stringify({
                 configurations: ['javascript', 'security'],
-                tools: {
-                    eslint: { plugins: [{ name: 'local', path: 'local.mjs', rules: {} }] },
-                    semgrep: { rule_files: ['local.mjs'] },
-                },
+                tools: { eslint: { plugins: [{ name: 'local', path: 'local.mjs', rules: {} }] } },
+                security: { rule_files: ['local.mjs'] },
             }),
             root,
         ),
     ).toStrictEqual([
         'gspot.toml:4: tools.eslint.plugins.0.path: local.mjs is a link. gspot does not write through links.',
-        'gspot.toml:5: tools.semgrep.rule_files.0: local.mjs is a link. gspot does not write through links.',
+        'gspot.toml:7: security.rule_files.0: local.mjs is a link. gspot does not write through links.',
     ]);
 });
 

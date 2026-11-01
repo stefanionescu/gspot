@@ -162,7 +162,7 @@ test('a scope path that names a file is refused', async () => {
 
 test('a rule file path that names a folder is refused', async () => {
     await using sandbox = await testdir({ rules: {} });
-    expect(validateSettingsText('[tools.semgrep]\nrule_files = ["rules"]\n', sandbox.path)).toStrictEqual([
-        'gspot.toml:2: tools.semgrep.rule_files.0: rules names no file. Point rule_files at a file, relative to its table.',
+    expect(validateSettingsText('[security]\nrule_files = ["rules"]\n', sandbox.path)).toStrictEqual([
+        'gspot.toml:2: security.rule_files.0: rules names no file. Point rule_files at a file, relative to its table.',
     ]);
 });

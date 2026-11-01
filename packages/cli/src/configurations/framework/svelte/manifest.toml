@@ -15,7 +15,7 @@ extensions = [".svelte"]
 filenames = ["svelte.config.js", "svelte.config.ts"]
 
 [defaults]
-"tools.eslint.import_extension" = "extensionless"
+"javascript.import_extension" = "extensionless"
 
 [[tool]]
 kind = "package"

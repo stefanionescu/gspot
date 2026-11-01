@@ -31,7 +31,7 @@ format.indent_width = 2
 path = "api/worker"
 configurations = ["sql"]
 limits.sql.file_lines = 30
-tools.sqlfluff.dialect = "postgres"
+sql.dialect = "postgres"
 `;
 
 export const SHFMT_IGNORE_SETTINGS = {

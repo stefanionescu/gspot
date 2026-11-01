@@ -39,7 +39,7 @@ the order of untouched settings and tables.
 | You want to                                               | Do this                                                                | Read                                                              |
 | --------------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------- |
 | Add a JavaScript or TypeScript lint rule                  | A plugin module and a `[[tools.eslint.plugins]]` record                | [Lint rule options](/configure/lint-rules/#your-own-eslint-rules) |
-| Add a rule for any language                               | A Semgrep rule file in `tools.semgrep.rule_files`                      | [Security](/topics/security/#semgrep)                             |
+| Add a rule for any language                               | A Semgrep rule file in `security.rule_files`                           | [Security](/topics/security/#semgrep)                             |
 | Describe the layers of your code                          | `[[import_rule]]` records                                              | [Import rules](/configure/import-rules/)                          |
 | Run a tool or script of your own, in the hooks and CI too | A `[[command_check]]` record                                           | [Command checks](/configure/command-checks/)                      |
 | Give coding agents rules of your own                      | Write them in `AGENTS.md`, outside the gspot managed block             | [Coding agents](/use/coding-agents/)                              |
@@ -127,7 +127,7 @@ The plan lists under `left out` each setting that belongs to the other repositor
 
 - Settings and records that name paths, such as `test_files` and `[[scope]]`.
 - Settings and command checks that run code.
-- Settings that describe that repository, such as `tools.eslint.import_extension`.
+- Settings that describe that repository, such as `javascript.import_extension`.
 - `ci.enabled` and `ci.provider`, because CI stays off until you run `gspot set ci.enabled true`.
 - Ignores with paths.
 

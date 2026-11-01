@@ -33,7 +33,7 @@ test.each([...PYDOCLINT_PROJECT_CASES])('pydoclint $name', async ({ project, set
     using prepared = await preparePydoclintCheck(
         sandbox.path,
         { 'pyproject.toml': project, 'source.py': 'value = 1\n' },
-        { tables: setting === undefined ? '' : `[tools.ruff]\ndocstring_convention = "${setting}"\n` },
+        { tables: setting === undefined ? '' : `[python]\ndocstring_convention = "${setting}"\n` },
     );
     const { session, planned } = prepared;
     using run = spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult());

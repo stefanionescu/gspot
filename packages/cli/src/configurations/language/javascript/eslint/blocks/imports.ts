@@ -5,7 +5,6 @@ import { FOLDER_CONTENTS } from '#cli/config/system.ts';
 import { findParentScope } from '#cli/settings/scopes.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/javascript.ts';
 import { buildNodePatterns } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { readScopeAliases, readPackageAliases } from '#cli/repository/javascript/aliases.ts';
 import type { EslintBlock, PlannedEslintFile, EslintImportBoundaryRule } from '#cli/types/configurations/language.ts';
@@ -34,13 +33,12 @@ export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[]): Es
     const changed = scopes.filter((scope) => {
         const parent = findParentScope(scopes, scope.path);
         return (
-            scope.settings.tables[ESLINT_SETTINGS_TABLE]?.import_extension !==
-            parent?.settings.tables[ESLINT_SETTINGS_TABLE]?.import_extension
+            scope.settings.tables.javascript?.import_extension !== parent?.settings.tables.javascript?.import_extension
         );
     });
     return changed.flatMap((scope) => {
         const path = scope.path;
-        const importExtension = scope.settings.tables[ESLINT_SETTINGS_TABLE]?.import_extension;
+        const importExtension = scope.settings.tables.javascript?.import_extension;
         return importExtension === undefined
             ? []
             : {

@@ -10,7 +10,7 @@ title = "React"
 dependencies = ["react"]
 
 [defaults]
-"tools.eslint.import_extension" = "extensionless"
+"javascript.import_extension" = "extensionless"
 
 [[naming.override]]
 cases = ["pascal", "kebab"]

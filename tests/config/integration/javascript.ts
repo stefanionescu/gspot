@@ -53,7 +53,7 @@ export const JSCONFIG_CASES = [
     {
         name: 'extensionless bundled imports with no public ambient type directory',
         scope: '',
-        tables: '[tools.eslint]\nimport_extension = "extensionless"\n',
+        tables: '[javascript]\nimport_extension = "extensionless"\n',
         files: {
             'source.js': `import { format } from './value';
 export const text = format(42);

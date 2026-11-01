@@ -315,8 +315,8 @@ pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\
 [[check]]
 command = ["knip", "--config", "{config_file:knip}", "--no-progress", "--reporter", "json", "{workspace:--workspace}"]
 cwd = "root"
-example = "An export that no entry point uses reports a finding. Remove it, or list a dynamically loaded file in `tools.knip.entry`."
-help = "Import the file from the code or test that uses it. Delete it when nothing will. For a file that a tool loads by path, add it to `tools.knip.entry`."
+example = "An export that no entry point uses reports a finding. Remove it, or list a dynamically loaded file in `javascript.entry_files`."
+help = "Import the file from the code or test that uses it. Delete it when nothing will. For a file that a tool loads by path, add it to `javascript.entry_files`."
 name = "knip"
 runs = "scope"
 stage = "push"

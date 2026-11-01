@@ -6,7 +6,6 @@ import type { Scope, Settings } from '#cli/types/settings.ts';
 import { LIMIT_RULES_BY_CHECK } from '#cli/manifests/limits.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { getLimit, getTable, findParentScope } from '#cli/settings/scopes.ts';
-import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/javascript.ts';
 import { joinScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { buildLimitRuleBlocks } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
 
@@ -268,8 +267,8 @@ export function buildRestrictedImportBlocks(
     const restrictedScopes = scopes.filter((scope) => {
         const parent = findParentScope(scopes, scope.path);
         return !isDeepStrictEqual(
-            getTable(scope.settings, ESLINT_SETTINGS_TABLE).restricted_imports,
-            parent === undefined ? [] : getTable(parent.settings, ESLINT_SETTINGS_TABLE).restricted_imports,
+            getTable(scope.settings, 'javascript').banned_imports,
+            parent === undefined ? [] : getTable(parent.settings, 'javascript').banned_imports,
         );
     });
     return restrictedScopes.map((scope) => ({
@@ -279,10 +278,7 @@ export function buildRestrictedImportBlocks(
             scope.path,
         ).map((path) => joinScope(escapeGlob(path), '**')),
         rules: {
-            'no-restricted-imports': [
-                'error',
-                { paths: getTable(scope.settings, ESLINT_SETTINGS_TABLE).restricted_imports },
-            ],
+            'no-restricted-imports': ['error', { paths: getTable(scope.settings, 'javascript').banned_imports }],
         },
     }));
 }

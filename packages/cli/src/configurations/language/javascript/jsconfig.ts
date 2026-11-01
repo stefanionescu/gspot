@@ -15,7 +15,6 @@ import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import {
     STANDALONE_OPTIONS,
     JAVASCRIPT_OPTIONS,
-    ESLINT_SETTINGS_TABLE,
     JAVASCRIPT_EXTENSIONS,
     SOURCE_SELECTION_FIELDS,
     JAVASCRIPT_IGNORED_GLOBS,
@@ -83,7 +82,7 @@ export function buildJsconfigFile(planned: PlannedConfig): string {
     const { root, cache } = planned.session;
     const { targetPath: target } = planned;
     const scope = planned.scope.path;
-    const importStyle = getTable(planned.scope.settings, ESLINT_SETTINGS_TABLE).import_extension;
+    const importStyle = getTable(planned.scope.settings, 'javascript').import_extension;
     const ignoredGlobs = convertToGlobs(
         planned.ignoreSections.filter((section) => planned.level !== 'all' || section.key !== 'build'),
     );

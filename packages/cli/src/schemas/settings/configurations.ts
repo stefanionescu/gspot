@@ -1,13 +1,14 @@
 import { z } from 'zod';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
+import { commitsSchema } from '#cli/schemas/settings/rules.ts';
 import type { ToolTableSchemas } from '#cli/types/settings.ts';
 import { FROZEN_ALL, FROZEN_NONE } from '#cli/config/parsers.ts';
 import { BUILD_SCRIPT } from '#cli/config/settings/validation.ts';
-import { toolsSchema, javascriptSchema } from '#cli/schemas/settings/tools.ts';
 import { FROZEN_VERSION, TABLE_DESCRIPTIONS } from '#cli/config/settings/schema.ts';
 import { hooksSchema, generalTableSchemas } from '#cli/schemas/settings/general.ts';
 import { commandSchema, nonemptyStringSchema } from '#cli/schemas/manifests/tools.ts';
 import { ciFields, namingSchema, pythonSchema, ruleFilesSchema } from '#cli/schemas/settings/tables.ts';
+import { toolsSchema, javascriptSchema, toolConfigurationSchemas } from '#cli/schemas/settings/tools.ts';
 
 import {
     formatSchema,
@@ -22,6 +23,8 @@ export const configurationTableSchemas = {
     limits: limitsSchema.optional(),
     naming: namingSchema.optional(),
     structure: generalTableSchemas.structure,
+    commits: commitsSchema,
+    ...toolConfigurationSchemas,
     cloudflare: z
         .strictObject({
             types_file: destinationPathSchema.default('worker-configuration.d.ts').meta({
@@ -120,6 +123,14 @@ export const configurationTableSchemas = {
                     description:
                         'The last migration version that has run everywhere (none, all, or a version); Squawk skips those migrations, and they may not change.',
                 }),
+            assume_in_transaction: z
+                .boolean()
+                .default(true)
+                .meta({
+                    leftOut: 'repository',
+                    configurations: ['postgres'],
+                    description: 'Whether the migration runner wraps every migration in a transaction.',
+                }),
             migrations_folder: relativePathSchema.optional().meta({
                 configurations: ['postgres'],
                 description:
@@ -139,6 +150,13 @@ export const configurationTableSchemas = {
             build_folder: destinationPathSchema.default('dist').meta({
                 configurations: ['site'],
                 description: 'The folder the build writes.',
+            }),
+            allowed_classes: allowReasonedValue(nonemptyStringsSchema, {
+                leftOut: 'repository',
+                configurations: ['site'],
+                description: 'Class names a script adds at run time: the names and the reason.',
+                reason_when: 'adding',
+                default: [] as [],
             }),
             allowed_unlisted_pages: allowReasonedValue(relativePathSchema.meta({ path_role: 'build' }).array(), {
                 configurations: ['site'],
@@ -191,6 +209,15 @@ export const configurationTableSchemas = {
                 configurations: ['swift'],
                 description: 'The shared scheme the build, the analyzer, and Periphery use.',
             }),
+            allowed_unused_imports: z
+                .string()
+                .array()
+                .default([] as [])
+                .meta({
+                    leftOut: 'repository',
+                    configurations: ['swift'],
+                    description: 'Imports the analyzer keeps although it sees no use of them.',
+                }),
             xcode_destination: nonemptyStringSchema.default('generic/platform=iOS Simulator').meta({
                 leftOut: 'repository',
                 configurations: ['swift'],

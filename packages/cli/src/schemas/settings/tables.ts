@@ -21,6 +21,7 @@ import {
     CI_PINS,
     CI_PROVIDERS,
     GITHUB_ONLY_CI_KEYS,
+    DOCSTRING_CONVENTIONS,
     NAMING_TABLE_CATEGORIES,
     NAMING_LANGUAGE_CATEGORIES,
 } from '#cli/config/settings/schema.ts';
@@ -134,6 +135,13 @@ export const pythonSchema = z
                 'Modules that the host application provides at run time, such as folder_paths. A name covers its submodules.',
             default: [] as [],
         }),
+        docstring_convention: z
+            .enum(DOCSTRING_CONVENTIONS)
+            .optional()
+            .meta({
+                configurations: ['python'],
+                description: 'The docstring style that Ruff and pydoclint check: google, numpy, or pep257.',
+            }),
         import_folders: relativePathSchema
             .array()
             .default([] as [])

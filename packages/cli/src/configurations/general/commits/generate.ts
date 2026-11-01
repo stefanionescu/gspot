@@ -17,9 +17,10 @@ Build commitlint.json: the Commitlint rules with the allowed types and scopes of
 export function buildCommitlintFile(planned: PlannedConfig): string {
     const { scopes } = planned.session;
 
+    const commits = getTable(planned.scope.settings, 'commits');
     const commitlint = getTable(planned.scope.settings, 'tools.commitlint');
-    const types = commitlint.types;
-    const named = commitlint.scopes;
+    const types = commits.types;
+    const named = commits.scopes;
     const allowed =
         named.length > 0 ? named : scopes.filter(({ path }) => path !== '').map(({ path }) => path.split('/').at(-1));
     const rules: Record<string, readonly unknown[]> = {

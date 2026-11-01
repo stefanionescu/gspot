@@ -194,27 +194,27 @@ export const SCOPE_IMPORT_FILES = {
     'state/store.js': RESTRICTED_ZUSTAND_SOURCE,
 } as const;
 
-export const SCOPE_IMPORT_TABLES = `[tools.eslint]
-restricted_imports = [{ name = "node:path", message = "Use the path service." }]
+export const SCOPE_IMPORT_TABLES = `[javascript]
+banned_imports = [{ name = "node:path", message = "Use the path service." }]
 
 [[scope]]
 path = "app"
-[scope.tools.eslint]
-restricted_imports = [{ name = "node:fs", message = "Use the storage service." }]
+[scope.javascript]
+banned_imports = [{ name = "node:fs", message = "Use the storage service." }]
 
 [[scope]]
 path = "app/deep"
 
 [[scope]]
 path = "app/clear"
-[scope.tools.eslint]
-restricted_imports = []
+[scope.javascript]
+banned_imports = []
 
 [[scope]]
 path = "state"
 configurations = ["zustand"]
-[scope.tools.eslint]
-restricted_imports = [{ name = "node:fs", message = "Use the storage service." }]
+[scope.javascript]
+banned_imports = [{ name = "node:fs", message = "Use the storage service." }]
 [scope.zustand]
 store_files = { value = ["store.js"], reason = "This test sets the allowed locations explicitly." }
 `;

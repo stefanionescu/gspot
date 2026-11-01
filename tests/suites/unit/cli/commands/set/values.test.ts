@@ -100,17 +100,17 @@ test('set writes a TOML list of tables as tables and refuses a list of strings',
     commitAll(sandbox.path);
     const written = await runGspot(sandbox.path, [
         'set',
-        'tools.eslint.restricted_imports',
+        'javascript.banned_imports',
         `[{name = "unreviewed-module", message = "Import the reviewed entrypoint for this dependency."}]`,
     ]);
     expect(written.code, written.stdout + written.stderr).toBe(0);
     const settings = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
-    expect(findValueAt(parse(settings) as TomlTable, ['tools', 'eslint', 'restricted_imports'])).toStrictEqual([
+    expect(findValueAt(parse(settings) as TomlTable, ['javascript', 'banned_imports'])).toStrictEqual([
         { name: 'unreviewed-module', message: 'Import the reviewed entrypoint for this dependency.' },
     ]);
     const refused = await runGspot(sandbox.path, [
         'set',
-        'tools.eslint.restricted_imports',
+        'javascript.banned_imports',
         String.raw`["{name = \"a\", message = \"Use its public entrypoint.\"}"]`,
         '--json',
     ]);

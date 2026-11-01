@@ -118,7 +118,7 @@ test('init deletes the .sqlfluffignore of the db package, and project/read-sql t
     expect(await isOnDisk(join(sandbox.path, 'db/.sqlfluffignore'))).toBe(false);
     const levelSet = await runGspot(sandbox.path, ['set', 'level', 'all']);
     expect(levelSet.code, levelSet.stdout + levelSet.stderr).toBe(0);
-    const dialect = await runGspot(sandbox.path, ['set', 'tools.sqlfluff.dialect', 'postgres', '--scope', 'db']);
+    const dialect = await runGspot(sandbox.path, ['set', 'sql.dialect', 'postgres', '--scope', 'db']);
     expect(dialect.code, dialect.stdout + dialect.stderr).toBe(0);
     const checked = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'project/read-sql', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);

@@ -4,6 +4,7 @@ import { findMissingBuild } from '#cli/tools/pins.ts';
 import { LIMIT_READERS } from '#cli/manifests/limits.ts';
 import type { Tool, Check } from '#cli/types/manifests.ts';
 import type { Repository } from '#cli/types/repository.ts';
+import { LOCAL_RULES_SETTING } from '#cli/config/engine.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import { isEveryPath, listIgnores } from '#cli/settings/scopes.ts';
 import { isInScope, isScopeCovered } from '#cli/repository/scopes.ts';
@@ -73,8 +74,8 @@ function findConfigSkip(settings: Settings, scope: Scope, check: Check): Setting
                 (file.level !== 'all' || settings.level === 'all'),
         ),
     );
-    if (selected || !isSettingEmpty(scope.settings.valuesByKey[`tools.${tool}.rule_files`])) return undefined;
-    return { cause: 'setting', note: `No selected configuration or tools.${tool}.rule_files supplies local rules.` };
+    if (selected || !isSettingEmpty(scope.settings.valuesByKey[LOCAL_RULES_SETTING])) return undefined;
+    return { cause: 'setting', note: `No selected configuration or ${LOCAL_RULES_SETTING} supplies local rules.` };
 }
 
 /**

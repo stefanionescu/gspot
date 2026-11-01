@@ -68,7 +68,7 @@ command = ["v8r", "--output-format", "text", "{files}"]
 env = { V8R_CONFIG_FILE = "{config_file:v8r}" }
 example = "A JSON file with a string where its schema requires a boolean reports a mismatch. Replace the string with `true` or `false`."
 files = { paths = ["**/*.{json,jsonc,yaml,yml,toml}", "!**/package.json", "!**/tsconfig*.json", "!**/jsconfig.json", "!**/.github/workflows/**", "!**/mise.toml", "!**/.mise.toml", "!**/mise.*.toml", "!**/.mise.*.toml", "!**/.mise/**", "!**/.config/mise/**", "!**/gspot.toml"] }
-help = "Fix the key v8r names, or map the file to its schema under tools.v8r.schema."
+help = "Fix the key v8r names, or map the file to its schema under data_files.schemas."
 name = "v8r"
 needs = ["network"]
 output = { format = "regex", pattern = "^(?<file>[^#\\s]+)#(?<message>.+)$" }

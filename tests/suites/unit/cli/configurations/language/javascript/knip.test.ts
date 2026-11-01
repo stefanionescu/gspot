@@ -34,7 +34,7 @@ test('Knip finds unused framework component files and uses the entry points of e
     await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['javascript'], {
         level: 'all',
-        tables: `\ntest_files = ["native-tests/**"]\n[tools.knip]\nentry = ["main.js"]\n[[scope]]\npath = "child"\n\nconfigurations = ["javascript"]\ntest_files = ["verification/**"]\n[scope.tools.knip]\nentry = ["main.js"]\n`,
+        tables: `\ntest_files = ["native-tests/**"]\n[javascript]\nentry_files = ["main.js"]\n[[scope]]\npath = "child"\n\nconfigurations = ["javascript"]\ntest_files = ["verification/**"]\n[scope.javascript]\nentry_files = ["main.js"]\n`,
     });
     const configuration = await buildGeneratedFile(
         settings,
@@ -110,7 +110,7 @@ test('Knip treats script configuration files as entries and ignores link files',
         ...KNIP_LINK_FILES,
         'gspot.toml': buildSandboxSettings(['javascript', 'markdown'], {
             level: 'all',
-            tables: `\n[tools.knip]\nentry = ["main.js"]\n[[scope]]\npath = "child"\n\nconfigurations = ["javascript", "markdown"]\n[scope.tools.knip]\nentry = ["main.js"]\n`,
+            tables: `\n[javascript]\nentry_files = ["main.js"]\n[[scope]]\npath = "child"\n\nconfigurations = ["javascript", "markdown"]\n[scope.javascript]\nentry_files = ["main.js"]\n`,
         }),
     });
 
@@ -174,7 +174,7 @@ test("Knip gets each scope's test_files as entry points without sibling leaks", 
 test('Knip workspaces come from package workspaces, your entries and the configuration entry files', async () => {
     const files = KNIP_WORKSPACE_FILES;
     const settings = buildSandboxSettings(['javascript'], {
-        tables: '[tools.knip]\nentry = ["cli.js"]\n[[scope]]\npath = "api"\n\nconfigurations = ["javascript"]\n[scope.tools.knip]\nentry = ["serve.js"]\n[[scope]]\npath = "lib"\n\nconfigurations = ["javascript"]\n',
+        tables: '[javascript]\nentry_files = ["cli.js"]\n[[scope]]\npath = "api"\n\nconfigurations = ["javascript"]\n[scope.javascript]\nentry_files = ["serve.js"]\n[[scope]]\npath = "lib"\n\nconfigurations = ["javascript"]\n',
     });
     const knip = JSON.parse(
         await buildGeneratedFile(settings, getManifestTarget('javascript', 'knip.json'), files),

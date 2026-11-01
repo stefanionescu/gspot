@@ -132,7 +132,7 @@ test('a JSON import attribute is accepted where your import extensions need a su
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
-            tables: '[tools.eslint]\nimport_extension = "js"\n\n',
+            tables: '[javascript]\nimport_extension = "js"\n\n',
             scopes: [{ path: 'app', configurations: ['javascript'] }],
         }),
         'package.json': '{"private":true,"type":"module","imports":{"#data/*":"./*.json"}}\n',

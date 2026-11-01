@@ -246,6 +246,8 @@ export const EXIT_FINDINGS = 1;
 
 export const DOCKER_TOOL = 'docker';
 
+export const LOCAL_RULES_SETTING = 'security.rule_files';
+
 export const DOCKER_DAEMON_NOTE = 'Start Docker, then run the check again.';
 
 export const BYTES_PER_KILOBYTE = 1024;

@@ -79,7 +79,7 @@ test('vue/vue-tsc without the typescript configuration is skipped with its condi
 test('a check whose tool has no Windows build is skipped on Windows', async () => {
     using mockResources = new DisposableStack();
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['python'], { tables: '[tools.semgrep]\nrule_files = ["rules.yml"]\n' }),
+        'gspot.toml': buildSandboxSettings(['python'], { tables: '[security]\nrule_files = ["rules.yml"]\n' }),
         'rules.yml': 'rules: []\n',
         'source.py': 'PORT = 8080\n',
     });
@@ -94,7 +94,7 @@ test.each([false, true])('Semgrep tools follow local rules at plan time (custom 
     using _platform = fakePlatform('linux');
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python'], {
-            tables: hasRuleFiles ? '[tools.semgrep]\nrule_files = ["rules.yml"]\n' : '',
+            tables: hasRuleFiles ? '[security]\nrule_files = ["rules.yml"]\n' : '',
         }),
         'rules.yml': 'rules: []\n',
         'source.py': 'PORT = 8080\n',
@@ -106,7 +106,7 @@ test.each([false, true])('Semgrep tools follow local rules at plan time (custom 
             ? undefined
             : {
                   cause: 'setting',
-                  note: 'No selected configuration or tools.semgrep.rule_files supplies local rules.',
+                  note: 'No selected configuration or security.rule_files supplies local rules.',
               },
     );
     expect(listPackagePins(session.toolConfigurations).python.some((pin) => pin.startsWith('semgrep=='))).toBe(

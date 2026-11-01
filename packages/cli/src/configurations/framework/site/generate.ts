@@ -9,5 +9,5 @@ Build the PurgeCSS safelist with the selected names and patterns.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: CONFIG_BUILDERS selects this configuration's generator through its shared builder interface.
 export function buildPurgecssSafelistFile(planned: PlannedConfig): string {
-    return JSON.stringify(getTable(planned.scope.settings, 'tools.purgecss').safelist, null, JSON_INDENT);
+    return JSON.stringify(getTable(planned.scope.settings, 'site').allowed_classes, null, JSON_INDENT);
 }

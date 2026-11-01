@@ -13,7 +13,7 @@ extensions = [".astro"]
 filenames = ["astro.config.mjs", "astro.config.ts"]
 
 [defaults]
-"tools.eslint.import_extension" = "extensionless"
+"javascript.import_extension" = "extensionless"
 
 [[tool]]
 kind = "package"

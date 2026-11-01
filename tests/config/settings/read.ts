@@ -2,12 +2,12 @@ export const CONFLICTING_DEFAULT_ERRORS = [
     {
         path: ['configurations'],
         message:
-            'The configurations sql and alternate-sql set tools.sqlfluff.dialect to different values. Set it yourself in gspot.toml to decide.',
+            'The configurations sql and alternate-sql set sql.dialect to different values. Set it yourself in gspot.toml to decide.',
     },
 ] as const;
 
-export const PURGECSS_SAFELIST_TABLES = `[tools.purgecss]
-safelist = []
+export const PURGECSS_SAFELIST_TABLES = `[site]
+allowed_classes = []
 [[scope]]
 path = "app"
 configurations = []
@@ -114,26 +114,22 @@ bun_scanners = "@socketsecurity/bun-security-scanner"
 
 export const RULE_FILE_SETTINGS = {
     configurations: ['javascript', 'security'],
-    tools: {
-        eslint: { plugins: [{ name: 'root', path: 'missing-root.mjs', rules: {} }] },
-        semgrep: { rule_files: ['missing-root.yml', 'present.yml'] },
-    },
+    tools: { eslint: { plugins: [{ name: 'root', path: 'missing-root.mjs', rules: {} }] } },
+    security: { rule_files: ['missing-root.yml', 'present.yml'] },
     scope: [
         {
             path: 'app',
-            tools: {
-                eslint: { plugins: [{ name: 'local', path: 'missing-scope.mjs', rules: {} }] },
-                semgrep: { rule_files: ['missing-scope.yml', 'present.yml'] },
-            },
+            tools: { eslint: { plugins: [{ name: 'local', path: 'missing-scope.mjs', rules: {} }] } },
+            security: { rule_files: ['missing-scope.yml', 'present.yml'] },
         },
     ],
 } as const;
 
 export const RULE_FILE_ERRORS = [
     'gspot.toml:4: tools.eslint.plugins.0.path: missing-root.mjs names no file. Point path at a file, relative to its table.',
-    'gspot.toml:5: tools.semgrep.rule_files.0: missing-root.yml names no file. Point rule_files at a file, relative to its table.',
-    'gspot.toml:9: scope.0.tools.eslint.plugins.0.path: missing-scope.mjs names no file. Point path at a file, relative to its table.',
-    'gspot.toml:9: scope.0.tools.semgrep.rule_files.0: missing-scope.yml names no file. Point rule_files at a file, relative to its table.',
+    'gspot.toml:7: security.rule_files.0: missing-root.yml names no file. Point rule_files at a file, relative to its table.',
+    'gspot.toml:11: scope.0.tools.eslint.plugins.0.path: missing-scope.mjs names no file. Point path at a file, relative to its table.',
+    'gspot.toml:12: scope.0.security.rule_files.0: missing-scope.yml names no file. Point rule_files at a file, relative to its table.',
 ] as const;
 
 export const EMPTY_REASONS = [
@@ -144,28 +140,28 @@ export const EMPTY_REASONS = [
 export const INVALID_TOOL_ENUMS = [
     {
         configuration: 'docker',
-        tables: '[tools.trivy]\nseverity = ["SEVERE"]\n',
+        tables: '[docker]\nseverity = ["SEVERE"]\n',
         message:
-            'gspot.toml:3: tools.trivy.severity.0: The value "SEVERE" is not valid for tools.trivy.severity.0. Use UNKNOWN, LOW, MEDIUM, HIGH, or CRITICAL.',
+            'gspot.toml:3: docker.severity.0: The value "SEVERE" is not valid for docker.severity.0. Use UNKNOWN, LOW, MEDIUM, HIGH, or CRITICAL.',
     },
 ] as const;
 
 export const SCOPE_CONFIGURATION_SETTINGS = [
     {
         name: 'a sibling configuration does not expose its settings to another scope',
-        text: 'configurations = ["bash"]\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[[scope]]\npath = "web"\n[scope.tools.sqlfluff]\ndialect = "sqlite"\n',
+        text: 'configurations = ["bash"]\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[[scope]]\npath = "web"\n[scope.sql]\ndialect = "sqlite"\n',
         messages: [
-            'gspot.toml:8: scope.1.tools.sqlfluff.dialect: There is no setting called tools.sqlfluff.dialect. No setting exists under that table. Run gspot list settings to see every one.',
+            'gspot.toml:8: scope.1.sql.dialect: There is no setting called sql.dialect. No setting exists under that table. Run gspot list settings to see every one.',
         ],
     },
     {
         name: 'a selected scope exposes its own configuration settings',
-        text: 'configurations = ["bash"]\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[scope.tools.sqlfluff]\ndialect = "sqlite"\n[[scope]]\npath = "web"\n',
+        text: 'configurations = ["bash"]\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[scope.sql]\ndialect = "sqlite"\n[[scope]]\npath = "web"\n',
         messages: [],
     },
     {
         name: 'root settings remain available to a scope that selects their configuration',
-        text: 'configurations = ["bash"]\n[tools.sqlfluff]\ndialect = "sqlite"\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[[scope]]\npath = "web"\n',
+        text: 'configurations = ["bash"]\n[sql]\ndialect = "sqlite"\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[[scope]]\npath = "web"\n',
         messages: [],
     },
 ] as const;
@@ -230,8 +226,9 @@ export const NESTED_SCOPE_SETTINGS = `configurations = ["bash", "swift", "struct
 enabled = false
 [limits.bash]
 file_lines = 100
-[tools.swiftlint]
-always_keep_imports = ["Foundation"]
+[swift]
+allowed_unused_imports = ["Foundation"]
+xcode_scheme = "5.0"
 [[ignore]]
 check = "bash/shellcheck"
 rule = "SC2086"
@@ -242,19 +239,16 @@ path = "api"
 configurations = ["bash"]
 limits.bash.file_lines = 80
 swift.xcode_scheme = "6.0"
-tools.swiftlint.always_keep_imports = ["UIKit"]
+swift.allowed_unused_imports = ["UIKit"]
 [[scope]]
 path = "api/v1"
 configurations = ["bash"]
 limits.bash.file_lines = 60
 swift.xcode_scheme = "5.0"
-tools.swiftlint.always_keep_imports = ["SwiftUI"]
+swift.allowed_unused_imports = ["SwiftUI"]
 [[scope]]
 path = "web"
 configurations = ["bash"]
-
-[swift]
-xcode_scheme = "5.0"
 `;
 
 export const PROJECT_CHOICES = {

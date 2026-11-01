@@ -113,10 +113,10 @@ export const SETTING_RULES: Readonly<Record<string, Readonly<Record<string, stri
     eslint: {
         'sonarjs/no-identical-functions': 'duplication.min_lines',
         'gspot/no-identical-functions': 'duplication.min_lines',
-        'no-restricted-imports': 'tools.eslint.restricted_imports',
+        'no-restricted-imports': 'javascript.banned_imports',
         'gspot/import-boundaries': 'javascript.import_boundaries',
         'gspot/no-trivial-files': 'structure.reexports',
-        'n/file-extension-in-import': 'tools.eslint.import_extension',
+        'n/file-extension-in-import': 'javascript.import_extension',
     },
 };
 

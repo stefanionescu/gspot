@@ -128,7 +128,7 @@ why = "Swift checks types only during a build."
 
 [[check]]
 example = "An import that no compiled Swift source uses reports a finding. Remove the import."
-help = "Remove what the rule names. List an import that the analyzer flags in error under `tools.swiftlint.always_keep_imports`."
+help = "Remove what the rule names. List an import that the analyzer flags in error under `swift.allowed_unused_imports`."
 name = "swiftlint-analyze"
 needs = ["build"]
 operating_systems = ["macos"]

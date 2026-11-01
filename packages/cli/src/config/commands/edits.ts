@@ -126,7 +126,7 @@ export const BUNDLER_PACKAGES: ReadonlySet<string> = new Set([
     '@rspack/core',
 ]);
 
-export const IMPORT_EXTENSION_SETTING = 'tools.eslint.import_extension';
+export const IMPORT_EXTENSION_SETTING = 'javascript.import_extension';
 
 export const INIT_INSTALL_NOTES: ReadonlySet<string> = new Set([HOOKS_CHANGED_NOTE, TOOLS_CHANGED_NOTE]);
 

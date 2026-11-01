@@ -34,11 +34,11 @@ test('an empty PurgeCSS safelist is inherited, and a scope value applies to its 
     ]);
     for (const path of ['', 'app', 'app/deep']) {
         const scope = inherited.scopes.find((scope) => scope.path === path)!;
-        expect(getTable(scope.settings, 'tools.purgecss').safelist).toStrictEqual([]);
+        expect(getTable(scope.settings, 'site').allowed_classes).toStrictEqual([]);
     }
     const overridden = PURGECSS_SAFELIST_TABLES.replace(
         'path = "app"\n',
-        'path = "app/"\ntools.purgecss.safelist = { value = ["keep"], reason = "The reviewed stylesheet keeps its dynamic selectors." }\n',
+        'path = "app/"\nsite.allowed_classes = { value = ["keep"], reason = "The reviewed stylesheet keeps its dynamic selectors." }\n',
     );
     await writeFile(
         join(sandbox.path, 'gspot.toml'),
@@ -48,7 +48,7 @@ test('an empty PurgeCSS safelist is inherited, and a scope value applies to its 
     expect(
         session.scopes
             .filter(({ path }) => path !== 'sibling')
-            .map(({ path, settings }) => [path, getTable(settings, 'tools.purgecss').safelist]),
+            .map(({ path, settings }) => [path, getTable(settings, 'site').allowed_classes]),
     ).toStrictEqual([
         ['', []],
         ['app', ['keep']],

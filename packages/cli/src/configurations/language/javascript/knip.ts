@@ -5,17 +5,16 @@ import { listDistinctTools } from '#cli/tools/pins.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import type { Scope, Settings } from '#cli/types/settings.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import type { Scope, Settings, TableSettings } from '#cli/types/settings.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/blocks.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
 
 import {
-    KNIP_TABLE,
     KNIP_CHECK,
     PACKAGE_RUNNERS,
     UNQUOTED_COMMENT,
@@ -28,9 +27,7 @@ import {
 
 function selectEntryFiles(settings: Settings, scopes: Scope[], scopePath: string): string[] {
     const authored = listApplicableTables(settings, scopePath).flatMap(({ table, scope = '' }) =>
-        ((table.tools?.knip as Partial<TableSettings<'tools.knip'>> | undefined)?.entry ?? []).map((pattern) =>
-            joinScopeSelector(pattern, scope),
-        ),
+        (table.javascript?.entry_files ?? []).map((pattern) => joinScopeSelector(pattern, scope)),
     );
     const nearest = scopes
         .filter((each) => isInScope(scopePath, each.path))
@@ -65,7 +62,9 @@ function buildWorkspaces(root: string, settings: Settings, scopes: Scope[]) {
         paths.map((path) => {
             const workspace = selected.find((each) => each.path === path);
             const ignored =
-                workspace === undefined ? undefined : getTable(workspace.settings, KNIP_TABLE).ignore_dependencies;
+                workspace === undefined
+                    ? undefined
+                    : getTable(workspace.settings, 'javascript').allowed_unused_dependencies;
             return [
                 path === '' ? '.' : path,
                 {
@@ -115,7 +114,7 @@ export function buildKnipFile(planned: PlannedConfig): string {
     const { scope } = planned;
     const { scopes, toolConfigurations: configurations } = planned.session;
     const { settings, root, startRunner } = planned.session;
-    const options = getTable(scope.settings, KNIP_TABLE);
+    const options = getTable(scope.settings, 'javascript');
     const scanner = getTable(scope.settings, 'dependencies').bun_scanner;
     const ignoredGlobs = convertToGlobs([
         ...planned.ignoreSections,
@@ -137,7 +136,7 @@ export function buildKnipFile(planned: PlannedConfig): string {
                     ...KNIP_IGNORED_DEPENDENCIES,
                     ...toolPackages,
                     ...(scanner === undefined ? [] : [scanner]),
-                    ...options.ignore_dependencies,
+                    ...options.allowed_unused_dependencies,
                     ...listFileTaskPackages(planned),
                 ]),
             ],

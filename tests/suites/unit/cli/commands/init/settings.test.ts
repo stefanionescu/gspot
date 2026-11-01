@@ -43,5 +43,5 @@ test.each([...IMPORT_STYLE_CASES])('init writes the import style of $name', asyn
     const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settingsText'>>;
-    expect(findValueAt(parse(output.settingsText), ['tools', 'eslint', 'import_extension'])).toBe(expected);
+    expect(findValueAt(parse(output.settingsText), ['javascript', 'import_extension'])).toBe(expected);
 });

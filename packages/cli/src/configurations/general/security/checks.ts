@@ -15,7 +15,7 @@ function listSemgrepRuleFiles(session: CheckSession, planned: PlannedCheck): str
             .filter((file) => file.level !== 'all' || session.settings.level === 'all')
             .map((file) => getConfigTarget(scopePath, file, session.generation.buildConfigs(session))),
     );
-    return [...new Set([...ruleFiles, ...getTable(settings, 'tools.semgrep').rule_files])];
+    return [...new Set([...ruleFiles, ...getTable(settings, 'security').rule_files])];
 }
 
 /**

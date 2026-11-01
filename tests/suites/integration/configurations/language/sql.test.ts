@@ -24,19 +24,13 @@ test("SQLFluff uses each scope's dialect setting instead of the PostgreSQL defau
     expect(listFindingRows(parseCheckReport(wrong).report)).toStrictEqual([
         { file: 'query.sql', line: 1, rule: 'PRS' },
     ]);
-    const selected = await spawnGspot(root, ['set', 'tools.sqlfluff.dialect', 'sqlite']);
+    const selected = await spawnGspot(root, ['set', 'sql.dialect', 'sqlite']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     const corrected = await spawnGspot(root, ['check', 'query.sql', '--only', 'sql/sqlfluff', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     const nested = await spawnGspot(root, ['check', 'warehouse/child/query.sql', '--only', 'sql/sqlfluff', '--json']);
     expect(nested.code, nested.stdout + nested.stderr).toBe(0);
-    const warehouseDialect = await spawnGspot(root, [
-        'set',
-        'tools.sqlfluff.dialect',
-        'postgres',
-        '--scope',
-        'warehouse',
-    ]);
+    const warehouseDialect = await spawnGspot(root, ['set', 'sql.dialect', 'postgres', '--scope', 'warehouse']);
     expect(warehouseDialect.code, warehouseDialect.stdout + warehouseDialect.stderr).toBe(0);
     const wrongChild = await spawnGspot(root, [
         'check',
@@ -57,7 +51,7 @@ test('SQLFluff reports and fixes uppercase function names', async () => {
         files: {
             'gspot.toml': buildSandboxSettings(['sql'], {
                 level: 'all',
-                tables: '[tools.sqlfluff]\ndialect = "postgres"\n',
+                tables: '[sql]\ndialect = "postgres"\n',
             }),
             'functions.sql': SQL_FUNCTION_SOURCE,
         },

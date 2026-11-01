@@ -63,8 +63,8 @@ tool = "html-validate"
 why = "Templates can each be valid and still join into a page with two main elements or a missing label."
 
 [[check]]
-example = "A built `.unused-banner` selector that no page or script uses reports a finding. Delete the rule, or list a class that a script adds under `tools.purgecss.safelist` with a reason."
-help = "Delete the rule, or list a name a script adds at run time under tools.purgecss.safelist with a reason."
+example = "A built `.unused-banner` selector that no page or script uses reports a finding. Delete the rule, or list a class that a script adds under `site.allowed_classes` with a reason."
+help = "Delete the rule, or list a name a script adds at run time under site.allowed_classes with a reason."
 name = "purgecss"
 needs = ["build"]
 runs = "scope"

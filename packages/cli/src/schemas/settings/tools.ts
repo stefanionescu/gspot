@@ -1,12 +1,7 @@
 import { z } from 'zod';
 import { nonemptyStringSchema } from '#cli/schemas/manifests/tools.ts';
+import { allowReasonedValue, relativePathSchema, nonemptyPathsSchema } from '#cli/schemas/settings/fields.ts';
 
-import {
-    allowReasonedValue,
-    relativePathSchema,
-    nonemptyPathsSchema,
-    nonemptyStringsSchema,
-} from '#cli/schemas/settings/fields.ts';
 import {
     commitlintSchema,
     eslintRulesSchema,
@@ -19,7 +14,6 @@ import {
     KNIP_PACKAGE_NAME,
     SQLFLUFF_DIALECTS,
     MARKDOWNLINT_RULE_ID,
-    DOCSTRING_CONVENTIONS,
     IMPORT_EXTENSION_STYLES,
     MARKDOWNLINT_RULE_ID_REFUSAL,
 } from '#cli/config/settings/schema.ts';
@@ -48,34 +42,56 @@ export const javascriptSchema = z
                 'Import specifiers that the runtime provides, such as ../../scripts/app.js in a host application. Globs match several.',
             default: [] as [],
         }),
+        import_extension: z
+            .enum(IMPORT_EXTENSION_STYLES)
+            .default('js')
+            .meta({
+                leftOut: 'repository',
+                configurations: ['javascript'],
+                description:
+                    'The import suffix in this scope: js for compiled ESM, ts for Deno and Bun, or extensionless for code that a bundler builds.',
+            }),
+        banned_imports: z
+            .strictObject({
+                name: z.string().meta({
+                    description: 'The import to refuse.',
+                }),
+                message: z.string().meta({
+                    description: 'What to import instead.',
+                }),
+            })
+            .array()
+            .default([] as [])
+            .meta({
+                configurations: ['javascript'],
+                description: 'Imports that this repository refuses, each with a name and a message.',
+            }),
+        entry_files: relativePathSchema
+            .array()
+            .default([] as [])
+            .meta({
+                configurations: ['javascript'],
+                description: 'Entry points knip starts from beyond the ones the framework configuration declares.',
+            }),
+        allowed_unused_dependencies: allowReasonedValue(
+            z
+                .string()
+                .min(1)
+                .regex(KNIP_PACKAGE_NAME, 'Use an exact package name, without a regular expression.')
+                .array(),
+            {
+                leftOut: 'repository',
+                configurations: ['javascript'],
+                description:
+                    'Exact package names that knip does not report as unused; new names need a reason, and a scope list applies to that project only.',
+                reason_when: 'adding',
+                default: [] as [],
+            },
+        ),
     })
     .optional();
 
 const eslintTableSchema = z.strictObject({
-    import_extension: z
-        .enum(IMPORT_EXTENSION_STYLES)
-        .default('js')
-        .meta({
-            leftOut: 'repository',
-            configurations: ['javascript'],
-            description:
-                'The import suffix in this scope: js for compiled ESM, ts for Deno and Bun, or extensionless for code that a bundler builds.',
-        }),
-    restricted_imports: z
-        .strictObject({
-            name: z.string().meta({
-                description: 'The import to refuse.',
-            }),
-            message: z.string().meta({
-                description: 'What to import instead.',
-            }),
-        })
-        .array()
-        .default([] as [])
-        .meta({
-            configurations: ['javascript'],
-            description: 'Imports that this repository refuses, each with a name and a message.',
-        }),
     rules: eslintRulesSchema.default({}).meta({
         configurations: ['javascript'],
         description:
@@ -121,27 +137,6 @@ const markdownlintSchema = z.strictObject({
     }),
 });
 
-const knipSchema = z.strictObject({
-    entry: relativePathSchema
-        .array()
-        .default([] as [])
-        .meta({
-            configurations: ['javascript'],
-            description: 'Entry points knip starts from beyond the ones the framework configuration declares.',
-        }),
-    ignore_dependencies: allowReasonedValue(
-        z.string().min(1).regex(KNIP_PACKAGE_NAME, 'Use an exact package name, without a regular expression.').array(),
-        {
-            leftOut: 'repository',
-            configurations: ['javascript'],
-            description:
-                'Exact package names that knip does not report as unused; new names need a reason, and a scope list applies to that project only.',
-            reason_when: 'adding',
-            default: [] as [],
-        },
-    ),
-});
-
 const validationTargetSchema = z.strictObject({
     paths: nonemptyPathsSchema.meta({
         description: 'Files SchemaStore does not know.',
@@ -151,16 +146,36 @@ const validationTargetSchema = z.strictObject({
     }),
 });
 
-export const toolsSchema = z.strictObject({
-    hadolint: z
+export const toolConfigurationSchemas = {
+    data_files: z
         .strictObject({
-            trusted_registries: z
+            schemas: validationTargetSchema
+                .array()
+                .default([] as [])
+                .meta({
+                    configurations: ['data-files'],
+                    description:
+                        'File patterns mapped to schema URLs, for files that the SchemaStore catalog does not know.',
+                }),
+        })
+        .optional(),
+    docker: z
+        .strictObject({
+            allowed_registries: z
                 .string()
                 .array()
                 .default([] as [])
                 .meta({
                     configurations: ['docker'],
                     description: 'The registries a base image may come from; empty allows any.',
+                }),
+            severity: z
+                .enum(TRIVY_SEVERITIES)
+                .array()
+                .default(['HIGH', 'CRITICAL'] as ['HIGH', 'CRITICAL'])
+                .meta({
+                    configurations: ['docker'],
+                    description: 'The severities Trivy reports.',
                 }),
         })
         .optional(),
@@ -175,18 +190,7 @@ export const toolsSchema = z.strictObject({
                 }),
         })
         .optional(),
-    ruff: z
-        .strictObject({
-            docstring_convention: z
-                .enum(DOCSTRING_CONVENTIONS)
-                .optional()
-                .meta({
-                    configurations: ['python'],
-                    description: 'The docstring style that Ruff and pydoclint check: google, numpy, or pep257.',
-                }),
-        })
-        .optional(),
-    semgrep: z
+    security: z
         .strictObject({
             rule_files: relativePathSchema
                 .array()
@@ -197,7 +201,7 @@ export const toolsSchema = z.strictObject({
                 }),
         })
         .optional(),
-    sqlfluff: z
+    sql: z
         .strictObject({
             dialect: z
                 .enum(SQLFLUFF_DIALECTS)
@@ -210,31 +214,9 @@ export const toolsSchema = z.strictObject({
                 }),
         })
         .optional(),
-    swiftlint: z
-        .strictObject({
-            always_keep_imports: z
-                .string()
-                .array()
-                .default([] as [])
-                .meta({
-                    leftOut: 'repository',
-                    configurations: ['swift'],
-                    description: 'Imports the analyzer keeps although it sees no use of them.',
-                }),
-        })
-        .optional(),
-    trivy: z
-        .strictObject({
-            severity: z
-                .enum(TRIVY_SEVERITIES)
-                .array()
-                .default(['HIGH', 'CRITICAL'] as ['HIGH', 'CRITICAL'])
-                .meta({
-                    configurations: ['docker'],
-                    description: 'The severities Trivy reports.',
-                }),
-        })
-        .optional(),
+};
+
+export const toolsSchema = z.strictObject({
     eslint: eslintTableSchema.optional(),
     commitlint: commitlintSchema,
     markdownlint: markdownlintSchema.optional(),
@@ -245,42 +227,6 @@ export const toolsSchema = z.strictObject({
                 description:
                     'Options for Stylelint rules, which stay errors. gspot refuses options for a rule of level all at a lower level, and Stylelint reports a rule that it does not know. Accept a finding with `gspot ignore css/stylelint --rule <rule> --reason "<why>"`.',
             }),
-        })
-        .optional(),
-    squawk: z
-        .strictObject({
-            assume_in_transaction: z
-                .boolean()
-                .default(true)
-                .meta({
-                    leftOut: 'repository',
-                    configurations: ['postgres'],
-                    description: 'Whether the migration runner wraps every migration in a transaction.',
-                }),
-        })
-        .optional(),
-    knip: knipSchema.optional(),
-    purgecss: z
-        .strictObject({
-            safelist: allowReasonedValue(nonemptyStringsSchema, {
-                leftOut: 'repository',
-                configurations: ['site'],
-                description: 'Class names a script adds at run time: the names and the reason.',
-                reason_when: 'adding',
-                default: [] as [],
-            }),
-        })
-        .optional(),
-    v8r: z
-        .strictObject({
-            schema: validationTargetSchema
-                .array()
-                .default([] as [])
-                .meta({
-                    configurations: ['data-files'],
-                    description:
-                        'File patterns mapped to schema URLs, for files that the SchemaStore catalog does not know.',
-                }),
         })
         .optional(),
 });

@@ -19,7 +19,6 @@ import type { Mount, NginxMounts } from '#cli/types/configurations/infrastructur
 import {
     NGINX_CONF,
     SYNTAX_RULE,
-    NGINX_TABLE,
     LOCAL_NAMES,
     VOLUME_FLAG,
     NGINX_FOLDER,
@@ -126,7 +125,7 @@ async function testNginxFile(
         if (!parsed.includes(NGINX_MAIN_TARGET))
             throw new CheckStop(
                 'error',
-                `The nginx in ${image} did not read ${NGINX_MAIN_TARGET}, so the check tested none of your files. Set tools.nginx.image to an image whose nginx reads ${NGINX_MAIN_TARGET}.`,
+                `The nginx in ${image} did not read ${NGINX_MAIN_TARGET}, so the check tested none of your files. Set nginx.image to an image whose nginx reads ${NGINX_MAIN_TARGET}.`,
             );
         return {
             findings: [],
@@ -180,7 +179,7 @@ Tests every tracked nginx.conf with the server's own parser.
 @returns one finding for each file nginx refuses.
 */
 export async function checkSyntax(session: CheckSession, planned: PlannedCheck): Promise<BuiltInCheckResult> {
-    const image = getTable(planned.scope.settings, NGINX_TABLE)['image'];
+    const image = getTable(planned.scope.settings, 'nginx').image;
     const paths = listSourcePaths(planned.files, [NGINX_CONF]);
     if (paths.length === 0) return { findings: [], files: [] };
     using workFolder = createTemporaryFolder();

@@ -25,7 +25,7 @@ export const RECORD_FIELDS: Readonly<Record<string, readonly string[]>> = Object
         'licenses.allowed_package': configurationTableSchemas.licenses.unwrap().shape.allowed_package.unwrap().element
             .shape,
         'tools.eslint.override': toolsSchema.shape.eslint.unwrap().shape.override.unwrap().element.shape,
-        'tools.v8r.schema': toolsSchema.shape.v8r.unwrap().shape.schema.unwrap().element.shape,
+        'data_files.schemas': configurationTableSchemas.data_files.unwrap().shape.schemas.unwrap().element.shape,
     }).map(([name, fields]) => [name, Object.keys(fields)]),
 );
 

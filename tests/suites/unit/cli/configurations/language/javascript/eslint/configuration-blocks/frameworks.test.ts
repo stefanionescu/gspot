@@ -83,7 +83,7 @@ test.each(['all'] as const)(
             'gspot.toml': buildSandboxSettings(['javascript'], {
                 level,
                 rules: true,
-                tables: '[tools.eslint]\nimport_extension = "js"\n',
+                tables: '[javascript]\nimport_extension = "js"\n',
                 scopes: [{ path: 'api', configurations: ['express'] }],
             }),
             'package.json': '{"private":true,"type":"module","imports":{"#lib/*":"./*.js"}}',

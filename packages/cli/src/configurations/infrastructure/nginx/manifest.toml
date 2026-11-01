@@ -38,7 +38,7 @@ why = "These mistakes parse, serve traffic, and look like any other location blo
 [[check]]
 example = "The line `invalid_directive on;` fails `nginx -T`. Remove it, or replace it with a known directive such as `listen 443 ssl;`."
 files = { filenames = ["nginx.conf"] }
-help = "Fix the line nginx names. Set `tools.nginx.image` to the one your deployment runs."
+help = "Fix the line nginx names. Set `nginx.image` to the one your deployment runs."
 name = "syntax"
 needs = ["docker"]
 runs = "scope"

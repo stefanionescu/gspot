@@ -7,12 +7,12 @@ export const SQUAWK_ROOT_MIGRATION_PATH = 'supabase/migrations/0001_initial.sql'
 
 export const SQUAWK_CHILD_MIGRATION_PATH = 'transactional/child/supabase/migrations/0001_initial.sql';
 
-export const SQUAWK_SCOPE_SETTINGS = `[tools.squawk]
+export const SQUAWK_SCOPE_SETTINGS = `[postgres]
 assume_in_transaction = false
 [[scope]]
 path = "transactional"
 
-[scope.tools.squawk]
+[scope.postgres]
 assume_in_transaction = true
 [[scope]]
 path = "transactional/child"
@@ -164,13 +164,13 @@ export const NGINX_SERVER = `server {
 }
 `;
 
-export const NGINX_SCOPE_TABLES = `[tools.nginx]
+export const NGINX_SCOPE_TABLES = `[nginx]
 image = "nginx:1.29.3-alpine@"
 [[scope]]
 path = "proxy"
 
 configurations = []
-[scope.tools.nginx]
+[scope.nginx]
 image = "nginx:1.29.3-alpine"
 `;
 

@@ -101,8 +101,8 @@ export const OUTPUT_CASES = [
         check: 'site/purgecss',
         level: 'basic',
         tables: `
-[tools.purgecss]
-safelist = { value = ["reviewed"], reason = "The script adds this reviewed class at runtime." }
+[site]
+allowed_classes = { value = ["reviewed"], reason = "The script adds this reviewed class at runtime." }
 `,
         files: {
             'pages/index.html':

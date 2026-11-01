@@ -209,7 +209,7 @@ test_files = ["**/*.spec.ts"]
 [limits]
 function_lines = { value = 80, reason = "The parsers are state machines." }
 
-[tools.eslint]
+[javascript]
 import_extension = "js"
 
 [tools.eslint.rules]
@@ -240,7 +240,7 @@ reason = "The scripts print their output."
 enabled = true
 provider = "github"
 
-[tools.nginx]
+[nginx]
 image = "nginx:stable"
 
 [[import_rule]]
@@ -255,11 +255,11 @@ reason = "The command runs separately."
 export const TEAM_LEFT_OUT = [
     { key: 'ci.enabled', note: 'CI stays off; run gspot set ci.enabled true' },
     { key: 'ci.provider', note: 'CI stays off; run gspot set ci.enabled true' },
-    { key: 'tools.nginx.image', note: 'runs code' },
+    { key: 'nginx.image', note: 'runs code' },
     { key: '[[import_rule]] app', note: 'names paths of that repository' },
     { key: '[[ignore]] licenses', note: 'ignores a command check' },
     { key: 'test_files', note: 'names paths of that repository' },
-    { key: 'tools.eslint.import_extension', note: 'describes that repository' },
+    { key: 'javascript.import_extension', note: 'describes that repository' },
     { key: '[[scope]] apps/web', note: 'names paths of that repository' },
     { key: '[[command_check]] licenses', note: 'runs code' },
     { key: '[[ignore]] javascript/eslint no-console', note: 'names paths of that repository' },

@@ -1,6 +1,5 @@
 import type { Level, Scope } from '#cli/types/settings.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
-import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/javascript.ts';
 import type { SelectorBlock, SelectorPaths } from '#cli/types/configurations/language.ts';
 import { BASE_SELECTORS, ENVIRONMENT_SELECTOR, ALIAS_IMPORT_SELECTORS } from '#cli/config/configurations/blocks.ts';
 
@@ -8,7 +7,7 @@ function listSettingSelectors(scope: Scope, level: Level): SelectorPaths[] {
     const selectors: SelectorPaths[] = [];
     const owners = scope.settings.tables.structure?.environment_readers ?? [];
     if (level === 'all' && owners.length > 0) selectors.push({ ...ENVIRONMENT_SELECTOR, ignores: owners });
-    const importExtension = scope.settings.tables[ESLINT_SETTINGS_TABLE]?.import_extension;
+    const importExtension = scope.settings.tables.javascript?.import_extension;
     if (importExtension !== undefined)
         selectors.push(ALIAS_IMPORT_SELECTORS[importExtension === 'extensionless' ? 'never' : 'always']);
     return selectors;

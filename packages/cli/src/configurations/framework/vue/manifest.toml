@@ -12,7 +12,7 @@ extensions = [".vue"]
 extensions = [".vue"]
 
 [defaults]
-"tools.eslint.import_extension" = "extensionless"
+"javascript.import_extension" = "extensionless"
 
 [[tool]]
 kind = "package"

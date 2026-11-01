@@ -70,8 +70,8 @@ test.each(['basic'] as const)(
         await using sandbox = await testdir({
             ...ZUSTAND_FILES,
             'gspot.toml': buildSandboxSettings(['javascript', 'zustand'], {
-                tables: `[tools.eslint]
-restricted_imports = [{ name = "node:fs", message = "Use the storage service." }]
+                tables: `[javascript]
+banned_imports = [{ name = "node:fs", message = "Use the storage service." }]
 [zustand]
 store_files = { value = ["**/store.js"], reason = "This test sets the allowed locations explicitly." }
 `,

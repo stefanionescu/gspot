@@ -277,11 +277,11 @@ SELECT get_user_name();
 `;
 
 export const SQLFLUFF_DIALECT_SETTINGS = {
-    tables: `[tools.sqlfluff]
+    tables: `[sql]
 dialect = "postgres"
 [[scope]]
 path = "warehouse"
-[scope.tools.sqlfluff]
+[scope.sql]
 dialect = "duckdb"
 [[scope]]
 path = "warehouse/child"

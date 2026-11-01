@@ -69,7 +69,7 @@ test('after --fix, the checks read the fixed file and other files stay as they w
     await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['sql'], {
         level: 'all',
-        tables: `[tools.sqlfluff]\ndialect = "postgres"\n${stringify({
+        tables: `[sql]\ndialect = "postgres"\n${stringify({
             command_check: [
                 {
                     id: 'project/correct-sql',

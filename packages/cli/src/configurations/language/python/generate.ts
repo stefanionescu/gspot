@@ -11,7 +11,6 @@ import type { PlannedConfig, FormatSettings } from '#cli/types/configurations/la
 import { getTable, getLimit, isEveryPath, listIgnores, listIgnoredRules } from '#cli/settings/scopes.ts';
 
 import {
-    RUFF_TABLE,
     RUFF_CHECK,
     RUFF_ISORT,
     PYTHON_FILES,
@@ -104,7 +103,7 @@ export function buildRuffFile(planned: PlannedConfig): string {
         const target = `${pythonScopePath}/${relative(scope, path)}`;
         byPath.set(target, [...(byPath.get(target) ?? []), rule]);
     }
-    const convention = getTable(planned.scope.settings, RUFF_TABLE).docstring_convention;
+    const convention = getTable(planned.scope.settings, 'python').docstring_convention;
     const document = {
         'line-length': format.print_width,
         'indent-width': format.indent_width,

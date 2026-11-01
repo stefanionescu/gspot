@@ -102,8 +102,6 @@ export const RUFF_ALWAYS_OFF = [
     'W191',
 ] as const;
 
-export const RUFF_TABLE = 'tools.ruff';
-
 export const RUFF_CHECK = 'python/ruff';
 
 export const BASEDPYRIGHT_CHECK = 'python/basedpyright';

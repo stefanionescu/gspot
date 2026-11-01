@@ -37,7 +37,7 @@ export const PARTIAL_FIX_CASES = [
         configuration: 'sql',
         check: 'sql/sqlfluff',
         path: 'sample.sql',
-        tables: '[tools.sqlfluff]\ndialect = "postgres"\n',
+        tables: '[sql]\ndialect = "postgres"\n',
         sample: 'select  * from foo;\n',
         partial: 'SELECT * FROM foo;\n',
         corrected: 'SELECT id FROM foo;\n',
