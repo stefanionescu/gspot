@@ -2,6 +2,8 @@ import { NODE_MODULES } from '#cli/config/system.ts';
 
 export const GSPOT_FOLDER = '.gspot';
 
+export const PARSES_BETWEEN_TURNS = 50;
+
 export const PBXPROJ_FILE = 'project.pbxproj';
 
 export const SWIFT_EXTENSION = '.swift';

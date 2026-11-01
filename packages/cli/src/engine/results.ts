@@ -2,6 +2,7 @@ import { realpathSync } from 'node:fs';
 import { findToolName } from '#cli/tools/pins.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { quoteArgument } from '#cli/system/text.ts';
+import { setImmediate } from 'node:timers/promises';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { INCOMPLETE_STATUSES } from '#cli/config/engine.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -80,6 +81,7 @@ export async function runBuiltInCheck(
     planned: PlannedCheck,
     options: CheckRunOptions,
 ): Promise<CheckResult> {
+    await setImmediate();
     const started = performance.now();
     const result = await builtInCheck(session, planned, options);
     const findings = (Array.isArray(result) ? result : result.findings).map((finding) => ({

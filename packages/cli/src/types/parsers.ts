@@ -76,6 +76,7 @@ export type SourceTree = { path: string; text: string; rootNode: Node };
 export type ParserGrammars = {
     runtime: Promise<void> | undefined;
     parsers: Map<GrammarName, Promise<Parser>>;
+    parses: number;
 };
 
 export type SourceComment = { line: number; text: string; standalone: boolean };

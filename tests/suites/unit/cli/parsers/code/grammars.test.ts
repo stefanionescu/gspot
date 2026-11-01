@@ -17,3 +17,15 @@ test('parsed source copies remain usable after the run releases its resources', 
     resources[Symbol.dispose]();
     expect(typescript.rootNode.text).toBe(source);
 });
+
+test('a long parse pass lets the event loop run', async () => {
+    let turns = 0;
+    const counter = setInterval(() => {
+        turns += 1;
+    }, 0);
+    for (let parsed = 0; parsed < 200; parsed += 1) {
+        using _tree = await parseSource('bash', 'echo ready\n');
+    }
+    clearInterval(counter);
+    expect(turns).toBeGreaterThan(0);
+});

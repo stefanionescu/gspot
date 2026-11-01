@@ -2,6 +2,7 @@ import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { remember } from '#cli/system/cache.ts';
 import { read } from '#cli/system/files/reads.ts';
+import { setImmediate } from 'node:timers/promises';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { Parser, Language, type Tree } from 'web-tree-sitter';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
@@ -10,6 +11,7 @@ import type { ParseCache, SourceTree, GrammarName, ParserGrammars, GrammarSource
 import {
     GRAMMARS_FOLDER,
     GRAMMAR_EXTENSIONS,
+    PARSES_BETWEEN_TURNS,
     GRAMMAR_CONFIGURATIONS,
     GRAMMAR_FILE_EXTENSION,
 } from '#cli/config/parsers.ts';
@@ -19,6 +21,7 @@ const PARSED_TREES = Symbol('parsed trees');
 const grammars: ParserGrammars = {
     runtime: undefined,
     parsers: new Map(),
+    parses: 0,
 };
 
 async function buildParser(grammar: GrammarName): Promise<Parser> {
@@ -64,6 +67,8 @@ Share one parse per run, and give each reader its own tree handle to dispose.
 @returns the caller owns the tree, which frees itself on dispose.
 */
 export async function parseSource(grammar: GrammarName, text: string, cache?: ParseCache): Promise<Tree & Disposable> {
+    grammars.parses += 1;
+    if (grammars.parses % PARSES_BETWEEN_TURNS === 0) await setImmediate();
     const parser = await getParser(grammar);
     const resources = cache?.resources;
     const tree =
