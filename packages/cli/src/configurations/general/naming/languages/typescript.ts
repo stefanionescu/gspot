@@ -70,7 +70,10 @@ function addDeclarations(found: FileIdentifiers, syntaxRoot: Node): void {
                         (node.childForFieldName('name')?.text === 'constructor' || node.parent?.type === 'object')
                     ),
             );
-        for (const node of nodes) addPattern(found, node.childForFieldName('name'), category);
+        for (const node of nodes) {
+            const hasFunctionType = node.childForFieldName('type')?.namedChildren[0]?.type === 'function_type';
+            addPattern(found, node.childForFieldName('name'), hasFunctionType ? 'methods' : category);
+        }
     }
 }
 

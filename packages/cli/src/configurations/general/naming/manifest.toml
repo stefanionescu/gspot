@@ -302,6 +302,12 @@ allowed_names = ["pre-commit", "pre-push", "commit-msg", "post-checkout", "post-
 reason = "git names its hooks."
 
 [[naming.override]]
+allowed_names = ["debug", "info", "warn", "error", "fatal", "trace"]
+categories = ["methods"]
+paths = ["**"]
+reason = "A logging interface names its methods after the log levels."
+
+[[naming.override]]
 allowed_names = ["main"]
 categories = ["files"]
 languages = ["swift"]

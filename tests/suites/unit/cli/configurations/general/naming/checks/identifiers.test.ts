@@ -222,3 +222,14 @@ test('snapshot names describe storage and subscription concepts outside tests', 
     });
     expect(await runSandboxCheck(sandbox.path, 'naming/identifiers')).toStrictEqual([]);
 });
+
+test('a property with a function type counts as a method, so log level methods pass', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
+        'logger.ts':
+            'export type Logger = { error: (message: string) => void; warn: (message: string) => void; retry_count: number };\n',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'naming/identifiers');
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.message).toContain('retry_count');
+});

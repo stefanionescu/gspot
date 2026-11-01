@@ -48,7 +48,7 @@ at one call site.
 logger.info({ headers: req.headers }, 'Incoming request');
 
 // Good.
-logger.info({ path: req.path, method: req.method, request_id: requestId }, 'Incoming request');
+logger.info({ path: req.path, method: req.method, requestId }, 'Incoming request');
 ```
 
 A logging test asserts the fields and redaction, not that the logger ran.

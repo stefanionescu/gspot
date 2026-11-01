@@ -14,8 +14,8 @@ concept reads alike throughout the program.
   Python, SQL, and Bash lowercase them inside snake_case, such as `http_url` and `user_id`.
 - Folders: kebab-case for TypeScript, JavaScript, HTML, CSS, and static sites; kebab-case or snake_case for Bash;
   snake_case for Python packages; PascalCase for Swift folders, which mirror type names.
-- On the wire: camelCase JSON fields and kebab-case URL segments. Log event names and fields: `snake_case`, unless an
-  existing logging interface defines their spelling.
+- On the wire: camelCase JSON fields and kebab-case URL segments. Log event names and fields follow the property case of the
+  language, unless an existing logging interface defines their spelling.
 - Environment variables: `UPPER_SNAKE_CASE`. An application's own variables take no prefix; a variable that a tool writes
   into another project's environment takes the tool's prefix.
 - Constants: a module-level constant bound to a literal or a frozen object uses `UPPER_SNAKE_CASE` in TypeScript,
