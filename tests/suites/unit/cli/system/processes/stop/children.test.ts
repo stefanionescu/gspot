@@ -147,33 +147,29 @@ test('the stop after a normal exit accepts the macOS refusal to signal an exited
     expect(result.errored).toBe(false);
 });
 
-test.skipIf(isWindows)('a stopped tool gets SIGTERM, so it can clean up before it exits', async () => {
-    await using sandbox = await testdir();
+async function stopTool(root: string, script: string): Promise<Awaited<ReturnType<typeof spawnProcess>>> {
     const controller = new AbortController();
-    const running = spawnProcess(['sh', '-c', CLEANING_TOOL], {
-        cwd: sandbox.path,
+    const running = spawnProcess(['sh', '-c', script], {
+        cwd: root,
         cancelSignal: controller.signal,
         timeoutSeconds: CHILD_TIMEOUT_SECONDS,
     });
-    expect(await waitForFile(join(sandbox.path, 'ready'))).toBe(true);
+    expect(await waitForFile(join(root, 'ready'))).toBe(true);
     controller.abort();
     const result = await running;
     expect(result.canceled).toBe(true);
+    return result;
+}
+
+test.skipIf(isWindows)('a stopped tool gets SIGTERM, so it can clean up before it exits', async () => {
+    await using sandbox = await testdir();
+    await stopTool(sandbox.path, CLEANING_TOOL);
     expect(await readFile(join(sandbox.path, 'cleaned'), 'utf8')).toBe('cleaned\n');
 });
 
 test.skipIf(isWindows)('a tool that ignores SIGTERM stops with SIGKILL', async () => {
     await using sandbox = await testdir();
-    const controller = new AbortController();
-    const running = spawnProcess(['sh', '-c', STUBBORN_TOOL], {
-        cwd: sandbox.path,
-        cancelSignal: controller.signal,
-        timeoutSeconds: CHILD_TIMEOUT_SECONDS,
-    });
-    expect(await waitForFile(join(sandbox.path, 'ready'))).toBe(true);
-    controller.abort();
-    const result = await running;
-    expect(result.canceled).toBe(true);
+    const result = await stopTool(sandbox.path, STUBBORN_TOOL);
     expect(result.code).not.toBe(0);
 });
 

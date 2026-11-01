@@ -184,7 +184,7 @@ Resolves the working folder and expands the tool environment values.
 @param planned the check and its files.
 @param root the repository, or the copy of it that the command runs in.
 */
-export function buildCommandSetup(session: CheckSession, planned: PlannedCheck, root: string): CommandSetup {
+function buildCommandSetup(session: CheckSession, planned: PlannedCheck, root: string): CommandSetup {
     const { scope } = planned;
     const cwd = selectCommandFolder(root, planned);
     const substitutions = buildCommandSubstitutions(root, planned, cwd);

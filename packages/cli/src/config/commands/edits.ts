@@ -215,5 +215,3 @@ export const FIX_APPLY_MESSAGE = 'Fix that, then run gspot apply.';
 export const COMMAND_SUGGESTION = /\(Did you mean ([^?)]+)\??\)/u;
 
 export const FORMAT_CONFIGURATION = 'format';
-
-export const OPENAPI_CONFIGURATION = 'openapi';

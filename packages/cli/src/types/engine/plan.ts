@@ -81,7 +81,7 @@ export type SessionOptions = {
     cancelSignal?: AbortSignal | undefined;
 };
 
-export type SettingsFile = {
+type SettingsFile = {
     settings: Settings;
     text: string;
 };
