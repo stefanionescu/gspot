@@ -219,7 +219,7 @@ export function buildClosingBlocks(
                 readPackageJson(session.cache, file.path)?.['private'] === true,
         )
         .map((file) => escapeGlob(file.path));
-    const selectorGroups = buildSelectorBlocks(session.scopes, level);
+    const selectorGroups = buildSelectorBlocks(session.scopes, level, session.repository.dependencyFiles);
     return [
         ...buildRuntimeBlocks(eslintFiles, runtimeBlocks),
         ...selectorGroups

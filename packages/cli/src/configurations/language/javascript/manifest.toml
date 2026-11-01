@@ -389,3 +389,11 @@ selector = 'LogicalExpression[operator=/^(\|\||\?\?)$/][right.type="ObjectExpres
 [[eslint.selectors]]
 message = "Log a stable message and pass the values as fields."
 selector = 'CallExpression:matches([callee.property.name=/^(debug|info|warn|error|fatal|trace)$/], [callee.property.name="log"][callee.object.name!="console"]) > TemplateLiteral.arguments:first-child[expressions.length>0]'
+
+[[eslint.selectors]]
+message = "Network inactivity does not prove that the page is ready. Wait for the visible state, response, or URL."
+selector = "CallExpression[callee.property.name='waitForLoadState'] > Literal:first-child[value='networkidle']"
+
+[[eslint.selectors]]
+message = "Pass the locator to expect, so that the assertion retries, such as await expect(locator).toHaveText(text)."
+selector = "Program:has(ImportDeclaration[source.value='@playwright/test']) CallExpression[callee.name='expect'] > AwaitExpression:first-child"

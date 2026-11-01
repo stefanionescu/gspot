@@ -121,3 +121,21 @@ test.each([...FRAMEWORK_SELECTOR_CASES])(
         }
     },
 );
+
+test('the next-intl import bans apply only in a project that declares next-intl', async () => {
+    const source = "import Link from 'next/link';\nimport { useRouter, useParams } from 'next/navigation';\n";
+    const listFindings = async (dependencies: Record<string, string>): Promise<unknown[]> => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['javascript', 'translations']),
+            'package.json': JSON.stringify({ private: true, type: 'module', dependencies }),
+            'page.js': source,
+        });
+        const eslint = await buildEslint(sandbox.path);
+        return await listLintFindings(eslint, sandbox.path, ['page.js'], ['gspot/restricted-syntax']);
+    };
+    expect(await listFindings({ 'next-intl': '4.0.0' })).toStrictEqual([
+        { file: 'page.js', rule: 'gspot/restricted-syntax', line: 1 },
+        { file: 'page.js', rule: 'gspot/restricted-syntax', line: 2 },
+    ]);
+    expect(await listFindings({})).toStrictEqual([]);
+});

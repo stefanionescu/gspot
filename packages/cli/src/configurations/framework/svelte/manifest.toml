@@ -38,6 +38,11 @@ name = "svelte-check"
 npm = "svelte-check"
 version = "4.7.7"
 
+[tool.suppression]
+marker = "^<!--\\s*svelte-ignore\\b"
+reason = " - (?<reason>\\S.*)"
+example = "<!-- svelte-ignore a11y_autofocus - reason: the dialog opens with the search field in focus -->"
+
 [[tool]]
 kind = "package"
 name = "prettier-plugin-svelte"

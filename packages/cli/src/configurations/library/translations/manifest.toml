@@ -32,3 +32,13 @@ why = "next-intl loads one locale at a time, so only a comparison with the base 
 [check.when]
 dependencies = ["next-intl"]
 setting = "translations.messages_folder"
+
+[[eslint.selectors]]
+dependencies = ["next-intl"]
+message = "Use the Link of your next-intl navigation module, so that it keeps the locale."
+selector = "ImportDeclaration[source.value='next/link']"
+
+[[eslint.selectors]]
+dependencies = ["next-intl"]
+message = "Use the navigation helpers of your next-intl module, so that they keep the locale."
+selector = "ImportDeclaration[source.value='next/navigation'] > ImportSpecifier[imported.name=/^(?:redirect|useRouter|usePathname)$/]"

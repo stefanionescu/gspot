@@ -1,3 +1,5 @@
+ignored_paths = ["**/.wrangler/**"]
+
 allowed_words = ["Cloudflare"]
 generated = ["worker-configuration.d.ts", "cloudflare-env.d.ts"]
 

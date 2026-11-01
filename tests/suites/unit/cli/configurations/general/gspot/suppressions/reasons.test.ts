@@ -188,3 +188,36 @@ test.each([...SUPPRESSION_REASONS])(
         ]);
     },
 );
+
+test.each([
+    ['vitest', 'source.js', '/* v8 ignore next */\nexport const a = 1;\n', 'vitest-no-reason'],
+    ['jest', 'source.js', '/* istanbul ignore next */\nexport const a = 1;\n', 'jest-no-reason'],
+    ['svelte', 'Form.svelte', '<!-- svelte-ignore a11y_autofocus -->\n<input autofocus />\n', 'svelte-check-no-reason'],
+])('a %s suppression in %s needs a reason', async (configuration, path, source, rule) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([configuration]),
+        [path]: source,
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'gspot/suppressions');
+    expect(findings.map((finding) => finding.rule)).toStrictEqual([rule]);
+});
+
+test.each([
+    [
+        'vitest',
+        'source.js',
+        '/* v8 ignore next -- reason: only a full disk reaches this branch */\nexport const a = 1;\n',
+    ],
+    ['jest', 'source.js', '/* istanbul ignore next: only a full disk reaches this branch */\nexport const a = 1;\n'],
+    [
+        'svelte',
+        'Form.svelte',
+        '<!-- svelte-ignore a11y_autofocus - reason: the dialog opens with the search field in focus -->\n<input autofocus />\n',
+    ],
+])('a %s suppression in %s with a reason passes', async (configuration, path, source) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([configuration]),
+        [path]: source,
+    });
+    expect(await runSandboxCheck(sandbox.path, 'gspot/suppressions')).toStrictEqual([]);
+});

@@ -32,3 +32,7 @@ selector = "JSXElement[openingElement.name.name='ScrollView'] > JSXExpressionCon
 [[eslint.selectors]]
 message = "AsyncStorage is plain text on the device. Keep a secret in the secure store of the platform."
 selector = "CallExpression[callee.object.name='AsyncStorage'][callee.property.name='setItem'] > Literal:first-child[value=/token|secret|password|credential/i]"
+
+[[eslint.selectors]]
+message = "The window size changes after load. Read it with useWindowDimensions in a component."
+selector = "Program > :matches(VariableDeclaration, ExportNamedDeclaration) CallExpression[callee.object.name='Dimensions'][callee.property.name='get']:not(:function *)"

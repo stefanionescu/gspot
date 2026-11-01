@@ -15,6 +15,11 @@ test_files = true
 name = "jest"
 system = true
 
+[tool.suppression]
+marker = "\\b(?:v8|c8|istanbul) ignore\\b"
+reason = "(?: -- |: )(?<reason>\\S.*)"
+example = "/* v8 ignore next -- reason: only a full disk reaches this branch */"
+
 [[tool]]
 kind = "package"
 name = "eslint-plugin-jest"

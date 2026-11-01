@@ -1,5 +1,7 @@
+import type { Session } from '#cli/types/tools.ts';
 import type { Level, Scope } from '#cli/types/settings.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
+import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import type { SelectorBlock, SelectorPaths } from '#cli/types/configurations/language.ts';
 import { BASE_SELECTORS, ENVIRONMENT_SELECTOR, ALIAS_IMPORT_SELECTORS } from '#cli/config/configurations/blocks.ts';
 
@@ -20,13 +22,23 @@ Each scope gets one list, and gspot/restricted-syntax matches the files of each 
 
 @param scopes every project scope.
 @param level the selected lint rule level.
+@param dependencyFiles the dependency files that a selector can name a package from.
 */
-export function buildSelectorBlocks(scopes: Scope[], level: Level): SelectorBlock[] {
+export function buildSelectorBlocks(
+    scopes: Scope[],
+    level: Level,
+    dependencyFiles: Session['repository']['dependencyFiles'],
+): SelectorBlock[] {
     const scopePaths = scopes.map((each) => each.path);
     return scopes.map((scope) => {
-        const declarations = scope.configurations.flatMap((configuration) =>
-            configuration.eslint.selectors.filter((selector) => level === 'all' || selector.level === 'basic'),
-        );
+        const installed = new Set(listProjectDependencyNames(dependencyFiles, scope.path));
+        const declarations = scope.configurations
+            .flatMap((configuration) => configuration.eslint.selectors)
+            .filter(
+                (selector) =>
+                    (level === 'all' || selector.level === 'basic') &&
+                    (selector.dependencies.length === 0 || !installed.isDisjointFrom(new Set(selector.dependencies))),
+            );
         const applied = new Map(declarations.map((declaration) => [declaration.selector, declaration]))
             .values()
             .map(

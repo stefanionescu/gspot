@@ -65,6 +65,7 @@ const selectorSchema = z.strictObject({
     selector: z.string().min(1),
     message: z.string().min(1),
     paths_setting: z.string().min(1).optional(),
+    dependencies: stringsSchema,
 });
 
 const pointerSchema = z.strictObject({

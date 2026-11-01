@@ -13,3 +13,7 @@ selector = "CallExpression[callee.name='useForm'][arguments.length=0], CallExpre
 [[eslint.selectors]]
 message = "A registered field that also takes `value` acts as a controlled field. Drop `value`, or use Controller."
 selector = "JSXOpeningElement:has(JSXSpreadAttribute CallExpression:matches([callee.name='register'], [callee.property.name='register'])):has(JSXAttribute[name.name=value]):not(:has([name.name=type]>[value=/^(checkbox|radio)$/]))"
+
+[[eslint.selectors]]
+message = "Give useForm complete defaultValues, so that each field starts controlled."
+selector = "CallExpression[callee.name='useForm'] > ObjectExpression:first-child:not(:has(> Property[key.name='defaultValues'])):not(:has(> SpreadElement))"
