@@ -20,6 +20,8 @@ const temporary = await mkdtemp(join(TEST_RUN_FOLDER, `${TEMPORARY_FOLDER}-`));
 const environment = overrideEnvironment({
     ...OFFLINE_ENVIRONMENT,
     ...GIT_ISOLATION_ENVIRONMENT,
+    CI: undefined,
+    GITHUB_ACTIONS: undefined,
     XDG_CACHE_HOME: cache,
     TMPDIR: temporary,
 });
