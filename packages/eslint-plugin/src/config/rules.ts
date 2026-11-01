@@ -161,7 +161,6 @@ export const LEADING_COMMENT_LINE_BREAKS = 2;
 export const BLANK = /^\s*$/u;
 
 export const LINE_BREAK_GAP = /^[\t ]*\r?\n[\t ]*$/u;
-export const LEADING_LINE_BREAK = /^[\t ]*\r?\n/u;
 
 export const LOCAL_PREFIXES = ['./', '../', '@/', '~/', '#'] as const;
 

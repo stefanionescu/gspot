@@ -35,6 +35,8 @@ buildRuleTester().run('no-comments-in-imports', plugin.rules['no-comments-in-imp
         "import { a } from './a';\n\n// Explains b.\n\nexport const b = a;",
         "import { a } from './a';\n// @ts-expect-error\nconsole.log(a);",
         "import { a } from './a';\n\n/**\n * Doc for b.\n */\nexport const b = a;",
+        "import { a } from './a';\n\n// TYPES\n\n/** Doc for b. */\nexport const b = a;",
+        "import { a } from './a';\n\n// Explains the overload\n// that follows.\n\n/**\n * Doc for b.\n */\nexport function b(value) { return a(value); }",
         {
             code: "import { a } from './a';\n\n/** Documents the required callback. */\n// eslint-enable no-unused-vars\nexport function callback(value) { return a; }",
         },
@@ -54,16 +56,6 @@ buildRuleTester().run('no-comments-in-imports', plugin.rules['no-comments-in-imp
             [
                 "import { a } from './a'; // trailing\nexport const b = a;",
                 "// trailing\nimport { a } from './a';\nexport const b = a;",
-                undefined,
-            ],
-            [
-                "import { a } from './a';\n\n// The complete\n// file header.\n\n\nexport const b = a;",
-                "// The complete\n// file header.\n\nimport { a } from './a';\n\nexport const b = a;",
-                undefined,
-            ],
-            [
-                "import { a } from './a';\n/* header */\n\n\nexport const b = a;",
-                "/* header */\n\nimport { a } from './a';\nexport const b = a;",
                 undefined,
             ],
             [
@@ -149,6 +141,24 @@ buildRuleTester().run('no-comments-in-imports regressions', plugin.rules['no-com
             name: 'a prose comment that starts with the word eslint reports',
             errors: [{ messageId: 'comment' }],
             output: "// eslint rules are strict here\nimport a from './a';\nimport b from './b';\n",
+        },
+        {
+            code: "import { a } from './a';\n\n// The complete\n// file header.\n\n\nexport const b = a;",
+            name: 'a comment after the imports that leads nothing reports without a fix',
+            errors: [{ messageId: 'comment', line: 3 }],
+            output: null,
+        },
+        {
+            code: "import { a } from './a';\n/* header */\n\n\nexport const b = a;",
+            name: 'a block comment after the imports that leads nothing reports without a fix',
+            errors: [{ messageId: 'comment', line: 2 }],
+            output: null,
+        },
+        {
+            code: "import './a';\n//# sourceMappingURL=entry.js.map\n",
+            name: 'a comment after the imports of an imports-only file stays where it is',
+            errors: [{ messageId: 'comment', line: 2 }],
+            output: null,
         },
     ],
 });

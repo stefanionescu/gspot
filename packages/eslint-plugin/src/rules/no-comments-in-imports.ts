@@ -6,7 +6,6 @@ import {
     BLANK,
     LEADING_STAR,
     LINE_BREAK_GAP,
-    LEADING_LINE_BREAK,
     TYPESCRIPT_DIRECTIVE,
     ESLINT_LINE_DIRECTIVE,
     ESLINT_BLOCK_DIRECTIVE,
@@ -118,17 +117,11 @@ function isLeading(
         !BLANK.test(text.slice(comment.range[0] - comment.loc.start.column, comment.range[0]))
     )
         return false;
-    let between = text.slice(comment.range[1], start);
-    const directives = comments.filter(
-        (directive) =>
-            directive.range[0] >= comment.range[1] && directive.range[1] <= start && isToolDirective(directive),
-    );
-    for (const directive of directives.toReversed()) {
-        const from = directive.range[0] - comment.range[1];
-        const to = directive.range[1] - comment.range[1];
-        between = between.slice(0, from) + between.slice(to).replace(LEADING_LINE_BREAK, '');
-    }
-    return BLANK.test(between) && between.split('\n').length - 1 <= LEADING_COMMENT_LINE_BREAKS;
+    const run = comments.filter((next) => next.range[0] >= comment.range[1] && next.range[1] <= start);
+    return [comment, ...run].every((previous, index) => {
+        const gap = text.slice(previous.range[1], run[index]?.range[0] ?? start);
+        return BLANK.test(gap) && gap.split('\n').length - 1 <= LEADING_COMMENT_LINE_BREAKS;
+    });
 }
 
 function buildRemovalRange(source: TSESLint.SourceCode, text: string, comment: TSESTree.Comment): [number, number] {
@@ -154,11 +147,11 @@ export const noCommentsInImports = createRule<[], 'comment'>({
         docs: {
             level: 'all',
             example:
-                'A file header after an import reports `comment`. A comment between imports does too. Move the comment above the first import or beside the code it explains. A comment that leads the next declaration remains in place. Tool directives, such as `// @ts-expect-error` above the import it targets, are allowed anywhere in the block. CommonJS require declarations follow the same rule when ESLint selects the commonjs source type.',
+                'A file header after an import reports `comment`. A comment between imports does too. Move the comment above the first import or beside the code it explains. A comment that leads the next declaration remains in place, and so does a run of comments, such as a section label above a JSDoc block, separated by at most one blank line and ending directly above the declaration. Tool directives, such as `// @ts-expect-error` above the import it targets, are allowed anywhere in the block. CommonJS require declarations follow the same rule when ESLint selects the commonjs source type.',
             description:
-                'Reports each comment within or immediately after an import block, including TypeScript import-equals declarations. Exempts tool directives and comments that lead the next declaration.',
+                'Reports each comment within or immediately after an import block, including TypeScript import-equals declarations. Exempts tool directives and each run of comments that leads the next declaration with at most one blank line between its parts.',
             why: 'An import block lists dependencies. A file header belongs before it, and a behavior comment belongs with the code it explains.',
-            fix: 'Move the comment above the first import or beside its declaration. eslint --fix moves it above the block.',
+            fix: 'Move the comment above the first import or beside its declaration. eslint --fix moves a comment inside the block above it. A comment after the block gets no fix, because only you know which code it explains.',
         },
         schema: [],
         messages: { comment: 'Put the comment above the imports or beside the code it explains.' },
@@ -180,24 +173,16 @@ export const noCommentsInImports = createRule<[], 'comment'>({
                             (nextStatement === undefined || !isLeading(text, comment, nextStatement, comments)),
                     );
                     for (const comment of misplaced) {
-                        const isAfterImports = comment.loc.start.line > last.loc.end.line;
                         context.report({
                             loc: comment.loc,
                             messageId: 'comment',
-                            fix(fixer) {
-                                const removal = buildRemovalRange(source, text, comment);
-                                if (isAfterImports) {
-                                    const rest = text.slice(removal[1]);
-                                    removal[1] += rest.length - rest.trimStart().length;
-                                }
-                                return [
-                                    fixer.removeRange(removal),
-                                    fixer.insertTextBefore(
-                                        first,
-                                        `${source.getText(comment)}${isAfterImports ? '\n\n' : '\n'}`,
-                                    ),
-                                ];
-                            },
+                            fix:
+                                comment.loc.start.line > last.loc.end.line
+                                    ? null
+                                    : (fixer) => [
+                                          fixer.removeRange(buildRemovalRange(source, text, comment)),
+                                          fixer.insertTextBefore(first, `${source.getText(comment)}\n`),
+                                      ],
                         });
                     }
                 }
