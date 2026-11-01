@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
 import { read } from '#cli/system/files/reads.ts';
 import type { CheckSession } from '#cli/types/session.ts';
-import type { PlannedCheck } from '#cli/types/planning.ts';
-import type { CheckFinding } from '#cli/types/runs/check.ts';
+import type { CheckFinding } from '#cli/types/engine/check.ts';
+import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import type { YamlFinding, YamlAnchorToken } from '#cli/types/checks/general/data-files.ts';
 
 import {

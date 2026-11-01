@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
-import { openSession } from '#cli/planning/session.ts';
-import { parseOutput } from '#cli/runs/output/formats.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

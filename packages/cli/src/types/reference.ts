@@ -1,10 +1,10 @@
 import type { z } from 'zod';
 import type cliPackage from '#cli-package';
 import type { DOCS_PATHS } from '#cli/config/files/names.ts';
-import type { STAGE_FILTERS } from '#cli/config/planning.ts';
 import type { LintRuleDocs } from '#cli/types/tools/tools.ts';
 import type { Setting } from '#cli/types/settings/inheritance.ts';
 import type { GROUP_LABELS } from '#cli/config/manifests/names.ts';
+import type { STAGE_FILTERS } from '#cli/config/engine/planning.ts';
 import type { START_RUNNERS } from '#cli/config/repository/javascript.ts';
 import type { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/main.ts';
 import type { Tool, Level, Check, Configuration, ConfigurationCheck } from '#cli/types/manifests.ts';

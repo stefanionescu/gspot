@@ -1,8 +1,8 @@
 import { getPosition } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
-import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Node, DefElem, TypeName } from '@pgsql/types';
-import type { CheckFinding } from '#cli/types/runs/check.ts';
+import type { CheckFinding } from '#cli/types/engine/check.ts';
+import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 import { readParsedMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import type { SqlStatement, SqlStatementVisitors } from '#cli/types/parsers/code.ts';

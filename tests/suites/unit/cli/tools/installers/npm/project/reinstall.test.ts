@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
+import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';

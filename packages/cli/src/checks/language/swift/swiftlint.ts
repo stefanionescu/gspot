@@ -4,12 +4,12 @@ import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import type { CheckSession } from '#cli/types/session.ts';
-import type { PlannedCheck } from '#cli/types/planning.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
-import { type CheckFinding } from '#cli/types/runs/check.ts';
+import { type CheckFinding } from '#cli/types/engine/check.ts';
+import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { planSwiftBuild } from '#cli/checks/language/swift/cache.ts';
 import { runSwiftBuild, runCopiedTool } from '#cli/checks/language/swift/build.ts';
-import { getConfigPath, getConfigTarget } from '#cli/runs/command/placeholders.ts';
+import { getConfigPath, getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
 
 import {
     ANALYZER_RULE,

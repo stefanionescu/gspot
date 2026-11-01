@@ -1,7 +1,7 @@
 import { join } from 'node:path';
+import { runChecks } from '#cli/engine/run.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { runChecks } from '#cli/commands/check/run.ts';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import * as environment from '#cli/system/environment.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';

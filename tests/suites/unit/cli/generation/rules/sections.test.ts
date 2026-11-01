@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
 import * as assets from '#cli/system/assets.ts';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

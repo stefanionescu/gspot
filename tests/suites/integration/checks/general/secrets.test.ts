@@ -4,7 +4,7 @@ import { writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
-import { type CheckResult } from '#cli/types/runs/check.ts';
+import { type CheckResult } from '#cli/types/engine/check.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
 import { type GitleaksHistory } from '#tests/types/secrets.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';

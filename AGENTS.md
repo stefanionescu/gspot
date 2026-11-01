@@ -135,7 +135,7 @@ repository.
   literal constants or types. Declare schemas only in `schemas/`, including schemas used by one file.
   A value computed at import time stays with the behavior that uses it.
 - Each folder of code reads one file in `config/`, one in `types/`, and one in `schemas/`. That file takes the path
-  of the folder, such as `packages/cli/src/config/runs/copy.ts` for the files in `packages/cli/src/runs/copy/`.
+  of the folder, such as `packages/cli/src/config/engine/copies.ts` for the files in `packages/cli/src/engine/copies/`.
 - When the folder of that path also holds files of subfolders, the file sits inside it under the folder name, such as
   `packages/cli/src/config/generation/generation.ts` for the files in `packages/cli/src/generation/`.
 - The files at the top of a package read `packages/cli/src/config/main.ts`, or

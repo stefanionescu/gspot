@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import { test, expect } from 'bun:test';
 import { join, dirname, resolve } from 'node:path';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';

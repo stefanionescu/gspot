@@ -5,10 +5,10 @@ import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { buildVenvPythonPath } from '#cli/system/paths.ts';
-import type { ConfiguredCheck } from '#cli/types/planning.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { ProcessFailure } from '#cli/types/tools/tools.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
+import type { ConfiguredCheck } from '#cli/types/engine/planning.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import type { Tool, VersionedInstaller } from '#cli/types/manifests.ts';
 

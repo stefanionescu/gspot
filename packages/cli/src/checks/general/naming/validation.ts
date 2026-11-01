@@ -1,7 +1,7 @@
 import { DIGITS_ONLY } from '#cli/config/text.ts';
 import { SQL_EXTENSION } from '#cli/config/files/names.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import type { CheckFinding } from '#cli/types/runs/check.ts';
+import type { CheckFinding } from '#cli/types/engine/check.ts';
 import type { NamingCase } from '#cli/types/settings/naming.ts';
 import { splitWords } from '#cli/checks/general/naming/settings.ts';
 

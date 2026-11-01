@@ -3,7 +3,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { findValueAt } from '#cli/system/tables.ts';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

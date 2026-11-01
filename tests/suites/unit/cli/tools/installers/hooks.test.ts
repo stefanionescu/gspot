@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { HOOKS_SETTINGS } from '#tests/config/hooks.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';

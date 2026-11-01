@@ -1,0 +1,150 @@
+import { FAILED_RUN } from '#tests/config/engine/samples.ts';
+
+export const BASE_CHECK = {
+    id: 'sandbox/diagnostic',
+    command: ['tool'],
+    level: 'basic' as const,
+    stage: 'commit' as const,
+    runs: 'files' as const,
+    summary: '',
+    why: '',
+    help: '',
+    output: { format: 'lines' as const },
+};
+
+export const LOCATED_CHECK = {
+    ...BASE_CHECK,
+    output: { format: 'regex', pattern: '^(?<file>[^:]+): (?<message>.*)$' },
+} as const;
+
+export const CHILD_SCOPE_SETTINGS = {
+    rules: true,
+    scopes: [
+        { path: 'api', configurations: [] },
+        { path: 'web', configurations: [] },
+    ],
+    tables: '\n[[command_check]]\nid = "project/syntax"\ncommand = ["bash", "-n", "{files}"]\noutput.format = "none"\npaths = ["**/*.sh"]\nstage = "push"\n',
+} as const;
+
+export const PENDING_NOTE_RESULTS = [
+    {
+        check: 'notes/no-pending',
+        status: 'failed',
+        findings: [{ file: 'notes/plan.txt', line: 2, message: 'PENDING later' }],
+    },
+] as const;
+
+export const MISSING_LOCATED_FILE = {
+    code: 1,
+    stdout: 'notes/reported.txt:1:A defect.',
+    stderr: '',
+    missing: false,
+    duration: 1,
+} as const;
+
+export const ESLINT_CRASH = { code: 1, stderr: 'Oops! Something went wrong\n' } as const;
+
+export const ESLINT_MANIFEST_TOOL = {
+    name: 'eslint',
+    installers: {},
+    kind: 'program' as const,
+    crash_pattern: '^Oops! Something went wrong',
+} as const;
+
+export const FILELESS_CHECKS = [
+    {
+        ...BASE_CHECK,
+        id: 'sandbox/coverage',
+        output: { format: 'regex', pattern: '^ERROR: (?<message>.*)$' },
+    },
+    { ...BASE_CHECK, id: 'sandbox/lines', output: { format: 'lines' } },
+] as const;
+
+export const REGEX_OUTPUT_CASES = [
+    {
+        title: 'regex output that names no real file on a failed run is a check error',
+        result: { ...FAILED_RUN, stdout: '2026-09-19T02: FATAL\n' },
+        expected: { note: 'tool failed with exit 1:\n2026-09-19T02: FATAL' },
+    },
+    {
+        title: 'a failed run that prints nothing is a check error',
+        result: FAILED_RUN,
+        expected: { note: 'tool failed with exit 1 and printed nothing.' },
+    },
+    {
+        title: 'regex output with one real file on a failed run keeps every finding',
+        result: { ...FAILED_RUN, stdout: '2026-09-19T02: FATAL\nsource.txt: located defect\n' },
+        expected: {
+            findings: [
+                { check: LOCATED_CHECK.id, file: '2026-09-19T02', message: 'FATAL', help: '', fixable: false },
+                { check: LOCATED_CHECK.id, file: 'source.txt', message: 'located defect', help: '', fixable: false },
+            ],
+        },
+    },
+    { title: 'a passing run that prints nothing has no findings', result: {}, expected: { findings: [] } },
+];
+
+export const SHFMT_INDENT_CASES = [
+    { style: 'space', width: 6, expected: '6' },
+    { style: 'tab', width: 6, expected: '0' },
+] as const;
+
+export const GENERATE_ARGUMENTS = [process.execPath, 'generate.ts', '', 'two words'];
+
+export const WORKSPACE_SCOPE_CASES = [
+    { scope: '', expected: [] },
+    { scope: 'package', expected: ['--workspace', 'package'] },
+    { scope: 'docs', expected: [] },
+    { scope: 'source', expected: [] },
+] as const;
+
+export const ASTRO_CHECK_SUMMARY = [
+    '\u001B[1mResult (1 file): \u001B[22m',
+    '- \u001B[1m\u001B[31m1 error\u001B[39m\u001B[22m',
+].join('\n');
+
+export const ASTRO_CHECK_OUTPUT = [
+    "\u001B[96msrc/env.ts\u001B[0m:\u001B[93m1\u001B[0m:\u001B[93m14\u001B[0m - \u001B[91merror\u001B[0m\u001B[90m ts(2322): \u001B[0mType 'string' is not assignable to type 'number'.",
+    '',
+    "\u001B[7m1\u001B[0m export const count: number = 'three';",
+    '\u001B[7m \u001B[0m \u001B[91m             ~~~~~\u001B[0m',
+    '',
+    ASTRO_CHECK_SUMMARY,
+].join('\n');
+
+export const FILE_LINE_PATTERN = String.raw`^(?<file>[^:]+):(?<line>\d+): (?<message>.*)$`;
+
+export const CAFE_SOURCE_PATH = 'inputs/café source.txt';
+
+export const CRASH_TAIL_CASES = [
+    {
+        name: 'frames after the cause',
+        stdout: '',
+        stderr: 'Error: Cannot find package example\n    at load (loader.js:1:2)\n    at start (main.js:2:3)',
+        expected: 'Error: Cannot find package example',
+        verbose: 'Error: Cannot find package example\n    at load (loader.js:1:2)\n    at start (main.js:2:3)',
+    },
+    {
+        name: 'frames at the start of both streams',
+        stdout: '    at output (stdout.js:1:2)\nError: stdout cause',
+        stderr: '    at error (stderr.js:2:3)\nError: stderr cause',
+        expected: 'Error: stderr cause\nError: stdout cause',
+        verbose: 'at error (stderr.js:2:3)\nError: stderr cause\nat output (stdout.js:1:2)\nError: stdout cause',
+    },
+] as const;
+
+export const BATCH_CHECK = {
+    id: 'project/batches',
+    stage: 'commit',
+    paths: ['*.txt'],
+    output: { format: 'json', fields: { file: 'file', rule: 'rule', message: 'message' } },
+};
+export const BATCH_FINDINGS = [
+    { file: 'one.txt', rule: 'kept', message: 'Kept finding.' },
+    { file: 'outside.txt', rule: 'outside', message: 'Outside finding.' },
+];
+export const BATCH_IGNORE = {
+    check: 'project/batches',
+    rule: 'kept',
+    reason: 'This case verifies ignores on error results.',
+};

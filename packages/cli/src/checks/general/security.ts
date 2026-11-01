@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import { CONFIG_FLAG } from '#cli/config/flags.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { CheckSession } from '#cli/types/session.ts';
-import { type PlannedCheck } from '#cli/types/planning.ts';
-import { type CheckResult } from '#cli/types/runs/check.ts';
-import { runCommandCheck } from '#cli/runs/command/check.ts';
-import { getConfigTarget } from '#cli/runs/command/placeholders.ts';
+import { type CheckResult } from '#cli/types/engine/check.ts';
+import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
+import { type PlannedCheck } from '#cli/types/engine/planning.ts';
+import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
 import { SEMGREP_TOOL, SEMGREP_RULE_EXTENSION } from '#cli/config/checks/general/general.ts';
 
 function listSemgrepRuleFiles(session: CheckSession, planned: PlannedCheck): string[] {

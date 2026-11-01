@@ -4,11 +4,11 @@ import { CODE_MARK } from '#cli/config/main.ts';
 import { LINE_BREAK } from '#cli/config/text.ts';
 import { EVERY_CHECK } from '#cli/config/ignores.ts';
 import { printWarning } from '#cli/system/terminal.ts';
-import { formatExplainCommand } from '#cli/runs/results.ts';
+import { formatExplainCommand } from '#cli/engine/results.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import { formatCount, quoteArgument } from '#cli/system/text.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { type Finding, type CheckResult } from '#cli/types/runs/check.ts';
+import { type Finding, type CheckResult } from '#cli/types/engine/check.ts';
 import { type FixReport, type RunReport, type CheckProgress } from '#cli/types/commands/check.ts';
 
 import {

@@ -1,6 +1,6 @@
 import type { Session } from '#cli/types/session.ts';
+import { listCheckTools } from '#cli/engine/tools.ts';
 import type { Config } from '#cli/types/manifests.ts';
-import { listCheckTools } from '#cli/planning/tools.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';

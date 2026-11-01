@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
 import { findValueAt } from '#cli/system/tables.ts';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

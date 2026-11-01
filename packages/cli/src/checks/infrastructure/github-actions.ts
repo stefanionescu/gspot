@@ -1,13 +1,13 @@
 import { join, posix } from 'node:path';
 import { read } from '#cli/system/files/reads.ts';
-import { createCopy } from '#cli/runs/copy/files.ts';
+import { createCopy } from '#cli/engine/copies/files.ts';
 import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import type { CheckSession } from '#cli/types/session.ts';
-import { type PlannedCheck } from '#cli/types/planning.ts';
-import { type CheckResult } from '#cli/types/runs/check.ts';
 import { GIT_FOLDER } from '#cli/config/repository/files.ts';
-import { runCommandCheck } from '#cli/runs/command/check.ts';
+import { type CheckResult } from '#cli/types/engine/check.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
+import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
+import { type PlannedCheck } from '#cli/types/engine/planning.ts';
 import { isMap, isSeq, isAlias, isScalar, type Scalar, parseDocument, type Document } from 'yaml';
 
 import {

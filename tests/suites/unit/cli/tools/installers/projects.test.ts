@@ -1,7 +1,7 @@
 import { createFileTree } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
+import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
-import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';

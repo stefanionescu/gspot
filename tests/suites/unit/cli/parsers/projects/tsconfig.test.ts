@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { openSession } from '#cli/engine/session.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { openSession } from '#cli/planning/session.ts';
 import { UNSAFE_PATH_MESSAGE } from '#tests/config/messages.ts';
 import { symlink, realpath, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

@@ -1,15 +1,15 @@
 import { join } from 'node:path';
-import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import { parseOutput } from '#cli/runs/output/formats.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import { isInInstalledFolder } from '#cli/system/paths.ts';
-import type { PlannedCheck } from '#cli/types/planning.ts';
-import { type CheckFinding } from '#cli/types/runs/check.ts';
-import { assertToolFindings } from '#cli/runs/command/output.ts';
-import { expandCommand } from '#cli/runs/command/placeholders.ts';
+import { parseOutput } from '#cli/engine/outputs/formats.ts';
+import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { type CheckFinding } from '#cli/types/engine/check.ts';
+import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
-import { buildCommandSubstitutions } from '#cli/runs/command/check.ts';
+import { expandCommand } from '#cli/engine/tool-runs/placeholders.ts';
+import { buildCommandSubstitutions } from '#cli/engine/tool-runs/check.ts';
 import { isInScope, listNestedScopes, findProjectFolder } from '#cli/repository/scopes.ts';
 import { ANSIBLE_CONFIG_FILE, ANSIBLE_CONFIG_EXTENSION } from '#cli/config/checks/infrastructure.ts';
 

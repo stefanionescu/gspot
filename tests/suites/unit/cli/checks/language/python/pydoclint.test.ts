@@ -3,23 +3,23 @@ import { chmod } from 'node:fs/promises';
 import { createFileTree } from 'testdirs';
 import { getTool } from '#cli/tools/pins.ts';
 import { test, spyOn, expect } from 'bun:test';
+import { planChecks } from '#cli/engine/plan.ts';
 import { PYPROJECT } from '#tests/config/python.ts';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
-import { planChecks } from '#cli/planning/checks.ts';
+import { openSession } from '#cli/engine/session.ts';
 import type { Level } from '#cli/types/manifests.ts';
 import { type Session } from '#cli/types/session.ts';
 import * as processes from '#cli/system/processes.ts';
-import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
-import { type PlannedCheck } from '#cli/types/planning.ts';
 import { CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
 import { EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
+import { type PlannedCheck } from '#cli/types/engine/planning.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
-import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 
 import {
     FAILED_STYLE_BATCH,

@@ -1,4 +1,4 @@
-import { type Finding } from '#cli/types/runs/check.ts';
+import { type Finding } from '#cli/types/engine/check.ts';
 import { type RunReport } from '#cli/types/commands/check.ts';
 import { type ProcessOutput } from '#tests/types/processes.ts';
 

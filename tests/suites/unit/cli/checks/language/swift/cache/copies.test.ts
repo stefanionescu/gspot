@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { SWIFT_VALUE_SOURCE } from '#tests/config/swift.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';

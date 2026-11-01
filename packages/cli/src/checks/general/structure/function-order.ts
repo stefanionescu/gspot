@@ -1,8 +1,8 @@
 import type { Node } from 'web-tree-sitter';
 import type { Session } from '#cli/types/session.ts';
-import type { PlannedCheck } from '#cli/types/planning.ts';
-import type { CheckFinding } from '#cli/types/runs/check.ts';
 import type { GrammarName } from '#cli/types/parsers/code.ts';
+import type { CheckFinding } from '#cli/types/engine/check.ts';
+import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import type { TopLevelFunction } from '#cli/types/checks/general/structure.ts';
 import { selectGrammar, visitParsedSources } from '#cli/parsers/code/grammars.ts';
 

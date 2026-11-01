@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { styleText } from 'node:util';
 import { inspectTool } from '#cli/tools/inspect.ts';
+import { openSession } from '#cli/engine/session.ts';
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { openSession } from '#cli/planning/session.ts';
 import { EXIT_FINDINGS } from '#cli/config/terminal.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';

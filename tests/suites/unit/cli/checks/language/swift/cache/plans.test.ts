@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { runChecks } from '#cli/engine/run.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import { runChecks } from '#cli/commands/check/run.ts';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';

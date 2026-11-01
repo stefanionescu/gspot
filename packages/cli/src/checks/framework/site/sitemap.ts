@@ -2,8 +2,8 @@ import { decodeXML } from 'entities';
 import { getPosition } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
-import type { PlannedCheck } from '#cli/types/planning.ts';
-import type { CheckFinding } from '#cli/types/runs/check.ts';
+import type { CheckFinding } from '#cli/types/engine/check.ts';
+import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import type { SitemapUrls } from '#cli/types/checks/framework/site.ts';
 import { RULES, SITEMAP_FILE, SITEMAP_LOCATION, SITEMAP_EXTENSION } from '#cli/config/checks/framework/site.ts';
 

@@ -1,10 +1,10 @@
 import { ESLint } from 'eslint';
 import { join, relative } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import { extractConfigName } from '#cli/engine/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { extractConfigName } from '#cli/planning/files.ts';
 import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
 import { runGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';

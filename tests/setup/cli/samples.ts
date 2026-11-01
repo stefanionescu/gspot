@@ -5,7 +5,7 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { type Sandbox } from '#tests/types/sandbox.ts';
 import { type ProcessOutput } from '#tests/types/processes.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { type Finding, type CheckResult } from '#cli/types/runs/check.ts';
+import { type Finding, type CheckResult } from '#cli/types/engine/check.ts';
 import { changeSandbox, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { type SampleFix, type CheckSample, type SampleResult, type SandboxChanges } from '#tests/types/samples.ts';
 

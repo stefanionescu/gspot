@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { parseDocument } from 'yaml';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import type { SemgrepRuleFile } from '#tests/types/tools.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

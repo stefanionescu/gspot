@@ -1,8 +1,8 @@
 import { getPosition } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
-import type { PlannedCheck } from '#cli/types/planning.ts';
-import type { CheckFinding } from '#cli/types/runs/check.ts';
+import type { CheckFinding } from '#cli/types/engine/check.ts';
+import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { ROW_SECURITY_RULE } from '#cli/config/checks/database/postgres.ts';
 import { buildDatabaseSchema } from '#cli/checks/database/postgres/schema.ts';
 import { readParsedMigrations } from '#cli/checks/database/postgres/migrations.ts';

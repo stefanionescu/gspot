@@ -1,7 +1,7 @@
 import { sep, join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { SWIFT_PACKAGE } from '#tests/config/swift.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
 import { symlink, readFile, writeFile } from 'node:fs/promises';

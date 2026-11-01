@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
+import { openSession } from '#cli/engine/session.ts';
 import { CLEAN_SWIFT } from '#tests/config/swift.ts';
-import { openSession } from '#cli/planning/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

@@ -1,7 +1,7 @@
 import { test, spyOn, expect } from 'bun:test';
+import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import * as processes from '#cli/system/processes.ts';
-import { openSession } from '#cli/planning/session.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';

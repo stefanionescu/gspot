@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { compareText } from '#cli/system/text.ts';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { NPM_CHECK_IGNORES } from '#tests/config/ignores.ts';

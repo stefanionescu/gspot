@@ -4,10 +4,9 @@ import { GspotError } from '#cli/system/errors.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { assertCheckExists } from '#cli/manifests/read.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { writeSettingsEdit } from '#cli/generation/write.ts';
 import type { TomlTable, IgnoreRecord } from '#cli/types/settings/settings.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { buildIgnorePaths, readSettingsEditContext } from '#cli/planning/edits.ts';
+import { buildIgnorePaths, writeSettingsEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
 
 import {
     type IgnoreTarget,

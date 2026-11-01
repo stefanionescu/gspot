@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { openSession } from '#cli/planning/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { BUN_SCANNER_SETTINGS } from '#tests/config/toml.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';

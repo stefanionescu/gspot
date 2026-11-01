@@ -1,7 +1,7 @@
 import type { Session } from '#cli/types/session.ts';
-import type { PlannedCheck } from '#cli/types/planning.ts';
-import type { CheckFinding } from '#cli/types/runs/check.ts';
+import type { CheckFinding } from '#cli/types/engine/check.ts';
 import type { ScriptFunction } from '#cli/types/parsers/code.ts';
+import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { readScripts } from '#cli/checks/language/bash/scripts.ts';
 import { splitWords } from '#cli/checks/general/naming/settings.ts';
 

@@ -1,10 +1,10 @@
 import type { Check } from '#cli/types/manifests.ts';
 import { type IgnoreRecord } from '#cli/types/settings/settings.ts';
-import { type CheckCode, type CheckResult } from '#cli/types/runs/check.ts';
+import { type CheckCode, type CheckResult } from '#cli/types/engine/check.ts';
 import type { CHECK_STAGES, CHECK_INPUT_HOOKS } from '#cli/config/commands/check.ts';
 import { type CommandResult, type CanceledCommandJson } from '#cli/types/terminal.ts';
 import { type Session, type CheckSession, type CheckGeneration } from '#cli/types/session.ts';
-import { type PlanOptions, type StageFilter, type PlannedCheck } from '#cli/types/planning.ts';
+import { type PlanOptions, type StageFilter, type PlannedCheck } from '#cli/types/engine/planning.ts';
 import { type StagedPaths, type ChangedPaths, type PushedRevisions } from '#cli/types/repository/revisions.ts';
 
 type CheckedRevision = { hash: string; refs: string[]; commits: string[]; shallow: boolean; report: RunReport };

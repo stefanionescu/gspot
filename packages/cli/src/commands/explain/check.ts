@@ -1,12 +1,12 @@
 import { CODE_MARK } from '#cli/config/main.ts';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
 import type { Session } from '#cli/types/session.ts';
-import { describeCheck } from '#cli/runs/reference.ts';
 import { readCheckRuleDocs } from '#cli/checks/rules.ts';
+import { describeCheck } from '#cli/engine/reference.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { getTool, findToolName } from '#cli/tools/pins.ts';
-import { hasRuleOutput } from '#cli/runs/output/formats.ts';
 import type { LintRuleDocs } from '#cli/types/tools/tools.ts';
+import { hasRuleOutput } from '#cli/engine/outputs/formats.ts';
 import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
 import type { CommandCheck } from '#cli/types/settings/settings.ts';

@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { runChecks } from '#cli/engine/run.ts';
 import { compareText } from '#cli/system/text.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { rename, writeFile } from 'node:fs/promises';
-import { runChecks } from '#cli/commands/check/run.ts';
-import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';

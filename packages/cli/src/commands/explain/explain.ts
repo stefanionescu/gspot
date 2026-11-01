@@ -1,7 +1,7 @@
 import { find } from '#cli/system/files/reads.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { openSession } from '#cli/engine/session.ts';
 import type { Session } from '#cli/types/session.ts';
-import { openSession } from '#cli/planning/session.ts';
 import { formatSimilarNames } from '#cli/system/text.ts';
 import type { Command } from '@commander-js/extra-typings';
 import { explainPath } from '#cli/commands/explain/path.ts';

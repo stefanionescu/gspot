@@ -1,6 +1,6 @@
 import { compareText } from '#cli/system/text.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
-import type { PlannedCheck } from '#cli/types/planning.ts';
+import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import type { FolderChild } from '#cli/types/checks/general/structure.ts';

@@ -1,22 +1,22 @@
 import { join, posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
-import { listCheckFiles } from '#cli/planning/files.ts';
+import { listCheckFiles } from '#cli/engine/files.ts';
 import { read, find } from '#cli/system/files/reads.ts';
-import { runCheckTool } from '#cli/runs/command/tool.ts';
-import { type PlannedCheck } from '#cli/types/planning.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
+import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { FILE_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
-import { runCommandBatches } from '#cli/runs/command/check.ts';
-import { formatOutputTail } from '#cli/runs/command/output.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { DOCKERFILE_NAME } from '#cli/config/repository/files.ts';
-import { getConfigPath } from '#cli/runs/command/placeholders.ts';
+import { type PlannedCheck } from '#cli/types/engine/planning.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
+import { runCommandBatches } from '#cli/engine/tool-runs/check.ts';
+import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
+import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { parseCheckedFile } from '#cli/checks/cross-configuration/syntax.ts';
-import { type CheckResult, type CheckFinding } from '#cli/types/runs/check.ts';
+import { type CheckResult, type CheckFinding } from '#cli/types/engine/check.ts';
 import { composeSchema, trivyImageOutputSchema } from '#cli/schemas/checks/infrastructure.ts';
 
 import {

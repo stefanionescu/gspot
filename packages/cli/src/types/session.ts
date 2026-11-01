@@ -1,10 +1,10 @@
 import type { LimitFunction } from 'p-limit';
 import type { RunCache } from '#cli/types/system/system.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import type { ConfiguredCheck } from '#cli/types/planning.ts';
-import type { CheckRunOptions } from '#cli/types/runs/check.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
+import type { CheckRunOptions } from '#cli/types/engine/check.ts';
+import type { ConfiguredCheck } from '#cli/types/engine/planning.ts';
 import type { ToolInspection } from '#cli/types/tools/inspection.ts';
 import type { RepositoryListing } from '#cli/types/repository/repository.ts';
 import type { Settings, SettingsFile } from '#cli/types/settings/settings.ts';

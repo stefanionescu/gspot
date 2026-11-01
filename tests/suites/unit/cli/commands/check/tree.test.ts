@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { HOOKS_SETTINGS } from '#tests/config/hooks.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';

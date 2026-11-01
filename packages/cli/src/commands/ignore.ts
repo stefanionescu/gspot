@@ -6,15 +6,14 @@ import type { Session } from '#cli/types/session.ts';
 import { readCheckRuleDocs } from '#cli/checks/rules.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { hasRuleOutput } from '#cli/runs/output/formats.ts';
-import { writeSettingsEdit } from '#cli/generation/write.ts';
 import { ignoreSchema } from '#cli/schemas/settings/file.ts';
+import { hasRuleOutput } from '#cli/engine/outputs/formats.ts';
 import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { buildIgnorePaths, readSettingsEditContext } from '#cli/planning/edits.ts';
 import { type IgnoreOptions, type CommandLocation } from '#cli/types/commands/commands.ts';
 import { listChecksById, assertCheckExists, readConfigurations } from '#cli/manifests/read.ts';
+import { buildIgnorePaths, writeSettingsEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
 import { RULE_OPTION, PATHS_OPTION, REASON_OPTION, IGNORE_CHECK_MESSAGE } from '#cli/config/commands/commands.ts';
 
 function formatIgnoreSummary(options: IgnoreOptions, paths: string[] | undefined): string {

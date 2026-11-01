@@ -1,10 +1,10 @@
 import { GspotError } from '#cli/system/errors.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { openSession } from '#cli/planning/session.ts';
 import type { Files } from '#cli/types/system/files.ts';
+import { listHostCheckTools } from '#cli/engine/tools.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { listHostCheckTools } from '#cli/planning/tools.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
 import { installTools } from '#cli/tools/installers/install.ts';

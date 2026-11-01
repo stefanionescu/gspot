@@ -1,15 +1,15 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { planChecks } from '#cli/engine/plan.ts';
 import { compareText } from '#cli/system/text.ts';
-import { planChecks } from '#cli/planning/checks.ts';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { parseCommandFindings } from '#cli/runs/command/output.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, runGspotStep, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 

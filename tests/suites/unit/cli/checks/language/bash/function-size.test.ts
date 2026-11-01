@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { runChecks } from '#cli/engine/run.ts';
 import { BASH_HEADER } from '#tests/config/bash.ts';
-import { runChecks } from '#cli/commands/check/run.ts';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { type SizeCase } from '#tests/types/function-size.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

@@ -1,10 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { dirname, resolve, relative } from 'node:path';
-import { type Finding } from '#cli/types/runs/check.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { type Finding } from '#cli/types/engine/check.ts';
 import { tsconfigSchema } from '#tests/schemas/tsconfig.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';

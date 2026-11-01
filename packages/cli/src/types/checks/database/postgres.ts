@@ -1,5 +1,5 @@
 import type { AlterTableCmd } from '@pgsql/types';
-import type { CheckFinding } from '#cli/types/runs/check.ts';
+import type { CheckFinding } from '#cli/types/engine/check.ts';
 import type { SqlFile, SqlStatement, SqlNodeFields } from '#cli/types/parsers/code.ts';
 
 type SourceStatement = { path: string; offset: number; text: string };

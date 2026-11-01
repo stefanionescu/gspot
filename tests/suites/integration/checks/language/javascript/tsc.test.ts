@@ -7,7 +7,7 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/tools.ts';
-import type { CheckResult } from '#cli/types/runs/check.ts';
+import type { CheckResult } from '#cli/types/engine/check.ts';
 import { COMPILER_SOURCE } from '#tests/config/typescript.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { LINGUIST_GENERATED_PATTERN } from '#tests/config/git.ts';

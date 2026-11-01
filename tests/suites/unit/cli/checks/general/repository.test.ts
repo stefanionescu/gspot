@@ -1,10 +1,10 @@
 import { test, expect } from 'bun:test';
 import { join, relative } from 'node:path';
+import { runChecks } from '#cli/engine/run.ts';
+import { planChecks } from '#cli/engine/plan.ts';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { planChecks } from '#cli/planning/checks.ts';
-import { runChecks } from '#cli/commands/check/run.ts';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';

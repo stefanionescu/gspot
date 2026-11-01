@@ -6,7 +6,7 @@ import type { Config } from '#cli/types/manifests.ts';
 import { buildConfig } from '#cli/generation/builders.ts';
 import { listOwnedConfigs } from '#cli/generation/selection.ts';
 import { buildIgnoreSections } from '#cli/generation/ignores.ts';
-import { getConfigTarget } from '#cli/runs/command/placeholders.ts';
+import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
 import { CONFIG_SCOPES_FOLDER } from '#cli/config/generation/generation.ts';
 import { buildLinkFiles, listLinkFilePaths } from '#cli/generation/links.ts';
 import { isMarkdownlintShared } from '#cli/generation/configurations/language/markdown.ts';

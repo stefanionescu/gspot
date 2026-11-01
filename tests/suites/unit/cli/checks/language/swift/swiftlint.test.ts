@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { planChecks } from '#cli/planning/checks.ts';
+import { planChecks } from '#cli/engine/plan.ts';
+import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
-import { openSession } from '#cli/planning/session.ts';
+import { buildCheckSession } from '#cli/engine/run.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { buildCheckSession } from '#cli/commands/check/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { planSwiftBuild } from '#cli/checks/language/swift/cache.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';

@@ -1,11 +1,11 @@
 import { join, dirname, relative } from 'node:path';
 import { createRunCache } from '#cli/system/cache.ts';
-import { listCheckedFiles } from '#cli/planning/files.ts';
-import { createCheckCopy } from '#cli/runs/copy/files.ts';
+import { listCheckedFiles } from '#cli/engine/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { PlannedCheck } from '#cli/types/planning.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
-import type { CheckResult } from '#cli/types/runs/check.ts';
+import { createCheckCopy } from '#cli/engine/copies/files.ts';
+import type { CheckResult } from '#cli/types/engine/check.ts';
+import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';

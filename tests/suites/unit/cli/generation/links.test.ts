@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { createFileTree } from 'testdirs';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { XCTEST_SOURCE } from '#tests/config/swift.ts';
 import { buildLinkFiles } from '#cli/generation/links.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';

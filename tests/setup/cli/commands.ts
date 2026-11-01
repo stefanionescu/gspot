@@ -4,7 +4,7 @@ import { Readable } from 'node:stream';
 import { runProgram } from '#cli/main.ts';
 import { type Sandbox } from '#tests/types/sandbox.ts';
 import { readTree } from '#tests/setup/system/files.ts';
-import { type CheckResult } from '#cli/types/runs/check.ts';
+import { type CheckResult } from '#cli/types/engine/check.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { captureTerminal } from '#tests/setup/system/terminal.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';

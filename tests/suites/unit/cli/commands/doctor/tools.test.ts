@@ -1,9 +1,9 @@
 import semver from 'semver';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
 import { APP_PYPROJECT } from '#tests/config/toml.ts';
-import { openSession } from '#cli/planning/session.ts';
 import { executableLayout } from '#cli/system/paths.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';

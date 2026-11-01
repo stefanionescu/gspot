@@ -4,7 +4,7 @@ import type { Check } from '#cli/types/manifests.ts';
 import type { Session } from '#cli/types/session.ts';
 import { readLintRuleDocs } from '#cli/tools/rules.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';
-import { hasRuleOutput } from '#cli/runs/output/formats.ts';
+import { hasRuleOutput } from '#cli/engine/outputs/formats.ts';
 import { buildMiseInstall } from '#cli/tools/installers/mise.ts';
 import type { LintRuleDocs, RuleDocsOptions } from '#cli/types/tools/tools.ts';
 

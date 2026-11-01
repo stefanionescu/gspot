@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { getTable } from '#cli/settings/scopes.ts';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { stripDefaults } from '#cli/commands/init/defaults.ts';

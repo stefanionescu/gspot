@@ -1,10 +1,10 @@
-import { planChecks } from '#cli/planning/checks.ts';
+import { planChecks } from '#cli/engine/plan.ts';
 import { selectCheckCode } from '#cli/checks/registry.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
-import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type RunOptions } from '#cli/types/commands/check.ts';
 import { listOutdatedFiles } from '#cli/generation/outdated.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { type PlannedCheck } from '#cli/types/engine/planning.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { type Session, type CheckGeneration } from '#cli/types/session.ts';
 

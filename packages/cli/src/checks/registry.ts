@@ -1,6 +1,6 @@
 import type { Check } from '#cli/types/manifests.ts';
 import { checkVale } from '#cli/checks/general/prose.ts';
-import type { CheckCode } from '#cli/types/runs/check.ts';
+import type { CheckCode } from '#cli/types/engine/check.ts';
 import { checkYaml } from '#cli/checks/general/data-files.ts';
 import { checkAllowed } from '#cli/checks/general/licenses.ts';
 import { checkSemgrep } from '#cli/checks/general/security.ts';

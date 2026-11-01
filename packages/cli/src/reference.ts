@@ -1,13 +1,13 @@
 import semver from 'semver';
 import { buildProgram } from '#cli/main.ts';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
-import { describeCheck } from '#cli/runs/reference.ts';
 import { DOCS_PATHS } from '#cli/config/files/names.ts';
-import { STAGE_FILTERS } from '#cli/config/planning.ts';
+import { describeCheck } from '#cli/engine/reference.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { findToolProjectPackage } from '#cli/tools/pins.ts';
 import { GROUP_LABELS } from '#cli/config/manifests/names.ts';
+import { STAGE_FILTERS } from '#cli/config/engine/planning.ts';
 import { buildJsonSchema } from '#cli/settings/schema/editor.ts';
 import { compareText, quoteArgument } from '#cli/system/text.ts';
 import { buildSettingsReference } from '#cli/settings/reference.ts';

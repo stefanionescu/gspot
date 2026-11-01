@@ -1,6 +1,6 @@
 import { parse } from 'jsonc-parser';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { HtmlValidate, type ConfigData } from 'html-validate';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

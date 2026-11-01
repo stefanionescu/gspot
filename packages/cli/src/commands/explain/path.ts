@@ -1,8 +1,8 @@
+import { planChecks } from '#cli/engine/plan.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { EVERY_CHECK } from '#cli/config/ignores.ts';
-import { planChecks } from '#cli/planning/checks.ts';
 import type { Session } from '#cli/types/session.ts';
-import { listCheckedFiles } from '#cli/planning/files.ts';
+import { listCheckedFiles } from '#cli/engine/files.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';

@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
+import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { openSession } from '#cli/planning/session.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { explainReleaseAgeHold } from '#cli/tools/installers/steps.ts';

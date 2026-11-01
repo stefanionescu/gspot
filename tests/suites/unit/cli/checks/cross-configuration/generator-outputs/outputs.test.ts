@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { symlink, readFile, writeFile } from 'node:fs/promises';
@@ -10,7 +10,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
-import { runChecks, runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
+import { runChecks, runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { checkGeneratorOutputs } from '#cli/checks/cross-configuration/generator-outputs.ts';
 import { BINARY_OUTPUT_HEX } from '#tests/config/checks/cross-configuration/generator-outputs.ts';
 

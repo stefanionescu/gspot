@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import type { CheckFinding } from '#cli/types/runs/check.ts';
+import type { CheckFinding } from '#cli/types/engine/check.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import type { composeSchema } from '#cli/schemas/checks/infrastructure.ts';
 

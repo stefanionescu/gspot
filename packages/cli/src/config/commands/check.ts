@@ -1,5 +1,5 @@
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import type { CheckStatus } from '#cli/types/runs/check.ts';
+import type { CheckStatus } from '#cli/types/engine/check.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 
 export const PROGRESS_CLEAR = '\r\u{1B}[2K';

@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { join, delimiter } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';

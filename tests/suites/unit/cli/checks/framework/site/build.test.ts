@@ -1,15 +1,15 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { compareText, quoteArgument } from '#cli/system/text.ts';
+import { runChecks, buildCheckSession } from '#cli/engine/run.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { runChecks, buildCheckSession } from '#cli/commands/check/run.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
 import { getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';

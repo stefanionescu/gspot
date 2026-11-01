@@ -1,6 +1,6 @@
 import { remember } from '#cli/system/cache.ts';
 import type { Session } from '#cli/types/session.ts';
-import type { PlannedCheck } from '#cli/types/planning.ts';
+import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { buildFileMatcher } from '#cli/repository/files/selection.ts';
 import { parseSource, selectGrammar } from '#cli/parsers/code/grammars.ts';
 import { extractSqlIdentifiers } from '#cli/checks/general/naming/languages/sql.ts';

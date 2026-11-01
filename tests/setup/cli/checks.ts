@@ -1,24 +1,24 @@
 import { spyOn } from 'bun:test';
+import { openSession } from '#cli/engine/session.ts';
 import { type Session } from '#cli/types/session.ts';
-import { openSession } from '#cli/planning/session.ts';
-import { runBuiltInCheck } from '#cli/runs/results.ts';
 import { ROOT_LABEL } from '#tests/config/messages.ts';
 import { SWIFT_PACKAGE } from '#tests/config/swift.ts';
-import type { Finding } from '#cli/types/runs/check.ts';
+import { runBuiltInCheck } from '#cli/engine/results.ts';
 import * as environment from '#cli/system/environment.ts';
+import type { Finding } from '#cli/types/engine/check.ts';
 import { getTool, findToolName } from '#cli/tools/pins.ts';
-import { type PlannedCheck } from '#cli/types/planning.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
+import { type PlannedCheck } from '#cli/types/engine/planning.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { CHECK_CODE, selectCheckCode } from '#cli/checks/registry.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import type { NamingSettings } from '#cli/types/checks/general/naming.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readNamingSettings } from '#cli/checks/general/naming/settings.ts';
-import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
 
 /**

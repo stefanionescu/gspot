@@ -1,13 +1,13 @@
 import { test, spyOn, expect } from 'bun:test';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
+import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
-import { openSession } from '#cli/planning/session.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { checkGeneratorOutputs } from '#cli/checks/cross-configuration/generator-outputs.ts';
 import { MISSING_OPENAPI_FINDINGS } from '#tests/config/checks/cross-configuration/generator-outputs.ts';
 

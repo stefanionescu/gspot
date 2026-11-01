@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { runChecks } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { unlink, writeFile } from 'node:fs/promises';
-import { runChecks } from '#cli/commands/check/run.ts';
-import { openSession } from '#cli/planning/session.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';

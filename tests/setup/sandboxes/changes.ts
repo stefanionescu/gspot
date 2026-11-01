@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { join, dirname } from 'node:path';
+import { openSession } from '#cli/engine/session.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { openSession } from '#cli/planning/session.ts';
 import type { Sandbox } from '#tests/types/sandbox.ts';
 import { runGspotStep } from '#tests/setup/cli/commands.ts';
 import type { SandboxWrite } from '#tests/types/changes.ts';

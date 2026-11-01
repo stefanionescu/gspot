@@ -1,7 +1,7 @@
 import { join, resolve } from 'node:path';
 import { runTool } from '#cli/tools/run.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { copyRevision } from '#cli/runs/copy/revision.ts';
+import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { runGit, readGitText, runGitBlocking, runGitForBytes } from '#cli/repository/git/run.ts';
 

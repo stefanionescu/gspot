@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { runChecks } from '#cli/commands/check/run.ts';
-import { openSession } from '#cli/planning/session.ts';
+import { runChecks } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

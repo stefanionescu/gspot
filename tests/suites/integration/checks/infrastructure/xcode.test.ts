@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { chmod } from 'node:fs/promises';
+import { planChecks } from '#cli/engine/plan.ts';
 import { test, expect, describe } from 'bun:test';
-import { planChecks } from '#cli/planning/checks.ts';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import { parseCommandFindings } from '#cli/runs/command/output.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import { isMacos, hasToolBuild } from '#tests/setup/system/platform.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { XCODE_CASES, PLUTIL_UNREADABLE_FILES } from '#tests/config/integration/checks/infrastructure.ts';

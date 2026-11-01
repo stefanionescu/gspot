@@ -1,6 +1,6 @@
 import { dirname } from 'node:path';
+import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { openSession } from '#cli/planning/session.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { TEMPORARY_FILE_NAME } from '#cli/config/system/files.ts';

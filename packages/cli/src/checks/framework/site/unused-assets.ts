@@ -4,10 +4,10 @@ import { find } from '#cli/system/files/reads.ts';
 import type { Session } from '#cli/types/session.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
-import type { PlannedCheck } from '#cli/types/planning.ts';
-import { type CheckFinding } from '#cli/types/runs/check.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
+import { type CheckFinding } from '#cli/types/engine/check.ts';
 import { FILENAME_TAGS } from '#cli/config/repository/files.ts';
+import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { SYMLINK_MODE, GIT_FILE_MODES } from '#cli/config/files/modes.ts';
 import type { AssetSource, AssetGlobImport } from '#cli/types/checks/framework/site.ts';
 

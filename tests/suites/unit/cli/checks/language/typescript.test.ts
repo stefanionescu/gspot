@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { STRICT_TSCONFIG_TEXT } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

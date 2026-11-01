@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { getTool } from '#cli/tools/pins.ts';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import type { ToolPackageJson } from '#tests/types/packages.ts';

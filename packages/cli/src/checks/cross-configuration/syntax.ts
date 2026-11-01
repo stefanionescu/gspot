@@ -1,6 +1,6 @@
 import { GspotError } from '#cli/system/errors.ts';
 import type { Parsed } from '#cli/types/shapes.ts';
-import type { CheckFinding } from '#cli/types/runs/check.ts';
+import type { CheckFinding } from '#cli/types/engine/check.ts';
 import { SYNTAX_RULE } from '#cli/config/checks/cross-configuration/cross-configuration.ts';
 
 /**

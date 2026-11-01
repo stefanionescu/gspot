@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import type { Config } from 'stylelint';
 import type stylelintModule from 'stylelint';
 import { compareText } from '#cli/system/text.ts';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';

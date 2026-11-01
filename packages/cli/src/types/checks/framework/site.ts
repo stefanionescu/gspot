@@ -1,4 +1,4 @@
-import type { CheckFinding } from '#cli/types/runs/check.ts';
+import type { CheckFinding } from '#cli/types/engine/check.ts';
 
 export type SitemapUrls = { urls: URL[]; findings: CheckFinding[] };
 

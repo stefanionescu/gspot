@@ -2,8 +2,8 @@ import type { Node } from 'web-tree-sitter';
 import { getLimit } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
 import { isDocstring } from '#cli/parsers/code/python.ts';
-import type { PlannedCheck } from '#cli/types/planning.ts';
-import type { CheckFinding } from '#cli/types/runs/check.ts';
+import type { CheckFinding } from '#cli/types/engine/check.ts';
+import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { readParsedSources } from '#cli/checks/general/structure/parsed-sources.ts';
 import type { ParsedSource, ParsedLanguage } from '#cli/types/checks/general/structure.ts';
 

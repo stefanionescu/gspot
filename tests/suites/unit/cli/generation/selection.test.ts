@@ -5,7 +5,7 @@ import { parse as parseYaml } from 'yaml';
 import { writeFile } from 'node:fs/promises';
 import { findValueAt } from '#cli/system/tables.ts';
 import { join, extname, basename } from 'node:path';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { LEVELS } from '#cli/config/manifests/names.ts';
 import { listToolProjectPins } from '#cli/tools/pins.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';

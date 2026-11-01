@@ -4,7 +4,7 @@ import { escapeGlob } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
-import { listPrettierPlugins } from '#cli/planning/tools.ts';
+import { listPrettierPlugins } from '#cli/engine/tools.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { includeFolderContents } from '#cli/system/matchers.ts';

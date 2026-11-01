@@ -3,7 +3,7 @@ import { open, readFile } from 'node:fs/promises';
 import { stringify } from '@decimalturn/toml-patch';
 import type { Session } from '#cli/types/session.ts';
 import type { Files } from '#cli/types/system/files.ts';
-import { listHostCheckTools } from '#cli/planning/tools.ts';
+import { listHostCheckTools } from '#cli/engine/tools.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import type { ToolSearch } from '#cli/types/tools/inspection.ts';
 import type { ToolProjectFiles } from '#tests/types/packages.ts';

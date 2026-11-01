@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { buildConfig } from '#cli/generation/builders.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildIgnoreSections } from '#cli/generation/ignores.ts';

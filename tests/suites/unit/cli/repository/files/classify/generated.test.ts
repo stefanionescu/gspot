@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text.ts';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';

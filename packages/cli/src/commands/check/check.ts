@@ -1,20 +1,20 @@
 import { join, resolve } from 'node:path';
 import { addAbortSignal } from 'node:stream';
 import { GspotError } from '#cli/system/errors.ts';
-import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { runPushCheck } from '#cli/commands/check/push.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { constants, accessSync, existsSync } from 'node:fs';
 import { printProgress } from '#cli/commands/check/report.ts';
+import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
 import { TRAILING_NEWLINE } from '#cli/config/system/system.ts';
-import { GIT_WRITE_TREE_ARGUMENTS } from '#cli/config/runs/copy.ts';
 import { readGitText, readGitPaths } from '#cli/repository/git/run.ts';
 import { readStagedPaths } from '#cli/repository/revisions/changes.ts';
 import type { CommandLocation } from '#cli/types/commands/commands.ts';
+import { GIT_WRITE_TREE_ARGUMENTS } from '#cli/config/engine/copies.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { Option, type Command, InvalidArgumentError } from '@commander-js/extra-typings';
 

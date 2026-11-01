@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { planChecks } from '#cli/planning/checks.ts';
+import { planChecks } from '#cli/engine/plan.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { TWO_WORDS } from '#tests/config/ignores.ts';
-import { openSession } from '#cli/planning/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { setKey, getScopeTable } from '#cli/settings/edit.ts';
 import { type Scope } from '#cli/types/settings/inheritance.ts';

@@ -3,12 +3,12 @@ import { formatCount } from '#cli/system/text.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import type { CheckSession } from '#cli/types/session.ts';
-import { type PlannedCheck } from '#cli/types/planning.ts';
-import { runCommandCheck } from '#cli/runs/command/check.ts';
+import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
+import { type PlannedCheck } from '#cli/types/engine/planning.ts';
 import { runGit, readGitSetting } from '#cli/repository/git/run.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { buildBaseResult, mergeCheckResults } from '#cli/runs/results.ts';
-import { type CheckResult, type CheckFinding } from '#cli/types/runs/check.ts';
+import { buildBaseResult, mergeCheckResults } from '#cli/engine/results.ts';
+import { type CheckResult, type CheckFinding } from '#cli/types/engine/check.ts';
 import { getSiblingCommand, listPushedCommits } from '#cli/checks/cross-configuration/pushed-commits.ts';
 
 import {

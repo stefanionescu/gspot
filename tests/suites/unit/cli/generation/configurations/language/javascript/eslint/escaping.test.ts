@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

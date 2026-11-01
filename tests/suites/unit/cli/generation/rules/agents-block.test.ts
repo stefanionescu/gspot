@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { format } from 'prettier';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildAgentsBlock } from '#cli/generation/rules.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';

@@ -1,13 +1,13 @@
 import { test, expect } from 'bun:test';
 import { getTool } from '#cli/tools/pins.ts';
+import { planChecks } from '#cli/engine/plan.ts';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
-import { planChecks } from '#cli/planning/checks.ts';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
 import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { runSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';

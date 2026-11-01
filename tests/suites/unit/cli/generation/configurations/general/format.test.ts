@@ -5,7 +5,7 @@ import type { Options } from 'prettier';
 import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
 import { stringify } from '@decimalturn/toml-patch';
-import { openSession } from '#cli/planning/session.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { GREETING_SOURCE } from '#tests/config/typescript.ts';

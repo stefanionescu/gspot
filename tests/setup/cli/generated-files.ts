@@ -1,12 +1,12 @@
 import { posix } from 'node:path';
+import { openSession } from '#cli/engine/session.ts';
 import type { Session } from '#cli/types/session.ts';
-import { openSession } from '#cli/planning/session.ts';
 import { ROOT_LABEL } from '#tests/config/messages.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { extractConfigName } from '#cli/engine/files.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
-import { extractConfigName } from '#cli/planning/files.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { getConfigTarget } from '#cli/runs/command/placeholders.ts';
+import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
 
