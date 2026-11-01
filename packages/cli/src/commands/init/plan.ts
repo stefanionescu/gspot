@@ -4,6 +4,7 @@ import { isInScope } from '#cli/repository/scopes.ts';
 import type { Generation } from '#cli/types/tools.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { Settings } from '#cli/types/settings.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import type { Configuration } from '#cli/types/manifests.ts';
 import { formatCount, formatScope } from '#cli/system/text.ts';
 import { GENERATED_FILE_NOUN } from '#cli/config/generation.ts';
@@ -192,7 +193,12 @@ export function planInitFiles(
             ...listSubmodulePaths(repository.index).map((path) => ({ path, note: UNREAD_SUBMODULE_MESSAGE })),
             ...repositorySetup.ci.map((path) => ({ path, note: CI_FILE_NOTE })),
         ],
-        change: [...(hasAttributes ? [ATTRIBUTES_ROW] : []), ...blockRows, ...conflicts.changed],
+        change: [
+            ...(hasAttributes ? [ATTRIBUTES_ROW] : []),
+            ...(scan.pinPath === undefined ? [] : [{ path: scan.pinPath, note: `pins gspot ${cliPackage.version}` }]),
+            ...blockRows,
+            ...conflicts.changed,
+        ],
         lintFolders: repositorySetup.lintFolders.map((folder) => ({
             path: `${folder}/`,
             note: LINT_FOLDER_MESSAGE,

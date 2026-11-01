@@ -173,10 +173,14 @@ test('at level basic, init keeps the config files of checks that are off', async
     expect(written.code, written.stdout + written.stderr).toBe(0);
     const plan = (JSON.parse(written.stdout) as InitJson).plan;
     expect(plan.delete).toStrictEqual([]);
-    expect(plan.change).toStrictEqual([]);
+    expect(plan.change.map(({ path }) => path)).toStrictEqual(['package.json']);
     expect(plan.write.map(({ path }) => path).filter((path) => /commitlint|syncpack/u.test(path))).toStrictEqual([]);
     for (const [path, source] of Object.entries(INACTIVE_CONFIGURATIONS))
-        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(source);
+        if (path === 'package.json')
+            expect(JSON.parse(await readFile(join(sandbox.path, path), 'utf8'))).toMatchObject(
+                JSON.parse(source) as object,
+            );
+        else expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(source);
 });
 
 test.each([...STYLELINT_REPLACEMENT_CASES])(
@@ -204,12 +208,14 @@ test.each([...STYLELINT_REPLACEMENT_CASES])(
             path: authoredConfiguration,
             note: 'replaced by the generated file for stylelint',
         });
-        expect(plan.change.filter(({ path }) => path === packagePath)).toStrictEqual(
+        expect(plan.change.filter(({ path, note }) => path === packagePath && !note.startsWith('pins'))).toStrictEqual(
             changed.map((path) => ({ path, note: 'managed stylelint fields; other content stays' })),
         );
         expect(await isOnDisk(join(sandbox.path, authoredConfiguration))).toBe(false);
         for (const { path, text } of unchangedFiles)
-            expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(text);
+            expect(JSON.parse(await readFile(join(sandbox.path, path), 'utf8'))).toMatchObject(
+                JSON.parse(text) as object,
+            );
         for (const level of LEVELS) {
             const levelSet = await runGspot(sandbox.path, ['set', 'level', level]);
             expect(levelSet.code, levelSet.stdout + levelSet.stderr).toBe(0);

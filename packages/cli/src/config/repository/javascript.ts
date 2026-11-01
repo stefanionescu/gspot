@@ -53,6 +53,12 @@ export const YARN_BERRY_MAJOR = 2;
 
 export const NPM_TOOL = 'npm';
 
+export const GSPOT_MISE_TOOL = 'npm:@gspothq/cli';
+
+export const GSPOT_MISE_OPTIONS = { allow_low_downloads: 'true' } as const;
+
+export const PIN_JSON_FORMAT = { formattingOptions: { insertSpaces: true, tabSize: 2 } } as const;
+
 export const LOCAL_PATH_PREFIX = './';
 
 export const PATHS_BASE_OPTION = 'pathsBasePath';

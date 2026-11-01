@@ -1,0 +1,43 @@
+import { join } from 'node:path';
+import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
+import { openFiles } from '#cli/system/files/open.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { readGspotPin, writeGspotPin, assertGspotPin } from '#cli/repository/javascript/gspot-pin.ts';
+
+test('the pin of a repository with package.json is an exact development dependency', async () => {
+    await using sandbox = await createGitSandbox({ 'package.json': '{\n  "name": "example"\n}\n' });
+    writeGspotPin(openFiles(sandbox.path));
+    const manifest = JSON.parse(await readFile(join(sandbox.path, 'package.json'), 'utf8')) as Record<string, unknown>;
+    expect(manifest['devDependencies']).toStrictEqual({ [cliPackage.name]: cliPackage.version });
+    expect(readGspotPin(sandbox.path)).toBe(cliPackage.version);
+});
+
+test('the pin of a repository without package.json is a mise tool beside the others', async () => {
+    await using sandbox = await createGitSandbox({ 'mise.toml': '[tools]\nnode = "24.0.0"\n' });
+    writeGspotPin(openFiles(sandbox.path));
+    expect(await readFile(join(sandbox.path, 'mise.toml'), 'utf8')).toContain('node = "24.0.0"');
+    expect(readGspotPin(sandbox.path)).toBe(cliPackage.version);
+});
+
+test('another pinned version stops the commands that run tools, and names the install', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([]),
+        'mise.toml': '[tools]\n"npm:@gspothq/cli" = "0.0.1"\n',
+    });
+    const error = await captureRejection(
+        Promise.resolve().then(() => {
+            assertGspotPin(sandbox.path);
+        }),
+    );
+    expect(error.message).toBe(
+        `This repository pins gspot 0.0.1; this is gspot ${cliPackage.version}. Run mise use --pin --tool-option allow_low_downloads=true npm:@gspothq/cli@0.0.1.`,
+    );
+    const result = await runGspot(sandbox.path, ['check', '--json']);
+    expect(result.code).toBe(2);
+    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments', message: error.message });
+});

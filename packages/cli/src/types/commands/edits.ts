@@ -119,6 +119,7 @@ export type InitScan = {
     scopes: Pick<Scope, 'path' | 'configurations'>[];
     everySelected: Configuration[];
     conflicts: ConflictingConfigs;
+    pinPath?: string | undefined;
 };
 
 export type InitPlan = {

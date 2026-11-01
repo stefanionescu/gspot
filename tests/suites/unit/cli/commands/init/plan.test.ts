@@ -5,6 +5,7 @@ import { readSettings } from '#cli/settings/read.ts';
 import { symlink, readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import type { InitJson } from '#cli/types/commands/edits.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -33,7 +34,8 @@ test.each([
     const result = await runGspot(sandbox.path, ['init', '--configurations', 'typescript', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
-    expect(plan.change).toStrictEqual(attributes === 'change' ? [ATTRIBUTES_PLAN_ROW] : []);
+    const pin = { path: 'package.json', note: `pins gspot ${cliPackage.version}` };
+    expect(plan.change).toStrictEqual(attributes === 'change' ? [ATTRIBUTES_PLAN_ROW, pin] : [pin]);
     expect(plan.write.filter(({ path }) => path === ATTRIBUTES_PLAN_ROW.path)).toStrictEqual(
         attributes === 'write' ? [ATTRIBUTES_PLAN_ROW] : [],
     );
@@ -112,7 +114,7 @@ test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that ap
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     expect(initialized.stderr).toBe('');
     const report = JSON.parse(initialized.stdout) as Required<Pick<InitJson, 'plan' | 'settingsText'>>;
-    expect(report.plan.change.map((file) => file.path)).toStrictEqual([...changes]);
+    expect(report.plan.change.map((file) => file.path)).toStrictEqual([...changes, 'mise.toml']);
     expect(await isOnDisk(join(sandbox.path, '.gitignore'))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, '.gspot/.gitignore'))).toBe(true);
     expect(await isOnDisk(join(sandbox.path, '.gitattributes'))).toBe(true);

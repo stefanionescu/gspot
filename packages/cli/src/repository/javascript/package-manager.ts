@@ -185,7 +185,21 @@ export function selectStartRunner(root: string): StartRunner {
         packageJson?.dependencies?.[cliPackage.name] !== undefined ||
         packageJson?.devDependencies?.[cliPackage.name] !== undefined;
     const packageManager = hasDependency ? detectPackageManager(root, []) : undefined;
-    const name = packageManager === undefined ? 'mise' : packageManager.name;
+    return buildStartRunner(packageManager === undefined ? 'mise' : packageManager.name);
+}
+
+/**
+Select the runner for init, which writes the pin next: the package manager, or mise without a package.json.
+
+@param root the folder whose package.json decides the runner.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: selectStartRunner reads a pin, and init chooses the runner before it writes one.
+export function selectInitRunner(root: string): StartRunner {
+    const hasManifest = readPackageJson(root, PACKAGE_JSON) !== undefined;
+    return buildStartRunner(hasManifest ? detectPackageManager(root, []).name : 'mise');
+}
+
+function buildStartRunner(name: StartRunner['name']): StartRunner {
     const runner = START_RUNNERS[name];
     return { name, ...runner, installCommand: runner.installCommand.replace('<package>', () => cliPackage.name) };
 }

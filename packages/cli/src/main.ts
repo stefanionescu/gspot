@@ -20,6 +20,7 @@ import { beginCheckReport } from '#cli/commands/check/report.ts';
 import { explainCommand } from '#cli/commands/explain/explain.ts';
 import { runGit, buildGitError } from '#cli/repository/git/run.ts';
 import { CODE_MARK, COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { assertGspotPin } from '#cli/repository/javascript/gspot-pin.ts';
 import { DASH_VALUE_HELP, COMMAND_SUGGESTION } from '#cli/config/commands/edits.ts';
 import { Option, Command, Argument, type Help, CommanderError } from '@commander-js/extra-typings';
 import { printError, printResult, setOutputOptions, printUnexpectedError } from '#cli/system/terminal.ts';
@@ -37,6 +38,7 @@ import {
     USAGE_LINE,
     HELP_WIDTH,
     VERSION_FLAG,
+    PIN_COMMANDS,
     INVALID_VALUE,
     GLOBAL_OPTIONS,
     HELP_ERROR_CODE,
@@ -191,13 +193,14 @@ export function buildProgram(onResult: CommandCompletion): Command {
         .helpCommand(false)
         .exitOverride();
     program.configureOutput({ writeErr: () => {} });
-    program.hook('preAction', async () => {
+    program.hook('preAction', async (_program, action) => {
         location.root = await readRepositoryRoot(location.cwd);
         const command = ['config', '--bool', '--get', 'core.sparseCheckout'];
         const sparse = await runGit(location.root, command, {});
         if (sparse.code === 0 && sparse.stdout.trim() === 'true')
             throw new GspotError('git', 'gspot does not support sparse checkouts. Run git sparse-checkout disable.');
         if (sparse.code !== 0 && sparse.code !== 1) throw buildGitError(location.root, command, sparse);
+        if (PIN_COMMANDS.has(action.name())) assertGspotPin(location.root);
     });
     const definitions: readonly CommandDefinition[] = [
         initCommand,

@@ -22,7 +22,9 @@ import { InvalidArgumentError } from '@commander-js/extra-typings';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { planInitFiles, formatInitPlan } from '#cli/commands/init/plan.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
+import { selectInitRunner } from '#cli/repository/javascript/package-manager.ts';
 import { buildInitSettings, buildSettingsDraft } from '#cli/commands/init/settings.ts';
+import { readGspotPin, writeGspotPin, selectPinPath } from '#cli/repository/javascript/gspot-pin.ts';
 
 import {
     assertFilesCommitted,
@@ -101,7 +103,9 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
     const draft = buildSettingsDraft(initConfigurations, options);
     const settingsText = buildInitSettings(draft, repository, configurationsByName);
     const settings = readSettings(settingsText, root);
-    const session = await openSession(root, { settingsFile: { settings, text: settingsText }, cache, listing });
+    const planned = await openSession(root, { settingsFile: { settings, text: settingsText }, cache, listing });
+    const hasPin = readGspotPin(root) !== undefined;
+    const session = hasPin ? planned : { ...planned, startRunner: selectInitRunner(root) };
     const everySelected = listSelectedConfigurations(session.scopes);
     const applicable = session.toolConfigurations;
     const tools = new Set(applicable.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));
@@ -131,6 +135,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
         everySelected,
         conflicts,
         template: options.template,
+        pinPath: hasPin ? undefined : selectPinPath(root),
     };
     const plan = planInitFiles(planning, { settings, settingsText, requirements: applicable, generated });
     return { detection, session, generated, plan, settingsText, reviewed: conflicts.reviewed };
@@ -140,6 +145,7 @@ async function writeInitFiles(root: string, initPlan: InitPlanning): Promise<App
     const writer = openFiles(root);
     const { session, generated } = initPlan;
     writeSettings(writer, initPlan.settingsText, initPlan.reviewed.get(SETTINGS_FILE));
+    if (readGspotPin(root) === undefined) writeGspotPin(writer);
     const applied = await writeGeneratedFiles(session, generated, writer, { reviewed: initPlan.reviewed });
     const kept = deleteConflictingConfigs(writer, initPlan.plan.delete, initPlan.reviewed);
     applied.notes.push(...kept.map((path) => `kept ${path}: it changed after init read it`));

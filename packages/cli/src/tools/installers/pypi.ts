@@ -257,14 +257,17 @@ export async function installPythonProjects(install: ToolInstall, executable: st
         .filter(
             (folder) => tracked.has(joinScope(folder, UV_LOCKFILE)) && tracked.has(joinScope(folder, PYPROJECT_TOML)),
         );
-    for (const folder of folders)
+    const lines = folders.map((folder) => {
+        const place = folder === '' ? 'the repository root' : folder;
+        return { folder, place };
+    });
+    for (const { folder, place } of lines)
         await runRequiredInstallStep(install, [executable, ...UV_PROJECT_INSTALL_ARGUMENTS], {
             cwd: join(root, folder),
-            name: `uv sync in ${folder === '' ? 'the repository root' : folder}`,
+            step: `installing the Python environment of ${place}`,
+            name: `uv sync in ${place}`,
         });
-    return folders.map(
-        (folder) => `installed the Python environment of ${folder === '' ? 'the repository root' : folder}`,
-    );
+    return lines.map(({ place }) => `installed the Python environment of ${place}`);
 }
 
 /**

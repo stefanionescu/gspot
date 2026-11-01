@@ -1,3 +1,5 @@
+export const PIN_COMMANDS: ReadonlySet<string> = new Set(['check', 'apply', 'install']);
+
 export const PROCESS_ARGUMENTS_START = 2;
 
 export const UNKNOWN_COMMAND_NAME = /unknown command '([^']+)'/u;
