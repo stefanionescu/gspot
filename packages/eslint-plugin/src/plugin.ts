@@ -24,6 +24,7 @@ import { testHooksFirst } from './rules/test-hooks-first.ts';
 import { noCommentedCode } from './rules/no-commented-code.ts';
 import { noGeneratedKeys } from './rules/no-generated-keys.ts';
 import { noIgnoredReturn } from './rules/no-ignored-return.ts';
+import { noStatefulRegex } from './rules/no-stateful-regex.ts';
 import { noUnthrownError } from './rules/no-unthrown-error.ts';
 import { preferTestTable } from './rules/prefer-test-table.ts';
 import { preferTypeGuard } from './rules/prefer-type-guard.ts';
@@ -38,6 +39,7 @@ import { noRenamedExports } from './rules/no-renamed-exports.ts';
 import pluginPackage from '../package.json' with { type: 'json' };
 import { noEmptyTestTable } from './rules/no-empty-test-table.ts';
 import { noFixedTestWaits } from './rules/no-fixed-test-waits.ts';
+import { noEmptyRepetition } from './rules/no-empty-repetition.ts';
 import { noInsecureCookies } from './rules/no-insecure-cookies.ts';
 import { noNestedFunctions } from './rules/no-nested-functions.ts';
 import { preferNativeAxios } from './rules/prefer-native-axios.ts';
@@ -50,6 +52,8 @@ import { noLeakedJsxNumber } from './rules/no-leaked-jsx-number.ts';
 import { noPoweredByHeader } from './rules/no-powered-by-header.ts';
 import { noSelfStateUpdate } from './rules/no-self-state-update.ts';
 import { noUiTestDebugging } from './rules/no-ui-test-debugging.ts';
+import { maxRegexComplexity } from './rules/max-regex-complexity.ts';
+import { noAmbiguousAnchors } from './rules/no-ambiguous-anchors.ts';
 import { noAsyncConstructor } from './rules/no-async-constructor.ts';
 import { noDiscardedPostfix } from './rules/no-discarded-postfix.ts';
 import { noElementOverwrite } from './rules/no-element-overwrite.ts';
@@ -71,6 +75,7 @@ import { preferBooleanReturn } from './rules/prefer-boolean-return.ts';
 import { noCommentsInImports } from './rules/no-comments-in-imports.ts';
 import { noDuplicateTestRows } from './rules/no-duplicate-test-rows.ts';
 import { noSetterInComponent } from './rules/no-setter-in-component.ts';
+import { noUnknownRegexGroup } from './rules/no-unknown-regex-group.ts';
 import { embedAlternativeText } from './rules/embed-alternative-text.ts';
 import { noDuplicatedBranches } from './rules/no-duplicated-branches.ts';
 import { noInvertedAssertions } from './rules/no-inverted-assertions.ts';
@@ -79,6 +84,7 @@ import { redundantTypeAliases } from './rules/redundant-type-aliases.ts';
 import { tableHeaderReference } from './rules/table-header-reference.ts';
 import { noBitwiseInCondition } from './rules/no-bitwise-in-condition.ts';
 import { noEqualLoopCondition } from './rules/no-equal-loop-condition.ts';
+import { noLazyBeforeOptional } from './rules/no-lazy-before-optional.ts';
 import { noPositiveIndexCheck } from './rules/no-positive-index-check.ts';
 import { noStringRegexPattern } from './rules/no-string-regex-pattern.ts';
 import { noUpdatedLoopCounter } from './rules/no-updated-loop-counter.ts';
@@ -116,6 +122,12 @@ import { noUnenclosedMultilineBlock } from './rules/no-unenclosed-multiline-bloc
 const rules = {
     ...securityRules,
     ...awsRules,
+    'no-unknown-regex-group': noUnknownRegexGroup,
+    'no-stateful-regex': noStatefulRegex,
+    'no-lazy-before-optional': noLazyBeforeOptional,
+    'max-regex-complexity': maxRegexComplexity,
+    'no-ambiguous-anchors': noAmbiguousAnchors,
+    'no-empty-repetition': noEmptyRepetition,
     'no-string-regex-pattern': noStringRegexPattern,
     'no-useless-intersection': noUselessIntersection,
     'no-redundant-optional': noRedundantOptional,

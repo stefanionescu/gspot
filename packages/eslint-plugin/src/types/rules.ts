@@ -181,3 +181,5 @@ export type HeaderIssue = TSESLint.ReportDescriptor<'otherHeader' | 'unknownHead
 export type ScriptSettings = { sources: number; isVersioned: boolean; hasIntegrity: boolean; isAnonymous: boolean };
 
 export type IntegrityMessage = 'missingBoth' | 'missingIntegrity' | 'missingCrossOrigin';
+
+export type GroupRead = { node: TSESTree.Node; name: string };

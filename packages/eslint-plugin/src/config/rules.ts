@@ -312,3 +312,29 @@ export const NULLISH_TYPE_KEYWORDS: ReadonlySet<string> = new Set(['TSNullKeywor
 export const ALIAS_MEMBER_LIMIT = 2;
 
 export const ALIAS_USE_LIMIT = 2;
+
+export const ANCHOR_KINDS: ReadonlySet<string> = new Set(['start', 'end']);
+
+export const LOOKAROUND_KINDS: ReadonlySet<string> = new Set(['lookahead', 'lookbehind']);
+
+export const CHOICE_BASE = 2;
+
+export const DEFAULT_REGEX_COMPLEXITY = 20;
+
+export const REGEX_COMPLEXITY_OPTIONS_SCHEMA = {
+    type: 'object',
+    properties: {
+        threshold: {
+            description: 'The highest complexity a regular expression may have.',
+            type: 'integer',
+            minimum: 0,
+        },
+    },
+    additionalProperties: false,
+} satisfies JSONSchema4;
+
+export const ANCHOR_PAIR = 2;
+
+export const ENDING_PAIR = 2;
+
+export const DISTINCT_SUBJECTS = 2;

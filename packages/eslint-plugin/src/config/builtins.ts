@@ -315,3 +315,21 @@ export const INTERFACE_DECLARATION = /^(?:export\s+)?(?:declare\s+)?interface\s+
 export const LITERAL_UNION_SIZE = 2;
 
 export const STRING_PATTERN_METHODS: ReadonlySet<string> = new Set(['match', 'matchAll', 'search']);
+
+export const REGEXP_CONSTRUCTOR = 'RegExp';
+
+export const MATCH_METHODS: ReadonlySet<string> = new Set(['match', 'matchAll']);
+
+export const EXEC_METHOD = 'exec';
+
+export const GROUPS_PROPERTY = 'groups';
+
+export const INDICES_PROPERTY = 'indices';
+
+export const STATEFUL_REGEX_METHODS: ReadonlySet<string> = new Set(['exec', 'test']);
+
+export const EMPTY_STRING_TEXTS: ReadonlySet<string> = new Set(["''", '""']);
+
+export const GLOBAL_THIS_NAME = 'globalThis';
+
+export const LOOP_STATEMENTS: ReadonlySet<string> = new Set(['WhileStatement', 'DoWhileStatement']);

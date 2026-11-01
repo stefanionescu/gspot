@@ -74,6 +74,7 @@
       "name": "@gspothq/eslint-plugin",
       "version": "0.2.3",
       "dependencies": {
+        "@eslint-community/regexpp": "^4.12.2",
         "@typescript-eslint/utils": "^8.70.0",
         "picomatch": "^4.0.7",
       },

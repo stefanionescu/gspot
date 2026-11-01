@@ -1,0 +1,96 @@
+import { createRule } from '../rule.ts';
+import { readAssignedValue } from '../modules.ts';
+import { DISTINCT_SUBJECTS } from '../config/rules.ts';
+import { readRegex, buildRegexVisitors } from '../regex.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { EXEC_METHOD, LOOP_STATEMENTS, EMPTY_STRING_TEXTS, STATEFUL_REGEX_METHODS } from '../config/builtins.ts';
+
+function isLoopCondition(node: TSESTree.Node, ancestors: readonly TSESTree.Node[]): boolean {
+    const chain = [...ancestors, node];
+    const index = chain.findLastIndex(
+        (ancestor) => LOOP_STATEMENTS.has(ancestor.type) || ASTUtils.isFunction(ancestor),
+    );
+    const loop = chain[index];
+    if (loop === undefined || ASTUtils.isFunction(loop) || !('test' in loop)) return false;
+    return Object.is(loop.test, chain[index + 1]);
+}
+
+function isLoopExec(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
+    const { parent } = node;
+    if (parent?.type !== AST_NODE_TYPES.MemberExpression || parent.object !== node) return false;
+    const isExec =
+        ASTUtils.getPropertyName(parent) === EXEC_METHOD && parent.parent.type === AST_NODE_TYPES.CallExpression;
+    return isExec && isLoopCondition(node, source.getAncestors(node));
+}
+
+function readCalledRegex(node: TSESTree.CallExpression): TSESTree.Identifier | undefined {
+    const { callee } = node;
+    if (callee.type !== AST_NODE_TYPES.MemberExpression || node.arguments.length !== 1) return undefined;
+    const isStateful = STATEFUL_REGEX_METHODS.has(ASTUtils.getPropertyName(callee) ?? '');
+    return isStateful && ASTUtils.isIdentifier(callee.object) ? callee.object : undefined;
+}
+
+function readGlobalVariable(node: TSESTree.CallExpression, source: TSESLint.SourceCode) {
+    const name = readCalledRegex(node);
+    const variable = name === undefined ? null : ASTUtils.findVariable(source.getScope(node), name);
+    const value = variable === null ? undefined : readAssignedValue(variable);
+    const regex = value === undefined ? undefined : readRegex(value, source);
+    return regex?.flags.global === true && variable !== null ? variable : undefined;
+}
+
+function isReusedOnSubjects(uses: readonly TSESTree.CallExpression[], source: TSESLint.SourceCode): boolean {
+    const subjects = new Set(uses.map(({ arguments: [input] }) => (input === undefined ? '' : source.getText(input))));
+    return subjects.size >= DISTINCT_SUBJECTS && [...subjects].every((input) => !EMPTY_STRING_TEXTS.has(input));
+}
+
+export const noStatefulRegex = createRule<[], 'sticky' | 'loop' | 'subjects'>({
+    name: 'no-stateful-regex',
+    meta: {
+        defaultOptions: [],
+        type: 'problem',
+        docs: {
+            level: 'recommended',
+            description:
+                'Reports a regular expression with both the `g` and `y` flags, `exec` on a new global regular expression in the condition of a loop, and a global regular expression variable whose `test` or `exec` runs on different subjects without a reset of `lastIndex`.',
+            why: 'A global regular expression remembers where its last match ended, so the next call on another input starts in the middle and can miss the match.',
+            fix: 'Remove the `g` flag when the expression only tests, reset `lastIndex` before each new input, or create the expression once outside the loop.',
+            example: '`const word = /a/g; word.test(first); word.test(second);` reports `subjects`.',
+        },
+        schema: [],
+        messages: {
+            sticky: 'The y flag already anchors each match. Remove the g flag.',
+            loop: 'This creates a new regular expression on each check, so the loop never ends. Create it once outside the loop.',
+            subjects:
+                'This global regular expression runs on different subjects and keeps its lastIndex. Remove the g flag.',
+        },
+    },
+    create(context) {
+        const source = context.sourceCode;
+        const calls = new Map<TSESLint.Scope.Variable, TSESTree.CallExpression[]>();
+        const resets = new Set<TSESLint.Scope.Variable>();
+        return {
+            ...buildRegexVisitors((node, { flags }) => {
+                if (flags.global && flags.sticky) context.report({ node, messageId: 'sticky' });
+                if (flags.global && isLoopExec(node, source)) context.report({ node, messageId: 'loop' });
+            }, source),
+            'CallExpression:exit'(node: TSESTree.CallExpression) {
+                const variable = readGlobalVariable(node, source);
+                if (variable === undefined) return;
+                calls.set(variable, [...(calls.get(variable) ?? []), node]);
+            },
+            'AssignmentExpression > MemberExpression.left'(node: TSESTree.MemberExpression) {
+                if (!ASTUtils.isIdentifier(node.object) || ASTUtils.getPropertyName(node) !== 'lastIndex') return;
+                const variable = ASTUtils.findVariable(source.getScope(node), node.object);
+                if (variable !== null) resets.add(variable);
+            },
+            'Program:exit'() {
+                for (const [variable, uses] of calls) {
+                    const declarator = variable.defs[0]?.node;
+                    if (resets.has(variable) || !isReusedOnSubjects(uses, source)) continue;
+                    if (declarator?.type === AST_NODE_TYPES.VariableDeclarator && declarator.init !== null)
+                        context.report({ node: declarator.init, messageId: 'subjects' });
+                }
+            },
+        };
+    },
+});
