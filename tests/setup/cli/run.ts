@@ -57,3 +57,15 @@ export const CHECK_GENERATION: CheckGeneration = {
     buildConfigs,
     listOutdatedFiles: (session, options) => listOutdatedFiles(session, buildGeneratedFiles(session), options),
 };
+
+/**
+Keep the resources of a run, and free them when the test disposes the list.
+*/
+export function createRunResources(): Disposable[] & Disposable {
+    const resources: Disposable[] = [];
+    return Object.assign(resources, {
+        [Symbol.dispose]: () => {
+            for (const resource of resources.splice(0).toReversed()) resource[Symbol.dispose]();
+        },
+    });
+}

@@ -1,5 +1,3 @@
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-
 export const BASEDPYRIGHT_LEVELS = { basic: 'recommended', all: 'all' } as const;
 
 export const BASEDPYRIGHT_OPTIONS = {
@@ -179,7 +177,5 @@ export const PYTHON_RULES = {
     placeholderDocstring: 'placeholder-docstring',
     unreachableCode: 'unreachable-code',
 } as const;
-
-export const DEPTRY_GSPOT_EXCLUDE = String.raw`(^|.*[/\\])${RegExp.escape(GSPOT_FOLDER)}([/\\]|$)`;
 
 export const REQUIREMENTS_FOLDER_FILE = /(?:^|\/)requirements\/[^/]+\.txt$/u;

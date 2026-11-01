@@ -9,7 +9,6 @@ import type { Level } from '#cli/types/settings.ts';
 import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { PYPROJECT } from '#tests/config/setup/languages.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -20,6 +19,7 @@ import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
+import { CHECK_GENERATION, createRunResources } from '#tests/setup/cli/run.ts';
 
 import {
     FAILED_STYLE_BATCH,
@@ -85,7 +85,7 @@ async function preparePydoclintCheck(
         [executable]: '',
     });
     await chmod(join(root, executable), EXECUTABLE_FILE);
-    const session = await openSession(root, { resources });
+    const session = await openSession(root, { resources: resources.use(createRunResources()) });
     const [planned] = planChecks(session, { stage: 'all', only: ['python/pydoclint'] });
     if (planned === undefined) throw new Error('The Python sandbox does not plan pydoclint.');
     const fakes = fakeToolExecutables([getTool(session.configurationsByName.values(), 'pydoclint')]);

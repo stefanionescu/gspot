@@ -1,6 +1,7 @@
 import { pathToFileURL } from 'node:url';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { escapeRegExp } from '#cli/system/text.ts';
 import { LEADING_SLASH } from '#cli/config/parsers.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
@@ -109,9 +110,9 @@ export async function checkLychee(session: CheckSession, planned: PlannedCheck):
             ? []
             : [
                   REMAP_FLAG,
-                  `^${RegExp.escape(location.origin + base)} ${buildUrl}`,
+                  `^${escapeRegExp(location.origin + base)} ${buildUrl}`,
                   REMAP_FLAG,
-                  `^${RegExp.escape(buildUrl + base.slice(1))} ${buildUrl}`,
+                  `^${escapeRegExp(buildUrl + base.slice(1))} ${buildUrl}`,
               ]),
         ...getTable(planned.scope.settings, 'docs').allowed_urls.flatMap((value) => [EXCLUDE_FLAG, value]),
     ];

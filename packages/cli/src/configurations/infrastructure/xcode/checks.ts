@@ -1,12 +1,12 @@
 import { posix } from 'node:path';
 import { camelCase } from 'scule';
 import { read } from '#cli/system/files/reads.ts';
-import { getPosition } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { getPosition, escapeRegExp } from '#cli/system/text.ts';
 import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { parseProjectSources } from '#cli/parsers/projects/xcode.ts';
@@ -122,7 +122,7 @@ export function checkXcodeUnusedAssets(session: Session, planned: PlannedCheck):
         .filter((path) => NAMED_SETS.some((ending) => path.endsWith(ending)))
         .filter((path) => {
             const name = extractAssetSetName(path);
-            const assignment = new RegExp(String.raw`=\s*${RegExp.escape(name)}\s*(?:;|$)`, 'mu');
+            const assignment = new RegExp(String.raw`=\s*${escapeRegExp(name)}\s*(?:;|$)`, 'mu');
             return !sourceTexts.some(
                 (text) =>
                     text.includes(`"${name}"`) ||

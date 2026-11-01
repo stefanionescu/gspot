@@ -67,7 +67,7 @@ type GrammarFile = { path: string; grammar: GrammarName };
 
 export type GrammarName = (typeof GRAMMAR_NAMES)[number];
 
-export type ParseCache = { cache: RunCache; resources?: DisposableStack };
+export type ParseCache = { cache: RunCache; resources?: Disposable[] };
 
 export type GrammarSourceFiles = ParseCache & { files: GrammarFile[] };
 

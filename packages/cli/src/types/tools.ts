@@ -73,7 +73,7 @@ export type Session = {
     startRunner: StartRunner;
     toolsRoot: string;
     cache: RunCache;
-    resources: DisposableStack;
+    resources: Disposable[];
     packageManager: PackageManagerPin | undefined;
     cancelSignal?: AbortSignal | undefined;
     settings: Settings;

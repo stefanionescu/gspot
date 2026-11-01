@@ -169,29 +169,33 @@ export async function runTreeCheck(
     cancelSignal: AbortSignal,
     revision?: RevisionSource,
 ): Promise<CommandResult<RunReport & { fixes?: FixReport | undefined }>> {
-    using resources = new DisposableStack();
-    const session = await openSession(treeFolder, {
-        toolsRoot: revision?.toolsRoot ?? treeFolder,
-        resources,
-        cancelSignal,
-    });
-    addRevisionPaths(session, revision);
-    const onlyNotes = assertOnlyChecks(session, options.only);
-    const filters = await readRunFilters(session, options, cancelSignal, revision);
-    await warnMissingHooks(session, revision);
-    const result = await runChecks(session, buildRunOptions(options, filters, revision));
-    if (result.fixes !== undefined) printFailedFixers(result.fixes, { verbose: options.verbose });
-    addRevisionNotes(result.report, revision);
-    result.report.notes.push(...onlyNotes);
-    if (filters.changed?.note !== undefined) result.report.notes.push(filters.changed.note);
-    const reportText = formatRunReport(result.report, {
-        verbose: options.verbose,
-        selectedOnly: options.only !== undefined,
-    });
-    const text = result.fixes ? `${formatFixes(result.fixes).join('\n')}\n${reportText}` : reportText;
-    return {
-        text,
-        json: { ...result.report, fixes: result.fixes },
-        exitCode: result.report.exitCode,
-    };
+    const resources: Disposable[] = [];
+    try {
+        const session = await openSession(treeFolder, {
+            toolsRoot: revision?.toolsRoot ?? treeFolder,
+            resources,
+            cancelSignal,
+        });
+        addRevisionPaths(session, revision);
+        const onlyNotes = assertOnlyChecks(session, options.only);
+        const filters = await readRunFilters(session, options, cancelSignal, revision);
+        await warnMissingHooks(session, revision);
+        const result = await runChecks(session, buildRunOptions(options, filters, revision));
+        if (result.fixes !== undefined) printFailedFixers(result.fixes, { verbose: options.verbose });
+        addRevisionNotes(result.report, revision);
+        result.report.notes.push(...onlyNotes);
+        if (filters.changed?.note !== undefined) result.report.notes.push(filters.changed.note);
+        const reportText = formatRunReport(result.report, {
+            verbose: options.verbose,
+            selectedOnly: options.only !== undefined,
+        });
+        const text = result.fixes ? `${formatFixes(result.fixes).join('\n')}\n${reportText}` : reportText;
+        return {
+            text,
+            json: { ...result.report, fixes: result.fixes },
+            exitCode: result.report.exitCode,
+        };
+    } finally {
+        for (const resource of resources.toReversed()) resource[Symbol.dispose]();
+    }
 }

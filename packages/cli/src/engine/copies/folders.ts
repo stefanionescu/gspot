@@ -39,8 +39,7 @@ export function createCopyFolder(root: string): TemporaryFolder {
     const files = openFiles(root);
     const path = createOwnedCopy(files);
     const parent = dirname(path);
-    using cleanup = new DisposableStack();
-    const copy = cleanup.use({
+    const copy = {
         path,
         [Symbol.dispose]: () => {
             deleteCopyFolder(path);
@@ -60,15 +59,19 @@ export function createCopyFolder(root: string): TemporaryFolder {
                 printWarning(`Could not remove check copy folder ${parent}: ${String(error)}`);
             }
         },
-    });
-    files.write(`${COPIES_FOLDER}/${COPY_IGNORE_FILE}`, {
-        bytes: Buffer.from(COPY_IGNORE_TEXT),
-        mode: OWNER_WRITABLE_FILE,
-    });
-    for (const name of files.list(COPIES_FOLDER)) {
-        const pid = COPY_FOLDER_NAME.exec(name)?.groups?.['pid'];
-        if (pid !== undefined && !isProcessRunning(Number(pid))) deleteCopyFolder(join(parent, name));
+    };
+    try {
+        files.write(`${COPIES_FOLDER}/${COPY_IGNORE_FILE}`, {
+            bytes: Buffer.from(COPY_IGNORE_TEXT),
+            mode: OWNER_WRITABLE_FILE,
+        });
+        for (const name of files.list(COPIES_FOLDER)) {
+            const pid = COPY_FOLDER_NAME.exec(name)?.groups?.['pid'];
+            if (pid !== undefined && !isProcessRunning(Number(pid))) deleteCopyFolder(join(parent, name));
+        }
+        return copy;
+    } catch (error) {
+        copy[Symbol.dispose]();
+        throw error;
     }
-    cleanup.move();
-    return copy;
 }

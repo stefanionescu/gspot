@@ -1,5 +1,13 @@
 import type { TextRange, TextPosition } from '#cli/types/system.ts';
-import { TYPO_MIN, LIST_LIMIT, TYPO_FRACTION, UNQUOTED_ARGUMENT, SIMILAR_NAME_LIMIT } from '#cli/config/system.ts';
+
+import {
+    TYPO_MIN,
+    LIST_LIMIT,
+    TYPO_FRACTION,
+    UNQUOTED_ARGUMENT,
+    SIMILAR_NAME_LIMIT,
+    REGEXP_SYNTAX_CHARACTERS,
+} from '#cli/config/system.ts';
 
 /**
 Count the fewest inserted, deleted, or replaced characters that turn one text into the other.
@@ -148,4 +156,14 @@ export function replaceRanges(base: string, overlay: string, ranges: readonly Te
     }
     pieces.push(base.slice(offset));
     return pieces.join('');
+}
+
+/**
+Escape text so that a regular expression matches it literally.
+
+@param text the text to match.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Six call sites in five files share this one escaping rule.
+export function escapeRegExp(text: string): string {
+    return text.replaceAll(REGEXP_SYNTAX_CHARACTERS, String.raw`\$&`);
 }

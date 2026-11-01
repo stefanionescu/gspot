@@ -76,7 +76,7 @@ export type SessionOptions = {
     cache?: RunCache | undefined;
     listing?: RepositoryListing | undefined;
     settingsFile?: SettingsFile;
-    resources?: DisposableStack;
+    resources?: Disposable[];
     cancelSignal?: AbortSignal | undefined;
 };
 

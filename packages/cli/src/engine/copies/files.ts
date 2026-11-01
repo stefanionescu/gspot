@@ -87,17 +87,20 @@ repository root with the copy, so Astro resolves their paths outside the copied 
 @returns the new folder, deleted on dispose.
 */
 export async function createCopy(source: CopyPaths): Promise<TemporaryFolder> {
-    using cleanup = new DisposableStack();
-    const folder = cleanup.use(createCopyFolder(source.root));
-    const plan = {
-        ...source,
-        target: folder.path,
-        files: new Set(source.paths),
-    };
-    await writeCopyFiles(plan);
-    await copyDependencies(plan);
-    cleanup.move();
-    return folder;
+    const folder = createCopyFolder(source.root);
+    try {
+        const plan = {
+            ...source,
+            target: folder.path,
+            files: new Set(source.paths),
+        };
+        await writeCopyFiles(plan);
+        await copyDependencies(plan);
+        return folder;
+    } catch (error) {
+        folder[Symbol.dispose]();
+        throw error;
+    }
 }
 
 /**

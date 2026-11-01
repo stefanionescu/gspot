@@ -1,5 +1,6 @@
 import { join, posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
+import { escapeRegExp } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
 import type { Level } from '#cli/types/settings.ts';
 import { buildUvRunCommand } from '#cli/tools/uv.ts';
@@ -13,13 +14,13 @@ import { countCodeLines } from '#cli/parsers/code/comments.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { REQUIREMENTS_FILE } from '#cli/config/repository/files.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
-import { PYPROJECT_TOML, PYTHON_EXTENSION } from '#cli/config/parsers.ts';
 import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import { PATH_SEPARATOR_PATTERN } from '#cli/config/configurations/blocks.ts';
 import { splitWords } from '#cli/configurations/general/naming/checks/settings.ts';
 import { joinScope, isInScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { runCommandCheck, runCommandBatches } from '#cli/engine/tool-runs/check.ts';
 import { deptrySchema, docstringStyleSchema } from '#cli/schemas/configurations.ts';
+import { GSPOT_FOLDER, PYPROJECT_TOML, PYTHON_EXTENSION } from '#cli/config/parsers.ts';
 import { findDocstring, readPythonFiles, parsePythonModule } from '#cli/parsers/code/python.ts';
 import type { PydoclintOptions, PythonDocstringStyle } from '#cli/types/configurations/language.ts';
 
@@ -40,7 +41,6 @@ import {
     PYDOCLINT_COMMAND,
     PIP_INSTALL_MESSAGE,
     DEPTRY_EXCLUDE_FLAG,
-    DEPTRY_GSPOT_EXCLUDE,
     PYDOCLINT_STYLE_FLAG,
     INSTALL_FILE_SUFFIXES,
     PYDOCLINT_TYPE_OPTIONS,
@@ -166,7 +166,7 @@ export async function checkDeptry(session: CheckSession, planned: PlannedCheck):
         command: buildUvRunCommand(planned.scope, join(session.root, planned.scope.path), [
             ...DEPTRY_COMMAND,
             ...[
-                DEPTRY_GSPOT_EXCLUDE,
+                String.raw`(^|.*[/\\])${escapeRegExp(GSPOT_FOLDER)}([/\\]|$)`,
                 ...listNestedScopes(
                     session.scopes.map((scope) => scope.path),
                     planned.scope.path,
@@ -174,7 +174,7 @@ export async function checkDeptry(session: CheckSession, planned: PlannedCheck):
                     const child = posix
                         .relative(planned.scope.path, path)
                         .split('/')
-                        .map((segment) => RegExp.escape(segment))
+                        .map((segment) => escapeRegExp(segment))
                         .join(PATH_SEPARATOR_PATTERN);
                     return String.raw`^${child}([/\\]|$)`;
                 }),

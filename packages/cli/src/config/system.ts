@@ -18,6 +18,8 @@ export const DRIVE_LETTER = /^[a-z]:/iu;
 
 export const GLOB_SPECIAL_CHARACTERS = /[\\*?{}[\]()!+@,]/gu;
 
+export const REGEXP_SYNTAX_CHARACTERS = /[$()*+.?[\\\]^{|}]/gu;
+
 export const TRAILING_SLASH = /\/$/u;
 
 export const INSTALLED_DEPENDENCY_FOLDERS: ReadonlySet<string> = new Set([

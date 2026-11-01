@@ -1,6 +1,7 @@
 import type ts from 'typescript';
 import { posix } from 'node:path';
 import { find } from '#cli/system/files/reads.ts';
+import { escapeRegExp } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
@@ -125,7 +126,7 @@ export function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): 
                 (ASSET_FOLDER.exec(file.path)?.index ?? 0) + (ASSET_FOLDER.exec(file.path)?.[0].length ?? 0),
             );
             const reference = new RegExp(
-                `${ASSET_REFERENCE_PREFIX}/?${RegExp.escape(belowAssets)}${ASSET_REFERENCE_SUFFIX}`,
+                `${ASSET_REFERENCE_PREFIX}/?${escapeRegExp(belowAssets)}${ASSET_REFERENCE_SUFFIX}`,
                 'u',
             );
             return !texts.some(

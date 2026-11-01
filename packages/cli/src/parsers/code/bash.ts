@@ -255,34 +255,38 @@ export async function parseBashScript(text: string, cache?: ParseCache): Promise
     const commands = tree.rootNode
         .descendantsOfType(['command', 'declaration_command'])
         .filter((node) => node.type === 'command' || node.child(0)?.text === 'export');
-    using resources = new DisposableStack();
-    const traps = await parseTrapScripts(commands, cache, resources);
-    const scripts = new Map(traps.map((script) => [script.trap.id, script]));
-    const calls = commands.flatMap((node) => {
-        const nodeCalls = buildCommandCalls([node]);
-        const script = scripts.get(node.id);
-        if (script !== undefined)
-            nodeCalls.push(
-                ...buildCommandCalls(
-                    script.syntaxRoot
-                        .descendantsOfType(['command', 'declaration_command'])
-                        .filter((child) => child.type === 'command' || child.child(0)?.text === 'export'),
-                    script.sourceRows,
-                ),
-            );
-        return nodeCalls;
-    });
-    return {
-        code: codeText.split('\n'),
-        commands: listScriptCommands(commands, traps),
-        swallowedLines: listSwallowedLines(tree.rootNode, traps),
-        statements: tree.rootNode.namedChildren
-            .filter((node) => node.type !== 'comment')
-            .map((node) => ({ kind: node.type, text: node.text, line: node.startPosition.row + 1 })),
-        functions: parseBashFunctions(tree.rootNode),
-        calls,
-        temporaryPaths: listTemporaryPaths(tree.rootNode, commands, traps),
-    };
+    const trapTrees: Disposable[] = [];
+    try {
+        const traps = await parseTrapScripts(commands, cache, trapTrees);
+        const scripts = new Map(traps.map((script) => [script.trap.id, script]));
+        const calls = commands.flatMap((node) => {
+            const nodeCalls = buildCommandCalls([node]);
+            const script = scripts.get(node.id);
+            if (script !== undefined)
+                nodeCalls.push(
+                    ...buildCommandCalls(
+                        script.syntaxRoot
+                            .descendantsOfType(['command', 'declaration_command'])
+                            .filter((child) => child.type === 'command' || child.child(0)?.text === 'export'),
+                        script.sourceRows,
+                    ),
+                );
+            return nodeCalls;
+        });
+        return {
+            code: codeText.split('\n'),
+            commands: listScriptCommands(commands, traps),
+            swallowedLines: listSwallowedLines(tree.rootNode, traps),
+            statements: tree.rootNode.namedChildren
+                .filter((node) => node.type !== 'comment')
+                .map((node) => ({ kind: node.type, text: node.text, line: node.startPosition.row + 1 })),
+            functions: parseBashFunctions(tree.rootNode),
+            calls,
+            temporaryPaths: listTemporaryPaths(tree.rootNode, commands, traps),
+        };
+    } finally {
+        for (const trapTree of trapTrees) trapTree[Symbol.dispose]();
+    }
 }
 
 /**

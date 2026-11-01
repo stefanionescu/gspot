@@ -50,7 +50,7 @@ export function readPythonFiles(sources: SourceFiles): Promise<PythonFiles> {
         for (const file of sources.files) {
             if (file.kind !== 'source' || !file.path.endsWith(PYTHON_EXTENSION)) continue;
             const module = await parsePythonModule(file.path, read(sources.cache, file.path), sources);
-            sources.resources.use(module.tree);
+            sources.resources.push(module.tree);
             modules.push(module);
         }
         return { modules, functions: modules.flatMap((module) => listFunctions(module)) };

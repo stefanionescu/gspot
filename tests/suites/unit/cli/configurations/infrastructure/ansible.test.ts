@@ -19,7 +19,6 @@ test('each Ansible project lints its own files and not those of a nested project
     });
     using resources = new DisposableStack();
     const session = await openFakeToolSession(sandbox.path, ['ansible-lint'], resources);
-    resources.use(session.resources);
     await createFileTree(sandbox.path, {
         [buildVenvExecutablePath(GSPOT_PATHS.pythonEnvironment, 'ansible-lint')]: 'stub',
     });

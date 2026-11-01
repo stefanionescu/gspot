@@ -4,11 +4,11 @@ import { writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { NODE_SCRIPT } from '#tests/config/setup/languages.ts';
 import { SESSION_FILES } from '#tests/config/engine/tool-runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
 
 test('a copied session generates settings from its replacement inventory and run cache', async () => {
     await using sandbox = await createGitSandbox({
@@ -30,8 +30,8 @@ test('a run uses the cancel signal supplied when its session opens', async () =>
         ...SESSION_FILES,
         'gspot.toml': buildSandboxSettings(['javascript', 'naming'], { rules: true }),
     });
-    const session = await openSession(sandbox.path, { cancelSignal: AbortSignal.abort() });
-    using _resources = session.resources;
+    using resources = createRunResources();
+    const session = await openSession(sandbox.path, { resources, cancelSignal: AbortSignal.abort() });
     const result = await runChecks(session, buildRunOptions({ only: ['naming/identifiers'] }));
     expect(result.report.exitCode).toBe(2);
     expect(

@@ -41,7 +41,7 @@ Parse literal trap scripts once and retain their trees until the caller disposes
 export async function parseTrapScripts(
     commands: Node[],
     cache: ParseCache | undefined,
-    resources: DisposableStack,
+    resources: Disposable[],
 ): Promise<TrapScript[]> {
     const bodies = commands
         .filter((command) => command.childForFieldName('name')?.text === TRAP_COMMAND)
@@ -58,7 +58,8 @@ export async function parseTrapScripts(
     const scripts: TrapScript[] = [];
     for (const { trap, body } of bodies) {
         const { text, sourceRows } = readTrapBody(body);
-        const tree = resources.use(await parseSource('bash', text, cache));
+        const tree = await parseSource('bash', text, cache);
+        resources.push(tree);
         scripts.push({ trap, body, syntaxRoot: tree.rootNode, sourceRows });
     }
     return scripts;

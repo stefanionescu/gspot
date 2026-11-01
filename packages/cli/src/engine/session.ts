@@ -80,7 +80,7 @@ Refuse invalid settings or configuration choices.
 @param options.cache the run cache.
 @param options.listing the files of the repository, or none to list them.
 @param options.settingsFile the settings to use, or none to read them from the repository.
-@param options.resources the cleanup stack of the caller.
+@param options.resources the resources that the caller disposes when the run ends.
 @param options.cancelSignal stops the operations of this session.
 */
 export async function openSession(
@@ -90,7 +90,7 @@ export async function openSession(
         cache = createRunCache(root),
         listing,
         settingsFile: requestedSettings,
-        resources = new DisposableStack(),
+        resources = [],
         cancelSignal,
     }: SessionOptions = {},
 ): Promise<Session> {

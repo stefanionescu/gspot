@@ -4,7 +4,6 @@ import { openSession } from '#cli/engine/session.ts';
 import { runBuiltInCheck } from '#cli/engine/results.ts';
 import * as environment from '#cli/system/environment.ts';
 import { getTool, findToolName } from '#cli/tools/pins.ts';
-import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -17,6 +16,7 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import type { NamingSettings } from '#cli/types/configurations/general.ts';
 import { ROOT_LABEL, SWIFT_PACKAGE } from '#tests/config/setup/programs.ts';
 import { CHECK_CODE, selectCheckCode } from '#cli/configurations/registry.ts';
+import { CHECK_GENERATION, createRunResources } from '#tests/setup/cli/run.ts';
 import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
 
@@ -87,7 +87,7 @@ export async function prepareSwiftCheck(
         'gspot.toml': buildSandboxSettings(['swift']),
         ...files,
     });
-    const session = await openSession(sandbox.path, { resources: resources.use(new DisposableStack()) });
+    const session = await openSession(sandbox.path, { resources: resources.use(createRunResources()) });
     return Object.assign(resources.move(), { session, planned: planSandboxCheck(session, checkId) });
 }
 
@@ -99,7 +99,7 @@ export async function runSandboxCheck(
     checkId: string,
     options: { scope?: string; paths?: string[] } = {},
 ): Promise<readonly Finding[]> {
-    using resources = new DisposableStack();
+    using resources = createRunResources();
     const session = await openSession(root, { resources });
     const planned = planSandboxCheck(session, checkId, options);
     const result = await runCheckCode(
@@ -119,7 +119,7 @@ export async function openFakeToolSession(
     toolNames: string[],
     resources: Pick<DisposableStack, 'use'>,
 ): Promise<Session> {
-    const session = await openSession(root);
+    const session = await openSession(root, { resources: resources.use(createRunResources()) });
     resources.use(fakeToolExecutables(toolNames.map((name) => getTool(session.configurationsByName.values(), name))));
     return session;
 }

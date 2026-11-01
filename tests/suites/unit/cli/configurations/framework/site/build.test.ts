@@ -11,9 +11,9 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
+import { buildRunOptions, CHECK_GENERATION, createRunResources } from '#tests/setup/cli/run.ts';
 import { BUILD_OUTPUT_CHECKS, WORKSPACE_SITE_FILES } from '#tests/config/configurations/framework.ts';
 import { listBuiltFiles, readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
 
@@ -46,7 +46,7 @@ test('build: a scope build reads the tracked files at the repository root in its
         'docs/page.md': '# Page\n',
     });
     commitAll(sandbox.path);
-    using resources = new DisposableStack();
+    using resources = createRunResources();
     const session = await openSession(sandbox.path, { resources });
     const build = await readSuccessfulBuild(
         buildCheckSession(session, CHECK_GENERATION),
@@ -64,7 +64,7 @@ test('build: a build that reads an untracked file fails until the file is in the
         }),
         'local-input.txt': 'Only available in the working tree.',
     });
-    using resources = new DisposableStack();
+    using resources = createRunResources();
     const session = await openSession(sandbox.path, { resources });
     const request = planSandboxCheck(session, 'site/build', { paths: [] });
     const findings = await getBuiltInCheck('site/build')(session, request);
@@ -100,7 +100,7 @@ test.each([0, 7])("build: a run deletes the build's copy after exit %i", async (
             return buildProcessResult({ code, stderr: code === 0 ? '' : 'Test build failure' });
         }),
     );
-    const runResources = new DisposableStack();
+    const runResources = createRunResources();
     const session = await openSession(sandbox.path, { resources: runResources });
     const result = await runChecks(session, buildRunOptions({ only: ['site/build'] }));
     expect(result.report.checks).toMatchObject([{ check: 'site/build', status: code === 0 ? 'passed' : 'failed' }]);
@@ -137,7 +137,7 @@ test("build: a scope's site build copies only the workspace packages it depends 
     await mkdir(join(sandbox.path, 'node_modules'));
     await symlink('../packages/core', join(sandbox.path, 'node_modules/core'));
     await symlink('../packages/unused', join(sandbox.path, 'node_modules/unused'));
-    using resources = new DisposableStack();
+    using resources = createRunResources();
     const session = await openSession(sandbox.path, { resources });
     const input = planSandboxCheck(session, 'site/build', { scope: 'web' });
     const built = await readSuccessfulBuild(buildCheckSession(session, CHECK_GENERATION), input);
@@ -159,7 +159,7 @@ test('build: a failed site build skips every check that reads the build, and a n
         }),
         'page.html': '<!doctype html><html lang="en"><title>Example</title></html>',
     });
-    using resources = new DisposableStack();
+    using resources = createRunResources();
     const consumers = new Set(BUILD_OUTPUT_CHECKS);
     const session = await openSession(sandbox.path, { resources });
     const failed = await runChecks(session, buildRunOptions({ only: ['site/build', ...consumers] }));

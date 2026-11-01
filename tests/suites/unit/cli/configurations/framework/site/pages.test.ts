@@ -3,6 +3,7 @@ import { pathToFileURL } from 'node:url';
 import { getTool } from '#cli/tools/pins.ts';
 import { writeFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
+import { escapeRegExp } from '#cli/system/text.ts';
 import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
@@ -43,7 +44,7 @@ test('a sitemap index supplies the base path for encoded and CDATA page URLs and
                 return 'https://example.com/docs/guide/'.replace(new RegExp(pattern!), target!);
             }),
         );
-        expect(mappings[1]).toBe(`^${RegExp.escape(buildUrl + 'docs/')} ${buildUrl}`);
+        expect(mappings[1]).toBe(`^${escapeRegExp(buildUrl + 'docs/')} ${buildUrl}`);
         expect(remaps.at(-1)?.[0]).toBe(buildUrl + 'guide/');
         return Promise.resolve(buildProcessResult());
     });

@@ -2,6 +2,7 @@ import picomatch from 'picomatch';
 import { posix, extname } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
 import { find } from '#cli/system/files/reads.ts';
+import { escapeRegExp } from '#cli/system/text.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
@@ -74,10 +75,7 @@ function parseSharedFile(text: string, extension: string, path: string): unknown
 function hasToolSection(text: string, path: string, selector: Pick<ConflictingConfig, 'key' | 'table'>): boolean {
     const extension = extname(path);
     if (selector.table !== undefined && INI_EXTENSIONS.has(extension)) {
-        const header = new RegExp(
-            String.raw`^\s*\[${RegExp.escape(selector.table)}(?::[^\]]+)?\]\s*(?:[#;].*)?$`,
-            'mu',
-        );
+        const header = new RegExp(String.raw`^\s*\[${escapeRegExp(selector.table)}(?::[^\]]+)?\]\s*(?:[#;].*)?$`, 'mu');
         return header.test(text);
     }
     const segments = selector.key === undefined ? (selector.table as string).split('.') : [selector.key];

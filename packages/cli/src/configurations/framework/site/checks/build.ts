@@ -42,7 +42,8 @@ function readSiteBuild(session: CheckSession, planned: PlannedCheck): Promise<Si
             .map((indexFile) => indexFile.path)
             .filter((path) => !path.includes('/'));
         const folder = await createCheckCopy(session, planned, rootFiles);
-        return runSiteBuild(session, planned, session.resources.use(folder).path);
+        session.resources.push(folder);
+        return runSiteBuild(session, planned, folder.path);
     });
 }
 

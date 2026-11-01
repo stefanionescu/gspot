@@ -7,7 +7,6 @@ import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
@@ -15,6 +14,7 @@ import { CANCELED_CHECK_NOTE } from '#tests/config/setup/sandboxes.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
+import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
 import { SCOPE_FINDINGS, SCOPE_CHECK_FILES, QUALITY_SEARCH_ARGUMENTS } from '#tests/config/engine/run.ts';
 
 test('an aborted run stops its command and reports cancellation on every system', async () => {
@@ -36,8 +36,8 @@ test('an aborted run stops its command and reports cancellation on every system'
         'source.txt': 'Input.\n',
     });
     const controller = new AbortController();
-    const session = await openSession(sandbox.path);
-    using _resources = session.resources;
+    using resources = createRunResources();
+    const session = await openSession(sandbox.path, { resources });
     session.cancelSignal = controller.signal;
     const running = runChecks(session, buildRunOptions({ only: ['project/cancel'] }));
     expect(await waitForFile(marker)).toBe(true);
@@ -62,8 +62,8 @@ test('a check whose code fails because the run was canceled reports the cancella
         'index.html': '<p>Ready.</p>\n',
     });
     const controller = new AbortController();
-    const session = await openSession(sandbox.path);
-    using _resources = session.resources;
+    using resources = createRunResources();
+    const session = await openSession(sandbox.path, { resources });
     session.cancelSignal = controller.signal;
     const running = runChecks(session, buildRunOptions({ only: ['site/build'] }));
     expect(await waitForFile(marker)).toBe(true);

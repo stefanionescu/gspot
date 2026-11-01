@@ -2,10 +2,10 @@ import { test, expect } from 'bun:test';
 import { runChecks } from '#cli/engine/run.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
 
 test('a fix run rereads the repository and keeps the package scopes it found', async () => {
     await using sandbox = await createGitSandbox({
@@ -47,7 +47,7 @@ test('checks read a new file inventory after a fixer creates a source and leave 
         }),
     });
 
-    using resources = new DisposableStack();
+    using resources = createRunResources();
     const session = await openSession(sandbox.path, { resources });
     const options = buildRunOptions({ stage: 'commit', fix: true, only: ['project/inventory'] });
     const result = await runChecks(session, options);

@@ -71,8 +71,10 @@ export async function parseSource(grammar: GrammarName, text: string, cache?: Pa
             ? (parser.parse(text) as Tree)
             : remember(cache.cache, PARSED_TREES, `${grammar}\0${text}`, () => {
                   const parsed = parser.parse(text) as Tree;
-                  resources.defer(() => {
-                      parsed.delete();
+                  resources.push({
+                      [Symbol.dispose]: () => {
+                          parsed.delete();
+                      },
                   });
                   return parsed;
               }).copy();

@@ -6,6 +6,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { createRunResources } from '#tests/setup/cli/run.ts';
 import { buildMiseInstall } from '#cli/tools/installers/mise.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -51,8 +52,8 @@ test('Markdownlint validates a rule against its installed catalog without evalua
 test('SwiftLint validates rules with installed metadata and an empty explicit configuration', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['swift']) });
     const executable = join(sandbox.path, 'tools/swiftlint');
-    const session = await openSession(sandbox.path);
-    using _resources = session.resources;
+    using resources = createRunResources();
+    const session = await openSession(sandbox.path, { resources });
     await createFileTree(sandbox.path, {
         '.gspot/mise.toml': buildMiseInstall(session.toolConfigurations).content,
         'tools/swiftlint': '',
