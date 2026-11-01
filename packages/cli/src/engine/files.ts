@@ -10,6 +10,7 @@ import { getTable, listIgnores } from '#cli/settings/scopes.ts';
 import type { PlannedCheck, PlannedScope } from '#cli/types/engine/plan.ts';
 import type { Check, ScopeCheck, Configuration } from '#cli/types/manifests.ts';
 import { listCoveredFiles, listCoveredPaths } from '#cli/repository/files/selection.ts';
+import { ROOT_RUNS, BYTES_PER_KILOBYTE, IGNORED_PATHS_MESSAGE } from '#cli/config/engine.ts';
 
 import {
     isInScope,
@@ -18,13 +19,6 @@ import {
     listNestedScopes,
     isOutsideChildScopes,
 } from '#cli/repository/scopes.ts';
-import {
-    ROOT_RUNS,
-    ENCODING_CHECK,
-    LARGE_FILES_CHECK,
-    BYTES_PER_KILOBYTE,
-    IGNORED_PATHS_MESSAGE,
-} from '#cli/config/engine.ts';
 
 /**
 Get the name that a config-file placeholder uses for a config file.
@@ -46,23 +40,31 @@ function listScopeFiles(planned: PlannedScope, scopePath: string, runs: Check['r
     );
 }
 
-function listProjectCheckFiles(planned: PlannedScope, scopeCheck: ScopeCheck, scopePath: string): TrackedFile[] {
-    const { check, configuration } = scopeCheck;
+function listProjectMatches(
+    planned: PlannedScope,
+    { check, configuration }: ScopeCheck,
+    { scopeFiles, scopePath }: { scopeFiles: TrackedFile[]; scopePath: string },
+): TrackedFile[] {
     const { scope } = planned;
     const owners = check.files ?? (configuration?.group === 'language' ? configuration.files : undefined);
-    const scopeFiles = listScopeFiles(planned, scopePath, check.runs);
     const projectFiles =
         configuration === undefined ? scopeFiles : scopeFiles.filter((file) => !isGspotPath(file.path));
-    const matches =
-        owners === undefined
-            ? projectFiles
-            : listCoveredFiles(owners, projectFiles, {
-                  configurations: scope.configurations,
-                  scopePath,
-                  settings: scope.settings,
-              });
-    if (listNarrowedFiles(planned, scopeCheck, stripIgnoredFiles(matches, check, scope).files).length === 0) return [];
-    return [check.runs, check.id].some((value) => ['scope', LARGE_FILES_CHECK, ENCODING_CHECK].includes(value))
+    return owners === undefined
+        ? projectFiles
+        : listCoveredFiles(owners, projectFiles, {
+              configurations: scope.configurations,
+              scopePath,
+              settings: scope.settings,
+          });
+}
+
+function listProjectCheckFiles(planned: PlannedScope, scopeCheck: ScopeCheck, scopePath: string): TrackedFile[] {
+    const { check } = scopeCheck;
+    const scopeFiles = listScopeFiles(planned, scopePath, check.runs);
+    const matches = listProjectMatches(planned, scopeCheck, { scopeFiles, scopePath });
+    const { files } = stripIgnoredFiles(matches, check, planned.scope);
+    if (listNarrowedFiles(planned, scopeCheck, files).length === 0) return [];
+    return check.runs === 'scope' || check.binary_files === true
         ? scopeFiles
         : scopeFiles.filter((file) => file.kind !== 'binary');
 }
@@ -131,13 +133,10 @@ function listDeletedTriggers(planned: PlannedScope, scopeCheck: ScopeCheck, scop
 }
 
 function listReadableFiles(planned: PlannedScope, check: Check, files: TrackedFile[]): TrackedFile[] {
-    if (check.id === LARGE_FILES_CHECK) return files;
-    const scopes = planned.session.scopes;
+    if (check.binary_files === true) return files;
     return files.filter((file) => {
-        const owner = selectScopePath(file.path, scopes);
-        const scope = scopes.find((scope) => scope.path === owner) as Scope;
-        if (file.size > getTable(scope.settings, 'repository').max_file_kilobytes * BYTES_PER_KILOBYTE) return false;
-        if (check.id === ENCODING_CHECK || !file.tags.includes('text') || file.tags.includes('symlink')) return true;
+        if (isOverSizeLimit(planned.session.scopes, file)) return false;
+        if (!file.tags.includes('text') || file.tags.includes('symlink')) return true;
         file.isUtf8 ??= isUtf8(readBytes(planned.session.cache, file.path));
         return file.isUtf8;
     });
@@ -148,6 +147,18 @@ function listToolFiles(planned: PlannedScope, scopeCheck: ScopeCheck, files: Tra
     const narrowed = check.runs === 'files' ? listNarrowedFiles(planned, scopeCheck, files) : files;
     const readable = listReadableFiles(planned, check, narrowed);
     return check.command === undefined ? readable : readable.filter((file) => !file.tags.includes('symlink'));
+}
+
+/**
+Check whether a file passes the size limit of its scope.
+
+@param scopes every scope of the session.
+@param file the path and size of the file.
+*/
+export function isOverSizeLimit(scopes: Scope[], file: Pick<TrackedFile, 'path' | 'size'>): boolean {
+    const owner = selectScopePath(file.path, scopes);
+    const scope = scopes.find((each) => each.path === owner) as Scope;
+    return file.size > getTable(scope.settings, 'repository').max_file_kilobytes * BYTES_PER_KILOBYTE;
 }
 
 /**
@@ -227,7 +238,7 @@ export function selectCheckFiles(
             : listScopeFiles(planned, scopePath, check.runs);
     files = listToolFiles(planned, scopeCheck, files);
     if (!keepsChildScopes) files = files.filter((file) => isOutsideChildScopes(file.path, children));
-    const unreadablePaths = check.id === ENCODING_CHECK ? planned.session.repository.unreadablePaths : [];
+    const unreadablePaths = check.binary_files === true ? planned.session.repository.unreadablePaths : [];
     return { ...stripIgnoredFiles(files, check, scope), triggerPaths: [...triggerPaths, ...unreadablePaths] };
 }
 

@@ -1,6 +1,25 @@
-import type { FenceParser } from '#cli/types/configurations/language.ts';
+import type { FenceParser, StylelintComponent } from '#cli/types/configurations/language.ts';
 
 export const PARENT_TSCONFIG_SKIP = 'The tsconfig of a parent folder covers this project, and gspot checks it there.';
+
+const VUE_STYLELINT_OVERRIDE = {
+    files: ['**/*.vue'],
+    customSyntax: 'postcss-html',
+    ignorePseudoClasses: ['deep', 'global', 'slotted'],
+    functions: ['v-bind'],
+} as const;
+
+const SVELTE_STYLELINT_OVERRIDE = {
+    files: ['**/*.svelte'],
+    customSyntax: 'postcss-html',
+    ignorePseudoClasses: ['global'],
+} as const;
+
+export const STYLELINT_COMPONENTS: readonly StylelintComponent[] = [
+    VUE_STYLELINT_OVERRIDE,
+    SVELTE_STYLELINT_OVERRIDE,
+    { files: ['**/*.astro'], customSyntax: 'postcss-html', ignorePseudoClasses: [] },
+];
 
 export const STYLELINT_BASE_RULES = { 'import-notation': 'string', 'function-no-unknown': true } as const;
 

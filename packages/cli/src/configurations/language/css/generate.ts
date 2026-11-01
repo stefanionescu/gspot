@@ -1,5 +1,4 @@
 import { isInScope } from '#cli/repository/scopes.ts';
-import { STYLELINT_COMPONENTS } from '#cli/config/engine.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
@@ -9,6 +8,7 @@ import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import {
     STYLELINT_CHECK,
     TAILWIND_AT_RULES,
+    STYLELINT_COMPONENTS,
     CSS_MODULES_OVERRIDE,
     STYLELINT_BASE_RULES,
     STYLELINT_DEFAULT_LEVEL_OFF,

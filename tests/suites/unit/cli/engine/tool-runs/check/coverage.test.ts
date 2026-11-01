@@ -3,11 +3,11 @@ import { join, resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { buildCheckSession } from '#cli/engine/run.ts';
 import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
-import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -35,7 +35,12 @@ test.each(COVERAGE_PROJECT_FILES)(
             commands.push([...command]);
             return Promise.resolve(buildProcessResult());
         });
-        const result = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned);
+        const result = await runCheckCode(
+            buildCheckSession(session, CHECK_GENERATION),
+            planned,
+            selectCheckCode(planned.check),
+            {},
+        );
         expect(result.status, result.note).toBe('passed');
         expect(commands).toHaveLength(1);
         const coverage = commands[0]!.find((argument) => argument.startsWith('--cov-config='));

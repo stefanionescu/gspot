@@ -4,6 +4,7 @@ description = "Tracked files: large files outside Git LFS, and paths that a conf
 title = "Repository"
 
 [[check]]
+binary_files = true
 example = "A tracked `notes/big.txt` over `repository.max_file_kilobytes` reports `size`. Delete the file, or store it through Git LFS."
 help = "Track the file with Git LFS, classify it as generated or vendored in .gitattributes, or raise repository.max_file_kilobytes with a reason."
 name = "large-files"
@@ -22,6 +23,7 @@ summary = "Reports a tracked file at a path that a configuration keeps out of Gi
 why = "Machine-local values and installed packages belong outside shared Git history."
 
 [[check]]
+binary_files = true
 example = "A tracked Latin-1 notes.md reports encoding. Save the file as UTF-8."
 help = "Save the reported file as UTF-8, then run the check again."
 name = "encoding"

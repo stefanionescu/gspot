@@ -63,7 +63,7 @@ allow_digits = true
 reason = "v8r is the name of the tool."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/engine/run.ts"]
+paths = ["packages/cli/src/types/configurations/language.ts"]
 allowed_names = ["customSyntax"]
 reason = "Stylelint names its parser option customSyntax."
 

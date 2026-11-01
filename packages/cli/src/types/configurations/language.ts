@@ -282,6 +282,13 @@ export type PlannedConfig = ConfigOwner & {
 
 export type ConfigOutput = { content: string; companions: GeneratedFile[] };
 
+export type StylelintComponent = {
+    files: readonly string[];
+    customSyntax: string;
+    ignorePseudoClasses: readonly string[];
+    functions?: readonly string[];
+};
+
 export type OwnedConfig = { config: Config; owner: ConfigOwner };
 
 export type FormatSettings = Required<Defined<Omit<NonNullable<ParsedSettings['format']>, 'override' | 'quotes'>>> &

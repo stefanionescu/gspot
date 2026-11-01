@@ -24,6 +24,7 @@ import { buildStylelintFile } from '#cli/configurations/language/css/generate.ts
 import { buildBiomeFile } from '#cli/configurations/language/javascript/biome.ts';
 import { checkTsconfig } from '#cli/configurations/language/typescript/checks.ts';
 import { checkMessages } from '#cli/configurations/library/translations/checks.ts';
+import { checkPytestCoverage } from '#cli/configurations/testing/pytest/checks.ts';
 import { buildCoverageFile } from '#cli/configurations/testing/pytest/generate.ts';
 import { buildSquawkFile } from '#cli/configurations/database/postgres/generate.ts';
 import { checkSiteBuild } from '#cli/configurations/framework/site/checks/build.ts';
@@ -243,6 +244,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'python/placeholder-docstrings': { check: checkPlaceholderDocstrings },
     'python/pydoclint': { run: checkPydoclint },
     'python/vulture': { check: checkVulture },
+    'pytest/coverage': { run: checkPytestCoverage },
     'repository/encoding': { check: checkEncoding },
     'react-dom/react-versions': { check: checkReactVersions },
     'repository/large-files': { check: checkLargeFiles },

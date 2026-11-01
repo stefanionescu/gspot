@@ -131,13 +131,6 @@ export type CommandLaunch = {
     env: Record<string, string>;
 };
 
-export type StylelintComponent = {
-    files: readonly string[];
-    customSyntax: string;
-    ignorePseudoClasses: readonly string[];
-    functions?: readonly string[];
-};
-
 export type OutdatedFile = {
     diff?: string;
     path: string;

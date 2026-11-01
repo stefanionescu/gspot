@@ -17,15 +17,7 @@ import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
 import { selectScopePath, listNestedScopes } from '#cli/repository/scopes.ts';
 import type { PrettierPlugin, LicenseProject } from '#cli/types/engine/plan.ts';
 import { isSettingEmpty, findSystemSkip, findSettingsSkip } from '#cli/engine/skips.ts';
-
-import {
-    PRETTIER_TOOL,
-    STYLELINT_TOOL,
-    PIP_LICENSES_COMMAND,
-    STYLELINT_COMPONENTS,
-    LICENSES_CONFIGURATION,
-    LICENSE_CHECKER_COMMAND,
-} from '#cli/config/engine.ts';
+import { PIP_LICENSES_COMMAND, LICENSES_CONFIGURATION, LICENSE_CHECKER_COMMAND } from '#cli/config/engine.ts';
 
 function isToolConditionMet(scope: Scope, conditions: Tool['when']): boolean {
     return (
@@ -67,17 +59,7 @@ export function listOtherTools(scope: Scope, check: Check, command?: string[]): 
     const plugins = tools.includes(ESLINT_MANIFEST_TOOL)
         ? scope.configurations.flatMap((configuration) => configuration.eslint.required_tools)
         : [];
-    const syntax =
-        check.tool === STYLELINT_TOOL
-            ? scope.settings.configurations
-                  .flatMap((name) =>
-                      STYLELINT_COMPONENTS.filter((component) =>
-                          component.files.some((pattern) => pattern.endsWith(`.${name}`)),
-                      ),
-                  )
-                  .map((dialect) => dialect.customSyntax)
-            : [];
-    return [...new Set([...otherTools, ...plugins, ...syntax])].filter((name) => {
+    return [...new Set([...otherTools, ...plugins])].filter((name) => {
         const pin = getTool(scope.configurations, name);
         return isToolConditionMet(scope, pin.when);
     });
@@ -143,11 +125,8 @@ export function selectToolConfigurations(session: SessionBase, checks: Configure
             basename(project.dependencyFile) === PACKAGE_JSON ? LICENSE_CHECKER_COMMAND[0] : PIP_LICENSES_COMMAND[0],
         );
     const toolNames = new Set([...checks.flatMap((check) => listCheckTools(check)), ...licenses]);
-    if (toolNames.has(PRETTIER_TOOL))
-        for (const { name } of listPrettierPlugins(
-            session.scopes.flatMap(({ configurations }) => configurations),
-        ).keys())
-            toolNames.add(name);
+    for (const { name } of listPrettierPlugins(session.scopes.flatMap(({ configurations }) => configurations)).keys())
+        toolNames.add(name);
     const configurations = listSelectedConfigurations(session.scopes);
     const selectedTools = new Set(
         configurations.flatMap((configuration) => configuration.tools.map(({ name }) => name)),

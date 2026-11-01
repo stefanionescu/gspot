@@ -1,7 +1,7 @@
 import { STAGES } from '#cli/config/manifests.ts';
+import type { CheckStatus } from '#cli/types/engine/run.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { CheckOutput } from '#cli/types/engine/tool-runs.ts';
-import type { CheckStatus, StylelintComponent } from '#cli/types/engine/run.ts';
 import { PACKAGE_JSON, TSCONFIG_FILE, PYPROJECT_TOML } from '#cli/config/parsers.ts';
 
 export const SHORT_HASH_LENGTH = 7;
@@ -25,25 +25,6 @@ export const FAILED_STATUSES = new Set<CheckStatus>(['failed', 'error']);
 export const CHECK_COMMAND = 'gspot check';
 
 export const HOOK_FLAG = '--hook';
-
-const VUE_STYLELINT_OVERRIDE = {
-    files: ['**/*.vue'],
-    customSyntax: 'postcss-html',
-    ignorePseudoClasses: ['deep', 'global', 'slotted'],
-    functions: ['v-bind'],
-} as const;
-
-const SVELTE_STYLELINT_OVERRIDE = {
-    files: ['**/*.svelte'],
-    customSyntax: 'postcss-html',
-    ignorePseudoClasses: ['global'],
-} as const;
-
-export const STYLELINT_COMPONENTS: readonly StylelintComponent[] = [
-    VUE_STYLELINT_OVERRIDE,
-    SVELTE_STYLELINT_OVERRIDE,
-    { files: ['**/*.astro'], customSyntax: 'postcss-html', ignorePseudoClasses: [] },
-];
 
 export const GIT_CHECK_IGNORE_ARGUMENTS = ['check-ignore', '--no-index', '-z', '--stdin'] as const;
 
@@ -175,17 +156,7 @@ export const COVERAGE_DIMENSIONS = [
 
 export const ROOT_RUNS = ['once', 'history'] as const;
 
-export const COVERAGE_INI_SECTION = /^[\t ]*\[coverage:run\][\t ]*\r?$/mu;
-
-export const LARGE_FILES_CHECK = 'repository/large-files';
-
-export const ENCODING_CHECK = 'repository/encoding';
-
 export const IGNORED_PATHS_MESSAGE = 'every selected path is ignored in gspot.toml';
-
-export const STYLELINT_TOOL = 'stylelint';
-
-export const PRETTIER_TOOL = 'prettier';
 
 export const INCOMPLETE_STATUSES = new Set<CheckStatus>(['missing', 'error']);
 

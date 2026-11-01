@@ -1,20 +1,16 @@
-import { isTable } from '#cli/system/tables.ts';
-import { find } from '#cli/system/files/reads.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { getTool, findToolName } from '#cli/tools/pins.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { listNestedScopes } from '#cli/repository/scopes.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import type { Check, ScopeCheck } from '#cli/types/manifests.ts';
 import type { Session, ConfiguredCheck } from '#cli/types/tools.ts';
 import { findFirstSkip, findSettingsSkip } from '#cli/engine/skips.ts';
-import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import type { PlanOptions, PlannedScope, PlannedCheck } from '#cli/types/engine/plan.ts';
 import { isRootOnlyCheck, isRepositoryRun, selectCheckFiles } from '#cli/engine/files.ts';
-import { OFF_BY_LEVEL, NO_MATCHING_FILES, COVERAGE_DIMENSIONS, COVERAGE_INI_SECTION } from '#cli/config/engine.ts';
+import { OFF_BY_LEVEL, NO_MATCHING_FILES, COVERAGE_DIMENSIONS } from '#cli/config/engine.ts';
 
 function listScopeChecks(settings: Settings, scope: Scope, root: Scope): ScopeCheck[] {
     const isRoot = scope.path === '';
@@ -252,21 +248,4 @@ export function listEnabledChecks(scopes: Scope[], settings: Settings): Configur
         const tool = name === undefined ? undefined : getTool(configurations, name);
         return { scope: isRepositoryRun(check) ? root : scope, check, configuration, tool };
     });
-}
-
-/**
-Check whether the project supplies coverage.py settings.
-
-@param session the run cache.
-@param scope the project folder relative to the repository.
-@returns whether pytest must use the project's coverage configuration.
-*/
-export function hasProjectCoverage(session: Session, scope: string): boolean {
-    if (find(session.cache, joinScope(scope, '.coveragerc')) !== undefined) return true;
-    const pyproject = find(session.cache, joinScope(scope, PYPROJECT_TOML));
-    const project = pyproject === undefined ? undefined : parseTomlFile(joinScope(scope, PYPROJECT_TOML), pyproject);
-    if (isTable(project?.['tool']) && Object.hasOwn(project['tool'], 'coverage')) return true;
-    return ['setup.cfg', 'tox.ini'].some((name) =>
-        COVERAGE_INI_SECTION.test(find(session.cache, joinScope(scope, name)) ?? ''),
-    );
 }

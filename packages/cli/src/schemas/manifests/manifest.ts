@@ -126,6 +126,7 @@ const checkFieldsSchema = z.strictObject({
     limits: z.union([z.string().min(1).array(), z.record(z.string().min(1), z.string().min(1))]).optional(),
     limit_languages: z.enum(SETTING_LANGUAGES).array().optional(),
     run_in_copy: z.boolean().optional(),
+    binary_files: z.boolean().optional(),
     env: z.record(z.string(), z.string()).optional(),
     instead_of: z.string().optional(),
     when: conditionSchema

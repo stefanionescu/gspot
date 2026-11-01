@@ -8,12 +8,12 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { listToolStart } from '#cli/tools/packages.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { ProcessFailure } from '#cli/types/tools.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { stripCoverageArguments } from '#cli/engine/plan.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
-import type { Session, ProcessFailure } from '#cli/types/tools.ts';
 import { buildCommandLines } from '#cli/engine/tool-runs/batches.ts';
-import { hasProjectCoverage, stripCoverageArguments } from '#cli/engine/plan.ts';
 import { listCopyPythonArguments, buildCopyPythonEnvironment } from '#cli/tools/uv.ts';
 import { runToolProcess, buildOtherToolEnvironment } from '#cli/engine/tool-runs/tool.ts';
 import { RAN_STATUSES, FILES_PLACEHOLDER, PYTHON_CONFIGURATION } from '#cli/config/engine.ts';
@@ -145,25 +145,6 @@ export function selectCommandFolder(root: string, planned: PlannedCheck): string
     return usesScopeFolder ? join(root, scope.path) : root;
 }
 
-function buildToolCommand(
-    session: Session,
-    planned: PlannedCheck,
-    options: CheckRunOptions,
-    environment: Record<string, string>,
-): string[] {
-    const command = [
-        ...(stripCoverageArguments(planned, options) as string[]),
-        ...listCopyPythonArguments(planned.tool as Tool, environment),
-    ];
-    if (
-        planned.check.id === 'pytest/coverage' &&
-        options.command === undefined &&
-        hasProjectCoverage(session, planned.scope.path)
-    )
-        return command.filter((argument) => !argument.startsWith('--cov-config='));
-    return command;
-}
-
 /**
 Resolves the working folder and expands the tool environment values.
 
@@ -264,7 +245,10 @@ export async function runCommandCheck(
     const tool = planned.tool as Tool;
     const base = buildBaseResult(planned, session);
     const setup = buildCommandSetup(session, planned, session.root);
-    const command = buildToolCommand(session, planned, options, setup.env);
+    const command = [
+        ...(stripCoverageArguments(planned, options) as string[]),
+        ...listCopyPythonArguments(tool, setup.env),
+    ];
     const { cwd } = setup;
     const missing = findMissingConfig(planned, { session, command, base });
     if (missing !== undefined) return missing;

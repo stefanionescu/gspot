@@ -1,3 +1,5 @@
+export const COVERAGE_INI_SECTION = /^[\t ]*\[coverage:run\][\t ]*\r?$/mu;
+
 export const BASEDPYRIGHT_LEVELS = { basic: 'recommended', all: 'all' } as const;
 
 export const BASEDPYRIGHT_OPTIONS = {
