@@ -67,3 +67,8 @@ rules = ["gspot/no-trivial-functions"]
 [[eslint.rules_off]]
 reason = "eslint-plugin-react-hooks reports the same hook mistakes under its react-hooks/ names."
 rules = ["@eslint-react/error-boundaries", "@eslint-react/exhaustive-deps", "@eslint-react/purity", "@eslint-react/rules-of-hooks", "@eslint-react/set-state-in-effect", "@eslint-react/set-state-in-render", "@eslint-react/static-components", "@eslint-react/unsupported-syntax", "@eslint-react/use-memo"]
+
+[[eslint.selectors]]
+level = "all"
+message = "Declare the props type on the parameter instead of FC."
+selector = 'TSTypeReference:matches([typeName.name="FC"], [typeName.left.name="React"][typeName.right.name="FC"])'

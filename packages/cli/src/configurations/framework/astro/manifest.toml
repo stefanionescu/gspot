@@ -99,3 +99,8 @@ extensions = [".astro"]
 [check.output]
 format = "regex"
 pattern = "^(?<file>[^:\\s][^:]*):(?<line>\\d+):(?<column>\\d+) - (?:error|warning) (?<rule>[a-z-]+\\(\\d+\\)): (?<message>.*)$"
+
+[[eslint.rules_off]]
+files = ["**/*.astro"]
+reason = "Astro compiles each component to a default export."
+rules = ["import-x/no-default-export"]

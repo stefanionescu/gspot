@@ -136,6 +136,12 @@ export const TYPESCRIPT_RULES = {
     '@typescript-eslint/strict-boolean-expressions': 'error',
     '@typescript-eslint/explicit-module-boundary-types': 'error',
     '@typescript-eslint/prefer-optional-chain': 'error',
+    '@typescript-eslint/array-type': ['error', { default: 'array-simple' }],
+    '@typescript-eslint/consistent-type-assertions': [
+        'error',
+        { assertionStyle: 'as', objectLiteralTypeAssertions: 'never', arrayLiteralTypeAssertions: 'never' },
+    ],
+    '@typescript-eslint/prefer-nullish-coalescing': 'error',
     'gspot/no-magic-numbers': [
         'error',
         {

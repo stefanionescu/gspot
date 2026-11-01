@@ -56,6 +56,11 @@ version = "16.4.2"
 required_tools = ["@next/eslint-plugin-next"]
 all_level_rules = ["@next/next/next-script-for-ga", "@next/next/no-img-element", "@next/next/no-page-custom-font"]
 
+[[eslint.rules_off]]
+files = ["**/app/**/{page,layout,default,template,loading,error,global-error,not-found}.*", "**/pages/**/*.{js,jsx,ts,tsx}"]
+reason = "Next.js reads the default export of its route files."
+rules = ["import-x/no-default-export"]
+
 [[eslint.export_names]]
 files = ["**/app/**/route.{js,ts}"]
 names = ["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]

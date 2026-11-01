@@ -30,12 +30,17 @@ extensions = [".ts", ".tsx", ".mts", ".cts"]
 
 [eslint]
 required_tools = ["typescript-eslint"]
-all_level_rules = ["@typescript-eslint/consistent-type-definitions", "@typescript-eslint/consistent-type-exports", "@typescript-eslint/consistent-type-imports", "@typescript-eslint/explicit-module-boundary-types", "@typescript-eslint/no-extraneous-class", "@typescript-eslint/no-mixed-enums", "@typescript-eslint/no-non-null-assertion", "@typescript-eslint/no-unnecessary-type-parameters", "@typescript-eslint/prefer-readonly", "@typescript-eslint/prefer-reduce-type-parameter", "@typescript-eslint/prefer-return-this-type", "@typescript-eslint/strict-boolean-expressions", "@typescript-eslint/unified-signatures", "gspot/no-magic-numbers"]
+all_level_rules = ["@typescript-eslint/array-type", "@typescript-eslint/consistent-type-assertions", "@typescript-eslint/prefer-nullish-coalescing", "@typescript-eslint/consistent-type-definitions", "@typescript-eslint/consistent-type-exports", "@typescript-eslint/consistent-type-imports", "@typescript-eslint/explicit-module-boundary-types", "@typescript-eslint/no-extraneous-class", "@typescript-eslint/no-mixed-enums", "@typescript-eslint/no-non-null-assertion", "@typescript-eslint/no-unnecessary-type-parameters", "@typescript-eslint/prefer-readonly", "@typescript-eslint/prefer-reduce-type-parameter", "@typescript-eslint/prefer-return-this-type", "@typescript-eslint/strict-boolean-expressions", "@typescript-eslint/unified-signatures", "gspot/no-magic-numbers"]
 
 [[eslint.rules_off]]
 files = ["**/*.d.ts"]
 reason = "TypeScript merges declarations through interfaces in declaration files."
 rules = ["@typescript-eslint/consistent-type-definitions"]
+
+[[eslint.rules_off]]
+files = ["**/*.d.ts"]
+reason = "A declaration file describes the default export of its module."
+rules = ["import-x/no-default-export"]
 
 [[check]]
 cwd = "scope"

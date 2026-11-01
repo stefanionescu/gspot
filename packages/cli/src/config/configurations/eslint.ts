@@ -193,6 +193,9 @@ const IMPORT_X_RULES = {
     'import-x/no-useless-path-segments': 'error',
     'import-x/no-empty-named-blocks': 'error',
     'import-x/no-duplicates': 'error',
+    'import-x/no-mutable-exports': 'error',
+    'import-x/no-relative-packages': 'error',
+    'import-x/no-default-export': 'error',
 } as const;
 
 export const BASE_RULES = {

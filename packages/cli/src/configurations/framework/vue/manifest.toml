@@ -67,3 +67,8 @@ extensions = [".vue"]
 [check.output]
 format = "regex"
 pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"
+
+[[eslint.rules_off]]
+files = ["**/*.vue"]
+reason = "Vue compiles each component to a default export."
+rules = ["import-x/no-default-export"]

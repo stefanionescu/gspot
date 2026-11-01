@@ -77,3 +77,8 @@ why = "tsc cannot parse a component file, and the Svelte compiler warns about ma
 
 [check.files]
 extensions = [".svelte"]
+
+[[eslint.rules_off]]
+files = ["**/*.svelte"]
+reason = "Svelte compiles each component to a default export."
+rules = ["import-x/no-default-export"]
