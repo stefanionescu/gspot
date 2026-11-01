@@ -22,6 +22,7 @@ const environment = overrideEnvironment({
     ...GIT_ISOLATION_ENVIRONMENT,
     CI: undefined,
     GITHUB_ACTIONS: undefined,
+    TERM: 'xterm-256color',
     XDG_CACHE_HOME: cache,
     TMPDIR: temporary,
 });
