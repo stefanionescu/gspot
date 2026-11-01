@@ -1,7 +1,7 @@
 import type { Session } from '#cli/types/tools.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { formatCount, formatNameList } from '#cli/system/text.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { formatCount, formatNameList, formatCountVerb } from '#cli/system/text.ts';
 import { READS_NO_POSITIONAL, UNREAD_ARGUMENTS_RULE } from '#cli/config/configurations/bash.ts';
 import { readScripts, listFunctionCalls } from '#cli/configurations/language/bash/checks/scripts.ts';
 
@@ -25,8 +25,8 @@ export async function checkUnreadArguments(session: Session, planned: PlannedChe
             if (width <= highest) return [];
             const unread = Array.from({ length: width - highest }, (_, offset) => String(highest + offset + 1));
             const read = highest === 0 ? READS_NO_POSITIONAL : `reads none past $${String(highest)}`;
-            const noun = formatCountVerb(unread.length, 'position', 'positions');
-            const positions = `${noun} ${formatNameList(unread)} ${formatCountVerb(unread.length, 'is', 'are')}`;
+            const isSingle = unread.length === 1;
+            const positions = `${isSingle ? 'position' : 'positions'} ${formatNameList(unread)} ${isSingle ? 'is' : 'are'}`;
             return [
                 {
                     file: file.path,

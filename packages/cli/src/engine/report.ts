@@ -1,6 +1,5 @@
 import { EXIT_ERROR } from '#cli/config/system.ts';
 import type { Session } from '#cli/types/tools.ts';
-import { isCanceled } from '#cli/system/processes.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { buildBaseResult, formatExplainCommand } from '#cli/engine/results.ts';
@@ -22,7 +21,7 @@ function listFailedChecks(results: CheckResult[], fixes: FixReport | undefined):
 
 function isIncomplete(session: Session, results: CheckResult[], fixes: FixReport | undefined): boolean {
     return (
-        isCanceled(session) ||
+        session.cancelSignal?.aborted === true ||
         results.some((result) => INCOMPLETE_STATUSES.has(result.status)) ||
         (fixes !== undefined && fixes.broken.length > 0) ||
         fixes?.results.some((result) => result.status === 'failed') === true

@@ -7,8 +7,8 @@ import { runFixers } from '#cli/engine/fixes.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { isEveryPath } from '#cli/settings/scopes.ts';
 import { buildRunReport } from '#cli/engine/report.ts';
+import { spawnProcess } from '#cli/system/processes.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { findMissingEnvironment } from '#cli/tools/uv.ts';
@@ -21,7 +21,6 @@ import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { formatUnexpectedError } from '#cli/system/terminal.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { buildMiseInstall } from '#cli/tools/installers/mise.ts';
-import { isCanceled, spawnProcess } from '#cli/system/processes.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { buildBaseResult, runBuiltInCheck, normalizeResultPaths } from '#cli/engine/results.ts';
 
@@ -53,7 +52,7 @@ import {
 function isIgnoreMatch(record: IgnoreRecord, finding: Finding): boolean {
     if ((['check', 'rule'] as const).some((key) => record[key] !== undefined && record[key] !== finding[key]))
         return false;
-    return isEveryPath(record) || buildPathMatcher(record.paths ?? [])(finding.file);
+    return record.paths === undefined || buildPathMatcher(record.paths)(finding.file);
 }
 
 const DOCKER_AVAILABILITY = Symbol('docker availability');
@@ -63,7 +62,7 @@ async function findUnrunnableResult(
     planned: PlannedCheck,
     base: CheckResult,
 ): Promise<CheckResult | undefined> {
-    if (isCanceled(session)) return { ...base, status: 'error', note: CANCELED_CHECK_NOTE };
+    if (session.cancelSignal?.aborted === true) return { ...base, status: 'error', note: CANCELED_CHECK_NOTE };
     const environment = findMissingEnvironment(session, planned);
     if (environment !== undefined) return { ...base, ...environment };
     if (planned.check.needs?.includes('docker') !== true) return undefined;
@@ -114,7 +113,7 @@ async function runPlannedCheck(run: Run, planned: PlannedCheck): Promise<CheckRe
         return {
             ...base,
             duration: Math.round(performance.now() - started),
-            ...(isCanceled(session)
+            ...(session.cancelSignal?.aborted === true
                 ? { status: 'error', note: CANCELED_CHECK_NOTE }
                 : classifyCheckError(planned.check.id, error, run.options.verbose === true)),
         };
@@ -165,7 +164,7 @@ function finishResult(run: Run, result: CheckResult): void {
     removeOutsideFindings(result, run);
     removeIgnoredFindings(result, run.session.settings.ignore);
     normalizeResultPaths(run.session, result);
-    if (!FAILED_STATUSES.has(result.status) || isCanceled(run.session)) return;
+    if (!FAILED_STATUSES.has(result.status) || run.session.cancelSignal?.aborted === true) return;
     const scopeArgument =
         result.scope === ''
             ? undefined

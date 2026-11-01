@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { escapeRegExp, formatScope, formatNameList, formatCountVerb } from '#cli/system/text.ts';
+import { formatScope, escapeRegExp, formatNameList } from '#cli/system/text.ts';
 
 test('an escaped text matches itself in a Unicode pattern, and each syntax character stays literal', () => {
     const text = String.raw`a.b*c+d?e^f$g{h}i(j)k|l[m]n\o/p-q`;
@@ -14,14 +14,6 @@ test.each([
     { names: ['a', 'b', 'c'], type: 'disjunction' as const, joined: 'a, b, or c' },
 ])('formatNameList joins $names as "$joined"', ({ names, type, joined }) => {
     expect(formatNameList(names, type)).toBe(joined);
-});
-
-test.each([
-    { count: 0, verb: 'are' },
-    { count: 1, verb: 'is' },
-    { count: 2, verb: 'are' },
-])('formatCountVerb picks "$verb" for $count', ({ count, verb }) => {
-    expect(formatCountVerb(count, 'is', 'are')).toBe(verb);
 });
 
 test.each([

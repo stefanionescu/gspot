@@ -1,6 +1,7 @@
 import type { Host } from '#cli/types/tools.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import { formatNameList } from '#cli/system/text.ts';
+import { listIgnores } from '#cli/settings/scopes.ts';
 import { findMissingBuild } from '#cli/tools/pins.ts';
 import { isRepositoryRun } from '#cli/engine/files.ts';
 import { LIMIT_READERS } from '#cli/manifests/limits.ts';
@@ -8,7 +9,6 @@ import type { Tool, Check } from '#cli/types/manifests.ts';
 import type { Repository } from '#cli/types/repository.ts';
 import { LOCAL_RULES_SETTING } from '#cli/config/engine.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
-import { isEveryPath, listIgnores } from '#cli/settings/scopes.ts';
 import { isInScope, isScopeCovered } from '#cli/repository/scopes.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import type { Skip, PlannedCheck, PlannedScope, SettingsSkip, SettingReader } from '#cli/types/engine/plan.ts';
@@ -53,7 +53,7 @@ function findConditionSkip(planned: PlannedCheck, repository: Repository): Skip 
 function findIgnoreSkip(scope: Scope, check: Check): SettingsSkip | undefined {
     const ignored = listIgnores(scope.settings, check.id).find(
         (ignore) =>
-            ignore.rule === undefined && (isEveryPath(ignore) || isScopeCovered(ignore.paths ?? [], scope.path)),
+            ignore.rule === undefined && (ignore.paths === undefined || isScopeCovered(ignore.paths, scope.path)),
     );
     if (ignored === undefined) return undefined;
     return { cause: 'ignore', note: `turned off by an ignore in gspot.toml: ${ignored.reason}` };

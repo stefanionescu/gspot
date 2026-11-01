@@ -9,7 +9,7 @@ import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { CODE_MARK, EVERY_CHECK } from '#cli/config/commands/help.ts';
 import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 import { print, printWarning, writeProgress } from '#cli/system/terminal.ts';
-import { formatCount, formatScope, quoteArgument, formatCountVerb } from '#cli/system/text.ts';
+import { formatCount, formatScope, quoteArgument } from '#cli/system/text.ts';
 import type { FixReport, RunReport, CheckResult, CheckProgress, FindingOptions } from '#cli/types/engine/run.ts';
 
 import {
@@ -40,7 +40,7 @@ function formatCheckedContent(comparison: CheckProgress['comparison']): string {
 
 function formatUnstagedChanges(report: RunReport): string[] {
     if (report.unstagedChanges === 0) return [];
-    const verb = formatCountVerb(report.unstagedChanges, 'has', 'have');
+    const verb = report.unstagedChanges === 1 ? 'has' : 'have';
     return [`${formatCount(report.unstagedChanges, 'file')} ${verb} unstaged changes that were not checked.`];
 }
 

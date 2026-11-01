@@ -8,7 +8,7 @@ import { DEFAULT_QUOTES } from '#cli/config/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { JSON_INDENT, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
-import { getTable, getLimit, isEveryPath, listIgnores, selectFormat, listIgnoredRules } from '#cli/settings/scopes.ts';
+import { getTable, getLimit, listIgnores, selectFormat, listIgnoredRules } from '#cli/settings/scopes.ts';
 
 import {
     RUFF_CHECK,
@@ -77,7 +77,7 @@ export function buildRuffFile(planned: PlannedConfig): string {
     const scope = planned.scope.path;
     const off = listIgnoredRules(planned.scope, RUFF_CHECK);
     const perFile = listIgnores(planned.scope.settings, RUFF_CHECK).filter(
-        (each) => each.rule !== undefined && !isEveryPath(each),
+        (each) => each.rule !== undefined && each.paths !== undefined,
     );
     const byPath = new Map<string, string[]>();
     const pathRules = perFile.flatMap((ignore) =>

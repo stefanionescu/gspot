@@ -1,6 +1,7 @@
 import { isTable } from '#cli/system/tables.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { formatNameList } from '#cli/system/text.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { buildSettings } from '#cli/settings/read.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
@@ -13,7 +14,6 @@ import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { removeKey, getScopeTable } from '#cli/settings/edit.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
-import { formatNameList, formatCountVerb } from '#cli/system/text.ts';
 import { SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
 import { selectForInit, listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { GSPOT_REMOVE, REMOVE_CONFIGURATION_MESSAGE } from '#cli/config/commands/edits.ts';
@@ -92,7 +92,7 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     const kept = selected.filter((name) => !options.configurations.includes(name));
     assertRemovable(options.configurations, kept, configurationsByName);
     if (options.configurations.every((name) => !selected.includes(name))) {
-        const verb = formatCountVerb(options.configurations.length, 'is', 'are');
+        const verb = options.configurations.length === 1 ? 'is' : 'are';
         return buildUnchangedResult(`No change: ${formatNameList(options.configurations)} ${verb} not selected.`);
     }
     const previous = scopeTable['removed_configurations'];

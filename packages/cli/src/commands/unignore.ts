@@ -1,6 +1,5 @@
 import { isTable } from '#cli/system/tables.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { isEveryPath } from '#cli/settings/scopes.ts';
 import { removeRecordPaths } from '#cli/settings/edit.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { RULE_OPTION } from '#cli/config/commands/help.ts';
@@ -56,7 +55,9 @@ function removeIgnores(table: TomlTable, options: Pick<IgnoreOptions, 'check' | 
             narrowed.flatMap((ignore) => ignore.paths ?? []).length -
             changed.flatMap((ignore) => ignore.paths ?? []).length,
         everywhere:
-            paths === undefined ? 0 : [...matching].filter((ignore) => isEveryPath(ignore as IgnoreRecord)).length,
+            paths === undefined
+                ? 0
+                : [...matching].filter((ignore) => (ignore as IgnoreRecord).paths === undefined).length,
     };
 }
 

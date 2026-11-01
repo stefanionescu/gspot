@@ -1,6 +1,7 @@
 import { join, resolve } from 'node:path';
 import { addAbortSignal } from 'node:stream';
 import { GspotError } from '#cli/system/errors.ts';
+import { formatNameList } from '#cli/system/text.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { runPushCheck } from '#cli/commands/check/push.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
@@ -11,7 +12,6 @@ import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { TRAILING_NEWLINE } from '#cli/config/repository/git.ts';
 import { InvalidArgumentError } from '@commander-js/extra-typings';
-import { formatNameList, formatCountVerb } from '#cli/system/text.ts';
 import { readGitText, readGitPaths } from '#cli/repository/git/run.ts';
 import { writeProgress, runCancelableCommand } from '#cli/system/terminal.ts';
 import type { CommandLocation, CommandDefinition } from '#cli/types/commands/edits.ts';
@@ -168,7 +168,7 @@ async function assertSetupStaged(root: string, cancelSignal: AbortSignal): Promi
     if (unstaged.length > 0)
         throw new GspotError(
             'git',
-            `${formatNameList(unstaged)} ${formatCountVerb(unstaged.length, 'is', 'are')} not staged. ${STAGE_SETUP_MESSAGE}`,
+            `${formatNameList(unstaged)} ${unstaged.length === 1 ? 'is' : 'are'} not staged. ${STAGE_SETUP_MESSAGE}`,
         );
 }
 

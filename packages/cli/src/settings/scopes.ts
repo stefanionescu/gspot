@@ -17,7 +17,6 @@ import type {
     Scope,
     Settings,
     TableValues,
-    IgnoreRecord,
     TableSettings,
     ScopeSettings,
     InheritedSetting,
@@ -235,16 +234,6 @@ export function listIgnores(scopeSettings: ScopeSettings, check: string): ScopeS
 }
 
 /**
-Check whether an ignore covers every path.
-
-@param ignore the ignore to read.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Planning, generators, and reports read an ignore without paths by this one rule.
-export function isEveryPath(ignore: Pick<IgnoreRecord, 'paths'>): boolean {
-    return ignore.paths === undefined;
-}
-
-/**
 List the lint rules disabled throughout the selected scope.
 
 @param scope the scope and its merged data.
@@ -253,7 +242,7 @@ List the lint rules disabled throughout the selected scope.
 export function listIgnoredRules(scope: Scope, checkId: string): string[] {
     return scope.settings.ignores
         .filter((ignore) => ignore.check === checkId)
-        .filter((ignore) => isEveryPath(ignore) || isScopeCovered(ignore.paths ?? [], scope.path))
+        .filter((ignore) => ignore.paths === undefined || isScopeCovered(ignore.paths, scope.path))
         .map((ignore) => ignore.rule)
         .filter((rule) => rule !== undefined);
 }

@@ -16,12 +16,12 @@ import type { Session, Generation } from '#cli/types/tools.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { Files, CommandResult } from '#cli/types/system.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { quoteArgument, formatNameList } from '#cli/system/text.ts';
 import { writeSettings, readSettingsFile } from '#cli/settings/file.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
 import { getScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
 import { formatApplyReport, writeGeneratedFiles } from '#cli/generation/write.ts';
-import { quoteArgument, formatNameList, formatCountVerb } from '#cli/system/text.ts';
 import { assertConfigurationsExist, assertConfigurationsEditable } from '#cli/manifests/select.ts';
 import type { Scope, Settings, TomlTable, SettingsEdit, SettingMatch, AvailableSettings } from '#cli/types/settings.ts';
 
@@ -151,7 +151,7 @@ Summarize an add or remove edit: the configurations it changed, and the ones it 
 export function formatConfigurationChange({ action, changed, where, unchanged, state }: ConfigurationChange): string {
     const summary = `${action} ${formatNameList(changed)}${where}.`;
     if (unchanged.length === 0) return summary;
-    return `${summary} ${formatNameList(unchanged)} ${formatCountVerb(unchanged.length, 'is', 'are')} ${state}.`;
+    return `${summary} ${formatNameList(unchanged)} ${unchanged.length === 1 ? 'is' : 'are'} ${state}.`;
 }
 
 /**

@@ -1,12 +1,12 @@
 import { isTable } from '#cli/system/tables.ts';
 import { overlayTable } from '#cli/settings/edit.ts';
+import { formatNameList } from '#cli/system/text.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { selectConfigurations } from '#cli/manifests/select.ts';
 import { buildDetectedTables } from '#cli/settings/detected.ts';
-import { formatNameList, formatCountVerb } from '#cli/system/text.ts';
 import type { ScopeFlags, CommandDefinition, ConfigurationsOptions } from '#cli/types/commands/edits.ts';
 
 import {
@@ -28,7 +28,7 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
     const { root, input, scope, scopeTable, scopeSettings, selected, configurationsByName, context } =
         await readConfigurationEditContext(options);
     if (options.configurations.every((name) => selected.includes(name))) {
-        const verb = formatCountVerb(options.configurations.length, 'is', 'are');
+        const verb = options.configurations.length === 1 ? 'is' : 'are';
         return buildUnchangedResult(`No change: ${formatNameList(options.configurations)} ${verb} already selected.`);
     }
     const scopeConfigurations = scopeSettings.configurations;
