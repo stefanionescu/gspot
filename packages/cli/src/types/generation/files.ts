@@ -46,7 +46,6 @@ export type RuleOptionsRun = {
     running: ReadonlySet<string>;
     allLevelRules: ReadonlySet<string>;
     level: Level;
-    suffix?: string;
 };
 
 export type ConfigOutput = { content: string; companions: GeneratedFile[] };

@@ -78,7 +78,6 @@ export type EslintBlockFields = {
     [field: string]: unknown;
     files?: readonly (EslintFileMatcher | EslintFileMatcher[])[];
     ignores?: string[];
-    basePath?: string;
     rules?: Record<string, unknown>;
 };
 

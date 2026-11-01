@@ -50,7 +50,6 @@ export type InheritedSetting = {
     source: string;
     origin: 'root' | 'scope' | 'configuration' | 'unset';
     originScope?: string | undefined;
-    scope?: string | undefined;
 };
 
 export type InheritedValue = Pick<InheritedSetting, 'value' | 'source' | 'origin' | 'originScope'> & {

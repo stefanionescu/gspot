@@ -278,7 +278,6 @@ export function getSettingValue(
         source,
         origin,
         reason,
-        scope: scopePath,
         originScope,
     };
 }
