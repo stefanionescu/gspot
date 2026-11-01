@@ -87,6 +87,7 @@ export const SWIFTFORMAT_ALWAYS_OFF: Readonly<Record<string, string>> = {
 export const SWIFTFORMAT_ALL_LEVEL_ON = ['blockComments', 'wrapEnumCases'] as const;
 
 export const SWIFTFORMAT_OPTIONS = {
+    'extension-acl': 'on-declarations',
     wraparguments: 'before-first',
     wrapparameters: 'before-first',
     wrapcollections: 'before-first',
@@ -161,6 +162,7 @@ export const SWIFTLINT_DEFAULT_LEVEL_OFF = [
     'missing_docs',
     'nesting',
     'no_empty_block',
+    'no_extension_access_modifier',
     'no_magic_numbers',
     'period_spacing',
     'private_action',
@@ -183,6 +185,7 @@ export const SWIFTLINT_ANALYZER: ReadonlySet<string> = new Set([
 
 export const SWIFTLINT_OPT_IN: ReadonlySet<string> = new Set([
     'missing_docs',
+    'no_extension_access_modifier',
     'fatal_error_message',
     'first_where',
     'last_where',

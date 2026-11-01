@@ -41,8 +41,8 @@ These rules cover XCTest, Swift Testing, and snapshot tests.
 - Prefer stable identifiers, dates, clocks, and ordering.
 
 ```swift
-private extension Message {
-    static func stub(
+extension Message {
+    private static func stub(
         id: Message.ID = .init("message-1"),
         subject: String = "Subject",
         sender: Person = .stub()
