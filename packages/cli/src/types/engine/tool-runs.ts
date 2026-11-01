@@ -115,7 +115,7 @@ export type FolderRun = {
     tool: Tool;
     command: string[];
     toolPath: string;
-    setup: CommandSetup;
+    substitutions: Substitutions;
     base: CheckResult;
     options: CheckRunOptions;
     configs: string[];

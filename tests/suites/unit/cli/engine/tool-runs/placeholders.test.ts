@@ -8,13 +8,13 @@ import { buildCheckSession } from '#cli/engine/run.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { GENERATED_HEADER_TEXT } from '#cli/config/generation.ts';
+import { buildCommandLaunch } from '#cli/engine/tool-runs/check.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { type CommandArgument } from '#cli/types/engine/tool-runs.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildCommandSetup, buildCommandLaunch } from '#cli/engine/tool-runs/check.ts';
 
 import {
     expandCommand,
@@ -161,7 +161,8 @@ test('per-file commands keep the arguments after the file', async () => {
     const setup = buildCommandLaunch(planned, {
         session,
         command: planned.check.command!,
-        setup: buildCommandSetup(session, planned, { options: {}, root: session.root }),
+        root: session.root,
+        options: {},
         toolPath: process.execPath,
     });
     const result = await spawnProcess(setup.commandLines[0]!.commandArguments, {
@@ -192,7 +193,8 @@ test.each([...SHFMT_INDENT_CASES])(
         const command = buildCommandLaunch(planned!, {
             session,
             command: planned!.check.command!,
-            setup: buildCommandSetup(session, planned!, { options: {}, root: session.root }),
+            root: session.root,
+            options: {},
             toolPath: process.execPath,
         });
         expect(command.commandArguments[command.commandArguments.indexOf('-i') + 1]).toBe(expected);

@@ -8,7 +8,6 @@ import * as processes from '#cli/system/processes.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { stat, chmod, readFile } from 'node:fs/promises';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
@@ -16,7 +15,7 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { CALLER_WORKFLOW } from '#tests/config/setup/configurations.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
-import { checkGeneratorOutputs } from '#cli/configurations/generator-outputs.ts';
+import { CHECK_CODE, selectCheckCode } from '#cli/configurations/registry.ts';
 import { writeProgramCommand, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 
 import {
@@ -77,9 +76,7 @@ test.each([...WORKFLOW_TEXT_CASES])(
         const result = await runCheckCode(
             buildCheckSession(session, CHECK_GENERATION),
             planned!,
-            planned!.check.generator_outputs === undefined
-                ? CHECK_CODE[planned!.check.id]
-                : { check: checkGeneratorOutputs },
+            selectCheckCode(planned!.check),
             {},
         );
         expect(result.status, JSON.stringify(result)).toBe('passed');

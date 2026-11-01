@@ -99,7 +99,7 @@ function findMissingConfig(
 }
 
 async function runInFolder(run: FolderRun): Promise<CheckResult> {
-    const { session, planned, tool, command, toolPath, setup, base, options, configs } = run;
+    const { session, planned, tool, command, toolPath, substitutions, base, options, configs } = run;
     using copy =
         options.copyRoot === undefined && planned.check.run_in_copy === true
             ? await createCopy({
@@ -110,15 +110,13 @@ async function runInFolder(run: FolderRun): Promise<CheckResult> {
               })
             : undefined;
     const folder = options.copyRoot ?? copy?.path;
-    const commandSetup =
-        folder === undefined
-            ? buildCommandLaunch(planned, { session, command, setup, toolPath })
-            : buildCommandLaunch(planned, {
-                  session: session,
-                  command: command,
-                  setup: buildCommandSetup(session, planned, { options: options, root: folder }),
-                  toolPath: toolPath,
-              });
+    const commandSetup = buildCommandLaunch(planned, {
+        session,
+        command,
+        root: folder ?? session.root,
+        options,
+        toolPath,
+    });
     commandSetup.env = buildOtherToolEnvironment(
         session,
         listOtherTools(planned.scope, planned.check, command),
@@ -132,7 +130,7 @@ async function runInFolder(run: FolderRun): Promise<CheckResult> {
         base,
     });
     if (folder === undefined) return result;
-    const reported = expandCommand(session, planned, command.with(0, toolPath), setup.substitutions);
+    const reported = expandCommand(session, planned, command.with(0, toolPath), substitutions);
     return { ...result, command: reported.filter((argument) => typeof argument === 'string') };
 }
 
@@ -153,7 +151,13 @@ function findMissingOtherTool(
     return undefined;
 }
 
-function selectCommandFolder(root: string, planned: PlannedCheck): string {
+/**
+Select the folder that a command of a check runs in.
+
+@param root the repository, or the copy of it that the tool runs in.
+@param planned the check and its scope.
+*/
+export function selectCommandFolder(root: string, planned: PlannedCheck): string {
     const { check, scope } = planned;
     const usesScopeFolder =
         check.cwd === 'scope' || (check.runs === 'scope' && check.cwd !== 'root') || runsInPackageFolder(root, planned);
@@ -245,15 +249,16 @@ Expands a check or fix command into file batches that fit the command line.
 @param expansion what to run.
 @param expansion.session the repository and its tools.
 @param expansion.command the executable and the arguments as declared.
-@param expansion.setup the working paths and tool variables.
+@param expansion.root the repository, or the copy of it that the tool runs in.
+@param expansion.options the overrides from the check code.
 @param expansion.toolPath the resolved executable path.
 */
 export function buildCommandLaunch(
     planned: PlannedCheck,
-    expansion: { session: CheckSession; command: string[]; setup: CommandSetup; toolPath: string },
+    expansion: { session: CheckSession; command: string[]; root: string; options: CheckRunOptions; toolPath: string },
 ): CommandLaunch {
-    const { session, setup, toolPath } = expansion;
-    const { root, cwd, files, substitutions, env } = setup;
+    const { session, root, options, toolPath } = expansion;
+    const { cwd, files, substitutions, env } = buildCommandSetup(session, planned, { options, root });
     const command = expansion.command.with(0, toolPath);
     const commandArguments = expandCommand(session, planned, command, substitutions);
     const commandLines = command.includes(FILES_PLACEHOLDER)
@@ -303,7 +308,7 @@ export async function runCommandCheck(
               tool,
               command,
               toolPath: availability.path,
-              setup,
+              substitutions: setup.substitutions,
               base,
               options,
               configs,

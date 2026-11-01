@@ -7,15 +7,14 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { runSandboxCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { checkGeneratorOutputs } from '#cli/configurations/generator-outputs.ts';
 import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { runCommand, buildProcessResult } from '#tests/setup/system/processes.ts';
 import { CLOUDFLARE_ENV_SOURCE, UNTRACKED_CLOUDFLARE_FINDINGS } from '#tests/config/configurations/general.ts';
@@ -55,7 +54,7 @@ test('custom Worker type settings reach wrangler types as --env-interface', asyn
     const result = await runCheckCode(
         buildCheckSession(session, CHECK_GENERATION),
         planned,
-        planned.check.generator_outputs === undefined ? CHECK_CODE[planned.check.id] : { check: checkGeneratorOutputs },
+        selectCheckCode(planned.check),
         {},
     );
     expect(result.findings).toStrictEqual([]);
@@ -83,9 +82,7 @@ test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and 
     const untrackedResult = await runCheckCode(
         buildCheckSession(untracked, CHECK_GENERATION),
         untrackedCheck,
-        untrackedCheck.check.generator_outputs === undefined
-            ? CHECK_CODE[untrackedCheck.check.id]
-            : { check: checkGeneratorOutputs },
+        selectCheckCode(untrackedCheck.check),
         {},
     );
     expect(untrackedResult.findings).toMatchObject([...UNTRACKED_CLOUDFLARE_FINDINGS]);
@@ -96,9 +93,7 @@ test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and 
     const trackedResult = await runCheckCode(
         buildCheckSession(tracked, CHECK_GENERATION),
         trackedCheck,
-        trackedCheck.check.generator_outputs === undefined
-            ? CHECK_CODE[trackedCheck.check.id]
-            : { check: checkGeneratorOutputs },
+        selectCheckCode(trackedCheck.check),
         {},
     );
     expect(trackedResult.findings).toStrictEqual([]);

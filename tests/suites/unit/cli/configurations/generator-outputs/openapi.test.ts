@@ -3,12 +3,11 @@ import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
-import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { checkGeneratorOutputs } from '#cli/configurations/generator-outputs.ts';
 import { MISSING_OPENAPI_FINDINGS } from '#tests/config/configurations/general.ts';
 
 test('a missing OpenAPI document is reported before generation', async () => {
@@ -27,7 +26,7 @@ test('a missing OpenAPI document is reported before generation', async () => {
     const missingResult = await runCheckCode(
         buildCheckSession(session, CHECK_GENERATION),
         input,
-        input.check.generator_outputs === undefined ? CHECK_CODE[input.check.id] : { check: checkGeneratorOutputs },
+        selectCheckCode(input.check),
         {},
     );
     expect(missingResult.findings).toStrictEqual(MISSING_OPENAPI_FINDINGS.map((finding) => matchFields(finding)));

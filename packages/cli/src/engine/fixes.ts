@@ -15,7 +15,7 @@ import type { SpawnResult, FileContents } from '#cli/types/system.ts';
 import { FIX_ROUNDS, FIX_CANCELED_MESSAGE } from '#cli/config/engine.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
-import { buildCommandSetup, buildCommandLaunch } from '#cli/engine/tool-runs/check.ts';
+import { buildCommandLaunch, selectCommandFolder } from '#cli/engine/tool-runs/check.ts';
 
 import type {
     CheckCode,
@@ -60,25 +60,19 @@ async function runFixInCopy(
     planned: PlannedCheck,
     {
         session,
-        root,
         command,
         toolPath,
         options,
-    }: { session: CheckSession; root: string; command: string[]; toolPath: string; options: CheckRunOptions },
+    }: { session: CheckSession; command: string[]; toolPath: string; options: CheckRunOptions },
 ): Promise<FixResult> {
     using scratch = await createCopy({
-        root: root,
+        root: session.root,
         paths: [...listCopyFiles(session, planned, command), ...(options.listConfigs?.(session, planned) ?? [])],
         dependencies: [],
         cancelSignal: session.cancelSignal,
     });
-    const setup = buildCommandLaunch(planned, {
-        session: session,
-        command: command,
-        setup: buildCommandSetup(session, planned, { options: options, root: scratch.path }),
-        toolPath: toolPath,
-    });
-    const files = openFiles(root);
+    const setup = buildCommandLaunch(planned, { session, command, root: scratch.path, options, toolPath });
+    const files = openFiles(session.root);
     const result = await runFixCommands(session, planned, setup);
     const corrected = openFiles(scratch.path);
     for (const path of result.changed) {
@@ -99,33 +93,33 @@ function mergeResults(first: FixResult | undefined, next: FixResult): FixResult 
 async function runFixTool(
     session: CheckSession,
     planned: PlannedCheck,
-    { root, command, tool, code }: { root: string; command: string[]; tool: Tool; code: CheckCode | undefined },
+    { command, tool, code }: { command: string[]; tool: Tool; code: CheckCode | undefined },
 ): Promise<FixResult> {
     const options: CheckRunOptions = {
         listFileArguments: code?.listFileArguments,
         listConfigs: code?.listConfigs,
     };
     const selected = { ...planned, tool };
-    const setup = buildCommandSetup(session, selected, { options, root: session.root });
     const availability = buildToolAvailability(
         tool,
-        inspectTool({ ...session, cwd: setup.cwd, miseBinPaths: session.readMiseBinPaths() }, tool),
+        inspectTool(
+            {
+                ...session,
+                cwd: selectCommandFolder(session.root, selected),
+                miseBinPaths: session.readMiseBinPaths(),
+            },
+            tool,
+        ),
     );
     if ('status' in availability)
         return { check: planned.check.id, status: 'failed', changed: [], note: availability.note };
     const toolPath = availability.path;
-    if (planned.check.run_in_copy === true)
-        return runFixInCopy(selected, { session, root, command, toolPath, options });
-    const fixSetup =
-        root === session.root
-            ? buildCommandLaunch(selected, { session, command, setup, toolPath })
-            : buildCommandLaunch(selected, {
-                  session: session,
-                  command: command,
-                  setup: buildCommandSetup(session, selected, { options: options, root: root }),
-                  toolPath: toolPath,
-              });
-    return runFixCommands(session, selected, fixSetup);
+    if (planned.check.run_in_copy === true) return runFixInCopy(selected, { session, command, toolPath, options });
+    return runFixCommands(
+        session,
+        selected,
+        buildCommandLaunch(selected, { session, command, root: session.root, options, toolPath }),
+    );
 }
 
 async function runFixer(
@@ -140,7 +134,7 @@ async function runFixer(
     const command = planned.check.fix as string[];
     const name = command[0] as string;
     const tool = planned.tool?.name === name ? planned.tool : getTool(session.configurationsByName.values(), name);
-    return runFixTool(session, planned, { root: session.root, command, tool, code: selectCheckCode(planned.check) });
+    return runFixTool(session, planned, { command, tool, code: selectCheckCode(planned.check) });
 }
 
 function readContents(sourceRoot: string, paths: string[]): PathBytes {
