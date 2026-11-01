@@ -2,8 +2,8 @@ import { getCdkName } from '../aws.ts';
 import { createRule } from '../rule.ts';
 import type { StorageIssue } from '../types/rules.ts';
 import { CDK_PROPS_POSITION } from '../config/plugin.ts';
-import { readExpressionValue, readOptionProperties } from '../values.ts';
 import { KMS_KEYS, RDS_STORAGES, RDS_KEYED_STORAGES } from '../config/aws.ts';
+import { readExpressionValue, readOptionProperties } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function hasKmsKey(source: Readonly<TSESLint.SourceCode>, options: TSESTree.ObjectExpression): boolean {

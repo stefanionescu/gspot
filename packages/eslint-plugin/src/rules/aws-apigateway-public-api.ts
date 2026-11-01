@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readExpressionValue } from '../values.ts';
+import { readExpressionValue } from '../expressions.ts';
 import { CDK_PROPS_POSITION } from '../config/plugin.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { getCdkName, readCdkResult, readCdkArgument, readCdkProperty, listCdkTableIssues } from '../aws.ts';

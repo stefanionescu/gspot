@@ -1,5 +1,5 @@
+import { SIDEBAR } from '#docs/config/site.ts';
 import { CLI_REFERENCE } from '#cli/reference.ts';
-import { SIDEBAR } from '#docs/config/navigation.ts';
 
 import {
     CURL_COMMAND,

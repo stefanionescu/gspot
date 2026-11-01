@@ -3,7 +3,13 @@ import { readQualifiedName } from '../modules.ts';
 import type { UploadForm } from '../types/rules.ts';
 import { MULTER_MODULE, UPLOAD_MESSAGES, FORMIDABLE_MODULE } from '../config/servers.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { readExpressionValue, readOptionProperties, findAssignedVariable, findMemberAssignment } from '../values.ts';
+
+import {
+    readExpressionValue,
+    readOptionProperties,
+    findAssignedVariable,
+    findMemberAssignment,
+} from '../expressions.ts';
 
 function readOption(source: Readonly<TSESLint.SourceCode>, options: TSESTree.Node | undefined, key: string) {
     const literal = readExpressionValue(options, source);

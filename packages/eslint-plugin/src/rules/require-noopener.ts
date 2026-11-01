@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readExpressionValue } from '../values.ts';
+import { readExpressionValue } from '../expressions.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { WEB_URL, NO_OPENER_FEATURE, WINDOW_OPEN_SELECTOR, WINDOW_FEATURES_ARGUMENT } from '../config/web.ts';
 

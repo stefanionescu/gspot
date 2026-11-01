@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
 import { readAssignedValue } from '../modules.ts';
-import { readOptionProperties } from '../values.ts';
+import { readOptionProperties } from '../expressions.ts';
 import { SANITIZER_BYPASS_METHODS } from '../config/security.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

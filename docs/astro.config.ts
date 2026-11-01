@@ -2,13 +2,13 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import starlight from '@astrojs/starlight';
 import starlightLlmsTxt from 'starlight-llms-txt';
-import { SIDEBAR } from '#docs/config/navigation.ts';
 import { pruneUnusedStyles } from '#docs/unused-styles.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { LLMS_PAGES, AGENT_STEPS } from '#docs/reference/setup.ts';
 import { defineConfig, passthroughImageService } from 'astro/config';
 
 import {
+    SIDEBAR,
     FAVICON,
     EDIT_URL,
     SITE_TITLE,

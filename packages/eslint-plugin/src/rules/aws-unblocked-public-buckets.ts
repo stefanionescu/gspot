@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
 import { S3_BUCKET } from '../config/plugin.ts';
-import { readExpressionValue } from '../values.ts';
+import { readExpressionValue } from '../expressions.ts';
 import { getCdkName, findBucketOption } from '../aws.ts';
 import { BLOCK_ACLS_ONLY, BLOCK_PUBLIC_ACCESS, BLOCK_PUBLIC_ACCESS_KEYS } from '../config/aws.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';

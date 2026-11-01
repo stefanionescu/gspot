@@ -2,7 +2,7 @@ import { createRule } from '../rule.ts';
 import { readQualifiedName } from '../modules.ts';
 import { XML_PARSERS } from '../config/servers.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { readExpressionValue, readOptionProperties } from '../values.ts';
+import { readExpressionValue, readOptionProperties } from '../expressions.ts';
 
 export const xmlParserXxe = createRule<[], 'entities'>({
     name: 'xml-parser-xxe',

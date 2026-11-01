@@ -2,8 +2,13 @@ import { createRule } from '../rule.ts';
 import { readQualifiedName } from '../modules.ts';
 import type { SizedForm, UploadCall } from '../types/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { readExpressionValue, readOptionProperties, findAssignedVariable, findMemberAssignment } from '../values.ts';
 
+import {
+    readExpressionValue,
+    readOptionProperties,
+    findAssignedVariable,
+    findMemberAssignment,
+} from '../expressions.ts';
 import {
     SIZE_TEXT,
     SIZE_UNITS,

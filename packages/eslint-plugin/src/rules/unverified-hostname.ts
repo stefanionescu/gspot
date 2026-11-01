@@ -2,7 +2,7 @@ import { createRule } from '../rule.ts';
 import { findFunction } from '../functions.ts';
 import type { FunctionNode } from '../types/rules.ts';
 import { TLS_OPTION_ARGUMENTS } from '../config/security.ts';
-import { listOptionLiterals, readOptionProperties } from '../values.ts';
+import { listOptionLiterals, readOptionProperties } from '../expressions.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 export const unverifiedHostname = createRule<[], 'unverified'>({

@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readExpressionValue, readOptionProperties } from '../values.ts';
+import { readExpressionValue, readOptionProperties } from '../expressions.ts';
 import { WEAK_CURVES, KEY_PAIR_SELECTOR, MINIMUM_KEY_LENGTHS } from '../config/security.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

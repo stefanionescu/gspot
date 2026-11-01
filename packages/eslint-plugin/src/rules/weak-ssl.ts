@@ -2,7 +2,7 @@ import { createRule } from '../rule.ts';
 import { listCdkTableIssues } from '../aws.ts';
 import { readQualifiedName } from '../modules.ts';
 import { TLS_CHECKS } from '../config/networks.ts';
-import { listOptionLiterals, readOptionProperties } from '../values.ts';
+import { listOptionLiterals, readOptionProperties } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {

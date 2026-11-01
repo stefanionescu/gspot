@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
 import { readQualifiedName } from '../modules.ts';
-import { readExpressionValue } from '../values.ts';
 import type { MethodCall } from '../types/rules.ts';
+import { readExpressionValue } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { DIGEST_METHOD, SUBTLE_DIGEST, HASH_FUNCTIONS, TRUNCATION_METHODS } from '../config/security.ts';
 

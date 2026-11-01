@@ -1,8 +1,8 @@
 import { createRule } from '../rule.ts';
 import { findFunction } from '../functions.ts';
 import { readQualifiedName } from '../modules.ts';
-import { readOptionProperties } from '../values.ts';
 import type { FunctionNode } from '../types/rules.ts';
+import { readOptionProperties } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { REGENERATE_METHOD, AUTHENTICATE_FUNCTION, ROUTE_CALLBACK_POSITION } from '../config/servers.ts';
 

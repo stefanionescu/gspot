@@ -2,7 +2,7 @@ import { createRule } from '../rule.ts';
 import type { AdminAccess } from '../types/rules.ts';
 import { CDK_PROPS_POSITION } from '../config/plugin.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { readLiteralValue, readExpressionValue, readOptionProperties } from '../values.ts';
+import { readLiteralValue, readExpressionValue, readOptionProperties } from '../expressions.ts';
 import { getCdkName, isUnresolved, readCdkResult, readCdkArgument, readCdkProperty } from '../aws.ts';
 
 import {

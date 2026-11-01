@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
 import { readQualifiedName } from '../modules.ts';
-import { listArgumentValues, readOptionProperties } from '../values.ts';
+import { listArgumentValues, readOptionProperties } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { CSRF_MODULE, MIDDLEWARE_METHOD, CSRF_SAFE_METHODS, CSRF_CHANGING_METHODS } from '../config/servers.ts';
 

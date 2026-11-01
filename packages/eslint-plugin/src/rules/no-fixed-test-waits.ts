@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readExpressionValue } from '../values.ts';
+import { readExpressionValue } from '../expressions.ts';
 import { SIGNED_NUMBER_OPERATORS } from '../config/rules.ts';
 import { isCypressChain, isTestRelatedPath } from '../testing.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';

@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
 import { readQualifiedName } from '../modules.ts';
-import { readExpressionValue, readOptionProperties } from '../values.ts';
+import { readExpressionValue, readOptionProperties } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {

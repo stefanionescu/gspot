@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
 import { readModuleName } from '../modules.ts';
 import { COOKIE_SECURITY_FLAGS, COOKIE_SET_OPTIONS_POSITION } from '../config/security.ts';
-import { readLiteralValue, readExpressionValue, readOptionProperties } from '../values.ts';
+import { readLiteralValue, readExpressionValue, readOptionProperties } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function readCookiesOptions(call: TSESTree.CallExpression, source: TSESLint.SourceCode): TSESTree.Node | undefined {

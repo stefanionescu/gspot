@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
-import { isDynamicString } from '../values.ts';
 import { readQualifiedName } from '../modules.ts';
+import { isDynamicString } from '../expressions.ts';
 import { TEMPLATE_FUNCTIONS } from '../config/servers.ts';
 import { ASTUtils, TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

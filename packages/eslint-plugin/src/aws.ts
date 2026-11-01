@@ -1,5 +1,5 @@
 import { readQualifiedName } from './modules.ts';
-import { listArgumentValues, readExpressionValue, readOptionProperties } from './values.ts';
+import { listArgumentValues, readExpressionValue, readOptionProperties } from './expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import type {
