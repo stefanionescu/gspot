@@ -104,6 +104,7 @@ async function writeMiseLockfile(install: ToolInstall, project: GeneratedFile): 
     writeFileSync(join(scratch.path, MISE_CONFIG_FILE), project.content);
     if (saved !== undefined) writeFileSync(join(scratch.path, MISE_LOCKFILE), saved.bytes);
     const result = await runInstallStep(install, MISE_LOCK_ARGUMENTS, {
+        step: `locking the mise tools in ${GSPOT_PATHS.miseLockfile}`,
         cwd: scratch.path,
         env: {
             [MISE_TRUSTED_PATHS_VARIABLE]: scratch.path,
@@ -208,6 +209,7 @@ export async function installMiseTools(install: ToolInstall): Promise<MiseInstal
     await runRequiredInstallStep(install, command, {
         cwd: join(session.root, GSPOT_FOLDER),
         env: { ...MISE_LOCKED_ENVIRONMENT, ...trust },
+        step: `installing mise tools from ${GSPOT_PATHS.miseProject}`,
         name: `The command ${command.join(' ')}`,
     });
     const names = pins.map((pin) => pin.name);

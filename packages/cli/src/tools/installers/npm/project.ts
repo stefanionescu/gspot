@@ -76,7 +76,11 @@ async function runPackageManager(install: ToolInstall, request: PackageManagerRe
             ? [...commandArguments, `--config=${writeBunReleaseAge(settings.path, install.releaseAgeDays)}`]
             : commandArguments;
     const command = buildPackageManagerCommand(packageManager.command, args);
-    const result = await runInstallStep(install, command, { cwd: runFolder, env });
+    const result = await runInstallStep(install, command, {
+        cwd: runFolder,
+        env,
+        step: `installing npm tools with ${packageManager.name} in ${GSPOT_PATHS.nodeModules}`,
+    });
     if (result.code !== 0) {
         const output = redactInstallOutput(result, credentials);
         const pins = Object.entries(listPackagePins(install.session.toolConfigurations).npm).map(

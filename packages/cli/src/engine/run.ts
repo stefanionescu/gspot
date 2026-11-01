@@ -177,6 +177,9 @@ async function runActiveChecks(run: Run, checks: PlannedCheck[]): Promise<CheckR
             const result = await runPlannedCheck(run, planned);
             finishResult(run, result);
             run.options.onProgress?.({
+                check: result.check,
+                scope: result.scope,
+                duration: result.duration,
                 finished: ++finished,
                 total: checks.length,
                 comparison: run.options.comparison,

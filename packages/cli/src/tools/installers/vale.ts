@@ -139,7 +139,11 @@ export async function installValePackages(install: ToolInstall, miseBinPaths: st
         mkdirSync(dirname(config), { recursive: true });
         writeFileSync(config, content);
         const command = [available.path, CONFIG_FLAG, config, ...VALE_INSTALL_ARGUMENTS];
-        await runRequiredInstallStep(install, command, { cwd: dirname(config), name: VALE_INSTALL_STEP });
+        await runRequiredInstallStep(install, command, {
+            cwd: dirname(config),
+            step: `installing Vale packages into ${GSPOT_PATHS.valePackages}`,
+            name: VALE_INSTALL_STEP,
+        });
         writeFileSync(join(temporary, GSPOT_PATHS.valeReleases), releases);
         files.deleteTree(GSPOT_PATHS.valePackages);
         renameSync(join(temporary, GSPOT_PATHS.valePackages), join(root, GSPOT_PATHS.valePackages));

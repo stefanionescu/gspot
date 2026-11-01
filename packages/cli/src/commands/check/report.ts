@@ -273,12 +273,17 @@ export function beginCheckReport(): (() => void) | undefined {
 }
 
 /**
-Rewrite the progress line when stderr points to a terminal.
+Rewrite the progress line when stderr points to a terminal, and print one line per finished check otherwise.
 
 @param progress the last finished check and its place in the run.
 */
 export function printProgress(progress: CheckProgress): void {
-    if (!process.stderr.isTTY) return;
+    if (!process.stderr.isTTY) {
+        const scope = progress.scope === '' ? '' : `${formatScope(progress.scope)}  `;
+        const seconds = (progress.duration / MILLISECONDS_PER_SECOND).toFixed(1);
+        writeProgress(`done  ${scope}${progress.check}  ${seconds}s\n`);
+        return;
+    }
     const subject = formatCheckedContent(progress.comparison);
     writeProgress(
         `${PROGRESS_CLEAR}Checking ${subject}: ${String(progress.finished)} of ${String(progress.total)} checks done`,

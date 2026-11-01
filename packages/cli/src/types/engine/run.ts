@@ -35,7 +35,11 @@ export type FixResult = { check: string; changed: string[] } & (
     | { status: 'failed' | 'canceled'; note: string }
 );
 
-export type CheckProgress = { finished: number; total: number; comparison: RunReport['comparison'] };
+export type CheckProgress = Pick<CheckResult, 'check' | 'scope' | 'duration'> & {
+    finished: number;
+    total: number;
+    comparison: RunReport['comparison'];
+};
 
 export type PlanAfterFixes = { session: CheckSession; planned: PlannedCheck[]; fixes: FixReport | undefined };
 

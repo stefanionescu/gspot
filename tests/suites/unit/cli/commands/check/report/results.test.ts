@@ -70,7 +70,6 @@ test('check prints the first findings and the count of the rest, and --json keep
     );
     const result = await runGspot(sandbox.path, [...VERBOSITY_ARGUMENTS]);
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    expect(result.stderr).toBe('');
     expect(result.stdout.match(/^ {2}finding \d+\.$/gmu)).toHaveLength(200);
     expect(result.stdout).toContain('  and 1 more (--verbose prints every finding)');
     await assertJsonFindings(sandbox.path, VERBOSITY_ARGUMENTS);
@@ -82,7 +81,6 @@ test('check --verbose prints every finding and the command', async () => {
     await using sandbox = await createVerbositySandbox(findingsCommand, passingCommand);
     const result = await runGspot(sandbox.path, [...VERBOSITY_ARGUMENTS, '--verbose']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    expect(result.stderr).toBe('');
     expect(result.stdout.match(/^ {2}finding \d+\.$/gmu)).toHaveLength(201);
     expect(result.stdout).toContain(`  $ ${findingsCommand.join(' ')}`);
     expect(result.stdout).toContain(`  $ ${passingCommand.join(' ')}`);
@@ -150,7 +148,7 @@ test('the report prints planned skips once with their reason only in verbose out
     expect(formatRunReport(skipped, { verbose: true })).toContain('skipped  bash/shellcheck  disabled');
 });
 
-test('terminal progress rewrites one status line and log output stays empty', () => {
+test('terminal progress rewrites one status line, and a log gets one line per finished check', () => {
     const terminal: string[] = [];
     const log: string[] = [];
     using _environment = overrideEnvironment({ NO_COLOR: undefined });
@@ -166,11 +164,21 @@ test('terminal progress rewrites one status line and log output stays empty', ()
             lines.push(String(chunk));
             return true;
         });
-        for (let index = 0; index < 5; index++) printProgress({ finished: index + 1, total: 5, comparison: undefined });
+        for (let index = 0; index < 5; index++)
+            printProgress({
+                check: 'python/ruff',
+                scope: index === 0 ? 'api' : '',
+                duration: 1200,
+                finished: index + 1,
+                total: 5,
+                comparison: undefined,
+            });
     }
     expect(terminal).toHaveLength(5);
     for (const line of terminal) expect(line).toStartWith('\r\u{1B}[2K');
-    expect(log).toStrictEqual([]);
+    expect(log).toHaveLength(5);
+    expect(log[0]).toBe('done  api  python/ruff  1.2s\n');
+    expect(log[1]).toBe('done  python/ruff  1.2s\n');
 });
 
 test('NO_COLOR prints findings without color on terminal streams', async () => {

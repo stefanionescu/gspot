@@ -34,7 +34,7 @@ test.each([...FIX_SUMMARY_CASES])('check --fix reports $name', async ({ paths, a
     const corrected = await runGspot(sandbox.path, ['check', '--only', 'sandbox/feedback', '--fix']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(corrected.stdout.split('\n', 1)[0]).toBe(appliedText);
-    expect(corrected.stderr).toBe('');
+    expect(corrected.stderr).toMatch(/^done {2}sandbox\/feedback {2}\d+\.\ds\n$/u);
     const checkedPaths = new Set(['source.txt', 'other.txt', ...paths]);
     for (const path of checkedPaths)
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(

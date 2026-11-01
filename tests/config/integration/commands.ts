@@ -88,8 +88,7 @@ export const VALE_INSTALL_FAILURES = [
     {
         name: 'timeout',
         fakeArguments: ['--wait'],
-        message:
-            'sync ran longer than tool_timeout_seconds (1s). Raise it with gspot set tool_timeout_seconds <seconds>.',
+        message: 'past tool_timeout_seconds (1s). Raise it with gspot set tool_timeout_seconds <seconds>.',
         settings: 'tool_timeout_seconds = 1\n',
     },
     {

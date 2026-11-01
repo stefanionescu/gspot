@@ -70,6 +70,7 @@ async function runUv(
     const result = await runInstallStep(install, command, {
         cwd: runFolder,
         env: { [UV_PROJECT_ENVIRONMENT]: join(runFolder, PYTHON_ENVIRONMENT_FOLDER), UV_PYTHON: undefined },
+        step: `running uv ${commandArguments.join(' ')} for ${GSPOT_PATHS.pythonProject}`,
     });
     if (result.missing)
         throw new GspotError(
