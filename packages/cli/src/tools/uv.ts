@@ -90,7 +90,8 @@ export function findMissingEnvironment(
     const project = joinScope(scope, PYPROJECT_TOML);
     if (session.repository.files.every((file) => file.path !== project)) return undefined;
     const files = openFiles(session.toolsRoot);
-    return files.findStats(joinScope(scope, PYTHON_ENVIRONMENT_FOLDER)) === undefined
-        ? { status: 'missing', note: PROJECT_ENVIRONMENT_MESSAGE }
-        : undefined;
+    const environment = files.findStats(joinScope(scope, PYTHON_ENVIRONMENT_FOLDER));
+    return environment?.isDirectory() === true || environment?.isSymbolicLink() === true
+        ? undefined
+        : { status: 'missing', note: PROJECT_ENVIRONMENT_MESSAGE };
 }
