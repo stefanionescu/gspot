@@ -65,6 +65,7 @@ import { noSwappedArguments } from './rules/no-swapped-arguments.ts';
 import { noTrivialFunctions } from './rules/no-trivial-functions.ts';
 import { noUnusedCollection } from './rules/no-unused-collection.ts';
 import { preferNativeJquery } from './rules/prefer-native-jquery.ts';
+import { preferNativeLodash } from './rules/prefer-native-lodash.ts';
 import { reduceInitialValue } from './rules/reduce-initial-value.ts';
 import { requireErrorChecks } from './rules/require-error-checks.ts';
 import { noEmptyReturnValue } from './rules/no-empty-return-value.ts';
@@ -199,6 +200,7 @@ const rules = {
     'no-component-debounce': noComponentDebounce,
     'prefer-readonly-props': preferReadonlyProps,
     'no-vue-updated-writes': noVueUpdatedWrites,
+    'prefer-native-lodash': preferNativeLodash,
     'no-setter-in-component': noSetterInComponent,
     'no-self-state-update': noSelfStateUpdate,
     'no-generated-keys': noGeneratedKeys,

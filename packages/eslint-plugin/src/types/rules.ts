@@ -291,3 +291,12 @@ export type PlacementState = {
 export type ThenCall = { property: TSESTree.Node; receiver: TSESTree.Expression; parameter: string };
 
 export type CallbackScope = { kinds: Map<string, string>; yielded: Set<string> };
+
+export type LibraryCall = { method: string; library: string };
+
+export type NativeReplacement = {
+    alternative: string;
+    year: number;
+    reason?: string | undefined;
+    example?: string | undefined;
+};
