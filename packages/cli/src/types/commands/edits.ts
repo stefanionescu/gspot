@@ -39,7 +39,6 @@ export type CommandOption = {
 
 export type CommandDefinition<Arguments extends readonly unknown[] = readonly unknown[], Flags = object> = {
     name: keyof typeof COMMAND_HELP;
-    usage?: string;
     arguments?: readonly CommandArgument[];
     options?: readonly CommandOption[];
     run(args: Arguments, flags: Flags, location: CommandLocation): Promise<CommandResult<object>>;

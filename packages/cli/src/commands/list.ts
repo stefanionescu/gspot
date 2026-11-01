@@ -13,7 +13,15 @@ import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
 import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/reports.ts';
-import { KEY_GAP, NOT_SET, LIST_USAGE, LIST_KINDS, VALUE_WIDTH, REASON_HEADER } from '#cli/config/commands/reports.ts';
+
+import {
+    KEY_GAP,
+    NOT_SET,
+    LIST_KINDS,
+    VALUE_WIDTH,
+    LIST_ARGUMENT,
+    REASON_HEADER,
+} from '#cli/config/commands/reports.ts';
 
 function formatScopeGroup(scopes: readonly string[]): string {
     const nested = scopes.filter((scope) => scope !== '');
@@ -119,8 +127,7 @@ function buildSettingRows(settings: Settings, scopes: Scope[]): SettingsListJson
 
 export const listCommand: CommandDefinition<[(typeof LIST_KINDS)[number]]> = {
     name: 'list',
-    usage: LIST_USAGE,
-    arguments: [{ term: '[kind]', choices: LIST_KINDS, defaultValue: 'configurations' }],
+    arguments: [{ term: LIST_ARGUMENT, choices: LIST_KINDS, defaultValue: 'configurations' }],
     run: async ([kind], _flags, { root }) => {
         const session = await openSession(root);
         return kind === 'settings' ? buildSettingsResult(session) : buildConfigurationsResult(session);

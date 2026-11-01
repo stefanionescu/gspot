@@ -20,7 +20,7 @@ import { explainCommand } from '#cli/commands/explain/explain.ts';
 import { runGit, buildGitError } from '#cli/repository/git/run.ts';
 import { CODE_MARK, COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { DASH_VALUE_HELP, COMMAND_SUGGESTION } from '#cli/config/commands/edits.ts';
-import { Option, Command, Argument, CommanderError } from '@commander-js/extra-typings';
+import { Option, Command, Argument, type Help, CommanderError } from '@commander-js/extra-typings';
 import { printError, printResult, setOutputOptions, printUnexpectedError } from '#cli/system/terminal.ts';
 
 import type {
@@ -34,13 +34,12 @@ import {
     HELP_FLAG,
     JSON_FLAG,
     USAGE_LINE,
+    HELP_WIDTH,
     VERSION_FLAG,
     INVALID_VALUE,
     GLOBAL_OPTIONS,
     HELP_ERROR_CODE,
-    HELP_TERM_WIDTH,
     ALLOWED_CHOICES,
-    EXIT_CODE_SPACING,
     PROGRAM_EXIT_CODES,
     PROGRAM_HELP_FOOTER,
     UNKNOWN_COMMAND_NAME,
@@ -110,35 +109,34 @@ function formatArgumentTerm(argument: Argument): string {
     return argument.required ? `<${shown}>` : `[${shown}]`;
 }
 
-function formatExitCodes(rows: readonly (readonly [codes: string, meaning: string])[]): string {
-    const width = Math.max(...rows.map(([codes]) => codes.length)) + EXIT_CODE_SPACING;
-    return rows.map(([codes, meaning]) => `  ${codes.padEnd(width)}${meaning}`).join('\n');
+function formatExitCodes(rows: CommandHelp['exitCodes'], layout: Help): string {
+    const width = Math.max(...rows.map(([codes]) => codes.length));
+    return rows.map(([codes, meaning]) => layout.formatItem(codes, width, meaning, layout)).join('\n');
 }
 
 function formatProgramHelp(program: Command): string {
-    const groups = new Map<string, string[]>();
-    for (const command of program.commands) {
-        const help = COMMAND_HELP[command.name() as keyof typeof COMMAND_HELP];
-        const term = [
-            command.name(),
-            ...command.registeredArguments.map((argument) => formatArgumentTerm(argument)),
-        ].join(' ');
-        const row =
-            term.length < HELP_TERM_WIDTH
-                ? `  ${term.padEnd(HELP_TERM_WIDTH)}${help.summary}`
-                : `  ${term}  ${help.summary}`;
-        groups.set(help.group, [...(groups.get(help.group) ?? []), row]);
-    }
-    const sections = [...groups].map(([group, rows]) => `${group}\n${rows.join('\n')}`);
-    const options = Object.entries(GLOBAL_OPTIONS).map(
-        ([flags, description]) => `  ${flags.padEnd(HELP_TERM_WIDTH)}${description}`,
+    const layout = program.createHelp();
+    const rows = program.commands.map((command) => ({
+        help: COMMAND_HELP[command.name() as keyof typeof COMMAND_HELP],
+        term: [command.name(), ...command.registeredArguments.map((argument) => formatArgumentTerm(argument))].join(
+            ' ',
+        ),
+    }));
+    const width = Math.max(...rows.map(({ term }) => term.length));
+    const groups = Map.groupBy(rows, ({ help }) => help.group);
+    const sections = [...groups].map(([group, commands]) => {
+        const lines = commands.map(({ term, help }) => layout.formatItem(term, width, help.summary, layout));
+        return `${group}\n${lines.join('\n')}`;
+    });
+    const options = Object.entries(GLOBAL_OPTIONS).map(([flags, description]) =>
+        layout.formatItem(flags, width, description, layout),
     );
     return [
         USAGE_LINE,
         program.description(),
         sections.join('\n\n'),
         `Options:\n${options.join('\n')}`,
-        `Exit codes:\n${formatExitCodes(PROGRAM_EXIT_CODES)}`,
+        `Exit codes:\n${formatExitCodes(PROGRAM_EXIT_CODES, layout)}`,
         PROGRAM_HELP_FOOTER,
     ].join('\n\n');
 }
@@ -165,14 +163,14 @@ function addCommandDefinition(program: Command, definition: CommandDefinition): 
         .summary(help.summary)
         .description(help.description)
         .helpGroup(help.group);
-    if (definition.usage !== undefined) command.usage(definition.usage);
     for (const argument of definition.arguments ?? [])
         command.addArgument(buildArgument(argument, help.arguments[argument.term]));
     for (const option of definition.options ?? []) command.addOption(buildOption(option, help.options[option.flags]));
     command.helpOption(HELP_FLAG, GLOBAL_OPTIONS[HELP_FLAG]);
     command.option(JSON_FLAG, help.options[JSON_FLAG]);
-    command.addHelpText('after', `\nExit codes:\n${formatExitCodes(help.exitCodes)}\n\nExample:\n  ${help.example}\n`);
-    command.configureHelp({ styleDescriptionText: (text) => text.replaceAll(CODE_MARK, '') });
+    command.configureHelp({ helpWidth: HELP_WIDTH, styleDescriptionText: (text) => text.replaceAll(CODE_MARK, '') });
+    const exitCodes = formatExitCodes(help.exitCodes, command.createHelp());
+    command.addHelpText('after', `\nExit codes:\n${exitCodes}\n\nExample:\n  ${help.example}\n`);
     return command;
 }
 
@@ -222,7 +220,7 @@ export function buildProgram(onResult: CommandCompletion): Command {
             onResult(await definition.run(command.processedArgs, command.opts(), location));
         });
     }
-    program.configureHelp({ formatHelp: () => formatProgramHelp(program) });
+    program.configureHelp({ helpWidth: HELP_WIDTH, formatHelp: () => formatProgramHelp(program) });
     return program;
 }
 

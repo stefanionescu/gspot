@@ -119,6 +119,34 @@ test('an argument choice names the command and the values to use', async () => {
     });
 });
 
+test.each([
+    [],
+    ['init'],
+    ['install'],
+    ['apply'],
+    ['check'],
+    ['add'],
+    ['remove'],
+    ['set'],
+    ['unset'],
+    ['ignore'],
+    ['unignore'],
+    ['list'],
+    ['explain'],
+    ['doctor'],
+])('the help of %p fits 80 columns', async (...commandArguments) => {
+    await using sandbox = await testdir();
+    const help = await runGspot(sandbox.path, [...commandArguments, '--help']);
+    expect(help.code).toBe(0);
+    expect(help.stdout.split('\n').filter((line) => line.length > 80)).toStrictEqual([]);
+});
+
+test('list names its choices as the argument', async () => {
+    await using sandbox = await testdir();
+    const help = await runGspot(sandbox.path, ['list', '--help']);
+    expect(help.stdout).toContain('Usage: gspot list [options] [configurations|settings]\n');
+});
+
 test('check treats --version after the separator as a file path', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),

@@ -6,9 +6,7 @@ export const COMMANDER_ERROR_PREFIX = 'error: ';
 
 export const COMMANDS_HELP_MESSAGE = 'Run gspot --help to see the commands.';
 
-export const EXIT_CODE_SPACING = 2;
-
-export const HELP_TERM_WIDTH = 29;
+export const HELP_WIDTH = 80;
 
 export const GLOBAL_OPTIONS = { '--version': 'Print the version', '-h, --help': 'Print help' } as const;
 

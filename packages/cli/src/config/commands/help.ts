@@ -18,7 +18,8 @@ export const COMMAND_HELP = {
             '--configurations <names>':
                 'Use these configurations at the root; repeat the flag or separate names with commas',
             '--no-configurations': 'Select no configurations at the root',
-            '--level <level>': 'Start at this level, so the plan replaces your tool configs that this level runs',
+            '--level <level>':
+                'Start at this level. The plan then replaces your tool configs for the checks of this level',
             '--json': 'Print the result as JSON',
         },
         exitCodes: [
@@ -31,7 +32,7 @@ export const COMMAND_HELP = {
         summary: 'Install the tools and turn on the Git hooks in this clone',
         group: 'Set up a repository:',
         description:
-            'Install the tools that gspot.toml needs, at the pinned versions:\n  - npm tools into .gspot/node_modules, from the lockfile of your package manager in .gspot/, such as .gspot/package-lock.json\n  - Python tools into .gspot/.venv, from .gspot/uv.lock\n  - the other tools with mise, from .gspot/mise.toml (mise reads it only for the mise commands of gspot, and only while it is the file that gspot writes)\n\ninstall writes each missing or outdated lockfile. Commit the lockfiles.\n\ninstall also sets the Git setting core.hooksPath to .gspot/hooks, or removes it when you set hooks.enabled to false. When another hook manager runs the hooks, install prints the line to add to each hook instead. Without mise, install names the tools that you must install yourself.',
+            'Install the tools that gspot.toml needs, at the pinned versions:\n  - npm tools into .gspot/node_modules, from the lockfile in .gspot/\n  - Python tools into .gspot/.venv, from .gspot/uv.lock\n  - the other tools with mise, from .gspot/mise.toml\n\nOnly the mise commands of gspot read .gspot/mise.toml, and only while it holds what gspot wrote.\n\ninstall writes each missing or outdated lockfile. Commit the lockfiles.\n\ninstall also sets the Git setting core.hooksPath to .gspot/hooks, or removes it when you set hooks.enabled to false. When another hook manager runs the hooks, install prints the line to add to each hook instead. Without mise, install names the tools that you must install yourself.',
         arguments: {},
         options: {
             '--json': 'Print the result as JSON',
@@ -82,7 +83,7 @@ export const COMMAND_HELP = {
         exitCodes: [
             ['0', 'Every check that ran passed.'],
             ['1', 'Findings remain.'],
-            ['2', 'A check could not run (a tool is missing or failed), a fixer failed, or an argument is not valid.'],
+            ['2', 'A check could not run, a fixer failed, or an argument is not valid.'],
             ['130, 143', 'The run stopped because of Ctrl-C or SIGTERM.'],
         ],
         example: 'gspot check --staged',
@@ -183,7 +184,7 @@ export const COMMAND_HELP = {
             ['2', 'An argument is not valid, or ignore could not finish.'],
         ],
         example:
-            'gspot ignore javascript/eslint --rule no-console --paths "scripts/**" --reason "Scripts print their results."',
+            'gspot ignore javascript/eslint --rule no-console --paths "scripts/**" \\\n    --reason "Scripts print their results."',
     },
     unignore: {
         summary: 'Remove ignores',
@@ -210,7 +211,7 @@ export const COMMAND_HELP = {
         description:
             'List the selected and the available configurations, with the state of each check in each scope. gspot list settings lists each setting, its value, and where the value comes from.\n\nlist changes nothing.',
         arguments: {
-            '[kind]': 'What to list',
+            '[configurations|settings]': 'What to list',
         },
         options: {
             '--json': 'Print the result as JSON',

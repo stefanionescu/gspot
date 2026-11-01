@@ -95,7 +95,7 @@ export const LIST_KINDS = ['configurations', 'settings'] as const;
 
 export const REASON_HEADER = 'reason needed when';
 
-export const LIST_USAGE = '[options] [configurations|settings]';
+export const LIST_ARGUMENT = '[configurations|settings]';
 
 export const VERSION_GAP = 4;
 
