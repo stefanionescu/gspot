@@ -1,7 +1,6 @@
 import { z } from 'zod';
-import type { ReasonedValue } from '#cli/types/settings/values.ts';
 import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
-import type { ReasonedSettingDefinition } from '#cli/types/settings/definitions.ts';
+import type { ReasonedValue, ReasonedSettingDefinition } from '#cli/types/settings.ts';
 import { CASE_NAMES, SETTING_LANGUAGES, REASON_DESCRIPTIONS } from '#cli/config/manifests.ts';
 
 import {

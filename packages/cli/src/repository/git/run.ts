@@ -3,18 +3,10 @@ import { realpathSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { spawnProcess, streamProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
+import type { SpawnResult, SpawnOptions, StdoutReader, AsyncSpawnOptions } from '#cli/types/system.ts';
+import type { GitLookup, GitRepository, GitEnvironment, GitVariableGroups } from '#cli/types/repository.ts';
 import { foldVariableName, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
 
-import type {
-    GitLookup,
-    SpawnResult,
-    SpawnOptions,
-    StdoutReader,
-    GitRepository,
-    GitEnvironment,
-    GitVariableGroups,
-    AsyncSpawnOptions,
-} from '#cli/types/system/system.ts';
 import {
     GIT_LOCALE,
     GIT_PROGRAM,

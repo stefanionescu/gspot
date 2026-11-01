@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { format } from 'prettier';
 import { afterAll, beforeAll } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import type { Level } from '#cli/types/manifests.ts';
+import type { Level } from '#cli/types/settings.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';

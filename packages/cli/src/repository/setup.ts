@@ -1,10 +1,9 @@
 import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
+import type { RunCache } from '#cli/types/system.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import type { RunCache } from '#cli/types/system/system.ts';
-import { type Repository } from '#cli/types/repository/files.ts';
 import { parseYamlDocuments } from '#cli/parsers/formats/yaml.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
@@ -14,7 +13,7 @@ import { EXECUTABLE_BITS, MARKDOWN_EXTENSION } from '#cli/config/repository/file
 import { ciJobSchema, ciDocumentSchema } from '#cli/schemas/repository/repository.ts';
 import { statSync, lstatSync, readdirSync, realpathSync, readFileSync } from 'node:fs';
 import { readPackageJson, listToolOnlyPackages } from '#cli/repository/dependencies.ts';
-import { type CiJob, type RepositoryHooks, type RepositorySetup } from '#cli/types/repository/repository.ts';
+import type { CiJob, Repository, RepositoryHooks, RepositorySetup } from '#cli/types/repository.ts';
 
 import {
     RUN_WORD,

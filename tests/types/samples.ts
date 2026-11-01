@@ -1,5 +1,5 @@
-import { type Finding } from '#cli/types/engine/check.ts';
-import { type RunReport } from '#cli/types/commands/check.ts';
+import type { RunReport } from '#cli/types/engine/run.ts';
+import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { type ProcessOutput } from '#tests/types/processes.ts';
 
 type SampleFinding = Partial<Pick<Finding, 'file' | 'rule' | 'line' | 'column' | 'message'>>;

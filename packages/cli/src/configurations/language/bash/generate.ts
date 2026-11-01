@@ -1,5 +1,5 @@
 import { listIgnoredRules } from '#cli/settings/scopes.ts';
-import type { PlannedConfig } from '#cli/types/generation/files.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 import {
     SHELLCHECK_CHECK,

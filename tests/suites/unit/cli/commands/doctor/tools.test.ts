@@ -9,7 +9,7 @@ import { executableLayout } from '#cli/system/paths.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
-import { type DoctorReport } from '#cli/types/commands/doctor.ts';
+import type { DoctorReport } from '#cli/types/commands/reports.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';

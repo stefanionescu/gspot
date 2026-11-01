@@ -1,6 +1,5 @@
 import type { Node } from 'web-tree-sitter';
 import { replaceRanges } from '#cli/system/text.ts';
-import type { NumberedLine } from '#cli/types/text.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 
 import {
@@ -14,10 +13,11 @@ import type {
     ParseCache,
     TrapScript,
     TrapCleanup,
+    NumberedLine,
     ScriptSyntax,
     TemporaryPath,
     ScriptTemporaryPaths,
-} from '#cli/types/parsers/code.ts';
+} from '#cli/types/parsers.ts';
 import {
     SHIFT_COMMAND,
     NOT_LINE_BREAK,

@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { compareText } from '#cli/system/text.ts';
+import type { Setting } from '#cli/types/manifests.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { joinDefaultPaths } from '#cli/settings/paths.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { commandSchema } from '#cli/schemas/manifests/fields.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
-import type { Settings, SettingsTable } from '#cli/types/settings/settings.ts';
 import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
 import { CATEGORY_PARENTS, CATEGORY_KEY_SEGMENTS } from '#cli/config/settings/validation.ts';
 
@@ -16,15 +16,16 @@ import {
     NAMING_LANGUAGE_CATEGORIES,
 } from '#cli/config/settings/schema.ts';
 import type {
-    Setting,
+    Settings,
     SettingMatch,
+    SettingsTable,
     InheritedValue,
     SettingDefault,
     WrittenSetting,
     InheritedSetting,
     AvailableSettings,
     WrittenScopeTable,
-} from '#cli/types/settings/inheritance.ts';
+} from '#cli/types/settings.ts';
 
 function findLanguageSetting(
     availableSettings: AvailableSettings,

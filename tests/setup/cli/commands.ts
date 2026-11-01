@@ -4,15 +4,14 @@ import { Readable } from 'node:stream';
 import { runProgram } from '#cli/main.ts';
 import { type Sandbox } from '#tests/types/sandbox.ts';
 import { readTree } from '#tests/setup/system/files.ts';
-import { type CheckResult } from '#cli/types/engine/check.ts';
+import type { AsyncSpawnOptions } from '#cli/types/system.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { captureTerminal } from '#tests/setup/system/terminal.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
-import { type AsyncSpawnOptions } from '#cli/types/system/system.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/setup/environment.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { type RunReport, type FixReport } from '#cli/types/commands/check.ts';
 import { type FindingRow, type ScopeFindingRow } from '#tests/types/reports.ts';
+import type { RunReport, FixReport, CheckResult } from '#cli/types/engine/run.ts';
 import { type StdinOptions, type ProcessOutput } from '#tests/types/processes.ts';
 
 export const CLI_BIN = join(REPOSITORY_ROOT, 'packages/cli/src/bin.ts');

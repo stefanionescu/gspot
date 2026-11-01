@@ -2,8 +2,8 @@ import { dirname } from 'node:path/posix';
 import { isDeepStrictEqual } from 'node:util';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { getTable } from '#cli/settings/scopes.ts';
+import type { Scope } from '#cli/types/settings.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { buildZodBlocks } from '#cli/configurations/library/zod/generate.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { buildVueBlocks } from '#cli/configurations/framework/vue/generate.ts';
@@ -23,15 +23,15 @@ import { buildTestingLibraryBlocks } from '#cli/configurations/library/testing-l
 import { joinScope, isInScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { buildTestFiles, listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
 
-import {
-    type EslintScope,
-    type EslintPlugins,
-    type PlannedEslintFile,
-    type PlannedEslintBlock,
-    type ConfigurationBlocks,
-    type ConfigurationBuilder,
-    type ConfigurationScopeBlocks,
-} from '#cli/types/generation/eslint.ts';
+import type {
+    EslintScope,
+    EslintPlugins,
+    PlannedEslintFile,
+    PlannedEslintBlock,
+    ConfigurationBlocks,
+    ConfigurationBuilder,
+    ConfigurationScopeBlocks,
+} from '#cli/types/configurations/language.ts';
 
 const CONFIGURATION_BUILDERS: Readonly<Record<string, ConfigurationBuilder | undefined>> = {
     ...Object.fromEntries(Object.keys(PLUGIN_RULE_BLOCKS).map((name) => [name, buildPluginRuleBlocks])),

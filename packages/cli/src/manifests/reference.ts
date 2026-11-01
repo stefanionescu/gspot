@@ -1,7 +1,6 @@
 import { posix } from 'node:path';
 import { listRuleFiles } from '#cli/manifests/read.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
-import type { ConfigurationReference } from '#cli/types/reference.ts';
+import type { Configuration, ConfigurationReference } from '#cli/types/manifests.ts';
 import { GSPOT_PATHS, DETECTION_LABELS, DETECTION_ALTERNATIVES } from '#cli/config/manifests.ts';
 
 /**

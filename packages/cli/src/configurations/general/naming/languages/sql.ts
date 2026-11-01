@@ -1,9 +1,10 @@
 import type { Node } from '@pgsql/types';
 import { getPosition } from '#cli/system/text.ts';
-import type { RunCache } from '#cli/types/system/system.ts';
+import type { RunCache } from '#cli/types/system.ts';
+import type { SqlFile, SqlStatement } from '#cli/types/parsers.ts';
 import { parseSqlFile, listSqlTokens, listNodeFields } from '#cli/parsers/code/sql.ts';
-import type { SqlFile, SqlStatement, SqlStatementVisitors } from '#cli/types/parsers/code.ts';
-import type { SqlName, Identifier, IdentifierRead } from '#cli/types/configurations/general/naming.ts';
+import type { SqlStatementVisitors } from '#cli/types/configurations/infrastructure.ts';
+import type { SqlName, Identifier, IdentifierRead } from '#cli/types/configurations/general.ts';
 
 import {
     NAME_TOKEN,

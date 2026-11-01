@@ -6,10 +6,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
+import type { TomlTable } from '#cli/types/settings.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { type InitJson } from '#cli/types/commands/init.ts';
-import { type TomlTable } from '#cli/types/settings/settings.ts';
-import { type FormatSettings } from '#cli/types/generation/formatting.ts';
+import type { InitJson } from '#cli/types/commands/edits.ts';
+import type { FormatSettings } from '#cli/types/configurations/language.ts';
 
 import {
     FORMAT_FILE_CASES,

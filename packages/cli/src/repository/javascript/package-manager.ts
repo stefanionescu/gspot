@@ -4,11 +4,11 @@ import { join, dirname } from 'node:path';
 import { remember } from '#cli/system/cache.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import type { RunCache } from '#cli/types/system.ts';
+import type { PackageJson } from '#cli/types/parsers.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import type { RunCache } from '#cli/types/system/system.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
-import type { PackageJson } from '#cli/types/parsers/projects.ts';
 import { GSPOT_FOLDER, PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { packageManagerSchema, packageManagerPinSchema } from '#cli/schemas/repository/javascript.ts';
 
@@ -18,7 +18,7 @@ import type {
     PackageManagerPin,
     PackageManagerField,
     PackageManagerCommand,
-} from '#cli/types/repository/javascript.ts';
+} from '#cli/types/repository.ts';
 import {
     CI_NODE,
     NPM_TOOL,

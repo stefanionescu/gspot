@@ -4,12 +4,12 @@ import { join, dirname, relative } from 'node:path';
 import { JSCONFIG_FILE } from '#cli/config/engine.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
+import type { ParsedTsconfig } from '#cli/types/parsers.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import { convertToGlobs } from '#cli/configurations/ignores.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
-import type { PlannedConfig } from '#cli/types/generation/files.ts';
-import type { ParsedTsconfig } from '#cli/types/parsers/projects.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 
 import {

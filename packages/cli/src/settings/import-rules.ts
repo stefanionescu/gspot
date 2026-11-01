@@ -1,4 +1,4 @@
-import type { ImportRule } from '#cli/types/settings/settings.ts';
+import type { ImportRule } from '#cli/types/settings.ts';
 import { OWN_FILES_ONLY } from '#cli/config/settings/validation.ts';
 
 /**

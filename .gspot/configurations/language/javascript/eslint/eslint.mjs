@@ -993,63 +993,71 @@ export default [
                     {
                         "category": "import-rule:cli-types",
                         "pattern": [
-                            "packages/cli/src/types/**"
+                            "packages/cli/src/types/*.d.ts"
                         ]
                     },
                     {
                         "category": "import-rule:system",
                         "pattern": [
                             "packages/cli/src/system/**",
-                            "packages/cli/src/config/system.ts"
+                            "packages/cli/src/config/system.ts",
+                            "packages/cli/src/types/system.ts"
                         ]
                     },
                     {
                         "category": "import-rule:parsers",
                         "pattern": [
                             "packages/cli/src/parsers/**",
-                            "packages/cli/src/config/parsers.ts"
+                            "packages/cli/src/config/parsers.ts",
+                            "packages/cli/src/types/parsers.ts"
                         ]
                     },
                     {
                         "category": "import-rule:manifests",
                         "pattern": [
                             "packages/cli/src/manifests/**",
-                            "packages/cli/src/config/manifests.ts"
+                            "packages/cli/src/config/manifests.ts",
+                            "packages/cli/src/types/manifests.ts"
                         ]
                     },
                     {
                         "category": "import-rule:repository",
                         "pattern": [
                             "packages/cli/src/repository/**",
-                            "packages/cli/src/config/repository/**"
+                            "packages/cli/src/config/repository/**",
+                            "packages/cli/src/types/repository.ts"
                         ]
                     },
                     {
                         "category": "import-rule:settings",
                         "pattern": [
                             "packages/cli/src/settings/**",
-                            "packages/cli/src/config/settings/**"
+                            "packages/cli/src/config/settings/**",
+                            "packages/cli/src/types/settings.ts"
                         ]
                     },
                     {
                         "category": "import-rule:tools",
                         "pattern": [
                             "packages/cli/src/tools/**",
-                            "packages/cli/src/config/tools/**"
+                            "packages/cli/src/config/tools/**",
+                            "packages/cli/src/types/tools.ts"
                         ]
                     },
                     {
                         "category": "import-rule:engine",
                         "pattern": [
                             "packages/cli/src/engine/**",
-                            "packages/cli/src/config/engine.ts"
+                            "packages/cli/src/config/engine.ts",
+                            "packages/cli/src/types/engine/**"
                         ]
                     },
                     {
                         "category": "import-rule:configurations",
                         "pattern": [
                             "packages/cli/src/configurations/**",
-                            "packages/cli/src/config/configurations/**"
+                            "packages/cli/src/config/configurations/**",
+                            "packages/cli/src/types/configurations/**"
                         ]
                     },
                     {
@@ -1062,14 +1070,16 @@ export default [
                         "category": "import-rule:generation",
                         "pattern": [
                             "packages/cli/src/generation/**",
-                            "packages/cli/src/config/generation.ts"
+                            "packages/cli/src/config/generation.ts",
+                            "packages/cli/src/types/generation.ts"
                         ]
                     },
                     {
                         "category": "import-rule:commands",
                         "pattern": [
                             "packages/cli/src/commands/**",
-                            "packages/cli/src/config/commands/**"
+                            "packages/cli/src/config/commands/**",
+                            "packages/cli/src/types/commands/**"
                         ]
                     },
                     {
@@ -1078,7 +1088,8 @@ export default [
                             "packages/cli/src/main.ts",
                             "packages/cli/src/bin.ts",
                             "packages/cli/src/reference.ts",
-                            "packages/cli/src/config/main.ts"
+                            "packages/cli/src/config/main.ts",
+                            "packages/cli/src/types/main.ts"
                         ]
                     },
                     {
@@ -1266,7 +1277,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"cli-types\" may import its own files and \"cli-schemas\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"cli-types\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1280,7 +1291,6 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:cli-types",
-                                                "import-rule:cli-schemas",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
                                                 "import-rule:manifests",
@@ -1619,7 +1629,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"shipped-config\" may import its own files and \"cli-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"shipped-config\" may import its own files and \"configurations\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1633,7 +1643,7 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:shipped-config",
-                                                "import-rule:cli-types"
+                                                "import-rule:configurations"
                                             ]
                                         }
                                     }

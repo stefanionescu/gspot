@@ -1,12 +1,11 @@
 import { findToolName } from '#cli/tools/pins.ts';
 import type { Check } from '#cli/types/manifests.ts';
-import type { Session } from '#cli/types/session.ts';
 import { readLintRuleDocs } from '#cli/tools/rules.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { hasRuleOutput } from '#cli/engine/outputs/formats.ts';
 import { buildMiseInstall } from '#cli/tools/installers/mise.ts';
-import type { LintRuleDocs, RuleDocsOptions } from '#cli/types/tools/tools.ts';
+import type { Session, LintRuleDocs, RuleDocsOptions } from '#cli/types/tools.ts';
 
 /**
 Read a documented rule from its built-in check or installed tool.

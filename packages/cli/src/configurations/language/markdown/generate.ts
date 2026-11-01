@@ -1,7 +1,7 @@
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import { refuseIdleRuleOptions } from '#cli/configurations/rule-options.ts';
-import type { OwnedConfig, PlannedConfig } from '#cli/types/generation/files.ts';
+import type { OwnedConfig, PlannedConfig } from '#cli/types/configurations/language.ts';
 
 import {
     PRETTIER_STYLE,

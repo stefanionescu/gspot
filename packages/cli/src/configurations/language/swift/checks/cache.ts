@@ -2,20 +2,20 @@ import { createHash } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { join, posix, relative } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
-import type { Session } from '#cli/types/session.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { Files, FileContents } from '#cli/types/system.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { MODE_BITS, PRIVATE_FOLDER } from '#cli/config/system.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
-import type { TrackedFile } from '#cli/types/repository/files.ts';
-import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { statSync, lstatSync, mkdirSync, realpathSync } from 'node:fs';
-import type { SwiftBuildPlan, SwiftBuildSetup, SwiftBuildPurpose } from '#cli/types/configurations/language/swift.ts';
+import type { SwiftBuildPlan, SwiftBuildSetup, SwiftBuildPurpose } from '#cli/types/configurations/language.ts';
 
 import {
     BUILD_LOG,

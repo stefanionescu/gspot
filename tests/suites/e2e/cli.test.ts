@@ -5,7 +5,7 @@ import { STARTING_FILES } from '#tests/config/e2e.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import type { InitJson } from '#cli/types/commands/init.ts';
+import type { InitJson } from '#cli/types/commands/edits.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';

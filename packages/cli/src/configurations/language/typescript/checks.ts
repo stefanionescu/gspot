@@ -1,11 +1,11 @@
 import { join, posix, relative } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
-import type { Session } from '#cli/types/session.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { type CheckFinding } from '#cli/types/engine/check.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { claimProjectCheck } from '#cli/configurations/tsc/compiler.ts';
 import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';

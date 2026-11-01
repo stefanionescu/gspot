@@ -1,6 +1,6 @@
 import { createRunCache } from '#cli/system/cache.ts';
+import type { Repository } from '#cli/types/repository.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import type { Repository } from '#cli/types/repository/files.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 
 /**

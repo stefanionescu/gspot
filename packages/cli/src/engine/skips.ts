@@ -1,21 +1,13 @@
+import type { Host } from '#cli/types/tools.ts';
 import { listIgnores } from '#cli/settings/scopes.ts';
 import { findMissingBuild } from '#cli/tools/pins.ts';
 import { LIMIT_READERS } from '#cli/manifests/limits.ts';
 import type { Tool, Check } from '#cli/types/manifests.ts';
-import type { Scope } from '#cli/types/settings/inheritance.ts';
-import type { Settings } from '#cli/types/settings/settings.ts';
-import type { Repository } from '#cli/types/repository/files.ts';
+import type { Repository } from '#cli/types/repository.ts';
+import type { Scope, Settings } from '#cli/types/settings.ts';
 import { isInScope, isScopeCovered } from '#cli/repository/scopes.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-
-import type {
-    Host,
-    Skip,
-    PlannedCheck,
-    PlannedScope,
-    SettingsSkip,
-    SettingReader,
-} from '#cli/types/engine/planning.ts';
+import type { Skip, PlannedCheck, PlannedScope, SettingsSkip, SettingReader } from '#cli/types/engine/plan.ts';
 
 function findDependencySkip(
     dependencies: string[] | undefined,

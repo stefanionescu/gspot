@@ -1,7 +1,7 @@
-import type { Session } from '#cli/types/session.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { buildBaseResult } from '#cli/engine/results.ts';
-import type { CheckResult } from '#cli/types/engine/check.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { CheckResult } from '#cli/types/engine/run.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { readPushedCommits } from '#cli/repository/revisions/push.ts';
 
 /**

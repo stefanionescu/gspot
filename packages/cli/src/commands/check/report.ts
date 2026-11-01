@@ -4,12 +4,12 @@ import { LINE_BREAK } from '#cli/config/parsers.ts';
 import { printWarning } from '#cli/system/terminal.ts';
 import { SHORT_HASH_LENGTH } from '#cli/config/engine.ts';
 import { formatExplainCommand } from '#cli/engine/results.ts';
+import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { formatCount, quoteArgument } from '#cli/system/text.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { CODE_MARK, EVERY_CHECK } from '#cli/config/commands/help.ts';
-import { type Finding, type CheckResult } from '#cli/types/engine/check.ts';
-import { type FixReport, type RunReport, type CheckProgress } from '#cli/types/commands/check.ts';
+import type { FixReport, RunReport, CheckResult, CheckProgress } from '#cli/types/engine/run.ts';
 
 import {
     RUN_AGAIN,

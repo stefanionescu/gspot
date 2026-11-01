@@ -1,6 +1,6 @@
 import { unescape } from 'node:querystring';
 import { GspotError } from '#cli/system/errors.ts';
-import type { SpawnResult } from '#cli/types/system/system.ts';
+import type { SpawnResult } from '#cli/types/system.ts';
 
 import {
     REDACTED,

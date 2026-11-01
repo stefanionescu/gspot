@@ -5,10 +5,10 @@ import { readNamingDefaults } from '#cli/manifests/read.ts';
 import { SETTING_LANGUAGES } from '#cli/config/manifests.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools/tables.ts';
-import type { Level, Configuration } from '#cli/types/manifests.ts';
 import { importRulesSchema } from '#cli/schemas/settings/settings.ts';
+import type { Setting, Configuration } from '#cli/types/manifests.ts';
+import type { Level, AvailableSettings } from '#cli/types/settings.ts';
 import { getSettingType, unwrapSettingSchema } from '#cli/settings/lookup.ts';
-import type { Setting, AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { TABLE_KEY_SEGMENTS, LANGUAGE_GROUP_TABLES, SHIPPED_DEFAULT_ORIGIN } from '#cli/config/settings/schema.ts';
 

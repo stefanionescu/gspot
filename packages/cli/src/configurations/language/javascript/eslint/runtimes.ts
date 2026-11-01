@@ -1,7 +1,7 @@
 import { escapeGlob } from '#cli/system/paths.ts';
-import type { Scope } from '#cli/types/settings/inheritance.ts';
-import type { EslintRuntime } from '#cli/types/generation/eslint.ts';
+import type { Scope } from '#cli/types/settings.ts';
 import { MISE_TASKS_GLOB } from '#cli/config/configurations/structure.ts';
+import type { EslintRuntime } from '#cli/types/configurations/language.ts';
 import { joinScope, isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { REACT_NATIVE_CONFIGURATION } from '#cli/config/configurations/framework.ts';
 import { splitGlobs } from '#cli/configurations/language/javascript/eslint/files.ts';

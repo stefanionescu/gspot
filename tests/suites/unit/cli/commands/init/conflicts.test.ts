@@ -8,7 +8,7 @@ import { readSettings } from '#cli/settings/read.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GOOGLE_PYPROJECT } from '#tests/config/python.ts';
-import type { InitJson } from '#cli/types/commands/init.ts';
+import type { InitJson } from '#cli/types/commands/edits.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { LEVELS, GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';

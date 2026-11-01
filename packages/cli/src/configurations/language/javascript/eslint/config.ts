@@ -2,6 +2,7 @@ import type ts from 'typescript';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import type { GeneratedFile } from '#cli/types/tools.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
@@ -11,11 +12,9 @@ import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ign
 import { buildRuntimes } from '#cli/configurations/language/javascript/eslint/runtimes.ts';
 import { buildBlockCalls } from '#cli/configurations/language/javascript/eslint/block-calls.ts';
 import { buildPlannedEslintFile } from '#cli/configurations/language/javascript/eslint/plan.ts';
-import type { ConfigOutput, GeneratedFile, PlannedConfig } from '#cli/types/generation/files.ts';
 import { splitSettingsBlocks } from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
 import { buildBoundaryBlocks } from '#cli/configurations/language/javascript/eslint/blocks/boundaries.ts';
 import { listConfigurationBlocks } from '#cli/configurations/language/javascript/eslint/configuration-blocks.ts';
-import type { BlockWriter, EslintBlock, EslintPlugins, PlannedEslintBlock } from '#cli/types/generation/eslint.ts';
 import { buildClosingBlocks, buildOpeningBlocks } from '#cli/configurations/language/javascript/eslint/blocks/base.ts';
 
 import {
@@ -28,6 +27,14 @@ import {
     PRESETS_AFTER_CONFIGURATIONS,
     PRESETS_BEFORE_CONFIGURATIONS,
 } from '#cli/config/configurations/blocks.ts';
+import type {
+    BlockWriter,
+    EslintBlock,
+    ConfigOutput,
+    PlannedConfig,
+    EslintPlugins,
+    PlannedEslintBlock,
+} from '#cli/types/configurations/language.ts';
 import {
     NAME_HYPHEN,
     GLOBALS_IMPORT,

@@ -1,11 +1,11 @@
+import type { Session } from '#cli/types/tools.ts';
 import { join, dirname, relative } from 'node:path';
-import type { Session } from '#cli/types/session.ts';
 import { listIgnoredRules } from '#cli/settings/scopes.ts';
+import type { Scope, Level } from '#cli/types/settings.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
-import type { Scope } from '#cli/types/settings/inheritance.ts';
-import type { Level, Configuration } from '#cli/types/manifests.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';

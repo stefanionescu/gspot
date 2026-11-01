@@ -1,6 +1,6 @@
 import type { Constraint } from '@pgsql/types';
+import type { SqlStatement } from '#cli/types/parsers.ts';
 import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
-import type { SqlStatement, SqlStatementVisitors } from '#cli/types/parsers/code.ts';
 import { PUBLIC_SCHEMA, SCHEMA_NAME_INDEX, CONSTRAINT_SUFFIXES } from '#cli/config/configurations/infrastructure.ts';
 
 import type {
@@ -10,7 +10,8 @@ import type {
     SchemaState,
     StatementReader,
     SchemaAlterations,
-} from '#cli/types/configurations/database/postgres.ts';
+    SqlStatementVisitors,
+} from '#cli/types/configurations/infrastructure.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Ten schema readers in this file qualify a name with its schema through it.
 function qualifyName(schema: string | undefined, name: string | undefined = ''): string {

@@ -2,18 +2,19 @@ import picomatch from 'picomatch';
 import { join, posix } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
-import type { Session, CheckSession } from '#cli/types/session.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { parseNginxDirectives } from '#cli/parsers/formats/nginx.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { DOCKER_TOOL, DOCKER_DAEMON_NOTE } from '#cli/config/engine.ts';
+import type { CheckSession, BuiltInCheckResult } from '#cli/types/engine/run.ts';
 import type { Mount, NginxMounts } from '#cli/types/configurations/infrastructure.ts';
-import { type CheckFinding, type BuiltInCheckResult } from '#cli/types/engine/check.ts';
 
 import {
     NGINX_CONF,

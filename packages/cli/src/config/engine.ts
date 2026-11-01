@@ -1,8 +1,7 @@
 import { STAGES } from '#cli/config/manifests.ts';
-import type { CheckStatus } from '#cli/types/engine/check.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import type { CheckOutput } from '#cli/types/engine/outputs.ts';
-import type { StylelintComponent } from '#cli/types/generation/css.ts';
+import type { CheckOutput } from '#cli/types/engine/tool-runs.ts';
+import type { CheckStatus, StylelintComponent } from '#cli/types/engine/run.ts';
 import { PACKAGE_JSON, TSCONFIG_FILE, PYPROJECT_TOML } from '#cli/config/parsers.ts';
 
 export const SHORT_HASH_LENGTH = 7;

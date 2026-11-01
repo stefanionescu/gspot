@@ -1,6 +1,6 @@
 import { visit } from 'unist-util-visit';
+import type { CodeFence } from '#cli/types/parsers.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import type { CodeFence } from '#cli/types/parsers/formats.ts';
 
 /**
 List code blocks with their language, attributes, and source lines.

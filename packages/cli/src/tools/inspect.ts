@@ -10,9 +10,15 @@ import { PACKAGE_JSON, GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { readToolVersion, classifyToolVersion } from '#cli/tools/versions.ts';
 import { readToolProjectPackage, findInstalledDependency } from '#cli/tools/packages.ts';
 import { listExecutablePaths, listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
-import { type ToolAvailability, type InstalledDependency } from '#cli/types/tools/tools.ts';
-import type { ToolSearch, InspectedTool, ToolInspection } from '#cli/types/tools/inspection.ts';
 import { INSTALL_HELP, MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/tools/programs.ts';
+
+import type {
+    ToolSearch,
+    InspectedTool,
+    ToolInspection,
+    ToolAvailability,
+    InstalledDependency,
+} from '#cli/types/tools.ts';
 
 function buildInstallHelp(tool: Tool): string {
     const toolProjectPackage = findPackagePin(tool);

@@ -11,10 +11,10 @@ import type { Tool, Check } from '#cli/types/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';
 import { gfmTableFromMarkdown } from 'mdast-util-gfm-table';
+import type { SettingDefinition } from '#cli/types/settings.ts';
 import { listAssets, buildAssetPath } from '#cli/system/assets.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
 import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
-import type { SettingDefinition } from '#cli/types/settings/definitions.ts';
 
 test('each accepted suppression example matches its marker and gives a reason', () => {
     const forms = readConfigurations()

@@ -1,6 +1,6 @@
 import { escapeGlob } from '#cli/system/paths.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
+import type { EslintScope, ConfigurationBlocks } from '#cli/types/configurations/language.ts';
 
 import {
     TS_PATTERN,

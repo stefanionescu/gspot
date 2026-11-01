@@ -1,14 +1,14 @@
 import type ts from 'typescript';
 import { posix } from 'node:path';
 import { find } from '#cli/system/files/reads.ts';
-import type { Session } from '#cli/types/session.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
-import { type CheckFinding } from '#cli/types/engine/check.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { AssetSource, AssetGlobImport } from '#cli/types/configurations/language.ts';
 import { SYMLINK_MODE, FILENAME_TAGS, GIT_FILE_MODES } from '#cli/config/repository/files.ts';
-import type { AssetSource, AssetGlobImport } from '#cli/types/configurations/framework/site.ts';
 import { ASTRO_EXTENSION, COMPONENT_SCRIPT, ASTRO_FRONT_MATTER, COMPONENT_EXTENSION } from '#cli/config/parsers.ts';
 
 import {

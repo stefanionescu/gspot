@@ -5,7 +5,7 @@ import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { type ApplyReport } from '#cli/types/generation/files.ts';
+import type { ApplyReport } from '#cli/types/generation.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { UPDATED_AGENTS } from '#tests/config/commands/contents.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

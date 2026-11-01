@@ -1,6 +1,6 @@
 import { GspotError } from '#cli/system/errors.ts';
-import type { CheckSession } from '#cli/types/session.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { CheckSession } from '#cli/types/engine/run.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CommandLine, Substitutions } from '#cli/types/engine/tool-runs.ts';
 import { expandCommand, buildFileCommandLines } from '#cli/engine/tool-runs/placeholders.ts';
 

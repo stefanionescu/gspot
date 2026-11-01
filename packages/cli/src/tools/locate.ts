@@ -1,15 +1,14 @@
 import which from 'which';
 import { statSync, realpathSync } from 'node:fs';
 import { listMisePins } from '#cli/tools/pins.ts';
+import type { Files } from '#cli/types/system.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
-import { type Session } from '#cli/types/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import type { Files } from '#cli/types/system/files.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import { LINE_BREAK, GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import type { Session, ExecutableSearch } from '#cli/types/tools.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
-import type { ExecutableSearch } from '#cli/types/tools/inspection.ts';
 import { GSPOT_PATHS, MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { join, dirname, basename, relative, isAbsolute } from 'node:path';
 import { executableLayout, convertToPosixPath, listExecutableNames } from '#cli/system/paths.ts';

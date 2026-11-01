@@ -1,6 +1,5 @@
 import which from 'which';
 import { GspotError } from '#cli/system/errors.ts';
-import type { Session } from '#cli/types/session.ts';
 import { listDistinctTools } from '#cli/tools/pins.ts';
 import { MISE_TOOL } from '#cli/config/tools/installers.ts';
 import { installHooks } from '#cli/tools/installers/hooks.ts';
@@ -10,7 +9,7 @@ import { installValePackages } from '#cli/tools/installers/vale.ts';
 import { installToolProjects } from '#cli/tools/installers/projects.ts';
 import { assertPackageManagerVersion } from '#cli/tools/installers/npm/project.ts';
 import { readToolPackageManager } from '#cli/repository/javascript/package-manager.ts';
-import type { ToolInstall, InstallResult, ToolPackageManager } from '#cli/types/tools/installers/installers.ts';
+import type { Session, ToolInstall, InstallResult, ToolPackageManager } from '#cli/types/tools.ts';
 
 function readInstallPackageManager(session: Session): ToolPackageManager | undefined {
     const pin = session.packageManager;

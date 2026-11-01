@@ -1,6 +1,6 @@
 import { listIgnoredRules } from '#cli/settings/scopes.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import type { PlannedConfig } from '#cli/types/generation/files.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 import {
     HTML_VALIDATE_RULES,

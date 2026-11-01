@@ -1,21 +1,19 @@
 import { basename } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
-import type { Session } from '#cli/types/session.ts';
 import { selectCheckFiles } from '#cli/engine/files.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
 import { getTool, findPackagePin } from '#cli/tools/pins.ts';
+import type { Scope, Settings } from '#cli/types/settings.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
-import type { Scope } from '#cli/types/settings/inheritance.ts';
-import type { Settings } from '#cli/types/settings/settings.ts';
-import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { GSPOT_FOLDER, PACKAGE_JSON } from '#cli/config/parsers.ts';
+import type { Session, ConfiguredCheck } from '#cli/types/tools.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { ESLINT_MANIFEST_TOOL } from '#cli/config/repository/setup.ts';
 import { isCoverageOff, hasCoverageArguments } from '#cli/engine/plan.ts';
-import type { PrettierPlugin } from '#cli/types/generation/formatting.ts';
 import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
 import { selectScopePath, listNestedScopes } from '#cli/repository/scopes.ts';
-import type { LicenseProject, ConfiguredCheck } from '#cli/types/engine/planning.ts';
+import type { PrettierPlugin, LicenseProject } from '#cli/types/engine/plan.ts';
 import { isSettingEmpty, findSystemSkip, findSettingsSkip } from '#cli/engine/skips.ts';
 
 import {

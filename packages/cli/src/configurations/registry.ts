@@ -1,8 +1,8 @@
 import type { Check } from '#cli/types/manifests.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import { checkTsc } from '#cli/configurations/tsc/check.ts';
-import type { CheckCode } from '#cli/types/engine/check.ts';
-import type { ConfigBuilder } from '#cli/types/generation/files.ts';
 import { checkVale } from '#cli/configurations/general/prose/checks.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import { checkYaml } from '#cli/configurations/general/data-files/checks.ts';
 import { checkAllowed } from '#cli/configurations/general/licenses/checks.ts';
 import { checkSemgrep } from '#cli/configurations/general/security/checks.ts';

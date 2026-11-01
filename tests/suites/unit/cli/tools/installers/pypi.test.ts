@@ -10,12 +10,12 @@ import type { GspotError } from '#cli/system/errors.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import type { PythonToolProject } from '#cli/types/tools.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { type PythonToolProject } from '#cli/types/tools/installers/installers.ts';
 
 import {
     installPythonTools,

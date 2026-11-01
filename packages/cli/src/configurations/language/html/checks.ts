@@ -1,11 +1,11 @@
 import type { Node } from 'web-tree-sitter';
 import { decodeHTMLAttribute } from 'entities';
-import type { Session } from '#cli/types/session.ts';
-import type { SourceTree } from '#cli/types/parsers/code.ts';
-import type { CheckFinding } from '#cli/types/engine/check.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { Session } from '#cli/types/tools.ts';
+import type { SourceTree } from '#cli/types/parsers.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
-import type { MarkupAttribute } from '#cli/types/configurations/language/language.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { MarkupAttribute } from '#cli/types/configurations/language.ts';
 
 import {
     HTML_RULES,

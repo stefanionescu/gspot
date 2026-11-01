@@ -1,4 +1,4 @@
-import type { DirectiveScan } from '#cli/types/parsers/formats.ts';
+import type { DirectiveScan } from '#cli/types/parsers.ts';
 
 import {
     WORD_STOPS,

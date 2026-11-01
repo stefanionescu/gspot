@@ -1,19 +1,18 @@
-import type { Session } from '#cli/types/session.ts';
 import { CODE_MARK } from '#cli/config/commands/help.ts';
 import { describeCheck } from '#cli/engine/reference.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { getTool, findToolName } from '#cli/tools/pins.ts';
+import type { CommandCheck } from '#cli/types/settings.ts';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
-import type { LintRuleDocs } from '#cli/types/tools/tools.ts';
 import { hasRuleOutput } from '#cli/engine/outputs/formats.ts';
 import { readCheckRuleDocs } from '#cli/configurations/rules.ts';
+import type { Session, LintRuleDocs } from '#cli/types/tools.ts';
 import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
-import type { CommandCheck } from '#cli/types/settings/settings.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import type { Check, ScopeCheck, Configuration } from '#cli/types/manifests.ts';
 import { listRuleFiles, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
-import type { CheckFacts, CheckIgnore, Explanation } from '#cli/types/commands/explain.ts';
+import type { CheckFacts, CheckIgnore, Explanation } from '#cli/types/commands/reports.ts';
 
 import {
     LINT_RULE_LABELS,

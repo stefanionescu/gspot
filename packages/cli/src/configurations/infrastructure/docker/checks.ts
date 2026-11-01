@@ -1,29 +1,30 @@
 import { join, posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
+import type { Session } from '#cli/types/tools.ts';
+import type { Scope } from '#cli/types/settings.ts';
 import { listCheckFiles } from '#cli/engine/files.ts';
 import { read, find } from '#cli/system/files/reads.ts';
 import { FILE_PLACEHOLDER } from '#cli/config/engine.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
-import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import { DOCKERFILE_NAME } from '#cli/config/repository/files.ts';
-import { type PlannedCheck } from '#cli/types/engine/planning.ts';
-import { type TrackedFile } from '#cli/types/repository/files.ts';
 import { runCommandBatches } from '#cli/engine/tool-runs/check.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
-import type { Session, CheckSession } from '#cli/types/session.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
-import { type CheckResult, type CheckFinding } from '#cli/types/engine/check.ts';
+import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import { composeSchema, trivyImageOutputSchema } from '#cli/schemas/configurations/infrastructure.ts';
 
-import {
-    type ImageFinding,
-    type ComposeFiles,
-    type ComposeDocuments,
-    type ComposeDeclaration,
+import type {
+    ImageFinding,
+    ComposeFiles,
+    ComposeDocuments,
+    ComposeDeclaration,
 } from '#cli/types/configurations/infrastructure.ts';
 import {
     DOCKER_RULES,

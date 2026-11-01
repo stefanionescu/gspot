@@ -2,7 +2,8 @@ import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
-import type { IgnoreSection, PlannedConfig } from '#cli/types/generation/files.ts';
+import type { IgnoreSection } from '#cli/types/configurations/general.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { convertToGlobs, keepFirstPatterns, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
 
 import {

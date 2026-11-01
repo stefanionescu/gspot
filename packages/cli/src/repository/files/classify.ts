@@ -3,19 +3,20 @@ import { read } from '#cli/system/files/reads.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
-import type { Config, Configuration } from '#cli/types/manifests.ts';
 import { MARKERS, SCRIPT_TAG, GSPOT_FOLDER, WHITESPACE_RUN, JAVASCRIPT_RUNTIMES } from '#cli/config/parsers.ts';
 
 import type {
+    Config,
     FileTags,
     ListedFile,
     TrackedFile,
     FileKindRules,
     GeneratedPaths,
     FileClassification,
-} from '#cli/types/repository/files.ts';
+} from '#cli/types/repository.ts';
 import {
     TEXT_TAG,
     SET_STATE,

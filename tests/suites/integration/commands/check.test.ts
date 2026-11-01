@@ -8,7 +8,7 @@ import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import type { CommandFailureJson } from '#cli/types/terminal.ts';
+import type { CommandFailureJson } from '#cli/types/system.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';

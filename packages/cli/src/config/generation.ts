@@ -1,6 +1,6 @@
-import type { Group } from '#cli/types/manifests.ts';
 import { COPIES_FOLDER } from '#cli/config/engine.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import type { Group } from '#cli/types/repository.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { LFS_GUARD_PREFIX } from '#cli/config/repository/setup.ts';
 import { GENERATED_HEADER_MARK } from '#cli/config/repository/files.ts';

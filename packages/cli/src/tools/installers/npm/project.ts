@@ -6,14 +6,12 @@ import { GspotError } from '#cli/system/errors.ts';
 import { listPackagePins } from '#cli/tools/pins.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import type { ReplacementRequest } from '#cli/types/repository.ts';
 import { PACKAGE_JSON, GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { VERSION_FLAG } from '#cli/config/repository/javascript.ts';
-import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { TRAILING_PERIOD } from '#cli/config/settings/validation.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
-import type { ToolInstall } from '#cli/types/tools/installers/installers.ts';
-import type { ReplacementRequest } from '#cli/types/repository/repository.ts';
 import { runInstallStep, explainReleaseAgeHold } from '#cli/tools/installers/steps.ts';
 import { buildPackageManagerCommand } from '#cli/repository/javascript/package-manager.ts';
 import { writeNpmrc, extractRegistryCredentials } from '#cli/tools/installers/npm/registry.ts';
@@ -21,11 +19,13 @@ import { prepareReleaseAge, writeBunReleaseAge } from '#cli/tools/installers/npm
 import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/tools/installers/credentials.ts';
 import { isLockfileFresh, selectLockfileName, stripBunRegistryUrls } from '#cli/tools/installers/npm/lockfiles.ts';
 
-import {
-    type NpmToolInstall,
-    type PackageManagerRun,
-    type PackageManagerRequest,
-} from '#cli/types/tools/installers/npm.ts';
+import type {
+    ToolInstall,
+    GeneratedFile,
+    NpmToolInstall,
+    PackageManagerRun,
+    PackageManagerRequest,
+} from '#cli/types/tools.ts';
 import {
     NODE_TOOL,
     NPMRC_FILE,

@@ -3,14 +3,10 @@ import { readFileSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { LINE_BREAK } from '#cli/config/parsers.ts';
 import { readHooks } from '#cli/repository/setup.ts';
-import type { Session } from '#cli/types/session.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { runGitBlocking } from '#cli/repository/git/run.ts';
-import type { HookName } from '#cli/types/generation/files.ts';
-import { type Repository } from '#cli/types/repository/files.ts';
-import type { ConfiguredCheck } from '#cli/types/engine/planning.ts';
-import { type RepositorySetup } from '#cli/types/repository/repository.ts';
-import type { HookPlan, HookStatus } from '#cli/types/tools/installers/installers.ts';
+import type { Repository, RepositorySetup } from '#cli/types/repository.ts';
+import type { Session, HookName, HookPlan, HookStatus, ConfiguredCheck } from '#cli/types/tools.ts';
 
 import {
     CHECK_HOOKS,

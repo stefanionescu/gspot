@@ -1,6 +1,6 @@
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { TYPE } from '@formatjs/icu-messageformat-parser';
-import type { EslintPlugins } from '#cli/types/generation/eslint.ts';
+import type { EslintPlugins } from '#cli/types/configurations/language.ts';
 
 export const TSCONFIG_COPY_FOLDER = `${GSPOT_PATHS.configurations}/language/typescript`;
 

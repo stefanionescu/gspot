@@ -1,7 +1,7 @@
 import { isTable } from '#cli/system/tables.ts';
+import type { RunCache } from '#cli/types/system.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { RunCache } from '#cli/types/system/system.ts';
 import { join, dirname, resolve, relative } from 'node:path';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';

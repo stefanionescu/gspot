@@ -1,7 +1,7 @@
 import { getTable } from '#cli/settings/scopes.ts';
-import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 import {
     LYCHEE_NOTES,

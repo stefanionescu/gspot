@@ -1,16 +1,16 @@
+import type { Session } from '#cli/types/tools.ts';
 import { quoteArgument } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/session.ts';
 import { buildSettings } from '#cli/settings/read.ts';
+import type { Setting } from '#cli/types/manifests.ts';
 import { listSettingReaders } from '#cli/engine/skips.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { REASON_HELP } from '#cli/config/commands/reports.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
-import type { Setting } from '#cli/types/settings/inheritance.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/configurations/general.ts';
 import { RECORD_FIELDS, findSettingSchema } from '#cli/settings/lookup.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
-import type { Explanation, SettingScope } from '#cli/types/commands/explain.ts';
+import type { Explanation, SettingScope } from '#cli/types/commands/reports.ts';
 import { findSetting, getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 
 function formatSettingScope(key: string, setting: Setting, scopeSetting: SettingScope): string[] {

@@ -1,30 +1,23 @@
 import { runChecks } from '#cli/engine/run.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { type Session } from '#cli/types/session.ts';
 import { printWarning } from '#cli/system/terminal.ts';
 import { findSettingsSkip } from '#cli/engine/skips.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
-import { type CommandResult } from '#cli/types/terminal.ts';
+import type { CommandResult } from '#cli/types/system.ts';
+import type { StageFilter } from '#cli/types/engine/plan.ts';
+import type { ChangedPaths } from '#cli/types/repository.ts';
 import { listOutdatedFiles } from '#cli/generation/outdated.ts';
 import { readHookStatus } from '#cli/tools/installers/hooks.ts';
-import { type StageFilter } from '#cli/types/engine/planning.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { type ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import { isInScope, buildArgumentPath } from '#cli/repository/scopes.ts';
 import { listChecksById, assertCheckExists } from '#cli/manifests/read.ts';
+import type { FixReport, RunReport, RunOptions } from '#cli/types/engine/run.ts';
+import type { RunFilters, CheckOptions, RevisionSource } from '#cli/types/commands/reports.ts';
 import { formatFixes, formatRunReport, printFailedFixers } from '#cli/commands/check/report.ts';
-
-import {
-    type FixReport,
-    type RunReport,
-    type RunOptions,
-    type RunFilters,
-    type CheckOptions,
-    type RevisionSource,
-} from '#cli/types/commands/check.ts';
 
 function buildHistorySelection(
     revision: RevisionSource | undefined,

@@ -1,11 +1,10 @@
 import { isTable } from '#cli/system/tables.ts';
+import type { TomlTable } from '#cli/types/settings.ts';
+import type { CommandResult } from '#cli/types/system.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
-import type { TomlTable } from '#cli/types/settings/settings.ts';
-import type { CommandLocation } from '#cli/types/commands/commands.ts';
 import { COMMAND_HELP, SCOPE_OPTION } from '#cli/config/commands/help.ts';
-import type { ConfigurationsOptions } from '#cli/types/engine/planning.ts';
-import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
+import type { CommandLocation, CommandCompletion, ConfigurationsOptions } from '#cli/types/commands/edits.ts';
 import { writeSettingsEdit, formatConfigurationChange, readConfigurationEditContext } from '#cli/commands/edits.ts';
 
 function restoreConfigurations(table: TomlTable, added: string[]): void {

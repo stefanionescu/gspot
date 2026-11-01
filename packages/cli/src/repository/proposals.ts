@@ -1,16 +1,17 @@
 import type { Configuration } from '#cli/types/manifests.ts';
-import type { ScopeFolder } from '#cli/types/repository/files.ts';
 import { isInScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { detectConfigurations, listAutomaticConfigurations } from '#cli/repository/detect.ts';
-import type { ConfigurationEvidence, ConfigurationSelection } from '#cli/types/repository/repository.ts';
 import { expandSuggestions, selectConfigurations, assertConfigurationsExist } from '#cli/manifests/select.ts';
 
 import type {
+    ScopeFolder,
     InitRepository,
     InitConfigurations,
     ConfigurationOrigin,
     ConfigurationChoices,
-} from '#cli/types/commands/init.ts';
+    ConfigurationEvidence,
+    ConfigurationSelection,
+} from '#cli/types/repository.ts';
 
 function selectRootConfigurations(
     init: InitRepository,

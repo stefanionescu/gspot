@@ -7,14 +7,8 @@ import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import { readHead } from '#cli/repository/revisions/files.ts';
 import { readMergeBase, readDefaultRef } from '#cli/repository/revisions/changes.ts';
 import { runGit, readGitText, readGitLines, readGitPaths } from '#cli/repository/git/run.ts';
+import type { PushLine, Comparison, PushSearch, PushRevision, PushedRevisions } from '#cli/types/repository.ts';
 
-import {
-    type PushLine,
-    type Comparison,
-    type PushSearch,
-    type PushRevision,
-    type PushedRevisions,
-} from '#cli/types/repository/revisions.ts';
 import {
     NOT_FLAG,
     TREE_SUFFIX,

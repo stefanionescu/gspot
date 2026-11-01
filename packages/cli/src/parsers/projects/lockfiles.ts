@@ -2,13 +2,13 @@ import { posix } from 'node:path';
 import { parseSyml } from '@yarnpkg/parsers';
 import { isTable } from '#cli/system/tables.ts';
 import { find } from '#cli/system/files/reads.ts';
+import type { RunCache } from '#cli/types/system.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
-import { type RunCache } from '#cli/types/system/system.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
-import { type LockfileName, type LockedPackageLockfile } from '#cli/types/parsers/projects.ts';
+import type { LockfileName, LockedPackageLockfile } from '#cli/types/parsers.ts';
 
 import {
     uvLockfileSchema,

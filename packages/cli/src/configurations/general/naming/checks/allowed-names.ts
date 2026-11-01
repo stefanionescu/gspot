@@ -1,13 +1,13 @@
 import { read } from '#cli/system/files/reads.ts';
-import type { Session } from '#cli/types/session.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { readNamingDefaults } from '#cli/manifests/read.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
-import type { CheckFinding } from '#cli/types/engine/check.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { FileNames } from '#cli/types/configurations/general.ts';
 import { UNUSED_RECORD_RULE } from '#cli/config/configurations/naming.ts';
-import type { FileNames } from '#cli/types/configurations/general/naming.ts';
 import { listNamedFiles, parseIdentifiers } from '#cli/configurations/general/naming/checks/source-names.ts';
 import { buildFileIdentifier, buildFolderIdentifiers } from '#cli/configurations/general/naming/checks/paths.ts';
 

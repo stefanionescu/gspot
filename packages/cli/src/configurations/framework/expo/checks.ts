@@ -3,11 +3,11 @@ import { GspotError } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import type { CheckSession } from '#cli/types/session.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import { type CheckFinding } from '#cli/types/engine/check.ts';
+import type { CheckSession } from '#cli/types/engine/run.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { findInstalledDependency } from '#cli/tools/packages.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 
 import {

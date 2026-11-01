@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { createRunCache } from '#cli/system/cache.ts';
-import { type Identifier } from '#cli/types/configurations/general/naming.ts';
+import type { Identifier } from '#cli/types/configurations/general.ts';
 import { parseIdentifiers } from '#cli/configurations/general/naming/checks/source-names.ts';
 
 import {

@@ -1,19 +1,23 @@
 import { readFileSync } from 'node:fs';
 import { remember } from '#cli/system/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import type { Session } from '#cli/types/session.ts';
-import type { Config } from '#cli/types/manifests.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { buildAssetPath } from '#cli/system/assets.ts';
+import type { Config } from '#cli/types/repository.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { join, dirname, relative } from 'node:path/posix';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import { listOwnedConfigs } from '#cli/generation/selection.ts';
 import { buildIgnoreSections } from '#cli/generation/ignores.ts';
 import { CONFIG_BUILDERS } from '#cli/configurations/registry.ts';
+import type { ConfigGeneration } from '#cli/types/engine/tool-runs.ts';
 import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import { buildLinkFiles, listLinkFilePaths } from '#cli/generation/links.ts';
 import { buildSemgrepFile } from '#cli/configurations/general/security/generate.ts';
+import type { OwnedConfig, PlannedConfig } from '#cli/types/configurations/language.ts';
 import { isMarkdownlintShared } from '#cli/configurations/language/markdown/generate.ts';
+import type { BuiltConfig, OwnedSourceFile, ConfigBuildState } from '#cli/types/generation.ts';
 
 import {
     TS_EXTENSION,
@@ -21,15 +25,6 @@ import {
     CONFIG_SCOPES_FOLDER,
     SEMGREP_RULE_PACK_FILE,
 } from '#cli/config/generation.ts';
-import type {
-    BuiltConfig,
-    OwnedConfig,
-    ConfigBuilder,
-    PlannedConfig,
-    OwnedSourceFile,
-    ConfigGeneration,
-    ConfigBuildState,
-} from '#cli/types/generation/files.ts';
 
 const CONFIGS = Symbol('config files');
 

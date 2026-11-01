@@ -2,11 +2,10 @@ import { join, posix } from 'node:path';
 import { read } from '#cli/system/files/reads.ts';
 import { PRIVATE_FILE } from '#cli/config/system.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
-import type { CheckSession } from '#cli/types/session.ts';
-import { type CheckResult } from '#cli/types/engine/check.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import { type PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import { isMap, isSeq, isAlias, isScalar, type Scalar, parseDocument, type Document } from 'yaml';
 
 import {

@@ -2,8 +2,9 @@ import { readFileSync } from 'node:fs';
 import { parse, stringify } from 'yaml';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { SemgrepDocument } from '#cli/types/configurations/general.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import type { PlannedConfig, SemgrepDocument } from '#cli/types/generation/files.ts';
 
 /**
 Build a Semgrep config file: drop the rules whose packages the scope does not depend on, and point folder-limited rules

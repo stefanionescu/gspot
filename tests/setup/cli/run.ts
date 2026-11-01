@@ -1,12 +1,12 @@
 import { planChecks } from '#cli/engine/plan.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
-import { type RunOptions } from '#cli/types/commands/check.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { listOutdatedFiles } from '#cli/generation/outdated.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { type PlannedCheck } from '#cli/types/engine/planning.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { type Session, type CheckGeneration } from '#cli/types/session.ts';
+import type { RunOptions, CheckGeneration } from '#cli/types/engine/run.ts';
 
 /**
 Options for an in-process run of every stage, with no fixes.

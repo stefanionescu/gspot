@@ -1,21 +1,21 @@
 import { createTwoFilesPatch } from 'diff';
 import { compareText } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { listOwnablePaths } from '#cli/generation/links.ts';
+import type { OutdatedFile } from '#cli/types/engine/run.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
+import type { Files, FileContents } from '#cli/types/system.ts';
 import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
 import { OCTAL_RADIX, GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
-import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { findBlockBody } from '#cli/parsers/formats/managed-blocks.ts';
 import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
 import { listStrayPaths, hasManagedKeys } from '#cli/repository/writer.ts';
 import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
+import type { Session, Generation, GeneratedFile } from '#cli/types/tools.ts';
 import { ON_DISK_LABEL, DIFF_CONTEXT_LINES, BLOCK_ON_DISK_LABEL } from '#cli/config/generation.ts';
-import { type Generation, type OutdatedFile, type GeneratedFile } from '#cli/types/generation/files.ts';
 
 function listOutdatedOutputs(files: Files, generated: Generation): OutdatedFile[] {
     return generated.files.flatMap((file): OutdatedFile[] => {

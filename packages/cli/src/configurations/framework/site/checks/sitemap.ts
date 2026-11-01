@@ -2,9 +2,9 @@ import { decodeXML } from 'entities';
 import { getPosition } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
-import type { CheckFinding } from '#cli/types/engine/check.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
-import type { SitemapUrls } from '#cli/types/configurations/framework/site.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { SitemapUrls } from '#cli/types/configurations/language.ts';
 import { SITE_RULES, SITEMAP_FILE, SITEMAP_LOCATION, SITEMAP_EXTENSION } from '#cli/config/configurations/framework.ts';
 
 function parseSitemapUrl(value: string): URL | undefined {

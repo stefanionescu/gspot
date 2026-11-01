@@ -1,13 +1,13 @@
 import { remember } from '#cli/system/cache.ts';
 import { read } from '#cli/system/files/reads.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { Query, type Node } from 'web-tree-sitter';
 import { SCRIPT_TAG } from '#cli/config/parsers.ts';
-import type { Session } from '#cli/types/session.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
-import type { TrackedFile } from '#cli/types/repository/files.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { ParsedSource, ParsedLanguage } from '#cli/types/configurations/general.ts';
 import { SOURCE_QUERIES, LANGUAGE_BY_EXTENSION } from '#cli/config/configurations/structure.ts';
-import type { ParsedSource, ParsedLanguage } from '#cli/types/configurations/general/structure.ts';
 
 function detectLanguage(file: TrackedFile): ParsedLanguage | undefined {
     for (const [extension, language] of Object.entries(LANGUAGE_BY_EXTENSION))

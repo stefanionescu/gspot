@@ -1,9 +1,9 @@
 import { getLimit } from '#cli/settings/scopes.ts';
-import type { Session } from '#cli/types/session.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { listCodeLines } from '#cli/parsers/code/bash.ts';
-import type { CheckFinding } from '#cli/types/engine/check.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { COUNT_LIMITS } from '#cli/config/configurations/bash.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
 
 /**

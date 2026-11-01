@@ -3,14 +3,14 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { sep, join, dirname, relative } from 'node:path';
-import type { EslintRuntime } from '#cli/types/generation/eslint.ts';
 
 import type {
+    EslintRuntime,
     EslintGlobals,
     ComponentParser,
     JavascriptBlock,
     EslintRuleOptionBlock,
-} from '#cli/types/generation/eslint-functions.ts';
+} from '#cli/types/configurations/language.ts';
 
 export const root = fileURLToPath(new URL('../../../../..', import.meta.url)).replace(/[\\/]$/u, '');
 

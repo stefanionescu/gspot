@@ -5,6 +5,7 @@ import { availableParallelism } from 'node:os';
 import { remember } from '#cli/system/cache.ts';
 import { runFixers } from '#cli/engine/fixes.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildRunReport } from '#cli/engine/report.ts';
@@ -13,23 +14,27 @@ import { readToolBinPaths } from '#cli/tools/locate.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { isActive, planChecks } from '#cli/engine/plan.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
+import type { IgnoreRecord } from '#cli/types/settings.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { formatUnexpectedError } from '#cli/system/terminal.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { buildMiseInstall } from '#cli/tools/installers/mise.ts';
-import { type PlannedCheck } from '#cli/types/engine/planning.ts';
-import { type IgnoreRecord } from '#cli/types/settings/settings.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
-import { type Session, type CheckSession, type CheckGeneration } from '#cli/types/session.ts';
 import { buildBaseResult, runBuiltInCheck, normalizeResultPaths } from '#cli/engine/results.ts';
-import { type Finding, type CheckCode, type CheckResult, type CheckRunOptions } from '#cli/types/engine/check.ts';
 
-import {
-    type Run,
-    type RunResult,
-    type RunOptions,
-    type PlanAfterFixes,
-    type ReproduceOptions,
-} from '#cli/types/commands/check.ts';
+import type {
+    Run,
+    CheckCode,
+    RunResult,
+    RunOptions,
+    CheckResult,
+    CheckSession,
+    PlanAfterFixes,
+    CheckGeneration,
+    CheckRunOptions,
+    ReproduceOptions,
+} from '#cli/types/engine/run.ts';
 import {
     HOOK_FLAG,
     BASE_FLAG,

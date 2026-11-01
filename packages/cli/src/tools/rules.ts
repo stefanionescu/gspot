@@ -14,8 +14,8 @@ import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import type { Tool, Configuration } from '#cli/types/manifests.ts';
 import { ESLINT_MANIFEST_TOOL } from '#cli/config/repository/setup.ts';
 import { GSPOT_PATHS, RULE_PLACEHOLDER } from '#cli/config/manifests.ts';
+import type { LintRuleDocs, RuleToolSearch, RuleDocsOptions } from '#cli/types/tools.ts';
 import { listExecutablePaths, listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
-import type { LintRuleDocs, RuleToolSearch, RuleDocsOptions } from '#cli/types/tools/tools.ts';
 import { ruffRuleSchema, installedRulesSchema, ruleDocumentationSchema } from '#cli/schemas/tools/tools.ts';
 
 import {

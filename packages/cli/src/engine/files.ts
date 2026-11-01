@@ -1,15 +1,15 @@
 import { posix } from 'node:path';
 import { isUtf8 } from 'node:buffer';
+import type { Scope } from '#cli/types/settings.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { getTable, listIgnores } from '#cli/settings/scopes.ts';
-import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
-import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
-import type { PlannedCheck, PlannedScope } from '#cli/types/engine/planning.ts';
+import type { PlannedCheck, PlannedScope } from '#cli/types/engine/plan.ts';
 import type { Check, ScopeCheck, Configuration } from '#cli/types/manifests.ts';
 import { isInScope, joinScope, selectScopePath, listNestedScopes } from '#cli/repository/scopes.ts';
 

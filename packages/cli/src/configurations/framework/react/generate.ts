@@ -1,4 +1,4 @@
-import type { ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
+import type { ConfigurationBlocks } from '#cli/types/configurations/language.ts';
 import { REACT_RULES, REACT_FILES, CONFIGURATION_PLUGINS } from '#cli/config/configurations/framework.ts';
 
 /**

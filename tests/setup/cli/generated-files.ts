@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
+import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
-import type { Session } from '#cli/types/session.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { ROOT_LABEL } from '#tests/config/messages.ts';
 import { extractConfigName } from '#cli/engine/files.ts';

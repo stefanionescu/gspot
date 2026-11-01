@@ -1,18 +1,18 @@
 import { cp } from 'node:fs/promises';
 import { GspotError } from '#cli/system/errors.ts';
 import { runGit } from '#cli/repository/git/run.ts';
+import type { RunCache } from '#cli/types/system.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
-import type { RunCache } from '#cli/types/system/system.ts';
+import type { GitFile } from '#cli/types/repository.ts';
+import type { ParsedTsconfig } from '#cli/types/parsers.ts';
 import { splitSystemPath } from '#cli/system/files/reads.ts';
-import type { GitFile } from '#cli/types/parsers/parsers.ts';
 import { join, dirname, basename, relative } from 'node:path';
-import type { ParsedTsconfig } from '#cli/types/parsers/projects.ts';
 import { NODE_MODULES, DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import { JSCONFIG_FILE, GIT_CHECK_IGNORE_ARGUMENTS } from '#cli/config/engine.ts';
 import { readTsconfig, listSourceFiles } from '#cli/parsers/projects/tsconfig.ts';
-import type { CopyPlan, DeclarationDependencies } from '#cli/types/engine/copies.ts';
 import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
+import type { CopyPlan, DeclarationDependencies } from '#cli/types/engine/tool-runs.ts';
 
 import {
     statSync,

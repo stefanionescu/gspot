@@ -9,12 +9,11 @@ import { LOCAL_RECORDS } from '#cli/config/commands/edits.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { LEFT_OUT_NOTES } from '#cli/config/settings/schema.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { listUnknownConfigurations } from '#cli/manifests/select.ts';
 import { formatSettingsIssue } from '#cli/settings/validation/schema.ts';
 import { formatSettingsError } from '#cli/settings/validation/messages.ts';
-import type { Template, LeftOutSetting } from '#cli/types/commands/init.ts';
-import type { SettingDefinition } from '#cli/types/settings/definitions.ts';
+import type { TomlTable, SettingDefinition } from '#cli/types/settings.ts';
+import type { Template, LeftOutSetting } from '#cli/types/commands/edits.ts';
 import { parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
 import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
 

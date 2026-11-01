@@ -1,21 +1,22 @@
 import { read } from '#cli/system/files/reads.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { SCRIPT_TAG } from '#cli/config/parsers.ts';
+import type { ProseRoute } from '#cli/types/tools.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import type { CheckSession } from '#cli/types/session.ts';
+import type { SpawnResult } from '#cli/types/system.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import type { CheckSession } from '#cli/types/engine/run.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
-import type { CheckFinding } from '#cli/types/engine/check.ts';
-import type { SpawnResult } from '#cli/types/system/system.ts';
 import { hasValePackages } from '#cli/tools/installers/vale.ts';
 import { join, dirname, relative, isAbsolute } from 'node:path';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
-import type { TrackedFile } from '#cli/types/repository/files.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { splitFileArguments } from '#cli/engine/tool-runs/batches.ts';
 import { valeOutputSchema } from '#cli/schemas/configurations/general.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
+import type { ValeAlert, ProseRouteBatch } from '#cli/types/configurations/general.ts';
 import { VALE_TOOL, CONFIG_FLAG, PROSE_GRAMMARS } from '#cli/config/tools/installers.ts';
-import type { ValeAlert, ProseRoute, ProseRouteBatch } from '#cli/types/configurations/general/general.ts';
 
 import {
     VALE_NAME,

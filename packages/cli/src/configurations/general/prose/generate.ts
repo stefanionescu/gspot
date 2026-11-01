@@ -1,11 +1,11 @@
 import { stringify } from 'yaml';
 import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { dirname, relative } from 'node:path/posix';
-import type { Session } from '#cli/types/session.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { buildValeIni } from '#cli/tools/installers/vale.ts';
-import type { PlannedConfig } from '#cli/types/generation/files.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { VALE_PACKAGES, VALE_STYLES_PATH, VALE_PACKAGE_URLS } from '#cli/config/tools/installers.ts';
 
 import {

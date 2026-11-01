@@ -11,16 +11,18 @@ import { NO_ROOT_SCOPE_MESSAGE } from '#cli/config/settings/validation.ts';
 import { NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/schema.ts';
 import { getSettingValue, listInheritedSettings } from '#cli/settings/inherit.ts';
 import { isInScope, isScopeCovered, compareScopeDepth } from '#cli/repository/scopes.ts';
-import type { Settings, TableValues, TableSettings } from '#cli/types/settings/settings.ts';
 
 import type {
     Scope,
+    Settings,
+    TableValues,
+    TableSettings,
     ScopeSettings,
     InheritedSetting,
     AvailableSettings,
     RemovedConfiguration,
     SelectedConfigurations,
-} from '#cli/types/settings/inheritance.ts';
+} from '#cli/types/settings.ts';
 
 function listNamingVariants(
     availableSettings: AvailableSettings,

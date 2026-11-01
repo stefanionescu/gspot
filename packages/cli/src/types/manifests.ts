@@ -1,8 +1,13 @@
 import type { z } from 'zod';
-import type { LEVELS, GROUPS } from '#cli/config/manifests.ts';
-import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import type { namingOverrideSchema } from '#cli/schemas/manifests/manifests.ts';
+import type { KeyPath } from '#cli/types/parsers.ts';
+import type { PATH_ROLES, REASON_DESCRIPTIONS } from '#cli/config/manifests.ts';
 import type { checkSchema, manifestSchema } from '#cli/schemas/manifests/manifest.ts';
+
+export type ShippedRule = {
+    source: string;
+    path: string;
+    group: Configuration['group'];
+};
 
 export type LimitCheck = { check: string; languages: readonly string[]; limits: readonly string[] };
 
@@ -14,10 +19,6 @@ export type RequirementWalk = {
 };
 
 export type ParsedManifest = z.infer<typeof manifestSchema>;
-
-export type Config = ParsedManifest['configs'][number];
-
-export type SourcedConfig = Extract<Config, { source: string }>;
 
 export type Check = Omit<z.infer<typeof checkSchema>, 'example' | 'name'> & {
     id: string;
@@ -33,26 +34,6 @@ export type ConfigurationCheck = ScopeCheck & { configuration: Configuration };
 
 export type WrittenConfiguration = { name: string; path: KeyPath };
 
-export type PackagePin = {
-    kind: Exclude<ToolFolderKind, 'vale'>;
-    name: string;
-    version: string;
-    requires?: readonly string[];
-};
-
-export type MiseToolPin = {
-    name: string;
-    version: string;
-    options?: Record<string, string | number | boolean> | undefined;
-    checksums?: Record<string, string> | undefined;
-};
-
-export type ToolFolderKind = 'npm' | 'python' | 'vale';
-
-export type Level = (typeof LEVELS)[number];
-
-export type PackagePins = { npm: Record<string, string>; python: string[] };
-
 type InstallerPin = {
     name: string;
     version?: string | undefined;
@@ -66,10 +47,24 @@ export type ToolInstallers = Record<string, InstallerPin> & { pypi?: VersionedIn
 
 export type Tool = Exclude<ParsedManifest['tools'][number], string>;
 
-export type Group = (typeof GROUPS)[number];
+export type ConfigurationReference = Configuration & {
+    selection: { conditions: string[]; exclusions: string[]; requiredBy: string[] };
+    ruleFiles: { path: string; conditions: string[]; exclusions: string[] }[];
+    installedTools: { name: string; version: string | undefined; source: string }[];
+    settings: Setting[];
+};
 
-export type GeneratorOutput = NonNullable<Check['generator_outputs']>[number];
+export type ReasonRequirement = keyof typeof REASON_DESCRIPTIONS;
 
-export type PathContainer = NonNullable<Configuration['naming']>['path_containers'][number];
-
-export type NamingOverride = z.infer<typeof namingOverrideSchema>;
+export type Setting = {
+    name: string;
+    type: 'number' | 'string' | 'path' | 'boolean' | 'list' | 'table';
+    path_role?: (typeof PATH_ROLES)[number];
+    default?: unknown;
+    default_all?: unknown;
+    language_defaults?: Record<string, unknown>;
+    reason_when?: ReasonRequirement;
+    reason_values?: boolean;
+    description: string;
+    languages?: string[];
+};

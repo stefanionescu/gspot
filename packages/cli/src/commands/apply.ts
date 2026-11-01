@@ -1,14 +1,14 @@
 import { dirname } from 'node:path';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import type { CommandResult } from '#cli/types/system.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { TEMPORARY_FILE_NAME } from '#cli/config/repository/setup.ts';
-import type { CommandLocation } from '#cli/types/commands/commands.ts';
 import { deleteStaleTemporaryPaths } from '#cli/system/files/folders.ts';
-import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { formatApplyReport, writeGeneratedFiles } from '#cli/generation/write.ts';
+import type { CommandLocation, CommandCompletion } from '#cli/types/commands/edits.ts';
 
 async function runApplyCommand(root: string): Promise<CommandResult> {
     const session = await openSession(root);

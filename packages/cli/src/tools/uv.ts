@@ -1,16 +1,14 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { getTool } from '#cli/tools/pins.ts';
-import type { Session } from '#cli/types/session.ts';
+import type { Scope } from '#cli/types/settings.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { buildVenvPythonPath } from '#cli/system/paths.ts';
-import type { Scope } from '#cli/types/settings/inheritance.ts';
-import type { ProcessFailure } from '#cli/types/tools/tools.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import type { ConfiguredCheck } from '#cli/types/engine/planning.ts';
 import type { Tool, VersionedInstaller } from '#cli/types/manifests.ts';
+import type { Session, ProcessFailure, ConfiguredCheck } from '#cli/types/tools.ts';
 import { UV_TOOL, UV_FLAGS, UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/installers.ts';
 
 import {

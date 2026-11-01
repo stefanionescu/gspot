@@ -1,7 +1,7 @@
+import type { ProseRoute } from '#cli/types/tools.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { HOOKS_PATH_SETTING } from '#cli/config/repository/setup.ts';
-import type { ProseRoute } from '#cli/types/configurations/general/general.ts';
 
 export const VALE_STYLES_PATH = `${GSPOT_PATHS.configurations}/general/prose/styles`;
 

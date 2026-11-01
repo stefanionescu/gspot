@@ -1,11 +1,11 @@
-import type { Session } from '#cli/types/session.ts';
-import type { NumberedLine } from '#cli/types/text.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { listCodeLines } from '#cli/parsers/code/bash.ts';
+import type { NumberedLine } from '#cli/types/parsers.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import type { CheckFinding } from '#cli/types/engine/check.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
-import type { ScriptFile, LayoutFinding } from '#cli/types/configurations/language/bash.ts';
+import type { ScriptFile, LayoutFinding } from '#cli/types/configurations/language.ts';
 
 import {
     MAIN_CALL,

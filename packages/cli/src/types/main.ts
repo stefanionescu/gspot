@@ -1,13 +1,15 @@
 import type { z } from 'zod';
 import type cliPackage from '#cli-package';
+import type { LintRuleDocs } from '#cli/types/tools.ts';
 import type { STAGE_FILTERS } from '#cli/config/engine.ts';
 import type { DOCS_PATHS } from '#cli/config/manifests.ts';
 import type { GROUP_LABELS } from '#cli/config/generation.ts';
-import type { LintRuleDocs } from '#cli/types/tools/tools.ts';
-import type { Setting } from '#cli/types/settings/inheritance.ts';
+import type { SetupReference } from '#cli/types/repository.ts';
+import type { CheckDescription } from '#cli/types/engine/plan.ts';
+import type { Level, SettingReference } from '#cli/types/settings.ts';
 import type { START_RUNNERS } from '#cli/config/repository/javascript.ts';
 import type { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/main.ts';
-import type { Tool, Level, Check, Configuration, ConfigurationCheck } from '#cli/types/manifests.ts';
+import type { Tool, ConfigurationCheck, ConfigurationReference } from '#cli/types/manifests.ts';
 
 export type CommandReference = {
     name: string;
@@ -20,60 +22,8 @@ export type CommandReference = {
     example: string;
 };
 
-export type SettingVariant = { setting: Setting; owners: string[] };
-
-export type SettingAccepted = {
-    types: string[];
-    choices: { value: unknown; description: string | undefined }[];
-    alternatives: SettingAccepted[];
-};
-
-export type SettingReference = {
-    key: string;
-    name: string;
-    kind: 'value' | 'table' | 'record';
-    required: boolean;
-    description: string | undefined;
-    default: unknown;
-    reasoned: boolean;
-    variantOf: string | undefined;
-    rootOnly: boolean;
-    scopeKeys: string[];
-    accepted: SettingAccepted;
-    variants: SettingVariant[];
-    children: SettingReference[];
-};
-
 export type CheckReference = ConfigurationCheck &
     CheckDescription & { ruleDocs: Readonly<Record<string, LintRuleDocs>> | undefined };
-
-export type CheckDescription = {
-    toolName: string | undefined;
-    tools: string[];
-    programs: string[];
-    systems: string[] | undefined;
-    needs: NonNullable<Check['needs']>;
-    minVersions: Record<string, string>;
-    turnOff: { paths: string; rule: string | undefined };
-    suppression: Tool['suppression'];
-};
-
-export type ConfigurationReference = Configuration & {
-    selection: { conditions: string[]; exclusions: string[]; requiredBy: string[] };
-    ruleFiles: { path: string; conditions: string[]; exclusions: string[] }[];
-    installedTools: { name: string; version: string | undefined; source: string }[];
-    settings: Setting[];
-};
-
-export type SetupReference = {
-    name: string;
-    label: string;
-    start: string;
-    add: string;
-    prerequisites: string[];
-    lines: string[];
-    clone: string[];
-};
 
 type ReferenceSchema = z.core.JSONSchema.JSONSchema;
 

@@ -1,19 +1,18 @@
 import { remember } from '#cli/system/cache.ts';
 import { getPosition } from '#cli/system/text.ts';
-import type { Parsed } from '#cli/types/shapes.ts';
-import type { TextRange } from '#cli/types/text.ts';
 import { dirname, basename } from 'node:path/posix';
 import type { Node, ParseResult } from '@pgsql/types';
-import type { RunCache } from '#cli/types/system/system.ts';
+import type { RunCache, TextRange } from '#cli/types/system.ts';
 
 import type {
+    Parsed,
     SqlFile,
     SqlToken,
     BlankedSql,
     SqlStatement,
     MatchedToken,
     SqlNodeFields,
-} from '#cli/types/parsers/code.ts';
+} from '#cli/types/parsers.ts';
 import {
     FROZEN_ALL,
     FROZEN_NONE,

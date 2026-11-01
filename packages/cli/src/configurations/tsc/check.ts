@@ -1,15 +1,15 @@
+import type { Session } from '#cli/types/tools.ts';
 import { join, dirname, relative } from 'node:path';
 import { createRunCache } from '#cli/system/cache.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
-import type { CheckResult } from '#cli/types/engine/check.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
-import type { Session, CheckSession } from '#cli/types/session.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
+import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 
 import {
     runTsc,

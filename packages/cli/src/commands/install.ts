@@ -1,18 +1,17 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import type { Files } from '#cli/types/system/files.ts';
+import type { Generation } from '#cli/types/tools.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
 import { installTools } from '#cli/tools/installers/install.ts';
-import type { Generation } from '#cli/types/generation/files.ts';
+import type { Files, CommandResult } from '#cli/types/system.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
-import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { type CommandLocation, type InstallCommandJson } from '#cli/types/commands/commands.ts';
+import type { CommandLocation, CommandCompletion, InstallCommandJson } from '#cli/types/commands/edits.ts';
 
 import {
     TOOL_PROJECT_FILES,

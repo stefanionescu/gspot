@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import type { MarkdownlintFormatterInput } from '#cli/types/generation/markdownlint-cli2.ts';
+import type { MarkdownlintFormatterInput } from '#cli/types/configurations/language.ts';
 
 export default {
     config: { extends: fileURLToPath(new URL('markdownlint.jsonc', import.meta.url)) },

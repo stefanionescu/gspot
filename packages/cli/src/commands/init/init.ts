@@ -3,39 +3,45 @@ import { LEVELS } from '#cli/config/manifests.ts';
 import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readSettings } from '#cli/settings/read.ts';
-import type { Session } from '#cli/types/session.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import type { RunCache } from '#cli/types/system/system.ts';
+import type { ApplyReport } from '#cli/types/generation.ts';
 import { selectForInit } from '#cli/repository/proposals.ts';
 import { readTemplate } from '#cli/commands/init/template.ts';
+import type { SettingsFile } from '#cli/types/engine/plan.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { readRepositorySetup } from '#cli/repository/setup.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { formatDetection } from '#cli/commands/init/detection.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import type { ApplyReport } from '#cli/types/generation/files.ts';
-import type { SettingsFile } from '#cli/types/settings/settings.ts';
+import type { RepositoryListing } from '#cli/types/repository.ts';
+import type { RunCache, CommandResult } from '#cli/types/system.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
-import type { CommandLocation } from '#cli/types/commands/commands.ts';
 import { planInitFiles, formatInitPlan } from '#cli/commands/init/plan.ts';
-import type { RepositoryListing } from '#cli/types/repository/repository.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
-import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { buildInitSettings, buildSettingsDraft } from '#cli/commands/init/settings.ts';
 import { Option, type Command, InvalidArgumentError } from '@commander-js/extra-typings';
-import type { InitJson, InitScan, InitOptions, InitPlanning, DetectionSummary } from '#cli/types/commands/init.ts';
 
 import {
     assertFilesCommitted,
     readConflictingConfigs,
     deleteConflictingConfigs,
 } from '#cli/commands/init/conflicts.ts';
+import type {
+    InitJson,
+    InitScan,
+    InitOptions,
+    InitPlanning,
+    CommandLocation,
+    DetectionSummary,
+    CommandCompletion,
+} from '#cli/types/commands/edits.ts';
 import {
     FROM_OPTION,
     LEVEL_OPTION,

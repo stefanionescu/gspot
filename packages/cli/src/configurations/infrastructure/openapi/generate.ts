@@ -1,5 +1,5 @@
 import { stringify as stringifyYaml } from 'yaml';
-import type { PlannedConfig } from '#cli/types/generation/files.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { SPECTRAL_DEFAULT_LEVEL_OFF } from '#cli/config/configurations/infrastructure.ts';
 
 /**

@@ -1,18 +1,18 @@
 import { GspotError } from '#cli/system/errors.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { mergeIgnore } from '#cli/settings/text.ts';
-import type { Session } from '#cli/types/session.ts';
+import type { TomlTable } from '#cli/types/settings.ts';
+import type { CommandResult } from '#cli/types/system.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { ignoreSchema } from '#cli/schemas/settings/file.ts';
 import { hasRuleOutput } from '#cli/engine/outputs/formats.ts';
 import { readCheckRuleDocs } from '#cli/configurations/rules.ts';
-import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { IGNORE_CHECK_MESSAGE } from '#cli/config/commands/edits.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
-import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { type IgnoreOptions, type CommandLocation } from '#cli/types/commands/commands.ts';
 import { listChecksById, assertCheckExists, readConfigurations } from '#cli/manifests/read.ts';
 import { buildIgnorePaths, writeSettingsEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
+import type { IgnoreOptions, CommandLocation, CommandCompletion } from '#cli/types/commands/edits.ts';
 import { EVERY_CHECK, RULE_OPTION, COMMAND_HELP, PATHS_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
 
 function formatIgnoreSummary(options: IgnoreOptions, paths: string[] | undefined): string {

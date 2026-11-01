@@ -7,12 +7,12 @@ import { openSession } from '#cli/engine/session.ts';
 import { XCTEST_SOURCE } from '#tests/config/swift.ts';
 import { buildLinkFiles } from '#cli/generation/links.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import type { SourcedConfig } from '#cli/types/manifests.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
+import type { SourcedConfig } from '#cli/types/configurations/general.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { DEFAULT_EXPORT, XCTEST_LINK_FILE_CASES, MARKDOWNLINT_SCOPE_TABLES } from '#tests/config/generation/configs.ts';
 

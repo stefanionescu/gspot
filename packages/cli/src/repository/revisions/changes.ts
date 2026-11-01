@@ -1,8 +1,8 @@
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { GIT_UNTRACKED_FILES_ARGUMENTS } from '#cli/config/repository/files.ts';
+import type { MergeBase, StagedPaths, ChangedPaths } from '#cli/types/repository.ts';
 import { runGit, readGitText, readGitLines, readGitPaths } from '#cli/repository/git/run.ts';
-import type { MergeBase, StagedPaths, ChangedPaths } from '#cli/types/repository/revisions.ts';
 
 import {
     ORIGIN_HEAD,

@@ -7,27 +7,19 @@ import { listOtherTools } from '#cli/engine/tools.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { ProcessFailure } from '#cli/types/tools/tools.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
-import type { Session, CheckSession } from '#cli/types/session.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { Session, ProcessFailure } from '#cli/types/tools.ts';
 import { buildCommandLines } from '#cli/engine/tool-runs/batches.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/engine/results.ts';
-import type { CheckResult, CheckRunOptions } from '#cli/types/engine/check.ts';
 import { hasProjectCoverage, stripCoverageArguments } from '#cli/engine/plan.ts';
 import { runToolProcess, buildOtherToolEnvironment } from '#cli/engine/tool-runs/tool.ts';
 import { RAN_STATUSES, FILES_PLACEHOLDER, PYTHON_CONFIGURATION } from '#cli/config/engine.ts';
 import { addCommandLine, buildCheckResult, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
+import type { CheckResult, CheckSession, CommandLaunch, CheckRunOptions } from '#cli/types/engine/run.ts';
 import { findMissingEnvironment, listCopyPythonArguments, buildCopyPythonEnvironment } from '#cli/tools/uv.ts';
+import type { FolderRun, CommandRun, CommandBatch, CommandSetup, Substitutions } from '#cli/types/engine/tool-runs.ts';
 
-import type {
-    FolderRun,
-    CommandRun,
-    CommandBatch,
-    CommandSetup,
-    Substitutions,
-    CommandLaunch,
-} from '#cli/types/engine/tool-runs.ts';
 import {
     expandCommand,
     listCopyFiles,

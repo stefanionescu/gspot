@@ -6,12 +6,12 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import type { WrittenTable } from '#cli/types/commands/init.ts';
+import type { WrittenTable } from '#cli/types/commands/edits.ts';
 import { DETECTED_SETTINGS } from '#cli/config/commands/edits.ts';
+import type { Settings, TomlTable } from '#cli/types/settings.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { findSetting, getSettingValue } from '#cli/settings/inherit.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
-import type { Settings, TomlTable } from '#cli/types/settings/settings.ts';
 
 function isInheritedValueChanged(
     name: string,

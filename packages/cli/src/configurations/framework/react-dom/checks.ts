@@ -1,9 +1,9 @@
 import { posix } from 'node:path';
 import { intersects, validRange } from 'semver';
-import type { Session } from '#cli/types/session.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
-import type { CheckFinding } from '#cli/types/engine/check.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
 import { readDependencySpecifiers } from '#cli/repository/dependencies.ts';
 import { REACT_PACKAGE, REACT_DOM_PACKAGE, REACT_VERSIONS_RULE } from '#cli/config/configurations/framework.ts';

@@ -1,10 +1,10 @@
 import type { Node } from 'web-tree-sitter';
-import type { Session } from '#cli/types/session.ts';
-import type { GrammarName } from '#cli/types/parsers/code.ts';
-import type { CheckFinding } from '#cli/types/engine/check.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { Session } from '#cli/types/tools.ts';
+import type { GrammarName } from '#cli/types/parsers.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { TopLevelFunction } from '#cli/types/configurations/general.ts';
 import { selectGrammar, visitParsedSources } from '#cli/parsers/code/grammars.ts';
-import type { TopLevelFunction } from '#cli/types/configurations/general/structure.ts';
 
 import {
     DEFAULT_EXPORT_NAME,

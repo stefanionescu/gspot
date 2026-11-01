@@ -1,7 +1,7 @@
 import { join } from 'node:path';
-import type { CheckSession } from '#cli/types/session.ts';
-import { type CheckFinding } from '#cli/types/engine/check.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { CheckSession } from '#cli/types/engine/run.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { runCopiedTool } from '#cli/configurations/language/swift/checks/build.ts';
 import { prepareBuild, readRepositoryCacheFolder } from '#cli/configurations/language/swift/checks/cache.ts';

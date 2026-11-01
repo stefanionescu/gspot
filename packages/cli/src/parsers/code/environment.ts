@@ -1,7 +1,7 @@
 import type ts from 'typescript';
 import type { Node } from 'web-tree-sitter';
 import { requireTypescript } from '#cli/system/typescript.ts';
-import type { EnvironmentRead, EnvironmentKind, EnvironmentNames, EnvironmentScope } from '#cli/types/parsers/code.ts';
+import type { EnvironmentRead, EnvironmentKind, EnvironmentNames, EnvironmentScope } from '#cli/types/parsers.ts';
 
 import {
     OS_MODULE,

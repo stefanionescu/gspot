@@ -1,20 +1,20 @@
 import { isDeepStrictEqual } from 'node:util';
 import { compareText } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/session.ts';
 import { posix, dirname, relative } from 'node:path';
 import { listCheckTools } from '#cli/engine/tools.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import type { Config } from '#cli/types/manifests.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import type { PlannedLinkField } from '#cli/types/generation.ts';
+import type { Session, GeneratedFile } from '#cli/types/tools.ts';
 import { GSPOT_FOLDER, PACKAGE_JSON } from '#cli/config/parsers.ts';
+import type { Config, ManagedKeys } from '#cli/types/repository.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
-import type { ManagedKeys } from '#cli/types/repository/repository.ts';
 import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
+import type { ConfigOwner } from '#cli/types/configurations/language.ts';
 import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
-import type { ConfigOwner, GeneratedFile, PlannedLinkField } from '#cli/types/generation/files.ts';
 import { escapeGlob, convertToPosixPath, extractParentFolder, includeParentFolders } from '#cli/system/paths.ts';
 
 import {

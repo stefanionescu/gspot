@@ -1,6 +1,6 @@
 import { join, basename } from 'node:path/posix';
 import { compareText } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/session.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
@@ -9,7 +9,7 @@ import { convertToGlob } from '#cli/configurations/ignores.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
 import { listOwnedConfigs } from '#cli/generation/selection.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
-import type { IgnoreSection } from '#cli/types/generation/files.ts';
+import type { IgnoreSection } from '#cli/types/configurations/general.ts';
 import { IGNORE_SECTION_TITLES } from '#cli/config/configurations/registry.ts';
 import { isMarkdownlintShared } from '#cli/configurations/language/markdown/generate.ts';
 

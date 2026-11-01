@@ -4,11 +4,11 @@ import { statSync } from 'node:fs';
 import { isTable } from '#cli/system/tables.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import type { KeyPath } from '#cli/types/parsers.ts';
+import type { PathVisitor } from '#cli/types/settings.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { GLOB_BRACKETS } from '#cli/config/settings/validation.ts';
-import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import type { PathVisitor } from '#cli/types/settings/inheritance.ts';
 
 function escapeLiteralPath(root: string, path: string): string {
     const segments = path.split('/');

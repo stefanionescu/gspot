@@ -1,6 +1,6 @@
-import type { Session } from '#cli/types/session.ts';
-import type { CheckFinding } from '#cli/types/engine/check.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { Session } from '#cli/types/tools.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { BATS_HOOKS, MAIN_FUNCTION, NEVER_CALLED_RULE } from '#cli/config/configurations/bash.ts';
 import { readScripts, listFunctionCalls } from '#cli/configurations/language/bash/checks/scripts.ts';
 

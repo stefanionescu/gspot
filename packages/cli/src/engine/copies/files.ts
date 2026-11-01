@@ -1,19 +1,19 @@
 import { join, posix, dirname } from 'node:path';
+import type { Session } from '#cli/types/tools.ts';
 import { setImmediate } from 'node:timers/promises';
-import type { Session } from '#cli/types/session.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { splitSystemPath } from '#cli/system/files/reads.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { createCopyFolder } from '#cli/engine/copies/folders.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { Files, TemporaryFolder } from '#cli/types/system.ts';
 import { NODE_MODULES, PERMISSION_BITS } from '#cli/config/system.ts';
 import { copyDependencies } from '#cli/engine/copies/dependencies.ts';
-import { type Files, type TemporaryFolder } from '#cli/types/system/files.ts';
 import { SYMLINK_MODE, GIT_FILE_MODES } from '#cli/config/repository/files.ts';
 import { listWorkspaceSources } from '#cli/repository/javascript/workspaces.ts';
-import type { CopyFile, CopyPlan, CopyPaths } from '#cli/types/engine/copies.ts';
+import type { CopyFile, CopyPlan, CopyPaths } from '#cli/types/engine/tool-runs.ts';
 import { COPY_ROOT_FILES, DEPENDENCY_FILES, FILES_BETWEEN_PAUSES } from '#cli/config/engine.ts';
 import { statSync, chmodSync, constants, mkdirSync, symlinkSync, copyFileSync, writeFileSync } from 'node:fs';
 

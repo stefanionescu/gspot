@@ -1,7 +1,7 @@
 import { getPosition } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/session.ts';
-import type { CheckFinding } from '#cli/types/engine/check.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { Session } from '#cli/types/tools.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { FOREIGN_KEY_INDEX_RULE } from '#cli/config/configurations/infrastructure.ts';
 import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';

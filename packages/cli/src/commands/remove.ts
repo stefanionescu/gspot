@@ -1,25 +1,24 @@
 import { isTable } from '#cli/system/tables.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import type { Session } from '#cli/types/session.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { buildSettings } from '#cli/settings/read.ts';
+import type { TomlTable } from '#cli/types/settings.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
+import type { CommandResult } from '#cli/types/system.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { MANAGED_KEYS_NOTE } from '#cli/config/generation.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { removeKey, getScopeTable } from '#cli/settings/edit.ts';
-import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
-import type { CommandLocation } from '#cli/types/commands/commands.ts';
-import type { ConfigurationsOptions } from '#cli/types/engine/planning.ts';
-import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { selectForInit, listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { COMMAND_HELP, SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
 import { GSPOT_REMOVE, REMOVE_CONFIGURATION_MESSAGE } from '#cli/config/commands/edits.ts';
 import { findSetting, listWrittenKeys, listSettingsTables } from '#cli/settings/inherit.ts';
+import type { CommandLocation, CommandCompletion, ConfigurationsOptions } from '#cli/types/commands/edits.ts';
 import { writeSettingsEdit, formatConfigurationChange, readConfigurationEditContext } from '#cli/commands/edits.ts';
 
 function assertRemovable(names: string[], kept: string[], configurationsByName: Map<string, Configuration>): void {

@@ -6,27 +6,30 @@ import { createRunCache } from '#cli/system/cache.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { findSetting } from '#cli/settings/inherit.ts';
 import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
+import type { CommandResult } from '#cli/types/system.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { buildArgumentPaths } from '#cli/settings/paths.ts';
-import type { CommandResult } from '#cli/types/terminal.ts';
+import type { ApplyReport } from '#cli/types/generation.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { listRepositoryFiles } from '#cli/repository/read.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import type { SettingsEdit } from '#cli/types/settings/edits.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import type { ApplyReport } from '#cli/types/generation/files.ts';
 import { writeSettings, readSettingsFile } from '#cli/settings/file.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
 import { getScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
-import type { Settings, TomlTable } from '#cli/types/settings/settings.ts';
-import type { SettingsEditOptions } from '#cli/types/generation/generation.ts';
 import { formatApplyReport, writeGeneratedFiles } from '#cli/generation/write.ts';
 import { FIX_APPLY_MESSAGE, ADD_REMOVE_MESSAGE } from '#cli/config/commands/edits.ts';
-import type { Scope, SettingMatch, AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import { assertConfigurationsExist, assertConfigurationsEditable } from '#cli/manifests/select.ts';
-import type { ConfigurationChange, SettingsEditContext, ConfigurationsOptions } from '#cli/types/engine/planning.ts';
+import type { Scope, Settings, TomlTable, SettingsEdit, SettingMatch, AvailableSettings } from '#cli/types/settings.ts';
+
+import type {
+    SettingsEditOptions,
+    ConfigurationChange,
+    SettingsEditContext,
+    ConfigurationsOptions,
+} from '#cli/types/commands/edits.ts';
 
 /**
 Read and validate the settings once before a command edits them, and find the table of the scope that the command

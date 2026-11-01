@@ -8,17 +8,16 @@ import { parse, stringify } from '@decimalturn/toml-patch';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { formatCount, compareText } from '#cli/system/text.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
-import type { GeneratedFile } from '#cli/types/generation/files.ts';
+import type { Tool, Configuration } from '#cli/types/manifests.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
 import { redactInstallOutput } from '#cli/tools/installers/credentials.ts';
-import type { Tool, MiseToolPin, Configuration } from '#cli/types/manifests.ts';
 import { miseLockfileSchema } from '#cli/schemas/tools/installers/installers.ts';
 import { GSPOT_PATHS, MISE_LOCKFILE, MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { runInstallStep, runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
 import { buildMiseTrust, readMiseBinPaths, readToolBinPaths } from '#cli/tools/locate.ts';
-import type { MiseInstall, ToolInstall } from '#cli/types/tools/installers/installers.ts';
+import type { MiseToolPin, MiseInstall, ToolInstall, GeneratedFile } from '#cli/types/tools.ts';
 import { findMisePin, listMisePins, listPackagePins, findMissingBuild } from '#cli/tools/pins.ts';
 
 import {

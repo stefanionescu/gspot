@@ -1,7 +1,7 @@
 import { compareText } from '#cli/system/text.ts';
 import { PRIVATE_FOLDER } from '#cli/config/system.ts';
+import type { Files, FileBounds } from '#cli/types/system.ts';
 import { readContainedPath } from '#cli/system/files/reads.ts';
-import type { Files, FileBounds } from '#cli/types/system/files.ts';
 import { extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 import { GspotError, hasErrorCode, buildWriteError } from '#cli/system/errors.ts';
 import { rmSync, chmodSync, lstatSync, mkdirSync, rmdirSync, unlinkSync, readdirSync, realpathSync } from 'node:fs';

@@ -1,11 +1,11 @@
-import type { Session } from '#cli/types/session.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import type { ManagedKeys } from '#cli/types/repository.ts';
 import { getTable, listIgnores } from '#cli/settings/scopes.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
-import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
-import type { ManagedKeys } from '#cli/types/repository/repository.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { SCANNER_KEY, BUNFIG_FILE, OSV_SCANNER_CHECK, OSV_SCANNER_NOTES } from '#cli/config/configurations/general.ts';
 
 /**

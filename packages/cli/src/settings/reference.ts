@@ -6,7 +6,7 @@ import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import { SETTING_NAME_PLACEHOLDER } from '#cli/config/settings/validation.ts';
 import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
 import { buildAvailableSettings, SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
-import type { SettingVariant, SettingAccepted, SettingReference } from '#cli/types/reference.ts';
+import type { SettingVariant, SettingAccepted, SettingReference } from '#cli/types/settings.ts';
 
 function inputSchema(schema: z.ZodType): z.ZodType {
     let inner = unwrapSettingSchema(schema);

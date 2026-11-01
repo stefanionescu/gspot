@@ -2,13 +2,13 @@ import { join } from 'node:path';
 import { formatCount } from '#cli/system/text.ts';
 import { PRIVATE_FILE } from '#cli/config/system.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import type { CheckSession } from '#cli/types/session.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import { type PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { runGit, readGitSetting } from '#cli/repository/git/run.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/engine/results.ts';
-import { type CheckResult, type CheckFinding } from '#cli/types/engine/check.ts';
 import { getSiblingCommand, listPushedCommits } from '#cli/configurations/pushed-commits.ts';
 
 import {

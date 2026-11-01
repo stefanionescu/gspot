@@ -1,6 +1,6 @@
 import { getLimit } from '#cli/settings/scopes.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import type { PlannedConfig } from '#cli/types/generation/files.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { BIOME_TYPESCRIPT_FILES } from '#cli/config/configurations/javascript.ts';
 
 /**

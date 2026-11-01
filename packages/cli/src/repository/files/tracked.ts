@@ -4,9 +4,8 @@ import { hasErrorCode } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { statSync, lstatSync, realpathSync } from 'node:fs';
 import { decodeGitPaths } from '#cli/repository/git/output.ts';
-import type { ListedFile } from '#cli/types/repository/files.ts';
-import type { GitIndexFile } from '#cli/types/parsers/parsers.ts';
 import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/system.ts';
+import type { ListedFile, GitIndexFile } from '#cli/types/repository.ts';
 import { buildGitError, runGitForBytes } from '#cli/repository/git/run.ts';
 import { isInside, extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
 

@@ -2,14 +2,12 @@ import { statSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { join, relative, isAbsolute } from 'node:path';
+import type { SpawnResult } from '#cli/types/system.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { Tool, Check } from '#cli/types/manifests.ts';
-import type { SpawnResult } from '#cli/types/system/system.ts';
-import type { OutputPaths } from '#cli/types/engine/outputs.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { CheckResult } from '#cli/types/engine/run.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { parseOutput, OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
-import type { Finding, CheckResult, CheckFinding } from '#cli/types/engine/check.ts';
-import type { CommandRun, OutputCheck, ParsedFindings, CommandLineOutput } from '#cli/types/engine/tool-runs.ts';
 
 import {
     TAIL_LINES,
@@ -19,6 +17,15 @@ import {
     OUT_OF_MEMORY_MESSAGE,
     NO_ERROR_OUTPUT_MESSAGE,
 } from '#cli/config/engine.ts';
+import type {
+    Finding,
+    CommandRun,
+    OutputPaths,
+    OutputCheck,
+    CheckFinding,
+    ParsedFindings,
+    CommandLineOutput,
+} from '#cli/types/engine/tool-runs.ts';
 
 function buildUnexplainedFailure(check: Check, tool: Tool, result: SpawnResult, file: string | undefined): Finding {
     const emptyOutputText = `${tool.name} exited ${String(result.code)}`;

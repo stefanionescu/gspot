@@ -5,7 +5,7 @@ import { readSettings } from '#cli/settings/read.ts';
 import { symlink, readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import type { InitJson } from '#cli/types/commands/init.ts';
+import type { InitJson } from '#cli/types/commands/edits.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { PRESERVE_SOURCE } from '#tests/config/commands/contents.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

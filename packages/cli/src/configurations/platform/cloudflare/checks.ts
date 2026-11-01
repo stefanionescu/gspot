@@ -1,11 +1,11 @@
 import { read } from '#cli/system/files/reads.ts';
-import type { Session } from '#cli/types/session.ts';
-import type { NumberedLine } from '#cli/types/text.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
-import { type CheckFinding } from '#cli/types/engine/check.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { NumberedLine } from '#cli/types/parsers.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
-import type { HeaderBlock, ParsedHeadersFile } from '#cli/types/configurations/platform.ts';
+import type { HeaderBlock, ParsedHeadersFile } from '#cli/types/configurations/infrastructure.ts';
 
 import {
     SYNTAX_RULE,

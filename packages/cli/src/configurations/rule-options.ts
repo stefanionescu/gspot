@@ -1,5 +1,5 @@
 import { GspotError } from '#cli/system/errors.ts';
-import type { RuleOptionsRun } from '#cli/types/generation/files.ts';
+import type { RuleOptionsRun } from '#cli/types/configurations/general.ts';
 
 /**
 Refuse options for rules that do not run at the selected level.

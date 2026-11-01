@@ -8,7 +8,7 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { type PathExplanation } from '#cli/types/commands/explain.ts';
+import type { PathExplanation } from '#cli/types/commands/reports.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {

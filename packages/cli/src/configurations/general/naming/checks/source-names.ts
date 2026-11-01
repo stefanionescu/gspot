@@ -1,13 +1,13 @@
 import { remember } from '#cli/system/cache.ts';
-import type { Session } from '#cli/types/session.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { Session } from '#cli/types/tools.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { buildFileMatcher } from '#cli/repository/files/selection.ts';
 import { parseSource, selectGrammar } from '#cli/parsers/code/grammars.ts';
 import { extractSqlIdentifiers } from '#cli/configurations/general/naming/languages/sql.ts';
 import { extractBashIdentifiers } from '#cli/configurations/general/naming/languages/bash.ts';
 import { extractSwiftIdentifiers } from '#cli/configurations/general/naming/languages/swift.ts';
 import { extractPythonIdentifiers } from '#cli/configurations/general/naming/languages/python.ts';
-import type { NamedFile, Identifier, IdentifierRead } from '#cli/types/configurations/general/naming.ts';
+import type { NamedFile, Identifier, IdentifierRead } from '#cli/types/configurations/general.ts';
 import { extractTypescriptIdentifiers } from '#cli/configurations/general/naming/languages/typescript.ts';
 
 /**

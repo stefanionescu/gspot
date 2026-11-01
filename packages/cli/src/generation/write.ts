@@ -2,18 +2,18 @@ import { formatCount } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import { readHooks } from '#cli/repository/setup.ts';
-import type { Session } from '#cli/types/session.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { listOwnablePaths } from '#cli/generation/links.ts';
+import type { ApplyReport } from '#cli/types/generation.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import type { Session, Generation } from '#cli/types/tools.ts';
 import { listExpectedPaths } from '#cli/generation/outdated.ts';
+import type { Files, FileContents } from '#cli/types/system.ts';
 import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
-import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
 import { SCANNER_KEY, BUNFIG_FILE } from '#cli/config/configurations/general.ts';
-import { type Generation, type ApplyReport } from '#cli/types/generation/files.ts';
 import { OWNER_WRITABLE_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/repository/setup.ts';
 
 import {

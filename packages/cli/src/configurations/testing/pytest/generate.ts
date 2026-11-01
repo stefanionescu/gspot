@@ -1,4 +1,4 @@
-import type { PlannedConfig } from '#cli/types/generation/files.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { NON_PYTHON_TEST_PATTERNS } from '#cli/config/configurations/framework.ts';
 
 /**

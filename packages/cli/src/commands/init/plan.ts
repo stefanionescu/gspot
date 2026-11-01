@@ -1,15 +1,15 @@
 import { styleText } from 'node:util';
 import { formatCount } from '#cli/system/text.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import type { Generation } from '#cli/types/tools.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import type { Settings } from '#cli/types/settings.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { GENERATED_FILE_NOUN } from '#cli/config/generation.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import type { Settings } from '#cli/types/settings/settings.ts';
-import type { Generation } from '#cli/types/generation/files.ts';
 import { listMisePins, listPackagePins } from '#cli/tools/pins.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
-import type { InitPlan, InitScan, InitFileRow, ConflictingConfigs } from '#cli/types/commands/init.ts';
+import type { InitPlan, InitScan, InitFileRow, ConflictingConfigs } from '#cli/types/commands/edits.ts';
 
 import {
     COLUMN_GAP,

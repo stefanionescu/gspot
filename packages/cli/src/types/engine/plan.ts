@@ -1,19 +1,13 @@
-import type { Session } from '#cli/types/session.ts';
+import type { RunCache } from '#cli/types/system.ts';
 import type { STAGE_FILTERS } from '#cli/config/engine.ts';
-import type { RunCache } from '#cli/types/system/system.ts';
-import type { Scope } from '#cli/types/settings/inheritance.ts';
-import type { SettingsEdit } from '#cli/types/settings/edits.ts';
-import type { TrackedFile } from '#cli/types/repository/files.ts';
-import type { ConfigurationTables } from '#cli/types/settings/tables.ts';
-import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
-import type { Settings, TomlTable } from '#cli/types/settings/settings.ts';
-import type { RepositoryListing } from '#cli/types/repository/repository.ts';
+import type { Tool, Check } from '#cli/types/manifests.ts';
+import type { Host, Session, ConfiguredCheck } from '#cli/types/tools.ts';
+import type { TrackedFile, RepositoryListing } from '#cli/types/repository.ts';
+import type { Scope, Defined, Settings, TableValues } from '#cli/types/settings.ts';
 
 export type SkipCause = 'level' | 'system' | 'replaced' | 'setting' | 'condition' | 'ignore';
 
 export type Skip = { cause: SkipCause; note: string };
-
-export type Host = { platform: string; arch: string };
 
 export type PlanOptions = {
     base?: string | undefined;
@@ -39,13 +33,6 @@ export type PlannedScope = {
 
 export type SettingsSkip = { cause: 'level' | 'ignore' | 'setting'; note: string };
 
-export type ConfiguredCheck = {
-    scope: Scope;
-    check: Check;
-    configuration?: Configuration | undefined;
-    tool?: Tool | undefined;
-};
-
 export type PlannedCheck = ConfiguredCheck & {
     base?: string | undefined;
     commits?: string[] | undefined;
@@ -67,23 +54,37 @@ export type LicenseProject = {
 
 export type SettingReader = { check: string; enabled: boolean; note?: string };
 
-export type ConfigurationsOptions = { root: string; cwd: string; configurations: string[]; scope?: string | undefined };
-
-export type ConfigurationChange = {
-    action: string;
-    changed: string[];
-    where: string;
-    unchanged: string[];
-    state: string;
+export type PrettierPlugin = {
+    name: string;
+    module: string;
+    overrides: { files: string; options: Record<string, unknown> }[];
 };
 
-export type SettingsEditContext = {
-    root: string;
-    edit: SettingsEdit;
+export type CheckDescription = {
+    toolName: string | undefined;
+    tools: string[];
+    programs: string[];
+    systems: string[] | undefined;
+    needs: NonNullable<Check['needs']>;
+    minVersions: Record<string, string>;
+    turnOff: { paths: string; rule: string | undefined };
+    suppression: Tool['suppression'];
+};
+
+export type SessionOptions = {
+    toolsRoot?: string;
+    cache?: RunCache | undefined;
+    listing?: RepositoryListing | undefined;
+    settingsFile?: SettingsFile;
+    resources?: DisposableStack;
+    cancelSignal?: AbortSignal | undefined;
+};
+
+export type SettingsFile = {
     settings: Settings;
-    cache: RunCache;
-    session: Session;
-    listing: RepositoryListing;
-    scope: string;
-    scopeTable: TomlTable;
+    text: string;
 };
+
+export type ConfigurationTables = Defined<
+    Required<Omit<TableValues, 'format' | 'limits' | 'naming' | 'structure' | `tools.${string}`>>
+>;

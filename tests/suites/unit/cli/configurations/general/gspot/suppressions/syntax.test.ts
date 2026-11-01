@@ -1,6 +1,6 @@
 import { createFileTree } from 'testdirs';
-import type { Finding } from '#cli/types/engine/check.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

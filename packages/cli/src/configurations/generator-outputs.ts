@@ -3,20 +3,18 @@ import { compareText } from '#cli/system/text.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
-import type { CheckSession } from '#cli/types/session.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import type { CheckSession } from '#cli/types/engine/run.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
-import { type CheckFinding } from '#cli/types/engine/check.ts';
-import { type GeneratorOutput } from '#cli/types/manifests.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
-import type { Substitutions } from '#cli/types/engine/tool-runs.ts';
 import { buildCommandSubstitutions } from '#cli/engine/tool-runs/check.ts';
+import type { CheckFinding, Substitutions } from '#cli/types/engine/tool-runs.ts';
 import { RULES, GENERATOR_IGNORED_FOLDERS } from '#cli/config/configurations/registry.ts';
-import type { GeneratorRun } from '#cli/types/configurations/cross-configuration/cross-configuration.ts';
+import type { GeneratorRun, GeneratorOutput } from '#cli/types/configurations/general.ts';
 import { expandCommand, replacePlaceholders, buildFileCommandLines } from '#cli/engine/tool-runs/placeholders.ts';
 
 function listMissingOutputs(

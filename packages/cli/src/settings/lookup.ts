@@ -1,8 +1,8 @@
 import { z } from 'zod';
+import type { KeyPath } from '#cli/types/parsers.ts';
 import { PATH_ROLES } from '#cli/config/manifests.ts';
+import type { Setting } from '#cli/types/manifests.ts';
 import { formatSchema } from '#cli/schemas/settings/fields.ts';
-import type { Setting } from '#cli/types/settings/inheritance.ts';
-import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools/tables.ts';
 import { configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { namingSchema, importRulesSchema } from '#cli/schemas/settings/settings.ts';

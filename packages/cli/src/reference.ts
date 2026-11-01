@@ -15,11 +15,11 @@ import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/main.ts';
 import { buildSetupReference } from '#cli/repository/javascript/setup.ts';
 import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
-import type { Configuration, ConfigurationCheck } from '#cli/types/manifests.ts';
 import { LEVEL_SUMMARY, ALL_LEVEL_SUMMARY } from '#cli/config/settings/schema.ts';
+import type { CliReference, CheckReference, CommandReference } from '#cli/types/main.ts';
 import { listRuleReferences, formatDetectionConditions } from '#cli/manifests/reference.ts';
+import type { Configuration, ConfigurationCheck, ConfigurationReference } from '#cli/types/manifests.ts';
 import { START_RUNNERS, FROZEN_INSTALLS, YARN_BERRY_INSTALL } from '#cli/config/repository/javascript.ts';
-import type { CliReference, CheckReference, CommandReference, ConfigurationReference } from '#cli/types/reference.ts';
 
 function buildCommandReference(command: ReturnType<typeof buildProgram>['commands'][number]): CommandReference {
     const help = COMMAND_HELP[command.name() as keyof typeof COMMAND_HELP];

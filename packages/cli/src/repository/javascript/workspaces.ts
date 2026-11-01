@@ -1,14 +1,14 @@
 import { realpathSync } from 'node:fs';
 import { remember } from '#cli/system/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import type { RunCache } from '#cli/types/system.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { FOLDER_CONTENTS } from '#cli/config/system.ts';
 import { join, posix, dirname, relative } from 'node:path';
-import type { RunCache } from '#cli/types/system/system.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
 import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
-import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool, type Package } from '@manypkg/tools';
 import { listSourceFiles, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { RUSH_FILE, LERNA_FILE, PNPM_WORKSPACE_FILE } from '#cli/config/repository/javascript.ts';

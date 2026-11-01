@@ -1,10 +1,11 @@
-import type { Session } from '#cli/types/session.ts';
+import type { Session } from '#cli/types/tools.ts';
+import type { Scope } from '#cli/types/settings.ts';
 import { listCheckTools } from '#cli/engine/tools.ts';
-import type { Config } from '#cli/types/manifests.ts';
+import type { Config } from '#cli/types/repository.ts';
+import type { UsedNames } from '#cli/types/generation.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
-import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
-import type { UsedNames, OwnedConfig } from '#cli/types/generation/files.ts';
+import type { OwnedConfig } from '#cli/types/configurations/language.ts';
 
 function isConfigWritten(session: Session, file: Config, usedNames: UsedNames): boolean {
     if (file.level === 'all' && session.settings.level !== 'all') return false;

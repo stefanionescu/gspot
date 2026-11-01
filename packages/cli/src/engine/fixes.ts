@@ -1,31 +1,32 @@
 import { getTool } from '#cli/tools/pins.ts';
 import { compareText } from '#cli/system/text.ts';
-import { type Tool } from '#cli/types/manifests.ts';
+import type { Session } from '#cli/types/tools.ts';
+import type { Tool } from '#cli/types/manifests.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { runToolProcess } from '#cli/engine/tool-runs/tool.ts';
-import { type FileContents } from '#cli/types/system/files.ts';
-import { type SpawnResult } from '#cli/types/system/system.ts';
 import { isReportedCrash } from '#cli/engine/tool-runs/output.ts';
-import { type PlannedCheck } from '#cli/types/engine/planning.ts';
-import { type CommandLaunch } from '#cli/types/engine/tool-runs.ts';
 import { listCopyFiles } from '#cli/engine/tool-runs/placeholders.ts';
-import { type Session, type CheckSession } from '#cli/types/session.ts';
+import type { SpawnResult, FileContents } from '#cli/types/system.ts';
 import { FIX_ROUNDS, FIX_CANCELED_MESSAGE } from '#cli/config/engine.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
-import { type CheckCode, type CheckRunOptions } from '#cli/types/engine/check.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 import { buildCommandSetup, buildCommandLaunch } from '#cli/engine/tool-runs/check.ts';
 
-import {
-    type FixReport,
-    type FixResult,
-    type FixRounds,
-    type PathBytes,
-    type RunOptions,
-} from '#cli/types/commands/check.ts';
+import type {
+    CheckCode,
+    FixReport,
+    FixResult,
+    FixRounds,
+    PathBytes,
+    RunOptions,
+    CheckSession,
+    CommandLaunch,
+    CheckRunOptions,
+} from '#cli/types/engine/run.ts';
 
 function findFixFailure(planned: PlannedCheck, result: SpawnResult): string | undefined {
     const { check } = planned;

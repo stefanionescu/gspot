@@ -1,10 +1,10 @@
 import { isTable } from '#cli/system/tables.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import type { CommandResult } from '#cli/types/system.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { assertCheckExists } from '#cli/manifests/read.ts';
-import type { TomlTable, IgnoreRecord } from '#cli/types/settings/settings.ts';
-import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
+import type { TomlTable, IgnoreRecord } from '#cli/types/settings.ts';
 import { RULE_OPTION, COMMAND_HELP, PATHS_OPTION } from '#cli/config/commands/help.ts';
 import { buildIgnorePaths, writeSettingsEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
 
@@ -13,12 +13,13 @@ import {
     ESCAPED_GLOB_CHARACTERS,
     RULE_WITHOUT_CHECK_MESSAGE,
 } from '#cli/config/commands/edits.ts';
-import {
-    type IgnoreTarget,
-    type IgnoreOptions,
-    type IgnoreRemoval,
-    type CommandLocation,
-} from '#cli/types/commands/commands.ts';
+import type {
+    IgnoreTarget,
+    IgnoreOptions,
+    IgnoreRemoval,
+    CommandLocation,
+    CommandCompletion,
+} from '#cli/types/commands/edits.ts';
 
 function removeIgnores(table: TomlTable, options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreRemoval {
     const removed = new Set(options.paths?.map((path) => path.replaceAll(ESCAPED_GLOB_CHARACTERS, '$1')));

@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 import type { Sandbox } from '#tests/types/sandbox.ts';
-import type { ToolPackageManager } from '#cli/types/tools/installers/installers.ts';
+import type { ToolPackageManager } from '#cli/types/tools.ts';
 import type { miseLockfileSchema } from '#cli/schemas/tools/installers/installers.ts';
 
 type MiseVersion = z.infer<typeof miseLockfileSchema>['tools'][string][number];

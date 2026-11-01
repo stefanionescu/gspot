@@ -15,7 +15,7 @@ import type {
     OutputOptions,
     CommandFailureJson,
     CanceledCommandJson,
-} from '#cli/types/terminal.ts';
+} from '#cli/types/system.ts';
 
 let options: OutputState = { isJson: false, notes: [] };
 

@@ -4,8 +4,7 @@ import { isTable } from '#cli/system/tables.ts';
 import parseExpression from 'spdx-expression-parse';
 import { SETTING_LANGUAGES } from '#cli/config/manifests.ts';
 import { namingOverrideSchema } from '#cli/schemas/manifests/manifests.ts';
-import type { ImportRule, SettingsError } from '#cli/types/settings/settings.ts';
-import type { NamingCategory, SettingLanguage } from '#cli/types/settings/naming.ts';
+import type { ImportRule, SettingsError, NamingCategory, SettingLanguage } from '#cli/types/settings.ts';
 import { commandSchema, nonemptyStringSchema, operatingSystemSchema } from '#cli/schemas/manifests/fields.ts';
 
 import {

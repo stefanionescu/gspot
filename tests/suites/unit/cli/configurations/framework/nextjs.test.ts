@@ -2,8 +2,8 @@ import { createFileTree } from 'testdirs';
 import { join, basename } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { planChecks } from '#cli/engine/plan.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { type Session } from '#cli/types/session.ts';
 import * as processes from '#cli/system/processes.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
@@ -17,8 +17,8 @@ import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system.ts';
 import { open, chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { type SpawnResult, type AsyncSpawnOptions } from '#cli/types/system/system.ts';
 
 import {
     UNRELATED_FILE,

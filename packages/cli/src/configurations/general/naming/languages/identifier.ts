@@ -1,7 +1,6 @@
 import type { Node } from 'web-tree-sitter';
-import type { NamedCategory } from '#cli/types/settings/naming.ts';
 import { NAME_QUOTE, CATEGORY_LABELS } from '#cli/config/configurations/naming.ts';
-import type { FileIdentifiers } from '#cli/types/configurations/general/naming.ts';
+import type { NamedCategory, FileIdentifiers } from '#cli/types/configurations/general.ts';
 
 /**
 Adds an identifier at its source place, except an empty name or `_`.

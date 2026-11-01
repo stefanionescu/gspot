@@ -6,12 +6,12 @@ import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { buildPathMatcher, includeFolderContents } from '#cli/system/matchers.ts';
 import { COMPONENT_CONFIGURATIONS } from '#cli/config/configurations/javascript.ts';
 
-import {
-    type EslintFiles,
-    type PathExpressions,
-    type EslintFileGroups,
-    type EslintBlockFields,
-} from '#cli/types/generation/eslint.ts';
+import type {
+    EslintFiles,
+    PathExpressions,
+    EslintFileGroups,
+    EslintBlockFields,
+} from '#cli/types/configurations/language.ts';
 
 /**
 Calculate the exact file sets that base blocks and the blocks of every framework share.

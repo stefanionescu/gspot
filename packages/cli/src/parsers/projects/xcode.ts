@@ -3,15 +3,15 @@ import { GspotError } from '#cli/system/errors.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import { pbxprojSchema } from '#cli/schemas/parsers/projects.ts';
 
-import {
-    type PbxElement,
-    type TargetFolder,
-    type XcodeProject,
-    type ProjectTokens,
-    type ParsedPbxproj,
-    type ProjectSources,
-    type ProjectBuildSettings,
-} from '#cli/types/parsers/projects.ts';
+import type {
+    PbxElement,
+    TargetFolder,
+    XcodeProject,
+    ProjectTokens,
+    ParsedPbxproj,
+    ProjectSources,
+    ProjectBuildSettings,
+} from '#cli/types/parsers.ts';
 import {
     OCTAL_RADIX,
     PBXPROJ_SUFFIX,

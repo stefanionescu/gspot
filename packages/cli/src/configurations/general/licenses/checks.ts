@@ -6,19 +6,19 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { join, dirname, basename } from 'node:path';
 import parseExpression from 'spdx-expression-parse';
-import type { CheckSession } from '#cli/types/session.ts';
 import { listLicenseProjects } from '#cli/engine/tools.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { buildVenvPythonPath } from '#cli/system/paths.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import type { CheckSession } from '#cli/types/engine/run.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
-import type { CheckFinding } from '#cli/types/engine/check.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readDependencySpecifiers } from '#cli/repository/dependencies.ts';
+import type { PlannedCheck, LicenseProject } from '#cli/types/engine/plan.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import type { PlannedCheck, LicenseProject } from '#cli/types/engine/planning.ts';
 import { PIP_LICENSES_COMMAND, LICENSE_CHECKER_COMMAND } from '#cli/config/engine.ts';
 import { splitIdentity, PACKAGE_PARSERS, findNearestLockfile } from '#cli/parsers/projects/lockfiles.ts';
 import { pythonLicenseOutputSchema, javascriptLicenseOutputSchema } from '#cli/schemas/configurations/general.ts';
@@ -29,7 +29,7 @@ import type {
     LicensedPackage,
     ProjectLicenses,
     PythonLicenseOutput,
-} from '#cli/types/configurations/general/general.ts';
+} from '#cli/types/configurations/general.ts';
 import {
     ANY_VERSION,
     LICENSE_RULES,

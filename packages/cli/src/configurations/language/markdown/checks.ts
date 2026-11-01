@@ -1,16 +1,15 @@
 import { parseAllDocuments } from 'yaml';
 import { read } from '#cli/system/files/reads.ts';
 import { getPosition } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/session.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { JSONC_OPTIONS } from '#cli/config/parsers.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
-import type { CheckFinding } from '#cli/types/engine/check.ts';
-import type { CodeFence } from '#cli/types/parsers/formats.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
-import type { ParseCache, GrammarName } from '#cli/types/parsers/code.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { SYNTAX_RULE } from '#cli/config/configurations/infrastructure.ts';
+import type { CodeFence, ParseCache, GrammarName } from '#cli/types/parsers.ts';
 import { parse, type ParseError, type ParseOptions, printParseErrorCode } from 'jsonc-parser';
 
 import type {
@@ -18,7 +17,7 @@ import type {
     FenceSyntaxError,
     FormatFenceParser,
     GrammarFenceParser,
-} from '#cli/types/configurations/language/language.ts';
+} from '#cli/types/configurations/language.ts';
 import {
     ELLIPSIS_LINE,
     FENCE_PARSERS,

@@ -1,7 +1,7 @@
 import { read } from '#cli/system/files/reads.ts';
-import type { Session } from '#cli/types/session.ts';
-import type { CheckFinding } from '#cli/types/engine/check.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { Session } from '#cli/types/tools.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { SYNTAX_RULE } from '#cli/config/configurations/infrastructure.ts';
 import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
 import { validateIdentifiers } from '#cli/configurations/general/naming/checks/validation.ts';

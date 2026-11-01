@@ -3,15 +3,20 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { readNamingDefaults } from '#cli/manifests/read.ts';
 import { SETTING_LANGUAGES } from '#cli/config/manifests.ts';
-import type { NamingOverride } from '#cli/types/manifests.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
-import { type Settings } from '#cli/types/settings/settings.ts';
 import { CATEGORY_PARENTS } from '#cli/config/settings/validation.ts';
 import { NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';
-import { type Scope, type ScopeSettings } from '#cli/types/settings/inheritance.ts';
-import type { NamingCase, ParsedNamingLanguageFields } from '#cli/types/settings/naming.ts';
+import type { Scope, Settings, ScopeSettings } from '#cli/types/settings.ts';
 import { SEPARATORS, NUMERIC_WORDS, DIGIT_BOUNDARY } from '#cli/config/configurations/naming.ts';
-import type { BannedWord, NamingSettings, CompiledOverride } from '#cli/types/configurations/general/naming.ts';
+
+import type {
+    NamingCase,
+    BannedWord,
+    NamingOverride,
+    NamingSettings,
+    CompiledOverride,
+    ParsedNamingLanguageFields,
+} from '#cli/types/configurations/general.ts';
 
 function compileOverride(override: NamingOverride): CompiledOverride {
     const [languages, categories, allowedNames] = [override.languages, override.categories, override.allowed_names].map(

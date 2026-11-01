@@ -9,7 +9,7 @@ import type {
     ScopeBoundaries,
     PlannedEslintFile,
     EslintBoundaryPolicy,
-} from '#cli/types/generation/eslint.ts';
+} from '#cli/types/configurations/language.ts';
 import {
     TEMPLATE_OPEN,
     CODE_LANGUAGES,

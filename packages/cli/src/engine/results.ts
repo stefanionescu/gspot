@@ -1,13 +1,14 @@
 import { realpathSync } from 'node:fs';
 import { findToolName } from '#cli/tools/pins.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { INCOMPLETE_STATUSES } from '#cli/config/engine.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { hasRuleOutput } from '#cli/engine/outputs/formats.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
-import { type Session, type CheckSession } from '#cli/types/session.ts';
 import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
-import { type Finding, type CheckResult, type BuiltInCheck, type CheckRunOptions } from '#cli/types/engine/check.ts';
+import type { CheckResult, CheckSession, BuiltInCheck, CheckRunOptions } from '#cli/types/engine/run.ts';
 
 /**
 Build the command that explains a finding's check and rule.

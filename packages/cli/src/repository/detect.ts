@@ -2,19 +2,20 @@ import { find } from '#cli/system/files/reads.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { extractExtension } from '#cli/system/paths.ts';
+import type { DependencyFile } from '#cli/types/parsers.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import type { DependencyFile } from '#cli/types/parsers/projects.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
-import type { Repository, TrackedFile } from '#cli/types/repository/files.ts';
 import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/matchers.ts';
 import { isInScope, joinScope, findProjectFolder } from '#cli/repository/scopes.ts';
 import { RUNTIME_TAG, SHEBANG_TAG, EVERY_REPOSITORY_EVIDENCE } from '#cli/config/repository/files.ts';
 
-import {
-    type ScopeContents,
-    type DetectionEvidence,
-    type ConfigurationEvidence,
-} from '#cli/types/repository/repository.ts';
+import type {
+    Repository,
+    TrackedFile,
+    ScopeContents,
+    DetectionEvidence,
+    ConfigurationEvidence,
+} from '#cli/types/repository.ts';
 
 function buildScopeContents(files: TrackedFile[], dependencyFiles: DependencyFile[], scopePath: string): ScopeContents {
     const scopeFiles = files.filter(

@@ -1,17 +1,15 @@
 import { isDeepStrictEqual } from 'node:util';
 import { isTable } from '#cli/system/tables.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import type { KeyPath } from '#cli/types/parsers.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import type { Settings } from '#cli/types/settings/settings.ts';
-import type { SettingsEdit } from '#cli/types/settings/edits.ts';
-import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import type { ReasonedValue } from '#cli/types/settings/values.ts';
+import type { Files, FileContents } from '#cli/types/system.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
-import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
 import { parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
+import type { Settings, SettingsEdit, ReasonedValue } from '#cli/types/settings.ts';
 import { NO_SETTINGS_MESSAGE, SETTINGS_ENCODING_MESSAGE } from '#cli/config/settings/validation.ts';
 
 /**

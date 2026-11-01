@@ -1,20 +1,20 @@
 import { find } from '#cli/system/files/reads.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
-import type { Session } from '#cli/types/session.ts';
 import { formatSimilarNames } from '#cli/system/text.ts';
+import type { CommandResult } from '#cli/types/system.ts';
 import type { Command } from '@commander-js/extra-typings';
 import { explainPath } from '#cli/commands/explain/path.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { listInheritedSettings } from '#cli/settings/inherit.ts';
 import { explainSetting } from '#cli/commands/explain/setting.ts';
-import type { Explanation } from '#cli/types/commands/explain.ts';
-import type { CommandLocation } from '#cli/types/commands/commands.ts';
+import type { Explanation } from '#cli/types/commands/reports.ts';
 import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
 import { explainConfiguration } from '#cli/commands/explain/configuration.ts';
 import { explainCheck, explainLintRule } from '#cli/commands/explain/check.ts';
-import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
+import type { CommandLocation, CommandCompletion } from '#cli/types/commands/edits.ts';
 
 function formatUnknownSubject(session: Session | undefined, subject: string): string {
     const subjects = [

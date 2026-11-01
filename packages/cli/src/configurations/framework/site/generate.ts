@@ -1,6 +1,6 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import type { PlannedConfig } from '#cli/types/generation/files.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 /**
 Build the PurgeCSS safelist with the selected names and patterns.

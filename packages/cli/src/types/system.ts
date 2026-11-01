@@ -1,5 +1,25 @@
 import type { Result } from 'execa';
+import type { Stats } from 'node:fs';
 import type { Readable } from 'node:stream';
+
+export type FileContents = { bytes: Buffer; mode: number; isSymlink?: true };
+
+export type FileBounds = { root: string };
+
+export type Files = {
+    readCanonicalPath(path: string): string;
+    list(path: string): string[];
+    readStats(path: string): Stats | undefined;
+    readKeepingLinks(path: string): FileContents | undefined;
+    read(path: string): FileContents | undefined;
+    write(path: string, value: FileContents): void;
+    deleteFile(path: string): void;
+    createPrivateFolder(path: string): void;
+    deleteFolder(path: string): void;
+    deleteTree(path: string): void;
+};
+
+export type TemporaryFolder = Disposable & { path: string };
 
 export type RunCache = {
     root: string;
@@ -68,14 +88,22 @@ export type ProcessTreeControl = {
 
 export type RunningProcess = PromiseLike<SpawnCompletion> & { stdout: Readable };
 
-export type GitEnvironment = { variables: Record<string, string | undefined> } | { failure: SpawnResult };
+export type OutputOptions = { isJson: boolean };
 
-export type GitRepository = { folder: string; environment: Record<string, string | undefined> };
+export type OutputState = OutputOptions & { notes: string[] };
 
-export type GitLookup = GitRepository | { failure: SpawnResult };
-
-export type GitVariableGroups = {
-    isolated: Record<string, undefined>;
-    overrides: Record<string, string | undefined>;
-    explicit: Record<string, string | undefined>;
+export type CommandResult<Json extends object = Record<string, unknown>> = {
+    text: string;
+    json: Json & { notes?: string[] };
+    exitCode: number;
 };
+
+export type CommandFailureJson = { error: ErrorCode; message: string; stack?: string };
+
+export type CommandJson = { version: string; exitCode: number; notes: string[] };
+
+export type CanceledCommandJson = { error: 'canceled'; message: string };
+
+export type TextPosition = { line: number; column: number };
+
+export type TextRange = { start: number; end: number };

@@ -1,9 +1,8 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { LINE_BREAK } from '#cli/config/parsers.ts';
 import { findValueAt } from '#cli/system/tables.ts';
-import type { Finding } from '#cli/types/engine/check.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
-import type { ToolOutput } from '#cli/types/engine/outputs.ts';
+import type { Finding, ToolOutput } from '#cli/types/engine/tool-runs.ts';
 
 import {
     JSON_START,

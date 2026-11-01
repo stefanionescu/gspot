@@ -1,7 +1,6 @@
 import type { Node } from 'web-tree-sitter';
-import type { NamedCategory } from '#cli/types/settings/naming.ts';
 import { addIdentifier } from '#cli/configurations/general/naming/languages/identifier.ts';
-import type { Identifier, FileIdentifiers } from '#cli/types/configurations/general/naming.ts';
+import type { Identifier, NamedCategory, FileIdentifiers } from '#cli/types/configurations/general.ts';
 import { TYPE_NODES, MEMBER_PARENTS, SWIFT_CALLABLE_NODES } from '#cli/config/configurations/naming.ts';
 
 function addTypes(found: FileIdentifiers, syntaxRoot: Node): void {

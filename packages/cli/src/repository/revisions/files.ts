@@ -1,7 +1,6 @@
 import { GspotError } from '#cli/system/errors.ts';
-import type { GitFile } from '#cli/types/parsers/parsers.ts';
 import { listGitFiles } from '#cli/repository/files/tracked.ts';
-import type { Revision } from '#cli/types/repository/revisions.ts';
+import type { GitFile, Revision } from '#cli/types/repository.ts';
 import { gitIndexFileSchema } from '#cli/schemas/parsers/parsers.ts';
 import { GIT_INDEX_FILES_ARGUMENTS } from '#cli/config/repository/files.ts';
 import { runGit, runGitStream, runGitForBytes } from '#cli/repository/git/run.ts';

@@ -5,6 +5,7 @@ import { read } from '#cli/system/files/reads.ts';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { Parser, Language, type Tree } from 'web-tree-sitter';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
+import type { ParseCache, SourceTree, GrammarName, ParserGrammars, GrammarSourceFiles } from '#cli/types/parsers.ts';
 
 import {
     GRAMMARS_FOLDER,
@@ -12,13 +13,6 @@ import {
     GRAMMAR_CONFIGURATIONS,
     GRAMMAR_FILE_EXTENSION,
 } from '#cli/config/parsers.ts';
-import {
-    type ParseCache,
-    type SourceTree,
-    type GrammarName,
-    type ParserGrammars,
-    type GrammarSourceFiles,
-} from '#cli/types/parsers/code.ts';
 
 const PARSED_TREES = Symbol('parsed trees');
 

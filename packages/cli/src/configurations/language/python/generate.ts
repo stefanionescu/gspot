@@ -4,11 +4,10 @@ import { stringify } from '@decimalturn/toml-patch';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { UV_LOCKFILE } from '#cli/config/manifests.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import { type PlannedConfig } from '#cli/types/generation/files.ts';
 import { DEFAULT_QUOTES } from '#cli/config/configurations/general.ts';
-import { type FormatSettings } from '#cli/types/generation/formatting.ts';
 import { JSON_INDENT, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
+import type { PlannedConfig, FormatSettings } from '#cli/types/configurations/language.ts';
 import { getTable, getLimit, listIgnores, listIgnoredRules } from '#cli/settings/scopes.ts';
 
 import {

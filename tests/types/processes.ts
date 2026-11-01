@@ -1,4 +1,4 @@
-import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/system.ts';
+import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system.ts';
 
 export type PausedGit = { pid: number; checkout?: string };
 

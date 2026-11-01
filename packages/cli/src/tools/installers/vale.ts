@@ -1,20 +1,19 @@
 import { createHash } from 'node:crypto';
 import { getTool } from '#cli/tools/pins.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import type { Level } from '#cli/types/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { join, posix, dirname, resolve } from 'node:path';
+import type { Level, Settings } from '#cli/types/settings.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
-import type { Settings } from '#cli/types/settings/settings.ts';
 import { VALE_TEMPORARY_NAME } from '#cli/config/repository/setup.ts';
 import { runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
+import type { ToolInstall, ArchiveDownload } from '#cli/types/tools.ts';
 import { deleteStaleTemporaryPaths } from '#cli/system/files/folders.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { rmSync, mkdirSync, renameSync, mkdtempSync, writeFileSync } from 'node:fs';
-import type { ToolInstall, ArchiveDownload } from '#cli/types/tools/installers/installers.ts';
 
 import {
     VALE_TOOL,

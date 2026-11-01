@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import type { CheckSession } from '#cli/types/session.ts';
 import { isInInstalledFolder } from '#cli/system/paths.ts';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import { type CheckFinding } from '#cli/types/engine/check.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { CheckSession } from '#cli/types/engine/run.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { expandCommand } from '#cli/engine/tool-runs/placeholders.ts';

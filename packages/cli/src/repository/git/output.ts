@@ -4,7 +4,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { gitFileSchema } from '#cli/schemas/parsers/parsers.ts';
 import { OCTAL_RADIX, LEADING_SLASH, WHITESPACE_RUN } from '#cli/config/parsers.ts';
-import type { GitFile, GitStream, GitIndexFile, AttributePattern } from '#cli/types/parsers/parsers.ts';
+import type { GitFile, GitStream, GitIndexFile, AttributePattern } from '#cli/types/repository.ts';
 
 import {
     LINE_FEED,

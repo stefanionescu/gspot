@@ -1,6 +1,6 @@
 import { type Node } from 'web-tree-sitter';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
-import type { ParseCache, TrapScript, ScriptSyntax } from '#cli/types/parsers/code.ts';
+import type { ParseCache, TrapScript, ScriptSyntax } from '#cli/types/parsers.ts';
 
 import {
     TRAP_COMMAND,

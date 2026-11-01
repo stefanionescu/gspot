@@ -1,6 +1,6 @@
-import type { Session } from '#cli/types/session.ts';
-import type { CheckFinding } from '#cli/types/engine/check.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { Session } from '#cli/types/tools.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { compareMigrationVersions } from '#cli/parsers/code/sql.ts';
 import { MIGRATION_RULES, MISSING_VERSION_MESSAGE } from '#cli/config/configurations/infrastructure.ts';
 import { readMigrations, readCommittedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';

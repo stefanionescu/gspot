@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { type RunReport } from '#cli/types/commands/check.ts';
+import type { RunReport } from '#cli/types/engine/run.ts';
 import { LEVELS, GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { type LinterJsonFinding } from '#tests/types/tools.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';

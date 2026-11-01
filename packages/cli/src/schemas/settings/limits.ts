@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { LIMIT_READERS } from '#cli/manifests/limits.ts';
 import { allowReasonedValue } from '#cli/schemas/settings/fields.ts';
-import type { LanguageLimitField, LanguageLimitSchemas } from '#cli/types/settings/values.ts';
+import type { LanguageLimitField, LanguageLimitSchemas } from '#cli/types/settings.ts';
 
 export const limitFields = {
     file_lines: allowReasonedValue(z.number().int().min(0).max(Number.MAX_SAFE_INTEGER), {

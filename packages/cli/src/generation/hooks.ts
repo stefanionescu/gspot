@@ -1,9 +1,9 @@
 import { quoteArgument } from '#cli/system/text.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import type { StartRunner } from '#cli/types/repository.ts';
 import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
-import type { StartRunner } from '#cli/types/repository/javascript.ts';
+import type { HookName, GeneratedFile } from '#cli/types/tools.ts';
 import { LFS_HOOKS, HOOK_SHEBANG } from '#cli/config/repository/setup.ts';
-import type { HookName, GeneratedFile } from '#cli/types/generation/files.ts';
 
 import {
     PUSH_INPUT_SAVE,

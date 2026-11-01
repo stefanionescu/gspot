@@ -1,7 +1,7 @@
 import { join, dirname } from 'node:path';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import type { PackageJson } from '#cli/types/parsers.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import type { PackageJson } from '#cli/types/parsers/projects.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { IGNORE_ALL_PATTERN } from '#tests/config/setup/sandboxes.ts';
 import { mkdir, readdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';

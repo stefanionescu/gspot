@@ -1,14 +1,14 @@
 import { planChecks } from '#cli/engine/plan.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import type { Session } from '#cli/types/session.ts';
+import type { Session } from '#cli/types/tools.ts';
+import type { Scope } from '#cli/types/settings.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { EVERY_CHECK } from '#cli/config/commands/help.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import type { Scope } from '#cli/types/settings/inheritance.ts';
-import type { TrackedFile } from '#cli/types/repository/files.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/configurations/general.ts';
 import { selectScopePath, buildArgumentPath } from '#cli/repository/scopes.ts';
-import type { Explanation, PathExplanation } from '#cli/types/commands/explain.ts';
+import type { Explanation, PathExplanation } from '#cli/types/commands/reports.ts';
 
 import {
     UNCHECKED_REASON,

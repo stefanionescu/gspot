@@ -1,9 +1,8 @@
 import { isDeepStrictEqual } from 'node:util';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
+import type { Scope, Settings } from '#cli/types/settings.ts';
 import { LIMIT_RULES_BY_CHECK } from '#cli/manifests/limits.ts';
-import { type Scope } from '#cli/types/settings/inheritance.ts';
-import { type Settings } from '#cli/types/settings/settings.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { getLimit, getTable, findParentScope } from '#cli/settings/scopes.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/javascript.ts';
@@ -15,13 +14,13 @@ import {
     buildScopeFiles,
     buildNodePatterns,
 } from '#cli/configurations/language/javascript/eslint/files.ts';
-import {
-    type EslintRuleBlock,
-    type EslintBlockFields,
-    type EslintRuleOptions,
-    type PlannedEslintFile,
-    type ScopeEslintSettings,
-} from '#cli/types/generation/eslint.ts';
+import type {
+    EslintRuleBlock,
+    EslintBlockFields,
+    EslintRuleOptions,
+    PlannedEslintFile,
+    ScopeEslintSettings,
+} from '#cli/types/configurations/language.ts';
 import {
     ESLINT_CHECK,
     CODE_LANGUAGES,

@@ -1,4 +1,4 @@
-import type { LintRuleDocs } from '#cli/types/tools/tools.ts';
+import type { LintRuleDocs } from '#cli/types/tools.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { YAML_RULES, YAML_MESSAGES } from '#cli/config/configurations/general.ts';
 

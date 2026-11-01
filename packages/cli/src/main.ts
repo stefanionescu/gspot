@@ -8,6 +8,7 @@ import { registerUnset } from '#cli/commands/unset.ts';
 import { registerIgnore } from '#cli/commands/ignore.ts';
 import { registerRemove } from '#cli/commands/remove.ts';
 import { registerInit } from '#cli/commands/init/init.ts';
+import type { CommandResult } from '#cli/types/system.ts';
 import { registerInstall } from '#cli/commands/install.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { registerCheck } from '#cli/commands/check/check.ts';
@@ -18,8 +19,8 @@ import { beginCheckReport } from '#cli/commands/check/report.ts';
 import { registerExplain } from '#cli/commands/explain/explain.ts';
 import { COMMAND_SUGGESTION } from '#cli/config/commands/edits.ts';
 import { runGit, buildGitError } from '#cli/repository/git/run.ts';
+import type { CommandCompletion } from '#cli/types/commands/edits.ts';
 import { CODE_MARK, COMMAND_HELP } from '#cli/config/commands/help.ts';
-import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { Command, type Argument, CommanderError } from '@commander-js/extra-typings';
 import { printError, printResult, setOutputOptions, printUnexpectedError } from '#cli/system/terminal.ts';
 

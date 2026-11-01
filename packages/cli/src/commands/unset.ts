@@ -1,15 +1,20 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
+import type { TomlTable } from '#cli/types/settings.ts';
+import type { CommandResult } from '#cli/types/system.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
-import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { removeKey, removeFromList } from '#cli/settings/edit.ts';
 import { COMMAND_HELP, SCOPE_OPTION } from '#cli/config/commands/help.ts';
-import type { SettingsEditOptions } from '#cli/types/generation/generation.ts';
-import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { type UnsetOptions, type CommandLocation } from '#cli/types/commands/commands.ts';
 import { readSetting, writeSettingsEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
+
+import type {
+    UnsetOptions,
+    CommandLocation,
+    CommandCompletion,
+    SettingsEditOptions,
+} from '#cli/types/commands/edits.ts';
 
 function removeTableKeys(scopeTable: TomlTable, key: string, names: string[]): void {
     const written = findValueAt(scopeTable, key.split('.'));

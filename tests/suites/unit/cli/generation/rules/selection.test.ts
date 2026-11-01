@@ -1,5 +1,5 @@
+import type { Level } from '#cli/types/settings.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { type Level } from '#cli/types/manifests.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { test, expect, describe, beforeAll } from 'bun:test';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';

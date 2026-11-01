@@ -1,8 +1,8 @@
 import { runTool } from '#cli/tools/run.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import type { SpawnResult } from '#cli/types/system/system.ts';
+import type { ToolInstall } from '#cli/types/tools.ts';
+import type { SpawnResult } from '#cli/types/system.ts';
 import { redactInstallOutput } from '#cli/tools/installers/credentials.ts';
-import type { ToolInstall } from '#cli/types/tools/installers/installers.ts';
 
 /**
 Record and run one install command with the shared cancellation and time limit.

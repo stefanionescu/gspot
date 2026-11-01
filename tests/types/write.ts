@@ -1,4 +1,4 @@
-import type { ManagedKeys } from '#cli/types/repository/repository.ts';
+import type { ManagedKeys } from '#cli/types/repository.ts';
 
 export type PackageFieldScenario = {
     project: Readonly<Record<string, string>>;

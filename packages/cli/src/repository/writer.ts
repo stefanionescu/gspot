@@ -4,21 +4,20 @@ import { isDeepStrictEqual } from 'node:util';
 import { isInside } from '#cli/system/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { normalizeTables } from '#cli/system/tables.ts';
+import type { EditableFile } from '#cli/types/parsers.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { openJsonFile } from '#cli/parsers/formats/json.ts';
 import { openTomlFile } from '#cli/parsers/formats/toml.ts';
 import { decodeUtf8Text } from '#cli/system/files/reads.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
-import type { Repository } from '#cli/types/repository/files.ts';
-import type { Files, FileContents } from '#cli/types/system/files.ts';
+import type { Files, FileContents } from '#cli/types/system.ts';
 import { GSPOT_FOLDER, LEADING_NEWLINE } from '#cli/config/parsers.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
 import { parseAttributePatterns } from '#cli/repository/git/output.ts';
-import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/files.ts';
 import { openFiles, walkFiles, deleteEmptyFolders } from '#cli/system/files/open.ts';
 import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
-import type { WritePlan, ManagedKeys, ReplacementRequest } from '#cli/types/repository/repository.ts';
+import type { WritePlan, Repository, ManagedKeys, ReplacementRequest } from '#cli/types/repository.ts';
 
 import {
     AGENTS_FILE,

@@ -3,13 +3,13 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { ESLINT_INDENT, PRESET_IMPORTERS, GSPOT_PRESET_LEVELS } from '#cli/config/configurations/blocks.ts';
 
-import {
-    type BlockWriter,
-    type EslintRuntime,
-    type EslintBlockFields,
-    type EslintCallArgument,
-    type PlannedEslintBlock,
-} from '#cli/types/generation/eslint.ts';
+import type {
+    BlockWriter,
+    EslintRuntime,
+    EslintBlockFields,
+    EslintCallArgument,
+    PlannedEslintBlock,
+} from '#cli/types/configurations/language.ts';
 
 function serializePresetImport(importName: string, path?: string): string {
     const importer = PRESET_IMPORTERS[importName];

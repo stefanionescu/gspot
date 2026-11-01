@@ -3,9 +3,10 @@ import { expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { type Sandbox } from '#tests/types/sandbox.ts';
+import type { CheckResult } from '#cli/types/engine/run.ts';
+import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { type ProcessOutput } from '#tests/types/processes.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { type Finding, type CheckResult } from '#cli/types/engine/check.ts';
 import { changeSandbox, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { type SampleFix, type CheckSample, type SampleResult, type SandboxChanges } from '#tests/types/samples.ts';
 

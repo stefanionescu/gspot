@@ -5,15 +5,15 @@ import { createFileTree } from 'testdirs';
 import { parse } from '@decimalturn/toml-patch';
 import { findValueAt } from '#cli/system/tables.ts';
 import { readSettings } from '#cli/settings/read.ts';
+import type { TomlTable } from '#cli/types/settings.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { rm, symlink, readFile, writeFile } from 'node:fs/promises';
 import { runGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
+import type { SettingsListJson } from '#cli/types/commands/reports.ts';
 import { ROOT_EDITORCONFIG } from '#tests/config/commands/contents.ts';
-import { type SettingsListJson } from '#cli/types/commands/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {

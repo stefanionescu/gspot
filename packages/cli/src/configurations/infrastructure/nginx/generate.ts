@@ -1,6 +1,6 @@
 import { listIgnoredRules } from '#cli/settings/scopes.ts';
-import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import { GIXY_CHECK } from '#cli/config/configurations/infrastructure.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 /**
 Build the Gixy exclusions from configured rule ignores.

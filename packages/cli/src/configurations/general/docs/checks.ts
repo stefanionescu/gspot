@@ -1,17 +1,17 @@
 import { join, posix } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
 import { statSync, readdirSync } from 'node:fs';
-import type { Session } from '#cli/types/session.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { TRAILING_SLASH } from '#cli/config/system.ts';
 import { find, read } from '#cli/system/files/reads.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { LICENSE_FILE } from '#cli/config/repository/files.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
 import { parseMiseTasks } from '#cli/parsers/projects/mise.ts';
-import type { CheckFinding } from '#cli/types/engine/check.ts';
 import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { PACKAGE_JSON, WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { joinScope, selectScopePath } from '#cli/repository/scopes.ts';
@@ -19,7 +19,7 @@ import { readCachedPackageJson } from '#cli/repository/dependencies.ts';
 import { buildGitignoreMatcher } from '#cli/repository/files/gitignore.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import { replaceSettingPlaceholders } from '#cli/engine/tool-runs/placeholders.ts';
-import type { PathIndex, TaskNames, ProseLine } from '#cli/types/configurations/general/general.ts';
+import type { PathIndex, TaskNames, ProseLine } from '#cli/types/configurations/general.ts';
 import { listExecutableNames, includeParentFolders, listEnclosingFolders } from '#cli/system/paths.ts';
 
 import {

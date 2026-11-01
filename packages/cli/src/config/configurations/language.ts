@@ -1,4 +1,4 @@
-import type { FenceParser } from '#cli/types/configurations/language/language.ts';
+import type { FenceParser } from '#cli/types/configurations/language.ts';
 
 export const PARENT_TSCONFIG_SKIP = 'The tsconfig of a parent folder covers this project, and gspot checks it there.';
 

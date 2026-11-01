@@ -1,12 +1,12 @@
 import { isDeepStrictEqual } from 'node:util';
+import type { ScopeSettings } from '#cli/types/settings.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { LIMIT_RULES_BY_CHECK } from '#cli/manifests/limits.ts';
-import { type ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { getLimit, getTable, findParentScope } from '#cli/settings/scopes.ts';
 import { ESLINT_CHECK, ESLINT_LIMIT_OPTIONS } from '#cli/config/configurations/blocks.ts';
 import { splitGlobs, buildNodePatterns } from '#cli/configurations/language/javascript/eslint/files.ts';
-import type { EslintRuleBlock, EslintLevelRules, PlannedEslintFile } from '#cli/types/generation/eslint.ts';
+import type { EslintRuleBlock, EslintLevelRules, PlannedEslintFile } from '#cli/types/configurations/language.ts';
 
 function buildLimitRules(scopeSettings: ScopeSettings, language: 'typescript' | 'javascript'): Record<string, unknown> {
     const limitRules = LIMIT_RULES_BY_CHECK.get(ESLINT_CHECK) as Record<string, string>;

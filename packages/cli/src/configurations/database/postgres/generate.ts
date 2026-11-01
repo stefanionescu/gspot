@@ -1,8 +1,8 @@
 import { stringify } from '@decimalturn/toml-patch';
 import { selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
-import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 import {
     SQUAWK_CHECK,

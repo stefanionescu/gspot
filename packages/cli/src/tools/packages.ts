@@ -1,15 +1,15 @@
 import { join, relative } from 'node:path';
 import { createRequire } from 'node:module';
 import { find } from '#cli/system/files/reads.ts';
+import type { Files } from '#cli/types/system.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
-import type { Files } from '#cli/types/system/files.ts';
+import type { PackageJson } from '#cli/types/parsers.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import type { PackageJson } from '#cli/types/parsers/projects.ts';
+import type { InstalledDependency } from '#cli/types/tools.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers/projects.ts';
-import type { InstalledDependency } from '#cli/types/tools/tools.ts';
 
 /**
 Read and validate a package.json outside the tool project, without its boundary.

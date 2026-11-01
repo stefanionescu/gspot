@@ -2,9 +2,9 @@ import { realpathSync } from 'node:fs';
 import { posix, resolve } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import type { RunCache } from '#cli/types/system.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers.ts';
-import { type RunCache } from '#cli/types/system/system.ts';
 import { detectSwiftTags } from '#cli/parsers/code/swift.ts';
 import { detectScopeFolders } from '#cli/repository/scopes.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
@@ -14,8 +14,6 @@ import { gitIndexFileSchema } from '#cli/schemas/parsers/parsers.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { read, find, readCachedPrefix } from '#cli/system/files/reads.ts';
 import { listGitFiles, listTrackedFiles } from '#cli/repository/files/tracked.ts';
-import { type Repository, type ScopeFolder, type TrackedFile } from '#cli/types/repository/files.ts';
-import { type RepositoryListing, type RepositoryReadOptions } from '#cli/types/repository/repository.ts';
 import { INDEX_LINE, GIT_LOCALE, TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/repository/git.ts';
 
 import {
@@ -24,6 +22,13 @@ import {
     parsePathAttributes,
     parseAttributePatterns,
 } from '#cli/repository/git/output.ts';
+import type {
+    Repository,
+    ScopeFolder,
+    TrackedFile,
+    RepositoryListing,
+    RepositoryReadOptions,
+} from '#cli/types/repository.ts';
 import {
     SET_VALUES,
     ROOT_SCOPE,

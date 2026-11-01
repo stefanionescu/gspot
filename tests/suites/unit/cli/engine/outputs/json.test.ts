@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
-import type { Finding } from '#cli/types/engine/check.ts';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
+import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { parseJsonFindings } from '#cli/engine/outputs/json.ts';
 import { outputSchema } from '#cli/schemas/manifests/output.ts';
 

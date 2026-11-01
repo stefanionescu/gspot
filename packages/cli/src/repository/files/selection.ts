@@ -3,7 +3,7 @@ import type { Configuration } from '#cli/types/manifests.ts';
 import { listSourceConfigurations } from '#cli/manifests/select.ts';
 import { escapeGlob, extractExtension } from '#cli/system/paths.ts';
 import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/matchers.ts';
-import type { TrackedFile, CoveredFilesOptions } from '#cli/types/repository/files.ts';
+import type { TrackedFile, CoveredFilesOptions } from '#cli/types/repository.ts';
 import { SETTING_PLACEHOLDER, TEST_FILES_PLACEHOLDER } from '#cli/config/repository/files.ts';
 
 function addPluginExtensions(table: Configuration['files'], configurations: Configuration[]): Configuration['files'] {

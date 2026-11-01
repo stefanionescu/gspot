@@ -1,6 +1,5 @@
 import { getUvPin } from '#cli/tools/pins.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import type { Session } from '#cli/types/session.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { CI_PINS } from '#cli/config/settings/schema.ts';
@@ -9,12 +8,12 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { STRICT_MODE } from '#cli/config/configurations/bash.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
-import type { GeneratedFile } from '#cli/types/generation/files.ts';
+import type { Session, GeneratedFile } from '#cli/types/tools.ts';
 import { frozenInstallArguments } from '#cli/repository/javascript/setup.ts';
 import { NEXTJS_CONFIGURATION } from '#cli/config/configurations/javascript.ts';
+import type { PackageManager, PackageManagerPin } from '#cli/types/repository.ts';
+import type { Pipeline, ActionPin, FrozenLockfile } from '#cli/types/generation.ts';
 import { Scalar, Document, type Node, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
-import type { PackageManager, PackageManagerPin } from '#cli/types/repository/javascript.ts';
-import type { Pipeline, ActionPin, FrozenLockfile } from '#cli/types/generation/generation.ts';
 import { CI_NODE, FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/javascript.ts';
 
 import {

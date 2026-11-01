@@ -1,29 +1,30 @@
 import { setKey } from '#cli/settings/edit.ts';
 import { parse } from '@decimalturn/toml-patch';
 import { GspotError } from '#cli/system/errors.ts';
+import type { Setting } from '#cli/types/manifests.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { listSettingReaders } from '#cli/engine/skips.ts';
+import type { CommandResult } from '#cli/types/system.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
-import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
-import type { SettingsEditContext } from '#cli/types/engine/planning.ts';
+import type { TomlTable, InheritedSetting } from '#cli/types/settings.ts';
 import { type Command, CommanderError } from '@commander-js/extra-typings';
 import { getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 import { formatSettingValueError } from '#cli/settings/validation/messages.ts';
-import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import type { Setting, InheritedSetting } from '#cli/types/settings/inheritance.ts';
 import { COMMAND_HELP, SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
 import { readSetting, writeSettingsEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
 import { NUMBER_TEXT, DASH_VALUE_HELP, COMMAND_SUGGESTION, TOML_COMPOUND_START } from '#cli/config/commands/edits.ts';
 
-import {
-    type SetOptions,
-    type CommandLocation,
-    type ParsedSettingValue,
-    type SettingReasonContext,
-} from '#cli/types/commands/commands.ts';
+import type {
+    SetOptions,
+    CommandLocation,
+    CommandCompletion,
+    ParsedSettingValue,
+    SettingsEditContext,
+    SettingReasonContext,
+} from '#cli/types/commands/edits.ts';
 
 function parseInlineValue(text: string): unknown {
     try {

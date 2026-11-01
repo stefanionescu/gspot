@@ -4,7 +4,7 @@ import { parse } from '@decimalturn/toml-patch';
 import { findValueAt } from '#cli/system/tables.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import type { InitJson } from '#cli/types/commands/init.ts';
+import type { InitJson } from '#cli/types/commands/edits.ts';
 import { SIMULATOR_DESTINATION } from '#tests/config/xcode.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/checks/infrastructure/infrastructure.ts';

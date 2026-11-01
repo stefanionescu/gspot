@@ -1,6 +1,6 @@
 import { stringify } from 'yaml';
 import { listIgnoredRules } from '#cli/settings/scopes.ts';
-import type { PlannedConfig } from '#cli/types/generation/files.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { ANSIBLE_LINT_CHECK, ANSIBLE_LINT_ALWAYS_OFF } from '#cli/config/configurations/infrastructure.ts';
 
 /**

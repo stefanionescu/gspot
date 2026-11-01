@@ -1,12 +1,12 @@
 import { readGitLines } from '#cli/repository/git/run.ts';
+import type { CommandResult } from '#cli/types/system.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
-import { type CommandResult } from '#cli/types/terminal.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { readPushedRevisions } from '#cli/repository/revisions/push.ts';
+import type { PushRevision, PushedRevisions } from '#cli/types/repository.ts';
 import { NO_PENDING_REFS, EMPTY_PUSH_MESSAGE } from '#cli/config/commands/reports.ts';
-import { type PushRevision, type PushedRevisions } from '#cli/types/repository/revisions.ts';
-import { type PushReport, type CheckOptions, type RevisionCheckResult } from '#cli/types/commands/check.ts';
+import type { PushReport, CheckOptions, RevisionCheckResult } from '#cli/types/commands/reports.ts';
 
 async function runRevisionCheck(
     root: string,

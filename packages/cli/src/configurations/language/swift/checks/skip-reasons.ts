@@ -1,8 +1,8 @@
 import type { Node } from 'web-tree-sitter';
-import type { Session } from '#cli/types/session.ts';
-import type { CheckFinding } from '#cli/types/engine/check.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { Session } from '#cli/types/tools.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 
 import {
     COMMENT_LINE,

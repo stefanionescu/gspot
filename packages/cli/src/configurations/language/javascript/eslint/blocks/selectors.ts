@@ -1,8 +1,7 @@
-import type { Level } from '#cli/types/manifests.ts';
+import type { Level, Scope } from '#cli/types/settings.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
-import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/javascript.ts';
-import { type SelectorBlock, type SelectorPaths } from '#cli/types/generation/eslint.ts';
+import type { SelectorBlock, SelectorPaths } from '#cli/types/configurations/language.ts';
 import { BASE_SELECTORS, ENVIRONMENT_SELECTOR, ALIAS_IMPORT_SELECTORS } from '#cli/config/configurations/blocks.ts';
 
 function listSettingSelectors(scope: Scope, level: Level): SelectorPaths[] {

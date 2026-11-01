@@ -1,13 +1,13 @@
 import { dirname, relative } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
+import type { Scope } from '#cli/types/settings.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { getTable, findParentScope } from '#cli/settings/scopes.ts';
 import { escapeGlob, convertToPosixPath } from '#cli/system/paths.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/blocks.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/javascript.ts';
-import type { EslintPlugins, EslintBlockFields } from '#cli/types/generation/eslint.ts';
+import type { EslintPlugins, EslintBlockFields } from '#cli/types/configurations/language.ts';
 
 function listPluginRecords(scopes: Scope[]) {
     return scopes

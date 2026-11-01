@@ -3,11 +3,11 @@ import { getTool } from '#cli/tools/pins.ts';
 import { dirname, delimiter } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { listOtherTools } from '#cli/engine/tools.ts';
-import type { CheckSession } from '#cli/types/session.ts';
-import type { SpawnResult } from '#cli/types/system/system.ts';
-import { type PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { SpawnResult } from '#cli/types/system.ts';
+import type { CheckSession } from '#cli/types/engine/run.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { ProcessFailure, ToolRunOptions } from '#cli/types/tools.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
-import type { ProcessFailure, ToolRunOptions } from '#cli/types/tools/tools.ts';
 import { foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { CheckTool, CheckToolOptions, CheckToolProgram, ToolProcessResult } from '#cli/types/engine/tool-runs.ts';
 

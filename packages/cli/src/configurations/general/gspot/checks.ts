@@ -1,27 +1,28 @@
 import { read } from '#cli/system/files/reads.ts';
 import { findToolName } from '#cli/tools/pins.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { mapSettingPaths } from '#cli/settings/paths.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
+import type { SourceComment } from '#cli/types/parsers.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
 import { INSTALL_HELP } from '#cli/config/tools/programs.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import type { SourceComment } from '#cli/types/parsers/code.ts';
-import { type PlannedCheck } from '#cli/types/engine/planning.ts';
-import type { TrackedFile } from '#cli/types/repository/files.ts';
+import type { Scope, PathVisitor } from '#cli/types/settings.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';
-import { type Session, type CheckSession } from '#cli/types/session.ts';
 import { findSettingLine, isReasonedValue } from '#cli/settings/file.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
+import type { CheckSession, CheckRunOptions } from '#cli/types/engine/run.ts';
 import { parseComments, stripCommentEnd } from '#cli/parsers/code/comments.ts';
-import { type Scope, type PathVisitor } from '#cli/types/settings/inheritance.ts';
-import type { SuppressionSyntax } from '#cli/types/configurations/general/general.ts';
-import { type CheckFinding, type FindingPlace, type CheckRunOptions } from '#cli/types/engine/check.ts';
+import type { FindingPlace, SuppressionSyntax } from '#cli/types/configurations/general.ts';
 
 import {
     GSPOT_RULES,

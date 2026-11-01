@@ -1,11 +1,10 @@
 import { isDeepStrictEqual } from 'node:util';
 import { isTable } from '#cli/system/tables.ts';
+import type { KeyPath } from '#cli/types/parsers.ts';
 import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
-import type { Setting } from '#cli/types/settings/inheritance.ts';
-import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import type { ReasonRequirement } from '#cli/types/settings/definitions.ts';
-import type { Settings, SettingsError } from '#cli/types/settings/settings.ts';
+import type { Settings, SettingsError } from '#cli/types/settings.ts';
+import type { Setting, ReasonRequirement } from '#cli/types/manifests.ts';
 
 import {
     EMPTY_REASON,

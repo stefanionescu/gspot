@@ -1,7 +1,6 @@
 import { resolve } from 'node:path';
-import type { Finding } from '#cli/types/engine/check.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
-import type { ToolOutput } from '#cli/types/engine/outputs.ts';
+import type { Finding, ToolOutput } from '#cli/types/engine/tool-runs.ts';
 import { markdownlintOutputSchema } from '#cli/schemas/engine/markdownlint.ts';
 
 /**

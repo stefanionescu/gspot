@@ -1,4 +1,4 @@
-import type { Finding } from '#cli/types/engine/check.ts';
+import type { Finding } from '#cli/types/engine/tool-runs.ts';
 
 export type FindingRow = { file: string; line: number | undefined; rule: string | undefined };
 

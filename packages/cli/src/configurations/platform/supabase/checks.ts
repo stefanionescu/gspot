@@ -4,26 +4,26 @@ import { fileURLToPath } from 'node:url';
 import { join, posix, relative } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import type { Parsed } from '#cli/types/shapes.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { find, read } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import type { CheckSession } from '#cli/types/engine/run.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
-import type { CheckFinding } from '#cli/types/engine/check.ts';
 import { parseCheckedFile } from '#cli/configurations/syntax.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
-import type { Session, CheckSession } from '#cli/types/session.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
-import type { SqlStatement, SqlNodeFields } from '#cli/types/parsers/code.ts';
+import type { Parsed, SqlStatement, SqlNodeFields } from '#cli/types/parsers.ts';
 import { formatOutputTail, assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
-import type { FunctionEntrypoint, SupabaseProjectFile } from '#cli/types/configurations/platform.ts';
 import { denoLintOutputSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations/platform.ts';
+import type { FunctionEntrypoint, SupabaseProjectFile } from '#cli/types/configurations/infrastructure.ts';
 
 import {
     SYNTAX_RULE,

@@ -1,4 +1,4 @@
-import type { TextRange, TextPosition } from '#cli/types/text.ts';
+import type { TextRange, TextPosition } from '#cli/types/system.ts';
 import { TYPO_MIN, LIST_LIMIT, TYPO_FRACTION, UNQUOTED_ARGUMENT, SIMILAR_NAME_LIMIT } from '#cli/config/system.ts';
 
 /**

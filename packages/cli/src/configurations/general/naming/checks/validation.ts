@@ -1,10 +1,10 @@
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import type { CheckFinding } from '#cli/types/engine/check.ts';
-import type { NamingCase } from '#cli/types/settings/naming.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { SQL_EXTENSION } from '#cli/config/configurations/infrastructure.ts';
 import { splitWords } from '#cli/configurations/general/naming/checks/settings.ts';
 
 import type {
+    NamingCase,
     Identifier,
     FileNaming,
     NamingCheck,
@@ -12,7 +12,7 @@ import type {
     NamingSettings,
     CompiledOverride,
     CheckedIdentifier,
-} from '#cli/types/configurations/general/naming.ts';
+} from '#cli/types/configurations/general.ts';
 import {
     RULES,
     DIGIT,

@@ -1,5 +1,5 @@
-import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 import {
     SQLFLUFF_CHECK,

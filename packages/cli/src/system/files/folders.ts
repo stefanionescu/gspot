@@ -5,8 +5,8 @@ import { globSync } from 'tinyglobby';
 import { GspotError } from '#cli/system/errors.ts';
 import { printWarning } from '#cli/system/terminal.ts';
 import { isProcessRunning } from '#cli/system/processes.ts';
+import type { Files, TemporaryFolder } from '#cli/types/system.ts';
 import { rmSync, lstatSync, mkdtempSync, realpathSync } from 'node:fs';
-import type { Files, TemporaryFolder } from '#cli/types/system/files.ts';
 
 import {
     DRIVE_LETTER,

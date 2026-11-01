@@ -1,25 +1,21 @@
 import { ROOT_RUNS } from '#cli/config/engine.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
-import type { Session } from '#cli/types/session.ts';
 import { isRootOnlyCheck } from '#cli/engine/files.ts';
+import type { CommandResult } from '#cli/types/system.ts';
 import { isActive, planChecks } from '#cli/engine/plan.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import type { Scope } from '#cli/types/settings/inheritance.ts';
-import type { Settings } from '#cli/types/settings/settings.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { Scope, Settings } from '#cli/types/settings.ts';
 import { listInheritedSettings } from '#cli/settings/inherit.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
 import { Argument, type Command } from '@commander-js/extra-typings';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/configurations/general.ts';
-import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
+import type { CommandLocation, CommandCompletion } from '#cli/types/commands/edits.ts';
+import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/reports.ts';
 
-import {
-    type CommandLocation,
-    type SettingsListJson,
-    type ConfigurationsListJson,
-} from '#cli/types/commands/commands.ts';
 import {
     KEY_GAP,
     LIST_USAGE,

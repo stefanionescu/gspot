@@ -2,7 +2,6 @@ import { basename } from 'node:path/posix';
 import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { listPackagePins } from '#cli/tools/pins.ts';
-import type { Session } from '#cli/types/session.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
@@ -12,8 +11,8 @@ import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { listWrittenPaths } from '#cli/generation/ignores.ts';
 import { buildLinkFieldEdits } from '#cli/generation/links.ts';
 import { listHookNames } from '#cli/tools/installers/hooks.ts';
+import type { Session, Generation } from '#cli/types/tools.ts';
 import { buildMiseInstall } from '#cli/tools/installers/mise.ts';
-import type { Generation } from '#cli/types/generation/files.ts';
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
 import { buildPythonInstall } from '#cli/tools/installers/pypi.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
@@ -21,10 +20,10 @@ import { FROZEN_INSTALLS } from '#cli/config/repository/javascript.ts';
 import { parseAttributePatterns } from '#cli/repository/git/output.ts';
 import { SWIFT_CONFIGURATION } from '#cli/config/configurations/structure.ts';
 import { readPackageManagerVersion } from '#cli/repository/javascript/package-manager.ts';
+import type { RuleFile, FrozenLockfile, CiPackageManager } from '#cli/types/generation.ts';
 import { buildBunScannerEdits } from '#cli/configurations/general/dependencies/generate.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { LFS_FILTER, FILTER_ATTRIBUTE, GITATTRIBUTES_FILE } from '#cli/config/repository/files.ts';
-import type { RuleFile, FrozenLockfile, CiPackageManager } from '#cli/types/generation/generation.ts';
 
 import {
     buildGithubWorkflow,

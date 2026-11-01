@@ -12,7 +12,7 @@ import type {
     DependencyFile,
     PythonDependency,
     DependencyFileParser,
-} from '#cli/types/parsers/projects.ts';
+} from '#cli/types/parsers.ts';
 import {
     PIPFILE,
     LINE_BREAK,

@@ -1,7 +1,7 @@
 import { stringify as stringifyYaml } from 'yaml';
 import { getTable } from '#cli/settings/scopes.ts';
-import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import { PERIPHERY_RETAIN } from '#cli/config/configurations/swift.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 /**
 Build periphery.yml: the Xcode project, schemes, and retained Periphery declarations as YAML.

@@ -7,7 +7,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { NO_UPSTREAM_MESSAGE } from '#tests/config/git.ts';
-import { type CommandFailureJson } from '#cli/types/terminal.ts';
+import type { CommandFailureJson } from '#cli/types/system.ts';
 import { buildReportingCheck } from '#tests/setup/cli/settings.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';

@@ -1,23 +1,23 @@
 import { realpathSync } from 'node:fs';
+import type { Files } from '#cli/types/system.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
-import type { Files } from '#cli/types/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { CheckSession } from '#cli/types/session.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
+import type { TableSettings } from '#cli/types/settings.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import type { CheckSession } from '#cli/types/engine/run.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
-import type { CheckFinding } from '#cli/types/engine/check.ts';
 import { MAX_PERCENTAGE } from '#cli/config/settings/schema.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
-import type { TableSettings } from '#cli/types/settings/settings.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { join, resolve, relative, basename, isAbsolute } from 'node:path';
+import type { CoverageOutput, SwiftBuildPlan } from '#cli/types/configurations/language.ts';
 import { prepareBuild, planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
-import type { CoverageOutput, SwiftBuildPlan } from '#cli/types/configurations/language/swift.ts';
 
 import {
     xccovSchema,

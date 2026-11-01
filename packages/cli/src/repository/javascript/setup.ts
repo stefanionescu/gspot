@@ -1,6 +1,6 @@
 import semver from 'semver';
 import cliPackage from '#cli-package' with { type: 'json' };
-import type { SetupReference } from '#cli/types/reference.ts';
+import type { SetupReference } from '#cli/types/repository.ts';
 
 import {
     LOCKFILES,

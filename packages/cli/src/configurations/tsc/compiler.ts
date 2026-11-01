@@ -1,25 +1,25 @@
 import type ts from 'typescript';
 import { remember } from '#cli/system/cache.ts';
 import { compareText } from '#cli/system/text.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { PRIVATE_FILE } from '#cli/config/system.ts';
+import type { RunCache } from '#cli/types/system.ts';
 import { buildBaseResult } from '#cli/engine/results.ts';
 import { listIgnoredRules } from '#cli/settings/scopes.ts';
-import type { RunCache } from '#cli/types/system/system.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
-import type { CheckResult } from '#cli/types/engine/check.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
-import type { Session, CheckSession } from '#cli/types/session.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { GSPOT_FOLDER, TSCONFIG_FILE } from '#cli/config/parsers.ts';
 import { join, dirname, resolve, relative, isAbsolute } from 'node:path';
+import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import { PARENT_TSCONFIG_SKIP } from '#cli/config/configurations/language.ts';
 import { TSCONFIG_COPY_FOLDER } from '#cli/config/configurations/framework.ts';
+import type { ParsedTsconfig, TypeScriptProject } from '#cli/types/parsers.ts';
 import { TSC_UNFORMATTED_OUTPUT } from '#cli/config/configurations/javascript.ts';
 import { readTsconfig, listSourceFiles } from '#cli/parsers/projects/tsconfig.ts';
-import type { ParsedTsconfig, TypeScriptProject } from '#cli/types/parsers/projects.ts';
-import type { TypeScriptReferenceCopy } from '#cli/types/configurations/cross-configuration/tsc.ts';
+import type { TypeScriptReferenceCopy } from '#cli/types/configurations/general.ts';
 import { buildTsconfig, selectRequiredTsconfigOptions } from '#cli/configurations/tsc/scope-tsconfig.ts';
 
 import {

@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { stringify } from '@decimalturn/toml-patch';
 import { runGitStep } from '#tests/setup/system/git.ts';
-import { type PushReport } from '#cli/types/commands/check.ts';
+import type { PushReport } from '#cli/types/commands/reports.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 

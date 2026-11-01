@@ -4,16 +4,15 @@ import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import type { Config } from '#cli/types/manifests.ts';
+import type { Config } from '#cli/types/repository.ts';
 import { extractConfigName } from '#cli/engine/files.ts';
-import { type CheckSession } from '#cli/types/session.ts';
-import { type PlannedCheck } from '#cli/types/engine/planning.ts';
-import type { ConfigTargets } from '#cli/types/generation/files.ts';
+import type { ScopeSettings } from '#cli/types/settings.ts';
+import type { CheckSession } from '#cli/types/engine/run.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
-import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
-import type { CommandLine, Substitutions, CommandArgument } from '#cli/types/engine/tool-runs.ts';
+import type { CommandLine, ConfigTargets, Substitutions, CommandArgument } from '#cli/types/engine/tool-runs.ts';
 
 import {
     FILE_PLACEHOLDER,

@@ -1,5 +1,5 @@
 import { CONFIGURATION_PLUGINS } from '#cli/config/configurations/framework.ts';
-import type { EslintScope, ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
+import type { EslintScope, ConfigurationBlocks } from '#cli/types/configurations/language.ts';
 
 /**
 Apply the basic rules and strict schema conventions of Zod.

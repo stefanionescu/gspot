@@ -1,4 +1,4 @@
-import type { PluginRuleBlock } from '#cli/types/generation/eslint.ts';
+import type { PluginRuleBlock } from '#cli/types/configurations/language.ts';
 import { CONFIGURATION_PLUGINS } from '#cli/config/configurations/framework.ts';
 
 export const TSC_UNFORMATTED_OUTPUT = ['--pretty', 'false'] as const;

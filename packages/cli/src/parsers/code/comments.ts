@@ -1,15 +1,15 @@
 import { CST, Lexer } from 'yaml';
 import { visit } from 'unist-util-visit';
 import type { Node } from 'web-tree-sitter';
+import type { TextRange } from '#cli/types/system.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { listSqlTokens } from '#cli/parsers/code/sql.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import { getPosition, replaceRanges } from '#cli/system/text.ts';
-import type { TextRange, SourcePosition } from '#cli/types/text.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 import { getTomlRange, parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
-import type { GrammarName, CommentParser, SourceComment, ComponentScript } from '#cli/types/parsers/code.ts';
+import type { GrammarName, CommentParser, SourceComment, SourcePosition, ComponentScript } from '#cli/types/parsers.ts';
 
 import {
     MDX_ESM,

@@ -16,7 +16,7 @@ import type {
     AsyncSpawnOptions,
     ProcessTermination,
     ProcessTreeControl,
-} from '#cli/types/system/system.ts';
+} from '#cli/types/system.ts';
 import {
     FAILED_CODE,
     OUTPUT_LIMIT,

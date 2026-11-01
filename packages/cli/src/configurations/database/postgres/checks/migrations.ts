@@ -3,12 +3,12 @@ import { remember } from '#cli/system/cache.ts';
 import { read } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import type { Session } from '#cli/types/session.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { listCheckFiles } from '#cli/engine/files.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { SYMLINK_MODE, GITLINK_MODE } from '#cli/config/repository/files.ts';
 import { readHead, readBlobs, listRevisionFiles } from '#cli/repository/revisions/files.ts';
-import { type Migration, type MigrationRead } from '#cli/types/configurations/database/postgres.ts';
+import type { Migration, MigrationRead } from '#cli/types/configurations/infrastructure.ts';
 
 import {
     parseSqlFile,

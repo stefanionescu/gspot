@@ -3,7 +3,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/setup/system/git.ts';
-import { type RunReport } from '#cli/types/commands/check.ts';
+import type { RunReport } from '#cli/types/engine/run.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 

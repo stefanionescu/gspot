@@ -1,5 +1,5 @@
 import { getTable } from '#cli/settings/scopes.ts';
-import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
+import type { EslintScope, ConfigurationBlocks } from '#cli/types/configurations/language.ts';
 import { DRIZZLE_RULES, CONFIGURATION_PLUGINS } from '#cli/config/configurations/framework.ts';
 
 /**

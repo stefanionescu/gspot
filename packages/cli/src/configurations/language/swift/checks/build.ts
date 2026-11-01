@@ -1,15 +1,16 @@
 import { join, relative } from 'node:path';
 import { remember } from '#cli/system/cache.ts';
+import type { Files } from '#cli/types/system.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { PRIVATE_FILE } from '#cli/config/system.ts';
-import { type Files } from '#cli/types/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import { type CheckFinding } from '#cli/types/engine/check.ts';
-import type { PlannedCheck } from '#cli/types/engine/planning.ts';
-import type { Session, CheckSession } from '#cli/types/session.ts';
+import type { CheckSession } from '#cli/types/engine/run.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
+import type { SwiftBuildPlan, SwiftBuildOutput } from '#cli/types/configurations/language.ts';
 import { prepareBuild, planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
-import { type SwiftBuildPlan, type SwiftBuildOutput } from '#cli/types/configurations/language/swift.ts';
 
 import {
     SWIFTC_CALL,

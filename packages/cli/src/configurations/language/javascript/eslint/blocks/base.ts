@@ -9,6 +9,15 @@ import { buildSelectorBlocks } from '#cli/configurations/language/javascript/esl
 import { buildScopeFiles, listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { buildRestrictedImportBlocks } from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
 
+import type {
+    EslintBlock,
+    EslintFiles,
+    EslintPlugins,
+    EslintRuntime,
+    EslintBlockFields,
+    PlannedEslintFile,
+    ConfigurationBlocks,
+} from '#cli/types/configurations/language.ts';
 import {
     buildImportIgnores,
     buildNodeScriptBlocks,
@@ -16,15 +25,6 @@ import {
     buildScopeImportBlocks,
     buildImportBoundariesRule,
 } from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';
-import {
-    type EslintBlock,
-    type EslintFiles,
-    type EslintPlugins,
-    type EslintRuntime,
-    type EslintBlockFields,
-    type PlannedEslintFile,
-    type ConfigurationBlocks,
-} from '#cli/types/generation/eslint.ts';
 import {
     NODE_RULES,
     TEST_RULES,

@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
 import { runChecks } from '#cli/engine/run.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
-import type { Session } from '#cli/types/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';

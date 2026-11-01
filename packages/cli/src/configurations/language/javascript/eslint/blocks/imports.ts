@@ -1,19 +1,15 @@
 import picomatch from 'picomatch';
 import { escapeGlob } from '#cli/system/paths.ts';
+import type { Scope } from '#cli/types/settings.ts';
 import { FOLDER_CONTENTS } from '#cli/config/system.ts';
 import { findParentScope } from '#cli/settings/scopes.ts';
-import { type Scope } from '#cli/types/settings/inheritance.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/javascript.ts';
 import { buildNodePatterns } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { readScopeAliases, readPackageAliases } from '#cli/repository/javascript/aliases.ts';
+import type { EslintBlock, PlannedEslintFile, EslintImportBoundaryRule } from '#cli/types/configurations/language.ts';
 
-import {
-    type EslintBlock,
-    type PlannedEslintFile,
-    type EslintImportBoundaryRule,
-} from '#cli/types/generation/eslint.ts';
 import {
     REGEX_SYMBOLS,
     CODE_LANGUAGES,
