@@ -1,10 +1,12 @@
 import { isDeepStrictEqual } from 'node:util';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
+import type { DependencyFile } from '#cli/types/parsers.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import { LIMIT_RULES_BY_CHECK } from '#cli/manifests/limits.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
+import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { getLimit, getTable, findParentScope } from '#cli/settings/scopes.ts';
 import { joinScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { buildLimitRuleBlocks } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
@@ -35,14 +37,15 @@ import {
     PACKAGE_JSON_RULE_PREFIX,
 } from '#cli/config/configurations/blocks.ts';
 
-function listManifestRuleBlocks(scope: Scope, excluded: string[]): EslintRuleBlock[] {
+function listManifestRuleBlocks(scope: Scope, excluded: string[], dependencyNames: string[]): EslintRuleBlock[] {
     const tables = scope.configurations.map(({ eslint }) => eslint);
     return [
         ...tables
             .flatMap(({ client_env }) => client_env)
+            .filter(({ dependencies }) => dependencies.every((name) => dependencyNames.includes(name)))
             .map(({ files, public_prefixes, allowed_names }) => ({
                 scope: scope.path,
-                ...splitGlobs([...files, ...excluded]),
+                ...splitGlobs([...files.map((file) => joinScopeSelector(file, escapeGlob(scope.path))), ...excluded]),
                 rules: {
                     [CLIENT_ENVIRONMENT_RULE]: [
                         'error',
@@ -64,7 +67,7 @@ function listManifestRuleBlocks(scope: Scope, excluded: string[]): EslintRuleBlo
     ];
 }
 
-function buildManifestRuleBlocks(scopes: Scope[]): EslintRuleBlock[] {
+function buildManifestRuleBlocks(scopes: Scope[], dependencyFiles: DependencyFile[]): EslintRuleBlock[] {
     return scopes.flatMap((scope) =>
         listManifestRuleBlocks(
             scope,
@@ -72,6 +75,7 @@ function buildManifestRuleBlocks(scopes: Scope[]): EslintRuleBlock[] {
                 scopes.map((each) => each.path),
                 scope.path,
             ).map((path) => `!${joinScope(escapeGlob(path), '**')}`),
+            listProjectDependencyNames(dependencyFiles, scope.path),
         ),
     );
 }
@@ -204,7 +208,7 @@ function buildSettingsBlocks(planned: Pick<PlannedEslintFile, 'session' | 'scope
         ...buildLimitRuleBlocks(planned),
         ...buildEnvironmentRuleBlocks(planned),
         ...buildTrivialRuleBlocks(planned),
-        ...buildManifestRuleBlocks(session.scopes),
+        ...buildManifestRuleBlocks(session.scopes, session.repository.dependencyFiles),
         ...ignored,
     ];
 }

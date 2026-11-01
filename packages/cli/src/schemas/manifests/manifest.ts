@@ -185,6 +185,7 @@ const rulesOffSchema = z.strictObject({
 });
 
 const clientEnvironmentSchema = z.strictObject({
+    dependencies: stringsSchema,
     files: z.string().min(1).array().min(1),
     public_prefixes: z.string().min(1).array().min(1),
     allowed_names: z.string().min(1).array().optional(),
