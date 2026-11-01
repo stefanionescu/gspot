@@ -53,9 +53,8 @@ term for each concept. Dates shown to people include their time zone; machine va
 - Use words instead of an emoji or an arrow.
 - Put a file path in code formatting, and write a placeholder as `<kebab-case>`.
 - Write the page title in title case and every lower heading in sentence case, with no end punctuation.
-- Keep a sentence within `prose.max_sentence_words` words, 30 by default, a list item within
-  `prose.max_list_item_words` words, 45 by default, and a paragraph within `prose.max_paragraph_sentences` sentences, 6
-  by default.
+- Keep a sentence within {setting:prose.max_sentence_words} words, a list item within
+  {setting:prose.max_list_item_words} words, and a paragraph within {setting:prose.max_paragraph_sentences} sentences.
 
 ## References
 

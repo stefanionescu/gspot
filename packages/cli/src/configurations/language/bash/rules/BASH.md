@@ -69,6 +69,8 @@ it reads.
 
 ```bash
 # report_unreadable_files: Reports each unreadable input and fails if any input is unreadable.
+# Arguments:
+#   $@: the input paths.
 report_unreadable_files() {
     local path
     local status=0
@@ -91,7 +93,8 @@ report_unreadable_files() {
 Use `name() { ... }` for a function that runs in the current shell, and a subshell body, `name() ( ... )`, to isolate
 state and traps from the caller on purpose.
 
-Keep each function within `limits.bash`: by default 40 code lines, 8 branches, 3 levels of nesting, and 8 assignments.
+Keep each function within {setting:limits.bash.max_function_lines} code lines, {setting:limits.max_function_branches} branches,
+{setting:limits.max_block_nesting} levels of nesting, and {setting:limits.max_function_assignments} assignments.
 Split a longer function by its steps.
 
 ## Variables and constants
@@ -223,6 +226,7 @@ Read `PIPESTATUS` immediately when individual statuses matter. Never close a sta
 a tool that serializes. Check a command directly or capture its status in a named variable.
 
 ```bash
+# shellcheck disable=SC2312 # PIPESTATUS on the next line reads the status of each side.
 tar -cf - ./* | (cd -- "${target_dir}" && tar -xf -)
 statuses=("${PIPESTATUS[@]}")
 if ((statuses[0] != 0 || statuses[1] != 0)); then

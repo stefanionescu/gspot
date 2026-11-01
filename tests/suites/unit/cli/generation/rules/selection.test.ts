@@ -58,6 +58,20 @@ test.each(
     );
 });
 
+test('a rule file shows the limit that gspot.toml sets', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['markdown'], {
+            rules: true,
+            level: 'all',
+            tables: '[prose]\nmax_sentence_words = 24\n',
+        }),
+    });
+    const session = await openSession(sandbox.path);
+    const writing = selectRuleFiles(session).find(({ path }) => path.endsWith('WRITING.md'));
+    expect(writing?.content).toContain('Keep a sentence within 24 words');
+    expect(writing?.content).not.toContain('{setting:');
+});
+
 test('an always-selected configuration installs its rule file once', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { rules: true, level: 'all' }),
