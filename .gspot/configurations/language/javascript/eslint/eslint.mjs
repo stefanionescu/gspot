@@ -124,7 +124,6 @@ export default [
             "docs/dist/**",
             "docs/.astro/**",
             "docs/.wrangler/**",
-            "findings/**",
             ".gspot/**",
             "eslint.config.mjs",
             ".markdownlint.jsonc",
@@ -210,7 +209,6 @@ export default [
                 "[\\\\/]docs[\\\\/]dist[\\\\/]",
                 "[\\\\/]docs[\\\\/]\\.astro[\\\\/]",
                 "[\\\\/]docs[\\\\/]\\.wrangler[\\\\/]",
-                "[\\\\/]findings[\\\\/]",
                 "[\\\\/]\\.gspot[\\\\/]",
                 "[\\\\/]bower_components[\\\\/]"
             ],

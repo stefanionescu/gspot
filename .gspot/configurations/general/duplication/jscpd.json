@@ -21,7 +21,6 @@
         "docs/dist/**",
         "docs/.astro/**",
         "docs/.wrangler/**",
-        "findings/**",
         ".gspot/**",
         "eslint.config.mjs",
         ".markdownlint.jsonc",

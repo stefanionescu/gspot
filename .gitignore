@@ -12,8 +12,6 @@ node_modules/
 /docs/.astro/
 /docs/.wrangler/
 
-/findings/
-
 # >>> gspot managed >>>
 .gspot/node_modules/
 .gspot/.venv/

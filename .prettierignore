@@ -12,7 +12,6 @@ build/
 /docs/.astro/
 /docs/.wrangler/
 /docs/dist/
-/findings/
 /packages/*/dist/
 /packages/*/LICENSE.md
 /packages/cli/grammars/

@@ -36,7 +36,6 @@ extend-exclude = [
   "docs/dist/**",
   "docs/.astro/**",
   "docs/.wrangler/**",
-  "findings/**",
   # Files that gspot generates
   ".gspot/**",
   "eslint.config.mjs",
