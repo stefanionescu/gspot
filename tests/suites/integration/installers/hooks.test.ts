@@ -26,7 +26,7 @@ test('doctor reports hooks this clone has not installed and accepts them after i
 
     const missing = await spawnGspot(sandbox.path, ['doctor', '--json']);
     expect(missing.code, missing.stdout + missing.stderr).toBe(1);
-    expect((JSON.parse(missing.stdout) as DoctorReport).hooks).toBe('not installed; run gspot install');
+    expect((JSON.parse(missing.stdout) as DoctorReport).hooks).toStrictEqual({ ready: false });
     const applied = await spawnGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const installed = await spawnGspot(sandbox.path, ['install']);
@@ -34,7 +34,7 @@ test('doctor reports hooks this clone has not installed and accepts them after i
     const diagnosed = await spawnGspot(sandbox.path, ['doctor', '--json']);
     expect(diagnosed.code, diagnosed.stdout + diagnosed.stderr).toBe(0);
     const report = JSON.parse(diagnosed.stdout) as DoctorReport;
-    expect(report.hooks).toBe('installed');
+    expect(report.hooks).toStrictEqual({ ready: true, tool: 'gspot' });
     expect(report.tools.filter(({ state }) => state !== 'ok' && state !== 'system')).toStrictEqual([]);
 });
 

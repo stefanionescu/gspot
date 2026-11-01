@@ -168,7 +168,7 @@ test('explain --json reports every field of a configuration', async () => {
         tools: [],
         checks: [],
         settings: [],
-        rules: [],
+        ruleFiles: [],
         alwaysSelected: true,
         removed: [],
         kind: 'configuration',

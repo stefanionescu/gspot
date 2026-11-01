@@ -4,7 +4,13 @@ import type { CommandResult } from '#cli/types/system.ts';
 import { SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { ScopeFlags, CommandDefinition, ConfigurationsOptions } from '#cli/types/commands/edits.ts';
-import { writeSettingsEdit, formatConfigurationChange, readConfigurationEditContext } from '#cli/commands/edits.ts';
+
+import {
+    writeSettingsEdit,
+    buildUnchangedResult,
+    formatConfigurationChange,
+    readConfigurationEditContext,
+} from '#cli/commands/edits.ts';
 
 function restoreConfigurations(table: TomlTable, added: string[]): void {
     const previous = table['removed_configurations'];
@@ -18,12 +24,10 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
     const { root, input, scope, scopeTable, scopeSettings, selected, context } =
         await readConfigurationEditContext(options);
     if (options.configurations.every((name) => selected.includes(name))) {
-        const summary = `No change: ${new Intl.ListFormat('en', { type: 'conjunction' }).format(options.configurations)} ${options.configurations.length === 1 ? 'is' : 'are'} already selected.`;
-        return {
-            text: summary + '\n',
-            json: { changed: false, summary },
-            exitCode: 0,
-        };
+        const names = new Intl.ListFormat('en', { type: 'conjunction' }).format(options.configurations);
+        return buildUnchangedResult(
+            `No change: ${names} ${options.configurations.length === 1 ? 'is' : 'are'} already selected.`,
+        );
     }
     const scopeConfigurations = scopeSettings.configurations;
     const list = [...scopeConfigurations];

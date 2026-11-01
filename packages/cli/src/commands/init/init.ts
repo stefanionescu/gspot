@@ -63,7 +63,7 @@ async function runInitCommand(root: string, options: InitOptions): Promise<Comma
     const json: InitJson = {
         root,
         plan,
-        settings: settingsText,
+        settingsText,
         written: [],
         unchanged: [],
         removed: [],

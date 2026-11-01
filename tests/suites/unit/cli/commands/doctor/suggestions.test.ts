@@ -201,8 +201,8 @@ test.each([...CI_PREFERENCE_CASES])(
         });
         if (tracked.length > 0) runGitStep(sandbox.path, ['add', '--', ...tracked]);
         runGitStep(sandbox.path, ['config', 'remote.origin.url', remote]);
-        const result = await runGspot(sandbox.path, ['doctor', '--json']);
-        expect((JSON.parse(result.stdout) as DoctorReport).ci).toBe(ci);
+        const result = await runGspot(sandbox.path, ['doctor']);
+        expect(result.stdout).toContain(`ci: ${ci}\n`);
     },
 );
 

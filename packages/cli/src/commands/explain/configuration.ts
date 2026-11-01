@@ -55,7 +55,7 @@ export function explainConfiguration(session: Session | undefined, name: string)
         ),
         checks: configuration.checks.map((check) => ({ check: check.id, stage: check.stage })),
         settings: (SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? []).map((setting) => setting.name),
-        rules: (session === undefined ? [] : selectRuleFiles(session))
+        ruleFiles: (session === undefined ? [] : selectRuleFiles(session))
             .filter((file) => listRuleFiles(configuration).some((rule) => rule.path === file.path))
             .map((file) => file.path),
         alwaysSelected: configuration.always_selected,
@@ -80,7 +80,7 @@ export function explainConfiguration(session: Session | undefined, name: string)
             values: facts.checks.filter((check) => check.stage === stage).map((check) => check.check),
         })),
         { label: 'Settings', values: facts.settings },
-        { label: 'Rule files', values: facts.rules },
+        { label: 'Rule files', values: facts.ruleFiles },
     ];
     const lines = [
         `${facts.title} (${facts.group} configuration)`,

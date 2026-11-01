@@ -19,10 +19,15 @@ import {
     NOT_INSTALLED_STATUS,
 } from '#cli/config/tools/installers.ts';
 
-function formatForeignHooks(hooks: RepositorySetup['hooks'], session: Session): string {
+function listGspotHookLines(session: Session): string[] {
     const runner = session.startRunner;
-    const names = listHookNames(session.configuredChecks);
-    const lines = names.map((name) => `  ${name}: ${runner.command} ${HOOK_CHECKS[name].arguments}`);
+    return listHookNames(session.configuredChecks).map(
+        (name) => `${name}: ${runner.command} ${HOOK_CHECKS[name].arguments}`,
+    );
+}
+
+function formatForeignHooks(hooks: RepositorySetup['hooks'], session: Session): string {
+    const lines = listGspotHookLines(session).map((line) => `  ${line}`);
     return `hooks already run from ${hooks.map((hook) => hook.path).join(', ')}; add these gspot lines to them:\n${lines.join('\n')}`;
 }
 
@@ -76,17 +81,20 @@ export async function readHookStatus(session: Session, repository: Pick<Reposito
     const { settings } = session;
     if (settings.hooks?.enabled !== true) return { ready: true, text: 'none' };
     const { hooksPath, hooks: foreign } = await readHooks(repository);
-    if (hooksPath === GSPOT_PATHS.hooks) return { ready: true, text: 'installed' };
+    if (hooksPath === GSPOT_PATHS.hooks) return { ready: true, text: 'installed', tool: 'gspot' };
     if (foreign.length > 0) {
         const ready = listHookNames(session.configuredChecks).every((name) =>
             foreign.some((hook) => hasHookCommand(repository.root, hook, name)),
         );
-        return {
-            ready,
-            text: ready
-                ? `run from ${foreign.map((hook) => hook.path).join(', ')}`
-                : `not installed; ${formatForeignHooks(foreign, session)}`,
-        };
+        const tool = foreign.map((hook) => hook.kind).join(', ');
+        return ready
+            ? { ready, tool, text: `run from ${foreign.map((hook) => hook.path).join(', ')}` }
+            : {
+                  ready,
+                  tool,
+                  lines: listGspotHookLines(session),
+                  text: `not installed; ${formatForeignHooks(foreign, session)}`,
+              };
     }
     return { ready: false, text: NOT_INSTALLED_STATUS };
 }

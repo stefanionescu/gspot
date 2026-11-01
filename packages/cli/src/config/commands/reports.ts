@@ -112,10 +112,9 @@ export const LEVEL_COMMAND = 'gspot set level all';
 
 export const LINT_JOB_NOTE = 'an existing lint job';
 
-export const CI_FILE_LABELS = {
-    github: GITHUB_WORKFLOW,
-    gitlab: `${GITLAB_WORKFLOW} (include from .gitlab-ci.yml)`,
-} as const;
+export const CI_FILES = { github: GITHUB_WORKFLOW, gitlab: GITLAB_WORKFLOW } as const;
+
+export const CI_FILE_NOTES = { github: '', gitlab: ' (include from .gitlab-ci.yml)' } as const;
 
 export const ORIGIN_URL_SETTING = 'remote.origin.url';
 

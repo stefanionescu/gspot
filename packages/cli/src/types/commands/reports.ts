@@ -1,10 +1,10 @@
-import type { ToolInspection } from '#cli/types/tools.ts';
-import type { Setting, Configuration } from '#cli/types/manifests.ts';
+import type { HookStatus, ToolInspection } from '#cli/types/tools.ts';
+import type { Check, Setting, Configuration } from '#cli/types/manifests.ts';
 import type { StageFilter, CheckDescription } from '#cli/types/engine/plan.ts';
 import type { CommandResult, CanceledCommandJson } from '#cli/types/system.ts';
 import type { RunReport, PushInput, CheckProgress } from '#cli/types/engine/run.ts';
 import type { InheritedSetting, RemovedConfiguration } from '#cli/types/settings.ts';
-import type { CHECK_STAGES, CHECK_INPUT_HOOKS } from '#cli/config/commands/reports.ts';
+import type { CI_FILES, CHECK_STAGES, CHECK_INPUT_HOOKS } from '#cli/config/commands/reports.ts';
 import type { FileKind, StagedPaths, ChangedPaths, PushedRevisions } from '#cli/types/repository.ts';
 
 type CheckedRevision = { hash: string; refs: string[]; commits: string[]; shallow: boolean; report: RunReport };
@@ -87,12 +87,12 @@ type SettingRow = {
     source: string;
     origin: InheritedSetting['origin'];
     originScope?: string | undefined;
-    reason_when: Setting['reason_when'];
+    reasonRequirement: Setting['reason_when'];
     scope: string;
 };
 
 export type ConfigurationsListJson = {
-    selected: { name: string; checks: { name: string; scope: string; state: string }[] }[];
+    selected: { name: string; checks: { check: string; scope: string; status: string }[] }[];
     removed: RemovedConfiguration[];
     available: { name: string; description: string }[];
 };
@@ -117,18 +117,70 @@ export type DoctorReport = {
     environments: string[];
     suggestions: Suggestions;
     addCommands: string[];
-    hooks: string;
-    ci: string;
+    hooks: Omit<HookStatus, 'text'>;
+    ci: CiState;
     ruleFiles: number;
-    exitCode: number;
 };
 
-export type Explanation = {
-    kind: 'check' | 'lint-rule' | 'configuration' | 'setting' | 'path';
-    subject: string;
-    text: string;
-    facts: Record<string, unknown>;
+export type CiState = { enabled: boolean; provider?: keyof typeof CI_FILES; file?: string };
+
+export type Explanation = { subject: string; text: string } & (
+    | { kind: 'check'; facts: CheckExplanation }
+    | { kind: 'lint-rule'; facts: LintRuleExplanation }
+    | { kind: 'configuration'; facts: ConfigurationExplanation }
+    | { kind: 'setting'; facts: SettingExplanation }
+    | { kind: 'path'; facts: PathExplanation }
+);
+
+type CheckExplanation = {
+    check: string;
+    configuration?: string;
+    command?: readonly string[] | undefined;
+    paths?: readonly string[] | undefined;
+    stage: string;
+    level: string;
+    summary: string;
+    why: string;
+    help: string;
+    condition: Check['when'];
+    crashPattern: string | undefined;
+    runInCopy: boolean | undefined;
+    settings: string[];
+    ruleFiles: string[];
+    ignores: CheckIgnore[];
 };
+
+type LintRuleExplanation = {
+    tool: string | undefined;
+    rule: string;
+    check: string;
+    page: string | null;
+    description: string | null;
+    why: string | undefined;
+    fix: string | undefined;
+    example: string | undefined;
+    explanation: string | undefined;
+};
+
+type SettingExplanation = {
+    key: string;
+    type: Setting['type'];
+    description: string;
+    default: unknown;
+    defaultAll: unknown;
+    languageDefaults: Setting['language_defaults'];
+    reasonRequirement: Setting['reason_when'];
+    scopes: {
+        scope: string;
+        default: unknown;
+        value?: unknown;
+        source?: string | undefined;
+        readBy?: string[];
+        reason?: string | undefined;
+    }[];
+};
+
+export type ExplainedSetting = { setting: Setting; text: string; scopes: SettingExplanation['scopes'] };
 
 export type CheckIgnore = { rule?: string | undefined; paths?: string[] | undefined; reason: string; command: string };
 
@@ -161,7 +213,7 @@ export type ConfigurationExplanation = {
     tools: string[];
     checks: { check: string; stage: string }[];
     settings: string[];
-    rules: string[];
+    ruleFiles: string[];
     alwaysSelected: boolean;
     removed: { scope: string; reason: string; command: string }[];
 };
@@ -170,7 +222,7 @@ export type CheckFacts = {
     turnOff: CheckDescription['turnOff'];
     source: string;
     settings: string[];
-    rules: string[];
+    ruleFiles: string[];
     crashPattern: string | undefined;
     ignores: CheckIgnore[];
     minVersions: Record<string, string>;

@@ -206,8 +206,8 @@ test('doctor --json reports every field when the required tools are missing', as
         environments: [],
         suggestions: { detected: [], suggested: [], undetected: [], unowned: [], lintJobs: [] },
         addCommands: [],
-        hooks: 'none',
-        ci: 'none',
+        hooks: { ready: true },
+        ci: { enabled: false },
         ruleFiles: 0,
     });
 });

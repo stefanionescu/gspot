@@ -48,7 +48,7 @@ function buildCheckFacts(
     const settings = (configuration === undefined ? [] : (SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? []))
         .filter((setting) => toolName !== undefined && setting.name.startsWith(`tools.${toolName}.`))
         .map((setting) => setting.name);
-    const rules =
+    const ruleFiles =
         configuration === undefined
             ? []
             : listRuleFiles(configuration)
@@ -59,7 +59,7 @@ function buildCheckFacts(
     return {
         source: configuration === undefined ? REPOSITORY_COMMAND : `${configuration.name} configuration`,
         settings,
-        rules,
+        ruleFiles,
         crashPattern,
         ignores: listCheckIgnores(session, check.id),
         minVersions: reference.minVersions,
@@ -97,7 +97,7 @@ function formatCheckExplanation(
     facts: CheckFacts,
 ): string {
     const { check, configuration } = found;
-    const { source, settings, rules, minVersions } = facts;
+    const { source, settings, ruleFiles, minVersions } = facts;
     const lines = [
         `${check.id}  (${source}, ${check.stage} stage, ${check.level} level)`,
         '',
@@ -113,7 +113,7 @@ function formatCheckExplanation(
         ...(settings.length === 0
             ? []
             : [`Settings that change it: ${settings.join(', ')} (gspot set <setting> <value>)`]),
-        ...(rules.length === 0 ? [] : [`Rule files that state it: ${rules.join(', ')}`]),
+        ...(ruleFiles.length === 0 ? [] : [`Rule files that state it: ${ruleFiles.join(', ')}`]),
         ...formatRepositoryUse(session, commandCheck, configuration),
         ...(facts.ignores.length === 0 ? [] : ['Ignored in this repository:']),
         ...facts.ignores.map((ignore) => formatCheckIgnore(ignore)),
@@ -198,11 +198,11 @@ export function explainCheck(session: Session | undefined, checkId: string): Exp
             summary: check.summary,
             why: check.why,
             help: check.help,
-            when: check.when,
-            crash_pattern: facts.crashPattern,
-            run_in_copy: check.run_in_copy,
+            condition: check.when,
+            crashPattern: facts.crashPattern,
+            runInCopy: check.run_in_copy,
             settings: facts.settings,
-            rules: facts.rules,
+            ruleFiles: facts.ruleFiles,
             ignores: facts.ignores,
         },
     };
@@ -234,20 +234,20 @@ export async function explainLintRule(
     if (docs === undefined) return undefined;
     const page = docs.url;
     const lines = formatLintRuleLines(found, { tool, identifier, page, docs, verbose: verbose === true });
-    const { url, explanation, ...documentation } = docs;
-    const facts: Record<string, unknown> = {
-        tool,
-        rule: identifier,
-        check: found.check.id,
-        page: url ?? null,
-        description: null,
-        ...documentation,
-    };
-    if (verbose === true) facts['explanation'] = explanation;
     return {
         kind: 'lint-rule',
         subject: `${checkId} ${identifier}`,
         text: `${lines.join('\n')}\n`,
-        facts,
+        facts: {
+            tool,
+            rule: identifier,
+            check: found.check.id,
+            page: page ?? null,
+            description: docs.description ?? null,
+            why: docs.why,
+            fix: docs.fix,
+            example: docs.example,
+            explanation: verbose === true ? docs.explanation : undefined,
+        },
     };
 }

@@ -34,7 +34,7 @@ function buildSettingsResult(session: Session): CommandResult {
         const value = row.value === undefined ? 'unset' : JSON.stringify(row.value);
         const shortened = value.length > VALUE_WIDTH ? `${value.slice(0, VALUE_WIDTH - 1)}…` : value;
         const scope = row.scope === '' ? '' : `  [scope ${row.scope}]`;
-        return `${row.key.padEnd(width)}${shortened.padEnd(VALUE_WIDTH)} ${(row.reason_when ?? '').padEnd(REASON_HEADER.length)}  ${row.source}${scope}`;
+        return `${row.key.padEnd(width)}${shortened.padEnd(VALUE_WIDTH)} ${(row.reasonRequirement ?? '').padEnd(REASON_HEADER.length)}  ${row.source}${scope}`;
     });
     lines.unshift(`${'setting'.padEnd(width)}${'value'.padEnd(VALUE_WIDTH)} ${REASON_HEADER}  source`);
     return { text: `${lines.join('\n')}\n`, json: { settings } satisfies SettingsListJson, exitCode: 0 };
@@ -56,8 +56,8 @@ function listCheckStates(
             const key = `${path}\0${check.id}`;
             if (listed.has(key)) return [];
             listed.add(key);
-            const state = formatCheckState(planned.get(path)?.findLast((each) => each.check.id === check.id));
-            return [{ name: check.id, scope: path, state }];
+            const status = formatCheckState(planned.get(path)?.findLast((each) => each.check.id === check.id));
+            return [{ check: check.id, scope: path, status }];
         });
     });
 }
@@ -78,10 +78,10 @@ function buildConfigurationsResult(session: Session): CommandResult {
     const lines = ['selected'];
     for (const configuration of selected) {
         lines.push(`  ${configuration.name}`);
-        const groups = Map.groupBy(configuration.checks, (check) => check.name);
+        const groups = Map.groupBy(configuration.checks, ({ check }) => check);
         for (const [name, checks] of groups) {
             const states = checks.map(
-                (check) => `${check.scope === '' ? ROOT_SCOPE_LABEL : check.scope}: ${check.state}`,
+                (check) => `${check.scope === '' ? ROOT_SCOPE_LABEL : check.scope}: ${check.status}`,
             );
             lines.push(`    ${name}  ${states.join(', ')}`);
         }
@@ -110,7 +110,7 @@ function buildSettingRows(settings: Settings, scopes: Scope[]): SettingsListJson
                 source: row.source,
                 origin: row.origin,
                 originScope: row.originScope,
-                reason_when: row.setting.reason_when,
+                reasonRequirement: row.setting.reason_when,
                 scope: scopePath,
             }));
     });

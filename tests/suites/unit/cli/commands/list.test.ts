@@ -23,10 +23,10 @@ test('list shows selected settings and available configurations', async () => {
     const result = JSON.parse(listed.stdout) as ConfigurationsListJson;
     const checks = result.selected.flatMap((configuration) => configuration.checks);
     const named = new Set(['bash/shellcheck', 'bash/shfmt', 'structure/shared-prefixes']);
-    expect(checks.filter(({ name }) => named.has(name))).toStrictEqual([
-        { name: 'bash/shellcheck', scope: '', state: 'on' },
-        { name: 'bash/shfmt', scope: '', state: OFF_BY_IGNORE },
-        { name: 'structure/shared-prefixes', scope: '', state: 'off (level)' },
+    expect(checks.filter(({ check }) => named.has(check))).toStrictEqual([
+        { check: 'bash/shellcheck', scope: '', status: 'on' },
+        { check: 'bash/shfmt', scope: '', status: OFF_BY_IGNORE },
+        { check: 'structure/shared-prefixes', scope: '', status: 'off (level)' },
     ]);
     expect([...result.selected, ...result.available].map(({ name }) => name).toSorted(compareText)).toStrictEqual(
         readConfigurations().keys().toArray().toSorted(compareText),
@@ -58,10 +58,10 @@ test('the check list reports the state in each scope', async () => {
     expect(structured.stderr).toBe('');
     const { selected } = JSON.parse(structured.stdout) as ConfigurationsListJson;
     const checks = selected.flatMap((configuration) => configuration.checks);
-    expect(checks.filter((check) => check.name === 'bash/shfmt')).toStrictEqual([
-        { name: 'bash/shfmt', scope: '', state: 'on' },
-        { name: 'bash/shfmt', scope: 'api', state: OFF_BY_IGNORE },
-        { name: 'bash/shfmt', scope: 'api/worker', state: OFF_BY_IGNORE },
+    expect(checks.filter(({ check }) => check === 'bash/shfmt')).toStrictEqual([
+        { check: 'bash/shfmt', scope: '', status: 'on' },
+        { check: 'bash/shfmt', scope: 'api', status: OFF_BY_IGNORE },
+        { check: 'bash/shfmt', scope: 'api/worker', status: OFF_BY_IGNORE },
     ]);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
@@ -81,11 +81,11 @@ test('checks that run at the root appear once when selected in two child scopes'
     expect(listed.code, listed.stdout + listed.stderr).toBe(0);
     const { selected } = JSON.parse(listed.stdout) as ConfigurationsListJson;
     const checks = selected.flatMap((configuration) => configuration.checks);
-    expect(checks.filter(({ name }) => name === 'docker/dockerignore')).toStrictEqual([
-        { name: 'docker/dockerignore', scope: '', state: 'on' },
+    expect(checks.filter(({ check }) => check === 'docker/dockerignore')).toStrictEqual([
+        { check: 'docker/dockerignore', scope: '', status: 'on' },
     ]);
-    expect(checks.filter(({ name }) => name === 'gspot/generated-files')).toStrictEqual([
-        { name: 'gspot/generated-files', scope: '', state: 'on' },
+    expect(checks.filter(({ check }) => check === 'gspot/generated-files')).toStrictEqual([
+        { check: 'gspot/generated-files', scope: '', status: 'on' },
     ]);
 });
 
@@ -101,8 +101,8 @@ test('the settings list reports inherited values and their source scope', async 
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
     const { settings } = JSON.parse(structured.stdout) as SettingsListJson;
-    expect(settings.find((row) => row.key === 'test_files')?.reason_when).toBeUndefined();
-    expect(settings.find((row) => row.key === 'limits.file_lines')?.reason_when).toBe('raising');
+    expect(settings.find((row) => row.key === 'test_files')?.reasonRequirement).toBeUndefined();
+    expect(settings.find((row) => row.key === 'limits.file_lines')?.reasonRequirement).toBe('raising');
     expect(settings.find((row) => row.scope === 'api/worker' && row.key === 'limits.file_lines')).toMatchObject({
         value: 200,
         source: '[scope "api"]',

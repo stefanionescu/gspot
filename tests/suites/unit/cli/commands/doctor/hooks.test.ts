@@ -35,10 +35,16 @@ test.each([false, true])(
         using _environment = overrideEnvironment({ PATH: folders.join(delimiter) });
         const diagnosed = await runGspot(sandbox.path, ['doctor', '--json']);
         expect(diagnosed.stderr).toBe('');
-        expect((JSON.parse(diagnosed.stdout) as DoctorReport).hooks).toBe(
+        expect((JSON.parse(diagnosed.stdout) as DoctorReport).hooks).toStrictEqual(
             installed
-                ? 'installed'
-                : `installed, but bunx --no-install gspot --version fails. Install gspot with: bun add --dev --exact @gspothq/cli@${cliPackage.version}`,
+                ? { ready: true, tool: 'gspot' }
+                : {
+                      ready: false,
+                      tool: 'gspot',
+                      lines: [
+                          `bunx --no-install gspot --version fails. Install gspot with: bun add --dev --exact @gspothq/cli@${cliPackage.version}`,
+                      ],
+                  },
         );
     },
 );

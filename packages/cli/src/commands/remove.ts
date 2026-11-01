@@ -18,7 +18,13 @@ import { selectForInit, listDetectedAdditions } from '#cli/repository/proposals.
 import { GSPOT_REMOVE, REMOVE_CONFIGURATION_MESSAGE } from '#cli/config/commands/edits.ts';
 import { findSetting, listWrittenKeys, listSettingsTables } from '#cli/settings/inherit.ts';
 import type { ScopeFlags, CommandDefinition, ConfigurationsOptions } from '#cli/types/commands/edits.ts';
-import { writeSettingsEdit, formatConfigurationChange, readConfigurationEditContext } from '#cli/commands/edits.ts';
+
+import {
+    writeSettingsEdit,
+    buildUnchangedResult,
+    formatConfigurationChange,
+    readConfigurationEditContext,
+} from '#cli/commands/edits.ts';
 
 function assertRemovable(names: string[], kept: string[], configurationsByName: Map<string, Configuration>): void {
     for (const configuration of names) {
@@ -85,12 +91,10 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     const kept = selected.filter((name) => !options.configurations.includes(name));
     assertRemovable(options.configurations, kept, configurationsByName);
     if (options.configurations.every((name) => !selected.includes(name))) {
-        const summary = `No change: ${new Intl.ListFormat('en', { type: 'conjunction' }).format(options.configurations)} ${options.configurations.length === 1 ? 'is' : 'are'} not selected.`;
-        return {
-            text: summary + '\n',
-            json: { changed: false, summary },
-            exitCode: 0,
-        };
+        const names = new Intl.ListFormat('en', { type: 'conjunction' }).format(options.configurations);
+        return buildUnchangedResult(
+            `No change: ${names} ${options.configurations.length === 1 ? 'is' : 'are'} not selected.`,
+        );
     }
     const previous = scopeTable['removed_configurations'];
     const removed = options.configurations.filter((name) => selected.includes(name));

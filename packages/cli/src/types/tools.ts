@@ -130,7 +130,7 @@ export type ArchiveDownload = {
     limit: number;
 };
 
-export type HookStatus = { ready: boolean; text: string };
+export type HookStatus = { ready: boolean; text: string; tool?: string; lines?: string[] };
 
 export type HookPlan = { command?: readonly string[]; note: string };
 

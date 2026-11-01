@@ -6,7 +6,6 @@ import { createRunCache } from '#cli/system/cache.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { findSetting } from '#cli/settings/inherit.ts';
 import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
-import type { CommandResult } from '#cli/types/system.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { PATHS_OPTION } from '#cli/config/commands/help.ts';
 import { buildArgumentPaths } from '#cli/settings/paths.ts';
@@ -14,17 +13,24 @@ import type { ApplyReport } from '#cli/types/generation.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { listRepositoryFiles } from '#cli/repository/read.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
+import type { Session, Generation } from '#cli/types/tools.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import type { Files, CommandResult } from '#cli/types/system.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { writeSettings, readSettingsFile } from '#cli/settings/file.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
 import { getScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
 import { formatApplyReport, writeGeneratedFiles } from '#cli/generation/write.ts';
-import { FIX_APPLY_MESSAGE, ADD_REMOVE_MESSAGE } from '#cli/config/commands/edits.ts';
 import { assertConfigurationsExist, assertConfigurationsEditable } from '#cli/manifests/select.ts';
 import type { Scope, Settings, TomlTable, SettingsEdit, SettingMatch, AvailableSettings } from '#cli/types/settings.ts';
 
+import {
+    FIX_APPLY_MESSAGE,
+    ADD_REMOVE_MESSAGE,
+    REPAIRED_FILES_MESSAGE,
+    UNCHANGED_SETTINGS_MESSAGE,
+} from '#cli/config/commands/edits.ts';
 import type {
     CommandOption,
     SettingsEditOptions,
@@ -178,29 +184,26 @@ export function readSetting(
 }
 
 /**
-Edit settings, check them, and write them and their generated files. Installs nothing.
+Build the result of an edit that leaves gspot.toml and the generated files unchanged.
 
-@param root the folder where gspot writes settings and generated files.
-@param options the edit and the text the report adds.
+@param summary the sentence that says why nothing changed.
+@param notes the notes of the edit.
 */
-export async function writeSettingsEdit(
-    root: string,
-    options: SettingsEditOptions,
-): Promise<CommandResult<ApplyReport & { changed: boolean; summary: string }>> {
-    const { edit, summary } = options;
-    const writer = openFiles(root);
-    const result = buildEditedSettings(root, edit);
-    options.cache?.sources.set(SETTINGS_FILE, Buffer.from(result.text));
-    const session = await openSession(root, {
-        cache: options.cache,
-        listing: options.listing,
-        settingsFile: { settings: result.settings, text: result.text },
-    });
-    const generated = buildGeneratedFiles(session);
-    writeSettings(writer, result.text, edit.previous);
-    let report: ApplyReport;
+export function buildUnchangedResult(
+    summary: string,
+    notes: string[] = [],
+): CommandResult<{ changed: false; summary: string }> {
+    const noteLines = notes.map((note) => `note     ${note}\n`);
+    return { text: `${summary}\n${noteLines.join('')}`, json: { changed: false, summary, notes }, exitCode: 0 };
+}
+
+async function writeEditedFiles(
+    session: Session,
+    generated: Generation,
+    { writer, summary }: { writer: Files; summary: string },
+): Promise<ApplyReport> {
     try {
-        report = await writeGeneratedFiles(session, generated, writer);
+        return await writeGeneratedFiles(session, generated, writer);
     } catch (error) {
         if (!(error instanceof GspotError)) throw error;
         throw new GspotError(
@@ -213,10 +216,35 @@ export async function writeSettingsEdit(
             { cause: error },
         );
     }
+}
+
+/**
+Edit settings, check them, and write them and their generated files. Installs nothing.
+
+@param root the folder where gspot writes settings and generated files.
+@param options the edit and the text the report adds.
+*/
+export async function writeSettingsEdit(
+    root: string,
+    options: SettingsEditOptions,
+): Promise<CommandResult<(ApplyReport & { changed: boolean; summary: string }) | { changed: false; summary: string }>> {
+    const { edit, summary } = options;
+    const writer = openFiles(root);
+    const result = buildEditedSettings(root, edit);
+    options.cache?.sources.set(SETTINGS_FILE, Buffer.from(result.text));
+    const session = await openSession(root, {
+        cache: options.cache,
+        listing: options.listing,
+        settingsFile: { settings: result.settings, text: result.text },
+    });
+    const generated = buildGeneratedFiles(session);
+    writeSettings(writer, result.text, edit.previous);
+    const report = await writeEditedFiles(session, generated, { writer, summary });
     report.notes.push(...(options.notes ?? []));
     const written = report.written.length + report.updated.length + report.removed.length;
-    const unchanged = written === 0 ? 'No change: gspot.toml already says this.' : 'gspot.toml already says this.';
-    const shown = result.changed ? summary : (options.unchangedSummary ?? unchanged);
+    if (!result.changed && written === 0)
+        return buildUnchangedResult(options.unchangedSummary ?? UNCHANGED_SETTINGS_MESSAGE, report.notes);
+    const shown = result.changed ? summary : (options.unchangedSummary ?? REPAIRED_FILES_MESSAGE);
     return {
         text: `${shown}\n${formatApplyReport(report)}`,
         json: { ...report, summary: shown, changed: result.changed },

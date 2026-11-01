@@ -41,7 +41,7 @@ test.each(INVALID_PRETTIER_OPTIONS)(
 async function readInitFormatOptions(root: string, commandArguments: string[]): Promise<FormatSettings[]> {
     const result = await runGspot(root, [...commandArguments, '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const text = (JSON.parse(result.stdout) as InitJson).settings;
+    const text = (JSON.parse(result.stdout) as InitJson).settingsText;
     const session = await openSession(root, { settingsFile: { settings: readSettings(text, root), text } });
     return session.scopes.map(({ settings }) => getTable(settings, 'format'));
 }
@@ -59,7 +59,7 @@ test('init reads the format settings of each scope', async () => {
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const text = (JSON.parse(result.stdout) as InitJson).settings;
+    const text = (JSON.parse(result.stdout) as InitJson).settingsText;
     const session = await openSession(sandbox.path, {
         settingsFile: { settings: readSettings(text, sandbox.path), text },
     });
@@ -102,11 +102,11 @@ test.each([...UNREADABLE_PRETTIER_FILES])(
         commitAll(sandbox.path);
         const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(0);
-        const { plan, settings } = JSON.parse(result.stdout) as InitJson;
+        const { plan, settingsText } = JSON.parse(result.stdout) as InitJson;
         expect([...plan.delete, ...plan.write].find((file) => file.path === path)?.note).toContain(
             'gspot cannot read this Prettier config, so set format.indent_width and format.print_width by hand',
         );
-        expect(parse(settings) as TomlTable).toHaveProperty('format', {
+        expect(parse(settingsText) as TomlTable).toHaveProperty('format', {
             indent_width: 2,
             print_width: 80,
             quotes: 'double',

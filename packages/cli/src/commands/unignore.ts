@@ -5,7 +5,6 @@ import type { CommandResult } from '#cli/types/system.ts';
 import { RULE_OPTION } from '#cli/config/commands/help.ts';
 import { assertCheckExists } from '#cli/manifests/read.ts';
 import type { TomlTable, IgnoreRecord } from '#cli/types/settings.ts';
-import { pathsOption, buildIgnorePaths, writeSettingsEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
 
 import {
     NO_CHECK_IGNORE_TEXTS,
@@ -19,6 +18,13 @@ import type {
     IgnoreRemoval,
     CommandDefinition,
 } from '#cli/types/commands/edits.ts';
+import {
+    pathsOption,
+    buildIgnorePaths,
+    writeSettingsEdit,
+    buildUnchangedResult,
+    readSettingsEditContext,
+} from '#cli/commands/edits.ts';
 
 function removeIgnores(table: TomlTable, options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreRemoval {
     const removed = new Set(options.paths?.map((path) => path.replaceAll(ESCAPED_GLOB_CHARACTERS, '$1')));
@@ -87,14 +93,10 @@ async function runUnignoreCommand(
     });
     const notes = formatEverywhereNote(everywhere, options.check);
     const target = formatIgnoreTarget(options);
-    if (deleted + changedIgnores === 0) {
-        const summary = notes.length === 0 ? `No change: ${target.unmatched}.` : `No change: ${notes.join(' ')}`;
-        return {
-            text: summary + '\n',
-            json: { changed: false, summary },
-            exitCode: 0,
-        };
-    }
+    if (deleted + changedIgnores === 0)
+        return buildUnchangedResult(
+            notes.length === 0 ? `No change: ${target.unmatched}.` : `No change: ${notes.join(' ')}`,
+        );
     const summary = [
         {
             count: deleted,

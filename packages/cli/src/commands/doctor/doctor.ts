@@ -23,15 +23,16 @@ import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
 import { findMissingBuild, listDistinctTools } from '#cli/tools/pins.ts';
 import type { Session, HookStatus, ToolInspection } from '#cli/types/tools.ts';
-import type { Suggestions, DoctorReport } from '#cli/types/commands/reports.ts';
+import type { CiState, Suggestions, DoctorReport } from '#cli/types/commands/reports.ts';
 import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/setup.ts';
 import { AVAILABLE_TOOL_STATES, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 
 import {
+    CI_FILES,
     VERSION_GAP,
     CI_OFF_NOTES,
+    CI_FILE_NOTES,
     COLUMN_WIDTHS,
-    CI_FILE_LABELS,
     REMOTE_URL_USER,
     TOOL_STATE_COLORS,
     REMOTE_URL_SCHEME,
@@ -100,7 +101,7 @@ function inspectScopeTools(session: Session): ToolInspection[] {
         .toSorted((left, right) => compareText(left.name, right.name));
 }
 
-async function detectCiProvider(root: string, paths: string[]): Promise<keyof typeof CI_OFF_NOTES | undefined> {
+async function detectCiProvider(root: string, paths: string[]): Promise<CiState['provider']> {
     if (paths.includes(GITLAB_CI_FILE)) return 'gitlab';
     if (paths.some((path) => path.startsWith(GITHUB_WORKFLOWS_FOLDER))) return 'github';
     const remote = (await readGitSetting(root, ORIGIN_URL_SETTING)) ?? '';
@@ -110,14 +111,20 @@ async function detectCiProvider(root: string, paths: string[]): Promise<keyof ty
     );
 }
 
-async function formatCiState(session: Session): Promise<string> {
+async function readCiState(session: Session): Promise<CiState & { text: string }> {
     const ci = session.settings.ci;
-    if (ci?.enabled === true) return CI_FILE_LABELS[ci.provider];
+    if (ci?.enabled === true) {
+        const { provider } = ci;
+        const file = CI_FILES[provider];
+        return { enabled: true, provider, file, text: `${file}${CI_FILE_NOTES[provider]}` };
+    }
     const provider = await detectCiProvider(
         session.root,
         session.repository.files.map((file) => file.path),
     );
-    return provider === undefined ? 'none' : CI_OFF_NOTES[provider];
+    return provider === undefined
+        ? { enabled: false, text: 'none' }
+        : { enabled: false, provider, text: CI_OFF_NOTES[provider] };
 }
 
 async function readHookState(session: Session): Promise<HookStatus> {
@@ -128,10 +135,8 @@ async function readHookState(session: Session): Promise<HookStatus> {
     const result = await spawnProcess(versionCommand, { cwd: session.root, timeoutSeconds: session.timeoutSeconds });
     if (result.code === 0) return hooks;
     const install = installCommand.replace('<version>', () => cliPackage.version);
-    return {
-        ready: false,
-        text: `${hooks.text}, but ${versionCommand.join(' ')} fails. Install gspot with: ${install}`,
-    };
+    const failure = `${versionCommand.join(' ')} fails. Install gspot with: ${install}`;
+    return { ...hooks, ready: false, lines: [failure], text: `${hooks.text}, but ${failure}` };
 }
 
 function listMissingEnvironments(session: Session): string[] {
@@ -141,30 +146,7 @@ function listMissingEnvironments(session: Session): string[] {
     return [...new Set(scopes)].toSorted((left, right) => compareText(left, right));
 }
 
-async function buildDoctorReport(session: Session): Promise<DoctorReport> {
-    const tools = inspectScopeTools(session);
-    const environments = listMissingEnvironments(session);
-    const hooks = await readHookState(session);
-    const isBroken =
-        !hooks.ready ||
-        environments.length > 0 ||
-        tools.some((tool) => !AVAILABLE_TOOL_STATES.has(tool.state) || tool.path === undefined);
-    return {
-        submodules: listSubmodulePaths(session.repository.index),
-        tools,
-        environments,
-        suggestions: await listSuggestions(session),
-        addCommands: listDetectedAdditions(session).map(({ scope, configurations }) =>
-            ['gspot add', ...configurations, ...(scope === '' ? [] : ['--scope', quoteArgument(scope)])].join(' '),
-        ),
-        hooks: hooks.text,
-        ci: await formatCiState(session),
-        ruleFiles: selectRuleFiles(session).length,
-        exitCode: isBroken ? EXIT_FINDINGS : 0,
-    };
-}
-
-function formatDoctorReport(report: DoctorReport): string {
+function formatDoctorReport(report: DoctorReport, states: { hooks: string; ci: string }): string {
     const lines = [
         ...formatTools(
             report.tools.filter((tool) => !AVAILABLE_TOOL_STATES.has(tool.state) || tool.path === undefined),
@@ -182,9 +164,9 @@ function formatDoctorReport(report: DoctorReport): string {
         ...(report.addCommands.length === 0
             ? []
             : [`Run ${report.addCommands.join(', then ')} to add the detected configurations.`, '']),
-        `hooks: ${report.hooks}`,
+        `hooks: ${states.hooks}`,
         ...report.submodules.map((path) => `submodule  ${path} (contents are not read)`),
-        `ci: ${report.ci}`,
+        `ci: ${states.ci}`,
         `rule files: ${String(report.ruleFiles)}`,
         `gspot      ${cliPackage.version}`,
     ];
@@ -193,11 +175,28 @@ function formatDoctorReport(report: DoctorReport): string {
 
 async function runDoctorCommand(root: string): Promise<CommandResult> {
     const session = await openSession(root);
-    const report = await buildDoctorReport(session);
+    const { text: hooksText, ...hooks } = await readHookState(session);
+    const { text: ciText, ...ci } = await readCiState(session);
+    const report: DoctorReport = {
+        submodules: listSubmodulePaths(session.repository.index),
+        tools: inspectScopeTools(session),
+        environments: listMissingEnvironments(session),
+        suggestions: await listSuggestions(session),
+        addCommands: listDetectedAdditions(session).map(({ scope, configurations }) =>
+            ['gspot add', ...configurations, ...(scope === '' ? [] : ['--scope', quoteArgument(scope)])].join(' '),
+        ),
+        hooks,
+        ci,
+        ruleFiles: selectRuleFiles(session).length,
+    };
+    const isBroken =
+        !hooks.ready ||
+        report.environments.length > 0 ||
+        report.tools.some((tool) => !AVAILABLE_TOOL_STATES.has(tool.state) || tool.path === undefined);
     return {
-        text: formatDoctorReport(report),
+        text: formatDoctorReport(report, { hooks: hooksText, ci: ciText }),
         json: report,
-        exitCode: report.exitCode,
+        exitCode: isBroken ? EXIT_FINDINGS : 0,
     };
 }
 

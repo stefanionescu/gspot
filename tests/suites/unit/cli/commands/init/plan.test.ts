@@ -70,9 +70,9 @@ test('init plans no scope for an old lint folder, and --level all replaces the c
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--json', '--level', 'all']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { plan, settings } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan' | 'settings'>>;
+    const { plan, settingsText } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan' | 'settingsText'>>;
     expect(plan.level).toBe('all');
-    expect(readSettings(settings, sandbox.path)).toMatchObject({ level: 'all', scopes: {} });
+    expect(readSettings(settingsText, sandbox.path)).toMatchObject({ level: 'all', scopes: {} });
     expect(plan.lintFolders.map(({ path }) => path)).toStrictEqual(['quality/']);
     expect(plan.delete).toStrictEqual([
         { path: '.commitlintrc.json', note: 'replaced by the generated commitlint config file' },
@@ -99,7 +99,7 @@ test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that ap
     const initialized = await runGspot(sandbox.path, ['init', '--json', '--no-configurations']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     expect(initialized.stderr).toBe('');
-    const report = JSON.parse(initialized.stdout) as Required<Pick<InitJson, 'plan' | 'settings'>>;
+    const report = JSON.parse(initialized.stdout) as Required<Pick<InitJson, 'plan' | 'settingsText'>>;
     expect(report.plan.change.map((file) => file.path)).toStrictEqual([...changes]);
     expect(await isOnDisk(join(sandbox.path, '.gitignore'))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, '.gspot/.gitignore'))).toBe(true);

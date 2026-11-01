@@ -10,8 +10,8 @@ import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/configurations/general.ts';
 import { RECORD_FIELDS, findSettingSchema } from '#cli/settings/lookup.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
-import type { Explanation, SettingScope } from '#cli/types/commands/reports.ts';
 import { findSetting, getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
+import type { Explanation, SettingScope, ExplainedSetting } from '#cli/types/commands/reports.ts';
 
 function formatSettingScope(key: string, setting: Setting, scopeSetting: SettingScope): string[] {
     const { scope, shipped, inherited } = scopeSetting;
@@ -40,12 +40,11 @@ function formatChangeLines(key: string, setting: Setting, scopeSetting: SettingS
     ];
 }
 
-function explainShippedSetting(key: string): Explanation | undefined {
+function readShippedSetting(key: string): ExplainedSetting | undefined {
     const settings = buildSettings(settingsSchema.parse({}), {});
     const available = buildAvailableSettings([...readConfigurations().values()], settings.level);
     const match = findSetting(available, key);
     if (match === undefined) return undefined;
-    const { name: _name, ...facts } = match.setting;
     const shipped = findSettingDefault(available, settings, match, '')?.value;
     const scope = { scope: '', shipped, inherited: undefined, readBy: [] };
     const owners = findSettingSchema(key)?.meta()?.['configurations'] as string[] | undefined;
@@ -54,8 +53,8 @@ function explainShippedSetting(key: string): Explanation | undefined {
             ? []
             : [`Configurations: ${new Intl.ListFormat('en', { type: 'conjunction' }).format(owners)}`];
     return {
-        kind: 'setting',
-        subject: key,
+        setting: match.setting,
+        scopes: [{ scope: '', default: shipped }],
         text: [
             key,
             '',
@@ -65,19 +64,10 @@ function explainShippedSetting(key: string): Explanation | undefined {
             ...formatSettingScope(key, match.setting, scope),
             '',
         ].join('\n'),
-        facts: { key, ...facts, scopes: [{ scope: '', default: shipped }] },
     };
 }
 
-/**
-Describe a setting's defaults, effective values, and edit commands.
-
-@param session the repository settings and selected scopes, when available.
-@param key the setting name to resolve.
-@returns undefined when no selected configuration declares the setting.
-*/
-export function explainSetting(session: Session | undefined, key: string): Explanation | undefined {
-    if (session === undefined) return explainShippedSetting(key);
+function readSessionSetting(session: Session, key: string): ExplainedSetting | undefined {
     const { settings } = session;
     const isScopeKey = findSettingSchema(key, scopeSchema) !== undefined;
     const scopes = session.scopes.flatMap((scope) => {
@@ -97,7 +87,6 @@ export function explainSetting(session: Session | undefined, key: string): Expla
     });
     const first = scopes[0];
     if (first === undefined) return undefined;
-    const { name: _name, ...settingFacts } = first.setting;
     const lines = [
         key,
         '',
@@ -106,20 +95,43 @@ export function explainSetting(session: Session | undefined, key: string): Expla
         ...scopes.flatMap((each) => formatSettingScope(key, first.setting, each)),
     ];
     return {
+        setting: first.setting,
+        text: `${lines.join('\n')}\n`,
+        scopes: scopes.map(({ scope, shipped, inherited, readBy }) => ({
+            scope,
+            default: shipped,
+            value: inherited?.value,
+            source: inherited?.source,
+            ...(readBy.length > 0 && { readBy }),
+            reason: inherited?.reason,
+        })),
+    };
+}
+
+/**
+Describe a setting's defaults, effective values, and edit commands.
+
+@param session the repository settings and selected scopes, when available.
+@param key the setting name to resolve.
+@returns undefined when no selected configuration declares the setting.
+*/
+export function explainSetting(session: Session | undefined, key: string): Explanation | undefined {
+    const explained = session === undefined ? readShippedSetting(key) : readSessionSetting(session, key);
+    if (explained === undefined) return undefined;
+    const { setting, text: explanation, scopes } = explained;
+    return {
         kind: 'setting',
         subject: key,
-        text: `${lines.join('\n')}\n`,
+        text: explanation,
         facts: {
             key,
-            ...settingFacts,
-            scopes: scopes.map(({ scope, shipped, inherited, readBy }) => ({
-                scope,
-                default: shipped,
-                value: inherited?.value,
-                source: inherited?.source,
-                ...(readBy.length > 0 && { readBy }),
-                reason: inherited?.reason,
-            })),
+            type: setting.type,
+            description: setting.description,
+            default: setting.default,
+            defaultAll: setting.default_all,
+            languageDefaults: setting.language_defaults,
+            reasonRequirement: setting.reason_when,
+            scopes,
         },
     };
 }

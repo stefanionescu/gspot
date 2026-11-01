@@ -14,6 +14,7 @@ import type { CommandDefinition, InstallCommandJson } from '#cli/types/commands/
 import {
     TOOL_PROJECT_FILES,
     TOOL_PROJECTS_MESSAGE,
+    TOOLS_CHANGED_MESSAGE,
     TOOLS_INSTALLED_MESSAGE,
     INSTALLATION_STOPPED_MESSAGE,
 } from '#cli/config/commands/edits.ts';
@@ -36,10 +37,10 @@ async function runInstallCommand(root: string, cancelSignal: AbortSignal): Promi
         generated,
         checkTools: listHostCheckTools(session.configuredChecks),
     });
-    const summary = installed.length === 0 ? TOOLS_INSTALLED_MESSAGE : installed.join('\n');
+    const isUnchanged = installed.length === 0;
     return {
-        text: `${[summary, ...notes].join('\n')}\n`,
-        json: { summary, steps, notes },
+        text: `${[...(isUnchanged ? [TOOLS_INSTALLED_MESSAGE] : installed), ...notes].join('\n')}\n`,
+        json: { summary: isUnchanged ? TOOLS_INSTALLED_MESSAGE : TOOLS_CHANGED_MESSAGE, installed, steps, notes },
         exitCode: 0,
     };
 }

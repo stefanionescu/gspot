@@ -72,7 +72,12 @@ export type IgnoreOptions = {
     reason: string;
 };
 
-export type InstallCommandJson = { summary: string; steps: readonly (readonly string[])[]; notes: string[] };
+export type InstallCommandJson = {
+    summary: string;
+    installed: string[];
+    steps: readonly (readonly string[])[];
+    notes: string[];
+};
 
 export type SetOptions = {
     root: string;
@@ -149,7 +154,7 @@ export type InitPlanning = {
     reviewed: Map<string, FileContents | undefined>;
 };
 
-export type InitJson = { root: string; plan: InitPlan; settings: string } & ApplyReport;
+export type InitJson = { root: string; plan: InitPlan; settingsText: string } & ApplyReport;
 
 export type DetectionSummary = {
     files: TrackedFile[];

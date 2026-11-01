@@ -171,8 +171,8 @@ test('init proposes a scope for a Swift package, not for a lint-only package, an
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settings' | 'plan'>>;
-    const proposed = settingsSchema.parse(parse(output.settings) as TomlTable);
+    const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settingsText' | 'plan'>>;
+    const proposed = settingsSchema.parse(parse(output.settingsText) as TomlTable);
     expect(proposed.scope!.map(({ path }) => path)).toStrictEqual(['ios']);
     expect(proposed.scope!.find(({ path }) => path === 'ios')?.configurations).toStrictEqual(['swift']);
     expect(output.plan.lintFolders).toStrictEqual([]);
@@ -211,8 +211,8 @@ test('init proposes workspace scopes without a lockfile, and writes nothing when
     const command = ['init', '--json'];
     const proposed = await runGspot(sandbox.path, command);
     expect(proposed.code, proposed.stdout + proposed.stderr).toBe(0);
-    const plan = JSON.parse(proposed.stdout) as Required<Pick<InitJson, 'settings'>>;
-    const settings = readSettings(plan.settings, sandbox.path);
+    const plan = JSON.parse(proposed.stdout) as Required<Pick<InitJson, 'settingsText'>>;
+    const settings = readSettings(plan.settingsText, sandbox.path);
     expect([...settings.scopes.keys()]).toStrictEqual(['packages/api']);
     const before = await readTree(broken.path);
     const refused = await runGspot(broken.path, command);
@@ -233,8 +233,8 @@ test('init keeps root Docker and GitHub configurations beside an app scope', asy
     });
     const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code, result.stderr).toBe(0);
-    const { settings } = JSON.parse(result.stdout) as InitJson;
-    const parsed = readSettings(settings, sandbox.path);
+    const { settingsText } = JSON.parse(result.stdout) as InitJson;
+    const parsed = readSettings(settingsText, sandbox.path);
     expect(parsed.configurations).toContain('docker');
     expect(parsed.configurations).toContain('github-actions');
     expect([...parsed.scopes.keys()]).toContain('app');
