@@ -8,12 +8,11 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { BASE_RULES } from '#cli/config/configurations/eslint.ts';
 import { CODE_LANGUAGES } from '#cli/config/configurations/blocks.ts';
-import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { MISE_TASKS_GLOB, NODE_SHEBANG_TAG } from '#cli/config/configurations/structure.ts';
-import { buildFilePatterns } from '#cli/configurations/language/javascript/eslint/files.ts';
 import type { PlannedConfig, PlannedEslintFile } from '#cli/types/configurations/language.ts';
 import { buildRuleOptions } from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
 import { buildScopeLimitRules } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
+import { buildFilePatterns, buildExtensionGlob } from '#cli/configurations/language/javascript/eslint/files.ts';
 
 function listConfigConfigurations(scopes: Scope[], scope: Scope, config: Config): Configuration[] {
     if (config.per_scope) return scope.configurations;
@@ -32,11 +31,7 @@ export function buildPlannedEslintFile(planned: PlannedConfig): PlannedEslintFil
     const { scopes } = session;
     const repositorySettings = session.settings;
     const { level } = repositorySettings;
-    const isRecognized = buildPathMatcher([
-        `**/*.{${listTaggedExtensions(...CODE_LANGUAGES)
-            .map((extension) => extension.slice(1))
-            .join(',')}}`,
-    ]);
+    const isRecognized = buildPathMatcher([buildExtensionGlob(...CODE_LANGUAGES)]);
     const nodeFiles = session.repository.files
         .filter((file) => !isRecognized(file.path) && file.kind === 'source' && file.tags.includes(NODE_SHEBANG_TAG))
         .map((file) => file.path);

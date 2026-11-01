@@ -4,9 +4,8 @@ import type { Scope } from '#cli/types/settings.ts';
 import { FOLDER_CONTENTS } from '#cli/config/system.ts';
 import { findParentScope } from '#cli/settings/scopes.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
-import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { buildNodePatterns } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { readScopeAliases, readPackageAliases } from '#cli/repository/javascript/aliases.ts';
+import { buildNodePatterns, buildExtensionGlob } from '#cli/configurations/language/javascript/eslint/files.ts';
 import type { EslintBlock, PlannedEslintFile, EslintImportBoundaryRule } from '#cli/types/configurations/language.ts';
 
 import {
@@ -42,12 +41,9 @@ export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[]): Es
         return importExtension === undefined
             ? []
             : {
-                  files: [
-                      `**/*.{${listTaggedExtensions(...CODE_LANGUAGES)
-                          .map((extension) => extension.slice(1))
-                          .join(',')}}`,
-                      ...buildNodePatterns(nodeFiles, path),
-                  ].map((pattern) => [joinScope(escapeGlob(path), '**/*'), pattern]),
+                  files: [buildExtensionGlob(...CODE_LANGUAGES), ...buildNodePatterns(nodeFiles, path)].map(
+                      (pattern) => [joinScope(escapeGlob(path), '**/*'), pattern],
+                  ),
                   ignores: listNestedScopes(
                       changed.map(({ path }) => path),
                       path,
@@ -106,12 +102,7 @@ export function buildScopeImportBlocks(planned: Pick<PlannedEslintFile, 'session
             const aliases = readScopeAliases(root, path, cache);
             return {
                 files: [
-                    joinScope(
-                        escapeGlob(path),
-                        `**/*.{${listTaggedExtensions(...CODE_LANGUAGES)
-                            .map((extension) => extension.slice(1))
-                            .join(',')}}`,
-                    ),
+                    joinScope(escapeGlob(path), buildExtensionGlob(...CODE_LANGUAGES)),
                     ...buildNodePatterns(nodeFiles, path),
                 ],
                 rules: {

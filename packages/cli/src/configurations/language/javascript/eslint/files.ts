@@ -14,6 +14,17 @@ import type {
 } from '#cli/types/configurations/language.ts';
 
 /**
+Build the glob of the files of these languages.
+
+@param languages the file tags whose extensions the glob matches.
+@returns a plain extension for one extension, because picomatch reads a one-item brace as literal text.
+*/
+export function buildExtensionGlob(...languages: string[]): string {
+    const extensions = listTaggedExtensions(...languages).map((extension) => extension.slice(1));
+    return extensions.length === 1 ? `**/*.${String(extensions[0])}` : `**/*.{${extensions.join(',')}}`;
+}
+
+/**
 Calculate the exact file sets that base blocks and the blocks of every framework share.
 
 @param groups the file sets to combine.
@@ -21,9 +32,7 @@ Calculate the exact file sets that base blocks and the blocks of every framework
 */
 export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
     const { scopes, nodeFiles } = groups;
-    const source = `**/*.{${listTaggedExtensions(...CODE_LANGUAGES)
-        .map((extension) => extension.slice(1))
-        .join(',')}}`;
+    const source = buildExtensionGlob(...CODE_LANGUAGES);
     const codeExtensions = listTaggedExtensions(...CODE_LANGUAGES);
     const selected = groups.components.flatMap(({ name, tools }) =>
         tools
@@ -38,12 +47,8 @@ export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
         '',
     );
     const code = [source, ...components, ...node];
-    const typescript = `**/*.{${listTaggedExtensions('typescript')
-        .map((extension) => extension.slice(1))
-        .join(',')}}`;
-    const javascript = `**/*.{${listTaggedExtensions('javascript')
-        .map((extension) => extension.slice(1))
-        .join(',')}}`;
+    const typescript = buildExtensionGlob('typescript');
+    const javascript = buildExtensionGlob('javascript');
     return {
         code,
         typescript: [typescript],

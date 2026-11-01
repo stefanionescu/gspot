@@ -5,7 +5,6 @@ import type { DependencyFile } from '#cli/types/parsers.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import { LIMIT_RULES_BY_CHECK } from '#cli/manifests/limits.ts';
-import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { getLimit, getTable, findParentScope } from '#cli/settings/scopes.ts';
 import { joinScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
@@ -15,6 +14,7 @@ import {
     splitGlobs,
     buildScopeFiles,
     buildNodePatterns,
+    buildExtensionGlob,
 } from '#cli/configurations/language/javascript/eslint/files.ts';
 import type {
     EslintRuleBlock,
@@ -101,9 +101,7 @@ function buildEnvironmentRuleBlocks(planned: Pick<PlannedEslintFile, 'session' |
             : {
                   scope: scope.path,
                   ...splitGlobs([
-                      `**/*.{${listTaggedExtensions(...ENVIRONMENT_LANGUAGES)
-                          .map((extension) => extension.slice(1))
-                          .join(',')}}`,
+                      buildExtensionGlob(...ENVIRONMENT_LANGUAGES),
                       ...buildNodePatterns(nodeFiles, scope.path),
                       ...owners.map((path) => `!${path}`),
                       ...listNestedScopes(
@@ -175,15 +173,8 @@ function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'no
         for (const { rules, languages } of groupTrivialRules(scope, parent, session.settings.structure.reexports)) {
             const patterns = languages.flatMap((language) =>
                 language === 'javascript'
-                    ? [
-                          `**/*.{${listTaggedExtensions('javascript')
-                              .map((extension) => extension.slice(1))
-                              .join(',')}}`,
-                          ...buildNodePatterns(nodeFiles, scope.path),
-                      ]
-                    : `**/*.{${listTaggedExtensions(...TYPED_LANGUAGES)
-                          .map((extension) => extension.slice(1))
-                          .join(',')}}`,
+                    ? [buildExtensionGlob('javascript'), ...buildNodePatterns(nodeFiles, scope.path)]
+                    : buildExtensionGlob(...TYPED_LANGUAGES),
             );
             blocks.push({ scope: scope.path, ...splitGlobs(patterns), rules });
         }
