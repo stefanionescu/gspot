@@ -1,7 +1,7 @@
-import { join, relative } from 'node:path';
 import { remember } from '#cli/system/cache.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { getTable } from '#cli/settings/scopes.ts';
+import { join, relative, normalize } from 'node:path';
 import { statSync, lstatSync, realpathSync } from 'node:fs';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
@@ -45,6 +45,17 @@ function readSiteBuild(session: CheckSession, planned: PlannedCheck): Promise<Si
         session.resources.push(folder);
         return runSiteBuild(session, planned, folder.path);
     });
+}
+
+/**
+Build the repository path of a file in the build output.
+
+@param planned the scope of the site.
+@param file the path relative to the build folder.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every site check reports its build files through this path.
+export function toBuildPath(planned: PlannedCheck, file: string): string {
+    return `${getTable(planned.scope.settings, 'site').build_folder}/${convertToPosixPath(normalize(file))}`;
 }
 
 /**

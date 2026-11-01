@@ -3,7 +3,6 @@ import { CheckStop } from '#cli/system/errors.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { escapeRegExp } from '#cli/system/text.ts';
 import { LEADING_SLASH } from '#cli/config/parsers.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
@@ -13,15 +12,15 @@ import { read, readBytes } from '#cli/system/files/reads.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { join, extname, relative, isAbsolute } from 'node:path';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { splitFileArguments } from '#cli/engine/tool-runs/batches.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { purgecssOutputSchema } from '#cli/schemas/configurations.ts';
-import { join, extname, relative, normalize, isAbsolute } from 'node:path';
 import { readSitemapUrls } from '#cli/configurations/framework/site/checks/sitemap.ts';
-import { listBuiltFiles, readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
+import { toBuildPath, listBuiltFiles, readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
 
 import {
     SITE_RULES,
@@ -52,13 +51,6 @@ function listPossiblePages(pathname: string): [string, ...string[]] {
     const path = decodeURIComponent(pathname).replace(LEADING_SLASH, '');
     if (path === '' || path.endsWith('/')) return [`${path}${INDEX_PAGE}`];
     return path.endsWith(HTML_EXTENSION) ? [path] : [path, `${path}${HTML_EXTENSION}`, `${path}/${INDEX_PAGE}`];
-}
-
-function addBuildFindings(findings: CheckFinding[], parsed: CheckFinding[], folder: string): void {
-    for (const finding of parsed) {
-        const file = `${folder}/${convertToPosixPath(normalize(finding.file))}`;
-        findings.push({ ...finding, file });
-    }
 }
 
 async function readScopeStyles(session: CheckSession, planned: PlannedCheck): Promise<string> {
@@ -124,7 +116,7 @@ export async function checkLychee(session: CheckSession, planned: PlannedCheck):
             parseOutput(planned.check, result.stdout, result.stderr, { root: build.folder, cwd: build.folder }),
             LYCHEE_TOOL,
         );
-        addBuildFindings(findings, parsed, getTable(planned.scope.settings, 'site').build_folder);
+        findings.push(...parsed.map((finding) => ({ ...finding, file: toBuildPath(planned, finding.file) })));
     }
     return findings;
 }
@@ -160,7 +152,7 @@ export async function checkHtmlValidate(session: CheckSession, planned: PlannedC
         });
         if (result.code === 1 && parsed.length === 0)
             throw new CheckStop('error', `HTML validation failed without findings: ${result.stderr}`);
-        addBuildFindings(findings, parsed, getTable(planned.scope.settings, 'site').build_folder);
+        findings.push(...parsed.map((finding) => ({ ...finding, file: toBuildPath(planned, finding.file) })));
     }
     return findings;
 }
@@ -195,7 +187,7 @@ export async function checkPurgecss(session: CheckSession, planned: PlannedCheck
                 return owned !== '' && styles.includes(owned);
             })
             .map((selector) => ({
-                file: `${getTable(planned.scope.settings, 'site')['build_folder']}/${convertToPosixPath(normalize(isAbsolute(sheet.file) ? relative(build.folder, sheet.file) : sheet.file))}`,
+                file: toBuildPath(planned, isAbsolute(sheet.file) ? relative(build.folder, sheet.file) : sheet.file),
                 line: 1,
                 rule: SITE_RULES.unusedSelector,
                 message: `No built page uses the selector ${selector.trim()}.`,
@@ -228,22 +220,15 @@ export async function checkSitemap(session: CheckSession, planned: PlannedCheck)
             ),
         )
         .map((url) => ({
-            file: `${getTable(planned.scope.settings, 'site')['build_folder']}/${convertToPosixPath(normalize(sitemapFile))}`,
+            file: toBuildPath(planned, sitemapFile),
             line: 1,
             rule: SITE_RULES.missingPage,
             message: `The sitemap lists ${url.href}, and the build wrote no such page.`,
         }));
     const unlisted = [...files]
-        .filter(
-            (path) =>
-                path.endsWith(HTML_EXTENSION) &&
-                !listed.has(path) &&
-                !isLeftOut(
-                    `${getTable(planned.scope.settings, 'site')['build_folder']}/${convertToPosixPath(normalize(path))}`,
-                ),
-        )
+        .filter((path) => path.endsWith(HTML_EXTENSION) && !listed.has(path) && !isLeftOut(toBuildPath(planned, path)))
         .map((path) => ({
-            file: `${getTable(planned.scope.settings, 'site')['build_folder']}/${convertToPosixPath(normalize(path))}`,
+            file: toBuildPath(planned, path),
             line: 1,
             rule: SITE_RULES.unlistedPage,
             message: UNLISTED_PAGE_MESSAGE,
