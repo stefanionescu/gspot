@@ -83,7 +83,7 @@ function deleteStaleSources(folder: string, files: Files, wantedFiles: Map<strin
 function openBuildCache(folder: string): Files {
     const home = readCacheFolder();
     mkdirSync(home, { recursive: true, mode: PRIVATE_FOLDER });
-    openFiles(home).createFolder(convertToPosixPath(relative(home, folder)), PRIVATE_FOLDER);
+    openFiles(home).createPrivateFolder(convertToPosixPath(relative(home, folder)));
     return openFiles(folder);
 }
 
@@ -170,7 +170,7 @@ export function prepareBuild(root: string, files: TrackedFile[], folder: string)
         files.map((file) => file.path),
     );
     deleteStaleSources(folder, cache, wantedFiles);
-    cache.createFolder(BUILD_SOURCE_FOLDER, PRIVATE_FOLDER);
+    cache.createPrivateFolder(BUILD_SOURCE_FOLDER);
     for (const [path, next] of wantedFiles) {
         const cached = cache.read(path);
         if (!isDeepStrictEqual(cached, next)) cache.write(path, next);

@@ -1,4 +1,5 @@
 import { compareText } from '#cli/system/text.ts';
+import { PRIVATE_FOLDER } from '#cli/config/files/modes.ts';
 import { readContainedPath } from '#cli/system/files/reads.ts';
 import type { Files, FileBounds } from '#cli/types/system/files.ts';
 import { extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
@@ -13,17 +14,17 @@ import {
     readBoundedKeepingLinks,
 } from '#cli/system/files/bounded.ts';
 
-function createBoundedFolder(bounds: FileBounds, path: string, mode: number): void {
+function createBoundedFolder(bounds: FileBounds, path: string): void {
     try {
         const target = preparePath(bounds, path);
         try {
-            mkdirSync(target, { mode });
+            mkdirSync(target, { mode: PRIVATE_FOLDER });
         } catch (error) {
             if (!hasErrorCode(error, 'EEXIST')) throw error;
         }
         if (!lstatSync(target).isDirectory())
             throw new GspotError('filesystem', `${path} is not a folder. Choose a folder.`);
-        chmodSync(target, mode);
+        chmodSync(target, PRIVATE_FOLDER);
     } catch (error) {
         throw buildWriteError(path, error);
     }
@@ -89,7 +90,7 @@ export function openFiles(root: string): Files {
         readKeepingLinks: (path) => readBoundedKeepingLinks(bounds, path),
         write: replaceBounded.bind(undefined, bounds),
         deleteFile: deleteBoundedFile.bind(undefined, bounds),
-        createFolder: createBoundedFolder.bind(undefined, bounds),
+        createPrivateFolder: createBoundedFolder.bind(undefined, bounds),
     };
     return files;
 }

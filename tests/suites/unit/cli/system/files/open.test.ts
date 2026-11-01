@@ -56,7 +56,7 @@ test('deleteFolder refuses linked and outside parents and keeps folders that are
             message: '"../outside/kept" is not a safe repository-relative path. Choose a path inside the repository.',
         }),
     );
-    files.createFolder('cache/empty', 0o700);
+    files.createPrivateFolder('cache/empty');
     files.deleteFolder('cache/empty');
     expect(files.readStats('cache/empty')).toBeUndefined();
     files.write('cache/kept/value', { bytes: Buffer.from('retained'), mode: 0o600 });
@@ -141,10 +141,10 @@ test.skipIf(isWindows)('writing and removing a linked file replace the link and 
     expect(await readFile(join(sandbox.path, 'outside/sentinel'), 'utf8')).toBe('authored\n');
 });
 
-test.skipIf(isWindows)('createFolder sets the folder mode', async () => {
+test.skipIf(isWindows)('createPrivateFolder sets the folder mode', async () => {
     await using sandbox = await testdir();
     const files = openFiles(sandbox.path);
-    files.createFolder('cache/private', 0o700);
+    files.createPrivateFolder('cache/private');
     const attributes = await stat(join(sandbox.path, 'cache/private'));
     expect(attributes.mode & 0o777).toBe(0o700);
 });

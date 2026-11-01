@@ -12,7 +12,7 @@ export type Files = {
     read(path: string): FileContents | undefined;
     write(path: string, value: FileContents): void;
     deleteFile(path: string): void;
-    createFolder(path: string, mode: number): void;
+    createPrivateFolder(path: string): void;
     deleteFolder(path: string): void;
     deleteTree(path: string): void;
 };
