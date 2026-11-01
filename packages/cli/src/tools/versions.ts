@@ -3,15 +3,26 @@ import { realpathSync } from 'node:fs';
 import type { Tool } from '#cli/types/manifests.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { openFiles } from '#cli/system/files/open.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { spawnProcess } from '#cli/system/processes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import type { Files, SpawnResult } from '#cli/types/system.ts';
-import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import { GSPOT_FOLDER, PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { VERSION_FLAG } from '#cli/config/repository/javascript.ts';
+import { normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
 import { readHostPackage, readToolProjectPackage } from '#cli/tools/packages.ts';
 import type { InspectedTool, ToolInspection, ParsedToolVersion } from '#cli/types/tools.ts';
-import { NO_VERSION, NPM_BIN_FOLDER, STACK_FRAME_LINE, TOOL_ENVIRONMENT } from '#cli/config/tools/programs.ts';
+
+import {
+    NO_VERSION,
+    NPM_BIN_FOLDER,
+    STACK_FRAME_LINE,
+    TOOL_ENVIRONMENT,
+    DISTRIBUTION_SUFFIX,
+    PYTHON_LIBRARY_FOLDERS,
+    PYTHON_PACKAGES_FOLDER,
+} from '#cli/config/tools/programs.ts';
 
 function findVersionAbove(files: Files | undefined, root: string, start: string, name: string): string | undefined {
     for (let folder = start; folder !== dirname(folder); folder = dirname(folder)) {
@@ -60,7 +71,7 @@ function findRunFailure(result: SpawnResult, tool: Tool, text: string): ParsedTo
     if (result.timedOut) return { state: 'error', note: `Reading the version of ${tool.name} timed out.` };
     if (result.missing) return { state: 'missing', note: text === '' ? `${tool.name} is not installed.` : text };
     if (text.includes(NO_VERSION)) return { state: 'missing', note: 'not installed' };
-    if (result.code === (tool.version_exit_code ?? 0)) return undefined;
+    if (result.code === 0) return undefined;
     const exited = `The version command of ${tool.name} exited ${String(result.code)}`;
     const detail = text
         .split('\n')
@@ -75,15 +86,40 @@ function isBelowMinimum(found: string | undefined, minimum: string | undefined):
     return version !== null && lowest !== null && semver.lt(version, lowest);
 }
 
-function parseVersionOutput(tool: Tool, result: SpawnResult, installedVersion: string | undefined): ParsedToolVersion {
-    const npm = tool.installers['npm'];
+function parseVersionOutput(tool: Tool, result: SpawnResult): ParsedToolVersion {
     const text = stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim();
-    const version = (npm?.version === tool.version ? installedVersion : undefined) ?? extractVersion(text, tool);
+    const version = extractVersion(text, tool);
     const failure = findVersionFailure(result, tool, text, version);
     if (failure !== undefined) return failure;
     return version === undefined || semver.coerce(version) === null
         ? { state: 'error', note: `${tool.name} did not report a valid version: ${text}` }
         : { version };
+}
+
+function readDistributionVersion(root: string, tool: Tool): string | undefined {
+    const name = tool.installers['pypi']?.name;
+    if (name === undefined) return undefined;
+    const files = openFiles(root);
+    const prefix = `${normalizePythonName(name)}-`;
+    const folders = PYTHON_LIBRARY_FOLDERS.flatMap((library) => {
+        const path = `${GSPOT_PATHS.pythonEnvironment}/${library}`;
+        return [path, ...files.list(path).map((name) => `${path}/${name}`)];
+    }).map((path) => `${path}/${PYTHON_PACKAGES_FOLDER}`);
+    for (const folder of folders) {
+        const found = files.list(folder).find((folderName) => {
+            return folderName.endsWith(DISTRIBUTION_SUFFIX) && normalizePythonName(folderName).startsWith(prefix);
+        });
+        if (found !== undefined) return found.slice(prefix.length, -DISTRIBUTION_SUFFIX.length);
+    }
+    return undefined;
+}
+
+function readMetadataVersion(inspected: InspectedTool, path: string): string | undefined {
+    const { root, tool } = inspected;
+    const npm = tool.installers['npm'];
+    const installed = readPackageVersion(root, path, npm?.name);
+    if (installed !== undefined && npm?.version === tool.version) return installed;
+    return tool.system === true ? undefined : (readDistributionVersion(root, tool) ?? tool.version);
 }
 
 /**
@@ -108,19 +144,20 @@ export function classifyToolVersion(
 }
 
 /**
-Read version output, using the installed package.json when the declared package supplies the executable.
+Read the version of a tool. A package.json, a Python dist-info folder, or the pin gives it for a tool that gspot
+installs. Only a system tool runs its version command.
 
 @param inspected the tool and where to run its version query.
 @param path the resolved executable.
 */
-export function readToolVersion(inspected: InspectedTool, path: string): ParsedToolVersion {
+export async function readToolVersion(inspected: InspectedTool, path: string): Promise<ParsedToolVersion> {
     const { root, cwd, tool, timeoutSeconds } = inspected;
-    const npm = tool.installers['npm'];
-    const installedVersion = readPackageVersion(root, path, npm?.name);
-    const result = spawnProcessBlocking([path, ...(tool.version_command ?? [VERSION_FLAG])], {
+    const metadataVersion = readMetadataVersion(inspected, path);
+    if (metadataVersion !== undefined) return { version: metadataVersion };
+    const result = await spawnProcess([path, ...(tool.version_command ?? [VERSION_FLAG])], {
         cwd: convertToPosixPath(relative(root, path)).startsWith(`${GSPOT_FOLDER}/`) ? join(root, GSPOT_FOLDER) : cwd,
         timeoutSeconds,
         env: TOOL_ENVIRONMENT,
     });
-    return parseVersionOutput(tool, result, installedVersion);
+    return parseVersionOutput(tool, result);
 }

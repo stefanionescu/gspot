@@ -1,16 +1,15 @@
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/engine/run.ts';
-import { test, spyOn, expect } from 'bun:test';
 import { join, toNamespacedPath } from 'node:path';
 import { openSession } from '#cli/engine/session.ts';
-import * as processes from '#cli/system/processes.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { fakeNpmTool } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { fakeNpmTool, fakeCommands } from '#tests/setup/system/fakes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { JSCPD_SCOPE_FINDINGS } from '#tests/config/configurations/general.ts';
 
@@ -32,7 +31,7 @@ test.each([1, 0])(
         const root = await prepareDuplicationSandbox(resources);
         const session = await openSession(root);
         const folders: string[] = [];
-        using _spawn = spyOn(processes, 'spawnProcess').mockImplementation((command) => {
+        using _spawn = fakeCommands('jscpd', (command) => {
             folders.push(command[command.indexOf('--output') + 1]!);
             return Promise.resolve(buildProcessResult({ code, stdout: 'The scanner could not write its report.\n' }));
         });
@@ -70,7 +69,7 @@ test.each(['relative', 'absolute', 'namespaced'])(
         };
         await createFileTree(root, { 'scripts/café.sh': 'echo clone\n', 'vendor/copy.sh': 'echo vendor\n' });
         const session = await openSession(root);
-        using _spawn = spyOn(processes, 'spawnProcess').mockImplementation(async (command) => {
+        using _spawn = fakeCommands('jscpd', async (command) => {
             const work = command[command.indexOf('--output') + 1]!;
             await writeFile(join(work, 'jscpd-report.json'), JSON.stringify(report));
             return buildProcessResult();

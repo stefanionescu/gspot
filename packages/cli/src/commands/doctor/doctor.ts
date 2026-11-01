@@ -1,11 +1,10 @@
 import { join } from 'node:path';
 import { styleText } from 'node:util';
-import { inspectTool } from '#cli/tools/inspect.ts';
+import { lookUpTool } from '#cli/tools/inspect.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { EXIT_FINDINGS } from '#cli/config/engine.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
-import { readToolBinPaths } from '#cli/tools/locate.ts';
 import { findMissingEnvironment } from '#cli/tools/uv.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
@@ -14,7 +13,6 @@ import { readGitSetting } from '#cli/repository/git/run.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { readHookStatus } from '#cli/tools/installers/hooks.ts';
 import { compareText, quoteArgument } from '#cli/system/text.ts';
-import { buildMiseInstall } from '#cli/tools/installers/mise.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { VERSION_FLAG } from '#cli/config/repository/javascript.ts';
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';
@@ -77,20 +75,19 @@ function formatSuggestions(suggestions: Suggestions): string[] {
     return sections.flat();
 }
 
-function inspectScopeTools(session: Session): DoctorTool[] {
+async function inspectScopeTools(session: Session): Promise<DoctorTool[]> {
     const platform = getOperatingSystem();
     const inspections = new Map<string, DoctorTool>();
     const pins = listDistinctTools(session.toolConfigurations).filter(
         (tool) => findMissingBuild(tool, { platform, arch: process.arch }) === undefined,
     );
-    const miseBinPaths = readToolBinPaths(session, buildMiseInstall(session.toolConfigurations).content);
     for (const { path: scopePath, configurations } of session.scopes) {
         const toolNames = new Set(
             configurations.flatMap((configuration) => configuration.tools).map((tool) => tool.name),
         );
         for (const tool of pins) {
             if (!toolNames.has(tool.name)) continue;
-            const inspection = inspectTool({ ...session, cwd: join(session.root, scopePath), miseBinPaths }, tool);
+            const inspection = await lookUpTool(session, tool, join(session.root, scopePath));
             inspections.set(JSON.stringify(inspection), { ...inspection, kind: tool.kind });
         }
     }
@@ -178,7 +175,7 @@ async function runDoctorCommand(root: string): Promise<CommandResult> {
     const { text: ciText, ...ci } = await readCiState(session);
     const report: DoctorReport = {
         submodules: listSubmodulePaths(session.repository.index),
-        tools: inspectScopeTools(session),
+        tools: await inspectScopeTools(session),
         environments: listMissingEnvironments(session),
         suggestions: await listSuggestions(session),
         addCommands: listDetectedAdditions(session).map(({ scope, configurations }) =>

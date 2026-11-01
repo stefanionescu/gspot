@@ -19,7 +19,7 @@ test('project pytest is found in its virtual environment before the global execu
     const globalPath = join(sandbox.path, 'system/pytest');
     using _lookup = fakeExecutableLookup((name) => (name === 'pytest' ? globalPath : null));
     expect(
-        listExecutablePaths(sandbox.path, 'pytest', {
+        await listExecutablePaths(sandbox.path, 'pytest', {
             folders: [join(sandbox.path, 'project')],
             timeoutSeconds: 1,
         }),
@@ -32,19 +32,19 @@ test('mise reads the tool project for one call only while it is the generated on
     const root = realpathSync(sandbox.path);
     const calls: SpawnOptions[] = [];
     using _lookup = fakeExecutableLookup((name) => (name === 'mise' ? join(root, 'bin/mise') : undefined));
-    using _spawn = spyOn(processes, 'spawnProcessBlocking').mockImplementation((_command, options) => {
+    using _spawn = spyOn(processes, 'spawnProcess').mockImplementation((_command, options) => {
         calls.push(options);
-        return buildProcessResult({ stdout: '/mise/installs/shfmt/3.12.0\n' });
+        return Promise.resolve(buildProcessResult({ stdout: '/mise/installs/shfmt/3.12.0\n' }));
     });
     const query = { timeoutSeconds: 1, project };
-    expect(readMiseBinPaths(sandbox.path, ['shfmt'], query)).toStrictEqual(['/mise/installs/shfmt/3.12.0']);
+    expect(await readMiseBinPaths(sandbox.path, ['shfmt'], query)).toStrictEqual(['/mise/installs/shfmt/3.12.0']);
     expect(calls.map((options) => options.env)).toMatchObject([
         { MISE_TRUSTED_CONFIG_PATHS: join(root, '.gspot/mise.toml'), MISE_CEILING_PATHS: root },
     ]);
     await writeFile(join(sandbox.path, '.gspot/mise.local.toml'), '[env]\n');
-    expect(readMiseBinPaths(sandbox.path, ['shfmt'], query)).toStrictEqual([]);
+    expect(await readMiseBinPaths(sandbox.path, ['shfmt'], query)).toStrictEqual([]);
     await rm(join(sandbox.path, '.gspot/mise.local.toml'));
     await writeFile(join(sandbox.path, '.gspot/mise.toml'), `${project}[env]\n`);
-    expect(readMiseBinPaths(sandbox.path, ['shfmt'], query)).toStrictEqual([]);
+    expect(await readMiseBinPaths(sandbox.path, ['shfmt'], query)).toStrictEqual([]);
     expect(calls).toHaveLength(1);
 });

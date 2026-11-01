@@ -98,11 +98,12 @@ export function listStaleLockfiles(
     return lockfiles.filter((lockfile): lockfile is StaleLockfile => lockfile !== undefined);
 }
 
-function findUvPath(install: ToolInstall, miseBinPaths: string[]): string | undefined {
+async function findUvPath(install: ToolInstall, miseBinPaths: string[]): Promise<string | undefined> {
     const { session, misePath } = install;
     if (misePath === undefined && which.sync(UV_TOOL, { nothrow: true }) === null) return undefined;
     const search = { folders: [], miseBinPaths, timeoutSeconds: session.timeoutSeconds };
-    return listExecutablePaths(session.toolsRoot, UV_TOOL, search)[0] ?? UV_TOOL;
+    const [path = UV_TOOL] = await listExecutablePaths(session.toolsRoot, UV_TOOL, search);
+    return path;
 }
 
 async function buildNpmInstall(install: ToolInstall): Promise<NpmToolInstall | undefined> {
@@ -121,7 +122,7 @@ Resolve the owned lockfiles, then install the frozen npm and Python tool project
 export async function installToolProjects(install: ToolInstall, miseBinPaths: string[]): Promise<ToolProjectsInstall> {
     const { session, writer, tools } = install;
     const installed: string[] = [];
-    const uvPath = findUvPath(install, miseBinPaths);
+    const uvPath = await findUvPath(install, miseBinPaths);
     const npm = await buildNpmInstall(install);
     const lockfiles = await planLockfiles(install, { npm, uvPath });
     writePlans(writer, planReplacements(writer, lockfiles));
@@ -148,6 +149,6 @@ export async function repairToolProjects(install: ToolInstall, miseBinPaths: str
         install.writer.deleteTree(GSPOT_PATHS.nodeModules);
         await installNpmTools(npm);
     }
-    const uvPath = kinds.has('python') ? findUvPath(install, miseBinPaths) : undefined;
+    const uvPath = kinds.has('python') ? await findUvPath(install, miseBinPaths) : undefined;
     if (uvPath !== undefined) await installPythonTools(install, uvPath, [UV_REINSTALL_FLAG]);
 }

@@ -7,9 +7,9 @@ import { runFixers } from '#cli/engine/fixes.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { findToolPath } from '#cli/tools/inspect.ts';
 import { buildRunReport } from '#cli/engine/report.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
-import { readToolBinPaths } from '#cli/tools/locate.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { findMissingEnvironment } from '#cli/tools/uv.ts';
 import { isActive, planChecks } from '#cli/engine/plan.ts';
@@ -20,8 +20,6 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { formatUnexpectedError } from '#cli/system/terminal.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import { buildMiseInstall } from '#cli/tools/installers/mise.ts';
-import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { buildBaseResult, runBuiltInCheck, normalizeResultPaths } from '#cli/engine/results.ts';
 
 import type {
@@ -66,12 +64,10 @@ async function findUnrunnableResult(
     const environment = findMissingEnvironment(session, planned);
     if (environment !== undefined) return { ...base, ...environment };
     if (planned.check.needs?.includes('docker') !== true) return undefined;
-    const docker = buildToolAvailability(
+    const docker = await findToolPath(
+        session,
         getTool(session.configurationsByName.values(), DOCKER_TOOL),
-        inspectTool(
-            { ...session, cwd: session.root, miseBinPaths: session.readMiseBinPaths() },
-            getTool(session.configurationsByName.values(), DOCKER_TOOL),
-        ),
+        session.root,
     );
     if ('status' in docker) return { ...base, status: 'missing', note: DOCKER_MISSING_MESSAGE };
     const result = await remember(session.cache, DOCKER_AVAILABILITY, session.root, () =>
@@ -202,6 +198,7 @@ async function planAfterFixes(session: CheckSession, options: RunOptions): Promi
     const fixed = buildCheckSession(
         await openSession(session.root, {
             toolsRoot: session.toolsRoot,
+            toolCache: session.toolCache,
             resources: session.resources,
             cancelSignal: session.cancelSignal,
         }),
@@ -239,23 +236,14 @@ export async function runChecks(session: Session, options: RunOptions): Promise<
 }
 
 /**
-Give a session the reader of the program folders of its mise tools, which asks mise once, when a check first needs a
-tool. The session also gets the one limiter that every tool process of its checks waits for.
+Give a session the generators of its checks, and the one limiter that every tool process of its checks waits for.
 
 @param session the repository and its tools.
 @param generation the generators called by checks when they need their output.
 */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: A check run, the session after fixers, and the tests build a check session through it, each with its own process limiter.
 export function buildCheckSession(session: Session, generation: CheckGeneration): CheckSession {
-    let miseBinPaths: string[] | undefined;
-    return {
-        ...session,
-        generation,
-        limitProcess: pLimit(availableParallelism()),
-        readMiseBinPaths: () => {
-            miseBinPaths ??= readToolBinPaths(session, buildMiseInstall(session.toolConfigurations).content);
-            return miseBinPaths;
-        },
-    };
+    return { ...session, generation, limitProcess: pLimit(availableParallelism()) };
 }
 
 /**

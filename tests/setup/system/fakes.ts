@@ -23,9 +23,11 @@ Replace the child command found by this path or program name, or without a name 
 others normally, and record only the replaced commands. Without a replacement, the replaced commands run normally too.
 */
 export function fakeCommands(name?: string, spawn?: typeof spawnProcess): Mock<typeof spawnProcess> {
-    const runProcess = processes.spawnProcess;
+    const unfaked = processes.spawnProcess;
+    const spy = spyOn(processes, 'spawnProcess');
+    const runProcess = spy.getMockImplementation() ?? unfaked;
     const fake = mock(spawn ?? runProcess);
-    const spy = spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
+    spy.mockImplementation((command, options) => {
         const replaced =
             name === undefined ? command[0] !== GIT_PROGRAM : [command[0], basename(command[0] ?? '')].includes(name);
         return replaced ? fake(command, options) : runProcess(command, options);
@@ -42,23 +44,26 @@ Fake the lookup and version output of these tools.
 */
 export function fakeToolExecutables(tools: Tool[]): DisposableStack {
     const resources = new DisposableStack();
-    const runBlocking = processes.spawnProcessBlocking;
     resources.use(
         fakeExecutableLookup((name) => {
             if (name === 'mise') return null;
             return tools.some((tool) => tool.name === name) ? join(tmpdir(), 'test-tools', name) : undefined;
         }),
     );
-    resources.use(
-        spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) => {
-            const executable = command[0]!;
-            const pin = tools.find((tool) => listExecutableNames(tool.name).includes(basename(executable)));
-            if (pin === undefined) return runBlocking(command, options);
-            const version = pin.version ?? pin.min_version;
-            if (version === undefined) throw new Error(`The test has no declared version for ${executable}.`);
-            return buildProcessResult({ stdout: version });
-        }),
-    );
+    const unfaked = processes.spawnProcess;
+    const spy = spyOn(processes, 'spawnProcess');
+    const run = spy.getMockImplementation() ?? unfaked;
+    spy.mockImplementation(async (command, options) => {
+        const executable = command[0]!;
+        const pin = tools.find((tool) => listExecutableNames(tool.name).includes(basename(executable)));
+        const versionCommand = pin?.version_command ?? ['--version'];
+        if (pin === undefined || command.slice(1).join(' ') !== versionCommand.join(' '))
+            return await run(command, options);
+        const version = pin.version ?? pin.min_version;
+        if (version === undefined) throw new Error(`The test has no declared version for ${executable}.`);
+        return buildProcessResult({ stdout: version });
+    });
+    resources.use(spy);
     return resources;
 }
 
@@ -94,7 +99,7 @@ export async function fakeNpmTool(root: string, tool: string): Promise<Tool> {
         name: installer.name,
         version: declaration.version,
         bin: tool,
-        toolArguments: ['--line', declaration.version, '--exit', String(declaration.version_exit_code ?? 0)],
+        toolArguments: ['--line', declaration.version],
     });
     return declaration;
 }

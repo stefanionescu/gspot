@@ -155,6 +155,7 @@ test('a failed version check blocks a check and its fix without changing source 
     const planned = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=changed'));
     planned.tool = {
         ...buildProgramPin('version-teller', '3.8.1'),
+        system: true,
         version_command: buildProgramArguments('fakes/tool', '--line', '3.8.1', '--exit', '7'),
     };
     planned.check.fix![0] = 'version-teller';

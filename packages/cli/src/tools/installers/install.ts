@@ -31,24 +31,31 @@ function writeToolProjects({ writer, generated }: ToolInstall): void {
     writePlans(writer, planReplacements(writer, requests));
 }
 
-function listBrokenTools(install: ToolInstall, tools: Tool[], miseBinPaths: string[]): BrokenTool[] {
+async function listBrokenTools(install: ToolInstall, tools: Tool[], miseBinPaths: string[]): Promise<BrokenTool[]> {
     const { session } = install;
     const host = { platform: getOperatingSystem(), arch: process.arch };
-    return tools
-        .filter((tool) => findMissingBuild(tool, host) === undefined)
-        .map((tool) => ({ tool, inspection: inspectTool({ ...session, inspections: new Map(), miseBinPaths }, tool) }))
-        .filter(({ tool, inspection }) => 'status' in buildToolAvailability(tool, inspection));
+    const inspected = await Promise.all(
+        tools
+            .filter((tool) => findMissingBuild(tool, host) === undefined)
+            .map(async (tool) => ({ tool, inspection: await inspectTool({ ...session, miseBinPaths }, tool) })),
+    );
+    return inspected.filter(({ tool, inspection }) => 'status' in buildToolAvailability(tool, inspection));
 }
 
 async function repairTools(install: ToolInstall, tools: Tool[], miseBinPaths: string[]): Promise<string[]> {
-    const broken = listBrokenTools(install, tools, miseBinPaths).map(({ tool }) => tool);
+    const broken = await listBrokenTools(install, tools, miseBinPaths);
     if (broken.length === 0) return [];
-    await repairToolProjects(install, miseBinPaths, broken);
+    await repairToolProjects(
+        install,
+        miseBinPaths,
+        broken.map(({ tool }) => tool),
+    );
     await reinstallMiseTools(
         install,
-        broken.flatMap((tool) => findMisePin(tool) ?? []),
+        broken.flatMap(({ tool }) => findMisePin(tool) ?? []),
     );
-    return listBrokenTools(install, tools, miseBinPaths).map(({ tool, inspection }) => {
+    const failed = await listBrokenTools(install, tools, miseBinPaths);
+    return failed.map(({ tool, inspection }) => {
         const reason = inspection.note ?? `gspot found ${inspection.found ?? 'no program'}`;
         return `${tool.name} ${tool.version ?? ''} still fails after a forced install. ${reason}`;
     });

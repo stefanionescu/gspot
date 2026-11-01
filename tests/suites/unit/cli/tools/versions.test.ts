@@ -2,30 +2,17 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { type Tool } from '#cli/types/manifests.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { UNCLOSED_SEQUENCE } from '#tests/config/setup/languages.ts';
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
 import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
+import { VERSION_OUTPUTS, SYSTEM_BASH_VERSIONS } from '#tests/config/tools/versions.ts';
 import { fakeNpmPackage, writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
-import { VERSION_OUTPUTS, SYSTEM_BASH_VERSIONS, PROGRAM_VERSION_STATES } from '#tests/config/tools/versions.ts';
 
 test('an npm tool is the version its package holds, whatever it prints', async () => {
     await using sandbox = await testdir();
     await fakeNpmPackage(sandbox.path, { name: 'teller', version: '5.0.1', toolArguments: ['--line', '4.4.2'] });
-    const inspection = inspectTool(buildToolSearch(sandbox.path), buildProgramPin('teller', '5.0.1', 'teller'));
+    const inspection = await inspectTool(buildToolSearch(sandbox.path), buildProgramPin('teller', '5.0.1', 'teller'));
     expect(inspection.found).toBe('5.0.1');
     expect(inspection.state).toBe('ok');
-});
-
-test('a program of the tool project reports its version from the gspot folder, past a config file in the repository', async () => {
-    await using sandbox = await testdir({ '.teller.yml': UNCLOSED_SEQUENCE });
-    await fakeNpmPackage(sandbox.path, {
-        name: 'teller',
-        version: '5.0.1',
-        toolArguments: ['--refuse-file', '.teller.yml', '--refuse-exit', '97', '--line', '5.0.1'],
-    });
-    const inspection = inspectTool(buildToolSearch(sandbox.path), buildProgramPin('teller', '5.0.1', 'teller'));
-    expect({ state: inspection.state, found: inspection.found }).toStrictEqual({ state: 'ok', found: '5.0.1' });
 });
 
 test('a shim that no configuration gives a version is missing, not broken', async () => {
@@ -39,7 +26,7 @@ test('a shim that no configuration gives a version is missing, not broken', asyn
         '--exit',
         '1',
     );
-    const inspection = inspectTool(buildToolSearch(sandbox.path), buildProgramPin('shimmed', '3.8.1'));
+    const inspection = await inspectTool(buildToolSearch(sandbox.path), buildProgramPin('shimmed', '3.8.1'));
     expect(inspection.state).toBe('missing');
     expect(inspection.want).toBe('3.8.1');
 });
@@ -49,11 +36,14 @@ test.each([...VERSION_OUTPUTS])(
     async ({ toolArguments, state, found, note }) => {
         await using sandbox = await testdir();
         using _which = fakeExecutableLookup(process.execPath);
-        const tool = {
-            ...buildProgramPin('version-teller', '3.8.1'),
+        const tool: Tool = {
+            name: 'version-teller',
+            kind: 'program',
+            system: true,
+            installers: {},
             version_command: buildProgramArguments('fakes/tool', ...toolArguments),
         };
-        const inspection = inspectTool(buildToolSearch(sandbox.path), tool);
+        const inspection = await inspectTool(buildToolSearch(sandbox.path), tool);
         expect({ state: inspection.state, found: inspection.found, note: inspection.note }).toStrictEqual({
             state,
             found,
@@ -61,35 +51,6 @@ test.each([...VERSION_OUTPUTS])(
         });
     },
 );
-
-test('an npm package version does not hide a failed program', async () => {
-    await using sandbox = await testdir();
-    await fakeNpmPackage(sandbox.path, {
-        name: 'teller',
-        version: '5.0.1',
-        toolArguments: ['--line', '5.0.1', '--exit', '7'],
-    });
-    const inspection = inspectTool(buildToolSearch(sandbox.path), buildProgramPin('teller', '5.0.1', 'teller'));
-    expect(inspection.state).toBe('error');
-    expect(inspection.note).toBe('The version command of teller exited 7: 5.0.1');
-});
-
-test('a manifest can declare the exit code of its version command without accepting other failures', async () => {
-    await using sandbox = await testdir();
-    using _which = fakeExecutableLookup(process.execPath);
-    const tool = {
-        ...buildProgramPin('version-help', '3.8.1'),
-        version_command: buildProgramArguments('fakes/tool', '--line', 'version-help 3.8.1', '--exit', '2'),
-        version_exit_code: 2,
-    };
-    const context = buildToolSearch(sandbox.path);
-    const inspection = inspectTool(context, tool);
-    expect(inspection.state).toBe('ok');
-    expect(inspection.found).toBe('3.8.1');
-    const failed = inspectTool(context, { ...tool, version_exit_code: 0 });
-    expect(failed.state).toBe('error');
-    expect(failed.note).toBe('The version command of version-help exited 2: version-help 3.8.1');
-});
 
 test.each([...SYSTEM_BASH_VERSIONS])(
     'a system bash that prints %s is %s against the 4.4 minimum',
@@ -105,30 +66,22 @@ test.each([...SYSTEM_BASH_VERSIONS])(
             version_command: buildProgramArguments('fakes/tool', '--line', `GNU bash, version ${version}(1)-release`),
             version_pattern: String.raw`version (\d+\.\d+(?:\.\d+)?)`,
         };
-        const inspection = inspectTool(buildToolSearch(sandbox.path), tool);
+        const inspection = await inspectTool(buildToolSearch(sandbox.path), tool);
         expect(inspection).toMatchObject({ state, found: version, minimumVersion: '4.4' });
     },
 );
 
-test.each([...PROGRAM_VERSION_STATES])(
-    'a wrapper with its own version runs program %s and reports %s',
-    async (version, state) => {
-        await using sandbox = await testdir({
-            [`${GSPOT_PATHS.nodeModules}/wrapper/package.json`]: '{"name":"wrapper","version":"0.7.0"}',
-        });
-
-        await writeProgramCommand(
-            sandbox.path,
-            `${GSPOT_PATHS.nodeModules}/.bin/wrapped`,
-            'fakes/tool',
-            '--line',
-            version,
-        );
-        const tool = buildProgramPin('wrapped', '0.10.0');
-        tool.min_version = '0.9.0';
-        tool.installers['npm'] = { name: 'wrapper', version: '0.7.0' };
-        const inspection = inspectTool(buildToolSearch(sandbox.path), tool);
-        expect(inspection.found).toBe(version);
-        expect(inspection.state).toBe(state);
-    },
-);
+test('a Python tool is the version of its dist-info folder, whatever it prints', async () => {
+    await using sandbox = await testdir({
+        '.gspot/.venv/lib/python3.13/site-packages/some_tool-1.2.3.dist-info/METADATA': '',
+    });
+    await writeProgramCommand(sandbox.path, '.gspot/.venv/bin/some-tool', 'fakes/tool', '--line', '9.9.9');
+    const tool: Tool = {
+        name: 'some-tool',
+        kind: 'program',
+        version: '1.2.4',
+        installers: { pypi: { name: 'some-tool', version: '1.2.4' } },
+    };
+    const inspection = await inspectTool(buildToolSearch(sandbox.path), tool);
+    expect(inspection).toMatchObject({ found: '1.2.3', state: 'outdated' });
+});

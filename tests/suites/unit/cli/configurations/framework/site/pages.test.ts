@@ -1,10 +1,9 @@
 import { join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { getTool } from '#cli/tools/pins.ts';
 import { writeFile } from 'node:fs/promises';
-import { test, spyOn, expect } from 'bun:test';
 import { escapeRegExp } from '#cli/system/text.ts';
-import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
@@ -14,7 +13,7 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { writeProgramCommand, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
+import { fakeCommands, writeProgramCommand, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { INVALID_SITEMAP_URLS, PURGECSS_STYLE_CASES } from '#tests/config/configurations/framework.ts';
 
 test('a sitemap index supplies the base path for encoded and CDATA page URLs and Lychee remaps', async () => {
@@ -32,10 +31,8 @@ test('a sitemap index supplies the base path for encoded and CDATA page URLs and
     });
     expect(await runSandboxCheck(sandbox.path, 'site/sitemap')).toStrictEqual([]);
     using _pins = fakeToolExecutables([getTool(readConfigurations().values(), 'lychee')]);
-    const spawn = processes.spawnProcess;
     const remaps: string[][] = [];
-    using _spawn = spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
-        if (!command.includes('--remap')) return spawn(command, options);
+    using _spawn = fakeCommands('lychee', (command, options) => {
         const mappings = command.filter((_, index) => command[index - 1] === '--remap');
         const buildUrl = `${pathToFileURL(options.cwd).href}/`;
         remaps.push(

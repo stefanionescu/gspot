@@ -1,3 +1,4 @@
+import { createRunCache } from '#cli/system/cache.ts';
 import { readGitLines } from '#cli/repository/git/run.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
@@ -87,8 +88,9 @@ export async function runPushCheck(
     const revisions: PushReport['revisions'] = [];
     const text: string[] = selected.revisions.length === 0 && selected.skipped.length === 0 ? [EMPTY_PUSH_MESSAGE] : [];
     let revisionCount = 0;
+    const toolCache = createRunCache(root);
     for (const revision of selected.revisions) {
-        const result = await runRevisionCheck(root, options, cancelSignal, revision);
+        const result = await runRevisionCheck(root, { ...options, toolCache }, cancelSignal, revision);
         if (result === undefined) break;
         revisionCount += 1;
         if ('skipped' in result) {

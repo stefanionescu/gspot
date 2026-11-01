@@ -28,6 +28,12 @@ export const PROJECT_ENVIRONMENT_MESSAGE = 'The project environment .venv is mis
 
 export const NO_VERSION = 'No version is set for shim';
 
+export const PYTHON_LIBRARY_FOLDERS = ['lib', 'Lib'] as const;
+
+export const PYTHON_PACKAGES_FOLDER = 'site-packages';
+
+export const DISTRIBUTION_SUFFIX = '.dist-info';
+
 export const ESLINT_BUILTIN_RULES = 'eslint/use-at-your-own-risk';
 
 export const INSTALL_FOR_RULES_MESSAGE =

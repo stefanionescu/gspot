@@ -4,7 +4,6 @@ import { readLintRuleDocs } from '#cli/tools/rules.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { hasRuleOutput } from '#cli/engine/outputs/formats.ts';
-import { buildMiseInstall } from '#cli/tools/installers/mise.ts';
 import type { Session, LintRuleDocs, RuleDocsOptions } from '#cli/types/tools.ts';
 
 /**
@@ -28,8 +27,7 @@ export async function readCheckRuleDocs(
     const options: RuleDocsOptions = {};
     if (session !== undefined) {
         options.timeoutSeconds = session.timeoutSeconds;
-        options.readMiseBinPaths = () =>
-            readToolBinPaths(session, buildMiseInstall(session.toolConfigurations).content);
+        options.readMiseBinPaths = () => readToolBinPaths(session);
     }
     return await readLintRuleDocs(root, tool, identifier, options);
 }

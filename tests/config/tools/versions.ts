@@ -79,14 +79,14 @@ export const VERSION_OUTPUTS = [
     {
         name: 'a version on stderr',
         toolArguments: ['--stderr', '3.8.1\n'],
-        state: 'ok',
+        state: 'system',
         found: '3.8.1',
         note: undefined,
     },
     {
         name: 'a version between color codes',
         toolArguments: ['--line', 'version-teller \u001B[1;36m3.8.1\u001B[0m using more'],
-        state: 'ok',
+        state: 'system',
         found: '3.8.1',
         note: undefined,
     },
@@ -95,9 +95,4 @@ export const VERSION_OUTPUTS = [
 export const SYSTEM_BASH_VERSIONS = [
     ['3.2.57', 'outdated'],
     ['5.2.0', 'system'],
-] as const;
-
-export const PROGRAM_VERSION_STATES = [
-    ['0.9.0', 'ok'],
-    ['0.8.0', 'outdated'],
 ] as const;

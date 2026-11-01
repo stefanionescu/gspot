@@ -48,8 +48,8 @@ test('custom Worker type settings reach wrangler types as --env-interface', asyn
     commitAll(sandbox.path);
     const session = await openSession(sandbox.path);
     using resources = new DisposableStack();
-    resources.use(await fakeWrangler(sandbox.path));
     const run = resources.use(fakeWranglerTypes(source));
+    resources.use(await fakeWrangler(sandbox.path));
     const planned = planSandboxCheck(session, 'cloudflare/stale-types', { scope: 'workers/api' });
     const result = await runCheckCode(
         buildCheckSession(session, CHECK_GENERATION),
@@ -75,8 +75,8 @@ test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and 
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, 'cloudflare-env.d.ts'), source);
     using resources = new DisposableStack();
-    resources.use(await fakeWrangler(sandbox.path));
     const run = resources.use(fakeWranglerTypes(source));
+    resources.use(await fakeWrangler(sandbox.path));
     const untracked = await openSession(sandbox.path);
     const untrackedCheck = planSandboxCheck(untracked, 'cloudflare/stale-types');
     const untrackedResult = await runCheckCode(

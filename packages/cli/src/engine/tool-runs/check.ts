@@ -2,6 +2,7 @@ import { join, relative } from 'node:path';
 import { getTool } from '#cli/tools/pins.ts';
 import { find } from '#cli/system/files/reads.ts';
 import type { Tool } from '#cli/types/manifests.ts';
+import { findToolPath } from '#cli/tools/inspect.ts';
 import { listOtherTools } from '#cli/engine/tools.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
@@ -10,7 +11,6 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import type { Session, ProcessFailure } from '#cli/types/tools.ts';
 import { buildCommandLines } from '#cli/engine/tool-runs/batches.ts';
-import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/engine/results.ts';
 import { hasProjectCoverage, stripCoverageArguments } from '#cli/engine/plan.ts';
 import { listCopyPythonArguments, buildCopyPythonEnvironment } from '#cli/tools/uv.ts';
@@ -111,7 +111,7 @@ async function runInFolder(run: FolderRun): Promise<CheckResult> {
             : undefined;
     const folder = options.copyRoot ?? copy?.path;
     const commandSetup = buildCommandLaunch(planned, { session, command, root: folder ?? session.root, toolPath });
-    commandSetup.env = buildOtherToolEnvironment(
+    commandSetup.env = await buildOtherToolEnvironment(
         session,
         listOtherTools(planned.scope, planned.check, command),
         commandSetup.env,
@@ -128,18 +128,15 @@ async function runInFolder(run: FolderRun): Promise<CheckResult> {
     return { ...result, command: reported.filter((argument) => typeof argument === 'string') };
 }
 
-function findMissingOtherTool(
+async function findMissingOtherTool(
     session: CheckSession,
     planned: PlannedCheck,
     command: string[],
     cwd: string,
-): ProcessFailure | undefined {
+): Promise<ProcessFailure | undefined> {
     for (const name of listOtherTools(planned.scope, planned.check, command)) {
         const required = getTool(session.configurationsByName.values(), name);
-        const availability = buildToolAvailability(
-            required,
-            inspectTool({ ...session, cwd: cwd, miseBinPaths: session.readMiseBinPaths() }, required),
-        );
+        const availability = await findToolPath(session, required, cwd);
         if ('status' in availability) return availability;
     }
     return undefined;
@@ -279,12 +276,9 @@ export async function runCommandCheck(
     const configs = options.listConfigs?.(session, planned) ?? [];
     const missing = findMissingConfig(planned, { session, command, base, configs });
     if (missing !== undefined) return missing;
-    const availability = buildToolAvailability(
-        tool,
-        inspectTool({ ...session, cwd: cwd, miseBinPaths: session.readMiseBinPaths() }, tool),
-    );
+    const availability = await findToolPath(session, tool, cwd);
     if ('status' in availability) return { ...base, ...availability };
-    const otherToolFailure = findMissingOtherTool(session, planned, command, cwd);
+    const otherToolFailure = await findMissingOtherTool(session, planned, command, cwd);
     return otherToolFailure === undefined
         ? await runInFolder({
               session,

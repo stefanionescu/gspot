@@ -5,7 +5,6 @@ import { test, spyOn, expect } from 'bun:test';
 import { listMisePins } from '#cli/tools/pins.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { MiseToolPin } from '#cli/types/tools.ts';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -78,10 +77,6 @@ test.each(['manual'] as const)(
         using _environment = overrideEnvironment({ MISE_CEILING_PATHS: sandbox.path });
         const pins = listMisePins(session.toolConfigurations);
         const audited = new Map(pins.map((pin) => [pin.name, pin.checksums['linux-x64']]));
-        const runBlocking = processes.spawnProcessBlocking;
-        using _paths = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
-            command[0] === 'mise' ? buildProcessResult() : runBlocking(command, options),
-        );
         using _commands = fakeCommands('mise', async (command, options) => {
             if (command[1] === 'lock') {
                 expect(options.env).toHaveProperty('MISE_TRUSTED_CONFIG_PATHS', options.cwd);
@@ -130,10 +125,6 @@ test('mise fills missing release checksums from the audited pins without fetchin
     await createFileTree(sandbox.path, { [project.path]: project.content });
     const url = 'https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-linux-x86_64.gz';
     const audited = new Map(listMisePins(session.toolConfigurations).map((pin) => [pin.name, pin.checksums]));
-    const runBlocking = processes.spawnProcessBlocking;
-    using _paths = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
-        command[0] === 'mise' ? buildProcessResult() : runBlocking(command, options),
-    );
     const respond = Object.assign(() => Promise.resolve(new Response('archive')), { preconnect: fetch.preconnect });
     using request = spyOn(globalThis, 'fetch').mockImplementation(respond);
     using _commands = fakeCommands('mise', async (command, options) => {

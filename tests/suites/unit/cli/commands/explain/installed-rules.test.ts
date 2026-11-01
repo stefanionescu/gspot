@@ -1,13 +1,12 @@
+import { test, expect } from 'bun:test';
 import { tmpdir, devNull } from 'node:os';
 import { join, dirname } from 'node:path';
 import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
-import { test, spyOn, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
-import * as processes from '#cli/system/processes.ts';
+import { buildMiseInstall } from '#cli/tools/pins.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { createRunResources } from '#tests/setup/cli/run.ts';
-import { buildMiseInstall } from '#cli/tools/installers/mise.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -62,10 +61,7 @@ test('SwiftLint validates rules with installed metadata and an empty explicit co
         if (name === 'swiftlint') return null;
         return name === 'mise' ? join(tmpdir(), 'mise') : undefined;
     });
-    const blocking = processes.spawnProcessBlocking;
-    using _bins = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
-        command[1] === 'bin-paths' ? buildProcessResult({ stdout: dirname(executable) }) : blocking(command, options),
-    );
+    using _bins = fakeCommands('mise', () => Promise.resolve(buildProcessResult({ stdout: dirname(executable) })));
     using commands = fakeCommands(executable).mockImplementation((command) =>
         Promise.resolve(
             command.at(-1) === 'force_cast'

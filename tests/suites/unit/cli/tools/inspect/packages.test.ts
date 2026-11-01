@@ -6,10 +6,9 @@ import { inspectTool } from '#cli/tools/inspect.ts';
 import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import type { GspotError } from '#cli/system/errors.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildToolSearch } from '#tests/setup/cli/tools.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { unlink, symlink, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
@@ -24,21 +23,21 @@ test('a library is found only in the tool project', async () => {
     });
 
     expect(
-        inspectTool(buildToolSearch(sandbox.path), {
+        await inspectTool(buildToolSearch(sandbox.path), {
             name: 'globals',
             kind: 'package' as const,
             version: '17.12.0',
             installers: { npm: { name: 'globals', version: '17.12.0' } },
-        }).state,
-    ).toBe('ok');
+        }),
+    ).toMatchObject({ state: 'ok' });
     expect(
-        inspectTool(buildToolSearch(sandbox.path), {
+        await inspectTool(buildToolSearch(sandbox.path), {
             name: 'eslint-plugin-n',
             kind: 'package' as const,
             version: '18.3.0',
             installers: { npm: { name: 'eslint-plugin-n', version: '18.3.0' } },
-        }).state,
-    ).toBe('missing');
+        }),
+    ).toMatchObject({ state: 'missing' });
 });
 
 test('an absent library is missing, and one above its pin is newer', async () => {
@@ -46,7 +45,7 @@ test('an absent library is missing, and one above its pin is newer', async () =>
         [`${GSPOT_PATHS.nodeModules}/typescript/package.json`]: '{"name":"typescript","version":"6.0.0"}',
     });
 
-    const absent = inspectTool(buildToolSearch(sandbox.path), {
+    const absent = await inspectTool(buildToolSearch(sandbox.path), {
         name: 'eslint-plugin-regexp',
         kind: 'package' as const,
         version: '3.3.0',
@@ -54,7 +53,7 @@ test('an absent library is missing, and one above its pin is newer', async () =>
     });
     expect(absent.state).toBe('missing');
     expect(absent.want).toBe('3.3.0');
-    const laterVersion = inspectTool(buildToolSearch(sandbox.path), {
+    const laterVersion = await inspectTool(buildToolSearch(sandbox.path), {
         name: 'typescript',
         kind: 'package' as const,
         version: '0.0.0-test',
@@ -73,33 +72,33 @@ test('a system library is read from the requested project, not from the tool pro
 
     const tool = getTool(readConfigurations().values(), '@vitest/coverage-v8');
     const context = buildToolSearch(sandbox.path, { cwd: join(sandbox.path, 'app') });
-    expect(inspectTool(context, tool)).toMatchObject({ name: tool.name, state: 'missing' });
+    expect(await inspectTool(context, tool)).toMatchObject({ name: tool.name, state: 'missing' });
     await using project = await testdir();
     const selected = buildToolSearch(project.path, { cwd: join(project.path, 'app') });
     await createFileTree(project.path, {
         'app/node_modules/@vitest/coverage-v8/package.json': '{"name":"@vitest/coverage-v8","version":"4.1.11"}',
     });
-    expect(inspectTool(selected, tool)).toMatchObject({
+    expect(await inspectTool(selected, tool)).toMatchObject({
         name: tool.name,
         state: 'system',
         found: '4.1.11',
         path: join(project.path, 'app/node_modules/@vitest/coverage-v8/package.json'),
     });
-    expect(inspectTool(buildToolSearch(sandbox.path), tool).state).toBe('missing');
+    expect(await inspectTool(buildToolSearch(sandbox.path), tool)).toMatchObject({ state: 'missing' });
     await createFileTree(project.path, { 'app/node_modules/@vitest/coverage-v8/package.json': '{invalid' });
-    expect(() => inspectTool(buildToolSearch(project.path, { cwd: join(project.path, 'app') }), tool)).toThrow(
-        'package.json:1:2 is not valid JSON:',
-    );
+    const search = buildToolSearch(project.path, { cwd: join(project.path, 'app') });
+    const failure = await captureRejection(inspectTool(search, tool));
+    expect(failure.message).toContain('package.json:1:2 is not valid JSON:');
 });
 
 test.each([...SYSTEM_PLUGIN_REPORTS])('a system plugin query classifies the $name report', async (report) => {
     await using sandbox = await testdir();
     const tool = getTool(readConfigurations().values(), 'pytest-cov');
     using _which = fakeExecutableLookup('/native/pytest');
-    using versionRun = spyOn(processes, 'spawnProcessBlocking').mockReturnValue(
+    using versionRun = spyOn(processes, 'spawnProcess').mockResolvedValue(
         buildProcessResult({ code: report.code, stdout: report.stdout, missing: report.missing }),
     );
-    const inspected = inspectTool(buildToolSearch(sandbox.path, { cwd: join(sandbox.path, 'app') }), tool);
+    const inspected = await inspectTool(buildToolSearch(sandbox.path, { cwd: join(sandbox.path, 'app') }), tool);
     expect(inspected).toStrictEqual({
         name: 'pytest-cov',
         path: '/native/pytest',
@@ -129,15 +128,12 @@ test('a library linked inside the tool project is accepted and one linked outsid
         version: '17.12.0',
         installers: { npm: { name: 'globals', version: '17.12.0' } },
     };
-    expect(inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '17.12.0' });
+    expect(await inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '17.12.0' });
     await unlink(link);
     await symlink(outside.path, link);
-    context.inspections.clear();
-    expect(() => inspectTool(context, tool)).toThrow(
-        new Error(
-            `${GSPOT_PATHS.nodeModules}/globals/package.json links to a file outside the repository. Replace the link with the file.`,
-        ),
-    );
+    expect(await captureRejection(inspectTool(context, tool))).toMatchObject({
+        message: `${GSPOT_PATHS.nodeModules}/globals/package.json links to a file outside the repository. Replace the link with the file.`,
+    });
 });
 
 test('library reads are kept per session and see a new install in the next session', async () => {
@@ -153,20 +149,20 @@ test('library reads are kept per session and see a new install in the next sessi
         version: '1.0.0',
         installers: { npm: { name: 'example', version: '1.0.0' } },
     };
-    expect(inspectTool(session, pin).state).toBe('missing');
+    expect(await inspectTool(session, pin)).toMatchObject({ state: 'missing' });
     await createFileTree(sandbox.path, {
         [`${GSPOT_PATHS.nodeModules}/example/package.json`]: '{"name":"example","version":"1.0.0"}',
     });
     const next = await openSession(sandbox.path);
-    expect(inspectTool(next, pin).state).toBe('ok');
+    expect(await inspectTool(next, pin)).toMatchObject({ state: 'ok' });
     expect(
-        inspectTool(next, {
+        await inspectTool(next, {
             name: 'example',
             kind: 'package' as const,
             version: '2.0.0',
             installers: { npm: { name: 'example', version: '2.0.0' } },
-        }).state,
-    ).toBe('outdated');
+        }),
+    ).toMatchObject({ state: 'outdated' });
 });
 
 test.each([...PACKAGE_METADATA_FAILURES])(
@@ -183,14 +179,12 @@ test.each([...PACKAGE_METADATA_FAILURES])(
             version: '5.0.1',
             installers: { npm: { name: 'teller', version: '5.0.1' } },
         };
-        expect(() => inspectTool(context, tool)).toThrow(
-            matchFields<GspotError>({
-                name: 'GspotError',
-                code: 'parse',
-                message: `${path}: ${field}: Invalid input: expected string, received boolean. Fix the field.`,
-            }),
-        );
+        expect(await captureRejection(inspectTool(context, tool))).toMatchObject({
+            name: 'GspotError',
+            code: 'parse',
+            message: `${path}: ${field}: Invalid input: expected string, received boolean. Fix the field.`,
+        });
         await writeFile(path, '{"name":"teller","version":"5.0.1"}');
-        expect(inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });
+        expect(await inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });
     },
 );

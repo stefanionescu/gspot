@@ -40,14 +40,7 @@ async function prepareSupabaseCheck(
     const supabase = executables.sync('supabase', { path: bin });
     const docker = executables.sync('docker', { path: bin });
     const requests: { commandArguments: string[]; cwd: string }[] = [];
-    const { spawnProcessBlocking: blocking, spawnProcess: spawn } = processes;
-    resources.use(
-        spyOn(processes, 'spawnProcessBlocking').mockImplementation((commandArguments, options) => {
-            if (![supabase, docker].includes(commandArguments[0] ?? '')) return blocking(commandArguments, options);
-            const stdout = commandArguments[0] === docker ? 'Docker version 29.2.1\n' : '2.75.0\n';
-            return buildProcessResult({ stdout });
-        }),
-    );
+    const { spawnProcess: spawn } = processes;
     resources.use(
         fakeExecutableLookup((name) =>
             new Map([
@@ -58,6 +51,10 @@ async function prepareSupabaseCheck(
     );
     resources.use(
         spyOn(processes, 'spawnProcess').mockImplementation(async (commandArguments, options) => {
+            if (commandArguments.at(-1) === '--version' && [supabase, docker].includes(commandArguments[0] ?? ''))
+                return buildProcessResult({
+                    stdout: commandArguments[0] === docker ? 'Docker version 29.2.1\n' : '2.75.0\n',
+                });
             if (commandArguments[0] !== supabase) return spawn(commandArguments, options);
             requests.push({ commandArguments: commandArguments.slice(1), cwd: options.cwd });
             return result;

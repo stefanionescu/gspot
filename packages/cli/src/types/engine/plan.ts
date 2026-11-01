@@ -76,13 +76,14 @@ export type CheckDescription = {
 export type SessionOptions = {
     toolsRoot?: string;
     cache?: RunCache | undefined;
+    toolCache?: RunCache | undefined;
     listing?: RepositoryListing | undefined;
     settingsFile?: SettingsFile;
     resources?: Disposable[];
     cancelSignal?: AbortSignal | undefined;
 };
 
-type SettingsFile = {
+export type SettingsFile = {
     settings: Settings;
     text: string;
 };

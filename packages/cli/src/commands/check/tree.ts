@@ -173,6 +173,7 @@ export async function runTreeCheck(
     try {
         const session = await openSession(treeFolder, {
             toolsRoot: revision?.toolsRoot ?? treeFolder,
+            toolCache: options.toolCache,
             resources,
             cancelSignal,
         });

@@ -3,6 +3,7 @@ import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
+import { findToolPath } from '#cli/tools/inspect.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
@@ -12,7 +13,6 @@ import { isReportedCrash } from '#cli/engine/tool-runs/output.ts';
 import { listCopyFiles } from '#cli/engine/tool-runs/placeholders.ts';
 import type { SpawnResult, FileContents } from '#cli/types/system.ts';
 import { FIX_ROUNDS, FIX_CANCELED_MESSAGE } from '#cli/config/engine.ts';
-import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 import { buildCommandLaunch, selectCommandFolder } from '#cli/engine/tool-runs/check.ts';
 
@@ -98,17 +98,7 @@ async function runFixTool(
         listConfigs: code?.listConfigs,
     };
     const selected = { ...planned, tool };
-    const availability = buildToolAvailability(
-        tool,
-        inspectTool(
-            {
-                ...session,
-                cwd: selectCommandFolder(session.root, selected),
-                miseBinPaths: session.readMiseBinPaths(),
-            },
-            tool,
-        ),
-    );
+    const availability = await findToolPath(session, tool, selectCommandFolder(session.root, selected));
     if ('status' in availability)
         return { check: planned.check.id, status: 'failed', changed: [], note: availability.note };
     const toolPath = availability.path;

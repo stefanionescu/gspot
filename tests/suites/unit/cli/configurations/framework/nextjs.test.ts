@@ -63,14 +63,12 @@ function fakeNextjsCommands(spawn: (command: readonly string[], options: AsyncSp
     const commands: string[][] = [];
     resources.use(fakeExecutableLookup(process.execPath));
     resources.use(
-        spyOn(processes, 'spawnProcessBlocking').mockImplementation((command) => {
-            return buildProcessResult({
-                stdout: basename(command[0] ?? '') === 'next' ? 'Next.js v16.3.5' : 'Version 0.0.0-test',
-            });
-        }),
-    );
-    resources.use(
         spyOn(processes, 'spawnProcess').mockImplementation(async (command, options) => {
+            if (command[1] === 'bin-paths') return buildProcessResult();
+            if (command.at(-1) === '--version')
+                return buildProcessResult({
+                    stdout: basename(command[0] ?? '') === 'next' ? 'Next.js v16.3.5' : 'Version 0.0.0-test',
+                });
             const cwd = options.cwd;
             folders.push(cwd);
             commands.push([...command]);

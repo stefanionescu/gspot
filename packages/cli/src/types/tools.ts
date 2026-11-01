@@ -76,10 +76,10 @@ export type Session = {
     toolConfigurations: Configuration[];
     timeoutSeconds: number;
     root: string;
-    inspections: Map<string, ToolInspection>;
     startRunner: StartRunner;
     toolsRoot: string;
     cache: RunCache;
+    toolCache: RunCache;
     resources: Disposable[];
     packageManager: PackageManagerPin | undefined;
     cancelSignal?: AbortSignal | undefined;
@@ -119,7 +119,6 @@ export type ToolSearch = {
     root: string;
     toolsRoot?: string;
     cwd?: string;
-    inspections: Map<string, ToolInspection>;
     miseBinPaths?: string[];
 };
 
@@ -229,7 +228,12 @@ export type InstalledDependency = { path: string; version: string | undefined };
 
 export type RuleDocsOptions = {
     timeoutSeconds?: number | undefined;
-    readMiseBinPaths?: (() => string[]) | undefined;
+    readMiseBinPaths?: (() => Promise<string[]>) | undefined;
 };
+
+export type ToolLookupSession = Pick<
+    Session,
+    'root' | 'scopes' | 'toolCache' | 'toolsRoot' | 'timeoutSeconds' | 'toolConfigurations'
+>;
 
 export type RuleToolSearch = RuleDocsOptions & { timeoutSeconds: number };

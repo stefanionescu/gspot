@@ -1,17 +1,18 @@
 import which from 'which';
+import { remember } from '#cli/system/cache.ts';
 import { statSync, realpathSync } from 'node:fs';
-import { listMisePins } from '#cli/tools/pins.ts';
 import type { Files } from '#cli/types/system.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { spawnProcessBlocking } from '#cli/system/processes.ts';
+import { spawnProcess } from '#cli/system/processes.ts';
 import { LINE_BREAK, GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import type { Session, ExecutableSearch } from '#cli/types/tools.ts';
+import { listMisePins, buildMiseInstall } from '#cli/tools/pins.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { GSPOT_PATHS, MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { findProgram, filterOutsidePaths } from '#cli/system/programs.ts';
 import { join, dirname, basename, relative, isAbsolute } from 'node:path';
+import type { ExecutableSearch, ToolLookupSession } from '#cli/types/tools.ts';
 import { executableLayout, convertToPosixPath, listExecutableNames } from '#cli/system/paths.ts';
 
 import {
@@ -28,6 +29,8 @@ import {
     MISE_PROJECT_FILES,
     MISE_LAUNCHER_FOLDER,
 } from '#cli/config/tools/programs.ts';
+
+const MISE_FOLDERS = Symbol('mise folders');
 
 function listSearchFolders(root: string, options: ExecutableSearch): string[] {
     const { folders: searchFolders, toolFolderKind } = options;
@@ -52,19 +55,22 @@ function isExecutablePresent(files: Files, root: string, path: string): boolean 
     }
 }
 
-function listSystemExecutablePaths(cwd: string, name: string, timeoutSeconds: number): string[] {
+async function listSystemExecutablePaths(cwd: string, name: string, timeoutSeconds: number): Promise<string[]> {
     const paths = filterOutsidePaths(which.sync(name, { nothrow: true, all: true }) ?? [], GSPOT_FOLDER);
     const mise = findProgram(MISE_TOOL);
-    return paths.flatMap((path) => {
-        if (mise === undefined || basename(dirname(path)) !== MISE_LAUNCHER_FOLDER) return [path];
-        const result = spawnProcessBlocking([mise, MISE_WHICH, name], {
-            cwd: cwd,
-            env: TOOL_ENVIRONMENT,
-            timeoutSeconds,
-        });
-        const selected = result.stdout.trim();
-        return selected !== '' && result.code === 0 ? [selected] : [];
-    });
+    const selected = await Promise.all(
+        paths.map(async (path) => {
+            if (mise === undefined || basename(dirname(path)) !== MISE_LAUNCHER_FOLDER) return [path];
+            const result = await spawnProcess([mise, MISE_WHICH, name], {
+                cwd: cwd,
+                env: TOOL_ENVIRONMENT,
+                timeoutSeconds,
+            });
+            const program = result.stdout.trim();
+            return program !== '' && result.code === 0 ? [program] : [];
+        }),
+    );
+    return selected.flat();
 }
 
 /**
@@ -114,16 +120,16 @@ Ask mise for the program folders of the tools that the mise tool project pins, w
 @param options.timeoutSeconds the limit for the mise query.
 @param options.project the mise tool project that gspot generates.
 */
-export function readMiseBinPaths(
+export async function readMiseBinPaths(
     root: string,
     toolNames: string[],
     options: { timeoutSeconds: number; project: string },
-): string[] {
+): Promise<string[]> {
     if (toolNames.length === 0 || findProgram(MISE_TOOL) === undefined) return [];
     const trust = buildMiseTrust(root, options.project);
     if (trust === undefined) return [];
     const command = [...MISE_BIN_PATHS_ARGUMENTS, ...toolNames];
-    const result = spawnProcessBlocking(command, {
+    const result = await spawnProcess(command, {
         cwd: join(root, GSPOT_FOLDER),
         timeoutSeconds: options.timeoutSeconds,
         env: { ...TOOL_ENVIRONMENT, ...trust },
@@ -141,32 +147,30 @@ program that mise selects for the repository, or nothing when mise selects none.
 
 @returns the paths that exist.
 */
-export function listExecutablePaths(
+export async function listExecutablePaths(
     root: string,
     name: string,
     options: ExecutableSearch & { timeoutSeconds: number },
-): string[] {
+): Promise<string[]> {
     const found = listRepositoryExecutablePaths(root, name, options);
     if (isAbsolute(name) || options.toolFolderKind !== undefined) return found;
     const programs = (options.miseBinPaths ?? [])
         .flatMap((folder) => listExecutableNames(name).map((file) => join(folder, file)))
         .filter((path) => statSync(path, { throwIfNoEntry: false }) !== undefined);
-    return [...programs, ...found, ...listSystemExecutablePaths(root, name, options.timeoutSeconds)];
+    return [...programs, ...found, ...(await listSystemExecutablePaths(root, name, options.timeoutSeconds))];
 }
 
 /**
-Ask mise for the program folders of the mise tools that the selected configurations pin.
+Ask mise once for the program folders of the mise tools that the selected configurations pin.
 
 @param session the run whose mise tools to find.
-@param project the mise tool project that gspot generates for the run.
 */
-export function readToolBinPaths(
-    session: Pick<Session, 'scopes' | 'toolsRoot' | 'timeoutSeconds'>,
-    project: string,
-): string[] {
-    const pins = listMisePins(listSelectedConfigurations(session.scopes));
-    return readMiseBinPaths(session.toolsRoot, [...new Set(pins.map((pin) => pin.name))], {
-        timeoutSeconds: session.timeoutSeconds,
-        project,
+export function readToolBinPaths(session: ToolLookupSession): Promise<string[]> {
+    return remember(session.toolCache, MISE_FOLDERS, session.toolsRoot, async () => {
+        const pins = listMisePins(listSelectedConfigurations(session.scopes));
+        return readMiseBinPaths(session.toolsRoot, [...new Set(pins.map((pin) => pin.name))], {
+            timeoutSeconds: session.timeoutSeconds,
+            project: buildMiseInstall(session.toolConfigurations).content,
+        });
     });
 }

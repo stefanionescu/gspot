@@ -9,12 +9,12 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import { selectToolConfigurations } from '#cli/engine/tools.ts';
-import type { SessionOptions } from '#cli/types/engine/plan.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
 import { selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 import type { Repository, RepositoryListing } from '#cli/types/repository.ts';
+import type { SettingsFile, SessionOptions } from '#cli/types/engine/plan.ts';
 import { listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { selectStartRunner, detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
 
@@ -64,6 +64,12 @@ async function readSessionRepository({
     });
 }
 
+function readSessionSettings(root: string, requested: SettingsFile | undefined): SettingsFile {
+    if (requested !== undefined) return requested;
+    const { text } = readSettingsFile(root);
+    return { text, settings: readSettings(text, root) };
+}
+
 /**
 Refuse invalid settings or configuration choices.
 
@@ -71,6 +77,7 @@ Refuse invalid settings or configuration choices.
 @param options where the tools sit, and what the run already read.
 @param options.toolsRoot the working repository with the installed tools.
 @param options.cache the run cache.
+@param options.toolCache the cache of the tool lookups, which pushed revisions and a --fix session share.
 @param options.listing the files of the repository, or none to list them.
 @param options.settingsFile the settings to use, or none to read them from the repository.
 @param options.resources the resources that the caller disposes when the run ends.
@@ -81,17 +88,14 @@ export async function openSession(
     {
         toolsRoot = root,
         cache = createRunCache(root),
+        toolCache = createRunCache(toolsRoot),
         listing,
         settingsFile: requestedSettings,
         resources = [],
         cancelSignal,
     }: SessionOptions = {},
 ): Promise<Session> {
-    let settingsFile = requestedSettings;
-    if (settingsFile === undefined) {
-        const { text } = readSettingsFile(root);
-        settingsFile = { text, settings: readSettings(text, root) };
-    }
+    const settingsFile = readSessionSettings(root, requestedSettings);
     const configurationsByName = readConfigurations();
     const settings = settingsFile.settings;
     const repository = await readSessionRepository({
@@ -116,8 +120,8 @@ export async function openSession(
         configurationsByName,
         repository,
         scopes,
-        inspections: new Map(),
         cache,
+        toolCache,
     };
     session.toolConfigurations = selectToolConfigurations(session, session.configuredChecks);
     if (Object.keys(listPackagePins(session.toolConfigurations).npm).length > 0)

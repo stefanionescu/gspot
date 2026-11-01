@@ -1,9 +1,9 @@
 import type { HookStatus, ToolInspection } from '#cli/types/tools.ts';
 import type { StageFilter, CheckDescription } from '#cli/types/engine/plan.ts';
-import type { CommandResult, CanceledCommandJson } from '#cli/types/system.ts';
 import type { Tool, Check, Setting, Configuration } from '#cli/types/manifests.ts';
 import type { RunReport, PushInput, CheckProgress } from '#cli/types/engine/run.ts';
 import type { InheritedSetting, RemovedConfiguration } from '#cli/types/settings.ts';
+import type { RunCache, CommandResult, CanceledCommandJson } from '#cli/types/system.ts';
 import type { CI_FILES, CHECK_STAGES, CHECK_INPUT_HOOKS } from '#cli/config/commands/reports.ts';
 import type { FileKind, StagedPaths, ChangedPaths, PushedRevisions } from '#cli/types/repository.ts';
 
@@ -40,6 +40,7 @@ export type CheckOptions = {
     stage?: StageFilter | undefined;
     messageFile?: string | undefined;
     verbose: boolean;
+    toolCache?: RunCache | undefined;
 };
 
 export type RevisionSource = (

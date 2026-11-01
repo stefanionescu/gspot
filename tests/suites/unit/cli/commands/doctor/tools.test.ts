@@ -110,14 +110,14 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
     const tools = listDistinctTools(session.toolConfigurations);
     await using programs = await testdir();
     using _which = fakeExecutableLookup(join(programs.path, 'pytest'));
-    const nativeVersion = processes.spawnProcessBlocking;
+    const nativeVersion = processes.spawnProcess;
     let isPresent = false;
-    using _version = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) => {
+    using _version = spyOn(processes, 'spawnProcess').mockImplementation(async (command, options) => {
         if (command.slice(1).join(' ') === '--version --version')
             return buildProcessResult({ stdout: isPresent ? 'pytest-cov-7.1.0' : 'pytest 9.1.1' });
         const pin = tools.find((tool) => tool.name === basename(command[0] ?? ''));
         const version = pin?.version ?? pin?.min_version;
-        return version === undefined ? nativeVersion(command, options) : buildProcessResult({ stdout: version });
+        return version === undefined ? await nativeVersion(command, options) : buildProcessResult({ stdout: version });
     });
     const missing = await runGspot(sandbox.path, ['doctor', '--json']);
     const pytestCov = {

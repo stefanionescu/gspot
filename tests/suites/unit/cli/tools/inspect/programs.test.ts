@@ -3,21 +3,27 @@ import { test, expect } from 'bun:test';
 import { runTool } from '#cli/tools/run.ts';
 import { getTool } from '#cli/tools/pins.ts';
 import { testdir, createFileTree } from 'testdirs';
+import type { Tool } from '#cli/types/manifests.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { listExecutablePaths } from '#cli/tools/locate.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { unlink, symlink, readFile } from 'node:fs/promises';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
-import { inspectTool, formatUnavailableNote } from '#cli/tools/inspect.ts';
 import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
-import { fakeNpmPackage, writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { lookUpTool, inspectTool, formatUnavailableNote } from '#cli/tools/inspect.ts';
+import { fakeCommands, fakeNpmPackage, writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 
 test('tool inspection finds the project compiler, and the repository compiler from a copy', async () => {
     await using sandbox = await testdir({
@@ -32,12 +38,12 @@ test('tool inspection finds the project compiler, and the repository compiler fr
     const compiler = getTool(readConfigurations().values(), 'tsc');
     const projectPath = join(work, 'node_modules/typescript/package.json');
     const project = parseJsonFile(projectPath, await readFile(projectPath, 'utf8'), packageJsonSchema);
-    expect(inspectTool(buildToolSearch(work), compiler)).toMatchObject({
+    expect(await inspectTool(buildToolSearch(work), compiler)).toMatchObject({
         state: 'system',
         found: project.version,
         path: join(work, 'node_modules/.bin', isWindows ? 'tsc.exe' : 'tsc'),
     });
-    expect(inspectTool(buildToolSearch(snapshot, { toolsRoot: work }), compiler)).toMatchObject({
+    expect(await inspectTool(buildToolSearch(snapshot, { toolsRoot: work }), compiler)).toMatchObject({
         state: 'system',
         found: project.version,
         path: join(work, 'node_modules/.bin', isWindows ? 'tsc.exe' : 'tsc'),
@@ -57,7 +63,7 @@ test('version reads and runs use the other tools of the tool folder', async () =
     await writeProgramCommand(sandbox.path, 'unrelated/companion', 'fakes/tool', '--line', '9.0.0');
     const env = { PATH: join(sandbox.path, 'unrelated') };
     const tool = buildProgramPin('teller', '3.8.1');
-    const read = inspectTool(buildToolSearch(sandbox.path), tool);
+    const read = await inspectTool(buildToolSearch(sandbox.path), tool);
     expect(read).toMatchObject({ state: 'ok', found: '3.8.1' });
     const result = await runTool([read.path!], {
         timeoutSeconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined),
@@ -83,7 +89,7 @@ test('a mise-pinned program in the repository node_modules or .venv is missing a
     const venv = buildVenvExecutablePath('.venv', 'gitleaks');
     await writeProgramCommand(sandbox.path, venv, 'fakes/tool', '--write', 'venv-ran=', ...version);
     using _which = fakeExecutableLookup(null);
-    const inspection = inspectTool(buildToolSearch(sandbox.path), tool);
+    const inspection = await inspectTool(buildToolSearch(sandbox.path), tool);
     expect(inspection.state).toBe('missing');
     expect(inspection.path).toBeUndefined();
     expect(await isOnDisk(join(sandbox.path, 'npm-ran'))).toBe(false);
@@ -97,7 +103,7 @@ test('a program on PATH wins over an unrelated mise shim', async () => {
     const active = join(sandbox.path, 'active', isWindows ? 'tsc.cmd' : 'tsc');
     using _environment = overrideEnvironment({ MISE_DATA_DIR: join(sandbox.path, 'mise') });
     using _which = fakeExecutableLookup(active);
-    const inspection = inspectTool(buildToolSearch(sandbox.path), getTool(readConfigurations().values(), 'tsc'));
+    const inspection = await inspectTool(buildToolSearch(sandbox.path), getTool(readConfigurations().values(), 'tsc'));
     expect(inspection.state).toBe('system');
     expect(inspection.path).toBe(active);
 });
@@ -132,7 +138,7 @@ async function fakeMiseTsc(root: string, status: number) {
             join(root, name === 'mise' ? 'bin' : 'mise/shims', `${name}${isWindows ? '.cmd' : ''}`),
         ),
     );
-    const paths = listExecutablePaths(join(root, 'work'), 'tsc', {
+    const paths = await listExecutablePaths(join(root, 'work'), 'tsc', {
         timeoutSeconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined),
         folders: [join(root, 'work')],
     });
@@ -160,7 +166,7 @@ test('a pinned program whose only executable is a mise shim that mise cannot res
     using _which = fakeExecutableLookup((name) =>
         join(root, name === 'mise' ? 'bin' : 'mise/shims', `${name}${isWindows ? '.cmd' : ''}`),
     );
-    const inspection = inspectTool(buildToolSearch(join(root, 'work')), buildProgramPin('vale', '0.0.0-test'));
+    const inspection = await inspectTool(buildToolSearch(join(root, 'work')), buildProgramPin('vale', '0.0.0-test'));
     expect(inspection).toStrictEqual({
         name: 'vale',
         state: 'missing',
@@ -186,15 +192,15 @@ test('a tool project program linked outside the repository is refused before it 
         '1.2.3',
     );
     await symlink('../../../../outside/teller', binary);
-    expect(() => inspectTool(buildToolSearch(root), buildProgramPin('teller', '1.2.3'))).toThrow(
-        new Error(
-            `${GSPOT_PATHS.nodeModules}/.bin/teller links to a file outside the repository. Replace the link with the file.`,
-        ),
-    );
+    expect(
+        await captureRejection(inspectTool(buildToolSearch(root), buildProgramPin('teller', '1.2.3'))),
+    ).toMatchObject({
+        message: `${GSPOT_PATHS.nodeModules}/.bin/teller links to a file outside the repository. Replace the link with the file.`,
+    });
     expect(await isOnDisk(ranMarker)).toBe(false);
     await unlink(binary);
     await symlink('../teller/run.sh', binary);
-    expect(inspectTool(buildToolSearch(root), buildProgramPin('teller', '1.2.3')).state).toBe('ok');
+    expect(await inspectTool(buildToolSearch(root), buildProgramPin('teller', '1.2.3'))).toMatchObject({ state: 'ok' });
 });
 
 test('a missing npm tool does not fall back to the program in the repository node_modules', async () => {
@@ -212,12 +218,12 @@ test('a missing npm tool does not fall back to the program in the repository nod
         '5.0.1',
     );
     const tool = buildProgramPin('teller', '5.0.1', 'teller');
-    const missing = inspectTool(buildToolSearch(sandbox.path), tool);
+    const missing = await inspectTool(buildToolSearch(sandbox.path), tool);
     expect(missing.state).toBe('missing');
     expect(missing.path).toBeUndefined();
     expect(await isOnDisk(join(sandbox.path, 'fallback-ran'))).toBe(false);
     await fakeNpmPackage(sandbox.path, { name: 'teller', version: '5.0.1', toolArguments: ['--line', '5.0.1'] });
-    expect(inspectTool(buildToolSearch(sandbox.path), tool)).toMatchObject({
+    expect(await inspectTool(buildToolSearch(sandbox.path), tool)).toMatchObject({
         state: 'ok',
         found: '5.0.1',
     });
@@ -237,7 +243,7 @@ test('a Python tool uses the tool project environment, not the repository .venv'
     );
     const tool = buildProgramPin('teller', '1.2.3');
     tool.installers['pypi'] = { name: 'teller', version: '1.2.3' };
-    expect(inspectTool(buildToolSearch(sandbox.path), tool).state).toBe('missing');
+    expect(await inspectTool(buildToolSearch(sandbox.path), tool)).toMatchObject({ state: 'missing' });
     await writeProgramCommand(
         sandbox.path,
         buildVenvExecutablePath(GSPOT_PATHS.pythonEnvironment, 'teller'),
@@ -245,7 +251,7 @@ test('a Python tool uses the tool project environment, not the repository .venv'
         '--line',
         '1.2.3',
     );
-    expect(inspectTool(buildToolSearch(sandbox.path), tool)).toMatchObject({
+    expect(await inspectTool(buildToolSearch(sandbox.path), tool)).toMatchObject({
         state: 'ok',
         found: '1.2.3',
     });
@@ -256,9 +262,22 @@ test('a missing managed program names mise being absent from PATH instead of cla
     await using sandbox = await testdir();
     using _lookup = fakeExecutableLookup(null);
     const tool = buildProgramPin('scanner', '0.0.0-test');
-    const inspection = inspectTool(buildToolSearch(sandbox.path), tool);
+    const inspection = await inspectTool(buildToolSearch(sandbox.path), tool);
     expect(inspection.state).toBe('missing');
     expect(formatUnavailableNote(tool, inspection)).toBe(
         'mise is not on PATH. Install mise (https://mise.jdx.dev/getting-started.html), or install scanner 0.0.0-test yourself.',
     );
+});
+
+test('a lookup keeps its inspection in the tool cache, and a system tool looks again in another folder', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const session = await openSession(sandbox.path);
+    using _which = fakeExecutableLookup((name) => (name === 'mise' ? null : process.execPath));
+    using commands = fakeCommands(process.execPath, () => Promise.resolve(buildProcessResult({ stdout: '2.0.0\n' })));
+    const tool: Tool = { name: 'teller', kind: 'program', system: true, min_version: '1.0.0', installers: {} };
+    await lookUpTool(session, tool, sandbox.path);
+    await lookUpTool(session, tool, sandbox.path);
+    expect(commands).toHaveBeenCalledTimes(1);
+    await lookUpTool(session, tool, join(sandbox.path, 'app'));
+    expect(commands).toHaveBeenCalledTimes(2);
 });

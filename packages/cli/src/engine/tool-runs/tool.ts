@@ -7,24 +7,21 @@ import type { SpawnResult } from '#cli/types/system.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
+import { lookUpTool, findToolPath } from '#cli/tools/inspect.ts';
 import type { ProcessFailure, ToolRunOptions } from '#cli/types/tools.ts';
-import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { PROCESS_KILLED_LINE, RAISE_TIMEOUT_MESSAGE } from '#cli/config/engine.ts';
 import { foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { CheckTool, CheckToolOptions, CheckToolProgram, ToolProcessResult } from '#cli/types/engine/tool-runs.ts';
 
-function getCheckTool(
+async function getCheckTool(
     session: CheckSession,
     planned: PlannedCheck,
     name: string,
     options: CheckToolOptions,
-): CheckTool {
+): Promise<CheckTool> {
     const tool = getTool(session.configurationsByName.values(), name);
     const env = { ...planned.check.env, ...options.env };
-    const availability = buildToolAvailability(
-        tool,
-        inspectTool({ ...session, cwd: options.cwd, miseBinPaths: session.readMiseBinPaths() }, tool),
-    );
+    const availability = await findToolPath(session, tool, options.cwd);
     if ('status' in availability) {
         if (availability.status === 'error') throw new CheckStop('error', availability.note);
         throw new CheckStop('missing', availability.note);
@@ -76,19 +73,15 @@ Add the folders of the installed other tools of a check to the process `PATH`, a
 @param environment variables for the tool process.
 @returns the environment with their folders on `PATH`.
 */
-export function buildOtherToolEnvironment(
+export async function buildOtherToolEnvironment(
     session: CheckSession,
     names: string[],
     environment: Record<string, string>,
-): Record<string, string> {
-    const folders = names
-        .map(
-            (name) =>
-                inspectTool(
-                    { ...session, miseBinPaths: session.readMiseBinPaths() },
-                    getTool(session.configurationsByName.values(), name),
-                ).path,
-        )
+): Promise<Record<string, string>> {
+    const tools = names.map((name) => getTool(session.configurationsByName.values(), name));
+    const inspections = await Promise.all(tools.map((tool) => lookUpTool(session, tool, session.root)));
+    const folders = inspections
+        .map((inspection) => inspection.path)
         .filter((path) => path !== undefined)
         .map((path) => dirname(path));
     if (folders.length === 0) return environment;
@@ -113,7 +106,7 @@ export async function runCheckTool(
     command: readonly string[] | CheckToolProgram,
     options: CheckToolOptions,
 ): Promise<SpawnResult> {
-    const { name, path, env } = getCheckTool(
+    const { name, path, env } = await getCheckTool(
         session,
         planned,
         'tool' in command ? command.tool : (command[0] as string),
@@ -121,10 +114,12 @@ export async function runCheckTool(
     );
     const commandArguments =
         'tool' in command ? [process.execPath, command.modulePath, path] : [path, ...command.slice(1)];
+    const otherTools = listOtherTools(planned.scope, planned.check);
+    const toolEnvironment = await buildOtherToolEnvironment(session, otherTools, env);
     const { result, failure } = await session.limitProcess(() =>
         runToolProcess(commandArguments, {
             ...options,
-            env: buildOtherToolEnvironment(session, listOtherTools(planned.scope, planned.check), env),
+            env: toolEnvironment,
             cancelSignal: session.cancelSignal,
             timeoutSeconds: session.timeoutSeconds,
             name,

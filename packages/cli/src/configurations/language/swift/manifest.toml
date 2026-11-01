@@ -30,7 +30,6 @@ replace = [".swiftlint.yml", ".swiftlint.yaml"]
 rule_url = "https://realm.github.io/SwiftLint/{rule}.html"
 suppression = { marker = "\\bswiftlint:disable\\b(?::(?:next|this|previous))?(?<rules>.*)", reason = " - (?<reason>\\S.*)", example = "// swiftlint:disable:next force_unwrapping - reason: the URL is a literal", separator = "\\s-\\s", all_rules = "^all(?=$|\\s)", limit_rules = "(?:^|[\\s,])(?:max_cyclomatic_complexity|function_body_length|file_length|type_body_length|function_parameter_count)(?=$|[\\s,])" }
 version = "0.65.1"
-version_command = ["version"]
 
 [[tool]]
 builds = ["macos", "linux"]
@@ -49,7 +48,6 @@ name = "periphery"
 replace = [".periphery.yml", ".periphery.yaml"]
 suppression = { marker = "\\bperiphery:ignore\\b", reason = " - (?<reason>\\S.*)", example = "// periphery:ignore - reason: the runtime calls it by name" }
 version = "3.8.0"
-version_command = ["version"]
 
 [[tool]]
 name = "swift"

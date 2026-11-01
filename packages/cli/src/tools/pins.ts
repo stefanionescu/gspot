@@ -1,9 +1,11 @@
 import { compareText } from '#cli/system/text.ts';
+import { stringify } from '@decimalturn/toml-patch';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { UV_TOOL, NODE_TOOL } from '#cli/config/tools/installers.ts';
 import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
-import type { Host, PackagePin, MiseToolPin, PackagePins } from '#cli/types/tools.ts';
+import { UV_TOOL, NODE_TOOL, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
+import type { Host, PackagePin, MiseToolPin, PackagePins, GeneratedFile } from '#cli/types/tools.ts';
 
 /**
 List the tools that mise installs, apart from those in the npm and Python tool projects, and add uv when a Python
@@ -18,6 +20,26 @@ export function listMisePins(configurations: Configuration[]): MiseToolPin[] {
         pins.push(getUvPin());
     }
     return pins;
+}
+
+/**
+Build the mise install of the tools, without the runtime pins of the repository.
+
+@param configurations the configurations in use.
+*/
+export function buildMiseInstall(configurations: Configuration[]): GeneratedFile {
+    const tools = Object.fromEntries(
+        listMisePins(configurations)
+            .toSorted((left, right) => compareText(left.name, right.name))
+            .map((pin) => [
+                pin.name,
+                pin.options === undefined ? pin.version : { version: pin.version, ...pin.options },
+            ]),
+    );
+    return {
+        path: GSPOT_PATHS.miseProject,
+        content: stringify({ tools, settings: { lockfile: true } }, { ...CONFIG_TOML_FORMAT, inlineTableStart: 1 }),
+    };
 }
 
 /**

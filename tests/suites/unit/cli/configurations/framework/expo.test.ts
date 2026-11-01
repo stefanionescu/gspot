@@ -1,8 +1,7 @@
 import { join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { getTool } from '#cli/tools/pins.ts';
-import { test, spyOn, expect } from 'bun:test';
-import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
@@ -76,12 +75,6 @@ async function prepareExpoApps(
         [`${GSPOT_PATHS.nodeModules}/expo-doctor/package.json`]: JSON.stringify({ name: 'expo-doctor', version }),
     });
     const folders: string[] = [];
-    const runBlocking = processes.spawnProcessBlocking;
-    resources.use(
-        spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
-            command[0] === 'git' ? runBlocking(command, options) : buildProcessResult({ stdout: String(version) }),
-        ),
-    );
     resources.use(
         fakeCommands().mockImplementation((_command, options) => {
             folders.push(options.cwd);

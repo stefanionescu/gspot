@@ -1,15 +1,15 @@
 import which from 'which';
 import { join, dirname } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
+import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import type { Tool } from '#cli/types/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { miseLockfileSchema } from '#cli/schemas/tools.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { formatCount, compareText } from '#cli/system/text.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
-import type { Tool, Configuration } from '#cli/types/manifests.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
@@ -25,7 +25,6 @@ import {
     MISE_TOOL_NOUN,
     MISE_FORCE_FLAG,
     GITHUB_RATE_LIMIT,
-    CONFIG_TOML_FORMAT,
     MISE_RELEASE_HOSTS,
     MISE_LOCK_ARGUMENTS,
     GITHUB_TOKEN_MESSAGE,
@@ -216,15 +215,14 @@ export async function installMiseTools(install: ToolInstall): Promise<MiseInstal
     }
     const [project] = install.generated.files.filter(({ path }) => path === GSPOT_PATHS.miseProject) as [GeneratedFile];
     if (listMisePins(session.toolConfigurations).length > 0) await writeMiseLockfile(install, project);
-    if (pins.length === 0)
-        return { installed: '', note: '', binPaths: readToolBinPaths(session, project.content), tools: [] };
+    if (pins.length === 0) return { installed: '', note: '', binPaths: await readToolBinPaths(session), tools: [] };
     await runMiseInstall(install, [...MISE_INSTALL_ARGUMENTS, ...pins.map((pin) => pin.name)]);
     const names = pins.map((pin) => pin.name);
     steps.push([...MISE_BIN_PATHS_ARGUMENTS, ...names]);
     return {
         installed: `installed ${formatCount(names.length, MISE_TOOL_NOUN)} with mise`,
         note: '',
-        binPaths: readMiseBinPaths(session.root, names, {
+        binPaths: await readMiseBinPaths(session.root, names, {
             timeoutSeconds: session.timeoutSeconds,
             project: project.content,
         }),
@@ -242,24 +240,4 @@ export async function reinstallMiseTools(install: ToolInstall, pins: MiseToolPin
     if (pins.length === 0) return;
     const versions = pins.map((pin) => `${pin.name}@${pin.version}`);
     await runMiseInstall(install, [...MISE_INSTALL_ARGUMENTS, MISE_FORCE_FLAG, ...versions]);
-}
-
-/**
-Build the mise install of the tools, without the runtime pins of the repository.
-
-@param configurations the configurations in use.
-*/
-export function buildMiseInstall(configurations: Configuration[]): GeneratedFile {
-    const tools = Object.fromEntries(
-        listMisePins(configurations)
-            .toSorted((left, right) => compareText(left.name, right.name))
-            .map((pin) => [
-                pin.name,
-                pin.options === undefined ? pin.version : { version: pin.version, ...pin.options },
-            ]),
-    );
-    return {
-        path: GSPOT_PATHS.miseProject,
-        content: stringify({ tools, settings: { lockfile: true } }, { ...CONFIG_TOML_FORMAT, inlineTableStart: 1 }),
-    };
 }

@@ -132,6 +132,16 @@ function parseYarnVersions(path: string, text: string, specifiers: Map<string, s
 }
 
 /**
+Normalize a Python package name: lower case, with one dash for each run of separators.
+
+@param name the name as a project or a lockfile writes it.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The lockfile parsers, the license check, and the Python installer compare package names through it.
+export function normalizePythonName(name: string): string {
+    return name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-');
+}
+
+/**
 Parse a yarn.lock file and reject other formats.
 
 @param path the file, for the error.

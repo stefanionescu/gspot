@@ -101,10 +101,10 @@ async function readSwiftlintRule(
 ): Promise<LintRuleDocs | undefined> {
     if (!SWIFTLINT_RULE_IDENTIFIER.test(identifier)) return undefined;
     const { timeoutSeconds } = options;
-    const [path] = listExecutablePaths(root, 'swiftlint', {
+    const [path] = await listExecutablePaths(root, 'swiftlint', {
         folders: [],
         timeoutSeconds,
-        miseBinPaths: options.readMiseBinPaths?.(),
+        miseBinPaths: await options.readMiseBinPaths?.(),
     });
     if (path === undefined) throw new GspotError('tool', 'SwiftLint is not installed. Run gspot install.');
     const result = await runTool([path, ...SWIFTLINT_RULE_ARGUMENTS, devNull, identifier], {

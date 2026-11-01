@@ -38,7 +38,7 @@ test('companion tool folders precede the existing PATH in declared order', async
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     const session = buildCheckSession(await openSession(sandbox.path), CHECK_GENERATION);
     using _executables = fakeExecutableLookup((name) => (name === 'mise' ? null : join(sandbox.path, name, name)));
-    const environment = buildOtherToolEnvironment(session, ['first-companion', 'second-companion'], {
+    const environment = await buildOtherToolEnvironment(session, ['first-companion', 'second-companion'], {
         PATH: 'original-search-path',
     });
     expect(environment['PATH']).toBe(

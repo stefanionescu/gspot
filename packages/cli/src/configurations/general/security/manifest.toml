@@ -15,7 +15,6 @@ name = "semgrep"
 pypi = "semgrep"
 suppression = { marker = "^\\s*(?://|/\\*+|\\*|#|--|<!--|;|%)?\\s*nosemgrep\\b", reason = "reason: (?<reason>\\S.*)", forbidden = true }
 version = "1.181.0"
-version_command = ["--disable-version-check", "--version"]
 
 [[check]]
 command = ["semgrep", "scan", "--strict", "--error", "--metrics", "off", "--disable-version-check", "--no-rewrite-rule-ids", "--quiet", "--json", "{files}"]

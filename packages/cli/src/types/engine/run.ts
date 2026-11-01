@@ -154,6 +154,5 @@ export type CheckGeneration = {
 
 export type CheckSession = Session & {
     generation: CheckGeneration;
-    readMiseBinPaths: () => string[];
     limitProcess: LimitFunction;
 };

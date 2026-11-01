@@ -1,13 +1,11 @@
 import { join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { getTool } from '#cli/tools/pins.ts';
-import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { listExecutableNames } from '#cli/system/paths.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { PREVIOUS_BYTES } from '#tests/config/setup/programs.ts';
@@ -16,7 +14,6 @@ import { rm, chmod, readFile, writeFile } from 'node:fs/promises';
 import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { VALE_PACKAGES_INI } from '#tests/config/setup/configurations.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -89,13 +86,6 @@ test.each([...VALE_INSTALL_FAILURES])(
         const session = await openSession(sandbox.path);
         const tool = getTool(session.configurationsByName.values(), 'vale');
         const miseBin = join(sandbox.path, 'mise/bin');
-        const executable = join(miseBin, listExecutableNames('vale')[0]!);
-        const runBlocking = processes.spawnProcessBlocking;
-        using _version = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
-            command[0] === executable && command[1] === '--version'
-                ? buildProcessResult({ stdout: String(tool.version) })
-                : runBlocking(command, options),
-        );
         const version = String(tool.version);
         await writeProgramCommand(
             sandbox.path,

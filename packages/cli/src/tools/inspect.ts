@@ -1,4 +1,5 @@
 import { join, relative } from 'node:path';
+import { remember } from '#cli/system/cache.ts';
 import { isInside } from '#cli/system/paths.ts';
 import { findPackagePin } from '#cli/tools/pins.ts';
 import type { Tool } from '#cli/types/manifests.ts';
@@ -9,16 +10,19 @@ import { MISE_TOOL } from '#cli/config/tools/installers.ts';
 import { PACKAGE_JSON, GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { readToolVersion, classifyToolVersion } from '#cli/tools/versions.ts';
 import { readToolProjectPackage, findInstalledDependency } from '#cli/tools/packages.ts';
-import { listExecutablePaths, listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
 import { INSTALL_HELP, MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/tools/programs.ts';
+import { readToolBinPaths, listExecutablePaths, listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
 
 import type {
     ToolSearch,
     InspectedTool,
     ToolInspection,
     ToolAvailability,
+    ToolLookupSession,
     InstalledDependency,
 } from '#cli/types/tools.ts';
+
+const TOOL_LOOKUPS = Symbol('tool lookups');
 
 function buildInstallHelp(tool: Tool): string {
     const toolProjectPackage = findPackagePin(tool);
@@ -37,17 +41,17 @@ function buildLibraryInspection(inspected: InspectedTool, path: string, found: s
     return { name: tool.name, state, path, found, help, minimumVersion: minimum, want };
 }
 
-function inspectLibraryCommand(inspected: InspectedTool, command: string[]): ToolInspection {
+async function inspectLibraryCommand(inspected: InspectedTool, command: string[]): Promise<ToolInspection> {
     const { root, cwd, tool, timeoutSeconds } = inspected;
     const program = command[0] as string;
     const commandArguments = command.slice(1);
-    const [path] = listExecutablePaths(root, program, { timeoutSeconds, folders: [cwd, root] });
+    const [path] = await listExecutablePaths(root, program, { timeoutSeconds, folders: [cwd, root] });
     return path === undefined
         ? inspected.missing
         : inspectExecutablePath({ ...inspected, tool: { ...tool, version_command: commandArguments } }, path);
 }
 
-function inspectPackage(inspected: InspectedTool): ToolInspection {
+async function inspectPackage(inspected: InspectedTool): Promise<ToolInspection> {
     const { root, cwd, tool } = inspected;
     if (tool.system === true && tool.version_command !== undefined)
         return inspectLibraryCommand(inspected, tool.version_command);
@@ -65,11 +69,11 @@ function inspectPackage(inspected: InspectedTool): ToolInspection {
         : buildLibraryInspection(inspected, installed.path, installed.version);
 }
 
-function inspectExecutablePath(inspected: InspectedTool, path: string): ToolInspection {
+async function inspectExecutablePath(inspected: InspectedTool, path: string): Promise<ToolInspection> {
     const { tool, help, want } = inspected;
     if (want === undefined && tool.version_command === undefined && tool.min_version === undefined)
         return { name: tool.name, state: 'system', path, help };
-    const read = readToolVersion(inspected, path);
+    const read = await readToolVersion(inspected, path);
     if ('state' in read) return { name: tool.name, path, help, want, ...read };
     const minimum = tool.min_version ?? want;
     const state = classifyToolVersion(read.version, want, minimum);
@@ -84,14 +88,14 @@ function inspectExecutablePath(inspected: InspectedTool, path: string): ToolInsp
     };
 }
 
-function inspectProjectExecutable(inspected: InspectedTool): ToolInspection | undefined {
+async function inspectProjectExecutable(inspected: InspectedTool): Promise<ToolInspection | undefined> {
     const { root, cwd, tool, timeoutSeconds } = inspected;
     if (tool.system !== true) return undefined;
     const toolProjectPackage = findPackagePin(tool);
     if (toolProjectPackage === undefined) return undefined;
     const [project] = listRepositoryExecutablePaths(root, tool.name, { folders: [cwd, root] });
     if (project !== undefined) return inspectExecutablePath(inspected, project);
-    const [toolProjectPath] = listExecutablePaths(root, tool.name, {
+    const [toolProjectPath] = await listExecutablePaths(root, tool.name, {
         timeoutSeconds,
         folders: [cwd, root],
         toolFolderKind: toolProjectPackage.kind,
@@ -104,9 +108,9 @@ function inspectProjectExecutable(inspected: InspectedTool): ToolInspection | un
     return undefined;
 }
 
-function inspectExecutable(inspected: InspectedTool): ToolInspection {
+async function inspectExecutable(inspected: InspectedTool): Promise<ToolInspection> {
     const { root, cwd, tool, timeoutSeconds, miseBinPaths } = inspected;
-    const project = inspectProjectExecutable(inspected);
+    const project = await inspectProjectExecutable(inspected);
     if (project !== undefined) return project;
     const isExternal = tool.system === true;
     const search = isExternal
@@ -116,7 +120,7 @@ function inspectExecutable(inspected: InspectedTool): ToolInspection {
               miseBinPaths,
               toolFolderKind: findPackagePin(tool)?.kind,
           };
-    const [path] = listExecutablePaths(root, tool.name, { timeoutSeconds, ...search });
+    const [path] = await listExecutablePaths(root, tool.name, { timeoutSeconds, ...search });
     return path === undefined ? inspected.missing : inspectExecutablePath(inspected, path);
 }
 
@@ -142,17 +146,14 @@ export function formatUnavailableNote(tool: Tool, inspection: ToolInspection): s
 }
 
 /**
-Inspect one tool, and reuse an inspection from earlier in this run.
+Inspect one tool.
 
-@param search where to search, with the run cache.
+@param search where to search.
 @param tool the tool to inspect.
 */
-export function inspectTool(search: ToolSearch, tool: Tool): ToolInspection {
-    const { root, inspections } = search;
+export async function inspectTool(search: ToolSearch, tool: Tool): Promise<ToolInspection> {
+    const { root } = search;
     const cwd = search.cwd ?? root;
-    const key = JSON.stringify([root, cwd, tool]);
-    const cached = inspections.get(key);
-    if (cached) return cached;
     const toolsRoot = search.toolsRoot ?? root;
     const help = buildInstallHelp(tool);
     const want = tool.system === true ? undefined : tool.version;
@@ -166,10 +167,35 @@ export function inspectTool(search: ToolSearch, tool: Tool): ToolInspection {
         want,
         miseBinPaths: search.miseBinPaths,
     };
-    const inspection = tool.kind === 'package' ? inspectPackage(inspected) : inspectExecutable(inspected);
+    const inspection = await (tool.kind === 'package' ? inspectPackage(inspected) : inspectExecutable(inspected));
     if (inspection.state === 'ok') delete inspection.help;
-    inspections.set(key, inspection);
     return inspection;
+}
+
+/**
+Inspect one tool once per run. The working folder counts only for a system tool, which a project can supply.
+
+@param session the run, with its tool cache.
+@param tool the tool to inspect.
+@param cwd the working folder of the tool.
+*/
+export function lookUpTool(session: ToolLookupSession, tool: Tool, cwd: string): Promise<ToolInspection> {
+    const folder = tool.system === true ? relative(session.root, cwd) : '';
+    return remember(session.toolCache, TOOL_LOOKUPS, JSON.stringify([folder, tool]), async () =>
+        inspectTool({ ...session, cwd, miseBinPaths: await readToolBinPaths(session) }, tool),
+    );
+}
+
+/**
+Find the path of a tool once per run, or the failure with the next step.
+
+@param session the run, with its tool cache.
+@param tool the tool to find.
+@param cwd the working folder of the tool.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The check runner, the fixers, and the docker test read a path or its failure through it at each call site.
+export async function findToolPath(session: ToolLookupSession, tool: Tool, cwd: string): Promise<ToolAvailability> {
+    return buildToolAvailability(tool, await lookUpTool(session, tool, cwd));
 }
 
 /**

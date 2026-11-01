@@ -106,7 +106,6 @@ export function buildToolSearch(root: string, fields: Partial<ToolSearch> = {}):
     return {
         root,
         timeoutSeconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined),
-        inspections: new Map(),
         ...fields,
     };
 }

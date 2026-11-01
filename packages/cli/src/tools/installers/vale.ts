@@ -121,7 +121,7 @@ export async function installValePackages(install: ToolInstall, miseBinPaths: st
     if (files.read(GSPOT_PATHS.valeReleases)?.bytes.toString('utf8') === releases && hasValePackages(root, level))
         return '';
     const tool = getTool(session.toolConfigurations, VALE_TOOL);
-    const available = buildToolAvailability(tool, inspectTool({ ...session, miseBinPaths }, tool));
+    const available = buildToolAvailability(tool, await inspectTool({ ...session, miseBinPaths }, tool));
     if ('status' in available) throw new GspotError('install', available.note);
     const temporary = mkdtempSync(
         join(files.readCanonicalPath(GSPOT_FOLDER), `${VALE_INSTALL_PREFIX}${String(process.pid)}-`),

@@ -247,7 +247,6 @@ const toolSchema = z
         system: z.boolean().optional(),
         builds: z.enum(TOOL_BUILDS).array().min(1).optional(),
         version_command: commandSchema.optional(),
-        version_exit_code: z.number().int().min(0).max(MAX_EXIT_CODE).optional(),
         version_pattern: z.string().optional(),
         crash_pattern: regexSchema.optional(),
         finding_header_pattern: regexSchema.optional(),
