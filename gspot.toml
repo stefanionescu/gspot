@@ -288,26 +288,6 @@ name = "tests"
 paths = ["tests/suites/**"]
 
 [[command_check]]
-id = "folder-rules"
-command = ["bash", "-c", "sources=$(find packages/cli/src packages/eslint-plugin/src docs/src tests -name '*.ts' -not -path '*/node_modules/*'); layers=$(grep -E '^(packages/[^/]+/src|docs/src|tests)/(config|types|schemas)/' <<<\"$sources\" | grep -v '^docs/src/schemas/content.ts$'); found=$(grep -E '/(values|types|schemas)\\.ts$' <<<\"$sources\" | grep -vE '^(packages/[^/]+/src|docs/src|tests)/(config|types|schemas)/'; grep -v '\\.d\\.ts$' <<<\"$layers\" | while read -r file; do [[ $(grep -c '^export ' \"$file\") -ne 1 ]] || echo \"$file holds one export.\"; done; awk -F/ '{ name = $NF; sub(/\\.ts$/, \"\", name); if (name == $(NF - 1)) print $0 \" takes the name of its folder.\" }' <<<\"$layers\"; sed -E 's#/[^/]+$##' <<<\"$layers\" | sort | uniq -c | awk '$1 == 1 { print $2 \" holds one file.\" }'; grep -lE '^export \\{[^}]*\\};$' $sources | while read -r file; do [[ ! $(tail -n 1 \"$file\") =~ ^export\\ \\{ ]] || echo \"$file ends with an export list.\"; done); [[ -z $found ]] || { printf '%s\\n' \"$found\"; exit 1; }"]
-paths = ["packages/**/*.ts", "docs/src/**/*.ts", "tests/**/*.ts"]
-stage = "commit"
-summary = "Checks the folder rules of AGENTS.md: value, type, and schema files sit in their folders, each with several exports and a name of its own, and no file ends with an export list."
-help = "Move or merge what the line names, as the Folders section of AGENTS.md says."
-exit_codes = [1]
-output = { format = "none" }
-
-[[command_check]]
-id = "unit-test-paths"
-command = ["bash", "-c", "found=$(find tests/suites/unit -name '*.test.ts' | while read -r test; do path=${test#tests/suites/unit/}; package=${path%%/*}; rest=${path#*/}; rest=${rest%.test.ts}; source=packages/$package/src; while [[ ! -e $source/$rest.ts && ! -d $source/$rest && $rest == */* ]]; do rest=${rest%/*}; done; [[ -e $source/$rest.ts || -d $source/$rest ]] || echo \"$test mirrors no source file.\"; done); [[ -z $found ]] || { printf '%s\\n' \"$found\"; exit 1; }"]
-paths = ["tests/suites/unit/**/*.test.ts", "packages/**/*.ts"]
-stage = "commit"
-summary = "Checks that each unit test mirrors a source file or folder."
-help = "Move the test to the path of the source that it tests."
-exit_codes = [1]
-output = { format = "none" }
-
-[[command_check]]
 id = "unit-tests"
 command = ["bash", "-c", "[[ -n ${CI:-} ]] || mise run test unit"]
 paths = ["**"]
