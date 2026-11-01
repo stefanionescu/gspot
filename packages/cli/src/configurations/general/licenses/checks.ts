@@ -20,10 +20,15 @@ import { readDependencySpecifiers } from '#cli/repository/dependencies.ts';
 import type { PlannedCheck, LicenseProject } from '#cli/types/engine/plan.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { PIP_LICENSES_COMMAND, LICENSE_CHECKER_COMMAND } from '#cli/config/engine.ts';
-import { splitIdentity, PACKAGE_PARSERS, findNearestLockfile } from '#cli/parsers/projects/lockfiles.ts';
+import { PACKAGE_JSON, PYTHON_LOCKFILES, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers.ts';
 import { pythonLicenseOutputSchema, javascriptLicenseOutputSchema } from '#cli/schemas/configurations.ts';
-import { PACKAGE_JSON, PYTHON_LOCKFILES, JAVASCRIPT_LOCKFILES, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers.ts';
 
+import {
+    splitIdentity,
+    PACKAGE_PARSERS,
+    normalizePythonName,
+    findNearestLockfile,
+} from '#cli/parsers/projects/lockfiles.ts';
 import type {
     AllowedPackage,
     LicensedPackage,
@@ -124,10 +129,7 @@ async function scanPythonLicenses(
         const identity = `${packageReport.Name}@${packageReport.Version}`;
         const split = splitIdentity(identity);
         return {
-            name:
-                split === undefined
-                    ? identity
-                    : `${split[0].toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-')}@${split[1]}`,
+            name: split === undefined ? identity : `${normalizePythonName(split[0])}@${split[1]}`,
             license: selectPythonLicense(packageReport),
         };
     });
@@ -163,9 +165,7 @@ async function scanProject(
             ? new Set(
                   [...locked].map((identity) => {
                       const split = splitIdentity(identity);
-                      return split === undefined
-                          ? identity
-                          : `${split[0].toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-')}@${split[1]}`;
+                      return split === undefined ? identity : `${normalizePythonName(split[0])}@${split[1]}`;
                   }),
               )
             : locked;
@@ -188,8 +188,7 @@ async function scanLicenses(session: CheckSession, planned: PlannedCheck) {
 
 function isPackageAllowed(record: AllowedPackage, identity: string, ecosystem: ProjectLicenses['ecosystem']): boolean {
     const split = splitIdentity(identity);
-    const name =
-        ecosystem === 'python' ? record.name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-') : record.name;
+    const name = ecosystem === 'python' ? normalizePythonName(record.name) : record.name;
     if (split === undefined || !buildPathMatcher([name])(split[0])) return false;
     if ([ANY_VERSION, split[1]].includes(record.version)) return true;
     return (

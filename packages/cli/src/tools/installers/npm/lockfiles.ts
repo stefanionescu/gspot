@@ -7,12 +7,10 @@ import { bunLockfileSchema } from '#cli/schemas/parsers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
-import type { PackageManager } from '#cli/types/repository.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { modify, applyEdits } from 'jsonc-parser/lib/esm/main.js';
-import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
 import { PNPM_PEER_START, NPM_PACKAGE_FOLDER, PNPM_ROOT_IMPORTER } from '#cli/config/parsers.ts';
-import type { Lockfile, BunPackage, LockedTarball, ToolProjectLockfileName } from '#cli/types/tools.ts';
+import { stripPnpmKey, splitIdentity, readNpmKeyName } from '#cli/parsers/projects/lockfiles.ts';
 import { INTEGRITY, BUN_LOCKFILE, NPM_SETTING_PREFIX, LOCKFILE_WORKSPACE_KEYS } from '#cli/config/tools/installers.ts';
 
 import {
@@ -21,6 +19,13 @@ import {
     npmToolPackageSchema,
     pnpmToolPackageSchema,
 } from '#cli/schemas/tools.ts';
+import type {
+    Lockfile,
+    BunPackage,
+    LockedTarball,
+    ToolPackageManagerName,
+    ToolProjectLockfileName,
+} from '#cli/types/tools.ts';
 
 function findPackageRegistry(name: string, environment: Record<string, string>): string | undefined {
     const scope = name.startsWith('@') ? name.split('/', 1)[0] : undefined;
@@ -47,7 +52,7 @@ function isStandardBunTarball(bunPackage: BunPackage, environment: Record<string
 }
 
 function parseDevelopmentDependencies(
-    packageManager: Exclude<PackageManager['name'], 'yarn'>,
+    packageManager: ToolPackageManagerName,
     workspace: unknown,
 ): Dependencies | undefined {
     if (!isTable(workspace)) return undefined;
@@ -63,10 +68,7 @@ function parseDevelopmentDependencies(
     return pins;
 }
 
-function parseToolLockfile(
-    packageManager: Exclude<PackageManager['name'], 'yarn'>,
-    lockfile: string,
-): Record<string, unknown> {
+function parseToolLockfile(packageManager: ToolPackageManagerName, lockfile: string): Record<string, unknown> {
     const path = selectLockfileName(packageManager);
     const schema = npmToolLockSchemas[packageManager];
     return packageManager === 'pnpm'
@@ -75,7 +77,7 @@ function parseToolLockfile(
 }
 
 function parseRootDependencies(
-    packageManager: Exclude<PackageManager['name'], 'yarn'>,
+    packageManager: ToolPackageManagerName,
     document: Record<string, unknown>,
 ): Dependencies | undefined {
     const workspaces = document[LOCKFILE_WORKSPACE_KEYS[packageManager]];
@@ -109,7 +111,7 @@ function hasStandardNpmPackages(document: Record<string, unknown>, environment: 
     const packages = document['packages'] as Record<string, Record<string, unknown>>;
     return Object.entries(packages).every(([key, lockedPackage]) => {
         if (!key.includes(NPM_PACKAGE_FOLDER)) return true;
-        const name = key.slice(key.lastIndexOf(NPM_PACKAGE_FOLDER) + NPM_PACKAGE_FOLDER.length);
+        const name = readNpmKeyName(key);
         const parsed = npmToolPackageSchema.safeParse(lockedPackage);
         if (!parsed.success) return false;
         const { version, resolved = '', integrity, name: identity = name } = parsed.data;
@@ -120,7 +122,7 @@ function hasStandardNpmPackages(document: Record<string, unknown>, environment: 
 function hasStandardPnpmPackages(document: Record<string, unknown>, environment: Record<string, string>): boolean {
     const packages = document['packages'] as Record<string, unknown>;
     return Object.entries(packages).every(([key, lockedPackage]) => {
-        const identity = splitIdentity((key.startsWith('/') ? key.slice(1) : key).split(PNPM_PEER_START, 1).join(''));
+        const identity = splitIdentity(stripPnpmKey(key));
         const parsed = pnpmToolPackageSchema.safeParse(lockedPackage);
         if (identity === undefined || !parsed.success) return false;
         const [name, version] = identity;
@@ -133,7 +135,7 @@ function hasStandardPnpmPackages(document: Record<string, unknown>, environment:
 }
 
 function isPinLocked(
-    packageManager: Exclude<PackageManager['name'], 'yarn'>,
+    packageManager: ToolPackageManagerName,
     document: Record<string, unknown>,
     [name, version]: [string, string],
 ): boolean {
@@ -183,7 +185,7 @@ Check whether a lockfile pins every generated dependency and no extra root depen
 @param environment the configured package registry addresses, which each download must match when given.
 */
 export function isLockfileFresh(
-    packageManager: Exclude<PackageManager['name'], 'yarn'>,
+    packageManager: ToolPackageManagerName,
     lockfile: string,
     dependencies: Dependencies,
     environment?: Record<string, string>,
@@ -209,7 +211,7 @@ Select the lockfile name for the package manager of an npm tool project.
 
 @param packageManager the validated name.
 */
-export function selectLockfileName(packageManager: Exclude<PackageManager['name'], 'yarn'>): ToolProjectLockfileName {
+export function selectLockfileName(packageManager: ToolPackageManagerName): ToolProjectLockfileName {
     return (
         LOCKFILES.filter((lockfile) => 'toolProject' in lockfile).find(
             (lockfile) => lockfile.packageManager === packageManager,

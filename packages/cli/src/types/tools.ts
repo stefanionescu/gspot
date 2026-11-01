@@ -82,6 +82,7 @@ export type Session = {
     toolCache: RunCache;
     resources: Disposable[];
     packageManager: PackageManagerPin | undefined;
+    toolPackageManager: ToolPackageManagerName | undefined;
     cancelSignal?: AbortSignal | undefined;
     settings: Settings;
     settingsText: string;
@@ -156,8 +157,10 @@ export type InstallResult = {
     steps: readonly (readonly string[])[];
 };
 
+export type ToolPackageManagerName = Exclude<PackageManager['name'], 'yarn'>;
+
 export type ToolPackageManager = PackageManager & {
-    name: Exclude<PackageManager['name'], 'yarn'>;
+    name: ToolPackageManagerName;
     command: PackageManagerCommand;
 };
 

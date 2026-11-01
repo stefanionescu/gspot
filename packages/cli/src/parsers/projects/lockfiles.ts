@@ -72,7 +72,7 @@ export const PACKAGE_PARSERS: Readonly<Record<LockedPackageLockfile, (path: stri
     'yarn.lock': parseYarnPackages,
     'uv.lock': (path, text) =>
         parseTomlFile(path, text, uvLockfileSchema).package.flatMap(({ name, version }) =>
-            version === undefined ? [] : `${name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-')}@${version}`,
+            version === undefined ? [] : `${normalizePythonName(name)}@${version}`,
         ),
 };
 
@@ -129,6 +129,26 @@ function parseYarnVersions(path: string, text: string, specifiers: Map<string, s
         return parsed.success && parsed.data.version !== undefined ? [[name, parsed.data.version]] : [];
     });
     return new Map(versions);
+}
+
+/**
+Read the package name of an npm lockfile key, the last one of its nested node_modules folders.
+
+@param key the key of the packages table.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The lockfile parser and the tool lockfile test read npm keys through it.
+export function readNpmKeyName(key: string): string {
+    return key.slice(key.lastIndexOf(NPM_PACKAGE_FOLDER) + NPM_PACKAGE_FOLDER.length);
+}
+
+/**
+Drop the leading slash and the peer suffix of a pnpm lockfile key.
+
+@param key the key of the packages table.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The lockfile parser and the tool lockfile test read pnpm keys through it.
+export function stripPnpmKey(key: string): string {
+    return (key.startsWith('/') ? key.slice(1) : key).split(PNPM_PEER_START, 1).join('');
 }
 
 /**

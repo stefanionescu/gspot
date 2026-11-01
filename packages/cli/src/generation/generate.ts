@@ -47,8 +47,8 @@ function listWorkflowPackageManagers(session: Session, generated: Generation, lo
     const packageManagers = new Set<CiPackageManager>(
         lockfiles.map((path) => FROZEN_INSTALLS[basename(path) as FrozenLockfile][0]),
     );
-    if (generated.files.some(({ path }) => path === GSPOT_PATHS.npmProject) && session.packageManager !== undefined)
-        packageManagers.add(session.packageManager.name === 'yarn' ? 'npm' : session.packageManager.name);
+    if (generated.files.some(({ path }) => path === GSPOT_PATHS.npmProject) && session.toolPackageManager !== undefined)
+        packageManagers.add(session.toolPackageManager);
     if (generated.files.some(({ path }) => path === GSPOT_PATHS.pythonProject)) packageManagers.add('uv');
     return [...packageManagers].toSorted(compareText);
 }

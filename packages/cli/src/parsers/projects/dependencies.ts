@@ -3,6 +3,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
 import { pipfileSchema, pyprojectSchema, packageJsonSchema } from '#cli/schemas/parsers.ts';
 
 import type {
@@ -28,14 +29,13 @@ import {
     LINE_CONTINUATION,
     JAVASCRIPT_RUNTIMES,
     REQUIREMENT_NAME_END,
-    PYTHON_NAME_SEPARATORS,
 } from '#cli/config/parsers.ts';
 
 function parseRequirementName(requirement: string): string | undefined {
     const trimmed = requirement.trim();
     const end = trimmed.search(REQUIREMENT_NAME_END);
     const name = end === -1 ? trimmed : trimmed.slice(0, end);
-    return REQUIREMENT_NAME.test(name) ? name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-') : undefined;
+    return REQUIREMENT_NAME.test(name) ? normalizePythonName(name) : undefined;
 }
 
 function convertPythonDependencies(maps: Record<string, PythonDependency>[]): Dependencies {
@@ -44,10 +44,7 @@ function convertPythonDependencies(maps: Record<string, PythonDependency>[]): De
             .flatMap((map) => Object.entries(map))
             .map(
                 ([name, value]) =>
-                    [
-                        name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-'),
-                        typeof value === 'string' ? value : JSON.stringify(value),
-                    ] as const,
+                    [normalizePythonName(name), typeof value === 'string' ? value : JSON.stringify(value)] as const,
             )
             .filter(([name]) => name !== 'python'),
     );

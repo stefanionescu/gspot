@@ -15,10 +15,11 @@ import { compareText, formatCount } from '#cli/system/text.ts';
 import type { ReplacementRequest } from '#cli/types/repository.ts';
 import { GSPOT_PATHS, UV_LOCKFILE } from '#cli/config/manifests.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { GSPOT_FOLDER, PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
+import { normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
 import { PRIVATE_FILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { uvSettingsSchema, uvProjectSettingsSchema } from '#cli/schemas/tools.ts';
-import { GSPOT_FOLDER, PYPROJECT_TOML, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers.ts';
 
 import {
     redactInstallOutput,
@@ -102,7 +103,7 @@ function parseExactRequirements(lockedPackage: UvLockfile['package'][number]): s
     const pins: string[] = [];
     for (const { name, specifier } of requirements) {
         if (specifier === undefined) return undefined;
-        pins.push(`${name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-')}${specifier}`);
+        pins.push(`${normalizePythonName(name)}${specifier}`);
     }
     return pins;
 }
@@ -286,11 +287,7 @@ export function isPythonLockfileFresh(
     const pins = parseExactRequirements(projectPackage);
     if (pins === undefined) return false;
     const expected = project.dependencies
-        .map((value) =>
-            value.replace(REQUIREMENT_PACKAGE_NAME, (name) =>
-                name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-'),
-            ),
-        )
+        .map((value) => value.replace(REQUIREMENT_PACKAGE_NAME, (name) => normalizePythonName(name)))
         .toSorted((left, right) => compareText(left, right));
     return isDeepStrictEqual(
         pins.toSorted((left, right) => compareText(left, right)),

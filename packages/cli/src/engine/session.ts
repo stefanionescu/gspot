@@ -64,6 +64,14 @@ async function readSessionRepository({
     });
 }
 
+function addPackageManagers(session: Session): void {
+    if (Object.keys(listPackagePins(session.toolConfigurations).npm).length === 0) return;
+    const sources = session.repository.files.filter((file) => file.kind === 'source').map((file) => file.path);
+    const packageManager = detectPackageManager(session.root, sources);
+    session.packageManager = packageManager;
+    session.toolPackageManager = packageManager.name === 'yarn' ? 'npm' : packageManager.name;
+}
+
 function readSessionSettings(root: string, requested: SettingsFile | undefined): SettingsFile {
     if (requested !== undefined) return requested;
     const { text } = readSettingsFile(root);
@@ -112,6 +120,7 @@ export async function openSession(
         cancelSignal,
         timeoutSeconds: settings.tool_timeout_seconds,
         packageManager: undefined,
+        toolPackageManager: undefined,
         root,
         toolsRoot,
         startRunner: selectStartRunner(root),
@@ -124,10 +133,6 @@ export async function openSession(
         toolCache,
     };
     session.toolConfigurations = selectToolConfigurations(session, session.configuredChecks);
-    if (Object.keys(listPackagePins(session.toolConfigurations).npm).length > 0)
-        session.packageManager = detectPackageManager(
-            root,
-            repository.files.filter((file) => file.kind === 'source').map((file) => file.path),
-        );
+    addPackageManagers(session);
     return session;
 }

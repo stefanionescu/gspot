@@ -5,23 +5,15 @@ import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { listExecutablePaths } from '#cli/tools/locate.ts';
+import type { ReplacementRequest } from '#cli/types/repository.ts';
 import { isMiseLockfileFresh } from '#cli/tools/installers/mise.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
 import { UV_TOOL, UV_REINSTALL_FLAG } from '#cli/config/tools/installers.ts';
 import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
 import { listMisePins, findPackagePin, listPackagePins } from '#cli/tools/pins.ts';
-import type { PackageManager, ReplacementRequest } from '#cli/types/repository.ts';
 import { installNpmTools, planNpmLockfile } from '#cli/tools/installers/npm/project.ts';
 import { isLockfileFresh, selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
 
-import type {
-    Session,
-    ToolInstall,
-    GeneratedFile,
-    StaleLockfile,
-    NpmToolInstall,
-    ToolProjectsInstall,
-} from '#cli/types/tools.ts';
 import {
     installPythonTools,
     planPythonLockfile,
@@ -29,6 +21,15 @@ import {
     isPythonLockfileFresh,
     buildPythonProjectTable,
 } from '#cli/tools/installers/pypi.ts';
+import type {
+    Session,
+    ToolInstall,
+    GeneratedFile,
+    StaleLockfile,
+    NpmToolInstall,
+    ToolProjectsInstall,
+    ToolPackageManagerName,
+} from '#cli/types/tools.ts';
 
 function readMiseLockfileState(files: Files, configurations: Session['toolConfigurations']): StaleLockfile | undefined {
     const path = GSPOT_PATHS.miseLockfile;
@@ -39,7 +40,7 @@ function readMiseLockfileState(files: Files, configurations: Session['toolConfig
 
 function readNpmLockfileState(
     files: Files,
-    packageManager: Exclude<PackageManager['name'], 'yarn'>,
+    packageManager: ToolPackageManagerName,
     configurations: Session['toolConfigurations'],
 ): StaleLockfile | undefined {
     const path = `${GSPOT_FOLDER}/${selectLockfileName(packageManager)}`;
@@ -83,18 +84,16 @@ writes nothing, and it reads no package manager settings.
 @param generated the tool project files that apply writes.
 */
 export function listStaleLockfiles(
-    session: Pick<Session, 'root' | 'packageManager' | 'toolConfigurations'>,
+    session: Pick<Session, 'root' | 'toolPackageManager' | 'toolConfigurations'>,
     generated: GeneratedFile[],
 ): StaleLockfile[] {
-    const { root, packageManager, toolConfigurations } = session;
+    const { root, toolPackageManager, toolConfigurations } = session;
     const projects = new Set(generated.map((file) => file.path));
     const files = openFiles(root);
     const lockfiles: (StaleLockfile | undefined)[] = [];
     if (projects.has(GSPOT_PATHS.miseProject)) lockfiles.push(readMiseLockfileState(files, toolConfigurations));
-    if (projects.has(GSPOT_PATHS.npmProject) && packageManager !== undefined) {
-        const name = packageManager.name === 'yarn' ? 'npm' : packageManager.name;
-        lockfiles.push(readNpmLockfileState(files, name, toolConfigurations));
-    }
+    if (projects.has(GSPOT_PATHS.npmProject) && toolPackageManager !== undefined)
+        lockfiles.push(readNpmLockfileState(files, toolPackageManager, toolConfigurations));
     if (projects.has(GSPOT_PATHS.pythonProject)) lockfiles.push(readPythonLockfileState(files, toolConfigurations));
     return lockfiles.filter((lockfile): lockfile is StaleLockfile => lockfile !== undefined);
 }

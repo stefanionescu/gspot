@@ -138,16 +138,14 @@ List every managed path, with the lockfiles of the tool projects in use.
 @param generated the files that this run generates.
 */
 export function listExpectedPaths(
-    session: Pick<Session, 'packageManager' | 'toolsRoot' | 'timeoutSeconds' | 'cache'>,
+    session: Pick<Session, 'toolPackageManager' | 'toolsRoot' | 'timeoutSeconds' | 'cache'>,
     generated: Generation,
 ): Set<string> {
     const paths = new Set([...generated.files, ...generated.blocks, ...generated.managedKeys].map((file) => file.path));
-    const { packageManager } = session;
+    const { toolPackageManager } = session;
     const project = generated.files.find((file) => file.path === GSPOT_PATHS.npmProject);
-    if (packageManager !== undefined && project !== undefined) {
-        const name = packageManager.name === 'yarn' ? 'npm' : packageManager.name;
-        paths.add(`${GSPOT_FOLDER}/${selectLockfileName(name)}`);
-    }
+    if (toolPackageManager !== undefined && project !== undefined)
+        paths.add(`${GSPOT_FOLDER}/${selectLockfileName(toolPackageManager)}`);
     for (const file of generated.files) {
         if (file.path === GSPOT_PATHS.miseProject) paths.add(GSPOT_PATHS.miseLockfile);
         else if (file.path === GSPOT_PATHS.pythonProject) paths.add(GSPOT_PATHS.uvLockfile);
