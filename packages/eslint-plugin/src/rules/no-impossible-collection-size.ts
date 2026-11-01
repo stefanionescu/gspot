@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
-import { COLLECTION_TYPE_NAMES, COLLECTION_SIZE_MEMBERS } from '../config/rules.ts';
 import { ESLintUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { COLLECTION_TYPE_NAMES, COLLECTION_SIZE_MEMBERS } from '../config/collections.ts';
 
 function readCollectionSize(node: TSESTree.BinaryExpression): TSESTree.MemberExpression | undefined {
     if (node.operator !== '<' && node.operator !== '>=') return undefined;

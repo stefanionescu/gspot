@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
 import { buildRegexVisitors } from '../regex.ts';
 import type { AST } from '@eslint-community/regexpp';
-import { ANCHOR_PAIR, ANCHOR_KINDS } from '../config/rules.ts';
+import { ANCHOR_PAIR, ANCHOR_KINDS } from '../config/regex.ts';
 
 function readAnchors({ elements }: AST.Alternative): { start: boolean; end: boolean } {
     const [first] = elements;

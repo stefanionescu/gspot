@@ -183,3 +183,7 @@ export type ScriptSettings = { sources: number; isVersioned: boolean; hasIntegri
 export type IntegrityMessage = 'missingBoth' | 'missingIntegrity' | 'missingCrossOrigin';
 
 export type GroupRead = { node: TSESTree.Node; name: string };
+
+export type TestedName = { identifier: TSESTree.Identifier; value: 'truthy' | 'falsy' };
+
+export type DecidedVariable = { variable: TSESLint.Scope.Variable; value: TestedName['value'] };

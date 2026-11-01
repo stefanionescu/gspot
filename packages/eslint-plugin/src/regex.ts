@@ -1,6 +1,7 @@
 import { readAssignedValue } from './modules.ts';
+import { REGEXP_CONSTRUCTOR } from './config/regex.ts';
+import { GLOBAL_THIS_NAME } from './config/builtins.ts';
 import { type AST, parseRegExpLiteral } from '@eslint-community/regexpp';
-import { GLOBAL_THIS_NAME, REGEXP_CONSTRUCTOR } from './config/builtins.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function readStaticString(node: TSESTree.Node | undefined, source: TSESLint.SourceCode): string | undefined {

@@ -4,7 +4,7 @@ import { unwrapExpression } from '../syntax.ts';
 import type { GroupRead } from '../types/rules.ts';
 import { type AST, visitRegExpAST } from '@eslint-community/regexpp';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { EXEC_METHOD, MATCH_METHODS, GROUPS_PROPERTY, INDICES_PROPERTY } from '../config/builtins.ts';
+import { EXEC_METHOD, MATCH_METHODS, GROUPS_PROPERTY, INDICES_PROPERTY } from '../config/regex.ts';
 
 function readCalledMethod(value: TSESTree.Node | null) {
     const call = value === null ? undefined : unwrapExpression(value);

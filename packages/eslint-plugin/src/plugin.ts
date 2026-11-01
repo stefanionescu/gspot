@@ -39,6 +39,7 @@ import { noRenamedExports } from './rules/no-renamed-exports.ts';
 import pluginPackage from '../package.json' with { type: 'json' };
 import { noEmptyTestTable } from './rules/no-empty-test-table.ts';
 import { noFixedTestWaits } from './rules/no-fixed-test-waits.ts';
+import { noEmptyCollection } from './rules/no-empty-collection.ts';
 import { noEmptyRepetition } from './rules/no-empty-repetition.ts';
 import { noInsecureCookies } from './rules/no-insecure-cookies.ts';
 import { noNestedFunctions } from './rules/no-nested-functions.ts';
@@ -61,6 +62,7 @@ import { noGlobalsShadowing } from './rules/no-globals-shadowing.ts';
 import { noInvariantReturns } from './rules/no-invariant-returns.ts';
 import { noRedundantBoolean } from './rules/no-redundant-boolean.ts';
 import { noTrivialFunctions } from './rules/no-trivial-functions.ts';
+import { noUnusedCollection } from './rules/no-unused-collection.ts';
 import { preferNativeJquery } from './rules/prefer-native-jquery.ts';
 import { reduceInitialValue } from './rules/reduce-initial-value.ts';
 import { requireErrorChecks } from './rules/require-error-checks.ts';
@@ -78,6 +80,7 @@ import { noSetterInComponent } from './rules/no-setter-in-component.ts';
 import { noUnknownRegexGroup } from './rules/no-unknown-regex-group.ts';
 import { embedAlternativeText } from './rules/embed-alternative-text.ts';
 import { noDuplicatedBranches } from './rules/no-duplicated-branches.ts';
+import { noIdenticalFunctions } from './rules/no-identical-functions.ts';
 import { noInvertedAssertions } from './rules/no-inverted-assertions.ts';
 import { preferReadonlyStatic } from './rules/prefer-readonly-static.ts';
 import { redundantTypeAliases } from './rules/redundant-type-aliases.ts';
@@ -106,6 +109,7 @@ import { preferPromiseShorthand } from './rules/prefer-promise-shorthand.ts';
 import { noDuplicateInComposite } from './rules/no-duplicate-in-composite.ts';
 import { noMisplacedLoopCounter } from './rules/no-misplaced-loop-counter.ts';
 import { noUnexplainedTestSkips } from './rules/no-unexplained-test-skips.ts';
+import { noGratuitousExpressions } from './rules/no-gratuitous-expressions.ts';
 import { noDefaultUtilityImports } from './rules/no-default-utility-imports.ts';
 import { noFloatingPointEquality } from './rules/no-floating-point-equality.ts';
 import { noUnsafeSanitizerBypass } from './rules/no-unsafe-sanitizer-bypass.ts';
@@ -122,6 +126,10 @@ import { noUnenclosedMultilineBlock } from './rules/no-unenclosed-multiline-bloc
 const rules = {
     ...securityRules,
     ...awsRules,
+    'no-gratuitous-expressions': noGratuitousExpressions,
+    'no-unused-collection': noUnusedCollection,
+    'no-empty-collection': noEmptyCollection,
+    'no-identical-functions': noIdenticalFunctions,
     'no-unknown-regex-group': noUnknownRegexGroup,
     'no-stateful-regex': noStatefulRegex,
     'no-lazy-before-optional': noLazyBeforeOptional,

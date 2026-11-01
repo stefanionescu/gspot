@@ -225,9 +225,6 @@ export const UNUSED_CALL_PARENTS = new Set([
     'ThrowStatement',
 ]);
 
-export const COLLECTION_SIZE_MEMBERS = new Set(['length', 'size']);
-export const COLLECTION_TYPE_NAMES = new Set(['Array', 'Map', 'Set', 'WeakMap', 'WeakSet']);
-
 export const SIGNED_NUMBER_OPERATORS = new Set(['+', '-']);
 
 export const EQUALITY_OPERATORS = new Set(['==', '===', '!=', '!==']);
@@ -313,28 +310,16 @@ export const ALIAS_MEMBER_LIMIT = 2;
 
 export const ALIAS_USE_LIMIT = 2;
 
-export const ANCHOR_KINDS: ReadonlySet<string> = new Set(['start', 'end']);
+export const DEFAULT_IDENTICAL_LINES = 3;
 
-export const LOOKAROUND_KINDS: ReadonlySet<string> = new Set(['lookahead', 'lookbehind']);
-
-export const CHOICE_BASE = 2;
-
-export const DEFAULT_REGEX_COMPLEXITY = 20;
-
-export const REGEX_COMPLEXITY_OPTIONS_SCHEMA = {
+export const IDENTICAL_FUNCTIONS_OPTIONS_SCHEMA = {
     type: 'object',
     properties: {
-        threshold: {
-            description: 'The highest complexity a regular expression may have.',
+        minLines: {
+            description: 'The fewest lines a function body spans before a copy of it is reported.',
             type: 'integer',
-            minimum: 0,
+            minimum: 1,
         },
     },
     additionalProperties: false,
 } satisfies JSONSchema4;
-
-export const ANCHOR_PAIR = 2;
-
-export const ENDING_PAIR = 2;
-
-export const DISTINCT_SUBJECTS = 2;

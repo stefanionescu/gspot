@@ -1,9 +1,9 @@
 import { createRule } from '../rule.ts';
 import { readAssignedValue } from '../modules.ts';
-import { DISTINCT_SUBJECTS } from '../config/rules.ts';
+import { LOOP_STATEMENTS } from '../config/builtins.ts';
 import { readRegex, buildRegexVisitors } from '../regex.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { EXEC_METHOD, LOOP_STATEMENTS, EMPTY_STRING_TEXTS, STATEFUL_REGEX_METHODS } from '../config/builtins.ts';
+import { EXEC_METHOD, DISTINCT_SUBJECTS, EMPTY_STRING_TEXTS, STATEFUL_REGEX_METHODS } from '../config/regex.ts';
 
 function isLoopCondition(node: TSESTree.Node, ancestors: readonly TSESTree.Node[]): boolean {
     const chain = [...ancestors, node];

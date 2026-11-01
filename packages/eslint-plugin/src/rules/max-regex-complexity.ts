@@ -7,7 +7,7 @@ import {
     LOOKAROUND_KINDS,
     DEFAULT_REGEX_COMPLEXITY,
     REGEX_COMPLEXITY_OPTIONS_SCHEMA,
-} from '../config/rules.ts';
+} from '../config/regex.ts';
 
 function readDeepening(node: AST.Node): number {
     const choices = 'alternatives' in node && node.alternatives.length > 1 ? 1 : 0;
