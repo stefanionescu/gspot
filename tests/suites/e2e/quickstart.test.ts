@@ -3,7 +3,7 @@ import { join, dirname } from 'node:path';
 import { parse } from '@decimalturn/toml-patch';
 import { testdir, createFileTree } from 'testdirs';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { runtimePinsSchema } from '#tests/schemas/runner.ts';
+import { runtimePinsSchema } from '#tests/schemas/setup.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { TOOL_PINS_FILE } from '#tests/config/setup/sandboxes.ts';

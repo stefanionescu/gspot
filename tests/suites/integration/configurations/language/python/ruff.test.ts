@@ -13,7 +13,7 @@ import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
 import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
-import { ruffRulesSchema, ruffConfigurationSchema } from '#tests/schemas/ruff.ts';
+import { ruffRulesSchema, ruffConfigurationSchema } from '#tests/schemas/integration.ts';
 import { buildSandboxSettings, prepareParameterProject } from '#tests/setup/cli/settings.ts';
 import { writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { spawnGspot, listFindingRows, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';

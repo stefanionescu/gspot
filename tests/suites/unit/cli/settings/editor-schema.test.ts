@@ -1,10 +1,18 @@
 import type { z } from 'zod';
 import { test, expect } from 'bun:test';
+import { Ajv2020 } from 'ajv/dist/2020.js';
 import { stringify } from '@decimalturn/toml-patch';
 import { buildJsonSchema } from '#cli/settings/editor-schema.ts';
-import { isPublishedSettings } from '#tests/schemas/settings.ts';
 import { validateSettingsText } from '#tests/setup/cli/settings.ts';
 import { PUBLISHED_SCHEMA_CASES } from '#tests/config/settings/validation.ts';
+
+const isPublishedSettings = new Ajv2020({
+    strict: true,
+    strictTuples: false,
+    formats: {
+        uri: (value: string) => URL.canParse(value),
+    },
+}).compile(buildJsonSchema());
 
 test.each([...PUBLISHED_SCHEMA_CASES])('runtime and published schemas agree on $name', ({ input, valid }) => {
     const errors = validateSettingsText(stringify(input));

@@ -6,7 +6,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { readGitSetting } from '#cli/repository/git/run.ts';
-import { runtimePinsSchema } from '#tests/schemas/runner.ts';
+import { runtimePinsSchema } from '#tests/schemas/setup.ts';
 import type { DoctorReport } from '#cli/types/commands/reports.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
