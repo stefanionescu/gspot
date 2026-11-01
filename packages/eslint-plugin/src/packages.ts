@@ -77,7 +77,8 @@ export function readRequiredModule(node: TSESTree.Node): string | undefined {
 }
 
 /**
-List the modules that a file imports or requires.
+List the modules that a file imports or requires. The Svelte parser puts the imports inside a script element, one
+level below the program.
 
 @param source the file.
 */
@@ -86,8 +87,11 @@ export function listImportedModules(source: TSESLint.SourceCode): ReadonlySet<st
     if (cached !== undefined) return cached;
     const globalScope = source.getScope(source.ast);
     const references = [...globalScope.through, ...(globalScope.set.get('require')?.references ?? [])];
+    const statements = source.ast.body.flatMap((statement): TSESTree.Node[] =>
+        'body' in statement && Array.isArray(statement.body) ? statement.body : [statement],
+    );
     const modules = new Set([
-        ...source.ast.body.flatMap((statement) =>
+        ...statements.flatMap((statement) =>
             statement.type === AST_NODE_TYPES.ImportDeclaration ? [statement.source.value] : [],
         ),
         ...references.flatMap((reference) => readRequiredModule(reference.identifier.parent) ?? []),

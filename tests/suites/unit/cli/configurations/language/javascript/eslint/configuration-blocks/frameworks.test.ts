@@ -263,3 +263,16 @@ test('React Native turns off DOM accessibility rules only inside its scope', asy
     expect(rules['native/App.tsx']!['jsx-a11y-x/alt-text']).toBeUndefined();
     expect(rules['web/App.tsx']!['jsx-a11y-x/alt-text']![0]).toBe(2);
 });
+
+test('a Svelte component reports what the rules read from the imports of its script', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['svelte']),
+        'package.json': '{"private":true,"type":"module","dependencies":{"svelte":"^5.0.0"}}',
+        'Wallet.svelte':
+            '<script>\nimport { Wallet } from "ethers";\nexport const wallet = Wallet.fromPhrase("legal winner thank year");\n</script>\n<p>Wallet</p>\n',
+    });
+    const eslint = await buildEslint(sandbox.path);
+    expect(
+        await listLintFindings(eslint, sandbox.path, ['Wallet.svelte'], ['gspot/review-blockchain-mnemonic']),
+    ).toStrictEqual([{ file: 'Wallet.svelte', rule: 'gspot/review-blockchain-mnemonic', line: 3 }]);
+});

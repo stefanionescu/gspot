@@ -1,4 +1,5 @@
 import { createRule } from '../rule.ts';
+import { listImportedModules } from '../packages.ts';
 import { readExpressionValue } from '../expressions.ts';
 import { WALLET_MODULES, MNEMONIC_FUNCTIONS } from '../config/security.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
@@ -32,22 +33,16 @@ export const reviewBlockchainMnemonic = createRule<[], 'mnemonic'>({
     },
     create(context) {
         const source = context.sourceCode;
-        let isWalletImported = source.ast.body.some(
-            (statement) =>
-                statement.type === AST_NODE_TYPES.ImportDeclaration && WALLET_MODULES.has(statement.source.value),
-        );
-        const phrases: TSESTree.Node[] = [];
+        if (
+            !listImportedModules(source)
+                .values()
+                .some((module) => WALLET_MODULES.has(module))
+        )
+            return {};
         return {
             CallExpression(node) {
-                const isRequire = ASTUtils.isIdentifier(node.callee) && node.callee.name === 'require';
-                const [module] = isRequire ? node.arguments : [];
-                isWalletImported ||= module !== undefined && WALLET_MODULES.has(ASTUtils.getStringIfConstant(module));
                 const phrase = findHardcodedPhrase(source, node);
-                if (phrase) phrases.push(phrase);
-            },
-            'Program:exit'() {
-                const found = isWalletImported ? phrases : [];
-                for (const phrase of found) context.report({ node: phrase, messageId: 'mnemonic' });
+                if (phrase) context.report({ node: phrase, messageId: 'mnemonic' });
             },
         };
     },

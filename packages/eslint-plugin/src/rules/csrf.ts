@@ -1,5 +1,6 @@
 import { createRule } from '../rule.ts';
 import { readQualifiedName } from '../modules.ts';
+import { listImportedModules } from '../packages.ts';
 import { listArgumentValues, readOptionProperties } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { CSRF_MODULE, MIDDLEWARE_METHOD, CSRF_SAFE_METHODS, CSRF_CHANGING_METHODS } from '../config/servers.ts';
@@ -46,10 +47,7 @@ export const csrf = createRule<[], 'ignoredMethod' | 'unprotectedRoute'>({
     },
     create(context) {
         const source = context.sourceCode;
-        let isImported = source.ast.body.some(
-            (statement) =>
-                statement.type === AST_NODE_TYPES.ImportDeclaration && statement.source.value === CSRF_MODULE,
-        );
+        const isImported = listImportedModules(source).has(CSRF_MODULE);
         let isAppProtected = false;
         const checkRoute = (node: TSESTree.CallExpression, method: string | null): void => {
             const values = method === MIDDLEWARE_METHOD ? listArgumentValues(node.arguments, source) : node.arguments;
@@ -60,8 +58,6 @@ export const csrf = createRule<[], 'ignoredMethod' | 'unprotectedRoute'>({
         };
         return {
             CallExpression(node) {
-                const isRequire = ASTUtils.isIdentifier(node.callee) && node.callee.name === 'require';
-                isImported ||= isRequire && readQualifiedName(node, source) === CSRF_MODULE;
                 const ignored =
                     readQualifiedName(node.callee, source) === CSRF_MODULE
                         ? findIgnoredMethod(source, node)
