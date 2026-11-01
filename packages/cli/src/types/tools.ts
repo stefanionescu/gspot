@@ -55,7 +55,7 @@ export type MiseToolPin = {
     name: string;
     version: string;
     options?: Record<string, string | number | boolean> | undefined;
-    checksums?: Record<string, string> | undefined;
+    checksums: Record<string, string>;
 };
 
 type ToolFolderKind = 'npm' | 'python' | 'vale';

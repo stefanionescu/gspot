@@ -10,7 +10,7 @@ extensions = [".md", ".mdx", ".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs
 tags = ["shebang:shell"]
 
 [[tool]]
-mise = "vale"
+mise = { name = "vale", checksums = { "linux-x64" = "sha256:867534ddb678abca7f214bc4706ead0922bd5252ffe8035fc227013f66c8b214", "linux-arm64" = "sha256:104cbd349279e50c4cb40adb70adf345d93cc4a3a0191f9e68bdccb97086b582", "macos-x64" = "sha256:eeb39e86f1daac27cc2a77fef3af1824d50559bdc22329fb25fb921c80c79472", "macos-arm64" = "sha256:87b513f26499f6657c15cf7175ba5b058a7c1ff2bb2d4e07265db2dd43451e44", "windows-x64" = "sha256:3a8884774973b6f2826877e1c6388a5feae4704ef88a9a9c912c77ce186990f3" } }
 name = "vale"
 replace = [".vale.ini", "_vale.ini", "vale.ini"]
 suppression = { marker = "^<!--\\s*vale\\b", reason = "reason: (?<reason>\\S.*)", forbidden = true }

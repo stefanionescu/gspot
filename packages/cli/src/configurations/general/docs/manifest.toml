@@ -7,7 +7,7 @@ title = "Docs"
 extensions = [".md", ".mdx"]
 
 [[tool]]
-mise = "lychee"
+mise = { name = "lychee", checksums = { "linux-x64" = "sha256:1f4e0ef7f6554a6ed33dd7ac144fb2e1bbed98598e7af973042fc5cd43951c9a", "linux-arm64" = "sha256:91a7bd65685da41b90ccb9bc867a3d649a7818042dae04ff405e55a25bddee4c", "macos-x64" = "sha256:887503a9cff667d322b8d0892b40bf49976eb9507af8483220a3706cdad55978", "macos-arm64" = "sha256:c9d3740ea2d891854d37116c9fba840f37b6e7c89d330e7db84ac333631c4977", "windows-x64" = "sha256:32975d1493ee1a975d6bb41e4fb56fe419cb442ded628bb772ba2e614acfacad" } }
 name = "lychee"
 replace = ["lychee.toml", ".lycheeignore"]
 version = "0.24.2"

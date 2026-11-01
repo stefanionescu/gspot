@@ -24,7 +24,7 @@ filenames = ["Package.swift", "Package.resolved", "*.xctestplan"]
 [[tool]]
 builds = ["macos", "linux"]
 min_version = "0.57.0"
-mise = "swiftlint"
+mise = { name = "swiftlint", checksums = { "linux-x64" = "sha256:caeed6f4a679c35539ffaf124f6c4ab4a8416917f7d8796279dc52b74026059d", "linux-arm64" = "sha256:9ffa52f478e6d8eb485d37d14715ffac90abc81c58f3370d598bf75be05605f8", "macos-x64" = "sha256:c1e429b0599cf1b516f369a2d9ec04eaf0e436f3c12b637df8851fa52ff694d0", "macos-arm64" = "sha256:c1e429b0599cf1b516f369a2d9ec04eaf0e436f3c12b637df8851fa52ff694d0" } }
 name = "swiftlint"
 replace = [".swiftlint.yml", ".swiftlint.yaml"]
 rule_url = "https://realm.github.io/SwiftLint/{rule}.html"
@@ -39,12 +39,12 @@ name = "swiftformat"
 replace = [".swiftformat"]
 suppression = { marker = "\\bswiftformat:disable\\b", reason = " - (?<reason>\\S.*)", example = "// swiftformat:disable:next redundantSelf - reason: the closure needs self" }
 version = "0.64.0"
-mise = { name = "swiftformat", options = { no_app = true, rename_exe = "swiftformat" } }
+mise = { name = "swiftformat", options = { no_app = true, rename_exe = "swiftformat" }, checksums = { "linux-x64" = "sha256:599eb5d2d8cf43e1128e79cd72f3bc2fec1b3189c3ac7593fbe732f2568fed36", "linux-arm64" = "sha256:6b53c985b3849be0c9544bf93a378c12aaa761a7225f05f0b9948f827dd7db52", "macos-x64" = "sha256:95ea62625d0b898a7af870293311ae6f09e4a3147ecd900593687e4b9ab2fd98", "macos-arm64" = "sha256:95ea62625d0b898a7af870293311ae6f09e4a3147ecd900593687e4b9ab2fd98", "windows-x64" = "sha256:95ea62625d0b898a7af870293311ae6f09e4a3147ecd900593687e4b9ab2fd98" } }
 
 [[tool]]
 builds = ["macos"]
 min_version = "3.0.0"
-mise = "periphery"
+mise = { name = "periphery", checksums = { "macos-x64" = "sha256:07d4e286e31dd79164df39097e0b59f533c94badbe18158464a455ea88a166d7", "macos-arm64" = "sha256:07d4e286e31dd79164df39097e0b59f533c94badbe18158464a455ea88a166d7" } }
 name = "periphery"
 replace = [".periphery.yml", ".periphery.yaml"]
 suppression = { marker = "\\bperiphery:ignore\\b", reason = " - (?<reason>\\S.*)", example = "// periphery:ignore - reason: the runtime calls it by name" }

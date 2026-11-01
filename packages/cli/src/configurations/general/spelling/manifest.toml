@@ -7,7 +7,7 @@ title = "Spelling"
 paths = ["**"]
 
 [[tool]]
-mise = "typos"
+mise = { name = "typos", checksums = { "linux-x64" = "sha256:93c301fd4120ff076e2cc2a6d6a61cab4a4bdb81899287c0938b452e56d1f454", "linux-arm64" = "sha256:2ac5e37b3236b3c07dec5cdf1527acf143aec4674a6089b0bf424d021b35e099", "macos-x64" = "sha256:f3451079971633a7f769fb958fe06b0d64b5f1dc46df0854aa1ddb9a6f4031d6", "macos-arm64" = "sha256:316d50a32c3726a80ab39c6d12141b70080498973c5e8a9b068b12cde78b10c1", "windows-x64" = "sha256:518f759fba43205f17a717656054c1d25bc883455a6296989e9d021c6edb7c59" } }
 name = "typos"
 replace = ["typos.toml", ".typos.toml", "_typos.toml"]
 version = "1.51.1"

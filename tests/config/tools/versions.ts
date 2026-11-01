@@ -14,7 +14,7 @@ export const TOOL_PROJECT_PACKAGES = [
         system: false,
         installers: {
             npm: { name: '@scope/searcher', version: '2.0.0' },
-            mise: { name: 'searcher', version: '2.0.0' },
+            mise: { name: 'searcher', version: '2.0.0', checksums: {} },
         },
         expected: { kind: 'npm', name: '@scope/searcher', version: '2.0.0', requires: ['node'] },
     },
@@ -23,7 +23,10 @@ export const TOOL_PROJECT_PACKAGES = [
         tool: 'formatter',
         version: '3.0.0',
         system: false,
-        installers: { pypi: { name: 'formatter', version: '3.0.0' }, mise: { name: 'formatter', version: '3.0.0' } },
+        installers: {
+            pypi: { name: 'formatter', version: '3.0.0' },
+            mise: { name: 'formatter', version: '3.0.0', checksums: {} },
+        },
         expected: { kind: 'python', name: 'formatter', version: '3.0.0' },
     },
     {

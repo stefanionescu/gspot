@@ -43,7 +43,9 @@ type InstallerPin = {
 
 export type VersionedInstaller = InstallerPin & { version: string };
 
-export type ToolInstallers = Record<string, InstallerPin> & { pypi?: VersionedInstaller; mise?: VersionedInstaller };
+type MiseInstaller = VersionedInstaller & { checksums: Record<string, string> };
+
+export type ToolInstallers = Record<string, InstallerPin> & { pypi?: VersionedInstaller; mise?: MiseInstaller };
 
 export type Tool = Exclude<ParsedManifest['tools'][number], string>;
 

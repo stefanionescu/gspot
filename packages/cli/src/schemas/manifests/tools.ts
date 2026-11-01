@@ -203,13 +203,10 @@ const installerSchema = z.union([z.string(), installerDefinitionSchema]);
 
 const installerOptionsSchema = z.record(z.string(), z.union([z.string(), z.boolean()]));
 
-const miseInstallerSchema = z.union([
-    z.string(),
-    installerDefinitionSchema.partial({ version: true }).extend({
-        options: installerOptionsSchema.optional(),
-        checksums: z.record(z.string().min(1), z.string().regex(SHIPPED_CHECKSUM_PATTERN)).optional(),
-    }),
-]);
+const miseInstallerSchema = installerDefinitionSchema.partial({ version: true }).extend({
+    options: installerOptionsSchema.optional(),
+    checksums: z.record(z.string().min(1), z.string().regex(SHIPPED_CHECKSUM_PATTERN)),
+});
 
 const installerFields = {
     npm: installerSchema.optional(),

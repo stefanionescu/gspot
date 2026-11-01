@@ -14,13 +14,13 @@ paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "**/docker-compo
 prefixes = ["docker"]
 
 [[tool]]
-mise = "hadolint"
+mise = { name = "hadolint", checksums = { "linux-x64" = "sha256:c7187db94eeeeca956519a6af171adc31453941a1e777961f6e680f697c8c507", "linux-arm64" = "sha256:f6198ef8090f404dbb771abfee086eb8c48ac177f30da7fd3510aca35b344b5d", "macos-x64" = "sha256:ffe9bb18b23d5ed1eae50237aecdbb523d016e96da0bd4e7aa432040acfc3fde", "macos-arm64" = "sha256:5c09f3213f8e40406abe048233d985eebef336d4a6a20021be47fadb6cf480a2", "windows-x64" = "sha256:01d927294962b5387f9ead4f18679158452be4f17c765ad0bdffe5264b9c7b0a" } }
 name = "hadolint"
 replace = [".hadolint.yaml", ".hadolint.yml"]
 version = "2.15.1"
 
 [[tool]]
-mise = "trivy"
+mise = { name = "trivy", checksums = { "linux-x64" = "sha256:e24b1c51293c1b15e4ba8d45bbc7891ba053f90278ec2698f3562c993e145fe7", "linux-arm64" = "sha256:aab21e677a7b7071fc79f1711480840754c18a1b9d9cefa7ccd06af63a0e8f4c", "macos-x64" = "sha256:89563d4d495cf4ef06a0d1950f8710b124e9f7bd2615ec6c47b03673f4ad45a2", "macos-arm64" = "sha256:e7ec0d21fe842553f59af99aba2efbcc822369fbaed27019c575408b6d135fce", "windows-x64" = "sha256:7b4762a5a5326cb4b83dfd2bb5d9aaf15a1ed867c75cad7dd8b38840a28e7be6" } }
 name = "trivy"
 replace = ["trivy.yaml", ".trivyignore"]
 version = "0.76.0"

@@ -23,7 +23,7 @@ paths = ["**"]
 reason = "A leading underscore marks a private shell declaration."
 
 [[tool]]
-mise = "shellcheck"
+mise = { name = "shellcheck", checksums = { "linux-x64" = "sha256:8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198", "linux-arm64" = "sha256:12b331c1d2db6b9eb13cfca64306b1b157a86eb69db83023e261eaa7e7c14588", "macos-x64" = "sha256:3c89db4edcab7cf1c27bff178882e0f6f27f7afdf54e859fa041fca10febe4c6", "macos-arm64" = "sha256:56affdd8de5527894dca6dc3d7e0a99a873b0f004d7aabc30ae407d3f48b0a79", "windows-x64" = "sha256:8a4e35ab0b331c85d73567b12f2a444df187f483e5079ceffa6bda1faa2e740e" } }
 name = "shellcheck"
 replace = [".shellcheckrc"]
 rule_url = "https://www.shellcheck.net/wiki/{rule}"
@@ -31,7 +31,7 @@ suppression = { marker = "\\bshellcheck +disable=", reason = "# ?reason: (?<reas
 version = "0.11.0"
 
 [[tool]]
-mise = "shfmt"
+mise = { name = "shfmt", checksums = { "linux-x64" = "sha256:76e77641faa025814b77f153b29796b8e6fa2fca03e0c76a691608b86c7ea7bf", "linux-arm64" = "sha256:5f2db09dae91fca848f7adbdd014632e921a383863a2ad7e0450ad3aba0c6489", "macos-x64" = "sha256:d33eee0da0f92835b3562e9767a05cee7e4eaeef47daa03bfd09da17b4b590a6", "macos-arm64" = "sha256:b7c872db63553ccffc7253aba3ed7d4885a27d83f1ba567b1138c6315a5847e5", "windows-x64" = "sha256:13629ce28442ca80b6b5a819f7574ab39e1c28c6e26734ca816c9714e04851df" } }
 name = "shfmt"
 version = "3.14.1"
 

@@ -125,10 +125,15 @@ export function buildToolLockfiles(configurations: Configuration[]): Record<stri
                     [
                         {
                             version: pin.version,
-                            'platforms.linux-x64': {
-                                url: 'https://github.com/example/tool/releases/download/v1.0.0/tool.tar.gz',
-                                checksum: pin.checksums?.['linux-x64'] ?? `sha256:${'a'.repeat(64)}`,
-                            },
+                            ...Object.fromEntries(
+                                Object.entries(pin.checksums).map(([platform, checksum]) => [
+                                    `platforms.${platform}`,
+                                    {
+                                        url: 'https://github.com/example/tool/releases/download/v1.0.0/tool.tar.gz',
+                                        checksum,
+                                    },
+                                ]),
+                            ),
                         },
                     ],
                 ]),

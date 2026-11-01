@@ -61,22 +61,19 @@ function isReleaseAddress(address: unknown): boolean {
     return url?.protocol === MISE_RELEASE_PROTOCOL && MISE_RELEASE_HOSTS.has(url.hostname);
 }
 
-function isAuditedChecksum(pin: MiseToolPin, platform: string, checksum: unknown): boolean {
-    if (typeof checksum !== 'string' || !MISE_CHECKSUM_PATTERN.test(checksum)) return false;
-    const audited = pin.checksums?.[platform.slice(MISE_PLATFORM_PREFIX.length)];
-    return audited === undefined || audited === checksum;
-}
-
 function isLockedRelease(pin: MiseToolPin, locked: object): boolean {
     const platforms = Object.entries(locked).filter(([name]) => name.startsWith(MISE_PLATFORM_PREFIX));
     if (platforms.length === 0) return false;
-    return platforms.every(
-        ([name, value]) =>
+    return platforms.every(([name, value]) => {
+        const audited = pin.checksums[name.slice(MISE_PLATFORM_PREFIX.length)];
+        return (
             isTable(value) &&
-            isAuditedChecksum(pin, name, value['checksum']) &&
+            audited !== undefined &&
+            audited === value['checksum'] &&
             isReleaseAddress(value['url']) &&
-            (value['url_api'] === undefined || isReleaseAddress(value['url_api'])),
-    );
+            (value['url_api'] === undefined || isReleaseAddress(value['url_api']))
+        );
+    });
 }
 
 function writeChecksums(lockfile: string, pins: MiseToolPin[]): string {
@@ -144,7 +141,7 @@ function fillVersionChecksums(version: Record<string, unknown>, pin: MiseToolPin
     for (const [name, platform] of Object.entries(version)) {
         if (!name.startsWith(MISE_PLATFORM_PREFIX) || !isTable(platform)) continue;
         if (typeof platform['checksum'] === 'string' && MISE_CHECKSUM_PATTERN.test(platform['checksum'])) continue;
-        const checksum = pin.checksums?.[name.slice(MISE_PLATFORM_PREFIX.length)];
+        const checksum = pin.checksums[name.slice(MISE_PLATFORM_PREFIX.length)];
         if (checksum === undefined)
             throw new GspotError(
                 'install',
@@ -156,7 +153,7 @@ function fillVersionChecksums(version: Record<string, unknown>, pin: MiseToolPin
 
 /**
 Compare the mise pins with the versions recorded in the mise lockfile. Each locked download must come from a release
-host over HTTPS, and each locked checksum must equal the audited checksum of the pin where it has one.
+host over HTTPS, and each locked checksum must equal the audited checksum of the pin on that platform.
 
 @param pins the mise pins of the configurations in use.
 @param lockfile the recorded lockfile, if present.

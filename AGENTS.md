@@ -110,6 +110,8 @@ You can edit the other keys of that file.
 - Keep CLI calls, and imports of the functions that the check registry names, out of `tests/suites/unit/cli/configurations/`.
   A test may import such a function when other product code imports it too. Exit codes, JSON output, and other CLI
   behavior belong to `tests/suites/unit/cli/commands/`.
+- When a mise pin changes, fill its `checksums` in the manifest from
+  `mise lock --platform linux-x64,linux-arm64,macos-x64,macos-arm64,windows-x64`.
 - End no file with an export list.
 - Throw `GspotError` for what the user can fix. Throw a plain `Error` only for a broken invariant.
 - Read and write files synchronously; run processes asynchronously.

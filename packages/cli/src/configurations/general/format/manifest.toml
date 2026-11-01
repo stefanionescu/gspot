@@ -25,7 +25,7 @@ file = "package.yaml"
 key = "prettier"
 
 [[tool]]
-mise = "github:editorconfig-checker/editorconfig-checker"
+mise = { name = "github:editorconfig-checker/editorconfig-checker", checksums = { "linux-x64" = "sha256:44efaef3ed14c6ab52eb87481d78e5e5c204796dccf26e2f4598a61ba17f8003", "linux-arm64" = "sha256:abad76da8c9950fdc2a314bcd66969172aa823e9c595fa7e3a389a91e34d025e", "macos-x64" = "sha256:ff59f57717d95fc62b8e372c8051dbbb766f7d660942409a85d027b0feb2422c", "macos-arm64" = "sha256:ff59f57717d95fc62b8e372c8051dbbb766f7d660942409a85d027b0feb2422c", "windows-x64" = "sha256:857f8f74dfc259d73dac93573e37cf3ce01150787d7b139bf839549cc6b5beb9" } }
 name = "editorconfig-checker"
 replace = [".editorconfig"]
 version = "4.0.2"

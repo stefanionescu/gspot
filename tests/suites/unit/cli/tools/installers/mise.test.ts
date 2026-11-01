@@ -7,6 +7,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import type { MiseToolPin } from '#cli/types/tools.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { MiseProject } from '#tests/types/setup.ts';
@@ -22,11 +23,9 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { installMiseTools, isMiseLockfileFresh } from '#cli/tools/installers/mise.ts';
 
 test('mise lock freshness needs the tool, its version, a URL and a sha256 checksum', () => {
-    const project = [{ name: 'vale', version: '1.2.3' }];
-    const lock =
-        '[[tools.vale]]\nversion = "1.2.3"\n[tools.vale."platforms.linux-x64"]\nurl = "https://github.com/vale-cli/vale/releases/download/v1.2.3/vale.zip"\nchecksum = "sha256:' +
-        'a'.repeat(64) +
-        '"\n';
+    const checksum = `sha256:${'a'.repeat(64)}`;
+    const project = [{ name: 'vale', version: '1.2.3', checksums: { 'linux-x64': checksum } }];
+    const lock = `[[tools.vale]]\nversion = "1.2.3"\n[tools.vale."platforms.linux-x64"]\nurl = "https://github.com/vale-cli/vale/releases/download/v1.2.3/vale.zip"\nchecksum = "${checksum}"\n`;
     expect(isMiseLockfileFresh(project, lock)).toBe(true);
     expect(isMiseLockfileFresh(project, lock.replace('1.2.3', '1.2.4'))).toBe(false);
     expect(isMiseLockfileFresh(project, lock.replaceAll('tools.vale', 'tools.other'))).toBe(false);
@@ -58,6 +57,7 @@ test('mise lock freshness refuses a download from another host and a checksum ot
     expect(isMiseLockfileFresh(project, lock.replace('https://github.com/', 'https://example.com/'))).toBe(false);
     expect(isMiseLockfileFresh(project, lock.replaceAll('https:', 'http:'))).toBe(false);
     expect(isMiseLockfileFresh(project, lock.replace('https://api.github.com/', 'https://example.com/'))).toBe(false);
+    expect(isMiseLockfileFresh([{ ...project[0]!, checksums: {} }], lock)).toBe(false);
 });
 
 test.each(['manual'] as const)(
@@ -77,7 +77,7 @@ test.each(['manual'] as const)(
         const trusted = join(realpathSync(sandbox.path), GSPOT_PATHS.miseProject);
         using _environment = overrideEnvironment({ MISE_CEILING_PATHS: sandbox.path });
         const pins = listMisePins(session.toolConfigurations);
-        const audited = new Map(pins.map((pin) => [pin.name, pin.checksums?.['linux-x64']]));
+        const audited = new Map(pins.map((pin) => [pin.name, pin.checksums['linux-x64']]));
         const runBlocking = processes.spawnProcessBlocking;
         using _paths = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
             command[0] === 'mise' ? buildProcessResult() : runBlocking(command, options),
@@ -95,7 +95,7 @@ test.each(['manual'] as const)(
                                 version: typeof version === 'string' ? version : version.version,
                                 'platforms.linux-x64': {
                                     url: 'https://github.com/example/tool/releases/download/v1.0.0/tool.zip',
-                                    checksum: audited.get(name) ?? `sha256:${'a'.repeat(64)}`,
+                                    checksum: audited.get(name),
                                 },
                             },
                         ],
@@ -129,7 +129,7 @@ test('mise fills missing release checksums from the audited pins without fetchin
     const project = install.generated.files.find(({ path }) => path === GSPOT_PATHS.miseProject)!;
     await createFileTree(sandbox.path, { [project.path]: project.content });
     const url = 'https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-linux-x86_64.gz';
-    const audited = listMisePins(session.toolConfigurations).find((pin) => pin.checksums !== undefined)!;
+    const audited = new Map(listMisePins(session.toolConfigurations).map((pin) => [pin.name, pin.checksums]));
     const runBlocking = processes.spawnProcessBlocking;
     using _paths = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
         command[0] === 'mise' ? buildProcessResult() : runBlocking(command, options),
@@ -142,8 +142,7 @@ test('mise fills missing release checksums from the audited pins without fetchin
             const sections = Object.entries(project.tools).map(([name, version]) => {
                 const key = /^[\w-]+$/u.test(name) ? name : JSON.stringify(name);
                 const pin = typeof version === 'string' ? version : version.version;
-                const checksum = name === audited.name ? '' : `checksum = "sha256:${'a'.repeat(64)}"\n`;
-                return `[[tools.${key}]]\nversion = "${pin}"\n\n[tools.${key}."platforms.linux-x64"]\nurl = "${url}"\n${checksum}`;
+                return `[[tools.${key}]]\nversion = "${pin}"\n\n[tools.${key}."platforms.linux-x64"]\nurl = "${url}"\n`;
             });
             await writeFile(join(options.cwd, 'mise.lock'), sections.join('\n'));
         }
@@ -152,7 +151,7 @@ test('mise fills missing release checksums from the audited pins without fetchin
     await installMiseTools(install);
     const lockfile = await readFile(join(sandbox.path, GSPOT_PATHS.miseLockfile), 'utf8');
     expect(request).not.toHaveBeenCalled();
-    expect(lockfile).toContain(audited.checksums!['linux-x64']!);
+    for (const checksums of audited.values()) expect(lockfile).toContain(checksums['linux-x64']!);
     expect(isMiseLockfileFresh(listMisePins(session.toolConfigurations), lockfile)).toBe(true);
 });
 
@@ -191,7 +190,7 @@ test.each(['pin', 'checksum'])('mise refuses a lock that omits a %s and keeps th
     const writer = openFiles(sandbox.path);
     const install = buildToolInstall(session, writer);
     install.misePath = 'mise';
-    const pin = listMisePins(session.toolConfigurations).find((pin) => pin.checksums === undefined)!;
+    const [pin] = listMisePins(session.toolConfigurations) as [MiseToolPin];
     const lockfile =
         omitted === 'pin'
             ? '[tools]\n'
@@ -200,7 +199,7 @@ test.each(['pin', 'checksum'])('mise refuses a lock that omits a %s and keeps th
                       [pin.name]: [
                           {
                               version: pin.version,
-                              'platforms.linux-x64': {
+                              'platforms.linux-riscv64': {
                                   url: 'https://github.com/example/tool/releases/download/v1.0.0/tool.zip',
                               },
                           },
@@ -218,7 +217,7 @@ test.each(['pin', 'checksum'])('mise refuses a lock that omits a %s and keeps th
     expect(error.message).toBe(
         omitted === 'pin'
             ? `mise lock did not lock ${names}.\nWARN skipped tool after rate limit\nGitHub limits the release lookups of mise without a token. Set GITHUB_TOKEN to a GitHub token, then run gspot install again.`
-            : `mise lock omitted a checksum for ${pin.name} on linux-x64. Add an audited installer checksum before retrying.`,
+            : `mise lock omitted a checksum for ${pin.name} on linux-riscv64. Add an audited installer checksum before retrying.`,
     );
     expect(install.steps.filter((command) => command[1] === 'install')).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.miseLockfile), 'utf8')).toBe('[tools]\n');
