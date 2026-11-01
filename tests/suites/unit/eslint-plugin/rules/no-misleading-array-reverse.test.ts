@@ -1,0 +1,26 @@
+import plugin from '#eslint-plugin/plugin.ts';
+import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+
+buildTypedRuleTester().run('no-misleading-array-reverse', plugin.rules['no-misleading-array-reverse'], {
+    valid: [
+        'declare const posts: string[]; posts.reverse();',
+        'declare const posts: string[]; function newest() { return posts.sort(); }',
+        'declare let posts: string[]; posts = posts.reverse();',
+        'const newest = [1, 2].reverse();',
+        'class Feed { get posts() { return [1]; } count() { return this.posts.reverse().length; } }',
+    ],
+    invalid: [
+        {
+            code: 'declare const posts: string[]; const newest = posts.reverse();',
+            errors: [{ messageId: 'mutation', data: { method: 'reverse', replacement: 'toReversed' } }],
+        },
+        {
+            code: 'declare const posts: string[]; show(posts.sort());',
+            errors: [{ messageId: 'mutation', data: { method: 'sort', replacement: 'toSorted' } }],
+        },
+        {
+            code: 'declare const posts: string[]; function newest() { return { posts: posts.reverse() }; }',
+            errors: [{ messageId: 'mutation' }],
+        },
+    ],
+});

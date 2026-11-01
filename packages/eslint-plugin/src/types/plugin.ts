@@ -1,4 +1,4 @@
-import type { TSESTree } from '@typescript-eslint/utils';
+import type { TSESTree, ParserServicesWithTypeInformation } from '@typescript-eslint/utils';
 
 export type RuleDocs = {
     level: 'recommended' | 'all' | 'none';
@@ -20,3 +20,16 @@ export type LocalFunction =
     | TSESTree.FunctionExpression
     | TSESTree.ArrowFunctionExpression
     | TSESTree.TSDeclareFunction;
+
+type TypeChecker = ReturnType<ParserServicesWithTypeInformation['program']['getTypeChecker']>;
+
+export type CheckedType = ReturnType<TypeChecker['getTypeAtLocation']>;
+
+export type TypeReader = {
+    program: ParserServicesWithTypeInformation['program'];
+    checker: TypeChecker;
+    read: (node: TSESTree.Node) => CheckedType;
+    map: ParserServicesWithTypeInformation['esTreeNodeToTSNodeMap'];
+};
+
+export type TypeCategory = 'array' | 'string' | 'number' | 'boolean' | 'other';

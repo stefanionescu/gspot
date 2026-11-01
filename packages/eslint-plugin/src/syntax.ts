@@ -101,6 +101,57 @@ export function buildSourceVisitors(checkSource: (source: TSESTree.Node) => void
 }
 
 /**
+Compare two nodes or two runs of statements. Their node types and tokens must match; comments and layout do not count.
+
+@param first a node, or the statements of one branch.
+@param second the node or statements to compare with the first.
+@param source the file that holds both.
+*/
+export function haveSameTokens(
+    first: TSESTree.Node | readonly TSESTree.Node[],
+    second: TSESTree.Node | readonly TSESTree.Node[],
+    source: TSESLint.SourceCode,
+): boolean {
+    const firstNodes = [first].flat();
+    const secondNodes = [second].flat();
+    if (firstNodes.some((node, index) => node.type !== secondNodes[index]?.type)) return false;
+    const firstTokens = firstNodes.flatMap((node) => source.getTokens(node));
+    const secondTokens = secondNodes.flatMap((node) => source.getTokens(node));
+    return (
+        firstNodes.length === secondNodes.length &&
+        firstTokens.length === secondTokens.length &&
+        firstTokens.every((token, index) => token.value === secondTokens[index]?.value)
+    );
+}
+
+/**
+List the nodes directly below a node.
+
+@param node the parent node.
+@param visitorKeys the child keys of each node type.
+*/
+export function listChildren(node: TSESTree.Node, visitorKeys: TSESLint.SourceCode['visitorKeys']): TSESTree.Node[] {
+    const values = (visitorKeys[node.type] ?? []).flatMap((key): unknown[] => [node[key as keyof TSESTree.Node]]);
+    return values.flat().filter((child): child is TSESTree.Node => typeof child === 'object' && child !== null);
+}
+
+/**
+List a node and every node below it, parents before children.
+
+@param node the root of the walk.
+@param visitorKeys the child keys of each node type.
+*/
+export function listDescendants(node: TSESTree.Node, visitorKeys: TSESLint.SourceCode['visitorKeys']): TSESTree.Node[] {
+    const nodes: TSESTree.Node[] = [];
+    const pending = [node];
+    for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
+        nodes.push(next);
+        pending.push(...listChildren(next, visitorKeys).toReversed());
+    }
+    return nodes;
+}
+
+/**
 Identify a type that only forwards its name and generic parameters to another type.
 
 @param node the alias declaration.

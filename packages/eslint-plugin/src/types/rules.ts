@@ -30,3 +30,30 @@ export type ImportBlock = { first: TSESTree.Statement; last: TSESTree.Statement 
 export type CommentGroup = { first: TSESTree.Comment; last: TSESTree.Comment; comments: TSESTree.Comment[] };
 
 export type SwitchCasesOptions = [number];
+
+export type Branch = { node: TSESTree.Node; body: readonly TSESTree.Node[] };
+
+export type BranchSet = {
+    owner: TSESTree.Node;
+    kind: string;
+    branches: readonly Branch[];
+    closing: 'none' | 'empty' | 'filled';
+};
+
+export type KeyWrite = { collection: TSESTree.Node; key: string; node: TSESTree.Node };
+
+export type ReturnScope = {
+    codePath: TSESLint.CodePath;
+    segments: Set<TSESLint.CodePathSegment>;
+    returns: TSESTree.ReturnStatement[];
+    frames: { effect: boolean; returns: boolean }[];
+    kinds: Set<string>;
+};
+
+export type NameSet = {
+    names: TSESTree.Identifier[];
+    kind: 'function' | 'parameter' | 'variable' | 'assignment';
+    unset: readonly TSESTree.Node[];
+};
+
+export type PromiseUse = 'blocking' | 'handled' | 'caught' | 'open';

@@ -1,0 +1,19 @@
+import plugin from '#eslint-plugin/plugin.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+
+buildRuleTester().run('no-equal-loop-condition', plugin.rules['no-equal-loop-condition'], {
+    valid: [
+        'for (let index = 0; index != 10; index++) {}',
+        'for (let index = 10; index !== 0; index -= 1) {}',
+        'for (let index = 0; index < limit; index += 2) {}',
+        'for (let index = 0; limit !== 10; index++) {}',
+        'for (let index = 0; index !== limit;) {}',
+    ],
+    invalid: [
+        { code: 'for (let index = 0; index !== limit; index += 2) {}', errors: [{ messageId: 'equality' }] },
+        { code: 'for (let index = 0; index != 10; index++) { read(index); }', errors: [{ messageId: 'equality' }] },
+        { code: 'for (let index = 10; index != 0; index++) {}', errors: [{ messageId: 'equality' }] },
+        { code: 'for (let index = 0; index == 10; index++) {}', errors: [{ messageId: 'equality' }] },
+        { code: 'for (let row = 0, column = 0; row !== 10; row++, column++) {}', errors: [{ messageId: 'equality' }] },
+    ],
+});

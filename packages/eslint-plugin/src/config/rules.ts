@@ -294,3 +294,50 @@ export const RESERVED_DECLARATION_NAMES = new Set([
 ]);
 
 export const COMPLEX_TRY_STATEMENTS = /^(?:Block|For(?:In|Of)?|While|DoWhile|Switch)Statement$/u;
+
+export const CONDITION_PARENTS: ReadonlySet<string> = new Set([
+    'IfStatement',
+    'ForStatement',
+    'WhileStatement',
+    'DoWhileStatement',
+    'ConditionalExpression',
+]);
+export const BRANCH_KEYS: ReadonlyMap<string, readonly string[]> = new Map([
+    ['IfStatement', ['consequent', 'alternate']],
+    ['WhileStatement', ['body']],
+    ['DoWhileStatement', ['body']],
+    ['ForStatement', ['body']],
+    ['ForInStatement', ['body']],
+    ['ForOfStatement', ['body']],
+]);
+
+export const MINIMUM_RETURNS = 2;
+
+export const DEFAULT_FUNCTION_NESTING = 5;
+export const FUNCTION_NESTING_OPTIONS_SCHEMA = {
+    type: 'object',
+    properties: {
+        threshold: { description: 'The deepest nesting of functions allowed.', type: 'integer', minimum: 1 },
+    },
+    additionalProperties: false,
+} satisfies JSONSchema4;
+
+export const STANDALONE_PARENTS: ReadonlySet<string> = new Set(['ChainExpression', 'LogicalExpression']);
+export const RETURNED_PARENTS: ReadonlySet<string> = new Set([
+    'ArrayExpression',
+    'ObjectExpression',
+    'ConditionalExpression',
+    'SpreadElement',
+]);
+
+export const CONSTRUCTOR_BODY_DEPTH = 2;
+
+export const NUMERIC_VALUE_TYPES: ReadonlySet<string> = new Set(['number', 'bigint']);
+
+export const SMALL_SWITCH_CASES = 2;
+
+export const EFFECT_ONLY_BRANCH = 'true,false';
+
+export const EFFECT_RETURN_BRANCH = 'true,true';
+
+export const BARE_RETURN_BRANCH = 'false,true';

@@ -1,0 +1,24 @@
+import plugin from '#eslint-plugin/plugin.ts';
+import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+
+buildTypedRuleTester().run('no-try-promise', plugin.rules['no-try-promise'], {
+    valid: [
+        'declare function save(): Promise<void>; async function run() { try { await save(); } catch (error) { report(error); } }',
+        'declare function save(): Promise<void>; declare function log(): void; try { save(); log(); } catch (error) { report(error); }',
+        'declare function save(): Promise<void>; try { save(); } finally { close(); }',
+    ],
+    invalid: [
+        {
+            code: 'declare function save(): Promise<void>; try { save(); } catch (error) { report(error); }',
+            errors: [{ messageId: 'open' }],
+        },
+        {
+            code: 'declare function save(): Promise<void>; try { save().catch(() => {}); } catch (error) { report(error); }',
+            errors: [{ messageId: 'caught' }],
+        },
+        {
+            code: 'declare function save(): Promise<void>; try { save().then(close); } catch (error) {}',
+            errors: [{ messageId: 'open' }],
+        },
+    ],
+});

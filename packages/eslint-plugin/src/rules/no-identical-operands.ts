@@ -1,5 +1,6 @@
 import { createRule } from '../rule.ts';
-import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { haveSameTokens } from '../syntax.ts';
+import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { UNIT_SHIFT_VALUES, EQUALITY_OPERATORS, REPEATED_OPERATORS } from '../config/rules.ts';
 
 function isComparedOperator(node: TSESTree.BinaryExpression | TSESTree.LogicalExpression): boolean {
@@ -9,20 +10,6 @@ function isComparedOperator(node: TSESTree.BinaryExpression | TSESTree.LogicalEx
     return (
         EQUALITY_OPERATORS.has(operator) &&
         (left.type !== AST_NODE_TYPES.Identifier || right.type !== AST_NODE_TYPES.Identifier)
-    );
-}
-
-function hasRepeatedOperands(
-    node: TSESTree.BinaryExpression | TSESTree.LogicalExpression,
-    source: TSESLint.SourceCode,
-): boolean {
-    const { left, right } = node;
-    if (left.type !== right.type || !isComparedOperator(node)) return false;
-    const leftTokens = source.getTokens(left);
-    const rightTokens = source.getTokens(right);
-    return (
-        leftTokens.length === rightTokens.length &&
-        leftTokens.every((token, index) => token.value === rightTokens[index]?.value)
     );
 }
 
@@ -44,8 +31,9 @@ export const noIdenticalOperands = createRule<[], 'operands'>({
     },
     create(context) {
         const inspect = (node: TSESTree.BinaryExpression | TSESTree.LogicalExpression) => {
-            const repeated = hasRepeatedOperands(node, context.sourceCode);
-            if (!repeated) return;
+            const { left, right } = node;
+            if (left.type !== right.type || !isComparedOperator(node)) return;
+            if (!haveSameTokens(left, right, context.sourceCode)) return;
             context.report({ node, messageId: 'operands', data: { operator: node.operator } });
         };
         return { BinaryExpression: inspect, LogicalExpression: inspect };
