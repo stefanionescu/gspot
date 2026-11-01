@@ -45,3 +45,18 @@ test.each([...IMPORT_STYLE_CASES])('init writes the import style of $name', asyn
     const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settingsText'>>;
     expect(findValueAt(parse(output.settingsText), ['javascript', 'import_extension'])).toBe(expected);
 });
+
+test('a nodenext tsconfig wins over the React import extension', async () => {
+    await using sandbox = await createGitSandbox({
+        'package.json': '{"private":true,"workspaces":["packages/ui"]}',
+        'packages/ui/package.json': '{"private":true,"type":"module","dependencies":{"react":"19.1.1"}}',
+        'packages/ui/tsconfig.json': '{"compilerOptions":{"module":"NodeNext","moduleResolution":"NodeNext"}}',
+        'packages/ui/src/button.tsx': 'export const Button = () => null;\n',
+    });
+    const result = await runGspot(sandbox.path, ['init', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const { settings: text } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settings'>>;
+    expect(parse(text)).toMatchObject({
+        scope: [{ path: 'packages/ui', tools: { eslint: { import_extension: 'js' } } }],
+    });
+});
