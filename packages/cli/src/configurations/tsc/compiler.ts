@@ -98,7 +98,7 @@ export function addTsbuildinfoFlag(
 }
 
 /**
-Shares a project compile across scopes, but never skips a second run in the same scope.
+Shares a project compile across scopes, but never skips a second run in the same scope. The first scope to start wins.
 
 @param cache the run cache.
 @param projectCheck what identifies the compile.
@@ -106,7 +106,7 @@ Shares a project compile across scopes, but never skips a second run in the same
 @param projectCheck.path the tsconfig of the project.
 @param projectCheck.scope the folder that runs it.
 @param projectCheck.required the compiler flags for one scope.
-@returns whether another scope already checks this project with these flags.
+@returns whether this scope owns the project: true when it won the claim, or won it earlier in this run.
 */
 export function claimProjectCheck(
     cache: RunCache,
@@ -118,7 +118,7 @@ export function claimProjectCheck(
         path,
         Object.entries(required).toSorted(([left], [right]) => compareText(left, right)),
     ]);
-    return remember(cache, CHECKED_PROJECTS, key, () => scope) !== scope;
+    return remember(cache, CHECKED_PROJECTS, key, () => scope) === scope;
 }
 
 /**
@@ -142,7 +142,7 @@ export async function runTsc(
     );
     const target = project === undefined ? join(session.root, planned.scope.path, TSCONFIG_FILE) : project.path;
     if (
-        claimProjectCheck(session.cache, {
+        !claimProjectCheck(session.cache, {
             check: planned.check.id,
             path: target,
             scope: planned.scope.path,

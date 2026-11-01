@@ -56,17 +56,18 @@ export function checkTsconfig(session: Session, planned: PlannedCheck): CheckFin
             ? []
             : { path, parsed };
     });
-    const unchecked = projects.filter(
-        ({ path }) =>
-            !claimProjectCheck(session.cache, {
-                check: planned.check.id,
-                path: join(session.root, path),
-                scope: planned.scope.path,
-                required,
-            }),
-    );
-    if (projects.length > 0 && unchecked.length === 0) throw new CheckStop('skipped', PARENT_TSCONFIG_SKIP);
-    return unchecked.flatMap(({ path, parsed }) =>
+    const owned: typeof projects = [];
+    for (const project of projects) {
+        const isOwned = claimProjectCheck(session.cache, {
+            check: planned.check.id,
+            path: join(session.root, project.path),
+            scope: planned.scope.path,
+            required,
+        });
+        if (isOwned) owned.push(project);
+    }
+    if (projects.length > 0 && owned.length === 0) throw new CheckStop('skipped', PARENT_TSCONFIG_SKIP);
+    return owned.flatMap(({ path, parsed }) =>
         [
             ...Object.keys(required).filter((option) => parsed.options[option] !== true),
             ...(required['strict'] === true
