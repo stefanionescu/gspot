@@ -249,6 +249,12 @@ export const ALT_TEXT_ON = 'gspot.alt-text = YES';
 
 export const VALE_DOWNLOAD_NAME = 'the Vale package';
 
+export const PROXY_VARIABLES = ['HTTPS_PROXY', 'HTTP_PROXY', 'https_proxy', 'http_proxy'] as const;
+
+export const NETWORK_ADVICE = 'Check the network or proxy, then run again.';
+
+export const NODE_PROXY_ADVICE = 'This Node.js sets no proxy for downloads. Run again with NODE_USE_ENV_PROXY=1.';
+
 export const VALE_PACKAGE_URLS = Object.fromEntries(
     VALE_PACKAGES.map((name) => [
         name,

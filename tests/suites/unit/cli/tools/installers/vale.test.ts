@@ -1,3 +1,4 @@
+import http from 'node:http';
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { getTool } from '#cli/tools/pins.ts';
@@ -13,6 +14,7 @@ import { LEVELS, GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { PREVIOUS_BYTES } from '#tests/config/setup/programs.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { VALE_PACKAGES_INI } from '#tests/config/setup/configurations.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { downloadArchive, hasValePackages, installValePackages } from '#cli/tools/installers/vale.ts';
@@ -166,4 +168,23 @@ test('an oversized archive cancels its response stream before reporting the size
     });
     expect(canceled).toBe(true);
     expect(stream.locked).toBe(false);
+});
+
+test('a failed download behind a proxy says how to turn the proxy on', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const install = buildToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    using _environment = overrideEnvironment({ HTTPS_PROXY: 'https://proxy.example.com:8080' });
+    const refuse = Object.assign(() => Promise.reject(new Error('The proxy refused the connection.')), {
+        preconnect: fetch.preconnect,
+    });
+    using _fetch = spyOn(globalThis, 'fetch').mockImplementation(refuse);
+    const setProxy: unknown = Reflect.get(http, 'setGlobalProxyFromEnv');
+    Reflect.deleteProperty(http, 'setGlobalProxyFromEnv');
+    const failure = await captureRejection(
+        downloadArchive(install, { url: 'https://example.com/a.zip', name: 'the archive', limit: 1 }),
+    );
+    Reflect.set(http, 'setGlobalProxyFromEnv', setProxy);
+    expect(failure.message).toBe(
+        'Cannot download the archive https://example.com/a.zip. This Node.js sets no proxy for downloads. Run again with NODE_USE_ENV_PROXY=1.',
+    );
 });

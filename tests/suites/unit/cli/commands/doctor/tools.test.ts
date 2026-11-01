@@ -242,3 +242,22 @@ test('doctor reports a missing project environment of a Python scope and exits 1
     expect(diagnosed.code, diagnosed.stdout + diagnosed.stderr).toBe(1);
     expect((JSON.parse(diagnosed.stdout) as DoctorReport).environments).toStrictEqual(['.venv']);
 });
+
+test.each([
+    { name: 'a Swift package', tables: '', tools: ['swift'] },
+    {
+        name: 'an Xcode project',
+        tables: '[swift]\nxcode_project = "App.xcodeproj"\nxcode_scheme = "App"\n',
+        tools: ['swift', 'xcodebuild'],
+    },
+])('doctor reports the Swift toolchain of $name', async ({ tables, tools }) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['swift'], { tables }),
+        'Package.swift': '// swift-tools-version: 6.0\n',
+    });
+    using _lookup = fakeExecutableLookup(null);
+    const result = await runGspot(sandbox.path, ['doctor', '--json']);
+    const report = JSON.parse(result.stdout) as DoctorReport;
+    const names = report.tools.map(({ name }) => name).filter((name) => ['swift', 'xcodebuild'].includes(name));
+    expect(names).toStrictEqual([...tools]);
+});

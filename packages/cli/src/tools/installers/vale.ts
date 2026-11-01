@@ -1,3 +1,4 @@
+import http from 'node:http';
 import { createHash } from 'node:crypto';
 import { getTool } from '#cli/tools/pins.ts';
 import { GspotError } from '#cli/system/errors.ts';
@@ -8,6 +9,7 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import { join, posix, dirname, resolve } from 'node:path';
 import type { Level, Settings } from '#cli/types/settings.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { VALE_TEMPORARY_NAME } from '#cli/config/repository/setup.ts';
 import { runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
 import type { ToolInstall, ArchiveDownload } from '#cli/types/tools.ts';
@@ -25,11 +27,14 @@ import {
     VALE_PACKAGES,
     BLOCK_IGNORES,
     TOKEN_IGNORES,
+    NETWORK_ADVICE,
     PROSE_GRAMMARS,
     MIN_ALERT_LINE,
     NO_STYLES_LINE,
     VALE_OFF_RULES,
+    PROXY_VARIABLES,
     VALE_STYLES_PATH,
+    NODE_PROXY_ADVICE,
     VALE_PACKAGE_URLS,
     VALE_INSTALL_STEP,
     ALL_FILES_SECTION,
@@ -46,6 +51,13 @@ import {
     VALE_PACKAGE_RELEASES,
     VALE_INSTALL_ARGUMENTS,
 } from '#cli/config/tools/installers.ts';
+
+function selectProxyAdvice(): string {
+    if (PROXY_VARIABLES.every((name) => readEnvironmentVariable(name) === undefined)) return NETWORK_ADVICE;
+    if (!('setGlobalProxyFromEnv' in http)) return NODE_PROXY_ADVICE;
+    http.setGlobalProxyFromEnv();
+    return NETWORK_ADVICE;
+}
 
 async function downloadValePackages(install: ToolInstall, folder: string): Promise<string[]> {
     const packages: string[] = [];
@@ -215,6 +227,7 @@ Download a release archive within the install timeout and a size limit.
 @param download the archive to fetch.
 */
 export async function downloadArchive(install: ToolInstall, download: ArchiveDownload): Promise<Buffer> {
+    const advice = selectProxyAdvice();
     try {
         const signals = [AbortSignal.timeout(install.session.timeoutSeconds * MILLISECONDS_PER_SECOND)];
         if (install.session.cancelSignal !== undefined) signals.push(install.session.cancelSignal);
@@ -228,10 +241,8 @@ export async function downloadArchive(install: ToolInstall, download: ArchiveDow
     } catch (error) {
         install.session.cancelSignal?.throwIfAborted();
         if (error instanceof GspotError) throw error;
-        throw new GspotError(
-            'install',
-            `Cannot download ${download.name} ${download.url}. Check the network or proxy, then run again.`,
-            { cause: error },
-        );
+        throw new GspotError('install', `Cannot download ${download.name} ${download.url}. ${advice}`, {
+            cause: error,
+        });
     }
 }

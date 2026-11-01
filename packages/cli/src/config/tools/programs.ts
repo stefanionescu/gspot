@@ -20,7 +20,7 @@ export const MISE_CONFIG_NAME = /^(?:\.?mise|\.rtx|\.tool-versions$|\.config$)/u
 
 export const MISE_PROJECT_FILES = new Set([MISE_CONFIG_FILE, MISE_LOCKFILE]);
 
-export const TOOL_ENVIRONMENT = { NO_COLOR: '1', FORCE_COLOR: '0' } as const;
+export const TOOL_ENVIRONMENT = { NO_COLOR: '1', FORCE_COLOR: '0', PYTHONUTF8: '1' } as const;
 
 export const UV_RUN_ARGUMENTS = ['run', '--no-sync'] as const;
 

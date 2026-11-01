@@ -57,6 +57,7 @@ system = true
 install_help = "Install Xcode from the App Store."
 name = "xcodebuild"
 system = true
+when = [{ setting = "swift.xcode_project" }]
 
 [[config_file]]
 per_scope = true
@@ -122,6 +123,7 @@ operating_systems = ["macos", "linux"]
 runs = "scope"
 stage = "push"
 summary = "Builds the package or Xcode scheme incrementally to report compiler errors."
+tool = ["swift", "xcodebuild"]
 why = "Swift checks types only during a build."
 
 [[check]]
