@@ -27,7 +27,7 @@ export const START_RUNNERS = {
         installCommand: 'yarn add --dev --exact <package>@<version>',
     },
     bun: {
-        command: 'bun run --no-install gspot',
+        command: 'bunx --no-install gspot',
         missing: 'Install Bun, then run bun install.',
         installCommand: 'bun add --dev --exact <package>@<version>',
     },

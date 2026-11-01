@@ -40,11 +40,11 @@ add each line to the matching hook. For Bun:
 
 ```shell
 # pre-commit
-bun run --no-install gspot check --hook pre-commit
+bunx --no-install gspot check --hook pre-commit
 # pre-push: preserve Git's remote arguments and standard input
-bun run --no-install gspot check --hook pre-push -- "$@"
+bunx --no-install gspot check --hook pre-push -- "$@"
 # commit-msg: preserve Git's message-file argument
-bun run --no-install gspot check --hook commit-msg -- "$1"
+bunx --no-install gspot check --hook commit-msg -- "$1"
 ```
 
 Use the exact lines that gspot prints for your package manager or mise. A hook without its line runs no gspot checks.

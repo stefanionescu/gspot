@@ -37,9 +37,9 @@ Run these commands in the root folder of a repository that has a `package.json`:
 
 ```shell
 bun add --dev --exact @gspothq/cli
-bun run --no-install gspot init
-bun run --no-install gspot install
-bun run --no-install gspot check
+bunx --no-install gspot init
+bunx --no-install gspot install
+bunx --no-install gspot check
 ```
 
 1. `bun add --dev --exact @gspothq/cli` adds gspot as a development dependency, pinned to one version.

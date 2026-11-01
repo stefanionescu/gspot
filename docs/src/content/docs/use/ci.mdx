@@ -121,8 +121,8 @@ starts it; see [Installation](/start/install/#choose-how-to-install). With Bun:
 
 ```shell
 bun install --frozen-lockfile
-bun run --no-install gspot install
-bun run --no-install gspot check
+bunx --no-install gspot install
+bunx --no-install gspot check
 ```
 
 With mise:
@@ -135,7 +135,7 @@ mise exec -- gspot check
 Run manual checks by name, for example:
 
 ```shell
-bun run --no-install gspot check --only security/semgrep-registry
+bunx --no-install gspot check --only security/semgrep-registry
 ```
 
 Let the pipeline fail on the gspot exit code: `1` means findings, and `2` means the run did not finish. A missing
