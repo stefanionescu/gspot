@@ -1,6 +1,6 @@
-import { stringify } from 'yaml';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { getTable, getLimit, selectFormat, listIgnoredRules } from '#cli/settings/scopes.ts';
+import { Document, type Node, type Scalar, type YAMLMap, type YAMLSeq } from 'yaml';
 
 import {
     SWIFT_FILES,
@@ -60,17 +60,6 @@ function buildSwiftlintOptions(planned: PlannedConfig, offSet: Set<string>) {
     return Object.fromEntries(enabled);
 }
 
-function buildDisabledRuleLines(off: string[]): string[] {
-    const disabled = off.filter((name) => !SWIFTLINT_OPT_IN.has(name) && !SWIFTLINT_ANALYZER.has(name));
-    const levelLines = disabled.map((name) => `  - ${name}`);
-    return [
-        'disabled_rules:',
-        `  ${SWIFTLINT_COMMENTS.disabled_rules}`,
-        ...SWIFTLINT_ALWAYS_OFF.map((name) => `  - ${name}`),
-        ...(disabled.length === 0 ? [] : [`  ${SWIFTLINT_LEVEL_NOTE}`, ...levelLines]),
-    ];
-}
-
 /**
 Build swiftlint.yml: the SwiftLint rules with the source limits of the repository.
 
@@ -80,23 +69,18 @@ export function buildSwiftlintFile(planned: PlannedConfig): string {
     const isAll = planned.level === 'all';
     const off = [...listIgnoredRules(planned.scope, SWIFTLINT_CHECK), ...(isAll ? [] : SWIFTLINT_DEFAULT_LEVEL_OFF)];
     const offSet = new Set(off);
-    const options = buildSwiftlintOptions(planned, offSet);
-    const document = {
-        ...options,
-        disabled_rules: [
-            ...SWIFTLINT_ALWAYS_OFF,
-            ...off.filter((rule) => !SWIFTLINT_OPT_IN.has(rule) && !SWIFTLINT_ANALYZER.has(rule)),
-        ],
+    const levelOff = off.filter((rule) => !SWIFTLINT_OPT_IN.has(rule) && !SWIFTLINT_ANALYZER.has(rule));
+    const document = new Document({
+        ...buildSwiftlintOptions(planned, offSet),
+        disabled_rules: [...SWIFTLINT_ALWAYS_OFF, ...levelOff],
         opt_in_rules: [...SWIFTLINT_OPT_IN.difference(offSet)],
         analyzer_rules: [...SWIFTLINT_ANALYZER.difference(offSet)],
-    };
-
-    const disabled = buildDisabledRuleLines(off);
-    return Object.entries(document)
-        .flatMap(([rule, value]) => {
-            if (rule === 'disabled_rules') return disabled;
-            const note = rule === 'identifier_name' ? [SWIFTLINT_COMMENTS.identifier_name] : [];
-            return [...note, stringify({ [rule]: value }).trimEnd()];
-        })
-        .join('\n');
+    });
+    for (const { key } of (document.contents as YAMLMap<Scalar<string>, Node>).items) {
+        const comment = SWIFTLINT_COMMENTS[key.value as keyof typeof SWIFTLINT_COMMENTS] as string | undefined;
+        if (comment !== undefined) key.commentBefore = comment;
+    }
+    const firstLevelOff = (document.get('disabled_rules') as YAMLSeq<Node>).items[SWIFTLINT_ALWAYS_OFF.length];
+    if (firstLevelOff !== undefined) firstLevelOff.commentBefore = SWIFTLINT_LEVEL_NOTE;
+    return document.toString({ lineWidth: 0 }).trimEnd();
 }

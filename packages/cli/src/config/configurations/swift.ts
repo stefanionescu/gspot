@@ -105,8 +105,8 @@ export const SWIFTLINT_FUNCTION_NESTING = 2;
 
 export const SWIFTLINT_COMMENTS = {
     identifier_name:
-        '# The case and length of types, variables, parameters, and enum cases; naming/identifiers checks functions and methods.',
-    disabled_rules: '# SwiftFormat owns whitespace, punctuation, braces, and statement layout.',
+        ' The case and length of types, variables, parameters, and enum cases; naming/identifiers checks functions and methods.',
+    disabled_rules: ' SwiftFormat owns whitespace, punctuation, braces, and statement layout.',
 } as const;
 
 export const SWIFTLINT_ALWAYS_OFF = [
@@ -260,4 +260,4 @@ export const SWIFTLINT_OPT_IN: ReadonlySet<string> = new Set([
 
 export const SWIFTLINT_CHECK = 'swift/swiftlint';
 
-export const SWIFTLINT_LEVEL_NOTE = '# Off at this level.';
+export const SWIFTLINT_LEVEL_NOTE = ' Off at this level.';
