@@ -86,7 +86,7 @@ test('a fixed run keeps the injected generation and reads the reopened file inve
         }),
     );
     expect(result.report.exitCode).toBe(0);
-    expect(selected).toStrictEqual(['project/inventory', 'project/inventory']);
+    expect(selected).toStrictEqual(['project/inventory']);
     expect(generated).not.toBe(initial);
     expect(generated?.repository.files.map(({ path }) => path)).toContain('added.txt');
     expect(initial.repository.files.map(({ path }) => path)).not.toContain('added.txt');

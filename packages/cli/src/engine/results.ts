@@ -101,6 +101,21 @@ export async function runBuiltInCheck(
 }
 
 /**
+Replaces the paths of a copy in the reported command with repository paths.
+
+@param result the run, which may have no command.
+@param copyRoot the folder of the copy that the tool ran in.
+@param sourceRoot the repository folder that the finding paths point into.
+*/
+export function restoreCommandPaths(result: CheckResult, copyRoot: string, sourceRoot: string): CheckResult {
+    if (result.command === undefined) return result;
+    return {
+        ...result,
+        command: result.command.map((argument) => argument.replaceAll(copyRoot, () => sourceRoot)),
+    };
+}
+
+/**
 Replace temporary revision paths with the repository path in reported commands and notes.
 
 @param session the working and temporary repository folders.

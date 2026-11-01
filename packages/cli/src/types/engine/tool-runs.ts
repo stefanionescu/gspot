@@ -37,9 +37,7 @@ export type CopyPlan = {
     cancelSignal?: AbortSignal | undefined;
 };
 
-export type CopyPaths = Omit<CopyPlan, 'target' | 'files'> & {
-    paths: string[];
-};
+export type CopyPaths = { paths: string[]; dependencies: string[] };
 
 export type DeclarationDependencies = { copies: string[]; mismatched: boolean };
 
@@ -115,10 +113,8 @@ export type FolderRun = {
     tool: Tool;
     command: string[];
     toolPath: string;
-    substitutions: Substitutions;
     base: CheckResult;
     options: CheckRunOptions;
-    configs: string[];
 };
 
 export type CommandRun = { root: string; cwd: string; findings: Finding[]; failed: boolean };

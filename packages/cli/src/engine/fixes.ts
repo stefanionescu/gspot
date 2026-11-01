@@ -15,18 +15,7 @@ import type { SpawnResult, FileContents } from '#cli/types/system.ts';
 import { FIX_ROUNDS, FIX_CANCELED_MESSAGE } from '#cli/config/engine.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 import { buildCommandLaunch, selectCommandFolder } from '#cli/engine/tool-runs/check.ts';
-
-import type {
-    CheckCode,
-    FixReport,
-    FixResult,
-    FixRounds,
-    PathBytes,
-    RunOptions,
-    CheckSession,
-    CommandLaunch,
-    CheckRunOptions,
-} from '#cli/types/engine/run.ts';
+import type { FixReport, FixResult, FixRounds, PathBytes, CheckSession, CommandLaunch } from '#cli/types/engine/run.ts';
 
 function findFixFailure(planned: PlannedCheck, result: SpawnResult): string | undefined {
     const { check } = planned;
@@ -60,33 +49,6 @@ async function runFixCommands(session: Session, planned: PlannedCheck, setup: Co
     return buildFixResult(check, changed, note, session.cancelSignal);
 }
 
-async function runFixInCopy(
-    planned: PlannedCheck,
-    {
-        session,
-        command,
-        toolPath,
-        options,
-    }: { session: CheckSession; command: string[]; toolPath: string; options: CheckRunOptions },
-): Promise<FixResult> {
-    using scratch = await createCopy({
-        root: session.root,
-        paths: [...listCopyFiles(session, planned, command), ...(options.listConfigs?.(session, planned) ?? [])],
-        dependencies: [],
-        cancelSignal: session.cancelSignal,
-    });
-    const setup = buildCommandLaunch(planned, { session, command, root: scratch.path, toolPath });
-    const files = openFiles(session.root);
-    const result = await runFixCommands(session, planned, setup);
-    const corrected = openFiles(scratch.path);
-    for (const path of result.changed) {
-        const value = corrected.read(path);
-        if (value === undefined) files.deleteFile(path);
-        else files.write(path, value);
-    }
-    return result;
-}
-
 function mergeResults(first: FixResult | undefined, next: FixResult): FixResult {
     if (first === undefined) return next;
     const changed = [...new Set([...first.changed, ...next.changed])];
@@ -97,29 +59,31 @@ function mergeResults(first: FixResult | undefined, next: FixResult): FixResult 
 async function runFixTool(
     session: CheckSession,
     planned: PlannedCheck,
-    { command, tool, code }: { command: string[]; tool: Tool; code: CheckCode | undefined },
+    { command, tool }: { command: string[]; tool: Tool },
 ): Promise<FixResult> {
-    const options: CheckRunOptions = {
-        listConfigs: code?.listConfigs,
-    };
     const selected = { ...planned, tool };
     const availability = await findToolPath(session, tool, selectCommandFolder(session.root, selected));
     if ('status' in availability)
         return { check: planned.check.id, status: 'failed', changed: [], note: availability.note };
-    const toolPath = availability.path;
-    if (planned.check.run_in_copy === true) return runFixInCopy(selected, { session, command, toolPath, options });
-    return runFixCommands(
-        session,
-        selected,
-        buildCommandLaunch(selected, { session, command, root: session.root, toolPath }),
-    );
+    using copy =
+        planned.check.run_in_copy === true
+            ? await createCopy(session, listCopyFiles(session, selected, command))
+            : undefined;
+    const root = copy?.path ?? session.root;
+    const launch = buildCommandLaunch(selected, { session, command, root, toolPath: availability.path });
+    const result = await runFixCommands(session, selected, launch);
+    if (copy === undefined) return result;
+    const files = openFiles(session.root);
+    const corrected = openFiles(copy.path);
+    for (const path of result.changed) {
+        const value = corrected.read(path);
+        if (value === undefined) files.deleteFile(path);
+        else files.write(path, value);
+    }
+    return result;
 }
 
-async function runFixer(
-    session: CheckSession,
-    planned: PlannedCheck,
-    selectCheckCode: RunOptions['selectCheckCode'],
-): Promise<FixResult> {
+async function runFixer(session: CheckSession, planned: PlannedCheck): Promise<FixResult> {
     const check = planned.check.id;
     if (session.cancelSignal?.aborted === true)
         return { check, status: 'canceled', changed: [], note: FIX_CANCELED_MESSAGE };
@@ -128,7 +92,7 @@ async function runFixer(
     const command = planned.check.fix as string[];
     const name = command[0] as string;
     const tool = planned.tool?.name === name ? planned.tool : getTool(session.configurationsByName.values(), name);
-    return runFixTool(session, planned, { command, tool, code: selectCheckCode(planned.check) });
+    return runFixTool(session, planned, { command, tool });
 }
 
 function readContents(sourceRoot: string, paths: string[]): PathBytes {
@@ -155,12 +119,7 @@ function listChangedPaths(before: PathBytes, after: PathBytes): string[] {
         .toArray();
 }
 
-async function runFixerRounds(
-    session: CheckSession,
-    checks: PlannedCheck[],
-    paths: string[],
-    selectCheckCode: RunOptions['selectCheckCode'],
-): Promise<FixRounds> {
+async function runFixerRounds(session: CheckSession, checks: PlannedCheck[], paths: string[]): Promise<FixRounds> {
     const results = new Map<number, FixResult>();
     let firstBefore: PathBytes | undefined;
     let after: PathBytes = new Map();
@@ -170,7 +129,7 @@ async function runFixerRounds(
         const before = readContents(session.root, paths);
         firstBefore ??= before;
         for (const { check, index } of pending) {
-            results.set(index, mergeResults(results.get(index), await runFixer(session, check, selectCheckCode)));
+            results.set(index, mergeResults(results.get(index), await runFixer(session, check)));
             fixedContents.set(index, readContents(session.root, listPlannedPaths(checks[index] as PlannedCheck)));
         }
         after = readContents(session.root, paths);
@@ -228,18 +187,13 @@ Runs fixes in passes and collects their results.
 
 @param session the repository and its tools.
 @param planned the checks to fix.
-@param selectCheckCode finds the implementation and config readers of each check.
 */
-export async function runFixers(
-    session: CheckSession,
-    planned: PlannedCheck[],
-    selectCheckCode: RunOptions['selectCheckCode'],
-): Promise<FixReport> {
+export async function runFixers(session: CheckSession, planned: PlannedCheck[]): Promise<FixReport> {
     const checks = planned.filter((check) => check.check.fix !== undefined);
     const paths = [...new Set(checks.flatMap((check) => listPlannedPaths(check)))].toSorted((a, b) =>
         compareText(a, b),
     );
-    const rounds = await runFixerRounds(session, checks, paths, selectCheckCode);
+    const rounds = await runFixerRounds(session, checks, paths);
     const { before, after, results } = rounds;
     const changed = listChangedPaths(before, after);
     const broken = await listBrokenFiles(changed, before, after);

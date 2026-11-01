@@ -75,34 +75,40 @@ export async function createCheckCopy(
     planned: PlannedCheck,
     includedPaths: string[] = [],
 ): Promise<TemporaryFolder> {
-    return createCopy({
-        ...selectCopyPaths(
-            session.root,
-            [
-                ...planned.files.map((file) => file.path),
-                ...listWorkspaceSources(session.cache, planned.scope.path, session.repository.files),
-                ...includedPaths,
-            ],
-            session.repository.scopeFolders.map((scope) => scope.path),
-        ),
-        cancelSignal: session.cancelSignal,
-    });
+    const { paths, dependencies } = selectCopyPaths(
+        session.root,
+        [
+            ...planned.files.map((file) => file.path),
+            ...listWorkspaceSources(session.cache, planned.scope.path, session.repository.files),
+            ...includedPaths,
+        ],
+        session.repository.scopeFolders.map((scope) => scope.path),
+    );
+    return createCopy(session, paths, dependencies);
 }
 
 /**
 Copies source files and dependency trees into a private folder inside the repository. Linked packages share the
 repository root with the copy, so Astro resolves their paths outside the copied source tree.
 
-@param source the paths and dependency trees to copy.
+@param session the repository and its cancel signal.
+@param paths the files to copy.
+@param dependencies the installed dependency trees to link.
 @returns the new folder, deleted on dispose.
 */
-export async function createCopy(source: CopyPaths): Promise<TemporaryFolder> {
-    const folder = createCopyFolder(source.root);
+export async function createCopy(
+    session: Pick<Session, 'root' | 'cancelSignal'>,
+    paths: string[],
+    dependencies: string[] = [],
+): Promise<TemporaryFolder> {
+    const folder = createCopyFolder(session.root);
     try {
         const plan = {
-            ...source,
+            root: session.root,
             target: folder.path,
-            files: new Set(source.paths),
+            files: new Set(paths),
+            dependencies,
+            cancelSignal: session.cancelSignal,
         };
         await writeCopyFiles(plan);
         await copyDependencies(plan);
@@ -130,7 +136,6 @@ function selectCopyPaths(root: string, paths: string[], scopes: string[]): CopyP
         ...new Set([GSPOT_FOLDER, ...scopes, ...projects].map((project) => posix.join(project, NODE_MODULES))),
     ].filter((path) => statSync(join(root, path), { throwIfNoEntry: false }) !== undefined);
     return {
-        root: root,
         paths: [...new Set([...paths, ...COPY_ROOT_FILES])].filter(
             (path) => statSync(join(root, path), { throwIfNoEntry: false }) !== undefined,
         ),

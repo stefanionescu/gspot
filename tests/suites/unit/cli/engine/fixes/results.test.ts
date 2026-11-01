@@ -11,7 +11,6 @@ import { formatFixes } from '#cli/commands/check/report.ts';
 import { FIXER_RESULTS } from '#tests/config/engine/run.ts';
 import { buildProgramPin } from '#tests/setup/cli/tools.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { runChecks, buildCheckSession } from '#cli/engine/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
@@ -34,7 +33,7 @@ test.each([0])('the fixer tool owns crash detection when exit is %p', async (cod
         tools: [{ ...planned.tool!, crash_pattern: '^Fatal:' }, ...configuration.tools],
     });
     planned.tool = { ...planned.tool!, name: 'different-checker', crash_pattern: '^Checker-only:' };
-    const failedRun = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned], selectCheckCode);
+    const failedRun = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned]);
     const failed = failedRun.results[0];
     expect(failed).toMatchObject({
         status: 'failed',
@@ -43,11 +42,7 @@ test.each([0])('the fixer tool owns crash detection when exit is %p', async (cod
     });
     const corrected = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=corrected'));
     corrected.tool = planned.tool;
-    const correctedResultRun = await runFixers(
-        buildCheckSession(session, CHECK_GENERATION),
-        [corrected],
-        selectCheckCode,
-    );
+    const correctedResultRun = await runFixers(buildCheckSession(session, CHECK_GENERATION), [corrected]);
     const correctedResult = correctedResultRun.results[0];
     expect(correctedResult).toMatchObject({
         status: 'changed',
@@ -63,7 +58,7 @@ test.each([...FIXER_RESULTS])(
         const session = await openSession(sandbox.path);
         const planned = planFixer(session, buildProgramCommand('fakes/tool', ...toolArguments));
         if (exitCodes !== undefined) planned.check = { ...planned.check, exit_codes: [...exitCodes] };
-        const resultRun = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned], selectCheckCode);
+        const resultRun = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned]);
         const result = resultRun.results[0];
         expect({ status: result!.status, note: 'note' in result! ? result.note : undefined }).toStrictEqual({
             status,
@@ -80,7 +75,7 @@ test('a fixer that swaps one invalid UTF-8 byte for another reports the file as 
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, buildProgramCommand('fakes/tool', '--write-hex', 'source.txt=fe'));
     await writeFile(join(sandbox.path, 'source.txt'), Buffer.from([0xff]));
-    const resultRun = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned], selectCheckCode);
+    const resultRun = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned]);
     const result = resultRun.results[0];
     expect(result).toMatchObject({ status: 'changed', changed: ['source.txt'] });
     expect(await readFile(join(sandbox.path, 'source.txt'))).toStrictEqual(Buffer.from([0xfe]));
@@ -91,7 +86,7 @@ test('a fixer that deletes an empty file reports it as changed', async () => {
 
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, buildProgramCommand('fakes/tool', '--delete', 'source.txt'));
-    const resultRun = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned], selectCheckCode);
+    const resultRun = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned]);
     const result = resultRun.results[0];
     expect(result).toMatchObject({ status: 'changed', changed: ['source.txt'] });
     expect(await isOnDisk(join(sandbox.path, 'source.txt'))).toBe(false);
@@ -102,17 +97,13 @@ test('a skipped fixer reports skipped, and a fixer whose program is missing fail
 
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=wrong'));
-    const skippedRun = await runFixers(
-        buildCheckSession(session, CHECK_GENERATION),
-        [{ ...planned, skip: { cause: 'level', note: 'Not selected.' } }],
-        selectCheckCode,
-    );
+    const skippedRun = await runFixers(buildCheckSession(session, CHECK_GENERATION), [
+        { ...planned, skip: { cause: 'level', note: 'Not selected.' } },
+    ]);
     const skipped = skippedRun.results[0]!;
-    const failedRun = await runFixers(
-        buildCheckSession(session, CHECK_GENERATION),
-        [{ ...planned, check: { ...planned.check, fix: [join(sandbox.path, 'absent-tool')] } }],
-        selectCheckCode,
-    );
+    const failedRun = await runFixers(buildCheckSession(session, CHECK_GENERATION), [
+        { ...planned, check: { ...planned.check, fix: [join(sandbox.path, 'absent-tool')] } },
+    ]);
     const failed = failedRun.results[0]!;
     expect(skipped.status).toBe('skipped');
     expect(failed).toMatchObject({
@@ -127,11 +118,9 @@ test('a fixer runs its own program when the check program is missing', async () 
 
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=corrected'));
-    const resultRun = await runFixers(
-        buildCheckSession(session, CHECK_GENERATION),
-        [{ ...planned, tool: { name: join(sandbox.path, 'absent-check-tool'), installers: {}, kind: 'program' } }],
-        selectCheckCode,
-    );
+    const resultRun = await runFixers(buildCheckSession(session, CHECK_GENERATION), [
+        { ...planned, tool: { name: join(sandbox.path, 'absent-check-tool'), installers: {}, kind: 'program' } },
+    ]);
     const result = resultRun.results[0]!;
     expect(result.status).toBe('changed');
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected');
@@ -164,7 +153,7 @@ test('a failed version check blocks a check and its fix without changing source 
     const checked = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned);
     expect(checked.status).toBe('error');
     expect(checked.note).toBe('The version command of version-teller exited 7: 3.8.1');
-    const fixedRun = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned], selectCheckCode);
+    const fixedRun = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned]);
     const fixed = fixedRun.results[0]!;
     expect(fixed.status).toBe('failed');
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
@@ -232,7 +221,7 @@ test('a fixer that leaves a code file that fails to parse is named in the fix re
             'notes.ts=export const note = true;\n',
         ),
     );
-    const fixed = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned], selectCheckCode);
+    const fixed = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned]);
     expect(fixed.broken).toStrictEqual(['client.ts']);
     expect(fixed.changed).toStrictEqual(['notes.ts']);
     expect(await readFile(join(sandbox.path, 'client.ts'))).toStrictEqual(before);

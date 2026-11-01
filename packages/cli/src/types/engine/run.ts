@@ -96,7 +96,6 @@ type CheckRun = (
 export type CheckRunOptions = {
     verbose?: boolean | undefined;
     command?: string[];
-    copyRoot?: string;
     listConfigs?: ((session: CheckSession, planned: PlannedCheck) => string[]) | undefined;
 };
 

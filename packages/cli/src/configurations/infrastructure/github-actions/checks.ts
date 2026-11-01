@@ -2,6 +2,7 @@ import { join, posix } from 'node:path';
 import { read } from '#cli/system/files/reads.ts';
 import { PRIVATE_FILE } from '#cli/config/system.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
+import { restoreCommandPaths } from '#cli/engine/results.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
@@ -91,24 +92,18 @@ export async function checkActionlint(session: CheckSession, planned: PlannedChe
         if (replaced !== source) replacements.set(file.path, replaced);
     }
     if (replacements.size === 0) return runCommandCheck(session, planned);
-    using scratch = await createCopy({
-        root: session.root,
-        paths: [
-            ...new Set([
-                ...session.repository.files
-                    .filter((file) => file.path.startsWith(GITHUB_FOLDER))
-                    .map((file) => file.path),
-                ...actionFiles.keys(),
-            ]),
-        ],
-        dependencies: [],
-        cancelSignal: session.cancelSignal,
-    });
+    using scratch = await createCopy(session, [
+        ...new Set([
+            ...session.repository.files.filter((file) => file.path.startsWith(GITHUB_FOLDER)).map((file) => file.path),
+            ...actionFiles.keys(),
+        ]),
+    ]);
     mkdirSync(join(scratch.path, GIT_FOLDER));
     for (const [path, source] of replacements) {
         const target = join(scratch.path, path);
         chmodSync(target, PRIVATE_FILE);
         writeFileSync(target, source);
     }
-    return await runCommandCheck(session, planned, { copyRoot: scratch.path });
+    const result = await runCommandCheck({ ...session, root: scratch.path }, planned);
+    return restoreCommandPaths(result, scratch.path, session.root);
 }

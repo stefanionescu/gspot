@@ -12,11 +12,11 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import type { Session, ProcessFailure } from '#cli/types/tools.ts';
 import { buildCommandLines } from '#cli/engine/tool-runs/batches.ts';
-import { buildBaseResult, mergeCheckResults } from '#cli/engine/results.ts';
 import { hasProjectCoverage, stripCoverageArguments } from '#cli/engine/plan.ts';
 import { listCopyPythonArguments, buildCopyPythonEnvironment } from '#cli/tools/uv.ts';
 import { runToolProcess, buildOtherToolEnvironment } from '#cli/engine/tool-runs/tool.ts';
 import { RAN_STATUSES, FILES_PLACEHOLDER, PYTHON_CONFIGURATION } from '#cli/config/engine.ts';
+import { buildBaseResult, mergeCheckResults, restoreCommandPaths } from '#cli/engine/results.ts';
 import { addCommandLine, buildCheckResult, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import type { CheckResult, CheckSession, CommandLaunch, CheckRunOptions } from '#cli/types/engine/run.ts';
 import type { FolderRun, CommandRun, CommandBatch, CommandSetup, Substitutions } from '#cli/types/engine/tool-runs.ts';
@@ -100,18 +100,13 @@ function findMissingConfig(
 }
 
 async function runInFolder(run: FolderRun): Promise<CheckResult> {
-    const { session, planned, tool, command, toolPath, substitutions, base, options, configs } = run;
+    const { session, planned, tool, command, toolPath, base, options } = run;
     using copy =
-        options.copyRoot === undefined && planned.check.run_in_copy === true
-            ? await createCopy({
-                  root: session.root,
-                  paths: [...listCopyFiles(session, planned, command), ...configs],
-                  dependencies: [],
-                  cancelSignal: session.cancelSignal,
-              })
+        planned.check.run_in_copy === true
+            ? await createCopy(session, listCopyFiles(session, planned, command))
             : undefined;
-    const folder = options.copyRoot ?? copy?.path;
-    const commandSetup = buildCommandLaunch(planned, { session, command, root: folder ?? session.root, toolPath });
+    const root = copy?.path ?? session.root;
+    const commandSetup = buildCommandLaunch(planned, { session, command, root, toolPath });
     commandSetup.env = await buildOtherToolEnvironment(
         session,
         listOtherTools(planned.scope, planned.check, command),
@@ -124,9 +119,7 @@ async function runInFolder(run: FolderRun): Promise<CheckResult> {
         launch: commandSetup,
         base,
     });
-    if (folder === undefined) return result;
-    const reported = expandCommand(session, planned, command.with(0, toolPath), substitutions);
-    return { ...result, command: reported.filter((argument) => typeof argument === 'string') };
+    return restoreCommandPaths(result, root, session.root);
 }
 
 async function findMissingOtherTool(
@@ -265,7 +258,7 @@ Finds the tool and runs the expanded commands of a check.
 
 @param session the repository and its tools.
 @param planned the check to run.
-@param options the command and copy folder overrides.
+@param options the command override and the verbosity of the notes.
 */
 export async function runCommandCheck(
     session: CheckSession,
@@ -290,10 +283,8 @@ export async function runCommandCheck(
               tool,
               command,
               toolPath: availability.path,
-              substitutions: setup.substitutions,
               base,
               options,
-              configs,
           })
         : { ...base, ...otherToolFailure };
 }

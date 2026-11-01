@@ -98,21 +98,6 @@ export function addTsbuildinfoFlag(
 }
 
 /**
-Replaces the paths of the copy in the command with repository paths.
-
-@param result the compiler run, which may have no command.
-@param copyRoot the folder of the temporary copy that tsc checked.
-@param sourceRoot the repository folder that the finding paths point into.
-*/
-export function restoreCommandPaths(result: CheckResult, copyRoot: string, sourceRoot: string): CheckResult {
-    if (result.command === undefined) return result;
-    return {
-        ...result,
-        command: result.command.map((argument) => argument.replaceAll(copyRoot, () => sourceRoot)),
-    };
-}
-
-/**
 Shares a project compile across scopes, but never skips a second run in the same scope.
 
 @param cache the run cache.
@@ -181,7 +166,7 @@ export async function runTsc(
         addTsbuildinfoFlag(command, project?.config.options, tsbuildinfoFolder, TSCONFIG_TSBUILDINFO);
     }
     command.push(...TSC_UNFORMATTED_OUTPUT);
-    return runCommandCheck(session, planned, { command, copyRoot: session.root });
+    return runCommandCheck(session, planned, { command });
 }
 
 /**

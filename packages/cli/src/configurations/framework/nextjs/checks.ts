@@ -4,13 +4,14 @@ import { CheckStop } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { createRunCache } from '#cli/system/cache.ts';
 import { listChecksById } from '#cli/manifests/read.ts';
+import { runTsc } from '#cli/configurations/tsc/compiler.ts';
+import { restoreCommandPaths } from '#cli/engine/results.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { ConfigurationCheck } from '#cli/types/manifests.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
-import { runTsc, restoreCommandPaths } from '#cli/configurations/tsc/compiler.ts';
 
 import {
     TSC_TOOL,

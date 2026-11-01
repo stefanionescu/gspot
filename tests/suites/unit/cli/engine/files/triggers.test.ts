@@ -9,7 +9,6 @@ import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { isActive, planChecks } from '#cli/engine/plan.ts';
 import { BASE_CHECK } from '#tests/config/engine/tool-runs.ts';
-import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { runChecks, buildCheckSession } from '#cli/engine/run.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -109,7 +108,7 @@ test('a fixer of a deleted trigger path restores it', async () => {
     const api = planChecks(session, { ...TSC_PUSH_OPTIONS, changed: paths }).find(
         (check) => check.scope.path === 'api',
     )!;
-    const applied = await runFixers(buildCheckSession(session, CHECK_GENERATION), [api], selectCheckCode);
+    const applied = await runFixers(buildCheckSession(session, CHECK_GENERATION), [api]);
     expect(applied.changed).toStrictEqual(['api/source.ts']);
     expect(await readFile(join(sandbox.path, 'api/source.ts'), 'utf8')).toBe('restored');
 });

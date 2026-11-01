@@ -4,19 +4,14 @@ import { createRunCache } from '#cli/system/cache.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
+import { restoreCommandPaths } from '#cli/engine/results.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
 import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
-
-import {
-    runTsc,
-    listCompilerFiles,
-    restoreCommandPaths,
-    writeReferenceProjects,
-} from '#cli/configurations/tsc/compiler.ts';
+import { runTsc, listCompilerFiles, writeReferenceProjects } from '#cli/configurations/tsc/compiler.ts';
 
 function removeChildScopeFindings(session: Session, planned: PlannedCheck, result: CheckResult): CheckResult {
     const checked = new Set(

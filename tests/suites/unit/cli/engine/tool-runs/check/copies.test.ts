@@ -89,9 +89,10 @@ test('a command run in a copy finds the other tools beside its program before a 
     using _environment = overrideEnvironment({ PATH: join(sandbox.path, 'inactive') });
     using _which = fakeExecutableLookup(join(sandbox.path, `native/shellcheck${isWindows ? '.cmd' : ''}`));
 
-    const result = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned, {
-        copyRoot: join(sandbox.path, 'copy'),
-    });
+    const result = await runCommandCheck(
+        { ...buildCheckSession(session, CHECK_GENERATION), root: join(sandbox.path, 'copy') },
+        planned,
+    );
     expect(result.status, result.note).toBe('passed');
     expect(result.findings).toStrictEqual([]);
     expect(result.command).toStrictEqual([join(sandbox.path, 'native/checker')]);

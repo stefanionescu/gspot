@@ -15,10 +15,10 @@ import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { createCopy, createCheckCopy } from '#cli/engine/copies/files.ts';
 import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import { listCheckedFiles, extractConfigName } from '#cli/engine/files.ts';
-import { buildBaseResult, mergeCheckResults } from '#cli/engine/results.ts';
 import { PRIVATE_FILE, DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
-import { listCompilerFiles, addTsbuildinfoFlag, restoreCommandPaths } from '#cli/configurations/tsc/compiler.ts';
+import { listCompilerFiles, addTsbuildinfoFlag } from '#cli/configurations/tsc/compiler.ts';
+import { buildBaseResult, mergeCheckResults, restoreCommandPaths } from '#cli/engine/results.ts';
 
 import {
     JSCONFIG_TSBUILDINFO,
@@ -96,10 +96,7 @@ export async function checkJavascriptTsc(session: CheckSession, planned: Planned
     );
     const command = [...JAVASCRIPT_TSC_COMMAND, generatedPath, ...TSC_UNFORMATTED_OUTPUT];
     addTsbuildinfoFlag(command, project.options, folder.path, JSCONFIG_TSBUILDINFO);
-    const result = await runCommandCheck(session, planned, {
-        command,
-        copyRoot: folder.path,
-    });
+    const result = await runCommandCheck({ ...session, root: folder.path }, planned, { command });
     return restoreCommandPaths(result, folder.path, session.root);
 }
 
@@ -120,12 +117,7 @@ export async function checkJavascriptBiome(session: CheckSession, planned: Plann
     const scripts = groups.get(false) ?? [];
     if (scripts.length === 0 || !RAN_STATUSES.has(result.status)) return result;
     const config = getConfigPath(session, planned, 'biome');
-    using copy = await createCopy({
-        root: session.root,
-        paths: [config],
-        dependencies: [],
-        cancelSignal: session.cancelSignal,
-    });
+    using copy = await createCopy(session, [config]);
     const writer = openFiles(copy.path);
     const names = new Map<string, string>();
     const scriptFiles = scripts.map((file) => {
@@ -134,9 +126,9 @@ export async function checkJavascriptBiome(session: CheckSession, planned: Plann
         writer.write(path, { bytes: readBytes(session.cache, file.path), mode: PRIVATE_FILE });
         return { ...file, path };
     });
-    const checked = await runCommandCheck(session, { ...planned, files: scriptFiles }, { copyRoot: copy.path });
+    const checked = await runCommandCheck({ ...session, root: copy.path }, { ...planned, files: scriptFiles });
     return mergeCheckResults(result, {
-        ...checked,
+        ...restoreCommandPaths(checked, copy.path, session.root),
         findings: checked.findings.map((finding) => ({ ...finding, file: names.get(finding.file) ?? finding.file })),
     });
 }
