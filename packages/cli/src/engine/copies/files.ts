@@ -1,6 +1,7 @@
 import { join, posix, dirname } from 'node:path';
 import type { Session } from '#cli/types/tools.ts';
 import { setImmediate } from 'node:timers/promises';
+import { hasErrorCode } from '#cli/system/errors.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -17,6 +18,15 @@ import type { CopyFile, CopyPlan, CopyPaths } from '#cli/types/engine/tool-runs.
 import { COPY_ROOT_FILES, DEPENDENCY_FILES, FILES_BETWEEN_PAUSES } from '#cli/config/engine.ts';
 import { statSync, chmodSync, constants, mkdirSync, symlinkSync, copyFileSync, writeFileSync } from 'node:fs';
 
+function writeCopyLink(target: string, destination: Buffer, mode: number): void {
+    try {
+        symlinkSync(destination, target);
+    } catch (error) {
+        if (process.platform !== 'win32' || !hasErrorCode(error, 'EPERM')) throw error;
+        writeFileSync(target, destination, { flag: 'wx', mode });
+    }
+}
+
 function writeCopyFile(files: Files, copyRoot: string, file: CopyFile): void {
     const target = join(copyRoot, ...splitSystemPath(typeof file === 'string' ? file : file.indexFile.path));
     mkdirSync(dirname(target), { recursive: true });
@@ -27,7 +37,7 @@ function writeCopyFile(files: Files, copyRoot: string, file: CopyFile): void {
         return;
     }
     const mode = normalizeFileMode({ mode: GIT_FILE_MODES[file.indexFile.mode] });
-    if (file.indexFile.mode === SYMLINK_MODE) symlinkSync(file.bytes, target);
+    if (file.indexFile.mode === SYMLINK_MODE) writeCopyLink(target, file.bytes, mode);
     else {
         writeFileSync(target, file.bytes, { flag: 'wx', mode });
         chmodSync(target, mode);

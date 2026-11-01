@@ -1,10 +1,10 @@
+import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
+import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { CHANGED_CONTEXT } from '#tests/config/setup/sandboxes.ts';
@@ -15,10 +15,11 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { LOWERCASE_SELECT_SQL } from '#tests/config/engine/tool-runs.ts';
+import { isWindows, fakePlatform } from '#tests/setup/system/platform.ts';
 import { readHead, listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { SELECTED_SOURCE, GIT_HOOK_REPORT } from '#tests/config/engine/files.ts';
 import { prepareNestedRepository } from '#tests/setup/sandboxes/repositories.ts';
-import { mkdir, readdir, symlink, copyFile, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, symlink, copyFile, readFile, readlink, writeFile } from 'node:fs/promises';
 
 test('a revision copy of a nested gspot.toml keeps the repository around it', async () => {
     await using sandbox = await testdir();
@@ -156,4 +157,24 @@ test.skipIf(isWindows)('a revision copy links the packages of a node_modules tha
     commitAll(project);
     using copy = await copyRevision(project, { kind: 'index' });
     expect(await readFile(join(copy.root, 'node_modules/example/index.js'), 'utf8')).toBe(SELECTED_SOURCE);
+});
+
+test.skipIf(isWindows)('a revision copy keeps a committed link', async () => {
+    await using sandbox = await testdir({ 'target.txt': SELECTED_SOURCE });
+    await symlink('target.txt', join(sandbox.path, 'linked.txt'));
+    commitAll(sandbox.path);
+    using copy = await copyRevision(sandbox.path, { kind: 'index' });
+    expect(await readlink(join(copy.root, 'linked.txt'))).toBe('target.txt');
+});
+
+test.skipIf(isWindows)('a revision copy on Windows without link rights writes the link target as a file', async () => {
+    await using sandbox = await testdir({ 'target.txt': SELECTED_SOURCE });
+    await symlink('target.txt', join(sandbox.path, 'linked.txt'));
+    commitAll(sandbox.path);
+    using _platform = fakePlatform('win32');
+    using _links = spyOn(fs, 'symlinkSync').mockImplementation(() => {
+        throw Object.assign(new Error('Operation not permitted'), { code: 'EPERM' });
+    });
+    using copy = await copyRevision(sandbox.path, { kind: 'index' });
+    expect(await readFile(join(copy.root, 'linked.txt'), 'utf8')).toBe('target.txt');
 });
