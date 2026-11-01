@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Publish both npm packages from a tested main commit, deploy the docs site, tag each published package, and create the GitHub release."
+#MISE description="Tag a tested main commit, publish both npm packages, deploy the docs site, and create the GitHub release."
 #MISE depends=["build"]
 set -euo pipefail
 
@@ -25,6 +25,7 @@ assert_release_commit() {
             return 1
         fi
     done
+    npm whoami >/dev/null || return 1
 }
 
 # assert_version_raised: Refuses a package whose code changed since the tag of a version that npm already serves.
@@ -103,11 +104,11 @@ main() {
     cli_tag="v${cli_spec##*@}"
     assert_version_raised packages/eslint-plugin "${plugin_spec}" "${plugin_tag}"
     assert_version_raised packages/cli "${cli_spec}" "${cli_tag}"
+    push_tag "${plugin_tag}"
+    push_tag "${cli_tag}"
     publish_package packages/eslint-plugin "${plugin_spec}"
     publish_package packages/cli "${cli_spec}"
     mise run docs:deploy || exit 1
-    push_tag "${plugin_tag}"
-    push_tag "${cli_tag}"
     create_release "${cli_tag}"
 }
 
