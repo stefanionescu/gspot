@@ -15,6 +15,7 @@ export function buildZodBlocks(scope: Pick<EslintScope, 'eslintFiles'>): Configu
                 fields: {
                     files: scope.eslintFiles.code,
                     rules: {
+                        'zod/consistent-import': ['error', { syntax: 'named' }],
                         'zod/prefer-strict-object': 'error',
                         'zod/prefer-meta-last': 'error',
                     },
