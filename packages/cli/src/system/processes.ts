@@ -88,6 +88,22 @@ function buildSpawnResult(result: SpawnCompletion, started: number): SpawnResult
     };
 }
 
+/**
+Check a process without signaling it. A permission refusal still means that the process exists.
+
+@param pid the process that owns a copy.
+*/
+export function isProcessRunning(pid: number): boolean {
+    try {
+        process.kill(pid, 0);
+        return true;
+    } catch (error) {
+        if (hasErrorCode(error, 'ESRCH')) return false;
+        if (hasErrorCode(error, 'EPERM')) return true;
+        throw error;
+    }
+}
+
 function isGroupGone(error: Error, child: ChildProcess): boolean {
     const hasExited = child.exitCode !== null || child.signalCode !== null;
     if (error instanceof GspotError) return process.platform === 'win32' && hasExited;

@@ -7,10 +7,10 @@ import { writeCopyFiles } from '#cli/runs/copy/files.ts';
 import { runGit, readGitText } from '#cli/system/git.ts';
 import { copyValePackages } from '#cli/runs/copy/vale.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
+import { createCopyFolder } from '#cli/runs/copy/folders.ts';
 import { splitSystemPath } from '#cli/system/files/reads.ts';
 import type { GitFile } from '#cli/types/parsers/parsers.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { join, posix, dirname, basename, relative } from 'node:path';
 import { SYMLINK_MODE, GITLINK_MODE } from '#cli/config/files/modes.ts';
 import { listPackageFiles } from '#cli/repository/javascript/workspaces.ts';
@@ -234,8 +234,8 @@ async function initializeRevisionCopy(
 }
 
 /**
-Writes a Git revision into a copy without checkout filters, stashing, or working-tree writes. The copy sits beside the
-repository, as createCopy explains, and outside it, so Git in the copy never finds the repository.
+Writes a Git revision into a private copy without checkout filters, stashing, or changes to authored files. The copy
+has its own Git directory, so Git commands use the copied revision.
 
 @param root the checkout with the Git objects and installed dependencies.
 @param source the revision to copy.
@@ -249,7 +249,7 @@ export async function copyRevision(root: string, source: Revision, cancelSignal?
     const indexFiles = await listRevisionFiles(toplevel, source, cancelSignal, unreadablePaths);
     const index = indexFiles.map((indexFile) => `${indexFile.mode} ${indexFile.hash} 0\t${indexFile.path}\0`).join('');
     using cleanup = new DisposableStack();
-    const copy = cleanup.use(createTemporaryFolder(dirname(toplevel)));
+    const copy = cleanup.use(createCopyFolder(toplevel));
     await initializeRevisionCopy(toplevel, copy.path, source, cancelSignal);
     await readGitText(copy.path, GIT_EMPTY_INDEX_ARGUMENTS, { cancelSignal });
     await readGitText(copy.path, GIT_UPDATE_INDEX_ARGUMENTS, { cancelSignal, stdin: index });

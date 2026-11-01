@@ -20,7 +20,6 @@ import {
     GIT_PROGRAM,
     GIT_DIR_VARIABLE,
     TRAILING_NEWLINE,
-    GIT_CLONE_COMMAND,
     GIT_PATH_VARIABLES,
     GIT_HOOKS_ARGUMENTS,
     GIT_VARIABLE_PREFIX,
@@ -28,6 +27,7 @@ import {
     GIT_FOLDER_ARGUMENTS,
     GIT_SOURCE_ARGUMENTS,
     GIT_SETTING_ARGUMENTS,
+    GIT_CREATION_COMMANDS,
     GIT_WORK_TREE_VARIABLE,
     NOT_REPOSITORY_MESSAGE,
     GIT_TOP_LEVEL_ARGUMENTS,
@@ -117,7 +117,7 @@ export function buildGitEnvironment(
     const { localVariables } = inheritedGit;
     if (localVariables.every((name) => readEnvironmentVariable(name) === undefined)) return { variables: explicit };
     const isolated = Object.fromEntries(localVariables.map((name) => [name, undefined]));
-    if ([GIT_PROGRAM, GIT_CLONE_COMMAND].every((word, index) => command[index] === word))
+    if (GIT_CREATION_COMMANDS.some((words) => words.every((word, index) => command[index] === word)))
         return { variables: { ...isolated, ...explicit } };
     const overrides = Object.fromEntries(
         Object.entries(explicit).filter(([name]) => !localVariables.includes(foldVariableName(name))),

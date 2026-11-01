@@ -6,10 +6,10 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { NODE_MODULES } from '#cli/config/files/names.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { createCopyFolder } from '#cli/runs/copy/folders.ts';
 import { splitSystemPath } from '#cli/system/files/reads.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { copyDependencies } from '#cli/runs/copy/dependencies.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import type { CopyFile, CopyPlan, CopyPaths } from '#cli/types/runs/copy.ts';
 import { type Files, type TemporaryFolder } from '#cli/types/system/files.ts';
 import { listWorkspaceSources } from '#cli/repository/javascript/workspaces.ts';
@@ -80,16 +80,15 @@ export async function createCheckCopy(
 }
 
 /**
-Copies source files and dependency trees into a new copy beside the repository. The copy links installed packages to
-their files in the repository. Tools such as Astro read a package path that shares no parent folder with the project
-as a path inside the project.
+Copies source files and dependency trees into a private folder inside the repository. Linked packages share the
+repository root with the copy, so Astro resolves their paths outside the copied source tree.
 
 @param source the paths and dependency trees to copy.
 @returns the new folder, deleted on dispose.
 */
 export async function createCopy(source: CopyPaths): Promise<TemporaryFolder> {
     using cleanup = new DisposableStack();
-    const folder = cleanup.use(createTemporaryFolder(dirname(source.root)));
+    const folder = cleanup.use(createCopyFolder(source.root));
     const plan = {
         ...source,
         target: folder.path,

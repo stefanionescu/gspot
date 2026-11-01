@@ -30,9 +30,12 @@ export const GIT_PATH_VARIABLES = [
 
 export const GIT_COMMAND_CONFIGURATION: ReadonlySet<string> = new Set(['GIT_CONFIG_COUNT', 'GIT_CONFIG_PARAMETERS']);
 
-export const GIT_CLONE_COMMAND = 'clone';
-
 export const GIT_PROGRAM = 'git';
+
+export const GIT_CREATION_COMMANDS = [
+    [GIT_PROGRAM, 'clone'],
+    [GIT_PROGRAM, 'init'],
+] as const;
 
 export const NOT_REPOSITORY_CODE = 128;
 
@@ -109,7 +112,7 @@ export const RUNTIME_NAMES = { node: 'Node.js', bun: 'Bun' } as const;
 
 export const RESULT_JSON_INDENT = 2;
 
-export const SIGNAL_EXIT_CODES = { SIGINT: 130, SIGTERM: 143 } as const;
+export const SIGNAL_EXIT_CODES = { SIGHUP: 129, SIGINT: 130, SIGTERM: 143 } as const;
 
 export const TERMINAL_CONTROL_CHARACTERS = /[^\P{Cc}\t\n]|\p{Cf}/gu;
 

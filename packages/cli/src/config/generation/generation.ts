@@ -1,4 +1,4 @@
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER, COPIES_FOLDER } from '#cli/config/files/gspot.ts';
 
 export const CACHED_PATHS = {
     linux: {
@@ -279,7 +279,7 @@ export const BUILD_OUTPUT_FOLDERS: ReadonlySet<string> = new Set(['.build', 'Der
 
 export const BUILD_OUTPUT_PATTERNS = ['dist/', 'build/', 'coverage/'] as const;
 
-export const GSPOT_FOLDER_PATTERNS = [`${GSPOT_FOLDER}/**`] as const;
+export const GSPOT_FOLDER_PATTERNS = [`${GSPOT_FOLDER}/**`, `${COPIES_FOLDER}/**`] as const;
 
 export const IGNORE_SECTION_TITLES = {
     build: 'Build output',

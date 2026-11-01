@@ -8,6 +8,8 @@ export const TEMPORARY_FILE_PREFIX = '.gspot-';
 
 export const TEMPORARY_FILE_SUFFIX = '.tmp';
 
+export const TEMPORARY_REMOVAL_OPTIONS = { recursive: true, force: true, maxRetries: 5, retryDelay: 100 } as const;
+
 export const PARENT_SEGMENT = /(?:^|[/{,])\.\.(?=[/},]|$)/u;
 
 export const RESERVED_SEGMENTS: ReadonlySet<string> = new Set(['', '.', '..']);

@@ -10,6 +10,8 @@ import {
 
 export const GSPOT_FOLDER = '.gspot';
 
+export const COPIES_FOLDER = '.gspot-copies';
+
 export const GSPOT_PATHS = {
     configurations: `${GSPOT_FOLDER}/configurations`,
     hooks: `${GSPOT_FOLDER}/hooks`,

@@ -84,7 +84,7 @@ test('a link into another linked tree points at the copy of that tree, whatever 
     expect(await isOnDisk(join(copied, '../helpers/package.json'))).toBe(true);
 });
 
-test('a copy sits beside the repository, so it shares a parent folder with the store package it links', async () => {
+test('a copy sits inside the repository, so linked store packages share its root', async () => {
     await using sandbox = await testdir({
         'project/package.json': '{"private":true}',
         'project/gspot.toml': buildSandboxSettings([]),
@@ -97,7 +97,7 @@ test('a copy sits beside the repository, so it shares a parent folder with the s
     const planned = planSandboxCheck(session, 'gspot/generated-files', { paths: ['package.json'] });
     using copy = await createCheckCopy(session, planned);
     const parent = await realpath(sandbox.path);
-    expect(dirname(copy.path)).toBe(parent);
+    expect(dirname(copy.path)).toBe(join(parent, 'project/.gspot-copies'));
     expect(await realpath(join(copy.path, 'node_modules/tool/index.js'))).toBe(
         join(parent, 'project/node_modules/.bun/tool@1/node_modules/tool/index.js'),
     );
