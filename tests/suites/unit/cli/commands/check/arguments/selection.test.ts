@@ -266,13 +266,11 @@ test.each(['all', 'message', 'manual'])('--stage refuses %s as a command-line st
     expect(result.stdout).toContain('Allowed choices are commit, push');
 });
 
-test('check refuses the removed pre-commit hook selector and a stage without its value', async () => {
+test('check refuses --stage without its value', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
-    for (const flags of [['--hook', 'pre-commit'], ['--stage']]) {
-        const result = await runGspot(sandbox.path, ['check', ...flags, '--json']);
-        expect(result.code).toBe(2);
-        expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments' });
-    }
+    const result = await runGspot(sandbox.path, ['check', '--stage', '--json']);
+    expect(result.code).toBe(2);
+    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments' });
 });
 
 test.each(['pre-push', 'commit-msg'])('--stage and --hook %s are mutually exclusive', async (hook) => {

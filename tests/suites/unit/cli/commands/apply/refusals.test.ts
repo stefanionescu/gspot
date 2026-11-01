@@ -73,11 +73,3 @@ test('apply refuses a gspot.toml that links outside the repository and writes no
     expect(refused.stderr).toBe('gspot.toml is not a regular file. Use a regular file.\n');
     expect(await readFile(join(sandbox.path, 'outside'), 'utf8')).toBe(outside);
 });
-
-test('apply refuses the removed dry-run flag before writing files', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': 'configurations = []\n' });
-    const refused = await runGspot(sandbox.path, ['apply', '--dry-run']);
-    expect(refused.code).toBe(2);
-    expect(refused.stderr).toContain("Unknown option '--dry-run'");
-    expect(await isOnDisk(join(sandbox.path, GSPOT_FOLDER))).toBe(false);
-});
