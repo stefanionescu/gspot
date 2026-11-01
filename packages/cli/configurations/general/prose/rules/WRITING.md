@@ -42,6 +42,7 @@ term for each concept. Dates shown to people include their time zone; machine va
 - Write no marketing word such as `simply`, `easily`, `robust`, or `powerful`.
 - Describe what exists now. Write no promise such as `coming soon` or `in the future`, and no history such as
   `previously`, `no longer`, or `renamed from`.
+- Do not mention a feature, option, or setting that the project removed or decided against.
 - Write `do not`, `it is`, `for example`, and `you`, not `don't`, `it's`, `e.g.`, and `we`.
 - Name the thing, not its place on the page: no `see above`, `the following section`, or `this guide explains`.
 - Write `because` or `after` instead of `since`.

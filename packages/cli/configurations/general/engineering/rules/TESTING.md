@@ -18,6 +18,8 @@ Tests exist to catch bugs. A useful test fails when the behavior it covers break
 - Do not write a test that only repeats a constant, a table, or a configuration value. A test runs code and checks its
   result.
 - Do not export a function only so that a test can call it. Test it through the public function that uses it.
+- Test the behavior that exists. Never write a test that proves the absence of a feature, option, setting, export, or
+  file that the project removed or decided against. When you remove a feature, delete its tests.
 
 ## Mocks
 
