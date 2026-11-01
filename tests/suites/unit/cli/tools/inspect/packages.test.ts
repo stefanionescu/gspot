@@ -182,7 +182,7 @@ test.each([...PACKAGE_METADATA_FAILURES])(
         expect(await captureRejection(inspectTool(context, tool))).toMatchObject({
             name: 'GspotError',
             code: 'parse',
-            message: `${path}: ${field}: Invalid input: expected string, received boolean. Fix the field.`,
+            message: `${GSPOT_PATHS.nodeModules}/teller/package.json: ${field}: Invalid input: expected string, received boolean. Fix the field.`,
         });
         await writeFile(path, '{"name":"teller","version":"5.0.1"}');
         expect(await inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });

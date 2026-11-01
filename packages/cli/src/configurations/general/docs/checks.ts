@@ -11,11 +11,11 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
 import { parseMiseTasks } from '#cli/parsers/projects/mise.ts';
 import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { PACKAGE_JSON, WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { joinScope, selectScopePath } from '#cli/repository/scopes.ts';
-import { readCachedPackageJson } from '#cli/repository/dependencies.ts';
 import { readScalarSetting } from '#cli/engine/tool-runs/placeholders.ts';
 import { buildGitignoreMatcher } from '#cli/repository/files/gitignore.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
@@ -122,7 +122,7 @@ function validateProseLine(file: string, prose: ProseLine, index: PathIndex): Ch
 
 function listPackageBinaries(session: Session, folders: string[]): string[] {
     return folders.flatMap((folder) => {
-        const manifest = readCachedPackageJson(session.cache, posix.join(folder, PACKAGE_JSON));
+        const manifest = readPackageJson(session.cache, posix.join(folder, PACKAGE_JSON));
         const bin = manifest?.['bin'];
         if (typeof bin === 'string') {
             const name = manifest?.name?.split('/').at(-1);
@@ -149,7 +149,7 @@ function readTaskNames(session: Session, scopePath: string): TaskNames {
     let scripts: string[] = [];
     let packages: string[] = [];
     for (const { path } of ancestors) {
-        const found = readCachedPackageJson(session.cache, posix.join(path, PACKAGE_JSON));
+        const found = readPackageJson(session.cache, posix.join(path, PACKAGE_JSON));
         if (found === undefined) continue;
         scripts = found.scripts === undefined ? [] : Object.keys(found.scripts);
         packages = [path, ...(path === '' ? listWorkspaceFolders(session.root) : [])];

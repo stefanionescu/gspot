@@ -10,9 +10,9 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import { miseToolsSchema } from '#cli/schemas/configurations.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
-import { readCachedPackageJson, readDependencySpecifiers } from '#cli/repository/dependencies.ts';
 import { PACKAGE_JSON, IMPORTER_LOCKFILES, PNPM_ROOT_IMPORTER, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers.ts';
 
 import {
@@ -173,7 +173,7 @@ Reports a packageManager field that names another version than the mise pin of t
 export function checkPackageManagerPin(session: Session, planned: PlannedCheck): CheckFinding[] {
     const folder = planned.scope.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
-    const writtenPin = splitPackageManager(readCachedPackageJson(session.cache, packageJsonPath)?.packageManager);
+    const writtenPin = splitPackageManager(readPackageJson(session.cache, packageJsonPath)?.packageManager);
     if (writtenPin === undefined) return [];
     const { tool, version } = writtenPin;
     const { pin, findings } = findMiseFilePin(session, folder, tool);
@@ -204,8 +204,9 @@ export function checkStaleLockfile(session: Session, planned: PlannedCheck): Che
         found.lockfile === 'pnpm-lock.yaml'
             ? STALE_LOCKFILE_SECTIONS.filter((section) => section !== 'peerDependencies')
             : STALE_LOCKFILE_SECTIONS;
-    const specifiers = readDependencySpecifiers(session.cache, packageJsonPath, sections);
-    if (specifiers === undefined) return [];
+    const manifest = readPackageJson(session.cache, packageJsonPath);
+    if (manifest === undefined) return [];
+    const specifiers = listSpecifiers(manifest, sections);
     let locked = new Map(
         SPECIFIER_PARSERS[found.lockfile](posix.join(found.base, found.lockfile), found.text).map(
             ([key, workspace]) => [key === PNPM_ROOT_IMPORTER ? '' : key, listSpecifiers(workspace, sections)],

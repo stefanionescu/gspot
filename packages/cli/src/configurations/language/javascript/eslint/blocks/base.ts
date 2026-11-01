@@ -1,7 +1,7 @@
 import { basename } from 'node:path/posix';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { readCachedPackageJson } from '#cli/repository/dependencies.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { readScopeAliases } from '#cli/repository/javascript/aliases.ts';
 import { MISE_TASKS_GLOB } from '#cli/config/configurations/structure.ts';
@@ -216,7 +216,7 @@ export function buildClosingBlocks(
             (file) =>
                 file.kind === 'source' &&
                 basename(file.path) === PACKAGE_JSON &&
-                readCachedPackageJson(session.cache, file.path)?.['private'] === true,
+                readPackageJson(session.cache, file.path)?.['private'] === true,
         )
         .map((file) => escapeGlob(file.path));
     const selectorGroups = buildSelectorBlocks(session.scopes, level);

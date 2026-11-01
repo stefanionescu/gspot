@@ -3,9 +3,9 @@ import { intersects, validRange } from 'semver';
 import type { Session } from '#cli/types/tools.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
-import { readDependencySpecifiers } from '#cli/repository/dependencies.ts';
+import { listSpecifiers, readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
 import { REACT_PACKAGE, REACT_DOM_PACKAGE, REACT_VERSIONS_RULE } from '#cli/config/configurations/framework.ts';
 
 function rangesCanMeet(react: string, reactDom: string): boolean {
@@ -23,8 +23,7 @@ Reports a project whose react and react-dom resolve to different versions.
 export function checkReactVersions(session: Session, planned: PlannedCheck): CheckFinding[] {
     const folder = planned.scope.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
-    const specifiers = readDependencySpecifiers(session.cache, packageJsonPath);
-    if (specifiers === undefined) return [];
+    const specifiers = listSpecifiers(readPackageJson(session.cache, packageJsonPath));
     if (![REACT_PACKAGE, REACT_DOM_PACKAGE].every((name) => specifiers.has(name))) return [];
     const locked = readLockedVersions(session.cache, folder);
     const versions = locked ?? specifiers;

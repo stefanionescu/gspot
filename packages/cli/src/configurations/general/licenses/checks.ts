@@ -13,28 +13,29 @@ import type { CheckSession } from '#cli/types/engine/run.ts';
 import { CheckStop, GspotError } from '#cli/system/errors.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { readDependencySpecifiers } from '#cli/repository/dependencies.ts';
 import type { PlannedCheck, LicenseProject } from '#cli/types/engine/plan.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { PIP_LICENSES_COMMAND, LICENSE_CHECKER_COMMAND } from '#cli/config/engine.ts';
 import { PACKAGE_JSON, PYTHON_LOCKFILES, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers.ts';
 import { pythonLicenseOutputSchema, javascriptLicenseOutputSchema } from '#cli/schemas/configurations.ts';
 
-import {
-    splitIdentity,
-    PACKAGE_PARSERS,
-    normalizePythonName,
-    findNearestLockfile,
-} from '#cli/parsers/projects/lockfiles.ts';
 import type {
     AllowedPackage,
     LicensedPackage,
     ProjectLicenses,
     PythonLicenseOutput,
 } from '#cli/types/configurations/general.ts';
+import {
+    splitIdentity,
+    listSpecifiers,
+    PACKAGE_PARSERS,
+    normalizePythonName,
+    findNearestLockfile,
+} from '#cli/parsers/projects/lockfiles.ts';
 import {
     ANY_VERSION,
     LICENSE_RULES,
@@ -180,7 +181,7 @@ async function scanLicenses(session: CheckSession, planned: PlannedCheck) {
         (project) =>
             project.skip === undefined &&
             (basename(project.dependencyFile) !== PACKAGE_JSON ||
-                (readDependencySpecifiers(session.cache, project.dependencyFile)?.size ?? 0) > 0),
+                listSpecifiers(readPackageJson(session.cache, project.dependencyFile)).size > 0),
     );
     const inventories = await Promise.all(scanned.map((project) => scanProject(session, planned, project)));
     return { inventories, hasSkipped: projects.some(({ skip }) => skip !== undefined) };

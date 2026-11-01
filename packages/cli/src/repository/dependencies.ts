@@ -7,7 +7,7 @@ import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import type { PackageJson, DependencyFile } from '#cli/types/parsers.ts';
-import { PACKAGE_JSON, DEPENDENCY_SECTIONS } from '#cli/config/parsers.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { isInInstalledFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 import { HOOK_PACKAGES, REQUIREMENTS_FILE } from '#cli/config/repository/files.ts';
 import { parseRequirements, DEPENDENCY_FILE_PARSERS } from '#cli/parsers/projects/dependencies.ts';
@@ -57,50 +57,14 @@ export async function readDependencyFiles(cache: RunCache, files: TrackedFile[])
 /**
 Read and validate the package.json fields that gspot uses.
 
-@param root the base folder of the path.
-@param path the repository-relative package.json.
+@param source the base folder of the path, or the run cache of that folder.
+@param path the relative package.json.
 @returns the validated package fields, or undefined when the file does not exist.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Commands, generation, and repository reads validate package.json with one schema through it.
-export function readPackageJson(root: string, path: string): PackageJson | undefined {
-    const text = find(root, path);
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Commands, generation, checks, and repository reads validate package.json through it.
+export function readPackageJson(source: string | RunCache, path: string): PackageJson | undefined {
+    const text = find(source, path);
     return text === undefined ? undefined : parseJsonFile(path, text, packageJsonSchema);
-}
-
-/**
-Read the package.json fields used by repository checks through the run cache.
-
-@param cache the cache rooted at the repository.
-@param path the repository-relative package.json path.
-@returns the validated fields, or undefined when the file does not exist.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Checks and repository reads validate package.json from the run cache with one schema through it.
-export function readCachedPackageJson(cache: RunCache, path: string): PackageJson | undefined {
-    const text = find(cache, path);
-    return text === undefined ? undefined : parseJsonFile(path, text, packageJsonSchema);
-}
-
-/**
-Read the dependency specifiers declared for installation.
-
-@param cache the cache rooted at the repository.
-@param path the repository-relative package.json path.
-@param sections the package.json dependency tables to read.
-@returns undefined when the file does not exist.
-*/
-export function readDependencySpecifiers(
-    cache: RunCache,
-    path: string,
-    sections: readonly ((typeof DEPENDENCY_SECTIONS)[number] | 'peerDependencies')[] = DEPENDENCY_SECTIONS,
-): Map<string, string> | undefined {
-    const fields = readCachedPackageJson(cache, path);
-    if (fields === undefined) return undefined;
-    return new Map(
-        sections.flatMap((section) => {
-            const dependencies = fields[section];
-            return dependencies === undefined ? [] : Object.entries(dependencies);
-        }),
-    );
 }
 
 /**
