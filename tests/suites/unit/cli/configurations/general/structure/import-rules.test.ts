@@ -103,7 +103,7 @@ test('without import rules the check is skipped', async () => {
         buildRunOptions({ only: ['structure/import-rules'] }),
     );
     expect(report.checks).toMatchObject([
-        { check: 'structure/import-rules', status: 'skipped', note: 'Add [[import_rule]] records to check imports.' },
+        { check: 'structure/import-rules', status: 'skipped', note: 'needs the setting import_rule' },
     ]);
 });
 

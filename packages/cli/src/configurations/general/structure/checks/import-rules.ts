@@ -1,6 +1,5 @@
 import { posix } from 'node:path';
 import type { Node } from 'web-tree-sitter';
-import { CheckStop } from '#cli/system/errors.ts';
 import { read } from '#cli/system/files/reads.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { getTable } from '#cli/settings/scopes.ts';
@@ -31,7 +30,6 @@ import {
     RELATIVE_IMPORT,
     CONFIG_PATTERNS,
     NODE_SHEBANG_TAG,
-    IMPORT_RULES_SKIP,
     PYTHON_EXTENSIONS,
     SWIFT_CONFIGURATION,
     PYTHON_SOURCE_ROOTS,
@@ -260,12 +258,8 @@ ESLint applies the rules to JavaScript and TypeScript imports.
 @param planned the configured check and selected scope files.
 */
 export async function checkImportRules(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
-    const rules = session.settings.import_rule;
-    if (rules.length === 0) throw new CheckStop('skipped', IMPORT_RULES_SKIP);
-    const lookup = buildRuleLookup(rules);
-    return [
-        ...listUncoveredFiles(planned, lookup),
-        ...(await validatePythonImports(session, planned, lookup)),
-        ...(await validateSwiftImports(session, planned, lookup)),
-    ];
+    const lookup = buildRuleLookup(session.settings.import_rule);
+    const python = await validatePythonImports(session, planned, lookup);
+    const swift = await validateSwiftImports(session, planned, lookup);
+    return [...listUncoveredFiles(planned, lookup), ...python, ...swift];
 }

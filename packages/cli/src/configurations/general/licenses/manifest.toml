@@ -2,6 +2,8 @@
 description = "Installed dependencies: a license on the allowed list, or an allowed-package record with a reason for one package."
 title = "Licenses"
 
+[detect]
+
 [files]
 filenames = ["package.json", "pyproject.toml"]
 
@@ -25,4 +27,5 @@ name = "allowed"
 runs = "once"
 stage = "push"
 summary = "Compares the license of each installed npm or Python package with the allowed list and package records."
+when = { setting = "licenses.allowed" }
 why = "A license the project cannot accept arrives silently with a transitive dependency."

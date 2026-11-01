@@ -253,7 +253,7 @@ test('scan: the check skips with a note while licenses.allowed is empty', async 
         buildRunOptions({ only: ['licenses/allowed'] }),
     );
     expect(report.checks).toMatchObject([
-        { check: 'licenses/allowed', status: 'skipped', note: 'Set licenses.allowed to check licenses.' },
+        { check: 'licenses/allowed', status: 'skipped', note: 'needs the setting licenses.allowed' },
     ]);
 });
 

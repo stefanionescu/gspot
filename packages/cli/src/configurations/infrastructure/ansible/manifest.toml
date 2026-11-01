@@ -3,7 +3,7 @@ description = "Ansible playbooks, roles, and collections: the lint rules of the 
 title = "Ansible"
 
 [detect]
-paths = ["**/ansible.cfg", "**/galaxy.yml", "**/requirements.yml", "**/roles/*/tasks/main.yml", "**/playbooks/*.{yml,yaml}", "**/group_vars/**", "**/host_vars/**", "**/inventory/**", "**/inventory.{ini,yml,yaml}"]
+paths = ["**/ansible.cfg", "**/playbook.{yml,yaml}", "**/playbooks/*.{yml,yaml}", "**/inventory/*.{ini,yml,yaml}", "**/inventory/hosts*"]
 
 [files]
 paths = ["**/ansible.cfg", "**/galaxy.yml", "**/requirements.yml", "**/roles/*/tasks/main.yml"]

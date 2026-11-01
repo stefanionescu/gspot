@@ -90,8 +90,8 @@ test('init leaves javascript out of a root package.json with only tool dependenc
             settings.configurations.filter((configuration) => !listAlwaysSelected().includes(configuration)),
         ]),
     ).toStrictEqual([
-        ['', ['licenses']],
-        ['app', ['licenses', 'javascript']],
+        ['', []],
+        ['app', ['javascript']],
     ]);
 });
 
@@ -153,7 +153,6 @@ const name = 1;
         'css',
         'javascript',
         'vue',
-        'licenses',
     ]);
     const typed = await listPlannedConfigurations(styled.path);
     expect(typed.filter((configuration) => !listAlwaysSelected().includes(configuration))).toStrictEqual([
@@ -161,7 +160,6 @@ const name = 1;
         'javascript',
         'typescript',
         'vue',
-        'licenses',
     ]);
 });
 

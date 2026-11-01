@@ -107,19 +107,16 @@ test.each(['all'] as const)(
         const selected = new Set(
             session.scopes.flatMap((scope) => scope.configurations.map((configuration) => configuration.name)),
         );
-        expect([...selected].toSorted(compareText)).toStrictEqual(
-            [...listAlwaysSelected(), 'licenses'].toSorted(compareText),
-        );
+        expect([...selected].toSorted(compareText)).toStrictEqual(listAlwaysSelected().toSorted(compareText));
         const checks = planChecks(session, {
             stage: 'all',
-            only: ['security/semgrep', 'prose/vale', 'duplication/jscpd', 'licenses/allowed'],
+            only: ['security/semgrep', 'prose/vale', 'duplication/jscpd'],
         });
         expect(checks.find((check) => check.check.id === 'prose/vale')?.files.map((file) => file.path)).toStrictEqual([
             'app/source.js',
             'guide.md',
             'source.js',
         ]);
-        expect(checks.find((check) => check.check.id === 'licenses/allowed')?.skip).toBeUndefined();
     },
 );
 

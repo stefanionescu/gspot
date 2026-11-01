@@ -7,7 +7,6 @@ suggests = ["typescript"]
 title = "Supabase"
 
 [detect]
-dependencies = ["@supabase/supabase-js", "@supabase/ssr"]
 project_files = ["supabase/config.toml"]
 
 [files]

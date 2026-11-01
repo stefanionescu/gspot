@@ -169,13 +169,3 @@ test('init identifies a configuration detected from a file', async () => {
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
     expect(plan.configurations.find(({ configuration }) => configuration === 'docker')?.origin).toBe('detected');
 });
-
-test('a runtime dependency selects licenses during init', async () => {
-    await using sandbox = await createGitSandbox({
-        'package.json': '{"name":"example","private":true,"dependencies":{"react":"19.1.1"}}\n',
-    });
-    const result = await runGspot(sandbox.path, ['init', '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { plan } = JSON.parse(result.stdout) as InitJson;
-    expect(plan.configurations.map(({ configuration }) => configuration)).toContain('licenses');
-});

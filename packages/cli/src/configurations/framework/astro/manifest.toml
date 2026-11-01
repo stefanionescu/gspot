@@ -1,7 +1,7 @@
 [configuration]
 description = "Astro components: the recommended and accessibility rules for frontmatter, markup, and scripts, and a type check of each component."
 requires = ["javascript"]
-suggests = ["typescript", "css"]
+suggests = ["typescript", "css", "site"]
 title = "Astro"
 
 [detect]

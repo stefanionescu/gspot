@@ -5,7 +5,7 @@ suggests = ["css", "javascript"]
 title = "Static site"
 
 [detect]
-dependencies = ["@astrojs/sitemap", "@astrojs/starlight"]
+dependencies = ["@astrojs/sitemap", "@astrojs/starlight", "vitepress", "@docusaurus/core", "@11ty/eleventy"]
 filenames = ["sitemap.xml"]
 absent_dependencies = ["next", "nuxt", "@sveltejs/kit", "@remix-run/node", "@react-router/node", "expo", "django", "flask", "@astrojs/node", "@astrojs/vercel", "@astrojs/netlify", "@astrojs/cloudflare"]
 
