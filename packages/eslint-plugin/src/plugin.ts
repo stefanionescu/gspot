@@ -129,6 +129,7 @@ import { noSelfComparingAssertions } from './rules/no-self-comparing-assertions.
 import { noUncertainChaiAssertions } from './rules/no-uncertain-chai-assertions.ts';
 import { noImpossibleCollectionSize } from './rules/no-impossible-collection-size.ts';
 import { noInconsistentFunctionCall } from './rules/no-inconsistent-function-call.ts';
+import { noMismatchedAssertionTypes } from './rules/no-mismatched-assertion-types.ts';
 import { noUnenclosedMultilineBlock } from './rules/no-unenclosed-multiline-block.ts';
 
 const rules = {
@@ -183,6 +184,7 @@ const rules = {
     'prefer-native-axios': preferNativeAxios,
     'no-constant-assertions': noConstantAssertions,
     'prefer-matcher-assertions': preferMatcherAssertions,
+    'no-mismatched-assertion-types': noMismatchedAssertionTypes,
     'no-setter-in-component': noSetterInComponent,
     'no-self-state-update': noSelfStateUpdate,
     'no-generated-keys': noGeneratedKeys,

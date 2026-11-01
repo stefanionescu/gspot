@@ -175,3 +175,22 @@ export const LOCATOR_VALUES = new Map([
     ['count', 'toHaveCount'],
     ['inputValue', 'toHaveValue'],
 ]);
+
+export const TYPE_CATEGORIES = new Map([
+    ['string', 'string'],
+    ['number', 'number'],
+    ['boolean', 'boolean'],
+    ['true', 'boolean'],
+    ['false', 'boolean'],
+    ['bigint', 'bigint'],
+    ['symbol', 'symbol'],
+    ['unique symbol', 'symbol'],
+    ['null', 'null'],
+    ['undefined', 'undefined'],
+    ['void', 'undefined'],
+    ['any', 'unknown'],
+    ['unknown', 'unknown'],
+    ['never', 'unknown'],
+]);
+
+export const OPEN_CATEGORIES = new Set(['object', 'null', 'undefined', 'unknown']);
