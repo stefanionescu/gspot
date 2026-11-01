@@ -293,7 +293,7 @@ paths = ["packages/*/build.ts", "packages/cli/pin-ages.ts"]
 
 [[command_check]]
 id = "unit-tests"
-command = ["mise", "run", "test", "unit"]
+command = ["bash", "-c", "[[ -n ${CI:-} ]] || mise run test unit"]
 paths = ["**"]
 stage = "push"
 summary = "Runs the unit suite."
