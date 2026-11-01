@@ -5,7 +5,8 @@ import { cpSync, rmSync, chmodSync, mkdirSync, existsSync, readFileSync, writeFi
 
 const packageFolder = import.meta.dir;
 const rootFolder = join(packageFolder, '../..');
-const assetURL = `${cliPackage.homepage}/`;
+const repositoryPath = new URL(cliPackage.repository.url.replace(/^git\+/u, '')).pathname.replace(/\.git$/u, '');
+const assetURL = `https://raw.githubusercontent.com${repositoryPath}/v${cliPackage.version}/docs/public/`;
 const downloadTimeout = 60_000;
 const executableMode = 0o755;
 
@@ -122,6 +123,6 @@ mkdirSync(join(packageFolder, 'grammars/licenses'), { recursive: true });
 for (const grammar of grammars) await downloadGrammar(grammar);
 writeFileSync(
     join(packageFolder, 'README.md'),
-    readFileSync(join(rootFolder, 'README.md'), 'utf8').replaceAll('(docs/public/', `(${assetURL}`),
+    readFileSync(join(rootFolder, 'README.md'), 'utf8').replaceAll('](docs/public/', `](${assetURL}`),
 );
 cpSync(join(rootFolder, 'LICENSE.md'), join(packageFolder, 'LICENSE.md'));

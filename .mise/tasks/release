@@ -44,6 +44,30 @@ assert_version_raised() {
     fi
 }
 
+# assert_readme_images: Refuses a README with an image that does not load, such as a banner at a tag that GitHub does
+# not serve yet. npm shows the README of a version forever, and nobody can change it after the publish.
+# Arguments:
+#   README files.
+assert_readme_images() {
+    local readme
+    local images
+    local image
+    local url
+
+    for readme in "$@"; do
+        images=$(grep -oE '!\[[^]]*\]\([^)]+\)' "${readme}") || continue
+        while IFS= read -r image; do
+            url="${image#*](}"
+            url="${url%)}"
+            if ! curl --fail --silent --show-error --location --connect-timeout 10 --max-time 60 \
+                --output /dev/null "${url}"; then
+                printf '%s shows %s, which does not load.\n' "${readme}" "${url}" >&2
+                return 1
+            fi
+        done <<<"${images}"
+    done
+}
+
 # publish_package: Publishes a package version that npm does not serve yet.
 # Arguments:
 #   Package folder.
@@ -106,6 +130,7 @@ main() {
     assert_version_raised packages/cli "${cli_spec}" "${cli_tag}"
     push_tag "${plugin_tag}"
     push_tag "${cli_tag}"
+    assert_readme_images packages/eslint-plugin/README.md packages/cli/README.md
     publish_package packages/eslint-plugin "${plugin_spec}"
     publish_package packages/cli "${cli_spec}"
     mise run docs:deploy || exit 1
