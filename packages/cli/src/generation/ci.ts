@@ -1,4 +1,3 @@
-import semver from 'semver';
 import { getUvPin } from '#cli/manifests/tools.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
@@ -11,7 +10,8 @@ import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { NEXTJS_CONFIGURATION } from '#cli/config/manifests/names.ts';
-import { PACKAGE_MANAGERS, YARN_BERRY_MAJOR } from '#cli/config/repository/javascript.ts';
+import { frozenInstallArguments } from '#cli/repository/javascript/setup.ts';
+import { FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/javascript.ts';
 import { Scalar, Document, type Node, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
 import type { PackageManager, PackageManagerPin } from '#cli/types/repository/javascript.ts';
 import type { Pipeline, ActionPin, FrozenLockfile } from '#cli/types/generation/generation.ts';
@@ -33,7 +33,6 @@ import {
     GITHUB_EVENTS,
     CI_CACHE_FILES,
     CI_CACHE_PREFIX,
-    FROZEN_INSTALLS,
     GITHUB_WORKFLOW,
     GITLAB_WORKFLOW,
     CI_CHECK_COMMAND,
@@ -42,7 +41,6 @@ import {
     GITLAB_BASE_LINE,
     NEXT_TYPEGEN_LINE,
     CI_INSTALL_COMMAND,
-    YARN_BERRY_INSTALL,
     GITHUB_CONCURRENCY,
     CI_TIMEOUT_MINUTES,
     CI_CACHE_SAVED_KEY,
@@ -149,11 +147,7 @@ function buildFrozenInstall(session: Session, scopePath: string, lockfile: Froze
     const command = FROZEN_INSTALLS[lockfile];
     const name = PACKAGE_MANAGERS.find((tool) => tool === command[0]);
     const runner = name === undefined ? getUvPin() : readProjectPackageManager(session, scopePath, name);
-    const args =
-        runner.name === 'yarn' && semver.major(runner.version) >= YARN_BERRY_MAJOR
-            ? YARN_BERRY_INSTALL.slice(1)
-            : command.slice(1);
-    return buildPackageManagerCommand(runner, args);
+    return buildPackageManagerCommand(runner, frozenInstallArguments(lockfile, runner.version));
 }
 
 /**

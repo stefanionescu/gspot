@@ -3,18 +3,18 @@ import { open, readFile } from 'node:fs/promises';
 import { stringify } from '@decimalturn/toml-patch';
 import type { Session } from '#cli/types/session.ts';
 import type { Files } from '#cli/types/system/files.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
+import { listHostCheckTools } from '#cli/planning/tools.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import type { ToolProjectFiles } from '#tests/types/packages.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildPythonProjectTable } from '#cli/installers/pypi.ts';
+import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import type { NpmToolInstall } from '#cli/types/installers/npm.ts';
 import type { Tool, Configuration } from '#cli/types/manifests.ts';
 import { selectLockfileName } from '#cli/installers/npm/lockfiles.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import type { ToolSearch } from '#cli/types/executables/inspection.ts';
 import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
-import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { readToolPackageManager } from '#cli/repository/javascript/package-manager.ts';
 import type { ToolInstall, ToolPackageManager } from '#cli/types/installers/installers.ts';
 import { listMisePins, listDistinctTools, listToolProjectPins } from '#cli/manifests/tools.ts';
@@ -65,22 +65,23 @@ export function buildToolInstall(session: Session, writer: Files): ToolInstall {
         writer,
         generated: buildGeneratedFiles(session),
         tools: listDistinctTools(session.toolConfigurations),
+        checkTools: listHostCheckTools(session.configuredChecks),
         misePath: null,
         steps: [],
     };
 }
 
 /**
-Build the npm tool install for a sandbox whose package.json names its package manager.
+Build the npm tool install for a sandbox whose package.json names its package packageManager.
 
 @param session the open sandbox.
 @param writer holds the repository lock and saves files.
-@returns the tool install with its package manager and registry environment.
+@returns the tool install with its package packageManager and registry environment.
 */
 export async function buildNpmToolInstall(session: Session, writer: Files): Promise<NpmToolInstall> {
     const install = buildToolInstall(session, writer);
     const { packageManager } = install;
-    if (packageManager === undefined) throw new Error('The sandbox package.json names no package manager.');
+    if (packageManager === undefined) throw new Error('The sandbox package.json names no package packageManager.');
     return { ...install, packageManager, registryEnvironment: await readRegistryEnvironment(session.root) };
 }
 
@@ -99,15 +100,6 @@ export function buildProgramPin(name: string, version: string, npmPackage?: stri
 }
 
 /**
-List the npm install folder and lockfile of the tool project that exist, to show that a command installed nothing.
-*/
-export async function listNpmInstallFiles(root: string): Promise<string[]> {
-    const paths = [GSPOT_PATHS.nodeModules, `${GSPOT_FOLDER}/package-lock.json`];
-    const found = await Promise.all(paths.map(async (path) => ((await isOnDisk(join(root, path))) ? [path] : [])));
-    return found.flat();
-}
-
-/**
 What tool search reads, for tests that inspect installed tools.
 */
 
@@ -115,7 +107,7 @@ What tool search reads, for tests that inspect installed tools.
 export function buildToolSearch(root: string, fields: Partial<ToolSearch> = {}): ToolSearch {
     return {
         root,
-        timeoutSeconds: SETTING_DEFINITIONS['tool_timeout_seconds'].default,
+        timeoutSeconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined),
         inspections: new Map(),
         ...fields,
     };

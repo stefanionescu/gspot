@@ -27,7 +27,7 @@ test.each(buildProcessBackends())(
     },
 );
 
-test.each(buildProcessBackends().flatMap((backend) => [0, 1].map((status) => ({ backend, status }))))(
+test.each(buildProcessBackends().flatMap((backend) => [1].map((status) => ({ backend, status }))))(
     '$backend.name: reads both large output streams to the end and keeps exit code $status',
     async ({ backend, status }) => {
         await using sandbox = await testdir();

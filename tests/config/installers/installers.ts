@@ -80,15 +80,15 @@ export const HOOK_CONFIGURATION_CASES = [
     {
         path: '.pre-commit-config.yaml',
         oneHook:
-            'repos:\n  - repo: local\n    hooks:\n      - id: gspot-commit\n        name: gspot commit\n        language: system\n        entry: gspot check --hook pre-commit\n',
+            'repos:\n  - repo: local\n    hooks:\n      - id: gspot-commit\n        name: gspot commit\n        language: system\n        entry: gspot check --staged --stage commit\n',
         bothHooks:
-            'repos:\n  - repo: local\n    hooks:\n      - id: gspot-commit\n        name: gspot commit\n        language: system\n        entry: gspot check --hook pre-commit\n      - id: gspot-push\n        name: gspot push\n        language: system\n        entry: gspot check --hook pre-push\n        stages: [pre-push]\n      - id: gspot-message\n        name: gspot message\n        language: system\n        entry: gspot check --hook commit-msg\n        stages: [commit-msg]\n',
+            'repos:\n  - repo: local\n    hooks:\n      - id: gspot-commit\n        name: gspot commit\n        language: system\n        entry: gspot check --staged --stage commit\n      - id: gspot-push\n        name: gspot push\n        language: system\n        entry: gspot check --hook pre-push\n        stages: [pre-push]\n      - id: gspot-message\n        name: gspot message\n        language: system\n        entry: gspot check --hook commit-msg\n        stages: [commit-msg]\n',
     },
     {
         path: 'package.json',
-        oneHook: '{"simple-git-hooks":{"pre-commit":"gspot check --hook pre-commit"}}',
+        oneHook: '{"simple-git-hooks":{"pre-commit":"gspot check --staged --stage commit"}}',
         bothHooks:
-            '{"simple-git-hooks":{"pre-commit":"gspot check --hook pre-commit","pre-push":"gspot check --hook pre-push","commit-msg":"gspot check --hook commit-msg"}}',
+            '{"simple-git-hooks":{"pre-commit":"gspot check --staged --stage commit","pre-push":"gspot check --hook pre-push","commit-msg":"gspot check --hook commit-msg"}}',
     },
 ] as const;
 

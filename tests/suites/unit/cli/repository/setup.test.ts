@@ -1,7 +1,7 @@
 import { join, dirname } from 'node:path';
+import { createFileTree } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { createRunCache } from '#cli/system/cache.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
@@ -21,11 +21,10 @@ import {
 } from '#tests/config/repository/repository.ts';
 
 test('tool discovery finds nested config files and skips root .gspot and vendored folders', async () => {
-    await using sandbox = await testdir(PRETTIER_SETTINGS_FILES);
+    await using sandbox = await createGitSandbox(PRETTIER_SETTINGS_FILES);
 
     const repository = await readTestRepository(sandbox.path);
     const discovered = await readRepositorySetup(createRunCache(sandbox.path), {
-        hasGit: repository.hasGit,
         files: repository.files,
         dependencyFiles: [],
     });
@@ -35,13 +34,13 @@ test('tool discovery finds nested config files and skips root .gspot and vendore
 });
 
 test.each([...CI_JOB_DOCUMENTS])('CI discovery recognizes $name', async ({ path, document, expected }) => {
-    await using sandbox = await testdir({ [path]: JSON.stringify(document) });
+    await using sandbox = await createGitSandbox({ [path]: JSON.stringify(document) });
 
     expect(readLintJobs(sandbox.path, [path, 'missing.yml'])).toStrictEqual(expected.map((name) => `${path}: ${name}`));
 });
 
 test('CI discovery reports malformed YAML', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const path = '.gitlab-ci.yml';
     await createFileTree(sandbox.path, { [path]: 'quality: [unterminated' });
     const error = await captureRejection(Promise.try(() => readLintJobs(sandbox.path, [path])));
@@ -50,7 +49,7 @@ test('CI discovery reports malformed YAML', async () => {
 });
 
 test('CI discovery reads jobs after a GitLab component specification and keeps reference tags quiet', async () => {
-    await using sandbox = await testdir({ '.gitlab/ci/quality.yml': GITLAB_COMPONENT });
+    await using sandbox = await createGitSandbox({ '.gitlab/ci/quality.yml': GITLAB_COMPONENT });
     const warnings: string[] = [];
     using _warnings = spyOn(process, 'emitWarning').mockImplementation((warning) => {
         warnings.push(String(warning));
@@ -60,12 +59,11 @@ test('CI discovery reads jobs after a GitLab component specification and keeps r
 });
 
 test('tool discovery reads tool sections through a link inside the repository', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const source = '[tool.ruff]\nline-length = 100\n';
     await createFileTree(sandbox.path, { 'settings/python.toml': source });
     await symlink('settings/python.toml', join(sandbox.path, 'pyproject.toml'));
     const repositorySetup = await readRepositorySetup(createRunCache(sandbox.path), {
-        hasGit: false,
         files: [],
         dependencyFiles: [],
     });
@@ -73,23 +71,24 @@ test('tool discovery reads tool sections through a link inside the repository', 
 });
 
 test.each(['.claude/rules'])('a linked %s counts as present without reading a rules folder outside', async (path) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'project/source.ts': 'export {};\n',
         'outside/guide.md': 'external rules\n',
     });
 
     const root = join(sandbox.path, 'project');
+    runGitStep(root, ['init', '-q']);
     await mkdir(dirname(join(root, path)), { recursive: true });
     await symlink(join(sandbox.path, 'outside'), join(root, path), 'dir');
     expect(
-        await readRepositorySetup(createRunCache(root), { hasGit: false, files: [], dependencyFiles: [] }).then(
+        await readRepositorySetup(createRunCache(root), { files: [], dependencyFiles: [] }).then(
             ({ ruleFolders }) => ruleFolders,
         ),
     ).toStrictEqual([path]);
     await unlink(join(root, path));
     await createFileTree(root, { [`${path}/guide.md`]: 'authored rules\n' });
     expect(
-        await readRepositorySetup(createRunCache(root), { hasGit: false, files: [], dependencyFiles: [] }).then(
+        await readRepositorySetup(createRunCache(root), { files: [], dependencyFiles: [] }).then(
             ({ ruleFolders }) => ruleFolders,
         ),
     ).toStrictEqual([path]);
@@ -100,33 +99,34 @@ test('hook discovery keeps spaces in core.hooksPath and refuses a broken Git con
     await using sandbox = await createGitSandbox({ [`${hooksPath}/pre-commit`]: '#!/bin/sh\nexit 0\n' });
 
     runGitStep(sandbox.path, ['config', 'core.hooksPath', hooksPath]);
-    expect(await readHooks({ root: sandbox.path, hasGit: true }).then(({ hooks }) => hooks)).toStrictEqual([
+    expect(await readHooks({ root: sandbox.path }).then(({ hooks }) => hooks)).toStrictEqual([
         { kind: 'hooksPath', path: hooksPath, files: ['pre-commit'] },
     ]);
     await writeFile(join(sandbox.path, '.git/config'), '[core\n');
-    expect(
-        await captureRejection(readHooks({ root: sandbox.path, hasGit: true })).then(({ message }) => message),
-    ).toContain('Git config failed in ');
+    expect(await captureRejection(readHooks({ root: sandbox.path })).then(({ message }) => message)).toContain(
+        'Git config failed in ',
+    );
 });
 
 test('a hooks folder outside the repository that core.hooksPath names is listed', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'project/README.md': 'project\n',
         'hooks/pre-commit': '#!/bin/sh\nexit 0\n',
     });
 
     const root = join(sandbox.path, 'project');
     runGitStep(root, ['init', '-q']);
+    runGitStep(root, ['init', '-q']);
     runGitStep(root, ['config', 'core.hooksPath', '../hooks']);
-    expect(await readHooks({ root: root, hasGit: true }).then(({ hooks }) => hooks)).toStrictEqual([
+    expect(await readHooks({ root: root }).then(({ hooks }) => hooks)).toStrictEqual([
         { kind: 'hooksPath', path: '../hooks', files: ['pre-commit'] },
     ]);
 });
 
 test('hook discovery reports other hook folders and leaves gspot and task scripts out', async () => {
-    await using sandbox = await testdir(HOOK_FOLDER_FILES);
+    await using sandbox = await createGitSandbox(HOOK_FOLDER_FILES);
 
-    const { hooks } = await readHooks({ root: sandbox.path, hasGit: false });
+    const { hooks } = await readHooks({ root: sandbox.path });
     expect(hooks.toSorted((left, right) => compareText(left.path, right.path))).toStrictEqual([
         { kind: 'githooks', path: '.git-hooks', files: ['pre-commit'] },
         { kind: 'githooks', path: '.githooks', files: ['pre-commit'] },
@@ -136,42 +136,40 @@ test('hook discovery reports other hook folders and leaves gspot and task script
 
 test('a linked .githooks counts as githooks without reading hook files outside', async () => {
     const path = '.githooks';
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'project/source.ts': 'export {};\n',
         'outside/pre-commit': '#!/bin/sh\nexit 0\n',
     });
 
     const root = join(sandbox.path, 'project');
+    runGitStep(root, ['init', '-q']);
     await symlink('../outside', join(root, path), 'dir');
-    expect(await readHooks({ root: root, hasGit: false }).then(({ hooks }) => hooks)).toStrictEqual([]);
+    expect(await readHooks({ root: root }).then(({ hooks }) => hooks)).toStrictEqual([]);
     await unlink(join(root, path));
     await createFileTree(root, { 'authored-hooks/pre-commit': '#!/bin/sh\nexit 0\n' });
     await symlink('authored-hooks', join(root, path), 'dir');
-    expect(await readHooks({ root: root, hasGit: false }).then(({ hooks }) => hooks)).toStrictEqual([
+    expect(await readHooks({ root: root }).then(({ hooks }) => hooks)).toStrictEqual([
         { kind: 'githooks', path, files: ['pre-commit'] },
     ]);
 });
 
 test.each([...LINKED_HOOK_FILES])('a linked $path counts as $kind configuration', async ({ path, kind }) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'project/source.ts': 'export {};\n',
         'outside/configuration': 'authored hook configuration\n',
     });
 
     const root = join(sandbox.path, 'project');
+    runGitStep(root, ['init', '-q']);
     await symlink('../outside/configuration', join(root, path));
-    expect(await readHooks({ root: root, hasGit: false }).then(({ hooks }) => hooks)).toStrictEqual([
-        { kind, path, files: [] },
-    ]);
+    expect(await readHooks({ root: root }).then(({ hooks }) => hooks)).toStrictEqual([{ kind, path, files: [] }]);
 });
 
 test.each([...SIMPLE_GIT_HOOKS_PACKAGES])(
     'hook discovery reads simple-git-hooks from the package.json key: $text',
     async ({ text, hooks }) => {
-        await using sandbox = await testdir({ 'package.json': text });
-        expect(await readHooks({ root: sandbox.path, hasGit: false }).then(({ hooks }) => hooks)).toStrictEqual([
-            ...hooks,
-        ]);
+        await using sandbox = await createGitSandbox({ 'package.json': text });
+        expect(await readHooks({ root: sandbox.path }).then(({ hooks }) => hooks)).toStrictEqual([...hooks]);
     },
 );
 
@@ -179,7 +177,7 @@ test('hook discovery lists a hooks folder once when core.hooksPath names it by i
     await using sandbox = await createGitSandbox({ '.githooks/pre-commit': '#!/bin/sh\nexit 0\n' });
 
     runGitStep(sandbox.path, ['config', 'core.hooksPath', join(sandbox.path, '.githooks')]);
-    expect(await readHooks({ root: sandbox.path, hasGit: true }).then(({ hooks }) => hooks)).toStrictEqual([
+    expect(await readHooks({ root: sandbox.path }).then(({ hooks }) => hooks)).toStrictEqual([
         { kind: 'hooksPath', path: '.githooks', files: ['pre-commit'] },
     ]);
 });
@@ -188,9 +186,9 @@ test('hook discovery includes executable Git hooks and leaves gspot hooks out', 
     await using sandbox = await createGitSandbox({ '.git/hooks/pre-commit': '#!/bin/sh\nexit 0\n' });
     await chmod(join(sandbox.path, '.git/hooks/pre-commit'), 0o755);
     const hooks = [{ kind: 'hooksPath' as const, path: '.git/hooks', files: ['pre-commit'] }];
-    expect(await readHooks({ root: sandbox.path, hasGit: true })).toStrictEqual({ hooksPath: '', hooks });
+    expect(await readHooks({ root: sandbox.path })).toStrictEqual({ hooksPath: '', hooks });
     runGitStep(sandbox.path, ['config', 'core.hooksPath', '.gspot/hooks']);
-    expect(await readHooks({ root: sandbox.path, hasGit: true })).toStrictEqual({
+    expect(await readHooks({ root: sandbox.path })).toStrictEqual({
         hooksPath: '.gspot/hooks',
         hooks: [],
     });

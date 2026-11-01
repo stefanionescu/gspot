@@ -1,43 +1,9 @@
-import type { GUIDES } from '#docs/config/reference.ts';
-import type { Setting } from '#cli/types/settings/inheritance.ts';
-import type { buildJsonSchema } from '#cli/settings/schema/editor.ts';
-import type { Tool, Configuration, ConfigurationCheck } from '#cli/types/manifests.ts';
+import type { readCliReference } from '#cli/reference.ts';
 
-export type CommandReference = {
-    name: string;
-    summary: string;
-    description: string;
-    usage: string;
-    arguments: { name: string; description: string; required: boolean; choices?: string[]; default?: unknown }[];
-    options: { flags: string; description: string; choices?: string[]; default?: unknown }[];
-    exitCodes: readonly (readonly [codes: string, meaning: string])[];
-    example: string;
-};
+export type CliReference = ReturnType<typeof readCliReference>;
+export type CommandReference = CliReference['commands'][number];
+export type SettingReference = CliReference['settings'][number];
+export type SettingVariant = SettingReference['variants'][number];
+export type SettingAccepted = SettingReference['accepted'];
 
-export type SettingVariant = { setting: Setting; owners: string[] };
-
-export type CliReference = {
-    commands: CommandReference[];
-    configurations: Configuration[];
-    checks: ConfigurationCheck[];
-    settings: SettingVariant[];
-    schema: SettingsSchema;
-};
-
-export type ReferencePage = {
-    data: {
-        title: string;
-        description: string;
-        editUrl: false;
-        tableOfContents?: { maxHeadingLevel: number };
-    };
-    body: string;
-};
-
-export type GuideCheck = { name: string; link: string; stage: string; summary: string };
-
-export type SettingsSchema = ReturnType<typeof buildJsonSchema>;
-
-export type GuideSlug = (typeof GUIDES)[keyof typeof GUIDES];
-
-export type Suppression = NonNullable<Tool['suppression']>;
+export type Suppression = CliReference['suppressions'][number]['form'];

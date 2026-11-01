@@ -1,8 +1,9 @@
-import { type CheckResult } from '#cli/types/runs/check.ts';
-import { type HookName } from '#cli/types/generation/files.ts';
-import { type CanceledCommandJson } from '#cli/types/terminal.ts';
+import type { Check } from '#cli/types/manifests.ts';
 import { type IgnoreRecord } from '#cli/types/settings/settings.ts';
-import { type Session, type CheckSession } from '#cli/types/session.ts';
+import { type CheckCode, type CheckResult } from '#cli/types/runs/check.ts';
+import type { CHECK_STAGES, CHECK_INPUT_HOOKS } from '#cli/config/commands/check.ts';
+import { type CommandResult, type CanceledCommandJson } from '#cli/types/terminal.ts';
+import { type Session, type CheckSession, type CheckGeneration } from '#cli/types/session.ts';
 import { type PlanOptions, type StageFilter, type PlannedCheck } from '#cli/types/planning.ts';
 import { type StagedPaths, type ChangedPaths, type PushedRevisions } from '#cli/types/repository/revisions.ts';
 
@@ -15,6 +16,8 @@ export type PushReport = {
     exitCode: number;
 };
 
+export type RevisionCheckResult = CommandResult<RunReport> | { skipped: PushedRevisions['skipped'][number]['reason'] };
+
 export type RunFilters = {
     paths: string[] | undefined;
     changed: ChangedPaths | undefined;
@@ -23,8 +26,8 @@ export type RunFilters = {
 };
 
 export type CheckOptions = {
-    allFiles?: 'empty-base' | 'new-branch' | undefined;
-    hook?: HookName | undefined;
+    changed?: boolean;
+    hook?: CheckHook | undefined;
     onProgress?: ((progress: CheckProgress) => void) | undefined;
     cwd: string;
     only?: string[] | undefined;
@@ -61,13 +64,19 @@ export type RevisionSource = (
       }
 ) & { dependencyNote?: string; unreadablePaths?: string[] };
 
+type CheckHook = (typeof CHECK_INPUT_HOOKS)[number];
+
+type CheckStage = (typeof CHECK_STAGES)[number];
+
 export type CheckFlags = {
+    stage?: CheckStage;
     json?: boolean;
     only?: string[];
     staged?: boolean;
-    changed?: boolean | string;
+    changed?: boolean;
+    base?: string;
     fix?: boolean;
-    hook?: HookName;
+    hook?: CheckHook;
     verbose?: boolean;
 };
 
@@ -113,6 +122,8 @@ export type Run = {
 };
 
 export type RunOptions = PlanOptions & {
+    generation: CheckGeneration;
+    selectCheckCode: (check: Check) => CheckCode | undefined;
     started?: Date | undefined;
     stage: StageFilter;
     onProgress?: ((progress: CheckProgress) => void) | undefined;

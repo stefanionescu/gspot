@@ -6,6 +6,7 @@ import { writeSettingsEdit } from '#cli/generation/write.ts';
 import { SCOPE_OPTION } from '#cli/config/commands/commands.ts';
 import type { TomlTable } from '#cli/types/settings/settings.ts';
 import type { ConfigurationsOptions } from '#cli/types/planning.ts';
+import type { CommandLocation } from '#cli/types/commands/commands.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { formatConfigurationChange, readConfigurationEditContext } from '#cli/planning/edits.ts';
 
@@ -57,9 +58,10 @@ Register the add command.
 
 @param program the gspot program that gets the command.
 @param onResult receives the result of the command.
+@param location the calling folder and the Git root validated before the action.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: main.ts registers the command through it, like every other command.
-export function registerAdd(program: Command, onResult: CommandCompletion): void {
+export function registerAdd(program: Command, onResult: CommandCompletion, location: CommandLocation): void {
     program
         .command('add')
         .argument('<configuration...>', COMMAND_HELP.add.arguments['configuration'])
@@ -69,7 +71,8 @@ export function registerAdd(program: Command, onResult: CommandCompletion): void
         .action(async (configurations, flags) => {
             onResult(
                 await runAddCommand({
-                    cwd: process.cwd(),
+                    root: location.root,
+                    cwd: location.cwd,
                     configurations: [...new Set(configurations)],
                     scope: flags.scope,
                 }),

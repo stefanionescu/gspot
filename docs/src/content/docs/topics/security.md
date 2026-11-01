@@ -1,9 +1,11 @@
 ---
 title: Security and secrets
 description: The security checks gspot runs, and how to run Semgrep.
+configurations: [security, docker, github-actions, secrets]
 ---
 
-These configurations hold security checks. gspot always selects `secrets`, `dependencies`, and `security`. It selects `docker` and `github-actions` when it finds their files:
+These configurations hold security checks. The [configuration reference](/reference/configurations/#always-selected)
+lists which ones gspot always selects. It selects `docker` and `github-actions` when it finds their files:
 
 | Configuration    | What it checks                                                                                                |
 | ---------------- | ------------------------------------------------------------------------------------------------------------- |

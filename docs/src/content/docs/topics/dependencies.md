@@ -1,6 +1,7 @@
 ---
 title: Dependencies and licenses
 description: Check vulnerable packages, dependency licenses, and registry hosts.
+configurations: [dependencies, licenses]
 ---
 
 Check dependencies for known vulnerabilities and review the licenses and registry hosts your repository accepts.

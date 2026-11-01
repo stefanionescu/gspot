@@ -1,8 +1,9 @@
 ---
+import { Icon } from '@astrojs/starlight/components';
+import { REPOSITORY_URL } from '#docs/config/site.ts';
 import Search from '@astrojs/starlight/components/Search.astro';
 import SiteTitle from '#docs/components/starlight/SiteTitle.astro';
 import Select from '#docs/components/starlight/theme/Select.astro';
-import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
 ---
 
 <div class="site-header">
@@ -12,7 +13,9 @@ import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
     </div>
     <div class="controls print:hidden">
         <div class="social">
-            <SocialIcons />
+            <a class="icon-button" href={REPOSITORY_URL} rel="me" aria-label="GitHub">
+                <Icon name="github" size="1.25rem" />
+            </a>
         </div>
         <Select />
     </div>
@@ -47,24 +50,6 @@ import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
 .social {
     display: none;
 }
-.social :global(a) {
-    display: inline-grid;
-    place-items: center;
-    width: var(--target-size);
-    height: var(--target-size);
-    margin: 0;
-    padding: 0;
-    border-radius: 8px;
-    color: var(--sl-color-gray-1);
-    font-size: 1.25rem;
-}
-@media (hover: hover) {
-    .social :global(a:hover) {
-        background: var(--sl-color-gray-6);
-        color: var(--sl-color-white);
-    }
-}
-
 @media (width < 50rem) {
     .search :global(button[data-open-modal]) {
         width: var(--target-size);

@@ -1,10 +1,10 @@
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
 import { findValueAt } from '#cli/system/tables.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { getConfigPath, getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 
 import {
@@ -27,7 +27,7 @@ test.each([...SQUAWK_VERSION_CASES])(
 );
 
 test('the Squawk config file of a Postgres child scope excludes the frozen migrations of every scope', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         ...CHILD_MIGRATIONS,
         'gspot.toml': buildSandboxSettings([], { level: 'all', tables: CHILD_POSTGRES_SCOPE_TABLES }),
     });

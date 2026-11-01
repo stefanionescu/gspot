@@ -113,6 +113,14 @@ function inspectExecutable(inspected: InspectedTool): ToolInspection {
     return path === undefined ? inspected.missing : inspectExecutablePath(inspected, path);
 }
 
+function formatMissingProgram(tool: Tool, inspection: ToolInspection): string {
+    const version = tool.version === undefined ? '' : ` ${tool.version}`;
+    const needsMise = tool.system !== true && findToolProjectPackage(tool) === undefined;
+    if (inspection.state === 'missing' && needsMise && which.sync(MISE_TOOL, { nothrow: true }) === null)
+        return 'mise is not on PATH.';
+    return `${tool.name}${version} is not installed.`;
+}
+
 /**
 Explain why the required tool cannot run.
 
@@ -121,10 +129,9 @@ Explain why the required tool cannot run.
 */
 export function formatUnavailableNote(tool: Tool, inspection: ToolInspection): string {
     const help = inspection.help ?? buildInstallHelp(tool);
-    const version = tool.version === undefined ? '' : ` ${tool.version}`;
-    return inspection.state === 'outdated'
-        ? `${tool.name} ${inspection.found ?? '?'} is below ${inspection.minimumVersion ?? '?'}. ${help}`
-        : `${tool.name}${version} is not installed. ${help}`;
+    if (inspection.state === 'outdated')
+        return `${tool.name} ${inspection.found ?? '?'} is below ${inspection.minimumVersion ?? '?'}. ${help}`;
+    return `${formatMissingProgram(tool, inspection)} ${help}`;
 }
 
 /**

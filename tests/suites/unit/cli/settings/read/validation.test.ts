@@ -75,13 +75,15 @@ test('the release age can be written at the root and cannot be written in a scop
     expect(
         validateSettingsText('[[scope]]\npath = "api"\n[scope.dependencies]\nmin_release_age_days = 30\n'),
     ).toStrictEqual([
-        'gspot.toml:4: scope.0.dependencies.min_release_age_days: There is no setting called scope.dependencies.min_release_age_days. The settings of [scope.dependencies] are allowed_registries and bun_scanner.',
+        expect.stringContaining(
+            'gspot.toml:4: scope.0.dependencies.min_release_age_days: There is no setting called dependencies.min_release_age_days.',
+        ) as string,
     ]);
 });
 
 test('settings of an unselected language are refused while settings of automatic general configurations stay valid', () => {
     expect(validateSettingsText('configurations = ["bash"]\n[tools.sqlfluff]\ndialect = "sqlite"\n')).toStrictEqual([
-        'gspot.toml:3: tools.sqlfluff.dialect: There is no setting called tools.sqlfluff.dialect in the selected configurations. No setting exists under that table. Run gspot list settings to see every one.',
+        'gspot.toml:3: tools.sqlfluff.dialect: There is no setting called tools.sqlfluff.dialect. No setting exists under that table. Run gspot list settings to see every one.',
     ]);
     expect(validateSettingsText('[tools.commitlint]\ntypes = ["feat", "fix"]\n')).toStrictEqual([]);
 });
@@ -143,6 +145,7 @@ test('a limit looser than the default needs a reason, and a tighter one does not
 test.each([...UNKNOWN_KEY_CASES])('an unknown key is refused: $name', (row) => {
     using sandbox = createTemporaryFolder();
     expect(() => readSettings(row.text, sandbox.path)).toThrow(row.message);
+    expect(() => readSettings(row.text, sandbox.path)).toThrow(`Did you mean ${row.correction[1]}?`);
     expect(validateSettingsText(row.text.replace(row.correction[0], () => row.correction[1]))).toStrictEqual([]);
 });
 

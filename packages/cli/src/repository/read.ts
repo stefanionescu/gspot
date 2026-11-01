@@ -1,11 +1,12 @@
-import { statSync, realpathSync } from 'node:fs';
+import { realpathSync } from 'node:fs';
+import { posix, resolve } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { join, posix, dirname, resolve } from 'node:path';
 import { INDEX_LINE } from '#cli/config/parsers/parsers.ts';
 import { type RunCache } from '#cli/types/system/system.ts';
 import { detectSwiftTags } from '#cli/parsers/code/swift.ts';
+import { runGit, isNotRepository } from '#cli/system/git.ts';
 import { detectScopeFolders } from '#cli/repository/scopes.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
@@ -13,13 +14,11 @@ import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { gitIndexFileSchema } from '#cli/schemas/parsers/parsers.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { read, find, readCachedPrefix } from '#cli/system/files/reads.ts';
-import { runGit, isGitRepository, isNotRepository } from '#cli/system/git.ts';
 import { SWIFT_EXTENSION, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import { listGitFiles, listTrackedFiles } from '#cli/repository/files/tracked.ts';
 import { GIT_LOCALE, TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/system.ts';
 import { type Repository, type ScopeFolder, type TrackedFile } from '#cli/types/repository/files.ts';
 import { type RepositoryListing, type RepositoryReadOptions } from '#cli/types/repository/repository.ts';
-import { ROOT_SCOPE, FILE_PREFIX_BYTES, GIT_CHECK_ATTRIBUTES_ARGUMENTS } from '#cli/config/repository/repository.ts';
 import { mergeAttributes, parseListingLine, parsePathAttributes, parseAttributePatterns } from '#cli/parsers/git.ts';
 
 import {
@@ -28,6 +27,12 @@ import {
     GENERATED_ATTRIBUTE,
     GIT_INDEX_FILES_ARGUMENTS,
 } from '#cli/config/repository/files.ts';
+import {
+    ROOT_SCOPE,
+    NEEDS_GIT_MESSAGE,
+    FILE_PREFIX_BYTES,
+    GIT_CHECK_ATTRIBUTES_ARGUMENTS,
+} from '#cli/config/repository/repository.ts';
 
 async function readAttributes(root: string, paths: string[]): Promise<Map<string, Record<string, string>>> {
     if (paths.length === 0) return new Map();
@@ -46,28 +51,23 @@ attributes.
 */
 export async function listRepositoryFiles(cache: RunCache): Promise<RepositoryListing> {
     const root = cache.root;
-    const hasGit = await isGitRepository(root);
     const unreadablePaths: string[] = [];
-    const index = hasGit
-        ? await listGitFiles(root, GIT_INDEX_FILES_ARGUMENTS, undefined, unreadablePaths).then((listed) =>
-              listed
-                  .split('\0')
-                  .filter(Boolean)
-                  .map((line) => parseListingLine(INDEX_LINE.exec(line), gitIndexFileSchema)),
-          )
-        : [];
-    const listedFiles = await listTrackedFiles(root, index, { hasGit, unreadablePaths });
-    const attributes = hasGit
-        ? await readAttributes(
-              root,
-              listedFiles.map((listedFile) => listedFile.path),
-          )
-        : new Map<string, Record<string, string>>();
+    const index = await listGitFiles(root, GIT_INDEX_FILES_ARGUMENTS, undefined, unreadablePaths).then((listed) =>
+        listed
+            .split('\0')
+            .filter(Boolean)
+            .map((line) => parseListingLine(INDEX_LINE.exec(line), gitIndexFileSchema)),
+    );
+    const listedFiles = await listTrackedFiles(root, index, unreadablePaths);
+    const attributes = await readAttributes(
+        root,
+        listedFiles.map((file) => file.path),
+    );
     const files = listedFiles.map((listedFile) => ({
         ...listedFile,
         prefix: listedFile.isSymlink ? Buffer.alloc(0) : readCachedPrefix(cache, listedFile.path, FILE_PREFIX_BYTES),
     }));
-    return { root, hasGit, index, attributes, files, unreadablePaths };
+    return { root, index, attributes, files, unreadablePaths };
 }
 
 /**
@@ -85,7 +85,7 @@ export async function readRepository(
     listing: RepositoryListing,
     { generatedPaths, scopes, configurationsByName }: RepositoryReadOptions,
 ): Promise<Repository> {
-    const { root, hasGit, index, attributes, unreadablePaths } = listing;
+    const { root, index, attributes, unreadablePaths } = listing;
     const files = openFiles(root);
     const tracked: TrackedFile[] = [];
     for (const listedFile of listing.files) {
@@ -115,7 +115,6 @@ export async function readRepository(
         attributes,
         unreadablePaths,
         index,
-        hasGit,
         files: tracked,
         dependencyFiles,
         scopeFolders: new Map([...discovered, ...written].map((scope) => [scope.path, scope]))
@@ -153,22 +152,20 @@ export function readLinguistPatterns(cache: RunCache, paths: string[]): string[]
 }
 
 /**
-Read the top level from Git, or find the nearest settings folder outside a repository.
-Without settings outside Git, return the starting folder.
+Read the canonical worktree root from Git.
 
-@param start where the search begins.
-@returns the settings folder, Git top level, or starting folder outside Git.
+@param start where the command starts.
+@returns the root of the Git worktree.
 */
 export async function readRepositoryRoot(start: string): Promise<string> {
     const folder = realpathSync(start);
     const top = await runGit(folder, GIT_TOP_LEVEL_ARGUMENTS, { env: GIT_LOCALE });
     if (top.code === 0) return resolve(top.stdout.replace(TRAILING_NEWLINE, ''));
-    if (!isNotRepository(top)) throw new GspotError('git', `Git could not open ${folder}: ${top.stderr.trim()}`);
-    let walked = folder;
-    while (statSync(join(walked, SETTINGS_FILE), { throwIfNoEntry: false }) === undefined) {
-        const parent = dirname(walked);
-        if (parent === walked) return folder;
-        walked = parent;
-    }
-    return walked;
+    if (isNotRepository(top)) throw new GspotError('git', NEEDS_GIT_MESSAGE);
+    if (top.stderr.includes('must be run in a work tree'))
+        throw new GspotError(
+            'git',
+            `${folder} is a bare repository or a Git folder, not a work tree. Run gspot in the work tree.`,
+        );
+    throw new GspotError('git', `Git could not open ${folder}: ${top.stderr.trim()}`);
 }

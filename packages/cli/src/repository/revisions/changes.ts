@@ -1,12 +1,15 @@
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { GIT_UNTRACKED_FILES_ARGUMENTS } from '#cli/config/repository/files.ts';
-import type { StagedPaths, ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { runGit, readGitText, readGitLines, readGitPaths } from '#cli/system/git.ts';
+import type { MergeBase, StagedPaths, ChangedPaths } from '#cli/types/repository/revisions.ts';
 
 import {
     ORIGIN_HEAD,
     HEAD_SUFFIX,
+    COMMIT_SUFFIX,
+    EMPTY_BASE_HASH,
+    COMMIT_HASH_PATTERN,
     NO_UPSTREAM_MESSAGE,
     HISTORY_CUT_MESSAGE,
     GIT_SHALLOW_ARGUMENTS,
@@ -16,7 +19,10 @@ import {
     GIT_DIFF_NAMES_ARGUMENTS,
     GIT_MERGE_BASE_ARGUMENTS,
     GIT_STAGED_DIFF_ARGUMENTS,
+    GIT_HASH_EXISTS_ARGUMENTS,
     GIT_REMOTE_HEADS_ARGUMENTS,
+    GIT_VERIFY_COMMIT_ARGUMENTS,
+    GIT_LOCAL_BRANCHES_ARGUMENTS,
     GIT_CHANGED_COMMITS_ARGUMENTS,
 } from '#cli/config/repository/revisions.ts';
 
@@ -46,8 +52,20 @@ export async function readDefaultRef(root: string, cancelSignal?: AbortSignal): 
     const upstream = upstreamText.trim();
     if (upstream !== '') return upstream;
     const heads = await listRemoteHeads(root, cancelSignal);
-    const preferred = heads.find(([name]) => name === ORIGIN_HEAD) ?? (heads.length === 1 ? heads[0] : undefined);
+    const preferred = heads.find(([name]) => name === ORIGIN_HEAD);
     return preferred?.[1] ?? '';
+}
+
+async function readInvalidBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<MergeBase> {
+    if (COMMIT_HASH_PATTERN.test(compared)) {
+        const presence = await runGit(root, [...GIT_HASH_EXISTS_ARGUMENTS, compared], { cancelSignal });
+        if (presence.code !== 0) return { note: `Checked every file: base ${compared} is not present in this clone.` };
+    }
+    const branches = await readGitLines(root, GIT_LOCAL_BRANCHES_ARGUMENTS, { cancelSignal });
+    throw new GspotError(
+        'arguments',
+        `${compared} is not a branch, tag, or commit in this repository. Local branches: ${branches.join(', ') || 'none'}.`,
+    );
 }
 
 /**
@@ -57,11 +75,19 @@ Read the merge base between a comparison branch and `HEAD`.
 @param compared the comparison branch.
 @param cancelSignal stops the Git reads.
 */
-export async function readMergeBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<string> {
-    const base = await runGit(root, [...GIT_MERGE_BASE_ARGUMENTS, compared, 'HEAD'], {
+export async function readMergeBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<MergeBase> {
+    if (EMPTY_BASE_HASH.test(compared))
+        return {
+            note: `Checked every file: ${compared === '' ? 'the base ref is empty' : 'the base is a new branch'}.`,
+        };
+    const commit = await runGit(root, [...GIT_VERIFY_COMMIT_ARGUMENTS, `${compared}${COMMIT_SUFFIX}`], {
         cancelSignal,
     });
-    if (base.code === 0) return base.stdout.trim();
+    if (commit.code !== 0) return readInvalidBase(root, compared, cancelSignal);
+    const base = await runGit(root, [...GIT_MERGE_BASE_ARGUMENTS, commit.stdout.trim(), 'HEAD'], {
+        cancelSignal,
+    });
+    if (base.code === 0) return { hash: base.stdout.trim() };
     const shallow = await readGitText(root, GIT_SHALLOW_ARGUMENTS, { cancelSignal });
     const help = shallow.trim() === 'true' ? HISTORY_CUT_MESSAGE : '';
     throw new GspotError('git', `Git merge-base failed for ${compared}: ${base.stderr.trim()}.${help}`);
@@ -87,19 +113,22 @@ export async function readStagedPaths(root: string, cancelSignal?: AbortSignal):
 Read the files and commits that changed after a ref.
 
 @param root the folder where Git runs.
-@param reference the git ref to compare against.
+@param reference the git ref to compare against; absent selects the upstream or the default branch of origin.
 @param cancelSignal stops the Git commands.
 */
 export async function readChangedPaths(
     root: string,
-    reference: string,
+    reference: string | undefined,
     cancelSignal?: AbortSignal,
 ): Promise<ChangedPaths> {
-    const compared = reference === '' ? await readDefaultRef(root, cancelSignal) : reference;
-    if (compared === '') {
+    const compared = reference === undefined ? await readDefaultRef(root, cancelSignal) : reference;
+    if (reference === undefined && compared === '') {
         throw new GspotError('git', NO_UPSTREAM_MESSAGE);
     }
-    const merged = await readMergeBase(root, compared, cancelSignal);
+    const base = await readMergeBase(root, compared, cancelSignal);
+    if (base.hash === undefined)
+        return { reference: compared, ...(base.note === undefined ? {} : { note: base.note }) };
+    const merged = base.hash;
     const committed = await readGitPaths(root, [...GIT_DIFF_NAMES_ARGUMENTS, merged, '--'], { cancelSignal });
     const working = await readGitPaths(root, GIT_DIFF_NAMES_ARGUMENTS, { cancelSignal });
     const untracked = await readGitPaths(root, GIT_UNTRACKED_FILES_ARGUMENTS, { cancelSignal });

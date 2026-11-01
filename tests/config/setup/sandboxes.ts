@@ -84,7 +84,6 @@ export const UV_PROJECT_VARIABLES = ['UV_PROJECT', 'UV_WORKING_DIR', 'UV_PROJECT
 
 export const PYTHON_PROJECT_IGNORES = [
     'data-files/v8r',
-    'data-files/yamllint',
     'security/semgrep',
     'format/editorconfig-checker',
     'python/basedpyright',

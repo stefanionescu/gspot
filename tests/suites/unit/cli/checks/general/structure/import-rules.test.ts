@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { OS_SOURCE } from '#tests/config/python.ts';
@@ -10,6 +9,7 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { NAMED_TARGET_SOURCE, NATIVE_TARGET_SOURCE } from '#tests/config/xcode.ts';
 import { GROUPED_PBXPROJ } from '#tests/config/checks/infrastructure/infrastructure.ts';
 
@@ -23,7 +23,7 @@ import {
 } from '#tests/config/checks/general/structure/structure.ts';
 
 test('structure/import-rules reports a Python file outside every rule and each refused import, a relative one too', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         ...PYTHON_IMPORT_FILES,
         'gspot.toml': buildSandboxSettings(['python'], { tables: PYTHON_IMPORT_RULES }),
     });
@@ -57,7 +57,7 @@ test('structure/import-rules reports a Python file outside every rule and each r
 });
 
 test('Swift imports follow the import rules through the SwiftPM targets, and a file outside every rule is reported', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         ...SWIFT_IMPORT_FILES,
         'gspot.toml': buildSandboxSettings(['swift'], { tables: SWIFT_IMPORT_RULES }),
     });
@@ -79,7 +79,7 @@ test('Swift imports follow the import rules through the SwiftPM targets, and a f
 });
 
 test('an Xcode native target is a Swift module named after the target', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'App.xcodeproj/project.pbxproj': GROUPED_PBXPROJ.replace(NATIVE_TARGET_SOURCE, NAMED_TARGET_SOURCE),
         'First Group/Shared.swift': 'public struct Shared {}\n',
         'Root.swift': 'public struct Root {}\n',
@@ -95,7 +95,7 @@ test('an Xcode native target is a Swift module named after the target', async ()
 });
 
 test('without import rules the check is skipped', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python']),
         'main.py': OS_SOURCE,
     });
@@ -109,7 +109,7 @@ test('without import rules the check is skipped', async () => {
 });
 
 test('import rules exempt a local ESLint plugin named by settings', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             tables: '[[import_rule]]\nname = "source"\npaths = ["src/**"]\n[[tools.eslint.plugins]]\nname = "local"\npath = "tools/lint/plugin.mjs"\nrules = {}\n',
         }),
@@ -120,7 +120,7 @@ test('import rules exempt a local ESLint plugin named by settings', async () => 
 });
 
 test('a vendored Python file under a rule reports nothing', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python'], {
             tables: '[[import_rule]]\nname = "vendor"\npaths = ["imported/**"]\n[[import_rule]]\nname = "app"\npaths = ["app/**"]\n',
         }),

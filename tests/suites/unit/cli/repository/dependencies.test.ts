@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { createRunCache } from '#cli/system/cache.ts';
 import { openSession } from '#cli/planning/session.ts';
 import type { GspotError } from '#cli/system/errors.ts';
@@ -11,6 +11,7 @@ import { SOURCE_KIND } from '#cli/config/repository/files.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readPackageJson, readDependencyFiles, listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 
 import {
@@ -24,7 +25,7 @@ import {
 } from '#tests/config/repository/dependencies.ts';
 
 test('Python dependency groups with includes keep every dependency', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'pyproject.toml': '[dependency-groups]\ntest = ["pytest>=8"]\ndev = [{include-group = "test"}, "ruff>=1"]\n',
     });
 
@@ -34,7 +35,7 @@ test('Python dependency groups with includes keep every dependency', async () =>
 });
 
 test('a pytest table counts as a pytest dependency', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const source = '[tool.pytest.ini_options]\ntestpaths = ["tests"]\n';
     await createFileTree(sandbox.path, { 'pyproject.toml': source, 'source.py': 'print("authored")\n' });
     const repository = await readTestRepository(sandbox.path);
@@ -45,7 +46,7 @@ test('a pytest table counts as a pytest dependency', async () => {
 test.each(INVALID_DEPENDENCY_FILES)(
     'invalid %s content %s is a dependency file error that names the file and field',
     async (path, content, prefix) => {
-        await using sandbox = await testdir({ [path]: content, 'source.ts': 'export {};\n' });
+        await using sandbox = await createGitSandbox({ [path]: content, 'source.ts': 'export {};\n' });
 
         const files = [
             {
@@ -64,7 +65,7 @@ test.each(INVALID_DEPENDENCY_FILES)(
 );
 
 test('package.json reads keep your own fields and tell a missing file from invalid data', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     expect(readPackageJson(sandbox.path, 'package.json')).toBeUndefined();
     const source = JSON.stringify(PACKAGE_FIELDS);
     await createFileTree(sandbox.path, { 'package.json': source });
@@ -88,7 +89,7 @@ test('package.json reads keep your own fields and tell a missing file from inval
 });
 
 test('declared framework dependencies follow the nearest npm project', async () => {
-    await using sandbox = await testdir(PROJECT_DEPENDENCY_FILES);
+    await using sandbox = await createGitSandbox(PROJECT_DEPENDENCY_FILES);
 
     const repository = await readTestRepository(sandbox.path);
     const dependencyFiles = await readDependencyFiles(createRunCache(sandbox.path), repository.files);
@@ -98,7 +99,7 @@ test('declared framework dependencies follow the nearest npm project', async () 
 });
 
 test('a broken package.json stops the next session and a fixed one changes the scope dependencies', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         ...REACT_VUE_PACKAGES,
         'gspot.toml': buildSandboxSettings(['javascript'], {
             rules: true,
@@ -123,7 +124,7 @@ test('a broken package.json stops the next session and a fixed one changes the s
 test.each([...PYTHON_DEPENDENCY_CASES])(
     'each Python dependency file form gives its dependencies: $name',
     async ({ path, source }) => {
-        await using sandbox = await testdir({ [`api/${path}`]: source });
+        await using sandbox = await createGitSandbox({ [`api/${path}`]: source });
         const repository = await readTestRepository(sandbox.path);
         const dependencyFiles = await readDependencyFiles(createRunCache(sandbox.path), repository.files);
         expect(Object.keys(dependencyFiles[0]!.dependencies).toSorted(compareText)).toStrictEqual([
@@ -134,7 +135,7 @@ test.each([...PYTHON_DEPENDENCY_CASES])(
 );
 
 test.each(['constructor', '__proto__'])('repository names do not access inherited tables: %s', async (name) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         [name]: 'authored source\n',
         script: `#!/usr/bin/env ${name}\nprintf "source\\n"\n`,
     });
@@ -148,7 +149,7 @@ test.each(['constructor', '__proto__'])('repository names do not access inherite
 });
 
 test('optional runtime dependencies remain installed beside development tools', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'package.json': '{"devDependencies":{"eslint":"9.0.0"},"optionalDependencies":{"react":"19.0.0"}}',
     });
     const files = await readDependencyFiles(createRunCache(sandbox.path), [

@@ -1,15 +1,15 @@
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { CLEAN_SWIFT } from '#tests/config/swift.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/checks/infrastructure/infrastructure.ts';
 import { SWIFT_PROJECT_SETTINGS } from '#tests/config/generation/configurations/language/language.ts';
 
 test("SwiftFormat reads each scope's Swift version from Package.swift", async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['swift'], {
             rules: true,
             scopes: [{ path: 'nested', configurations: ['swift'] }],
@@ -40,7 +40,7 @@ test('SwiftFormat uses the Xcode project you choose in each scope', async () => 
             'SWIFT_VERSION=5.5',
         ),
     };
-    await using sandbox = await testdir(files);
+    await using sandbox = await createGitSandbox(files);
     const session = await openSession(sandbox.path);
     const outputs = buildGeneratedFiles(session).files;
     expect(outputs.find((file) => file.path === getConfigPath(session, 'swiftformat'))?.content).toContain(

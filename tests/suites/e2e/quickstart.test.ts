@@ -49,7 +49,7 @@ async function runQuickstart(tutorial: typeof PYTHON_TUTORIAL | typeof SWIFT_TUT
     commitAll(root);
     const gspotCommand = ['mise', 'exec', '--', 'gspot'];
     for (const { gspotArguments, code } of [
-        { gspotArguments: ['init', '--yes'], code: 0 },
+        { gspotArguments: ['init'], code: 0 },
         { gspotArguments: ['install'], code: 0 },
         { gspotArguments: ['check'], code: tutorial.firstCheckCode },
         { gspotArguments: ['check', '--fix'], code: 0 },

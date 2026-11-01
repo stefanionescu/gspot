@@ -31,7 +31,7 @@ const signalListeners = Object.entries(SIGNAL_EXIT_CODES).map(([signal, code]) =
     signal,
     listener: (): void => {
         // eslint-disable-next-line @typescript-eslint/no-floating-promises, n/no-process-exit -- reason: The signal handler must dispose resources before exiting with the signal status.
-        void resources.disposeAsync().finally(() => process.exit(code));
+        resources.disposeAsync().finally(() => process.exit(code));
     },
 }));
 

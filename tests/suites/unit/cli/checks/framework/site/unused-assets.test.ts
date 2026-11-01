@@ -6,6 +6,7 @@ import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { GLOB_ASSET_CASES, SCOPE_ASSET_FILES, ASSET_REFERENCE_CASES } from '#tests/config/checks/framework/site.ts';
 
@@ -50,9 +51,9 @@ test('unused-assets reads staged files, not an unstaged README or an untracked f
 });
 
 test.each([...ASSET_REFERENCE_CASES])(
-    'a site without Git keeps the asset that %s names and reports an unused asset',
+    'a site with untracked files keeps the asset that %s names and reports an unused asset',
     async (file, text) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['site'], { level: 'all' }),
             [file]: text,
             'assets/logo.svg': '<svg/>',
@@ -79,7 +80,7 @@ test('an unstaged deletion removes the reference without failing the asset check
 });
 
 test('conventional assets pass and a nested asset needs its own path', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['site'], { level: 'all' }),
         'public/favicon.ico': 'image',
         'public/apple-touch-icon.png': 'image',

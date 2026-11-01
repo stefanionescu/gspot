@@ -1,6 +1,7 @@
 import { isDeepStrictEqual } from 'node:util';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
+import { LIMIT_RULES_BY_CHECK } from '#cli/manifests/limits.ts';
 import { type Scope } from '#cli/types/settings/inheritance.ts';
 import { type Settings } from '#cli/types/settings/settings.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
@@ -33,7 +34,6 @@ import {
     PACKAGE_JSON_PATTERN,
     ENVIRONMENT_LANGUAGES,
     TRIVIAL_FUNCTIONS_RULE,
-    TRIVIAL_FUNCTION_LIMIT,
     PACKAGE_JSON_RULE_PREFIX,
 } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
 
@@ -99,16 +99,19 @@ function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'no
     if (session.settings.level !== 'all') return [];
     const { scopes } = session;
     const blocks: EslintRuleBlock[] = [];
+    const trivialFunctionLimit = (LIMIT_RULES_BY_CHECK.get(ESLINT_CHECK) as Record<string, string>)[
+        TRIVIAL_FUNCTIONS_RULE
+    ] as string;
     const isAllowIndex = session.settings.structure.reexports === 'index-only';
     const orderedScopes = scopes.toSorted((a, b) => compareScopeDepth(a.path, b.path));
     for (const scope of orderedScopes) {
         const parent = findParentScope(scopes, scope.path);
         const limits = CODE_LANGUAGES.map((language) => ({
             language,
-            value: getLimit(scope.settings, TRIVIAL_FUNCTION_LIMIT, language),
+            value: getLimit(scope.settings, trivialFunctionLimit, language),
         })).filter(
             ({ language, value }) =>
-                parent === undefined || value !== getLimit(parent.settings, TRIVIAL_FUNCTION_LIMIT, language),
+                parent === undefined || value !== getLimit(parent.settings, trivialFunctionLimit, language),
         );
         const groups = new Map<number, string[]>();
         for (const { language, value } of limits) groups.set(value, [...(groups.get(value) ?? []), language]);

@@ -5,6 +5,7 @@ import { readBytes } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { createCheckCopy } from '#cli/runs/copy/files.ts';
+import type { CheckSession } from '#cli/types/session.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckFinding } from '#cli/types/runs/check.ts';
@@ -13,14 +14,13 @@ import { type GeneratorOutput } from '#cli/types/manifests.ts';
 import type { Substitutions } from '#cli/types/runs/command.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
-import type { Session, CheckSession } from '#cli/types/session.ts';
 import { buildCommandSubstitutions } from '#cli/runs/command/check.ts';
 import type { GeneratorRun } from '#cli/types/checks/cross-configuration/cross-configuration.ts';
 import { expandCommand, replacePlaceholders, buildFileCommandLines } from '#cli/runs/command/placeholders.ts';
 import { RULES, GENERATOR_IGNORED_FOLDERS } from '#cli/config/checks/cross-configuration/cross-configuration.ts';
 
 function listMissingOutputs(
-    session: Session,
+    session: CheckSession,
 
     outputs: GeneratorOutput[],
     commandText: string,
@@ -44,14 +44,14 @@ function listMissingOutputs(
 }
 
 function listUntrackedOutputs(
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
     named: string[],
     excluded: string[],
 ): CheckFinding[] {
     const scope = planned.scope.path;
     const tracked = new Set(session.repository.index.map(({ path }) => path));
-    return named.length === 0 || !session.repository.hasGit
+    return named.length === 0
         ? []
         : listMatchingPaths(join(session.root, scope), [...named, ...excluded])
               .map((path) => joinScope(scope, path))
@@ -97,7 +97,7 @@ function stripScopePrefix(path: string, scopePath: string): string {
 }
 
 function listGeneratorOutputs(
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
     substitutions: Substitutions,
 ): { listed: GeneratorOutput[]; named: string[] } {
@@ -114,7 +114,7 @@ function listGeneratorOutputs(
     return { listed: generatorOutputs, named };
 }
 
-function planGeneratorRun(session: Session, planned: PlannedCheck): GeneratorRun | undefined {
+function planGeneratorRun(session: CheckSession, planned: PlannedCheck): GeneratorRun | undefined {
     const values = buildCommandSubstitutions(session.root, planned, join(session.root, planned.scope.path));
     const declaration = planned.check.command ?? [];
     const command = expandCommand(session, planned, declaration, values);

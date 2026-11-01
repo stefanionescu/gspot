@@ -29,6 +29,8 @@ explain what each one does. Browser code imports no server implementation.
   value. When a library publishes its API through an index file, ask the user to set `structure.reexports` to
   `index-only`.
 - Do not add a file that only imports and re-exports other modules.
+- A module that exports values runs no top-level statements: build routers, registries, and listeners in a function
+  that the entry point calls.
 - Keep comments out of an import block. Put a file header above it.
 - Keep each relative import inside its boundary folder: each second-level folder, such as `src/cart`, and each folder
   that `javascript.import_boundaries` lists. Import another boundary through its package name or path alias.
@@ -58,8 +60,10 @@ Write a JSDoc comment as `/**` on its own line, then lines with no leading `*`, 
 <!-- level: all -->
 
 - Give every exported function and method a JSDoc comment: a summary that says more than the name, a blank line, and
-  `@param <name> <what it is>` for each parameter, with no type in braces. Document a destructured parameter and each
-  of its properties, such as `@param props` and `@param props.items`.
+  `@param <name> <what it is>` for each parameter.
+- In TypeScript, write no type in braces. In JavaScript, write the type in braces, such as `@param {<type>} <name>`, so tsc
+  checks it.
+- Document a destructured parameter and each of its properties, such as `@param props` and `@param props.items`.
 - Put the functions that a module does not export, and constants set to a function, above its exported functions.
 - Do not add optional parameters to hide a broken caller contract.
 - Use early returns when they make missing-value and error handling clearer.

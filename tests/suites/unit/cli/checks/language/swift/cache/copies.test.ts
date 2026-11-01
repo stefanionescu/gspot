@@ -1,18 +1,18 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { SWIFT_VALUE_SOURCE } from '#tests/config/swift.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { open, stat, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck, prepareSwiftCheck } from '#tests/setup/cli/checks.ts';
 
 test('Swift build side effects stay in the source copy and do not reach later runs', async () => {
     using resources = new DisposableStack();
 
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
 
     await using prepared = await prepareSwiftCheck(sandbox, 'swift/build', {
         'Sources/Value.swift': SWIFT_VALUE_SOURCE,
@@ -56,7 +56,7 @@ test('Swift build side effects stay in the source copy and do not reach later ru
 test('Periphery build side effects stay in its source copy and findings name the repository source paths', async () => {
     using resources = new DisposableStack();
 
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
 
     await using prepared = await prepareSwiftCheck(sandbox, 'swift/periphery', {
         'Main.swift': 'let unused = 1\n',
@@ -83,7 +83,7 @@ test('Periphery build side effects stay in its source copy and findings name the
 test('concurrent Swift compilation and Periphery keep separate source and build folders', async () => {
     using resources = new DisposableStack();
 
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
 
     await using prepared = await prepareSwiftCheck(sandbox, 'swift/build');
 

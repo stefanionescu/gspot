@@ -11,3 +11,5 @@ export const TRAILING_SLASH = /\/$/u;
 export const LEADING_SLASH = /^\//u;
 
 export const PATH_SEPARATOR_PATTERN = String.raw`[/\\]`;
+
+export const GLOB_BRACKETS = /[()[\]]/u;

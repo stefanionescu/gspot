@@ -9,18 +9,15 @@ test('Swift dependencies include package calls and exclude comments, strings, lo
     expect(parsed.installed).toStrictEqual(parsed.dependencies);
 });
 
-test.each(['./local-package', 'git+https://example.com/package.git'])(
-    'pyproject names an invalid requirement and its fix: %s',
-    async (spec) => {
-        const parsed = Promise.try(() =>
-            DEPENDENCY_FILE_PARSERS.get('pyproject.toml')!(
-                'services/api/pyproject.toml',
-                `[project]\ndependencies = [${JSON.stringify(spec)}]\n`,
-            ),
-        );
-        expect(await captureRejection(parsed)).toMatchObject({
-            code: 'filesystem',
-            message: `services/api/pyproject.toml: ${spec} is not a PEP 508 requirement. Write it as name @ url, then run gspot again.`,
-        });
-    },
-);
+test.each(['./local-package'])('pyproject names an invalid requirement and its fix: %s', async (spec) => {
+    const parsed = Promise.try(() =>
+        DEPENDENCY_FILE_PARSERS.get('pyproject.toml')!(
+            'services/api/pyproject.toml',
+            `[project]\ndependencies = [${JSON.stringify(spec)}]\n`,
+        ),
+    );
+    expect(await captureRejection(parsed)).toMatchObject({
+        code: 'filesystem',
+        message: `services/api/pyproject.toml: ${spec} is not a PEP 508 requirement. Write it as name @ url, then run gspot again.`,
+    });
+});

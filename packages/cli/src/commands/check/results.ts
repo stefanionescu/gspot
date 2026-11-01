@@ -1,10 +1,10 @@
 import type { Session } from '#cli/types/session.ts';
-import { buildBaseResult } from '#cli/runs/results.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import { INCOMPLETE_STATUSES } from '#cli/config/runs/runs.ts';
 import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/terminal.ts';
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';
+import { buildBaseResult, formatExplainCommand } from '#cli/runs/results.ts';
 import { FAILED_STATUSES, NO_FILES_MESSAGE } from '#cli/config/commands/check.ts';
 import type { FixReport, RunReport, FinishedRun } from '#cli/types/commands/check.ts';
 
@@ -46,15 +46,20 @@ Build the check results, detected configuration warning, and exit status of a fi
 export function buildRunReport(run: FinishedRun): RunReport {
     const { session, options, started, planned, results: ran, fixes } = run;
     const results = new Map(run.active.map((check, index) => [check, ran[index] as CheckResult]));
-    const checks = planned.map<CheckResult>(
-        (check) =>
-            results.get(check) ?? {
-                ...buildBaseResult(check, session),
-                status: 'skipped' as const,
-                cause: check.skip?.cause ?? 'no-files',
-                note: check.skip?.note ?? NO_FILES_MESSAGE,
-            },
-    );
+    const checks = planned
+        .map<CheckResult>(
+            (check) =>
+                results.get(check) ?? {
+                    ...buildBaseResult(check, session),
+                    status: 'skipped' as const,
+                    cause: check.skip?.cause ?? 'no-files',
+                    note: check.skip?.note ?? NO_FILES_MESSAGE,
+                },
+        )
+        .map((check) => ({
+            ...check,
+            findings: check.findings.map((finding) => ({ ...finding, explain: formatExplainCommand(finding) })),
+        }));
     const failed = listFailedChecks(checks, fixes);
     let code = failed.length > 0 ? EXIT_FINDINGS : 0;
     if (isIncomplete(session, ran, fixes)) code = EXIT_ERROR;

@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     MESSAGE_LAYOUTS,
@@ -17,7 +17,7 @@ import {
 } from '#tests/config/checks/library.ts';
 
 test('a missing base locale is reported and restoring it enables key comparisons', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'messages/de.json': '{}',
         'package.json': JSON.stringify({ dependencies: TRANSLATION_SANDBOX.dependencies }),
         'gspot.toml': buildSandboxSettings(['translations'], { level: 'all', tables: TRANSLATION_TABLES }),
@@ -43,7 +43,7 @@ test.each([...TRANSLATION_CASES])(
 test.each([...MESSAGE_LAYOUTS])(
     'each message file compares with its own base locale file: $layout',
     async ({ files, expected }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             ...files,
             'package.json': JSON.stringify({ dependencies: TRANSLATION_SANDBOX.dependencies }),
             'gspot.toml': buildSandboxSettings(['translations'], { level: 'all', tables: TRANSLATION_TABLES }),
@@ -54,7 +54,7 @@ test.each([...MESSAGE_LAYOUTS])(
 );
 
 test('a translation keeps the arguments, tags, and select keys of its base message, and its own plural categories', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'messages/en.json': JSON.stringify(MESSAGE_ARGUMENTS.base),
         'messages/fr.json': JSON.stringify(MESSAGE_ARGUMENTS.translated),
         'package.json': JSON.stringify({ dependencies: TRANSLATION_SANDBOX.dependencies }),
@@ -68,7 +68,7 @@ test('a translation keeps the arguments, tags, and select keys of its base messa
 
 test('translations/messages reports an empty message', async () => {
     const files = { 'messages/en.json': '{"greeting":"Hello","farewell":"Bye"}' };
-    await using changedSandbox = await testdir({
+    await using changedSandbox = await createGitSandbox({
         ...files,
         'messages/fr.json': '{"greeting":"Bonjour","farewell":""}',
         'package.json': JSON.stringify({ dependencies: TRANSLATION_SANDBOX.dependencies }),
@@ -81,7 +81,7 @@ test('translations/messages reports an empty message', async () => {
 });
 
 test('a malformed locale does not hide missing or extra keys in another locale', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'messages/en.json': '{"heading":"Welcome"}',
         'messages/de.json': '{',
         'messages/fr.json': '{\n  "extra": "Bonjour"\n}',
@@ -97,7 +97,7 @@ test('a malformed locale does not hide missing or extra keys in another locale',
 });
 
 test('a plural branch can print its enclosing count as an argument or a pound sign', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'messages/en.json': '{"items":"{count, plural, one {# item} other {# items}}"}',
         'messages/fr.json': '{"items":"{count, plural, one {{count} item} other {{count} items}}"}',
         'package.json': JSON.stringify({ dependencies: TRANSLATION_SANDBOX.dependencies }),

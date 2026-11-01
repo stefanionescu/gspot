@@ -29,13 +29,3 @@ export const ruffFormatSchema = z.looseObject({
         })
         .optional(),
 });
-
-const lintRuleDocsSchema = z.looseObject({
-    description: z.string().exactOptional(),
-    url: z.string().exactOptional(),
-});
-
-export const ruleDocumentationSchema = z.looseObject({
-    docs: lintRuleDocsSchema.exactOptional(),
-    url: z.string().exactOptional(),
-});

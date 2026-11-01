@@ -3,6 +3,7 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import { join, dirname, relative } from 'node:path';
 import { JSCONFIG_FILE } from '#cli/config/files/names.ts';
+import { convertToGlobs } from '#cli/generation/ignores.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
@@ -10,7 +11,6 @@ import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import type { ParsedTsconfig } from '#cli/types/parsers/projects.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/system.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
-import { convertToGlobs, buildIgnoreSections } from '#cli/generation/ignores.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 
 import {
@@ -85,7 +85,7 @@ export function buildJsconfigFile(planned: PlannedConfig): string {
     const scope = planned.scope.path;
     const importStyle = getTable(planned.scope.settings, ESLINT_SETTINGS_TABLE).import_extension;
     const ignoredGlobs = convertToGlobs(
-        buildIgnoreSections(planned.session).filter((section) => planned.level !== 'all' || section.key !== 'build'),
+        planned.ignoreSections.filter((section) => planned.level !== 'all' || section.key !== 'build'),
     );
     const rootPrefix = convertToPosixPath(relative(dirname(target), '.')) + '/';
     const scopePrefix = convertToPosixPath(relative(dirname(target), scope)) + '/';

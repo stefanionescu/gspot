@@ -121,24 +121,13 @@ export const CI_STEP_NAMES = {
     gspot: 'Install gspot',
 } as const;
 
-export const FROZEN_INSTALLS = {
-    'package-lock.json': ['npm', 'ci'],
-    'pnpm-lock.yaml': ['pnpm', 'install', '--frozen-lockfile'],
-    'yarn.lock': ['yarn', 'install', '--frozen-lockfile'],
-    'bun.lock': ['bun', 'install', '--frozen-lockfile'],
-    'bun.lockb': ['bun', 'install', '--frozen-lockfile'],
-    'uv.lock': ['uv', 'sync', '--locked'],
-} as const satisfies Record<string, readonly string[]>;
-
-export const YARN_BERRY_INSTALL = ['yarn', 'install', '--immutable'] as const;
-
 export const NEXT_TYPEGEN_LINE = 'npx --no -- next typegen';
 
 export const CI_DIFF_LINES = ['git add --intent-to-add -- .gspot', 'git diff --exit-code -- .gspot'] as const;
 
 export const CI_INSTALL_COMMAND = 'gspot install';
 
-export const CI_CHECK_COMMAND = `gspot check --changed "\${${CI_BASE_VARIABLE}}"`;
+export const CI_CHECK_COMMAND = `gspot check --base "\${${CI_BASE_VARIABLE}}"`;
 
 export const GITHUB_EXPRESSION_START = '${{';
 
@@ -182,7 +171,7 @@ export const PUSH_INPUT_REPLAY = String.raw`printf '%s\n' "$input" | `;
 export const LFS_GUARD_PREFIX = 'command -v git-lfs >/dev/null 2>&1 || ';
 
 export const HOOK_CHECKS = {
-    'pre-commit': { arguments: 'check --hook pre-commit', stages: ['commit'] },
+    'pre-commit': { arguments: 'check --staged --stage commit', stages: ['commit'] },
     'pre-push': { arguments: 'check --hook pre-push -- "$@"', stages: ['commit', 'push'] },
     'commit-msg': { arguments: 'check --hook commit-msg -- "$1"', stages: ['message'] },
 } as const satisfies Record<(typeof CHECK_HOOKS)[number], { arguments: string; stages: readonly string[] }>;
@@ -219,7 +208,7 @@ export const RULE_OPENING_PREFIX = 'Read this rule ';
 
 export const MARKDOWN_HEADING = /^(#{1,5}) /u;
 
-export const SETTINGS_COMMANDS = ['set', 'unset', 'add', 'remove', 'ignore', 'unignore'] as const;
+export const SETTINGS_COMMANDS = ['set', 'unset', 'unignore'] as const;
 
 export const COMMANDS_HEADING = '## Commands';
 

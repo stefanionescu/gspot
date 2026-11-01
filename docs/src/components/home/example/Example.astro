@@ -1,62 +1,20 @@
 ---
 import example from '#docs/config/example.json';
+import { Code } from '@astrojs/starlight/components';
 import Run from '#docs/components/home/example/Run.astro';
 import InlineText from '#docs/components/InlineText.astro';
-import { tokenizeExampleLine } from '#docs/components/home/example/syntax.ts';
 
-const beforeLines = example.agent.files
-    .flatMap(({ content }) =>
-        content
-            .trimEnd()
-            .split('\n')
-            .map((text, index) => ({ number: index + 1, tokens: tokenizeExampleLine(text) })),
-    )
-    .map((line) => ({
-        ...line,
-        issue: example.issues.findIndex(({ lines }) => lines.includes(line.number)) + 1,
-    }));
-const afterLines = example.fix.files
-    .flatMap(({ content }) =>
-        content
-            .trimEnd()
-            .split('\n')
-            .map((text, index) => ({ number: index + 1, tokens: tokenizeExampleLine(text) })),
-    )
-    .map((line) => ({
-        ...line,
-        inserted: example.fix.inserted_lines.includes(line.number),
-    }));
+const issueMarkers = example.issues.map(({ lines }, index) => ({ range: lines.join(','), label: String(index + 1) }));
+const insertedLines = example.insertedLines.join(',');
 ---
 
 <div class="example-grid">
     <figure class="panel before">
         <figcaption class="panel-head">
             <span>Before: what the agent wrote</span>
-            <span class="file">{example.agent.files.map(({ path }) => path)}</span>
         </figcaption>
         <div class="panel-body">
-            <code class="code">
-                {beforeLines.map(({ number, issue, tokens }) => (
-                    <span class:list={['line', { 'is-marked': issue > 0 }]}>
-                        <span class:list={{ badge: issue > 0 }}>
-                            {issue > 0 && (
-                                <>
-                                    <span class="sr-only">Problem </span>
-                                    {issue}
-                                </>
-                            )}
-                        </span>
-                        <span class="number" aria-hidden="true">
-                            {number}
-                        </span>
-                        <span>
-                            {tokens.map(({ text, kind }) => (
-                                <span class:list={[kind]}>{text}</span>
-                            ))}
-                        </span>
-                    </span>
-                ))}
-            </code>
+            <Code code={example.before.content} lang="ts" title={example.before.path} mark={issueMarkers} />
         </div>
         <ol class="issues">
             {example.issues.map(({ title, text }, index) => (
@@ -71,32 +29,17 @@ const afterLines = example.fix.files
             ))}
         </ol>
     </figure>
-    <Run status="failed" summary={example.rejected_summary} />
+    <Run status="failed" summary={example.rejectedSummary} />
     <figure class="panel after">
         <figcaption class="panel-head">
             <span>After: the fix</span>
-            <span class="file">{example.fix.files.map(({ path }) => path)}</span>
         </figcaption>
         <div class="panel-body">
-            <code class="code">
-                {afterLines.map(({ number, inserted, tokens }) => (
-                    <span class:list={['line', { 'is-inserted': inserted }]}>
-                        <span></span>
-                        <span class="number" aria-hidden="true">
-                            {number}
-                        </span>
-                        <span>
-                            {tokens.map(({ text, kind }) => (
-                                <span class:list={[kind]}>{text}</span>
-                            ))}
-                        </span>
-                    </span>
-                ))}
-            </code>
+            <Code code={example.after.content} lang="ts" title={example.after.path} ins={insertedLines} />
         </div>
         <p class="panel-note">
-            <code class="inline-code">pay</code> now waits for the charge, and a failed payment reaches the caller.
+            <code>pay</code> now waits for the charge, and a failed payment reaches the caller.
         </p>
     </figure>
-    <Run status="passed" />
+    <Run status="passed" summary={example.passedSummary} />
 </div>

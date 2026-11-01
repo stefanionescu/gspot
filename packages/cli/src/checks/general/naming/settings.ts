@@ -90,9 +90,11 @@ export function readNamingSettings(settings: Settings, scope: Scope): NamingSett
     const overrides = [
         compileOverride({ allowed_names: shipped.allowed_names }),
         ...shipped.override.map((override) => compileOverride(override)),
-        ...configurations.flatMap((configuration) =>
-            (configuration.naming?.override ?? []).map((override) => compileOverride(override)),
-        ),
+        ...configurations
+            .filter((configuration) => configuration.name !== 'naming')
+            .flatMap((configuration) =>
+                (configuration.naming?.override ?? []).map((override) => compileOverride(override)),
+            ),
         ...settings.naming.override.map((override) => compileOverride(override)),
     ];
     return {

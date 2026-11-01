@@ -80,16 +80,6 @@ export const QUALITY_PACKAGE_FILES = {
     '.commitlintrc.json': '{"extends":["@commitlint/config-conventional"]}\n',
 } as const;
 
-export const SHARED_SETUP_FILES = {
-    'setup.cfg': `[flake8]
-ignore = E501
-[sqlfluff]
-exclude_rules = LT01
-`,
-    '.gitlab-ci.yml': 'quality:\n  script: npm run lint\n',
-    'query.sql': 'SELECT 1;\n',
-} as const;
-
 export const ATTRIBUTES_PLAN_ROW = {
     path: '.gitattributes',
     note: 'marks the generated files and keeps LF line endings',
@@ -131,7 +121,6 @@ export const STYLE_SOURCE_FILES = {
 } as const;
 
 export const NEXTJS_LOCALE_CASES = [
-    { dependency: false, named: false, isSelected: false },
     { dependency: true, named: false, isSelected: false },
     { dependency: false, named: true, isSelected: true },
 ] as const;
@@ -274,18 +263,7 @@ configurations = ['typescript']
 file_lines = 100
 `;
 
-export const COPIED_TEMPLATE = `# Change these settings with gspot set, unset, add, remove, ignore, or unignore.
-configurations = ['typescript']
-
-[hooks]
-enabled = true
-
-# Keep modules short.
-[limits]
-file_lines = 100
-`;
-
 export const GENERATED_WRITE_MESSAGE = 'Generated write denied';
 
 export const STOPPED_ERROR_MESSAGE =
-    'gspot stopped because of an internal error: Generated write denied. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.\n';
+    'gspot stopped because of an internal error. Report it at https://github.com/stefanionescu/gspot/issues.\n';

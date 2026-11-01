@@ -5,11 +5,6 @@ export const INVALID_PRETTIER_OPTIONS = [
 
 export const FORMAT_FILE_CASES = [
     {
-        name: 'no formatter configuration',
-        files: {},
-        expected: { indent_width: 4, print_width: 120 },
-    },
-    {
         name: 'Prettier dependency without configuration',
         files: { 'package.json': '{"devDependencies":{"prettier":"3.8.1"}}' },
         expected: { indent_width: 2, print_width: 80, quotes: 'double' },
@@ -43,17 +38,6 @@ export const FORMAT_FILE_CASES = [
         name: 'Prettier package configuration',
         files: { 'package.json': '{"prettier":{"tabWidth":6,"printWidth":100,"singleQuote":true}}' },
         expected: { indent_width: 6, print_width: 100, quotes: 'single' },
-    },
-    {
-        name: 'EditorConfig without indent_style',
-        files: {
-            '.editorconfig': `root = true
-[*]
-indent_size = 3
-max_line_length = 96
-`,
-        },
-        expected: { indent_width: 3, print_width: 96 },
     },
     {
         name: 'EditorConfig project settings and section overrides',
@@ -111,6 +95,5 @@ export const FORMAT_WORKSPACE_FILES = {
 
 export const UNREADABLE_PRETTIER_FILES = [
     { path: 'prettier.config.mjs', text: 'export default { printWidth: 100 };\n' },
-    { path: '.prettierrc.cjs', text: 'module.exports = { printWidth: 100 };\n' },
     { path: '.prettierrc.json5', text: '// formatting\n{ tabWidth: 4, }\n' },
 ] as const;

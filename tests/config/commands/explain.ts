@@ -1,41 +1,25 @@
 export const RULE_PAGES = [
-    ['no-var', 'https://eslint.org/docs/latest/rules/no-var'],
-    ['eslint/no-var', 'https://eslint.org/docs/latest/rules/no-var'],
-    ['gspot/no-trivial-functions', 'https://generativespotting.com/reference/eslint-plugin/#no-trivial-functions'],
-    ['@typescript-eslint/no-explicit-any', 'https://typescript-eslint.io/rules/no-explicit-any'],
+    ['javascript/eslint', 'no-var', 'https://eslint.org/docs/latest/rules/no-var'],
     [
-        'unicorn/prefer-set-has',
-        'https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-set-has.md',
+        'javascript/eslint',
+        'gspot/no-trivial-functions',
+        'https://generativespotting.com/reference/eslint-plugin/#no-trivial-functions',
     ],
+    ['javascript/eslint', '@typescript-eslint/no-explicit-any', 'https://typescript-eslint.io/rules/no-explicit-any'],
     [
-        'eslint/unicorn/prefer-set-has',
-        'https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-set-has.md',
+        'javascript/eslint',
+        'n/prefer-global/process',
+        'https://github.com/eslint-community/eslint-plugin-n/blob/HEAD/docs/rules/prefer-global/process.md',
     ],
-    ['eslint/@typescript-eslint/no-explicit-any', 'https://typescript-eslint.io/rules/no-explicit-any'],
-    ['stylelint/color-no-invalid-hex', 'https://stylelint.io/user-guide/rules/color-no-invalid-hex'],
+    ['css/stylelint', 'color-no-invalid-hex', 'https://stylelint.io/user-guide/rules/color-no-invalid-hex'],
 ] as const;
 
 export const UNKNOWN_RULES = [
-    'eslint/no-consolee',
-    'eslint/unicorn/no-such-rule',
-    'eslint/unknown/no-such-rule',
-    'eslint/typescript-eslint/no-explicit-any',
-    'stylelint/no-such-rule',
+    ['javascript/eslint', 'no-consolee'],
+    ['javascript/eslint', 'n/no-such-rule'],
+    ['javascript/eslint', 'unknown/no-such-rule'],
+    ['css/stylelint', 'no-such-rule'],
 ] as const;
-
-export const CHILD_RULE_PAGE = {
-    tool: 'swiftlint',
-    rule: 'type_body_length',
-    check: 'swift/swiftlint',
-    page: 'https://realm.github.io/SwiftLint/type_body_length.html',
-} as const;
-
-export const ROOT_RULE_PAGE = {
-    tool: 'ruff',
-    rule: 'F401',
-    check: 'python/ruff',
-    page: 'https://docs.astral.sh/ruff/rules/F401/',
-} as const;
 
 export const RULE_PAGE_SETTINGS = `level = "all"
 configurations = ["python"]
@@ -43,13 +27,6 @@ configurations = ["python"]
 path = "app"
 configurations = ["swift"]
 `;
-
-export const SHELLCHECK_RULE_PAGE = {
-    kind: 'lint-rule',
-    tool: 'shellcheck',
-    rule: 'SC2086',
-    page: 'https://www.shellcheck.net/wiki/SC2086',
-} as const;
 
 export const REASON_VALUES = [
     {
@@ -111,38 +88,6 @@ paths = ["api/build.sh"]
 reason = "The script deliberately splits a list of arguments."
 `;
 
-export const CONFIGURATION_DETECTION_LINES = [
-    {
-        configuration: 'docker',
-        lines: [
-            'Detected by: **/Dockerfile, **/Dockerfile.*, **/*.dockerfile, **/docker-compose*.yml, **/docker-compose*.yaml, **/compose.{yml,yaml}, **/compose.*.{yml,yaml}, **/compose-*.{yml,yaml}, !**/*.dockerignore',
-            'Files: **/Dockerfile, **/Dockerfile.*, **/*.dockerfile, **/docker-compose*.yml, **/docker-compose*.yaml, **/compose.{yml,yaml}, **/compose.*.{yml,yaml}, **/compose-*.{yml,yaml}, **/.dockerignore, **/*.dockerignore',
-        ],
-    },
-    {
-        configuration: 'javascript',
-        lines: [
-            'Detected by: .js, .jsx, .mjs, .cjs, project file package.json, shebang node',
-            'Files: .js, .jsx, .mjs, .cjs, shebang:node',
-            'Files: the file types of the selected ESLint plugins',
-        ],
-    },
-    {
-        configuration: 'bash',
-        lines: [
-            'Detected by: .sh, .bash, .zsh, .bats, tag shebang:shell',
-            'Files: .sh, .bash, .zsh, .bats, shebang:shell',
-        ],
-    },
-    {
-        configuration: 'postgres',
-        lines: [
-            String.raw`Detected by: pg in dependencies, postgres in dependencies, psycopg* in dependencies, asyncpg in dependencies, @neondatabase/serverless in dependencies, prisma/schema.prisma matching (?:^|\n)[\t ]*provider[\t ]*=[\t ]*"postgresql"`,
-            'Files: db/migrations/*.sql, migrations/*.sql, prisma/migrations/*/migration.sql, drizzle/*.sql, **/supabase/migrations/*.sql',
-        ],
-    },
-] as const;
-
 export const CHECK_TOOL_MINIMUMS = [
     { check: 'react-dom/react-versions', tools: [] },
     { check: 'javascript/eslint', tools: ['node'] },
@@ -178,11 +123,11 @@ export const SYNTAX_CHECK_TABLES =
 export const UNKNOWN_SUBJECT_CASES = [
     [
         'unknown/no-such-rule',
-        'There is no check, lint rule, configuration, setting, or file called unknown/no-such-rule. Give a check (python/ruff), a lint rule (eslint/no-console), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).',
+        'There is no check, lint rule, configuration, setting, or file called unknown/no-such-rule. Give a check (python/ruff), a lint rule (python/ruff E501), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).',
     ],
     ['./missing.sh', 'missing.sh is not a file in this repository.'],
     [
         'unknown-configuration',
-        'There is no check, lint rule, configuration, setting, or file called unknown-configuration. Give a check (python/ruff), a lint rule (eslint/no-console), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).',
+        'There is no check, lint rule, configuration, setting, or file called unknown-configuration. Give a check (python/ruff), a lint rule (python/ruff E501), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).',
     ],
 ] as const;

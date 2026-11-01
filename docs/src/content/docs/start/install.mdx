@@ -4,19 +4,22 @@ description: Choose an installation method for your repository and prepare its c
 ---
 
 import { Code, Tabs, TabItem } from '@astrojs/starlight/components';
+import { RELEASE_AGE_EXCLUSIONS } from '#docs/config/reference.ts';
 import {
-    SETUP_COMMANDS,
-    RUNTIME_MINIMUMS,
-    YARN_CLASSIC_INSTALL,
-    RELEASE_AGE_EXCLUSIONS,
-} from '#docs/config/setup.ts';
+    setup,
+    runtimeMinimums,
+    yarnClassicInstall,
+} from '#docs/reference/setup.ts';
 
 ## What you need
 
-Git and {`Node.js ${RUNTIME_MINIMUMS.node} or newer`}. When Bun runs gspot, it needs {`Bun ${RUNTIME_MINIMUMS.bun} or
+Git and {`Node.js ${runtimeMinimums.node} or newer`}. When Bun runs gspot, it needs {`Bun ${runtimeMinimums.bun} or
 newer`}. An older runtime stops gspot with exit code 2 and names the version it found:
 
-<Code code={`gspot needs Node.js ${RUNTIME_MINIMUMS.node} or newer (found 22.11.0).`} lang="text" />
+<Code code={`gspot needs Node.js ${runtimeMinimums.node} or newer (found 22.11.0).`} lang="text" />
+
+Run gspot in a full Git worktree; only help and version work outside one. For a sparse checkout, run
+`git sparse-checkout disable` first.
 
 The tools that your checks run need these:
 
@@ -27,7 +30,8 @@ The tools that your checks run need these:
 | Other programs                                           | mise, or the exact pinned tools on `PATH`. `gspot doctor` lists missing tools.                                                                                                                                                |
 | Your project's own commands, such as its tests and build | Your project's runtime, dependencies, and build tools.                                                                                                                                                                        |
 
-`gspot init` shows the configurations that gspot picks before it asks. After init, `gspot doctor` lists the missing tools.
+`gspot init` prints the configurations it selects and writes its plan without asking. After init, `gspot doctor` lists
+the missing tools.
 
 ### Systems
 
@@ -50,7 +54,7 @@ last column shows.
         </tr>
     </thead>
     <tbody>
-        {SETUP_COMMANDS.map(({ label, start, add }) => (
+        {setup.map(({ label, start, add }) => (
             <tr>
                 <td>{label}</td>
                 <td>
@@ -75,12 +79,12 @@ Install the dependencies from the committed lockfile first; it pins the gspot ve
 instead.
 
 <Tabs syncKey="package-manager">
-    {SETUP_COMMANDS.map(({ label, clone }) => (
+    {setup.map(({ label, clone }) => (
         <TabItem label={label}>
             <Code lang="shell" code={clone.join('\n')} />
             {label === 'Yarn' && (
                 <p>
-                    Yarn Classic installs with <code>{YARN_CLASSIC_INSTALL}</code>.
+                    Yarn Classic installs with <code>{yarnClassicInstall}</code>.
                 </p>
             )}
         </TabItem>
@@ -135,13 +139,13 @@ To stop checking one language or framework instead, see [gspot.toml](/configure/
 
 Commit first, so you can go back.
 
-1. Copy the list under "Generated files" in the managed block of `AGENTS.md`, the part between the gspot markers. It
-   names every file gspot writes outside `.gspot/` and each key it sets in your files.
+1. Save the paths marked `linguist-generated` in the gspot block of `.gitattributes`. It lists the generated files
+   outside `.gspot/`. Review [Generated files](/reference/generated-files/) for keys gspot sets in your own files.
 2. Run `gspot set rules.enabled false` and `gspot set ci.enabled false`. gspot deletes the rules, its `AGENTS.md`
    managed block, and the CI workflow. Then run `git config --unset core.hooksPath`. If Husky, Lefthook, or your own
    hooks run gspot, delete those lines.
 3. Restore your earlier config files from Git, such as `git show <commit>:.eslintrc.json`, or set up the tools you want.
-4. Run `mise trust --untrust .gspot/mise.toml`. Then delete the files and keys from step 1, the managed block in
+4. Delete the generated files and tool keys identified in step 1, the managed block in
    `.gitattributes` and the blank line above it, `gspot.toml`, and `.gspot/`.
 5. Remove the package: `bun remove @gspothq/cli`, the remove command of your package manager, or
    `mise unuse npm:@gspothq/cli`.
@@ -149,3 +153,9 @@ Commit first, so you can go back.
 Review the diff. To undo, go back to the first commit and run `gspot install`.
 
 The hooks run the code of the repository as you; see [Trust](/start/concepts/#trust).
+
+## What stays outside the repository
+
+Deleting `.gspot/` leaves global mise tools, uv-managed Python versions, and the Swift build cache of gspot.
+[What gspot adds to your repository and machine](/start/footprint/) lists their locations and the commands to prune
+unused tools and caches. Check for leftover `.gspot-copies/` folders after all checks stop.

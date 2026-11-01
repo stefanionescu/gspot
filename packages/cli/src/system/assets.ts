@@ -1,10 +1,9 @@
-import { statSync } from 'node:fs';
-import { join, dirname } from 'node:path';
 import { createRequire } from 'node:module';
+import { statSync, readdirSync } from 'node:fs';
 import { compareText } from '#cli/system/text.ts';
+import { join, dirname, relative } from 'node:path';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { listMatchingPaths } from '#cli/system/files/folders.ts';
-import { ALL_FILES_GLOB, CLI_PACKAGE_JSON } from '#cli/config/system/system.ts';
+import { CLI_PACKAGE_JSON } from '#cli/config/system/system.ts';
 
 const packageFolder = dirname(createRequire(import.meta.url).resolve(CLI_PACKAGE_JSON));
 
@@ -27,7 +26,8 @@ List the asset paths under a prefix, relative to the package, sorted.
 export function listAssets(prefix: string): string[] {
     const folder = join(packageFolder, prefix);
     if (statSync(folder, { throwIfNoEntry: false }) === undefined) return [];
-    return listMatchingPaths(folder, [ALL_FILES_GLOB])
-        .map((path) => convertToPosixPath(join(prefix, path)))
+    return readdirSync(folder, { recursive: true, withFileTypes: true })
+        .filter((file) => file.isFile())
+        .map((file) => convertToPosixPath(relative(packageFolder, join(file.parentPath, file.name))))
         .toSorted((a, b) => compareText(a, b));
 }

@@ -1,6 +1,6 @@
 import { GspotError } from '#cli/system/errors.ts';
+import { DOCS_PATHS } from '#cli/config/files/names.ts';
 import { formatSimilarNames } from '#cli/system/text.ts';
-import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { SOURCE_FILE_GROUPS } from '#cli/config/manifests/manifests.ts';
 import { type Configuration, type RequirementWalk, type WrittenConfiguration } from '#cli/types/manifests.ts';
 
@@ -9,9 +9,8 @@ function addRequiredConfigurations(walk: RequirementWalk, name: string): void {
     walk.seen.add(name);
     const configuration = walk.configurationsByName.get(name);
     if (!configuration) {
-        const names = walk.configurationsByName.keys().toArray();
         walk.errors.push(
-            `There is no configuration called ${name}.${formatSimilarNames(name, names)} See https://generativespotting.com/reference/configurations/ for the available configurations.`,
+            ...listUnknownConfigurations([{ name }], walk.configurationsByName).map(({ message }) => message),
         );
         return;
     }
@@ -56,7 +55,7 @@ List each configuration of the scopes once, in first-seen order.
 
 @param scopes the scopes, which can share configurations.
 */
-export function listSelectedConfigurations(scopes: Pick<Scope, 'configurations'>[]): Configuration[] {
+export function listSelectedConfigurations(scopes: readonly { configurations: Configuration[] }[]): Configuration[] {
     const seen = new Map<string, Configuration>();
     for (const scope of scopes)
         for (const configuration of scope.configurations)
@@ -70,7 +69,7 @@ Check whether any scope selects a configuration.
 @param scopes the validated scopes.
 @param name the configuration to find.
 */
-export function isConfigurationSelected(scopes: Pick<Scope, 'configurations'>[], name: string): boolean {
+export function isConfigurationSelected(scopes: readonly { configurations: Configuration[] }[], name: string): boolean {
     return scopes.some((scope) => scope.configurations.some((configuration) => configuration.name === name));
 }
 
@@ -89,7 +88,7 @@ export function listUnknownConfigurations<Written extends Pick<WrittenConfigurat
         .filter(({ name }) => !configurationsByName.has(name))
         .map((missing) => ({
             ...missing,
-            message: `There is no configuration called ${missing.name}.${formatSimilarNames(missing.name, available)} See https://generativespotting.com/reference/configurations/ for the available configurations.`,
+            message: `There is no configuration called ${missing.name}.${formatSimilarNames(missing.name, available)} See ${DOCS_PATHS.configurations} for the available configurations.`,
         }));
 }
 

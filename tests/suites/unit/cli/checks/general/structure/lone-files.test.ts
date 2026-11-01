@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
@@ -10,6 +10,7 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { LINGUIST_GENERATED_PATTERN } from '#tests/config/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     LONE_FILE_TREE,
@@ -19,7 +20,7 @@ import {
 } from '#tests/config/checks/general/structure/structure.ts';
 
 test('an untracked neighbor does not hide a selected tracked lone file', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
         'lone/only.ts': LONE_FILE_TREE['lone/only.ts'],
     });
@@ -31,7 +32,7 @@ test('an untracked neighbor does not hide a selected tracked lone file', async (
 });
 
 test('only code files count, and ignored paths and folders with subfolders are not reported', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], {
             tables: '[[ignore]]\ncheck = "structure/lone-files"\npaths = ["allowed/**", "parent/child/**"]\nreason = "Required entry directory."\n',
             level: 'all',
@@ -50,7 +51,7 @@ test('only code files count, and ignored paths and folders with subfolders are n
 });
 
 test('lone-files and shared-prefixes check build, dist and coverage folders and skip folders marked linguist-generated', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const authored = Object.fromEntries(
         ['build', 'dist', 'coverage'].flatMap((folder) => [
             [`${folder}/lone/only.ts`, ''],
@@ -84,7 +85,7 @@ test('lone-files and shared-prefixes check build, dist and coverage folders and 
 test.each([...FRAMEWORK_COMPONENT_CASES])(
     'a lone $framework component is reported once its framework is selected',
     async ({ framework, name, folder, content }) => {
-        await using sandbox = await testdir();
+        await using sandbox = await createGitSandbox({});
         const route = `${folder}/users/${name}`;
         const neighbor = `${folder}/teams/${name}`;
         const settings = buildSandboxSettings(['typescript', framework], { level: 'all' });
@@ -102,7 +103,7 @@ test.each([...FRAMEWORK_COMPONENT_CASES])(
 test.each([...ROUTE_FILE_CASES])(
     'a folder with only a $framework route file is a route, not a lone file',
     async ({ configurations, files, expected }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             ...files,
             'gspot.toml': buildSandboxSettings([...configurations], { level: 'all' }),
         });

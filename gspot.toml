@@ -63,11 +63,6 @@ allow_digits = true
 reason = "v8r is the name of the tool."
 
 [[naming.override]]
-paths = ["tests/suites/e2e/cli.test.ts"]
-allowed_names = ["resolved"]
-reason = "npm and Yarn lockfiles name each package download URL resolved."
-
-[[naming.override]]
 paths = ["packages/cli/src/types/generation/css.ts"]
 allowed_names = ["customSyntax"]
 reason = "Stylelint names its parser option customSyntax."
@@ -88,7 +83,7 @@ allowed_names = ["getDocumentFragment"]
 reason = "vue-eslint-parser names this parser service getDocumentFragment."
 
 [[naming.override]]
-paths = ["docs/src/types/reference.ts"]
+paths = ["docs/src/types/pages.ts"]
 allowed_names = ["data"]
 reason = "Astro content entries keep their fields in data."
 
@@ -118,7 +113,7 @@ allowed_names = ["reason_when"]
 reason = "gspot list settings --json and the shipped setting definitions name this field reason_when."
 
 [[naming.override]]
-paths = ["packages/cli/configurations/general/data-files/**", "packages/cli/src/generation/configurations/general/data-files.ts", "tests/config/integration/checks/general/data-files.ts", "tests/suites/integration/checks/general/data-files.test.ts", "tests/config/integration/checks/general/security/sensitive-data.ts", "tests/suites/integration/checks/general/security/sensitive-data.test.ts"]
+paths = ["packages/cli/configurations/general/data-files/**", "packages/cli/src/checks/general/data-files.ts", "packages/cli/src/config/checks/general/data-files.ts", "packages/cli/src/types/checks/general/data-files.ts", "packages/cli/src/generation/configurations/general/data-files.ts", "tests/suites/unit/cli/checks/general/data-files.test.ts", "tests/config/integration/checks/general/data-files.ts", "tests/suites/integration/checks/general/data-files.test.ts", "tests/config/integration/checks/general/security/sensitive-data.ts", "tests/suites/integration/checks/general/security/sensitive-data.test.ts"]
 allowed_names = ["data-files", "data-files.test", "sensitive-data", "sensitive-data.test"]
 reason = "These files and folders take the names of the data-files configuration and the security/sensitive-data check."
 
@@ -137,12 +132,12 @@ allowed = ["MIT", "ISC", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0", "0BSD", "
 [[licenses.allowed_package]]
 name = "@fontsource-variable/geist-mono"
 version = "5.3.0"
-reason = "The documentation distributes this unmodified font and copies its license into the built site under licenses/geist-mono.txt."
+reason = "The documentation distributes this unmodified font and copies its license into the built site under licenses/geist/mono.txt."
 
 [[licenses.allowed_package]]
 name = "@fontsource-variable/geist"
 version = "5.3.0"
-reason = "The documentation distributes this unmodified font and copies its license into the built site under licenses/geist.txt."
+reason = "The documentation distributes this unmodified font and copies its license into the built site under licenses/geist/sans.txt."
 
 [[licenses.allowed_package]]
 name = "lightningcss"
@@ -156,6 +151,7 @@ next-intl = "The next-intl package name."
 udid = "Apple names the device identifier udid."
 NGINX = "Official product name."
 Stylelint = "Official product name."
+pytest = "Official product name."
 markdownlint = "Official product name."
 React = "Official product name."
 Native = "Part of the React Native product name."
@@ -172,7 +168,7 @@ import_extension = "ts"
 no-restricted-properties = [{ object = "Bun", property = "env" }, { object = "Deno", property = "env" }, { property = "localeCompare", message = "Use compareText for stable ordering." }]
 
 [tools.knip]
-entry = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/sandboxes/tool-project.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config/eslint-functions.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config/markdownlint-cli2.ts", "packages/cli/configurations/framework/site/config/purgecss.ts"]
+entry = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/sandboxes/tool-project.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config/eslint-functions.ts", "packages/cli/src/bin.ts", "packages/cli/src/reference.ts", "packages/cli/configurations/language/markdown/config/markdownlint-cli2.ts", "packages/cli/configurations/framework/site/config/purgecss.ts"]
 
 [[scope]]
 path = "docs"
@@ -196,7 +192,7 @@ can_import = ["cli-types"]
 [[import_rule]]
 name = "cli-types"
 paths = ["packages/cli/src/types/**"]
-can_import = ["cli-config", "parsers", "manifests", "repository", "settings", "installers", "runs", "checks", "commands"]
+can_import = ["cli-config", "parsers", "manifests", "repository", "settings", "executables", "installers", "runs", "checks", "commands"]
 
 [[import_rule]]
 name = "system"
@@ -224,19 +220,19 @@ paths = ["packages/cli/src/planning/**"]
 
 [[import_rule]]
 name = "executables"
-paths = ["packages/cli/src/executables/**"]
+paths = ["packages/cli/src/executables/**", "packages/cli/src/schemas/executables.ts"]
 
 [[import_rule]]
 name = "installers"
 paths = ["packages/cli/src/installers/**", "packages/cli/src/schemas/installers/**"]
 
 [[import_rule]]
-name = "generation"
-paths = ["packages/cli/src/generation/**"]
-
-[[import_rule]]
 name = "runs"
 paths = ["packages/cli/src/runs/**", "packages/cli/src/schemas/runs/**"]
+
+[[import_rule]]
+name = "generation"
+paths = ["packages/cli/src/generation/**"]
 
 [[import_rule]]
 name = "checks"
@@ -248,7 +244,7 @@ paths = ["packages/cli/src/commands/**", "packages/cli/src/schemas/commands.ts"]
 
 [[import_rule]]
 name = "main"
-paths = ["packages/cli/src/main.ts", "packages/cli/src/bin.ts"]
+paths = ["packages/cli/src/main.ts", "packages/cli/src/bin.ts", "packages/cli/src/reference.ts"]
 
 [[import_rule]]
 name = "plugin-config"
@@ -273,7 +269,7 @@ can_import = ["cli-config", "docs-types"]
 [[import_rule]]
 name = "docs-types"
 paths = ["docs/src/types/**"]
-can_import = ["cli-types", "settings", "docs-config"]
+can_import = ["cli-types", "settings", "main", "docs-config"]
 
 [[import_rule]]
 name = "docs"
@@ -342,7 +338,7 @@ reason = "This sample URL holds a session identifier so that the Vale test sees 
 [[ignore]]
 check = "prose/vale"
 rule = "write-good.E-Prime"
-paths = ["README.md", "packages/cli/README.md", "docs/src/content/docs/start/overview.md"]
+paths = ["README.md", "packages/cli/README.md", "docs/src/content/docs/start/overview.mdx"]
 reason = "These files open with the owner's product description, which keeps its wording."
 
 [[ignore]]
@@ -385,6 +381,12 @@ check = "structure/lone-files"
 rule = "lone-file"
 paths = ["docs/src/pages/index.astro"]
 reason = "Astro builds the routes of the site only from files in src/pages/."
+
+[[ignore]]
+check = "structure/lone-files"
+rule = "lone-file"
+paths = ["docs/src/schemas/content.ts"]
+reason = "AGENTS.md keeps every schema in a schemas folder, and the docs site declares one schema."
 
 [[ignore]]
 check = "structure/lone-files"

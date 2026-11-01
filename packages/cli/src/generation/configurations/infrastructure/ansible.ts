@@ -1,0 +1,15 @@
+import { stringify } from 'yaml';
+import { listIgnoredRules } from '#cli/settings/scopes.ts';
+import type { PlannedConfig } from '#cli/types/generation/files.ts';
+import { ANSIBLE_LINT_CHECK, ANSIBLE_LINT_ALWAYS_OFF } from '#cli/config/generation/generation.ts';
+
+/**
+Build the Ansible exclusions from configured rule ignores.
+
+@param planned the config file and scope.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: CONFIG_BUILDERS selects this configuration's generator through its shared builder interface.
+export function buildAnsibleLintFile(planned: PlannedConfig): string {
+    const ignored = listIgnoredRules(planned.scope, ANSIBLE_LINT_CHECK);
+    return stringify({ skip_list: [...new Set([...ANSIBLE_LINT_ALWAYS_OFF, ...ignored])] });
+}

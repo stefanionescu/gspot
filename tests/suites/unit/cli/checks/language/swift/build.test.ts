@@ -4,6 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
@@ -13,6 +14,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { planSwiftBuild } from '#cli/checks/language/swift/cache.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { UNEXPECTED_PLAN_MESSAGE } from '#tests/config/checks/language/swift/messages.ts';
 import { SWIFT_PACKAGE, SWIFT_VALUE_SOURCE, SWIFT_LANGUAGE_PACKAGE } from '#tests/config/swift.ts';
 
@@ -33,7 +35,7 @@ import {
 test('compiler: a failed Swift build without source errors exits 2, and the next build passes', async () => {
     using resources = new DisposableStack();
 
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
 
     await using prepared = await prepareSwiftCheck(sandbox, 'swift/build', {
         'Main.swift': SWIFT_VALUE_SOURCE,
@@ -56,7 +58,7 @@ test('compiler: a failed Swift build without source errors exits 2, and the next
             check: 'swift/build',
             status: 'error',
             findings: [],
-            note: 'The swift/build check failed: The Swift build command failed (exit 7): Compiler startup failed\nPermission denied',
+            note: 'The Swift build command failed (exit 7): Compiler startup failed\nPermission denied',
         },
     ]);
     run.mockResolvedValue(buildProcessResult());
@@ -67,7 +69,7 @@ test('compiler: a failed Swift build without source errors exits 2, and the next
 test('compiler: a later Swift session reads a failed build after an earlier successful build', async () => {
     using resources = new DisposableStack();
 
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
 
     await using prepared = await prepareSwiftCheck(sandbox, 'swift/build');
 
@@ -91,7 +93,7 @@ test('compiler: a later Swift session reads a failed build after an earlier succ
 test('compiler: canceled Swift compilation refuses to launch the compiler', async () => {
     using resources = new DisposableStack();
 
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
 
     await using prepared = await prepareSwiftCheck(sandbox, 'swift/build');
 
@@ -114,7 +116,7 @@ test('compiler: canceled Swift compilation refuses to launch the compiler', asyn
 test('compiler: swift/build refuses a response file outside the compiler cache and writes its log only with one inside', async () => {
     using resources = new DisposableStack();
 
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
 
     await using prepared = await prepareSwiftCheck(sandbox, 'swift/build', {
         'external-response': 'external bytes must not enter a compiler log',
@@ -143,7 +145,7 @@ test('compiler: swift/build refuses a response file outside the compiler cache a
 test('compiler: a Swift build whose source file is missing names the file and runs no compiler', async () => {
     using resources = new DisposableStack();
 
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     await using _cache = await redirectCacheFolder();
     await createFileTree(sandbox.path, {
         'Package.swift': SWIFT_PACKAGE,
@@ -160,7 +162,7 @@ test('compiler: a Swift build whose source file is missing names the file and ru
 });
 
 test('compiler: Swift compiler messages drop the macOS /private prefix from source paths', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     await using prepared = await prepareSwiftCheck(sandbox, 'swift/build', { 'Main.swift': SWIFT_VALUE_SOURCE });
 
     const input = prepared.planned;
@@ -184,6 +186,7 @@ test.each([...SWIFT_REPLACEMENT_CASES])(
     async ({ checkId, rule }) => {
         await using parent = await testdir();
         await using sandbox = await testdir({}, { dirname: join(parent.path, 'literal-$&') });
+        runGitStep(sandbox.path, ['init', '--quiet']);
         await using resources = new AsyncDisposableStack();
         resources.use(await prepareSwiftCheck(sandbox, checkId, { 'Main.swift': SWIFT_VALUE_SOURCE }));
         resources.use(

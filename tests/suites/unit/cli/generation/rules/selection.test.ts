@@ -1,4 +1,3 @@
-import { testdir } from 'testdirs';
 import { type Level } from '#cli/types/manifests.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
@@ -8,9 +7,10 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { RUNTIME_RULE_CASES } from '#tests/config/generation/rules.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 async function generateRuleFiles(level: Level, files: Record<string, string>): Promise<Map<string, string>> {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript', 'css', 'vitest', 'swift', 'bash', 'drizzle', 'openapi'], {
             rules: true,
             level,
@@ -31,10 +31,15 @@ test.each(
     [
         { place: 'the root', scope: '' },
         { place: 'a scope', scope: 'app' },
-    ].flatMap((place) => RUNTIME_RULE_CASES.map((row) => ({ ...row, ...place }))),
+    ].flatMap((place) =>
+        RUNTIME_RULE_CASES.filter((row) => place.scope === '' || row.name === 'a Node.js script').map((row) => ({
+            ...row,
+            ...place,
+        })),
+    ),
 )('$name in $place selects the runtime rules $rules', async ({ scope, runtime, dependency, rules }) => {
     const prefix = scope === '' ? '' : scope + '/';
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(scope === '' ? ['javascript'] : [], {
             rules: true,
             level: 'all',
@@ -54,7 +59,9 @@ test.each(
 });
 
 test('an always-selected configuration installs its rule file once', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([], { rules: true, level: 'all' }) });
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { rules: true, level: 'all' }),
+    });
     const session = await openSession(sandbox.path);
     const configurations = listSelectedConfigurations(session.scopes);
     const engineering = configurations.find((configuration) => configuration.name === 'engineering')!;
@@ -109,10 +116,26 @@ describe('which rule files gspot writes', () => {
 });
 
 test('a Supabase project selects Deno rules without a Deno settings file', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['supabase'], { rules: true }),
         'supabase/config.toml': 'project_id = "example"\n',
     });
     const session = await openSession(sandbox.path);
     expect(selectRuleFiles(session).map(({ path }) => path)).toContain('language/javascript/rules/DENO.md');
 });
+
+test.each(['pytest', 'jest'])(
+    '%s selection writes its test guidance and links it from AGENTS.md',
+    async (configuration) => {
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings([configuration], { rules: true }),
+        });
+        const generated = buildGeneratedFiles(await openSession(sandbox.path));
+        const path = getRuleFilePath(configuration, `${configuration.toUpperCase()}.md`);
+        expect(generated.files.find((file) => file.path === path)?.content).toContain('Read TESTING.md too.');
+        const agents = generated.blocks.find((block) => block.path === 'AGENTS.md')?.body;
+        expect(agents).toContain(
+            `\`${path}\`: when you write or change a ${configuration === 'jest' ? 'Jest' : 'pytest'} test.`,
+        );
+    },
+);

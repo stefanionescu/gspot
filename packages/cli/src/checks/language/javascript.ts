@@ -1,22 +1,25 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { chmodSync, writeFileSync } from 'node:fs';
-import { join, dirname, relative } from 'node:path';
-import { buildBaseResult } from '#cli/runs/results.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { readBytes } from '#cli/system/files/reads.ts';
 import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import { listCheckedFiles } from '#cli/planning/files.ts';
-import { createCheckCopy } from '#cli/runs/copy/files.ts';
 import { JSCONFIG_FILE } from '#cli/config/files/names.ts';
+import { RAN_STATUSES } from '#cli/config/runs/command.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { extractConfigName } from '#cli/manifests/tools.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
+import { join, dirname, extname, relative } from 'node:path';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { getConfigPath } from '#cli/runs/command/placeholders.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import type { ParsedTsconfig } from '#cli/types/parsers/projects.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/system.ts';
+import { createCopy, createCheckCopy } from '#cli/runs/copy/files.ts';
+import { buildBaseResult, mergeCheckResults } from '#cli/runs/results.ts';
 import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import { TSC_UNFORMATTED_OUTPUT } from '#cli/config/checks/cross-configuration/tsc.ts';
 import { JSCONFIG_TSBUILDINFO, JAVASCRIPT_TSC_COMMAND } from '#cli/config/checks/language/language.ts';
@@ -102,4 +105,42 @@ export async function checkJavascriptTsc(session: CheckSession, planned: Planned
         copyRoot: folder.path,
     });
     return restoreCommandPaths(result, folder.path, session.root);
+}
+
+/**
+Run Biome on supported files and name copied Node shebang scripts as JavaScript.
+
+@param session the repository and installed tools.
+@param planned the scope and selected files.
+*/
+export async function checkJavascriptBiome(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
+    const files = listCheckedFiles(session.scopes, planned);
+    const biomeExtensions = new Set(planned.check.files?.extensions);
+    const groups = Map.groupBy(files, (file) => biomeExtensions.has(extname(file.path).toLowerCase()));
+    const regular = groups.get(true) ?? [];
+    let result = buildBaseResult(planned, session);
+    if (regular.length > 0)
+        result = mergeCheckResults(result, await runCommandCheck(session, { ...planned, files: regular }));
+    const scripts = groups.get(false) ?? [];
+    if (scripts.length === 0 || !RAN_STATUSES.has(result.status)) return result;
+    const config = getConfigPath(session, planned, 'biome');
+    using copy = await createCopy({
+        root: session.root,
+        paths: [config],
+        dependencies: [],
+        cancelSignal: session.cancelSignal,
+    });
+    const writer = openFiles(copy.path);
+    const names = new Map<string, string>();
+    const scriptFiles = scripts.map((file) => {
+        const path = file.path + '.js';
+        names.set(path, file.path);
+        writer.write(path, { bytes: readBytes(session.cache, file.path), mode: PRIVATE_FILE });
+        return { ...file, path };
+    });
+    const checked = await runCommandCheck(session, { ...planned, files: scriptFiles }, { copyRoot: copy.path });
+    return mergeCheckResults(result, {
+        ...checked,
+        findings: checked.findings.map((finding) => ({ ...finding, file: names.get(finding.file) ?? finding.file })),
+    });
 }

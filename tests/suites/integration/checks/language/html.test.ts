@@ -21,10 +21,9 @@ test.each([...AUTOPLAY_CHECKS])(
     '$check reports audio and video autoplay and accepts user-controlled playback',
     async (row) => {
         const { root } = installedSandbox();
-        const skippedChecks =
-            row.scope === ''
-                ? [{ check: row.check, scope: 'app', status: 'skipped' as const, fileCount: 0, findings: [] }]
-                : [];
+        const skippedChecks = [
+            { check: row.check, scope: 'app', status: 'skipped' as const, fileCount: 0, findings: [] },
+        ];
         const build = buildProgramCommand('fakes/site-build', '--copy', 'page.html=dist/index.html');
         const sourceFiles = {
             'gspot.toml': buildSandboxSettings(['html'], {

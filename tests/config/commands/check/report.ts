@@ -45,12 +45,6 @@ export const FAILED_CHECK_REPORT = {
     exitCode: 1,
 } as const;
 
-export const CHECK_REPORT_COMPARISONS = [
-    { content: 'working-tree', header: 'Checked the files changed since main.\n' },
-    { content: 'index', header: 'Checked the staged files.\n' },
-    { content: 'commit', header: 'Checked commit main.\n' },
-] as const;
-
 export const NO_COLOR_SETTINGS = `configurations = []
 [[ignore]]
 check = "gspot/generated-files"
@@ -58,45 +52,18 @@ paths = ["absent/**"]
 reason = "This path belongs to an external generated project."
 `;
 
-export const VERBOSITY_ARGUMENTS = [
-    'check',
-    '--only',
-    'example/findings,example/passing',
-    '--changed',
-    'HEAD',
-] as const;
+export const VERBOSITY_ARGUMENTS = ['check', '--only', 'example/findings,example/passing', '--base', 'HEAD'] as const;
 
-export const SKIPPED_REPORT_CHECKS = [
-    {
-        check: 'example/skipped',
-        scope: '',
-        status: 'skipped',
-        fileCount: 0,
-        duration: 0,
-        findings: [],
-        note: 'disabled',
-    },
-] as const;
-
-export const COMPARISON_NOTICE_CASES = [
-    { count: 2, notice: '2 files have unstaged changes that were not checked.' },
-] as const;
-
-export const FINDING_LINES = Array.from({ length: 201 }, (_, index) => `finding ${String(index + 1)}.`);
+const FINDING_LINES = Array.from({ length: 201 }, (_, index) => `finding ${String(index + 1)}.`);
 
 export const FINDINGS_TOOL_ARGUMENTS = [...FINDING_LINES.flatMap((line) => ['--line', line]), '--exit', '1'];
 
-export const FINDINGS_REPORT = [
-    'Checked the files changed since HEAD.',
-    'example/findings  failed  201 findings',
-    ...FINDING_LINES.slice(0, 200).map((line) => `  ${line}`),
-    '  help: Read the command output; this repository declares the check.',
-    '  and 1 more (--verbose prints every finding)',
-    '  run again: gspot check --only example/findings --changed HEAD',
-    '',
-    'Failed: 1 check with 201 findings. Passed: 1 check. Skipped: 0 checks.',
-    'Time: 0.0s. Exit code 1.',
-    '',
-].join('\n');
-
-export const DURATION = /\b\d+\.\ds\b/gu;
+export const ENVIRONMENT_CHECK = {
+    check: 'python/basedpyright',
+    scope: '',
+    status: 'missing' as const,
+    fileCount: 1,
+    duration: 0,
+    findings: [],
+    note: 'The project environment .venv is missing. Run uv sync, then check again.',
+};

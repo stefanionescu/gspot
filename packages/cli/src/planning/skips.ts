@@ -1,11 +1,11 @@
 import { listIgnores } from '#cli/settings/scopes.ts';
+import { LIMIT_READERS } from '#cli/manifests/limits.ts';
 import { findMissingBuild } from '#cli/manifests/tools.ts';
 import type { Tool, Check } from '#cli/types/manifests.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Settings } from '#cli/types/settings/settings.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
 import { isInScope, isScopeCovered } from '#cli/repository/scopes.ts';
-import { LIMIT_READERS, NO_HISTORY_MESSAGE } from '#cli/config/planning.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import type { Host, Skip, PlannedCheck, PlannedScope, SettingsSkip, SettingReader } from '#cli/types/planning.ts';
 
@@ -31,21 +31,17 @@ function findTagSkip(tags: string[] | undefined, scopePath: string, files: Repos
 }
 
 function findConditionSkip(planned: PlannedCheck, repository: Repository): Skip | undefined {
-    const { configuration, git, dependencies, tags } = { ...planned.configuration?.when, ...planned.check.when };
+    const { configuration, dependencies, tags } = { ...planned.check.when };
     const scope = planned.scope.path;
     if (configuration !== undefined && !planned.scope.settings.configurations.includes(configuration))
         return {
             cause: 'condition',
             note: `Needs the ${configuration} configuration, which this scope does not select.`,
         };
-    const skip =
+    return (
         findDependencySkip(dependencies, scope, repository.dependencyFiles) ??
-        findTagSkip(tags, scope, repository.files);
-    if (skip !== undefined || git !== true || repository.hasGit) return skip;
-    return {
-        cause: 'condition',
-        note: NO_HISTORY_MESSAGE,
-    };
+        findTagSkip(tags, scope, repository.files)
+    );
 }
 
 function findIgnoreSkip(scope: Scope, check: Check): SettingsSkip | undefined {
@@ -137,7 +133,11 @@ Find the first reason that a planned check cannot run.
 export function findFirstSkip(check: PlannedCheck, planned: PlannedScope): Skip | undefined {
     const { session, host } = planned;
     const settings = session.settings;
-    const selected = findSettingsSkip(settings, check.scope, check.check);
+    const selectedCheck =
+        planned.options.only?.includes(check.check.id) === true
+            ? { ...check.check, level: 'basic' as const }
+            : check.check;
+    const selected = findSettingsSkip(settings, check.scope, selectedCheck);
     if (selected !== undefined) return selected;
     const condition = findConditionSkip(check, session.repository);
     if (condition !== undefined) return condition;

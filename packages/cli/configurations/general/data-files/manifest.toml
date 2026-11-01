@@ -19,12 +19,6 @@ replace = ["taplo.toml", ".taplo.toml"]
 version = "0.10.0"
 
 [[tool]]
-name = "yamllint"
-pypi = "yamllint"
-replace = [".yamllint", ".yamllint.yml", ".yamllint.yaml"]
-version = "1.38.0"
-
-[[tool]]
 name = "v8r"
 npm = "v8r"
 requires = ["ajv"]
@@ -45,11 +39,6 @@ target = "taplo.toml"
 tool = "taplo"
 
 [[config_file]]
-per_scope = true
-target = "yamllint.yml"
-tool = "yamllint"
-
-[[config_file]]
 target = "v8r.yml"
 tool = "v8r"
 
@@ -66,15 +55,13 @@ summary = "Checks that every TOML file parses and matches the taplo output under
 why = "One formatter keeps a diff about the values, not the spacing."
 
 [[check]]
-command = ["yamllint", "-c", "{config_file:yamllint}", "-f", "parsable", "-s", "{files}"]
 example = "Two `enabled` keys in one YAML mapping report a duplicate key. Keep one, and delete the other."
 files = { extensions = [".yaml", ".yml"] }
-help = "Fix the line yamllint names, or change rule options with `gspot set tools.yamllint.rules`."
-name = "yamllint"
-output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): \\[(?:error|warning)\\] (?<message>.*?)(?: \\((?<rule>[a-z-]+)\\))?$" }
+help = "Fix the reported YAML value or layout. Follow YAML.md for quoting, anchors, comments, and file names."
+name = "yaml"
 stage = "commit"
-summary = "Checks YAML files for duplicate keys, anchors, and truthy values."
-why = "A YAML file that parses to the wrong shape fails silently: a duplicated key wins, a stray tab changes the nesting."
+summary = "Checks YAML syntax, duplicate keys, anchors, ambiguous scalar values, and the conventions in YAML.md."
+why = "A YAML file that parses differently between consumers can silently change the values that the program reads."
 
 [[check]]
 command = ["v8r", "--output-format", "text", "{files}"]

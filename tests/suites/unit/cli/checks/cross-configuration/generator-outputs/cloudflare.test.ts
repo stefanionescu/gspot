@@ -1,15 +1,17 @@
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
+import { createFileTree } from 'testdirs';
 import { getTool } from '#cli/manifests/tools.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
 import { EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { runSandboxCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
@@ -39,7 +41,7 @@ function fakeWranglerTypes(source: string) {
 }
 
 test('custom Worker type settings reach wrangler types as --env-interface', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const source = CLOUDFLARE_ENV_SOURCE;
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], {
@@ -48,13 +50,14 @@ test('custom Worker type settings reach wrangler types as --env-interface', asyn
         }),
         'workers/api/cloudflare-env.d.ts': source,
     });
+    commitAll(sandbox.path);
     const session = await openSession(sandbox.path);
     using resources = new DisposableStack();
     resources.use(await fakeWrangler(sandbox.path));
     const run = resources.use(fakeWranglerTypes(source));
     const planned = planSandboxCheck(session, 'cloudflare/stale-types', { scope: 'workers/api' });
     const result = await runCheckCode(
-        buildCheckSession(session),
+        buildCheckSession(session, CHECK_GENERATION),
         planned,
         planned.check.generator_outputs === undefined ? CHECK_CODE[planned.check.id] : { check: checkGeneratorOutputs },
         {},
@@ -66,7 +69,7 @@ test('custom Worker type settings reach wrangler types as --env-interface', asyn
 });
 
 test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and reports the file until Git tracks it', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const source = CLOUDFLARE_ENV_SOURCE;
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['cloudflare']),
@@ -81,7 +84,7 @@ test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and 
     const untracked = await openSession(sandbox.path);
     const untrackedCheck = planSandboxCheck(untracked, 'cloudflare/stale-types');
     const untrackedResult = await runCheckCode(
-        buildCheckSession(untracked),
+        buildCheckSession(untracked, CHECK_GENERATION),
         untrackedCheck,
         untrackedCheck.check.generator_outputs === undefined
             ? CHECK_CODE[untrackedCheck.check.id]
@@ -94,7 +97,7 @@ test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and 
     const tracked = await openSession(sandbox.path);
     const trackedCheck = planSandboxCheck(tracked, 'cloudflare/stale-types');
     const trackedResult = await runCheckCode(
-        buildCheckSession(tracked),
+        buildCheckSession(tracked, CHECK_GENERATION),
         trackedCheck,
         trackedCheck.check.generator_outputs === undefined
             ? CHECK_CODE[trackedCheck.check.id]
@@ -109,7 +112,7 @@ test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and 
 
 test('the wrangler types of the test tools write a cloudflare-env.d.ts that passes, and a changed binding reports the file', async () => {
     using _environment = overrideEnvironment({ WRANGLER_SEND_METRICS: 'false' });
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['cloudflare'], {
             tables: '[cloudflare]\ntypes_file = "cloudflare-env.d.ts"\n',
         }),
@@ -131,6 +134,7 @@ test('the wrangler types of the test tools write a cloudflare-env.d.ts that pass
         { cwd: sandbox.path, env: { WRANGLER_SEND_METRICS: 'false' } },
     );
     expect(generated.code, generated.stdout + generated.stderr).toBe(0);
+    commitAll(sandbox.path);
     expect(await runSandboxCheck(sandbox.path, 'cloudflare/stale-types')).toStrictEqual([]);
     await writeFile(
         join(sandbox.path, 'wrangler.jsonc'),

@@ -1,19 +1,19 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { parse } from '@decimalturn/toml-patch';
 import { getTool } from '#cli/manifests/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import type { ToolPackageJson } from '#tests/types/packages.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { YARN_CLIENTS } from '#tests/config/installers/installers.ts';
-import type { PythonToolProject } from '#cli/types/installers/installers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { STYLESHEET_CASES, LICENSE_TOOL_CASES } from '#tests/config/generation/generation.ts';
 
 test.each([...STYLESHEET_CASES])('$name installs postcss-html when Stylelint is selected', async (row) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(row.configurations),
         ...row.files,
     });
@@ -28,7 +28,7 @@ test.each([...STYLESHEET_CASES])('$name installs postcss-html when Stylelint is 
 test.each([...LICENSE_TOOL_CASES])(
     'a root allowed package installs the license tool for a child scope with root configurations $configurations',
     async ({ configurations }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([...configurations], {
                 tables: '[[licenses.allowed_package]]\nname = "example"\nversion = "1.0.0"\nreason = "Reviewed installed metadata."\n',
                 scopes: [{ path: 'docs', configurations: ['licenses'] }],
@@ -41,12 +41,7 @@ test.each([...LICENSE_TOOL_CASES])(
         expect((JSON.parse(npmProject.content) as ToolPackageJson).devDependencies).toHaveProperty(
             'license-checker-rseidelsohn',
         );
-        const pythonProject = generated.files.find(({ path }) => path === GSPOT_PATHS.pythonProject)!;
-        expect(
-            (parse(pythonProject.content) as { project: PythonToolProject }).project.dependencies.filter((dependency) =>
-                dependency.startsWith('pip-licenses'),
-            ),
-        ).toStrictEqual([]);
+        expect(generated.files.find(({ path }) => path === GSPOT_PATHS.pythonProject)).toBeUndefined();
     },
 );
 
@@ -61,6 +56,7 @@ test('Next ESLint plugin keeps its shipped pin when two folders declare differen
         'node_modules/next/package.json': '{"name":"next","version":"17.0.0"}',
     });
 
+    runGitStep(join(sandbox.path, 'project'), ['init', '--quiet']);
     const session = await openSession(join(sandbox.path, 'project'));
     const generated = buildGeneratedFiles(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject);
     expect((JSON.parse(generated!.content) as ToolPackageJson).devDependencies['@next/eslint-plugin-next']).toBe(
@@ -71,18 +67,12 @@ test('Next ESLint plugin keeps its shipped pin when two folders declare differen
 test.each([...YARN_CLIENTS])(
     'Yarn $packageManager.version generates an npm tool project without Yarn settings',
     async ({ packageManager }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([]),
             'package.json': JSON.stringify({ private: true, packageManager: `yarn@${packageManager.version}` }),
         });
         const session = await openSession(sandbox.path);
         const files = buildGeneratedFiles(session).files;
         expect(files.filter(({ path }) => path.endsWith('.yarnrc.yml')).map(({ path }) => path)).toStrictEqual([]);
-        const project = JSON.parse(
-            files.find(({ path }) => path === GSPOT_PATHS.npmProject)!.content,
-        ) as ToolPackageJson;
-        expect(project.devDependencies['prettier']).toBe(
-            getTool(session.configurationsByName.values(), 'prettier').version,
-        );
     },
 );

@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { compareText } from '#cli/system/text.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { planChecks } from '#cli/planning/checks.ts';
 import { symlink, writeFile } from 'node:fs/promises';
@@ -25,7 +25,7 @@ import {
 } from '#tests/config/planning/files.ts';
 
 test("a file named on the command line runs its scope's project check on every file of the scope", async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': TYPESCRIPT_SCOPES_SETTINGS,
         'api/source.ts': 'export {};\n',
         'api/caller.ts': 'export {};\n',
@@ -118,7 +118,7 @@ test('a project-wide TypeScript check counts its source file and tsconfig.json, 
 });
 
 test(`a scope's per-scope check plans every file of its scope and covers only its test files`, async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['jest'], {
             scopes: [{ path: 'apps/web' }, { path: 'apps/web/nested' }],
         }),
@@ -182,7 +182,7 @@ test('a command check reads each matching file once across nested scopes', async
 });
 
 test('a deleted generated path is not a trigger for a configured project check', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['dependencies']),
         'source.ts': 'export const value = 1;\n',
     });
@@ -197,7 +197,7 @@ test('a deleted generated path is not a trigger for a configured project check',
 });
 
 test('a project check leaves binary files out of its planned inputs', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['docker']),
         Dockerfile: 'FROM scratch\n',
         'image.bin': new Uint8Array([0, 255, 0]),

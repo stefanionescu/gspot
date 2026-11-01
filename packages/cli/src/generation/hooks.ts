@@ -1,3 +1,4 @@
+import { quoteArgument } from '#cli/system/text.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import type { StartRunner } from '#cli/types/repository/javascript.ts';
 import type { HookName, GeneratedFile } from '#cli/types/generation/files.ts';
@@ -13,7 +14,7 @@ import {
 } from '#cli/config/generation/generation.ts';
 
 function buildHookScript(name: HookName, runner: StartRunner, lfsHooks: readonly string[]): string {
-    const program = runner.name;
+    const program = runner.command.split(' ', 1)[0] as string;
     const { missing } = runner;
     const messagePathLines = name === 'commit-msg' ? COMMIT_MESSAGE_PATH_LINES : [];
     const isLfs = lfsHooks.includes(name);
@@ -21,7 +22,12 @@ function buildHookScript(name: HookName, runner: StartRunner, lfsHooks: readonly
     const body = [
         ...(isLfs ? [LFS_MISSING_GUARD, PUSH_INPUT_SAVE, `${replay}git lfs ${name} "$@" || exit $?`] : []),
         ...messagePathLines,
-        `command -v ${program} >/dev/null 2>&1 || { echo '${missing}' >&2; exit 2; }`,
+        `command -v ${program} >/dev/null 2>&1 || { printf ${quoteArgument(missing.replace('$PATH', '%s') + '\n')} "$PATH" >&2; exit 2; }`,
+        ...(runner.name === 'npm'
+            ? [
+                  String.raw`test -f node_modules/.bin/gspot || { printf '%s\n' 'Run npm install, then gspot install, in this worktree.' >&2; exit 2; }`,
+              ]
+            : []),
         `${isLfs ? replay : 'exec '}${runner.command} ${HOOK_CHECKS[name].arguments}`,
         '',
     ].join('\n');

@@ -1,13 +1,14 @@
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { join, relative } from 'node:path';
 import { getTool } from '#cli/manifests/tools.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { executableLayout } from '#cli/system/paths.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeNpmTool, fakeCommands, writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { SAMPLE_PYPROJECT, LOCKED_PACKAGE_CASES, LICENSE_PACKAGE_JSON } from '#tests/config/checks/general/licenses.ts';
 
@@ -16,7 +17,7 @@ test.each([...LOCKED_PACKAGE_CASES])(
     async ({ file, text, expected }) => {
         const python = file === 'uv.lock';
         const manifest = python ? 'pyproject.toml' : 'package.json';
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['licenses'], { tables: '[licenses]\nallowed = ["MIT"]\n' }),
             [manifest]: python ? SAMPLE_PYPROJECT : LICENSE_PACKAGE_JSON,
             [python ? '.venv/installed' : 'node_modules/installed']: 'installed',
@@ -56,7 +57,7 @@ test.each([...LOCKED_PACKAGE_CASES])(
 test.each(['root', 'nearest', 'none'])(
     'licenses/allowed reads the %s lockfile for a nested project',
     async (location) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['licenses'], {
                 tables: '[licenses]\nallowed = ["MIT"]\n',
                 scopes: [{ path: 'apps/web' }],

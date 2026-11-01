@@ -37,19 +37,6 @@ export function fakeCommands(name?: string, spawn?: typeof spawnProcess): Mock<t
 }
 
 /**
-Record each npm command that gspot starts, other than npm --version, and run it as usual.
-*/
-export function recordNpmCommands(): Mock<typeof spawnProcess> & { commands: string[][] } {
-    const runProcess = processes.spawnProcess;
-    const commands: string[][] = [];
-    const spy = spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
-        if (command[0] === 'npm' && command[1] !== '--version') commands.push([...command]);
-        return runProcess(command, options);
-    });
-    return Object.assign(spy, { commands });
-}
-
-/**
 Fake the lookup and version output of these tools.
 */
 export function fakeToolExecutables(tools: Tool[]): DisposableStack {

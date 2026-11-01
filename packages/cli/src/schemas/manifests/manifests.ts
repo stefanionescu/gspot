@@ -14,17 +14,9 @@ import {
     INSTALLER_VERSION_MESSAGE,
 } from '#cli/config/manifests/tool.ts';
 
-const pathContainerSchema = z.strictObject({
-    open: z.string().min(1),
-    close: z.string(),
-    category: z.enum(NAMED_CATEGORIES),
-});
-
 const identifierCategorySchema = z.enum(NAMED_CATEGORIES);
 
-const sourcePathSchema = z.string().min(1).meta({ pathRole: 'source' });
-
-const wordListSchema = z.strictObject({ words: z.string().array() });
+const sourcePathSchema = z.string().min(1);
 
 export const namingOverrideSchema = z.strictObject({
     paths: sourcePathSchema.array().min(1).optional().meta({ description: 'Where the override applies.' }),
@@ -46,21 +38,6 @@ export const namingOverrideSchema = z.strictObject({
 
 export const writtenNamingOverrideSchema = namingOverrideSchema.extend({
     reason: z.string().min(1),
-});
-
-const categoryCasesSchema = z.strictObject({ cases: z.enum(CASE_NAMES).array() });
-
-const languageSchema = z.strictObject({
-    categories: z.record(z.string(), categoryCasesSchema),
-});
-
-export const namingDefaultsSchema = z.strictObject({
-    path_containers: pathContainerSchema.array(),
-    lists: z.object({ folders: wordListSchema }).catchall(wordListSchema),
-    allowed_names: z.string().array(),
-    allowed_phrases: z.string().array(),
-    languages: z.record(z.string(), languageSchema),
-    override: writtenNamingOverrideSchema.array(),
 });
 
 const minimumVersionSchema = z

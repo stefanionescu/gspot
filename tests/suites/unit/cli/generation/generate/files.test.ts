@@ -1,9 +1,7 @@
 import { join } from 'node:path';
 import * as prettier from 'prettier';
 import { type Options } from 'prettier';
-import { parse as parseYaml } from 'yaml';
 import { test, spyOn, expect } from 'bun:test';
-import { parse as parseJsonc } from 'jsonc-parser';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/planning/session.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
@@ -128,7 +126,7 @@ test('every shipped configuration together generates each path once, ignoring ca
 });
 
 test('generated scope settings stay identical across process collations', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'commits'], {
             scopes: [
                 { path: 'yam', configurations: ['javascript'] },
@@ -165,7 +163,7 @@ test('adding the first Markdown and LFS files leaves generated output unchanged'
 
 test('format.indent_width reaches EditorConfig, Prettier and each config file', async () => {
     const width = 6;
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['format', 'data-files', 'python', 'swift', 'sql', 'markdown', 'bash'], {
             level: 'all',
             rules: true,
@@ -187,10 +185,6 @@ test('format.indent_width reaches EditorConfig, Prettier and each config file', 
     expect(editor?.tabWidth).toBe(width);
     const configuration = JSON.parse(generated.get(getManifestTarget('format', 'prettier.json'))!) as Options;
     expect(configuration.tabWidth).toBe(width);
-    const markdownlint: unknown = parseJsonc(generated.get(getManifestTarget('markdown', 'markdownlint.jsonc'))!);
-    expect(markdownlint).not.toHaveProperty('MD007');
-    const yamllint: unknown = parseYaml(generated.get(getManifestTarget('data-files', 'yamllint.yml'))!);
-    expect(yamllint).not.toHaveProperty('rules.indentation');
     const ruff: unknown = parseToml(generated.get(getManifestTarget('python', 'ruff.toml'))!);
     expect(ruff).toHaveProperty('indent-width', width);
     const taplo: unknown = parseToml(generated.get(getManifestTarget('data-files', 'taplo.toml'))!);

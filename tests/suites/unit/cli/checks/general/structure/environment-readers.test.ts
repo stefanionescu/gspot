@@ -1,4 +1,3 @@
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/commands/check/run.ts';
@@ -10,6 +9,7 @@ import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     OS_VALUE_SOURCE,
@@ -18,7 +18,7 @@ import {
 } from '#tests/config/checks/general/structure/structure.ts';
 
 test('Swift environment reads outside the env files are reported; comments and strings are not', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'Sources/Screen.swift': `let live = ProcessInfo.processInfo.environment["KEY"]
 // ProcessInfo.processInfo.environment
 let literal = "ProcessInfo.processInfo.environment"
@@ -56,7 +56,7 @@ let spaced = ProcessInfo . processInfo . environment
 });
 
 test('Python reads through os aliases are reported; shadowed and unrelated names are not', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',
             tables: '[structure]\nenvironment_readers = ["environment.py"]\n',
@@ -85,7 +85,7 @@ test('Python reads through os aliases are reported; shadowed and unrelated names
 });
 
 test('each scope uses its own environment readers', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',
             scopes: [{ path: 'app', configurations: ['python'] }],

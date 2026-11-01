@@ -1,13 +1,15 @@
 import { test, expect } from 'bun:test';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { fakeTerminals } from '#tests/setup/system/fakes.ts';
 import { captureTerminal } from '#tests/setup/system/terminal.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 
 import {
-    getColors,
     printError,
     printResult,
     printWarning,
     setOutputOptions,
+    printUnexpectedError,
     runCancelableCommand,
 } from '#cli/system/terminal.ts';
 
@@ -30,12 +32,12 @@ test('a printed result removes escape sequences and format characters but keeps 
     using output = captureTerminal();
     const { stdout } = output;
     try {
-        setOutputOptions({ isJson: false, colored: true });
+        setOutputOptions({ isJson: false });
         const name = 'title\u001B]0;renamed\u0007\u001B[2Jcheck‮gnp.exe​⁦x⁩';
-        printResult({ text: `${getColors().red('failed')} ${name}\n`, json: {}, exitCode: 1 });
+        printResult({ text: `\u001B[31mfailed\u001B[39m ${name}\n`, json: {}, exitCode: 1 });
         expect(stdout).toStrictEqual(['\u001B[31mfailed\u001B[39m titlecheckgnp.exex\n']);
     } finally {
-        setOutputOptions({ isJson: false, colored: false });
+        setOutputOptions({ isJson: false });
     }
 });
 
@@ -44,10 +46,10 @@ test('a human error removes terminal controls while JSON preserves the message a
     using output = captureTerminal();
     const { stdout, stderr } = output;
     try {
-        setOutputOptions({ isJson: false, colored: false });
+        setOutputOptions({ isJson: false });
         printError({ error: 'filesystem', message });
         expect(stderr).toStrictEqual(['Beforeafter\n']);
-        setOutputOptions({ isJson: true, colored: false });
+        setOutputOptions({ isJson: true });
         printError({ error: 'filesystem', message });
         expect(stdout.join('')).not.toContain('\u001B');
         expect(JSON.parse(stdout.join(''))).toStrictEqual({
@@ -58,7 +60,7 @@ test('a human error removes terminal controls while JSON preserves the message a
             message,
         });
     } finally {
-        setOutputOptions({ isJson: false, colored: false });
+        setOutputOptions({ isJson: false });
     }
 });
 
@@ -66,16 +68,54 @@ test('warnings use stderr in text mode and join existing JSON notes without writ
     using output = captureTerminal();
     const { stdout, stderr } = output;
     try {
-        setOutputOptions({ isJson: false, colored: false });
+        setOutputOptions({ isJson: false });
         printWarning('Check\u001B[2K again.');
         expect(stderr).toStrictEqual(['[warn] Check again.\n']);
         stderr.length = 0;
-        setOutputOptions({ isJson: true, colored: false });
+        setOutputOptions({ isJson: true });
         printWarning('Check again.');
         printResult({ text: '', json: { notes: ['Existing note.'] }, exitCode: 0 });
         expect(stderr).toStrictEqual([]);
         expect(JSON.parse(stdout.join(''))).toMatchObject({ notes: ['Check again.', 'Existing note.'] });
     } finally {
-        setOutputOptions({ isJson: false, colored: false });
+        setOutputOptions({ isJson: false });
     }
+});
+
+test('unexpected command errors use the shared envelope and include their stack only in verbose output', () => {
+    using output = captureTerminal();
+    const { stdout } = output;
+    try {
+        setOutputOptions({ isJson: true });
+        const failure = new TypeError('Private implementation detail');
+        printUnexpectedError(failure, false);
+        printUnexpectedError(failure, true);
+        const brief: unknown = JSON.parse(stdout[0]!);
+        const detailed: unknown = JSON.parse(stdout[1]!);
+        expect(brief).toMatchObject({
+            version: cliPackage.version,
+            exitCode: 2,
+            error: 'unexpected',
+            message: `gspot stopped because of an internal error. Report it at ${cliPackage.bugs.url}.`,
+        });
+        expect(brief).not.toHaveProperty('stack');
+        expect(detailed).toMatchObject({ stack: failure.stack });
+    } finally {
+        setOutputOptions({ isJson: false });
+    }
+});
+
+test.each([true, false])('warning colors follow stderr when its terminal state is %p', (stderrIsTerminal) => {
+    using _environment = overrideEnvironment({ NO_COLOR: undefined, FORCE_COLOR: undefined });
+    using _terminals = fakeTerminals([
+        [process.stdout, !stderrIsTerminal],
+        [process.stderr, stderrIsTerminal],
+    ]);
+    using output = captureTerminal();
+    setOutputOptions({ isJson: false });
+    printWarning('Read the note.');
+    expect(output.stdout).toStrictEqual([]);
+    expect(output.stderr).toStrictEqual([
+        stderrIsTerminal ? '\u001B[33m[warn]\u001B[39m Read the note.\n' : '[warn] Read the note.\n',
+    ]);
 });

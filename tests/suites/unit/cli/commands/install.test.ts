@@ -55,10 +55,11 @@ test('an unexpected error during install prints the internal error once and chan
         return buildProcessResult();
     });
     const message =
-        'gspot stopped because of an internal error: Unexpected process failure. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.';
+        'gspot stopped because of an internal error. Report it at https://github.com/stefanionescu/gspot/issues.';
     const failed = await runGspot(sandbox.path, ['install', '--json']);
     expect(failed.code).toBe(2);
     expect(JSON.parse(failed.stdout)).toMatchObject({ error: 'unexpected', message });
+    expect(failed.stdout).not.toContain('Unexpected process failure.');
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 

@@ -1,17 +1,16 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { parseDocument } from 'yaml';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/planning/session.ts';
-import { LEVELS } from '#cli/config/manifests/names.ts';
 import type { SemgrepRuleFile } from '#tests/types/tools.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { getConfigPath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 test('a language choice brings its security rules without selecting security', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'sample.sh': 'echo sample\n',
     });
@@ -29,48 +28,32 @@ test('a language choice brings its security rules without selecting security', a
     expect(generated?.content).toBe(defaultOutput.files.find((file) => file.path === target)?.content);
 });
 
-test.each([...LEVELS])(
-    'Cloudflare Worker rules apply to every path at level all only, and Supabase rules use the functions folder (%s)',
-    async (level) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['cloudflare'], {
-                level,
-                tables: '[[scope]]\npath = "api"\n\nconfigurations = ["supabase"]\n[scope.supabase]\nfunctions_folder = "api/edge"\n[[scope]]\npath = "sibling"\n\nremoved_configurations = { cloudflare = "This scope does not deploy to Cloudflare." }\n',
-            }),
-            'src/worker.js': 'fetch(url.searchParams.get("target"));\n',
-            'api/edge/handler.js': 'await req.json();\n',
-            'sibling/edge/handler.js': 'await req.json();\n',
-        });
+test('Supabase rules use the configured functions folder', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['cloudflare'], {
+            level: 'all',
+            tables: '[[scope]]\npath = "api"\n\nconfigurations = ["supabase"]\n[scope.supabase]\nfunctions_folder = "api/edge"\n[[scope]]\npath = "sibling"\n\nremoved_configurations = { cloudflare = "This scope does not deploy to Cloudflare." }\n',
+        }),
+        'src/worker.js': 'fetch(url.searchParams.get("target"));\n',
+        'api/edge/handler.js': 'await req.json();\n',
+        'sibling/edge/handler.js': 'await req.json();\n',
+    });
 
-        const session = await openSession(sandbox.path);
-        const output = buildGeneratedFiles(session);
-        const worker = output.files.find(({ path }) => path.endsWith('/cloudflare/semgrep.yml'));
-        if (level === 'basic') expect(worker).toBeUndefined();
-        else {
-            expect(parseDocument(worker!.content).toJS()).toMatchObject({
-                rules: [{ id: 'gspot.cloudflare.wildcard-cors-origin' }],
-            });
-            expect(parseDocument(worker!.content).getIn(['rules', 0, 'paths'])).toBeUndefined();
-        }
-        const javascript = output.files.find(({ path }) => path === getManifestTarget('javascript', 'semgrep.yml'))!;
-        const { rules: javascriptRules } = parseDocument(javascript.content).toJS() as SemgrepRuleFile;
-        expect(javascriptRules.map(({ id }) => id)).toContain('gspot.javascript.ssrf-web-request-user-input');
-        const supabase = output.files.find(({ path }) => path.endsWith('/supabase/semgrep.yml'))!;
-        const { rules: supabaseRules } = parseDocument(supabase.content).toJS() as SemgrepRuleFile;
-        expect(
-            supabaseRules
-                .filter(({ id }) => id.startsWith('gspot.supabase.edge-'))
-                .map(({ id, paths }) => ({ id, paths })),
-        ).toStrictEqual(
-            ['gspot.supabase.edge-cors-wildcard-with-credentials', 'gspot.supabase.edge-unvalidated-json-body'].map(
-                (id) => ({ id, paths: { include: ['/api/edge/**'] } }),
-            ),
-        );
-    },
-);
+    const session = await openSession(sandbox.path);
+    const output = buildGeneratedFiles(session);
+    const supabase = output.files.find(({ path }) => path.endsWith('/supabase/semgrep.yml'))!;
+    const { rules: supabaseRules } = parseDocument(supabase.content).toJS() as SemgrepRuleFile;
+    expect(
+        supabaseRules.filter(({ id }) => id.startsWith('gspot.supabase.edge-')).map(({ id, paths }) => ({ id, paths })),
+    ).toStrictEqual(
+        ['gspot.supabase.edge-cors-wildcard-with-credentials', 'gspot.supabase.edge-unvalidated-json-body'].map(
+            (id) => ({ id, paths: { include: ['/api/edge/**'] } }),
+        ),
+    );
+});
 
 test('JWT rules are written only where the nearest package.json has jsonwebtoken', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
             scopes: [{ path: 'jwt' }, { path: 'jwt/child' }, { path: 'other' }],

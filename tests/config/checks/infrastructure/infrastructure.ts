@@ -121,7 +121,7 @@ export const NGINX_FAILURE_CASES = [
         name: 'an unavailable Docker daemon as missing',
         stderr: 'Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?',
         status: 'missing',
-        note: 'Start Docker: nginx/syntax runs nginx -T in a container.',
+        note: 'Start Docker, then run the check again.',
         findings: [],
     },
 ] as const;

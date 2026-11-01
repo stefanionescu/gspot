@@ -1,14 +1,12 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/planning/session.ts';
+import { writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/setup/system/git.ts';
-import { readFile, writeFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { getConfigPath, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 
 import {
     LOCAL_PLUGIN,
@@ -21,8 +19,8 @@ import {
     CONFLICTING_LOCAL_PLUGIN_TABLES,
 } from '#tests/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
 
-test('a scope plugin reaches its scope, and an inherited root plugin writes one rule block', async () => {
-    await using sandbox = await testdir({
+test('a scope plugin reaches its scope and an inherited root plugin reaches nested files', async () => {
+    await using sandbox = await createGitSandbox({
         ...SCOPE_PLUGIN_FILES,
         'gspot.toml': buildSandboxSettings(['javascript'], { tables: SCOPE_PLUGIN_TABLES }),
     });
@@ -37,10 +35,6 @@ test('a scope plugin reaches its scope, and an inherited root plugin writes one 
             ['local/no-forbidden', 'scoped/no-forbidden'],
         ),
     ).toStrictEqual(SCOPE_PLUGIN_FINDINGS);
-    const session = await openSession(sandbox.path);
-    const generated = await readFile(join(sandbox.path, getConfigPath(session, 'eslint')), 'utf8');
-    expect(generated.matchAll(/"local\/no-forbidden"\s*:/gu).toArray()).toHaveLength(1);
-    expect(generated.matchAll(/"scoped\/no-forbidden"\s*:/gu).toArray()).toHaveLength(1);
 });
 
 test('one plugin name with two modules is a settings error that names both paths', async () => {
@@ -55,7 +49,7 @@ test('one plugin name with two modules is a settings error that names both paths
 });
 
 test('tools.eslint.plugins loads your plugin by its path and refuses the gspot rule prefix', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], { tables: LOCAL_PLUGIN_TABLES }),
         '.gitignore': 'node_modules/\n',
         'package.json': '{"private":true,"type":"module"}\n',

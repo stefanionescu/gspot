@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { MAX_PERCENTAGE } from '#cli/config/units.ts';
 import { CASE_NAMES } from '#cli/config/manifests/manifests.ts';
+import { SETTING_LANGUAGES } from '#cli/config/settings/naming.ts';
 import type { ReasonedValue } from '#cli/types/settings/values.ts';
 import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
 import type { ReasonedSettingDefinition } from '#cli/types/settings/definitions.ts';
-import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 
 import {
     INDENT_MAX,
@@ -34,45 +34,73 @@ const formatFieldsSchema = z.strictObject({
     indent_style: z
         .enum(FORMAT_INDENT_STYLES)
         .optional()
-        .default(SETTING_DEFINITIONS['format.indent_style'].default)
-        .meta(SETTING_DEFINITIONS['format.indent_style']),
+        .default('space')
+        .meta({
+            configurations: ['format'],
+            description: 'The character of one indent level: space or tab.',
+        }),
     indent_width: z
         .number()
         .int()
         .min(1)
         .max(INDENT_MAX)
         .optional()
-        .default(SETTING_DEFINITIONS['format.indent_width'].default)
-        .meta(SETTING_DEFINITIONS['format.indent_width']),
+        .default(4)
+        .meta({
+            configurations: ['format'],
+            description: 'Spaces per indent level.',
+        }),
     print_width: z
         .number()
         .int()
         .min(PRINT_WIDTH_MIN)
         .max(PRINT_WIDTH_MAX)
         .optional()
-        .default(SETTING_DEFINITIONS['format.print_width'].default)
-        .meta(SETTING_DEFINITIONS['format.print_width']),
+        .default(120)
+        .meta({
+            configurations: ['format'],
+            description: 'The line width formatters wrap at.',
+        }),
     line_ending: z
         .enum(LINE_ENDINGS)
         .optional()
-        .default(SETTING_DEFINITIONS['format.line_ending'].default)
-        .meta(SETTING_DEFINITIONS['format.line_ending']),
+        .default('lf')
+        .meta({
+            configurations: ['format'],
+            description: 'The line ending every file uses: lf or crlf.',
+        }),
     final_newline: z
         .boolean()
         .optional()
-        .default(SETTING_DEFINITIONS['format.final_newline'].default)
-        .meta(SETTING_DEFINITIONS['format.final_newline']),
-    quotes: z.enum(QUOTE_STYLES).optional().meta(SETTING_DEFINITIONS['format.quotes']),
+        .default(true)
+        .meta({
+            configurations: ['format'],
+            description: 'Whether every file ends with a newline.',
+        }),
+    quotes: z
+        .enum(QUOTE_STYLES)
+        .optional()
+        .meta({
+            configurations: ['format'],
+            description:
+                'Single or double, for the languages where a formatter chooses. Unset, Python gets double quotes and the other languages single.',
+        }),
     trailing_commas: z
         .enum(TRAILING_COMMAS)
         .optional()
-        .default(SETTING_DEFINITIONS['format.trailing_commas'].default)
-        .meta(SETTING_DEFINITIONS['format.trailing_commas']),
+        .default('all')
+        .meta({
+            configurations: ['format'],
+            description: 'Where trailing commas go: all, es5, or none.',
+        }),
     semicolons: z
         .boolean()
         .optional()
-        .default(SETTING_DEFINITIONS['format.semicolons'].default)
-        .meta(SETTING_DEFINITIONS['format.semicolons']),
+        .default(true)
+        .meta({
+            configurations: ['format'],
+            description: 'Whether JavaScript and TypeScript statements end with semicolons.',
+        }),
 });
 
 export const relativePathSchema = z
@@ -95,16 +123,39 @@ const relativePathsSchema = relativePathSchema.array();
 export const nonemptyPathsSchema = relativePathsSchema.min(1);
 
 export const namingCategorySchema = z.strictObject({
-    max_characters: allowReasonedValue(z.number().int().positive(), SETTING_DEFINITIONS['naming.max_characters']),
-    max_words: allowReasonedValue(z.number().int().positive(), SETTING_DEFINITIONS['naming.max_words']),
-    cases: allowReasonedValue(z.enum(CASE_NAMES).array(), SETTING_DEFINITIONS['naming.cases']),
+    max_characters: allowReasonedValue(z.number().int().positive(), {
+        configurations: ['naming'],
+        description: 'The most characters one identifier may have.',
+        reason_when: 'raising',
+        languages: SETTING_LANGUAGES,
+        language_defaults: { swift: 40, sql: 55 },
+        default: 35,
+    }),
+    max_words: allowReasonedValue(z.number().int().positive(), {
+        configurations: ['naming'],
+        description: 'The most words one identifier may have.',
+        reason_when: 'raising',
+        languages: SETTING_LANGUAGES,
+        language_defaults: { swift: 5, sql: 7 },
+        default: 4,
+    }),
+    cases: allowReasonedValue(z.enum(CASE_NAMES).array(), {
+        configurations: ['naming'],
+        description:
+            'The case patterns that one identifier category accepts: camel, pascal, kebab, snake, upper-snake, pascal-extension (String+Format.swift), or timestamp-snake (20260103120000_create_users.sql). Ruff checks the case of Python classes, functions, and parameters, and SwiftLint checks Swift types, variables, parameters, and enum cases; this setting covers the rest.',
+        reason_when: 'adding',
+        languages: SETTING_LANGUAGES,
+        default: [] as [],
+    }),
 });
 
 namingCategorySchema.register(z.globalRegistry, { id: 'namingCategory' });
 
 const formatOverrideSchema = z
     .strictObject({
-        paths: nonemptyPathsSchema.meta(SETTING_DEFINITIONS['format.override.paths']),
+        paths: nonemptyPathsSchema.meta({
+            description: 'The files these formatting values apply to.',
+        }),
         indent_style: formatFieldsSchema.shape.indent_style
             .unwrap()
             .describe(formatFieldsSchema.shape.indent_style.description as string),
@@ -136,8 +187,11 @@ const formatOverrideSchema = z
 export const formatSchema = formatFieldsSchema.extend({
     override: formatOverrideSchema
         .array()
-        .default(SETTING_DEFINITIONS['format.override'].default)
-        .meta(SETTING_DEFINITIONS['format.override']),
+        .default([] as [])
+        .meta({
+            configurations: ['format'],
+            description: 'Formatting options for repository-relative paths, in order.',
+        }),
 });
 
 /**
@@ -162,5 +216,5 @@ export function allowReasonedValue<Output, Input>(
                 .transform((reasoned) => reasoned.value),
         ])
         .default(definition.default)
-        .meta(definition);
+        .meta({ ...definition, reasoned: true });
 }

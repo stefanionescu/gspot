@@ -23,8 +23,7 @@ export type ErrorCode =
     | 'check'
     | 'tool'
     | 'output'
-    | 'skip'
-    | 'prompt';
+    | 'skip';
 
 export type SpawnResult = {
     code: number;

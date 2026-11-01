@@ -1,11 +1,11 @@
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { FUNCTION_SIZE_SOURCE } from '#tests/config/checks/language/python.ts';
 
 test('a Python function over limits.python.function_lines is reported, counting code lines only', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',
             tables: '[limits.python]\nfunction_lines = 3\n',
@@ -19,7 +19,7 @@ test('a Python function over limits.python.function_lines is reported, counting 
 });
 
 test('Python function size excludes a multiline docstring and keeps comment-like string lines', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',
             tables: '[limits.python]\nfunction_lines = 3\n',

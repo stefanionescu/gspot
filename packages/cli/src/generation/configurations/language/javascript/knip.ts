@@ -13,7 +13,7 @@ import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import type { Settings, TableSettings } from '#cli/types/settings/settings.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
-import { convertToGlobs, buildIgnoreSections, listCheckIgnoreSections } from '#cli/generation/ignores.ts';
+import { convertToGlobs, listCheckIgnoreSections } from '#cli/generation/ignores.ts';
 
 import {
     KNIP_TABLE,
@@ -117,7 +117,7 @@ export function buildKnipFile(planned: PlannedConfig): string {
     const options = getTable(scope.settings, KNIP_TABLE);
     const scanner = getTable(scope.settings, 'dependencies').bun_scanner;
     const ignoredGlobs = convertToGlobs([
-        ...buildIgnoreSections(planned.session),
+        ...planned.ignoreSections,
         ...listCheckIgnoreSections(planned.scope.settings, KNIP_CHECK),
     ]);
     const tools = listDistinctTools(configurations);

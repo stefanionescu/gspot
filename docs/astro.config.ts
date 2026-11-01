@@ -1,61 +1,55 @@
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import starlight from '@astrojs/starlight';
 import starlightLlmsTxt from 'starlight-llms-txt';
 import { SIDEBAR } from '#docs/config/navigation.ts';
-import { CLI_REFERENCE } from '#docs/reference/cli.ts';
-import { SCHEMA_FILE } from '#cli/config/files/names.ts';
 import { pruneUnusedStyles } from '#docs/unused-styles.ts';
-import { mkdir, copyFile, writeFile } from 'node:fs/promises';
-import { LLMS_PAGES, AGENT_STEPS } from '#docs/config/setup.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
+import { LLMS_PAGES, AGENT_STEPS } from '#docs/reference/setup.ts';
 import { defineConfig, passthroughImageService } from 'astro/config';
-import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
 
 import {
     FAVICON,
     EDIT_URL,
     SITE_TITLE,
     SOCIAL_IMAGE,
-    FONT_PACKAGES,
     REPOSITORY_URL,
     APPLE_TOUCH_ICON,
     SOCIAL_IMAGE_ALT,
     SOCIAL_IMAGE_SIZE,
 } from '#docs/config/site.ts';
 
+function readReadmeSentence(): string {
+    const readme = readFileSync(new URL('../packages/cli/README.md', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
+    const [, paragraph] = readme.split('\n\n');
+    if (paragraph === undefined || paragraph === '')
+        throw new Error('README.md in packages/cli must open with a paragraph after its title.');
+    const [first] = new Intl.Segmenter('en', { granularity: 'sentence' }).segment(
+        paragraph.replaceAll('\n', ' ').trim(),
+    );
+    if (first === undefined) throw new Error('README.md in packages/cli must contain an opening sentence.');
+    return first.segment.trim();
+}
+
+const README_OPENING = readReadmeSentence();
+
 export default defineConfig({
     site: cliPackage.homepage,
     image: { service: passthroughImageService() },
     prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
     vite: {
+        define: { 'import.meta.env.PUBLIC_GSPOT_README_OPENING': JSON.stringify(README_OPENING) },
         resolve: {
             tsconfigPaths: true,
             alias: {
                 '#docs': fileURLToPath(new URL('src', import.meta.url)),
-                '#starlight-style': fileURLToPath(
-                    new URL('node_modules/@astrojs/starlight/dist/style', import.meta.url),
-                ),
+                '#cli-package': fileURLToPath(new URL('../packages/cli/package.json', import.meta.url)),
             },
         },
         oxc: { target: 'es2022' },
         environments: { prerender: { resolve: { external: ['satteri'] } } },
     },
     integrations: [
-        {
-            name: 'site-files',
-            hooks: {
-                'astro:build:done': async ({ dir }) => {
-                    await writeFile(new URL(SCHEMA_FILE, dir), JSON.stringify(CLI_REFERENCE.schema) + '\n');
-                    const licenses = new URL('licenses/', dir);
-                    await mkdir(licenses, { recursive: true });
-                    for (const font of FONT_PACKAGES) {
-                        await copyFile(
-                            new URL(`node_modules/@fontsource-variable/${font}/LICENSE`, import.meta.url),
-                            new URL(`${font}.txt`, licenses),
-                        );
-                    }
-                },
-            },
-        },
         starlight({
             title: SITE_TITLE,
             favicon: FAVICON,
@@ -63,7 +57,7 @@ export default defineConfig({
                 starlightLlmsTxt({
                     projectName: 'gspot',
                     description: cliPackage.description,
-                    details: AGENT_STEPS,
+                    details: `${README_OPENING}\n\n${AGENT_STEPS}`,
                     ...LLMS_PAGES,
                 }),
             ],
@@ -81,7 +75,9 @@ export default defineConfig({
                 { tag: 'link', attrs: { rel: 'apple-touch-icon', href: APPLE_TOUCH_ICON } },
             ],
             components: {
+                Head: './src/components/starlight/Head.astro',
                 Header: './src/components/starlight/Header.astro',
+                Hero: './src/components/home/hero/Hero.astro',
                 SiteTitle: './src/components/starlight/SiteTitle.astro',
                 ThemeProvider: './src/components/starlight/theme/Provider.astro',
                 ThemeSelect: './src/components/starlight/theme/Select.astro',

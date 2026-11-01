@@ -41,9 +41,4 @@ export const USE_CASES = [
         icon: ['M12 16v5', 'M8 3h8l-1 6 3 3v2H6v-2l3-3-1-6z'],
     },
 ] as const;
-export const CODE_TOKENS =
-    /(?<string>'[^']*')|(?<keyword>\b(?:import type|import|from|export async function|try|catch|await)\b)|(?<type>\bCart\b)|(?<function>\b(?:pay|charge)\b)/gu;
 export const SUMMARY_SENTENCE_BREAK = /(?<=\.) /u;
-export const URL_BREAK = /(?<=\/)(?!\/)/u;
-export const COPY_FAILED_MESSAGE = 'Copy failed. Select and copy the text.';
-export const COPIED_MESSAGE = 'Copied.';

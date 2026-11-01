@@ -1,10 +1,10 @@
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     TRIVIAL_FILES,
@@ -17,7 +17,7 @@ import {
 } from '#tests/config/checks/general/structure/trivial-functions.ts';
 
 test('Swift reports constructors, accessors, decorated methods, and nested functions, and counts the statements of closures toward their function', async () => {
-    await using initialSandbox = await testdir({
+    await using initialSandbox = await createGitSandbox({
         ['example.swift']: ACCESSOR_DECLARATIONS,
         'gspot.toml': buildSandboxSettings(['swift'], {
             level: 'all',
@@ -28,7 +28,7 @@ test('Swift reports constructors, accessors, decorated methods, and nested funct
     expect(initial.map(({ rule, line }) => ({ rule, line }))).toStrictEqual(
         [2, 4, 5, 7].map((line) => ({ rule: 'trivial-function', line })),
     );
-    await using increasedSandbox = await testdir({
+    await using increasedSandbox = await createGitSandbox({
         ['example.swift']: ACCESSOR_DECLARATIONS,
         'gspot.toml': buildSandboxSettings(['swift'], {
             level: 'all',
@@ -44,7 +44,7 @@ test('Swift reports constructors, accessors, decorated methods, and nested funct
 test.each([...TRIVIAL_FUNCTION_CASES])(
     'Swift $name reports the trivial functions at lines $lines',
     async ({ source, lines }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             ['Source.swift']: source,
             'gspot.toml': buildSandboxSettings(['swift'], {
                 level: 'all',
@@ -59,7 +59,7 @@ test.each([...TRIVIAL_FUNCTION_CASES])(
 );
 
 test('Python counts the statements of nested functions, lambdas, and control flow, reports decorated methods, and skips lambdas in a dict', async () => {
-    await using initialSandbox = await testdir({
+    await using initialSandbox = await createGitSandbox({
         ['example.py']: NESTED_PYTHON_FUNCTIONS,
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',
@@ -68,7 +68,7 @@ test('Python counts the statements of nested functions, lambdas, and control flo
     });
     const initial = await runSandboxCheck(initialSandbox.path, 'structure/trivial-functions');
     expect(initial.map(({ rule, line }) => ({ rule, line }))).toStrictEqual([{ rule: 'trivial-function', line: 3 }]);
-    await using increasedSandbox = await testdir({
+    await using increasedSandbox = await createGitSandbox({
         ['example.py']: NESTED_PYTHON_FUNCTIONS,
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',
@@ -82,7 +82,7 @@ test('Python counts the statements of nested functions, lambdas, and control flo
 });
 
 test('Python reports overloads, abstract and protocol methods, properties, setters, and stubs', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         ['interfaces.py']: PYTHON_INTERFACES,
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',
@@ -99,7 +99,7 @@ test.each([...STATEMENT_COUNT_CASES])(
     '%s reports a function of two statements, not counting comments and docstrings',
     async (language, source) => {
         const extension = ({ python: 'py', bash: 'sh', swift: 'swift' } as const)[language];
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             [`example.${extension}`]: source,
             'gspot.toml': buildSandboxSettings([language], {
                 level: 'all',
@@ -119,7 +119,7 @@ test.each([...STATEMENT_COUNT_CASES])(
 );
 
 test.each([...TRIVIAL_FILES])('$name gets the findings $expected', async ({ language, file, source, expected }) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         [file]: source,
         'gspot.toml': buildSandboxSettings([language], {
             level: 'all',

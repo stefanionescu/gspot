@@ -1,8 +1,8 @@
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     CLOUDFLARE_HEADERS,
@@ -11,7 +11,7 @@ import {
 } from '#tests/config/checks/platform/platform.ts';
 
 test('cloudflare/redirects reports each malformed redirect and each status Cloudflare does not support', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['cloudflare'], { level: 'all' }),
         _redirects: CLOUDFLARE_REDIRECTS,
     });
@@ -28,7 +28,7 @@ test('cloudflare/redirects reports each malformed redirect and each status Cloud
 });
 
 test('cloudflare/headers reports a header before any path, a block without a leading slash, and a header without a colon', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['cloudflare'], { level: 'all' }),
         _headers: CLOUDFLARE_HEADERS,
     });
@@ -45,7 +45,7 @@ test('cloudflare/headers reports a header before any path, a block without a lea
 test.each(SECURITY_HEADER_CASES)(
     'cloudflare/headers checks global security headers with $name',
     async ({ text, missing }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['cloudflare']),
             _headers: text,
         });

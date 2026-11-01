@@ -24,19 +24,6 @@
 
 :root {
     --target-size: 44px;
-    --home-finding-bg: color-mix(in srgb, var(--brand-tangerine) 14%, transparent);
-    --home-fixed-bg: color-mix(in srgb, #88a5ff 16%, transparent);
-    --home-pass: var(--sl-color-accent-high);
-    --code-text: #d6deeb;
-    --code-keyword: #c792ea;
-    --code-string: #ecc48d;
-    --code-function: #82aaff;
-    --code-type: #ffcb8b;
-    --code-comment: #8b9ab0;
-    --code-muted: #7d8aa0;
-    --home-width: 1200px;
-    --home-section-space: 64px;
-    --home-radius: 8px;
 
     color-scheme: dark;
 
@@ -74,17 +61,6 @@
 }
 
 :root[data-theme='light'] {
-    --home-finding-bg: color-mix(in srgb, var(--brand-tangerine) 12%, transparent);
-    --home-fixed-bg: color-mix(in srgb, #2457ff 10%, transparent);
-    --home-pass: var(--sl-color-accent-high);
-    --code-text: #403f53;
-    --code-keyword: #8a3fb5;
-    --code-string: #a2453f;
-    --code-function: #3b61b0;
-    --code-type: #8a5a00;
-    --code-comment: #5f6b7a;
-    --code-muted: #6b7686;
-
     color-scheme: light;
 
     --sl-color-white: #141b30;
@@ -110,7 +86,6 @@
 
 @media (width >= 50rem) {
     :root {
-        --home-section-space: 80px;
         --sl-content-pad-x: 1.5rem;
         --sl-text-h1: 2.5rem;
     }
@@ -118,7 +93,6 @@
 
 @media (width >= 72rem) {
     :root {
-        --home-section-space: 96px;
         --sl-mobile-toc-height: 0rem;
     }
 }
@@ -151,10 +125,6 @@ html[data-has-hero] .content-panel {
 
 html[data-has-hero] main {
     padding-top: 0;
-}
-
-html[data-has-hero] h1 {
-    margin-top: 0;
 }
 
 header.header {
@@ -333,7 +303,10 @@ mobile-starlight-toc .display-current {
     padding-top: 0;
 }
 
+.hero h1,
+.section h2,
 :root[data-has-sidebar] main h1 {
+    color: var(--sl-color-white);
     font-weight: 550;
     line-height: 1.15;
     letter-spacing: -0.035em;
@@ -376,7 +349,8 @@ mobile-starlight-toc .display-current {
     text-decoration-color: color-mix(in srgb, currentcolor 40%, transparent);
 }
 
-.sl-markdown-content :not(pre) > code {
+.sl-markdown-content :not(pre) > code,
+.landing :not(pre) > code {
     display: inline-block;
     max-width: 100%;
     overflow-wrap: break-word;
@@ -413,6 +387,11 @@ mobile-starlight-toc .display-current {
 .sl-markdown-content :is(th, td),
 .sl-markdown-content :is(th, td) code {
     overflow-wrap: anywhere;
+}
+
+.sl-markdown-content th,
+.sl-markdown-content td code {
+    white-space: nowrap;
 }
 
 .sl-markdown-content :is(th, td) {
@@ -454,15 +433,29 @@ site-search input:focus-visible {
     outline-offset: 0;
 }
 
+.icon-button,
 .mobile-preferences .social-icons a {
-    display: inline-grid;
-    place-items: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: var(--target-size);
     height: var(--target-size);
     margin: 0;
     padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
     color: var(--sl-color-gray-1);
     font-size: 1.25rem;
+    cursor: pointer;
+}
+
+@media (hover: hover) {
+    .icon-button:hover,
+    .mobile-preferences .social-icons a:hover {
+        background: var(--sl-color-gray-6);
+        color: var(--sl-color-white);
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {

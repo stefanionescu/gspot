@@ -10,7 +10,7 @@ import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { includeFolderContents } from '#cli/system/matchers.ts';
 import { type PlannedConfig } from '#cli/types/generation/files.ts';
 import { type Settings, type WrittenFormat } from '#cli/types/settings/settings.ts';
-import { keepFirstPatterns, buildIgnoreSections, listCheckIgnoreSections } from '#cli/generation/ignores.ts';
+import { keepFirstPatterns, listCheckIgnoreSections } from '#cli/generation/ignores.ts';
 import { type ScopeFormat, type FormatOverride, type PrettierPlugin } from '#cli/types/generation/formatting.ts';
 
 import {
@@ -172,16 +172,15 @@ Build .prettierignore: the ignored paths in the shared section order, with the w
 @param planned the config file to build.
 */
 export function buildPrettierignoreFile(planned: PlannedConfig): string {
-    const ordered = [
-        ...buildIgnoreSections(planned.session),
-        ...listCheckIgnoreSections(planned.scope.settings, PRETTIER_CHECK),
-    ].map((section) => ({
-        ...section,
-        patterns: [
-            ...section.patterns.filter((pattern) => !pattern.startsWith('!')).toSorted(compareText),
-            ...section.patterns.filter((pattern) => pattern.startsWith('!')).toSorted(compareText),
-        ],
-    }));
+    const ordered = [...planned.ignoreSections, ...listCheckIgnoreSections(planned.scope.settings, PRETTIER_CHECK)].map(
+        (section) => ({
+            ...section,
+            patterns: [
+                ...section.patterns.filter((pattern) => !pattern.startsWith('!')).toSorted(compareText),
+                ...section.patterns.filter((pattern) => pattern.startsWith('!')).toSorted(compareText),
+            ],
+        }),
+    );
     const lines = keepFirstPatterns(ordered).flatMap(({ title, patterns }) =>
         patterns.length === 0
             ? []

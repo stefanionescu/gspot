@@ -38,19 +38,19 @@ test('--changed compares with the merge base, names its base, and a folder argum
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, 'web/source.txt'), 'working change');
     const checked = parseCheckReport(
-        await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', '--json', '--', 'api']),
+        await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', 'api', '--json']),
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     expect(checked.report.comparison).toStrictEqual({ content: 'working-tree', reference: 'refs/heads/base' });
-    expect(checked.report.checks[0]?.reproduce).toBe('gspot check api --only sandbox/paths --changed refs/heads/base');
+    expect(checked.report.checks[0]?.reproduce).toBe('gspot check api --only sandbox/paths --base refs/heads/base');
     expect(checked.report.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toStrictEqual([
         'api/source.txt',
     ]);
     const explicit = parseCheckReport(
-        await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', 'base', '--json']),
+        await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--base', 'base', '--json']),
     );
     expect(explicit.code, explicit.stdout + explicit.stderr).toBe(1);
-    expect(explicit.report.checks[0]?.reproduce).toBe('gspot check --only sandbox/paths --changed base');
+    expect(explicit.report.checks[0]?.reproduce).toBe('gspot check --only sandbox/paths --base base');
     expect(
         explicit.report.checks
             .flatMap((check) => check.findings.map((finding) => finding.message))
@@ -75,7 +75,7 @@ test('--changed without an upstream names the fix, and uses the remote default b
 });
 
 test.each([...ALL_FILES_BASES])(
-    '--changed $reference, as CI gives for a new branch, checks every file and says why',
+    '--base $reference, as CI gives for a new branch, checks every file and says why',
     async ({ reference, message }) => {
         await using sandbox = await testdir();
         await prepareChangedRepository(sandbox.path, {
@@ -86,7 +86,7 @@ test.each([...ALL_FILES_BASES])(
         runGitStep(sandbox.path, ['init', '-b', 'topic']);
         commitAll(sandbox.path);
         const result = parseCheckReport(
-            await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', reference, '--json']),
+            await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--base', reference, '--json']),
         );
         expect(result.code, result.stdout + result.stderr).toBe(1);
         expect(result.report.comparison).toBeUndefined();
@@ -95,12 +95,13 @@ test.each([...ALL_FILES_BASES])(
                 .flatMap((check) => check.findings.map((finding) => finding.message))
                 .toSorted(compareText),
         ).toStrictEqual(['api/source.txt', 'web/source.txt']);
-        const text = await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', reference]);
-        expect(text.stdout).toStartWith(`${message}\n`);
+        const text = await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--base', reference]);
+        expect(text.stdout).toContain(`note     ${message}\n`);
+        expect(result.report.notes).toContain(message);
     },
 );
 
-test('a shallow clone explains how to fetch the missing history', async () => {
+test('an absent full base hash in a shallow clone checks every file and identifies the base', async () => {
     await using sandbox = await testdir();
     const source = join(sandbox.path, 'source');
     await prepareChangedRepository(source, { 'api/source.txt': 'before' });
@@ -114,12 +115,14 @@ test('a shallow clone explains how to fetch the missing history', async () => {
         'check',
         '--only',
         'sandbox/paths',
-        '--changed',
+        '--base',
         base,
         '--json',
     ]);
-    expect(result.code).toBe(2);
-    expect((JSON.parse(result.stdout) as CommandFailureJson).message).toBe(
-        `Git merge-base failed for ${base}: fatal: Not a valid commit name ${base}. History is cut; run git fetch --unshallow.`,
-    );
+    const checked = parseCheckReport(result);
+    expect(result.code, result.stdout + result.stderr).toBe(1);
+    expect(checked.report.notes).toContain(`Checked every file: base ${base} is not present in this clone.`);
+    expect(checked.report.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toStrictEqual([
+        'api/source.txt',
+    ]);
 });

@@ -26,7 +26,7 @@ and temporary notes out of shipped content. Examples use fictional people, safe 
 
 <!-- level: all -->
 
-Use active voice when the actor matters. Address the reader as you in procedures. Use imperatives for requirements and
+Use active voice. Address the reader as you in procedures. Use imperatives for requirements and
 label optional steps. Put a condition before its action and keep one main idea per sentence. Name the subject instead of
 relying on an ambiguous pronoun.
 
@@ -46,6 +46,9 @@ term for each concept. Dates shown to people include their time zone; machine va
 - Name the thing, not its place on the page: no `see above`, `the following section`, or `this guide explains`.
 - Write `because` or `after` instead of `since`.
 - Use a comma, a colon, or a period instead of an em dash or a double hyphen. Write `to` instead of a dash in a range.
+- Avoid parenthetical asides. Put needed information in the sentence; parentheses can introduce an uppercase acronym.
+- Put commas and periods inside quotation marks.
+- Address the reader as you. Write no first-person pronouns or exclamation marks.
 - Use words instead of an emoji or an arrow.
 - Put a file path in code formatting, and write a placeholder as `<kebab-case>`.
 - Write the page title in title case and every lower heading in sentence case, with no end punctuation.

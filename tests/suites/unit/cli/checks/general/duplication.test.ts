@@ -1,7 +1,7 @@
+import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { join, toNamespacedPath } from 'node:path';
-import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -11,10 +11,11 @@ import { fakeNpmTool } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { JSCPD_SCOPE_FINDINGS } from '#tests/config/checks/general/general.ts';
 
 async function prepareDuplicationSandbox(resources: AsyncDisposableStack): Promise<string> {
-    const folder = resources.use(await testdir());
+    const folder = resources.use(await createGitSandbox({}));
     await fakeNpmTool(folder.path, 'jscpd');
     await createFileTree(folder.path, {
         'gspot.toml': buildSandboxSettings(['bash', 'duplication'], { level: 'all' }),
@@ -39,7 +40,7 @@ test.each([1, 0])(
         expect(folders, JSON.stringify(failed.report)).toHaveLength(1);
         expect(failed.report.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'error', findings: [] }]);
         expect(failed.report.checks[0]!.note).toBe(
-            `The duplication/jscpd check failed: The jscpd command ${code === 0 ? 'wrote no report' : 'failed'}: The scanner could not write its report.`,
+            `The jscpd command ${code === 0 ? 'wrote no report' : 'failed'}: The scanner could not write its report.`,
         );
         expect(await isOnDisk(folders[0]!)).toBe(false);
     },

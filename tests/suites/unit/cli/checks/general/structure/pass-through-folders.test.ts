@@ -1,10 +1,10 @@
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('a folder whose only child is one folder is reported, and a file beside the folder clears it', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
         'src/index.ts': 'export const index = 1;\n',
         'src/models/user/name.ts': 'export const name = 1;\n',
@@ -18,7 +18,7 @@ test('a folder whose only child is one folder is reported, and a file beside the
             message: 'The folder src/models/ holds only the folder user/. Remove one of the two levels.',
         },
     ]);
-    await using grouped = await testdir({
+    await using grouped = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
         'src/index.ts': 'export const index = 1;\n',
         'src/models/index.ts': 'export const index = 1;\n',
@@ -28,7 +28,7 @@ test('a folder whose only child is one folder is reported, and a file beside the
 });
 
 test('a child scope counts as a child of its parent folder, and a scope folder is not reported', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], {
             level: 'all',
             scopes: [{ path: 'apps/web', configurations: ['typescript'] }],
@@ -44,7 +44,7 @@ test('a child scope counts as a child of its parent folder, and a scope folder i
 });
 
 test('installed dependency folders are not reported', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
         'index.ts': 'export const index = 1;\n',
         'node_modules/package/lib/index.ts': 'export const index = 1;\n',

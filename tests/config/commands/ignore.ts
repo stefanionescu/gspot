@@ -36,6 +36,5 @@ export const LITERAL_ROUTE_CASES = [
         folder: 'app/[id]',
         path: 'app/[id]/**',
         escaped: String.raw`app/\[id\]/**`,
-        removed: true,
     },
 ] as const;

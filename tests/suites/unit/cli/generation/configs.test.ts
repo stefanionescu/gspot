@@ -3,9 +3,10 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/planning/session.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('a check copy builds the config files of the repository, not of the copy folder', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], {
             scopes: [{ path: 'docs', configurations: ['typescript'] }],
         }),

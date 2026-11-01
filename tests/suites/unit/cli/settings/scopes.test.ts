@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
+import { createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
 import { TWO_WORDS } from '#tests/config/ignores.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -10,6 +10,7 @@ import { type Scope } from '#cli/types/settings/inheritance.ts';
 import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { getLimit, getTable, listIgnores, selectForScope, listIgnoredRules } from '#cli/settings/scopes.ts';
 
 import {
@@ -22,7 +23,7 @@ import {
 } from '#tests/config/settings/settings.ts';
 
 async function readNestedScopes(): Promise<Scope[]> {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': NESTED_SCOPE_SETTINGS,
         'entry.sh': 'echo root\n',
         'api/entry.sh': 'echo api\n',
@@ -39,7 +40,7 @@ test.each(
         ['', 'app'].map((scope) => ({ name, files, installer, scope })),
     ),
 )('the site build command defaults to $installer in "$scope" ($name)', async ({ files, installer, scope }) => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const settings =
         scope === ''
             ? buildSandboxSettings(['site'])
@@ -55,7 +56,7 @@ test.each(
 });
 
 test('a scope keeps a written site build command including empty and spaced arguments', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const table = parseToml(
         buildSandboxSettings([], { scopes: [{ path: 'app', configurations: ['site'] }] }),
     ) as TomlTable;
@@ -77,7 +78,7 @@ test('an ignore with a rule and paths turns the rule off in its scope and the sc
 });
 
 test('a per-scope limit overrides a root language limit in the scope view', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python'], {
             rules: true,
             tables: '[limits.python]\nfile_lines = 300\n[[scope]]\npath = "api"\nlimits.file_lines = 100\n',
@@ -91,7 +92,7 @@ test('a per-scope limit overrides a root language limit in the scope view', asyn
 });
 
 test('OpenAPI stays off without a document and in a scope that removes it', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['openapi'], OPENAPI_SCOPE_SETTINGS),
         'api/swagger.yaml': 'openapi: 3.1.0\n',
     });
@@ -105,7 +106,7 @@ test('OpenAPI stays off without a document and in a scope that removes it', asyn
 });
 
 test('Postgres client schemas come from Supabase or from gspot.toml', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['postgres'], POSTGRES_SCOPE_SETTINGS),
         'migration.sql': 'CREATE TABLE public.entries (id int);\n',
         'api/migration.sql': 'CREATE TABLE public.entries (id int);\n',
@@ -144,7 +145,7 @@ test.each([...PROJECT_SCOPE_CASES])('scope $scope selects $name: $selected', ({ 
 });
 
 test('a rule option named reason is passed on and is not a gspot reason', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml':
             'configurations = ["css"]\n[tools.stylelint.rules]\nselector-class-pattern = ["^[a-z]+$", { reason = false }]\n',
     });
@@ -154,7 +155,7 @@ test('a rule option named reason is passed on and is not a gspot reason', async 
 });
 
 test('a language limit overrides the shared limit in the root and in a child scope', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python', 'swift'], {
             tables: '[limits]\nfunction_parameters = 2\n[limits.python]\nfunction_parameters = { value = 8, reason = "The project API declares eight required parameters." }\n[[scope]]\npath = "api"\n',
         }),
@@ -176,7 +177,7 @@ test('a language limit overrides the shared limit in the root and in a child sco
 });
 
 test('an ignore without a check applies to every check', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': '[[ignore]]\npaths = ["generated/**"]\nreason = "The generator owns these files."\n',
     });
     const { scopes } = await openSession(sandbox.path);
@@ -187,7 +188,7 @@ test('an ignore without a check applies to every check', async () => {
 });
 
 test('a table rule option keeps its value and reason fields', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml':
             'configurations = ["css"]\n[tools.stylelint.rules]\nselector-class-pattern = {value = "^[a-z]+$", reason = "The style rule receives both fields."}\n',
     });

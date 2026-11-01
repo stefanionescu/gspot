@@ -79,24 +79,13 @@ function hasUnmanagedScanner(session: Session, writer: Files): boolean {
 }
 
 function formatGeneratedChanges(action: string, paths: string[]): string[] {
-    const gspotCount = action === 'removed' ? 0 : paths.filter((path) => path.startsWith(`${GSPOT_FOLDER}/`)).length;
-    const outside = action === 'removed' ? paths : paths.filter((path) => !path.startsWith(`${GSPOT_FOLDER}/`));
+    const gspotCount = paths.filter((path) => path.startsWith(`${GSPOT_FOLDER}/`)).length;
+    const outside = paths.filter((path) => !path.startsWith(`${GSPOT_FOLDER}/`));
     const label = action.padEnd(CHANGE_LABEL_WIDTH);
     return [
         ...(gspotCount === 0 ? [] : [`${label}${formatCount(gspotCount, GENERATED_FILE_NOUN)} in ${GSPOT_FOLDER}/`]),
         ...outside.map((path) => `${label}${path}`),
     ];
-}
-
-/**
-Say that the generated files need no change.
-
-@param count how many files gspot generates.
-@returns the sentence, with the verb agreeing with the count.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The apply command and its dry run print this one sentence.
-export function formatUpToDate(count: number): string {
-    return `No change: the ${formatCount(count, GENERATED_FILE_NOUN)} ${count === 1 ? 'is' : 'are'} up to date.`;
 }
 
 /**
@@ -110,7 +99,12 @@ export function formatApplyReport(report: ApplyReport): string {
         ...formatGeneratedChanges('updated', report.updated),
         ...formatGeneratedChanges('removed', report.removed),
     ];
-    if (lines.length === 0 && report.notes.length === 0) lines.push(formatUpToDate(report.unchanged.length));
+    if (lines.length === 0) {
+        const count = report.unchanged.length;
+        lines.push(
+            `No change: the ${formatCount(count, GENERATED_FILE_NOUN)} ${count === 1 ? 'is' : 'are'} up to date.`,
+        );
+    }
     lines.push(...report.notes.map((note) => `note     ${note}`));
     return `${lines.join('\n')}\n`;
 }
@@ -213,7 +207,7 @@ export async function writeSettingsEdit(
     report.notes.push(...(options.notes ?? []));
     const written = report.written.length + report.updated.length + report.removed.length;
     const unchanged = written === 0 ? 'No change: gspot.toml already says this.' : 'gspot.toml already says this.';
-    const shown = result.changed ? summary : unchanged;
+    const shown = result.changed ? summary : (options.unchangedSummary ?? unchanged);
     return {
         text: `${shown}\n${formatApplyReport(report)}`,
         json: { ...report, summary: shown, changed: result.changed },

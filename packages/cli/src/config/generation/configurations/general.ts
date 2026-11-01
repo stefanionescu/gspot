@@ -3,21 +3,6 @@ import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 
 export const COMMITLINT_ERROR_SEVERITY = 2;
 
-const COMMIT_LINE_LENGTH = 72;
-
-export const COMMITLINT_RULES = {
-    'type-case': [COMMITLINT_ERROR_SEVERITY, 'always', 'lower-case'],
-    'type-empty': [COMMITLINT_ERROR_SEVERITY, 'never'],
-    'scope-case': [COMMITLINT_ERROR_SEVERITY, 'always', 'kebab-case'],
-    'subject-empty': [COMMITLINT_ERROR_SEVERITY, 'never'],
-    'subject-full-stop': [COMMITLINT_ERROR_SEVERITY, 'never', '.'],
-    'subject-case': [COMMITLINT_ERROR_SEVERITY, 'never', ['start-case', 'pascal-case', 'upper-case']],
-    'header-max-length': [COMMITLINT_ERROR_SEVERITY, 'always', COMMIT_LINE_LENGTH],
-    'body-leading-blank': [COMMITLINT_ERROR_SEVERITY, 'always'],
-    'body-max-line-length': [COMMITLINT_ERROR_SEVERITY, 'always', COMMIT_LINE_LENGTH],
-    'footer-leading-blank': [COMMITLINT_ERROR_SEVERITY, 'always'],
-} as const;
-
 export const COMMITLINT_PARSER_PRESET = {
     parserOpts: {
         headerPattern: String.raw`^(\w*)(?:\((.*)\))?!?: (.*)$`,
@@ -33,15 +18,7 @@ export const TAPLO_FORMATTING = {
 
 export const V8R_NOTES = ['# The other selected tools check files without a known schema.'];
 
-export const YAMLLINT_RULE_OPTIONS = { truthy: { 'check-keys': false } } as const;
-
-export const YAMLLINT_YAML_OPTIONS = { version: '1.1' } as const;
-
-export const YAMLLINT_RULES = ['anchors', 'key-duplicates', 'octal-values', 'truthy'] as const;
-
 export const V8R_TABLE = 'tools.v8r';
-
-export const YAMLLINT_CHECK = 'data-files/yamllint';
 
 export const OSV_SCANNER_NOTES = [
     '# This file stops OSV-Scanner from reading an osv-scanner.toml next to a lockfile.',

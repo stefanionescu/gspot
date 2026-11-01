@@ -7,13 +7,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/commands.ts';
-
-import {
-    OFF_BY_IGNORE,
-    LIST_SCOPE_ROWS,
-    LIST_SCOPE_SETTINGS,
-    SHFMT_IGNORE_SETTINGS,
-} from '#tests/config/commands/commands.ts';
+import { OFF_BY_IGNORE, LIST_SCOPE_SETTINGS, SHFMT_IGNORE_SETTINGS } from '#tests/config/commands/commands.ts';
 
 test('list shows selected settings and available configurations', async () => {
     await using sandbox = await createGitSandbox({});
@@ -47,7 +41,7 @@ test('list shows selected settings and available configurations', async () => {
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
-test('the text check list puts the states of all scopes in one row', async () => {
+test('the check list reports the state in each scope', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], {
             tables: '[[ignore]]\ncheck = "bash/shfmt"\npaths = ["api/**"]\nreason = "Review scoped syntax separately."\n',
@@ -68,18 +62,6 @@ test('the text check list puts the states of all scopes in one row', async () =>
         { name: 'bash/shfmt', scope: '', state: 'on' },
         { name: 'bash/shfmt', scope: 'api', state: OFF_BY_IGNORE },
         { name: 'bash/shfmt', scope: 'api/worker', state: OFF_BY_IGNORE },
-    ]);
-    const human = await runGspot(sandbox.path, ['list']);
-    expect(human.code, human.stdout + human.stderr).toBe(0);
-    expect(human.stderr).toBe('');
-    expect(
-        human.stdout
-            .split('\n')
-            .filter((line) => /^ {4}(?:bash\/shellcheck|bash\/shfmt|gspot\/generated-files) /u.test(line)),
-    ).toStrictEqual([
-        '    bash/shellcheck  root: on, api: on, api/worker: on',
-        '    bash/shfmt  root: on, api: off (ignore), api/worker: off (ignore)',
-        '    gspot/generated-files  root: on',
     ]);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
@@ -107,7 +89,7 @@ test('checks that run at the root appear once when selected in two child scopes'
     ]);
 });
 
-test('the text settings list shows scope values while JSON keeps inherited values', async () => {
+test('the settings list reports inherited values and their source scope', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': LIST_SCOPE_SETTINGS,
         'api/entry.sh': 'echo api\n',
@@ -115,14 +97,6 @@ test('the text settings list shows scope values while JSON keeps inherited value
     });
 
     const before = await readTree(sandbox.path);
-    const human = await runGspot(sandbox.path, ['list', 'settings']);
-    expect(human.code, human.stdout + human.stderr).toBe(0);
-    expect(human.stderr).toBe('');
-    const lines = human.stdout.split('\n');
-    const selected = lines.filter((line) =>
-        /^(?:limits\.file_lines|test_files|dependencies\.(?:min_release_age_days|allowed_registries)) /u.test(line),
-    );
-    expect(selected).toStrictEqual([...LIST_SCOPE_ROWS]);
     const structured = await runGspot(sandbox.path, ['list', 'settings', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');

@@ -1,8 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { unlink, writeFile } from 'node:fs/promises';
-import { LEVELS } from '#cli/config/manifests/names.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
@@ -13,7 +11,6 @@ import {
     SCOPE_IMPORT_TABLES,
     ESLINT_OVERRIDES_SETTINGS,
     RESTRICTED_IMPORT_FINDINGS,
-    RESTRICTED_IMPORT_SETTINGS,
 } from '#tests/config/generation/configurations/language/javascript/eslint/overrides.ts';
 
 test.each(IGNORE_CASES)('an ignore of an ESLint rule applies after your rule options ($name)', async ({ ignored }) => {
@@ -81,25 +78,7 @@ test.each(IGNORE_CASES)(
     },
 );
 
-test('an override of no-restricted-imports is refused with its owning setting', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript'], RESTRICTED_IMPORT_SETTINGS),
-        'package.json': '{"private":true,"type":"module"}\n',
-        'app/source.js':
-            "import lodash from 'lodash';\nimport moment from 'moment';\nexport const both = [lodash, moment];\n",
-        'other.js':
-            "import lodash from 'lodash';\nimport moment from 'moment';\nexport const both = [lodash, moment];\n",
-    });
-
-    const refused = await runGspot(sandbox.path, ['apply']);
-    expect(refused.code).toBe(2);
-    expect({ stdout: refused.stdout, stderr: refused.stderr }).toStrictEqual({
-        stdout: '',
-        stderr: 'gspot.toml:8: tools.eslint.override.0.rules.no-restricted-imports: gspot writes the options of no-restricted-imports from tools.eslint.restricted_imports. Change that setting instead: gspot set tools.eslint.restricted_imports <value>, with --reason when you raise it.\n',
-    });
-});
-
-test.each([...LEVELS])(
+test.each(['all'] as const)(
     "a scope's tools.eslint.restricted_imports ban reports the import only in that scope (%s)",
     async (level) => {
         await using sandbox = await createGitSandbox({

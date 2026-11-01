@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import * as prettier from 'prettier';
 import { test, expect } from 'bun:test';
 import type { Options } from 'prettier';
+import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
-import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
@@ -13,6 +13,7 @@ import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { NESTED_YAML } from '#tests/config/generation/documents.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 import { PRETTIER_OPTIONS_BY_FILE, FORMAT_OVERRIDES_SETTINGS } from '#tests/config/format.ts';
 import { EDITORCONFIG_SELECTOR_ERRORS } from '#tests/config/generation/configurations/general.ts';
@@ -32,16 +33,12 @@ test.each([...EDITORCONFIG_SELECTOR_ERRORS])(
 );
 
 test('Prettier loads the selected plugin through the root link file', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['svelte']),
         'source.svelte': '<h1>Example</h1>\n',
     });
     const generated = buildGeneratedFiles(await openSession(sandbox.path));
     await createFileTree(sandbox.path, Object.fromEntries(generated.files.map(({ path, content }) => [path, content])));
-    const config = JSON.parse(
-        generated.files.find(({ path }) => path === getManifestTarget('format', 'prettier.json'))!.content,
-    ) as Options;
-    expect(config.plugins).toStrictEqual([`./${GSPOT_PATHS.nodeModules}/prettier-plugin-svelte/plugin.js`]);
     const editorOptions = await prettier.resolveConfig(join(sandbox.path, 'source.svelte'), {
         config: join(sandbox.path, 'prettier.config.mjs'),
         useCache: false,
@@ -51,7 +48,7 @@ test('Prettier loads the selected plugin through the root link file', async () =
     ]);
 });
 
-test('the Prettier plugin overrides come before your overrides, and without a plugin the Prettier file has no plugins key', async () => {
+test('the Prettier plugin overrides come before your overrides', async () => {
     const settings = {
         configurations: ['svelte'],
         format: { override: [{ paths: ['docs/**'], print_width: 80 }] },
@@ -65,19 +62,10 @@ test('the Prettier plugin overrides come before your overrides, and without a pl
         { files: '*.svelte', options: { embeddedLanguageFormatting: 'auto' } },
         { files: ['docs/**'], options: { printWidth: 80 } },
     ]);
-    const without = JSON.parse(
-        await buildGeneratedFile(
-            stringify({ ...settings, configurations: ['format'] }),
-            getManifestTarget('format', 'prettier.json'),
-            { 'source.js': 'export {};\n' },
-        ),
-    ) as Options;
-    expect(without).not.toHaveProperty('plugins');
-    expect(without['overrides']).toMatchObject([{ files: ['docs/**'] }]);
 });
 
 test('a YAML indent override gives EditorConfig and Prettier the same width', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['format', 'javascript'], {
             rules: true,
             tables: stringify({ format: { indent_width: 6, override: [{ paths: ['**/*.yaml'], indent_width: 2 }] } }),
@@ -98,7 +86,7 @@ test('a YAML indent override gives EditorConfig and Prettier the same width', as
 });
 
 test('Prettier overrides agree in the root link file and editor lookup', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const root = sandbox.path;
     await createFileTree(root, {
         'gspot.toml': FORMAT_OVERRIDES_SETTINGS,

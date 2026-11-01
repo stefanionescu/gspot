@@ -14,8 +14,6 @@ export const NAME_PATTERN = /^[a-z0-9-]+$/u;
 
 export const RULE_FILE_PATTERN = /^[A-Z0-9-]+\.md$/u;
 
-export const NAMING_DEFAULTS_FILE = 'configurations/general/naming/defaults.json';
-
 export const NAMED_CATEGORIES = [
     'schemas',
     'tables',
@@ -57,3 +55,16 @@ export const MANIFEST_FILE = 'manifest.toml';
 export const RULES_FOLDER = 'rules';
 
 export const SOURCE_FILE_GROUPS = ['language', 'framework'] as const;
+
+export const DETECTION_LABELS = {
+    extensions: 'file extensions',
+    filenames: 'filenames',
+    dependencies: 'dependencies',
+    shebangs: 'script interpreters',
+    runtimes: 'JavaScript runtimes',
+    tags: 'files marked',
+    paths: 'file paths',
+    project_files: 'project files',
+} as const;
+
+export const DETECTION_ALTERNATIVES = new Intl.ListFormat('en', { type: 'disjunction' });

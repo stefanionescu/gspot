@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { unlink, writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/commands/check/run.ts';
@@ -11,6 +10,7 @@ import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     HOST_LOCKFILE,
@@ -25,7 +25,7 @@ import {
 } from '#tests/config/checks/general/general.ts';
 
 test('dependencies/lockfiles accepts a vendored file tarball without treating it as a download', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),
         'package-lock.json': '{"packages":{"node_modules/vendored":{"resolved":"file:vendor/vendored-1.0.0.tgz"}}}',
     });
@@ -42,7 +42,7 @@ test('dependencies/lockfiles reports Git download hosts until they are allowed, 
             'node_modules/third': { ...HOST_LOCKFILE.packages['node_modules/third'], resolved: insecureDownload.href },
         },
     };
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),
         'package-lock.json': JSON.stringify(lockfile, null, 2),
     });
@@ -98,7 +98,7 @@ test.each([...LOCKFILE_HOST_CASES])(
 
 test('an allowed registry host in a scope applies only to that scope', async () => {
     const lockfile = JSON.stringify(HOST_LOCKFILE, null, 2);
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             tables: `[[scope]]\npath = "app"\n[scope.dependencies]\n${ALLOWED_GITHUB_REGISTRIES}[[scope]]\npath = "sibling"\n`,
         }),
@@ -120,7 +120,7 @@ test('an allowed registry host in a scope applies only to that scope', async () 
 });
 
 test('dependencies/lockfiles reads no hosts from the binary bun.lockb', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript']),
         'bun.lockb': Buffer.concat([Buffer.from([0xff, 0]), Buffer.from('https://untrusted.invalid/package.tgz')]),
     });
@@ -128,7 +128,7 @@ test('dependencies/lockfiles reads no hosts from the binary bun.lockb', async ()
 });
 
 test('dependencies/lockfiles reports the lockfile of a second package manager in the scope as foreign-lockfile', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { level: 'all' }),
         'package.json': '{"private":true}\n',
         'package-lock.json': '{"lockfileVersion":3,"packages":{}}\n',
@@ -149,7 +149,7 @@ test('dependencies/lockfiles reports the lockfile of a second package manager in
 test.each([...LOCKFILE_DOWNLOAD_CASES])(
     '$path checks download fields without treating metadata URLs as registries: $name',
     async ({ path, text, lines }) => {
-        await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]), [path]: text });
+        await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]), [path]: text });
         const findings = await runSandboxCheck(sandbox.path, 'dependencies/lockfiles');
         expect(findings.map(({ line }) => line)).toStrictEqual([...lines]);
     },
@@ -159,7 +159,7 @@ test.each([...MISE_PIN_FILES])(
     'package-manager-pin reports a packageManager that differs from the bun pin of $file, and passes once they match',
     async ({ file }) => {
         const packageJson = JSON.stringify({ name: 'shop', private: true, packageManager: 'bun@0.0.0-test.1' });
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'package.json': packageJson,
             [file]: BUN_PIN_SETTINGS,
             'gspot.toml': buildSandboxSettings(['javascript']),
@@ -179,7 +179,7 @@ test.each([...MISE_PIN_FILES])(
 );
 
 test('package-manager-pin uses the highest-precedence mise file in a folder', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         ...Object.fromEntries(MISE_PIN_FILES.map(({ file }) => [file, BUN_PIN_SETTINGS])),
         '.mise.local.toml': '[tools]\nbun = "0.0.0-test.1"\n',
         'package.json': JSON.stringify({ name: 'shop', private: true, packageManager: 'bun@0.0.0-test.1' }),
@@ -189,7 +189,7 @@ test('package-manager-pin uses the highest-precedence mise file in a folder', as
 });
 
 test('stale-lockfile reports each dependency that package.json and bun.lock disagree on', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         ...BUN_PROJECT_FILES,
         'gspot.toml': buildSandboxSettings(['javascript']),
     });
@@ -202,7 +202,7 @@ test('stale-lockfile reports each dependency that package.json and bun.lock disa
 });
 
 test('package-manager-pin reports malformed mise syntax and still reads other mise files', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript']),
         'package.json': '{"packageManager":"bun@1.0.0"}',
         'mise.toml': '[tools',
@@ -216,7 +216,7 @@ test('package-manager-pin reports malformed mise syntax and still reads other mi
 });
 
 test('stale-lockfile reports a peer dependency and an unrecorded workspace importer', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], { scopes: [{ path: 'packages/app', configurations: [] }] }),
         'package.json': '{"workspaces":["packages/*"],"peerDependencies":{"react":"^19.0.0"}}',
         'packages/app/package.json': '{"name":"app","dependencies":{"zod":"^4.0.0"}}',

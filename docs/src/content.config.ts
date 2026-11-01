@@ -1,32 +1,36 @@
 import { defineCollection } from 'astro:content';
+import { CLI_REFERENCE } from '#cli/reference.ts';
 import { docsSchema } from '@astrojs/starlight/schema';
-import type { Loader, DataStore } from 'astro/loaders';
+import { guideSchema } from '#docs/schemas/content.ts';
 import { docsLoader } from '@astrojs/starlight/loaders';
-import { buildCheckIndex } from '#docs/reference/checks.ts';
+import type { Loader, LoaderContext } from 'astro/loaders';
 import { buildCommandPage } from '#docs/reference/commands.ts';
 import { buildSettingsPage } from '#docs/reference/settings.ts';
 import { buildPluginPage } from '#docs/reference/eslint-plugin.ts';
-import type { GuideSlug, ReferencePage } from '#docs/types/reference.ts';
 import { buildConfigurationPages } from '#docs/reference/configurations.ts';
+import { buildCheckIndex, formatCheckTable } from '#docs/reference/checks.ts';
+import type { ReferencePage, ConfigurationGuide } from '#docs/types/pages.ts';
 
 import {
-    GUIDES,
     PAGES_FOLDER,
     REFERENCE_PATH,
-    SECTION_HEADING,
     DOCS_SOURCE_NAME,
     REFERENCE_FOLDERS,
     REFERENCE_IDS_KEY,
 } from '#docs/config/reference.ts';
 
-function getGuideTitles(store: DataStore): Record<GuideSlug, string> {
-    const titles = {} as Record<GuideSlug, string>;
-    for (const slug of Object.values(GUIDES)) {
-        const title = store.get(slug)?.data['title'];
-        if (typeof title !== 'string') throw new TypeError(`The guide ${slug} has no loaded page title.`);
-        titles[slug] = title;
+async function buildGuideIndex(context: LoaderContext): Promise<Map<string, ConfigurationGuide>> {
+    const guides = new Map<string, ConfigurationGuide>();
+    for (const guide of context.store.values()) {
+        const { title, configurations } = guideSchema.parse(guide.data);
+        if (configurations.length === 0) continue;
+        for (const name of configurations) guides.set(name, { title, slug: guide.id });
+        const checks = CLI_REFERENCE.checks.filter(({ configuration }) => configurations.includes(configuration.name));
+        const table = await context.renderMarkdown(formatCheckTable(checks));
+        const frontmatter = { ...guide.data, checksTable: table.html };
+        context.store.set({ ...guide, data: frontmatter, digest: context.generateDigest(JSON.stringify(frontmatter)) });
     }
-    return titles;
+    return guides;
 }
 
 /**
@@ -42,7 +46,7 @@ function buildDocsSource(): Loader {
             const ids: string[] = [];
             const pages = new Map<string, ReferencePage>([
                 [`${REFERENCE_FOLDERS.commands}/index`, buildCommandPage()],
-                ...buildConfigurationPages(getGuideTitles(context.store)),
+                ...buildConfigurationPages(await buildGuideIndex(context)),
                 [`${REFERENCE_FOLDERS.settings}/index`, buildSettingsPage()],
                 [`${REFERENCE_FOLDERS.eslintPlugin}/index`, buildPluginPage()],
                 [`${REFERENCE_FOLDERS.checks}/index`, buildCheckIndex()],
@@ -52,18 +56,19 @@ function buildDocsSource(): Loader {
                 const { body } = page;
                 const metadata = await context.parseData({
                     id,
-                    data: {
-                        ...page.data,
-                        tableOfContents: page.data.tableOfContents ?? (SECTION_HEADING.test(body) ? undefined : false),
-                    },
+                    data: page.data,
                 });
                 const filePath = `${PAGES_FOLDER}/${id}.md`;
+                const document = await context.renderMarkdown(body, {
+                    fileURL: new URL(filePath, context.config.root),
+                });
+                if (page.headings !== undefined) document.metadata = { ...document.metadata, headings: page.headings };
                 context.store.set({
                     id,
                     filePath,
                     data: metadata,
                     body,
-                    rendered: await context.renderMarkdown(body, { fileURL: new URL(filePath, context.config.root) }),
+                    rendered: document,
                     digest: context.generateDigest(JSON.stringify(page)),
                 });
                 ids.push(id);
@@ -73,4 +78,6 @@ function buildDocsSource(): Loader {
     };
 }
 
-export const collections = { docs: defineCollection({ loader: buildDocsSource(), schema: docsSchema() }) };
+export const collections = {
+    docs: defineCollection({ loader: buildDocsSource(), schema: docsSchema({ extend: guideSchema }) }),
+};

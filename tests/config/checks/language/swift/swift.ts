@@ -53,7 +53,7 @@ export const XCTEST_FAILURES = [
     },
     {
         failure: 'malformed',
-        note: 'The swift/coverage check failed: xccov printed output that gspot cannot read.',
+        note: 'xccov printed output that gspot cannot read.',
         tables: XCTEST_TABLES,
         build: [],
         coverage: undefined,

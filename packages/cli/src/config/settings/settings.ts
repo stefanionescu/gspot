@@ -193,3 +193,9 @@ export const FIRST_TABLES = [
 ] as const;
 
 export const LAST_TABLES = ['tools', 'scope', 'import_rule', 'command_check', 'ignore'] as const;
+
+export const LEVEL_SUMMARY =
+    "Correctness, security, accessibility, type safety, routine formatting, and the project's own declared checks apply at both levels.";
+
+export const ALL_LEVEL_SUMMARY =
+    'Level all adds checks and rules for word choice, architecture, naming, doc comments, declaration order, duplication, API style, and complexity.';

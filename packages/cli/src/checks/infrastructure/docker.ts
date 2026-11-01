@@ -1,5 +1,6 @@
 import { join, posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
+import { listCheckFiles } from '#cli/planning/files.ts';
 import { read, find } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
@@ -14,7 +15,6 @@ import { DOCKERFILE_NAME } from '#cli/config/repository/files.ts';
 import { getConfigPath } from '#cli/runs/command/placeholders.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
-import { listCheckFiles } from '#cli/repository/files/selection.ts';
 import { parseCheckedFile } from '#cli/checks/cross-configuration/syntax.ts';
 import { type CheckResult, type CheckFinding } from '#cli/types/runs/check.ts';
 import { composeSchema, trivyImageOutputSchema } from '#cli/schemas/checks/infrastructure.ts';

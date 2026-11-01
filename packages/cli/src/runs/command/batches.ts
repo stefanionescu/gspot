@@ -1,5 +1,5 @@
 import { GspotError } from '#cli/system/errors.ts';
-import type { Session } from '#cli/types/session.ts';
+import type { CheckSession } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CommandLine, Substitutions } from '#cli/types/runs/command.ts';
 import { expandCommand, buildFileCommandLines } from '#cli/runs/command/placeholders.ts';
@@ -23,7 +23,7 @@ Splits a command into command lines that fit the system argument limit.
 */
 export function buildCommandLines(
     planned: PlannedCheck,
-    expansion: { session: Session; command: string[]; substitutions: Substitutions },
+    expansion: { session: CheckSession; command: string[]; substitutions: Substitutions },
 ): CommandLine[] {
     const { session, command, substitutions } = expansion;
     const fixed = expandCommand(session, planned, command, { ...substitutions, files: [] });

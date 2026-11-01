@@ -1,5 +1,7 @@
+import type { Check } from '#cli/types/manifests.ts';
 import { checkVale } from '#cli/checks/general/prose.ts';
 import type { CheckCode } from '#cli/types/runs/check.ts';
+import { checkYaml } from '#cli/checks/general/data-files.ts';
 import { checkAllowed } from '#cli/checks/general/licenses.ts';
 import { checkSemgrep } from '#cli/checks/general/security.ts';
 import { checkFences } from '#cli/checks/language/markdown.ts';
@@ -19,11 +21,11 @@ import { checkSwiftBuild } from '#cli/checks/language/swift/build.ts';
 import { checkCoverage } from '#cli/checks/language/swift/coverage.ts';
 import { checkTsc } from '#cli/checks/cross-configuration/tsc/check.ts';
 import { checkReactVersions } from '#cli/checks/framework/react-dom.ts';
-import { checkJavascriptTsc } from '#cli/checks/language/javascript.ts';
 import { MARKDOWNLINT_PATH_PREFIX } from '#cli/config/checks/checks.ts';
 import { checkAnsibleLint } from '#cli/checks/infrastructure/ansible.ts';
 import { checkPeriphery } from '#cli/checks/language/swift/periphery.ts';
 import { checkShellcheck } from '#cli/checks/language/bash/shellcheck.ts';
+import { YAML_RULE_DOCS } from '#cli/config/checks/general/data-files.ts';
 import { checkIdentifiers } from '#cli/checks/general/naming/identifiers.ts';
 import { checkLoneFiles } from '#cli/checks/general/structure/lone-files.ts';
 import { checkLongFiles } from '#cli/checks/general/structure/long-files.ts';
@@ -50,9 +52,11 @@ import { checkReferences, checkCommitlintPushed } from '#cli/checks/general/comm
 import { checkEditedMigrations } from '#cli/checks/database/postgres/edited-migrations.ts';
 import { checkTrivialFunctions } from '#cli/checks/general/structure/trivial-functions.ts';
 import { checkRowLevelSecurity } from '#cli/checks/database/postgres/row-level-security.ts';
+import { checkGeneratorOutputs } from '#cli/checks/cross-configuration/generator-outputs.ts';
 import { checkDefinerSearchPath } from '#cli/checks/database/postgres/definer-search-path.ts';
 import { checkForeignKeyIndexes } from '#cli/checks/database/postgres/foreign-key-indexes.ts';
 import { checkFileFolderClashes } from '#cli/checks/general/structure/file-folder-clashes.ts';
+import { checkJavascriptTsc, checkJavascriptBiome } from '#cli/checks/language/javascript.ts';
 import { checkEnvironmentReaders } from '#cli/checks/general/structure/environment-readers.ts';
 import { checkPassThroughFolders } from '#cli/checks/general/structure/pass-through-folders.ts';
 import { checkEncoding, checkLargeFiles, checkLocalFiles } from '#cli/checks/general/repository.ts';
@@ -104,6 +108,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'cloudflare/redirects': { check: checkRedirects },
     'commits/commitlint-pushed': { run: checkCommitlintPushed },
     'commits/references': { check: checkReferences },
+    'data-files/yaml': { check: checkYaml, ruleDocs: YAML_RULE_DOCS },
     'dependencies/lockfiles': { check: checkLockfiles },
     'dependencies/package-manager-pin': { check: checkPackageManagerPin },
     'dependencies/stale-lockfile': { check: checkStaleLockfile },
@@ -121,6 +126,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'gspot/unmatched-paths': { check: checkUnmatchedPaths },
     'html/inline-scripts': { check: checkHtmlInlineScripts },
     'javascript/tsc': { run: checkJavascriptTsc },
+    'javascript/biome': { run: checkJavascriptBiome },
     'licenses/allowed': { check: checkAllowed },
     'markdown/fences': { check: checkFences },
     'markdown/markdownlint': {
@@ -191,3 +197,14 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'xcode/unused-assets': { check: checkXcodeUnusedAssets },
     'xcode/xcstrings': { check: checkXcstrings },
 };
+
+/**
+Find the implementation of a built-in check or a check that compares generator outputs.
+
+@param check the manifest check.
+*/
+export function selectCheckCode(check: Check): CheckCode | undefined {
+    const code = CHECK_CODE[check.id];
+    if (check.generator_outputs !== undefined) return { check: checkGeneratorOutputs };
+    return code;
+}

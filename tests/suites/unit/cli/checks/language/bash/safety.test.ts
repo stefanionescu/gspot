@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/commands/check/run.ts';
@@ -11,12 +10,13 @@ import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { commitAll, markExecutable } from '#tests/setup/system/git.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { CONTINUED_TRAP_SOURCE } from '#tests/config/parsers/code/code.ts';
 import { PASSED_BASH_RESULTS } from '#tests/config/checks/language/bash/runs.ts';
 import { BASH_SAFETY_CASES, COMMAND_SAFETY_CASES } from '#tests/config/checks/language/bash/bash.ts';
 
 test('a recursive removal outside a mktemp cleanup trap is reported', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'source.sh': '#!/usr/bin/env bash\nset -euo pipefail\nrm -rf /etc\n',
     });
@@ -28,7 +28,7 @@ test('a recursive removal outside a mktemp cleanup trap is reported', async () =
 
 test('a trap that removes another path is reported by script-layout as mktemp-trap and by safety as recursive-remove, and the right trap passes both', async () => {
     const options = buildRunOptions({ only: ['bash/script-layout', 'bash/safety'] });
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
         'source.sh': `#!/usr/bin/env bash
 set -euo pipefail
@@ -69,7 +69,7 @@ test.each([...BASH_SAFETY_CASES])(
 );
 
 test.each(COMMAND_SAFETY_CASES)('Bash safety parses the command $source', async ({ source, rule }) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
         'run.sh': `#!/usr/bin/env bash\n${source}\n`,
     });
@@ -78,7 +78,7 @@ test.each(COMMAND_SAFETY_CASES)('Bash safety parses the command $source', async 
 });
 
 test('the default level permits an explicitly ignored failure', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'run.sh': '#!/usr/bin/env bash\nfalse || :\n',
     });
@@ -86,7 +86,7 @@ test('the default level permits an explicitly ignored failure', async () => {
 });
 
 test('a continued trap safely removes its temporary directory on the original source row', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'run.sh': `#!/usr/bin/env bash\n${CONTINUED_TRAP_SOURCE}`,
     });

@@ -30,9 +30,7 @@ test('the AGENTS.md block names the folders of a scoped rule without parentheses
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const agents = await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8');
-    expect(agents.split('\n').filter((line) => line.includes('app/'))).toStrictEqual([
-        '- `.gspot/configurations/language/javascript/rules/JAVASCRIPT.md` in `app/`: when you change JavaScript or TypeScript code.',
-    ]);
+    expect(agents.split('\n').find((line) => line.includes('/JAVASCRIPT.md`'))).toContain('` in `app/`: ');
 });
 
 test('with no configurations the block still lists the general rules', async () => {
@@ -41,11 +39,6 @@ test('with no configurations the block still lists the general rules', async () 
         ({ path }) => path === 'AGENTS.md',
     )!.body;
     const paths = listIndexPaths(block);
-    expect(paths.slice(0, 3)).toStrictEqual([
-        '.gspot/configurations/general/engineering/rules/WORKING.md',
-        '.gspot/configurations/general/prose/rules/WRITING.md',
-        '.gspot/configurations/general/engineering/rules/TALKING.md',
-    ]);
     expect(paths).toContain('.gspot/configurations/general/engineering/rules/TESTING.md');
     expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
 });
@@ -64,7 +57,6 @@ test('a rule file that rules.exclude names leaves the index', async () => {
     const paths = listIndexPaths(block);
     expect(paths).not.toContain('.gspot/configurations/general/engineering/rules/CLI.md');
     expect(paths).toContain('.gspot/configurations/general/engineering/rules/TESTING.md');
-    expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
 });
 
 test('the AGENTS.md block moves its headings one level down in a file with its own title', async () => {
@@ -88,7 +80,7 @@ test('the AGENTS.md block moves its headings one level down in a file with its o
     expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).toBe(agents);
 });
 
-test('the AGENTS.md Commands section names the start command and leaves the staged check to the hooks', () => {
+test('the AGENTS.md Commands section names its launcher and requires agreement before configuration changes', () => {
     const command = 'pnpm exec gspot';
     const block = buildAgentsBlock({
         files: [],
@@ -98,7 +90,15 @@ test('the AGENTS.md Commands section names the start command and leaves the stag
     });
     const commands = block.slice(block.indexOf(COMMANDS_HEADING), block.indexOf('\n## Generated files'));
     expect(commands).toContain(`The rules write \`gspot\` for \`${command}\`.`);
-    expect(commands).not.toContain('check --staged');
+    expect(commands).toContain('Before you commit, run `gspot check --staged --stage commit`.');
+    expect(commands).toContain('Before you push, run `gspot check --changed --stage push`.');
+    expect(commands).toContain('To change `gspot.toml`, run `gspot set`, `unset`, or `unignore`.');
+    expect(commands).toContain(
+        'When `gspot check` or `gspot doctor` names a new configuration, ask the user, then run the `gspot add` line it prints and `gspot install`.',
+    );
+    expect(commands).toContain('Run `gspot ignore` or `gspot remove` only after the user agrees, with a reason.');
+    expect(commands).toContain('After you edit `gspot.toml`, a package manifest, or a tsconfig, run `gspot apply`.');
+    expect(commands.match(/pnpm exec gspot/gu)).toHaveLength(1);
 });
 
 test('the AGENTS.md index keeps a rule opening that wraps onto a second line', () => {

@@ -140,10 +140,10 @@ export async function planNpmLockfile(
         );
         const dependencies = listToolProjectPins(install.session.toolConfigurations).npm;
         if (isLockfileFresh(packageManager.name, saved, dependencies, registryEnvironment))
-            return { path, next: { bytes: Buffer.from(saved), mode: OWNER_WRITABLE_FILE }, previous };
+            return { path, next: { bytes: Buffer.from(saved), mode: OWNER_WRITABLE_FILE }, previous: previous };
     }
     const content = await createNpmLockfile(install, { toolProjectFile, lockfileName: lockfile });
-    return { path, next: { bytes: Buffer.from(content), mode: OWNER_WRITABLE_FILE }, previous };
+    return { path, next: { bytes: Buffer.from(content), mode: OWNER_WRITABLE_FILE }, previous: previous };
 }
 
 /**

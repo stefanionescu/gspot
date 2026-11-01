@@ -216,13 +216,13 @@ List the general configurations that gspot adds without an explicit selection.
 */
 export function listAutomaticConfigurations(
     configurationsByName: Map<string, Configuration>,
-    repository?: Pick<Repository, 'root' | 'files' | 'hasGit' | 'dependencyFiles'>,
+    repository?: Pick<Repository, 'root' | 'files' | 'dependencyFiles'>,
 ): string[] {
     const general = new Map([...configurationsByName].filter(([, configuration]) => configuration.group === 'general'));
     const automatic = new Set(
         general
             .values()
-            .filter((configuration) => configuration.always_selected && configuration.when === undefined)
+            .filter((configuration) => configuration.always_selected)
             .map((configuration) => configuration.name),
     );
     if (repository === undefined) return [...automatic];
@@ -238,8 +238,7 @@ export function listAutomaticConfigurations(
         ).map(({ configuration }) => configuration),
     );
     for (const configuration of general.values())
-        if (detected.has(configuration.name) && (configuration.when?.git !== true || repository.hasGit))
-            automatic.add(configuration.name);
+        if (detected.has(configuration.name)) automatic.add(configuration.name);
     return general
         .keys()
         .filter((name) => automatic.has(name))

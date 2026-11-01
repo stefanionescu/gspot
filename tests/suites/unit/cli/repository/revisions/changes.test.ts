@@ -8,7 +8,6 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { readPushedCommits } from '#cli/repository/revisions/push.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { MERGE_BASE_FAILURE } from '#tests/config/repository/revisions.ts';
 import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
 
 test('staged paths of an unborn index count its unstaged edits', async () => {
@@ -59,10 +58,16 @@ test('a branch comparison refuses invalid references without reading them as opt
     const changed = await readChangedPaths(sandbox.path, 'HEAD');
     expect(changed.paths).toStrictEqual([]);
     const error = await captureRejection(readChangedPaths(sandbox.path, 'missing-reference'));
-    expect(error.message).toStartWith(MERGE_BASE_FAILURE);
+    expect(error.message).toContain('missing-reference is not a branch, tag, or commit in this repository.');
+    expect(error.message).toContain('Local branches:');
     const mergeBaseError = await captureRejection(readChangedPaths(sandbox.path, '--output=outside.txt'));
-    expect(mergeBaseError.message).toStartWith(MERGE_BASE_FAILURE);
+    expect(mergeBaseError.message).toContain(
+        '--output=outside.txt is not a branch, tag, or commit in this repository.',
+    );
     expect(await isOnDisk(join(sandbox.path, 'outside.txt'))).toBe(false);
+    const blob = runGitStep(sandbox.path, ['rev-parse', 'HEAD:source.ts']);
+    const blobError = await captureRejection(readChangedPaths(sandbox.path, blob));
+    expect(blobError.message).toContain(`${blob} is not a branch, tag, or commit in this repository.`);
 });
 
 test('a new branch compares with the remote default without losing unpushed commits', async () => {
@@ -76,7 +81,7 @@ test('a new branch compares with the remote default without losing unpushed comm
     runGitStep(sandbox.path, ['checkout', '-qb', 'topic']);
     runGitStep(sandbox.path, ['commit', '--allow-empty', '-qm', 'Unpublished']);
     expect(await readPushedCommits(sandbox.path)).toStrictEqual([runGitStep(sandbox.path, ['rev-parse', 'HEAD'])]);
-    const { reference, commits } = await readChangedPaths(sandbox.path, '');
+    const { reference, commits } = await readChangedPaths(sandbox.path, undefined);
     expect(reference).toBe('refs/remotes/origin/main');
     expect(commits).toStrictEqual([runGitStep(sandbox.path, ['rev-parse', 'HEAD'])]);
 });
@@ -95,6 +100,6 @@ test('a detached comparison without a remote default explains how to select one'
     commitAll(sandbox.path);
     runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
     runGitStep(sandbox.path, ['checkout', '--detach', '--quiet']);
-    const upstreamError = await captureRejection(readChangedPaths(sandbox.path, ''));
+    const upstreamError = await captureRejection(readChangedPaths(sandbox.path, undefined));
     expect(upstreamError.message).toBe(NO_UPSTREAM_MESSAGE);
 });

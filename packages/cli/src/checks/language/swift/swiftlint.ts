@@ -3,15 +3,13 @@ import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { buildConfigs } from '#cli/generation/configs.ts';
+import type { CheckSession } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { type CheckFinding } from '#cli/types/runs/check.ts';
-import { getConfigTarget } from '#cli/generation/selection.ts';
-import { getConfigPath } from '#cli/runs/command/placeholders.ts';
-import type { Session, CheckSession } from '#cli/types/session.ts';
 import { planSwiftBuild } from '#cli/checks/language/swift/cache.ts';
 import { runSwiftBuild, runCopiedTool } from '#cli/checks/language/swift/build.ts';
+import { getConfigPath, getConfigTarget } from '#cli/runs/command/placeholders.ts';
 
 import {
     ANALYZER_RULE,
@@ -50,14 +48,14 @@ Lists the SwiftLint files a copy keeps: the scope link file, the config file, an
 @param planned the scope files and config files.
 @returns the repository-relative paths, sorted.
 */
-export function listSwiftlintConfigs(session: Session, planned: PlannedCheck): string[] {
+export function listSwiftlintConfigs(session: CheckSession, planned: PlannedCheck): string[] {
     const paths = [
         joinScope(planned.scope.path, SWIFTLINT_CONFIG_FILE),
         ...session.configurationsByName
             .values()
             .flatMap((configuration) => configuration.configs)
             .filter((config) => config.pointer?.path === SWIFTLINT_CONFIG_FILE)
-            .map((config) => getConfigTarget(planned.scope.path, config, buildConfigs(session))),
+            .map((config) => getConfigTarget(planned.scope.path, config, session.generation.buildConfigs(session))),
     ];
     for (const file of planned.files) {
         const folders = listEnclosingFolders(posix.dirname(file.path));

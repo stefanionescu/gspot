@@ -1,13 +1,13 @@
 import { posix } from 'node:path';
-import { testdir } from 'testdirs';
 import type { Session } from '#cli/types/session.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { ROOT_LABEL } from '#tests/config/messages.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
 import { extractConfigName } from '#cli/manifests/tools.ts';
-import { getConfigTarget } from '#cli/generation/selection.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { getConfigTarget } from '#cli/runs/command/placeholders.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
 
 /**
@@ -53,7 +53,7 @@ export async function buildGeneratedFile(
     path: string,
     files: Record<string, string>,
 ): Promise<string> {
-    await using sandbox = await testdir({ ...files, 'gspot.toml': settings });
+    await using sandbox = await createGitSandbox({ ...files, 'gspot.toml': settings });
 
     const session = await openSession(sandbox.path);
     const output = buildGeneratedFiles(session);

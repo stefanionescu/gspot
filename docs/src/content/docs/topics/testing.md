@@ -1,6 +1,7 @@
 ---
 title: Tests and coverage
 description: Run your tests before every push and fail when coverage drops under its minimum.
+configurations: [jest, vitest, pytest]
 ---
 
 gspot runs your test suite as a check at the push stage, and the check fails when coverage falls below the limits you

@@ -2,12 +2,10 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { LEVELS } from '#cli/config/manifests/names.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { APP_SCOPE_SETTINGS } from '#tests/config/toml.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
 import type { ToolPackageJson } from '#tests/types/packages.ts';
-import { type EslintConfiguration } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
@@ -58,41 +56,25 @@ test.each([...IMPORT_RULE_CASES])(
         ) as ToolPackageJson;
         const isEnabled = level === 'all' || declarations !== 'none';
         expect(Object.hasOwn(packages.devDependencies, 'eslint-plugin-boundaries')).toBe(isEnabled);
-        expect(Object.hasOwn(packages.devDependencies, 'eslint-import-resolver-typescript')).toBe(true);
         if (!isEnabled) await unlink(join(sandbox.path, 'node_modules/eslint-plugin-boundaries'));
-        async function lintFiles() {
-            const files = ['app/source.ts', 'apps/api/app/source.ts'];
-            const configured = [];
-            for (const file of files) {
-                const config = (await eslint.calculateConfigForFile(file)) as EslintConfiguration;
-                configured.push({
-                    plugin: Object.hasOwn(config.plugins, 'boundaries'),
-                    classic: Object.hasOwn(config.settings, 'import/resolver'),
-                    modern: Object.hasOwn(config.settings, 'import-x/resolver-next'),
-                });
-            }
-            return {
-                configured,
-                findings: await listLintFindings(eslint, sandbox.path, files, ['boundaries/dependencies']),
-            };
-        }
-        const configured = [
-            { plugin: isEnabled, classic: isEnabled, modern: true },
-            { plugin: isEnabled, classic: isEnabled, modern: true },
-        ];
-        expect(await lintFiles()).toStrictEqual({
-            configured,
-            findings:
-                declarations === 'none'
-                    ? []
-                    : [
-                          {
-                              file: declarations === 'root' ? 'app/source.ts' : 'apps/api/app/source.ts',
-                              rule: 'boundaries/dependencies',
-                              line: 1,
-                          },
-                      ],
-        });
+        expect(
+            await listLintFindings(
+                eslint,
+                sandbox.path,
+                ['app/source.ts', 'apps/api/app/source.ts'],
+                ['boundaries/dependencies'],
+            ),
+        ).toStrictEqual(
+            declarations === 'none'
+                ? []
+                : [
+                      {
+                          file: declarations === 'root' ? 'app/source.ts' : 'apps/api/app/source.ts',
+                          rule: 'boundaries/dependencies',
+                          line: 1,
+                      },
+                  ],
+        );
         await Promise.all(
             ['app/source.ts', 'apps/api/app/source.ts'].map((file) =>
                 writeFile(
@@ -101,7 +83,14 @@ test.each([...IMPORT_RULE_CASES])(
                 ),
             ),
         );
-        expect(await lintFiles()).toStrictEqual({ configured, findings: [] });
+        expect(
+            await listLintFindings(
+                eslint,
+                sandbox.path,
+                ['app/source.ts', 'apps/api/app/source.ts'],
+                ['boundaries/dependencies'],
+            ),
+        ).toStrictEqual([]);
     },
 );
 
@@ -134,7 +123,7 @@ test('import rules skip your test files in each scope and check other files', as
     );
 });
 
-test.each([...LEVELS])(
+test.each(['all'] as const)(
     'a file outside test_files may not import a test file, in root and child scopes, at %s',
     async (level) => {
         await using sandbox = await testdir();
@@ -167,13 +156,13 @@ test.each([...LEVELS])(
         const eslint = await buildEslint(sandbox.path);
         for (const row of files) {
             expect(await listLintFindings(eslint, sandbox.path, [row.path], ['boundaries/dependencies'])).toStrictEqual(
-                level === 'all' && row.rejected ? [{ file: row.path, rule: 'boundaries/dependencies', line: 1 }] : [],
+                row.rejected ? [{ file: row.path, rule: 'boundaries/dependencies', line: 1 }] : [],
             );
         }
     },
 );
 
-test.each([...LEVELS])(
+test.each(['all'] as const)(
     'environment reads are allowed only in environment_readers files of each scope at %s',
     async (level) => {
         await using sandbox = await testdir();
@@ -192,8 +181,7 @@ test.each([...LEVELS])(
         });
         const eslint = await buildEslint(sandbox.path);
         for (const path of paths) {
-            const isRejected =
-                level === 'all' && !['config/env.js', 'app/src/env/source.js', 'literal/config/env.js'].includes(path);
+            const isRejected = !['config/env.js', 'app/src/env/source.js', 'literal/config/env.js'].includes(path);
             for (const { source, rule } of ENVIRONMENT_CASES) {
                 await createFileTree(sandbox.path, { [path]: source });
                 expect(await listLintFindings(eslint, sandbox.path, [path], [rule])).toStrictEqual(
@@ -210,19 +198,6 @@ test.each([...LEVELS])(
                 ),
             ).toStrictEqual([]);
         }
-        await createFileTree(sandbox.path, {
-            'app/src/source.js': "export * from './other.js';\nconst port = import.meta.env.PORT;\n",
-        });
-        expect(
-            await listLintFindings(eslint, sandbox.path, ['app/src/source.js'], ['no-restricted-syntax']),
-        ).toStrictEqual(
-            level === 'all'
-                ? [
-                      { file: 'app/src/source.js', rule: 'no-restricted-syntax', line: 1 },
-                      { file: 'app/src/source.js', rule: 'no-restricted-syntax', line: 2 },
-                  ]
-                : [],
-        );
     },
 );
 

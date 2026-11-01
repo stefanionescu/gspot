@@ -6,7 +6,6 @@ import { planChecks } from '#cli/planning/checks.ts';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
-import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { SWIFT_VALUE_SOURCE } from '#tests/config/swift.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
@@ -15,6 +14,7 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { runChecks, buildCheckSession } from '#cli/commands/check/run.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { CHILD_SCOPE_SETTINGS } from '#tests/config/runs/command/check.ts';
+import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
 
 test('a command in a scope runs in the scope folder with paths relative to it', async () => {
     await using sandbox = await createGitSandbox({});
@@ -35,7 +35,9 @@ test('a command in a scope runs in the scope folder with paths relative to it', 
     expect(planned.map((check) => check.scope.path)).toStrictEqual(['', scope]);
     for (const check of planned) {
         check.check = { ...check.check, runs: 'scope' };
-        expect(await runCommandCheck(buildCheckSession(session), check)).toMatchObject({ status: 'passed' });
+        expect(await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), check)).toMatchObject({
+            status: 'passed',
+        });
     }
     expect(calls).toStrictEqual([
         { cwd: sandbox.path, files: ['./--config=x.swift'] },

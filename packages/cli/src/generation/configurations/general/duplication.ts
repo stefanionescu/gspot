@@ -1,7 +1,7 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { PlannedConfig } from '#cli/types/generation/files.ts';
-import { convertToGlobs, buildIgnoreSections, listCheckIgnoreSections } from '#cli/generation/ignores.ts';
+import { convertToGlobs, listCheckIgnoreSections } from '#cli/generation/ignores.ts';
 import { JSCPD_CHECK, JSCPD_IGNORED, JSCPD_IMPORT_PATTERNS } from '#cli/config/generation/configurations/general.ts';
 
 /**
@@ -21,7 +21,7 @@ export function buildJscpdFile(planned: PlannedConfig): string {
         ignore: [
             ...JSCPD_IGNORED,
             ...convertToGlobs([
-                ...buildIgnoreSections(planned.session),
+                ...planned.ignoreSections,
                 ...listCheckIgnoreSections(planned.scope.settings, JSCPD_CHECK),
             ]).filter((pattern) => !pattern.startsWith('!')),
         ],

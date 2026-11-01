@@ -10,7 +10,12 @@ async function writePackageFolder(folder: string): Promise<string> {
     const root = join(import.meta.dir, '../../../../..');
     await createFileTree(folder, {
         [`${PACKAGE_FOLDER}/tsconfig.json`]: JSON.stringify({
-            compilerOptions: { paths: { '#cli/*': ['./packages/cli/src/*'] } },
+            compilerOptions: {
+                paths: {
+                    '#cli/*': ['./packages/cli/src/*'],
+                    '#cli-package': ['./packages/cli/package.json'],
+                },
+            },
         }),
         [`${PACKAGE_FOLDER}/packages/cli/package.json`]: await readFile(
             join(root, 'packages/cli/package.json'),

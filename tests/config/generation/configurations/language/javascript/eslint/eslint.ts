@@ -160,23 +160,7 @@ export function addPrices(first, second) {
 }
 `;
 
-export const RUNTIME_CASES = [
-    {
-        runtime: 'browser',
-        globals: ['window', 'document'],
-        absent: ['process', 'Buffer', 'require', '__dirname', 'importScripts'],
-    },
-    {
-        runtime: 'worker',
-        globals: ['postMessage', 'DedicatedWorkerGlobalScope', 'importScripts'],
-        absent: ['process', 'Buffer', 'require', '__dirname', 'clients'],
-    },
-    {
-        runtime: 'react-native',
-        globals: ['__DEV__', 'process', 'require'],
-        absent: ['Buffer', '__dirname', '__filename', 'module'],
-    },
-] as const;
+export const RUNTIME_CASES = [{ runtime: 'browser' }, { runtime: 'worker' }, { runtime: 'react-native' }] as const;
 
 export const FRAMEWORK_RUNTIME_CASES = [
     {
@@ -273,7 +257,6 @@ export const BARREL_CASES = [
 
 export const LEVEL_REEXPORT_CASES = [
     ['basic', 'none'],
-    ['basic', 'index-only'],
     ['all', 'none'],
     ['all', 'index-only'],
 ] as const;

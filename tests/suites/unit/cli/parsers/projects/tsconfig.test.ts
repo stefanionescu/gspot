@@ -6,6 +6,7 @@ import { openSession } from '#cli/planning/session.ts';
 import { UNSAFE_PATH_MESSAGE } from '#tests/config/messages.ts';
 import { symlink, realpath, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 
 test('a tsconfig can extend a dependency installed above the repository', async () => {
@@ -31,7 +32,7 @@ test('a tsconfig keeps dependencies reached through a node_modules symlink reada
 });
 
 test('a TypeScript project comes from the nearest covering tsconfig.json and refuses an excluded file', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], {
             level: 'all',
             scopes: [{ path: 'app' }, { path: 'app/deep' }, { path: 'sibling' }],

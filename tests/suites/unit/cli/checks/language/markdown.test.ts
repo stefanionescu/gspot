@@ -1,13 +1,13 @@
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { MARKDOWN_FENCE_CASES } from '#tests/config/checks/language/language.ts';
 
 test.each([...MARKDOWN_FENCE_CASES])(
     'markdown/fences reports each fence that does not parse: $name',
     async ({ markdown, lines }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['markdown'], { level: 'all' }),
             'example.md': markdown,
         });
@@ -17,7 +17,7 @@ test.each([...MARKDOWN_FENCE_CASES])(
 );
 
 test('a broken fence in MDX reports its source line', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['markdown']),
         'guide.mdx': 'import Panel from "./Panel.jsx";\n\n# Guide\n\n<Panel />\n\n```json\n{broken\n```\n',
     });

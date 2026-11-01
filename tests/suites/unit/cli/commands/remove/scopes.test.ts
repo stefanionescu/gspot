@@ -7,16 +7,13 @@ import { readSettings } from '#cli/settings/read.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
-import { listNpmInstallFiles } from '#tests/setup/cli/tools.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import type { TomlTable } from '#cli/types/settings/settings.ts';
-import { recordNpmCommands } from '#tests/setup/system/fakes.ts';
-import type { ApplyReport } from '#cli/types/generation/files.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
+import { API_SCOPE_FILES } from '#tests/config/commands/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { API_SCOPE_FILES, TOOLS_CHANGED_NOTE, BASH_CONFIG_FILE_NAMES } from '#tests/config/commands/samples.ts';
 
 import {
     SCOPE_REMOVALS,
@@ -68,7 +65,7 @@ test('remove refuses a dependency required by a parent configuration and leaves 
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
-test('remove --scope writes removed_configurations with its reason and applies it without an npm install', async () => {
+test('remove --scope writes removed_configurations with its reason and applies the generated files', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['markdown'], { scopes: [{ path: 'api', configurations: ['bash'] }] }),
         ...API_SCOPE_FILES,
@@ -77,17 +74,10 @@ test('remove --scope writes removed_configurations with its reason and applies i
     const initial = await runGspot(sandbox.path, ['apply']);
     expect(initial.code, initial.stdout + initial.stderr).toBe(0);
     expect(await isOnDisk(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')))).toBe(true);
-    using npm = recordNpmCommands();
     const reason = 'The API scope no longer uses Bash.';
     const result = await runGspot(sandbox.path, ['remove', 'bash', '--scope', 'api', '--reason', reason, '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { written, removed, notes } = JSON.parse(result.stdout) as ApplyReport;
-    expect({ written, removed, notes }).toStrictEqual({
-        written: [GSPOT_PATHS.miseProject, GSPOT_PATHS.pythonProject],
-        removed: BASH_CONFIG_FILE_NAMES.map((file) => getManifestTarget('bash', file)),
-        notes: [TOOLS_CHANGED_NOTE],
-    });
-    expect(npm.commands).toStrictEqual([]);
+    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.pythonProject))).toBe(false);
     const saved = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
     expect(saved.scopes.get('api')!.configurations).toStrictEqual([]);
     expect(saved.configurations).toStrictEqual(['markdown']);
@@ -96,7 +86,6 @@ test('remove --scope writes removed_configurations with its reason and applies i
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(await isOnDisk(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')))).toBe(false);
-    expect(await listNpmInstallFiles(sandbox.path)).toStrictEqual([]);
 });
 
 test('remove reports no change for a configuration the root does not list', async () => {

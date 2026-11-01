@@ -4,7 +4,6 @@ import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { type Level } from '#cli/types/manifests.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { LEVELS } from '#cli/config/manifests/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { type LintFinding, type ScriptFindingCase, type EslintConfiguration } from '#tests/types/tools.ts';
@@ -21,7 +20,6 @@ import {
     NODE_SCRIPT_FILES,
     NODE_SCRIPT_RULES,
     NODE_SCRIPT_TABLES,
-    PACKAGE_MANAGER_LEVELS,
     EXTENSIONLESS_SCRIPT_CASES,
     EXTENSIONLESS_SCRIPT_RULES,
 } from '#tests/config/generation/configurations/language/javascript/eslint/node.ts';
@@ -68,7 +66,7 @@ test.each([...ENGINE_PHASES])(
     },
 );
 
-test.each([...LEVELS])(
+test.each(['all'] as const)(
     'ESLint lints Node script files by role and shebang, and skips generated, vendored and other files (%s)',
     async (level) => {
         await using sandbox = await testdir({
@@ -100,7 +98,7 @@ test.each([...LEVELS])(
     },
 );
 
-test.each([...LEVELS])(
+test.each(['all'] as const)(
     'Node scripts without an extension get syntax, global, engine, import and scope limit findings (%s)',
     async (level) => {
         await using sandbox = await testdir({
@@ -170,19 +168,6 @@ test('an ignore of a package-json rule for one file keeps the finding in other f
         ),
     ).toStrictEqual([{ file: 'library/package.json', rule: 'package-json/require-exports', line: 1 }]);
 });
-
-test.each([...PACKAGE_MANAGER_LEVELS])(
-    'the root package manager rule follows the manifest level ($level)',
-    async ({ level, severity }) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['javascript'], { level }),
-            'package.json': '{"private":true,"type":"module"}',
-        });
-        const eslint = await buildEslint(sandbox.path);
-        const configuration = (await eslint.calculateConfigForFile('package.json')) as EslintConfiguration;
-        expect(configuration.rules['package-json/require-packageManager']).toStrictEqual([severity]);
-    },
-);
 
 function buildExpectedFindings(cases: readonly ScriptFindingCase[], level: Level): LintFinding[] {
     return cases

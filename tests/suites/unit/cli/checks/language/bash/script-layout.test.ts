@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { markExecutable } from '#tests/setup/system/git.ts';
@@ -17,7 +16,7 @@ import {
 } from '#tests/config/checks/language/bash/script-layout.ts';
 
 test('an environment reader that only its scope declares may run top-level commands', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'tools/env.sh': '#!/usr/bin/env bash\nload_environment\n',
         'gspot.toml': buildSandboxSettings(['bash'], { level: 'all', tables: ENVIRONMENT_READER_SCOPE_TABLES }),
     });
@@ -33,7 +32,7 @@ test.each([...SCRIPT_LAYOUT_CASES])(
 );
 
 test('library declarations span array and heredoc lines without creating flow findings', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'library.sh': '#!/usr/bin/env bash\nvalues=(\n  first\n  second\n)\ntext=$(cat <<EOF\nmessage\nEOF\n)\n',
     });
@@ -47,7 +46,7 @@ test('library declarations span array and heredoc lines without creating flow fi
 });
 
 test('Bash layout skips Bats tests, Zsh files and Korn shell shebangs', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'sample.bats': '@test "ready" {\n  true\n}\n',
         'sample.zsh': 'print ready\n',

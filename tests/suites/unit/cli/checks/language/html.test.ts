@@ -1,14 +1,14 @@
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { URL_MARKUP_CASES, SCRIPT_TYPE_CASES, INLINE_SCRIPT_PAGE } from '#tests/config/checks/language/language.ts';
 
 test.each([...SCRIPT_TYPE_CASES])(
     'html/inline-scripts treats type "$type" like the browser',
     async ({ type, rules }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['html'], { level: 'all' }),
             'index.html': `<script type="${type}">window.start();</script><script type="${type}" src="data:text/javascript,window.start()"></script>`,
         });
@@ -20,7 +20,7 @@ test.each([...SCRIPT_TYPE_CASES])(
 test.each([...URL_MARKUP_CASES])(
     'html/inline-scripts reports each URL in $markup that runs code, at its attribute column',
     async ({ markup, columns, scheme }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['html'], { level: 'all' }),
             'page.html': markup,
         });
@@ -41,7 +41,7 @@ test.each([...URL_MARKUP_CASES])(
 );
 
 test('html/inline-scripts reports an executable inline script and an event handler attribute, and skips an inert or linked script', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['html'], { level: 'all' }),
         'index.html': INLINE_SCRIPT_PAGE,
     });
@@ -67,7 +67,7 @@ test('html/inline-scripts reports an executable inline script and an event handl
 });
 
 test('prototype property tag names with data URLs do not crash the check', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['html'], { level: 'all' }),
         'index.html': '<constructor src="data:text/javascript,run()"></constructor>',
     });

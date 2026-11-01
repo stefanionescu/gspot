@@ -1,7 +1,7 @@
 import { join } from 'node:path';
+import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
 import { type Session } from '#cli/types/session.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -9,10 +9,11 @@ import { type PlannedCheck } from '#cli/types/planning.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { listOtherTools, listCheckTools } from '#cli/planning/tools.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { NODE_REQUIREMENTS, COVERAGE_PROVIDERS } from '#tests/config/planning/planning.ts';
 
 test('basic tRPC server files select the boundaries plugin without import rules', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript', 'trpc'], {
             tables: '[trpc]\nserver_files = ["server/**"]\n',
         }),
@@ -29,7 +30,7 @@ test('basic tRPC server files select the boundaries plugin without import rules'
 test.each([...NODE_REQUIREMENTS])(
     'the tools include Node only when an npm tool needs it: $name',
     async ({ configurations, tables, files, needs, skips }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(configurations, { tables }),
             ...files,
         });
@@ -50,7 +51,7 @@ describe.each(COVERAGE_PROVIDERS.flatMap((row) => [0, 80].map((lines) => ({ ...r
         let session: Session;
         let checks: PlannedCheck[];
         beforeAll(async () => {
-            const sandbox = resources.use(await testdir());
+            const sandbox = resources.use(await createGitSandbox({}));
             await createFileTree(sandbox.path, { [file]: '', ['app/' + file]: '' });
             await writeFile(
                 join(sandbox.path, 'gspot.toml'),
@@ -75,7 +76,7 @@ describe.each(COVERAGE_PROVIDERS.flatMap((row) => [0, 80].map((lines) => ({ ...r
 );
 
 test('Prettier plugins join the selected tools even though checks do not name them', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['astro', 'svelte']),
         'page.astro': '<p>Page</p>\n',
         'Page.svelte': '<p>Page</p>\n',

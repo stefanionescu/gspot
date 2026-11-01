@@ -3,6 +3,7 @@ import { join, resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { planChecks } from '#cli/planning/checks.ts';
 import { openSession } from '#cli/planning/session.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { buildCheckSession } from '#cli/commands/check/run.ts';
@@ -34,7 +35,7 @@ test.each(COVERAGE_PROJECT_FILES)(
             commands.push([...command]);
             return Promise.resolve(buildProcessResult());
         });
-        const result = await runCommandCheck(buildCheckSession(session), planned);
+        const result = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned);
         expect(result.status, result.note).toBe('passed');
         expect(commands).toHaveLength(1);
         const coverage = commands[0]!.find((argument) => argument.startsWith('--cov-config='));

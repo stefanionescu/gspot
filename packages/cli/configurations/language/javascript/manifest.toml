@@ -65,11 +65,27 @@ reason = " -- (?<reason>\\S.*)"
 example = "// eslint-disable-next-line no-console -- reason: the command prints its result"
 separator = "\\s--"
 all_rules = "^$"
-limit_rules = "(?:^|[\\s,])(?:complexity|sonarjs/cognitive-complexity|max-lines|max-lines-per-function|max-statements|max-params|max-depth|max-nested-callbacks)(?=$|[\\s,])"
+limit_rules = "(?:^|[\\s,])(?:complexity|max-lines|max-lines-per-function|max-statements|max-params|max-depth|max-nested-callbacks)(?=$|[\\s,])"
 
 [[tool.replace_key]]
 file = "package.json"
 key = "eslintConfig"
+
+[[tool]]
+name = "biome"
+npm = "@biomejs/biome"
+version = "2.6.4"
+rule_prefix = "lint/complexity"
+rule_url = "https://biomejs.dev/linter/rules/no-excessive-cognitive-complexity/javascript/#{rule}"
+
+[tool.suppression]
+marker = "^(?://|/\\*|<!--)\\s*biome-ignore(?:-all|-start|-end)?(?=\\s|$)"
+reason = ":\\s*(?<reason>\\S.*)"
+example = "// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: reason"
+forbidden = true
+
+[[tool.when]]
+level = "all"
 
 [[tool]]
 kind = "library"
@@ -83,7 +99,6 @@ name = "@gspothq/eslint-plugin"
 npm = "@gspothq/eslint-plugin"
 version = "0.2.3"
 rule_prefix = "gspot"
-rule_url = "https://generativespotting.com/reference/eslint-plugin/#{rule}"
 
 [[tool]]
 kind = "library"
@@ -216,7 +231,7 @@ example = "// @ts-expect-error reason: the library types omit this overload"
 
 [eslint]
 required_tools = ["@eslint/js", "@gspothq/eslint-plugin", "eslint-plugin-sonarjs", "eslint-plugin-unicorn", "eslint-plugin-security", "eslint-plugin-barrel-files", "eslint-plugin-perfectionist", "eslint-plugin-n", "eslint-plugin-jsdoc", "eslint-plugin-regexp", "eslint-plugin-import-x", "eslint-import-resolver-typescript", "eslint-plugin-boundaries", "eslint-plugin-package-json", "eslint-config-prettier", "globals", "picomatch"]
-all_level_rules = ["no-labels", "no-new", "no-nested-ternary", "default-case-last", "import-x/first", "import-x/newline-after-import", "barrel-files/avoid-barrel-files", "perfectionist/sort-imports", "perfectionist/sort-named-imports", "perfectionist/sort-exports", "perfectionist/sort-named-exports", "complexity", "jsdoc/no-types", "jsdoc/require-description", "jsdoc/require-jsdoc", "jsdoc/require-param", "jsdoc/match-name", "jsdoc/informative-docs", "jsdoc/require-param-description", "jsdoc/tag-lines", "max-depth", "max-lines", "max-lines-per-function", "max-nested-callbacks", "max-params", "max-statements", "n/no-process-exit", "n/prefer-global/buffer", "n/prefer-global/console", "n/prefer-global/process", "n/prefer-global/url", "n/prefer-global/url-search-params", "n/prefer-promises/dns", "n/prefer-promises/fs", "no-console", "no-param-reassign", "package-json/repository-shorthand", "package-json/require-attribution", "package-json/require-description", "package-json/require-exports", "package-json/require-files", "package-json/require-name", "package-json/require-repository", "package-json/require-sideEffects", "package-json/require-type", "package-json/require-version", "package-json/sort-collections", "security/detect-child-process", "security/detect-possible-timing-attacks", "sonarjs/bitwise-operators", "sonarjs/cognitive-complexity", "sonarjs/constructor-for-side-effects", "sonarjs/hooks-before-test-cases", "sonarjs/max-switch-cases", "sonarjs/no-clear-text-protocols", "sonarjs/no-commented-code", "sonarjs/no-default-utility-imports", "sonarjs/no-fixed-wait-in-tests", "sonarjs/no-global-this", "sonarjs/no-hardcoded-ip", "sonarjs/no-identical-functions", "sonarjs/no-inverted-boolean-check", "sonarjs/no-labels", "sonarjs/no-nested-assignment", "sonarjs/no-nested-conditional", "sonarjs/no-nested-functions", "sonarjs/no-nested-switch", "sonarjs/no-nested-template-literals", "sonarjs/no-os-command-from-path", "sonarjs/no-same-line-conditional", "sonarjs/no-selector-parameter", "sonarjs/no-small-switch", "sonarjs/no-undefined-argument", "sonarjs/parameterized-tests", "sonarjs/prefer-default-last", "sonarjs/prefer-immediate-return", "sonarjs/prefer-native-lodash-alternative", "sonarjs/prefer-object-literal", "sonarjs/prefer-promise-shorthand", "sonarjs/prefer-read-only-props", "sonarjs/prefer-single-boolean-return", "sonarjs/prefer-specific-assertions", "sonarjs/prefer-type-guard", "sonarjs/prefer-while", "sonarjs/pseudo-random", "sonarjs/public-static-readonly", "sonarjs/publicly-writable-directories", "sonarjs/regex-complexity", "sonarjs/use-type-alias", "unicorn/better-dom-traversing", "unicorn/catch-error-name", "unicorn/consistent-assert", "unicorn/consistent-compound-words", "unicorn/consistent-date-clone", "unicorn/consistent-empty-array-spread", "unicorn/consistent-function-scoping", "unicorn/consistent-json-file-read", "unicorn/consistent-template-literal-escape", "unicorn/dom-node-dataset", "unicorn/expiring-todo-comments", "unicorn/explicit-length-check", "unicorn/isolated-functions", "unicorn/no-anonymous-default-export", "unicorn/no-array-from-fill", "unicorn/no-array-method-this-argument", "unicorn/no-array-reduce", "unicorn/no-array-reverse", "unicorn/no-array-sort", "unicorn/no-await-expression-member", "unicorn/no-blob-to-file", "unicorn/no-canvas-to-image", "unicorn/no-confusing-array-splice", "unicorn/no-document-cookie", "unicorn/no-empty-file", "unicorn/no-exports-in-scripts", "unicorn/no-for-loop", "unicorn/no-immediate-mutation", "unicorn/no-magic-array-flat-depth", "unicorn/no-named-default", "unicorn/no-negated-condition", "unicorn/no-negation-in-equality-check", "unicorn/no-new-array", "unicorn/no-process-exit", "unicorn/no-single-promise-in-promise-methods", "unicorn/no-static-only-class", "unicorn/no-this-assignment", "unicorn/no-typeof-undefined", "unicorn/no-unnecessary-array-flat-depth", "unicorn/no-unnecessary-array-splice-count", "unicorn/no-unnecessary-nested-ternary", "unicorn/no-unnecessary-slice-end", "unicorn/no-unreadable-array-destructuring", "unicorn/no-unreadable-iife", "unicorn/no-useless-switch-case", "unicorn/prefer-add-event-listener", "unicorn/prefer-array-find", "unicorn/prefer-array-flat", "unicorn/prefer-array-flat-map", "unicorn/prefer-array-index-of", "unicorn/prefer-array-last-methods", "unicorn/prefer-array-some", "unicorn/prefer-at", "unicorn/prefer-bigint-literals", "unicorn/prefer-blob-reading-methods", "unicorn/prefer-class-fields", "unicorn/prefer-classlist-toggle", "unicorn/prefer-date-now", "unicorn/prefer-default-parameters", "unicorn/prefer-dom-node-append", "unicorn/prefer-dom-node-remove", "unicorn/prefer-dom-node-text-content", "unicorn/prefer-event-target", "unicorn/prefer-get-or-insert-computed", "unicorn/prefer-global-this", "unicorn/prefer-includes", "unicorn/prefer-includes-over-repeated-comparisons", "unicorn/prefer-iterator-to-array-at-end", "unicorn/prefer-keyboard-event-key", "unicorn/prefer-logical-operator-over-ternary", "unicorn/prefer-math-abs", "unicorn/prefer-math-min-max", "unicorn/prefer-math-trunc", "unicorn/prefer-modern-dom-apis", "unicorn/prefer-modern-math-apis", "unicorn/prefer-module", "unicorn/prefer-native-coercion-functions", "unicorn/prefer-negative-index", "unicorn/prefer-number-properties", "unicorn/prefer-object-from-entries", "unicorn/prefer-optional-catch-binding", "unicorn/prefer-prototype-methods", "unicorn/prefer-query-selector", "unicorn/prefer-queue-microtask", "unicorn/prefer-reflect-apply", "unicorn/prefer-regexp-test", "unicorn/prefer-response-static-json", "unicorn/prefer-set-has", "unicorn/prefer-set-size", "unicorn/prefer-simple-condition-first", "unicorn/prefer-single-call", "unicorn/prefer-split-limit", "unicorn/prefer-spread", "unicorn/prefer-string-match-all", "unicorn/prefer-string-pad-start-end", "unicorn/prefer-string-raw", "unicorn/prefer-string-repeat", "unicorn/prefer-string-replace-all", "unicorn/prefer-string-slice", "unicorn/prefer-string-starts-ends-with", "unicorn/prefer-string-trim-start-end", "unicorn/prefer-structured-clone", "unicorn/prefer-switch", "unicorn/prefer-ternary", "unicorn/prefer-top-level-await", "unicorn/prefer-type-error", "unicorn/relative-url-style", "unicorn/require-passive-events", "package-json/require-packageManager"]
+all_level_rules = ["no-labels", "no-new", "no-nested-ternary", "default-case-last", "import-x/first", "import-x/newline-after-import", "barrel-files/avoid-barrel-files", "perfectionist/sort-imports", "perfectionist/sort-named-imports", "perfectionist/sort-exports", "perfectionist/sort-named-exports", "complexity", "jsdoc/no-types", "jsdoc/require-description", "jsdoc/require-jsdoc", "jsdoc/require-param", "jsdoc/match-name", "jsdoc/informative-docs", "jsdoc/require-param-description", "jsdoc/tag-lines", "max-depth", "max-lines", "max-lines-per-function", "max-nested-callbacks", "max-params", "max-statements", "n/no-process-exit", "n/prefer-global/buffer", "n/prefer-global/console", "n/prefer-global/process", "n/prefer-global/url", "n/prefer-global/url-search-params", "n/prefer-promises/dns", "n/prefer-promises/fs", "no-console", "no-param-reassign", "package-json/repository-shorthand", "package-json/require-attribution", "package-json/require-description", "package-json/require-exports", "package-json/require-files", "package-json/require-name", "package-json/require-repository", "package-json/require-sideEffects", "package-json/require-type", "package-json/require-version", "package-json/sort-collections", "security/detect-child-process", "security/detect-possible-timing-attacks", "sonarjs/bitwise-operators", "sonarjs/constructor-for-side-effects", "sonarjs/hooks-before-test-cases", "sonarjs/max-switch-cases", "sonarjs/no-clear-text-protocols", "sonarjs/no-commented-code", "sonarjs/no-default-utility-imports", "sonarjs/no-fixed-wait-in-tests", "sonarjs/no-global-this", "sonarjs/no-hardcoded-ip", "sonarjs/no-identical-functions", "sonarjs/no-inverted-boolean-check", "sonarjs/no-labels", "sonarjs/no-nested-assignment", "sonarjs/no-nested-conditional", "sonarjs/no-nested-functions", "sonarjs/no-nested-switch", "sonarjs/no-nested-template-literals", "sonarjs/no-os-command-from-path", "sonarjs/no-same-line-conditional", "sonarjs/no-selector-parameter", "sonarjs/no-small-switch", "sonarjs/no-undefined-argument", "sonarjs/parameterized-tests", "sonarjs/prefer-default-last", "sonarjs/prefer-immediate-return", "sonarjs/prefer-native-lodash-alternative", "sonarjs/prefer-object-literal", "sonarjs/prefer-promise-shorthand", "sonarjs/prefer-read-only-props", "sonarjs/prefer-single-boolean-return", "sonarjs/prefer-specific-assertions", "sonarjs/prefer-type-guard", "sonarjs/prefer-while", "sonarjs/pseudo-random", "sonarjs/public-static-readonly", "sonarjs/publicly-writable-directories", "sonarjs/regex-complexity", "sonarjs/use-type-alias", "unicorn/better-dom-traversing", "unicorn/catch-error-name", "unicorn/consistent-assert", "unicorn/consistent-compound-words", "unicorn/consistent-date-clone", "unicorn/consistent-empty-array-spread", "unicorn/consistent-function-scoping", "unicorn/consistent-json-file-read", "unicorn/consistent-template-literal-escape", "unicorn/dom-node-dataset", "unicorn/expiring-todo-comments", "unicorn/explicit-length-check", "unicorn/isolated-functions", "unicorn/no-anonymous-default-export", "unicorn/no-array-from-fill", "unicorn/no-array-method-this-argument", "unicorn/no-array-reduce", "unicorn/no-array-reverse", "unicorn/no-array-sort", "unicorn/no-await-expression-member", "unicorn/no-blob-to-file", "unicorn/no-canvas-to-image", "unicorn/no-confusing-array-splice", "unicorn/no-document-cookie", "unicorn/no-empty-file", "unicorn/no-exports-in-scripts", "unicorn/no-for-loop", "unicorn/no-immediate-mutation", "unicorn/no-magic-array-flat-depth", "unicorn/no-named-default", "unicorn/no-negated-condition", "unicorn/no-negation-in-equality-check", "unicorn/no-new-array", "unicorn/no-process-exit", "unicorn/no-single-promise-in-promise-methods", "unicorn/no-static-only-class", "unicorn/no-this-assignment", "unicorn/no-typeof-undefined", "unicorn/no-unnecessary-array-flat-depth", "unicorn/no-unnecessary-array-splice-count", "unicorn/no-unnecessary-nested-ternary", "unicorn/no-unnecessary-slice-end", "unicorn/no-unreadable-array-destructuring", "unicorn/no-unreadable-iife", "unicorn/no-useless-switch-case", "unicorn/prefer-add-event-listener", "unicorn/prefer-array-find", "unicorn/prefer-array-flat", "unicorn/prefer-array-flat-map", "unicorn/prefer-array-index-of", "unicorn/prefer-array-last-methods", "unicorn/prefer-array-some", "unicorn/prefer-at", "unicorn/prefer-bigint-literals", "unicorn/prefer-blob-reading-methods", "unicorn/prefer-class-fields", "unicorn/prefer-classlist-toggle", "unicorn/prefer-date-now", "unicorn/prefer-default-parameters", "unicorn/prefer-dom-node-append", "unicorn/prefer-dom-node-remove", "unicorn/prefer-dom-node-text-content", "unicorn/prefer-event-target", "unicorn/prefer-get-or-insert-computed", "unicorn/prefer-global-this", "unicorn/prefer-includes", "unicorn/prefer-includes-over-repeated-comparisons", "unicorn/prefer-iterator-to-array-at-end", "unicorn/prefer-keyboard-event-key", "unicorn/prefer-logical-operator-over-ternary", "unicorn/prefer-math-abs", "unicorn/prefer-math-min-max", "unicorn/prefer-math-trunc", "unicorn/prefer-modern-dom-apis", "unicorn/prefer-modern-math-apis", "unicorn/prefer-module", "unicorn/prefer-native-coercion-functions", "unicorn/prefer-negative-index", "unicorn/prefer-number-properties", "unicorn/prefer-object-from-entries", "unicorn/prefer-optional-catch-binding", "unicorn/prefer-prototype-methods", "unicorn/prefer-query-selector", "unicorn/prefer-queue-microtask", "unicorn/prefer-reflect-apply", "unicorn/prefer-regexp-test", "unicorn/prefer-response-static-json", "unicorn/prefer-set-has", "unicorn/prefer-set-size", "unicorn/prefer-simple-condition-first", "unicorn/prefer-single-call", "unicorn/prefer-split-limit", "unicorn/prefer-spread", "unicorn/prefer-string-match-all", "unicorn/prefer-string-pad-start-end", "unicorn/prefer-string-raw", "unicorn/prefer-string-repeat", "unicorn/prefer-string-replace-all", "unicorn/prefer-string-slice", "unicorn/prefer-string-starts-ends-with", "unicorn/prefer-string-trim-start-end", "unicorn/prefer-structured-clone", "unicorn/prefer-switch", "unicorn/prefer-ternary", "unicorn/prefer-top-level-await", "unicorn/prefer-type-error", "unicorn/relative-url-style", "unicorn/require-passive-events", "package-json/require-packageManager"]
 
 [[config_file]]
 target = "eslint/eslint.mjs"
@@ -232,6 +247,12 @@ check = "javascript/tsc"
 per_scope = true
 target = "jsconfig.json"
 tool = "tsc"
+
+[[config_file]]
+target = "biome.json"
+per_scope = true
+tool = "biome"
+check = "javascript/biome"
 
 [[config_file]]
 target = "knip.json"
@@ -253,7 +274,9 @@ command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{c
 example = "The declaration `const unused = 1;` reports no-unused-vars. Delete the variable."
 exit_codes = [1]
 fix = ["eslint", "--fix", "--config", "{config_file:eslint}", "{files}"]
-help = "Run `gspot check --fix` for the rules that fix themselves, then read each remaining line; `gspot explain <rule>` links the rule documentation."
+help = "Run `gspot check --fix` for the rules that fix themselves, then read each remaining line; `gspot explain javascript/eslint <rule>` links the rule documentation."
+limits = { "max-lines" = "file_lines", "max-lines-per-function" = "function_lines", "max-params" = "function_parameters", "max-statements" = "function_statements", "max-depth" = "block_nesting", "max-nested-callbacks" = "callback_nesting", "complexity" = "cyclomatic_complexity", "barrel-files/avoid-barrel-files" = "index_exports", "gspot/no-trivial-functions" = "trivial_function_statements" }
+limit_languages = ["javascript", "typescript"]
 name = "eslint"
 stage = "commit"
 summary = "Runs the shipped ESLint rules on JavaScript, TypeScript, component files, and package.json."
@@ -300,7 +323,7 @@ pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\
 command = ["knip", "--config", "{config_file:knip}", "--no-progress", "--reporter", "json", "{workspace:--workspace}"]
 cwd = "root"
 example = "An export that no entry point uses reports a finding. Remove it, or list a dynamically loaded file in `tools.knip.entry`."
-help = "Delete what knip names. For a file loaded in a way that knip cannot trace, add an entry point in `tools.knip.entry`."
+help = "Import the file from the code or test that uses it. Delete it when nothing will. For a file that a tool loads by path, add it to `tools.knip.entry`."
 name = "knip"
 runs = "scope"
 stage = "push"
@@ -310,6 +333,22 @@ why = "Teams read, maintain, and ship dead code for nobody."
 [check.output]
 format = "knip"
 
+[[check]]
+command = ["biome", "lint", "--config-path", "{config_file:biome}", "--reporter=rdjson", "--max-diagnostics=none", "--only=complexity/noExcessiveCognitiveComplexity", "{files}"]
+example = "Nested conditions raise the cognitive score. Move each independent task into its own function."
+exit_codes = [1]
+files = { extensions = [".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".mts", ".cts", ".astro", ".vue", ".svelte"], tags = ["shebang:node"] }
+help = "Separate the tasks in the reported function to reduce its cognitive complexity."
+level = "all"
+limits = { "complexity/noExcessiveCognitiveComplexity" = "cognitive_complexity" }
+limit_languages = ["javascript", "typescript"]
+name = "biome"
+runs = "scope"
+stage = "commit"
+summary = "Checks cognitive complexity against the scope's language limits."
+why = "Nested control flow makes a function harder to follow and change."
+output = { format = "json", list = "diagnostics", fields = { file = "location.path", line = "location.range.start.line", column = "location.range.start.column", rule = "code.value", message = "message" } }
+
 [[eslint.selectors]]
 message = "Use a label only on a loop or switch statement. Remove this label."
 selector = "LabeledStatement:not([body.type=/^(?:WhileStatement|DoWhileStatement|ForStatement|ForInStatement|ForOfStatement|SwitchStatement)$/])"
@@ -318,3 +357,28 @@ selector = "LabeledStatement:not([body.type=/^(?:WhileStatement|DoWhileStatement
 level = "all"
 message = "This loop has no initializer or update. Use a while loop for its condition."
 selector = "ForStatement[init=null][update=null][test!=null]"
+
+[[eslint.selectors]]
+message = "The delete operator removes properties. Pass a property access instead of this expression."
+selector = "UnaryExpression[operator='delete']:not([argument.type='MemberExpression']):not([argument.type='ChainExpression']):not([argument.type='Identifier'])"
+
+[[eslint.selectors]]
+level = "all"
+message = "Move this assignment into a separate statement before using its value."
+selector = "AssignmentExpression:not(ExpressionStatement > AssignmentExpression):not(AssignmentExpression > AssignmentExpression):not(BinaryExpression[operator=/^(?:==|!=|===|!==|<|<=|>|>=)$/] > AssignmentExpression):not(SequenceExpression > AssignmentExpression):not(VariableDeclarator > AssignmentExpression):not(ArrowFunctionExpression > AssignmentExpression.body):not(LogicalExpression > AssignmentExpression.right):not(WhileStatement > AssignmentExpression.test):not(DoWhileStatement > AssignmentExpression.test):not(ForStatement > AssignmentExpression.init):not(ForStatement > AssignmentExpression.update)"
+
+[[eslint.selectors]]
+message = "Call a function or method instead of a literal value."
+selector = "CallExpression[callee.type=/^(?:ArrayExpression|ClassExpression|ObjectExpression|Literal|TemplateLiteral)$/]"
+
+[[eslint.selectors]]
+message = "Use a function as the template tag instead of a literal value."
+selector = "TaggedTemplateExpression[tag.type=/^(?:ArrayExpression|ClassExpression|ObjectExpression|Literal|TemplateLiteral)$/]"
+
+[[eslint.selectors]]
+message = "Use the package's public name instead of a node_modules path."
+selector = "ImportDeclaration[source.value=/node_modules/]"
+
+[[eslint.selectors]]
+message = "Use the package's public name instead of a node_modules path."
+selector = "CallExpression[callee.type='Identifier'][callee.name='require'][arguments.length=1][arguments.0.type='Literal'][arguments.0.value=type(string)][arguments.0.value=/node_modules/]"

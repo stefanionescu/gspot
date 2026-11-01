@@ -34,6 +34,9 @@ gspot check api
 
 To add a configuration that init did not find: `gspot add zod --scope api`.
 
+`--scope` names a scope from the repository root, even when you run the command in a subfolder. `--scope .` selects
+the root. `gspot check` and `--paths` read each path from your current folder.
+
 ## Which scope a file belongs to
 
 A file belongs to the deepest scope that contains it. Files outside every scope belong to the root.
@@ -46,6 +49,8 @@ names a configuration or a check: `gspot explain bash` describes the configurati
 file.
 
 ## Settings in a scope
+
+At level `all`, raise the function length limit with a reason:
 
 ```shell
 gspot set limits.function_lines 80 --scope api --reason "The parser is one state machine."

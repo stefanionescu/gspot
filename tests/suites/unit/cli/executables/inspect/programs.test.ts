@@ -5,18 +5,18 @@ import { getTool } from '#cli/manifests/tools.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
-import { inspectTool } from '#cli/executables/inspect.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { unlink, symlink, readFile } from 'node:fs/promises';
 import { listExecutablePaths } from '#cli/executables/locate.ts';
+import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers/projects.ts';
 import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
 import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
-import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
+import { inspectTool, formatUnavailableNote } from '#cli/executables/inspect.ts';
 import { fakeNpmPackage, writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 
 test('tool inspection finds the project compiler, and the repository compiler from a copy', async () => {
@@ -60,7 +60,7 @@ test('version reads and runs use the other tools of the tool folder', async () =
     const read = inspectTool(buildToolSearch(sandbox.path), tool);
     expect(read).toMatchObject({ state: 'ok', found: '3.8.1' });
     const result = await runTool([read.path!], {
-        timeoutSeconds: SETTING_DEFINITIONS['tool_timeout_seconds'].default,
+        timeoutSeconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined),
         cwd: sandbox.path,
         env,
     });
@@ -133,7 +133,7 @@ async function fakeMiseTsc(root: string, status: number) {
         ),
     );
     const paths = listExecutablePaths(join(root, 'work'), 'tsc', {
-        timeoutSeconds: SETTING_DEFINITIONS['tool_timeout_seconds'].default,
+        timeoutSeconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined),
         folders: [join(root, 'work')],
     });
     return { executable, paths };
@@ -144,7 +144,7 @@ test('mise finds the program of the repository, and it runs from a copy', async 
     const { executable, paths } = await fakeMiseTsc(sandbox.path, 0);
     expect(paths).toStrictEqual([executable]);
     const result = await runTool([executable], {
-        timeoutSeconds: SETTING_DEFINITIONS['tool_timeout_seconds'].default,
+        timeoutSeconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined),
         cwd: join(sandbox.path, 'copy'),
     });
     expect({ code: result.code, stdout: result.stdout }).toStrictEqual({ code: 0, stdout: '0.0.0-test\n' });
@@ -250,4 +250,15 @@ test('a Python tool uses the tool project environment, not the repository .venv'
         found: '1.2.3',
     });
     expect(await isOnDisk(join(sandbox.path, 'fallback-ran'))).toBe(false);
+});
+
+test('a missing managed program names mise being absent from PATH instead of claiming the tool is uninstalled', async () => {
+    await using sandbox = await testdir();
+    using _lookup = fakeExecutableLookup(null);
+    const tool = buildProgramPin('scanner', '0.0.0-test');
+    const inspection = inspectTool(buildToolSearch(sandbox.path), tool);
+    expect(inspection.state).toBe('missing');
+    expect(formatUnavailableNote(tool, inspection)).toBe(
+        'mise is not on PATH. Install mise (https://mise.jdx.dev/getting-started.html), or install scanner 0.0.0-test yourself.',
+    );
 });

@@ -1,0 +1,17 @@
+import { test, expect } from 'bun:test';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+
+test('explain reads built-in YAML rule fixes without an installed tool and rejects unknown rules', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['data-files']) });
+    const explained = await runGspot(sandbox.path, ['explain', 'data-files/yaml', 'documents']);
+    expect(explained.code, explained.stderr).toBe(0);
+    expect(explained.stdout).toContain('What to do:');
+    expect(explained.stdout).toContain('gspot ignore data-files/yaml --rule documents --paths');
+    expect(explained.stdout.indexOf('What to do:')).toBeLessThan(explained.stdout.indexOf('Turn it off'));
+    expect(explained.stdout).not.toContain('undefined');
+    const refused = await runGspot(sandbox.path, ['explain', 'data-files/yaml', 'document']);
+    expect(refused.code).toBe(2);
+    expect(refused.stderr).toBe('gspot does not know rule document of data-files/yaml.\n');
+});

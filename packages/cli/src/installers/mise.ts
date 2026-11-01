@@ -2,10 +2,7 @@ import which from 'which';
 import { join, dirname } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import type { Session } from '#cli/types/session.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { findSystemSkip } from '#cli/planning/skips.ts';
-import { listCheckTools } from '#cli/planning/tools.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { formatCount, compareText } from '#cli/system/text.ts';
@@ -45,17 +42,13 @@ import {
     MISE_LOCKED_ENVIRONMENT,
 } from '#cli/config/installers/installers.ts';
 
-function selectMiseTools(session: Session, tools: Tool[]) {
+function selectMiseTools(install: ToolInstall) {
+    const { session, tools, checkTools } = install;
     const configurations = session.toolConfigurations;
     const host = { platform: getOperatingSystem(), arch: process.arch };
-    const toolNames = new Set(
-        session.configuredChecks
-            .filter((planned) => findSystemSkip(planned.check, planned.tool, host) === undefined)
-            .flatMap((planned) => listCheckTools(planned)),
-    );
     const hookTools = tools.filter(
         (tool) =>
-            toolNames.has(tool.name) && findMissingBuild(tool, host) === undefined && findMisePin(tool) !== undefined,
+            checkTools.has(tool.name) && findMissingBuild(tool, host) === undefined && findMisePin(tool) !== undefined,
     );
     const pins = listMisePins(configurations).filter(
         (pin) =>
@@ -196,8 +189,8 @@ Install the mise tools, and read their executable folders.
 @returns the line about the tools that mise installed, the note about missing tools, and the folders of the tools.
 */
 export async function installMiseTools(install: ToolInstall): Promise<MiseInstall> {
-    const { session, tools, misePath, steps } = install;
-    const { pins, hookTools } = selectMiseTools(session, tools);
+    const { session, misePath, steps } = install;
+    const { pins, hookTools } = selectMiseTools(install);
     if (misePath === null) {
         const missing = pins.flatMap((pin) => {
             const name =

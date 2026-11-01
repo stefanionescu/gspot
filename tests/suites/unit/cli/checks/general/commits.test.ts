@@ -2,12 +2,17 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/planning/session.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
-async function checkMessage(message: string): Promise<{ rule: string | undefined; message: string }[]> {
+async function checkMessage(
+    message: string,
+    commentChar?: string,
+): Promise<{ rule: string | undefined; message: string }[]> {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    if (commentChar !== undefined) runGitStep(sandbox.path, ['config', 'core.commentChar', commentChar]);
     const messageFile = join(sandbox.path, '.git', 'COMMIT_EDITMSG');
     await writeFile(messageFile, message);
     const session = await openSession(sandbox.path);
@@ -63,4 +68,39 @@ test('references reports finding IDs, plan steps, and issue footers without a nu
         { rule: 'plan-step', line: '4' },
         { rule: 'issue-footer', line: '6' },
     ]);
+});
+
+test.each([';', 'auto', undefined])(
+    'the scissors marker selects the comment character over core.commentChar %p',
+    async (commentChar) => {
+        const findings = await checkMessage(
+            [
+                'fix(cli): retain the requested message',
+                '; https://chatgpt.com/share/comment',
+                '# https://chatgpt.com/share/body',
+                '; ------------------------ >8 ------------------------',
+                '+ https://chatgpt.com/share/diff',
+            ].join('\n'),
+            commentChar,
+        );
+        expect(findings).toHaveLength(1);
+        expect(findings[0]?.message).toStartWith('Line 3 links to an AI session.');
+    },
+);
+
+test.each([
+    [';', 3],
+    ['auto', 2],
+    [undefined, 2],
+] as const)('without scissors core.commentChar %p chooses which line is a comment', async (commentChar, line) => {
+    const findings = await checkMessage(
+        [
+            'fix(cli): retain the requested message',
+            '; https://chatgpt.com/share/semicolon',
+            '# https://chatgpt.com/share/hash',
+        ].join('\n'),
+        commentChar,
+    );
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.message).toStartWith(`Line ${String(line)} links to an AI session.`);
 });

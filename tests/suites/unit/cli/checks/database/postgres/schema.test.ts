@@ -1,9 +1,9 @@
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { createRunCache } from '#cli/system/cache.ts';
 import { parseSqlFile } from '#cli/parsers/code/sql.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildDatabaseSchema } from '#cli/checks/database/postgres/schema.ts';
 
 import {
@@ -36,7 +36,7 @@ test('table and column renames retain their foreign keys, indexes, and row secur
         },
     ]);
     expect([...schema.indexed]).toStrictEqual([['public.groups', [['organization_id', 'user_id']]]]);
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['postgres'], {
             level: 'all',
             tables: '[postgres]\nclient_schemas = ["public"]\n',

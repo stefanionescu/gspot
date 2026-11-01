@@ -5,14 +5,14 @@ import type { Files } from '#cli/types/system/files.ts';
 import { installTools } from '#cli/installers/install.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { readRepositoryRoot } from '#cli/repository/read.ts';
+import { listHostCheckTools } from '#cli/planning/tools.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import type { Generation } from '#cli/types/generation/files.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import type { InstallCommandJson } from '#cli/types/commands/commands.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
+import { type CommandLocation, type InstallCommandJson } from '#cli/types/commands/commands.ts';
 
 import {
     TOOL_PROJECT_FILES,
@@ -29,13 +29,16 @@ function hasOutdatedToolProjects(files: Files, generated: Generation): boolean {
     });
 }
 
-async function runInstallCommand(cwd: string, cancelSignal: AbortSignal): Promise<CommandResult<InstallCommandJson>> {
-    const root = await readRepositoryRoot(cwd);
+async function runInstallCommand(root: string, cancelSignal: AbortSignal): Promise<CommandResult<InstallCommandJson>> {
     const session = await openSession(root, { cancelSignal });
     const generated = buildGeneratedFiles(session);
     const writer = openFiles(root);
     if (hasOutdatedToolProjects(writer, generated)) throw new GspotError('install', TOOL_PROJECTS_MESSAGE);
-    const { installed, notes, steps } = await installTools(session, writer, generated);
+    const { installed, notes, steps } = await installTools(session, {
+        writer,
+        generated,
+        checkTools: listHostCheckTools(session.configuredChecks),
+    });
     const summary = installed.length === 0 ? TOOLS_INSTALLED_MESSAGE : installed.join('\n');
     return {
         text: `${[summary, ...notes].join('\n')}\n`,
@@ -49,8 +52,9 @@ Register the install command.
 
 @param program the gspot program that gets the command.
 @param onResult receives the result of the command.
+@param location the calling folder and the Git root validated before the action.
 */
-export function registerInstall(program: Command, onResult: CommandCompletion): void {
+export function registerInstall(program: Command, onResult: CommandCompletion, location: CommandLocation): void {
     program
         .command('install')
         .summary(COMMAND_HELP.install.summary)
@@ -58,7 +62,7 @@ export function registerInstall(program: Command, onResult: CommandCompletion): 
         .action(async () => {
             onResult(
                 await runCancelableCommand(
-                    (cancelSignal) => runInstallCommand(process.cwd(), cancelSignal),
+                    (cancelSignal) => runInstallCommand(location.root, cancelSignal),
                     INSTALLATION_STOPPED_MESSAGE,
                 ),
             );

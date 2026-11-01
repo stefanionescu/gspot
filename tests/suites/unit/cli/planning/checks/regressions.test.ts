@@ -1,4 +1,3 @@
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -7,7 +6,7 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { isActive, planChecks, stripCoverageArguments } from '#cli/planning/checks.ts';
 
 test('a shared function coverage limit enables Jest coverage without enabling pytest coverage', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python', 'pytest', 'jest'], {
             tables: '[coverage]\nlines = 0\nfunctions = 100\n',
         }),
@@ -42,7 +41,7 @@ test('stage all leaves out message checks even when only names one', async () =>
 });
 
 test('a check selected in two scopes runs once at the root', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['docker'], {
             scopes: [{ path: 'app', configurations: ['docker'] }],
         }),
@@ -59,7 +58,7 @@ test('a check selected in two scopes runs once at the root', async () => {
 });
 
 test('a replacer with no matching files leaves the original check active', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript', 'vue']),
         'source.ts': 'export const value = 1;\n',
     });
@@ -77,7 +76,7 @@ test('a replacer with no matching files leaves the original check active', async
 });
 
 test('explicit paths intersect the staged set', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript']),
         'first.js': 'export const first = 1;\n',
         'second.js': 'export const second = 2;\n',
@@ -132,7 +131,7 @@ test('v8r keeps unowned schema files and excludes files validated by other tools
         '.mise.production.toml',
     ];
     const schemaFiles = ['compose.yaml', '.github/dependabot.yml', 'renovate.json', 'app/config.json'];
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         ...Object.fromEntries(
             [...otherToolFiles, ...schemaFiles].map((path) => [path, path.endsWith('.toml') ? '' : '{}']),
         ),

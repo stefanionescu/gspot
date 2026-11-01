@@ -9,10 +9,11 @@ gspot writes rules: Markdown files for your configurations and level, in the `ru
 ## The `AGENTS.md` managed block
 
 gspot writes one managed block, the part between the gspot markers, and keeps your own text outside it. The block lists
-the rules and names `gspot check --staged`, the command to run before a commit.
+the rules and names `gspot check --staged --stage commit` before a commit and `gspot check --changed --stage push`
+before a push.
 
-It also names the commands that change settings, and the generated files that agents must not edit, with the keys gspot
-sets in your own files.
+It also names the commands that change settings. The gspot block of `.gitattributes` marks generated paths outside
+`.gspot/` with `linguist-generated`; [Generated files](/reference/generated-files/) explains their contents.
 
 When `AGENTS.md` already has its own top heading, gspot writes its managed block one heading level lower.
 

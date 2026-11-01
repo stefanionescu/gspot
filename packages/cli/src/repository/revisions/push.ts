@@ -94,8 +94,7 @@ async function readShallowBoundaries(root: string, cancelSignal?: AbortSignal): 
 
 async function readComparison(search: PushSearch, hash: string, remoteHash: string): Promise<Comparison> {
     const { root, cancelSignal } = search;
-    if (!ABSENT_HASH.test(remoteHash)) {
-        assertCommitPresent(search.commits, remoteHash);
+    if (!ABSENT_HASH.test(remoteHash) && search.commits.has(remoteHash)) {
         const previous = search.commits.get(remoteHash);
         if (previous === undefined)
             return { base: await readPushBase(root, cancelSignal), changed: undefined, range: [hash] };
@@ -155,7 +154,10 @@ async function addPushLine(search: PushSearch, pushed: PushedRevisions, line: Pu
 
 async function readPushBase(root: string, cancelSignal?: AbortSignal): Promise<string> {
     const compared = await readDefaultRef(root, cancelSignal);
-    if (compared !== '') return readMergeBase(root, compared, cancelSignal);
+    if (compared !== '') {
+        const base = await readMergeBase(root, compared, cancelSignal);
+        if (base.hash !== undefined) return base.hash;
+    }
     const roots = await readGitLines(root, GIT_ROOT_COMMITS_ARGUMENTS, { cancelSignal });
     return roots.at(-1) as string;
 }

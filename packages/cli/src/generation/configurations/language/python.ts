@@ -8,8 +8,8 @@ import { type PlannedConfig } from '#cli/types/generation/files.ts';
 import { type FormatSettings } from '#cli/types/generation/formatting.ts';
 import { DEFAULT_QUOTES } from '#cli/config/generation/configurations/general.ts';
 import { UV_LOCKFILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
+import { convertToGlobs, listCheckIgnoreSections } from '#cli/generation/ignores.ts';
 import { getTable, getLimit, listIgnores, listIgnoredRules } from '#cli/settings/scopes.ts';
-import { convertToGlobs, buildIgnoreSections, listCheckIgnoreSections } from '#cli/generation/ignores.ts';
 
 import {
     RUFF_TABLE,
@@ -25,7 +25,7 @@ import {
 } from '#cli/config/generation/configurations/language/language.ts';
 
 function listIgnoredGlobs(planned: PlannedConfig, checkId: string, root: string): string[] {
-    const shared = convertToGlobs(buildIgnoreSections(planned.session)).filter(
+    const shared = convertToGlobs(planned.ignoreSections).filter(
         (pattern) =>
             pattern.endsWith('/**') ||
             planned.configuration.files.extensions.some((extension) => pattern.endsWith(extension)),

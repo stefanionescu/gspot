@@ -34,14 +34,6 @@ limits.sql.file_lines = 30
 tools.sqlfluff.dialect = "postgres"
 `;
 
-export const LIST_SCOPE_ROWS = [
-    'dependencies.allowed_registries          ["registry.npmjs.org","regi… adding              gspot.toml',
-    'dependencies.min_release_age_days        14                           lowering            gspot.toml',
-    'limits.file_lines                        250                          raising             gspot.toml',
-    'test_files                               ["checks/**"]                                    gspot.toml',
-    'limits.file_lines                        200                          raising             [scope "api"]  [scope api]',
-] as const;
-
 export const SHFMT_IGNORE_SETTINGS = {
     tables: `[[ignore]]
 check = "bash/shfmt"
@@ -51,11 +43,6 @@ reason = "Review this separately."
 
 export const OFF_BY_IGNORE = 'off (ignore)';
 
-export const UPDATED_GITATTRIBUTES = 'updated  .gitattributes';
-
-export const TOOLS_CHANGED_LINE =
-    'note     The tools changed. Run gspot install; until then gspot/generated-files fails on the tool lockfile.';
-
 export const UNSET_REFUSALS = [
     {
         commandArguments: ['unset', 'configurations'],
@@ -64,7 +51,7 @@ export const UNSET_REFUSALS = [
     {
         commandArguments: ['unset', 'no_such_key'],
         message:
-            'There is no setting called no_such_key in the selected configurations. The settings that exist at the top level are level, tool_timeout_seconds, test_files, hooks, ci, rules, tools, dependencies and 10 more. Run gspot list settings to see every one.',
+            'There is no setting called no_such_key. The settings that exist at the top level are level, tool_timeout_seconds, test_files, hooks, ci, rules, tools, dependencies and 10 more. Run gspot list settings to see every one.',
     },
     {
         commandArguments: ['unset', 'level', 'extra'],

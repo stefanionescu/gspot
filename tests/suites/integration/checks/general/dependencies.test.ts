@@ -10,7 +10,7 @@ import { SYNCPACK_PACKAGE_FILES } from '#tests/config/commands/init/conflicts.ts
 
 async function initAtLevelAll(root: string): Promise<void> {
     commitAll(root);
-    const initialized = await spawnGspot(root, ['init', '--yes', '--no-configurations', '--level', 'all']);
+    const initialized = await spawnGspot(root, ['init', '--no-configurations', '--level', 'all']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
 }
 

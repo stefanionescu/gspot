@@ -1,11 +1,11 @@
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { EXTERNAL_COMMAND_GUIDE, EXTERNAL_COMMAND_FINDINGS } from '#tests/config/checks/general/docs.ts';
 
 test('command fences resolve local files at the repository root and skip external repositories, remote endpoints and media types', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['docs'], { level: 'all' }),
         'docs/guide.md': EXTERNAL_COMMAND_GUIDE,
         'src/here.ts': '',
@@ -17,7 +17,7 @@ test('command fences resolve local files at the repository root and skip externa
 });
 
 test('Bun runs declared workspace bins before installation and still reports unknown commands', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['docs'], { level: 'all' }),
         'package.json': '{"private":true,"workspaces":["packages/*"]}\n',
         'packages/cli/package.json': '{"name":"@example/cli","bin":{"gspot":"bin/gspot.js"}}\n',

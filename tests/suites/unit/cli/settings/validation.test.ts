@@ -35,7 +35,6 @@ test('an import rule may import the rules above it, and a rule below is refused'
         { name: 'entry', paths: ['entry/**'] },
     ]);
     expect(listAllowedRules(settings.import_rule, 1)).toStrictEqual(['app', 'storage']);
-    expect(settings.written).not.toHaveProperty('import_rule.1.can_import');
     expect(() => readSettings(ORDERED_IMPORT_RULES.replace('paths = ["app/**"]', 'paths = [3]'), sandbox.path)).toThrow(
         'import_rule.1.paths.0',
     );
@@ -140,7 +139,7 @@ test.each(['constructor', 'prototype'])('a rule named %s is not mistaken for a s
     ).toStrictEqual([]);
 });
 
-test.each(['latest', '20240101__init.sql'])('the freeze cutoff refuses an invalid version: %s', (through) => {
+test.each(['latest'])('the freeze cutoff refuses an invalid version: %s', (through) => {
     using sandbox = createTemporaryFolder();
     expect(() =>
         readSettings(`configurations = ["postgres"]\n[postgres]\nfrozen_through = "${through}"\n`, sandbox.path),

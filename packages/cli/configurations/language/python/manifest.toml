@@ -330,6 +330,8 @@ exit_codes = [1]
 files = { extensions = [".py", ".pyi"] }
 fix = ["ruff", "check", "--no-cache", "--fix", "--quiet", "{files}"]
 help = "Run `gspot check --fix` for the rules that fix themselves. Turn one rule off with `gspot ignore python/ruff --rule <rule> --reason \"<why>\"`, and add `--paths` to limit it."
+limits = { "C901" = "cyclomatic_complexity", "PLR0915" = "function_statements", "PLR0913" = "function_parameters", "PLR0917" = "function_parameters", "PLR0912" = "function_branches", "PLR0911" = "function_returns" }
+limit_languages = ["python"]
 name = "ruff"
 output = { format = "json", fields = { file = "filename", line = "location.row", column = "location.column", rule = "code", message = "message" } }
 stage = "commit"
@@ -414,6 +416,8 @@ example = "A Python function over `limits.python.function_lines` reports `functi
 files = { extensions = [".py"] }
 help = "Split the function by responsibility, or raise `limits.python.function_lines` with a reason."
 level = "all"
+limits = ["function_lines"]
+limit_languages = ["python"]
 name = "function-size"
 runs = "scope"
 stage = "commit"

@@ -43,15 +43,15 @@ bunx --no-install gspot check
 ```
 
 1. `bun add --dev --exact @gspothq/cli` adds gspot as a development dependency, pinned to one version.
-2. `gspot init` shows a plan. When you accept it, gspot writes `gspot.toml`, the config files, the rules for coding
+2. `gspot init` prints its plan and writes `gspot.toml`, the config files, the rules for coding
    agents, and the Git hooks, and deletes the config files it replaces. CI stays off until you enable it;
    `gspot doctor` suggests the commands for your provider.
 3. `gspot install` installs the pinned tools and turns on the Git hooks. With mise, it also installs the programs that
    do not come from npm or PyPI. Without mise, it names each program that you must install yourself.
 4. `gspot check` runs the checks on every file. From then on, the Git hooks check each commit and push.
 
-gspot starts at level `basic`. To start at level `all`, add `--level all` to the init command. To print the plan
-and write nothing, answer no when init asks.
+gspot starts at level `basic`. To start at level `all`, add `--level all` to the init command. Init writes without
+asking. It asks nothing in CI or in a session of a coding agent either.
 
 Commit `gspot.toml` and the files that `gspot init` and `gspot install` wrote. In each new clone, install the
 dependencies first, then run the install command above.

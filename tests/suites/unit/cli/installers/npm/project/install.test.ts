@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
+import { createFileTree } from 'testdirs';
 import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -14,6 +14,7 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { NPM_TOOL_PROJECT } from '#cli/config/generation/generation.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { installNpmTools, planNpmLockfile } from '#cli/installers/npm/project.ts';
 
 import {
@@ -46,7 +47,7 @@ test.each([...FAILED_INSTALL_CASES])(
     'a failed $operation keeps the files and hides credentials',
     async ({ frozen, operation }) => {
         const refusal = 'HTTP 403 Forbidden';
-        await using sandbox = await testdir();
+        await using sandbox = await createGitSandbox({});
         const token = 'synthetic-registry-failure-token';
         const password = 'synthetic-registry-password/with spaces';
         const registry = `https://alex:${encodeURIComponent(password)}@registry.example.com/`;
@@ -94,7 +95,7 @@ test.each([...FAILED_INSTALL_CASES])(
 );
 
 test('a cached lockfile that holds registry credentials is refused and the files stay', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const { files, error } = await prepareCredentialProject(sandbox.path, CREDENTIAL_PACKAGE_JSON, CREDENTIAL_LOCKFILE);
     expect(error.message).toBe(
         'The npm lockfile holds the registry credentials of the repository. gspot kept the existing files. Remove the credentials from the registry URL.',
@@ -104,7 +105,7 @@ test('a cached lockfile that holds registry credentials is refused and the files
 });
 
 test('a lockfile that the package manager writes with registry credentials is refused and the files stay', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     using _bun = fakeCommands('mise', async (command, options) => {
         if (command.at(-1) !== '--version') await writeFile(join(options.cwd, 'bun.lock'), CREDENTIAL_LOCKFILE);
         return buildProcessResult({ stdout: command.at(-1) === '--version' ? '1.4.2\n' : '' });
@@ -122,7 +123,7 @@ test('a lockfile that the package manager writes with registry credentials is re
 });
 
 test('a missing Node stops npm before it writes a lockfile and keeps a cached lockfile', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}',
         'gspot.toml': buildSandboxSettings([]),
     });

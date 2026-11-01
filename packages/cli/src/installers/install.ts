@@ -3,12 +3,10 @@ import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { MISE_TOOL } from '#cli/config/executables.ts';
 import { installHooks } from '#cli/installers/hooks.ts';
-import type { Files } from '#cli/types/system/files.ts';
 import { installMiseTools } from '#cli/installers/mise.ts';
 import { listDistinctTools } from '#cli/manifests/tools.ts';
 import { installValePackages } from '#cli/installers/vale.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
-import type { Generation } from '#cli/types/generation/files.ts';
 import { installToolProjects } from '#cli/installers/projects.ts';
 import { assertPackageManagerVersion } from '#cli/installers/npm/project.ts';
 import { readToolPackageManager } from '#cli/repository/javascript/package-manager.ts';
@@ -25,12 +23,14 @@ function readInstallPackageManager(session: Session): ToolPackageManager | undef
 Install the tools in their tool projects and set the hooks of this clone.
 
 @param session the repository to install for.
-@param writer the repository handle.
-@param generated the tool projects to install.
+@param input the repository handle, generated files, and tools of the checks.
 */
-export async function installTools(session: Session, writer: Files, generated: Generation): Promise<InstallResult> {
+export async function installTools(
+    session: Session,
+    input: Pick<ToolInstall, 'writer' | 'generated' | 'checkTools'>,
+): Promise<InstallResult> {
     try {
-        const context = buildToolInstall(session, writer, generated);
+        const context = buildToolInstall(session, input);
         const { steps } = context;
         await assertPackageManagerVersion(context);
         const mise = await installMiseTools(context);
@@ -56,11 +56,13 @@ export async function installTools(session: Session, writer: Files, generated: G
 Build what every install step reads from the session.
 
 @param session the repository and its settings.
-@param writer the files of the run.
-@param generated the files that apply wrote.
+@param input the repository handle, generated files, and tools of the checks.
 @returns the install of the tools.
 */
-function buildToolInstall(session: Session, writer: Files, generated: Generation): ToolInstall {
+function buildToolInstall(
+    session: Session,
+    input: Pick<ToolInstall, 'writer' | 'generated' | 'checkTools'>,
+): ToolInstall {
     const configurations = session.toolConfigurations;
     const steps: (readonly string[])[] = [];
     const tools = listDistinctTools(configurations);
@@ -69,8 +71,7 @@ function buildToolInstall(session: Session, writer: Files, generated: Generation
         session,
         packageManager: readInstallPackageManager(session),
         releaseAgeDays: getTable(getRootScope(session.scopes).settings, 'dependencies').min_release_age_days,
-        writer,
-        generated,
+        ...input,
         tools,
         misePath,
         steps,

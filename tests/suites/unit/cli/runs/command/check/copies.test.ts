@@ -5,7 +5,6 @@ import { stringify } from '@decimalturn/toml-patch';
 import { planChecks } from '#cli/planning/checks.ts';
 import { PYVENV_HOME } from '#tests/config/python.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { buildCheckSession } from '#cli/commands/check/run.ts';
@@ -14,6 +13,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
 import { fakeNpmTool, fakeCommands, writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 
 test('a Python check that runs in a copy uses the environment that the working tree installed', async () => {
@@ -42,7 +42,9 @@ test('a Python check that runs in a copy uses the environment that the working t
         const planned = planChecks(session, buildRunOptions({ only: ['python/basedpyright'] })).find(
             ({ check }) => check.id === 'python/basedpyright',
         )!;
-        expect(await runCommandCheck(buildCheckSession(session), planned)).toMatchObject({ status: 'passed' });
+        expect(await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned)).toMatchObject({
+            status: 'passed',
+        });
     }
     expect(calls).toStrictEqual([
         {
@@ -87,7 +89,9 @@ test('a command run in a copy finds the other tools beside its program before a 
     using _environment = overrideEnvironment({ PATH: join(sandbox.path, 'inactive') });
     using _which = fakeExecutableLookup(join(sandbox.path, `native/shellcheck${isWindows ? '.cmd' : ''}`));
 
-    const result = await runCommandCheck(buildCheckSession(session), planned, { copyRoot: join(sandbox.path, 'copy') });
+    const result = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned, {
+        copyRoot: join(sandbox.path, 'copy'),
+    });
     expect(result.status, result.note).toBe('passed');
     expect(result.findings).toStrictEqual([]);
     expect(result.command).toStrictEqual([join(sandbox.path, 'native/checker')]);

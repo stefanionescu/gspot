@@ -5,6 +5,8 @@ import { stringify } from '@decimalturn/toml-patch';
 import { planChecks } from '#cli/planning/checks.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
+import { buildCheckSession } from '#cli/commands/check/run.ts';
 import { type CommandArgument } from '#cli/types/runs/command.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
@@ -65,7 +67,7 @@ test('a list setting inside one command argument is refused', async () => {
         {
             check: 'sandbox/arguments',
             status: 'error',
-            note: 'The sandbox/arguments check failed: List setting openapi.generate_command must occupy a whole command argument.',
+            note: 'List setting openapi.generate_command must occupy a whole command argument.',
         },
     ]);
 });
@@ -82,7 +84,7 @@ test.each([...WORKSPACE_SCOPE_CASES])(
             'source/Example.swift': 'let source = 2\n',
         });
 
-        const session = await openSession(sandbox.path);
+        const session = buildCheckSession(await openSession(sandbox.path), CHECK_GENERATION);
         const plans = planChecks(session, { stage: 'commit', only: ['swift/swiftlint'] });
         expect(
             expandCommand(session, plans[0]!, ['before', '{workspace:--workspace}', 'after'], {
@@ -115,7 +117,7 @@ test('a Markdown command run in a copy keeps the config files its manifest write
         'README.md': '# Example\n',
     });
 
-    const session = await openSession(sandbox.path);
+    const session = buildCheckSession(await openSession(sandbox.path), CHECK_GENERATION);
     const planned = planChecks(session, { stage: 'commit', only: ['markdown/markdownlint'] })[0]!;
     expect(listCopyFiles(session, planned, planned.check.command!)).toStrictEqual([
         'README.md',
@@ -152,7 +154,7 @@ test('per-file commands keep the arguments after the file', async () => {
         'inputs/café source.txt': '',
     });
 
-    const session = await openSession(sandbox.path);
+    const session = buildCheckSession(await openSession(sandbox.path), CHECK_GENERATION);
     const planned = planChecks(session, { stage: 'all', only: ['sandbox/arguments'] })[0]!;
     planned.tool = { name: 'echo', installers: {}, kind: 'program' };
     planned.check = { ...planned.check, env: { TOOL_RELEASE: 'v3.4.0' } };
@@ -185,7 +187,7 @@ test.each([...SHFMT_INDENT_CASES])(
             'sample.sh': 'echo example\n',
         });
 
-        const session = await openSession(sandbox.path);
+        const session = buildCheckSession(await openSession(sandbox.path), CHECK_GENERATION);
         const [planned] = planChecks(session, { stage: 'all', only: ['bash/shfmt'] });
         const command = buildCommandLaunch(planned!, {
             session,
@@ -203,7 +205,7 @@ test('scalar placeholders select generated link files, scope, boolean settings a
         'app/main.swift': 'let value = 1\n',
         'prettier.config.mjs': `// ${GENERATED_HEADER_TEXT}\nexport default {};\n`,
     });
-    let session = await openSession(sandbox.path);
+    let session = buildCheckSession(await openSession(sandbox.path), CHECK_GENERATION);
     let planned = planChecks(session, { stage: 'all', only: ['swift/swiftlint'] }).find(
         ({ scope }) => scope.path === 'app',
     )!;
@@ -220,7 +222,7 @@ test('scalar placeholders select generated link files, scope, boolean settings a
     await createFileTree(sandbox.path, {
         'app/prettier.config.mjs': `// ${GENERATED_HEADER_TEXT}\nexport default {};\n`,
     });
-    session = await openSession(sandbox.path);
+    session = buildCheckSession(await openSession(sandbox.path), CHECK_GENERATION);
     planned = planChecks(session, { stage: 'all', only: ['swift/swiftlint'] }).find(
         ({ scope }) => scope.path === 'app',
     )!;

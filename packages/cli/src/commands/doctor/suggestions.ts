@@ -11,9 +11,9 @@ import type { Generation } from '#cli/types/generation/files.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
 import { readLintJobs, readRepositorySetup } from '#cli/repository/setup.ts';
+import { LEVEL_COMMAND, LINT_JOB_NOTE } from '#cli/config/commands/doctor.ts';
 import type { Suggestions, SuggestionRow } from '#cli/types/commands/doctor.ts';
 import { expandSuggestions, listSelectedConfigurations } from '#cli/manifests/select.ts';
-import { LEVEL_COMMAND, LINT_JOB_NOTE, GIT_INIT_COMMAND } from '#cli/config/commands/doctor.ts';
 import type { RepositorySetup, ConflictingConfig, ConfigurationEvidence } from '#cli/types/repository/repository.ts';
 
 function listDetectedConfigurations(session: Session): ConfigurationEvidence[] {
@@ -93,12 +93,6 @@ function buildInactiveFileRow(
     config: ConflictingConfig,
     configuration: Configuration,
 ): SuggestionRow {
-    if (configuration.when?.git === true && !session.repository.hasGit)
-        return {
-            path: config.path,
-            note: `${config.tool} requires a Git repository`,
-            command: GIT_INIT_COMMAND,
-        };
     const checks = configuration.checks.filter(
         (check) =>
             [check.tool, ...(check.other_tools ?? [])].includes(config.tool) || check.command?.[0] === config.tool,

@@ -10,6 +10,7 @@ import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { planSwiftBuild } from '#cli/checks/language/swift/cache.ts';
 import { testdir, createFileTree, type TestdirResult } from 'testdirs';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { XCTEST_SOURCE, SWIFT_PACKAGE_HEADER } from '#tests/config/swift.ts';
 import { planSandboxCheck, redirectCacheFolder } from '#tests/setup/cli/checks.ts';
@@ -26,7 +27,7 @@ import {
 test.each([...XCTEST_FAILURES])(
     'swift/coverage: XCTest coverage classifies $failure and passes after the fix',
     async ({ tables, build, coverage, code, status, produced, note, failure }) => {
-        await using sandbox = await testdir();
+        await using sandbox = await createGitSandbox({});
         await using _cache = await redirectCacheFolder();
         const result = await runXcodeCoverage(sandbox, {
             tables,
@@ -90,7 +91,7 @@ async function runXcodeCoverage(
 
 test('swift/coverage: XCTest coverage refuses an external result link and removes a previous result bundle', async () => {
     using _system = spyOn(environment, 'getOperatingSystem').mockReturnValue('macos');
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     await using outside = await testdir();
     await using _cache = await redirectCacheFolder();
     await createFileTree(sandbox.path, {
@@ -112,9 +113,7 @@ test('swift/coverage: XCTest coverage refuses an external result link and remove
     await symlink(outside.path, bundle, 'dir');
     const refused = await runXcodeCoverage(sandbox, files);
     expect(refused.report.exitCode).toBe(2);
-    expect(refused.report.checks[0]?.note).toBe(
-        'The swift/coverage check failed: coverage.xcresult is a link. gspot does not write through links.',
-    );
+    expect(refused.report.checks[0]?.note).toBe('coverage.xcresult is a link. gspot does not write through links.');
     expect(await readFile(join(outside.path, 'authored.txt'), 'utf8')).toBe('preserved');
     expect(await isOnDisk(join(cache, 'source/tested.txt'))).toBe(false);
     await rm(bundle);
@@ -129,7 +128,7 @@ test('swift/coverage: XCTest coverage refuses an external result link and remove
 
 test('Swift package coverage runs swift test, reads the custom target paths, and applies every target limit', async () => {
     using _system = spyOn(environment, 'getOperatingSystem').mockReturnValue('macos');
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     await using _cache = await redirectCacheFolder();
     const reportPath = join(sandbox.path, 'coverage-input.json');
     await createFileTree(sandbox.path, {
@@ -171,13 +170,11 @@ test('Swift package coverage runs swift test, reads the custom target paths, and
         buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
     );
 
-    expect(omitted.report.checks[0]?.note).toBe(
-        'The swift/coverage check failed: The Swift coverage report has no source lines for target API.',
-    );
+    expect(omitted.report.checks[0]?.note).toBe('The Swift coverage report has no source lines for target API.');
 });
 
 test('Swift coverage skips a scope that holds no Swift tests', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['swift']),
         'Package.swift': SWIFT_PACKAGE_HEADER,
         'Sources/App/App.swift': 'func value() -> Int { 1 }\n',
@@ -194,7 +191,7 @@ test.each([...COVERAGE_LIMIT_CASES])(
     'swift/coverage compares each target with the shared and per-target limits: $name',
     async ({ report, tables, expected }) => {
         await using _cache = await redirectCacheFolder();
-        await using sandbox = await testdir();
+        await using sandbox = await createGitSandbox({});
         const result = await runXcodeCoverage(sandbox, {
             tables: `[swift]\nxcode_project = "Example.xcodeproj"\nxcode_scheme = "Example"\n${tables}`,
             xcodebuild: [],
@@ -208,7 +205,7 @@ test.each([...COVERAGE_LIMIT_CASES])(
 );
 
 test('Swift Testing failures name the test file and its source position', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     await using _cache = await redirectCacheFolder();
     const result = await runXcodeCoverage(sandbox, {
         tables: XCTEST_TABLES,

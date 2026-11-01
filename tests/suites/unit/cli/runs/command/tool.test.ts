@@ -2,10 +2,12 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { openSession } from '#cli/planning/session.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
 import { buildCheckSession } from '#cli/commands/check/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runToolProcess, buildOtherToolEnvironment } from '#cli/runs/command/tool.ts';
 
 test('a timed-out tool carries the configured time limit in its failure', async () => {
@@ -33,8 +35,8 @@ test('a missing executable is reported as missing rather than a check finding', 
 });
 
 test('companion tool folders precede the existing PATH in declared order', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
-    const session = buildCheckSession(await openSession(sandbox.path));
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const session = buildCheckSession(await openSession(sandbox.path), CHECK_GENERATION);
     using _executables = fakeExecutableLookup((name) => (name === 'mise' ? null : join(sandbox.path, name, name)));
     const environment = buildOtherToolEnvironment(session, ['first-companion', 'second-companion'], {
         PATH: 'original-search-path',

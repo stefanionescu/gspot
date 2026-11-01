@@ -34,6 +34,7 @@ test.each(START_COMMANDS.map(([program, packageManager, prefix]) => ({ program, 
         const folder = 'project';
         await using sandbox = await createGitSandbox({
             [join(folder, 'gspot.toml')]: buildSandboxSettings([], { rules: true }),
+            'node_modules/.bin/gspot': '',
         });
 
         const root = join(sandbox.path, folder);
@@ -79,10 +80,10 @@ test.each(START_COMMANDS.map(([program, packageManager, prefix]) => ({ program, 
                 },
             );
             expect(result.code, result.stdout + result.stderr).toBe(0);
-            const suffix =
-                name === 'commit-msg' ? [join(await realpath(sandbox.path), 'message')] : [...commandArguments];
+            const suffix = name === 'commit-msg' ? [join(cwd, 'message')] : [...commandArguments];
+            const selector = name === 'pre-commit' ? ['--staged', '--stage', 'commit'] : ['--hook', name, '--'];
             expect(JSON.parse(result.stderr)).toStrictEqual({
-                arguments: [...prefix, 'check', '--hook', name, ...(name === 'pre-commit' ? [] : ['--']), ...suffix],
+                arguments: [...prefix, 'check', ...selector, ...suffix],
                 environment: { GSPOT_HOOK: null },
                 cwd,
             });
@@ -90,24 +91,56 @@ test.each(START_COMMANDS.map(([program, packageManager, prefix]) => ({ program, 
     },
 );
 
-test('a hook says how to install mise when mise is missing', async () => {
-    await using sandbox = await createGitSandbox({});
-    const hook = buildHookFiles(
-        selectStartRunner(sandbox.path),
-        HOOK_CASES.map(([name]) => name),
-        { hasLfsFiles: false },
-    ).find((file) => file.path.endsWith('pre-commit'))!;
+test.each(START_COMMANDS)(
+    'a hook names %s and the Git client PATH when its runner is missing',
+    async (program, packageManager) => {
+        await using sandbox = await createGitSandbox({});
+        if (packageManager !== undefined)
+            await writeFile(
+                join(sandbox.path, 'package.json'),
+                JSON.stringify({
+                    packageManager,
+                    devDependencies: { '@gspothq/cli': '0.0.0-test' },
+                }),
+            );
+        const hook = buildHookFiles(selectStartRunner(sandbox.path), ['pre-commit'], { hasLfsFiles: false })[0]!;
+        const path = join(sandbox.path, 'pre-commit');
+        await writeFile(path, hook.content);
+        const searchPath = join(sandbox.path, "empty 'quoted' $(untouched)");
+        const result = await runCommand(
+            [Bun.which('sh')!, '-c', 'PATH=$1; export PATH; . "$2"', '--', searchPath, path],
+            {
+                cwd: sandbox.path,
+                stdin: '',
+            },
+        );
+        expect(result.code, result.stdout + result.stderr).toBe(2);
+        expect(result.stderr).toBe(
+            `${program} is not on the PATH that this Git client gives hooks (${searchPath}). Start the client from a terminal, or add ${program}'s folder to its PATH.\n`,
+        );
+    },
+);
+
+test('an npm hook with no local gspot binary names both worktree installation steps before starting npm', async () => {
+    await using sandbox = await createGitSandbox({
+        'package.json': JSON.stringify({
+            packageManager: 'npm@0.0.0-test',
+            devDependencies: { '@gspothq/cli': '0.0.0-test' },
+        }),
+    });
+    const hook = buildHookFiles(selectStartRunner(sandbox.path), ['pre-commit'], { hasLfsFiles: false })[0]!;
     const path = join(sandbox.path, 'pre-commit');
     await writeFile(path, hook.content);
-    await chmod(path, 0o755);
-    const shExecutable = Bun.which('sh')!;
-    const result = await runCommand([shExecutable, path], {
+    const bin = await writeProgramCommand(sandbox.path, 'bin/npm', 'fakes/logger', 'npm');
+    const log = join(sandbox.path, 'calls.jsonl');
+    const result = await runCommand([Bun.which('sh')!, path], {
         cwd: sandbox.path,
-        env: { PATH: join(sandbox.path, 'empty') },
+        env: { PATH: bin, CALLS_LOG: log },
         stdin: '',
     });
     expect(result.code, result.stdout + result.stderr).toBe(2);
-    expect(result.stderr).toBe('Install mise, then run mise install.\n');
+    expect(result.stderr).toBe('Run npm install, then gspot install, in this worktree.\n');
+    expect(await Bun.file(log).exists()).toBe(false);
 });
 
 test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, and the other LFS hooks run git lfs', async () => {

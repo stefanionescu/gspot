@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { getTool } from '#cli/manifests/tools.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
@@ -11,6 +11,7 @@ import { rm, readFile, writeFile } from 'node:fs/promises';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
 
@@ -23,7 +24,7 @@ import {
 } from '#tests/config/checks/general/general.ts';
 
 test('Vale gets the timeout setting', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const path = 'sample.md';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['prose', 'markdown'], { tables: 'tool_timeout_seconds = 1\n' }),
@@ -40,7 +41,7 @@ test('Vale gets the timeout setting', async () => {
 });
 
 test('prose/vale sends Vale each stdin file as gspot read it at the start of the run, not a later edit', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         ...VALE_INSTALLED_FILES,
         'gspot.toml': buildSandboxSettings(['prose', 'typescript'], { level: 'all' }),
         [GSPOT_PATHS.valeConfig]: EMPTY_VALE_INI,
@@ -77,7 +78,10 @@ test.each([...VALE_OUTPUT_CASES])(
     async ({ stdout, findings }) => {
         await using resources = new AsyncDisposableStack();
         const sandbox = resources.use(
-            await testdir({ ...VALE_SANDBOX_FILES, 'gspot.toml': buildSandboxSettings(['prose', 'markdown']) }),
+            await createGitSandbox({
+                ...VALE_SANDBOX_FILES,
+                'gspot.toml': buildSandboxSettings(['prose', 'markdown']),
+            }),
         );
         const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
         const parsed = Object.fromEntries(
@@ -96,7 +100,7 @@ test.each([...VALE_OUTPUT_CASES])(
 test('the Vale check fails with the error line Vale prints when Vale exits non-zero', async () => {
     await using resources = new AsyncDisposableStack();
     const sandbox = resources.use(
-        await testdir({ ...VALE_SANDBOX_FILES, 'gspot.toml': buildSandboxSettings(['prose', 'markdown']) }),
+        await createGitSandbox({ ...VALE_SANDBOX_FILES, 'gspot.toml': buildSandboxSettings(['prose', 'markdown']) }),
     );
     const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
     resources.use(
@@ -111,7 +115,7 @@ test('the Vale check fails with the error line Vale prints when Vale exits non-z
 test('the Vale check fails before running Vale when the Vale packages are not installed', async () => {
     await using resources = new AsyncDisposableStack();
     const sandbox = resources.use(
-        await testdir({ ...VALE_SANDBOX_FILES, 'gspot.toml': buildSandboxSettings(['prose', 'markdown']) }),
+        await createGitSandbox({ ...VALE_SANDBOX_FILES, 'gspot.toml': buildSandboxSettings(['prose', 'markdown']) }),
     );
     const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
     await rm(join(sandbox.path, GSPOT_PATHS.valeConfig));

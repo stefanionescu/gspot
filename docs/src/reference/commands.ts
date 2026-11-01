@@ -1,7 +1,7 @@
-import { CLI_REFERENCE } from '#docs/reference/cli.ts';
-import { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/main.ts';
-import { type ReferencePage, type CommandReference } from '#docs/types/reference.ts';
-import { formatTable, formatSection, buildReferencePage } from '#docs/reference/markdown.ts';
+import { CLI_REFERENCE } from '#cli/reference.ts';
+import { type ReferencePage } from '#docs/types/pages.ts';
+import { type CommandReference } from '#docs/types/reference.ts';
+import { formatText, formatTable, formatSection, buildReferencePage } from '#docs/reference/markdown.ts';
 
 import {
     PURPOSE_HEADING,
@@ -16,27 +16,25 @@ import {
     ENVIRONMENT_VARIABLES_HEADING,
 } from '#docs/config/reference.ts';
 
+function formatChoices(value: Pick<CommandReference['arguments'][number], 'choices' | 'default'>): string {
+    const choices =
+        value.choices === undefined
+            ? ''
+            : ' Choices: ' + value.choices.map((choice) => `\`${choice}\``).join(', ') + '.';
+    const defaultValue = value.default === undefined ? '' : ` Default: \`${JSON.stringify(value.default)}\`.`;
+    return choices + defaultValue;
+}
+
 function formatCommand(command: CommandReference): string {
     const argumentRows = command.arguments.map((argument) => [
         `\`${argument.name}\``,
-        `${argument.description}. ${argument.required ? 'Required.' : 'Optional.'}` +
-            ((argument.choices === undefined
-                ? ''
-                : ' Choices: ' + argument.choices.map((value) => `\`${value}\``).join(', ') + '.') +
-                (argument.default === undefined ? '' : ` Default: \`${JSON.stringify(argument.default)}\`.`)),
+        `${argument.description}. ${argument.required ? 'Required.' : 'Optional.'}` + formatChoices(argument),
     ]);
     const optionRows = command.options
-        .filter((option) => !Object.hasOwn(GLOBAL_OPTIONS, option.flags))
-        .map((option) => [
-            `\`${option.flags}\``,
-            `${option.description}.` +
-                ((option.choices === undefined
-                    ? ''
-                    : ' Choices: ' + option.choices.map((value) => `\`${value}\``).join(', ') + '.') +
-                    (option.default === undefined ? '' : ` Default: \`${JSON.stringify(option.default)}\`.`)),
-        ]);
+        .filter((option) => !Object.hasOwn(CLI_REFERENCE.globalOptions, option.flags))
+        .map((option) => [`\`${option.flags}\``, `${option.description}.` + formatChoices(option)]);
     const blocks = [
-        command.description,
+        formatText(command.description),
         `\`\`\`shell\n${command.usage}\n\`\`\``,
         formatTable(['Argument', DEFINITION_HEADING], argumentRows),
         formatTable(['Option', PURPOSE_HEADING], optionRows),
@@ -59,11 +57,11 @@ export function buildCommandPage(): ReferencePage {
         `[\`gspot ${command.name}\`](#gspot-${command.name})`,
         command.summary,
     ]);
-    const globalOptions = Object.entries(GLOBAL_OPTIONS).map(([flags, description]) => [
+    const globalOptions = Object.entries(CLI_REFERENCE.globalOptions).map(([flags, description]) => [
         `\`${flags}\``,
         description + '.',
     ]);
-    const exitCodes = PROGRAM_EXIT_CODES.map(([codes, meaning]) => [`\`${codes}\``, meaning]);
+    const exitCodes = CLI_REFERENCE.exitCodes.map(([codes, meaning]) => [`\`${codes}\``, meaning]);
     return buildReferencePage(
         'Commands',
         COMMANDS_DESCRIPTION,

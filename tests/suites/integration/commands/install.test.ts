@@ -10,18 +10,17 @@ import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { spawnGspot, applyThenInstall } from '#tests/setup/cli/commands.ts';
-import type { DryRunJson, InstallCommandJson } from '#cli/types/commands/commands.ts';
+import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 test('after init and install, apply has nothing to write', async () => {
     await using sandbox = await testdir(INIT_FILES);
 
     commitAll(sandbox.path);
-    const init = await spawnGspot(sandbox.path, ['init', '--yes']);
+    const init = await spawnGspot(sandbox.path, ['init']);
     expect(init.code, init.stdout + init.stderr).toBe(0);
     await applyThenInstall(sandbox.path);
-    const applied = await spawnGspot(sandbox.path, ['apply', '--dry-run', '--json']);
-    expect((JSON.parse(applied.stdout) as DryRunJson).outdated).toStrictEqual([]);
+    const applied = await spawnGspot(sandbox.path, ['check', '--only', 'gspot/generated-files', '--json']);
+    expect(parseCheckReport(applied).report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
 });
 
@@ -37,7 +36,7 @@ test.each([true, false])(
         await writeFile(join(sandbox.path, 'notes.txt'), 'draft\n');
         const staged = runGitStep(sandbox.path, ['diff', '--cached', '--binary']);
         const head = runCommandBlocking(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: sandbox.path, env: {} });
-        const initialized = await spawnGspot(sandbox.path, ['init', '--yes', '--json', '--no-configurations']);
+        const initialized = await spawnGspot(sandbox.path, ['init', '--json', '--no-configurations']);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(true);
         await applyThenInstall(sandbox.path);
@@ -64,8 +63,6 @@ test('a repeated npm install keeps the lockfile and the modules with the registr
         if (!online) registry[Symbol.dispose]();
         const next = await spawnGspot(root, ['install', '--json']);
         expect(next.code, next.stdout + next.stderr).toBe(0);
-        const result = JSON.parse(next.stdout) as InstallCommandJson;
-        expect(result.steps.filter((step) => step.includes('--no-save'))).toHaveLength(1);
         expect(registry.requests).toBe(requests);
         expect(await readFile(join(root, GSPOT_FOLDER, 'package-lock.json'), 'utf8')).toBe(lockfile);
         expect(await readFile(marker, 'utf8')).toBe('installed modules');

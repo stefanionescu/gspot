@@ -3,10 +3,50 @@ import { join } from 'node:path';
 import picomatch from 'picomatch';
 import { globSync } from 'tinyglobby';
 import { GspotError } from '#cli/system/errors.ts';
-import type { TemporaryFolder } from '#cli/types/system/files.ts';
+import { printWarning } from '#cli/system/terminal.ts';
+import { isProcessRunning } from '#cli/system/processes.ts';
 import { rmSync, lstatSync, mkdtempSync, realpathSync } from 'node:fs';
+import type { Files, TemporaryFolder } from '#cli/types/system/files.ts';
 import { DRIVE_LETTER, GLOB_EXCLUDE } from '#cli/config/files/path-patterns.ts';
-import { PARENT_SEGMENT, TEMPORARY_FILE_PREFIX } from '#cli/config/system/files.ts';
+
+import {
+    PARENT_SEGMENT,
+    TEMPORARY_FILE_PREFIX,
+    TEMPORARY_REMOVAL_OPTIONS,
+    TEMPORARY_STALE_MILLISECONDS,
+} from '#cli/config/system/files.ts';
+
+function isStaleTemporaryPath(path: string, pid: string | undefined): boolean {
+    if (pid !== undefined) return !isProcessRunning(Number(pid));
+    const stat = lstatSync(path, { throwIfNoEntry: false });
+    if (stat === undefined) return false;
+    return Date.now() - stat.mtimeMs > TEMPORARY_STALE_MILLISECONDS;
+}
+
+/**
+Remove interrupted temporary writes and installs. Keep live owners and recent files without an owner.
+
+@param files the repository file handle.
+@param folder the relative folder to scan without following child links.
+@param pattern the temporary names, with an optional pid capture.
+*/
+export function deleteStaleTemporaryPaths(files: Files, folder: string, pattern: RegExp): void {
+    const names = files.list(folder);
+    if (names.length === 0) return;
+    const parent = files.readCanonicalPath(folder);
+    for (const name of names) {
+        const match = pattern.exec(name);
+        if (match === null) continue;
+        const path = join(parent, name);
+        const pid = match.groups?.['pid'];
+        if (!isStaleTemporaryPath(path, pid)) continue;
+        try {
+            rmSync(path, TEMPORARY_REMOVAL_OPTIONS);
+        } catch (error) {
+            printWarning(`Could not remove temporary path ${path}: ${String(error)}`);
+        }
+    }
+}
 
 function hasSymlinkPrefix(folder: string, pattern: string): boolean {
     const { base } = picomatch.scan(pattern);

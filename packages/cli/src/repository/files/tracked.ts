@@ -1,21 +1,16 @@
-import ignore from 'ignore';
-import { read } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { join, posix, relative } from 'node:path';
 import { decodeGitPaths } from '#cli/parsers/git.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
-import { isIgnored } from '#cli/repository/files/gitignore.ts';
+import { statSync, lstatSync, realpathSync } from 'node:fs';
+import type { ListedFile } from '#cli/types/repository/files.ts';
 import type { GitIndexFile } from '#cli/types/parsers/parsers.ts';
 import { buildGitError, runGitForBytes } from '#cli/system/git.ts';
-import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
 import { isInside, extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
 import { GITLINK_MODE, GIT_FILE_MODES, EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
-import type { ListedFile, PathIgnore, PendingFolder, FolderListing } from '#cli/types/repository/files.ts';
 
 import {
-    GIT_FOLDER,
-    GITIGNORE_FILE,
     EXECUTABLE_BITS,
     INSTALLED_DEPENDENCY_FOLDERS,
     GIT_UNTRACKED_FILES_ARGUMENTS,
@@ -53,39 +48,6 @@ function readListedFile(
     return { path, size: stat.size, executable: isExecutable, isSymlink: false };
 }
 
-function readFolderListing(root: string, folder: string, inherited: PathIgnore[]): FolderListing {
-    const children = readdirSync(join(root, folder), { withFileTypes: true });
-    const ignores = [...inherited];
-    if (children.some((child) => child.name === GITIGNORE_FILE && child.isFile())) {
-        ignores.push({
-            base: folder,
-            matcher: ignore().add(read(root, `${folder}${GITIGNORE_FILE}`)),
-        });
-    }
-    return { children: children, ignores };
-}
-
-function walkPaths(root: string): string[] {
-    const paths: string[] = [];
-    const pending: PendingFolder[] = [{ folder: '', ignores: [] }];
-    for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
-        const { folder } = next;
-        const { children, ignores } = readFolderListing(root, folder, next.ignores);
-        const kept = children.filter((child) => {
-            if (child.name === GIT_FOLDER) return false;
-            const path = `${folder}${child.name}`;
-            const listedPath = child.isDirectory() ? `${path}/` : path;
-            return !isIgnored(listedPath, ignores);
-        });
-        for (const child of kept) {
-            const path = `${folder}${child.name}`;
-            if (child.isDirectory()) pending.push({ folder: `${path}/`, ignores });
-            else if (child.isFile() || child.isSymbolicLink()) paths.push(path);
-        }
-    }
-    return paths;
-}
-
 /**
 Read a Git file listing and separate names with invalid UTF-8.
 
@@ -121,26 +83,19 @@ export function listSubmodulePaths(indexFiles: GitIndexFile[]): string[] {
 }
 
 /**
-List tracked and new files as sorted, root-relative paths. Outside Git, walk files according to the ignore rules.
+List tracked and new files as sorted, root-relative paths.
 
 @param root the folder where Git runs.
 @param index the parsed staging area entries.
-@param options what the walk knows about the repository.
-@param options.hasGit whether the folder belongs to a Git repository.
-@param options.unreadablePaths paths that the inventory cannot read.
+@param unreadablePaths paths that the inventory cannot read.
 */
 export async function listTrackedFiles(
     root: string,
     index: GitIndexFile[],
-    { hasGit, unreadablePaths }: { hasGit: boolean; unreadablePaths: string[] },
+    unreadablePaths: string[],
 ): Promise<ListedFile[]> {
-    const listed = hasGit
-        ? await listGitFiles(root, GIT_UNTRACKED_FILES_ARGUMENTS, undefined, unreadablePaths)
-        : undefined;
-    const paths =
-        listed === undefined
-            ? walkPaths(root)
-            : [...index.map((indexFile) => indexFile.path), ...listed.split('\0').filter(Boolean)];
+    const listed = await listGitFiles(root, GIT_UNTRACKED_FILES_ARGUMENTS, undefined, unreadablePaths);
+    const paths = [...index.map((indexFile) => indexFile.path), ...listed.split('\0').filter(Boolean)];
     const submodules = listSubmodulePaths(index);
     const executables =
         process.platform === 'win32'

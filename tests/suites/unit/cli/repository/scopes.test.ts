@@ -1,15 +1,17 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { compareText } from '#cli/system/text.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { createRunCache } from '#cli/system/cache.ts';
 import { symlink, writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import { buildArgumentPath, findProjectFolder, detectScopeFolders } from '#cli/repository/scopes.ts';
 
@@ -29,7 +31,7 @@ test.each(PROJECT_FILE_FOLDERS)('%s with the project file %s marks the folder %j
 test.each([...WORKSPACE_FILE_CASES])(
     'workspace files list tool packages while scope detection keeps applications: %j',
     async (files) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             ...files,
             'packages/api/package.json': '{"dependencies":{"express":"5.0.0"}}',
             'packages/lint/package.json': '{"devDependencies":{"eslint":"10.0.0"}}',
@@ -50,9 +52,10 @@ test.each([...WORKSPACE_FILE_CASES])(
 );
 
 test('broad workspace patterns skip .gspot/.venv and its outside interpreter link', async () => {
-    await using sandbox = await testdir(PRIVATE_TOOL_PACKAGES);
+    await using sandbox = await createGitSandbox(PRIVATE_TOOL_PACKAGES);
 
     const root = join(sandbox.path, 'project');
+    runGitStep(root, ['init', '-q']);
     await symlink('../../../../outside/python', join(root, `${GSPOT_PATHS.pythonEnvironment}/bin/python`));
     const repository = await readTestRepository(root);
     expect(listWorkspaceFolders(root)).toStrictEqual(['packages/app']);
@@ -65,7 +68,7 @@ test('broad workspace patterns skip .gspot/.venv and its outside interpreter lin
 });
 
 test('every folder that holds a project file is a scope, the root and lint-only packages aside', async () => {
-    await using sandbox = await testdir(PROJECT_SCOPE_FILES);
+    await using sandbox = await createGitSandbox(PROJECT_SCOPE_FILES);
 
     const repository = await readTestRepository(sandbox.path);
     const dependencyFiles = await readDependencyFiles(createRunCache(sandbox.path), repository.files);
@@ -74,7 +77,7 @@ test('every folder that holds a project file is a scope, the root and lint-only 
 });
 
 test('scope detection leaves out packages that hold only gspot npm tools or a hook manager, and keeps unpinned packages', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     await createFileTree(sandbox.path, {
         'package.json': '{"workspaces":["packages/*"]}',
         ...TOOL_ONLY_PACKAGES,

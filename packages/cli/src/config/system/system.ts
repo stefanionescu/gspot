@@ -41,8 +41,6 @@ export const NOT_REPOSITORY_CODE = 128;
 
 export const GIT_NONLOCAL_ENVIRONMENT_NAME = /^GIT_(?:PAGER|CONFIG_(?:COUNT|PARAMETERS|KEY_\d+|VALUE_\d+))$/u;
 
-export const GIT_WORK_TREE_ARGUMENTS = ['rev-parse', '--is-inside-work-tree'] as const;
-
 export const GIT_LOCALE = { LC_ALL: 'C' } as const;
 
 export const GIT_DIR_VARIABLE = 'GIT_DIR';

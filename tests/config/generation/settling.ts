@@ -1,16 +1,3 @@
-export const GROUP_CASES = [
-    'language',
-    'framework',
-    'platform',
-    'database',
-    'testing',
-    'infrastructure',
-    'library',
-    'general',
-] as const;
-
-export const LEVEL_CASES = ['basic', 'all'] as const;
-
 export const SWITCH_CASES = [
     { name: 'hooks', path: '.gspot/hooks/pre-commit' },
     { name: 'rules', path: '.gspot/configurations/general/engineering/rules/WORKING.md' },

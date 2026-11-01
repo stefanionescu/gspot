@@ -7,6 +7,7 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { LOWERCASE_SELECT_SQL } from '#tests/config/sql.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { CHANGED_CONTEXT } from '#tests/config/setup/sandboxes.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -17,7 +18,6 @@ import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { SELECTED_SOURCE, GIT_HOOK_REPORT } from '#tests/config/runs/copy.ts';
 import { readHead, listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { prepareNestedRepository } from '#tests/setup/sandboxes/repositories.ts';
-import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { mkdir, readdir, symlink, copyFile, readFile, writeFile } from 'node:fs/promises';
 
 test('a revision copy of a nested gspot.toml keeps the repository around it', async () => {
@@ -90,7 +90,7 @@ test('a Git hook in a linked worktree copies the index and the commit, and keeps
     expect(staged.code, staged.stderr).toBe(0);
     await writeFile(join(worktree, 'nested/source.txt'), 'working\n');
     const report = join(sandbox.path, 'report.json');
-    const timeout = String(SETTING_DEFINITIONS['tool_timeout_seconds'].default);
+    const timeout = String(rootSettingSchemas.tool_timeout_seconds.parse(undefined));
     const hooks = await writeProgramCommand(sandbox.path, 'hook/pre-commit', 'processes/revisions', timeout, report);
     const result = runCommandBlocking(['git', '-c', `core.hooksPath=${hooks}`, 'commit', '-qm', 'hook'], {
         cwd: worktree,

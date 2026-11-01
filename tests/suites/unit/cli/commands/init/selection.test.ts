@@ -29,7 +29,7 @@ import {
 } from '#tests/config/commands/init/init.ts';
 
 async function listPlannedConfigurations(root: string): Promise<string[]> {
-    const result = await runGspot(root, ['init', '--yes', '--json']);
+    const result = await runGspot(root, ['init', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const plan = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
     return plan.plan.configurations.map((each) => each.configuration);
@@ -39,14 +39,17 @@ test.each([...CONFIGURATION_CHOICES])(
     'init with --configurations %j keeps the always-selected configurations',
     async (row) => {
         const { configurations } = row;
-        const flags = configurations === undefined ? [] : ['--configurations', ...configurations];
+        const flags =
+            configurations === undefined
+                ? []
+                : configurations.flatMap((configuration) => ['--configurations', configuration]);
         if ('noConfigurations' in row) flags.push('--no-configurations');
         await using sandbox = await createGitSandbox({
             'package.json': '{"name":"example","private":true,"type":"module"}\n',
             'source.js': 'export const port = 8080;\n',
         });
         commitAll(sandbox.path);
-        const initialized = await runGspot(sandbox.path, ['init', '--yes', ...flags]);
+        const initialized = await runGspot(sandbox.path, ['init', ...flags]);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         const session = await openSession(sandbox.path);
         const { configurations: selected } = session.scopes[0]!;
@@ -57,6 +60,21 @@ test.each([...CONFIGURATION_CHOICES])(
     },
 );
 
+test('init combines repeated and comma-separated configuration names', async () => {
+    await using sandbox = await createGitSandbox({ 'sample.txt': 'Example.\n' });
+    const result = await runGspot(sandbox.path, [
+        'init',
+        '--configurations',
+        'bash, markdown',
+        '--configurations',
+        'sql',
+        '--json',
+    ]);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const saved = readSettings(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'), sandbox.path);
+    for (const name of ['bash', 'markdown', 'sql']) expect(saved.configurations).toContain(name);
+});
+
 test('init leaves javascript out of a root package.json with only tool dependencies and selects it in the app package scope', async () => {
     await using sandbox = await createGitSandbox({
         'package.json': TOOL_ONLY_PACKAGE,
@@ -64,13 +82,8 @@ test('init leaves javascript out of a root package.json with only tool dependenc
         'app/server.js': 'export const port = 8080;\n',
     });
 
-    const before = await readTree(sandbox.path);
-    const preview = await runGspot(sandbox.path, ['init']);
-    expect(preview.code, preview.stdout + preview.stderr).toBe(2);
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-    const accepted = await runGspot(sandbox.path, ['init', '--yes']);
+    const accepted = await runGspot(sandbox.path, ['init']);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-    expect(accepted.stdout.slice(0, preview.stdout.length)).toBe(preview.stdout);
     const session = await openSession(sandbox.path);
     expect(session.repository.scopeFolders.map(({ path }) => path)).toStrictEqual(['', 'app']);
     expect(
@@ -90,7 +103,7 @@ test('the JavaScript tools and the ESLint config file appear only after gspot ad
         'source.py': 'VALUE = 1\n',
     });
 
-    const initialized = await runGspot(sandbox.path, ['init', '--yes', '--json']);
+    const initialized = await runGspot(sandbox.path, ['init', '--json']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     for (const level of LEVELS) {
         const levelSet = await runGspot(sandbox.path, ['set', 'level', level]);
@@ -158,7 +171,7 @@ test('init proposes a scope for a Swift package, not for a lint-only package, an
     await using sandbox = await testdir(PLATFORM_PROJECT_FILES);
 
     commitAll(sandbox.path);
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--json']);
+    const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settings' | 'plan'>>;
     const proposed = settingsSchema.parse(parse(output.settings) as TomlTable);
@@ -180,8 +193,8 @@ test.each([...NEXTJS_LOCALE_CASES])(
             'app/page.tsx': 'export default function Page() { return "home"; }\n',
         });
 
-        const configurations = ['--configurations', 'nextjs', ...(named ? ['translations'] : [])];
-        const result = await runGspot(sandbox.path, ['init', '--yes', '--json', ...configurations]);
+        const configurations = ['--configurations', 'nextjs', ...(named ? ['--configurations', 'translations'] : [])];
+        const result = await runGspot(sandbox.path, ['init', '--json', ...configurations]);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
         expect(plan.configurations.some(({ configuration }) => configuration === 'translations')).toBe(isSelected);
@@ -197,7 +210,7 @@ test('init proposes workspace scopes without a lockfile, and writes nothing when
     await using sandbox = await createGitSandbox(files);
     await using broken = await createGitSandbox({ ...files, 'pnpm-workspace.yaml': UNCLOSED_PACKAGES });
 
-    const command = ['init', '--yes', '--json'];
+    const command = ['init', '--json'];
     const proposed = await runGspot(sandbox.path, command);
     expect(proposed.code, proposed.stdout + proposed.stderr).toBe(0);
     const plan = JSON.parse(proposed.stdout) as Required<Pick<InitJson, 'settings'>>;
@@ -220,7 +233,7 @@ test('init keeps root Docker and GitHub configurations beside an app scope', asy
         'app/package.json': '{"name":"example-app","private":true}',
         'app/index.js': 'export const port = 8080;\n',
     });
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--json']);
+    const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code, result.stderr).toBe(0);
     const { settings } = JSON.parse(result.stdout) as InitJson;
     const parsed = readSettings(settings, sandbox.path);
@@ -235,7 +248,7 @@ test('init names an uninstalled tsconfig extension and the dependency install st
         'tsconfig.json': '{"extends":"@tsconfig/node22/tsconfig.json"}',
         'index.ts': 'export const port = 8080;\n',
     });
-    const result = await runGspot(sandbox.path, ['init', '--yes']);
+    const result = await runGspot(sandbox.path, ['init']);
     expect(result.code).toBe(2);
     expect(result.stderr).toBe(
         'tsconfig.json extends @tsconfig/node22/tsconfig.json, which is not installed. Install the project dependencies, then run the command again.\n',

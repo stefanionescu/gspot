@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { type Check } from '#cli/types/manifests.ts';
@@ -7,8 +6,8 @@ import { type Session } from '#cli/types/session.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
+import { selectCheckCode } from '#cli/checks/registry.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
 import { BASE_CHECK } from '#tests/config/runs/command/check.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
@@ -18,6 +17,8 @@ import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { mkdir, unlink, readFile, appendFile } from 'node:fs/promises';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { runChecks, buildCheckSession } from '#cli/commands/check/run.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
 import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
 
 import {
@@ -60,7 +61,7 @@ async function replaceChildScopeChecks(session: Session): Promise<void> {
 test.each(LAST_FILE_CHANGES)(
     `a %s of the last file of a project runs only that project's check with %s files`,
     async (operation, selection) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': TWO_SCOPES_SETTINGS,
             'api/source.ts': 'export {};\n',
             'web/kept.ts': 'export {};\n',
@@ -94,7 +95,7 @@ test.each(LAST_FILE_CHANGES)(
 );
 
 test('a fixer of a deleted trigger path restores it', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': TWO_SCOPES_SETTINGS,
         'api/source.ts': 'export {};\n',
         'web/kept.ts': 'export {};\n',
@@ -108,13 +109,13 @@ test('a fixer of a deleted trigger path restores it', async () => {
     const api = planChecks(session, { ...TSC_PUSH_OPTIONS, changed: paths }).find(
         (check) => check.scope.path === 'api',
     )!;
-    const applied = await runFixers(buildCheckSession(session), [api]);
+    const applied = await runFixers(buildCheckSession(session, CHECK_GENERATION), [api], selectCheckCode);
     expect(applied.changed).toStrictEqual(['api/source.ts']);
     expect(await readFile(join(sandbox.path, 'api/source.ts'), 'utf8')).toBe('restored');
 });
 
 test('a deleted file from another language does not trigger a TypeScript project', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': TWO_SCOPES_SETTINGS, 'api/kept.ts': 'export {};\n' });
+    await using sandbox = await createGitSandbox({ 'gspot.toml': TWO_SCOPES_SETTINGS, 'api/kept.ts': 'export {};\n' });
 
     const session = await openSession(sandbox.path);
     await replaceChildScopeChecks(session);
@@ -127,7 +128,7 @@ test('a deleted file from another language does not trigger a TypeScript project
 });
 
 test(`deleting a file of a child scope runs only the child project's check`, async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml':
             TWO_SCOPES_SETTINGS +
             `
@@ -155,7 +156,7 @@ configurations = []
 test.each(['gspot.toml', getManifestTarget('docs', 'lychee.toml')])(
     'a change to %s re-runs docs/lychee in every scope and keeps its path ignores',
     async (path) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': `configurations = ["docs"]\n[[scope]]\npath = "api"\n\nconfigurations = ["docs"]\n[[ignore]]\ncheck = "docs/lychee"\npaths = ["api/ignored/**"]\nreason = "These pages are evaluated only after the documentation build."\n`,
             'README.md': '# Root\n',
             'api/guide.md': '# API\n',
@@ -177,7 +178,7 @@ test.each(['gspot.toml', getManifestTarget('docs', 'lychee.toml')])(
 );
 
 test('dependencies/osv-scanner runs only when a trigger file changes', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'uv.lock': '',
         'app/uv.lock': '',
         'ignored/uv.lock': '',

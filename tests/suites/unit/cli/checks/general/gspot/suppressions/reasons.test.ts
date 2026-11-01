@@ -1,14 +1,15 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { COMPILER_SOURCE } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     SWIFT_REASON_CASES,
@@ -18,7 +19,7 @@ import {
 } from '#tests/config/checks/general/gspot/suppressions.ts';
 
 test('@ts-ignore, @ts-expect-error and @ts-nocheck need a reason; the same text in a string is not a comment', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const paths = TYPESCRIPT_SUPPRESSIONS.map((directive) => `${directive}.ts`);
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['typescript']),
@@ -59,7 +60,7 @@ test('@ts-ignore, @ts-expect-error and @ts-nocheck need a reason; the same text 
 });
 
 test.each([...SUPPRESSION_REASON_CASES])('$name', async ({ path, source, findings }) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript', 'bash'], { level: 'all', rules: true }),
         [path]: source,
     });
@@ -82,7 +83,7 @@ test.each([...SUPPRESSION_REASON_CASES])('$name', async ({ path, source, finding
 });
 
 test.each(['-->', '--!>'])('an HTML suppression that ends with %s still needs a reason', async (ending) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['html', 'structure'], { level: 'all', rules: true }),
         'page.html': `<!-- html-validate-disable attr -- External validator owns this attribute. ${ending}\n<!-- html-validate-disable attr ${ending}\n`,
     });
@@ -96,7 +97,7 @@ test.each(['-->', '--!>'])('an HTML suppression that ends with %s still needs a 
 });
 
 test('a nosemgrep comment is reported even with a reason', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const path = 'source.ts';
     const source = '// nosemgrep: example.rule -- The external interface requires this call.\nconst value = 1;\n';
     await createFileTree(sandbox.path, {
@@ -124,7 +125,7 @@ test.each([...SWIFT_REASON_CASES])(
     'the Swift suppression $directive needs a reason and passes with one',
     async ({ tool, directive, rule }) => {
         const source = `// ${directive}\npublic let value = 1\n`;
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['swift'], { level: 'all' }),
             'Value.swift': source,
         });
@@ -164,7 +165,7 @@ test.each([...SWIFT_REASON_CASES])(
 test.each([...SUPPRESSION_REASONS])(
     'a $tool suppression needs a reason and passes with one',
     async ({ configuration, tool, file, bare, explained, rule }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([configuration], { level: 'all' }),
             [file]: `${bare}\n${explained}\n`,
         });

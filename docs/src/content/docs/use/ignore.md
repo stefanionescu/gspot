@@ -10,15 +10,23 @@ gspot ignore javascript/eslint --rule no-console --paths "scripts/**" --reason "
 
 Every ignore needs a reason. Leave out `--rule` to ignore the whole check, and add `--paths` to select files.
 gspot resolves paths and globs passed to `--paths` from your current folder. It saves them relative to the repository
-root in `gspot.toml`; `gspot unignore --paths` uses the same conversion.
+root in `gspot.toml`; `gspot unignore --paths` uses the same conversion. Repeat the flag for more paths:
+`--paths "scripts/**" --paths "fixtures/**"`. A comma stays part of the path: `--paths "data,old.csv"` names one file.
+
+Each path or glob must match a repository file. gspot refuses a value that names a check; give the check as the command's
+positional argument. After deleting an ignored file, remove its whole ignore without `--paths`.
 
 To leave paths out of every check, see [Exclude files](/configure/files/).
 
 To ignore a dependency advisory, give its ID as the rule:
 
-```shell
+```text
 gspot ignore dependencies/osv-scanner --rule <advisory-id> --reason "<why>"
 ```
+
+For ESLint, Stylelint, Ruff, Markdownlint, and SwiftLint, `gspot ignore --rule` checks the installed rule catalog before
+saving the ignore.
+A check that does not report rule IDs refuses `--rule`.
 
 To remove the ignore:
 

@@ -16,8 +16,6 @@ export const SET_HOOKS_PATH = ['git', 'config', HOOKS_PATH_SETTING] as const;
 
 export const UNSET_HOOKS_PATH = ['git', 'config', '--unset', HOOKS_PATH_SETTING] as const;
 
-export const NO_GIT_STATUS = 'not installed: no Git repository';
-
 export const NOT_INSTALLED_STATUS = 'not installed; run gspot install';
 
 export const UNSET_HOOKS_NOTE = 'disabled hooks: unset core.hooksPath';
@@ -117,6 +115,8 @@ export const VALE_PACKAGE_FOLDERS = [...VALE_PACKAGES, 'config/dictionaries'] as
 export const VALE_INSTALL_ARGUMENTS = ['sync'] as const;
 
 export const VALE_INSTALL_PREFIX = 'vale-';
+
+export const VALE_TEMPORARY_NAME = /^vale-(?:(?<pid>[1-9]\d{0,8})-)?[a-zA-Z0-9]{6}$/u;
 
 export const VALE_ARCHIVE_LIMIT = 8 * 1024 * 1024;
 

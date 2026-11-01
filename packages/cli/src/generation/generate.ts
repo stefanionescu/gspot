@@ -18,6 +18,7 @@ import type { Generation } from '#cli/types/generation/files.ts';
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { SWIFT_CONFIGURATION } from '#cli/config/manifests/names.ts';
+import { FROZEN_INSTALLS } from '#cli/config/repository/javascript.ts';
 import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import { LFS_FILTER, FILTER_ATTRIBUTE } from '#cli/config/repository/files.ts';
 import { readPackageManagerVersion } from '#cli/repository/javascript/package-manager.ts';
@@ -33,7 +34,6 @@ import {
 } from '#cli/generation/ci.ts';
 import {
     LF_ATTRIBUTES,
-    FROZEN_INSTALLS,
     NPM_TOOL_PROJECT,
     AUTO_LF_ATTRIBUTES,
     TOOL_FOLDER_IGNORES,

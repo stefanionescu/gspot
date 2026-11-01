@@ -1,5 +1,5 @@
+import { styleText } from 'node:util';
 import { formatCount } from '#cli/system/text.ts';
-import { getColors } from '#cli/system/terminal.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { Settings } from '#cli/types/settings/settings.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
@@ -8,7 +8,7 @@ import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { GENERATED_FILE_NOUN } from '#cli/config/generation/generation.ts';
 import { listMisePins, listToolProjectPins } from '#cli/manifests/tools.ts';
-import type { InitPlan, InitScan, InitFileRow } from '#cli/types/commands/init.ts';
+import type { InitPlan, InitScan, InitFileRow, ConflictingConfigs } from '#cli/types/commands/init.ts';
 
 import {
     COLUMN_GAP,
@@ -24,6 +24,7 @@ import {
     DELETED_RULES_NOTE,
     CONFIGURATION_WIDTH,
     LINT_FOLDER_MESSAGE,
+    PRETTIER_SCRIPT_NOTE,
     LINT_FOLDERS_HEADING,
     CHANGE_LATER_MESSAGE,
     UNREAD_SUBMODULE_MESSAGE,
@@ -79,8 +80,30 @@ function formatConfigurationSection(rows: InitPlan['configurations'], level: Ini
     return ['configurations', ...lines, ''];
 }
 
+function buildGeneratedRows(generated: Generation, conflicts: ConflictingConfigs): InitFileRow[] {
+    return [...generated.files, ...generated.blocks]
+        .filter(({ path }) => !path.startsWith(`${GSPOT_FOLDER}/`) && path !== ATTRIBUTES_ROW.path)
+        .map(({ path }) => {
+            const replaced = conflicts.deleted.find((row) => row.path === path);
+            if (replaced !== undefined)
+                return {
+                    path,
+                    note: [
+                        `replaces your file; read the old one with git show HEAD:${path}`,
+                        ...(replaced.unreadablePrettier ? [PRETTIER_SCRIPT_NOTE] : []),
+                    ].join('; '),
+                };
+            return {
+                path,
+                note: Object.hasOwn(CI_FILE_NOTES, path)
+                    ? CI_FILE_NOTES[path as keyof typeof CI_FILE_NOTES]
+                    : GENERATED_FILE_NOUN,
+            };
+        });
+}
+
 /**
-Build the plan that init shows before you accept it.
+Build the file changes that init reports before it writes them.
 
 @param scan the repository facts, answers, and configurations.
 @param settings the validated gspot.toml and its generated files.
@@ -98,7 +121,6 @@ export function planInitFiles(
     }: { settings: Settings; settingsText: string; requirements: Configuration[]; generated: Generation },
 ): InitPlan {
     const { repository, repositorySetup, conflicts } = scan;
-    const attributes = repository.hasGit ? [ATTRIBUTES_ROW] : [];
     const hasAttributes = repository.files.some((file) => file.path === ATTRIBUTES_ROW.path);
     const write: InitPlan['write'] = [
         {
@@ -107,26 +129,8 @@ export function planInitFiles(
         },
         { path: `${GSPOT_FOLDER}/`, note: GSPOT_FOLDER_NOTE },
         ...buildToolProjectRows(requirements),
-        ...(hasAttributes ? [] : attributes),
-        ...[...generated.files, ...generated.blocks]
-            .filter(({ path }) => !path.startsWith(`${GSPOT_FOLDER}/`) && path !== ATTRIBUTES_ROW.path)
-            .map(({ path }) => {
-                const replaced = conflicts.deleted.find((row) => row.path === path);
-                if (replaced !== undefined)
-                    return {
-                        path,
-                        note: [
-                            `replaces your file; read the old one with git show HEAD:${path}`,
-                            ...replaced.note.split(';').slice(1),
-                        ].join(';'),
-                    };
-                return {
-                    path,
-                    note: Object.hasOwn(CI_FILE_NOTES, path)
-                        ? CI_FILE_NOTES[path as keyof typeof CI_FILE_NOTES]
-                        : GENERATED_FILE_NOUN,
-                };
-            }),
+        ...(hasAttributes ? [] : [ATTRIBUTES_ROW]),
+        ...buildGeneratedRows(generated, conflicts),
     ];
     return {
         level: settings.level,
@@ -135,13 +139,21 @@ export function planInitFiles(
             : { template: { file: scan.template.file, leftOut: scan.template.leftOut } }),
         configurations: buildConfigurationRows(scan, settings),
         write,
-        delete: conflicts.deleted.filter(({ path }) => write.every((row) => row.path !== path)),
+        delete: conflicts.deleted
+            .filter(({ path }) => write.every((row) => row.path !== path))
+            .map(({ path, tool, unreadablePrettier }) => ({
+                path,
+                note: [
+                    `replaced by the generated ${tool} config file`,
+                    ...(unreadablePrettier ? [PRETTIER_SCRIPT_NOTE] : []),
+                ].join('; '),
+            })),
         keep: [
             ...conflicts.kept,
             ...listSubmodulePaths(repository.index).map((path) => ({ path, note: UNREAD_SUBMODULE_MESSAGE })),
             ...repositorySetup.ci.map((path) => ({ path, note: CI_FILE_NOTE })),
         ],
-        change: [...(hasAttributes ? attributes : []), ...conflicts.changed],
+        change: [...(hasAttributes ? [ATTRIBUTES_ROW] : []), ...conflicts.changed],
         lintFolders: repositorySetup.lintFolders.map((folder) => ({
             path: `${folder}/`,
             note: LINT_FOLDER_MESSAGE,
@@ -155,7 +167,6 @@ Format the plan that init prints before it writes anything.
 @param plan the configurations and file changes to preview.
 */
 export function formatInitPlan(plan: InitPlan): string {
-    const { dim } = getColors();
     const lines = [
         ...formatConfigurationSection(plan.configurations, plan.level),
         ...(plan.template === undefined
@@ -165,7 +176,7 @@ export function formatInitPlan(plan: InitPlan): string {
                   plan.template.leftOut.map(({ key, note }) => ({ path: key, note })),
               )),
         ...formatFileSection('write', plan.write),
-        ...formatFileSection(`delete ${dim(DELETED_RULES_NOTE)}`, plan.delete),
+        ...formatFileSection(`delete ${styleText('dim', DELETED_RULES_NOTE, { stream: process.stdout })}`, plan.delete),
         ...formatFileSection('keep', plan.keep),
         ...formatFileSection('change', plan.change),
         ...formatFileSection(LINT_FOLDERS_HEADING, plan.lintFolders),

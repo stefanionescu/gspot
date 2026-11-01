@@ -35,7 +35,6 @@ export const conditionSchema = z.strictObject({
     config_file: z.string().min(1),
     level: levelSchema,
     setting: z.string().min(1),
-    git: z.literal(true),
     dependencies: z.string().min(1).array().min(1),
     absent_dependencies: z.string().min(1).array().min(1),
     filenames: z.string().min(1).array().min(1),

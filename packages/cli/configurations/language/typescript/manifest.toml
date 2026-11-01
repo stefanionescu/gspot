@@ -32,6 +32,11 @@ extensions = [".ts", ".tsx", ".mts", ".cts"]
 required_tools = ["typescript-eslint"]
 all_level_rules = ["@typescript-eslint/ban-ts-comment", "@typescript-eslint/consistent-type-definitions", "@typescript-eslint/consistent-type-exports", "@typescript-eslint/consistent-type-imports", "@typescript-eslint/explicit-module-boundary-types", "@typescript-eslint/no-extraneous-class", "@typescript-eslint/no-mixed-enums", "@typescript-eslint/no-non-null-assertion", "@typescript-eslint/no-unnecessary-type-parameters", "@typescript-eslint/prefer-readonly", "@typescript-eslint/prefer-reduce-type-parameter", "@typescript-eslint/prefer-return-this-type", "@typescript-eslint/strict-boolean-expressions", "@typescript-eslint/unified-signatures", "gspot/no-magic-numbers"]
 
+[[eslint.rules_off]]
+files = ["**/*.d.ts"]
+reason = "TypeScript merges declarations through interfaces in declaration files."
+rules = ["@typescript-eslint/consistent-type-definitions"]
+
 [[check]]
 cwd = "scope"
 example = "`const count: number = \"one\";` reports an incompatible assignment. Assign a number, such as `const count: number = 1;`."

@@ -64,13 +64,12 @@ enabled = false
 export const UNKNOWN_SETTING_KEYS = [
     {
         key: 'tools.eslint.unknown_key',
-        message:
-            'There is no setting called tools.eslint.unknown_key in the selected configurations. No setting exists under that table.',
+        message: 'There is no setting called tools.eslint.unknown_key. No setting exists under that table.',
     },
     {
         key: 'tools.v8r.unknown_key',
         message:
-            'There is no setting called tools.v8r.unknown_key in the selected configurations. The settings that exist under that table are schema.',
+            'There is no setting called tools.v8r.unknown_key. The settings that exist under that table are schema.',
     },
 ] as const;
 

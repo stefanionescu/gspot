@@ -27,16 +27,6 @@ export const LINUX_PIPELINE = {
     packageManagers: ['npm' as const, 'pnpm' as const],
 };
 
-export const LINT_STEPS = [
-    'Check out source',
-    'Restore caches',
-    'Set up mise',
-    'Install gspot',
-    'Install gspot tools',
-    'Save caches',
-    'Lint',
-] as const;
-
 export const START_COMMANDS = [
     ['npm', 'npm@11.10.1', ['exec', '--no', '--', 'gspot']],
     ['pnpm', 'pnpm@10.32.1', ['exec', 'gspot']],

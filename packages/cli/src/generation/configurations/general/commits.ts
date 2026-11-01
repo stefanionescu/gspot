@@ -3,12 +3,7 @@ import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import { refuseIdleRuleOptions } from '#cli/generation/rule-options.ts';
 import { COMMITLINT_CHECK } from '#cli/config/checks/general/general.ts';
-
-import {
-    COMMITLINT_RULES,
-    COMMITLINT_PARSER_PRESET,
-    COMMITLINT_ERROR_SEVERITY,
-} from '#cli/config/generation/configurations/general.ts';
+import { COMMITLINT_PARSER_PRESET, COMMITLINT_ERROR_SEVERITY } from '#cli/config/generation/configurations/general.ts';
 
 /**
 Build commitlint.json: the Commitlint rules with the allowed types and scopes of the repository.
@@ -25,7 +20,7 @@ export function buildCommitlintFile(planned: PlannedConfig): string {
         named.length > 0 ? named : scopes.filter(({ path }) => path !== '').map(({ path }) => path.split('/').at(-1));
     const rules: Record<string, readonly unknown[]> = {
         'type-enum': [COMMITLINT_ERROR_SEVERITY, 'always', types],
-        ...COMMITLINT_RULES,
+        ...planned.configuration.commitlint.rules,
     };
     if (allowed.length > 0) {
         rules['scope-enum'] = [COMMITLINT_ERROR_SEVERITY, 'always', allowed];

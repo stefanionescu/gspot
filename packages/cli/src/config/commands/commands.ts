@@ -1,22 +1,12 @@
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 
-export const APPLY_WRITE_MESSAGE = 'Run gspot apply to write these files.';
-
-export const INSTALL_WRITE_MESSAGE = 'Run gspot install to write the tool lockfiles.';
-
-export const DRY_RUN_NOTE = 'Dry run: nothing was written.';
-
-export const DRY_RUN_FLAG = '--dry-run';
-
 export const SCOPE_OPTION = '--scope <path>';
 
 export const REASON_OPTION = '--reason <text>';
 
 export const RULE_OPTION = '--rule <rule>';
 
-export const PATHS_OPTION = '--paths <path...>';
-
-export const GLOB_BRACKETS = /[()[\]]/u;
+export const PATHS_OPTION = '--paths <path>';
 
 export const IGNORE_CHECK_MESSAGE = 'Run gspot ignore <check> --reason "<why>".';
 

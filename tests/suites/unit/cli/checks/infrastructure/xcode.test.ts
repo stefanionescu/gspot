@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { rm, writeFile } from 'node:fs/promises';
-import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
@@ -10,6 +10,7 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     LOGO_IMAGE_SET,
@@ -22,7 +23,7 @@ import {
 } from '#tests/config/checks/infrastructure/infrastructure.ts';
 
 test('Xcode sources follow group paths and target membership instead of duplicate filenames', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['xcode'], { level: 'all' }),
         'App.xcodeproj/project.pbxproj': GROUPED_PBXPROJ,
         'First Group/Shared.swift': 'let first = 1\n',
@@ -44,7 +45,7 @@ test('Xcode sources follow group paths and target membership instead of duplicat
 });
 
 test('membership combines projects in a scope and checks nested scopes independently', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['xcode'], { scopes: [{ path: 'nested' }] }),
         'One.xcodeproj/project.pbxproj': SINGLE_FILE_PBXPROJ.replace('path = Root.swift;', 'path = One.swift;'),
         'Two.xcodeproj/project.pbxproj': SINGLE_FILE_PBXPROJ.replace('path = Root.swift;', 'path = Two.swift;'),
@@ -70,14 +71,17 @@ test('membership combines projects in a scope and checks nested scopes independe
 });
 
 test('xcode/assets reports an image that the set names and the repository does not hold', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['xcode']), ...LOGO_IMAGE_SET.files });
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['xcode']),
+        ...LOGO_IMAGE_SET.files,
+    });
     commitAll(sandbox.path);
     await rm(join(sandbox.path, LOGO_IMAGE_SET.image));
     expect(await runSandboxCheck(sandbox.path, 'xcode/assets')).toMatchObject([LOGO_IMAGE_SET.missingFinding]);
 });
 
 test('xcode/assets reports an ignored image that is on disk but not in the repository', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['xcode']),
         '.gitignore': `${LOGO_IMAGE_SET.image}\n`,
         ...LOGO_IMAGE_SET.files,
@@ -92,7 +96,7 @@ test('xcode/assets reports an ignored image that is on disk but not in the repos
 test.each(['Logo Mark', 'Logo MarkImage', 'logo-markColor'])(
     'Xcode asset %s accepts its camel-case symbol and reports an unrelated symbol',
     async (name) => {
-        await using sandbox = await testdir();
+        await using sandbox = await createGitSandbox({});
         const path = `App/Assets.xcassets/${name}.imageset/Contents.json`;
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings(['xcode'], { level: 'all' }),
@@ -117,7 +121,7 @@ test.each(['Logo Mark', 'Logo MarkImage', 'logo-markColor'])(
 test.each([...ASSET_SETTING_CASES])(
     '$title counts the asset and rejects an unrelated name',
     async ({ scope, path, text }) => {
-        await using sandbox = await testdir();
+        await using sandbox = await createGitSandbox({});
         const asset = `${scope}Assets.xcassets/AccentColor.colorset/Contents.json`;
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings(['xcode'], {
@@ -143,7 +147,7 @@ test.each([...ASSET_SETTING_CASES])(
 test.each([...INVALID_RESOURCE_DOCUMENTS])(
     '$check reports malformed $path as a source finding',
     async ({ check, path, text }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['xcode'], { level: 'all' }),
             'Source.swift': 'let image = Image("Logo")\n',
             [path]: text,
@@ -156,7 +160,7 @@ test.each([...INVALID_RESOURCE_DOCUMENTS])(
 );
 
 test('xcode/assets reports an image set that names no image file', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['xcode']),
         [LOGO_IMAGE_SET.contents]: '{"images":[{"idiom":"universal"}]}\n',
         'App/Home.swift': LOGO_IMAGE_SET.files['App/Home.swift'],
@@ -173,7 +177,7 @@ test('xcode/assets reports an image set that names no image file', async () => {
 });
 
 test('xcode/xcstrings reports a string without a translation for a locale the catalog uses', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['xcode']),
         'App/Localizable.xcstrings': JSON.stringify(PARTLY_TRANSLATED_STRINGS),
     });
@@ -193,7 +197,7 @@ test('xcode/entitlements checks the deepest scope only', async () => {
     const broken = '<plist><dict><key>unlisted-capability</key><true/></dict></plist>';
     const corrected = '<plist><dict><key>nested-capability</key><true/></dict></plist>';
     const check = 'xcode/entitlements';
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const rootContent = corrected.replace('nested-capability', 'root-capability');
     const settings = buildSandboxSettings(['xcode'], {
         tables: '[xcode]\nallowed_entitlements = ["root-capability"]\n[[scope]]\npath = "app"\n[scope.xcode]\nallowed_entitlements = ["nested-capability"]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
@@ -214,7 +218,7 @@ test('xcode/entitlements checks the deepest scope only', async () => {
 });
 
 test('xcode/app-transport-security reports arbitrary loads at its line and passes when disabled', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['xcode']),
         'App/Info.plist': '<plist><dict>\n<key>NSAllowsArbitraryLoads</key><true/>\n</dict></plist>\n',
     });

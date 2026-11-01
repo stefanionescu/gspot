@@ -28,7 +28,7 @@ export const GIT_SHALLOW_ARGUMENTS = ['rev-parse', '--is-shallow-repository'] as
 export const REMOTE_HEAD_FIELD_COUNT = 2;
 
 export const NO_UPSTREAM_MESSAGE =
-    'No upstream or default branch is available. Run git remote set-head origin --auto once, or pass --changed <ref>.';
+    'No upstream or origin/HEAD is available. Use --base <ref> to name a branch, tag, or commit.';
 
 export const HISTORY_CUT_MESSAGE = ' History is cut; run git fetch --unshallow.';
 
@@ -40,7 +40,8 @@ export const GIT_HEAD_ARGUMENTS = ['rev-parse', '--verify', '--quiet', 'HEAD'] a
 
 export const GIT_SYMBOLIC_HEAD_ARGUMENTS = ['symbolic-ref', '--quiet', 'HEAD'] as const;
 
-export const UNREADABLE_HISTORY_MESSAGE = 'Cannot read committed Git history. Restore HEAD and check again.';
+export const UNREADABLE_HISTORY_MESSAGE =
+    'Cannot read committed Git history. Run git status, then commit or stash the change.';
 
 export const ABSENT_HASH = /^0+$/u;
 
@@ -50,7 +51,7 @@ export const PEEL_SUFFIX = '^{}';
 
 export const GIT_SHALLOW_FILE_ARGUMENTS = ['rev-parse', '--git-path', 'shallow'] as const;
 
-export const MISSING_PUSH_REVISION_MESSAGE = 'Cannot find pushed object {hash}. Fetch the remote again.';
+export const MISSING_PUSH_REVISION_MESSAGE = 'Cannot find the commit {hash} that the push sends.';
 
 export const REMOTES_FLAG = '--remotes';
 
@@ -83,3 +84,15 @@ export const INVALID_PUSH_INPUT_MESSAGE = 'Invalid Git pre-push input. Supply ev
 export const PEEL_FAILURE_MESSAGE = 'Git did not resolve every pushed object.';
 
 export const NOT_FLAG = '--not';
+
+export const EMPTY_BASE_HASH = /^0*$/u;
+
+export const COMMIT_HASH_PATTERN = /^(?:[a-fA-F0-9]{40}|[a-fA-F0-9]{64})$/u;
+
+export const GIT_VERIFY_COMMIT_ARGUMENTS = ['rev-parse', '--verify', '--quiet', '--end-of-options'] as const;
+
+export const COMMIT_SUFFIX = '^{commit}';
+
+export const GIT_LOCAL_BRANCHES_ARGUMENTS = ['for-each-ref', '--format=%(refname:short)', 'refs/heads'] as const;
+
+export const GIT_HASH_EXISTS_ARGUMENTS = ['cat-file', '-e'] as const;

@@ -1,23 +1,21 @@
 import { z } from 'zod';
 import { findValueAt } from '#cli/system/tables.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
+import { formatSimilarNames } from '#cli/system/text.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
-import { limitsSchema } from '#cli/schemas/settings/limits.ts';
-import { validateKeys } from '#cli/settings/validation/keys.ts';
+import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import type { TomlSyntax } from '#cli/types/parsers/formats.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import type { LimitLanguage } from '#cli/types/settings/values.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import type { WrittenConfiguration } from '#cli/types/manifests.ts';
 import { listUnknownConfigurations } from '#cli/manifests/select.ts';
-import { formatCodeList, formatSimilarNames } from '#cli/system/text.ts';
 import { NO_CHECK_PATHS_MESSAGE } from '#cli/config/settings/settings.ts';
+import { RECORD_PATHS_MESSAGE } from '#cli/config/settings/validation.ts';
 import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
-import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import { formatFileValueError } from '#cli/settings/validation/messages.ts';
 import { validateSettingReasons } from '#cli/settings/validation/reasons.ts';
 import type { Settings, SettingsError } from '#cli/types/settings/settings.ts';
-import { RECORD_PATHS_MESSAGE, SETTINGS_REFERENCE_URL } from '#cli/config/settings/validation.ts';
+import { validateKeys, formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { RECORD_FIELDS, findChildSchema, unwrapSettingSchema } from '#cli/settings/schema/lookup.ts';
 
 import {
@@ -39,50 +37,27 @@ function formatEmptyIgnorePaths(issue: z.core.$ZodIssue, path: KeyPath, syntax: 
     return { path, message };
 }
 
-function formatSimilarKeys(segments: KeyPath, key: string): string {
-    const [record, , ...scopeFields] = segments;
-    let schema: z.ZodType | undefined = record === 'scope' ? scopeSchema : settingsSchema;
-    const fields = record === 'scope' ? scopeFields : segments;
-    for (const segment of fields) schema = findChildSchema(schema, segment);
-    const table = schema === undefined ? undefined : unwrapSettingSchema(schema);
-    return table instanceof z.ZodObject ? formatSimilarNames(key, Object.keys(table.shape)) : '';
-}
-
-function formatUnknownTableField(segments: KeyPath, key: string): string | undefined {
-    if (segments.length === 0) return undefined;
+function listSchemaKeys(segments: KeyPath): string[] {
     let schema: z.ZodType | undefined = settingsSchema;
     for (const segment of segments) schema = findChildSchema(schema, segment);
     const table = schema === undefined ? undefined : unwrapSettingSchema(schema);
-    if (!(table instanceof z.ZodObject)) return undefined;
-    const fields = Object.keys(table.shape);
-    const allowed = new Intl.ListFormat('en', { type: 'conjunction' }).format(fields);
-    const path = segments.filter((segment) => typeof segment === 'string').join('.');
-    const name = typeof segments.at(-1) === 'number' ? `[[${path}]]` : `[${path}]`;
-    return `There is no setting called ${path}.${key}. The settings of ${name} are ${allowed}.${formatSimilarNames(key, fields)}`;
-}
-
-function formatUnknownLimit(
-    table: KeyPath[number] | undefined,
-    language: KeyPath[number] | undefined,
-    key: string,
-): string | undefined {
-    if (table === 'limits' && typeof language === 'string')
-        return `There is no setting called limits.${language}.${key}. The limits that ${language} reads are ${formatCodeList(Object.keys(limitsSchema.shape[language as LimitLanguage].unwrap().shape))}.`;
-    return undefined;
+    const [record, , ...scopeFields] = segments;
+    const fields = record === 'scope' ? scopeFields : segments;
+    const prefix = fields.filter((segment) => typeof segment === 'string').join('.');
+    return table instanceof z.ZodObject
+        ? Object.keys(table.shape).map((key) => (prefix === '' ? key : `${prefix}.${key}`))
+        : [];
 }
 
 function formatUnknownKey(segments: KeyPath, key: string): string {
     const [record, , ...scopeFields] = segments;
-    const [table, language] = record === 'scope' ? scopeFields : segments;
-    const limitMessage = formatUnknownLimit(table, language, key);
-    if (limitMessage !== undefined) return limitMessage;
     const fields: Readonly<Record<string, readonly string[]>> = RECORD_FIELDS;
     const recordName = [...scopeFields, key].map(String).join('.');
     if (record === 'scope' && Object.hasOwn(fields, recordName))
         return `Write [[${recordName}]] at the root.${fields[recordName]?.includes('paths') === true ? RECORD_PATHS_MESSAGE : ''}`;
-    const recordMessage = formatUnknownTableField(segments, key);
-    if (recordMessage !== undefined) return recordMessage;
-    return `There is no setting called ${key}.${formatSimilarKeys(segments, key)} See ${SETTINGS_REFERENCE_URL} for every setting.`;
+    const settingPath = record === 'scope' ? scopeFields : segments;
+    const name = [...settingPath.filter((segment) => typeof segment === 'string'), key].join('.');
+    return formatUnknownSetting(name, listSchemaKeys(segments));
 }
 
 function listRemovedSelections(settings: Settings): SettingsError[] {

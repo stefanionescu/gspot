@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { join, relative } from 'node:path';
 import { realpath } from 'node:fs/promises';
 import { getTool } from '#cli/manifests/tools.ts';
 import { compareText } from '#cli/system/text.ts';
-import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { APP_PYPROJECT } from '#tests/config/toml.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
@@ -18,6 +18,7 @@ import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
 import { fakeNpmTool, fakeCommands, writeProgramCommand } from '#tests/setup/system/fakes.ts';
 
@@ -39,7 +40,7 @@ test.each([...ALLOWED_PACKAGE_SCOPE_CASES])(
     'licenses/allowed keeps a root allowed_package record that a project uses: $name',
     async (scenario) => {
         const { scopes, reports, findings } = scenario;
-        await using sandbox = await testdir();
+        await using sandbox = await createGitSandbox({});
         await writeScopeLicenseSandbox(sandbox.path, scenario);
 
         const scanned: string[] = [];
@@ -75,7 +76,7 @@ test.each([...ALLOWED_PACKAGE_CASES])(
     async (sample) => {
         const { license, package: name, findings } = sample;
         const { installed } = sample;
-        await using sandbox = await testdir();
+        await using sandbox = await createGitSandbox({});
         await writeLicenseSandbox(
             sandbox.path,
             `${LICENSE_TABLES}[[licenses.allowed_package]]\nname = "${name.slice(0, name.lastIndexOf('@'))}"\nversion = "${name.slice(name.lastIndexOf('@') + 1)}"\nreason = "Reviewed the published GPL license."\n`,
@@ -94,7 +95,7 @@ test.each([...ALLOWED_PACKAGE_CASES])(
 test.each([...UNINSTALLED_DEPENDENCY_CASES])(
     'scan: a scan in scope "$scope" stops before any scanner when $dependencyFile dependencies are not installed',
     async ({ scope, dependencyFile, text, installedFolder }) => {
-        await using sandbox = await testdir();
+        await using sandbox = await createGitSandbox({});
         const path = scope === '' ? dependencyFile : `${scope}/${dependencyFile}`;
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings(['licenses'], {
@@ -117,7 +118,7 @@ test.each([...UNINSTALLED_DEPENDENCY_CASES])(
 test.each([...SCANNER_FAILURES])(
     'scan: pip-licenses $name is an error, and gspot deletes its temporary folder',
     async ({ stdout, code, message }) => {
-        await using sandbox = await testdir();
+        await using sandbox = await createGitSandbox({});
         await writeLicenseSandbox(sandbox.path, LICENSE_TABLES);
         await createFileTree(sandbox.path, {
             'app/pyproject.toml': SAMPLE_PYPROJECT,
@@ -147,7 +148,7 @@ test.each([...SCANNER_FAILURES])(
 );
 
 test('scan: one scan reads package.json and pyproject.toml, accepts a license choice, and reports unknown licenses', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     await writeLicenseSandbox(sandbox.path, LICENSE_TABLES + SCAN_ALLOWED_PACKAGES);
     await fakeNpmTool(sandbox.path, 'license-checker-rseidelsohn');
     await createFileTree(sandbox.path, {
@@ -208,7 +209,7 @@ test('scan: one scan reads package.json and pyproject.toml, accepts a license ch
 });
 
 test('scan: a Python license comes from its SPDX expression, then its metadata, then its trove classifiers', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     await writeLicenseSandbox(sandbox.path, '[licenses]\nallowed = ["MIT", "BSD-3-Clause", "Apache-2.0"]\n');
     using _scan = fakeCommands().mockResolvedValue(
         buildProcessResult({
@@ -221,7 +222,7 @@ test('scan: a Python license comes from its SPDX expression, then its metadata, 
 });
 
 test('scan: licenses/allowed checks only the packages that the lockfile holds, and an allowed_package record covers a locked platform build', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     await writeLicenseSandbox(
         sandbox.path,
         `[licenses]\nallowed = ["MIT"]\n[[licenses.allowed_package]]\nname = "nvidia-*"\nversion = "*"\nreason = "The CUDA builds ship under the NVIDIA license."\n`,
@@ -242,7 +243,7 @@ test('scan: licenses/allowed checks only the packages that the lockfile holds, a
 });
 
 test('scan: the check skips with a note while licenses.allowed is empty', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['licenses']),
         'pyproject.toml': APP_PYPROJECT,
     });

@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
+import { createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
@@ -36,7 +36,7 @@ test('a project with its own tsconfig.json keeps its own compiler options', asyn
 });
 
 test('projects without tsconfig.json get required options and framework options only in their scope', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], {
             level: 'all',
             tables: IMPLICIT_RETURNS_IGNORE,

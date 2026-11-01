@@ -20,12 +20,12 @@ const failedChecks = [...new Set(example.findings.map(({ check }) => check))].ma
 }));
 ---
 
-<figure class:list={['panel', { blocked: status === 'failed', passed: status !== 'failed' }]}>
+<figure class="panel">
     <figcaption class="panel-head">
         <span class="run">
-            <span class="prompt">$ </span>git commit
+            <span class="prompt">$ </span>gspot check --staged
         </span>
-        <span class:list={['status', status]}>{status === 'failed' ? 'Blocked' : 'Committed'}</span>
+        <span class:list={['status', status]}>{status === 'failed' ? 'Failed' : 'Passed'}</span>
     </figcaption>
     <div class="panel-body terminal">
         <p class="muted">{example.checked}</p>
@@ -59,6 +59,5 @@ const failedChecks = [...new Set(example.findings.map(({ check }) => check))].ma
                 {rest === '' ? '' : ` ${rest}`}
             </p>
         )}
-        {status === 'passed' && <p class="muted">{example.commit_record}</p>}
     </div>
 </figure>

@@ -4,8 +4,8 @@ import { read } from '#cli/system/files/reads.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import type { RunCache } from '#cli/types/system/system.ts';
 import { GITIGNORE_FILE } from '#cli/config/repository/files.ts';
-import type { PathIgnore } from '#cli/types/repository/files.ts';
 import { isInside, extractParentFolder } from '#cli/system/paths.ts';
+import type { GitignoreMatcher } from '#cli/types/repository/files.ts';
 
 /**
 Test a path against ignore files in order, keeping later negations.
@@ -14,7 +14,7 @@ Test a path against ignore files in order, keeping later negations.
 @param ignores the patterns with the folder that contains each ignore file.
 @returns whether the final matching pattern ignores the path.
 */
-export function isIgnored(path: string, ignores: PathIgnore[]): boolean {
+function isIgnored(path: string, ignores: GitignoreMatcher[]): boolean {
     let isPathIgnored = false;
     for (const { base, matcher } of ignores) {
         if (path === base || !path.startsWith(base)) continue;
@@ -32,7 +32,7 @@ Build a test for paths that a tracked .gitignore ignores, or that sit inside an 
 @param trackedPaths the tracked files of the repository.
 */
 export function buildGitignoreMatcher(cache: RunCache, trackedPaths: string[]): (path: string) => boolean {
-    const ignores: PathIgnore[] = trackedPaths
+    const ignores: GitignoreMatcher[] = trackedPaths
         .filter((path) => posix.basename(path) === GITIGNORE_FILE)
         .map((file) => {
             const folder = extractParentFolder(file);

@@ -18,7 +18,6 @@ import { getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 import { formatSettingValueError } from '#cli/settings/validation/messages.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import type { Setting, InheritedSetting } from '#cli/types/settings/inheritance.ts';
-import type { SetOptions, ParsedSettingValue, SettingReasonContext } from '#cli/types/commands/commands.ts';
 
 import {
     NUMBER_TEXT,
@@ -27,6 +26,12 @@ import {
     DASH_VALUE_HELP,
     TOML_COMPOUND_START,
 } from '#cli/config/commands/commands.ts';
+import {
+    type SetOptions,
+    type CommandLocation,
+    type ParsedSettingValue,
+    type SettingReasonContext,
+} from '#cli/types/commands/commands.ts';
 
 function parseInlineValue(text: string): unknown {
     try {
@@ -156,7 +161,7 @@ function readSettingChange(
 }
 
 async function runSetCommand(options: SetOptions): Promise<CommandResult> {
-    const edit = await readSettingsEditContext(options.cwd, options.scope);
+    const edit = await readSettingsEditContext(options.root, options.scope);
     const { root, edit: input, scopeTable } = edit;
     const { setting, change, summary, notes } = readSettingChange(edit, options);
     try {
@@ -174,8 +179,9 @@ Register the set command.
 
 @param program the gspot program that gets the command.
 @param onResult receives the result of the command.
+@param location the calling folder and the Git root validated before the action.
 */
-export function registerSet(program: Command, onResult: CommandCompletion): void {
+export function registerSet(program: Command, onResult: CommandCompletion, location: CommandLocation): void {
     program
         .command('set')
         .argument('<setting>', COMMAND_HELP.set.arguments['setting'])
@@ -193,7 +199,8 @@ export function registerSet(program: Command, onResult: CommandCompletion): void
         .action(async (setting, values, flags) => {
             onResult(
                 await runSetCommand({
-                    cwd: process.cwd(),
+                    root: location.root,
+                    cwd: location.cwd,
                     key: setting,
                     values: values,
                     reason: flags.reason,

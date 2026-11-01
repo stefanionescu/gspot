@@ -84,8 +84,7 @@ export const UNKNOWN_KEY_CASES = [
         text: `[dependencies]
 bun_scanners = "@socketsecurity/bun-security-scanner"
 `,
-        message:
-            'gspot.toml:2: dependencies.bun_scanners: There is no setting called dependencies.bun_scanners. The settings of [dependencies] are min_release_age_days, allowed_registries, and bun_scanner. Did you mean bun_scanner?',
+        message: 'gspot.toml:2: dependencies.bun_scanners: There is no setting called dependencies.bun_scanners.',
         correction: ['bun_scanners', 'bun_scanner'] as const,
     },
 ] as const;
@@ -133,7 +132,7 @@ export const SCOPE_CONFIGURATION_SETTINGS = [
         name: 'a sibling configuration does not expose its settings to another scope',
         text: 'configurations = ["bash"]\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[[scope]]\npath = "web"\n[scope.tools.sqlfluff]\ndialect = "sqlite"\n',
         messages: [
-            'gspot.toml:8: scope.1.tools.sqlfluff.dialect: There is no setting called tools.sqlfluff.dialect in the selected configurations. No setting exists under that table. Run gspot list settings to see every one.',
+            'gspot.toml:8: scope.1.tools.sqlfluff.dialect: There is no setting called tools.sqlfluff.dialect. No setting exists under that table. Run gspot list settings to see every one.',
         ],
     },
     {
@@ -152,20 +151,17 @@ export const UNKNOWN_TABLE_FIELDS = [
     {
         text: '[format]\nlevel = true\n',
         path: ['format', 'level'],
-        message:
-            'There is no setting called format.level. The settings of [format] are indent_style, indent_width, print_width, line_ending, final_newline, quotes, trailing_commas, semicolons, and override.',
+        message: 'There is no setting called format.level.',
     },
     {
         text: '[[scope]]\npath = "app"\n[scope.format]\nlevel = true\n',
         path: ['scope', 0, 'format', 'level'],
-        message:
-            'There is no setting called scope.format.level. The settings of [scope.format] are indent_style, indent_width, print_width, line_ending, final_newline, quotes, trailing_commas, and semicolons.',
+        message: 'There is no setting called format.level.',
     },
     {
         text: '[[tools.eslint.override]]\npaths = ["src/**"]\nlevel = true\n',
         path: ['tools', 'eslint', 'override', 0, 'level'],
-        message:
-            'There is no setting called tools.eslint.override.level. The settings of [[tools.eslint.override]] are paths, rules, and runtime.',
+        message: 'There is no setting called tools.eslint.override.level.',
     },
 ] as const;
 

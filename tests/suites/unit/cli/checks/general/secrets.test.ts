@@ -1,10 +1,11 @@
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
+import { createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     ENV_ACCESSOR_FILES,
@@ -21,7 +22,7 @@ import {
 } from '#tests/config/checks/general/secrets.ts';
 
 test('a nested scope uses the default example environment file names', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'app/.env.example': 'KNOWN=example\n',
         'app/source.ts': 'process.env.KNOWN; process.env.MISSING;\n',
         'gspot.toml': buildSandboxSettings(['secrets'], {
@@ -42,7 +43,7 @@ test('a nested scope uses the default example environment file names', async () 
 
 test('keys read through Bun.env and environment functions are reported until the example file lists them', async () => {
     const options = buildRunOptions({ only: ['secrets/env-examples'] });
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         ...READER_PROJECT_FILES,
         'gspot.toml': buildSandboxSettings([], {
             tables: `[secrets]
@@ -65,7 +66,7 @@ environment_functions = ["config.$env", "$readEnv", "read_env"]
 
 test('each scope checks its own example env files and environment functions', async () => {
     const options = buildRunOptions({ only: ['secrets/env-examples'] });
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         ...SCOPE_READER_PROJECT_FILES,
         'gspot.toml': buildSandboxSettings([], { tables: SCOPE_READER_PROJECT_TABLES }),
     });
@@ -80,7 +81,7 @@ test('each scope checks its own example env files and environment functions', as
 });
 
 test('a scope with env reads and no example env file is skipped with a note', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         '.env.example': 'KNOWN=value\n',
         'app/source.ts': 'process.env.MISSING;\n',
         'gspot.toml': buildSandboxSettings(['data-files'], {
@@ -107,7 +108,7 @@ test('a scope with env reads and no example env file is skipped with a note', as
 
 test('import.meta.env and Deno.env reads in component and module files need example keys', async () => {
     const settings = buildSandboxSettings(['data-files'], { level: 'all' });
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': settings,
         '.env.example': 'KNOWN=example\n',
         ...ENV_ACCESSOR_FILES,
@@ -121,7 +122,7 @@ test('import.meta.env and Deno.env reads in component and module files need exam
 });
 
 test.each([...ENVIRONMENT_TEXT_CASES])('$name', async ({ files, changed, findings: expected }) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['secrets']),
         ...files,
     });

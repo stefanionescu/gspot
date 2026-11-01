@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { pathToFileURL } from 'node:url';
 import { writeFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
@@ -18,7 +17,7 @@ import { writeProgramCommand, fakeToolExecutables } from '#tests/setup/system/fa
 import { INVALID_SITEMAP_URLS, PURGECSS_STYLE_CASES } from '#tests/config/checks/framework/site.ts';
 
 test('a sitemap index supplies the base path for encoded and CDATA page URLs and Lychee remaps', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['site'], {
             level: 'all',
             tables: `[site]\nbuild_command = ${JSON.stringify(buildProgramCommand('fakes/site-build', '--copy', 'built=dist'))}\n`,
@@ -71,7 +70,7 @@ test('a sitemap index supplies the base path for encoded and CDATA page URLs and
 });
 
 test.each(INVALID_SITEMAP_URLS)('site/sitemap reports %s as an invalid URL and site/lychee skips it', async (url) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['site'], {
             level: 'all',
             tables: `[site]\nbuild_command = ${JSON.stringify(buildProgramCommand('fakes/site-build', '--copy', 'sitemap.xml=dist/sitemap.xml'))}\n`,

@@ -1,7 +1,6 @@
 import { posix } from 'node:path';
 import { find, read } from '#cli/system/files/reads.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import { listNpmToolNames } from '#cli/manifests/tools.ts';
 import { type RunCache } from '#cli/types/system/system.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
@@ -13,6 +12,22 @@ import { isInInstalledFolder, listEnclosingFolders } from '#cli/system/paths.ts'
 import { PACKAGE_JSON, DEPENDENCY_SECTIONS } from '#cli/config/parsers/projects.ts';
 import { type PackageJson, type DependencyFile } from '#cli/types/parsers/projects.ts';
 import { parseRequirements, DEPENDENCY_FILE_PARSERS } from '#cli/parsers/projects/dependencies.ts';
+
+/**
+List the exact npm package names that the configurations declare.
+
+@param configurations the configurations in use.
+*/
+function listNpmToolNames(configurations: Iterable<Configuration>): Set<string> {
+    return new Set(
+        [...configurations].flatMap((configuration) =>
+            configuration.tools.flatMap((tool) => {
+                const npm = tool.installers['npm'];
+                return npm === undefined ? [] : npm.name;
+            }),
+        ),
+    );
+}
 
 async function readDependencyFile(cache: RunCache, file: TrackedFile): Promise<DependencyFile | undefined> {
     const parse = REQUIREMENTS_FILE.test(file.path)

@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/planning/session.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { formatHeader } from '#cli/generation/header.ts';
@@ -92,7 +92,7 @@ test('every generated header format marks a file generated outside .gspot', asyn
 test.each([...GENERATED_PATH_CASES])(
     'the configurations each scope selects mark their generated files: $configurations $tables',
     async ({ configurations, tables, generated }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(configurations, { tables }),
             ...TYPE_DECLARATION_FILES,
         });

@@ -63,7 +63,7 @@ export function openFiles(root: string): Files {
                 throw buildWriteError(path, error);
             }
         },
-        readCanonicalPath: (path) => readContainedPath(bounds.root, path),
+        readCanonicalPath: (path) => (path === '' ? bounds.root : readContainedPath(bounds.root, path)),
         list(path) {
             try {
                 const target = path === '' ? bounds.root : buildContainedPath(bounds, path);

@@ -26,7 +26,7 @@ test('licenses/allowed accepts an allowed license choice and reports a disallowe
     const root = sandbox.path;
     commitAll(root);
     for (const command of [
-        ['init', '--yes', '--configurations', 'licenses'],
+        ['init', '--configurations', 'licenses'],
         ['set', 'licenses.allowed', '["MIT","Apache-2.0"]'],
     ]) {
         const applied = await spawnGspot(root, command);

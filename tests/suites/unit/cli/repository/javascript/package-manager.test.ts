@@ -7,13 +7,13 @@ import * as processes from '#cli/system/processes.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 
 import {
     detectPackageManager,
@@ -37,7 +37,7 @@ test('without a packageManager field or Bun on PATH, the tool project uses npm a
         readPackageManagerVersion(
             sandbox.path,
             installer,
-            SETTING_DEFINITIONS['tool_timeout_seconds'].default,
+            rootSettingSchemas.tool_timeout_seconds.parse(undefined),
             createRunCache(sandbox.path),
         ),
     ).toStrictEqual({

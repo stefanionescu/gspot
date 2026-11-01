@@ -6,9 +6,7 @@ export const MESSAGE_FILE = 'message.txt';
 
 export const COMMITLINT_CHECK = 'commits/commitlint';
 
-export const SCISSORS_LINE = '# ------------------------ >8 ------------------------';
-
-export const COMMENT_PREFIX = '#';
+export const COMMIT_SCISSORS = /^. -{24} >8 -{24}\r?$/mu;
 
 export const MESSAGE_REFERENCES = [
     {

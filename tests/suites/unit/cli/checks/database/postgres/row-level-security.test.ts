@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/commands/check/run.ts';
@@ -7,10 +6,11 @@ import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('row security reports a table without row level security and passes after the fix', async () => {
     const path = 'migrations/1_tables.sql';
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['postgres'], {
             level: 'all',
             tables: '[postgres]\nclient_schemas = ["public"]\n',
@@ -36,7 +36,7 @@ ALTER TABLE private_data ENABLE ROW LEVEL SECURITY;\n`,
 });
 
 test('row security skips when no client schemas are selected', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['postgres']),
         'migrations/1_orders.sql': 'CREATE TABLE public.orders (id bigint PRIMARY KEY);\n',
     });

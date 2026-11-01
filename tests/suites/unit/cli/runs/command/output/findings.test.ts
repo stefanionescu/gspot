@@ -8,11 +8,13 @@ import { openSession } from '#cli/planning/session.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { FAILED_RUN } from '#tests/config/runs/samples.ts';
 import { SWIFT_VALUE_SOURCE } from '#tests/config/swift.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { buildCheckSession } from '#cli/commands/check/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildCheckResult, parseCommandFindings } from '#cli/runs/command/output.ts';
 
 import {
@@ -40,7 +42,7 @@ test.each([...FILELESS_CHECKS])('$id accepts a fileless result without classifyi
 });
 
 test('an ESLint finding whose source text holds a module error word stays a finding, and a real module error becomes a note', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const path = 'source.ts';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
@@ -83,7 +85,7 @@ test.each(['{file}', '{files}'])(
     async (placeholder) => {
         const source = 'input.txt';
         const located = `${source}:1: Located defect before exit`;
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([], {
                 rules: true,
                 tables: stringify({
@@ -108,7 +110,7 @@ test.each(['{file}', '{files}'])(
         const plans = planChecks(session, { stage: 'all', only: ['project/exit-contract'] });
         const planned = plans[0]!;
         planned.tool = { name: process.execPath, installers: {}, kind: 'program' };
-        const finding = await runCommandCheck(buildCheckSession(session), planned);
+        const finding = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned);
         expect(finding.status).toBe('failed');
         expect(finding.findings).toStrictEqual([
             matchFields({ file: source, line: 1, message: 'Located defect before exit' }),
@@ -117,7 +119,7 @@ test.each(['{file}', '{files}'])(
             ...planned.check,
             command: buildProgramCommand('fakes/tool', '--line', located, '--exit', '7', placeholder),
         };
-        const fatal = await runCommandCheck(buildCheckSession(session), planned);
+        const fatal = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned);
         expect(fatal.status).toBe('error');
         expect(fatal.findings).toStrictEqual([]);
         expect(fatal.note).toBe(`${process.execPath} failed with exit 7:\n${located}`);
@@ -125,7 +127,7 @@ test.each(['{file}', '{files}'])(
 );
 
 test('per-file failures drop only the header lines the tool declares', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             tables: stringify({
                 command_check: [
@@ -150,10 +152,10 @@ test('per-file failures drop only the header lines the tool declares', async () 
 
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'commit', only: ['project/native'] })[0]!;
-    const unfiltered = await runCommandCheck(buildCheckSession(session), planned);
+    const unfiltered = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned);
     expect(unfiltered.status).toBe('failed');
     expect(unfiltered.findings).toMatchObject([{ file: 'source.txt', message: 'Banner: scanner 1' }]);
-    const filtered = await runCommandCheck(buildCheckSession(session), {
+    const filtered = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), {
         ...planned,
         tool: { ...planned.tool!, finding_header_pattern: '^Banner:' },
     });
@@ -162,7 +164,7 @@ test('per-file failures drop only the header lines the tool declares', async () 
 });
 
 test('a regex finding in a file that does not exist is a note until the file exists', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const source = 'unchanged input\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], {
@@ -191,7 +193,7 @@ pattern = '^(?<file>[^:]+):(?<line>\d+):(?<message>.*)$'
 });
 
 test('a finding in a folder outside the scope keeps its repository path when the check runs in the scope folder', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['swift'], { scopes: [{ path: 'app' }] }),
         'app/src/a.swift': SWIFT_VALUE_SOURCE,
         'lib/x.ts': 'export const value = 1;\n',
@@ -216,7 +218,7 @@ test('a finding in a folder outside the scope keeps its repository path when the
         },
     };
 
-    const checked = await runCommandCheck(buildCheckSession(session), planned);
+    const checked = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned);
 
     expect(checked.findings.map(({ file }) => file)).toStrictEqual(['lib/x.ts', 'app/src/a.swift']);
 });

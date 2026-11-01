@@ -55,10 +55,10 @@ exists only when the elements accept any value on purpose and say so with `Any`.
 
 ## Aliases, variables, and forward references
 
-A type alias names a complex repeated annotation in CapWords, with a leading underscore when internal. Use a `type`
-statement when the Python version supports it and the module already does. Use `TypeAlias` where a syntax change falls
-outside the task. `MetricMap` for `Mapping[str, float]` names an alias. `Path = pathlib.Path` aliases a class and
-`errno.EEXIST` holds a value; neither defines a typing interface.
+A type alias names a complex repeated annotation in CapWords, with a leading underscore when internal. On Python 3.12
+and later, write `type MetricMap = Mapping[str, float]` and the type parameters of Python Enhancement Proposal (PEP) 695; Ruff reports `TypeAlias` and
+`TypeVar` generics. `Path = pathlib.Path` aliases a class and `errno.EEXIST` holds a value; neither defines a typing
+interface.
 
 ### Type variable naming
 

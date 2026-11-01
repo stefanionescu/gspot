@@ -1,5 +1,4 @@
 import ts from 'typescript';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { parse as parseIni } from 'ini';
 import { parse as parseYaml } from 'yaml';
@@ -17,6 +16,7 @@ import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 
 import {
@@ -27,7 +27,7 @@ import {
 } from '#tests/config/generation/configs.ts';
 
 test('a child project receives Python configuration only after its first Python file', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python'], { scopes: [{ path: 'docs' }] }),
         'docs/README.md': '# Guide\n',
     });
@@ -49,7 +49,7 @@ test('a child project receives Python configuration only after its first Python 
 });
 
 test('a scope that selects Express gets its Semgrep rules when only the root selects Semgrep', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'security'], {
             scopes: [{ path: 'app', configurations: ['express'] }, { path: 'app/child' }],
         }),
@@ -62,7 +62,7 @@ test('a scope that selects Express gets its Semgrep rules when only the root sel
 });
 
 test('a Ruff-only Python scope gets no type checker file or link file', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], NESTED_PYTHON_SETTINGS),
         'linted/source.py': 'value = 1\n',
         'typed/source.py': 'value: int = 1\n',
@@ -79,7 +79,7 @@ test('a Ruff-only Python scope gets no type checker file or link file', async ()
 });
 
 test('a TypeScript-only scope gets the config files of its selected JavaScript checks', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript']),
         'src/main.ts': 'export const value = 1;\n',
     });
@@ -93,7 +93,7 @@ test('a TypeScript-only scope gets the config files of its selected JavaScript c
 test.each([...IGNORED_CHECK_FILES])(
     '$name and drops the files of the ignored checks',
     async ({ settings, files, kept, dropped }) => {
-        await using sandbox = await testdir({ 'gspot.toml': settings, ...files });
+        await using sandbox = await createGitSandbox({ 'gspot.toml': settings, ...files });
 
         const paths = buildGeneratedFiles(await openSession(sandbox.path)).files.map((file) => file.path);
         const listed = new Set<string>([...kept, ...dropped]);
@@ -102,7 +102,7 @@ test.each([...IGNORED_CHECK_FILES])(
 );
 
 test('Go and Rust sources keep the files and tools of every selected configuration', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { level: 'all' }),
         'main.go': 'package main\nfunc main() {}\n',
         'main.rs': 'fn main() {}\n',
@@ -137,7 +137,7 @@ test.each([...LEVELS])("every configuration's generated config files parse at le
         .filter((configuration) => configuration.configs.length > 0)
         .map((configuration) => configuration.name)
         .toArray();
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         ...CONFIG_PROJECT,
         'gspot.toml': buildSandboxSettings(configurations, { level, rules: true }),
     });
@@ -163,7 +163,7 @@ test.each([...LEVELS])("every configuration's generated config files parse at le
 });
 
 test('an ignore whose reason equals a built-in section title keeps its paths in the jsconfig exclude', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
             rules: true,
@@ -203,15 +203,23 @@ function parseConfig(text: string, path: string): void {
         '.ini': (text) => {
             parseIni(text);
         },
-        '.json': (text) => void JSON.parse(text),
+        '.json': (text) => {
+            JSON.parse(text);
+        },
         '.jsonc': parseJson,
         'pyrightconfig.json': parseJson,
-        '.webmanifest': (text) => void JSON.parse(text),
+        '.webmanifest': (text) => {
+            JSON.parse(text);
+        },
         '.toml': (text) => {
             parseToml(text);
         },
-        '.yml': (text) => void parseYaml(text),
-        '.yaml': (text) => void parseYaml(text),
+        '.yml': (text) => {
+            parseYaml(text);
+        },
+        '.yaml': (text) => {
+            parseYaml(text);
+        },
         '.mjs': (text, path) => {
             const result = runCommandBlocking(['node', '--input-type=module', '--check'], {
                 cwd: process.cwd(),

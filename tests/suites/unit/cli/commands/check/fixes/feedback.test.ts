@@ -4,7 +4,6 @@ import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
 import { stringify } from '@decimalturn/toml-patch';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { DURATION } from '#tests/config/commands/check/report.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { FIX_SUMMARY_CASES } from '#tests/config/commands/check/fixes.ts';
@@ -34,7 +33,7 @@ test.each([...FIX_SUMMARY_CASES])('check --fix reports $name', async ({ paths, a
     });
     const corrected = await runGspot(sandbox.path, ['check', '--only', 'sandbox/feedback', '--fix']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(corrected.stdout.replaceAll(DURATION, '0.0s')).toBe(appliedText);
+    expect(corrected.stdout.split('\n', 1)[0]).toBe(appliedText);
     expect(corrected.stderr).toBe('');
     const checkedPaths = new Set(['source.txt', 'other.txt', ...paths]);
     for (const path of checkedPaths)

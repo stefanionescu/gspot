@@ -1,10 +1,25 @@
 import { z } from 'zod';
+import { join } from 'node:path';
+import { statSync } from 'node:fs';
 import { isTable } from '#cli/system/tables.ts';
+import { escapeGlob } from '#cli/system/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
+import { GLOB_BRACKETS } from '#cli/config/files/path-patterns.ts';
 import { findSettingSchema } from '#cli/settings/schema/lookup.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { PathVisitor } from '#cli/types/settings/inheritance.ts';
+
+function escapeLiteralPath(root: string, path: string): string {
+    const segments = path.split('/');
+    for (let index = segments.length; index > 0; index -= 1) {
+        const prefix = segments.slice(0, index).join('/');
+        if (!GLOB_BRACKETS.test(prefix)) return path;
+        if (statSync(join(root, prefix), { throwIfNoEntry: false }) !== undefined)
+            return [escapeGlob(prefix), ...segments.slice(index)].join('/');
+    }
+    return path;
+}
 
 function mapNestedPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, keys: KeyPath): unknown {
     if (schema instanceof z.ZodUnion) {
@@ -93,7 +108,7 @@ export function buildArgumentPaths(root: string, cwd: string, paths: string[] | 
     return paths?.map((path) => {
         const negative = path.startsWith('!');
         try {
-            const selector = buildArgumentPath(root, cwd, negative ? path.slice(1) : path);
+            const selector = escapeLiteralPath(root, buildArgumentPath(root, cwd, negative ? path.slice(1) : path));
             return negative ? `!${selector}` : selector;
         } catch (error) {
             throw new GspotError('arguments', `--paths ${path} is outside this repository. Name a path inside it.`, {

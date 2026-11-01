@@ -11,10 +11,11 @@ export const VERIFY_FLAG = '--verify';
 
 export const NAME_ONLY_FLAG = '--name-only';
 
-export const READ_COMMITTED_MESSAGE = 'Cannot read committed config files. Restore HEAD and run gspot init again.';
+export const READ_COMMITTED_MESSAGE =
+    'Cannot read committed config files. Run git status, then commit or stash the change.';
 
 export const PRETTIER_SCRIPT_NOTE =
-    '; gspot cannot read this Prettier config, so set format.indent_width and format.print_width by hand';
+    'gspot cannot read this Prettier config, so set format.indent_width and format.print_width by hand';
 
 export const DETECTED_SETTINGS = [
     'site.build_command',
@@ -51,9 +52,6 @@ export const REPLACES_LABEL = 'gspot replaces';
 
 export const LEAVES_LABEL = 'gspot leaves';
 
-export const NO_GIT_MESSAGE =
-    'no git repository: the hooks and the configurations that read git stay out until git init runs';
-
 export const RUFF_SETTINGS_FILES = ['.ruff.toml', 'ruff.toml', 'pyproject.toml'] as const;
 
 export const EDITORCONFIG_FILE = '.editorconfig';
@@ -86,32 +84,18 @@ export const IMPORT_EXTENSION_SETTING = 'tools.eslint.import_extension';
 
 export const INIT_INSTALL_NOTES: ReadonlySet<string> = new Set([HOOKS_CHANGED_NOTE, TOOLS_CHANGED_NOTE]);
 
-export const NO_TERMINAL_MESSAGE = 'There is no terminal to ask in. Pass --yes to accept the plan.';
-
-export const CANCELED_MESSAGE = 'Canceled. Nothing was written.';
-
-export const CONFIRM_PROMPT = 'Continue? [Y/n] ';
-
-export const ACCEPT_ANSWER = /^(?:y|yes)?$/iu;
-
 export const WROTE_PLAN_MESSAGE = 'Wrote the plan above.';
 
 export const SETTINGS_EXIST_MESSAGE =
     'This repository already has a gspot.toml. Run gspot doctor to inspect its setup; it prints the gspot add line for newly detected configurations.';
 
-export const NOTHING_WRITTEN_MESSAGE = 'Nothing written.\n';
+export const NEXT_INSTALL_MESSAGE = 'Next: gspot install, then gspot baseline.';
 
-export const NEXT_INSTALL_MESSAGE = 'Next: run gspot install to install the tools and turn on the Git hooks.';
-
-export const CONFIGURATIONS_OPTION = '--configurations <names...>';
+export const CONFIGURATIONS_OPTION = '--configurations <names>';
 
 export const NO_CONFIGURATIONS_FLAG = '--no-configurations';
 
 export const LEVEL_OPTION = '--level <level>';
-
-export const YES_FLAG = '--yes';
-
-export const JSON_NEEDS_YES_MESSAGE = '--json needs --yes, because gspot cannot ask while it prints JSON.';
 
 export const COLUMN_GAP = 2;
 
@@ -180,6 +164,9 @@ export const LEFT_OUT_NOTES = {
 
 export const LOCAL_RECORDS = { scope: 'path', import_rule: 'name', command_check: 'id' } as const;
 
-export const FROM_CONFLICT_MESSAGE = 'takes the configurations of its file. Leave out';
+export const FROM_CONFLICT_MESSAGE =
+    '--from takes the configurations of its file. Leave out {flag}, or edit a copy of the file.';
 
 export const FROM_OPTION = '--from <file>';
+
+export const CONFIGURATION_LIST_SEPARATOR = ',';

@@ -39,7 +39,6 @@
 .findings .badge {
     grid-row: span 2;
     align-self: start;
-    margin-block-start: 0;
 }
 
 .findings .where {

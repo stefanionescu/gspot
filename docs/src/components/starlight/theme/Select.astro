@@ -3,8 +3,12 @@ import { Icon } from '@astrojs/starlight/components';
 import { THEME_STORAGE_KEY, THEME_SWITCH_LABELS } from '#docs/config/site.ts';
 ---
 
-<theme-toggle data-storage-key={THEME_STORAGE_KEY} data-light-label={THEME_SWITCH_LABELS.light}>
-    <button type="button" class="theme-toggle" aria-label={THEME_SWITCH_LABELS.dark} title={THEME_SWITCH_LABELS.dark}>
+<theme-toggle
+    data-storage-key={THEME_STORAGE_KEY}
+    data-dark-label={THEME_SWITCH_LABELS.dark}
+    data-light-label={THEME_SWITCH_LABELS.light}
+>
+    <button type="button" class="icon-button" aria-label={THEME_SWITCH_LABELS.dark} title={THEME_SWITCH_LABELS.dark}>
         <span class="moon">
             <Icon name="moon" size="1.25rem" />
         </span>
@@ -20,9 +24,10 @@ import { THEME_STORAGE_KEY, THEME_SWITCH_LABELS } from '#docs/config/site.ts';
         connectedCallback(): void {
             const button = this.querySelector('button') as HTMLButtonElement;
             const root = document.documentElement;
-            const darkLabel = button.title;
+            const darkLabel = this.dataset['darkLabel'] as string;
+            const lightLabel = this.dataset['lightLabel'] as string;
             const refreshLabel = (): void => {
-                const text = root.dataset['theme'] === 'light' ? (this.dataset['lightLabel'] as string) : darkLabel;
+                const text = root.dataset['theme'] === 'light' ? lightLabel : darkLabel;
                 button.setAttribute('aria-label', text);
                 button.title = text;
             };
@@ -43,24 +48,6 @@ import { THEME_STORAGE_KEY, THEME_SWITCH_LABELS } from '#docs/config/site.ts';
 </script>
 
 <style>
-.theme-toggle {
-    display: inline-grid;
-    place-items: center;
-    width: var(--target-size);
-    height: var(--target-size);
-    padding: 0;
-    border: 0;
-    border-radius: 8px;
-    background: transparent;
-    color: var(--sl-color-gray-1);
-    cursor: pointer;
-}
-@media (hover: hover) {
-    .theme-toggle:hover {
-        background: var(--sl-color-gray-6);
-        color: var(--sl-color-white);
-    }
-}
 .moon,
 .sun {
     display: contents;

@@ -45,16 +45,6 @@ test('check refuses the commitlint check outside the commit-msg hook and names t
     );
 });
 
-test('--only refuses a check disabled by the selected level', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const result = await runGspot(sandbox.path, ['check', '--only', 'docs/required-files', '--json']);
-    expect(result.code).toBe(2);
-    expect(JSON.parse(result.stdout)).toMatchObject({
-        error: 'arguments',
-        message: 'docs/required-files is off at level basic. Run gspot set level all to turn it on.',
-    });
-});
-
 test('--only names the configuration that an unselected check needs', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     const result = await runGspot(sandbox.path, ['check', '--only', 'python/ruff', '--json']);
@@ -149,6 +139,7 @@ test('a staged check reports a file name that is not UTF-8 and leaves no copy be
             file: String.raw`"bad-\377.txt"`,
             line: 1,
             rule: 'path-encoding',
+            explain: 'gspot explain repository/encoding',
             message: String.raw`"bad-\377.txt" is not a UTF-8 path. Rename the file using UTF-8.`,
             fixable: false,
             help: 'Save the reported file as UTF-8, then run the check again.',

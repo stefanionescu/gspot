@@ -31,7 +31,6 @@ import {
     GIT_WORK_TREE_VARIABLE,
     NOT_REPOSITORY_MESSAGE,
     GIT_TOP_LEVEL_ARGUMENTS,
-    GIT_WORK_TREE_ARGUMENTS,
     GIT_COMMAND_CONFIGURATION,
     GIT_LOCAL_VARIABLES_ARGUMENTS,
     GIT_NONLOCAL_ENVIRONMENT_NAME,
@@ -282,27 +281,6 @@ export async function readGitPaths(
         .split('\0')
         .map((path) => decodeUtf8(Buffer.from(path, 'latin1')))
         .filter((path): path is string => path !== undefined && path !== '');
-}
-
-/**
-Check whether a Git work tree contains the folder.
-
-@param cwd the folder to test.
-@throws when the folder holds a bare repository or Git metadata, or Git cannot identify a work tree.
-*/
-export async function isGitRepository(cwd: string): Promise<boolean> {
-    const inspection = await runGit(cwd, GIT_WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
-    if (inspection.code === 0 && inspection.stdout.trim() === 'true') return true;
-    if (inspection.code === 0 && inspection.stdout.trim() === 'false')
-        throw new GspotError(
-            'git',
-            `${cwd} is a bare repository or a Git folder, not a work tree. Run gspot in the work tree.`,
-        );
-    if (isNotRepository(inspection)) return false;
-    throw new GspotError(
-        'git',
-        `Git could not tell whether ${cwd} is a work tree (exit ${String(inspection.code)}): ${inspection.stderr.trim()}`,
-    );
 }
 
 /**

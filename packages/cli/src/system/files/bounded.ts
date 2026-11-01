@@ -171,7 +171,10 @@ Replace the file at a path with new file contents, through a staged file that mo
 */
 export function replaceBounded(bounds: FileBounds, path: string, contents: FileContents): void {
     const target = preparePath(bounds, path);
-    const temporary = join(dirname(target), `${TEMPORARY_FILE_PREFIX}${randomUUID()}${TEMPORARY_FILE_SUFFIX}`);
+    const temporary = join(
+        dirname(target),
+        `${TEMPORARY_FILE_PREFIX}${String(process.pid)}-${randomUUID()}${TEMPORARY_FILE_SUFFIX}`,
+    );
     let isStaged = false;
     try {
         writeStagedFile(temporary, contents);

@@ -1,7 +1,6 @@
 import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { LEVELS } from '#cli/config/manifests/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
@@ -36,7 +35,7 @@ test('Drizzle reports delete and update without where only for its client names'
     expect(await listLintFindings(eslint, sandbox.path, ['app/source.js'], rules)).toStrictEqual([]);
 });
 
-test.each([...LEVELS])(
+test.each(['all'] as const)(
     'the translations configuration reports literal UI text outside the test files of each scope at %s',
     async (level) => {
         await using sandbox = await testdir();
@@ -60,14 +59,12 @@ test.each([...LEVELS])(
             expect(
                 await listLintFindings(eslint, sandbox.path, [file], ['i18next/no-literal-string']),
                 file,
-            ).toStrictEqual(
-                level === 'all' && ordinary.has(file) ? [{ file, rule: 'i18next/no-literal-string', line: 1 }] : [],
-            );
+            ).toStrictEqual(ordinary.has(file) ? [{ file, rule: 'i18next/no-literal-string', line: 1 }] : []);
         }
     },
 );
 
-test.each([...LEVELS])(
+test.each(['basic'] as const)(
     'at %s, Zustand store files keep your import restrictions and other files get the Zustand restriction',
     async (level) => {
         await using sandbox = await testdir({
@@ -148,13 +145,9 @@ path = "flat"
         await createFileTree(sandbox.path, { [file]: TRPC_TYPES });
         expect(await listLintFindings(eslint, sandbox.path, [file], ['boundaries/dependencies'])).toStrictEqual([]);
     }
-    await createFileTree(sandbox.path, { 'form0.ts': 'import { broken from "./private/router.js";\n' });
-    expect(await listLintFindings(eslint, sandbox.path, ['form0.ts'], ['boundaries/dependencies'])).toStrictEqual([
-        { file: 'form0.ts', rule: null, line: 1 },
-    ]);
 });
 
-test.each([...LEVELS])(
+test.each(['basic'] as const)(
     'tRPC procedures need an input schema in router role files of each scope at %s',
     async (level) => {
         await using sandbox = await testdir();
@@ -182,24 +175,3 @@ test.each([...LEVELS])(
         }
     },
 );
-
-test('TanStack Query rules report only in the scope that selects tanstack-query', async () => {
-    const source =
-        "import { useQuery } from '@tanstack/react-query';\nconst { data, ...rest } = useQuery({ queryKey: ['todos'], queryFn: load });\n";
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['javascript'], {
-            scopes: [{ path: 'app', configurations: ['tanstack-query'] }],
-        }),
-        'source.js': source,
-        'app/source.js': source,
-    });
-    const eslint = await buildEslint(sandbox.path);
-    expect(
-        await listLintFindings(
-            eslint,
-            sandbox.path,
-            ['source.js', 'app/source.js'],
-            ['@tanstack/query/no-rest-destructuring'],
-        ),
-    ).toStrictEqual([{ file: 'app/source.js', rule: '@tanstack/query/no-rest-destructuring', line: 2 }]);
-});

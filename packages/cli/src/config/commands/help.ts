@@ -3,19 +3,19 @@ export const COMMAND_HELP = {
         summary: 'Find what this repository needs, then write gspot.toml and the generated files',
         group: 'Set up a repository:',
         description:
-            'Find the configurations this repository needs and print a plan. When you accept the plan, gspot writes gspot.toml and the generated files: the tool settings, the rule files for coding agents, and the Git hooks. CI starts off; turn it on with gspot set ci.enabled true.\n\ninit deletes or replaces the config files that gspot replaces. Git must hold each one unchanged at HEAD; read the old one with git show HEAD:<path>. init installs no tools and runs no checks. Run gspot install next.\n\nWith --from, init also selects the configurations of the gspot.toml of another repository, and copies its settings that fit any repository. The plan lists each one it leaves out.',
+            'Find the configurations this repository needs and print a plan. gspot writes gspot.toml and the generated files: the tool settings, the rule files for coding agents, and the Git hooks. CI starts off; turn it on with gspot set ci.enabled true.\n\ninit deletes or replaces the config files that gspot replaces. Git must hold each one unchanged at HEAD; read the old one with git show HEAD:<path>. init installs no tools and runs no checks. Run gspot install next.\n\nWith --from, init also selects the configurations of the gspot.toml of another repository, and copies its settings that fit any repository. The plan lists each one it leaves out.',
         arguments: {},
         options: {
             '--from <file>': "Start from another repository's gspot.toml",
-            '--yes': 'Accept the plan without a question (needed without a terminal)',
-            '--configurations <names...>': 'Use these configurations at the root instead of the detected ones',
+            '--configurations <names>':
+                'Use these configurations at the root; repeat the flag or separate names with commas',
             '--no-configurations': 'Select no configurations at the root',
             '--level <level>':
                 'Start at this level, so the plan replaces the config files that this level runs (default: basic)',
-            '--json': 'Print the result as JSON. Needs --yes',
+            '--json': 'Print the result as JSON',
         },
         exitCodes: [
-            ['0', 'The plan was written or declined.'],
+            ['0', 'The plan was written.'],
             ['2', 'An argument is not valid, or init could not finish.'],
         ],
         example: 'gspot init --level all',
@@ -43,14 +43,13 @@ export const COMMAND_HELP = {
             'Write the generated files again from gspot.toml: the tool settings, the rule files, the Git hooks, and the CI workflow. apply replaces the generated files that gspot owns.\n\napply does not change gspot.toml and installs no tools. Run gspot install when apply says the tools changed.',
         arguments: {},
         options: {
-            '--dry-run': 'Print the generated files that would change, with their differences, and write nothing',
             '--json': 'Print the result as JSON',
         },
         exitCodes: [
-            ['0', 'The files were written, or the dry run finished.'],
+            ['0', 'The generated files were written.'],
             ['2', 'gspot.toml is not valid, or apply could not finish.'],
         ],
-        example: 'gspot apply --dry-run',
+        example: 'gspot apply',
     },
     check: {
         summary: 'Run the checks and print the findings',
@@ -58,16 +57,18 @@ export const COMMAND_HELP = {
         description:
             'Run the checks and print each finding with its file, line, lint rule, and help.\n\nWithout options, gspot runs the commit and push checks on the working tree. Commit message checks run with --hook commit-msg. Manual checks run only when --only names them.',
         arguments: {
-            paths: 'Files or folders to check (default: the whole repository)',
+            paths: 'Files or folders to check, relative to the current folder (default: the whole repository)',
         },
         options: {
             '--only <checks>':
-                'Run only these checks, such as python/ruff. Separate several with commas, or repeat the option',
+                'Run only these checks, including checks off at your level. Separate several with commas, or repeat the option',
             '--staged': 'Check the files as you staged them, not the working tree',
-            '--changed [ref]':
-                'Check the files changed since ref (default: the upstream branch, else the default branch). An empty ref, or a ref of all zeros as CI gives for a new branch, checks every file',
+            '--stage <commit|push>': 'Run only the checks assigned to this stage (default: commit and push)',
+            '--changed': 'Check the files changed since the upstream branch, or origin/HEAD',
+            '--base <ref>':
+                'Compare with this branch, tag, or commit; an empty, all-zero, or absent full hash checks every file',
             '--fix': 'Run the fixers, then run the checks on the fixed files',
-            '--hook <hook>': 'Run as that Git hook runs. Put the arguments that Git gives the hook after --',
+            '--hook <hook>': 'Run the pre-push or commit-msg hook. Put the arguments that Git gives the hook after --',
             '--verbose': 'Also print the passed and skipped checks, each command, and each ignore',
             '--json': 'Print the report as JSON',
         },
@@ -88,7 +89,7 @@ export const COMMAND_HELP = {
             configuration: 'Configuration names, such as pytest. Run gspot list to see them',
         },
         options: {
-            '--scope <path>': 'Select them in this scope only (default: the root)',
+            '--scope <path>': 'Select them in this scope, relative to the repository root (default: the root)',
             '--json': 'Print the result as JSON',
         },
         exitCodes: [
@@ -106,7 +107,7 @@ export const COMMAND_HELP = {
             configuration: 'Configuration names',
         },
         options: {
-            '--scope <path>': 'Remove them from this scope only (default: the root)',
+            '--scope <path>': 'Remove them from this scope, relative to the repository root (default: the root)',
             '--reason <text>': 'Why you remove them (required)',
             '--json': 'Print the result as JSON',
         },
@@ -120,14 +121,14 @@ export const COMMAND_HELP = {
         summary: 'Change a setting',
         group: 'Change gspot.toml:',
         description:
-            'Change one setting in gspot.toml, then write the generated files again. gspot checks the value first.\n\ngspot replaces the value. For a list, give every item: gspot replaces the whole list, so gspot.toml holds exactly the items you typed, and the same command always writes the same list. To remove single items, run gspot unset <setting> <items...>. For a table, give one TOML inline table, and gspot adds its keys.\n\nFor an ignore, run gspot ignore <check> --reason "<why>". Write other records, such as [[command_check]], by hand.',
+            'Change one setting in gspot.toml, then write the generated files again. gspot checks the value first.\n\ngspot replaces the value. For a list, give every item: gspot replaces the whole list, so gspot.toml holds exactly the items you typed, and the same command always writes the same list. To remove single items, run gspot unset <setting> <items...>. For a setting that holds a table, such as spelling.allowed_words, give one TOML inline table, and gspot adds its keys.\n\nFor an ignore, run gspot ignore <check> --reason "<why>". Write other records, such as [[command_check]], by hand.',
         arguments: {
             setting: 'The setting name, such as limits.file_lines. Run gspot list settings to see them',
             values: 'The new value: every item of a list, or the table keys to add',
         },
         options: {
             '--reason <text>': 'Why you change it. Needed when the change makes a check weaker',
-            '--scope <path>': 'Change it in this scope only (default: the root)',
+            '--scope <path>': 'Change it in this scope, relative to the repository root (default: the root)',
             '--json': 'Print the result as JSON',
         },
         exitCodes: [
@@ -146,7 +147,7 @@ export const COMMAND_HELP = {
             items: 'List items or table keys to remove (default: the whole value)',
         },
         options: {
-            '--scope <path>': 'Change it in this scope only (default: the root)',
+            '--scope <path>': 'Change it in this scope, relative to the repository root (default: the root)',
             '--json': 'Print the result as JSON',
         },
         exitCodes: [
@@ -166,8 +167,8 @@ export const COMMAND_HELP = {
         options: {
             '--reason <text>': 'Why you turn it off (required)',
             '--rule <rule>': 'Turn off only this lint rule',
-            '--paths <path...>':
-                'Turn it off only for these paths, relative to the current folder (default: every path)',
+            '--paths <path>':
+                'Turn it off for one path or glob relative to the current folder; repeat for more (default: every path)',
             '--json': 'Print the result as JSON',
         },
         exitCodes: [
@@ -187,7 +188,7 @@ export const COMMAND_HELP = {
         },
         options: {
             '--rule <rule>': 'Remove only the ignores of this lint rule',
-            '--paths <path...>': 'Take only these paths, relative to the current folder, out of the ignores',
+            '--paths <path>': 'Remove one path or glob relative to the current folder from ignores; repeat for more',
             '--json': 'Print the result as JSON',
         },
         exitCodes: [
@@ -220,9 +221,11 @@ export const COMMAND_HELP = {
             'Explain one thing: what it means, its state in this repository, and the commands that change it.\n\nexplain changes nothing.',
         arguments: {
             subject:
-                'A check (python/ruff), a lint rule (eslint/no-console), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts)',
+                'A check (python/ruff), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts)',
+            rule: 'A lint rule of the named check, such as E501 for python/ruff',
         },
         options: {
+            '--verbose': 'Print the full rule explanation',
             '--json': 'Print the result as JSON',
         },
         exitCodes: [

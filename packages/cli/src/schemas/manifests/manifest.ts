@@ -2,9 +2,10 @@ import { z } from 'zod';
 import { posix } from 'node:path';
 import { FILE_KINDS } from '#cli/config/files/kinds.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { SETTING_LANGUAGES } from '#cli/config/settings/naming.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects.ts';
-import { NAME_PATTERN, RULE_FILE_PATTERN } from '#cli/config/manifests/manifests.ts';
 import { manifestToolSchema, writtenNamingOverrideSchema } from '#cli/schemas/manifests/manifests.ts';
+import { CASE_NAMES, NAME_PATTERN, NAMED_CATEGORIES, RULE_FILE_PATTERN } from '#cli/config/manifests/manifests.ts';
 
 import {
     GROUPS,
@@ -21,6 +22,18 @@ import {
     nonemptyStringSchema,
     operatingSystemSchema,
 } from '#cli/schemas/manifests/fields.ts';
+
+const pathContainerSchema = z.strictObject({
+    open: z.string().min(1),
+    close: z.string(),
+    category: z.enum(NAMED_CATEGORIES),
+});
+
+const wordListSchema = z.strictObject({ words: z.string().array() });
+
+const categoryCasesSchema = z.strictObject({ cases: z.enum(CASE_NAMES).array() });
+
+const languageSchema = z.strictObject({ categories: z.record(z.string(), categoryCasesSchema) });
 
 const fileKindSchema = z.enum(FILE_KINDS);
 
@@ -104,6 +117,8 @@ const checkFieldsSchema = z.strictObject({
     runs: z.enum(CHECK_RUNS).default('files'),
     generator_outputs: generatorOutputSchema.array().min(1).optional(),
     coverage_arguments: z.string().min(1).array().optional(),
+    limits: z.union([z.string().min(1).array(), z.record(z.string().min(1), z.string().min(1))]).optional(),
+    limit_languages: z.enum(SETTING_LANGUAGES).array().optional(),
     run_in_copy: z.boolean().optional(),
     env: z.record(z.string(), z.string()).optional(),
     instead_of: z.string().optional(),
@@ -112,7 +127,6 @@ const checkFieldsSchema = z.strictObject({
             configuration: true,
             config_file: true,
             setting: true,
-            git: true,
             dependencies: true,
             tags: true,
         })
@@ -168,6 +182,7 @@ export const manifestSchema = z
     .strictObject({
         folder: z.string(),
         defaults: z.record(z.string().min(1), z.json()).default({}),
+        commitlint: z.strictObject({ rules: z.record(z.string(), z.json().array()).default({}) }).prefault({}),
         eslint: z
             .strictObject({
                 all_level_rules: allLevelRulesSchema.prefault([]),
@@ -188,7 +203,6 @@ export const manifestSchema = z
             requires: stringsSchema,
             suggests: stringsSchema,
             always_selected: z.boolean().default(false),
-            when: conditionSchema.pick({ git: true }).optional(),
             description: nonemptyStringSchema,
         }),
         detect: detectionSchema.optional(),
@@ -198,6 +212,14 @@ export const manifestSchema = z
         check: checkSchema.array().default([]),
         naming: z
             .strictObject({
+                path_containers: pathContainerSchema.array().default([]),
+                lists: z
+                    .object({ folders: wordListSchema })
+                    .catchall(wordListSchema)
+                    .default({ folders: { words: [] } }),
+                allowed_names: z.string().array().default([]),
+                allowed_phrases: z.string().array().default([]),
+                languages: z.record(z.string(), languageSchema).default({}),
                 override: writtenNamingOverrideSchema.array().default([]),
             })
             .optional(),

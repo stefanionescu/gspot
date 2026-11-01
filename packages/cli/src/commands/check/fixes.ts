@@ -1,7 +1,6 @@
 import { getTool } from '#cli/manifests/tools.ts';
 import { compareText } from '#cli/system/text.ts';
 import { type Tool } from '#cli/types/manifests.ts';
-import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { createCopy } from '#cli/runs/copy/files.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -11,16 +10,22 @@ import { type PlannedCheck } from '#cli/types/planning.ts';
 import { isReportedCrash } from '#cli/runs/command/output.ts';
 import { type FileContents } from '#cli/types/system/files.ts';
 import { type SpawnResult } from '#cli/types/system/system.ts';
-import { type CheckRunOptions } from '#cli/types/runs/check.ts';
 import { type CommandLaunch } from '#cli/types/runs/command.ts';
 import { listCopyFiles } from '#cli/runs/command/placeholders.ts';
 import { type Session, type CheckSession } from '#cli/types/session.ts';
+import { type CheckCode, type CheckRunOptions } from '#cli/types/runs/check.ts';
 import { FIX_ROUNDS, FIX_CANCELED_MESSAGE } from '#cli/config/commands/check.ts';
 import { inspectTool, buildToolAvailability } from '#cli/executables/inspect.ts';
 import { buildCommandSetup, buildCommandLaunch } from '#cli/runs/command/check.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
-import { checkGeneratorOutputs } from '#cli/checks/cross-configuration/generator-outputs.ts';
-import { type FixReport, type FixResult, type FixRounds, type PathBytes } from '#cli/types/commands/check.ts';
+
+import {
+    type FixReport,
+    type FixResult,
+    type FixRounds,
+    type PathBytes,
+    type RunOptions,
+} from '#cli/types/commands/check.ts';
 
 function findFixFailure(planned: PlannedCheck, result: SpawnResult): string | undefined {
     const { check } = planned;
@@ -57,7 +62,7 @@ async function runFixInCopy(
         command,
         toolPath,
         options,
-    }: { session: Session; root: string; command: string[]; toolPath: string; options: CheckRunOptions },
+    }: { session: CheckSession; root: string; command: string[]; toolPath: string; options: CheckRunOptions },
 ): Promise<FixResult> {
     using scratch = await createCopy({
         root: root,
@@ -92,10 +97,8 @@ function mergeResults(first: FixResult | undefined, next: FixResult): FixResult 
 async function runFixTool(
     session: CheckSession,
     planned: PlannedCheck,
-    { root, command, tool }: { root: string; command: string[]; tool: Tool },
+    { root, command, tool, code }: { root: string; command: string[]; tool: Tool; code: CheckCode | undefined },
 ): Promise<FixResult> {
-    const code =
-        planned.check.generator_outputs === undefined ? CHECK_CODE[planned.check.id] : { check: checkGeneratorOutputs };
     const options: CheckRunOptions = {
         listFileArguments: code?.listFileArguments,
         listConfigs: code?.listConfigs,
@@ -123,7 +126,11 @@ async function runFixTool(
     return runFixCommands(session, selected, fixSetup);
 }
 
-async function runFixer(session: CheckSession, planned: PlannedCheck, root: string): Promise<FixResult> {
+async function runFixer(
+    session: CheckSession,
+    planned: PlannedCheck,
+    selectCheckCode: RunOptions['selectCheckCode'],
+): Promise<FixResult> {
     const check = planned.check.id;
     if (session.cancelSignal?.aborted === true)
         return { check, status: 'canceled', changed: [], note: FIX_CANCELED_MESSAGE };
@@ -132,7 +139,7 @@ async function runFixer(session: CheckSession, planned: PlannedCheck, root: stri
     const command = planned.check.fix as string[];
     const name = command[0] as string;
     const tool = planned.tool?.name === name ? planned.tool : getTool(session.configurationsByName.values(), name);
-    return runFixTool(session, planned, { root, command, tool });
+    return runFixTool(session, planned, { root: session.root, command, tool, code: selectCheckCode(planned.check) });
 }
 
 function readContents(sourceRoot: string, paths: string[]): PathBytes {
@@ -159,7 +166,12 @@ function listChangedPaths(before: PathBytes, after: PathBytes): string[] {
         .toArray();
 }
 
-async function runFixerRounds(session: CheckSession, checks: PlannedCheck[], paths: string[]): Promise<FixRounds> {
+async function runFixerRounds(
+    session: CheckSession,
+    checks: PlannedCheck[],
+    paths: string[],
+    selectCheckCode: RunOptions['selectCheckCode'],
+): Promise<FixRounds> {
     const results = new Map<number, FixResult>();
     let firstBefore: PathBytes | undefined;
     let after: PathBytes = new Map();
@@ -169,7 +181,7 @@ async function runFixerRounds(session: CheckSession, checks: PlannedCheck[], pat
         const before = readContents(session.root, paths);
         firstBefore ??= before;
         for (const { check, index } of pending) {
-            results.set(index, mergeResults(results.get(index), await runFixer(session, check, session.root)));
+            results.set(index, mergeResults(results.get(index), await runFixer(session, check, selectCheckCode)));
             fixedContents.set(
                 index,
                 readContents(session.root, [
@@ -235,15 +247,20 @@ Runs fixes in passes and collects their results.
 
 @param session the repository and its tools.
 @param planned the checks to fix.
+@param selectCheckCode finds the implementation and config readers of each check.
 */
-export async function runFixers(session: CheckSession, planned: PlannedCheck[]): Promise<FixReport> {
+export async function runFixers(
+    session: CheckSession,
+    planned: PlannedCheck[],
+    selectCheckCode: RunOptions['selectCheckCode'],
+): Promise<FixReport> {
     const checks = planned.filter((check) => check.check.fix !== undefined);
     const paths = [
         ...new Set(
             checks.flatMap((check) => [...new Set([...check.files.map((file) => file.path), ...check.triggerPaths])]),
         ),
     ].toSorted((a, b) => compareText(a, b));
-    const rounds = await runFixerRounds(session, checks, paths);
+    const rounds = await runFixerRounds(session, checks, paths, selectCheckCode);
     const { before, after, results } = rounds;
     const changed = listChangedPaths(before, after);
     const broken = await listBrokenFiles(changed, before, after);

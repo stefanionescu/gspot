@@ -1,10 +1,10 @@
 import { join } from 'node:path';
-import { runGit } from '#cli/system/git.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
+import { runGit, readGitSetting } from '#cli/system/git.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/runs/results.ts';
@@ -13,8 +13,7 @@ import { getSiblingCommand, listPushedCommits } from '#cli/checks/cross-configur
 
 import {
     MESSAGE_FILE,
-    SCISSORS_LINE,
-    COMMENT_PREFIX,
+    COMMIT_SCISSORS,
     COMMITLINT_CHECK,
     MESSAGE_REFERENCES,
     GIT_COMMIT_MESSAGE_ARGUMENTS,
@@ -69,14 +68,19 @@ export async function checkCommitlintPushed(session: CheckSession, planned: Plan
 /**
 Report each line of a new commit message that links to an AI session.
 
-@param _session the repository and its tools.
+@param session the repository and its tools.
 @param planned the check and the commit message file.
 */
-export function checkReferences(_session: CheckSession, planned: PlannedCheck): CheckFinding[] {
+export async function checkReferences(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     if (planned.messageFile === undefined) return [];
-    const [message = ''] = readFileSync(planned.messageFile, 'utf8').split(SCISSORS_LINE, 1);
+    const text = readFileSync(planned.messageFile, 'utf8');
+    const scissors = COMMIT_SCISSORS.exec(text);
+    const comment =
+        scissors === null ? await readGitSetting(session.root, 'core.commentChar') : scissors[0].slice(0, 1);
+    const prefix = comment?.length === 1 ? comment : '#';
+    const message = text.slice(0, scissors?.index ?? text.length);
     return message.split('\n').flatMap((line, index) =>
-        line.startsWith(COMMENT_PREFIX)
+        line.startsWith(prefix)
             ? []
             : MESSAGE_REFERENCES.filter(({ pattern }) => pattern.test(line)).map(({ rule, message: text }) => ({
                   file: '',

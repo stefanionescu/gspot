@@ -1,6 +1,7 @@
 import { realpathSync } from 'node:fs';
 import { sep, posix, isAbsolute } from 'node:path';
 import { hasErrorCode } from '#cli/system/errors.ts';
+import type { Check } from '#cli/types/manifests.ts';
 import { stripVTControlCharacters } from 'node:util';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
@@ -13,6 +14,21 @@ import { parseMarkdownlintFindings } from '#cli/runs/output/markdownlint.ts';
 import { FILE_GROUP, TAPLO_OUTPUTS, MISSING_PATH_CODES } from '#cli/config/runs/output.ts';
 import type { CheckOutput, OutputPaths, ParsingCheck, OutputParser } from '#cli/types/runs/output.ts';
 import { parseLineFindings, parseRegexFindings, parseGroupedFindings } from '#cli/runs/output/text.ts';
+
+/**
+Tell whether the output of a check names the lint rule of each finding.
+
+@param check the output format and field mappings to inspect.
+@returns whether each finding of the check holds a rule.
+*/
+export function hasRuleOutput(check: Check): boolean {
+    const { output } = check;
+    if (['semgrep', 'knip', 'markdownlint'].includes(output.format)) return true;
+    if (output.format === 'json') return output.fields?.rule !== undefined;
+    if (output.format === 'regex' || output.format === 'grouped')
+        return output.fields?.rule !== undefined || output.pattern.includes('(?<rule>');
+    return false;
+}
 
 function readCanonicalPath(path: string): string | undefined {
     try {

@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -39,7 +38,7 @@ async function applyPackageFields(root: string, scenario: PackageFieldScenario):
 }
 
 test('writeGeneratedFiles deletes the npm tool folder when no configuration needs it', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),
         [`${GSPOT_PATHS.nodeModules}/tool/index.js`]: 'export {};\n',
     });
@@ -51,7 +50,7 @@ test('writeGeneratedFiles deletes the npm tool folder when no configuration need
 });
 
 test('removing css drops its managed stylelint field and keeps authored fields byte for byte', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         ...STYLELINT_PACKAGE_FIELDS.project,
         'gspot.toml': buildSandboxSettings(STYLELINT_PACKAGE_FIELDS.configurations, {
             level: 'all',
@@ -87,7 +86,7 @@ test('removing css drops its managed stylelint field and keeps authored fields b
 });
 
 test('writing a mise project preserves its lockfile and reports a changed hook', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),
         '.gspot/mise.lock': 'version = 1\n',
     });
@@ -114,7 +113,7 @@ test('writing a mise project preserves its lockfile and reports a changed hook',
 });
 
 test('at level basic, prose keeps its Vale configuration and removes installed style packages', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['prose']),
         'guide.md': '# Guide\n',
         '.gspot/vale/Google/Heading.yml': 'extends: existence\n',

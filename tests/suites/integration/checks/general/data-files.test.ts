@@ -22,15 +22,15 @@ import {
 } from '#tests/config/integration/checks/general/data-files.ts';
 
 async function assertYamlFiles(root: string, rule?: string): Promise<void> {
-    const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', 'data-files/yamllint', '--json']));
+    const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', 'data-files/yaml', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(rule === undefined ? 0 : 1);
     expect(checked.report.checks).toMatchObject([
-        { check: 'data-files/yamllint', scope: '', status: 'passed', findings: [] },
+        { check: 'data-files/yaml', scope: '', status: 'passed', findings: [] },
         {
-            check: 'data-files/yamllint',
+            check: 'data-files/yaml',
             scope: 'app',
             status: rule === undefined ? 'passed' : 'failed',
-            findings: rule === undefined ? [] : [matchFields({ file: 'app/settings/project.yaml', rule, line: 2 })],
+            findings: rule === undefined ? [] : [matchFields({ file: 'app/settings/project.yml', rule, line: 2 })],
         },
     ]);
 }
@@ -106,7 +106,7 @@ test('Taplo never downloads a schema named in a #:schema comment', async () => {
     expect(requests).toBe(0);
 });
 
-test("yamllint applies each scope's lint rule options, and Prettier keeps two-space YAML", async () => {
+test('the built-in YAML check reports its scope, and Prettier keeps two-space YAML', async () => {
     const { root } = installedSandbox();
     await using _change = await writeSandboxChanges(installedSandbox(), {
         removed: Object.keys(FILES_SANDBOX.files),
@@ -122,15 +122,15 @@ test("yamllint applies each scope's lint rule options, and Prettier keeps two-sp
         { check: 'format/prettier', scope: '', status: 'passed', findings: [] },
     ]);
     await writeFile(
-        join(root, 'app/settings/project.yaml'),
+        join(root, 'app/settings/project.yml'),
         `parent:
   enabled: yes
 on:
-  enabled: no
+  enabled: false
 `,
     );
     await assertYamlFiles(root, 'truthy');
-    await writeFile(join(root, 'app/settings/project.yaml'), YAML_SCOPE_FILES['app/settings/project.yaml']);
+    await writeFile(join(root, 'app/settings/project.yml'), YAML_SCOPE_FILES['app/settings/project.yml']);
     await assertYamlFiles(root);
 });
 

@@ -1,22 +1,15 @@
 {
-    "agent": {
-        "files": [
-            {
-                "path": "src/checkout.ts",
-                "content": "import type { Cart } from './cart.js';\nimport { charge } from './payments.js';\n\nexport async function pay(cart: Cart) {\n    try {\n        // eslint-disable-next-line\n        charge(cart.total);\n    } catch {}\n}\n"
-            }
-        ]
+    "before": {
+        "path": "src/checkout.ts",
+        "content": "import type { Cart } from './cart.js';\nimport { charge } from './payments.js';\n\nexport async function pay(cart: Cart) {\n    try {\n        // eslint-disable-next-line\n        charge(cart.total);\n    } catch {}\n}\n"
     },
-    "fix": {
-        "files": [
-            {
-                "path": "src/checkout.ts",
-                "content": "import type { Cart } from './cart.js';\nimport { charge } from './payments.js';\n\nexport async function pay(cart: Cart) {\n    await charge(cart.total);\n}\n"
-            }
-        ],
-        "inserted_lines": [5]
+    "after": {
+        "path": "src/checkout.ts",
+        "content": "import type { Cart } from './cart.js';\nimport { charge } from './payments.js';\n\nexport async function pay(cart: Cart) {\n    await charge(cart.total);\n}\n"
     },
-    "rejected_summary": "Failed: 2 checks with 5 findings.",
+    "insertedLines": [5],
+    "rejectedSummary": "Failed: 2 checks with 5 findings. Passed: 23 checks. Skipped: 8 checks.",
+    "passedSummary": "Passed: 25 checks. Skipped: 8 checks.",
     "findings": [
         {
             "check": "javascript/eslint",
@@ -77,6 +70,5 @@
             "rules": ["no-empty"]
         }
     ],
-    "checked": "Checked the staged files.",
-    "commit_record": "[main 066501e] feat: Add checkout"
+    "checked": "Checked the staged files."
 }

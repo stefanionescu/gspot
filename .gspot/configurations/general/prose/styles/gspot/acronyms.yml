@@ -100,6 +100,7 @@ exceptions:
   - udid
   - NGINX
   - Stylelint
+  - pytest
   - markdownlint
   - React
   - Native

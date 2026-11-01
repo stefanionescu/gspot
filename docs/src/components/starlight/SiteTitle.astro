@@ -1,12 +1,16 @@
 ---
 import mark from '#docs/assets/mark.webp';
-import { DOCS_PATH } from '#docs/config/site.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
+import { DOCS_PATH, RELEASES_URL } from '#docs/config/site.ts';
 ---
 
 <div class="brand-navigation">
     <a class="site-title" href="/" aria-label="gspot home">
         <img class="brand-mark" src={mark.src} alt="" width="28" height="28" />
         <span>gspot</span>
+    </a>
+    <a class="site-version" href={RELEASES_URL} aria-label={`gspot ${cliPackage.version} release notes`}>
+        v{cliPackage.version}
     </a>
     {Astro.url.pathname !== '/' && (
         <a href={DOCS_PATH} aria-current="location">
@@ -18,7 +22,11 @@ import { DOCS_PATH } from '#docs/config/site.ts';
 .brand-navigation {
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: 12px;
+}
+.site-version {
+    font-size: 0.8125rem;
+    white-space: nowrap;
 }
 a {
     color: var(--sl-color-gray-2);

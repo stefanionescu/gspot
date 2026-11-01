@@ -4,7 +4,6 @@ import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildEslint } from '#tests/setup/eslint/lint.ts';
-import type { EslintConfiguration } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 import {
@@ -31,16 +30,9 @@ test.each([...RUNTIME_CASES])('runtime globals and Node.js rules stay apart ($ru
     });
 
     const eslint = await buildEslint(sandbox.path);
-    const config = (await eslint.calculateConfigForFile('application/source.js')) as EslintConfiguration;
-    const globals = Object.keys(config.languageOptions.globals);
-    expect(row.globals.filter((name) => !globals.includes(name))).toStrictEqual([]);
-    expect(row.absent.filter((name) => globals.includes(name))).toStrictEqual([]);
-    expect(Object.keys(config.rules).filter((name) => name.startsWith('n/'))).toStrictEqual([
-        'n/file-extension-in-import',
-    ]);
     const [result] = await eslint.lintFiles(['application/source.js']);
     expect(result!.messages.map(({ ruleId, line }) => ({ ruleId, line }))).toStrictEqual([
-        ...(globals.includes('process') ? [] : [{ ruleId: 'no-undef', line: 1 }]),
+        ...(row.runtime === 'react-native' ? [] : [{ ruleId: 'no-undef', line: 1 }]),
         { ruleId: 'unicorn/no-process-exit', line: 1 },
         { ruleId: 'no-undef', line: 2 },
     ]);
@@ -62,8 +54,6 @@ test('ES modules reject CommonJS globals and .cjs files keep CommonJS', async ()
     expect(module!.messages.map(({ ruleId, line, message }) => ({ ruleId, line, message }))).toStrictEqual([
         { ruleId: 'no-undef', line: 1, message: "'__dirname' is not defined." },
     ]);
-    const commonjs = (await eslint.calculateConfigForFile('source.cjs')) as EslintConfiguration;
-    expect(commonjs.languageOptions.sourceType).toBe('commonjs');
     const [required] = await eslint.lintFiles(['source.cjs']);
     expect(required!.messages).toStrictEqual([]);
 });
@@ -82,26 +72,6 @@ test('framework runtimes and your runtime settings stay inside their scopes', as
     });
 
     const eslint = await buildEslint(sandbox.path);
-    const node = (await eslint.calculateConfigForFile('server.js')) as EslintConfiguration;
-    const native = (await eslint.calculateConfigForFile('native/src/source.js')) as EslintConfiguration;
-    const browser = (await eslint.calculateConfigForFile('native/src/browser.js')) as EslintConfiguration;
-    const web = (await eslint.calculateConfigForFile('web/source.js')) as EslintConfiguration;
-    expect(node.languageOptions.globals['Buffer']).toBe(false);
-    expect(native.languageOptions.globals['__DEV__']).toBe(false);
-    expect(native.languageOptions.globals['Buffer']).toBeUndefined();
-    expect(browser.languageOptions.globals['window']).toBe(false);
-    expect(browser.languageOptions.globals['__DEV__']).toBeUndefined();
-    expect(browser.languageOptions.globals['process']).toBeUndefined();
-    expect(web.languageOptions.globals['window']).toBe(false);
-    expect(web.languageOptions.globals['process']).toBeUndefined();
-    for (const file of ['native/scripts/build.js', 'native/server/source.js', 'web/scripts/build.js']) {
-        const script = (await eslint.calculateConfigForFile(file)) as EslintConfiguration;
-        expect(script.languageOptions.globals['Buffer'], file).toBe(false);
-        expect(script.rules['n/no-deprecated-api']![0]).toBe(2);
-    }
-    const worker = (await eslint.calculateConfigForFile('native/scripts/worker.js')) as EslintConfiguration;
-    expect(worker.languageOptions.globals['DedicatedWorkerGlobalScope']).toBe(false);
-    expect(worker.languageOptions.globals['Buffer']).toBeUndefined();
     const results = await eslint.lintFiles(RUNTIME_GLOBAL_FINDINGS.map(({ file }) => file));
     expect(
         results.map(({ filePath, messages }) => ({

@@ -1,14 +1,15 @@
 ---
 title: JavaScript and TypeScript
 description: Choose runtimes, type checking, and framework rules for JavaScript and TypeScript.
+configurations: [javascript, typescript, nextjs, react, react-dom, expo, react-native]
 ---
 
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
 gspot checks JavaScript and TypeScript with ESLint, the TypeScript compiler, and Knip, which finds code that nothing
-uses. These checks run for the `javascript` and `typescript` configurations:
+uses. These checks cover JavaScript, TypeScript, and the framework configurations described below:
 
-<ChecksTable configurations={['javascript', 'typescript']} />
+<ChecksTable guide="languages/javascript-typescript" />
 
 Framework configurations, such as `react`, `nextjs`, and `react-native`, add their own lint rules. A React project that
 depends on `react-dom` also gets the `react-dom` configuration and its DOM accessibility lint rules. The
@@ -111,13 +112,4 @@ other components, set the option in the scope of the native project.
 
 ## Settings that change lint rule options
 
-| Setting                              | What it sets                                                                                                                  |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| `structure.environment_readers`      | The files that may read environment variables, for `n/no-process-env`, `no-restricted-properties`, and `no-restricted-syntax` |
-| `tools.eslint.import_extension`      | The import extension option of `n/file-extension-in-import`                                                                   |
-| `limits.index_exports`               | `amountOfExportsToConsiderModuleAsBarrel` of `barrel-files/avoid-barrel-files`                                                |
-| `structure.reexports = "index-only"` | Lets index files re-export; ESLint re-export rules and `gspot/no-trivial-files` skip them                                     |
-
-The environment reader checks run at level `all`. The limits on index files that re-export other files run at level
-`all` too, and only when you allow re-exports. The [ESLint plugin](/reference/eslint-plugin/) page lists the options of
-its lint rules.
+See [Lint rule options](/configure/lint-rules/#settings-that-set-rule-options) for the settings that control lint rules.

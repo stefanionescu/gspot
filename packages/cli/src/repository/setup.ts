@@ -183,15 +183,15 @@ async function listGitFolderHooks(root: string): Promise<RepositorySetup['hooks'
 /**
 Read the hooks that a clone already runs: another hooks folder, a tool hooks folder, and hook manager settings.
 
-@param repository the repository to read and whether Git tracks it
+@param repository the repository to read
 */
-export async function readHooks(repository: Pick<Repository, 'root' | 'hasGit'>): Promise<RepositoryHooks> {
-    const { root, hasGit } = repository;
-    const written = hasGit ? await readGitSetting(root, HOOKS_PATH_SETTING) : undefined;
+export async function readHooks(repository: Pick<Repository, 'root'>): Promise<RepositoryHooks> {
+    const { root } = repository;
+    const written = await readGitSetting(root, HOOKS_PATH_SETTING);
     const hooksPath = convertToPosixPath(relative(root, resolve(root, written ?? '')));
     const own = hooksPath === GSPOT_PATHS.hooks || hooksPath === HUSKY_PATH || hooksPath.startsWith(`${HUSKY_PATH}/`);
     const hooks = await listHookSetups(root, own ? '' : hooksPath);
-    if (written === undefined && hasGit) hooks.push(...(await listGitFolderHooks(root)));
+    if (written === undefined) hooks.push(...(await listGitFolderHooks(root)));
     return { hooksPath, hooks };
 }
 
@@ -220,7 +220,7 @@ Find config files to replace, hooks, CI, agent files, and lint folders.
 */
 export async function readRepositorySetup(
     cache: RunCache,
-    repository: Pick<Repository, 'files' | 'dependencyFiles' | 'hasGit'>,
+    repository: Pick<Repository, 'files' | 'dependencyFiles'>,
 ): Promise<RepositorySetup> {
     const root = cache.root;
     const { files, dependencyFiles } = repository;
@@ -231,7 +231,7 @@ export async function readRepositorySetup(
     );
 
     const conflictingConfigs = listConflictingConfigs(root, files, configurationsByName.values());
-    const { hooks } = await readHooks({ root, hasGit: repository.hasGit });
+    const { hooks } = await readHooks({ root });
     return {
         conflictingConfigs: new Map(
             conflictingConfigs.map((conflictingConfig) => [

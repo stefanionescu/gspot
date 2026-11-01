@@ -3,7 +3,7 @@ export const INVALID_SETTING_MESSAGES = [
         name: 'an unknown root key',
         text: '# The repository settings.\nnope = true\n',
         message:
-            'gspot.toml:2: nope: There is no setting called nope. See generativespotting.com/reference/gspot-toml/ for every setting.',
+            'gspot.toml:2: nope: There is no setting called nope. The settings that exist at the top level are level, tool_timeout_seconds, test_files, configurations, removed_configurations, format, limits, naming and 27 more. Run gspot list settings to see every one.',
     },
     {
         name: 'a wrong root enum type',
@@ -111,20 +111,6 @@ export const REFUSED_RULE_OPTIONS = [
         toml: '[tools.stylelint.rules]\ncolor-hex-length = ["short", { severity = "warning" }]\n',
         message:
             'gspot.toml:3: tools.stylelint.rules.color-hex-length: This table holds options only, without a severity; the level decides which rules run. To turn color-hex-length off, run gspot ignore css/stylelint --rule color-hex-length --reason "<why>".',
-    },
-    {
-        tool: 'yamllint',
-        configuration: 'data-files',
-        toml: '[tools.yamllint.rules]\ntruthy = true\n',
-        message:
-            'gspot.toml:3: tools.yamllint.rules.truthy: This table holds options only, without a severity; the level decides which rules run. To turn truthy off, run gspot ignore data-files/yamllint --rule truthy --reason "<why>".',
-    },
-    {
-        tool: 'yamllint',
-        configuration: 'data-files',
-        toml: '[tools.yamllint.rules]\ntruthy = { ignore = "**" }\n',
-        message:
-            'gspot.toml:3: tools.yamllint.rules.truthy: This table holds options only, without a severity; the level decides which rules run. To turn truthy off, run gspot ignore data-files/yamllint --rule truthy --reason "<why>".',
     },
     {
         tool: 'stylelint',

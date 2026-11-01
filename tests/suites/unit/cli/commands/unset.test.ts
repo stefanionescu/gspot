@@ -41,3 +41,16 @@ test('unset removes the scanner setting and keeps bunfig.toml', async () => {
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
     expect(await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8')).toBe(previous);
 });
+
+test.each([
+    ['naming.banned_words', '[naming]\nbanned_words = ["retained"]\n'],
+    ['spelling.allowed_words', '[spelling.allowed_words]\nNebulix = "The product name keeps the vendor spelling."\n'],
+])('unset identifies an absent item of %s without changing the settings', async (key, tables) => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([], { tables }) });
+    const path = join(sandbox.path, 'gspot.toml');
+    const before = await readFile(path, 'utf8');
+    const result = await runGspot(sandbox.path, ['unset', key, 'zzz', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(JSON.parse(result.stdout)).toMatchObject({ changed: false, summary: `zzz is not in ${key}.` });
+    expect(await readFile(path, 'utf8')).toBe(before);
+});

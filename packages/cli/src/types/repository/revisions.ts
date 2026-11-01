@@ -13,7 +13,11 @@ export type PushRevision = {
 
 export type PushedRevisions = {
     revisions: PushRevision[];
-    skipped: { ref: string; hash: string; reason: 'deleted ref' | 'non-commit object' }[];
+    skipped: {
+        ref: string;
+        hash: string;
+        reason: 'deleted ref' | 'non-commit object' | 'the commit has no gspot.toml' | 'no changed paths';
+    }[];
 };
 
 export type PushLine = { localRef: string; localHash: string; remoteRef: string; remoteHash: string };
@@ -28,6 +32,8 @@ export type PushSearch = {
     boundaries: Set<string>;
 };
 
-export type ChangedPaths = { reference: string; paths: string[]; commits?: string[] };
+export type MergeBase = { hash?: string; note?: string };
+
+export type ChangedPaths = { reference: string; paths?: string[]; commits?: string[]; note?: string };
 
 export type StagedPaths = { staged: string[]; unstaged: number };

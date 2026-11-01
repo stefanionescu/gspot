@@ -1,5 +1,6 @@
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { FileKind } from '#cli/types/repository/files.ts';
+import type { CheckDescription } from '#cli/types/reference.ts';
 import type { InheritedSetting } from '#cli/types/settings/inheritance.ts';
 
 export type Explanation = {
@@ -45,9 +46,8 @@ export type ConfigurationExplanation = {
     removed: { scope: string; reason: string; command: string }[];
 };
 
-export type LintRuleDocs = { description: string | undefined; url: string | undefined };
-
 export type CheckFacts = {
+    turnOff: CheckDescription['turnOff'];
     source: string;
     settings: string[];
     rules: string[];

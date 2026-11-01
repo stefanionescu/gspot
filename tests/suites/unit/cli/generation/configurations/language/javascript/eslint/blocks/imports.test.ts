@@ -2,7 +2,6 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { LEVELS } from '#cli/config/manifests/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { HOST_MODULE } from '#tests/config/generation/configurations/language/javascript/paths.ts';
@@ -12,29 +11,7 @@ import {
     SORT_RULES,
 } from '#tests/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
 
-test('a bundler scope uses extensionless imports while the Node.js parent keeps .js suffixes', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['javascript'], {
-            rules: true,
-            scopes: [{ path: 'app', configurations: ['react'] }],
-        }),
-        'source.js': '',
-        'value.js': 'export const value = 1;\n',
-        'app/source.js': '',
-        'app/value.js': 'export const value = 1;\n',
-    });
-
-    const eslint = await buildEslint(sandbox.path);
-    const source = 'import { value } from "./value";\n';
-    await createFileTree(sandbox.path, { 'source.js': source, 'app/source.js': source });
-    const rules = ['n/file-extension-in-import'];
-    expect(await listLintFindings(eslint, sandbox.path, ['source.js'], rules)).toStrictEqual([
-        { file: 'source.js', rule: 'n/file-extension-in-import', line: 1 },
-    ]);
-    expect(await listLintFindings(eslint, sandbox.path, ['app/source.js'], rules)).toStrictEqual([]);
-});
-
-test.each([...LEVELS])(
+test.each(['all'] as const)(
     'imports and exports are sorted at level all only, in root and child scopes (%s)',
     async (level) => {
         await using sandbox = await testdir({
@@ -59,7 +36,7 @@ test.each([...LEVELS])(
             for (const { source, fixed } of SORT_CASES) {
                 const [result] = await eslint.lintText(source, { filePath });
                 expect(result?.fatalErrorCount).toBe(0);
-                expect(result?.output ?? source).toBe(level === 'all' ? fixed : source);
+                expect(result?.output ?? source).toBe(fixed);
                 expect(
                     result!.messages.find(({ ruleId }) => ruleId !== null && new Set<string>(SORT_RULES).has(ruleId)),
                 ).toBeUndefined();

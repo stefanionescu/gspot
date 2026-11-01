@@ -25,11 +25,11 @@ test.each([...OUTSIDE_LINK_CASES])('the repository file list leaves out the outs
     expect(repository.files.map((file) => file.path)).toStrictEqual(['local.ts']);
 });
 
-test.skipIf(isWindows)('a walk without Git leaves out named pipes', async () => {
-    await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
+test.skipIf(isWindows)('the Git inventory leaves out untracked named pipes', async () => {
+    await using sandbox = await createGitSandbox({ 'source.ts': 'export {};\n' });
 
     expect(runCommandBlocking(['mkfifo', 'stream.ts'], { cwd: sandbox.path }).code).toBe(0);
-    const files = await listTrackedFiles(sandbox.path, [], { hasGit: false, unreadablePaths: [] });
+    const files = await listTrackedFiles(sandbox.path, [], []);
     expect(files.map((file) => file.path)).toStrictEqual(['source.ts']);
 });
 
@@ -50,7 +50,7 @@ test.each(
         { name: 'a folder whose name holds a newline', folder: 'source\nfiles' },
     ].filter(({ folder }) => !isWindows || !folder.includes('\n')),
 )(
-    'non-Git discovery in $name applies nested ignores, pruning and link boundaries without sharing them with siblings',
+    'Git discovery in $name applies nested ignores, pruning and link boundaries without sharing them with siblings',
     async ({ folder }) => {
         await using sandbox = await testdir();
         const root = join(sandbox.path, 'project');
@@ -72,7 +72,8 @@ test.each(
         await symlink('source.ts', join(root, 'linked.ts'));
         await symlink('../../outside', join(root, 'blocked/external'), 'dir');
         await symlink(folder, join(root, 'linked-directory'), 'dir');
-        const files = await listTrackedFiles(root, [], { hasGit: false, unreadablePaths: [] });
+        runGitStep(root, ['init', '-q']);
+        const files = await listTrackedFiles(root, [], []);
         expect(files.map((file) => file.path)).toStrictEqual(
             [
                 '.gitignore',
@@ -91,7 +92,7 @@ test.each(
             isSymlink: true,
         });
         await symlink('../outside/private.ts', join(root, 'external.ts'));
-        const linked = await listTrackedFiles(root, [], { hasGit: false, unreadablePaths: [] });
+        const linked = await listTrackedFiles(root, [], []);
         expect(linked.map((file) => file.path)).toStrictEqual(files.map((file) => file.path));
     },
 );

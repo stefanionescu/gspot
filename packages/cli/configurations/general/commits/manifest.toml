@@ -2,7 +2,6 @@
 always_selected = true
 description = "Commit messages: a conventional type, an optional project scope, a first line of 72 characters or fewer, and a wrapped body."
 title = "Commits"
-when = { git = true }
 
 [files]
 paths = ["**"]
@@ -52,3 +51,15 @@ stage = "push"
 summary = "Checks the message of each commit in a push. A manual run covers every commit from the upstream merge base to HEAD."
 tool = "commitlint"
 why = "A message written past the hook (--no-verify, a rebase, or a merge) still reaches the shared branch unless the push checks it."
+
+[commitlint.rules]
+type-case = [2, "always", "lower-case"]
+type-empty = [2, "never"]
+scope-case = [2, "always", "kebab-case"]
+subject-empty = [2, "never"]
+subject-full-stop = [2, "never", "."]
+subject-case = [2, "never", ["start-case", "pascal-case", "upper-case"]]
+header-max-length = [2, "always", 72]
+body-leading-blank = [2, "always"]
+body-max-line-length = [2, "always", 72]
+footer-leading-blank = [2, "always"]

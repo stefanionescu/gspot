@@ -92,7 +92,12 @@ async function runCommands(
 
 function findMissingConfig(
     planned: PlannedCheck,
-    { session, command, base, configs }: { session: Session; command: string[]; base: CheckResult; configs: string[] },
+    {
+        session,
+        command,
+        base,
+        configs,
+    }: { session: CheckSession; command: string[]; base: CheckResult; configs: string[] },
 ): CheckResult | undefined {
     const files = openFiles(session.root);
     const missing = [...configs, ...listCommandConfigs(session, planned, command)].find(
@@ -193,7 +198,7 @@ Resolves the working folder and expands the tool environment values.
 @param setup.root the repository, or the copy of it that the command runs in.
 */
 export function buildCommandSetup(
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
     { options, root }: { options: CheckRunOptions; root: string },
 ): CommandSetup {
@@ -254,7 +259,7 @@ Expands a check or fix command into file batches that fit the command line.
 */
 export function buildCommandLaunch(
     planned: PlannedCheck,
-    expansion: { session: Session; command: string[]; setup: CommandSetup; toolPath: string },
+    expansion: { session: CheckSession; command: string[]; setup: CommandSetup; toolPath: string },
 ): CommandLaunch {
     const { session, setup, toolPath } = expansion;
     const { root, cwd, files, substitutions, env } = setup;

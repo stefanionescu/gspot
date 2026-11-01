@@ -1,89 +1,149 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { pathToFileURL } from 'node:url';
 import { createFileTree } from 'testdirs';
-import { readFile } from 'node:fs/promises';
-import { SWIFT_VALUE_SOURCE } from '#tests/config/swift.ts';
+import { createRequire } from 'node:module';
+import plugin from '#eslint-plugin/plugin.ts';
+import { symlink, readFile } from 'node:fs/promises';
+import { executableLayout } from '#cli/system/paths.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
+import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { RULE_PAGES, UNKNOWN_RULES, RULE_PAGE_SETTINGS } from '#tests/config/commands/explain.ts';
 
-import {
-    RULE_PAGES,
-    UNKNOWN_RULES,
-    ROOT_RULE_PAGE,
-    CHILD_RULE_PAGE,
-    RULE_PAGE_SETTINGS,
-    SHELLCHECK_RULE_PAGE,
-} from '#tests/config/commands/explain.ts';
+async function readToolRules(name: string, specifier: string): Promise<Record<string, unknown>> {
+    if (name === '@gspothq/eslint-plugin') return plugin.rules;
+    const require = createRequire(join(toolModules, 'package.json'));
+    const installed: unknown = await import(pathToFileURL(require.resolve(specifier)).href);
+    const builtin: unknown = findValueAt(installed, ['builtinRules']);
+    if (builtin instanceof Map) return Object.fromEntries(builtin) as Record<string, unknown>;
+    const exported = findValueAt(installed, ['default']) ?? installed;
+    const rules: unknown = Reflect.get(new Object(exported), 'rules') ?? findValueAt(exported, ['plugin', 'rules']);
+    if (!isTable(rules)) throw new Error(`No rules in ${name}.`);
+    return rules;
+}
 
-test('explain shellcheck/SC2086 gives the rule page and the gspot ignore commands', async () => {
-    await using sandbox = await createGitSandbox({});
-    const shellcheck = await runGspot(sandbox.path, ['explain', 'shellcheck/SC2086', '--json']);
-    const shellcheckText = await runGspot(sandbox.path, ['explain', 'shellcheck/SC2086']);
-    expect(JSON.parse(shellcheck.stdout)).toMatchObject(SHELLCHECK_RULE_PAGE);
-    expect(shellcheckText.stdout).toBe(
-        'shellcheck/SC2086  (run by bash/shellcheck)\n\nThe tool\'s page: https://www.shellcheck.net/wiki/SC2086\n\nTurn it off everywhere: gspot ignore bash/shellcheck --rule SC2086 --reason "<why>"\nTurn it off for some paths: gspot ignore bash/shellcheck --rule SC2086 --paths "<glob>" --reason "<why>"\n',
-    );
+async function writeRulePackages(root: string): Promise<void> {
+    for (const [name, specifier] of [
+        ['eslint', 'eslint/use-at-your-own-risk'],
+        ['eslint-plugin-n', 'eslint-plugin-n'],
+        ['typescript-eslint', 'typescript-eslint'],
+        ['stylelint', 'stylelint'],
+        ['@gspothq/eslint-plugin', '@gspothq/eslint-plugin'],
+    ] as const) {
+        const rules = await readToolRules(name, specifier);
+        const metadata: Record<string, unknown> = {};
+        for (const [key, rule] of Object.entries(rules)) {
+            const ruleMetadata: unknown = Reflect.get(new Object(await rule), 'meta');
+            metadata[key] = { meta: ruleMetadata };
+        }
+        let body: string;
+        if (name === 'eslint') body = `exports.builtinRules = new Map(Object.entries(${JSON.stringify(metadata)}));`;
+        else if (name === 'typescript-eslint')
+            body = `module.exports = ${JSON.stringify({ plugin: { rules: metadata } })};`;
+        else body = `module.exports = ${JSON.stringify({ rules: metadata })};`;
+        await createFileTree(root, {
+            [`.gspot/node_modules/${name}/package.json`]: JSON.stringify({
+                name,
+                exports: { '.': './index.cjs', './use-at-your-own-risk': './index.cjs' },
+            }),
+            [`.gspot/node_modules/${name}/index.cjs`]: body,
+        });
+    }
+}
+
+test('explain reads installed rule metadata without executing generated configuration', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript', 'typescript', 'css']),
+        'source.ts': 'export const value = 1;\n',
+        '.gspot/configurations/language/javascript/eslint/eslint.mjs': 'throw new Error("Generated config executed");',
+    });
+    await writeRulePackages(sandbox.path);
+    for (const [check, rule, page] of RULE_PAGES) {
+        const result = await runGspot(sandbox.path, ['explain', check, rule, '--json']);
+        expect(result.code, result.stderr).toBe(0);
+        expect(JSON.parse(result.stdout)).toMatchObject({ kind: 'lint-rule', check, rule, page });
+    }
+    const described = await runGspot(sandbox.path, ['explain', 'javascript/eslint', 'gspot/no-trivial-functions']);
+    for (const label of ['Why:', 'What to do:', 'Example:']) {
+        expect(described.stdout).toContain(label);
+        expect(described.stdout.indexOf(label)).toBeLessThan(described.stdout.indexOf('Turn it off'));
+    }
+    expect(described.stdout).toContain('Ask the user before you turn a rule off (SUPPRESSIONS.md).');
+    for (const [check, rule] of UNKNOWN_RULES) {
+        const refused = await runGspot(sandbox.path, ['explain', check, rule]);
+        expect(refused.code).toBe(2);
+        expect(refused.stderr).toBe(`gspot does not know rule ${rule} of ${check}.\n`);
+    }
 });
 
-test('explain gives a TypeScript error the gspot ignore commands, and no rule options or page', async () => {
-    await using sandbox = await createGitSandbox({});
-    const rule = await runGspot(sandbox.path, ['explain', 'tsc/TS2345', '--json']);
-    const ruleText = await runGspot(sandbox.path, ['explain', 'tsc/TS2345']);
-    expect(JSON.parse(rule.stdout)).toMatchObject({ kind: 'lint-rule', tool: 'tsc', rule: 'TS2345', page: null });
-    expect(ruleText.stdout).toBe(
-        'tsc/TS2345  (run by javascript/tsc)\n\nRead the tsc documentation for TS2345.\n\nTurn it off everywhere: gspot ignore javascript/tsc --rule TS2345 --reason "<why>"\nTurn it off for some paths: gspot ignore javascript/tsc --rule TS2345 --paths "<glob>" --reason "<why>"\n',
+test('explain gives Ruff summaries and reserves its full explanation for verbose output', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': RULE_PAGE_SETTINGS,
+        'app/source.swift': 'let count = 1\n',
+        [`.gspot/.venv/${executableLayout.environmentFolder}/ruff${isWindows ? '.exe' : ''}`]: '',
+    });
+    using commands = fakeCommands().mockResolvedValue(
+        buildProcessResult({
+            stdout: JSON.stringify({
+                name: 'unused-import',
+                summary: 'Unused import',
+                explanation: 'Delete the import that no expression reads.',
+            }),
+        }),
     );
-});
-
-test('explain finds rule pages from the root and from a child scope', async () => {
-    await using sandbox = await createGitSandbox({});
-    await createFileTree(sandbox.path, { 'gspot.toml': RULE_PAGE_SETTINGS, 'app/sample.swift': SWIFT_VALUE_SOURCE });
-    const root = await runGspot(sandbox.path, ['explain', 'ruff/F401', '--json']);
-    expect(root.code, root.stdout + root.stderr).toBe(0);
-    expect(JSON.parse(root.stdout)).toMatchObject(ROOT_RULE_PAGE);
-    const child = await runGspot(join(sandbox.path, 'app'), ['explain', 'swiftlint/type_body_length', '--json']);
-    expect(child.code, child.stdout + child.stderr).toBe(0);
-    expect(JSON.parse(child.stdout)).toMatchObject(CHILD_RULE_PAGE);
+    const root = await runGspot(sandbox.path, ['explain', 'python/ruff', 'F401', '--json']);
+    expect(root.code, root.stderr).toBe(0);
+    expect(JSON.parse(root.stdout)).toMatchObject({ description: 'Unused import', rule: 'F401' });
+    expect(JSON.parse(root.stdout)).not.toHaveProperty('explanation');
+    const child = await runGspot(join(sandbox.path, 'app'), ['explain', 'python/ruff', 'F401', '--verbose']);
+    expect(child.code, child.stderr).toBe(0);
+    expect(child.stdout).toContain('Delete the import that no expression reads.');
+    expect(
+        commands.mock.calls.every(([command]) => command.slice(1).join(' ') === 'rule F401 --output-format json'),
+    ).toBe(true);
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(RULE_PAGE_SETTINGS);
 });
 
-test('explain reads ESLint, plugin, and Stylelint rules from the installed tools', async () => {
+test.each(['javascript/eslint', 'css/stylelint'])('explain refuses ancestor packages for %s', async (check) => {
+    const name = check === 'javascript/eslint' ? 'eslint' : 'stylelint';
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript', 'typescript', 'css']),
-        'package.json': '{"private":true,"type":"module"}',
-        'source.ts': 'export const value = 1;\n',
-        'style.css': 'a { color: red; }\n',
+        [`node_modules/${name}/package.json`]: JSON.stringify({
+            name,
+            exports: check === 'javascript/eslint' ? { './use-at-your-own-risk': './index.cjs' } : './index.cjs',
+        }),
+        [`node_modules/${name}/index.cjs`]: 'require("node:fs").writeFileSync(__dirname + "/executed", "yes");',
     });
-    await linkInstalledModules(join(sandbox.path, 'node_modules'));
-    await runGspotStep({ root: sandbox.path, run: runGspot }, ['apply']);
-    for (const [subject, page] of RULE_PAGES) {
-        const explained = await runGspot(sandbox.path, ['explain', subject, '--json']);
-        expect(explained.code, subject + explained.stderr).toBe(0);
-        expect(JSON.parse(explained.stdout), subject).toMatchObject({ kind: 'lint-rule', page });
-    }
-    const described = await runGspot(sandbox.path, ['explain', 'eslint/no-var']);
-    expect(described.stdout.split('\n').slice(0, 4)).toStrictEqual([
-        'eslint/no-var  (run by javascript/eslint)',
-        '',
-        'What it looks for: Require `let` or `const` instead of `var`',
-        "The tool's page: https://eslint.org/docs/latest/rules/no-var",
-    ]);
-    for (const subject of UNKNOWN_RULES) {
-        const refused = await runGspot(sandbox.path, ['explain', subject]);
-        expect(refused.code, subject).toBe(2);
-        expect(refused.stderr, subject).toStartWith(
-            `There is no check, lint rule, configuration, setting, or file called ${subject}. Give a check (python/ruff),`,
-        );
-    }
+    const result = await runGspot(sandbox.path, ['explain', check, 'no-var']);
+    expect(result.code).toBe(2);
+    expect(result.stderr).toContain('resolves outside .gspot/node_modules');
+    expect(existsSync(join(sandbox.path, `node_modules/${name}/executed`))).toBe(false);
 });
 
-test('explain of an ESLint rule asks for gspot install when the tools are not installed', async () => {
+test.skipIf(isWindows)('explain refuses an installed plugin symlink that leaves the tool project', async () => {
+    await using sandbox = await createGitSandbox({
+        'outside/package.json': '{"name":"eslint-plugin-n","main":"index.cjs"}',
+        'outside/index.cjs': 'throw new Error("External plugin executed");',
+        '.gspot/node_modules/.keep': '',
+    });
+    await symlink(join(sandbox.path, 'outside'), join(sandbox.path, '.gspot/node_modules/eslint-plugin-n'));
+    const result = await runGspot(sandbox.path, ['explain', 'javascript/eslint', 'n/prefer-global/process']);
+    expect(result.code).toBe(2);
+    expect(result.stderr).toContain('resolves outside .gspot/node_modules');
+});
+
+test('explain requires installed tools and refuses rules of checks with no rule documentation', async () => {
     await using sandbox = await createGitSandbox({});
-    const missing = await runGspot(sandbox.path, ['explain', 'eslint/no-var']);
+    const missing = await runGspot(sandbox.path, ['explain', 'javascript/eslint', 'no-var']);
     expect(missing.code).toBe(2);
-    expect(missing.stderr).toBe(
-        'gspot explain reads lint rules from the tools that gspot install puts in .gspot/node_modules. Run gspot install.\n',
-    );
+    expect(missing.stderr).toContain('Run gspot install.');
+    const unknown = await runGspot(sandbox.path, ['explain', 'bash/shfmt', 'unknown']);
+    expect(unknown.code).toBe(2);
+    expect(unknown.stderr).toBe('gspot does not know rule unknown of bash/shfmt.\n');
 });

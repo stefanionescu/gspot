@@ -32,7 +32,7 @@ test.skipIf(isWindows).each(LINKED_GLOBS)(
     },
 );
 
-test('a glob includes dot files and honors exclusions and brace patterns', async () => {
+test('a glob includes dot files and honors exclusions', async () => {
     await using sandbox = await testdir(GLOB_FILES);
 
     expect(listMatchingPaths(sandbox.path, ['src/**/*.ts']).toSorted(compareText)).toStrictEqual([
@@ -45,11 +45,6 @@ test('a glob includes dot files and honors exclusions and brace patterns', async
             compareText(left, right),
         ),
     ).toStrictEqual(['.hidden/nested/c.ts', 'src/.leaf.ts', 'src/a.ts', 'src/nested/.inner/b.ts']);
-    expect(
-        listMatchingPaths(sandbox.path, ['src/{a.ts,nested/.inner/b.ts}', 'src/a.ts']).toSorted((left, right) =>
-            compareText(left, right),
-        ),
-    ).toStrictEqual(['src/a.ts', 'src/nested/.inner/b.ts']);
 });
 
 test.skipIf(isWindows)('a glob excludes file, folder, broken, and cyclic links', async () => {

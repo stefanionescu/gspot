@@ -5,17 +5,22 @@ export const GENERATOR_LIMITS = [
     {
         check: 'javascript/eslint',
         file: 'eslint.mjs',
-        languages: ['javascript', 'typescript'],
+        languages: ['javascript'],
         limits: [
             'file_lines',
             'function_lines',
             'function_statements',
             'block_nesting',
             'callback_nesting',
-            'cognitive_complexity',
             'index_exports',
             'trivial_function_statements',
         ],
+    },
+    {
+        check: 'javascript/biome',
+        file: 'biome.json',
+        languages: ['javascript'],
+        limits: ['cognitive_complexity'],
     },
     {
         check: 'swift/swiftlint',

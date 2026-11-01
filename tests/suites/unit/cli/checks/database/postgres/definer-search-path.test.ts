@@ -1,10 +1,10 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     DEFINER_REPAIRS,
@@ -13,7 +13,7 @@ import {
 } from '#tests/config/checks/database/postgres/postgres.ts';
 
 test.each([...DEFINER_REPAIRS])('definer-search-path accepts a later $name migration', async ({ sql }) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['postgres'], {
             level: 'all',
             tables: '[postgres]\nfrozen_through = "1"\n',
@@ -25,7 +25,7 @@ test.each([...DEFINER_REPAIRS])('definer-search-path accepts a later $name migra
 });
 
 test('definer-search-path keeps an unsafe overload when another signature is repaired', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['postgres'], { level: 'all' }),
         'migrations/1_definer.sql': DEFINER_FUNCTION_SQL,
         'migrations/2_overload.sql':
@@ -39,7 +39,7 @@ test('definer-search-path keeps an unsafe overload when another signature is rep
 
 test('definer-search-path reports a SECURITY DEFINER function without search_path and passes once it sets one', async () => {
     const path = 'migrations/1_access.sql';
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['postgres'], { level: 'all' }),
         [path]: DEFINER_FUNCTION_SQL,
     });
@@ -56,7 +56,7 @@ test('definer-search-path reports a SECURITY DEFINER function without search_pat
 test.each([...SECURITY_ALTERATIONS])(
     'definer-search-path replays ALTER FUNCTION $change',
     async ({ change, initial, unsafe }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['postgres'], { level: 'all' }),
             'migrations/1_create.sql': `CREATE FUNCTION access() RETURNS int LANGUAGE sql ${initial} AS $$ SELECT 1 $$;`,
             'migrations/2_alter.sql': `ALTER FUNCTION access() ${change};`,

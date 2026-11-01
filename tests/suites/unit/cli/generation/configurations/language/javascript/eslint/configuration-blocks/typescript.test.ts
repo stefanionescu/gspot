@@ -3,7 +3,6 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { LEVELS } from '#cli/config/manifests/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listFindingRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
@@ -28,7 +27,7 @@ test.each([...TYPED_RULE_PROJECTS])('$name gets typed lint rules', async ({ conf
     expect(await listLintFindings(eslint, sandbox.path, [file], rules)).toStrictEqual([]);
 });
 
-test.each([...LEVELS])('%s type import and export rules apply at their declared level', async (level) => {
+test.each(['all'] as const)('%s type import and export rules apply at their declared level', async (level) => {
     await using sandbox = await testdir({
         ...TYPE_EXPORT_FILES,
         'gspot.toml': buildSandboxSettings(['typescript'], {
@@ -40,7 +39,7 @@ test.each([...LEVELS])('%s type import and export rules apply at their declared 
     const eslint = await buildEslint(sandbox.path);
     const rules = ['@typescript-eslint/consistent-type-imports', '@typescript-eslint/consistent-type-exports'];
     const findings = await listLintFindings(eslint, sandbox.path, ['index.ts'], rules);
-    expect(listFindingRules(findings)).toStrictEqual(level === 'all' ? rules.toSorted(compareText) : []);
+    expect(listFindingRules(findings)).toStrictEqual(rules.toSorted(compareText));
 });
 
 test('a default import with an inline type merges with a type-only import into code that parses', async () => {
@@ -81,4 +80,26 @@ test('gspot/no-magic-numbers accepts the numbers of a module-level const and rep
             ['gspot/no-magic-numbers', '@typescript-eslint/no-magic-numbers'],
         ),
     ).toStrictEqual([{ file: 'source.ts', rule: 'gspot/no-magic-numbers', line: 4 }]);
+});
+
+test('declaration merging is accepted only in declaration files at level all', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["*.ts"]}\n',
+        'global.d.ts':
+            'export {};\ndeclare global { interface RequestContext { accountId: string; } }\ndeclare global { interface RequestContext { requestId: string; } }\n',
+        'context.ts': 'export interface RequestContext { accountId: string; }\n',
+        'aliases.ts': 'export type RequestContext = { accountId: string; };\n',
+    });
+
+    const eslint = await buildEslint(sandbox.path);
+    expect(
+        await listLintFindings(
+            eslint,
+            sandbox.path,
+            ['global.d.ts', 'context.ts', 'aliases.ts'],
+            ['@typescript-eslint/consistent-type-definitions'],
+        ),
+    ).toStrictEqual([{ file: 'context.ts', rule: '@typescript-eslint/consistent-type-definitions', line: 1 }]);
 });

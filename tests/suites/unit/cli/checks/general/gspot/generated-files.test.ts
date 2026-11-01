@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -10,10 +9,11 @@ import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { GENERATED_BASH_FILES } from '#tests/config/checks/general/gspot/gspot.ts';
 
 test('gspot/generated-files reports an edited file with the apply help and passes after apply, while tool lockfiles stay missing', async () => {
-    await using sandbox = await testdir(GENERATED_BASH_FILES);
+    await using sandbox = await createGitSandbox(GENERATED_BASH_FILES);
 
     await applyGeneratedFiles(sandbox.path);
     const session = await openSession(sandbox.path);
@@ -49,7 +49,7 @@ test('gspot/generated-files reports an edited file with the apply help and passe
 });
 
 test('gspot/generated-files reports a removed configuration file as stray with delete help', async () => {
-    await using sandbox = await testdir(GENERATED_BASH_FILES);
+    await using sandbox = await createGitSandbox(GENERATED_BASH_FILES);
     await applyGeneratedFiles(sandbox.path);
     const session = await openSession(sandbox.path);
     const path = getConfigPath(session, 'shellcheckrc');

@@ -3,15 +3,18 @@ import { type Session } from '#cli/types/session.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { printWarning } from '#cli/system/terminal.ts';
+import { selectCheckCode } from '#cli/checks/registry.ts';
+import { buildConfigs } from '#cli/generation/configs.ts';
 import { readHookStatus } from '#cli/installers/hooks.ts';
 import { findSettingsSkip } from '#cli/planning/skips.ts';
 import { type StageFilter } from '#cli/types/planning.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
+import { listOutdatedFiles } from '#cli/generation/outdated.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { type ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import { isInScope, buildArgumentPath } from '#cli/repository/scopes.ts';
 import { listChecksById, assertCheckExists } from '#cli/manifests/read.ts';
-import { EMPTY_BASE, CREATED_BRANCH_BASE } from '#cli/config/commands/check.ts';
 import { formatFixes, formatRunReport, printFailedFixers } from '#cli/commands/check/report.ts';
 
 import {
@@ -34,13 +37,18 @@ function buildHistorySelection(
             base: revision.base ?? changed?.reference,
             shallow: revision.shallow,
         };
-    return { commits: changed?.commits, base: changed?.reference };
+    return { commits: changed?.commits, base: changed?.paths === undefined ? undefined : changed.reference };
 }
 
 function buildRunOptions(options: CheckOptions, filters: RunFilters, revision: RevisionSource | undefined): RunOptions {
     const { changed, staging, stage, paths } = filters;
     const comparison = buildComparison(revision, changed);
     return {
+        selectCheckCode,
+        generation: {
+            buildConfigs,
+            listOutdatedFiles: (session, flags) => listOutdatedFiles(session, buildGeneratedFiles(session), flags),
+        },
         cwd: revision?.content === 'index' ? revision.cwd : options.cwd,
         pathArguments: revision?.content === 'index' ? revision.paths : options.paths,
         started: revision?.content === 'index' ? revision.started : undefined,
@@ -65,7 +73,7 @@ function buildComparison(
     changed: RunFilters['changed'],
 ): RunOptions['comparison'] {
     if (revision !== undefined) return { content: revision.content, reference: revision.reference };
-    return changed === undefined ? undefined : { content: 'working-tree', reference: changed.reference };
+    return changed?.paths === undefined ? undefined : { content: 'working-tree', reference: changed.reference };
 }
 
 function listMatchingFiles(session: Session, cwd: string, path: string, files: string[]): string[] {
@@ -84,7 +92,8 @@ function selectArgumentPaths(session: Session, options: CheckOptions, changed: s
     return [...selected];
 }
 
-function assertOnlyChecks(session: Session, only: string[] | undefined): void {
+function assertOnlyChecks(session: Session, only: string[] | undefined): string[] {
+    const notes: string[] = [];
     const selected = session.scopes.flatMap((scope) =>
         scope.configurations.flatMap((configuration) => configuration.checks.map((check) => ({ check, scope }))),
     );
@@ -92,7 +101,7 @@ function assertOnlyChecks(session: Session, only: string[] | undefined): void {
     const settings = session.settings;
     const requested = only ?? [];
     for (const id of requested) {
-        assertCheckExists(id, settings);
+        assertCheckExists(id, Object.values(settings.commandChecks));
         const match = selected.find(({ check }) => check.id === id);
         if (match === undefined) {
             const owner = shipped.get(id);
@@ -102,15 +111,15 @@ function assertOnlyChecks(session: Session, only: string[] | undefined): void {
                     `${id} belongs to ${owner.configuration.name}, which no scope selects. Run gspot add ${owner.configuration.name}.`,
                 );
         } else if (findSettingsSkip(settings, match.scope, match.check)?.cause === 'level')
-            throw new GspotError('arguments', `${id} is off at level basic. Run gspot set level all to turn it on.`);
+            notes.push(`${id}: --only allows this check to run here; it stays off in hooks at level basic.`);
     }
+    return notes;
 }
 
 async function warnMissingHooks(session: Session, revision: RevisionSource | undefined): Promise<void> {
     if (revision?.content === 'commit') return;
     const hooks = await readHookStatus(session, {
         root: revision?.reportRoot ?? session.root,
-        hasGit: revision?.reportRoot !== undefined || session.repository.hasGit,
     });
     if (!hooks.ready) printWarning('The Git hooks are not installed in this clone. Run gspot install.');
 }
@@ -123,7 +132,9 @@ async function readChangedFilter(
 ): Promise<ChangedPaths | undefined> {
     if (revision?.content === 'commit' && revision.changed !== undefined)
         return { reference: revision.reference, paths: revision.changed };
-    return options.base === undefined ? undefined : readChangedPaths(session.root, options.base, cancelSignal);
+    return options.base === undefined && options.changed !== true
+        ? undefined
+        : readChangedPaths(session.root, options.base, cancelSignal);
 }
 
 async function readRunFilters(
@@ -137,12 +148,6 @@ async function readRunFilters(
     const stage: StageFilter = options.stage ?? 'all';
     const paths = selectArgumentPaths(session, options, [...(staging.staged ?? []), ...(changed?.paths ?? [])]);
     return { changed, staging, stage, paths: paths.length === 0 ? undefined : paths };
-}
-
-function formatAllFilesHeader(options: CheckOptions, revision: RevisionSource | undefined): string {
-    if (revision !== undefined || options.allFiles === undefined) return '';
-    const cause = options.allFiles === 'empty-base' ? EMPTY_BASE : CREATED_BRANCH_BASE;
-    return `Checked every file: ${cause}.\n`;
 }
 
 function addRevisionPaths(session: Session, revision: RevisionSource | undefined): void {
@@ -178,15 +183,18 @@ export async function runTreeCheck(
         cancelSignal,
     });
     addRevisionPaths(session, revision);
-    assertOnlyChecks(session, options.only);
+    const onlyNotes = assertOnlyChecks(session, options.only);
     const filters = await readRunFilters(session, options, cancelSignal, revision);
     await warnMissingHooks(session, revision);
     const result = await runChecks(session, buildRunOptions(options, filters, revision));
     if (result.fixes !== undefined) printFailedFixers(result.fixes, { verbose: options.verbose });
     addRevisionNotes(result.report, revision);
-    const reportText =
-        formatAllFilesHeader(options, revision) +
-        formatRunReport(result.report, { verbose: options.verbose, selectedOnly: options.only !== undefined });
+    result.report.notes.push(...onlyNotes);
+    if (filters.changed?.note !== undefined) result.report.notes.push(filters.changed.note);
+    const reportText = formatRunReport(result.report, {
+        verbose: options.verbose,
+        selectedOnly: options.only !== undefined,
+    });
     const text = result.fixes ? `${formatFixes(result.fixes).join('\n')}\n${reportText}` : reportText;
     return {
         text,

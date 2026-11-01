@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { planChecks } from '#cli/planning/checks.ts';
@@ -23,7 +22,7 @@ import {
 
 test('a check whose required setting is missing is skipped with a note naming the setting', async () => {
     const settings = buildSandboxSettings(['xcode'], { level: 'all' });
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': settings,
         'App.entitlements':
             '<?xml version="1.0"?><plist><dict><key>aps-environment</key><string>development</string></dict></plist>',
@@ -41,24 +40,10 @@ test('a check whose required setting is missing is skipped with a note naming th
     ]);
 });
 
-test('a commits check outside Git is skipped because there is no history to read', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['commits'], { level: 'all' }),
-        'source.py': 'PORT = 8080\n',
-    });
-    const planned = planChecks(await openSession(sandbox.path), {
-        stage: 'push',
-        only: ['commits/commitlint-pushed'],
-    });
-    expect(planned.map((check) => check.skip)).toStrictEqual([
-        { cause: 'condition', note: 'This folder is not a Git repository, so the check has no history to read.' },
-    ]);
-});
-
 test.each([...NEXT_INTL_PROJECTS])(
     'translations/messages runs only where the project depends on next-intl: $name (selected: $selected)',
     async ({ scope, files, selected }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             ...files,
             'gspot.toml': buildSandboxSettings(['translations'], {
                 tables: '[translations]\nmessages_folder = "messages"\n',
@@ -79,7 +64,7 @@ test.each([...NEXT_INTL_PROJECTS])(
 );
 
 test('vue/vue-tsc without the typescript configuration is skipped with its condition', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'vue']),
         'src/App.vue': '<template><p>App</p></template>',
     });
@@ -93,7 +78,7 @@ test('vue/vue-tsc without the typescript configuration is skipped with its condi
 
 test('a check whose tool has no Windows build is skipped on Windows', async () => {
     using mockResources = new DisposableStack();
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python'], { tables: '[tools.semgrep]\nrule_files = ["rules.yml"]\n' }),
         'rules.yml': 'rules: []\n',
         'source.py': 'PORT = 8080\n',
@@ -107,7 +92,7 @@ test('a check whose tool has no Windows build is skipped on Windows', async () =
 
 test.each([false, true])('Semgrep tools follow local rules at plan time (custom rules: %p)', async (hasRuleFiles) => {
     using _platform = fakePlatform('linux');
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python'], {
             tables: hasRuleFiles ? '[tools.semgrep]\nrule_files = ["rules.yml"]\n' : '',
         }),
@@ -131,7 +116,7 @@ test.each([false, true])('Semgrep tools follow local rules at plan time (custom 
 
 test('shipped Semgrep rules select its tool', async () => {
     using _platform = fakePlatform('linux');
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript']),
         'package.json': '{"name":"example","version":"1.0.0"}',
         'index.js': 'export const port = 8080;\n',
@@ -166,7 +151,7 @@ test('generated and vendored test files do not satisfy a source-tag condition', 
 });
 
 test('a check for other systems names the host in its skip note', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['swift'], { level: 'all' }),
         'main.swift': 'let value = 1\n',
     });
@@ -178,7 +163,7 @@ test('a check for other systems names the host in its skip note', async () => {
 });
 
 test('limit readers belong to the requested language', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'python', 'swift'], { level: 'all' }),
     });
     const session = await openSession(sandbox.path);
@@ -191,7 +176,9 @@ test('limit readers belong to the requested language', async () => {
 });
 
 test('limit readers report their enabled state and exact level note', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['python'], { level: 'basic' }) });
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['python'], { level: 'basic' }),
+    });
     const session = await openSession(sandbox.path);
     expect(listSettingReaders(session.settings, session.scopes[0]!, 'limits.python.function_lines')).toStrictEqual([
         { check: 'python/function-size', enabled: false, note: 'off at level basic' },
@@ -208,22 +195,27 @@ test.each(
 )(
     '$check writes the configured $limit limit of $language into its generated file',
     async ({ check, file, language, limit }) => {
-        await using sandbox = await testdir({
+        const value = limit === 'cognitive_complexity' ? '101' : '1001';
+        const written =
+            limit === 'trivial_function_statements'
+                ? value
+                : `{ value = ${value}, reason = "The generated limit must retain this distinctive value." }`;
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([language], {
                 level: 'all',
-                tables: `[structure]\nreexports = { value = "index-only", reason = "The index export limit needs an enabled index module." }\n[limits.${language}]\n${limit} = ${limit === 'trivial_function_statements' ? '1001' : '{ value = 1001, reason = "The generated limit must retain this distinctive value." }'}\n`,
+                tables: `[structure]\nreexports = { value = "index-only", reason = "The index export limit needs an enabled index module." }\n[limits.${language}]\n${limit} = ${written}\n`,
             }),
         });
         const session = await openSession(sandbox.path);
         const generated = buildGeneratedFiles(session).files.find(({ path }) => path.endsWith(file));
         expect(generated, `${check} generates ${file}`).toBeDefined();
-        expect(generated!.content).toMatch(/\b1001\b/u);
+        expect(generated!.content).toMatch(new RegExp(String.raw`\b${value}\b`, 'u'));
     },
 );
 
 test.each([...BUILT_IN_LIMIT_CASES])('$check reads the $limit limit of $language', async (sample) => {
     const configuration = sample.language;
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([configuration], {
             level: 'all',
             tables: `[limits.${sample.language}]\n${sample.limit} = 3\n`,
@@ -243,7 +235,7 @@ test.each([...BUILT_IN_LIMIT_CASES])('$check reads the $limit limit of $language
 });
 
 test('shared-prefixes reads its configured sibling limit', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
             tables: '[limits]\nshared_prefix_files = { value = 3, reason = "Three related files form the configured group." }\n',

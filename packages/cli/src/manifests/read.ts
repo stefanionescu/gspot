@@ -2,24 +2,14 @@ import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { isTable } from '#cli/system/tables.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
-import type { Settings } from '#cli/types/settings/settings.ts';
 import { listAssets, buildAssetPath } from '#cli/system/assets.ts';
 import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
 import { manifestSchema } from '#cli/schemas/manifests/manifest.ts';
 import { compareText, formatSimilarNames } from '#cli/system/text.ts';
 import { CONFIGURATIONS_FOLDER } from '#cli/config/manifests/names.ts';
 import type { ShippedRule } from '#cli/types/generation/generation.ts';
-import { namingDefaultsSchema } from '#cli/schemas/manifests/manifests.ts';
-import { RULES_FOLDER, MANIFEST_FILE, NAMING_DEFAULTS_FILE } from '#cli/config/manifests/manifests.ts';
-
-import type {
-    Tool,
-    Check,
-    Configuration,
-    NamingDefaults,
-    ParsedManifest,
-    ConfigurationCheck,
-} from '#cli/types/manifests.ts';
+import { RULES_FOLDER, MANIFEST_FILE } from '#cli/config/manifests/manifests.ts';
+import type { Tool, Check, Configuration, ParsedManifest, ConfigurationCheck } from '#cli/types/manifests.ts';
 
 let shippedConfigurations: Map<string, Configuration> | undefined;
 
@@ -153,10 +143,10 @@ export function listChecksById(configurations: Iterable<Configuration>): Map<str
 Refuse a check ID that no configuration or command check declares.
 
 @param checkId the requested check ID.
-@param settings the command checks of gspot.toml.
+@param commandChecks the authored command checks.
 */
-export function assertCheckExists(checkId: string, settings: Pick<Settings, 'commandChecks'>): void {
-    const checkIds = listCheckIds(Object.values(settings.commandChecks));
+export function assertCheckExists(checkId: string, commandChecks: readonly Pick<Check, 'id'>[]): void {
+    const checkIds = listCheckIds(commandChecks);
     if (!checkIds.includes(checkId))
         throw new GspotError(
             'arguments',
@@ -164,14 +154,11 @@ export function assertCheckExists(checkId: string, settings: Pick<Settings, 'com
         );
 }
 
-let namingDefaults: NamingDefaults | undefined;
-
 /**
-Read the shipped naming choices once per process.
+Read the global naming choices from the naming manifest.
 */
-export function readNamingDefaults(): NamingDefaults {
-    if (namingDefaults !== undefined) return namingDefaults;
-    const contents = readFileSync(buildAssetPath(NAMING_DEFAULTS_FILE), 'utf8');
-    namingDefaults = namingDefaultsSchema.parse(JSON.parse(contents));
-    return namingDefaults;
+export function readNamingDefaults(): NonNullable<Configuration['naming']> {
+    const naming = readConfigurations().get('naming')?.naming;
+    if (naming === undefined) throw new Error('The naming manifest has no naming table.');
+    return naming;
 }

@@ -4,13 +4,13 @@ description: Install a new gspot version and update the generated files.
 ---
 
 import { Tabs, TabItem, Code } from '@astrojs/starlight/components';
-import { SETUP_COMMANDS } from '#docs/config/setup.ts';
+import { setup } from '#docs/reference/setup.ts';
 
 Commit first, so you can go back. Pick a [release](https://github.com/stefanionescu/gspot/releases), such as `1.2.0`,
 and put it in place of `<version>` below.
 
 <Tabs syncKey="package-manager">
-    {SETUP_COMMANDS.map(({ label, start, add }) => (
+    {setup.map(({ label, start, add }) => (
         <TabItem label={label}>
             <Code
                 lang="shell"
@@ -32,3 +32,7 @@ If `gspot apply` says that it did not overwrite some files, gspot did not write 
 `gspot apply` again.
 
 To return to an older gspot, check out the commit before the upgrade.
+
+Upgrades can leave older global tool versions and download caches outside the repository. After verifying the new
+version, follow [Reclaim shared disk space](/start/footprint/#reclaim-shared-disk-space) to preview
+`mise prune` and run `uv cache prune` when you want to reclaim that space.

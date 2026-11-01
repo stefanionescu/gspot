@@ -1,10 +1,13 @@
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import type { SkipCause, PlannedCheck } from '#cli/types/planning.ts';
+import type { LintRuleDocs } from '#cli/types/executables/executables.ts';
 
 export type CheckStatus = 'passed' | 'failed' | 'missing' | 'skipped' | 'error';
 
 export type CheckCode = ({ check: BuiltInCheck; run?: never } | { run?: CheckRun; check?: never }) &
-    Pick<CheckRunOptions, 'listFileArguments' | 'listConfigs'>;
+    Pick<CheckRunOptions, 'listFileArguments' | 'listConfigs'> & {
+        ruleDocs?: Readonly<Record<string, LintRuleDocs>>;
+    };
 
 type CheckRun = (
     session: CheckSession,
@@ -17,7 +20,7 @@ export type CheckRunOptions = {
     command?: string[];
     copyRoot?: string;
     listFileArguments?: ((session: Session, planned: PlannedCheck) => string[]) | undefined;
-    listConfigs?: ((session: Session, planned: PlannedCheck) => string[]) | undefined;
+    listConfigs?: ((session: CheckSession, planned: PlannedCheck) => string[]) | undefined;
 };
 
 export type BuiltInCheckResult = { findings: CheckFinding[]; files: string[] };
@@ -25,6 +28,7 @@ export type BuiltInCheckResult = { findings: CheckFinding[]; files: string[] };
 export type BuiltInCheck = (
     session: CheckSession,
     planned: PlannedCheck,
+    options?: CheckRunOptions,
 ) => CheckFinding[] | BuiltInCheckResult | Promise<CheckFinding[] | BuiltInCheckResult>;
 
 export type CheckResult = {
@@ -36,6 +40,7 @@ export type CheckResult = {
     duration: number;
     findings: readonly Finding[];
     note?: string;
+    stack?: string;
     cause?: SkipCause | 'no-files';
     reproduce?: string;
     command?: readonly string[];
@@ -46,6 +51,8 @@ export type Finding = {
     file: string;
     message: string;
     fixable: boolean;
+    explain?: string;
+    diff?: string;
     line?: number | undefined;
     column?: number;
     rule?: string;

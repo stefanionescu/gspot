@@ -1043,7 +1043,8 @@ export default [
                     {
                         "category": "import-rule:executables",
                         "pattern": [
-                            "packages/cli/src/executables/**"
+                            "packages/cli/src/executables/**",
+                            "packages/cli/src/schemas/executables.ts"
                         ]
                     },
                     {
@@ -1054,16 +1055,16 @@ export default [
                         ]
                     },
                     {
-                        "category": "import-rule:generation",
-                        "pattern": [
-                            "packages/cli/src/generation/**"
-                        ]
-                    },
-                    {
                         "category": "import-rule:runs",
                         "pattern": [
                             "packages/cli/src/runs/**",
                             "packages/cli/src/schemas/runs/**"
+                        ]
+                    },
+                    {
+                        "category": "import-rule:generation",
+                        "pattern": [
+                            "packages/cli/src/generation/**"
                         ]
                     },
                     {
@@ -1084,7 +1085,8 @@ export default [
                         "category": "import-rule:main",
                         "pattern": [
                             "packages/cli/src/main.ts",
-                            "packages/cli/src/bin.ts"
+                            "packages/cli/src/bin.ts",
+                            "packages/cli/src/reference.ts"
                         ]
                     },
                     {
@@ -1260,7 +1262,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"cli-types\" may import its own files and \"cli-config\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"installers\", \"runs\", \"checks\", \"commands\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"cli-types\" may import its own files and \"cli-config\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"executables\", \"installers\", \"runs\", \"checks\", \"commands\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1279,6 +1281,7 @@ export default [
                                                 "import-rule:manifests",
                                                 "import-rule:repository",
                                                 "import-rule:settings",
+                                                "import-rule:executables",
                                                 "import-rule:installers",
                                                 "import-rule:runs",
                                                 "import-rule:checks",
@@ -1600,49 +1603,6 @@ export default [
                         {
                             "from": {
                                 "file": {
-                                    "categories": "import-rule:generation"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"generation\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"planning\", \"executables\", \"installers\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:generation"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:generation",
-                                                "import-rule:cli-config",
-                                                "import-rule:cli-types",
-                                                "import-rule:system",
-                                                "import-rule:parsers",
-                                                "import-rule:manifests",
-                                                "import-rule:repository",
-                                                "import-rule:settings",
-                                                "import-rule:planning",
-                                                "import-rule:executables",
-                                                "import-rule:installers"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
                                     "categories": "import-rule:runs"
                                 }
                             },
@@ -1653,7 +1613,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"runs\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"planning\", \"executables\", \"installers\", \"generation\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"runs\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"planning\", \"executables\", \"installers\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1676,8 +1636,51 @@ export default [
                                                 "import-rule:settings",
                                                 "import-rule:planning",
                                                 "import-rule:executables",
+                                                "import-rule:installers"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "from": {
+                                "file": {
+                                    "categories": "import-rule:generation"
+                                }
+                            },
+                            "disallow": {
+                                "to": {
+                                    "file": {
+                                        "path": "**/*"
+                                    }
+                                }
+                            },
+                            "message": "Import rule \"generation\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"planning\", \"executables\", \"installers\", \"runs\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        },
+                        {
+                            "from": {
+                                "file": {
+                                    "categories": "import-rule:generation"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "import-rule:generation",
+                                                "import-rule:cli-config",
+                                                "import-rule:cli-types",
+                                                "import-rule:system",
+                                                "import-rule:parsers",
+                                                "import-rule:manifests",
+                                                "import-rule:repository",
+                                                "import-rule:settings",
+                                                "import-rule:planning",
+                                                "import-rule:executables",
                                                 "import-rule:installers",
-                                                "import-rule:generation"
+                                                "import-rule:runs"
                                             ]
                                         }
                                     }
@@ -1697,7 +1700,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"checks\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"planning\", \"executables\", \"installers\", \"generation\", \"runs\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"checks\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"planning\", \"executables\", \"installers\", \"runs\", \"generation\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1721,8 +1724,8 @@ export default [
                                                 "import-rule:planning",
                                                 "import-rule:executables",
                                                 "import-rule:installers",
-                                                "import-rule:generation",
-                                                "import-rule:runs"
+                                                "import-rule:runs",
+                                                "import-rule:generation"
                                             ]
                                         }
                                     }
@@ -1742,7 +1745,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"commands\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"planning\", \"executables\", \"installers\", \"generation\", \"runs\", \"checks\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"commands\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"planning\", \"executables\", \"installers\", \"runs\", \"generation\", \"checks\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1766,8 +1769,8 @@ export default [
                                                 "import-rule:planning",
                                                 "import-rule:executables",
                                                 "import-rule:installers",
-                                                "import-rule:generation",
                                                 "import-rule:runs",
+                                                "import-rule:generation",
                                                 "import-rule:checks"
                                             ]
                                         }
@@ -1788,7 +1791,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"main\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"planning\", \"executables\", \"installers\", \"generation\", \"runs\", \"checks\", \"commands\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"main\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"planning\", \"executables\", \"installers\", \"runs\", \"generation\", \"checks\", \"commands\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1812,8 +1815,8 @@ export default [
                                                 "import-rule:planning",
                                                 "import-rule:executables",
                                                 "import-rule:installers",
-                                                "import-rule:generation",
                                                 "import-rule:runs",
+                                                "import-rule:generation",
                                                 "import-rule:checks",
                                                 "import-rule:commands"
                                             ]
@@ -1971,7 +1974,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"docs-types\" may import its own files and \"cli-types\", \"settings\", \"docs-config\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"docs-types\" may import its own files and \"cli-types\", \"settings\", \"main\", \"docs-config\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1987,6 +1990,7 @@ export default [
                                                 "import-rule:docs-types",
                                                 "import-rule:cli-types",
                                                 "import-rule:settings",
+                                                "import-rule:main",
                                                 "import-rule:docs-config"
                                             ]
                                         }
@@ -2007,7 +2011,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"docs\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"planning\", \"executables\", \"installers\", \"generation\", \"runs\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"docs\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"planning\", \"executables\", \"installers\", \"runs\", \"generation\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -2031,8 +2035,8 @@ export default [
                                                 "import-rule:planning",
                                                 "import-rule:executables",
                                                 "import-rule:installers",
-                                                "import-rule:generation",
                                                 "import-rule:runs",
+                                                "import-rule:generation",
                                                 "import-rule:checks",
                                                 "import-rule:commands",
                                                 "import-rule:main",
@@ -2131,7 +2135,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"tests-setup\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"planning\", \"executables\", \"installers\", \"generation\", \"runs\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"tests-setup\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"planning\", \"executables\", \"installers\", \"runs\", \"generation\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -2155,8 +2159,8 @@ export default [
                                                 "import-rule:planning",
                                                 "import-rule:executables",
                                                 "import-rule:installers",
-                                                "import-rule:generation",
                                                 "import-rule:runs",
+                                                "import-rule:generation",
                                                 "import-rule:checks",
                                                 "import-rule:commands",
                                                 "import-rule:main",
@@ -2187,7 +2191,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"tests\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"planning\", \"executables\", \"installers\", \"generation\", \"runs\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", \"tests-setup\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"tests\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"planning\", \"executables\", \"installers\", \"runs\", \"generation\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", \"tests-setup\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -2211,8 +2215,8 @@ export default [
                                                 "import-rule:planning",
                                                 "import-rule:executables",
                                                 "import-rule:installers",
-                                                "import-rule:generation",
                                                 "import-rule:runs",
+                                                "import-rule:generation",
                                                 "import-rule:checks",
                                                 "import-rule:commands",
                                                 "import-rule:main",
@@ -2428,8 +2432,8 @@ export default [
                                             "import-rule:planning",
                                             "import-rule:executables",
                                             "import-rule:installers",
-                                            "import-rule:generation",
                                             "import-rule:runs",
+                                            "import-rule:generation",
                                             "import-rule:checks",
                                             "import-rule:commands",
                                             "import-rule:main",
@@ -2472,8 +2476,8 @@ export default [
                                                 "import-rule:planning",
                                                 "import-rule:executables",
                                                 "import-rule:installers",
-                                                "import-rule:generation",
                                                 "import-rule:runs",
+                                                "import-rule:generation",
                                                 "import-rule:checks",
                                                 "import-rule:commands",
                                                 "import-rule:main",

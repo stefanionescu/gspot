@@ -5,7 +5,6 @@ import { isRootOnlyCheck } from '#cli/planning/files.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { readRepositoryRoot } from '#cli/repository/read.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
@@ -15,8 +14,12 @@ import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
 import { Argument, type Command } from '@commander-js/extra-typings';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import type { ListKind, SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/commands.ts';
 
+import {
+    type CommandLocation,
+    type SettingsListJson,
+    type ConfigurationsListJson,
+} from '#cli/types/commands/commands.ts';
 import {
     KEY_GAP,
     LIST_USAGE,
@@ -125,21 +128,14 @@ function formatCheckState(planned: PlannedCheck | undefined): string {
     return isActive(planned) ? 'on' : NO_MATCHING_FILES;
 }
 
-async function runListCommand(cwd: string, kind: ListKind): Promise<CommandResult> {
-    const root = await readRepositoryRoot(cwd);
-
-    const session = await openSession(root);
-    return kind === 'settings' ? buildSettingsResult(session) : buildConfigurationsResult(session);
-}
-
 /**
 Register the list command.
 
 @param program the gspot program that gets the command.
 @param onResult receives the result of the command.
+@param location the calling folder and the Git root validated before the action.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: main.ts registers the command through it, like every other command.
-export function registerList(program: Command, onResult: CommandCompletion): void {
+export function registerList(program: Command, onResult: CommandCompletion, location: CommandLocation): void {
     program
         .command('list')
         .usage(LIST_USAGE)
@@ -149,6 +145,7 @@ export function registerList(program: Command, onResult: CommandCompletion): voi
             new Argument('[kind]', COMMAND_HELP.list.arguments.kind).choices(LIST_KINDS).default('configurations'),
         )
         .action(async (kind) => {
-            onResult(await runListCommand(process.cwd(), kind));
+            const session = await openSession(location.root);
+            onResult(kind === 'settings' ? buildSettingsResult(session) : buildConfigurationsResult(session));
         });
 }

@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { getTable } from '#cli/settings/scopes.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
@@ -12,12 +12,13 @@ import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { fakePlatform } from '#tests/setup/system/platform.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { XCTEST_SOURCE, SWIFT_PACKAGE, SWIFT_PACKAGE_HEADER } from '#tests/config/swift.ts';
 import { planSwiftBuild, readRepositoryCacheFolder } from '#cli/checks/language/swift/cache.ts';
 import { SWIFT_BUILD_PURPOSES, SWIFT_PROJECT_SELECTION_CASES } from '#tests/config/checks/language/swift/cache.ts';
 
 test.each(['platform=macOS'])('Xcode build plans keep destination %s for every build purpose', async (destination) => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const destinationLine = `xcode_destination = ${JSON.stringify(destination)}\n`;
     await createFileTree(sandbox.path, {
         'Package.swift': SWIFT_PACKAGE,
@@ -37,7 +38,10 @@ test.each(['platform=macOS'])('Xcode build plans keep destination %s for every b
 test.each([...SWIFT_PROJECT_SELECTION_CASES])(
     'the swift/build plan $name',
     async ({ scope, tables, files, project, argument }) => {
-        await using sandbox = await testdir({ ...files, 'gspot.toml': buildSandboxSettings(['swift'], { tables }) });
+        await using sandbox = await createGitSandbox({
+            ...files,
+            'gspot.toml': buildSandboxSettings(['swift'], { tables }),
+        });
 
         const session = await openSession(sandbox.path);
         const input = planSandboxCheck(session, 'swift/build', { scope });
@@ -52,7 +56,7 @@ test.each([...SWIFT_BUILD_PURPOSES])(
     'Swift $purpose skips without swift.xcode_project or Package.swift, then builds the package once Package.swift exists',
     async ({ purpose, check }) => {
         using _host = fakePlatform('darwin');
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['swift']),
             'App.xcodeproj/project.pbxproj': '',
             'ExampleTests/Example.swift': XCTEST_SOURCE,

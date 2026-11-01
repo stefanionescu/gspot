@@ -6,7 +6,8 @@ Read HTTP.md too.
 
 ## Routes and middleware
 
-Validate requests with the schemas the project already has, in middleware, and give each route one domain call.
+Call `app.disable('x-powered-by')` right after `express()`. Validate requests with the schemas the project already has,
+in middleware, and give each route one domain call.
 
 ```ts
 // Bad: the route validates by hand, queries the database, and relays a provider response.
@@ -23,17 +24,23 @@ router.post('/orders', async (req, res) => {
 ```
 
 ```ts
-// Good: middleware validates and authenticates; the route makes one domain call.
+import { Router } from 'express';
+
 const HTTP_CREATED = 201;
 
-router.post('/orders', authenticate, validateBody(submitOrderSchema), async (_request, response) => {
-    const order = await submitOrder(response.locals.accountId, response.locals.body);
-    response.status(HTTP_CREATED).json(order);
-});
+// Good: middleware validates and authenticates; the route makes one domain call.
+export function buildOrdersRouter(): Router {
+    const router = Router();
+    router.post('/orders', authenticate, validateBody(submitOrderSchema), async (_request, response) => {
+        const order = await submitOrder(response.locals.accountId, response.locals.body);
+        response.status(HTTP_CREATED).json(order);
+    });
+    return router;
+}
 ```
 
-- Declare each field that middleware sets on `response.locals` in the global `Express.Locals` interface, so a route
-  reads typed values.
+- Declare each field that middleware sets on `response.locals` in the global `Express.Locals` interface in a `.d.ts`
+  file, so a route reads typed values.
 
 - Middleware checks authentication and ownership, and reaches the database only through the auth helpers.
 - A permission check that depends on domain state belongs in a module, and a transport-level one in ownership

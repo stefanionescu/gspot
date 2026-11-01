@@ -1,6 +1,6 @@
+import { createFileTree } from 'testdirs';
 import { join, basename } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { planChecks } from '#cli/planning/checks.ts';
 import { type Session } from '#cli/types/session.ts';
@@ -9,11 +9,13 @@ import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { open, chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { type SpawnResult, type AsyncSpawnOptions } from '#cli/types/system/system.ts';
@@ -80,8 +82,8 @@ function fakeNextjsCommands(spawn: (command: readonly string[], options: AsyncSp
 
 test('nextjs/tsc in a child scope reports its finding, passes after the fix, and leaves tsconfig.json, .next, and next-env.d.ts unchanged', async () => {
     const scope = 'app';
-    await using sandbox = await testdir();
-    const session = buildCheckSession(await prepareNextjsBuild(sandbox.path, scope));
+    await using sandbox = await createGitSandbox({});
+    const session = buildCheckSession(await prepareNextjsBuild(sandbox.path, scope), CHECK_GENERATION);
 
     const planned = planChecks(session, { stage: 'push', only: ['nextjs/tsc'] }).find(
         (check) => check.scope.path === scope,
@@ -126,7 +128,7 @@ test('nextjs/tsc in a child scope reports its finding, passes after the fix, and
 
 test('nextjs/tsc removes its copy after a failed type generation and keeps a concurrent edit to tsconfig.json', async () => {
     const message = 'Generator failed';
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['nextjs']),
         'package.json': '{"private":true}\n',
         'tsconfig.json': '{}\n',
@@ -143,7 +145,7 @@ test('nextjs/tsc removes its copy after a failed type generation and keeps a con
         return buildProcessResult({ code: 1, stderr: `Error: ${message}` });
     });
     const error = await captureRejection(
-        runCheckCode(buildCheckSession(session), planned, CHECK_CODE['nextjs/tsc'], {}),
+        runCheckCode(buildCheckSession(session, CHECK_GENERATION), planned, CHECK_CODE['nextjs/tsc'], {}),
     );
     expect(error.message).toBe(`The next typegen command failed: Error: ${message}`);
     expect(scratch).not.toBe('');

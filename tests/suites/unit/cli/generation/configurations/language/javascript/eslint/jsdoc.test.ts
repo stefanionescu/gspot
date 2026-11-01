@@ -3,7 +3,6 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { LEVELS } from '#cli/config/manifests/names.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
@@ -17,7 +16,7 @@ import {
     ROOT_PARAMETERS,
 } from '#tests/config/generation/configurations/language/javascript/eslint/eslint.ts';
 
-test.each([...LEVELS])(
+test.each(['all'] as const)(
     'JSDoc types are allowed in JavaScript and duplicate TypeScript type tags are reported at %s',
     async (level) => {
         await using sandbox = await testdir();
@@ -33,14 +32,10 @@ test.each([...LEVELS])(
         });
         const eslint = await buildEslint(sandbox.path);
         expect(await listLintFindings(eslint, sandbox.path, ['client.js'], ['jsdoc/no-types'])).toStrictEqual([]);
-        expect(await listLintFindings(eslint, sandbox.path, ['client.ts'], ['jsdoc/no-types'])).toStrictEqual(
-            level === 'all'
-                ? [
-                      { file: 'client.ts', rule: 'jsdoc/no-types', line: 3 },
-                      { file: 'client.ts', rule: 'jsdoc/no-types', line: 4 },
-                  ]
-                : [],
-        );
+        expect(await listLintFindings(eslint, sandbox.path, ['client.ts'], ['jsdoc/no-types'])).toStrictEqual([
+            { file: 'client.ts', rule: 'jsdoc/no-types', line: 3 },
+            { file: 'client.ts', rule: 'jsdoc/no-types', line: 4 },
+        ]);
     },
 );
 

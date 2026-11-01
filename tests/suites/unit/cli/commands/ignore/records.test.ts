@@ -40,8 +40,7 @@ test('ignore merges matching paths, keeps different reasons apart, and a record 
             ...commandArguments,
             '--reason',
             explanation,
-            '--paths',
-            ...paths,
+            ...paths.flatMap((path) => ['--paths', path]),
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(0);
     }
@@ -56,12 +55,32 @@ test('ignore merges matching paths, keeps different reasons apart, and a record 
         { check: 'bash/shellcheck', rule: 'SC2312', reason },
         { check: 'bash/shellcheck', rule: 'SC2312', paths: ['other.sh'], reason: 'Another cause.' },
     ]);
-    const removed = await runGspot(sandbox.path, ['unignore', 'bash/shellcheck', '--rule', 'SC2312']);
-    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(removed.stdout).toBe(
-        'Removed 2 ignores for rule SC2312 of bash/shellcheck.\nwrote    1 generated file in .gspot/\nnote     The tool lockfile is missing or stale. Run gspot install; until then gspot/generated-files fails on it.\n',
-    );
-    expect(parse(await readFile(settingsPath, 'utf8'))).not.toHaveProperty('ignore');
+});
+
+test('ignore rejects unknown rules and checks without rule output before writing settings', async () => {
+    const settings = buildSandboxSettings(['javascript', 'bash']);
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': settings,
+        'source.js': 'export const count = 1;\n',
+        '.gspot/node_modules/eslint/package.json': '{"exports":{"./use-at-your-own-risk":"./rules.cjs"}}',
+        '.gspot/node_modules/eslint/rules.cjs': 'exports.builtinRules = new Map();',
+    });
+    for (const [check, rule, message] of [
+        ['javascript/eslint', 'no-consolee', 'gspot does not know rule no-consolee of javascript/eslint.'],
+        ['bash/shfmt', 'indent', 'bash/shfmt does not report lint rules. Omit --rule.'],
+    ] as const) {
+        const result = await runGspot(sandbox.path, [
+            'ignore',
+            check,
+            '--rule',
+            rule,
+            '--reason',
+            'The generated source needs this exception.',
+        ]);
+        expect(result.code).toBe(2);
+        expect(result.stderr).toBe(`${message}\n`);
+        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
+    }
 });
 
 test.each([...IGNORE_REFUSALS])(

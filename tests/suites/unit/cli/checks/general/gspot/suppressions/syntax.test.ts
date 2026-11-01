@@ -1,8 +1,9 @@
-import { testdir, createFileTree } from 'testdirs';
+import { createFileTree } from 'testdirs';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     JSX_COMMENTS,
@@ -23,7 +24,7 @@ describe.each([...SUPPRESSION_SYNTAX_CASES])(
         const resources = new AsyncDisposableStack();
         let comments: readonly Finding[];
         beforeAll(async () => {
-            const sandbox = resources.use(await testdir());
+            const sandbox = resources.use(await createGitSandbox({}));
             await createFileTree(sandbox.path, {
                 'gspot.toml': buildSandboxSettings([configuration], { level: 'all' }),
                 ...Object.fromEntries(sources.map(({ path, source }) => [path, source])),
@@ -44,7 +45,7 @@ describe.each([...SUPPRESSION_SYNTAX_CASES])(
 test.each(['js', 'ts'])(
     'eslint comments inside strings and templates in .%s files are not suppressions',
     async (extension) => {
-        await using sandbox = await testdir();
+        await using sandbox = await createGitSandbox({});
         const path = `source.${extension}`;
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings(['typescript', 'structure'], { level: 'all' }),
@@ -60,7 +61,7 @@ test.each(['js', 'ts'])(
 );
 
 test('eslint comments in JSX text and quoted attributes are not directives; an empty expression comment is', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript', 'structure'], { level: 'all' }),
         'source.tsx': JSX_COMMENTS,
     });
@@ -75,7 +76,7 @@ test('eslint comments in JSX text and quoted attributes are not directives; an e
 test.each([...LIMIT_SUPPRESSION_CASES])(
     '$configuration refuses a suppression of $name',
     async ({ configuration, file, directive, code, rule, message }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([configuration], { level: 'all' }),
             [file]: `${directive}\n${code}\n`,
         });

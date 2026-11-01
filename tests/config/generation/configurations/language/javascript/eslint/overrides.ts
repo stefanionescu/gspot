@@ -97,17 +97,6 @@ export const RESTRICTED_IMPORT_FINDINGS = [
     { file: 'state/widget.js', rule: 'no-restricted-imports', line: 3 },
 ] as const;
 
-export const RESTRICTED_IMPORT_SETTINGS = {
-    tables: `[[tools.eslint.restricted_imports]]
-name = "lodash"
-message = "Use the built-in methods."
-
-[[tools.eslint.override]]
-paths = ["app/**"]
-rules = { "no-restricted-imports" = [{ paths = [{ name = "moment", message = "Use Temporal." }] }] }
-`,
-} as const;
-
 export const IGNORE_CASES = [
     { name: 'without an ignore', ignored: false },
     { name: 'with an ignore', ignored: true },

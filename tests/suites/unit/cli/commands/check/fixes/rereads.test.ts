@@ -1,4 +1,3 @@
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import { runChecks } from '#cli/commands/check/run.ts';
@@ -6,9 +5,10 @@ import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('a fix run rereads the repository and keeps the package scopes it found', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['docs'], { level: 'all' }),
         'package.json': '{"name":"root","private":true,"scripts":{"root":"true"}}',
         'README.md': 'Run `bun run root`.\n',
@@ -29,7 +29,7 @@ test('a fix run rereads the repository and keeps the package scopes it found', a
 });
 
 test('checks read a new file inventory after a fixer creates a source and leave the session they got as it was', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'source.txt': 'input',
         'gspot.toml': buildSandboxSettings([], {
             rules: true,

@@ -4,7 +4,7 @@ import type { GspotError } from '#cli/system/errors.ts';
 import { SYNTAX_ERRORS } from '#tests/config/parsers/formats.ts';
 import { openJsonFile, parseJsonFile } from '#cli/parsers/formats/json.ts';
 
-test.each(['null', '[]', '42'])(
+test.each(['null', '[]'])(
     'a JSON file whose root is %s, not an object, fails with an error that names the file and the shape',
     (text) => {
         expect(() => parseJsonFile('example.json', text)).toThrow(

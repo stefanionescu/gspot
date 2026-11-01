@@ -1,18 +1,9 @@
-import type { LIST_KINDS } from '#cli/config/commands/commands.ts';
-import type { OutdatedFile } from '#cli/types/generation/files.ts';
 import type { Setting, InheritedSetting, RemovedConfiguration } from '#cli/types/settings/inheritance.ts';
 
-export type ApplyOptions = {
-    cwd: string;
-    dryRun: boolean;
-};
-
-export type DryRunJson = {
-    dryRun: true;
-    outdated: OutdatedFile[];
-};
+export type CommandLocation = { readonly root: string; readonly cwd: string };
 
 export type IgnoreOptions = {
+    root: string;
     cwd: string;
     check?: string | undefined;
     paths?: string[] | undefined;
@@ -40,9 +31,8 @@ export type ConfigurationsListJson = {
 
 export type SettingsListJson = { settings: SettingRow[] };
 
-export type ListKind = (typeof LIST_KINDS)[number];
-
 export type SetOptions = {
+    root: string;
     cwd: string;
     key: string;
     values: string[];
@@ -70,4 +60,4 @@ export type IgnoreRemoval = {
 
 export type IgnoreTarget = { unmatched: string; removed: string };
 
-export type UnsetOptions = { cwd: string; key: string; keys: string[]; scope?: string | undefined };
+export type UnsetOptions = { root: string; cwd: string; key: string; keys: string[]; scope?: string | undefined };

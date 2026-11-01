@@ -1,9 +1,8 @@
-import type { Session } from '#cli/types/session.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { ScopeFolder } from '#cli/types/repository/files.ts';
 import { isInScope, selectScopePath } from '#cli/repository/scopes.ts';
-import type { ConfigurationEvidence } from '#cli/types/repository/repository.ts';
 import { detectConfigurations, listAutomaticConfigurations } from '#cli/repository/detect.ts';
+import type { ConfigurationEvidence, ConfigurationSelection } from '#cli/types/repository/repository.ts';
 import { expandSuggestions, selectConfigurations, assertConfigurationsExist } from '#cli/manifests/select.ts';
 
 import type {
@@ -12,12 +11,6 @@ import type {
     ConfigurationOrigin,
     ConfigurationChoices,
 } from '#cli/types/commands/init.ts';
-
-function findInitConfiguration(init: InitRepository, name: string): Configuration | undefined {
-    const configuration = init.configurationsByName.get(name);
-    if (!configuration) return undefined;
-    return configuration.when?.git === true && !init.repository.hasGit ? undefined : configuration;
-}
 
 function selectRootConfigurations(
     init: InitRepository,
@@ -29,7 +22,7 @@ function selectRootConfigurations(
     const root = selectScopeConfigurations(init, { path: '', origin: 'root', configurations: [] }, []);
     const detectedConfigurations = detected
         .filter((evidence) => {
-            const configuration = findInitConfiguration(init, evidence.configuration);
+            const configuration = init.configurationsByName.get(evidence.configuration);
             if (!configuration) return false;
             const { group } = configuration;
             return !hasScopes || group === 'general' || group === 'language' || root.includes(configuration.name);
@@ -55,7 +48,7 @@ function selectScopeConfigurations(init: InitRepository, scopeFolder: ScopeFolde
             : init.repository;
     const names = detectConfigurations(repository, init.configurationsByName, scopeFolder.path)
         .filter((evidence) => {
-            const configuration = findInitConfiguration(init, evidence.configuration);
+            const configuration = init.configurationsByName.get(evidence.configuration);
             return configuration !== undefined && configuration.group !== 'general';
         })
         .map((evidence) => evidence.configuration);
@@ -155,7 +148,7 @@ Find newly detected configurations in each project scope, respecting removals.
 @returns new choices and the evidence for each scope.
 */
 export function listDetectedAdditions(
-    session: Session,
+    session: ConfigurationSelection,
 ): { scope: string; configurations: string[]; evidence: ConfigurationEvidence[] }[] {
     const proposed = selectForInit({
         repository: session.repository,

@@ -1,13 +1,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
-import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     SECRET_KEY_READS,
@@ -20,7 +21,7 @@ import {
 } from '#tests/config/checks/platform/supabase.ts';
 
 test('supabase/storage-policies reports a syntax finding for malformed TOML', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['supabase'], { scopes: [{ path: 'apps/api' }] }),
         'apps/api/supabase/config.toml': '[broken',
     });
@@ -33,7 +34,7 @@ test.each([...STORAGE_POLICIES])(
     "a storage policy counts a bucket_id = 'name' condition on storage.objects, not a lookalike: $name",
     async ({ sql, allowed }) => {
         const path = 'supabase/migrations/20261005000000_policy.sql';
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['supabase'], { level: 'all' }),
             'supabase/config.toml': AVATARS_BUCKET_CONFIG,
             [path]: sql,
@@ -48,7 +49,7 @@ test.each([...STORAGE_POLICIES])(
 );
 
 test("service role keys are allowed in each scope's test files and refused in client files", async () => {
-    await using sandbox = await testdir({ 'gspot.toml': SERVICE_KEY_SETTINGS, ...SERVICE_KEY_READERS });
+    await using sandbox = await createGitSandbox({ 'gspot.toml': SERVICE_KEY_SETTINGS, ...SERVICE_KEY_READERS });
 
     const result = await runChecks(
         await openSession(sandbox.path),
@@ -65,7 +66,7 @@ test("service role keys are allowed in each scope's test files and refused in cl
 });
 
 test('service role keys are refused in component and module clients and allowed in the functions folder', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['supabase'], { tables: '[supabase]\nfunctions_folder = "server"\n' });
     await createFileTree(sandbox.path, { 'gspot.toml': settings, ...SERVICE_ROLE_CLIENTS });
     const findings = await runSandboxCheck(sandbox.path, 'supabase/service-role-key');
@@ -86,7 +87,7 @@ test('service role keys are refused in component and module clients and allowed 
 });
 
 test.each([...SECRET_KEY_READS])('a secret Supabase key read as %s is refused in client files', async (read) => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['supabase'], {
         tables: 'test_files = ["qa/**"]\n[supabase]\nfunctions_folder = "server"\n[[scope]]\npath = "apps/web"\nconfigurations = ["supabase"]\n[scope.supabase]\nfunctions_folder = "apps/web/server"\n',
     });
@@ -123,7 +124,7 @@ test.each([...SECRET_KEY_READS])('a secret Supabase key read as %s is refused in
 
 test('supabase/storage-policies reports invalid bucket settings as a syntax finding', async () => {
     const path = 'supabase/config.toml';
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['supabase']),
         [path]: '[storage]\nbuckets = "avatars"\n',
     });

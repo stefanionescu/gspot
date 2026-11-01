@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { compareText } from '#cli/system/text.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { rename, writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -10,6 +10,7 @@ import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildFileIdentifier } from '#cli/checks/general/naming/paths.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     FILE_NAME_CASES,
@@ -18,7 +19,7 @@ import {
 } from '#tests/config/checks/general/naming/naming.ts';
 
 test('[slug] path brackets are allowed in every scope and banned file names are reported', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'typescript', 'naming'], {
             level: 'all',
             scopes: [{ path: 'app', configurations: ['nextjs'] }],
@@ -35,7 +36,7 @@ test('[slug] path brackets are allowed in every scope and banned file names are 
 });
 
 test.each([...FILE_NAME_CASES])('$name', async ({ configurations, files, invalid, renamed }) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([...configurations], { level: 'all' }),
         ...files,
     });
@@ -58,7 +59,7 @@ test.each([
     'migration timestamps pass with $configuration while other numeric folders are reported (scope "$scope")',
     async ({ scope, configuration }) => {
         const prefix = scope === '' ? '' : `${scope}/`;
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['naming', configuration], { level: 'all', scopes: [{ path: 'app' }] }),
             ...Object.fromEntries(
                 Object.entries({
@@ -76,7 +77,7 @@ test.each([
 );
 
 test('a numbered file name needs an ignored_prefix override', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['bash', 'naming'], { level: 'all' });
     await createFileTree(sandbox.path, {
         'gspot.toml': settings,
@@ -96,7 +97,7 @@ test('a numbered file name needs an ignored_prefix override', async () => {
 });
 
 test('a banned folder word such as shared is reported in folder names', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const paths = ['shared/first.js', 'app/shared/first.js', 'app/worker/shared/entry.js'];
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['javascript', 'naming'], {
@@ -113,7 +114,7 @@ test('a banned folder word such as shared is reported in folder names', async ()
 });
 
 test('a mise task file named _default passes, and the same name elsewhere does not', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash', 'naming'], { level: 'all' }),
         '.mise/tasks/build/_default': '#!/usr/bin/env bash\necho build\n',
         'scripts/_default': '#!/usr/bin/env bash\necho other\n',
@@ -128,7 +129,7 @@ test.each(['', 'apps/api'])(
     'Supabase _shared folders pass naming/paths while other shared folders fail in scope %s',
     async (scope) => {
         const prefix = scope === '' ? '' : `${scope}/`;
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['supabase', 'typescript', 'naming'], {
                 level: 'all',
                 scopes: scope === '' ? [] : [{ path: scope }],
@@ -149,7 +150,7 @@ test('a file name drops one extension, or .d.ts as one, and a SQL migration keep
 });
 
 test('double underscore tool folders keep their inner names and a shared folder stays banned', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'python', 'naming'], { level: 'all' }),
         'src/__tests__/total.test.js': 'export const total = 1;\n',
         'src/__mocks__/fs.js': 'export const read = 1;\n',
@@ -164,7 +165,7 @@ test('double underscore tool folders keep their inner names and a shared folder 
 });
 
 test('mixed-language folders accept the union of language naming cases once', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript', 'python', 'naming'], { level: 'all' }),
         'account-pages/entry.ts': 'export const port = 1;',
         'account-pages/entry.py': 'port = 1\n',

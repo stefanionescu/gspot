@@ -82,7 +82,7 @@ test('a commit with a ShellCheck finding fails through the installed hook, in th
 
     await writeRuntimePins(sandbox.path);
     commitAll(sandbox.path);
-    const initialized = await spawnGspot(sandbox.path, ['init', '--yes', '--configurations', 'bash']);
+    const initialized = await spawnGspot(sandbox.path, ['init', '--configurations', 'bash']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const installed = await spawnGspot(sandbox.path, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);

@@ -37,13 +37,50 @@ test('an unknown command exits 2 and names the closest command', async () => {
     });
 });
 
-test('init refuses a folder outside Git before writing', async () => {
-    await using sandbox = await testdir({ 'package.json': '{"private":true}' });
+test.each(
+    [
+        ['init'],
+        ['install'],
+        ['apply'],
+        ['check'],
+        ['list'],
+        ['explain', 'python'],
+        ['doctor'],
+        ['set', 'level', 'all'],
+        ['unset', 'level'],
+        ['add', 'python'],
+        ['remove', 'python', '--reason', 'External tools check this language.'],
+        ['ignore', 'repository/encoding', '--reason', 'External tooling checks these files.'],
+        ['unignore', 'repository/encoding'],
+    ].map((commandArguments) => ({ commandArguments })),
+)(
+    '$commandArguments requires a Git worktree before reading settings or writing, while its help works outside Git',
+    async ({ commandArguments }) => {
+        await using sandbox = await testdir({ 'gspot.toml': MALFORMED_SETTINGS });
+        const before = await readTree(sandbox.path);
+        const result = await runGspot(sandbox.path, [...commandArguments, '--json']);
+        expect(result.code).toBe(2);
+        expect(JSON.parse(result.stdout)).toMatchObject({ error: 'git', message: NEEDS_GIT_MESSAGE });
+        expect(await readTree(sandbox.path)).toStrictEqual(before);
+        const help = await runGspot(sandbox.path, [commandArguments[0]!, '--help']);
+        expect(help.code).toBe(0);
+        expect(help.stdout).toContain('Usage:');
+    },
+);
+
+test('a sparse checkout is refused before reading settings and help remains available', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': MALFORMED_SETTINGS });
+    runGitStep(sandbox.path, ['config', 'core.sparseCheckout', 'yes']);
     const before = await readTree(sandbox.path);
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--json']);
+    const result = await runGspot(sandbox.path, ['doctor', '--json']);
     expect(result.code).toBe(2);
-    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'git', message: NEEDS_GIT_MESSAGE });
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+        error: 'git',
+        message: 'gspot does not support sparse checkouts. Run git sparse-checkout disable.',
+    });
+    expect(await readTree(sandbox.path)).toEqual(before);
+    const help = await runGspot(sandbox.path, ['doctor', '--help']);
+    expect(help.code).toBe(0);
 });
 
 test.each(VERSION_ARGUMENTS.map((commandArguments) => ({ commandArguments })))(

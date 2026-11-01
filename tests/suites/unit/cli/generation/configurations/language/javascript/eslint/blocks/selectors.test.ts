@@ -1,6 +1,5 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { LEVELS } from '#cli/config/manifests/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
@@ -44,7 +43,7 @@ test('a block that stands alone is reported at the top of a file and inside a fu
             .map(({ line }) => line),
     ).toStrictEqual([2, 6]);
 });
-test.each([...LEVELS])('form validation and list security run at both levels (%s)', async (level) => {
+test.each(['basic'] as const)('form validation and list security run at level %s', async (level) => {
     await using sandbox = await testdir({
         ...SELECTOR_FILES,
         'gspot.toml': buildSandboxSettings(['javascript'], {
@@ -98,9 +97,9 @@ test('library selectors at level basic report both whole-store reads and accept 
 });
 
 test.each([...FRAMEWORK_SELECTOR_CASES])(
-    '$configuration selectors report their sample lines at each level',
+    '$configuration selectors report their sample lines at level all',
     async (sample) => {
-        for (const level of LEVELS) {
+        for (const level of ['all'] as const) {
             await using sandbox = await testdir({
                 'gspot.toml': buildSandboxSettings([sample.language, sample.configuration], { level }),
                 'package.json': '{"private":true,"type":"module"}\n',

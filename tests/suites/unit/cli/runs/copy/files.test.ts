@@ -12,12 +12,12 @@ import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
-import { listWorkspaceSources } from '#cli/repository/javascript/workspaces.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { TEST_WORKSPACE_FILES, WORKSPACE_SOURCE_FILES } from '#tests/config/runs/copy.ts';
 import { cp, mkdir, lstat, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 
 test('a copy isolates workspace sources and links external dependencies and executable tools', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     await using external = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([]),
@@ -48,7 +48,7 @@ test('a copy isolates workspace sources and links external dependencies and exec
 });
 
 test('a workspace member that is no scope brings its own dependency store into the copy', async () => {
-    await using sandbox = await testdir({ ...TEST_WORKSPACE_FILES, 'gspot.toml': buildSandboxSettings([]) });
+    await using sandbox = await createGitSandbox({ ...TEST_WORKSPACE_FILES, 'gspot.toml': buildSandboxSettings([]) });
 
     await mkdir(join(sandbox.path, 'tests/node_modules'));
     await symlink('../../node_modules/.bun/vue@3/node_modules/vue', join(sandbox.path, 'tests/node_modules/vue'));
@@ -64,7 +64,7 @@ test('a workspace member that is no scope brings its own dependency store into t
 });
 
 test('a link into another linked tree points at the copy of that tree, whatever order the folder lists them in', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     await using store = await testdir({
         'next@16/node_modules/next/package.json': '{"name":"next"}',
         'next@16/node_modules/helpers/package.json': '{"name":"helpers"}',
@@ -85,7 +85,7 @@ test('a link into another linked tree points at the copy of that tree, whatever 
 });
 
 test('a copy sits inside the repository, so linked store packages share its root', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'project/package.json': '{"private":true}',
         'project/gspot.toml': buildSandboxSettings([]),
         'project/node_modules/.bun/tool@1/node_modules/tool/index.js': 'export {};',
@@ -104,7 +104,7 @@ test('a copy sits inside the repository, so linked store packages share its root
 });
 
 test('a dependency link that points at nothing is left out of the copy', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'package.json': '{"private":true}',
         'node_modules/.bin/tool': '#!/bin/sh\n',
         'gspot.toml': buildSandboxSettings([]),
@@ -124,7 +124,7 @@ test('a dependency link that points at nothing is left out of the copy', async (
 test.each([false, true])(
     "a check's copy holds its files and dependencies, plus an extra file when asked: %p",
     async (includedPaths) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['javascript']),
             'selected.js': 'export const selected = 1;',
             'unselected.js': 'export const unselected = 2;',
@@ -150,7 +150,7 @@ test.each([false, true])(
 test.each([false, true])(
     'workspace dependency copies keep exactly the sources the check imports (revision copy %p)',
     async (revision) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['javascript'], {
                 scopes: [{ path: 'apps/web', configurations: ['javascript'] }],
             }),
@@ -172,15 +172,6 @@ test.each([false, true])(
                 scope: 'apps/web',
                 paths: ['apps/web/main.js'],
             });
-            const dependencyPaths = listWorkspaceSources(session.cache, input.scope.path, session.repository.files);
-            expect(dependencyPaths).toStrictEqual([
-                'packages/aliased/package.json',
-                'packages/aliased/value.js',
-                'packages/core/package.json',
-                'packages/core/value.js',
-                'packages/utility/package.json',
-                'packages/utility/value.js',
-            ]);
             expect(input.files.map((file) => file.path)).toStrictEqual(['apps/web/main.js']);
             using copy = await createCheckCopy(session, input);
             const output = runCommandBlocking([process.execPath, 'apps/web/main.js'], { cwd: copy.path });

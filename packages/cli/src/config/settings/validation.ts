@@ -10,8 +10,6 @@ export const EMPTY_REASON = 'an empty reason';
 
 export const REMOVAL_REASON_SUGGESTION = 'Run gspot remove <configuration> --reason "<why>".';
 
-export const SETTINGS_REFERENCE_URL = 'generativespotting.com/reference/gspot-toml/';
-
 export const RECORD_PATHS_MESSAGE = ' Its paths say where it applies.';
 
 export const SETTING_RULES: Readonly<Record<string, Readonly<Record<string, string>>>> = {
@@ -20,7 +18,6 @@ export const SETTING_RULES: Readonly<Record<string, Readonly<Record<string, stri
         'no-restricted-imports': 'tools.eslint.restricted_imports',
         'gspot/import-boundaries': 'javascript.import_boundaries',
         'barrel-files/avoid-barrel-files': 'structure.reexports',
-        'gspot/no-trivial-functions': 'limits.trivial_function_statements',
         'gspot/no-trivial-files': 'structure.reexports',
         'n/file-extension-in-import': 'tools.eslint.import_extension',
     },

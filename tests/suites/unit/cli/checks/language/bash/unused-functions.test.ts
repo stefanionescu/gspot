@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
@@ -7,6 +6,7 @@ import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     TRAP_SCRIPT_FORMS,
@@ -16,7 +16,7 @@ import {
 } from '#tests/config/checks/language/bash/bash.ts';
 
 test.each(TRAP_SCRIPT_FORMS)('a function called by trap %s is not reported', async (script) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'source.sh': TRAP_FUNCTION_SOURCE.replace('trap _cleanup EXIT', () => `trap ${script} EXIT`),
     });
@@ -32,7 +32,7 @@ test.each([...UNUSED_FUNCTION_CASES])(
 );
 
 test('Bats lifecycle hooks are called by the runner', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'test.bats':
             '#!/usr/bin/env bats\nsetup() { echo ready; }\nteardown() { echo done; }\nsetup_file() { echo ready; }\nteardown_file() { echo done; }\n',
@@ -41,7 +41,7 @@ test('Bats lifecycle hooks are called by the runner', async () => {
 });
 
 test('a function call stays in its own script until the caller sources a library', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'first.sh': '#!/usr/bin/env bash\n_show() { echo first; }\n_show\n',
         'second.sh': '#!/usr/bin/env bash\n_show() { echo second; }\n',
@@ -54,7 +54,7 @@ test('a function call stays in its own script until the caller sources a library
 
 test.each(LITERAL_FUNCTION_REFERENCES)('literal function argument %s counts as a reference', async (command) => {
     const name = command.endsWith('_download') ? '_download' : '_each';
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'run.sh': `#!/usr/bin/env bash\n${name}() { printf ready; }\n${command}\n`,
     });

@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { rm } from 'node:fs/promises';
 import { test, expect } from 'bun:test';
 import { runChecks } from '#cli/commands/check/run.ts';
@@ -7,10 +6,11 @@ import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { LOCKED_SCOPE_SETTINGS, REQUIREMENTS_FILE_FINDING } from '#tests/config/checks/language/python.ts';
 
 test('a requirements file is reported only in a scope with a lockfile and passes once removed', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python'], LOCKED_SCOPE_SETTINGS),
         'requirements.txt': 'root-dependency\n',
         'locked/uv.lock': 'version = 1\n',
@@ -41,7 +41,7 @@ test('a requirements file is reported only in a scope with a lockfile and passes
 });
 
 test('an unmanaged pip install reports its file and rule', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python']),
         'uv.lock': 'version = 1\n',
         'install.sh': 'pip install requests\n',

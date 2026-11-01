@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import { DOCS_PATHS } from '#cli/config/files/names.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
-import { SCHEMA_URL, HIDDEN_FACT_KEYS, SCHEMA_DESCRIPTION, JSON_SCHEMA_DIALECT } from '#cli/config/settings/schema.ts';
+import { HIDDEN_FACT_KEYS, SCHEMA_DESCRIPTION, JSON_SCHEMA_DIALECT } from '#cli/config/settings/schema.ts';
 
 /**
 Build the editor schema for this gspot version.
@@ -15,6 +16,7 @@ export function buildJsonSchema(): z.core.JSONSchema.JSONSchema {
             for (const key of HIDDEN_FACT_KEYS) Reflect.deleteProperty(jsonSchema, key);
             if (zodSchema instanceof z.ZodDefault && zodSchema.def.innerType instanceof z.ZodUnion) {
                 delete jsonSchema['minimum'];
+                delete jsonSchema['maximum'];
                 jsonSchema.default = zodSchema.def.defaultValue;
             }
             const definition = z.globalRegistry.get(zodSchema);
@@ -23,7 +25,7 @@ export function buildJsonSchema(): z.core.JSONSchema.JSONSchema {
     });
     return {
         $schema: JSON_SCHEMA_DIALECT,
-        $id: SCHEMA_URL,
+        $id: DOCS_PATHS.schema,
         title: SETTINGS_FILE,
         description: SCHEMA_DESCRIPTION,
         ...converted,

@@ -74,6 +74,7 @@ test('an ignored folder covers its subfolders, and a negated file in it is still
         'The legacy files retain malformed syntax.',
         '--paths',
         'legacy scripts',
+        '--paths',
         '!legacy scripts/required.sh',
     ]);
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
@@ -91,6 +92,7 @@ test('an ignored folder covers its subfolders, and a negated file in it is still
         'project/bash-syntax',
         '--paths',
         'legacy scripts',
+        '--paths',
         '!legacy scripts/required.sh',
     ]);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
@@ -123,7 +125,7 @@ test('ignore without a check keeps the paths out of every check and every config
 });
 
 test.each([...LITERAL_ROUTE_CASES])(
-    'ignore and unignore accept $folder after it disappears',
+    'ignore escapes literal $folder and unignore refuses its deleted path',
     async ({ folder, path, escaped }) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['typescript']),
@@ -143,9 +145,14 @@ test.each([...LITERAL_ROUTE_CASES])(
         expect(written['ignore']).toMatchObject([{ paths: [escaped] }]);
         expect(await runSandboxCheck(sandbox.path, 'gspot/unmatched-paths')).toStrictEqual([]);
         await rm(join(sandbox.path, folder), { recursive: true });
-        const restored = await runGspot(sandbox.path, ['unignore', 'structure/lone-files', '--paths', path]);
+        const command = ['unignore', 'structure/lone-files', '--paths', path];
+        const refused = await runGspot(sandbox.path, command);
+        expect(refused.code).toBe(2);
+        expect(refused.stderr).toContain('matches no repository file');
+        command.splice(2);
+        const restored = await runGspot(sandbox.path, command);
         expect(restored.code, restored.stdout + restored.stderr).toBe(0);
-        expect(restored.stdout).toStartWith(`Removed 1 ignore for structure/lone-files for ${path}.`);
+        expect(restored.stdout).toStartWith('Removed 1 ignore for structure/lone-files.');
         const contents: unknown = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'));
         expect(contents).not.toHaveProperty('ignore');
     },

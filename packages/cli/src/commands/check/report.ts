@@ -1,9 +1,13 @@
+import { styleText } from 'node:util';
+import { randomUUID } from 'node:crypto';
 import { CODE_MARK } from '#cli/config/main.ts';
 import { LINE_BREAK } from '#cli/config/text.ts';
 import { EVERY_CHECK } from '#cli/config/ignores.ts';
+import { printWarning } from '#cli/system/terminal.ts';
+import { formatExplainCommand } from '#cli/runs/results.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import { formatCount, quoteArgument } from '#cli/system/text.ts';
-import { getColors, printWarning } from '#cli/system/terminal.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { type Finding, type CheckResult } from '#cli/types/runs/check.ts';
 import { type FixReport, type RunReport, type CheckProgress } from '#cli/types/commands/check.ts';
 
@@ -42,18 +46,34 @@ function formatLocation(finding: Finding): string {
     return `${finding.file}${line}${column}  `;
 }
 
-function formatFinding(finding: Finding, next?: Finding): string[] {
+function formatFinding(finding: Finding, next: Finding | undefined, { verbose }: { verbose: boolean }): string[] {
     const rule =
-        finding.rule === undefined || finding.rule === finding.check ? '' : `${getColors().cyan(finding.rule)}  `;
+        finding.rule === undefined || finding.rule === finding.check
+            ? ''
+            : `${styleText('cyan', finding.rule, { stream: process.stdout })}  `;
     const lines = [
         `  ${formatLocation(finding)}${rule}${finding.message
             .split(LINE_BREAK)
             .map((line) => line.trim())
             .join(' ')}`,
     ];
-    if (finding.help !== undefined && finding.help !== '' && next?.help !== finding.help)
-        lines.push(`  ${getColors().dim('help:')} ${finding.help.replaceAll(CODE_MARK, '')}`);
+    if (verbose && finding.diff !== undefined)
+        lines.push(
+            ...finding.diff
+                .trimEnd()
+                .split(LINE_BREAK)
+                .map((line) => `    ${line}`),
+        );
+    const help = formatFindingHelp(finding);
+    if (next === undefined || formatFindingHelp(next) !== help)
+        lines.push(`  ${styleText('dim', 'help:', { stream: process.stdout })} ${help}`);
     return lines;
+}
+
+function formatFindingHelp(finding: Finding): string {
+    const command = finding.explain ?? formatExplainCommand(finding);
+    const help = finding.help?.replaceAll(CODE_MARK, '');
+    return help === undefined || help === '' ? command : `${help} ${command}`;
 }
 
 function formatCheckTail(result: CheckResult): string {
@@ -65,23 +85,28 @@ function formatCheckTail(result: CheckResult): string {
 
 function formatFindings(findings: readonly Finding[], { verbose }: { verbose: boolean }): string[] {
     const shown = verbose ? findings : findings.slice(0, FINDINGS_SHOWN);
-    const lines = shown.flatMap((finding, index) => formatFinding(finding, shown[index + 1]));
+    const lines = shown.flatMap((finding, index) => formatFinding(finding, shown[index + 1], { verbose }));
     const hidden = findings.length - shown.length;
     if (hidden > 0) {
         const message = `and ${String(hidden)} more (--verbose prints every finding)`;
-        lines.push(`  ${getColors().dim(message)}`);
+        lines.push(`  ${styleText('dim', message, { stream: process.stdout })}`);
     }
     return lines;
 }
 
 function formatCheck(result: CheckResult, { verbose }: { verbose: boolean }): string[] {
-    const status = getColors()[CHECK_STATUS_COLORS[result.status]](result.status);
+    const status = styleText(CHECK_STATUS_COLORS[result.status], result.status, { stream: process.stdout });
     const scope = result.scope === '' ? '' : `${result.scope}  `;
     const lines = [`${scope}${result.check}  ${status}  ${formatCheckTail(result)}`.trimEnd()];
-    if (verbose && result.command) lines.push(`  ${getColors().dim('$ ' + result.command.join(' '))}`);
+    if (verbose) {
+        if (result.command)
+            lines.push(`  ${styleText('dim', '$ ' + result.command.join(' '), { stream: process.stdout })}`);
+        if (result.stack !== undefined) lines.push(...result.stack.split('\n').map((line) => `  ${line}`));
+    }
     if (result.status === 'failed' || result.status === 'error')
         lines.push(...formatFindings(result.findings, { verbose }));
-    if (result.reproduce !== undefined) lines.push(`  ${getColors().dim(RUN_AGAIN)} ${result.reproduce}`);
+    if (result.reproduce !== undefined)
+        lines.push(`  ${styleText('dim', RUN_AGAIN, { stream: process.stdout })} ${result.reproduce}`);
     return lines;
 }
 
@@ -91,7 +116,7 @@ function formatIgnores(report: RunReport, { verbose }: { verbose: boolean }): st
     return report.ignores.map((ignore) => {
         const rule = ignore.rule === undefined ? '' : ` ${ignore.rule}`;
         const paths = ignore.paths === undefined ? '' : ` ${ignore.paths.join(' ')}`;
-        return `ignore     ${ignore.check ?? EVERY_CHECK}${rule}${paths}  ${getColors().dim(ignore.reason)}`;
+        return `ignore     ${ignore.check ?? EVERY_CHECK}${rule}${paths}  ${styleText('dim', ignore.reason, { stream: process.stdout })}`;
     });
 }
 
@@ -112,7 +137,7 @@ function formatSummary(report: RunReport, { selectedOnly }: { selectedOnly: bool
         );
     sentences.push(`Passed: ${formatCount(passed, 'check')}.`, `Skipped: ${formatCount(skipped, 'check')}.`);
     const text = sentences.join(' ');
-    return report.exitCode === 0 ? text : getColors().red(text);
+    return report.exitCode === 0 ? text : styleText('red', text, { stream: process.stdout });
 }
 
 function formatComparison(comparison: RunReport['comparison']): string {
@@ -146,7 +171,7 @@ function formatNotChecked(notChecked: RunReport['notChecked']): string[] {
 Print failed fixer warnings, with the full diagnostics when requested.
 
 @param fixes the fixer results.
-@param options the details verbosity.
+@param options the report verbosity.
 @param options.verbose whether to include the full fixer output.
 */
 export function printFailedFixers(fixes: FixReport, { verbose }: { verbose: boolean }): void {
@@ -200,6 +225,18 @@ export function formatRunReport(report: RunReport, options: { verbose: boolean; 
         `Time: ${(report.duration / MILLISECONDS_PER_SECOND).toFixed(1)}s. Exit code ${String(report.exitCode)}.`,
     );
     return `${formatComparison(report.comparison)}${lines.join('\n')}\n`;
+}
+
+/**
+Stop GitHub workflow command parsing until the check's output has finished.
+*/
+export function beginCheckReport(): (() => void) | undefined {
+    if (readEnvironmentVariable('GITHUB_ACTIONS') !== 'true') return undefined;
+    const token = randomUUID();
+    process.stdout.write(`::stop-commands::${token}\n`);
+    return () => {
+        process.stdout.write(`::${token}::\n`);
+    };
 }
 
 /**

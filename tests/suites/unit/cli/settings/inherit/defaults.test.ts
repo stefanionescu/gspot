@@ -1,15 +1,15 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/planning/session.ts';
 import { getSettingValue } from '#cli/settings/inherit.ts';
 import { POSTGRES_ORIGIN } from '#tests/config/settings/inherit.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test("a written false overrides a configuration's true default", async () => {
     const source = buildSandboxSettings(['postgres'], { rules: true });
-    await using sandbox = await testdir({ 'gspot.toml': source });
+    await using sandbox = await createGitSandbox({ 'gspot.toml': source });
     const initial = await openSession(sandbox.path);
     expect(
         getSettingValue(
@@ -32,7 +32,7 @@ test("a written false overrides a configuration's true default", async () => {
 });
 
 test('an inherited default names the configuration that declares it', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['supabase'], { rules: true }) });
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['supabase'], { rules: true }) });
     const { settings, scopes } = await openSession(sandbox.path);
     expect(getSettingValue(scopes[0]!.availableSettings, settings, 'tools.sqlfluff.dialect', '')).toMatchObject({
         value: 'postgres',
@@ -41,7 +41,7 @@ test('an inherited default names the configuration that declares it', async () =
 });
 
 test('a value comes from the configuration default, then the root table, then the scope table', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], {
             rules: true,
             tables: '[limits]\nfile_lines = 250\n[[scope]]\npath = "api"\nlimits.file_lines = 200\n',

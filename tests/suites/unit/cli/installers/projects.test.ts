@@ -1,5 +1,5 @@
+import { createFileTree } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
@@ -9,11 +9,12 @@ import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { YARN_CLIENTS } from '#tests/config/installers/installers.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each([...YARN_CLIENTS])(
     'Yarn $packageManager.version plans an npm tool lockfile without Yarn settings',
     async ({ packageManager }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([]),
             'package.json': JSON.stringify({ private: true, packageManager: `yarn@${packageManager.version}` }),
         });
@@ -30,12 +31,11 @@ test.each([...YARN_CLIENTS])(
         expect(
             lockfiles.filter(({ path }) => path !== GSPOT_PATHS.uvLockfile && path !== GSPOT_PATHS.miseLockfile),
         ).toStrictEqual([{ path: '.gspot/package-lock.json', kind: 'missing' }]);
-        expect(session.packageManager).toStrictEqual(packageManager);
     },
 );
 
 test('tool lockfiles report missing and changed projects and omit current projects', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python']),
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}',
     });

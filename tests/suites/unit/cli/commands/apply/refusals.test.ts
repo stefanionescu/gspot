@@ -62,14 +62,22 @@ test('a malformed reason reports a settings error and apply preserves the author
     expect(await isOnDisk(join(sandbox.path, GSPOT_FOLDER))).toBe(false);
 });
 
-test('apply --dry-run refuses a gspot.toml that links outside the repository and writes nothing', async () => {
+test('apply refuses a gspot.toml that links outside the repository and writes nothing', async () => {
     const outside = 'configurations = []\n';
     await using sandbox = await testdir({ 'project/.gspot/configurations/.keep': '', outside });
     const project = join(sandbox.path, 'project');
     runGitStep(project, ['init', '--quiet']);
     await symlink(join(sandbox.path, 'outside'), join(project, 'gspot.toml'));
-    const refused = await runGspot(project, ['apply', '--dry-run']);
+    const refused = await runGspot(project, ['apply']);
     expect(refused.code).toBe(2);
     expect(refused.stderr).toBe('gspot.toml is not a regular file. Use a regular file.\n');
     expect(await readFile(join(sandbox.path, 'outside'), 'utf8')).toBe(outside);
+});
+
+test('apply refuses the removed dry-run flag before writing files', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': 'configurations = []\n' });
+    const refused = await runGspot(sandbox.path, ['apply', '--dry-run']);
+    expect(refused.code).toBe(2);
+    expect(refused.stderr).toContain("Unknown option '--dry-run'");
+    expect(await isOnDisk(join(sandbox.path, GSPOT_FOLDER))).toBe(false);
 });

@@ -1,7 +1,6 @@
-import pc from 'picocolors';
 import { EXIT_ERROR } from '#cli/config/terminal.ts';
-import { stripVTControlCharacters } from 'node:util';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { styleText, stripVTControlCharacters } from 'node:util';
 
 import {
     SIGNAL_EXIT_CODES,
@@ -18,20 +17,12 @@ import type {
     CanceledCommandJson,
 } from '#cli/types/terminal.ts';
 
-let options: OutputState = { isJson: false, colored: false, notes: [] };
-
-/**
-Read the palette for the configured command output.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Output options stay private to this module.
-export function getColors(): ReturnType<typeof pc.createColors> {
-    return pc.createColors(options.colored);
-}
+let options: OutputState = { isJson: false, notes: [] };
 
 /**
 Set the output mode for the process.
 
-@param next the JSON and color choices.
+@param next the JSON output choice.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Output options stay private to this module.
 export function setOutputOptions(next: OutputOptions): void {
@@ -49,8 +40,35 @@ export function printError(failure: string | CommandFailureJson): void {
         process.stdout.write(`${JSON.stringify({ ...fields, ...failure }, null, RESULT_JSON_INDENT)}\n`);
         return;
     }
-    const text = stripControlCharacters(typeof failure === 'string' ? failure : failure.message);
+    const text = stripControlCharacters(
+        typeof failure === 'string'
+            ? failure
+            : [failure.message, failure.stack].filter((line) => line !== undefined).join('\n'),
+    );
     process.stderr.write(text.endsWith('\n') ? text : `${text}\n`);
+}
+
+/**
+Describe an unexpected failure without exposing its implementation details.
+
+@param subject the command or check that stopped.
+*/
+export function formatUnexpectedError(subject: string): string {
+    const location = subject === 'gspot' ? '' : ' in gspot';
+    const page = cliPackage.bugs.url;
+    return `${subject} stopped because of an internal error${location}. Report it at ${page}.`;
+}
+
+/**
+Print an unexpected command failure, retaining its stack only for verbose output.
+
+@param error the unexpected thrown value.
+@param verbose whether to include its message and stack.
+*/
+export function printUnexpectedError(error: unknown, verbose: boolean): void {
+    const stackText = error instanceof Error ? (error.stack ?? error.message) : String(error);
+    const message = formatUnexpectedError('gspot');
+    printError({ error: 'unexpected', message, ...(verbose && { stack: stackText }) });
 }
 
 /**
@@ -75,7 +93,7 @@ Keep warnings in the JSON result, or print them without terminal controls on std
 */
 export function printWarning(text: string): void {
     if (options.isJson) options.notes.push(text);
-    else printError(`${getColors().yellow('[warn]')} ${text}`);
+    else printError(`${styleText('yellow', '[warn]', { stream: process.stderr })} ${text}`);
 }
 
 /**

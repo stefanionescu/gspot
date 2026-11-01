@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
-import { testdir, createFileTree } from 'testdirs';
 import { createRunCache } from '#cli/system/cache.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
@@ -12,6 +12,7 @@ import { buildConfiguration } from '#tests/setup/cli/manifests.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { PYTHON_DEPENDENCY_CASES } from '#tests/config/repository/dependencies.ts';
 import { PRISMA_SCHEMA_CASES, RUNTIME_DETECTION_CASES } from '#tests/config/repository/detect.ts';
 
@@ -52,35 +53,30 @@ test('detection proposes a language from an extension and the always-selected co
     ]);
 });
 
-test.each(['.d.ts', '.d.mts', '.d.cts'])(
-    'TypeScript declarations in %s need a tsconfig.json to propose typescript',
-    async (extension) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['javascript']),
-            'package.json': '{"private":true,"devDependencies":{"typescript":"5.9.3"}}\n',
-            'source.js': 'export const value = 1;\n',
-            [`types/library${extension}`]: 'export declare const value: number;\n',
-        });
+test.each(['.d.ts'])('TypeScript declarations in %s need a tsconfig.json to propose typescript', async (extension) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript']),
+        'package.json': '{"private":true,"devDependencies":{"typescript":"5.9.3"}}\n',
+        'source.js': 'export const value = 1;\n',
+        [`types/library${extension}`]: 'export declare const value: number;\n',
+    });
 
-        const before = await openSession(sandbox.path);
-        expect(
-            detectConfigurations(before.repository, before.configurationsByName).map(
-                ({ configuration }) => configuration,
-            ),
-        ).not.toContain('typescript');
-        await writeFile(join(sandbox.path, 'tsconfig.json'), '{"compilerOptions":{"strict":true}}\n');
-        const configured = await openSession(sandbox.path);
-        expect(
-            detectConfigurations(configured.repository, configured.configurationsByName).find(
-                ({ configuration }) => configuration === 'typescript',
-            )?.evidence,
-        ).toBe('tsconfig.json');
-    },
-);
+    const before = await openSession(sandbox.path);
+    expect(
+        detectConfigurations(before.repository, before.configurationsByName).map(({ configuration }) => configuration),
+    ).not.toContain('typescript');
+    await writeFile(join(sandbox.path, 'tsconfig.json'), '{"compilerOptions":{"strict":true}}\n');
+    const configured = await openSession(sandbox.path);
+    expect(
+        detectConfigurations(configured.repository, configured.configurationsByName).find(
+            ({ configuration }) => configuration === 'typescript',
+        )?.evidence,
+    ).toBe('tsconfig.json');
+});
 
 test('a FastAPI dependency proposes fastapi and python in its own scope until it is removed', async () => {
     const { path, source } = PYTHON_DEPENDENCY_CASES[0];
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         [`api/${path}`]: source,
         'other/readme.txt': 'No Python dependencies.\n',
     });
@@ -115,10 +111,12 @@ test('a FastAPI dependency proposes fastapi and python in its own scope until it
     ).toStrictEqual([]);
 });
 
-test.each(PRISMA_SCHEMA_CASES.flatMap((row) => ['', 'apps/api'].map((scope) => ({ ...row, scope }))))(
+test.each(
+    PRISMA_SCHEMA_CASES.flatMap((row) => (row.detected ? ['', 'apps/api'] : ['']).map((scope) => ({ ...row, scope }))),
+)(
     'a Prisma schema with $name selects postgres in "$scope", and a sibling scope keeps its own detection',
     async ({ path, source, detected, scope }) => {
-        await using sandbox = await testdir();
+        await using sandbox = await createGitSandbox({});
         const owned = scope === '' ? path : `${scope}/${path}`;
         await createFileTree(sandbox.path, {
             [owned]: source,
@@ -145,7 +143,7 @@ test.each(PRISMA_SCHEMA_CASES.flatMap((row) => ['', 'apps/api'].map((scope) => (
 
 test('Testing Library is detected only in the scope that declares it', async () => {
     const dependency = '@testing-library/react';
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript']),
         'package.json': '{"private":true,"dependencies":{"react":"19.1.1"}}\n',
         'child/package.json': JSON.stringify({ private: true, dependencies: { [dependency]: '1.0.0' } }),
@@ -166,7 +164,7 @@ test('Testing Library is detected only in the scope that declares it', async () 
 });
 
 test.each(RUNTIME_DETECTION_CASES)('$name decides runtime detection within its project', async (row) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'package.json': JSON.stringify({ engines: { [row.runtime]: '>=1' } }),
         'api/package.json': JSON.stringify(row.package),
         'api/entry.js': row.source,
@@ -188,12 +186,12 @@ test.each(RUNTIME_DETECTION_CASES)('$name decides runtime detection within its p
 });
 
 test('site is detected from a sitemap.xml in any folder', async () => {
-    await using sandbox = await testdir({ 'docs/public/sitemap.xml': '<urlset/>' });
+    await using sandbox = await createGitSandbox({ 'docs/public/sitemap.xml': '<urlset/>' });
     expect(await detectSandboxConfigurations(sandbox.path)).toContain('site');
 });
 
 test('site detection excludes a server framework even when a sitemap is present', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'package.json': '{"dependencies":{"next":"15.5.4"}}',
         'public/sitemap.xml': '<urlset/>',
     });

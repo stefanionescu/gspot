@@ -9,9 +9,9 @@ import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
+import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import type { PlannedCheck, PlannedScope } from '#cli/types/planning.ts';
 import type { Check, ScopeCheck, Configuration } from '#cli/types/manifests.ts';
-import { listCheckFiles, listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { isInScope, joinScope, selectScopePath, listNestedScopes } from '#cli/repository/scopes.ts';
 import { ROOT_RUNS, ENCODING_CHECK, LARGE_FILES_CHECK, IGNORED_PATHS_MESSAGE } from '#cli/config/planning.ts';
 
@@ -203,4 +203,24 @@ export function selectCheckFiles(
     const selected = stripIgnoredFiles(files, check, scope);
     if (check.id === ENCODING_CHECK) triggerPaths.push(...planned.session.repository.unreadablePaths);
     return { ...selected, triggerPaths };
+}
+
+/**
+List the files that a check of the selected configurations covers.
+
+@param planned the scope and its candidate files.
+@param checkId the declaration whose coverage to apply.
+*/
+export function listCheckFiles(planned: Pick<PlannedCheck, 'scope' | 'files'>, checkId: string): TrackedFile[] {
+    return planned.scope.configurations.flatMap((configuration) =>
+        configuration.checks
+            .filter((check) => check.id === checkId)
+            .flatMap((check) =>
+                listCoveredFiles(check.files ?? configuration.files, planned.files, {
+                    configurations: planned.scope.configurations,
+                    scopePath: planned.scope.path,
+                    settings: planned.scope.settings,
+                }),
+            ),
+    );
 }

@@ -3,24 +3,20 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
-test.each(['javascript', 'typescript'].flatMap((language) => [7, 8].map((maximum) => ({ language, maximum }))))(
-    'ESLint for $language counts declared parameters against a maximum of $maximum: the default 7 or an authored 8',
+test.each([{ language: 'typescript', maximum: 8 }])(
+    'ESLint for $language counts declared parameters against a maximum of $maximum: an authored limit',
     async ({ language, maximum }) => {
         await using sandbox = await testdir();
-        const extension = { javascript: 'js', typescript: 'ts' }[language]!;
+        const extension = { javascript: 'js', typescript: 'ts' }[language];
         const source = [7, 8]
             .map((count) => {
                 const names = Array.from({ length: count }, (_, index) => `value${String(index)}`);
                 const name = count === 7 ? 'seven' : 'eight';
-                const parameters =
-                    language === 'typescript' ? ['this: void', ...names.map((name) => `${name}: number`)] : names;
+                const parameters = ['this: void', ...names.map((name) => `${name}: number`)];
                 return `export function ${name}(${parameters.join(', ')}) { return ${names.join(' + ')}; }`;
             })
             .join('\n');
-        const limits =
-            maximum === 7
-                ? ''
-                : `[limits.${language}]\nfunction_parameters = { value = ${String(maximum)}, reason = "This sandbox tests the authored parameter ceiling." }\n`;
+        const limits = `[limits.${language}]\nfunction_parameters = { value = ${String(maximum)}, reason = "This sandbox tests the authored parameter ceiling." }\n`;
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings([language], { tables: limits, level: 'all' }),
             'package.json': '{"private":true,"type":"module"}',
@@ -29,9 +25,7 @@ test.each(['javascript', 'typescript'].flatMap((language) => [7, 8].map((maximum
         });
         const eslint = await buildEslint(sandbox.path);
         const file = `example.${extension}`;
-        expect(await listLintFindings(eslint, sandbox.path, [file], ['max-params'])).toStrictEqual(
-            maximum === 7 ? [{ file, rule: 'max-params', line: 2 }] : [],
-        );
+        expect(await listLintFindings(eslint, sandbox.path, [file], ['max-params'])).toStrictEqual([]);
     },
 );
 

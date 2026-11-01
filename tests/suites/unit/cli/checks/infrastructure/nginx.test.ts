@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { getTool } from '#cli/manifests/tools.ts';
@@ -11,6 +10,7 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 
 import {
@@ -22,7 +22,10 @@ import {
 test.each([...NGINX_MOUNT_CASES])(
     'nginx/syntax mounts the nginx.conf and its certificates and maps upstream hosts: $name',
     async ({ source, hosts, certificates }) => {
-        await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['nginx']), 'nginx.conf': source });
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings(['nginx']),
+            'nginx.conf': source,
+        });
         const session = await openSession(sandbox.path);
         using _pins = fakeToolExecutables([
             getTool(session.configurationsByName.values(), 'openssl'),
@@ -63,7 +66,7 @@ test.each([...NGINX_MOUNT_CASES])(
 );
 
 test('a failed certificate step reports its error text, removes the scratch files, and does not start Docker', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['nginx']),
         'nginx.conf': NGINX_UPSTREAM_CONF,
     });
@@ -94,7 +97,7 @@ test('a failed certificate step reports its error text, removes the scratch file
 });
 
 test.each(NGINX_FAILURE_CASES)('nginx/syntax reports $name', async ({ stderr, status, note, findings }) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['nginx']),
         'nginx.conf': 'events {}\nhttp { include /etc/nginx/conf.d/site.conf; }\n',
         'conf.d/site.conf': 'server {}\n',

@@ -1,8 +1,3 @@
-export const ESLINT_BUILTIN_RULES = 'eslint/use-at-your-own-risk';
-
-export const INSTALL_FOR_RULES_MESSAGE =
-    'gspot explain reads lint rules from the tools that gspot install puts in .gspot/node_modules. Run gspot install.';
-
 export const RUN_IN_COPY_MESSAGE = 'Runs on a copy of the selected files in a temporary folder.';
 
 export const REPOSITORY_COMMAND = 'repository command';
@@ -32,3 +27,10 @@ export const MARK_GENERATED_MESSAGE =
 
 export const REASON_HELP =
     'If you set this value, give a reason: write it as { value = ..., reason = "..." }, or run gspot set with --reason.';
+
+export const LINT_RULE_LABELS = [
+    ['description', 'What it looks for'],
+    ['why', 'Why'],
+    ['fix', 'What to do'],
+    ['example', 'Example'],
+] as const;

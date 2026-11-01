@@ -7,6 +7,7 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { buildInitSettings } from '#cli/commands/init/settings.ts';
 import { setKey, buildEditedSettings } from '#cli/settings/edit.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 import { ARRAY_COMMENT_CASES } from '#tests/config/settings/text/array-comments.ts';
 import { FIELD_COMMENT_CASES } from '#tests/config/settings/text/field-comments.ts';
@@ -29,7 +30,7 @@ test('a template keeps authored spelling, record order, comments, and inline tab
 });
 
 test('setting level keeps the opening init comment first', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const cache = createRunCache(sandbox.path);
     const configurationsByName = readConfigurations();
     const repository = await readRepository(cache, await listRepositoryFiles(cache), {

@@ -5,6 +5,7 @@ import type { Files } from '#cli/types/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
+import { LIMIT_SETTING_RULES } from '#cli/manifests/limits.ts';
 import { FIRST_READ } from '#cli/config/generation/generation.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { formatCodeList, formatSimilarNames } from '#cli/system/text.ts';
@@ -12,7 +13,6 @@ import type { AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import { getSettingValue, listSettingsTables } from '#cli/settings/inherit.ts';
 import type { Settings, SettingsError } from '#cli/types/settings/settings.ts';
 import { SETTING_RULES, SWIFT_TARGET_MESSAGE, COVERAGE_LINES_SETTING } from '#cli/config/settings/validation.ts';
-import { ESLINT_LIMIT_RULES } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
 
 function readPathStats(files: Files, path: string): ReturnType<Files['readStats']> | Error {
     try {
@@ -142,13 +142,12 @@ Refuse rule options whose values come from another gspot setting.
 @param settings the root settings and every scope.
 */
 export function validateSettingRules(settings: Settings): SettingsError[] {
-    const limitRules = Object.fromEntries(
-        Object.entries(ESLINT_LIMIT_RULES).map(([rule, setting]) => [rule, `limits.${setting.limit}`]),
-    );
+    const tools = new Set([...Object.keys(SETTING_RULES), ...Object.keys(LIMIT_SETTING_RULES)]);
     const owned = new Map(
-        Object.entries({ ...SETTING_RULES, eslint: { ...limitRules, ...SETTING_RULES['eslint'] } }).map(
-            ([tool, rules]) => [tool, new Map(Object.entries(rules))],
-        ),
+        [...tools].map((tool) => [
+            tool,
+            new Map(Object.entries({ ...LIMIT_SETTING_RULES[tool], ...SETTING_RULES[tool] })),
+        ]),
     );
     return listSettingsTables(settings).flatMap(({ table, path }) => {
         const eslint = table.tools?.['eslint'];

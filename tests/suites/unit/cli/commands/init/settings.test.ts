@@ -12,7 +12,7 @@ import { IMPORT_STYLE_CASES, WORKSPACE_SITE_FILES } from '#tests/config/commands
 
 test('the gspot.toml text keeps root and scope configurations', async () => {
     await using sandbox = await createGitSandbox(WORKSPACE_SITE_FILES);
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--configurations', 'typescript', '--json']);
+    const result = await runGspot(sandbox.path, ['init', '--configurations', 'typescript', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { settings: text } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settings'>>;
     const settings = readSettings(text, sandbox.path);
@@ -25,7 +25,7 @@ test('the gspot.toml text keeps root and scope configurations', async () => {
 test('init finds the Xcode project of the scope and picks the destination from its SDKROOT', async () => {
     const source = BUILD_SETTINGS_PBXPROJ.replace('SDKROOT=macosx', 'SDKROOT=iphoneos');
     await using sandbox = await createGitSandbox({ 'App.xcodeproj/project.pbxproj': source });
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--configurations', 'swift', 'xcode', '--json']);
+    const result = await runGspot(sandbox.path, ['init', '--configurations', 'swift,xcode', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settings'>>;
     expect(parse(output.settings)).toMatchObject({
@@ -36,7 +36,7 @@ test('init finds the Xcode project of the scope and picks the destination from i
 
 test.each([...IMPORT_STYLE_CASES])('init writes the import style of $name', async ({ files, expected }) => {
     await using sandbox = await createGitSandbox(files);
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--json']);
+    const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settings'>>;
     expect(findValueAt(parse(output.settings), ['tools', 'eslint', 'import_extension'])).toBe(expected);

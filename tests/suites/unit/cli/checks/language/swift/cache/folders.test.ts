@@ -6,11 +6,12 @@ import { SWIFT_PACKAGE } from '#tests/config/swift.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
 import { symlink, readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { prepareBuild, planSwiftBuild } from '#cli/checks/language/swift/cache.ts';
 import { planSandboxCheck, redirectCacheFolder } from '#tests/setup/cli/checks.ts';
 
 test('build cache rejects external output links', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     await using outside = await testdir();
     await using _cache = await redirectCacheFolder();
     await createFileTree(sandbox.path, {
@@ -35,8 +36,8 @@ test('build cache rejects external output links', async () => {
 });
 
 test('the Swift build folder lives in the gspot cache and differs between repositories', async () => {
-    await using first = await testdir();
-    await using second = await testdir();
+    await using first = await createGitSandbox({});
+    await using second = await createGitSandbox({});
     await using _cache = await redirectCacheFolder();
     for (const root of [first.path, second.path])
         await createFileTree(root, { 'gspot.toml': buildSandboxSettings(['swift']), 'Package.swift': SWIFT_PACKAGE });
@@ -51,9 +52,9 @@ test('the Swift build folder lives in the gspot cache and differs between reposi
 
 test('two copies of one repository that share a tools root share one build folder', async () => {
     const files = { 'gspot.toml': buildSandboxSettings(['swift']), 'Package.swift': SWIFT_PACKAGE };
-    await using installed = await testdir(files);
-    await using first = await testdir(files);
-    await using second = await testdir(files);
+    await using installed = await createGitSandbox(files);
+    await using first = await createGitSandbox(files);
+    await using second = await createGitSandbox(files);
     await using _cache = await redirectCacheFolder();
     const session = await openSession(installed.path);
     const installedInput = planSandboxCheck(session, 'swift/build');

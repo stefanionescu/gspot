@@ -1,5 +1,4 @@
 import { isInScope } from '#cli/repository/scopes.ts';
-import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import { listSourceConfigurations } from '#cli/manifests/select.ts';
@@ -104,23 +103,4 @@ export function listSourcePaths(files: TrackedFile[], endings: readonly string[]
                 ),
         )
         .map((file) => file.path);
-}
-/**
-List the files that a check of the selected configurations covers.
-
-@param planned the scope and its candidate files.
-@param checkId the declaration whose coverage to apply.
-*/
-export function listCheckFiles(planned: Pick<PlannedCheck, 'scope' | 'files'>, checkId: string): TrackedFile[] {
-    return planned.scope.configurations.flatMap((configuration) =>
-        configuration.checks
-            .filter((check) => check.id === checkId)
-            .flatMap((check) =>
-                listCoveredFiles(check.files ?? configuration.files, planned.files, {
-                    configurations: planned.scope.configurations,
-                    scopePath: planned.scope.path,
-                    settings: planned.scope.settings,
-                }),
-            ),
-    );
 }

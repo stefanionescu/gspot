@@ -17,27 +17,6 @@ Run the tests.
 `,
 } as const;
 
-export const SHELLCHECK_SYNTAX_FINDINGS = [
-    {
-        check: 'bash/shellcheck',
-        file: 'broken.sh',
-        line: 1,
-        column: 1,
-        rule: 'SC1073',
-        message: "Couldn't parse this if expression. Fix to allow more checks.",
-        fixable: false,
-    },
-    {
-        check: 'bash/shellcheck',
-        file: 'broken.sh',
-        line: 1,
-        column: 8,
-        rule: 'SC1072',
-        message: 'Unexpected keyword/token. Fix any mentioned problems and try again.',
-        fixable: false,
-    },
-] as const;
-
 export const PLUGIN_TYPES_SOURCE = `
 import plugin from '@gspothq/eslint-plugin';
 import type { TSESLint } from '@typescript-eslint/utils';

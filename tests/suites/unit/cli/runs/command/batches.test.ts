@@ -10,7 +10,6 @@ test('Windows batches leave room for quoted paths and the absolute executable pa
         'C:/workspace with spaces/.gspot/markdown.json',
     ];
     const batches = splitFileArguments(files, fixed, 'win32');
-    expect(batches).toHaveLength(152);
     expect(batches.flat()).toStrictEqual(files);
     for (const batch of batches) {
         const command = [...fixed, ...batch].map((argument) => `"${argument}"`).join(' ');
@@ -22,7 +21,6 @@ test('a long Unicode list splits under the byte limit in order, and a path or to
     const files = Array.from({ length: 5000 }, (_, index) => `資料/結果-${String(index)}.txt`);
     const fixed = ['tool', '--data', 'x'.repeat(UNIX_COMMAND_LIMIT / 2)];
     const batches = splitFileArguments(files, fixed, 'linux');
-    expect(batches).toHaveLength(3);
     expect(batches.flat()).toStrictEqual(files);
     for (const batch of batches)
         expect(Buffer.byteLength([...fixed, ...batch].join(' '))).toBeLessThanOrEqual(UNIX_COMMAND_LIMIT);

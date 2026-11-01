@@ -1,14 +1,14 @@
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { getTool } from '#cli/manifests/tools.ts';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { planChecks } from '#cli/planning/checks.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
+import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
 import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { runSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
 
@@ -32,7 +32,7 @@ async function scanImages(root: string, stdout: string, resources: DisposableSta
 test.each([...COMPOSE_PAIRING_CASES])(
     'Compose $override runs after $base in one docker compose call',
     async ({ base, override }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['docker']),
             [base]: NGINX_COMPOSE,
             [override]: 'services: {app: {environment: {FEATURE: enabled}}}\n',
@@ -45,7 +45,12 @@ test.each([...COMPOSE_PAIRING_CASES])(
         resources.use(fakes);
         const toolRun = resources.use(fakeCommands().mockResolvedValue(buildProcessResult()));
         const planned = planChecks(session, buildRunOptions({ stage: 'push', only: ['docker/compose'] }))[0]!;
-        const result = await runCheckCode(buildCheckSession(session), planned, CHECK_CODE['docker/compose'], {});
+        const result = await runCheckCode(
+            buildCheckSession(session, CHECK_GENERATION),
+            planned,
+            CHECK_CODE['docker/compose'],
+            {},
+        );
         expect(result.findings).toStrictEqual([]);
         expect(result.status).toBe('passed');
         expect(
@@ -57,7 +62,7 @@ test.each([...COMPOSE_PAIRING_CASES])(
 test.each([...DOCKERIGNORE_ALLOWLISTS])(
     'docker/dockerignore respects ordered allowlist $text',
     async ({ text, missing }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['docker']),
             Dockerfile: 'FROM scratch\n',
             '.dockerignore': text,
@@ -81,7 +86,10 @@ test.each([...DOCKERIGNORE_ALLOWLISTS])(
 test.each([...DOCKERIGNORE_CASES])(
     "docker/dockerignore requires an ignore file with the patterns of each scope's configurations: $name",
     async ({ configurations, options, files, findings: expectedFindings }) => {
-        await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(configurations, options), ...files });
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings(configurations, options),
+            ...files,
+        });
 
         const findings = await runSandboxCheck(sandbox.path, 'docker/dockerignore');
         expect(findings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([
@@ -91,7 +99,7 @@ test.each([...DOCKERIGNORE_CASES])(
 );
 
 test.each([...COMPOSE_SOURCES])('Trivy scans only service images in $name', async ({ source }) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['docker']),
         'compose.yaml': source,
     });
@@ -110,7 +118,7 @@ test.each([...COMPOSE_SOURCES])('Trivy scans only service images in $name', asyn
 
 test(`docker/trivy-image fails with Trivy's error text when Trivy exits 1`, async () => {
     const { code, stdout, stderr, message } = TRIVY_REGISTRY_FAILURE;
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['docker']),
         'compose.yaml': NGINX_COMPOSE,
     });
@@ -124,7 +132,7 @@ test(`docker/trivy-image fails with Trivy's error text when Trivy exits 1`, asyn
 test.each([...INVALID_COMPOSE_SOURCES])(
     'docker/trivy-image reports syntax for $name in compose.yaml before it runs Trivy',
     async ({ source }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['docker']),
             'compose.yaml': source,
         });
@@ -137,7 +145,7 @@ test.each([...INVALID_COMPOSE_SOURCES])(
 );
 
 test('Trivy scans a repeated image once and reports each advisory and secret in every Compose file that names it', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['docker']),
         'compose.yaml': NGINX_COMPOSE,
         'docker-compose.prod.yml': NGINX_COMPOSE,

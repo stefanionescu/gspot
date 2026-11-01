@@ -7,10 +7,10 @@ import type { Configuration } from '#cli/types/manifests.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import { join, dirname, basename, relative } from 'node:path/posix';
 import { refuseIdleRuleOptions } from '#cli/generation/rule-options.ts';
+import { convertToGlobs, listCheckIgnoreSections } from '#cli/generation/ignores.ts';
 import type { BlockWriter, PlannedEslintBlock } from '#cli/types/generation/eslint.ts';
 import type { ConfigOutput, GeneratedFile, PlannedConfig } from '#cli/types/generation/files.ts';
 import { buildRuntimes } from '#cli/generation/configurations/language/javascript/eslint/runtimes.ts';
-import { convertToGlobs, buildIgnoreSections, listCheckIgnoreSections } from '#cli/generation/ignores.ts';
 import { buildBlockCalls } from '#cli/generation/configurations/language/javascript/eslint/block-calls.ts';
 import { buildPlannedEslintFile } from '#cli/generation/configurations/language/javascript/eslint/plan.ts';
 import { splitSettingsBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
@@ -151,7 +151,7 @@ export function buildEslintFile(planned: PlannedConfig): ConfigOutput {
     blockWriter.runtimes = runtimes;
     const boundaryBlocks = buildBoundaryBlocks(eslintFile);
     const ignoredGlobs = convertToGlobs([
-        ...buildIgnoreSections(planned.session),
+        ...planned.ignoreSections,
         ...listCheckIgnoreSections(planned.scope.settings, ESLINT_CHECK),
     ]);
     const { configurationBlocks, configurationImports } = listConfigurationBlocks(eslintFile);

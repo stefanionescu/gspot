@@ -6,6 +6,7 @@ export const SIDEBAR = [
             { slug: 'start/overview' },
             { slug: 'start/quickstart' },
             { slug: 'start/install' },
+            { slug: 'start/footprint' },
             { slug: 'start/migrate' },
             { slug: 'start/upgrade' },
             { slug: 'start/concepts' },

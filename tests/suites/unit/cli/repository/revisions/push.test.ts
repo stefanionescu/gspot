@@ -6,7 +6,6 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { PUSH_CONTENT } from '#tests/config/setup/sandboxes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { MERGE_BASE_FAILURE } from '#tests/config/repository/revisions.ts';
 import { readPushedCommits, readPushedRevisions } from '#cli/repository/revisions/push.ts';
 
 import {
@@ -28,7 +27,7 @@ test('push comparison tells a missing upstream from an upstream whose commit is 
     expect(await readPushedCommits(sandbox.path)).toStrictEqual([]);
     runGitStep(sandbox.path, ['update-ref', '-d', 'refs/heads/upstream']);
     const error = await captureRejection(readPushedCommits(sandbox.path));
-    expect(error.message).toStartWith(MERGE_BASE_FAILURE);
+    expect(error.message).toContain('refs/heads/upstream is not a branch, tag, or commit in this repository.');
 });
 
 test('push comparison reports an unborn or broken HEAD instead of inventing a base', async () => {
@@ -108,4 +107,25 @@ test('a gspot.toml below the Git root keeps paths relative to its folder for upd
     const created = await readPushedRevisions(project, createdRef, 'example');
     expect(created.revisions[0]?.paths).toStrictEqual(['source.txt']);
     expect(await readFile(join(project, 'source.txt'), 'utf8')).toBe('working');
+});
+
+test('an unfetched remote tip selects the same outgoing commits and files as a new ref', async () => {
+    await using sandbox = await testdir();
+    const { base, reviewed, broken, zero } = await preparePushRepository(sandbox.path);
+    runGitStep(sandbox.path, ['remote', 'add', 'origin', 'unused']);
+    runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]);
+    runGitStep(sandbox.path, ['update-ref', 'refs/remotes/other/main', reviewed]);
+    const unfetched = await readPushedRevisions(
+        sandbox.path,
+        `refs/heads/reviewed ${reviewed} refs/heads/main ${'f'.repeat(base.length)}\n`,
+        'origin',
+    );
+    const created = await readPushedRevisions(
+        sandbox.path,
+        `refs/heads/reviewed ${reviewed} refs/heads/main ${zero}\n`,
+        'origin',
+    );
+    expect(unfetched).toEqual(created);
+    expect(unfetched.revisions[0]).toMatchObject({ commits: [reviewed], paths: ['changed.sh'] });
+    expect(runGitStep(sandbox.path, ['rev-parse', 'HEAD'])).toBe(broken);
 });

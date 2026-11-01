@@ -1,9 +1,11 @@
+import { CODE_MARK } from '#cli/config/main.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { checkStageSchema } from '#cli/schemas/manifests/fields.ts';
 import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
+import { formatDetectionConditions } from '#cli/manifests/reference.ts';
 import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
 import type { Explanation, ConfigurationExplanation } from '#cli/types/commands/explain.ts';
 
@@ -60,22 +62,13 @@ export function explainConfiguration(session: Session | undefined, name: string)
         removed: listConfigurationRemovals(session, name),
     };
     const { detect, files } = configuration;
+    const detection = formatDetectionConditions(detect);
     const lists = [
         {
             label: DETECTED_BY,
-            values: [
-                ...detect.extensions,
-                ...detect.filenames,
-                ...detect.dependencies.map((name) => `${name} in dependencies`),
-                ...detect.paths,
-                ...detect.project_files.map((path) => `project file ${path}`),
-                ...detect.shebangs.map((name) => `shebang ${name}`),
-                ...detect.runtimes.map((name) => `runtime ${name}`),
-                ...detect.tags.map((tag) => `tag ${tag}`),
-                ...Object.entries(detect.content).map(([path, pattern]) => `${path} matching ${pattern}`),
-                ...detect.absent_dependencies.map((name) => `${name} absent from dependencies`),
-            ],
+            values: detection.conditions.map((condition) => condition.replaceAll(CODE_MARK, '')),
         },
+        { label: 'Exclusions', values: detection.exclusions.map((condition) => condition.replaceAll(CODE_MARK, '')) },
         { label: 'Files', values: [...files.extensions, ...files.filenames, ...files.paths, ...files.tags] },
         { label: 'Files', values: files.languages ? [LANGUAGE_FILES_MESSAGE] : [] },
         { label: 'Files', values: files.prettier_plugins ? [PRETTIER_FILES_MESSAGE] : [] },

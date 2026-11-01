@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/commands/check/run.ts';
@@ -9,9 +8,10 @@ import { NODE_SCRIPT } from '#tests/config/typescript.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { SESSION_FILES } from '#tests/config/planning/planning.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('a copied session generates settings from its replacement inventory and run cache', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         ...SESSION_FILES,
         'gspot.toml': buildSandboxSettings(['javascript', 'naming'], { rules: true }),
     });
@@ -26,7 +26,7 @@ test('a copied session generates settings from its replacement inventory and run
 });
 
 test('a run uses the cancel signal supplied when its session opens', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         ...SESSION_FILES,
         'gspot.toml': buildSandboxSettings(['javascript', 'naming'], { rules: true }),
     });
@@ -34,5 +34,7 @@ test('a run uses the cancel signal supplied when its session opens', async () =>
     using _resources = session.resources;
     const result = await runChecks(session, buildRunOptions({ only: ['naming/identifiers'] }));
     expect(result.report.exitCode).toBe(2);
-    expect(result.report.checks).toStrictEqual([]);
+    expect(
+        result.report.checks.map(({ check, status, note, findings }) => ({ check, status, note, findings })),
+    ).toStrictEqual([{ check: 'naming/identifiers', status: 'error', note: 'The check was canceled.', findings: [] }]);
 });

@@ -1,7 +1,7 @@
 import { join } from 'node:path';
+import { createFileTree } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
 import { getTool } from '#cli/manifests/tools.ts';
-import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -11,10 +11,11 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { DEPTRY_SCOPE_PATHS } from '#tests/config/checks/language/python.ts';
 
 test('deptry skips a scope without pyproject.toml', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python']),
         'main.py': 'value = 1\n',
     });
@@ -27,7 +28,7 @@ test('deptry skips a scope without pyproject.toml', async () => {
 });
 
 test('deptry excludes nested scopes and keeps your own exclude patterns', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const scopes = Object.keys(DEPTRY_SCOPE_PATHS) as (keyof typeof DEPTRY_SCOPE_PATHS)[];
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['python'], {
@@ -75,7 +76,7 @@ async function runFakeDeptry(root: string) {
 }
 
 test('deptry counts python.externals as first party beside the known_first_party of the project', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python'], {
             tables: '[python]\nexternals = { value = ["folder_paths", "comfy"], reason = "The host application provides these modules at runtime." }\n',
         }),

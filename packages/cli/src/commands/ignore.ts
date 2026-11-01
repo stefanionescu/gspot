@@ -1,47 +1,40 @@
-import { join } from 'node:path';
-import { statSync } from 'node:fs';
-import { escapeGlob } from '#cli/system/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { mergeIgnore } from '#cli/settings/text.ts';
+import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { EVERY_CHECK } from '#cli/config/ignores.ts';
+import type { Session } from '#cli/types/session.ts';
+import { readCheckRuleDocs } from '#cli/checks/rules.ts';
 import { type Command } from '@commander-js/extra-typings';
-import { assertCheckExists } from '#cli/manifests/read.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { buildArgumentPaths } from '#cli/settings/paths.ts';
+import { hasRuleOutput } from '#cli/runs/output/formats.ts';
 import { writeSettingsEdit } from '#cli/generation/write.ts';
 import { ignoreSchema } from '#cli/schemas/settings/file.ts';
-import { readSettingsEditContext } from '#cli/planning/edits.ts';
 import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
-import type { IgnoreOptions } from '#cli/types/commands/commands.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-
-import {
-    RULE_OPTION,
-    PATHS_OPTION,
-    GLOB_BRACKETS,
-    REASON_OPTION,
-    IGNORE_CHECK_MESSAGE,
-} from '#cli/config/commands/commands.ts';
-
-function escapeLiteralPaths(root: string, paths: string[] | undefined): string[] | undefined {
-    return paths?.map((path) => {
-        const segments = path.split('/');
-        for (let index = segments.length; index > 0; index -= 1) {
-            const prefix = segments.slice(0, index).join('/');
-            if (!GLOB_BRACKETS.test(prefix)) return path;
-            if (statSync(join(root, prefix), { throwIfNoEntry: false }) !== undefined)
-                return [escapeGlob(prefix), ...segments.slice(index)].join('/');
-        }
-        return path;
-    });
-}
+import { buildIgnorePaths, readSettingsEditContext } from '#cli/planning/edits.ts';
+import { type IgnoreOptions, type CommandLocation } from '#cli/types/commands/commands.ts';
+import { listChecksById, assertCheckExists, readConfigurations } from '#cli/manifests/read.ts';
+import { RULE_OPTION, PATHS_OPTION, REASON_OPTION, IGNORE_CHECK_MESSAGE } from '#cli/config/commands/commands.ts';
 
 function formatIgnoreSummary(options: IgnoreOptions, paths: string[] | undefined): string {
     const check = options.check ?? EVERY_CHECK;
     const target = options.rule === undefined ? check : `rule ${options.rule} of ${check}`;
     const suffix = paths === undefined ? '' : ` for ${paths.join(' and ')}`;
     return `Ignored ${target}${suffix}.`;
+}
+
+async function assertDocumentedRule(
+    session: Session,
+    { checkId, rule }: { checkId: string; rule: string },
+): Promise<void> {
+    const { root, settings } = session;
+    const shippedCheck = listChecksById(readConfigurations().values()).get(checkId)?.check;
+    const check = settings.commandChecks[checkId] ?? shippedCheck;
+    if (check === undefined || (!hasRuleOutput(check) && CHECK_CODE[checkId]?.ruleDocs === undefined))
+        throw new GspotError('arguments', `${checkId} does not report lint rules. Omit --rule.`);
+    const docs = await readCheckRuleDocs(root, check, rule, session);
+    if (docs === undefined) throw new GspotError('arguments', `gspot does not know rule ${rule} of ${checkId}.`);
 }
 
 async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> {
@@ -57,10 +50,12 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
             'arguments',
             valid.error.issues.map((issue) => `--${issue.path.join('.')}: ${issue.message}`).join('\n'),
         );
-    const context = await readSettingsEditContext(options.cwd);
+    const context = await readSettingsEditContext(options.root);
     const { root, edit: input, settings } = context;
-    if (options.check !== undefined) assertCheckExists(options.check, settings);
-    const paths = escapeLiteralPaths(root, buildArgumentPaths(root, options.cwd, options.paths));
+    if (options.check !== undefined) assertCheckExists(options.check, Object.values(settings.commandChecks));
+    if (options.rule !== undefined && options.check !== undefined)
+        await assertDocumentedRule(context.session, { checkId: options.check, rule: options.rule });
+    const paths = buildIgnorePaths(context, options.cwd, options.paths);
     const list = (input.table['ignore'] as TomlTable[] | undefined) ?? [];
     mergeIgnore(list, {
         ...(options.check !== undefined && { check: options.check }),
@@ -82,8 +77,9 @@ Register the ignore command.
 
 @param program the gspot program that gets the command.
 @param onResult receives the result of the command.
+@param location the calling folder and the Git root validated before the action.
 */
-export function registerIgnore(program: Command, onResult: CommandCompletion): void {
+export function registerIgnore(program: Command, onResult: CommandCompletion, location: CommandLocation): void {
     program
         .command('ignore')
         .argument('[check]', COMMAND_HELP.ignore.arguments['check'])
@@ -91,13 +87,18 @@ export function registerIgnore(program: Command, onResult: CommandCompletion): v
         .description(COMMAND_HELP.ignore.description)
         .requiredOption(REASON_OPTION, COMMAND_HELP.ignore.options[REASON_OPTION])
         .option(RULE_OPTION, COMMAND_HELP.ignore.options[RULE_OPTION])
-        .option(PATHS_OPTION, COMMAND_HELP.ignore.options[PATHS_OPTION])
+        .option(
+            PATHS_OPTION,
+            COMMAND_HELP.ignore.options[PATHS_OPTION],
+            (value: string, previous: string[] | undefined) => [...(previous ?? []), value],
+        )
         .action(async (check, flags) => {
             const message = validateReason(`gspot ignore ${check ?? ''}`.trimEnd(), flags.reason, IGNORE_CHECK_MESSAGE);
             if (message !== undefined) throw new GspotError('arguments', message);
             onResult(
                 await runIgnoreCommand({
-                    cwd: process.cwd(),
+                    root: location.root,
+                    cwd: location.cwd,
                     check,
                     paths: flags.paths,
                     rule: flags.rule,

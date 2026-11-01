@@ -91,6 +91,9 @@ shared code only when two or more callers need the same behavior now.
 Never introduce compatibility layers, wrapper functions, re-exports for renamed symbols, deprecated-but-kept code, or
 other backward-compatible scaffolding. A published API follows the deprecation policy its project declares instead.
 
+This covers code and APIs inside the repository. Stored data and wire formats follow the contract rule in Thinking
+before coding.
+
 When you replace or rename something:
 
 - Delete the old implementation entirely.

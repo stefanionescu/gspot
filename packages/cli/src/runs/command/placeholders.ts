@@ -2,14 +2,13 @@ import { statSync } from 'node:fs';
 import { sep, join } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { type Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import type { Config } from '#cli/types/manifests.ts';
-import { buildConfigs } from '#cli/generation/configs.ts';
+import { type CheckSession } from '#cli/types/session.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { extractConfigName } from '#cli/manifests/tools.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { getConfigTarget } from '#cli/generation/selection.ts';
+import type { ConfigTargets } from '#cli/types/generation/files.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
@@ -30,6 +29,21 @@ import {
     SETTING_ONLY_PLACEHOLDER,
 } from '#cli/config/runs/command.ts';
 
+/**
+Find the repository-relative path of the config file for a scope.
+
+@param scopePath the folder, empty for the root.
+@param config the config file from the manifest.
+@param configs the generated paths by scope and file name, and the scopes whose file failed to build.
+@returns the file of the scope, or the root file as a fallback.
+@throws the build failure of the file in this scope.
+*/
+export function getConfigTarget(scopePath: string, config: Config, configs: ConfigTargets): string {
+    const failure = configs.failures.get(scopePath)?.get(config.target);
+    if (failure !== undefined) throw failure;
+    return config.per_scope ? (configs.targets.get(scopePath)?.get(config.target) ?? config.target) : config.target;
+}
+
 function assertArgumentList(value: unknown, name: string): string[] {
     if (Array.isArray(value) && value.every((element) => typeof element === 'string')) return value;
     throw new GspotError('settings', `Command setting ${name} must contain only string arguments.`);
@@ -45,7 +59,7 @@ function expandEachPlaceholder(planned: PlannedCheck, argument: string): string[
     ]);
 }
 
-function listConfigs(session: Session, planned: PlannedCheck): Config[] {
+function listConfigs(session: CheckSession, planned: PlannedCheck): Config[] {
     const own = planned.scope.configurations
         .filter((configuration) => configuration.checks.some((check) => check.id === planned.check.id))
         .flatMap((configuration) => configuration.configs);
@@ -56,14 +70,14 @@ function listConfigs(session: Session, planned: PlannedCheck): Config[] {
     return [...own, ...every];
 }
 
-function selectLinkFilePath(session: Session, scopePath: string, name: string): string {
+function selectLinkFilePath(session: CheckSession, scopePath: string, name: string): string {
     const path = joinScope(scopePath, name);
     const generated = listGeneratedPaths(session.repository.files);
     return !generated.has(path) && generated.has(name) ? name : path;
 }
 
 function expandArgument(
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
     argument: string,
     substitutions: Substitutions,
@@ -105,14 +119,14 @@ Find the path of the config file that {config_file:<name>} names, with the confi
 @returns the repository-relative path in the scope of the check.
 @throws the build failure of that config file in the scope.
 */
-export function getConfigPath(session: Session, planned: PlannedCheck, name: string): string {
+export function getConfigPath(session: CheckSession, planned: PlannedCheck, name: string): string {
     const config = listConfigs(session, planned).find(({ file }) => extractConfigName(file) === name);
     if (!config)
         throw new GspotError(
             'settings',
             `Check ${planned.check.id} names {config_file:${name}} and no configuration writes it.`,
         );
-    return getConfigTarget(planned.scope.path, config, buildConfigs(session));
+    return getConfigTarget(planned.scope.path, config, session.generation.buildConfigs(session));
 }
 
 /**
@@ -123,7 +137,7 @@ Lists the config files that a check command or its environment names.
 @param command the arguments to scan.
 @returns the config file paths, relative to the root.
 */
-export function listCommandConfigs(session: Session, planned: PlannedCheck, command: readonly string[]): string[] {
+export function listCommandConfigs(session: CheckSession, planned: PlannedCheck, command: readonly string[]): string[] {
     const words = [...command, ...(planned.check.env === undefined ? [] : Object.values(planned.check.env))];
     const scope = planned.scope.path;
     return [
@@ -155,10 +169,10 @@ Lists the source and config files that a copy needs for a command.
 @param command the arguments, with config file placeholders.
 @returns repository-relative paths for the copy.
 */
-export function listCopyFiles(session: Session, planned: PlannedCheck, command: string[]): string[] {
+export function listCopyFiles(session: CheckSession, planned: PlannedCheck, command: string[]): string[] {
     const scope = planned.scope.path;
     const owned = (planned.configuration?.configs ?? []).map((config) =>
-        getConfigTarget(scope, config, buildConfigs(session)),
+        getConfigTarget(scope, config, session.generation.buildConfigs(session)),
     );
     return [
         ...new Set([
@@ -178,7 +192,8 @@ Replace scalar setting placeholders with their scope values.
 export function replaceSettingPlaceholders(scopeSettings: ScopeSettings, text: string): string {
     return text.replaceAll(SETTING_PLACEHOLDER, (_match, name: string) => {
         const found = scopeSettings.valuesByKey[name];
-        if (Array.isArray(found)) throw new TypeError(`List setting ${name} must occupy a whole command argument.`);
+        if (Array.isArray(found))
+            throw new GspotError('settings', `List setting ${name} must occupy a whole command argument.`);
         return typeof found === 'string' || typeof found === 'number' || typeof found === 'boolean'
             ? String(found)
             : '';
@@ -194,7 +209,7 @@ Expands a scalar command argument or environment value from the check scope.
 @param substitutions the expansion values.
 */
 export function replacePlaceholders(
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
     argument: string,
     substitutions: Substitutions,
@@ -226,7 +241,7 @@ Expands setting and scope placeholders, and keeps a marker for each file slot.
 @param substitutions the expansion values.
 */
 export function expandCommand(
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
     command: string[],
     substitutions: Substitutions,

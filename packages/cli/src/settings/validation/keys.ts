@@ -62,7 +62,10 @@ function validateWrittenKey(
     key: string,
 ): SettingsError[] {
     const match = findSetting(availableSettings, key);
-    if (!match) return [{ path: key.split('.'), message: formatUnknownSetting(availableSettings, key) }];
+    if (!match)
+        return [
+            { path: key.split('.'), message: formatUnknownSetting(key, availableSettings.settings.keys().toArray()) },
+        ];
     const written = findWrittenSetting(table, key);
     if (!written) return [];
     const shipped = findSettingDefault(availableSettings, settings, match, scopePath)?.value;
@@ -100,33 +103,42 @@ function formatUnknownLimitSetting(key: string, settings: string[]): string {
         : `There is no setting called ${key}. Did you mean ${formatCodeList(near)}?`;
 }
 
-/**
-Name an unknown setting, and list the closest keys in the same table.
-
-@param availableSettings the settings of the configurations.
-@param key the written dotted name.
-@returns the error, with a command that lists the settings.
-*/
-export function formatUnknownSetting(availableSettings: AvailableSettings, key: string): string {
-    const all = availableSettings.settings.keys().toArray();
-    if (key.startsWith('limits.')) return formatUnknownLimitSetting(key, all);
+function formatUnknownField(key: string, availableKeys: string[]): string {
     const depth = key.startsWith('tools.') ? TABLE_KEY_SEGMENTS : 1;
     const prefix = key.includes('.') ? key.split('.').slice(0, depth).join('.') : '';
     const keys =
         prefix === ''
-            ? [...new Set(all.map((name) => name.split('.', 1)[0] as string))].filter(
+            ? [...new Set(availableKeys.map((name) => name.split('.', 1)[0] as string))].filter(
                   (name) => !Object.hasOwn(RECORD_FIELDS, name),
               )
-            : all.filter((name) => name.startsWith(`${prefix}.`)).map((name) => name.slice(prefix.length + 1));
+            : availableKeys
+                  .filter((name) => name.startsWith(`${prefix}.`))
+                  .map((name) => name.slice(prefix.length + 1));
     const near = selectSimilarNames(prefix === '' ? key : key.slice(prefix.length + 1), keys);
+    const correction = near.length === 0 ? '' : ` Did you mean ${formatCodeList(near)}?`;
     const rest = keys.filter((each) => !near.includes(each));
     const suggestions = [...near, ...rest];
     const place = prefix === '' ? AT_TOP_LEVEL : UNDER_TABLE;
-    return `There is no setting called ${key} in the selected configurations. ${
+    return `There is no setting called ${key}.${correction} ${
         suggestions.length === 0
             ? `No setting exists ${place}.`
             : `The settings that exist ${place} are ${formatCodeList(suggestions)}.`
     } Run gspot list settings to see every one.`;
+}
+
+/**
+Name an unknown setting, and list the closest keys in the same table.
+
+@param key the written dotted name.
+@param availableKeys the settings available at this location.
+@returns the error, with a command that lists the settings.
+*/
+export function formatUnknownSetting(key: string, availableKeys: string[]): string {
+    const descendants = availableKeys.filter((name) => name.startsWith(`${key}.`));
+    if (descendants.length > 0)
+        return `${key} is a table. Name one of its settings, such as ${descendants[0] as string}. The settings are ${formatCodeList(descendants)}.`;
+    if (key.startsWith('limits.')) return formatUnknownLimitSetting(key, availableKeys);
+    return formatUnknownField(key, availableKeys);
 }
 
 /**

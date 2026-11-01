@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { BASH_HEADER } from '#tests/config/bash.ts';
@@ -8,12 +7,13 @@ import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { type SizeCase } from '#tests/types/function-size.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { PASSED_BASH_RESULTS } from '#tests/config/checks/language/bash/runs.ts';
 import { COUNTED_LOOPS, BASH_SIZE_CASES, CORRECTED_LOOPS } from '#tests/config/checks/language/bash/bash.ts';
 
 test('Bash function-size counts C-style loops as branches and nesting, not their header assignments, in each scope', async () => {
     const options = buildRunOptions({ only: ['bash/function-size'] });
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], {
             level: 'all',
             tables: '[limits.bash]\nfunction_branches = 3\nblock_nesting = 3\nfunction_assignments = 1\n',
@@ -53,7 +53,7 @@ test.each(buildSizeCases())(
     '$rule reports $file and passes after the fix',
     async ({ source, corrected: fixedSource, file, rule, line, message }) => {
         const options = buildRunOptions({ only: ['bash/function-size'] });
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['bash'], {
                 level: 'all',
                 tables: '[limits.bash]\nfunction_lines = 12\nfunction_branches = 4\nblock_nesting = 2\nfunction_assignments = 3\n',

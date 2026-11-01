@@ -2,17 +2,17 @@ export const FILES_SANDBOX = {
     configurations: ['data-files'],
     files: {
         'settings/clean.toml': 'a = 1\n',
-        'config.yaml': '---\nkey: 1\n',
+        'config.yml': '---\nkey: 1\n',
         'schema.json': '{"type":"object","properties":{"count":{"type":"integer"}},"required":["count"]}\n',
     },
 } as const;
 
 export const FILES_CASES = [
     {
-        check: 'data-files/yamllint',
-        files: { 'config.yaml': 'mode: 0755\n' },
-        expected: { file: 'config.yaml', line: 1, rule: 'octal-values' },
-        corrected: { files: { 'config.yaml': 'mode: "0755"\n' } },
+        check: 'data-files/yaml',
+        files: { 'config.yml': 'mode: 0755\n' },
+        expected: { file: 'config.yml', line: 1, rule: 'octal-values' },
+        corrected: { files: { 'config.yml': 'mode: "0755"\n' } },
     },
     {
         check: 'data-files/taplo-format',
@@ -33,26 +33,22 @@ export const FILES_CASES = [
 export const YAML_SCOPE_TABLES = `[format]
 indent_width = 4
 [[format.override]]
-paths = ["**/*.yaml"]
+paths = ["**/*.yml"]
 indent_width = 2
-[tools.yamllint.rules]
-truthy = { allowed-values = ["yes"] }
 [[scope]]
 path = "app"
 configurations = []
-[scope.tools.yamllint.rules]
-truthy = { allowed-values = ["no"] }
 `;
 
 export const YAML_SCOPE_FILES = {
-    'settings/project.yaml': `parent:
-  enabled: yes
+    'settings/project.yml': `parent:
+  enabled: true
 on:
-  enabled: yes
+  enabled: true
 `,
-    'app/settings/project.yaml': `parent:
-  enabled: no
+    'app/settings/project.yml': `parent:
+  enabled: false
 on:
-  enabled: no
+  enabled: false
 `,
 } as const;

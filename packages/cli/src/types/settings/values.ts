@@ -1,22 +1,18 @@
+import type { z } from 'zod';
+import type { limitFields } from '#cli/schemas/settings/limits.ts';
+import type { SettingLanguage } from '#cli/types/settings/naming.ts';
 import type { TableSettings } from '#cli/types/settings/settings.ts';
-import type { LIMIT_DEFINITIONS } from '#cli/config/settings/definitions/limits.ts';
 
 export type ReasonedValue<Value> = { value: Value; reason: string };
 
-type LimitDefinition = (typeof LIMIT_DEFINITIONS)[keyof typeof LIMIT_DEFINITIONS];
+type LimitLanguage = SettingLanguage;
 
-export type LimitLanguage = Extract<LimitDefinition, { languages: readonly string[] }>['languages'][number];
+export type LanguageLimitField = {
+    [Field in keyof typeof limitFields]: z.ZodOptional<(typeof limitFields)[Field]>;
+};
 
-export type LanguageLimitField<Language extends LimitLanguage> = {
-    [Key in keyof typeof LIMIT_DEFINITIONS]: (typeof LIMIT_DEFINITIONS)[Key] extends {
-        languages: readonly (infer Languages)[];
-    }
-        ? Language extends Languages
-            ? Key extends `limits.${infer Field}`
-                ? Field
-                : never
-            : never
-        : never;
-}[keyof typeof LIMIT_DEFINITIONS];
+export type LanguageLimitSchemas = {
+    [Language in LimitLanguage]: z.ZodOptional<z.ZodObject<LanguageLimitField>>;
+};
 
 export type ParsedStructure = TableSettings<'structure'>;

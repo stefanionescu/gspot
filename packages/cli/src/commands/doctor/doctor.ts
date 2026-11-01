@@ -1,6 +1,6 @@
 import { join } from 'node:path';
+import { styleText } from 'node:util';
 import { readGitSetting } from '#cli/system/git.ts';
-import { getColors } from '#cli/system/terminal.ts';
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -13,7 +13,6 @@ import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { buildMiseInstall } from '#cli/installers/mise.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { readToolBinPaths } from '#cli/executables/locate.ts';
 import { findMissingEnvironment } from '#cli/executables/uv.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
@@ -23,12 +22,13 @@ import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import type { HookStatus } from '#cli/types/installers/installers.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
+import type { CommandLocation } from '#cli/types/commands/commands.ts';
 import type { ToolInspection } from '#cli/types/executables/inspection.ts';
 import { findMissingBuild, listDistinctTools } from '#cli/manifests/tools.ts';
 import type { Suggestions, DoctorReport } from '#cli/types/commands/doctor.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { VERSION_FLAG, AVAILABLE_TOOL_STATES } from '#cli/config/executables.ts';
 import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/repository.ts';
+import { VERSION_FLAG, AVAILABLE_TOOL_STATES, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/executables.ts';
 
 import {
     VERSION_GAP,
@@ -40,7 +40,6 @@ import {
     REMOTE_URL_SCHEME,
     ORIGIN_URL_SETTING,
     SUGGESTION_SECTIONS,
-    ENVIRONMENT_MISSING_NOTE,
 } from '#cli/config/commands/doctor.ts';
 
 function formatToolVersion(tool: ToolInspection): string {
@@ -55,7 +54,9 @@ function formatTools(tools: ToolInspection[]): string[] {
     const width = Math.max(...tools.map((tool) => formatToolVersion(tool).length)) + VERSION_GAP;
     return tools.map((tool) => {
         const tail = !AVAILABLE_TOOL_STATES.has(tool.state) || tool.path === undefined ? (tool.note ?? '') : tool.path;
-        const label = getColors()[TOOL_STATE_COLORS[tool.state]](tool.state.padEnd(COLUMN_WIDTHS.label));
+        const label = styleText(TOOL_STATE_COLORS[tool.state], tool.state.padEnd(COLUMN_WIDTHS.label), {
+            stream: process.stdout,
+        });
         return `  ${label} ${formatToolVersion(tool).padEnd(width)} ${tail}`.trimEnd();
     });
 }
@@ -177,7 +178,7 @@ function formatDoctorReport(report: DoctorReport): string {
         `tools: ${String(report.tools.filter((tool) => AVAILABLE_TOOL_STATES.has(tool.state) && tool.path !== undefined).length)} ready`,
         ...report.environments.map(
             (path) =>
-                `  ${getColors().red('missing'.padEnd(COLUMN_WIDTHS.label))} ${path}  ${ENVIRONMENT_MISSING_NOTE}`,
+                `  ${styleText('red', 'missing'.padEnd(COLUMN_WIDTHS.label), { stream: process.stdout })} ${path}  ${PROJECT_ENVIRONMENT_MESSAGE}`,
         ),
         '',
         ...formatSuggestions(report.suggestions),
@@ -193,8 +194,7 @@ function formatDoctorReport(report: DoctorReport): string {
     return `${lines.join('\n')}\n`;
 }
 
-async function runDoctorCommand(cwd: string): Promise<CommandResult> {
-    const root = await readRepositoryRoot(cwd);
+async function runDoctorCommand(root: string): Promise<CommandResult> {
     const session = await openSession(root);
     const report = await buildDoctorReport(session);
     return {
@@ -209,14 +209,15 @@ Register the doctor command.
 
 @param program the gspot program that gets the command.
 @param onResult receives the result of the command.
+@param location the calling folder and the Git root validated before the action.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: main.ts registers the command through it, like every other command.
-export function registerDoctor(program: Command, onResult: CommandCompletion): void {
+export function registerDoctor(program: Command, onResult: CommandCompletion, location: CommandLocation): void {
     program
         .command('doctor')
         .summary(COMMAND_HELP.doctor.summary)
         .description(COMMAND_HELP.doctor.description)
         .action(async () => {
-            onResult(await runDoctorCommand(process.cwd()));
+            onResult(await runDoctorCommand(location.root));
         });
 }

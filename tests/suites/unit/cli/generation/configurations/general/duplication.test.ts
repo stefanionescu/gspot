@@ -1,15 +1,15 @@
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/planning/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { PYTHON_IMPORT_EXCLUSIONS } from '#tests/config/generation/configurations/general.ts';
 
 test.each(PYTHON_IMPORT_EXCLUSIONS)(
     'jscpd import exclusions preserve executable code in $source',
     async ({ source, expected }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['python'], { level: 'all' }),
             'source.py': source,
         });

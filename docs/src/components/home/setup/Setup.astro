@@ -1,143 +1,21 @@
 ---
-import { Icon } from '@astrojs/starlight/components';
-import { URL_BREAK, COPIED_MESSAGE, COPY_FAILED_MESSAGE } from '#docs/config/home.ts';
-import { LLMS_URL, AGENT_PROMPT, LLMS_COMMAND, CURL_COMMAND, SETUP_COMMANDS } from '#docs/config/setup.ts';
-
-const [promptStart, promptEnd] = AGENT_PROMPT.split(LLMS_COMMAND);
+import { setup, AGENT_PROMPT } from '#docs/reference/setup.ts';
+import { Code, Tabs, TabItem } from '@astrojs/starlight/components';
 ---
 
-<home-setup
-    class="setup"
-    data-mode="human"
-    data-prompt={AGENT_PROMPT}
-    data-copied={COPIED_MESSAGE}
-    data-copy-failed={COPY_FAILED_MESSAGE}
->
-    <div class="setup-head">
-        <div class="modes" role="tablist" aria-label="Who sets up gspot">
-            <button
-                type="button"
-                role="tab"
-                id="mode-human"
-                aria-controls="panel-human"
-                aria-selected="true"
-                data-mode="human"
-            >
-                Human
-            </button>
-            <button
-                type="button"
-                role="tab"
-                id="mode-agent"
-                aria-controls="panel-agent"
-                aria-selected="false"
-                tabindex="-1"
-                data-mode="agent"
-            >
-                Agent
-            </button>
-        </div>
-        <div class="setup-tools">
-            <label class="manager">
-                <span class="sr-only">Package manager</span>
-                <select>
-                    {SETUP_COMMANDS.map(({ label }, index) => (
-                        <option value={index}>{label.toLowerCase()}</option>
-                    ))}
-                </select>
-                <Icon name="down-caret" size="1rem" class="icon-16" />
-            </label>
-            <button class="copy" type="button" data-copy aria-label="Copy">
-                <svg
-                    class="icon-16"
-                    aria-hidden="true"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.75"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                >
-                    <rect x="8" y="8" width="13" height="13" rx="2" />
-                    <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
-                </svg>
-                <span class="copy-label">Copy</span>
-            </button>
-        </div>
-    </div>
-    <div class="setup-body">
-        <div class="setup-panel" role="tabpanel" id="panel-human" aria-labelledby="mode-human" tabindex="0">
-            {SETUP_COMMANDS.map(({ lines }, index) => <pre
-                class="commands"
-                data-manager={index}
-                hidden={index !== 0}
-            >{lines.map((line) => <span class="cmd"><span class="prompt" aria-hidden="true">$ </span><span class="command-text">{line}</span></span>)}</pre>)}
-        </div>
-        <div class="setup-panel" role="tabpanel" id="panel-agent" aria-labelledby="mode-agent" tabindex="0" hidden>
-            <p class="agent-prompt">
-                {promptStart}
-                <span class="em">
-                    <span class="nowrap">{CURL_COMMAND}</span>{' '}
-                    {LLMS_URL.split(URL_BREAK).map((segment, index) => (
-                        <>
-                            {index > 0 && <wbr />}
-                            {segment}
-                        </>
-                    ))}
-                </span>
-                {promptEnd}
-            </p>
-        </div>
-    </div>
-    <span class="sr-only" role="status" data-copy-status></span>
-</home-setup>
-
-<script>
-
-    class HomeSetup extends HTMLElement {
-        connectedCallback(): void {
-            const manager = this.querySelector('select') as HTMLSelectElement;
-            const commands = [...this.querySelectorAll<HTMLPreElement>('pre.commands')];
-            const copy = this.querySelector('[data-copy]') as HTMLButtonElement;
-            const status = this.querySelector('[data-copy-status]') as HTMLElement;
-            const tabs = [...this.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
-            manager.addEventListener('change', () => {
-                for (const [index, pre] of commands.entries()) pre.hidden = index !== manager.selectedIndex;
-            });
-            for (const tab of tabs) {
-                tab.addEventListener('click', () => {
-                    this.dataset['mode'] = tab.dataset['mode'];
-                    for (const other of tabs) {
-                        const isSelected = other === tab;
-                        other.setAttribute('aria-selected', String(isSelected));
-                        other.tabIndex = isSelected ? 0 : -1;
-                        const panel = this.querySelector(`#${other.getAttribute('aria-controls') ?? ''}`) as HTMLElement;
-                        panel.hidden = !isSelected;
-                    }
-                });
-                tab.addEventListener('keydown', (event) => {
-                    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-                    event.preventDefault();
-                    let next = tabs.find((other) => other !== tab);
-                    if (event.key === 'Home') next = tabs[0];
-                    else if (event.key === 'End') next = tabs.at(-1);
-                    next?.click();
-                    next?.focus();
-                });
-            }
-            copy.addEventListener('click', async () => {
-                const text = this.dataset['mode'] === 'agent' ? (this.dataset['prompt'] as string) : commands
-                    .filter((pre) => !pre.hidden)
-                    .flatMap((pre) => [...pre.querySelectorAll('.command-text')].map((line) => line.textContent))
-                    .join('\n');
-                try {
-                    await navigator.clipboard.writeText(text);
-                    status.textContent = (this.dataset['copied'] as string);
-                } catch {
-                    status.textContent = (this.dataset['copyFailed'] as string);
-                }
-            });
-        }
-    }
-    customElements.define('home-setup', HomeSetup);
-</script>
+<div class="setup">
+    <Tabs>
+        <TabItem label="Human">
+            <Tabs syncKey="package-manager">
+                {setup.map(({ label, lines }) => (
+                    <TabItem label={label}>
+                        <Code code={lines.join('\n')} lang="shell" />
+                    </TabItem>
+                ))}
+            </Tabs>
+        </TabItem>
+        <TabItem label="Agent">
+            <Code code={AGENT_PROMPT} lang="text" />
+        </TabItem>
+    </Tabs>
+</div>

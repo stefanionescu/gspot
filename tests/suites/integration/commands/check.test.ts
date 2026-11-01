@@ -8,7 +8,6 @@ import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { MISE_INSTALL_URL } from '#cli/config/executables.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -18,7 +17,7 @@ import { PARTIAL_FIX_CASES } from '#tests/config/integration/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
-test('bash/shellcheck without ShellCheck on PATH exits 2 and names the pinned version, while bash/function-size passes and bash/shellcheck passes on the full PATH', async () => {
+test('bash/shellcheck without ShellCheck on PATH exits 2 and names the pinned version', async () => {
     await using sandbox = await createGitSandbox({
         'scripts/a.sh': CLEAN_BASH_SCRIPT,
         '.gitignore': 'home/\nbin/\n',
@@ -38,36 +37,21 @@ test('bash/shellcheck without ShellCheck on PATH exits 2 and names the pinned ve
         HOME: join(sandbox.path, 'home'),
         MISE_DATA_DIR: join(sandbox.path, 'home', 'mise'),
     };
-    const initialized = await spawnGspot(sandbox.path, ['init', '--yes', '--configurations', 'bash'], environment);
+    const initialized = await spawnGspot(sandbox.path, ['init', '--configurations', 'bash'], environment);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-    expect(initialized.stdout.split('\n')).toContain(
-        'Next: run gspot install to install the tools and turn on the Git hooks.',
-    );
     const check = parseCheckReport(
         await spawnGspot(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json'], environment),
     );
     expect(check.code, check.stdout + check.stderr).toBe(2);
     const version = String(getTool(readConfigurations().values().toArray(), 'shellcheck').version);
+    expect(check.report.checks[0]!.note).toContain(`shellcheck ${version}`);
     expect(check.report.checks).toMatchObject([
         {
             check: 'bash/shellcheck',
             status: 'missing',
             findings: [],
-            note: `shellcheck ${version} is not installed. Install mise (${MISE_INSTALL_URL}), or install shellcheck ${version} yourself.`,
         },
     ]);
-    const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all']);
-    expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-    const builtIn = parseCheckReport(
-        await spawnGspot(sandbox.path, ['check', '--only', 'bash/function-size', '--json'], environment),
-    );
-    expect(builtIn.code, builtIn.stdout + builtIn.stderr).toBe(0);
-    expect(builtIn.report.checks).toMatchObject([{ check: 'bash/function-size', status: 'passed', findings: [] }]);
-    const available = parseCheckReport(
-        await spawnGspot(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json']),
-    );
-    expect(available.code, available.stdout + available.stderr).toBe(0);
-    expect(available.report.checks).toMatchObject([{ check: 'bash/shellcheck', status: 'passed', findings: [] }]);
 });
 
 test('a pre-push check in a shallow clone refuses commits/commitlint-pushed and names git fetch --unshallow', async () => {

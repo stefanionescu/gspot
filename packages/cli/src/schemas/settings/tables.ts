@@ -2,10 +2,10 @@ import { z } from 'zod';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools/tables.ts';
 import type { ToolTableSchemas } from '#cli/types/settings/tables.ts';
+import { generalTableSchemas } from '#cli/schemas/settings/general.ts';
+import { BUILD_SCRIPT, TABLE_DESCRIPTIONS } from '#cli/config/settings/settings.ts';
 import { FROZEN_ALL, FROZEN_NONE, FROZEN_VERSION } from '#cli/config/parsers/code.ts';
-import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { commandSchema, nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
-import { ALLOWED_WORD, REEXPORT_MODES, SPELLING_LOCALES, TABLE_DESCRIPTIONS } from '#cli/config/settings/settings.ts';
 
 import {
     ciFields,
@@ -13,82 +13,46 @@ import {
     rulesSchema,
     namingSchema,
     pythonSchema,
-    licensesSchema,
     javascriptSchema,
 } from '#cli/schemas/settings/settings.ts';
 import {
     formatSchema,
-    percentageSchema,
     relativePathSchema,
     allowReasonedValue,
     nonemptyStringsSchema,
     destinationPathSchema,
-    nonnegativeIntegerSchema,
 } from '#cli/schemas/settings/fields.ts';
 
 export const configurationTableSchemas = {
     format: formatSchema.optional(),
     limits: limitsSchema.optional(),
     naming: namingSchema.optional(),
-    structure: z
-        .strictObject({
-            reexports: allowReasonedValue(z.enum(REEXPORT_MODES), SETTING_DEFINITIONS['structure.reexports']),
-            environment_readers: relativePathSchema
-                .array()
-                .default(SETTING_DEFINITIONS['structure.environment_readers'].default)
-                .meta(SETTING_DEFINITIONS['structure.environment_readers']),
-        })
-        .optional(),
+    structure: generalTableSchemas.structure,
     cloudflare: z
         .strictObject({
-            types_file: destinationPathSchema
-                .default(SETTING_DEFINITIONS['cloudflare.types_file'].default)
-                .meta(SETTING_DEFINITIONS['cloudflare.types_file']),
-            types_interface: nonemptyStringSchema
-                .default(SETTING_DEFINITIONS['cloudflare.types_interface'].default)
-                .meta(SETTING_DEFINITIONS['cloudflare.types_interface']),
+            types_file: destinationPathSchema.default('worker-configuration.d.ts').meta({
+                configurations: ['cloudflare'],
+                description:
+                    'Tracked Worker types file from the repository root; OpenNext defaults to cloudflare-env.d.ts.',
+            }),
+            types_interface: nonemptyStringSchema.default('Env').meta({
+                template: 'repository',
+                configurations: ['cloudflare'],
+                description: 'Environment interface name passed to wrangler types; OpenNext defaults to CloudflareEnv.',
+            }),
         })
         .optional(),
-    coverage: z
-        .strictObject({
-            lines: allowReasonedValue(percentageSchema, SETTING_DEFINITIONS['coverage.lines']),
-            branches: allowReasonedValue(percentageSchema, SETTING_DEFINITIONS['coverage.branches']),
-            functions: allowReasonedValue(percentageSchema, SETTING_DEFINITIONS['coverage.functions']),
-            statements: allowReasonedValue(percentageSchema, SETTING_DEFINITIONS['coverage.statements']),
-            swift_target: z
-                .strictObject({
-                    name: nonemptyStringSchema.meta(SETTING_DEFINITIONS['coverage.swift_target.name']),
-                    lines: percentageSchema.meta(SETTING_DEFINITIONS['coverage.swift_target.lines']),
-                    reason: z.string().optional().meta(SETTING_DEFINITIONS['coverage.swift_target.reason']),
-                })
-                .array()
-                .default(SETTING_DEFINITIONS['coverage.swift_target'].default)
-                .meta(SETTING_DEFINITIONS['coverage.swift_target']),
-        })
-        .optional(),
-    dependencies: z
-        .strictObject({
-            min_release_age_days: allowReasonedValue(
-                nonnegativeIntegerSchema,
-                SETTING_DEFINITIONS['dependencies.min_release_age_days'],
-            ),
-            allowed_registries: allowReasonedValue(
-                nonemptyStringsSchema,
-                SETTING_DEFINITIONS['dependencies.allowed_registries'],
-            ),
-            bun_scanner: nonemptyStringSchema.optional().meta(SETTING_DEFINITIONS['dependencies.bun_scanner']),
-        })
-        .optional(),
-    docs: z
-        .strictObject({
-            allowed_urls: allowReasonedValue(z.string().array(), SETTING_DEFINITIONS['docs.allowed_urls']),
-        })
-        .optional(),
+    coverage: generalTableSchemas.coverage,
+    dependencies: generalTableSchemas.dependencies,
+    docs: generalTableSchemas.docs,
     drizzle: z
         .strictObject({
-            client_names: nonemptyStringsSchema
-                .default(SETTING_DEFINITIONS['drizzle.client_names'].default)
-                .meta(SETTING_DEFINITIONS['drizzle.client_names']),
+            client_names: nonemptyStringsSchema.default(['db'] as ['db']).meta({
+                template: 'repository',
+                configurations: ['drizzle'],
+                description:
+                    'The Drizzle client identifiers checked for update and delete operations without a where clause.',
+            }),
         })
         .optional(),
     javascript: javascriptSchema,
@@ -97,147 +61,166 @@ export const configurationTableSchemas = {
         .strictObject({
             router_files: relativePathSchema
                 .array()
-                .default(SETTING_DEFINITIONS['trpc.router_files'].default)
-                .meta(SETTING_DEFINITIONS['trpc.router_files']),
+                .default(['**/routers/**', '**/*router*.ts', '**/trpc/**'] as [
+                    '**/routers/**',
+                    '**/*router*.ts',
+                    '**/trpc/**',
+                ])
+                .meta({
+                    configurations: ['trpc'],
+                    description: 'The files that declare tRPC procedures.',
+                }),
             server_files: relativePathSchema
                 .array()
-                .default(SETTING_DEFINITIONS['trpc.server_files'].default)
-                .meta(SETTING_DEFINITIONS['trpc.server_files']),
+                .default([] as [])
+                .meta({
+                    configurations: ['trpc'],
+                    description:
+                        'The server files that other files of a tRPC scope may import only as types; empty turns the rule off.',
+                }),
         })
         .optional(),
     zustand: z
         .strictObject({
-            store_files: allowReasonedValue(relativePathSchema.array(), SETTING_DEFINITIONS['zustand.store_files']),
+            store_files: allowReasonedValue(relativePathSchema.array(), {
+                reason_when: 'adding',
+                configurations: ['zustand'],
+                description: 'The files that may create a store.',
+                default: ['**/store.*', '**/stores/*', '**/store/*', '**/*.store.*'] as [
+                    '**/store.*',
+                    '**/stores/*',
+                    '**/store/*',
+                    '**/*.store.*',
+                ],
+            }),
         })
         .optional(),
-    licenses: licensesSchema.optional(),
+    licenses: generalTableSchemas.licenses,
     openapi: z
         .strictObject({
-            document: relativePathSchema.optional().meta(SETTING_DEFINITIONS['openapi.document']),
-            generate_command: commandSchema.optional().meta(SETTING_DEFINITIONS['openapi.generate_command']),
+            document: relativePathSchema.optional().meta({
+                configurations: ['openapi'],
+                description:
+                    'The committed OpenAPI document, relative to the repository root, which init fills in when it finds one; without it, the OpenAPI checks do not run.',
+            }),
+            generate_command: commandSchema.optional().meta({
+                template: 'code',
+                configurations: ['openapi'],
+                description:
+                    'The command that writes the OpenAPI document from the code, run in the project scope folder.',
+            }),
         })
         .optional(),
     postgres: z
         .strictObject({
-            client_schemas: nonemptyStringsSchema
-                .default(SETTING_DEFINITIONS['postgres.client_schemas'].default)
-                .meta(SETTING_DEFINITIONS['postgres.client_schemas']),
+            client_schemas: nonemptyStringsSchema.default([] as []).meta({
+                template: 'repository',
+                configurations: ['postgres'],
+                description: 'The schemas clients reach, where every table needs row level security.',
+            }),
             frozen_through: z
                 .union([z.enum([FROZEN_NONE, FROZEN_ALL]), z.string().regex(FROZEN_VERSION)])
-                .default(SETTING_DEFINITIONS['postgres.frozen_through'].default)
-                .meta(SETTING_DEFINITIONS['postgres.frozen_through']),
-            migrations_folder: relativePathSchema.optional().meta(SETTING_DEFINITIONS['postgres.migrations_folder']),
+                .default('none')
+                .meta({
+                    template: 'repository',
+                    configurations: ['postgres'],
+                    description:
+                        'The last migration version that has run everywhere (none, all, or a version); Squawk skips those migrations, and they may not change.',
+                }),
+            migrations_folder: relativePathSchema.optional().meta({
+                configurations: ['postgres'],
+                description:
+                    'The migrations folder, relative to the repository root; without it, the checks use the migration files of this configuration.',
+            }),
         })
         .optional(),
-    secrets: z
-        .strictObject({
-            env_examples: nonemptyStringsSchema
-                .default(SETTING_DEFINITIONS['secrets.env_examples'].default)
-                .meta(SETTING_DEFINITIONS['secrets.env_examples']),
-            environment_functions: nonemptyStringsSchema
-                .default(SETTING_DEFINITIONS['secrets.environment_functions'].default)
-                .meta(SETTING_DEFINITIONS['secrets.environment_functions']),
-        })
-        .optional(),
+    secrets: generalTableSchemas.secrets,
     site: z
         .strictObject({
-            build_command: commandSchema
-                .default(SETTING_DEFINITIONS['site.build_command'].default)
-                .meta(SETTING_DEFINITIONS['site.build_command']),
-            build_folder: destinationPathSchema
-                .default(SETTING_DEFINITIONS['site.build_folder'].default)
-                .meta(SETTING_DEFINITIONS['site.build_folder']),
-            allowed_unlisted_pages: allowReasonedValue(
-                relativePathSchema.meta({ path_role: 'build' }).array(),
-                SETTING_DEFINITIONS['site.allowed_unlisted_pages'],
-            ),
+            build_command: commandSchema.default(['npm', ...BUILD_SCRIPT] as string[]).meta({
+                template: 'code',
+                configurations: ['site'],
+                description:
+                    'The command that builds the site. Without it, gspot runs the build script of the package manager.',
+            }),
+            build_folder: destinationPathSchema.default('dist').meta({
+                configurations: ['site'],
+                description: 'The folder the build writes.',
+            }),
+            allowed_unlisted_pages: allowReasonedValue(relativePathSchema.meta({ path_role: 'build' }).array(), {
+                configurations: ['site'],
+                description: 'Built pages the sitemap leaves out on purpose.',
+                reason_when: 'adding',
+                default: ['404.html'] as ['404.html'],
+            }),
         })
         .optional(),
-    spelling: z
-        .strictObject({
-            locale: z
-                .enum(SPELLING_LOCALES)
-                .default(SETTING_DEFINITIONS['spelling.locale'].default)
-                .meta(SETTING_DEFINITIONS['spelling.locale']),
-            allowed_words: z
-                .record(
-                    z.string().regex(ALLOWED_WORD, 'Use a plain word, without a regular expression pattern.'),
-                    z.string(),
-                )
-                .default(SETTING_DEFINITIONS['spelling.allowed_words'].default)
-                .meta(SETTING_DEFINITIONS['spelling.allowed_words']),
-        })
-        .optional(),
+    spelling: generalTableSchemas.spelling,
     supabase: z
         .strictObject({
-            functions_folder: relativePathSchema
-                .default(SETTING_DEFINITIONS['supabase.functions_folder'].default)
-                .meta(SETTING_DEFINITIONS['supabase.functions_folder']),
-            schemas: nonemptyStringsSchema
-                .default(SETTING_DEFINITIONS['supabase.schemas'].default)
-                .meta(SETTING_DEFINITIONS['supabase.schemas']),
-            types_file: destinationPathSchema.optional().meta(SETTING_DEFINITIONS['supabase.types_file']),
+            functions_folder: relativePathSchema.default('supabase/functions').meta({
+                configurations: ['supabase'],
+                description:
+                    'The folder, relative to the repository root, with one folder for each edge function; the default starts from the project scope.',
+            }),
+            schemas: nonemptyStringsSchema.default(['public'] as ['public']).meta({
+                template: 'repository',
+                configurations: ['supabase'],
+                description: 'The database schemas to include in generated types.',
+            }),
+            types_file: destinationPathSchema.optional().meta({
+                configurations: ['supabase'],
+                description:
+                    'The committed database types file, relative to the repository root; without it, no type comparison runs.',
+            }),
         })
         .optional(),
     translations: z
         .strictObject({
-            base_locale: nonemptyStringSchema
-                .default(SETTING_DEFINITIONS['translations.base_locale'].default)
-                .meta(SETTING_DEFINITIONS['translations.base_locale']),
-            messages_folder: relativePathSchema.optional().meta(SETTING_DEFINITIONS['translations.messages_folder']),
+            base_locale: nonemptyStringSchema.default('en').meta({
+                template: 'repository',
+                configurations: ['translations'],
+                description: 'The locale whose message keys every other locale must contain.',
+            }),
+            messages_folder: relativePathSchema.optional().meta({
+                configurations: ['translations'],
+                description: 'The folder of the `<locale>.json` message files, relative to the repository root.',
+            }),
         })
         .optional(),
     swift: z
         .strictObject({
-            xcode_project: relativePathSchema.optional().meta(SETTING_DEFINITIONS['swift.xcode_project']),
-            xcode_scheme: nonemptyStringSchema.optional().meta(SETTING_DEFINITIONS['swift.xcode_scheme']),
-            xcode_destination: nonemptyStringSchema
-                .default(SETTING_DEFINITIONS['swift.xcode_destination'].default)
-                .meta(SETTING_DEFINITIONS['swift.xcode_destination']),
+            xcode_project: relativePathSchema.optional().meta({
+                configurations: ['swift'],
+                description:
+                    'The Xcode project or workspace, relative to the repository root, which init fills in when it finds one; without it, the checks use the Swift package.',
+            }),
+            xcode_scheme: nonemptyStringSchema.optional().meta({
+                template: 'repository',
+                configurations: ['swift'],
+                description: 'The shared scheme the build, the analyzer, and Periphery use.',
+            }),
+            xcode_destination: nonemptyStringSchema.default('generic/platform=iOS Simulator').meta({
+                template: 'repository',
+                configurations: ['swift'],
+                description: 'The xcodebuild destination.',
+            }),
         })
         .optional(),
-    repository: z
-        .strictObject({
-            max_file_kilobytes: allowReasonedValue(
-                nonnegativeIntegerSchema,
-                SETTING_DEFINITIONS['repository.max_file_kilobytes'],
-            ),
-        })
-        .optional(),
-    prose: z
-        .strictObject({
-            banned_headings: z
-                .string()
-                .array()
-                .default(SETTING_DEFINITIONS['prose.banned_headings'].default)
-                .meta(SETTING_DEFINITIONS['prose.banned_headings']),
-            max_sentence_words: allowReasonedValue(
-                nonnegativeIntegerSchema,
-                SETTING_DEFINITIONS['prose.max_sentence_words'],
-            ),
-            max_list_item_words: allowReasonedValue(
-                nonnegativeIntegerSchema,
-                SETTING_DEFINITIONS['prose.max_list_item_words'],
-            ),
-            max_paragraph_sentences: allowReasonedValue(
-                nonnegativeIntegerSchema,
-                SETTING_DEFINITIONS['prose.max_paragraph_sentences'],
-            ),
-        })
-        .optional(),
-    duplication: z
-        .strictObject({
-            min_lines: allowReasonedValue(z.number().int().positive(), SETTING_DEFINITIONS['duplication.min_lines']),
-            min_tokens: allowReasonedValue(z.number().int().positive(), SETTING_DEFINITIONS['duplication.min_tokens']),
-        })
-        .optional(),
+    repository: generalTableSchemas.repository,
+    prose: generalTableSchemas.prose,
+    duplication: generalTableSchemas.duplication,
     xcode: z
         .strictObject({
             allowed_entitlements: z
                 .string()
                 .array()
-                .default(SETTING_DEFINITIONS['xcode.allowed_entitlements'].default)
-                .meta(SETTING_DEFINITIONS['xcode.allowed_entitlements']),
+                .default([] as [])
+                .meta({
+                    template: 'repository',
+                    configurations: ['xcode'],
+                    description: 'The entitlements the app may hold; empty turns the check off.',
+                }),
         })
         .optional(),
 };

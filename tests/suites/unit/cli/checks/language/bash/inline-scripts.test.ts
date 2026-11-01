@@ -1,14 +1,14 @@
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { INLINE_SCRIPT_CASES } from '#tests/config/checks/language/bash/bash.ts';
 
 test('a heredoc that writes a data file is not reported', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
         'source.sh': '#!/usr/bin/env bash\ncat > settings.json <<EOF\n{ "name": "example" }\nEOF\n',
     });
@@ -25,7 +25,7 @@ test.each([...INLINE_SCRIPT_CASES])(
 );
 
 test('long Node flags and interpreter variable commands report their lines', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
         'source.sh':
             'node --eval "1"\nnode --print "1"\n"$runtime" -c "1"\n"${runtime}" -e "1"\n"${PYTHON:-python3}" -c "print(1)"\n',

@@ -1,8 +1,10 @@
 import type { z } from 'zod';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
+import { type LEVELS, type GROUPS } from '#cli/config/manifests/names.ts';
+import type { namingOverrideSchema } from '#cli/schemas/manifests/manifests.ts';
 import type { checkSchema, manifestSchema } from '#cli/schemas/manifests/manifest.ts';
-import { type LEVELS, type STAGES, type GROUPS } from '#cli/config/manifests/names.ts';
-import type { namingOverrideSchema, namingDefaultsSchema } from '#cli/schemas/manifests/manifests.ts';
+
+export type LimitCheck = { check: string; languages: readonly string[]; limits: readonly string[] };
 
 export type RequirementWalk = {
     configurationsByName: Map<string, Configuration>;
@@ -66,11 +68,8 @@ export type Tool = Exclude<ParsedManifest['tools'][number], string>;
 
 export type Group = (typeof GROUPS)[number];
 
-export type Stage = (typeof STAGES)[number];
 export type GeneratorOutput = NonNullable<Check['generator_outputs']>[number];
 
-export type PathContainer = NamingDefaults['path_containers'][number];
-
-export type NamingDefaults = z.infer<typeof namingDefaultsSchema>;
+export type PathContainer = NonNullable<Configuration['naming']>['path_containers'][number];
 
 export type NamingOverride = z.infer<typeof namingOverrideSchema>;

@@ -12,7 +12,6 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     GIT_PLAN_CASES,
-    SHARED_SETUP_FILES,
     EDITORCONFIG_WRITE,
     ATTRIBUTES_PLAN_ROW,
     QUALITY_PACKAGE_FILES,
@@ -30,11 +29,9 @@ test.each([
         'package.json': '{"name":"example","private":true,"type":"module","devDependencies":{"typescript":"^5.0.0"}}\n',
         ...files,
     });
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--configurations', 'typescript', '--json']);
+    const result = await runGspot(sandbox.path, ['init', '--configurations', 'typescript', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
-    expect(plan.configurations.find(({ configuration }) => configuration === 'javascript')?.origin).toBe('required');
-    expect(plan.configurations.map(({ configuration }) => configuration)).not.toContain('licenses');
     expect(plan.change).toStrictEqual(attributes === 'change' ? [ATTRIBUTES_PLAN_ROW] : []);
     expect(plan.write.filter(({ path }) => path === ATTRIBUTES_PLAN_ROW.path)).toStrictEqual(
         attributes === 'write' ? [ATTRIBUTES_PLAN_ROW] : [],
@@ -43,39 +40,12 @@ test.each([
     expect(plan.lintFolders).toStrictEqual([]);
 });
 
-test('the init plan leaves existing CI files apart from tool settings that the generated config files replace', async () => {
-    await using sandbox = await testdir(SHARED_SETUP_FILES);
-
-    commitAll(sandbox.path);
-    const preview = await runGspot(sandbox.path, ['init', '--yes', '--configurations', 'sql']);
-    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    expect(preview.stderr).toBe('');
-    const kept = preview.stdout.split('keep\n', 2)[1]?.split('\n\n', 1)[0];
-    expect(kept).toBe(
-        '  setup.cfg       sqlfluff settings stay here, and the generated sqlfluff config file takes over. Delete the section; the generated config file replaces it.\n  .gitlab-ci.yml  existing CI file',
-    );
-});
-
 test('init leaves an unsupported CI pipeline in place and names it in the plan', async () => {
     await using sandbox = await createGitSandbox({ 'bitbucket-pipelines.yml': '{}\n' });
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--no-configurations', '--json']);
+    const result = await runGspot(sandbox.path, ['init', '--no-configurations', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
     expect(plan.keep.map((file) => file.path)).toStrictEqual(['bitbucket-pipelines.yml']);
-});
-
-test('the init plan groups test runners and infrastructure under their own labels', async () => {
-    await using sandbox = await testdir({
-        'package.json': '{"name":"example","private":true,"dependencies":{"jest":"30.2.0"}}',
-        Dockerfile: 'FROM node:24\n',
-    });
-
-    commitAll(sandbox.path);
-    const result = await runGspot(sandbox.path, ['init', '--yes']);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(result.stdout.split('\n').filter((line) => /^(?:testing|infrastructure|tools)\s/u.test(line))).toStrictEqual(
-        ['testing              jest  jest in package.json', 'infrastructure       docker  Dockerfile'],
-    );
 });
 
 test('the init plan lists each submodule once and reads none of it', async () => {
@@ -87,7 +57,7 @@ test('the init plan lists each submodule once and reads none of it', async () =>
     const commitId = runGitStep(sandbox.path, ['rev-parse', 'HEAD']);
     runGitStep(sandbox.path, ['update-index', '--add', '--cacheinfo', `160000,${commitId},external project`]);
     await symlink(outside.path, join(sandbox.path, 'external project'), 'dir');
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--no-configurations', '--json']);
+    const result = await runGspot(sandbox.path, ['init', '--no-configurations', '--json']);
     expect(result.code).toBe(0);
     expect(JSON.parse(result.stdout)).toMatchObject({
         plan: { keep: [{ path: 'external project', note: 'submodule; init does not read it' }] },
@@ -98,7 +68,7 @@ test('the init plan lists each submodule once and reads none of it', async () =>
 test('init plans no scope for an old lint folder, and --level all replaces the config files of that level', async () => {
     await using sandbox = await testdir(QUALITY_PACKAGE_FILES);
     commitAll(sandbox.path);
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--json', '--level', 'all']);
+    const result = await runGspot(sandbox.path, ['init', '--json', '--level', 'all']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan, settings } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan' | 'settings'>>;
     expect(plan.level).toBe('all');
@@ -113,7 +83,7 @@ test('init lists your .editorconfig under write and not under delete when the ge
     const authored = 'root = true\n[*]\nindent_style = space\nindent_size = 2\n';
     await using sandbox = await createGitSandbox({ '.editorconfig': authored });
     commitAll(sandbox.path);
-    const initialized = await runGspot(sandbox.path, ['init', '--yes', '--configurations', 'format', '--json']);
+    const initialized = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const { plan } = JSON.parse(initialized.stdout) as Required<Pick<InitJson, 'plan'>>;
     expect(plan.delete.map(({ path }) => path)).not.toContain('.editorconfig');
@@ -126,7 +96,7 @@ test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that ap
     await using sandbox = await testdir({ 'control.txt': PRESERVE_SOURCE });
 
     commitAll(sandbox.path);
-    const initialized = await runGspot(sandbox.path, ['init', '--yes', '--json', '--no-configurations']);
+    const initialized = await runGspot(sandbox.path, ['init', '--json', '--no-configurations']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     expect(initialized.stderr).toBe('');
     const report = JSON.parse(initialized.stdout) as Required<Pick<InitJson, 'plan' | 'settings'>>;
@@ -137,24 +107,19 @@ test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that ap
     expect(await readFile(join(sandbox.path, 'control.txt'), 'utf8')).toBe(PRESERVE_SOURCE);
 });
 
-test.each([false, true])(
-    'init leaves CI off and names the commands that turn it on (GitHub origin: %p)',
-    async (github) => {
-        await using sandbox = await createGitSandbox({ 'package.json': '{"private":true}\n' });
-        if (github) runGitStep(sandbox.path, ['remote', 'add', 'origin', 'https://github.com/example/project.git']);
-        const result = await runGspot(sandbox.path, ['init']);
-        expect(result.code, result.stdout + result.stderr).toBe(2);
-        expect(result.stdout).toContain('existing hooks');
-        expect(result.stdout).toContain('existing ci');
-        expect(result.stdout).toContain(
-            'CI is off. To turn it on, run gspot set ci.enabled true; for GitLab, also run gspot set ci.provider gitlab.',
-        );
-        const json = await runGspot(sandbox.path, ['init', '--yes', '--json']);
-        expect(json.code, json.stdout + json.stderr).toBe(0);
-        const output = JSON.parse(json.stdout) as Required<Pick<InitJson, 'settings'>>;
-        expect(readSettings(output.settings, sandbox.path).written).not.toHaveProperty('ci');
-    },
-);
+test('init leaves CI off with a GitHub origin and names the commands that turn it on', async () => {
+    await using sandbox = await createGitSandbox({ 'package.json': '{"private":true}\n' });
+    runGitStep(sandbox.path, ['remote', 'add', 'origin', 'https://github.com/example/project.git']);
+    const result = await runGspot(sandbox.path, ['init']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).toContain('existing hooks');
+    expect(result.stdout).toContain('existing ci');
+    expect(result.stdout).toContain(
+        'CI is off. To turn it on, run gspot set ci.enabled true; for GitLab, also run gspot set ci.provider gitlab.',
+    );
+    const written = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
+    expect(readSettings(written, sandbox.path).written).not.toHaveProperty('ci');
+});
 
 test('init lists at most five unchecked paths of an unsupported extension', async () => {
     await using sandbox = await createGitSandbox({
@@ -164,7 +129,7 @@ test('init lists at most five unchecked paths of an unsupported extension', asyn
         ),
         'README.md': '# Project\n',
     });
-    const result = await runGspot(sandbox.path, ['init', '--yes']);
+    const result = await runGspot(sandbox.path, ['init']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const rows = result.stdout.split('\n').filter((line) => line.startsWith('not checked'));
     expect(rows).toHaveLength(5);
@@ -173,28 +138,12 @@ test('init lists at most five unchecked paths of an unsupported extension', asyn
     expect(result.stdout).not.toContain('not checked          README.md');
 });
 
-test('the text plan names scope evidence, configuration origin and replaced files', async () => {
-    await using sandbox = await createGitSandbox({
-        'app/package.json': '{"name":"app","private":true}\n',
-        'app/server.js': 'export {};\n',
-        '.shellcheckrc': 'enable=all\n',
-        'entry.sh': '#!/usr/bin/env bash\nprintf "ready\\n"\n',
-    });
-    commitAll(sandbox.path);
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--configurations', 'bash']);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(result.stdout).toContain('scopes               app   a project file in each');
-    expect(result.stdout).toContain('  bash             named        6 checks (4 off at basic)');
-    expect(result.stdout).toContain('gspot replaces       shellcheck');
-    expect(result.stdout).toContain('  .shellcheckrc  replaced by the generated shellcheck config file');
-});
-
 test('init distinguishes named, required and always selected configurations', async () => {
     await using sandbox = await createGitSandbox({
         'source.ts': 'export {};\n',
         'tsconfig.json': '{}\n',
     });
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--configurations', 'typescript', '--json']);
+    const result = await runGspot(sandbox.path, ['init', '--configurations', 'typescript', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
     expect(plan.configurations.find(({ configuration }) => configuration === 'typescript')?.origin).toBe('named');
@@ -204,11 +153,7 @@ test('init distinguishes named, required and always selected configurations', as
 
 test('init identifies a configuration detected from a file', async () => {
     await using sandbox = await createGitSandbox({ Dockerfile: 'FROM node:24\n' });
-    const text = await runGspot(sandbox.path, ['init']);
-    expect(text.code, text.stdout + text.stderr).toBe(2);
-    expect(text.stdout).not.toContain('gspot replaces');
-    expect(text.stdout).not.toContain('gspot leaves');
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--json']);
+    const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
     expect(plan.configurations.find(({ configuration }) => configuration === 'docker')?.origin).toBe('detected');
@@ -218,7 +163,7 @@ test('a runtime dependency selects licenses during init', async () => {
     await using sandbox = await createGitSandbox({
         'package.json': '{"name":"example","private":true,"dependencies":{"react":"19.1.1"}}\n',
     });
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--json']);
+    const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = JSON.parse(result.stdout) as InitJson;
     expect(plan.configurations.map(({ configuration }) => configuration)).toContain('licenses');

@@ -1,3 +1,5 @@
+import cliPackage from '#cli-package' with { type: 'json' };
+
 export const AGENTS_FILE = 'AGENTS.md';
 
 export const REQUIREMENTS_FILE = /(?:^|\/)requirements[^/]*\.txt$/u;
@@ -40,7 +42,22 @@ export const PBXPROJ_SUFFIX = `.xcodeproj/${PBXPROJ_FILE}`;
 
 export const NPM_PACKAGE_FOLDER = `${NODE_MODULES}/`;
 
-export const SCHEMA_FILE = 'gspot.schema.json';
+const SCHEMA_FILE = 'gspot.schema.json';
+
+const REFERENCE_URL = `${cliPackage.homepage}/reference/`;
+
+export const DOCS_PATHS = {
+    reference: REFERENCE_URL,
+    commands: `${REFERENCE_URL}commands/`,
+    settings: `${REFERENCE_URL}gspot-toml/`,
+    jsonOutput: `${REFERENCE_URL}json-output/`,
+    configurations: `${REFERENCE_URL}configurations/`,
+    checks: `${REFERENCE_URL}checks/`,
+    eslintPlugin: `${REFERENCE_URL}eslint-plugin/`,
+    stage: `${cliPackage.homepage}/start/concepts/#stage`,
+    levels: `${cliPackage.homepage}/start/concepts/#levels`,
+    schema: `${cliPackage.homepage}/${SCHEMA_FILE}`,
+} as const;
 
 export const UV_LOCKFILE = 'uv.lock';
 

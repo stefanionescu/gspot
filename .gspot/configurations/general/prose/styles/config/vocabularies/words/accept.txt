@@ -67,6 +67,7 @@ prettier
 Prettier
 prettier-plugin-astro
 purgecss
+pytest
 React
 RPC
 semgrep

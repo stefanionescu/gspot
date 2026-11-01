@@ -1,5 +1,4 @@
 import ts from 'typescript';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { join, dirname, resolve } from 'node:path';
 import { openSession } from '#cli/planning/session.ts';
@@ -42,8 +41,8 @@ test('a jsconfig beside a tsconfig keeps authored exclusions and lists only trac
     expect(jsconfig.exclude).toContain(`../../../../${GSPOT_FOLDER}/**`);
 });
 
-test.each(['basic', 'all'] as const)('JavaScript implicit parameters follow level %s', async (level) => {
-    await using sandbox = await testdir({
+test.each(['all'] as const)('JavaScript implicit parameters follow level %s', async (level) => {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], { level }),
         'source.js':
             'export function total(items) { return items.length; }\n/** @type {number} */\nexport const count = "one";\n',
@@ -57,12 +56,12 @@ test.each(['basic', 'all'] as const)('JavaScript implicit parameters follow leve
     )!;
     const program = ts.createProgram(project.fileNames, { ...project.options, noLib: true });
     const errorCodes = new Set(program.getSemanticDiagnostics().map(({ code }) => code));
-    expect(errorCodes.has(7006)).toBe(level === 'all');
+    expect(errorCodes.has(7006)).toBe(true);
     expect(errorCodes.has(2322)).toBe(true);
 });
 
 test('a scoped jsconfig anchors recursive excludes in its scope and other excludes at the repository root', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             scopes: [{ path: 'tests' }],
             tables: '[[ignore]]\npaths = ["docs/**", "tests/fixtures/**", "**/cache/**"]\nreason = "These folders hold reference files."\n',

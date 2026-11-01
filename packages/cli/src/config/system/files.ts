@@ -8,6 +8,10 @@ export const TEMPORARY_FILE_PREFIX = '.gspot-';
 
 export const TEMPORARY_FILE_SUFFIX = '.tmp';
 
+export const TEMPORARY_FILE_NAME = /^\.gspot-(?:(?<pid>[1-9]\d{0,8})-)?[\da-f-]{36}\.tmp$/u;
+
+export const TEMPORARY_STALE_MILLISECONDS = 24 * 60 * 60 * 1000;
+
 export const TEMPORARY_REMOVAL_OPTIONS = { recursive: true, force: true, maxRetries: 5, retryDelay: 100 } as const;
 
 export const PARENT_SEGMENT = /(?:^|[/{,])\.\.(?=[/},]|$)/u;

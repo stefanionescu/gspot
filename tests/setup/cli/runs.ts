@@ -1,8 +1,12 @@
 import { planChecks } from '#cli/planning/checks.ts';
-import { type Session } from '#cli/types/session.ts';
+import { selectCheckCode } from '#cli/checks/registry.ts';
+import { buildConfigs } from '#cli/generation/configs.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type RunOptions } from '#cli/types/commands/check.ts';
+import { listOutdatedFiles } from '#cli/generation/outdated.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { type Session, type CheckGeneration } from '#cli/types/session.ts';
 
 /**
 Options for an in-process run of every stage, with no fixes.
@@ -10,7 +14,15 @@ Options for an in-process run of every stage, with no fixes.
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: `AGENTS.md` names it as the options of runChecks.
 export function buildRunOptions(overrides: Partial<RunOptions>): RunOptions {
-    return { stage: 'all', fix: false, cwd: process.cwd(), pathArguments: [], ...overrides };
+    return {
+        stage: 'all',
+        fix: false,
+        cwd: process.cwd(),
+        pathArguments: [],
+        selectCheckCode,
+        generation: CHECK_GENERATION,
+        ...overrides,
+    };
 }
 
 /**
@@ -37,3 +49,11 @@ paths = ${JSON.stringify(paths)}
 stage = "commit"
 `;
 }
+
+/**
+The production generators, called only when a check needs their output.
+*/
+export const CHECK_GENERATION: CheckGeneration = {
+    buildConfigs,
+    listOutdatedFiles: (session, options) => listOutdatedFiles(session, buildGeneratedFiles(session), options),
+};

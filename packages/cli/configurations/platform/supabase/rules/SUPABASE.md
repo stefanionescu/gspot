@@ -23,18 +23,12 @@ Read POSTGRES.md too. Supabase uses the API roles `anon`, `authenticated`, and `
 
 Choose the Supabase connection mode for the workload.
 
-| Workload | Connection choice
-|
-| --------------------------------------------- | ---------------------------------------------------------------------
-|
-| Short-lived serverless application requests | Transaction pooler, with a compatible driver
-|
-| Persistent server with direct network access | Direct connection with a bounded application pool
-|
-| Persistent server on an IPv4-only network | Session pooler when the server cannot reach the direct endpoint
-|
-| Migrations, dumps, or session-dependent tools | Direct connection; use a supported session alternative when necessary
-|
+| Workload                                      | Connection choice                                                     |
+| --------------------------------------------- | --------------------------------------------------------------------- |
+| Short-lived serverless application requests   | Transaction pooler, with a compatible driver                          |
+| Persistent server with direct network access  | Direct connection with a bounded application pool                     |
+| Persistent server on an IPv4-only network     | Session pooler when the server cannot reach the direct endpoint       |
+| Migrations, dumps, or session-dependent tools | Direct connection; use a supported session alternative when necessary |
 
 A separate migration credential holds schema privileges. The application role holds only the privileges it needs at
 runtime. See [connection modes](https://supabase.com/docs/guides/database/connecting-to-postgres).
@@ -74,16 +68,11 @@ tool. See [migration history](https://supabase.com/docs/guides/local-development
 - Use stable, explicit storage object keys.
 - Do not use display text as storage identity.
 
-| Avoid | Prefer | Meaning
-|
-| ------------------------------------------- | -------------------------------------- |
------------------------------------- |
-| `Avatar Pictures` | `avatar_images` | A bucket.
-|
-| `avatars/john@example.com/avatar image.png` | `avatars/user_01hxx8j2r6/avatar.png` | Object key without personal
-content. |
-| `uploads/latest` | `reports/report_01hxx8j2r6/export.pdf` | A key tied to a specific
-report. |
+| Avoid                                       | Prefer                                 | Meaning                              |
+| ------------------------------------------- | -------------------------------------- | ------------------------------------ |
+| `Avatar Pictures`                           | `avatar_images`                        | A bucket.                            |
+| `avatars/john@example.com/avatar image.png` | `avatars/user_01hxx8j2r6/avatar.png`   | Object key without personal content. |
+| `uploads/latest`                            | `reports/report_01hxx8j2r6/export.pdf` | A key tied to a specific report.     |
 
 ## Edge functions
 

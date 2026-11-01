@@ -4,12 +4,8 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { readSettings } from '#cli/settings/read.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { CONFIGURATIONS_SETTINGS } from '#tests/config/toml.ts';
-import { listNpmInstallFiles } from '#tests/setup/cli/tools.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
-import { recordNpmCommands } from '#tests/setup/system/fakes.ts';
-import type { ApplyReport } from '#cli/types/generation/files.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
@@ -18,13 +14,11 @@ import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.
 
 import {
     API_SCOPE_FILES,
-    TOOLS_CHANGED_NOTE,
-    BASH_CONFIG_FILE_NAMES,
     UNKNOWN_CONFIGURATION_REFUSALS,
     INHERITED_CONFIGURATION_SETTINGS,
 } from '#tests/config/commands/samples.ts';
 
-test('add --scope writes the scope list and applies it without an npm install', async () => {
+test('add --scope writes the scope list and applies the generated files', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['markdown'], { scopes: [{ path: 'api', configurations: [] }] }),
         ...API_SCOPE_FILES,
@@ -33,27 +27,14 @@ test('add --scope writes the scope list and applies it without an npm install', 
     const initial = await runGspot(sandbox.path, ['apply']);
     expect(initial.code, initial.stdout + initial.stderr).toBe(0);
     expect(await isOnDisk(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')))).toBe(false);
-    using npm = recordNpmCommands();
     const result = await runGspot(sandbox.path, ['add', 'bash', '--scope', 'api', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { written, removed, notes } = JSON.parse(result.stdout) as ApplyReport;
-    expect({ written, removed, notes }).toStrictEqual({
-        written: [
-            ...BASH_CONFIG_FILE_NAMES.map((file) => getManifestTarget('bash', file)),
-            GSPOT_PATHS.miseProject,
-            GSPOT_PATHS.pythonProject,
-        ],
-        removed: [],
-        notes: [TOOLS_CHANGED_NOTE],
-    });
-    expect(npm.commands).toStrictEqual([]);
     const saved = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
     expect(saved.scopes.get('api')!.configurations).toStrictEqual(['bash']);
     expect(saved.configurations).toStrictEqual(['markdown']);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(await isOnDisk(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')))).toBe(true);
-    expect(await listNpmInstallFiles(sandbox.path)).toStrictEqual([]);
 });
 
 test('add security exits 2, names gspot set level, and writes nothing', async () => {

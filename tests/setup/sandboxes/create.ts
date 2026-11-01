@@ -6,13 +6,13 @@ import { testdir, createFileTree } from 'testdirs';
 import type { Level } from '#cli/types/manifests.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { formatSchema } from '#cli/schemas/settings/fields.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkPackages } from '#tests/setup/sandboxes/node-modules.ts';
 import { commitAll, markExecutable } from '#tests/setup/system/git.ts';
 import { runGspot, spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
-import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { SANDBOX_GITIGNORE, SANDBOX_PACKAGE_JSON } from '#tests/config/setup/sandboxes.ts';
 import { type Sandbox, type SandboxPlan, type InstalledSandboxPlan } from '#tests/types/sandbox.ts';
 
@@ -33,7 +33,7 @@ async function writeSandbox(root: string, plan: SandboxPlan): Promise<void> {
             json[path] = await format(JSON.stringify(value), {
                 parser: 'json',
                 tabWidth: JSON_INDENT,
-                printWidth: SETTING_DEFINITIONS['format.print_width'].default,
+                printWidth: formatSchema.shape.print_width.parse(undefined),
             });
     await createFileTree(root, {
         '.gitignore': SANDBOX_GITIGNORE,
@@ -114,13 +114,11 @@ export async function initSandbox(
         install?: false;
     },
 ): Promise<ProcessOutput> {
-    const initialized = await runGspotStep(sandbox, [
-        'init',
-        '--yes',
-        '--configurations',
-        ...options.configurations,
-        '--json',
-    ]);
+    const configurations =
+        options.configurations.length === 0
+            ? ['--no-configurations']
+            : options.configurations.flatMap((configuration) => ['--configurations', configuration]);
+    const initialized = await runGspotStep(sandbox, ['init', ...configurations, '--json']);
     if (options.level !== undefined) await runGspotStep(sandbox, ['set', 'level', options.level]);
     const excluded = options.without ?? [];
     for (const configuration of excluded)

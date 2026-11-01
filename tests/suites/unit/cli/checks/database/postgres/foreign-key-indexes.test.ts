@@ -1,15 +1,15 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { COMPOSITE_INDEX_CASES } from '#tests/config/checks/database/postgres/postgres.ts';
 
 test.each([...COMPOSITE_INDEX_CASES])(
     'a composite foreign key with index ($columns) produces $count findings',
     async ({ columns, count }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['postgres'], { level: 'all' }),
             'migrations/1_orders.sql':
                 'CREATE TABLE orders (tenant_id int, user_id int, id int, FOREIGN KEY (tenant_id, user_id) REFERENCES users (tenant_id, user_id));\n' +
@@ -27,7 +27,7 @@ test.each([...COMPOSITE_INDEX_CASES])(
 );
 
 test('foreign-key-indexes reports a foreign key column that no index leads with and passes after an index on it', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['postgres'], { level: 'all' }),
         'migrations/1_members.sql':
             'CREATE TABLE teams (id bigint PRIMARY KEY);\nCREATE TABLE members (id bigint PRIMARY KEY, team_id bigint REFERENCES teams (id));\n',

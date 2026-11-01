@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { createFileTree } from 'testdirs';
+import { writeFile } from 'node:fs/promises';
 import { createRunCache } from '#cli/system/cache.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
@@ -63,16 +63,6 @@ test('.gitattributes wins, then the files configurations declare, then banners, 
     expect(files.get('vendor/lib.js')).toMatchObject({ kind: 'vendored', kindOrigin: 'folder' });
     expect(files.get('assets/a.bin')).toMatchObject({ kind: 'binary', kindOrigin: '.gitattributes' });
     expect(files.get('src/a.ts')).toMatchObject({ kind: 'source', kindOrigin: 'default' });
-});
-
-test('a folder without Git does not read Git attributes', async () => {
-    await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
-
-    await mkdir(join(sandbox.path, '.gitattributes'));
-    const repository = await readTestRepository(sandbox.path);
-    expect(repository.files.map(({ path, kind }) => ({ path, kind }))).toStrictEqual([
-        { path: 'source.ts', kind: 'source' },
-    ]);
 });
 
 test('.git/info/attributes marks a file generated while the working .gitattributes holds invalid UTF-8', async () => {

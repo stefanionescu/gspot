@@ -34,6 +34,267 @@ stage = "commit"
 summary = "Reports allowed names that no source file uses."
 why = "An allowed name that nothing uses stays in gspot.toml after the code that needed it is gone."
 
+[naming]
+allowed_names = ["toJSON", "toString", "valueOf", "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS", "NODE_ENV", "CI", "HOME", "PATH", "PWD", "TMPDIR", "TERM", "SHELL", "USER", "LANG", "NO_COLOR", "FORCE_COLOR", "GITHUB_TOKEN", "GITHUB_ACTIONS", "GITHUB_SHA", "GITHUB_REF"]
+allowed_phrases = ["package manager", "news"]
+
+[[naming.path_containers]]
+open = "__"
+close = "__"
+category = "folders"
+
+[[naming.path_containers]]
+open = "["
+close = "]"
+category = "path_parameters"
+
+[[naming.path_containers]]
+open = "("
+close = ")"
+category = "folders"
+
+[[naming.path_containers]]
+open = "@"
+close = ""
+category = "folders"
+
+[[naming.path_containers]]
+open = "_"
+close = ""
+category = "folders"
+
+[naming.lists]
+
+[naming.lists.folders]
+words = ["shared", "support"]
+
+[naming.lists.containers]
+words = ["core", "common", "generic", "misc", "stuff", "thing", "things", "details", "info", "object", "taxonomy", "tmp", "temp"]
+
+[naming.lists.roles]
+words = ["helper", "helpers", "util", "utils", "manager", "handler", "processor", "wrapper", "shim", "shims", "shell", "probe"]
+
+[naming.lists.marketing]
+words = ["advanced", "enhanced", "improved", "intelligent", "smart", "modern", "robust", "seamless", "ultimate", "comprehensive", "optimized", "reusable", "custom", "final", "latest", "old", "new", "legacy", "combined"]
+
+[naming.lists.defensive]
+words = ["ensure", "maybe", "likely", "should", "if needed", "ifneeded", "if available", "ifavailable", "if changed", "ifchanged", "if possible", "ifpossible", "or throw", "orthrow", "waitfor", "with retries", "transient", "belt and suspenders", "fallback", "load bearing", "load-bearing", "loadbearing"]
+
+[naming.lists.conjunctions]
+words = ["and", "or", "with", "when", "what", "whatever", "once", "plus"]
+
+[naming.lists.tests]
+words = ["test case", "testcase", "under test", "undertest", "edge case", "edge cases", "actual"]
+
+[naming.languages]
+
+[naming.languages.typescript]
+
+[naming.languages.typescript.categories]
+
+[naming.languages.typescript.categories.files]
+cases = ["kebab"]
+
+[naming.languages.typescript.categories.folders]
+cases = ["kebab"]
+
+[naming.languages.typescript.categories.types]
+cases = ["pascal"]
+
+[naming.languages.typescript.categories.classes]
+cases = ["pascal"]
+
+[naming.languages.typescript.categories.functions]
+cases = ["camel"]
+
+[naming.languages.typescript.categories.methods]
+cases = ["camel"]
+
+[naming.languages.typescript.categories.parameters]
+cases = ["camel"]
+
+[naming.languages.typescript.categories.variables]
+cases = ["camel", "upper-snake"]
+
+[naming.languages.typescript.categories.constants]
+cases = ["camel", "upper-snake"]
+
+[naming.languages.typescript.categories.properties]
+cases = ["camel", "upper-snake"]
+
+[naming.languages.typescript.categories.routes]
+cases = ["kebab"]
+
+[naming.languages.typescript.categories.path_parameters]
+cases = ["camel"]
+
+[naming.languages.typescript.categories.operation_ids]
+cases = ["camel"]
+
+[naming.languages.typescript.categories.enum_cases]
+cases = ["pascal", "camel"]
+
+[naming.languages.javascript]
+
+[naming.languages.javascript.categories]
+
+[naming.languages.javascript.categories.files]
+cases = ["kebab"]
+
+[naming.languages.javascript.categories.folders]
+cases = ["kebab"]
+
+[naming.languages.javascript.categories.types]
+cases = ["pascal"]
+
+[naming.languages.javascript.categories.classes]
+cases = ["pascal"]
+
+[naming.languages.javascript.categories.functions]
+cases = ["camel"]
+
+[naming.languages.javascript.categories.methods]
+cases = ["camel"]
+
+[naming.languages.javascript.categories.parameters]
+cases = ["camel"]
+
+[naming.languages.javascript.categories.variables]
+cases = ["camel", "upper-snake"]
+
+[naming.languages.javascript.categories.constants]
+cases = ["camel", "upper-snake"]
+
+[naming.languages.javascript.categories.properties]
+cases = ["camel", "upper-snake"]
+
+[naming.languages.javascript.categories.routes]
+cases = ["kebab"]
+
+[naming.languages.python]
+
+[naming.languages.python.categories]
+
+[naming.languages.python.categories.files]
+cases = ["snake"]
+
+[naming.languages.python.categories.folders]
+cases = ["snake"]
+
+[naming.languages.python.categories.modules]
+cases = ["snake"]
+
+[naming.languages.python.categories.packages]
+cases = ["snake"]
+
+[naming.languages.python.categories.type_aliases]
+cases = ["pascal"]
+
+[naming.languages.python.categories.variables]
+cases = ["snake", "upper-snake"]
+
+[naming.languages.python.categories.constants]
+cases = ["upper-snake"]
+
+[naming.languages.python.categories.attributes]
+cases = ["snake", "upper-snake"]
+
+[naming.languages.python.categories.properties]
+cases = ["snake"]
+
+[naming.languages.swift]
+
+[naming.languages.swift.categories]
+
+[naming.languages.swift.categories.files]
+cases = ["pascal", "pascal-extension"]
+
+[naming.languages.swift.categories.folders]
+cases = ["pascal"]
+
+[naming.languages.swift.categories.functions]
+cases = ["camel"]
+
+[naming.languages.swift.categories.methods]
+cases = ["camel"]
+
+[naming.languages.bash]
+
+[naming.languages.bash.categories]
+
+[naming.languages.bash.categories.files]
+cases = ["kebab", "snake"]
+
+[naming.languages.bash.categories.folders]
+cases = ["kebab", "snake"]
+
+[naming.languages.bash.categories.functions]
+cases = ["snake"]
+
+[naming.languages.bash.categories.variables]
+cases = ["snake", "upper-snake"]
+
+[naming.languages.bash.categories.constants]
+cases = ["upper-snake"]
+
+[naming.languages.sql]
+
+[naming.languages.sql.categories]
+
+[naming.languages.sql.categories.files]
+cases = ["timestamp-snake", "snake"]
+
+[naming.languages.sql.categories.folders]
+cases = ["snake"]
+
+[naming.languages.sql.categories.functions]
+cases = ["snake"]
+
+[naming.languages.sql.categories.parameters]
+cases = ["snake"]
+
+[naming.languages.sql.categories.schemas]
+cases = ["snake"]
+
+[naming.languages.sql.categories.tables]
+cases = ["snake"]
+
+[naming.languages.sql.categories.columns]
+cases = ["snake"]
+
+[naming.languages.sql.categories.indexes]
+cases = ["snake"]
+
+[naming.languages.sql.categories.triggers]
+cases = ["snake"]
+
+[naming.languages.sql.categories.policies]
+cases = ["snake"]
+
+[[naming.override]]
+paths = ["**"]
+categories = ["variables", "parameters"]
+allowed_names = ["_"]
+reason = "An underscore marks a discarded binding."
+
+[[naming.override]]
+paths = ["**/.githooks/**", "**/.gspot/hooks/**", "**/.husky/**", "**/hooks/**"]
+categories = ["files"]
+allowed_names = ["pre-commit", "pre-push", "commit-msg", "post-checkout", "post-merge", "pre-rebase", "prepare-commit-msg"]
+reason = "git names its hooks."
+
+[[naming.override]]
+paths = ["**/e2e/**"]
+categories = ["folders", "files"]
+allow_digits = true
+reason = "The folder name e2e holds a digit."
+
+[[naming.override]]
+paths = ["**/migrations/**"]
+categories = ["folders", "files"]
+allow_digits = true
+reason = "Migration tools name their folders and files with timestamps."
+
 [[naming.override]]
 allowed_names = ["_default"]
 categories = ["files"]

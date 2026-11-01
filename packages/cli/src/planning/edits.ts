@@ -6,16 +6,18 @@ import { createRunCache } from '#cli/system/cache.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { findSetting } from '#cli/settings/inherit.ts';
 import { readSettingsFile } from '#cli/settings/file.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { buildArgumentPaths } from '#cli/settings/paths.ts';
 import { ADD_REMOVE_MESSAGE } from '#cli/config/planning.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
+import { listRepositoryFiles } from '#cli/repository/read.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { RECORD_FIELDS } from '#cli/settings/schema/lookup.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import type { SettingsEdit } from '#cli/types/settings/edits.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
+import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
 import type { Settings, TomlTable } from '#cli/types/settings/settings.ts';
-import { readRepositoryRoot, listRepositoryFiles } from '#cli/repository/read.ts';
 import type { Scope, SettingMatch, AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import { assertConfigurationsExist, assertConfigurationsEditable } from '#cli/manifests/select.ts';
 import type { ConfigurationChange, SettingsEditContext, ConfigurationsOptions } from '#cli/types/planning.ts';
@@ -24,18 +26,17 @@ import type { ConfigurationChange, SettingsEditContext, ConfigurationsOptions } 
 Read and validate the settings once before a command edits them, and find the table of the scope that the command
 writes into.
 
-@param cwd the folder where the command starts.
-@param scopePath the --scope path as typed, relative to cwd, or absent for the top level.
+@param root the validated repository root.
+@param scopePath the --scope path relative to the repository root, or absent for the top level.
 */
-export async function readSettingsEditContext(cwd: string, scopePath?: string): Promise<SettingsEditContext> {
-    const root = await readRepositoryRoot(cwd);
+export async function readSettingsEditContext(root: string, scopePath?: string): Promise<SettingsEditContext> {
     const input = readSettingsFile(root);
     const cache = createRunCache(root);
     cache.sources.set(SETTINGS_FILE, Buffer.from(input.text));
     const settings = readSettings(input.text, root);
     const listing = await listRepositoryFiles(cache);
     const session = await openSession(root, { settingsFile: { settings, text: input.text }, cache, listing });
-    const path = scopePath === undefined ? '' : buildArgumentPath(root, cwd, scopePath);
+    const path = scopePath === undefined ? '' : buildArgumentPath(root, root, scopePath);
     if (!session.scopes.some((scope) => scope.path === path))
         throw new GspotError(
             'arguments',
@@ -43,6 +44,42 @@ export async function readSettingsEditContext(cwd: string, scopePath?: string): 
         );
     const scopeTable = getScopeTable(input.table, path);
     return { root, edit: input, settings, cache, listing, session, scope: path, scopeTable };
+}
+
+/**
+Resolve ignore selectors from the calling folder and refuse mistaken checks or unmatched paths.
+
+@param context the settings and repository files from before the edit.
+@param cwd the calling folder.
+@param paths the repeated --paths values.
+*/
+export function buildIgnorePaths(
+    context: SettingsEditContext,
+    cwd: string,
+    paths: string[] | undefined,
+): string[] | undefined {
+    const checks = new Set(listCheckIds(Object.values(context.settings.commandChecks)));
+    for (const path of paths ?? [])
+        if (checks.has(path))
+            throw new GspotError(
+                'arguments',
+                `--paths ${quoteArgument(path)} names a check. Give the check as a positional argument.`,
+            );
+    const selectors = buildArgumentPaths(context.root, cwd, paths);
+    for (const selector of selectors ?? []) {
+        const path = selector.startsWith('!') ? selector.slice(1) : selector;
+        const matches = buildPathMatcher([path]);
+        if (
+            !context.listing.files.some(
+                (file) => file.path === path || file.path.startsWith(`${path}/`) || matches(file.path),
+            )
+        )
+            throw new GspotError(
+                'arguments',
+                `--paths ${quoteArgument(selector)} matches no repository file. Name an existing file, folder, or matching glob.`,
+            );
+    }
+    return selectors;
 }
 
 /**
@@ -60,7 +97,7 @@ export async function readConfigurationEditContext(options: ConfigurationsOption
     configurationsByName: Map<string, Configuration>;
     context: SettingsEditContext;
 }> {
-    const context = await readSettingsEditContext(options.cwd, options.scope);
+    const context = await readSettingsEditContext(options.root, options.scope);
     const { root, edit: input, settings, scope, scopeTable } = context;
     const configurationsByName = readConfigurations();
     assertConfigurationsExist(options.configurations, configurationsByName);
@@ -124,7 +161,7 @@ export function readSetting(
                 'arguments',
                 `A configuration has the setting ${key} in the scope ${selectedScope}; add --scope ${quoteArgument(selectedScope)}.`,
             );
-        throw new GspotError('arguments', formatUnknownSetting(availableSettings, key));
+        throw new GspotError('arguments', formatUnknownSetting(key, availableSettings.settings.keys().toArray()));
     }
     return { availableSettings, match, scope: selected };
 }

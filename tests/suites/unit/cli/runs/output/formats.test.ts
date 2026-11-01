@@ -7,7 +7,6 @@ import { planChecks } from '#cli/planning/checks.ts';
 import { type Check } from '#cli/types/manifests.ts';
 import { openSession } from '#cli/planning/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
-import { parseOutput } from '#cli/runs/output/formats.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { CAFE_SCRIPT_PATH } from '#tests/config/paths.ts';
 import { isLinux } from '#tests/setup/system/platform.ts';
@@ -20,6 +19,8 @@ import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { BASE_CHECK } from '#tests/config/runs/command/check.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { parseOutput, hasRuleOutput } from '#cli/runs/output/formats.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { addCommandLine, parseCommandFindings } from '#cli/runs/command/output.ts';
 
 import {
@@ -255,7 +256,7 @@ test.each([...FIXABLE_FORMAT_CASES])('the %s formatter declares which output sup
 test.each([false, true])(
     'an unexplained failed invocation fails the run with one finding (per file: %j)',
     async (perFile) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([]),
             'source.js': 'export const ready = true;\n',
         });
@@ -280,3 +281,14 @@ test.each([false, true])(
         ]);
     },
 );
+
+test('only Bash checks with rule IDs advertise rule output', () => {
+    const checks = readConfigurations().get('bash')?.checks;
+    expect(checks).toBeDefined();
+    expect(
+        hasRuleOutput(checks?.find((check) => check.id === 'bash/zsh-syntax') as NonNullable<typeof checks>[number]),
+    ).toBe(false);
+    expect(
+        hasRuleOutput(checks?.find((check) => check.id === 'bash/shellcheck') as NonNullable<typeof checks>[number]),
+    ).toBe(true);
+});

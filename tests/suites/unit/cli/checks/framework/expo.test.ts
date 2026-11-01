@@ -1,7 +1,7 @@
 import { join } from 'node:path';
+import { createFileTree } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
 import { getTool } from '#cli/manifests/tools.ts';
-import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
@@ -11,6 +11,7 @@ import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { type SpawnResult } from '#cli/types/system/system.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { APP_FOLDERS, EXPO_PACKAGE_JSON, FAILED_DOCTOR_OUTPUT } from '#tests/config/checks/framework/framework.ts';
 
 test('Expo Doctor reports each failed check once in each app folder', async () => {
@@ -41,7 +42,7 @@ test('Expo Doctor output without a failed check is a check error that keeps its 
 });
 
 test('Expo Doctor reports an uninstalled Expo project instead of accepting its empty success', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['expo']),
         'package.json': EXPO_PACKAGE_JSON,
     });
@@ -56,7 +57,7 @@ async function prepareExpoApps(
     result: Partial<SpawnResult>,
 ): Promise<AsyncDisposable & { path: string; folders: string[] }> {
     await using resources = new AsyncDisposableStack();
-    const outside = await testdir({
+    const outside = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             scopes: APP_FOLDERS.map((path) => ({ path, configurations: ['expo'] })),
         }),

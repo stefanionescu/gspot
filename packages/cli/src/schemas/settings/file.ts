@@ -3,7 +3,6 @@ import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { levelSchema, commandCheckFields } from '#cli/schemas/manifests/fields.ts';
-import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { toolsSchema as publicToolsSchema } from '#cli/schemas/settings/tools/tables.ts';
 import { DEVICE_NAME, UNSAFE_PATH_END, UNSAFE_CHARACTERS, RESERVED_SEGMENTS } from '#cli/config/system/files.ts';
 import { ciSchema, hooksSchema, rulesSchema, namingSchema, importRulesSchema } from '#cli/schemas/settings/settings.ts';
@@ -15,7 +14,9 @@ import {
     removedConfigurationsSchema,
 } from '#cli/schemas/settings/fields.ts';
 import {
+    LEVEL_SUMMARY,
     COMMAND_CHECK_ID,
+    ALL_LEVEL_SUMMARY,
     GSPOT_FOLDER_PATH,
     SETTINGS_EXAMPLES,
     TABLE_DESCRIPTIONS,
@@ -26,12 +27,19 @@ import {
 
 export const ignoreSchema = z
     .strictObject({
-        check: z.string().optional().meta(SETTING_DEFINITIONS['ignore.check']),
-        rule: z.string().optional().meta(SETTING_DEFINITIONS['ignore.rule']),
-        paths: nonemptyPathsSchema.optional().meta(SETTING_DEFINITIONS['ignore.paths']),
-        reason: z
-            .string({ error: 'needs a reason. Add reason = "..." to this record.' })
-            .meta(SETTING_DEFINITIONS['ignore.reason']),
+        check: z.string().optional().meta({
+            description:
+                'The check whose findings you accept: a shipped check or a command check. Leave it out to keep the paths out of every check.',
+        }),
+        rule: z.string().optional().meta({
+            description: 'One lint rule of that check.',
+        }),
+        paths: nonemptyPathsSchema.optional().meta({
+            description: 'Where the ignore applies.',
+        }),
+        reason: z.string({ error: 'needs a reason. Add reason = "..." to this record.' }).meta({
+            description: 'Why you accept the findings.',
+        }),
     })
     .superRefine((ignore, context) => {
         if (ignore.check !== undefined) {
@@ -48,19 +56,38 @@ export const ignoreSchema = z
     });
 
 export const commandCheckSchema = z.strictObject({
-    id: z
-        .string()
-        .regex(COMMAND_CHECK_ID, 'Use a check ID without whitespace or commas.')
-        .meta(SETTING_DEFINITIONS['command_check.id']),
-    command: commandCheckFields.command.unwrap().meta(SETTING_DEFINITIONS['command_check.command']),
-    paths: nonemptyPathsSchema.meta(SETTING_DEFINITIONS['command_check.paths']),
-    outputs: nonemptyPathsSchema.optional().meta(SETTING_DEFINITIONS['command_check.outputs']),
-    stage: commandCheckFields.stage.exclude(['message']).meta(SETTING_DEFINITIONS['command_check.stage']),
-    summary: commandCheckFields.summary.meta(SETTING_DEFINITIONS['command_check.summary']),
-    help: commandCheckFields.help.meta(SETTING_DEFINITIONS['command_check.help']),
-    fix: commandCheckFields.fix.meta(SETTING_DEFINITIONS['command_check.fix']),
-    exit_codes: commandCheckFields.exit_codes.meta(SETTING_DEFINITIONS['command_check.exit_codes']),
-    output: commandCheckFields.output.meta(SETTING_DEFINITIONS['command_check.output']),
+    id: z.string().regex(COMMAND_CHECK_ID, 'Use a check ID without whitespace or commas.').meta({
+        description: 'The check ID that `--only` and `[[ignore]] check` use, which may not match a shipped check.',
+    }),
+    command: commandCheckFields.command.unwrap().meta({
+        description: 'The executable and arguments to run on selected files.',
+    }),
+    paths: nonemptyPathsSchema.meta({
+        description: 'The files the check reads, as repository-relative globs.',
+    }),
+    outputs: nonemptyPathsSchema.optional().meta({
+        description:
+            'The files that the command writes. With outputs, the check runs the command in a copy and reports each output that differs from the committed file.',
+    }),
+    stage: commandCheckFields.stage.exclude(['message']).meta({
+        description: 'The earliest stage that runs this check.',
+    }),
+    summary: commandCheckFields.summary.meta({
+        description: 'A short description shown in check listings.',
+    }),
+    help: commandCheckFields.help.meta({
+        description: 'Instructions for resolving findings.',
+    }),
+    fix: commandCheckFields.fix.meta({
+        description: 'The executable and arguments that correct findings.',
+    }),
+    exit_codes: commandCheckFields.exit_codes.meta({
+        description:
+            'Nonzero statuses that mean findings from command and fix. Other nonzero statuses mean execution failure.',
+    }),
+    output: commandCheckFields.output.meta({
+        description: 'The parser and location patterns used to read findings.',
+    }),
 });
 
 const { structure: rootStructure, ...scopeTables } = configurationTableSchemas;
@@ -107,9 +134,7 @@ export const scopeSchema = z.strictObject({
     path: relativePathSchema
         .refine(
             (path) =>
-                stripTrailingSlashes(
-                    stripTrailingSlashes(stripTrailingSlashes(stripTrailingSlashes(stripTrailingSlashes(path)))),
-                )
+                stripTrailingSlashes(path)
                     .split('/')
                     .every(
                         (segment) =>
@@ -121,31 +146,64 @@ export const scopeSchema = z.strictObject({
             SCOPE_PATH_MESSAGES.portable,
         )
         .refine((path) => !GSPOT_FOLDER_PATH.test(path.normalize('NFC')), SCOPE_PATH_MESSAGES.gspot)
-        .meta(SETTING_DEFINITIONS['scope.path']),
+        .meta({
+            description: 'The folder of the scope; no two records may name the same folder.',
+        }),
     configurations: z
         .string()
         .array()
-        .default(SETTING_DEFINITIONS['scope.configurations'].default)
-        .meta(SETTING_DEFINITIONS['scope.configurations']),
-    removed_configurations: removedConfigurationsSchema
-        .prefault(SETTING_DEFINITIONS['scope.removed_configurations'].default)
-        .meta(SETTING_DEFINITIONS['scope.removed_configurations']),
-    test_files: relativePathSchema.array().optional().meta(SETTING_DEFINITIONS['scope.test_files']),
+        .default([] as [])
+        .meta({
+            description:
+                'Configurations for this folder, on top of the root ones; `gspot add --scope` writes this list.',
+        }),
+    removed_configurations: removedConfigurationsSchema.prefault({}).meta({
+        reason_when: 'adding',
+        description:
+            'Configurations removed in this folder, each with the reason why; only `gspot add` and `gspot remove` write this table.',
+    }),
+    test_files: relativePathSchema.array().optional().meta({
+        description: 'More test files for this folder, added to the root list.',
+    }),
     ...scopeBody,
 });
 
 export const rootSettingSchemas = {
-    level: levelSchema.default(SETTING_DEFINITIONS['level'].default).meta(SETTING_DEFINITIONS['level']),
-    tool_timeout_seconds: z
-        .number()
-        .int()
-        .positive()
-        .default(SETTING_DEFINITIONS['tool_timeout_seconds'].default)
-        .meta(SETTING_DEFINITIONS['tool_timeout_seconds']),
+    level: levelSchema.default('basic').meta({
+        description: `${LEVEL_SUMMARY} ${ALL_LEVEL_SUMMARY} No level turns on experimental or preview lint rules.`,
+    }),
+    tool_timeout_seconds: z.number().int().positive().default(600).meta({
+        description:
+            'The time limit in seconds for every tool command, including installation and version reads. Root only.',
+    }),
     test_files: relativePathSchema
         .array()
-        .default(SETTING_DEFINITIONS['test_files'].default)
-        .meta(SETTING_DEFINITIONS['test_files']),
+        .default([
+            '**/test/**',
+            '**/tests/**',
+            '**/__tests__/**',
+            '**/*.test.*',
+            '**/*.spec.*',
+            '**/test_*.py',
+            '**/*_test.py',
+            '**/conftest.py',
+            '**/Tests/**',
+            '**/*Tests.swift',
+        ] as [
+            '**/test/**',
+            '**/tests/**',
+            '**/__tests__/**',
+            '**/*.test.*',
+            '**/*.spec.*',
+            '**/test_*.py',
+            '**/*_test.py',
+            '**/conftest.py',
+            '**/Tests/**',
+            '**/*Tests.swift',
+        ])
+        .meta({
+            description: 'Test files. Linters apply their test rules to these files.',
+        }),
 };
 
 export const settingsSchema = z
@@ -154,11 +212,16 @@ export const settingsSchema = z
         configurations: z
             .string()
             .array()
-            .default(SETTING_DEFINITIONS['configurations'].default)
-            .meta(SETTING_DEFINITIONS['configurations']),
-        removed_configurations: removedConfigurationsSchema
-            .prefault(SETTING_DEFINITIONS['removed_configurations'].default)
-            .meta(SETTING_DEFINITIONS['removed_configurations']),
+            .default([] as [])
+            .meta({
+                description:
+                    'The configurations this repository uses besides the always-selected ones. `gspot init` writes the detected ones here; `gspot add` and `gspot remove` change the list.',
+            }),
+        removed_configurations: removedConfigurationsSchema.prefault({}).meta({
+            reason_when: 'adding',
+            description:
+                'Configurations you removed, each with the reason why, which detection does not add back; only `gspot add` and `gspot remove` write this table.',
+        }),
         scope: scopeSchema.array().optional(),
         ...rootBody,
         import_rule: importRulesSchema,

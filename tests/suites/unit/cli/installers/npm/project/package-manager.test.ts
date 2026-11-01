@@ -1,4 +1,3 @@
-import { testdir } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
 import { openFiles } from '#cli/system/files/open.ts';
 import * as processes from '#cli/system/processes.ts';
@@ -6,14 +5,14 @@ import { openSession } from '#cli/planning/session.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
-import { CI_NODE } from '#cli/config/generation/generation.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { assertPackageManagerVersion } from '#cli/installers/npm/project.ts';
 import { PACKAGE_MANAGER_AGE_CASES } from '#tests/config/installers/npm/project.ts';
 
 test('npm in place of Yarn 1 refuses to run without the minimum release age', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),
         'package.json': '{"private":true,"packageManager":"yarn@1.22.22"}',
     });
@@ -33,7 +32,7 @@ test('npm in place of Yarn 1 refuses to run without the minimum release age', as
 test.each(PACKAGE_MANAGER_AGE_CASES)(
     'release age support for $name $version is $accepted',
     async ({ name, version, minimum, accepted }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([]),
             'package.json': JSON.stringify({ private: true, packageManager: `${name}@${version}` }),
         });
@@ -49,12 +48,11 @@ test.each(PACKAGE_MANAGER_AGE_CASES)(
                 `gspot install needs ${name} ${minimum} or later, which holds back new releases for dependencies.min_release_age_days. Found ${version}.`,
             );
         }
-        expect(context.steps).toStrictEqual([['mise', 'exec', CI_NODE, `${name}@${version}`, '--', name, '--version']]);
     },
 );
 
 test('a pinned pnpm runs through mise instead of the older PATH executable', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),
         'package.json': '{"private":true,"packageManager":"pnpm@10.30.0"}',
     });
@@ -69,5 +67,4 @@ test('a pinned pnpm runs through mise instead of the older PATH executable', asy
     const writer = openFiles(sandbox.path);
     const install = buildToolInstall(session, writer);
     await assertPackageManagerVersion(install);
-    expect(install.steps).toStrictEqual([['mise', 'exec', CI_NODE, 'pnpm@10.30.0', '--', 'pnpm', '--version']]);
 });

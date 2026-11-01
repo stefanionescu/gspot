@@ -23,3 +23,12 @@ test.each(VALUE_VALIDATION_CASES)('set validates the value before its reason: $n
     });
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
+
+test.each(['set', 'unset'])('%s identifies a table and names its settings without writing', async (command) => {
+    const settings = buildSandboxSettings([]);
+    await using sandbox = await createGitSandbox({ 'gspot.toml': settings });
+    const result = await runGspot(sandbox.path, [command, 'hooks', ...(command === 'set' ? ['false'] : [])]);
+    expect(result.code).toBe(2);
+    expect(result.stderr).toStartWith('hooks is a table. Name one of its settings, such as hooks.enabled.');
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
+});

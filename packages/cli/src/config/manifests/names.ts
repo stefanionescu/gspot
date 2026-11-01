@@ -43,9 +43,7 @@ export const TOOL_KINDS = ['program', 'library'] as const;
 
 export const PYTHON_CONFIGURATION = 'python';
 
-export const TOOL_BUILDS = OPERATING_SYSTEMS.flatMap(
-    (system) => [system.name, `${system.name}-x64`, `${system.name}-arm64`] as const,
-);
+export const TOOL_BUILDS = OPERATING_SYSTEMS.map((system) => system.name);
 
 export const SHIPPED_CONFIG_FOLDER = 'config';
 

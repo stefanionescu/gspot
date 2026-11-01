@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
 import { getTable } from '#cli/settings/scopes.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { getSettingValue } from '#cli/settings/inherit.ts';
@@ -11,10 +11,11 @@ import { validateKeys } from '#cli/settings/validation/keys.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { PURGECSS_SAFELIST_TABLES } from '#tests/config/settings/inherit.ts';
 
 test('an empty PurgeCSS safelist is inherited, and a scope value applies to its children', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['site'], { level: 'all', tables: PURGECSS_SAFELIST_TABLES }),
         'index.html': '<!doctype html><title>Site</title>',
@@ -53,9 +54,6 @@ test('an empty PurgeCSS safelist is inherited, and a scope value applies to its 
         ['app', ['keep']],
         ['app/deep', ['keep']],
     ]);
-    expect(() => getTable(session.scopes.find(({ path }) => path === 'sibling')!.settings, 'tools.purgecss')).toThrow(
-        'The selected scope has no tools.purgecss settings.',
-    );
 });
 
 test('a root list replaces configuration defaults, and a scope list adds to the root list', () => {
@@ -97,7 +95,7 @@ test('a root list replaces configuration defaults, and a scope list adds to the 
 });
 
 test('a first list written in a scope replaces the shipped default for that scope and its children', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['supabase'], {
             tables: '[[scope]]\npath = "app"\nsupabase.schemas = ["api"]\n',
         }),

@@ -1,15 +1,9 @@
 import { stringify as stringifyYaml } from 'yaml';
+import { getTable } from '#cli/settings/scopes.ts';
+import { CONFIG_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import type { PlannedConfig } from '#cli/types/generation/files.ts';
-import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
-
-import {
-    V8R_TABLE,
-    V8R_NOTES,
-    YAMLLINT_CHECK,
-    YAMLLINT_RULES,
-    YAMLLINT_YAML_OPTIONS,
-    YAMLLINT_RULE_OPTIONS,
-} from '#cli/config/generation/configurations/general.ts';
+import { stringify as stringifyToml } from '@decimalturn/toml-patch';
+import { V8R_TABLE, V8R_NOTES, TAPLO_FORMATTING } from '#cli/config/generation/configurations/general.ts';
 
 /**
 Build v8r.yml: the v8r schema catalog, including the configured file selectors.
@@ -32,21 +26,21 @@ export function buildV8rFile(planned: PlannedConfig): string {
 }
 
 /**
-Build yamllint.yml: the YAML lint rules with the configured indentation and disabled checks.
+Build the Taplo formatter settings with the selected indentation.
 
-@param planned the config file to build.
+@param planned the config file and scope.
 */
-export function buildYamllintFile(planned: PlannedConfig): string {
-    const rules: Record<string, unknown> = {
-        ...Object.fromEntries(YAMLLINT_RULES.map((rule) => [rule, {}])),
-        ...YAMLLINT_RULE_OPTIONS,
-    };
-    for (const [rule, ruleOptions] of Object.entries(getTable(planned.scope.settings, 'tools.yamllint').rules))
-        rules[rule] = { ...(rules[rule] as Record<string, unknown>), ...ruleOptions };
-    Object.assign(
-        rules,
-        Object.fromEntries(listIgnoredRules(planned.scope, YAMLLINT_CHECK).map((name) => [name, 'disable'])),
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: CONFIG_BUILDERS selects this configuration's generator through its shared builder interface.
+export function buildTaploFile(planned: PlannedConfig): string {
+    const { format } = planned.scope.settings.tables;
+    return stringifyToml(
+        {
+            schema: { enabled: false },
+            formatting: {
+                indent_string: format.indent_style === 'tab' ? '\t' : ' '.repeat(format.indent_width),
+                ...TAPLO_FORMATTING,
+            },
+        },
+        CONFIG_TOML_FORMAT,
     );
-    const document = { rules };
-    return stringifyYaml(document, YAMLLINT_YAML_OPTIONS);
 }

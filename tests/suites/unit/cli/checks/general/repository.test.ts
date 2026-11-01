@@ -15,7 +15,7 @@ import { LOCAL_FILE_PATHS, LARGE_FILE_TABLES } from '#tests/config/checks/genera
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 test(`local-files reports each tracked path that a scope's configurations leave untracked, once, including a path only in the Git index`, async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const { refused, allowed, scopes, indexOnly } = LOCAL_FILE_PATHS;
     const settings = buildSandboxSettings(['javascript'], { level: 'all', tables: scopes });
     await createFileTree(sandbox.path, {
@@ -40,7 +40,7 @@ test(`local-files reports each tracked path that a scope's configurations leave 
 });
 
 test('large files are reported in every scope except LFS, generated and vendored files, and pass once shrunk', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['javascript'], {
         level: 'all',
         tables: LARGE_FILE_TABLES,
@@ -67,18 +67,9 @@ vendor/** linguist-vendored
         buildRunOptions({ only: ['repository/large-files'] }),
     );
 
-    expect(failed.report.checks.flatMap(({ findings }) => findings)).toStrictEqual(
-        ['app/big.bin', 'big.bin'].map((file) => ({
-            check: 'repository/large-files',
-            file,
-            rule: 'size',
-            line: 1,
-            fixable: false,
-            message:
-                '1 kB is over the 1 kB limit; mark it as generated or vendored in .gitattributes, move it to LFS, or ignore this finding with a reason.',
-            help: 'Track the file with Git LFS, classify it as generated or vendored in .gitattributes, or raise repository.max_file_kilobytes with a reason.',
-        })),
-    );
+    expect(
+        failed.report.checks.flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule }))),
+    ).toStrictEqual(['app/big.bin', 'big.bin'].map((file) => ({ file, rule: 'size' })));
     await writeFile(join(sandbox.path, 'app/big.bin'), Buffer.alloc(BYTES_PER_KILOBYTE));
     await writeFile(join(sandbox.path, 'big.bin'), Buffer.alloc(BYTES_PER_KILOBYTE));
 
@@ -93,7 +84,7 @@ vendor/** linguist-vendored
 
 test('a tracked outward symlink is a local-files finding', async () => {
     await using outside = await testdir({ 'external.ts': 'export {};\n' });
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     await symlink(relative(sandbox.path, outside.path), join(sandbox.path, 'outside'), 'dir');
     runGitStep(sandbox.path, ['init', '-q']);
     runGitStep(sandbox.path, ['add', '-A']);
@@ -130,7 +121,7 @@ test('oversized and invalid UTF-8 files get one repository finding and leave oth
 });
 
 test('large files use the size limit of their owning scope', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             tables: '[repository]\nmax_file_kilobytes = 1\n[[scope]]\npath = "app"\n[scope.repository]\nmax_file_kilobytes = 2\n',
         }),

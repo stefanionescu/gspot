@@ -169,7 +169,7 @@ test.each(['', 'app'])(
         const command = [join(toolModules, '.bin/commitlint'), '--edit', join(sandbox.path, messageFile)];
         const before = await runCommand(command, execution);
         expect(before.code, before.stdout + before.stderr).toBe(0);
-        const initialized = await runGspot(sandbox.path, ['init', '--yes', '--no-configurations', '--level', 'all']);
+        const initialized = await runGspot(sandbox.path, ['init', '--no-configurations', '--level', 'all']);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         const target = `${scope === '' ? './' : '../'}${getManifestTarget('commits', 'commitlint.json')}`;
         expect(await readFile(join(sandbox.path, packageFile), 'utf8')).toBe(

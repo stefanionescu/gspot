@@ -1,15 +1,15 @@
-import { testdir } from 'testdirs';
 import { parse } from 'jsonc-parser';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/planning/session.ts';
 import { HtmlValidate, type ConfigData } from 'html-validate';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each(['html/html-validate', 'site/html-validate'])(
     'an ignore for %s turns valid-id off only in its own html-validate file',
     async (check) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['html', 'site'], {
                 level: 'all',
                 tables: `[[ignore]]\ncheck = "${check}"\nrule = "valid-id"\nreason = "The external validator checks identifier syntax."\n`,
@@ -30,7 +30,7 @@ test.each(['html/html-validate', 'site/html-validate'])(
 );
 
 test('source HTML leaves layout to Prettier while built pages keep their existing validation', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['html', 'site']),
         'index.html':
             '<!doctype html><html lang="en"><head><title>Example</title></head><body><DIV CLASS=sample>Example</DIV></body></html>',

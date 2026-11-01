@@ -6,14 +6,18 @@ export const PROGRESS_CLEAR = '\r\u{1B}[2K';
 
 export const CHECK_LIST_SEPARATOR = ',';
 
-export const NO_BASE_REVISION = /^0*$/u;
-
 export const SHORT_HASH_LENGTH = 7;
 
 export const PUSH_STDIN_MESSAGE =
     '--hook pre-push reads the lines that Git writes to standard input. Run it from the pre-push hook.';
 
-export const PRE_COMMIT_OPTION = '--hook pre-commit';
+export const CHECK_STAGES = ['commit', 'push'] as const;
+
+export const CHECK_INPUT_HOOKS = ['pre-push', 'commit-msg'] as const;
+
+export const STAGE_OPTION = '--stage <commit|push>';
+
+export const STAGE_FLAG = '--stage';
 
 export const COMMIT_FILE_MESSAGE = '--hook commit-msg needs one commit message file after --.';
 
@@ -21,7 +25,9 @@ export const CHECK_STOPPED_MESSAGE = 'Check stopped before every check finished.
 
 export const ONLY_OPTION = '--only <checks>';
 
-export const CHANGED_OPTION = '--changed [ref]';
+export const BASE_OPTION = '--base <ref>';
+
+export const BASE_FLAG = '--base';
 
 export const FIX_FLAG = '--fix';
 
@@ -88,7 +94,3 @@ export const FAILED_STATUSES = new Set<CheckStatus>(['failed', 'error']);
 export const CHECK_COMMAND = 'gspot check';
 
 export const HOOK_FLAG = '--hook';
-
-export const EMPTY_BASE = 'the base ref is empty';
-
-export const CREATED_BRANCH_BASE = 'the base is a new branch';

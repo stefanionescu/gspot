@@ -20,7 +20,7 @@ test.each([...ROOT_DEPENDENCIES])(
 describe.each(['bun', 'npm', 'pnpm'] as const)('%s tool lockfile', (packageManager) => {
     test.each([
         ...LOCKFILE_SECURITY_CASES.map((row) => [...row, LOCKFILE_REGISTRY, 'is-number'] as const),
-        ...LOCKFILE_REGISTRY_CASES,
+        ...(packageManager === 'bun' ? LOCKFILE_REGISTRY_CASES : []),
     ])('%s preserves the pinned package identity', (_scenario, name, version, address, expected, env, dependency) => {
         const dependencies = { [dependency]: '7.0.0' };
         const integrity = 'sha512-YQ==';

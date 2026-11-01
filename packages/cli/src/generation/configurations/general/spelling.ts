@@ -3,13 +3,8 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { CONFIG_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import type { IgnoreSection, PlannedConfig } from '#cli/types/generation/files.ts';
+import { convertToGlobs, keepFirstPatterns, listCheckIgnoreSections } from '#cli/generation/ignores.ts';
 
-import {
-    convertToGlobs,
-    keepFirstPatterns,
-    buildIgnoreSections,
-    listCheckIgnoreSections,
-} from '#cli/generation/ignores.ts';
 import {
     TYPOS_CHECK,
     LOCKFILE_GLOB,
@@ -21,21 +16,20 @@ import {
 } from '#cli/config/generation/configurations/general.ts';
 
 function buildTyposSections(planned: PlannedConfig): IgnoreSection[] {
-    const sections = [
-        ...buildIgnoreSections(planned.session),
-        ...listCheckIgnoreSections(planned.scope.settings, TYPOS_CHECK),
-    ].map((section) => {
-        if (section.key === 'lockfiles')
-            return {
-                ...section,
-                patterns: [...section.patterns, ...TYPOS_LOCKFILE_GLOBS].filter(
-                    (path) => path === LOCKFILE_GLOB || !path.endsWith(LOCKFILE_EXTENSION),
-                ),
-            };
-        return section.key === 'generators'
-            ? { ...section, patterns: [...section.patterns, ...TYPOS_FORMAT_GLOBS] }
-            : section;
-    });
+    const sections = [...planned.ignoreSections, ...listCheckIgnoreSections(planned.scope.settings, TYPOS_CHECK)].map(
+        (section) => {
+            if (section.key === 'lockfiles')
+                return {
+                    ...section,
+                    patterns: [...section.patterns, ...TYPOS_LOCKFILE_GLOBS].filter(
+                        (path) => path === LOCKFILE_GLOB || !path.endsWith(LOCKFILE_EXTENSION),
+                    ),
+                };
+            return section.key === 'generators'
+                ? { ...section, patterns: [...section.patterns, ...TYPOS_FORMAT_GLOBS] }
+                : section;
+        },
+    );
     return keepFirstPatterns(
         sections.map((section) => ({
             ...section,

@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { getTable } from '#cli/settings/scopes.ts';
@@ -8,6 +7,7 @@ import { buildSettingsText } from '#cli/settings/text.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { stripDefaults } from '#cli/commands/init/defaults.ts';
 import { DEFAULT_CASES } from '#tests/config/commands/init/init.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each([...DEFAULT_CASES])('init strips $name without changing inherited values', ({ source, expected }) => {
     const authored = parseTomlFile('gspot.toml', source);
@@ -21,7 +21,7 @@ test.each([
     'configurations = ["supabase"]\n[supabase]\nfunctions_folder = "supabase/functions"\n[[scope]]\npath = "apps/api"\n',
     'configurations = ["supabase"]\n[[scope]]\npath = "app"\nsupabase.functions_folder = "supabase/functions"\n[[scope]]\npath = "app/child"\n',
 ])("dropping defaults keeps every scope's paths the same (%j)", async (source) => {
-    await using sandbox = await testdir({ 'gspot.toml': source, 'apps/api/.keep': '', 'app/child/.keep': '' });
+    await using sandbox = await createGitSandbox({ 'gspot.toml': source, 'apps/api/.keep': '', 'app/child/.keep': '' });
     const before = await openSession(sandbox.path);
     const written = buildSettingsText(source, stripDefaults(parseTomlFile('gspot.toml', source)));
     await writeFile(join(sandbox.path, 'gspot.toml'), written);

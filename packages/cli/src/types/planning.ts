@@ -1,12 +1,13 @@
 import type { Session } from '#cli/types/session.ts';
 import type { RunCache } from '#cli/types/system/system.ts';
+import type { STAGE_FILTERS } from '#cli/config/planning.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { SettingsEdit } from '#cli/types/settings/edits.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import type { ConfigurationTables } from '#cli/types/settings/tables.ts';
+import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
 import type { Settings, TomlTable } from '#cli/types/settings/settings.ts';
 import type { RepositoryListing } from '#cli/types/repository/repository.ts';
-import type { Tool, Stage, Check, Configuration } from '#cli/types/manifests.ts';
 
 export type SkipCause = 'level' | 'system' | 'replaced' | 'setting' | 'condition' | 'ignore';
 
@@ -55,7 +56,7 @@ export type PlannedCheck = ConfiguredCheck & {
     messageFile?: string | undefined;
 };
 
-export type StageFilter = Stage | 'all';
+export type StageFilter = (typeof STAGE_FILTERS)[number];
 
 export type LicenseProject = {
     dependencyFile: string;
@@ -64,11 +65,9 @@ export type LicenseProject = {
     skip: SettingsSkip | undefined;
 };
 
-export type LimitCheck = { check: string; languages: readonly string[]; limits: readonly string[] };
-
 export type SettingReader = { check: string; enabled: boolean; note?: string };
 
-export type ConfigurationsOptions = { cwd: string; configurations: string[]; scope?: string | undefined };
+export type ConfigurationsOptions = { root: string; cwd: string; configurations: string[]; scope?: string | undefined };
 
 export type ConfigurationChange = {
     action: string;

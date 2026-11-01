@@ -1,18 +1,25 @@
+import { readGitLines } from '#cli/system/git.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import { readPushedRevisions } from '#cli/repository/revisions/push.ts';
 import { NO_PENDING_REFS, EMPTY_PUSH_MESSAGE } from '#cli/config/commands/check.ts';
 import { type PushRevision, type PushedRevisions } from '#cli/types/repository/revisions.ts';
-import { type RunReport, type PushReport, type CheckOptions } from '#cli/types/commands/check.ts';
+import { type PushReport, type CheckOptions, type RevisionCheckResult } from '#cli/types/commands/check.ts';
 
 async function runRevisionCheck(
     root: string,
     options: CheckOptions,
     cancelSignal: AbortSignal,
     revision: PushRevision,
-): Promise<CommandResult<RunReport> | undefined> {
+): Promise<RevisionCheckResult | undefined> {
+    if (revision.paths?.length === 0) return { skipped: 'no changed paths' };
     try {
+        const settings = await readGitLines(root, ['ls-tree', '--name-only', revision.hash, '--', SETTINGS_FILE], {
+            cancelSignal,
+        });
+        if (settings.length === 0) return { skipped: 'the commit has no gspot.toml' };
         using copy = await copyRevision(root, { kind: 'commit', hash: revision.hash }, cancelSignal);
         return await runTreeCheck(copy.root, options, cancelSignal, {
             ...(copy.dependencyNote !== undefined && { dependencyNote: copy.dependencyNote }),
@@ -36,8 +43,9 @@ function buildPushReport(
     pushed: PushedRevisions,
     revisions: PushReport['revisions'],
     cancelSignal: AbortSignal,
+    revisionCount: number,
 ): PushReport {
-    const pendingRefs = pushed.revisions.slice(revisions.length).flatMap((revision) => revision.refs);
+    const pendingRefs = pushed.revisions.slice(revisionCount).flatMap((revision) => revision.refs);
     const exitCode = cancelSignal.aborted
         ? Number(cancelSignal.reason)
         : Math.max(0, ...revisions.map((revision) => revision.report.exitCode));
@@ -64,9 +72,17 @@ export async function runPushCheck(
     const selected = await readPushedRevisions(root, options.push.stdin, options.push.remote, cancelSignal);
     const revisions: PushReport['revisions'] = [];
     const text: string[] = selected.revisions.length === 0 && selected.skipped.length === 0 ? [EMPTY_PUSH_MESSAGE] : [];
+    let revisionCount = 0;
     for (const revision of selected.revisions) {
         const result = await runRevisionCheck(root, options, cancelSignal, revision);
         if (result === undefined) break;
+        revisionCount += 1;
+        if ('skipped' in result) {
+            selected.skipped.push(
+                ...revision.refs.map((ref) => ({ ref, hash: revision.hash, reason: result.skipped })),
+            );
+            continue;
+        }
         revisions.push({
             hash: revision.hash,
             refs: revision.refs,
@@ -76,11 +92,11 @@ export async function runPushCheck(
         });
         text.push(`${revision.refs.join(', ')} at ${revision.hash}\n${result.text}`);
     }
-    const report = buildPushReport(selected, revisions, cancelSignal);
+    const report = buildPushReport(selected, revisions, cancelSignal, revisionCount);
     if (report.canceled !== undefined)
         text.push(
             `Push checks canceled. Branches and tags not checked: ${report.canceled.pendingRefs.join(', ') || NO_PENDING_REFS}.\n`,
         );
-    const skipped = selected.skipped.map((skip) => `${skip.ref}: ${skip.reason}; no source check applies.\n`);
+    const skipped = selected.skipped.map((skip) => `${skip.ref}: ${skip.reason}; no checks apply.\n`);
     return { text: [...text, ...skipped].join(''), json: report, exitCode: report.exitCode };
 }

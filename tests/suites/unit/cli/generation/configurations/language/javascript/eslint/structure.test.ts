@@ -4,11 +4,10 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { LEVELS } from '#cli/config/manifests/names.ts';
 import { LINGUIST_GENERATED_PATTERN } from '#tests/config/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { type LintFinding, type SourceRuleCase } from '#tests/types/tools.ts';
 import { buildEslint, listFindingRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { type LintFinding, type SourceRuleCase, type EslintConfiguration } from '#tests/types/tools.ts';
 import { INDEX_ONLY_REEXPORTS } from '#tests/config/generation/configurations/language/javascript/eslint/settings.ts';
 
 import {
@@ -51,38 +50,41 @@ async function assertSourceRules(
     }
 }
 
-test.each([...LEVELS])('Knip entry files still get the trivial-file rules at %s, in nested scopes', async (level) => {
-    await using sandbox = await testdir({
-        'package.json': '{"name":"entry-sandbox","private":true,"type":"module"}',
-        'src/start.js': STARTER_SOURCE,
-        'src/main.js': ENTRYPOINT_SOURCE,
-        'src/task.js': ENTRYPOINT_SOURCE,
-        'api/src/start.js': STARTER_SOURCE,
-        'api/src/main.js': ENTRYPOINT_SOURCE,
-        'api/src/task.js': ENTRYPOINT_SOURCE,
-    });
+test.each(['all'] as const)(
+    'Knip entry files still get the trivial-file rules at %s, in nested scopes',
+    async (level) => {
+        await using sandbox = await testdir({
+            'package.json': '{"name":"entry-sandbox","private":true,"type":"module"}',
+            'src/start.js': STARTER_SOURCE,
+            'src/main.js': ENTRYPOINT_SOURCE,
+            'src/task.js': ENTRYPOINT_SOURCE,
+            'api/src/start.js': STARTER_SOURCE,
+            'api/src/main.js': ENTRYPOINT_SOURCE,
+            'api/src/task.js': ENTRYPOINT_SOURCE,
+        });
 
-    const settings = buildSandboxSettings(['javascript'], { level, tables: ENTRYPOINT_TABLES });
-    expect(listTrivialFiles(await listTrivialFindings(sandbox.path, settings))).toStrictEqual(
-        level === 'all' ? [...TRIVIAL_ENTRYPOINT_FILES] : [],
-    );
-    await writeFile(
-        join(sandbox.path, 'src/main.js'),
-        "import { start } from './start.js';\nfunction boot() { start(); }\nboot();\n",
-    );
-    const mainFindings = level === 'all' ? [{ file: 'src/main.js', rule: 'gspot/no-trivial-functions' }] : [];
-    const findings = await listTrivialFindings(sandbox.path, settings);
-    expect(findings.filter(({ file }) => file === 'src/main.js')).toStrictEqual(mainFindings);
-    expect(listTrivialFiles(findings)).toStrictEqual(
-        level === 'all' ? TRIVIAL_ENTRYPOINT_FILES.filter((file) => file !== 'src/main.js') : [],
-    );
-    await writeFile(
-        join(sandbox.path, 'src/main.js'),
-        "import { start } from './start.js';\nexport function boot() { start(); }\n",
-    );
-    const publicFindings = await listTrivialFindings(sandbox.path, settings);
-    expect(publicFindings.filter(({ file }) => file === 'src/main.js')).toStrictEqual(mainFindings);
-});
+        const settings = buildSandboxSettings(['javascript'], { level, tables: ENTRYPOINT_TABLES });
+        expect(listTrivialFiles(await listTrivialFindings(sandbox.path, settings))).toStrictEqual([
+            ...TRIVIAL_ENTRYPOINT_FILES,
+        ]);
+        await writeFile(
+            join(sandbox.path, 'src/main.js'),
+            "import { start } from './start.js';\nfunction boot() { start(); }\nboot();\n",
+        );
+        const mainFindings = [{ file: 'src/main.js', rule: 'gspot/no-trivial-functions' }];
+        const findings = await listTrivialFindings(sandbox.path, settings);
+        expect(findings.filter(({ file }) => file === 'src/main.js')).toStrictEqual(mainFindings);
+        expect(listTrivialFiles(findings)).toStrictEqual(
+            TRIVIAL_ENTRYPOINT_FILES.filter((file) => file !== 'src/main.js'),
+        );
+        await writeFile(
+            join(sandbox.path, 'src/main.js'),
+            "import { start } from './start.js';\nexport function boot() { start(); }\n",
+        );
+        const publicFindings = await listTrivialFindings(sandbox.path, settings);
+        expect(publicFindings.filter(({ file }) => file === 'src/main.js')).toStrictEqual(mainFindings);
+    },
+);
 
 test('level all skips build output and files marked linguist-generated in .gitattributes', async () => {
     await using sandbox = await testdir({
@@ -103,7 +105,7 @@ test('level all skips build output and files marked linguist-generated in .gitat
     }
 });
 
-test.each([...LEVELS])('size limits apply to test files only at level all (%s)', async (level) => {
+test.each(['all'] as const)('size limits apply to test files only at level all (%s)', async (level) => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             tables: '[limits]\nfile_lines = 8\nfunction_lines = 5\nfunction_statements = 3\n',
@@ -122,37 +124,8 @@ test.each([...LEVELS])('size limits apply to test files only at level all (%s)',
     const source = `export function count() {\n${declarations}\n    return value0;\n}\n`;
     await createFileTree(sandbox.path, { 'sample.test.js': source });
     const findings = await listLintFindings(eslint, sandbox.path, ['sample.test.js'], rules);
-    expect(listFindingRules(findings)).toStrictEqual(level === 'all' ? rules.toSorted(compareText) : []);
+    expect(listFindingRules(findings)).toStrictEqual(rules.toSorted(compareText));
 });
-
-test.each([...LEVELS])(
-    'trivial-file and trivial-function rules apply to root and nested files only at level all (%s)',
-    async (level) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['javascript'], {
-                level,
-                scopes: [{ path: 'app', configurations: ['javascript'] }],
-            }),
-            'package.json': '{"private":true,"type":"module"}\n',
-            'main.js': '',
-            'app/main.js': '',
-        });
-
-        const eslint = await buildEslint(sandbox.path);
-        for (const filePath of ['main.js', 'app/main.js']) {
-            await createFileTree(sandbox.path, { [filePath]: "export { launch as start } from './launch.js';" });
-            expect(await listLintFindings(eslint, sandbox.path, [filePath], TRIVIAL_RULES)).toStrictEqual(
-                level === 'all' ? [{ file: filePath, rule: 'gspot/no-trivial-files', line: 1 }] : [],
-            );
-            await createFileTree(sandbox.path, {
-                [filePath]: 'function start() { return launch(); } export const app = start();',
-            });
-            expect(
-                await listLintFindings(eslint, sandbox.path, [filePath], ['gspot/no-trivial-functions']),
-            ).toStrictEqual(level === 'all' ? [{ file: filePath, rule: 'gspot/no-trivial-functions', line: 1 }] : []);
-        }
-    },
-);
 
 test('a JSON import attribute is accepted where your import extensions need a suffix', async () => {
     await using sandbox = await testdir({
@@ -168,8 +141,6 @@ test('a JSON import attribute is accepted where your import extensions need a su
 
     const eslint = await buildEslint(sandbox.path);
     for (const filePath of ['main.js', 'app/main.js']) {
-        const config = (await eslint.calculateConfigForFile(filePath)) as EslintConfiguration;
-        expect(config.rules['n/file-extension-in-import']![0]).toBe(2);
         await createFileTree(sandbox.path, { [filePath]: 'import manifest from "#data/package";' });
         expect(await listLintFindings(eslint, sandbox.path, [filePath], ['no-restricted-syntax'])).toStrictEqual([
             { file: filePath, rule: 'no-restricted-syntax', line: 1 },

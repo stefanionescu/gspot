@@ -76,9 +76,6 @@ test.each([...PYTHON_PROJECTS])(
         for (let round = 0; round < 2; round++) {
             const installed = await spawnGspot(clone, ['install']);
             expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-            expect(installed.stdout.split('\n')).toContain(
-                `installed 1 Python tool in ${GSPOT_PATHS.pythonEnvironment}`,
-            );
             expect(runGitStep(clone, ['status', '--porcelain'])).toBe('');
             expect({
                 projectFile: await readFile(join(clone, GSPOT_PATHS.pythonProject)),

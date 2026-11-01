@@ -13,27 +13,32 @@ export const PACKAGE_MANAGERS = ['npm', 'bun', 'pnpm', 'yarn'] as const;
 export const START_RUNNERS = {
     npm: {
         command: 'npm exec --no -- gspot',
-        missing: 'Install Node.js and npm, then run npm install.',
+        missing:
+            "npm is not on the PATH that this Git client gives hooks ($PATH). Start the client from a terminal, or add npm's folder to its PATH.",
         installCommand: 'npm install --save-dev --save-exact <package>@<version>',
     },
     pnpm: {
         command: 'pnpm exec gspot',
-        missing: 'Install pnpm, then run pnpm install.',
+        missing:
+            "pnpm is not on the PATH that this Git client gives hooks ($PATH). Start the client from a terminal, or add pnpm's folder to its PATH.",
         installCommand: 'pnpm add --save-dev --save-exact <package>@<version>',
     },
     yarn: {
         command: 'yarn exec -- gspot',
-        missing: 'Install Yarn, then run yarn install.',
+        missing:
+            "yarn is not on the PATH that this Git client gives hooks ($PATH). Start the client from a terminal, or add yarn's folder to its PATH.",
         installCommand: 'yarn add --dev --exact <package>@<version>',
     },
     bun: {
         command: 'bunx --no-install gspot',
-        missing: 'Install Bun, then run bun install.',
+        missing:
+            "bunx is not on the PATH that this Git client gives hooks ($PATH). Start the client from a terminal, or add bunx's folder to its PATH.",
         installCommand: 'bun add --dev --exact <package>@<version>',
     },
     mise: {
         command: 'mise exec -- gspot',
-        missing: 'Install mise, then run mise install.',
+        missing:
+            "mise is not on the PATH that this Git client gives hooks ($PATH). Start the client from a terminal, or add mise's folder to its PATH.",
         installCommand: 'mise use --pin --tool-option allow_low_downloads=true npm:<package>@<version>',
     },
 } as const;
@@ -45,3 +50,16 @@ export const LERNA_FILE = 'lerna.json';
 export const RUSH_FILE = 'rush.json';
 
 export const IMPORT_CONDITIONS = new Set(['node', 'import', 'default']);
+
+export const FROZEN_INSTALLS = {
+    'package-lock.json': ['npm', 'ci'],
+    'pnpm-lock.yaml': ['pnpm', 'install', '--frozen-lockfile'],
+    'yarn.lock': ['yarn', 'install', '--frozen-lockfile'],
+    'bun.lock': ['bun', 'install', '--frozen-lockfile'],
+    'bun.lockb': ['bun', 'install', '--frozen-lockfile'],
+    'uv.lock': ['uv', 'sync', '--locked'],
+} as const satisfies Record<string, readonly string[]>;
+
+export const YARN_BERRY_INSTALL = ['yarn', 'install', '--immutable'] as const;
+
+export const PACKAGE_MANAGER_LABELS = { bun: 'Bun', npm: 'npm', pnpm: 'pnpm', yarn: 'Yarn', mise: 'mise' } as const;

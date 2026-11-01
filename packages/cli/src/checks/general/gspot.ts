@@ -1,5 +1,4 @@
 import { read } from '#cli/system/files/reads.ts';
-import { type Session } from '#cli/types/session.ts';
 import { findToolName } from '#cli/manifests/tools.ts';
 import { mapSettingPaths } from '#cli/settings/paths.ts';
 import { INSTALL_HELP } from '#cli/config/executables.ts';
@@ -10,21 +9,20 @@ import { selectScopePath } from '#cli/repository/scopes.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
-import { listOutdatedFiles } from '#cli/generation/outdated.ts';
 import type { SourceComment } from '#cli/types/parsers/code.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';
+import { type Session, type CheckSession } from '#cli/types/session.ts';
 import { findSettingLine, isReasonedValue } from '#cli/settings/file.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import type { SuppressionSyntax } from '#cli/types/checks/general/general.ts';
 import { parseComments, stripCommentEnd } from '#cli/parsers/code/comments.ts';
-import { type CheckFinding, type FindingPlace } from '#cli/types/runs/check.ts';
 import { type Scope, type PathVisitor } from '#cli/types/settings/inheritance.ts';
+import { type CheckFinding, type FindingPlace, type CheckRunOptions } from '#cli/types/runs/check.ts';
 
 import {
     GSPOT_RULES,
@@ -155,16 +153,26 @@ Reports each generated file on disk that does not match what the settings genera
 
 @param session the settings and repository.
 @param _planned the configured check and selected scope files.
+@param options whether to include the differences.
 */
-export async function checkGeneratedFiles(session: Session, _planned: PlannedCheck): Promise<CheckFinding[]> {
-    const outdated = await listOutdatedFiles(session, buildGeneratedFiles(session));
-    return outdated.map((outdatedFile) => ({
-        file: outdatedFile.path,
-        rule: outdatedFile.kind,
-        message: GENERATED_FILE_FINDINGS[outdatedFile.kind].message,
-
-        help: TOOL_LOCKFILES.has(outdatedFile.path) ? INSTALL_HELP : GENERATED_FILE_FINDINGS[outdatedFile.kind].help,
-    }));
+export async function checkGeneratedFiles(
+    session: CheckSession,
+    _planned: PlannedCheck,
+    options: CheckRunOptions = {},
+): Promise<CheckFinding[]> {
+    const outdated = await session.generation.listOutdatedFiles(session, options);
+    return outdated.map((outdatedFile) => {
+        const { diff } = outdatedFile;
+        return {
+            file: outdatedFile.path,
+            rule: outdatedFile.kind,
+            message: GENERATED_FILE_FINDINGS[outdatedFile.kind].message,
+            help: TOOL_LOCKFILES.has(outdatedFile.path)
+                ? INSTALL_HELP
+                : GENERATED_FILE_FINDINGS[outdatedFile.kind].help,
+            ...(diff === undefined ? {} : { diff }),
+        };
+    });
 }
 
 /**

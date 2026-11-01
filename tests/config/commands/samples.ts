@@ -15,8 +15,6 @@ export const UNKNOWN_CONFIGURATION_REFUSALS = ['not-a-real-config-a', 'not-a-rea
     )
     .join('');
 
-export const BASH_CONFIG_FILE_NAMES = ['semgrep.yml', 'shellcheckrc'];
-
 export const SQL_COMMAND_CHECK = { id: 'project/read-sql', paths: ['**/*.sql'], stage: 'commit' };
 
 export const SQL_SEARCH_ARGUMENTS = [

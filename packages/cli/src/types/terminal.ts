@@ -1,6 +1,6 @@
 import type { ErrorCode } from '#cli/types/system/system.ts';
 
-export type OutputOptions = { isJson: boolean; colored: boolean };
+export type OutputOptions = { isJson: boolean };
 
 export type OutputState = OutputOptions & { notes: string[] };
 
@@ -10,7 +10,7 @@ export type CommandResult<Json extends object = Record<string, unknown>> = {
     exitCode: number;
 };
 
-export type CommandFailureJson = { error: ErrorCode; message: string };
+export type CommandFailureJson = { error: ErrorCode; message: string; stack?: string };
 
 export type CommandJson = { version: string; exitCode: number; notes: string[] };
 

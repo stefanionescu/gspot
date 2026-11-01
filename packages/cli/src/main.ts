@@ -3,35 +3,33 @@ import { registerSet } from '#cli/commands/set.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { registerList } from '#cli/commands/list.ts';
 import { EXIT_ERROR } from '#cli/config/terminal.ts';
-import { isGitRepository } from '#cli/system/git.ts';
 import { registerApply } from '#cli/commands/apply.ts';
 import { registerUnset } from '#cli/commands/unset.ts';
 import { registerIgnore } from '#cli/commands/ignore.ts';
 import { registerRemove } from '#cli/commands/remove.ts';
 import { registerInit } from '#cli/commands/init/init.ts';
 import { registerInstall } from '#cli/commands/install.ts';
+import { runGit, buildGitError } from '#cli/system/git.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { registerCheck } from '#cli/commands/check/check.ts';
 import { registerUnignore } from '#cli/commands/unignore.ts';
+import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { registerDoctor } from '#cli/commands/doctor/doctor.ts';
+import { beginCheckReport } from '#cli/commands/check/report.ts';
 import { registerExplain } from '#cli/commands/explain/explain.ts';
-import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { WHITESPACE_RUN, TRAILING_PERIOD } from '#cli/config/text.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { printError, printResult, setOutputOptions } from '#cli/system/terminal.ts';
 import { Command, type Argument, CommanderError } from '@commander-js/extra-typings';
+import { printError, printResult, setOutputOptions, printUnexpectedError } from '#cli/system/terminal.ts';
 
 import {
     HELP_FLAG,
     JSON_FLAG,
     CODE_MARK,
     USAGE_LINE,
-    GIT_COMMANDS,
     GLOBAL_OPTIONS,
     HELP_ERROR_CODE,
     HELP_TERM_WIDTH,
-    NEEDS_GIT_MESSAGE,
     EXIT_CODE_SPACING,
     COMMAND_SUGGESTION,
     PROGRAM_EXIT_CODES,
@@ -68,12 +66,9 @@ function printFailure(error: unknown, program: Command, commandArguments: string
         printError({ error: error.code, message: error.message });
         return EXIT_ERROR;
     }
-    const detail = (error instanceof Error ? error.message : String(error))
-        .replaceAll(WHITESPACE_RUN, ' ')
-        .trim()
-        .replace(TRAILING_PERIOD, '');
-    const message = `gspot stopped because of an internal error: ${detail}. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.`;
-    printError({ error: 'unexpected', message });
+    const separator = commandArguments.indexOf('--');
+    const flags = separator === -1 ? commandArguments : commandArguments.slice(0, separator);
+    printUnexpectedError(error, flags.includes('--verbose'));
     return EXIT_ERROR;
 }
 
@@ -122,6 +117,8 @@ Build the CLI with every command.
 @param onResult receives the result of the command that ran.
 */
 export function buildProgram(onResult: CommandCompletion): Command {
+    const cwd = process.cwd();
+    const location = { cwd, root: cwd };
     const program: Command = new Command('gspot')
         .description(cliPackage.description)
         .enablePositionalOptions()
@@ -130,19 +127,27 @@ export function buildProgram(onResult: CommandCompletion): Command {
         .helpCommand(false)
         .exitOverride();
     program.configureOutput({ writeErr: () => {} });
-    registerInit(program, onResult);
-    registerInstall(program, onResult);
-    registerApply(program, onResult);
-    registerCheck(program, onResult);
-    registerAdd(program, onResult);
-    registerRemove(program, onResult);
-    registerSet(program, onResult);
-    registerUnset(program, onResult);
-    registerIgnore(program, onResult);
-    registerUnignore(program, onResult);
-    registerList(program, onResult);
-    registerExplain(program, onResult);
-    registerDoctor(program, onResult);
+    program.hook('preAction', async () => {
+        location.root = await readRepositoryRoot(location.cwd);
+        const command = ['config', '--bool', '--get', 'core.sparseCheckout'];
+        const sparse = await runGit(location.root, command, {});
+        if (sparse.code === 0 && sparse.stdout.trim() === 'true')
+            throw new GspotError('git', 'gspot does not support sparse checkouts. Run git sparse-checkout disable.');
+        if (sparse.code !== 0 && sparse.code !== 1) throw buildGitError(location.root, command, sparse);
+    });
+    registerInit(program, onResult, location);
+    registerInstall(program, onResult, location);
+    registerApply(program, onResult, location);
+    registerCheck(program, onResult, location);
+    registerAdd(program, onResult, location);
+    registerRemove(program, onResult, location);
+    registerSet(program, onResult, location);
+    registerUnset(program, onResult, location);
+    registerIgnore(program, onResult, location);
+    registerUnignore(program, onResult, location);
+    registerList(program, onResult, location);
+    registerExplain(program, onResult, location);
+    registerDoctor(program, onResult, location);
     for (const command of program.commands) {
         const help = COMMAND_HELP[command.name() as keyof typeof COMMAND_HELP];
         command.helpGroup(help.group);
@@ -171,19 +176,14 @@ export async function runProgram(commandArguments: string[]): Promise<number> {
     });
     const separator = commandArguments.indexOf('--');
     const options = separator === -1 ? commandArguments : commandArguments.slice(0, separator);
-    setOutputOptions({
-        isJson: options.includes(JSON_FLAG),
-        colored:
-            [undefined, ''].includes(readEnvironmentVariable('NO_COLOR')) &&
-            [process.stderr.isTTY, process.stdout.isTTY].every((tty: unknown) => tty === true),
-    });
+    setOutputOptions({ isJson: options.includes(JSON_FLAG) });
     if (options.includes('--version')) {
         printResult({ text: cliPackage.version, json: { version: cliPackage.version }, exitCode: 0 });
         return 0;
     }
-    program.hook('preAction', async (_program, command) => {
-        if (GIT_COMMANDS.has(command.name()) && !(await isGitRepository(process.cwd())))
-            throw new GspotError('git', NEEDS_GIT_MESSAGE);
+    let endReport: (() => void) | undefined;
+    program.hook('preAction', (_program, command) => {
+        if (command.name() === 'check' && !options.includes(JSON_FLAG)) endReport = beginCheckReport();
     });
     try {
         await program.parseAsync(commandArguments, { from: 'user' });
@@ -191,5 +191,7 @@ export async function runProgram(commandArguments: string[]): Promise<number> {
         return result.exitCode;
     } catch (error) {
         return printFailure(error, program, commandArguments);
+    } finally {
+        endReport?.();
     }
 }

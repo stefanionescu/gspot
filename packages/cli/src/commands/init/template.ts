@@ -8,7 +8,6 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import type { TomlTable } from '#cli/types/settings/settings.ts';
-import { findSettingSchema } from '#cli/settings/schema/lookup.ts';
 import { listUnknownConfigurations } from '#cli/manifests/select.ts';
 import { formatSettingsIssue } from '#cli/settings/validation/schema.ts';
 import { formatSettingsError } from '#cli/settings/validation/messages.ts';
@@ -16,14 +15,21 @@ import type { Template, LeftOutSetting } from '#cli/types/commands/init.ts';
 import type { SettingDefinition } from '#cli/types/settings/definitions.ts';
 import { LOCAL_RECORDS, LEFT_OUT_NOTES } from '#cli/config/commands/init.ts';
 import { parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
-import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
+import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/schema/lookup.ts';
+
+function isSettingsTable(schema: z.ZodType): boolean {
+    let inner = unwrapSettingSchema(schema);
+    while (inner instanceof z.ZodPipe) inner = unwrapSettingSchema(inner.in as z.ZodType);
+    return inner instanceof z.ZodObject && schema.meta()?.['reasoned'] !== true;
+}
 
 function listSettingValues(table: TomlTable, prefix: string): { key: string; value: unknown }[] {
     return Object.entries(table).flatMap(([name, value]) => {
         const key = prefix === '' ? name : `${prefix}.${name}`;
-        return Object.hasOwn(SETTING_DEFINITIONS, key) || !isTable(value)
-            ? [{ key, value }]
-            : listSettingValues(value, key);
+        const schema = findSettingSchema(key);
+        return isTable(value) && schema !== undefined && isSettingsTable(schema)
+            ? listSettingValues(value, key)
+            : [{ key, value }];
     });
 }
 
@@ -58,9 +64,9 @@ function splitIgnores(
 }
 
 function findSettingNote(key: string): string | undefined {
-    const local = (SETTING_DEFINITIONS as Record<string, SettingDefinition>)[key]?.template;
-    if (local !== undefined) return LEFT_OUT_NOTES[local];
     const schema = findSettingSchema(key);
+    const local = (schema?.meta() as SettingDefinition | undefined)?.template;
+    if (local !== undefined) return LEFT_OUT_NOTES[local];
     if (schema === undefined) return undefined;
     return hasPathRole(z.toJSONSchema(schema, { io: 'input', unrepresentable: 'any' }))
         ? LEFT_OUT_NOTES.paths

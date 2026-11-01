@@ -1,13 +1,13 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('grants reports GRANT ALL in both direct and default privileges', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['postgres'], { level: 'all' }),
         'migrations/1_grants.sql':
             'GRANT ALL ON TABLE orders TO app_reader;\nALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO app_reader;\nALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app_reader;\nALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON TABLES FROM app_reader;\n',
@@ -19,7 +19,7 @@ test('grants reports GRANT ALL in both direct and default privileges', async () 
 });
 
 test('grants in a child scope skip frozen migrations and report the newer ones', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'app/migrations/V1_before.sql': 'GRANT ALL ON TABLE before_table TO authenticated;\n',
         'app/migrations/V2_at.sql': 'GRANT ALL ON TABLE at_table TO authenticated;\n',
         'app/migrations/V3_after.sql': 'GRANT ALL ON TABLE after_table TO authenticated;\n',

@@ -1,15 +1,15 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { LONG_PYTHON_FILE, LONG_JAVASCRIPT_FILE } from '#tests/config/checks/general/structure/structure.ts';
 
 test.each(['.sh', ''])('Bash %s heredocs and multiline strings count as code lines', async (extension) => {
     const source = '#!/bin/sh\n# comment\ncat <<\'EOF\'\n# literal\nEOF\nvalue="first\n# literal\nlast"\n';
     const file = `run${extension}`;
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], { level: 'all', tables: '[limits.bash]\nfile_lines = 5\n' }),
         [file]: source,
     });
@@ -27,7 +27,7 @@ test.each(['.sh', ''])('Bash %s heredocs and multiline strings count as code lin
 });
 
 test('long files checks authored covered languages and leaves generated, vendored, and ESLint-owned files out', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python', 'javascript'], {
             level: 'all',
             tables: '[limits]\nfile_lines = 2\n',
@@ -45,7 +45,7 @@ test('long files checks authored covered languages and leaves generated, vendore
 });
 
 test('SQL strings count while multiline SQL comments do not', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['sql'], { level: 'all', tables: '[limits.sql]\nfile_lines = 2\n' }),
         'query.sql': '/* This comment\nspans two lines. */\nSELECT $$first\n-- string content\nlast$$;\n',
     });
@@ -55,7 +55,7 @@ test('SQL strings count while multiline SQL comments do not', async () => {
 });
 
 test('a Python string line that starts with # counts as code', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python'], { level: 'all', tables: '[limits.python]\nfile_lines = 2\n' }),
         'source.py': 'value = """first\n# string content\nlast"""\n',
     });

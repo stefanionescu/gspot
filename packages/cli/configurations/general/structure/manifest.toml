@@ -40,6 +40,7 @@ why = "A folder that only holds one folder adds a level to every path and groups
 example = "Sibling files `asset-card.ts`, `asset-list.ts`, and `asset-row.ts` share a repeated prefix. Move them into `asset/` with names `card.ts`, `list.ts`, and `row.ts`, then update imports."
 help = "Move the files into a folder named after the shared prefix, or raise `limits.shared_prefix_files` with a reason."
 level = "all"
+limits = ["shared_prefix_files"]
 name = "shared-prefixes"
 runs = "scope"
 stage = "commit"
@@ -61,6 +62,8 @@ example = "A Python file over its line limit reports the count. Split it by resp
 files = { extensions = [".py", ".pyi", ".sql", ".pgsql", ".psql"], tags = ["shell"], kinds = ["source"] }
 help = "Split the file by responsibility, or raise `limits.<language>.file_lines` with a reason."
 level = "all"
+limits = ["file_lines"]
+limit_languages = ["python", "sql", "bash"]
 name = "long-files"
 runs = "scope"
 stage = "commit"
@@ -72,6 +75,8 @@ example = "A Bash function that only calls another reports a finding. Inline the
 files = { extensions = [".py", ".swift"], tags = ["shell"], kinds = ["source"] }
 help = "Inline the function at its calls and delete it, or import from the module that defines the code and delete the forwarding file. When a function must stay, list its name under `names` in an `[[ignore]]` record with the reason."
 level = "all"
+limits = ["trivial_function_statements"]
+limit_languages = ["python", "swift", "bash"]
 name = "trivial-functions"
 runs = "scope"
 stage = "commit"

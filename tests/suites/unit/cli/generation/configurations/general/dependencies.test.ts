@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -9,10 +8,11 @@ import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writePlans, planManagedKeys } from '#cli/repository/writer.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { BUN_SCANNER_KEYS } from '#tests/config/generation/configurations/general.ts';
 
 test('a scope that uses Bun gets the scanner that gspot.toml names in its bunfig.toml', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['dependencies'], {
             scopes: [{ path: 'apps/api', configurations: ['dependencies'] }],
             tables: BUN_SCANNER_SETTINGS,
@@ -29,7 +29,7 @@ test('a scope that uses Bun gets the scanner that gspot.toml names in its bunfig
 });
 
 test('a new Bun scanner file has one table and a final newline, and keeps its key with a note after the scanner setting goes', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['dependencies'], {
             tables: BUN_SCANNER_SETTINGS,
         }),

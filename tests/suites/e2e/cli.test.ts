@@ -1,16 +1,15 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { STARTING_FILES } from '#tests/config/e2e.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { createGspotProject } from '#tests/setup/sandboxes/projects/gspot.ts';
-import { STARTING_FILES, SHELLCHECK_SYNTAX_FINDINGS } from '#tests/config/e2e.ts';
 
 async function assertConflictingConfigs(root: string, output: string): Promise<void> {
     const { plan } = JSON.parse(output) as InitJson;
@@ -52,26 +51,6 @@ test('init replaces formatter files, keeps authored notes and CLAUDE.md, and che
     expect(checks.map(({ check, status }) => ({ check, status }))).toStrictEqual(
         ['bash/shellcheck', 'dependencies/lockfiles', 'format/prettier'].map((check) => ({ check, status: 'failed' })),
     );
-    const lockfileFindings = checks.find(({ check }) => check === 'dependencies/lockfiles')!.findings;
-    const lockfile = JSON.parse(await readFile(join(root, 'package-lock.json'), 'utf8')) as {
-        packages: Record<string, { resolved?: string }>;
-    };
-    const registry = new URL('/', readEnvironmentVariable('GSPOT_TEST_NPM_REGISTRY')).href;
-    expect(lockfileFindings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual(
-        Object.values(lockfile.packages)
-            .flatMap(({ resolved }) => (resolved?.startsWith(registry) === true ? resolved : []))
-            .map((url) => ({ file: 'package-lock.json', rule: 'host', message: `${url} is not HTTPS.` })),
-    );
-    expect(
-        checks
-            .filter(({ check }) => check === 'format/prettier')
-            .map(({ status, findings }) => ({ status, files: findings.map(({ file }) => file) })),
-    ).toStrictEqual([{ status: 'failed', files: ['package.json', 'source.js'] }]);
-    expect(checks.find(({ check }) => check === 'bash/shellcheck')).toMatchObject({
-        status: 'failed',
-        fileCount: 1,
-        findings: SHELLCHECK_SYNTAX_FINDINGS,
-    });
     await writeFile(join(root, 'broken.sh'), 'echo example\n');
     const corrected = parseCheckReport(
         await sandbox.offline.run(root, ['check', '--only', 'bash/shellcheck', '--json']),

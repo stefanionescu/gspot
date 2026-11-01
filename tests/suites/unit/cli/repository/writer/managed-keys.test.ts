@@ -74,21 +74,6 @@ test.each([...INVALID_PACKAGE_JSON_TEXTS])(
     },
 );
 
-test('managed keys refuse a non-UTF-8 file with a file error and keep its bytes', async () => {
-    await using sandbox = await testdir();
-    const bytes = Buffer.from([0xff, 0xfe, 0x41, 0x00]);
-    await writeFile(join(sandbox.path, 'package.json'), bytes);
-    const writer = openFiles(sandbox.path);
-    expect(() => planManagedKeys(writer, 'package.json', [])).toThrow(
-        matchFields<GspotError>({
-            name: 'GspotError',
-            code: 'filesystem',
-            message: 'package.json is not UTF-8 text. Save it as UTF-8, then run the command again.',
-        }),
-    );
-    expect(await readFile(join(sandbox.path, 'package.json'))).toStrictEqual(bytes);
-});
-
 test('managed TOML keys refuse a malformed file, create missing tables, and write back an edited managed value', async () => {
     await using sandbox = await testdir({ 'broken.toml': '[tasks\n' });
 

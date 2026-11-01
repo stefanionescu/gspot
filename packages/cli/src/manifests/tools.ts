@@ -159,60 +159,16 @@ export function findToolProjectPackage(tool: Tool): ToolProjectPackage | undefin
 }
 
 /**
-List the exact npm package names that the configurations declare.
-
-@param configurations the configurations in use.
-*/
-export function listNpmToolNames(configurations: Iterable<Configuration>): Set<string> {
-    return new Set(
-        [...configurations].flatMap((configuration) =>
-            configuration.tools.flatMap((tool) => {
-                const npm = tool.installers['npm'];
-                return npm === undefined ? [] : npm.name;
-            }),
-        ),
-    );
-}
-
-/**
-Find the build that a tool lacks on a system such as Windows or arm64 Linux.
+Find the operating system that a tool does not support.
 
 @param tool the tool with its builds.
-@param host the system name and architecture.
+@param host the operating system.
 @returns undefined when the tool has a build.
 */
 export function findMissingBuild(tool: Tool, host: Host): string | undefined {
     if (tool.builds === undefined) return undefined;
-    const { platform, arch } = host;
+    const { platform } = host;
     const named: readonly string[] = tool.builds;
-    if (named.includes(platform) || named.includes(`${platform}-${arch}`)) return undefined;
-    const label = OPERATING_SYSTEMS.find((system) => system.name === platform)?.label ?? platform;
-    return named.some((systemName) => systemName.startsWith(`${platform}-`)) ? `${arch} ${label}` : label;
-}
-
-/**
-Read the plugin prefix of a qualified lint rule.
-
-@param rule the rule name, optionally prefixed by its plugin.
-@returns undefined for an unqualified rule.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three rule lookups of explain take the plugin prefix of a rule before its last slash through it.
-export function extractRulePrefix(rule: string): string | undefined {
-    const slash = rule.lastIndexOf('/');
-    return slash === -1 ? undefined : rule.slice(0, slash);
-}
-
-/**
-Tell whether the output of a check names the lint rule of each finding.
-
-@param check the output format and field mappings to inspect.
-@returns whether each finding of the check holds a rule.
-*/
-export function hasRuleOutput(check: Check): boolean {
-    const { output } = check;
-    if (['semgrep', 'knip', 'markdownlint'].includes(output.format)) return true;
-    if (output.format === 'json') return output.fields?.rule !== undefined;
-    if (output.format === 'regex' || output.format === 'grouped')
-        return output.fields?.rule !== undefined || output.pattern.includes('(?<rule>');
-    return false;
+    if (named.includes(platform)) return undefined;
+    return OPERATING_SYSTEMS.find((system) => system.name === platform)?.label ?? platform;
 }

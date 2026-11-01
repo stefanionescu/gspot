@@ -1,16 +1,17 @@
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
+import { createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/planning/session.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { ESCAPED_SCOPE_CONFIGURATIONS } from '#tests/config/generation/configurations/language/javascript/eslint/eslint.ts';
 
 async function parseScopeShape(scopePath: string): Promise<string> {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const child = `${scopePath}/child`;
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(ESCAPED_SCOPE_CONFIGURATIONS, {

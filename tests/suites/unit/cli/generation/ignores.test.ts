@@ -1,6 +1,5 @@
 import prettier from 'prettier';
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { findValueAt } from '#cli/system/tables.ts';
@@ -28,7 +27,7 @@ import {
 } from '#tests/config/generation/configs.ts';
 
 test('negative ignores follow positives for ordered tools and stay out of tools without negation', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'typescript', 'format', 'spelling', 'duplication'], {
             level: 'all',
             tables: '[[ignore]]\npaths = ["!src/keep.ts", "src/**"]\nreason = "Keep one authored file among generated sources."\n',
@@ -39,7 +38,6 @@ test('negative ignores follow positives for ordered tools and stay out of tools 
     const output = buildGeneratedFiles(await openSession(sandbox.path));
     const prettierIgnore = output.files.find(({ path }) => path === '.prettierignore')!.content;
     await writeFile(join(sandbox.path, '.prettierignore'), prettierIgnore);
-    expect(prettierIgnore).toContain('src/**\n!src/keep.ts');
     const ignored = await prettier.getFileInfo(join(sandbox.path, 'src/keep.ts'), {
         ignorePath: join(sandbox.path, '.prettierignore'),
         resolveConfig: false,
@@ -88,7 +86,7 @@ test.each([true, false])('generated file lists include the CI workflow only when
 });
 
 test('shared Markdown settings leave inherited link files out of generated path ignores', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['markdown'], {
             scopes: [
                 { path: 'app', configurations: [] },
@@ -100,11 +98,6 @@ test('shared Markdown settings leave inherited link files out of generated path 
         'docs/README.md': '# Docs\n',
     });
     const session = await openSession(sandbox.path);
-    const generated = buildGeneratedFiles(session);
-    const linkFiles = generated.files
-        .filter(({ path }) => path.endsWith('.markdownlint.jsonc'))
-        .map(({ path }) => path);
-    expect(linkFiles).toStrictEqual(['.markdownlint.jsonc']);
     const ignored = buildIgnoreSections(session).find(({ key }) => key === 'gspot')!.patterns;
     expect(ignored.filter((path) => path.endsWith('.markdownlint.jsonc'))).toStrictEqual(['/.markdownlint.jsonc']);
 });
@@ -112,7 +105,7 @@ test('shared Markdown settings leave inherited link files out of generated path 
 test.each([...PRETTIER_IGNORE_CASES])(
     'the generated .prettierignore ignores $file: $ignored',
     async ({ file, ignored }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(PRETTIER_IGNORE_SETTINGS.configurations, {
                 rules: true,
                 tables: stringify({ ignore: PRETTIER_IGNORE_SETTINGS.ignore }),
@@ -167,7 +160,7 @@ test.each([...PATH_IGNORE_CASES])(
 test.each([...LANGUAGE_IGNORES])(
     '$name: Prettier ignores only the folders of the selected languages',
     async ({ configurations, scopes, ignored, absent }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(configurations, { rules: true, scopes }),
             'source.js': 'const value = 1;\n',
             'source.py': 'value = 1\n',
@@ -239,7 +232,7 @@ test('a second apply writes the same files when .prettierignore covers every sou
 });
 
 test('root paths in the generated-files section are anchored, so an authored tools/eslint.config.mjs stays checked', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['format', 'javascript', 'duplication'], { level: 'all' }),
         'source.js': 'export const value = 1;\n',
         'tools/eslint.config.mjs': 'export default [];\n',

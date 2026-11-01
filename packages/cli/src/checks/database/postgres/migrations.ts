@@ -4,9 +4,9 @@ import { read } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
+import { listCheckFiles } from '#cli/planning/files.ts';
 import { SQL_EXTENSION } from '#cli/config/files/names.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { listCheckFiles } from '#cli/repository/files/selection.ts';
 import { SYMLINK_MODE, GITLINK_MODE } from '#cli/config/files/modes.ts';
 import { SYNTAX_RULE } from '#cli/config/checks/cross-configuration/cross-configuration.ts';
 import { readHead, readBlobs, listRevisionFiles } from '#cli/repository/revisions/files.ts';
@@ -136,7 +136,6 @@ export async function readCommittedMigrations(
     paths: string[],
     revision: string,
 ): Promise<Map<string, string>> {
-    if (!session.repository.hasGit) return new Map<string, string>();
     const commit = revision === 'HEAD' ? await readHead(session.root, session.cancelSignal) : revision;
     if (commit === undefined) return new Map<string, string>();
     return remember(session.cache, COMMITTED_MIGRATIONS, `${commit}\0${JSON.stringify(paths)}`, async () => {

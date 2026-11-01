@@ -1,6 +1,4 @@
-import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { STRICT_COMPILER_OPTIONS } from '#tests/config/typescript.ts';
-import { REACT_NATIVE_DEPENDENCIES } from '#tests/config/generation/samples.ts';
 
 export const COMPONENT_FILES = {
     'Card.vue': '<template><p>{{ count }}</p></template>\n<script setup lang="ts">const count: number = 1;</script>\n',
@@ -32,46 +30,7 @@ export const HTML_INJECTION_CASES = [
         sample: '<template><div v-html="markup"></div></template>\n',
         corrected: '<template><div>{{ markup }}</div></template>\n',
     },
-    {
-        configuration: 'astro',
-        path: 'src/Greeting.astro',
-        rule: 'astro/no-set-html-directive',
-        sample: '<div set:html={"<b>Hello</b>"} />\n',
-        corrected: '<div>{"<b>Hello</b>"}</div>\n',
-    },
 ] as const;
-
-const MOBILE_SETTINGS = `configurations = [ "javascript" ]
-
-[[scope]]
-path = "bare"
-configurations = [ "react-native" ]
-
-[[scope]]
-path = "expo-app"
-configurations = [ "expo" ]
-
-[rules]
-enabled = false
-`;
-
-const MOBILE_SOURCE_FILES = {
-    'gspot.toml': MOBILE_SETTINGS,
-    'bare/source.js': 'const { EXPO_PUBLIC_URL } = process.env;\n',
-    'expo-app/source.js': 'const { EXPO_PUBLIC_URL } = process.env;\n',
-} as const;
-
-export const MOBILE_FILES: Record<string, string> = {
-    ...MOBILE_SOURCE_FILES,
-    'bare/package.json': JSON.stringify({
-        private: true,
-        dependencies: { react: SANDBOX_PACKAGES.react, ...REACT_NATIVE_DEPENDENCIES },
-    }),
-    'expo-app/package.json': JSON.stringify({
-        private: true,
-        dependencies: { react: SANDBOX_PACKAGES.react, ...REACT_NATIVE_DEPENDENCIES, expo: '54.0.0' },
-    }),
-};
 
 export const NEXTJS_ROUTE_FILES = {
     'package.json': '{"private":true,"type":"module"}\n',
@@ -86,13 +45,6 @@ export const EXPRESS_SOURCE =
     'import value from "#lib/owner";\nresponse.json({ message: `Item ${identifier}` });\ncustom.info(`Item ${identifier}`);\n';
 
 export const EXPRESS_FINDINGS = {
-    basic: [
-        { file: 'api/child/source.js', rule: 'no-restricted-syntax', line: 1 },
-        { file: 'api/child/source.js', rule: 'no-restricted-syntax', line: 2 },
-        { file: 'api/source.js', rule: 'no-restricted-syntax', line: 1 },
-        { file: 'api/source.js', rule: 'no-restricted-syntax', line: 2 },
-        { file: 'source.js', rule: 'no-restricted-syntax', line: 1 },
-    ],
     all: [
         { file: 'api/child/source.js', rule: 'no-restricted-syntax', line: 1 },
         { file: 'api/child/source.js', rule: 'no-restricted-syntax', line: 2 },

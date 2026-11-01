@@ -1,9 +1,8 @@
-import { join } from 'node:path';
 import { lstatSync } from 'node:fs';
+import { join, basename } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { isInside } from '#cli/system/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import type { Session } from '#cli/types/session.ts';
 import { normalizeTables } from '#cli/system/tables.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { openJsonFile } from '#cli/parsers/formats/json.ts';
@@ -14,9 +13,12 @@ import { isSameContents } from '#cli/system/files/bounded.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { LEADING_NEWLINE } from '#cli/config/parsers/formats.ts';
 import { GITIGNORE_FILE } from '#cli/config/repository/files.ts';
+import type { Repository } from '#cli/types/repository/files.ts';
+import { TEMPORARY_FILE_NAME } from '#cli/config/system/files.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
 import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
+import { VALE_TEMPORARY_NAME } from '#cli/config/installers/installers.ts';
 import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import { GSPOT_FOLDER, INSTALLED_TOOL_FOLDERS } from '#cli/config/files/gspot.ts';
 import { openFiles, walkFiles, deleteEmptyFolders } from '#cli/system/files/open.ts';
@@ -120,15 +122,23 @@ export function hasManagedKeys(output: ManagedKeys, onDisk: FileContents): boole
     return output.keys.every((field) => isDeepStrictEqual(document.getValue(field.key), normalizeTables(field.value)));
 }
 
+function isTemporaryPath(path: string): boolean {
+    if (TEMPORARY_FILE_NAME.test(basename(path))) return true;
+    const [folder, name] = path.split('/');
+    return folder === GSPOT_FOLDER && name !== undefined && VALE_TEMPORARY_NAME.test(name);
+}
+
 /**
 Find owned files and managed blocks outside the generation plan.
 
 @param session the repository files.
+@param session.root the absolute repository folder.
+@param session.repository the classified file inventory.
 @param expected the generated destinations that remain.
 @param ownablePaths the destinations that the shipped manifests can write.
 */
 export function listStrayPaths(
-    session: Pick<Session, 'root' | 'repository'>,
+    session: { root: string; repository: Repository },
     expected: ReadonlySet<string>,
     ownablePaths: ReadonlySet<string>,
 ): string[] {
@@ -139,6 +149,7 @@ export function listStrayPaths(
     const ownPaths: string[] = [];
     if (ownFolder !== undefined) {
         walkFiles(disk, GSPOT_FOLDER, (path) => {
+            if (isTemporaryPath(path)) return false;
             if (installations.some((folder) => path === folder || path.startsWith(`${folder}/`))) return false;
             if (lstatSync(join(session.root, path)).isDirectory()) return true;
             ownPaths.push(path);
@@ -152,6 +163,7 @@ export function listStrayPaths(
         ...blockPaths,
     ]);
     return [...writtenPaths].filter((path) => {
+        if (isTemporaryPath(path)) return false;
         if (installations.some((folder) => path === folder || path.startsWith(`${folder}/`))) return false;
         if (expected.has(path)) return false;
         if (isOwned(path, disk, generatedPatterns, ownablePaths)) return true;

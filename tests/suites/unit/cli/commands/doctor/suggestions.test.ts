@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
+import { createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
@@ -11,19 +11,6 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { STYLELINT_FILES, COMMITLINT_PACKAGE } from '#tests/config/authored-configs.ts';
 import { REMOVE_SUGGESTIONS, CI_PREFERENCE_CASES, REMOVED_CONFIGURATION_CASES } from '#tests/config/commands/doctor.ts';
-
-test('doctor names Git setup for commitlint outside Git', async () => {
-    await using sandbox = await testdir({
-        'package.json': COMMITLINT_PACKAGE,
-        'gspot.toml': buildSandboxSettings([], { level: 'all' }),
-    });
-
-    const doctor = await runGspot(sandbox.path, ['doctor', '--json']);
-    expect((JSON.parse(doctor.stdout) as DoctorReport).suggestions.unowned).toStrictEqual([
-        { path: 'package.json', note: 'commitlint requires a Git repository', command: 'git init' },
-    ]);
-    expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(COMMITLINT_PACKAGE);
-});
 
 test.each([
     {
@@ -37,7 +24,7 @@ test.each([
         suggested: [{ configuration: 'css', evidence: 'suggested by react', command: 'gspot add css' }],
     },
 ])('doctor $scenario', async ({ files, suggested }) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         ...files,
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',

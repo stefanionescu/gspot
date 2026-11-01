@@ -4,9 +4,11 @@ import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { Config } from '#cli/types/manifests.ts';
 import { buildConfig } from '#cli/generation/builders.ts';
+import { listOwnedConfigs } from '#cli/generation/selection.ts';
+import { buildIgnoreSections } from '#cli/generation/ignores.ts';
+import { getConfigTarget } from '#cli/runs/command/placeholders.ts';
 import { CONFIG_SCOPES_FOLDER } from '#cli/config/generation/generation.ts';
 import { buildLinkFiles, listLinkFilePaths } from '#cli/generation/links.ts';
-import { getConfigTarget, listOwnedConfigs } from '#cli/generation/selection.ts';
 import { isMarkdownlintShared } from '#cli/generation/configurations/language/markdown.ts';
 
 import type {
@@ -25,7 +27,7 @@ function buildOwnedOutput(
     generated: ConfigBuildState,
 ): BuiltConfig[] {
     try {
-        return [{ ...owned, ...buildConfig(owned, owned.config.target, generated.targets) }];
+        return [{ ...owned, ...buildConfig(owned, owned.config.target, generated) }];
     } catch (error) {
         if (!(error instanceof GspotError)) throw error;
         for (const { owner, config } of owned.config.per_scope ? [owned] : ownedFiles) {
@@ -54,7 +56,7 @@ function listToolOutputs(ownedFiles: OwnedSourceFile[], generated: ConfigBuildSt
 function addToolOutput(target: string, group: BuiltConfig[], index: number, generated: ConfigBuildState): void {
     const [first] = group as [BuiltConfig, ...BuiltConfig[]];
     const written = index === 0 ? target : buildPerScopeTarget(first.config, first.owner.scope.path);
-    const { file, companions } = written === target ? first : buildConfig(first, written, generated.targets);
+    const { file, companions } = written === target ? first : buildConfig(first, written, generated);
     for (const written of [file, ...companions]) generated.files.set(written.path, written);
     for (const { owner } of group) {
         const scope = owner.scope.path;
@@ -117,7 +119,12 @@ function addLinkFiles(selected: OwnedConfig, configs: OwnedConfig[], generated: 
 
 function buildScopeConfigs(session: Session): ConfigGeneration {
     const configs = listOwnedConfigs(session);
-    const state: ConfigBuildState = { targets: new Map(), files: new Map(), failures: new Map() };
+    const state: ConfigBuildState = {
+        targets: new Map(),
+        files: new Map(),
+        failures: new Map(),
+        ignoreSections: buildIgnoreSections(session),
+    };
     addSourceFiles(configs, state);
     for (const config of configs)
         if (state.failures.get(config.owner.scope.path)?.has(config.config.target) !== true)

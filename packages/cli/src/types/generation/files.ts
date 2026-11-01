@@ -36,6 +36,7 @@ export type SemgrepDocument = { rules: SemgrepRule[] };
 export type HookName = (typeof CHECK_HOOKS)[number];
 
 export type PlannedConfig = ConfigOwner & {
+    ignoreSections: IgnoreSection[];
     targetPath: string;
     level: Level;
     config: SourcedConfig;
@@ -74,6 +75,7 @@ export type BuiltConfig = OwnedSourceFile & {
 };
 
 export type ConfigBuildState = {
+    ignoreSections: IgnoreSection[];
     targets: Map<string, Map<string, string>>;
     files: Map<string, GeneratedFile>;
     failures: Map<string, Map<string, Error>>;
@@ -90,7 +92,7 @@ export type ApplyReport = {
 };
 
 export type OutdatedFile = {
+    diff?: string;
     path: string;
     kind: 'changed' | 'missing' | 'stray';
-    diff?: string;
 };

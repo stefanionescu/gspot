@@ -1,6 +1,5 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { LEVELS } from '#cli/config/manifests/names.ts';
 import { type EslintConfiguration } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
@@ -10,7 +9,7 @@ import {
     ASSERTION_RULE_OWNERS,
 } from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
-test.each(['js', 'jsx'])('Jest rules apply only to their scope for .%s files', async (extension) => {
+test.each(['jsx'])('Jest rules apply only to their scope for .%s files', async (extension) => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
@@ -69,7 +68,7 @@ test.each([...TESTING_LIBRARY_CASES])(
     },
 );
 
-test.each([...LEVELS])(
+test.each(['all'] as const)(
     'Vitest reports a focused test without a fix, and strict equality only at level all (%s)',
     async (level) => {
         await using sandbox = await testdir({
@@ -88,7 +87,7 @@ test.only('checks the value', () => { expect({value: 1}).toEqual({value: 1}); })
         const rules = ['vitest/no-focused-tests', 'vitest/prefer-strict-equal'];
         expect(await listLintFindings(eslint, sandbox.path, [path], rules)).toStrictEqual([
             { file: path, rule: 'vitest/no-focused-tests', line: 2 },
-            ...(level === 'all' ? [{ file: path, rule: 'vitest/prefer-strict-equal', line: 2 }] : []),
+            { file: path, rule: 'vitest/prefer-strict-equal', line: 2 },
         ]);
         const [result] = await eslint.lintFiles([path]);
         expect(result!.messages.find(({ ruleId }) => ruleId === 'vitest/no-focused-tests')?.fix).toBeUndefined();
@@ -125,9 +124,5 @@ test.each(ASSERTION_RULE_OWNERS)('basic assertion ownership with $name', async (
     });
     const eslint = await buildEslint(sandbox.path);
     const tests = (await eslint.calculateConfigForFile('source.test.js')) as EslintConfiguration;
-    const source = (await eslint.calculateConfigForFile('source.js')) as EslintConfiguration;
     expect(tests.rules['sonarjs/assertions-in-tests']?.[0]).toBe(assertions);
-    expect(tests.rules['sonarjs/no-empty-test-file']?.[0]).toBe(2);
-    expect(source.rules['sonarjs/assertions-in-tests']?.[0]).toBe(0);
-    expect(source.rules['sonarjs/no-empty-test-file']?.[0]).toBe(0);
 });

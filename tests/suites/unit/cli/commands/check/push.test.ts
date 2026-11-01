@@ -31,24 +31,25 @@ async function runBrokenPushCheck(root: string, base: string, broken: string): P
     return (JSON.parse(result.stdout) as PushReport).revisions[0]!.report;
 }
 
-test.each(['local', 'remote'] as const)(
-    'missing %s objects stop a pre-push check and leave the working tree as it was',
-    async (side) => {
-        await using sandbox = await createGitSandbox({});
-        const { base, reviewed, broken } = await preparePushRepository(sandbox.path);
-        const missing = await runGspot(
-            sandbox.path,
-            PUSH_CHECK_COMMAND,
-            {},
-            {
-                stdin: `refs/heads/reviewed ${side === 'local' ? 'f'.repeat(base.length) : reviewed} refs/heads/main ${side === 'remote' ? 'f'.repeat(base.length) : base}\n`,
-            },
-        );
-        expect(missing.code, missing.stdout + missing.stderr).toBe(2);
-        expect((JSON.parse(missing.stdout) as CommandFailureJson).error).toBe('git');
-        await assertWorkingTreeKept(sandbox.path, broken);
-    },
-);
+test('a missing local commit stops a pre-push check and leaves the working tree as it was', async () => {
+    await using sandbox = await createGitSandbox({});
+    const { base, broken } = await preparePushRepository(sandbox.path);
+    const absent = 'f'.repeat(base.length);
+    const missing = await runGspot(
+        sandbox.path,
+        PUSH_CHECK_COMMAND,
+        {},
+        {
+            stdin: `refs/heads/reviewed ${absent} refs/heads/main ${base}\n`,
+        },
+    );
+    expect(missing.code, missing.stdout + missing.stderr).toBe(2);
+    expect(JSON.parse(missing.stdout) as CommandFailureJson).toMatchObject({
+        error: 'git',
+        message: `Cannot find the commit ${absent} that the push sends.`,
+    });
+    await assertWorkingTreeKept(sandbox.path, broken);
+});
 
 test('a new branch compares with the remote-tracking commit, and with a fetch mapping with the mapped commit', async () => {
     await using sandbox = await createGitSandbox({});
@@ -143,7 +144,7 @@ test('the pre-push report prints a command that reproduces the same findings', a
     const { base, broken } = await preparePushRepository(sandbox.path);
     const failedReport = await runBrokenPushCheck(sandbox.path, base, broken);
     const reproduction = failedReport.checks.map(({ reproduce }) => reproduce);
-    expect(reproduction).toStrictEqual([`gspot check --only project/bash-syntax --changed ${base.slice(0, 7)}`]);
+    expect(reproduction).toStrictEqual([`gspot check --only project/bash-syntax --base ${base.slice(0, 7)}`]);
     await using checkout = await testdir();
     runGitStep(sandbox.path, ['worktree', 'add', '--detach', checkout.path, broken]);
     const repeated = await runCommand(
@@ -252,4 +253,34 @@ test('a pushed commit that changes gspot.toml checks every file of that commit',
             ),
         ),
     ).toStrictEqual(new Set(['legacy.sh']));
+});
+
+test('push skips pre-adoption and unchanged refs without opening a copy or parsing settings', async () => {
+    await using sandbox = await createGitSandbox({ 'legacy.sh': 'echo before adoption\n' });
+    const preAdoption = commitAll(sandbox.path);
+    await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings([]));
+    const adopted = commitAll(sandbox.path);
+    await writeFile(join(sandbox.path, 'gspot.toml'), 'invalid = [');
+    await writeFile(join(sandbox.path, '.gspot-copies'), 'A copy cannot be created here.');
+    for (const [hash, remoteHash, reason] of [
+        [preAdoption, '0'.repeat(preAdoption.length), 'the commit has no gspot.toml'],
+        [adopted, adopted, 'no changed paths'],
+    ] as const) {
+        const protocol = { stdin: `refs/heads/legacy ${hash} refs/heads/legacy ${remoteHash}\n` };
+        const skipped = await runGspot(sandbox.path, PUSH_CHECK_COMMAND, {}, protocol);
+        expect(skipped.code, skipped.stdout + skipped.stderr).toBe(0);
+        expect(JSON.parse(skipped.stdout) as PushReport).toMatchObject({
+            revisions: [],
+            skipped: [{ ref: 'refs/heads/legacy', hash, reason }],
+            exitCode: 0,
+        });
+        const text = await runGspot(
+            sandbox.path,
+            PUSH_CHECK_COMMAND.filter((argument) => argument !== '--json'),
+            {},
+            protocol,
+        );
+        expect(text.stdout).toBe(`refs/heads/legacy: ${reason}; no checks apply.\n`);
+    }
+    expect(await readFile(join(sandbox.path, '.gspot-copies'), 'utf8')).toBe('A copy cannot be created here.');
 });

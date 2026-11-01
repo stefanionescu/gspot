@@ -3,13 +3,23 @@ title: Editors
 description: Make your editor run the same tools, with the same settings, as gspot.
 ---
 
-Your editor reads the same config files as gspot. A link file at the root of each scope leads each editor extension
-to its config file under `.gspot/configurations/`, so the editor reports what `gspot check` reports.
+Your editor reads the same config files as gspot. ESLint and Prettier extensions normally run the workspace's own
+packages, so their versions can differ from the tools that gspot installs.
 
 ## Before you open the editor
 
 Run `gspot install` in each clone first. The config files load their plugins from `.gspot/node_modules` and
-`.gspot/.venv`, so the ESLint extension, for example, fails until `gspot install` puts the tools there.
+`.gspot/.venv`.
+
+For a repository without its own ESLint, add this setting to VS Code's workspace settings:
+
+```json title=".vscode/settings.json"
+{
+    "eslint.nodePath": ".gspot/node_modules"
+}
+```
+
+Check your editor's output to confirm which ESLint and Prettier versions it runs.
 
 ## How editors find the config files
 

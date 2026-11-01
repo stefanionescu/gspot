@@ -3,14 +3,32 @@
 @import './example/layout.css';
 @import './example/report.css';
 
-.header {
-    position: sticky;
-    z-index: var(--sl-z-index-navbar);
-    inset-block-start: 0;
-    height: var(--sl-nav-height);
-    padding-inline: var(--sl-nav-pad-x);
-    border-bottom: 1px solid var(--sl-color-hairline-shade);
-    background-color: var(--sl-color-bg-nav);
+:root {
+    --home-finding-bg: color-mix(in srgb, var(--brand-tangerine) 14%, transparent);
+    --home-fixed-bg: color-mix(in srgb, var(--sl-color-accent) 16%, transparent);
+    --home-pass: var(--sl-color-accent-high);
+    --home-badge-text: var(--sl-color-black);
+    --home-width: 1200px;
+    --home-section-space: 64px;
+    --home-radius: 8px;
+}
+
+:root[data-theme='light'] {
+    --home-badge-text: var(--sl-color-white);
+    --home-finding-bg: color-mix(in srgb, var(--brand-tangerine) 12%, transparent);
+    --home-fixed-bg: color-mix(in srgb, var(--sl-color-accent) 10%, transparent);
+}
+
+@media (width >= 50rem) {
+    :root {
+        --home-section-space: 80px;
+    }
+}
+
+@media (width >= 72rem) {
+    :root {
+        --home-section-space: 96px;
+    }
 }
 
 .landing,
@@ -42,12 +60,7 @@
 
 .section h2 {
     margin: 0;
-    color: var(--sl-color-white);
     font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
-    font-weight: 550;
-    line-height: 1.15;
-    letter-spacing: -0.035em;
-    text-wrap: balance;
 }
 
 .intro .lead {
@@ -56,17 +69,6 @@
     font-size: 1.0625rem;
     line-height: 1.6;
     text-wrap: pretty;
-}
-
-.inline-code,
-.issues code,
-.card > p code {
-    padding: 1px 5px;
-    border: 1px solid var(--sl-color-gray-5);
-    border-radius: 4px;
-    color: var(--sl-color-gray-1);
-    font-size: 0.875em;
-    white-space: nowrap;
 }
 
 .tools {

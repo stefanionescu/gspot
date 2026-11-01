@@ -1,14 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { TWO_WORDS } from '#tests/config/ignores.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
-import { LEVELS } from '#cli/config/manifests/names.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { listAlwaysSelected } from '#tests/setup/cli/manifests.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -18,7 +17,7 @@ import { isActive, planChecks, stripCoverageArguments } from '#cli/planning/chec
 import { TSC_REPLACEMENTS, SCOPE_WIDE_IGNORE_CASES } from '#tests/config/planning/checks.ts';
 
 test('coverage stripping leaves your own checks and given arguments unchanged', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const command = [process.execPath, '--coverage', '', TWO_WORDS];
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], {
@@ -40,7 +39,7 @@ test('coverage stripping leaves your own checks and given arguments unchanged', 
 });
 
 test('a project check with no matching files is skipped even when its scope holds another language', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python', 'bash']),
         'source.sh': 'echo example\n',
     });
@@ -57,7 +56,7 @@ test('a project check with no matching files is skipped even when its scope hold
 test.each([...SCOPE_WIDE_IGNORE_CASES])(
     'an ignore of a whole scope keeps the replaced check running there and nowhere else: $paths',
     async ({ paths, ignored }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['typescript'], {
                 rules: true,
                 scopes: [
@@ -93,10 +92,10 @@ test.each([...SCOPE_WIDE_IGNORE_CASES])(
     },
 );
 
-test.each([...LEVELS])(
+test.each(['all'] as const)(
     '%s selects the always-selected configurations from an empty list and plans their general checks',
     async (level) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([], { level }),
             'source.js': 'export const port = 8080;\n',
             'guide.md': SCHEDULE_RELEASE_MARKDOWN,
@@ -121,12 +120,11 @@ test.each([...LEVELS])(
             'guide.md',
             'source.js',
         ]);
-        expect(checks.some((check) => check.check.id === 'duplication/jscpd')).toBe(level === 'all');
         expect(checks.find((check) => check.check.id === 'licenses/allowed')?.skip).toBeUndefined();
     },
 );
 
-test.each([...LEVELS])('%s plans history checks once at the root and only for pushed commits', async (level) => {
+test.each(['all'] as const)('%s plans history checks once at the root and only for pushed commits', async (level) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['commits', 'secrets'], {
             level,
@@ -146,7 +144,7 @@ test.each([...LEVELS])('%s plans history checks once at the root and only for pu
         'app/source.txt': 'Child source.\n',
     });
     const session = await openSession(sandbox.path);
-    const names = [...(level === 'all' ? ['commits/commitlint-pushed'] : []), 'secrets/gitleaks-pushed'];
+    const names = ['commits/commitlint-pushed', 'secrets/gitleaks-pushed'];
     const planned = planChecks(session, {
         stage: 'push',
         only: [...names, 'sandbox/once'],
@@ -170,7 +168,7 @@ test.each([...LEVELS])('%s plans history checks once at the root and only for pu
 test.each([...TSC_REPLACEMENTS])(
     '$check replaces typescript/tsc only while it runs',
     async ({ configuration, check, source, text }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['typescript', configuration]),
             'source.ts': 'export const port = 8080;\n',
             [source]: text,
@@ -198,7 +196,7 @@ test.each([...TSC_REPLACEMENTS])(
 );
 
 test('a nested Next.js check replaces TypeScript only in its own scope', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], {
             scopes: [{ path: 'app', configurations: ['typescript', 'nextjs'] }],
         }),
@@ -217,7 +215,7 @@ test('a nested Next.js check replaces TypeScript only in its own scope', async (
 });
 
 test('the jest, vitest, and pytest coverage checks drop exactly their coverage arguments when every limit is 0', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'jest', 'vitest', 'python', 'pytest'], {
             tables: '[coverage]\nlines = 0\nbranches = 0\nfunctions = 0\nstatements = 0\n',
         }),

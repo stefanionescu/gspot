@@ -30,6 +30,7 @@ export type ToolInstall = {
     writer: Files;
     generated: Generation;
     tools: Tool[];
+    checkTools: Set<string>;
     misePath: string | null;
     steps: (readonly string[])[];
 };

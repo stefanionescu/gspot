@@ -3,12 +3,10 @@ import type { Defined } from '#cli/types/shapes.ts';
 import type { Check } from '#cli/types/manifests.ts';
 import type { ParsedTools } from '#cli/types/settings/tools.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import type { ReasonedValue } from '#cli/types/settings/values.ts';
 import type { formatSchema } from '#cli/schemas/settings/fields.ts';
 import type { settingsSchema } from '#cli/schemas/settings/file.ts';
 import type { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
 import type { importRulesSchema } from '#cli/schemas/settings/settings.ts';
-import type { LIMIT_DEFINITIONS } from '#cli/config/settings/definitions/limits.ts';
 
 export type TableValues = z.output<typeof tableValuesSchema>;
 
@@ -59,11 +57,5 @@ export type SettingsError = { path: KeyPath; message: string };
 export type TomlTable = Record<string, unknown>;
 
 export type ImportRule = z.output<typeof importRulesSchema>[number];
-
-export type LimitSchemas = {
-    [Key in keyof typeof LIMIT_DEFINITIONS as Key extends `limits.${infer Field}` ? Field : never]: z.ZodDefault<
-        z.ZodUnion<readonly [z.ZodType<number, number>, z.ZodType<number, ReasonedValue<number>>]>
-    >;
-};
 
 export type TaploLayout = { width: number; indent: string };

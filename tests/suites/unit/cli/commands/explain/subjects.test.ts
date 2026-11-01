@@ -18,7 +18,6 @@ import {
     CHECK_TOOL_MINIMUMS,
     UNKNOWN_SUBJECT_CASES,
     SYNTAX_CHECK_EXPLANATION,
-    CONFIGURATION_DETECTION_LINES,
 } from '#tests/config/commands/explain.ts';
 
 test('a path explanation lists the command checks and the ignores that apply', async () => {
@@ -83,7 +82,7 @@ test('a configuration name stays a name, and a tracked or ./ path explains the f
 });
 
 test.each(['run.sh', './run.sh', '../src/run.sh'])('explain resolves %s from its calling folder', async (subject) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'run.sh': 'printf "root\\n"\n',
         'src/run.sh': 'printf "source\\n"\n',
@@ -140,18 +139,6 @@ test.each([...UNKNOWN_SUBJECT_CASES])(
         const result = await runGspot(sandbox.path, ['explain', subject, '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(2);
         expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments', message });
-    },
-);
-
-test.each([...CONFIGURATION_DETECTION_LINES])(
-    'explain $configuration lists the detection rules and file tags',
-    async ({ configuration, lines }) => {
-        await using sandbox = await createGitSandbox({ 'README.md': '# Example\n' });
-        const result = await runGspot(sandbox.path, ['explain', configuration]);
-        expect({ code: result.code, stderr: result.stderr }).toStrictEqual({ code: 0, stderr: '' });
-        expect(
-            result.stdout.split('\n').filter((line) => line.startsWith('Detected by:') || line.startsWith('Files:')),
-        ).toStrictEqual([...lines]);
     },
 );
 

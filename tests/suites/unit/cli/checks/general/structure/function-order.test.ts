@@ -1,11 +1,11 @@
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('a private Python function below a public one is reported, and the moved function is not', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'rows.py': `def _strip(value):
     return value.strip()
 
@@ -47,7 +47,7 @@ def load_rows(text):
 });
 
 test('a private or fileprivate Swift function below an internal one is reported, and methods are not', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'Sources/Report.swift': String.raw`private func trim(_ value: String) -> String {
     value.trimmingCharacters(in: .whitespaces)
 }
@@ -79,7 +79,7 @@ struct Report {
 });
 
 test('a private JavaScript or TypeScript function or function constant below an exported one is reported', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'src/rows.ts': `function first(): number {
     return 1;
 }

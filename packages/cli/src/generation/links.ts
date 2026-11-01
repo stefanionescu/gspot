@@ -11,7 +11,7 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { getConfigTarget } from '#cli/generation/selection.ts';
+import { getConfigTarget } from '#cli/runs/command/placeholders.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import type { ManagedKeys } from '#cli/types/repository/repository.ts';
 import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';

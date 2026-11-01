@@ -1,10 +1,10 @@
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/planning/session.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('typos.toml lists each allowed word once and keeps quoted paths', async () => {
     const words = ['café', "apostrophe'word", 'long-term'];
@@ -20,7 +20,7 @@ test('typos.toml lists each allowed word once and keeps quoted paths', async () 
     const files = {
         'gspot.toml': buildSandboxSettings(['spelling'], settings),
     };
-    await using sandbox = await testdir(files);
+    await using sandbox = await createGitSandbox(files);
 
     const session = await openSession(sandbox.path);
     const output = buildGeneratedFiles(session);

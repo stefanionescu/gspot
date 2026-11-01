@@ -25,8 +25,6 @@ export const LEVEL_COMMAND = 'gspot set level all';
 
 export const LINT_JOB_NOTE = 'an existing lint job';
 
-export const GIT_INIT_COMMAND = 'git init';
-
 export const CI_FILE_LABELS = {
     github: GITHUB_WORKFLOW,
     gitlab: `${GITLAB_WORKFLOW} (include from .gitlab-ci.yml)`,
@@ -42,5 +40,3 @@ export const CI_OFF_NOTES = {
     github: 'off; gspot set ci.enabled true writes the check workflow',
     gitlab: 'off; gspot set ci.enabled true and gspot set ci.provider gitlab write the check workflow',
 } as const;
-
-export const ENVIRONMENT_MISSING_NOTE = 'The project environment is missing. Run uv sync in its folder.';

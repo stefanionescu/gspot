@@ -24,14 +24,6 @@ body
 <!-- <<< gspot managed <<< -->
 `,
     },
-    {
-        path: 'AGENTS.md',
-        source: `<!-- >>> gspot managed >>> -->
-body
-<!-- <<< gspot managed <<< -->
-<!-- <<< gspot managed <<< -->
-`,
-    },
 ] as const;
 
 export const BLOCK_FORMATS = [

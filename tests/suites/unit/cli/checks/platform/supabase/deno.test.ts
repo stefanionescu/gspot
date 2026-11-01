@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { writeFile } from 'node:fs/promises';
@@ -9,10 +8,11 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
 
 test('supabase/deno-lint runs in each scope folder on each edge function of its functions folder, without _shared', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['supabase'], {
             scopes: [{ path: 'apps/api', configurations: ['supabase'] }],
             tables: '[scope.supabase]\nfunctions_folder = "apps/api/edge"\n',
@@ -33,7 +33,7 @@ test('supabase/deno-lint runs in each scope folder on each edge function of its 
 });
 
 test("supabase/deno-lint fails with Deno's error text when Deno exits without a JSON report", async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['supabase']),
         'supabase/functions/greet/index.ts': 'export {};',
         'supabase/functions/greet/deno.json': '{',
@@ -51,7 +51,7 @@ test("supabase/deno-lint fails with Deno's error text when Deno exits without a 
 });
 
 test('a configured edge entrypoint and import map reach Deno, unless deno.json takes precedence', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['supabase']),
         'supabase/config.toml':
             '[functions.greet]\nentrypoint = "./functions/greet/main.ts"\nimport_map = "./imports.json"\n',
@@ -72,7 +72,7 @@ test('a configured edge entrypoint and import map reach Deno, unless deno.json t
 });
 
 test('Deno checks skip a scope with no edge functions', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['supabase']),
         'supabase/config.toml': '',
     });
@@ -98,7 +98,7 @@ async function prepareDenoSession(root: string) {
 }
 
 test('Deno type errors use their location or the entrypoint', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['supabase']),
         'supabase/functions/greet/index.ts': 'export {};\n',
         'supabase/functions/greet/deno.json': '{}\n',

@@ -11,14 +11,6 @@ export const REPLACED_PYPROJECT_TABLES = [
         generated: 'pyrightconfig.json',
     },
     {
-        configuration: 'python',
-        table: 'tool.pyright',
-        note: 'tool.pyright settings stay here, and the generated basedpyright config file takes over. Delete the section; the generated config file replaces it.',
-        text: '[tool.pyright]\ntypeCheckingMode = "basic"\n',
-        source: { file: 'main.py', text: 'VALUE = 1\n' },
-        generated: 'pyrightconfig.json',
-    },
-    {
         configuration: 'sql',
         table: 'tool.sqlfluff',
         note: 'tool.sqlfluff settings stay here, and the generated sqlfluff config file takes over. Delete the section; the generated config file replaces it.',
@@ -41,7 +33,7 @@ export const STYLELINT_REPLACEMENT_CASES = [
         name: 'a root package field',
         scope: '',
         packageText: STYLELINT_PACKAGE_JSON,
-        command: ['init', '--yes', '--configurations', 'css'],
+        command: ['init', '--configurations', 'css'],
         changed: ['package.json'],
         unchangedFiles: [],
     },
@@ -49,7 +41,7 @@ export const STYLELINT_REPLACEMENT_CASES = [
         name: 'a scoped package field',
         scope: 'app',
         packageText: STYLELINT_PACKAGE_JSON,
-        command: ['init', '--yes', '--no-configurations'],
+        command: ['init', '--no-configurations'],
         changed: ['app/package.json'],
         unchangedFiles: [],
     },
@@ -57,7 +49,7 @@ export const STYLELINT_REPLACEMENT_CASES = [
         name: 'a standalone file',
         scope: '',
         packageText: '{"private":true,"type":"module"}',
-        command: ['init', '--yes', '--configurations', 'css'],
+        command: ['init', '--configurations', 'css'],
         changed: [],
         unchangedFiles: [{ path: 'package.json', text: '{"private":true,"type":"module"}' }],
     },
@@ -85,10 +77,10 @@ exclude_rules = LT01, RF01
 `;
 
 export const REPLACED_CONFIG_DELETIONS = [
-    { path: '.shellcheckrc', note: 'replaced by the generated shellcheck config file' },
-    { path: '.prettierrc', note: 'replaced by the generated prettier config file' },
-    { path: '.eslintrc.json', note: 'replaced by the generated eslint config file' },
-    { path: 'typos.toml', note: 'replaced by the generated typos config file' },
+    { path: '.shellcheckrc' },
+    { path: '.prettierrc' },
+    { path: '.eslintrc.json' },
+    { path: 'typos.toml' },
 ] as const;
 
 export const HOOKS_PATH_CASES = [

@@ -1,14 +1,15 @@
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { join, basename } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { buildDatabaseSchema } from '#cli/checks/database/postgres/schema.ts';
 import { ROW_SECURITY_SQL } from '#tests/config/checks/database/postgres/statements.ts';
@@ -21,7 +22,7 @@ import {
 } from '#tests/config/checks/database/postgres/postgres.ts';
 
 test('postgres/migration-order reports a migration that does not parse at its line and column, the other postgres checks skip, and the fixed migration passes', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['postgres'], {
             level: 'all',
             tables: '[postgres]\nfrozen_through = "all"\nclient_schemas = ["public"]\n',
@@ -68,7 +69,7 @@ test('postgres/migration-order reports a migration that does not parse at its li
 });
 
 test('dbmate and golang-migrate replays exclude rollback SQL', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['postgres']),
         'db/migrations/1_teams.sql': '-- migrate:up\nCREATE TABLE teams (id int);\n-- migrate:down\nDROP TABLE teams;',
         'db/migrations/2_secure.up.sql': ROW_SECURITY_SQL,
@@ -84,7 +85,7 @@ test('dbmate and golang-migrate replays exclude rollback SQL', async () => {
 });
 
 test.each(['', 'app'])('the default migration folders are read and a set folder replaces them in %j', async (scope) => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['postgres'], { scopes: [{ path: 'app', configurations: ['postgres'] }] });
     await createFileTree(sandbox.path, { 'gspot.toml': settings });
     for (const folder of ['', 'app'])
@@ -124,7 +125,7 @@ test.each(['', 'app'])('the default migration folders are read and a set folder 
 test.each(['prisma/migrations/20260101000000_init/migration.sql', 'drizzle/0001_init.sql'])(
     '%s is read by the Postgres checks with its migration version',
     async (path) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['postgres']),
             [path]: 'GRANT ALL ON TABLE orders TO app_reader;\n',
         });
@@ -142,7 +143,7 @@ test.each(['prisma/migrations/20260101000000_init/migration.sql', 'drizzle/0001_
 );
 
 test.each(['', 'V'])('unpadded %s migration versions replay and freeze in numeric order', async (prefix) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['postgres'], { tables: '[postgres]\nfrozen_through = "9"\n' }),
         [`migrations/${prefix}9_create.sql`]: 'CREATE TABLE teams (id int);',
         [`migrations/${prefix}10_secure.sql`]: ROW_SECURITY_SQL,
@@ -170,7 +171,7 @@ test.each(['', 'V'])('unpadded %s migration versions replay and freeze in numeri
 });
 
 test('Flyway component versions remain distinct and dollar-quoted down markers stay inside their function', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['postgres']),
         'migrations/V1__first.sql': 'CREATE TABLE entries (id int);',
         'migrations/V1_1__second.sql':

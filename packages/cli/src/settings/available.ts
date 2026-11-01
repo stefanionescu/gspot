@@ -91,6 +91,7 @@ const TOOL_SETTINGS: Map<string, Setting[]> = new Map(
         Object.entries<z.ZodType>(table.unwrap().shape).map<Setting>(([field, schema]) => ({
             name: `tools.${tool}.${field}`,
             ...getSettingType(schema),
+            default: schema.parse(undefined),
             ...schema.meta(),
             description: schema.description ?? '',
         })),

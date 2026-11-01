@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { writeFileSync } from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
 import * as assets from '#cli/system/assets.ts';
@@ -7,6 +6,7 @@ import { openSession } from '#cli/planning/session.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('at level basic, a rule file loses its level-all sections with their subsections, but keeps fenced examples and the next heading of the same depth', async () => {
     const before = '# Guide\n\n## Required\n\n```md\n## Example\n<!-- level: all -->\n```\n\n';
@@ -14,7 +14,7 @@ test('at level basic, a rule file loses its level-all sections with their subsec
         '## Convention\n<!-- level: all -->\n\nContent.\n\n### Detail\n<!-- level: all -->\n\n```md\n## Not a boundary\n```\n\n';
     const after = '## Safety\n\nKeep this requirement.\n';
     const text = before + omitted + after;
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], { rules: true }),
         'rules/GUIDE.md': text,
     });

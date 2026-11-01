@@ -18,6 +18,7 @@
 
 .panel-head {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
@@ -29,18 +30,13 @@
     font-weight: 550;
 }
 
-.panel-head .file,
 .panel-head .run {
     min-width: 0;
-    color: var(--sl-color-gray-3);
+    color: var(--sl-color-gray-1);
     font-family: var(--sl-font-mono);
     font-size: 0.7813rem;
     font-weight: 400;
-    overflow-wrap: anywhere;
-}
-
-.panel-head .run {
-    color: var(--sl-color-gray-1);
+    white-space: nowrap;
 }
 
 .panel-head .run .prompt {
@@ -72,39 +68,6 @@
     flex: 1;
 }
 
-.code {
-    display: block;
-    padding-block: 12px;
-    color: var(--code-text);
-    font-size: 0.75rem;
-    line-height: 1.75;
-}
-
-.line {
-    display: grid;
-    grid-template-columns: 18px 1ch minmax(0, 1fr);
-    column-gap: 8px;
-    padding-inline: 8px 12px;
-    border-inline-start: 3px solid transparent;
-    white-space: pre-wrap;
-}
-
-.line .number {
-    color: var(--code-muted);
-    text-align: end;
-    user-select: none;
-}
-
-.line.is-marked {
-    background: var(--home-finding-bg);
-    border-inline-start-color: var(--brand-tangerine);
-}
-
-.line.is-inserted {
-    background: var(--home-fixed-bg);
-    border-inline-start-color: var(--sl-color-accent);
-}
-
 .badge {
     display: inline-grid;
     place-items: center;
@@ -113,39 +76,12 @@
     align-self: center;
     border-radius: 50%;
     background: var(--brand-tangerine);
-    color: #0b1020;
+    color: var(--home-badge-text);
     font-family: var(--sl-font);
     font-size: 0.7188rem;
     font-weight: 700;
     line-height: 1;
     user-select: none;
-}
-
-.line .badge {
-    width: 18px;
-    height: 18px;
-    font-size: 0.6875rem;
-}
-
-.keyword {
-    color: var(--code-keyword);
-}
-
-.string {
-    color: var(--code-string);
-}
-
-.function {
-    color: var(--code-function);
-}
-
-.type {
-    color: var(--code-type);
-}
-
-.comment {
-    color: var(--code-comment);
-    font-style: italic;
 }
 
 .issues {
@@ -182,18 +118,6 @@
     border-top: 1px solid var(--sl-color-gray-5);
     font-size: 0.875rem;
     line-height: 1.5;
-}
-
-@media (width >= 50rem) {
-    .code {
-        font-size: 0.8125rem;
-    }
-
-    .line {
-        grid-template-columns: 20px 1ch minmax(0, 1fr);
-        column-gap: 10px;
-        padding-inline: 10px 16px;
-    }
 }
 
 @media (width >= 72rem) {

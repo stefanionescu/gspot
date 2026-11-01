@@ -15,6 +15,7 @@ import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import type { ConfigurationsOptions } from '#cli/types/planning.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
+import type { CommandLocation } from '#cli/types/commands/commands.ts';
 import { MANAGED_KEYS_NOTE } from '#cli/config/generation/generation.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { selectForInit, listDetectedAdditions } from '#cli/repository/proposals.ts';
@@ -154,8 +155,9 @@ Register the remove command.
 
 @param program the gspot program that gets the command.
 @param onResult receives the result of the command.
+@param location the calling folder and the Git root validated before the action.
 */
-export function registerRemove(program: Command, onResult: CommandCompletion): void {
+export function registerRemove(program: Command, onResult: CommandCompletion, location: CommandLocation): void {
     program
         .command('remove')
         .argument('<configuration...>', COMMAND_HELP.remove.arguments['configuration'])
@@ -168,7 +170,8 @@ export function registerRemove(program: Command, onResult: CommandCompletion): v
             if (invalid !== undefined) throw new GspotError('arguments', invalid);
             onResult(
                 await runRemoveCommand({
-                    cwd: process.cwd(),
+                    root: location.root,
+                    cwd: location.cwd,
                     configurations: [...new Set(configurations)],
                     reason: flags.reason,
                     scope: flags.scope,

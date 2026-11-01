@@ -1,31 +1,4 @@
-import { type GuideSlug } from '#docs/types/reference.ts';
-import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
-
-const CODE_SPAN = /(?<!`)(?<delimiter>`+)(?!`)[\s\S]+?(?<!`)\k<delimiter>(?!`)/u;
-
-const KEPT_TAG = /<\/?(?:h[2-6]|code)(?:\s[^<>]*)?>/u;
-
-export const GUIDES = {
-    javascript: 'languages/javascript-typescript',
-    python: 'languages/python',
-    css: 'languages/css',
-    swift: 'languages/swift',
-    security: 'topics/security',
-    testing: 'topics/testing',
-    dependencies: 'topics/dependencies',
-    prose: 'topics/prose',
-} as const;
-
-export const DETECTION_LABELS = {
-    extensions: 'file extensions',
-    filenames: 'filenames',
-    dependencies: 'dependencies',
-    shebangs: 'script interpreters',
-    runtimes: 'JavaScript runtimes',
-    tags: 'files marked',
-    paths: 'file paths',
-    project_files: 'project files',
-} as const;
+import { DOCS_PATHS } from '#cli/config/files/names.ts';
 
 export const SCHEMA_TYPE_LABELS: Readonly<Record<string, string>> = {
     string: 'Text',
@@ -54,28 +27,14 @@ export const LEVEL_ADVICE = {
     all: 'Choose it for a new repository or one that coding agents write.',
 } as const;
 
-export const REFERENCE_PATH = '/reference/';
+export const REFERENCE_PATH = new URL(DOCS_PATHS.reference).pathname;
 
-export const REFERENCE_FOLDERS = {
-    commands: 'commands',
-    settings: 'gspot-toml',
-    jsonOutput: 'json-output',
-    configurations: 'configurations',
-    checks: 'checks',
-    eslintPlugin: 'eslint-plugin',
-} as const;
-
-export const DOCS_SOURCE_NAME = 'gspot-docs';
-
-export const REFERENCE_IDS_KEY = 'reference-ids';
-
-export const PAGES_FOLDER = 'src/content/docs';
-
-export const MARKDOWN_ESCAPES = new RegExp(`${CODE_SPAN.source}|${KEPT_TAG.source}|[<>]`, 'gu');
-
-export const FLAGS_OUTSIDE_CODE = /```[\s\S]*?```|`[^`]*`|(?<![\w-])--[a-z][a-z-]*/gu;
-
-export const HTML_BRACKET_ENTITIES: Readonly<Record<string, string>> = { '<': '&lt;', '>': '&gt;' };
+export const REFERENCE_FOLDERS = Object.fromEntries(
+    ['commands', 'settings', 'jsonOutput', 'configurations', 'checks', 'eslintPlugin'].map((name) => [
+        name,
+        new URL(DOCS_PATHS[name as keyof typeof DOCS_PATHS]).pathname.slice(REFERENCE_PATH.length, -1),
+    ]),
+) as Record<'commands' | 'settings' | 'jsonOutput' | 'configurations' | 'checks' | 'eslintPlugin', string>;
 
 export const SECTION_HEADING = /^## /mu;
 
@@ -91,36 +50,9 @@ export const TABLE_HEADING_LEVEL = 2;
 
 export const REASONED_VALUE_LABEL = 'a reasoned value `{ value = …, reason = "…" }`';
 
-export const HEADING_ID_STRIPPED = /[^\p{L}\p{N} _-]/gu;
-
 export const LANGUAGE_PLACEHOLDER = '<language>';
 
 export const CATEGORY_PLACEHOLDER = '<category>';
-
-export const CONFIGURATION_GUIDES: Readonly<Partial<Record<string, GuideSlug>>> = {
-    javascript: GUIDES.javascript,
-    typescript: GUIDES.javascript,
-    nextjs: GUIDES.javascript,
-    react: GUIDES.javascript,
-    'react-dom': GUIDES.javascript,
-    expo: GUIDES.javascript,
-    'react-native': GUIDES.javascript,
-    python: GUIDES.python,
-    css: GUIDES.css,
-    swift: GUIDES.swift,
-    xcode: GUIDES.swift,
-    security: GUIDES.security,
-    docker: GUIDES.security,
-    'github-actions': GUIDES.security,
-    secrets: GUIDES.security,
-    jest: GUIDES.testing,
-    vitest: GUIDES.testing,
-    pytest: GUIDES.testing,
-    dependencies: GUIDES.dependencies,
-    licenses: GUIDES.dependencies,
-    prose: GUIDES.prose,
-    spelling: GUIDES.prose,
-};
 
 export const ENVIRONMENT_VARIABLES: readonly [name: string, meaning: string][] = [
     ['`NO_COLOR`', 'Any nonempty value turns color off.'],
@@ -132,8 +64,12 @@ export const CONJUNCTION_FORMAT = new Intl.ListFormat('en', { type: 'conjunction
 export const DISJUNCTION_FORMAT = new Intl.ListFormat('en', { type: 'disjunction' });
 
 export const CHECKS_OPENING =
-    'Each check ID is `<configuration>/<name>`. The [stage](/start/concepts/#stage) says when it runs, and the ' +
-    '[level](/start/concepts/#levels) says which setting of `level` turns it on. ' +
+    'Each check ID is `<configuration>/<name>`. The [stage](' +
+    DOCS_PATHS.stage +
+    ') says when it runs, and the ' +
+    '[level](' +
+    DOCS_PATHS.levels +
+    ') says which setting of `level` turns it on. ' +
     '`gspot explain <check>` shows its state in your repository.\n';
 
 export const PURPOSE_HEADING = 'What it does';
@@ -194,8 +130,6 @@ export const ALL_FILES_LABEL = 'All files in the scope';
 
 export const LINT_RULES_HEADING = 'Lint rules';
 
-export const SELECTED_IN_GIT_MESSAGE = 'Always selected in a Git repository.';
-
 export const ALWAYS_SELECTED_MESSAGE = 'Always selected.';
 
 export const CONDITION_SEPARATOR = ', or ';
@@ -221,8 +155,6 @@ export const BANNED_NAME_MESSAGE =
 
 export const MONOREPOS_SCOPE_MESSAGE = 'See [Monorepos](/configure/monorepos/) for how a scope inherits settings.\n\n';
 
-export const DEFS_PREFIX = '#/$defs/';
-
 export const SETTINGS_DESCRIPTION = 'Every key, accepted value, and default of gspot.toml.';
 
 export const SETTINGS_OPENING =
@@ -238,95 +170,36 @@ export const SUBSECTION_HEADING_LEVEL = 3;
 
 export const MINOR_HEADING_LEVEL = 4;
 
-export const RANGE_OPERATOR = /^[<>=^~]+/u;
+export const DOCS_SOURCE_NAME = 'gspot-docs';
+export const REFERENCE_IDS_KEY = 'reference-ids';
+export const PAGES_FOLDER = 'src/content/docs';
+export const REFERENCE_CODE_FENCE = /^ {0,3}(`{3,}|~{3,})/gmu;
+export const REFERENCE_FENCE_END = /^(?:`+|~+)$/u;
+export const REFERENCE_INLINE_TOKENS = /(?<delimiter>`+)|(?<flag>(?<![\w-])--[a-z][a-z-]*)|[&<>|]/gu;
+export const REFERENCE_TEXT_ENTITIES: Readonly<Record<string, string>> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '|': '&#124;',
+};
 
-const PLUGIN_REQUIREMENTS = {
-    node: pluginPackage.engines.node.replace(RANGE_OPERATOR, ''),
-    eslint: pluginPackage.peerDependencies.eslint.replace(RANGE_OPERATOR, ''),
-    typescriptEslint: pluginPackage.peerDependencies['@typescript-eslint/eslint-plugin'].replace(RANGE_OPERATOR, ''),
-} as const;
+export const REFERENCE_CODE_CHARACTERS = /[&<>|[\]*_~`\\]/gu;
+export const REFERENCE_CODE_ENTITIES: Readonly<Record<string, string>> = {
+    ...REFERENCE_TEXT_ENTITIES,
+    '[': '&#91;',
+    ']': '&#93;',
+    '*': '&#42;',
+    _: '&#95;',
+    '~': '&#126;',
+    '`': '&#96;',
+    '\\': '&#92;',
+};
 
-export const PLUGIN_TITLE = 'ESLint plugin';
+export const RELEASE_AGE_EXCLUSIONS = [
+    { label: 'pnpm', key: 'minimumReleaseAgeExclude', file: 'pnpm-workspace.yaml' },
+    { label: 'Bun', key: 'install.minimumReleaseAgeExcludes', file: 'bunfig.toml' },
+    { label: 'npm', key: 'min-release-age-exclude', file: '.npmrc' },
+    { label: 'Yarn', key: 'npmPreapprovedPackages', file: '.yarnrc.yml' },
+] as const;
 
-export const PLUGIN_DESCRIPTION =
-    'Lint rules for the code that AI coding agents write, for ESLint with or without gspot.';
-
-export const PLUGIN_OPENING = `\`@gspothq/eslint-plugin\` holds ESLint rules for code that AI coding agents often write.
-
-The rules flag files that only forward to another module, functions of a few statements, and exports that only rename a
-value. They flag imports through index files and relative imports that leave their folder. They also flag comments mixed
-into import blocks and private environment variables read in client code.
-
-The [gspot CLI](https://www.npmjs.com/package/@gspothq/cli) sets this plugin up for you. Install it yourself only when
-you run ESLint without gspot.
-
-## Install
-
-You need Node.js ${PLUGIN_REQUIREMENTS.node} or newer and ESLint ${PLUGIN_REQUIREMENTS.eslint} or newer with a flat config file, such as
-\`eslint.config.mjs\`.
-
-| Package manager | Command |
-| --- | --- |
-| Bun | \`bun add --dev @gspothq/eslint-plugin eslint\` |
-| npm | \`npm install --save-dev @gspothq/eslint-plugin eslint\` |
-| pnpm | \`pnpm add --save-dev @gspothq/eslint-plugin eslint\` |
-| Yarn | \`yarn add --dev @gspothq/eslint-plugin eslint\` |
-
-## Use
-
-Add a plugin config to \`eslint.config.mjs\`. \`recommended\` turns on \`gspot/no-client-env\`; \`all\` turns on every lint
-rule except \`gspot/require-server-only\` and \`gspot/no-magic-numbers\`.
-
-\`\`\`javascript
-import gspot from '@gspothq/eslint-plugin';
-
-export default [gspot.configs.all];
-\`\`\`
-
-A finding looks like this:
-
-\`\`\`text
-src/orders.js
-  15:14  error  getOrderTotal only renames orderTotal. Export the source value under its own name.  gspot/no-renamed-exports
-\`\`\`
-
-Turn on \`gspot/require-server-only\` for the files that hold server code:
-
-\`\`\`javascript
-import gspot from '@gspothq/eslint-plugin';
-
-export default [{ files: ['src/server/**/*.js'], plugins: { gspot }, rules: { 'gspot/require-server-only': 'error' } }];
-\`\`\`
-
-\`gspot/import-boundaries\` reads its folders relative to the working folder of ESLint. To use another root, set
-\`settings: { gspot: { root: import.meta.dirname } }\`.
-
-## TypeScript
-
-Install \`@typescript-eslint/parser\` with the TypeScript version it supports, then select your TypeScript files:
-
-\`\`\`javascript
-import gspot from '@gspothq/eslint-plugin';
-import tsParser from '@typescript-eslint/parser';
-
-export default [
-    {
-        ...gspot.configs.all,
-        files: ['**/*.ts', '**/*.tsx'],
-        languageOptions: { parser: tsParser },
-    },
-];
-\`\`\`
-
-## Magic numbers
-
-\`gspot/no-magic-numbers\` reports the numbers that \`@typescript-eslint/no-magic-numbers\` reports. It skips the
-initializer of a module-level \`const\`, where an array of numbers counts as named. It takes the options of that rule
-and needs \`@typescript-eslint/eslint-plugin\` ${PLUGIN_REQUIREMENTS.typescriptEslint} or newer installed:
-
-\`\`\`javascript
-import gspot from '@gspothq/eslint-plugin';
-
-export default [{ files: ['**/*.ts'], plugins: { gspot }, rules: { 'gspot/no-magic-numbers': ['error', { ignore: [0, 1] }] } }];
-\`\`\`
-`;
+export const CURL_COMMAND = 'curl -fsSL';

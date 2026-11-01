@@ -1,4 +1,3 @@
-import { DIGITS_ONLY } from '#cli/config/text.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import { GROUP_LABELS } from '#cli/config/manifests/names.ts';
 import type { DetectionSummary } from '#cli/types/commands/init.ts';
@@ -11,7 +10,6 @@ import {
     LEAVES_LABEL,
     ANY_FILE_GLOB,
     REPLACES_LABEL,
-    NO_GIT_MESSAGE,
     PROJECT_FILE_NOTE,
     AGENT_FILES_LABEL,
     NOT_CHECKED_LABEL,
@@ -101,12 +99,11 @@ export function formatDetection(summary: DetectionSummary): string {
     );
     const languages = detected
         .filter((evidence) => evidence.group === 'language')
-        .map((evidence) => {
-            const count = evidence.evidence.split(' ', 1)[0] ?? '';
-            return DIGITS_ONLY.test(count)
-                ? `${evidence.configuration} ${count}`
-                : `${evidence.configuration} (${evidence.evidence})`;
-        });
+        .map((evidence) =>
+            evidence.count === undefined
+                ? `${evidence.configuration} (${evidence.evidence})`
+                : `${evidence.configuration} ${String(evidence.count)}`,
+        );
     const rows = [
         formatDetectionRow(GROUP_LABELS.language.toLowerCase(), languages),
         ...formatUncheckedFiles(summary),
@@ -125,7 +122,6 @@ export function formatDetection(summary: DetectionSummary): string {
     ].filter((line) => line !== undefined);
     return [
         `reading ${summary.files.length.toLocaleString('en-US')} ${summary.files.length === 1 ? 'file' : 'files'}: tracked, and untracked but not ignored`,
-        ...(summary.hasGit ? [] : [NO_GIT_MESSAGE]),
         '',
         ...rows,
         '',

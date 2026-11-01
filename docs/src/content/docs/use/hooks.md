@@ -40,7 +40,7 @@ add each line to the matching hook. For Bun:
 
 ```shell
 # pre-commit
-bunx --no-install gspot check --hook pre-commit
+bunx --no-install gspot check --staged --stage commit
 # pre-push: preserve Git's remote arguments and standard input
 bunx --no-install gspot check --hook pre-push -- "$@"
 # commit-msg: preserve Git's message-file argument
@@ -52,16 +52,16 @@ Use the exact lines that gspot prints for your package manager or mise. A hook w
 ## Test a hook
 
 ```shell
-gspot check --hook pre-commit
+gspot check --staged --stage commit
 gspot check --hook commit-msg -- .git/COMMIT_EDITMSG
 ```
 
 The pre-push hook needs the remote arguments and revision updates that Git passes on standard input, so test it with
 `git push`. After a failed push, the `run again:` line checks the files changed after the remote hash with
-`gspot check --only <check> --changed <hash>`. To compare with a branch outside a push:
+`gspot check --only <check> --base <hash>`. To compare with a branch outside a push:
 
 ```shell
-gspot check --changed origin/main
+gspot check --base origin/main
 ```
 
 ## Large files

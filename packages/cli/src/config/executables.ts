@@ -52,3 +52,20 @@ export const PROJECT_ENVIRONMENT_MESSAGE = 'The project environment .venv is mis
 export const NO_VERSION = 'No version is set for shim';
 
 export const VERSION_FLAG = '--version';
+
+export const ESLINT_BUILTIN_RULES = 'eslint/use-at-your-own-risk';
+
+export const INSTALL_FOR_RULES_MESSAGE =
+    'gspot explain reads lint rules from the tools that gspot install puts in .gspot/node_modules. Run gspot install.';
+
+export const MARKDOWNLINT_RULE_SCHEMA = '../schema/markdownlint-config-schema.json';
+
+export const MARKDOWNLINT_RULE_DESCRIPTION = /^MD\d+\/[^:]+ : (.+) : (https:\/\/\S+)$/u;
+
+export const SWIFTLINT_RULE_ARGUMENTS = ['rules', '--default-config', '--config'] as const;
+
+export const SWIFTLINT_RULE_IDENTIFIER = /^[a-z][a-z0-9_]*$/u;
+
+export const SHELLCHECK_RULE_IDENTIFIER = /^SC\d{4}$/u;
+
+export const DOCKER_DAEMON_NOTE = 'Start Docker, then run the check again.';

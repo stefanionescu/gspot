@@ -97,8 +97,8 @@ function formatRulesIndex(files: RuleFile[]): string[] {
     ];
 }
 
-function formatSettingsCommands(startCommand: string): string {
-    const commands = SETTINGS_COMMANDS.map((command, index) => (index === 0 ? `${startCommand} ${command}` : command));
+function formatSettingsCommands(): string {
+    const commands = SETTINGS_COMMANDS.map((command, index) => (index === 0 ? `gspot ${command}` : command));
     return new Intl.ListFormat('en', { type: 'disjunction' }).format(commands.map((command) => '`' + command + '`'));
 }
 
@@ -180,15 +180,17 @@ export function buildAgentsBlock({ files, managedKeys, startCommand, hasOwnTitle
         '',
         `The rules write \`gspot\` for \`${startCommand}\`.`,
         '',
-        `After you add code in a new language, framework or tool, run \`${startCommand} add\`, then \`${startCommand} install\`.`,
+        'Before you commit, run `gspot check --staged --stage commit`. Before you push, run `gspot check --changed --stage push`.',
         '',
-        `To change \`gspot.toml\`, run ${formatSettingsCommands(startCommand)}.`,
-        `After you edit \`gspot.toml\` by hand, run \`${startCommand} apply\`.`,
+        `To change \`gspot.toml\`, run ${formatSettingsCommands()}.`,
+        'When `gspot check` or `gspot doctor` names a new configuration, ask the user, then run the `gspot add` line it prints and `gspot install`.',
+        'Run `gspot ignore` or `gspot remove` only after the user agrees, with a reason.',
+        'After you edit `gspot.toml`, a package manifest, or a tsconfig, run `gspot apply`.',
         '',
         GENERATED_FILES_HEADING,
         '',
         GENERATED_FILES_LINE,
-        `Do not edit these files. Change \`gspot.toml\`, then run \`${startCommand} apply\`.`,
+        'Do not edit these files. Change `gspot.toml`, then run `gspot apply`.',
         ...managedKeys.flatMap(({ path, keys }) => [
             '',
             `gspot also sets ${keys.length === 1 ? 'one key' : 'these keys'} in \`${path}\`: ${keys.map((key) => '`' + key + '`').join(' and ')}.`,

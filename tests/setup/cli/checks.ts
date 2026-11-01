@@ -1,5 +1,4 @@
 import { spyOn } from 'bun:test';
-import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { type Session } from '#cli/types/session.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { runBuiltInCheck } from '#cli/runs/results.ts';
@@ -10,15 +9,17 @@ import * as environment from '#cli/system/environment.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
 import { getTool, findToolName } from '#cli/manifests/tools.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { CHECK_CODE, selectCheckCode } from '#cli/checks/registry.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import type { NamingSettings } from '#cli/types/checks/general/naming.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readNamingSettings } from '#cli/checks/general/naming/settings.ts';
 import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
-import { checkGeneratorOutputs } from '#cli/checks/cross-configuration/generator-outputs.ts';
 
 /**
 Keep the compiler cache in a temporary folder until the test ends.
@@ -103,9 +104,9 @@ export async function runSandboxCheck(
     const session = await openSession(root, { resources });
     const planned = planSandboxCheck(session, checkId, options);
     const result = await runCheckCode(
-        buildCheckSession(session),
+        buildCheckSession(session, CHECK_GENERATION),
         planned,
-        planned.check.generator_outputs === undefined ? CHECK_CODE[planned.check.id] : { check: checkGeneratorOutputs },
+        selectCheckCode(planned.check),
         {},
     );
     return result.findings;
@@ -131,7 +132,7 @@ export function getBuiltInCheck(checkId: string): (session: Session, planned: Pl
     const check = CHECK_CODE[checkId]?.check;
     if (check === undefined) throw new Error(`${checkId} has no built-in check.`);
     return async (session, planned) => {
-        const result = await runBuiltInCheck(check, buildCheckSession(session), planned);
+        const result = await runBuiltInCheck(check, buildCheckSession(session, CHECK_GENERATION), planned, {});
         return [...result.findings];
     };
 }
@@ -140,7 +141,7 @@ export function getBuiltInCheck(checkId: string): (session: Session, planned: Pl
 Read the naming settings that apply in one scope of this settings text.
 */
 export async function buildScopeNamingSettings(text: string, scopePath = ''): Promise<NamingSettings> {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': text,
         ...(scopePath !== '' && { [`${scopePath}/.keep`]: '' }),
     });

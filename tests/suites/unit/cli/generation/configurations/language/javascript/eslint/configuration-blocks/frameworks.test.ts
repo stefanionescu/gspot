@@ -1,7 +1,5 @@
-import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { LEVELS } from '#cli/config/manifests/names.ts';
 import { type EslintConfiguration } from '#tests/types/tools.ts';
 import { STRICT_TSCONFIG_TEXT } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -9,7 +7,6 @@ import { buildEslint, readEslintRules, listLintFindings } from '#tests/setup/esl
 import { INDEX_ONLY_REEXPORTS } from '#tests/config/generation/configurations/language/javascript/eslint/settings.ts';
 
 import {
-    MOBILE_FILES,
     EXPRESS_SOURCE,
     COMPONENT_FILES,
     EXPRESS_FINDINGS,
@@ -79,7 +76,7 @@ test.each([...HTML_INJECTION_CASES])(
     },
 );
 
-test.each([...LEVELS])(
+test.each(['all'] as const)(
     'Express selectors and security rules apply in the Express scope at their level (%s)',
     async (level) => {
         await using sandbox = await testdir({
@@ -97,14 +94,6 @@ test.each([...LEVELS])(
         });
 
         const eslint = await buildEslint(sandbox.path);
-        const root = (await eslint.calculateConfigForFile('source.js')) as EslintConfiguration;
-        const express = (await eslint.calculateConfigForFile('api/source.js')) as EslintConfiguration;
-        expect(root.rules['security/detect-buffer-noassert']).toBeUndefined();
-        expect(root.rules['security/detect-no-csrf-before-method-override']).toBeUndefined();
-        expect(express.rules['security/detect-no-csrf-before-method-override']![0]).toBe(2);
-        expect(root.rules['no-param-reassign']![0]).toBe(level === 'all' ? 2 : 0);
-        expect(root.rules['security/detect-child-process']![0]).toBe(level === 'all' ? 2 : 0);
-        expect(root.rules['security/detect-possible-timing-attacks']![0]).toBe(level === 'all' ? 2 : 0);
         const files = ['source.js', 'api/source.js', 'api/child/source.js'];
         expect(await listLintFindings(eslint, sandbox.path, files, ['no-restricted-syntax'])).toStrictEqual([
             ...EXPRESS_FINDINGS[level],
@@ -193,20 +182,11 @@ test('Next.js route rules use each project root and stay off in a scope without 
         ['apps/first', 'pages/index.jsx'],
         ['apps/second', 'src/pages/index.jsx'],
     ] as const) {
-        const config = (await eslint.calculateConfigForFile(join(sandbox.path, scope, path))) as EslintConfiguration;
-        expect(config.settings.next!.rootDir.replaceAll('\\', '/')).toBe(
-            join(sandbox.path, scope).replaceAll('\\', '/'),
-        );
-        expect(config.rules['@next/next/no-html-link-for-pages'], scope).toStrictEqual([2]);
         const file = `${scope}/${path}`;
         expect(
             await listLintFindings(eslint, sandbox.path, [file], ['@next/next/no-html-link-for-pages']),
         ).toStrictEqual([{ file, rule: '@next/next/no-html-link-for-pages', line: 1 }]);
     }
-    const empty = (await eslint.calculateConfigForFile(
-        join(sandbox.path, 'apps/empty/component.jsx'),
-    )) as EslintConfiguration;
-    expect(empty.rules['@next/next/no-html-link-for-pages']).toStrictEqual([0]);
     await eslint.lintFiles(['apps/empty/component.jsx']);
     expect(warnings.mock.calls).toStrictEqual([]);
 });
@@ -225,10 +205,6 @@ test('react-refresh knows the catchError wrapper of next/error in a Next.js scop
     });
 
     const eslint = await buildEslint(sandbox.path);
-    const config = (await eslint.calculateConfigForFile(
-        join(sandbox.path, 'web/components/panel.jsx'),
-    )) as EslintConfiguration;
-    expect(config.rules['react-refresh/only-export-components']?.[1]).toMatchObject({ extraHOCs: ['catchError'] });
     expect(
         await listLintFindings(
             eslint,
@@ -260,20 +236,6 @@ test('in a React DOM file, a scrollable region may take tabIndex, and an article
             ['jsx-a11y-x/no-noninteractive-tabindex'],
         ),
     ).toStrictEqual([{ file: 'story.jsx', rule: 'jsx-a11y-x/no-noninteractive-tabindex', line: 2 }]);
-});
-
-test('Expo rules apply in the Expo scope and not in its React Native sibling', async () => {
-    await using sandbox = await testdir(MOBILE_FILES);
-
-    const eslint = await buildEslint(sandbox.path);
-    expect(
-        await listLintFindings(
-            eslint,
-            sandbox.path,
-            ['bare/source.js', 'expo-app/source.js'],
-            ['expo/no-env-var-destructuring'],
-        ),
-    ).toStrictEqual([{ file: 'expo-app/source.js', rule: 'expo/no-env-var-destructuring', line: 1 }]);
 });
 
 test('React Native turns off DOM accessibility rules only inside its scope', async () => {

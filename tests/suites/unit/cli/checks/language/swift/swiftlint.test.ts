@@ -1,15 +1,17 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
 import { planChecks } from '#cli/planning/checks.ts';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { buildCheckSession } from '#cli/commands/check/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { planSwiftBuild } from '#cli/checks/language/swift/cache.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { listSwiftlintConfigs } from '#cli/checks/language/swift/swiftlint.ts';
 import { getBuiltInCheck, prepareSwiftCheck } from '#tests/setup/cli/checks.ts';
 import { UNEXPECTED_PLAN_MESSAGE } from '#tests/config/checks/language/swift/messages.ts';
@@ -18,7 +20,7 @@ import { ANALYZER_EXIT_CASES, NESTED_SWIFTLINT_FILES } from '#tests/config/check
 test.each([...ANALYZER_EXIT_CASES])(
     'analyzer: build exit $buildCode and analyzer exit $analyzerCode report the failed stage',
     async ({ buildCode, analyzerCode, message }) => {
-        await using sandbox = await testdir();
+        await using sandbox = await createGitSandbox({});
         await using resources = new AsyncDisposableStack();
         await using prepared = await prepareSwiftCheck(sandbox, 'swift/swiftlint-analyze');
         resources.use(
@@ -36,7 +38,7 @@ test.each([...ANALYZER_EXIT_CASES])(
 test('analyzer: swift/swiftlint-analyze removes its own old compiler files and leaves the incremental build of swift/build in place', async () => {
     using resources = new DisposableStack();
 
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
 
     await using prepared = await prepareSwiftCheck(sandbox, 'swift/swiftlint-analyze');
 
@@ -66,7 +68,7 @@ test('analyzer: swift/swiftlint-analyze removes its own old compiler files and l
 });
 
 test('the SwiftLint config files of a nested scope stop at the scope folder and include a link inside the repository', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['swift'], { scopes: [{ path: 'app' }] }),
         '.swiftlint.yml': 'disabled_rules: []\n',
         'app/.swiftlint.yml': 'disabled_rules: []\n',
@@ -76,7 +78,7 @@ test('the SwiftLint config files of a nested scope stop at the scope folder and 
         'app/Other/.swiftlint.yml': 'disabled_rules: []\n',
     });
 
-    const session = await openSession(sandbox.path);
+    const session = buildCheckSession(await openSession(sandbox.path), CHECK_GENERATION);
     const plans = planChecks(session, { stage: 'commit', only: ['swift/swiftlint'] });
     const planned = plans.find((plan) => plan.scope.path === 'app')!;
     const shipped = '.gspot/configurations/language/swift/swiftlint.yml';

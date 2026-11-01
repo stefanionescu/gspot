@@ -1,14 +1,20 @@
 import semver from 'semver';
+import type { z } from 'zod';
 import { posix } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { listAssets } from '#cli/system/assets.ts';
+import { visit } from 'unist-util-visit';
+import { fromMarkdown } from 'mdast-util-from-markdown';
+import { gfmTable } from 'micromark-extension-gfm-table';
 import type { Tool, Check } from '#cli/types/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { gfmTableFromMarkdown } from 'mdast-util-gfm-table';
 import { EACH_PLACEHOLDER } from '#cli/config/runs/command.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
+import { findSettingSchema } from '#cli/settings/schema/lookup.ts';
+import { listAssets, buildAssetPath } from '#cli/system/assets.ts';
 import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import type { SettingDefinition } from '#cli/types/settings/definitions.ts';
-import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 
 test('each accepted suppression example matches its marker and gives a reason', () => {
     const forms = readConfigurations()
@@ -56,15 +62,12 @@ function listToolPinErrors(tool: Tool): string[] {
     ];
 }
 
-function hasEmptyDefault(definition: SettingDefinition | undefined, value: unknown): boolean {
-    if (definition === undefined) return true;
-    const selected = value ?? definition.default_all ?? definition.default;
-    return (
-        selected === undefined ||
-        selected === '' ||
-        selected === false ||
-        (Array.isArray(selected) && selected.length === 0)
-    );
+function hasEmptyDefault(schema: z.ZodType | undefined, value: unknown): boolean {
+    if (schema === undefined) return true;
+    const definition = schema.meta() as SettingDefinition | undefined;
+    const parsed = schema.safeParse(undefined);
+    const selected = value ?? definition?.default_all ?? (parsed.success ? parsed.data : undefined);
+    return new Set<unknown>([undefined, '', false]).has(selected) || (Array.isArray(selected) && selected.length === 0);
 }
 
 function listCommandSettings(check: Check): string[] {
@@ -80,14 +83,13 @@ function listCommandSettings(check: Check): string[] {
 }
 
 function listCheckSettingErrors(check: Check, defaults: Record<string, unknown>): string[] {
-    const declarations: Readonly<Record<string, SettingDefinition>> = SETTING_DEFINITIONS;
     const requiredSetting = check.when?.setting;
     return [
-        ...(requiredSetting !== undefined && declarations[requiredSetting] === undefined
+        ...(requiredSetting !== undefined && findSettingSchema(requiredSetting) === undefined
             ? [`${check.id} waits for undeclared setting ${requiredSetting}.`]
             : []),
         ...listCommandSettings(check)
-            .filter((name) => name !== requiredSetting && hasEmptyDefault(declarations[name], defaults[name]))
+            .filter((name) => name !== requiredSetting && hasEmptyDefault(findSettingSchema(name), defaults[name]))
             .map((name) => `${check.id} uses empty-default setting ${name} without when.setting.`),
     ];
 }
@@ -142,7 +144,7 @@ test('each manifest default names a declared setting', () => {
         .values()
         .flatMap((configuration) =>
             Object.keys(configuration.defaults)
-                .filter((name) => !Object.hasOwn(SETTING_DEFINITIONS, name))
+                .filter((name) => findSettingSchema(name) === undefined)
                 .map((name) => `${configuration.name}: default ${name} has no setting declaration.`),
         )
         .toArray();
@@ -170,4 +172,25 @@ test('shipped configuration folders have unique names', () => {
         .filter((path) => path.endsWith('/manifest.toml'))
         .map((path) => posix.basename(posix.dirname(path)));
     expect(new Set(names).size).toBe(names.length);
+});
+
+test('every shipped Markdown table parses as a table instead of a paragraph', () => {
+    const errors: string[] = [];
+    const rules = listAssets('configurations/').filter((path) => path.includes('/rules/') && path.endsWith('.md'));
+    for (const path of rules) {
+        const text = readFileSync(buildAssetPath(path), 'utf8');
+        const document = fromMarkdown(text, {
+            extensions: [gfmTable()],
+            mdastExtensions: [gfmTableFromMarkdown()],
+        });
+        visit(document, 'paragraph', (paragraph) => {
+            const { position } = paragraph;
+            if (position === undefined) return;
+            const lines = text.split('\n').slice(position.start.line - 1, position.end.line);
+            if (lines.some((line) => line.trimStart().startsWith('|'))) {
+                errors.push(`${path}:${String(position.start.line)}: table rows parsed as a paragraph.`);
+            }
+        });
+    }
+    expect(errors).toStrictEqual([]);
 });

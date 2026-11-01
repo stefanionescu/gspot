@@ -4,7 +4,6 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { readBytes } from '#cli/system/files/reads.ts';
-import { DOCKER_TOOL } from '#cli/config/executables.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
@@ -12,6 +11,7 @@ import type { Session, CheckSession } from '#cli/types/session.ts';
 import { parseNginxDirectives } from '#cli/parsers/formats/nginx.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { DOCKER_TOOL, DOCKER_DAEMON_NOTE } from '#cli/config/executables.ts';
 import type { Mount, NginxMounts } from '#cli/types/checks/infrastructure.ts';
 import { type CheckFinding, type BuiltInCheckResult } from '#cli/types/runs/check.ts';
 import { SYNTAX_RULE } from '#cli/config/checks/cross-configuration/cross-configuration.ts';
@@ -32,7 +32,6 @@ import {
     OPENSSL_KEY_FLAG,
     NGINX_COPY_PREFIX,
     NGINX_MAIN_TARGET,
-    DOCKER_DAEMON_NOTE,
     NGINX_TEST_COMMAND,
     DOCKER_DAEMON_ERROR,
     NGINX_VARIABLE_MARK,

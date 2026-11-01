@@ -1,15 +1,17 @@
 import { isDeepStrictEqual } from 'node:util';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
+import { LIMIT_RULES_BY_CHECK } from '#cli/manifests/limits.ts';
 import type { ParsedStructure } from '#cli/types/settings/values.ts';
 import { type ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { getLimit, getTable, findParentScope } from '#cli/settings/scopes.ts';
+import { ESLINT_CHECK } from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 import type { EslintRuleBlock, EslintLevelRules, PlannedEslintFile } from '#cli/types/generation/eslint.ts';
 import { splitGlobs, buildNodePatterns } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 
 import {
     BARREL_FILES_RULE,
-    ESLINT_LIMIT_RULES,
+    ESLINT_LIMIT_OPTIONS,
 } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
 
 function buildLimitRules(
@@ -17,14 +19,24 @@ function buildLimitRules(
     language: 'typescript' | 'javascript',
     reexports: ParsedStructure['reexports'],
 ): Record<string, unknown> {
+    const limitRules = LIMIT_RULES_BY_CHECK.get(ESLINT_CHECK) as Record<string, string>;
     const barrelRule: [string, unknown] = [
         BARREL_FILES_RULE,
-        ['error', { amountOfExportsToConsiderModuleAsBarrel: getLimit(scopeSettings, 'index_exports', language) }],
+        [
+            'error',
+            {
+                amountOfExportsToConsiderModuleAsBarrel: getLimit(
+                    scopeSettings,
+                    limitRules[BARREL_FILES_RULE] as string,
+                    language,
+                ),
+            },
+        ],
     ];
     return Object.fromEntries([
-        ...Object.entries(ESLINT_LIMIT_RULES).map(([rule, limitRule]): [string, unknown] => {
-            const maximum = getLimit(scopeSettings, limitRule.limit, language);
-            return [rule, ['error', 'options' in limitRule ? { max: maximum, ...limitRule.options } : maximum]];
+        ...Object.entries(ESLINT_LIMIT_OPTIONS).map(([rule, options]): [string, unknown] => {
+            const maximum = getLimit(scopeSettings, limitRules[rule] as string, language);
+            return [rule, ['error', Object.keys(options).length > 0 ? { max: maximum, ...options } : maximum]];
         }),
         ...(reexports === 'index-only' ? [barrelRule] : []),
     ]);

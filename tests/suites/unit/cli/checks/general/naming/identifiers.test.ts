@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/commands/check/run.ts';
@@ -7,6 +6,7 @@ import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     FRAMEWORK_NAMES,
@@ -24,7 +24,7 @@ test.each([...FRAMEWORK_NAMES])(
         const variables = `export const ${name} = () => null;\n`;
         const declarations = `    ${name}() { return null; }\n`;
         const methods = `export class Reader {\n${declarations}}\n`;
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['typescript', 'naming'], {
                 level: 'all',
                 scopes: [{ path: 'app', configurations: [configuration] }, { path: 'sibling' }],
@@ -70,7 +70,7 @@ test.each([...FRAMEWORK_NAMES])(
 
 test('SwiftLint owns the case and length of Swift types; banned words are still reported in types and parameters', async () => {
     const sourceText = 'typealias URLSession = String\n';
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['swift', 'naming'], {
             level: 'all',
             tables: '[naming]\nbanned_words = ["url session"]\n',
@@ -96,7 +96,7 @@ test('SwiftLint owns the case and length of Swift types; banned words are still 
 
 test('with pytest selected, the test_ prefix does not count as a word', async () => {
     const source = 'def test_read_account_summary_columns():\n    pass\n';
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python', 'naming'], {
             level: 'all',
             scopes: [{ path: 'app', configurations: ['pytest'] }, { path: 'sibling' }],
@@ -128,7 +128,7 @@ test('with pytest selected, the test_ prefix does not count as a word', async ()
 test('an allowed property name does not hide a bad name on the next line', async () => {
     const source =
         'export type Template = {\n    external_key: string;\n    user_name: string;\n    USER_COUNT: number;\n};\n';
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript', 'naming'], {
             tables: '[[naming.override]]\npaths = ["source.ts"]\ncategories = ["properties"]\nallowed_names = ["external_key"]\nreason = "The remote API fixes this exact property key."\n',
             level: 'all',
@@ -147,7 +147,7 @@ test('an allowed property name does not hide a bad name on the next line', async
 });
 
 test(`test-file exemptions follow each scope's test_files and Swift test names`, async () => {
-    await using sandbox = await testdir({ 'gspot.toml': TEST_PATH_SETTINGS, ...TEST_PATH_FILES });
+    await using sandbox = await createGitSandbox({ 'gspot.toml': TEST_PATH_SETTINGS, ...TEST_PATH_FILES });
 
     const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['naming/identifiers'] }));
 
@@ -157,7 +157,7 @@ test(`test-file exemptions follow each scope's test_files and Swift test names`,
 });
 
 test('Python dunders and type aliases follow their own naming', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python', 'naming'], { level: 'all' }),
         'source.py': [...PYTHON_TYPE_SOURCE].join('\n'),
     });
@@ -169,7 +169,7 @@ test('Python dunders and type aliases follow their own naming', async () => {
 });
 
 test('React component variables may take PascalCase, and destructured names keep their source spelling', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript', 'react', 'naming'], { level: 'all' }),
         'context.ts': [...REACT_COMPONENT_SOURCE].join('\n'),
         'header.tsx': 'export const Header = readHeader();\n',
@@ -183,7 +183,7 @@ test('React component variables may take PascalCase, and destructured names keep
 });
 
 test('domain names customer, news and supported pass, and names that hold a banned word are reported', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'naming'], { level: 'all' }),
         'orders.js':
             'export const customerId = 1;\nexport const newsFeed = 1;\nexport const supportedLocales = [];\nexport const finalScore = 1;\nexport const objectStore = {};\n',
@@ -196,7 +196,7 @@ test('domain names customer, news and supported pass, and names that hold a bann
 });
 
 test('Next.js JavaScript routes accept PascalCase components', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'nextjs', 'naming'], { level: 'all' }),
         'app/blog/page.js': 'export default function Page() { return null; }\n',
         'pages/index.js': 'export default function Home() { return null; }\n',
@@ -205,7 +205,7 @@ test('Next.js JavaScript routes accept PascalCase components', async () => {
 });
 
 test('cors stays a domain word while core and its word forms remain banned', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'naming'], { level: 'all' }),
         'cors.js':
             'export const corsHeaders = {};\nexport const coreCount = 1;\nexport const cores = [];\nexport const cored = 1;\n',
@@ -215,7 +215,7 @@ test('cors stays a domain word while core and its word forms remain banned', asy
 });
 
 test('snapshot names describe storage and subscription concepts outside tests', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'swift', 'naming'], { level: 'all' }),
         'backups.js': 'export function createSnapshot(volumeId) { return volumeId; }\n',
         'Sources/List.swift': 'var snapshot = NSDiffableDataSourceSnapshot<Int, String>()\n',

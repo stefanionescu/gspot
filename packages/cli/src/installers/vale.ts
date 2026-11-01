@@ -12,6 +12,7 @@ import type { Settings } from '#cli/types/settings/settings.ts';
 import { VALE_TOOL, PROSE_GRAMMARS } from '#cli/config/prose.ts';
 import { runRequiredInstallStep } from '#cli/installers/steps.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
+import { deleteStaleTemporaryPaths } from '#cli/system/files/folders.ts';
 import { inspectTool, buildToolAvailability } from '#cli/executables/inspect.ts';
 import { VALE_STYLES_PATH } from '#cli/config/generation/configurations/general.ts';
 import { rmSync, mkdirSync, renameSync, mkdtempSync, writeFileSync } from 'node:fs';
@@ -37,6 +38,7 @@ import {
     VALE_COMMENT_RULES,
     STYLES_PATH_COMMENT,
     VALE_INSTALL_PREFIX,
+    VALE_TEMPORARY_NAME,
     VALE_SKIPPED_SCOPES,
     MARKUP_RULES_COMMENT,
     VALE_PACKAGE_FOLDERS,
@@ -109,17 +111,20 @@ Skip the download when every package folder exists and the release file names th
 export async function installValePackages(install: ToolInstall, miseBinPaths: string[]): Promise<string> {
     const { session } = install;
     const { root } = session;
+    const files = openFiles(root);
+    deleteStaleTemporaryPaths(files, GSPOT_FOLDER, VALE_TEMPORARY_NAME);
     const level = session.settings.level;
     const usesVale = session.toolConfigurations.some(({ tools }) => tools.some((tool) => tool.name === VALE_TOOL));
     if (level === 'basic' || !usesVale) return '';
-    const files = openFiles(root);
     const releases = `${JSON.stringify(VALE_PACKAGE_RELEASES, null, JSON_INDENT)}\n`;
     if (files.read(GSPOT_PATHS.valeReleases)?.bytes.toString('utf8') === releases && hasValePackages(root, level))
         return '';
     const tool = getTool(session.toolConfigurations, VALE_TOOL);
     const available = buildToolAvailability(tool, inspectTool({ ...session, miseBinPaths }, tool));
     if ('status' in available) throw new GspotError('tool', available.note);
-    const temporary = mkdtempSync(join(files.readCanonicalPath(GSPOT_FOLDER), VALE_INSTALL_PREFIX));
+    const temporary = mkdtempSync(
+        join(files.readCanonicalPath(GSPOT_FOLDER), `${VALE_INSTALL_PREFIX}${String(process.pid)}-`),
+    );
     try {
         const config = join(temporary, GSPOT_PATHS.valeConfig);
         const content = buildValeIni({

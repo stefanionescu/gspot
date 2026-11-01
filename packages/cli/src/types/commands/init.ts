@@ -32,7 +32,7 @@ export type InitPlan = {
 export type ConflictingConfigs = {
     changed: InitFileRow[];
     reviewed: Map<string, FileContents | undefined>;
-    deleted: InitFileRow[];
+    deleted: { path: string; tool: string; unreadablePrettier: boolean }[];
     kept: InitFileRow[];
 };
 
@@ -63,7 +63,6 @@ export type DetectionSummary = {
     owned: string[];
     unowned: string[];
     configurationsByName: Map<string, Configuration>;
-    hasGit: boolean;
 };
 
 export type InitFileRow = { path: string; note: string };
@@ -71,7 +70,6 @@ export type InitFileRow = { path: string; note: string };
 export type InitOptions = {
     template?: Template | undefined;
     cwd: string;
-    yes: boolean;
     level?: Level | undefined;
     configurations?: string[] | undefined;
 };
@@ -89,7 +87,10 @@ export type InitConfigurations = {
 export type InitRepository = {
     repository: Repository;
     configurationsByName: Map<string, Configuration>;
-    options: Pick<InitOptions, 'configurations' | 'template'>;
+    options: {
+        configurations?: string[] | undefined;
+        template?: { configurations: string[]; removed: string[] } | undefined;
+    };
 };
 
 export type ConfigurationChoices = {

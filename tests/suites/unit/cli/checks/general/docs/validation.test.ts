@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
-import { testdir, createFileTree } from 'testdirs';
 import { createRunCache } from '#cli/system/cache.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -11,6 +11,7 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { README, LICENSE } from '#tests/config/documents.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 import {
@@ -32,7 +33,7 @@ import {
 } from '#tests/config/checks/general/docs.ts';
 
 test('required files run in root and child scopes even without any Markdown file', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['docs'], { level: 'all', scopes: [{ path: 'app' }] }),
         'app/source.ts': 'export const value = 1;\n',
     });
@@ -60,7 +61,7 @@ test('required files run in root and child scopes even without any Markdown file
 });
 
 test('Bun file commands validate tracked paths without treating them as package scripts', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['docs'], { level: 'all' }),
         'guide.md': 'Run `bun run scripts/build.ts` and `bun run scripts/missing.ts`.\n',
         'scripts/build.ts': 'console.info("built");\n',
@@ -81,7 +82,10 @@ async function runMissingPathsCheck(
     files: Record<string, string>,
     options: { paths?: string[] } = {},
 ): Promise<readonly Finding[]> {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['docs'], { level: 'all' }), ...files });
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['docs'], { level: 'all' }),
+        ...files,
+    });
     return await runSandboxCheck(sandbox.path, 'docs/missing-paths', options);
 }
 
@@ -178,7 +182,7 @@ test('missing-paths: paths relative to the document are found, and missing ones 
 test.each([...MALFORMED_TASK_FILES])(
     'missing-paths: a malformed $path is a read error, not a missing task',
     async ({ path, text, document, scopes, files, message }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['docs'], { level: 'all', scopes }),
             ...files,
         });
@@ -203,7 +207,7 @@ test('missing-paths: documented tasks are checked against their task tool and th
 });
 
 test('missing-paths: a document in a child scope does not read unrelated or shadowed package scripts', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { scopes: DOC_TASK_SCOPES }),
         ...DOC_TASK_FILES,
     });
@@ -239,7 +243,7 @@ test.each([...DOC_FENCE_PATH_CASES])(
 test.each([...LICENSE_FILE_CASES])(
     'required-files: $name counts as a LICENSE only when it is one',
     async ({ name, findings }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['docs'], { level: 'all' }),
             'README.md': README,
             [name]: LICENSE,
@@ -250,7 +254,7 @@ test.each([...LICENSE_FILE_CASES])(
 );
 
 test('required-files: ignored README.md and LICENSE files in a Git repository are reported', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['docs'], { level: 'all' }),
         '.gitignore': 'README.md\nLICENSE\n',
         'README.md': README,
@@ -269,7 +273,7 @@ test('required-files: ignored README.md and LICENSE files in a Git repository ar
 });
 
 test('missing-paths: a generator output named by a setting counts as present before it is generated', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['docs', 'openapi'], {
             level: 'all',
             tables: '[openapi]\ndocument = "generated/openapi.json"\ngenerate_command = ["bun", "generate.ts"]\n',

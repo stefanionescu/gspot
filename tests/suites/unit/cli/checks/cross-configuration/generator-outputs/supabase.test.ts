@@ -1,8 +1,8 @@
 import executables from 'which';
 import { join } from 'node:path';
+import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -10,6 +10,7 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { DATABASE_SCHEMAS, SUPABASE_TYPES_OUTPUT } from '#tests/config/checks/cross-configuration/generator-outputs.ts';
 
@@ -73,7 +74,7 @@ async function prepareSupabaseCheck(
 
 test('Supabase passes every configured schema as its own --schema in a scope', async () => {
     const scope = 'apps/api';
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     using supabase = await prepareSupabaseCheck(
         sandbox.path,
         scope,
@@ -102,7 +103,7 @@ test('Supabase passes every configured schema as its own --schema in a scope', a
 test('Supabase types need Docker before the local stack starts', async () => {
     using resources = new DisposableStack();
 
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     using supabase = await prepareSupabaseCheck(
         sandbox.path,
         '',

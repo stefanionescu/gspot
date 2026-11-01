@@ -4,7 +4,7 @@ import type { Configuration } from '#cli/types/manifests.ts';
 import type { Settings } from '#cli/types/settings/settings.ts';
 import type { SettingsEdit } from '#cli/types/settings/edits.ts';
 import type { PackageManager } from '#cli/types/repository/javascript.ts';
-import type { FROZEN_INSTALLS } from '#cli/config/generation/generation.ts';
+import type { FROZEN_INSTALLS } from '#cli/config/repository/javascript.ts';
 import type { RepositoryListing } from '#cli/types/repository/repository.ts';
 
 export type ActionPin = { name: string; sha: string; version: string };
@@ -56,6 +56,7 @@ export type ShippedRule = {
 export type SettingsEditOptions = {
     edit: SettingsEdit;
     summary: string;
+    unchangedSummary?: string;
     notes?: string[];
     cache?: RunCache | undefined;
     listing?: RepositoryListing | undefined;

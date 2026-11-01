@@ -1,13 +1,14 @@
 import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
+import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     PREFIX_TREE,
@@ -17,7 +18,7 @@ import {
 
 test('shared-prefixes groups files and folders once, and honors an ignore and a raised limit', async () => {
     const settings = buildSandboxSettings(['typescript'], { level: 'all' });
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': settings,
         ...PREFIX_TREE,
     });
@@ -44,7 +45,7 @@ test('shared-prefixes groups files and folders once, and honors an ignore and a 
 
 test('hook scripts under .husky do not count; other files beside them still do', async () => {
     const folder = '.husky';
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const hooks = Object.fromEntries(
         [folder, `${folder}/nested`, `app/${folder}`, `app/${folder}/nested`].flatMap((path) =>
             ['post-merge', 'post-checkout', 'hook-first.ts', 'hook-second.ts'].map((name) => [
@@ -86,7 +87,7 @@ test('hook scripts under .husky do not count; other files beside them still do',
 });
 
 test('NestJS kind suffixes do not count in NestJS scopes; JSX files and unknown kinds still do', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const sourceFiles: Record<string, string> = {};
     for (const scope of ['', 'app', 'app/deep', 'sibling']) {
         for (const kind of ['controller', 'service']) {
@@ -111,7 +112,7 @@ test('NestJS kind suffixes do not count in NestJS scopes; JSX files and unknown 
 });
 
 test('snake_case and PascalCase siblings share their first word', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
         'snake/invoice_list.ts': '',
         'snake/invoice_row.ts': '',

@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/planning/session.ts';
@@ -7,6 +6,7 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import { STRICT_TSCONFIG_TEXT } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 import {
@@ -23,7 +23,7 @@ import {
 test.each([...TSCONFIG_READ_ERRORS])(
     '$name is a read error that names the file, not missing options',
     async ({ tsconfig, error, fixed }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['typescript']),
             'tsconfig.json': tsconfig,
         });
@@ -36,7 +36,7 @@ test.each([...TSCONFIG_READ_ERRORS])(
 );
 
 test('a scope needs no tsconfig of its own but still checks one that is added', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['typescript']) });
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['typescript']) });
 
     expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig')).toStrictEqual([]);
     await writeFile(
@@ -52,7 +52,7 @@ test('a scope needs no tsconfig of its own but still checks one that is added', 
 
 test('a nested tsconfig inherits strict from the tsconfig an npm package names, and strict: false is reported in both files', async () => {
     const filename = 'strict.json';
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript']),
         'tsconfig.json': '{"extends":"./apps/web/tsconfig.json"}',
         'apps/web/tsconfig.json': '{"extends":"@example/config"}',
@@ -84,7 +84,7 @@ test('a nested tsconfig inherits strict from the tsconfig an npm package names, 
 });
 
 test('level basic does not require noImplicitReturns and noPropertyAccessFromIndexSignature, and level all does', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'basic' }),
         'tsconfig.json': JSON.stringify(DEFAULT_LEVEL_TSCONFIG),
     });
@@ -99,7 +99,7 @@ test('level basic does not require noImplicitReturns and noPropertyAccessFromInd
 });
 
 test(`a scope's framework compiler options are required in its tsconfig`, async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], {
             level: 'all',
             scopes: [{ path: 'service', configurations: ['nestjs'] }],
@@ -132,7 +132,7 @@ test(`a scope's framework compiler options are required in its tsconfig`, async 
 });
 
 test('a covering ancestor tsconfig is checked once and a child-only project keeps its own check', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], {
             level: 'all',
             scopes: [{ path: 'app', configurations: ['typescript'] }],
@@ -177,7 +177,7 @@ test('a covering ancestor tsconfig is checked once and a child-only project keep
 });
 
 test('a child excluded from the root project is its own compiler project', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], {
             level: 'all',
             scopes: [{ path: 'app', configurations: ['typescript'] }],
@@ -194,7 +194,7 @@ test('a child excluded from the root project is its own compiler project', async
 });
 
 test('TypeScript sources without a compiler project give one setup finding', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript']),
         'source.ts': COUNT_NUMBER_SOURCE,
     });
@@ -206,7 +206,7 @@ test('TypeScript sources without a compiler project give one setup finding', asy
 });
 
 test('a solution tsconfig leaves compiler option checks to its referenced projects', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript']),
         'tsconfig.json': '{"files":[],"references":[{"path":"./tsconfig.app.json"}]}',
         'tsconfig.app.json': JSON.stringify(DEFAULT_LEVEL_TSCONFIG),
@@ -221,7 +221,7 @@ test('a solution tsconfig leaves compiler option checks to its referenced projec
 });
 
 test('strict requires explicitly disabled members of the strict family', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript']),
         'tsconfig.json': STRICT_TSCONFIG_TEXT.replace('"strict":true', '"strict":true,"strictNullChecks":false'),
     });

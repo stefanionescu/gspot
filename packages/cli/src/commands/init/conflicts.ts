@@ -7,14 +7,8 @@ import { isEditedInPlace } from '#cli/repository/conflicts.ts';
 import { parsePrettierFile } from '#cli/commands/init/format.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import type { InitPlan, ConflictingConfigs } from '#cli/types/commands/init.ts';
+import { VERIFY_FLAG, NAME_ONLY_FLAG, READ_COMMITTED_MESSAGE } from '#cli/config/commands/init.ts';
 import type { WritePlan, ManagedKeys, RepositorySetup, ConflictingConfig } from '#cli/types/repository/repository.ts';
-
-import {
-    VERIFY_FLAG,
-    NAME_ONLY_FLAG,
-    PRETTIER_SCRIPT_NOTE,
-    READ_COMMITTED_MESSAGE,
-} from '#cli/config/commands/init.ts';
 
 function listCommittedPaths(root: string, paths: string[]): Set<string> {
     const head = runGitBlocking(root, ['rev-parse', VERIFY_FLAG, '--quiet', 'HEAD']);
@@ -36,7 +30,10 @@ function addConflictingConfig(file: ConflictingConfig, conflicts: ConflictingCon
     else
         conflicts.deleted.push({
             path,
-            note: `replaced by the generated ${tool} config file${tool === 'prettier' && parsePrettierFile(path, conflicts.reviewed.get(path)?.bytes.toString('utf8') ?? '') === undefined ? PRETTIER_SCRIPT_NOTE : ''}`,
+            tool,
+            unreadablePrettier:
+                tool === 'prettier' &&
+                parsePrettierFile(path, conflicts.reviewed.get(path)?.bytes.toString('utf8') ?? '') === undefined,
         });
 }
 

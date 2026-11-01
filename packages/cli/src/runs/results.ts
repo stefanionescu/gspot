@@ -1,9 +1,31 @@
 import { realpathSync } from 'node:fs';
+import { quoteArgument } from '#cli/system/text.ts';
+import { findToolName } from '#cli/manifests/tools.ts';
 import { listCheckedFiles } from '#cli/planning/files.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { hasRuleOutput } from '#cli/runs/output/formats.ts';
 import { INCOMPLETE_STATUSES } from '#cli/config/runs/runs.ts';
 import { type Session, type CheckSession } from '#cli/types/session.ts';
-import { type CheckResult, type BuiltInCheck } from '#cli/types/runs/check.ts';
+import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
+import { type Finding, type CheckResult, type BuiltInCheck, type CheckRunOptions } from '#cli/types/runs/check.ts';
+
+/**
+Build the command that explains a finding's check and rule.
+
+@param finding the reported check and optional rule identifier.
+*/
+export function formatExplainCommand(finding: Pick<Finding, 'check' | 'rule'>): string {
+    const argumentsList = [finding.check];
+    const found = listChecksById(readConfigurations().values()).get(finding.check);
+    if (
+        finding.rule !== undefined &&
+        found !== undefined &&
+        hasRuleOutput(found.check) &&
+        findToolName(found.check) !== undefined
+    )
+        argumentsList.push(finding.rule);
+    return `gspot explain ${argumentsList.map((argument) => quoteArgument(argument)).join(' ')}`;
+}
 
 /**
 Starts a passed check result with the check ID, scope, and file count.
@@ -48,15 +70,17 @@ Run a built-in check and attach its help and file count to the result.
 @param builtInCheck the implementation that reads repository files.
 @param session the current check session.
 @param planned the configured check and selected files.
+@param options the verbosity of the findings.
 @returns the findings and execution status.
 */
 export async function runBuiltInCheck(
     builtInCheck: BuiltInCheck,
     session: CheckSession,
     planned: PlannedCheck,
+    options: CheckRunOptions,
 ): Promise<CheckResult> {
     const started = performance.now();
-    const result = await builtInCheck(session, planned);
+    const result = await builtInCheck(session, planned, options);
     const findings = (Array.isArray(result) ? result : result.findings).map((finding) => ({
         ...finding,
         check: planned.check.id,

@@ -4,13 +4,17 @@ import { GspotError } from '#cli/system/errors.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { assertCheckExists } from '#cli/manifests/read.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { buildArgumentPaths } from '#cli/settings/paths.ts';
 import { writeSettingsEdit } from '#cli/generation/write.ts';
-import { readSettingsEditContext } from '#cli/planning/edits.ts';
 import type { TomlTable, IgnoreRecord } from '#cli/types/settings/settings.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import type { IgnoreTarget, IgnoreOptions, IgnoreRemoval } from '#cli/types/commands/commands.ts';
+import { buildIgnorePaths, readSettingsEditContext } from '#cli/planning/edits.ts';
 
+import {
+    type IgnoreTarget,
+    type IgnoreOptions,
+    type IgnoreRemoval,
+    type CommandLocation,
+} from '#cli/types/commands/commands.ts';
 import {
     RULE_OPTION,
     PATHS_OPTION,
@@ -75,14 +79,14 @@ function formatEverywhereNote(everywhere: number, check: string | undefined): st
 }
 
 async function runUnignoreCommand(
-    options: Pick<IgnoreOptions, 'cwd' | 'check' | 'rule' | 'paths'>,
+    options: Pick<IgnoreOptions, 'root' | 'cwd' | 'check' | 'rule' | 'paths'>,
 ): Promise<CommandResult> {
-    const context = await readSettingsEditContext(options.cwd);
+    const context = await readSettingsEditContext(options.root);
     const { root, edit: input, settings } = context;
-    if (options.check !== undefined) assertCheckExists(options.check, settings);
+    if (options.check !== undefined) assertCheckExists(options.check, Object.values(settings.commandChecks));
     const { kept, deleted, changedIgnores, removedPaths, everywhere } = removeIgnores(input.table, {
         ...options,
-        paths: buildArgumentPaths(root, options.cwd, options.paths),
+        paths: buildIgnorePaths(context, options.cwd, options.paths),
     });
     const notes = formatEverywhereNote(everywhere, options.check);
     const target = formatIgnoreTarget(options);
@@ -123,21 +127,27 @@ Register the unignore command.
 
 @param program the gspot program that gets the command.
 @param onResult receives the result of the command.
+@param location the calling folder and the Git root validated before the action.
 */
-export function registerUnignore(program: Command, onResult: CommandCompletion): void {
+export function registerUnignore(program: Command, onResult: CommandCompletion, location: CommandLocation): void {
     program
         .command('unignore')
         .argument('[check]', COMMAND_HELP.unignore.arguments['check'])
         .summary(COMMAND_HELP.unignore.summary)
         .description(COMMAND_HELP.unignore.description)
         .option(RULE_OPTION, COMMAND_HELP.unignore.options[RULE_OPTION])
-        .option(PATHS_OPTION, COMMAND_HELP.unignore.options[PATHS_OPTION])
+        .option(
+            PATHS_OPTION,
+            COMMAND_HELP.unignore.options[PATHS_OPTION],
+            (value: string, previous: string[] | undefined) => [...(previous ?? []), value],
+        )
         .action(async (check, flags) => {
             if (check === undefined && flags.rule !== undefined)
                 throw new GspotError('arguments', RULE_WITHOUT_CHECK_MESSAGE);
             onResult(
                 await runUnignoreCommand({
-                    cwd: process.cwd(),
+                    root: location.root,
+                    cwd: location.cwd,
                     check,
                     rule: flags.rule,
                     paths: flags.paths,

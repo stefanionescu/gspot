@@ -23,9 +23,11 @@ Change `gspot.toml`, then run `gspot apply`; gspot writes every generated file f
 | Keys in your own files, such as `install.security.scanner` in `bunfig.toml` and tool keys in `package.json`            | Install options. The other keys stay yours.                                                                                                                                                                                                                 | Yes    |
 | `.gspot/node_modules/`, `.gspot/.venv/`, `.gspot/vale/`                                                                | Installed tools. The `.gitignore` in `.gspot/` keeps them out of Git.                                                                                                                                                                                       | No     |
 
-The managed block of `AGENTS.md` lists your repository's generated files and the keys gspot sets. Run `gspot install` in each new clone.
+The gspot block of `.gitattributes` marks every generated path outside `.gspot/` with `linguist-generated`.
+Use that block to find the generated link files and enabled CI workflow in your repository. Run `gspot install` in
+each new clone.
 
-The generated-file lists in `.prettierignore`, `.gitattributes`, and `AGENTS.md` include generated link files and the enabled CI workflow.
+For installed tools, temporary check copies, and caches, see [What gspot adds to your repository and machine](/start/footprint/).
 
 ## Do not edit generated files
 
@@ -40,7 +42,7 @@ file with the header stays yours, and `gspot apply` leaves it in place.
 
 `gspot apply` names each file that it removes. The hooks of Git Large File Storage (LFS) exist only when a file of the
 repository uses `filter=lfs`. When you turn off `dependencies.bun_scanner`, its key stays in `bunfig.toml` as yours,
-and `gspot apply` says so. The ESLint settings of each configuration sit in its `eslint.mjs`, which the JavaScript configuration imports.
+and `gspot apply` says so.
 
 ## Dependency bots
 

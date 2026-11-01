@@ -5,11 +5,9 @@ import { remember } from '#cli/system/cache.ts';
 import { getTool } from '#cli/manifests/tools.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument } from '#cli/system/text.ts';
-import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
-import { DOCKER_TOOL } from '#cli/config/executables.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildMiseInstall } from '#cli/installers/mise.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
@@ -18,11 +16,12 @@ import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { readToolBinPaths } from '#cli/executables/locate.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
 import { buildRunReport } from '#cli/commands/check/results.ts';
+import { formatUnexpectedError } from '#cli/system/terminal.ts';
 import { type IgnoreRecord } from '#cli/types/settings/settings.ts';
-import { type Session, type CheckSession } from '#cli/types/session.ts';
+import { DOCKER_TOOL, DOCKER_DAEMON_NOTE } from '#cli/config/executables.ts';
 import { inspectTool, buildToolAvailability } from '#cli/executables/inspect.ts';
-import { checkGeneratorOutputs } from '#cli/checks/cross-configuration/generator-outputs.ts';
 import { buildBaseResult, runBuiltInCheck, normalizeResultPaths } from '#cli/runs/results.ts';
+import { type Session, type CheckSession, type CheckGeneration } from '#cli/types/session.ts';
 import { type Finding, type CheckCode, type CheckResult, type CheckRunOptions } from '#cli/types/runs/check.ts';
 
 import {
@@ -34,8 +33,8 @@ import {
 } from '#cli/types/commands/check.ts';
 import {
     HOOK_FLAG,
+    BASE_FLAG,
     STAGED_FLAG,
-    CHANGED_FLAG,
     CHECK_COMMAND,
     FAILED_STATUSES,
     SHORT_HASH_LENGTH,
@@ -73,18 +72,22 @@ async function findUnrunnableResult(
             cancelSignal: session.cancelSignal,
         }),
     );
-    return result.code === 0
-        ? undefined
-        : { ...base, status: 'missing', note: 'Start Docker, then run the check again.' };
+    return result.code === 0 ? undefined : { ...base, status: 'missing', note: DOCKER_DAEMON_NOTE };
 }
 
-function classifyCheckError(name: string, error: unknown): Pick<CheckResult, 'status' | 'note' | 'cause'> {
-    if (error instanceof GspotError && error.code === 'skip')
-        return { status: 'skipped', cause: 'condition', note: error.message };
-    if (error instanceof GspotError && error.code === 'tool') return { status: 'missing', note: error.message };
+function classifyCheckError(
+    name: string,
+    error: unknown,
+    verbose: boolean,
+): Pick<CheckResult, 'status' | 'note' | 'cause' | 'stack'> {
+    if (error instanceof GspotError) {
+        if (error.code === 'skip') return { status: 'skipped', cause: 'condition', note: error.message };
+        return { status: error.code === 'tool' ? 'missing' : 'error', note: error.message };
+    }
     return {
         status: 'error',
-        note: `The ${name} check failed: ${error instanceof Error ? error.message : String(error)}`,
+        note: formatUnexpectedError(name),
+        ...(verbose && { stack: error instanceof Error ? (error.stack ?? error.message) : String(error) }),
     };
 }
 
@@ -95,21 +98,16 @@ async function runPlannedCheck(run: Run, planned: PlannedCheck): Promise<CheckRe
     if (unrunnable) return unrunnable;
     const started = performance.now();
     try {
-        return await runCheckCode(
-            session,
-            planned,
-            planned.check.generator_outputs === undefined
-                ? CHECK_CODE[planned.check.id]
-                : { check: checkGeneratorOutputs },
-            { verbose: run.options.verbose },
-        );
+        return await runCheckCode(session, planned, run.options.selectCheckCode(planned.check), {
+            verbose: run.options.verbose,
+        });
     } catch (error) {
         return {
             ...base,
             duration: Math.round(performance.now() - started),
             ...(session.cancelSignal?.aborted === true
                 ? { status: 'error', note: CANCELED_CHECK_NOTE }
-                : classifyCheckError(planned.check.id, error)),
+                : classifyCheckError(planned.check.id, error, run.options.verbose === true)),
         };
     }
 }
@@ -148,7 +146,7 @@ function formatReproduceCommand(checkId: string, scopeArgument: string | undefin
     else if (scopeArgument !== undefined && messageFile === undefined)
         words.push(quoteArgument(scopeArgument.startsWith('-') ? `./${scopeArgument}` : scopeArgument));
     words.push('--only', quoteArgument(checkId));
-    if (changed !== undefined) words.push(CHANGED_FLAG, quoteArgument(changed));
+    if (changed !== undefined) words.push(BASE_FLAG, quoteArgument(changed));
     if (messageFile !== undefined) words.push(HOOK_FLAG, 'commit-msg', '--', quoteArgument(messageFile));
     if (staged) words.push(STAGED_FLAG);
     return words.join(' ');
@@ -189,13 +187,14 @@ async function runActiveChecks(run: Run, checks: PlannedCheck[]): Promise<CheckR
 async function planAfterFixes(session: CheckSession, options: RunOptions): Promise<PlanAfterFixes> {
     const planned = planChecks(session, options);
     if (!options.fix) return { session, planned, fixes: undefined };
-    const fixes = await runFixers(session, planned);
+    const fixes = await runFixers(session, planned, options.selectCheckCode);
     const fixed = buildCheckSession(
         await openSession(session.root, {
             toolsRoot: session.toolsRoot,
             resources: session.resources,
             cancelSignal: session.cancelSignal,
         }),
+        session.generation,
     );
     return { session: fixed, planned: planChecks(fixed, options), fixes };
 }
@@ -209,7 +208,11 @@ Plan and run the checks, after the fixers when --fix asks, then drop ignored fin
 */
 export async function runChecks(session: Session, options: RunOptions): Promise<RunResult> {
     const started = options.started ?? new Date();
-    const { session: checked, planned, fixes } = await planAfterFixes(buildCheckSession(session), options);
+    const {
+        session: checked,
+        planned,
+        fixes,
+    } = await planAfterFixes(buildCheckSession(session, options.generation), options);
     const active = planned.filter((check) => isActive(check) && check.skip === undefined);
     const ran = await runActiveChecks({ session: checked, options }, active);
     const report = buildRunReport({
@@ -229,11 +232,13 @@ Give a session the reader of the program folders of its mise tools, which asks m
 tool. The session also gets the one limiter that every tool process of its checks waits for.
 
 @param session the repository and its tools.
+@param generation the generators called by checks when they need their output.
 */
-export function buildCheckSession(session: Session): CheckSession {
+export function buildCheckSession(session: Session, generation: CheckGeneration): CheckSession {
     let miseBinPaths: string[] | undefined;
     return {
         ...session,
+        generation,
         limitProcess: pLimit(availableParallelism()),
         readMiseBinPaths: () => {
             miseBinPaths ??= readToolBinPaths(session, buildMiseInstall(session.toolConfigurations).content);
@@ -256,7 +261,7 @@ export async function runCheckCode(
     code: CheckCode | undefined,
     options: CheckRunOptions,
 ): Promise<CheckResult> {
-    if (code?.check !== undefined) return runBuiltInCheck(code.check, session, planned);
+    if (code?.check !== undefined) return runBuiltInCheck(code.check, session, planned, options);
     return (code?.run ?? runCommandCheck)(session, planned, {
         ...options,
         listFileArguments: code?.listFileArguments,

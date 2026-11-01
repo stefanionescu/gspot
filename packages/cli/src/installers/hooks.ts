@@ -14,7 +14,6 @@ import { CHECK_HOOKS, HOOK_CHECKS } from '#cli/config/generation/generation.ts';
 import type { HookPlan, HookStatus } from '#cli/types/installers/installers.ts';
 
 import {
-    NO_GIT_STATUS,
     SET_HOOKS_PATH,
     UNSET_HOOKS_NOTE,
     UNSET_HOOKS_PATH,
@@ -49,7 +48,8 @@ function hasHookCommand(root: string, hook: RepositorySetup['hooks'][number], na
         ? hook.files.filter((file) => file === name).map((file) => resolve(root, hook.path, file))
         : [resolve(root, hook.path)];
     const lines = paths.flatMap((path) => readFileSync(path, 'utf8').split(LINE_BREAK));
-    return lines.some((line) => !HOOK_COMMENT_LINE.test(line) && line.includes(`check --hook ${name}`));
+    const command = HOOK_CHECKS[name].arguments.split(' -- ', 1)[0] as string;
+    return lines.some((line) => !HOOK_COMMENT_LINE.test(line) && line.includes(command));
 }
 
 /**
@@ -75,13 +75,9 @@ Check whether the hooks in the settings run in this repository.
 @param session the settings, runner, and configured checks.
 @param repository the Git repository whose hooks to inspect.
 */
-export async function readHookStatus(
-    session: Session,
-    repository: Pick<Repository, 'root' | 'hasGit'>,
-): Promise<HookStatus> {
+export async function readHookStatus(session: Session, repository: Pick<Repository, 'root'>): Promise<HookStatus> {
     const { settings } = session;
     if (settings.hooks?.enabled !== true) return { ready: true, text: 'none' };
-    if (!repository.hasGit) return { ready: false, text: NO_GIT_STATUS };
     const { hooksPath, hooks: foreign } = await readHooks(repository);
     if (hooksPath === GSPOT_PATHS.hooks) return { ready: true, text: 'installed' };
     if (foreign.length > 0) {

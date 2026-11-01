@@ -1,5 +1,4 @@
 import type { Ignore } from 'ignore';
-import type { Dirent } from 'node:fs';
 import type { FILE_KINDS } from '#cli/config/files/kinds.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { GitIndexFile } from '#cli/types/parsers/parsers.ts';
@@ -7,7 +6,7 @@ import type { DependencyFile } from '#cli/types/parsers/projects.ts';
 import type { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 
-export type PathIgnore = { base: string; matcher: Ignore };
+export type GitignoreMatcher = { base: string; matcher: Ignore };
 
 export type ListedFile = { path: string; size: number; executable: boolean; isSymlink: boolean };
 
@@ -23,7 +22,6 @@ export type TrackedFile = {
 export type Repository = {
     root: string;
     attributes: Map<string, Record<string, string>>;
-    hasGit: boolean;
     index: GitIndexFile[];
     unreadablePaths: string[];
     files: TrackedFile[];
@@ -44,10 +42,6 @@ export type ScopeFolder = {
     configurations: string[];
     origin: 'root' | typeof SETTINGS_FILE | 'project';
 };
-
-export type FolderListing = { children: Dirent[]; ignores: PathIgnore[] };
-
-export type PendingFolder = { folder: string; ignores: PathIgnore[] };
 
 export type FileKindRules = { generatedPaths: GeneratedPaths[]; attributes: Repository['attributes'] };
 

@@ -32,46 +32,36 @@ function listReplacementConflicts(root: string, paths: string[], replacement: Co
         }));
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The manifest dotfile convention identifies configs that cascade below project roots.
+function isCascadingConfig(path: string): boolean {
+    return posix.basename(path).startsWith('.');
+}
+
 function listConfigurationConflicts(
     root: string,
     configuration: Configuration,
     files: { inventory: Set<string>; projectFolders: Set<string> },
 ): ConflictingConfig[] {
-    const replacements = configuration.tools.flatMap((tool) =>
-        [
-            ...(tool.replace ?? []).map((path) => ({ tool: tool.name, path, shared: false })),
-            ...(tool.replace_key ?? []).map(({ file, ...selector }) => ({
-                tool: tool.name,
-                path: file,
-                shared: true,
-                ...selector,
-            })),
-        ].map((replacement) => ({
-            replacement,
-            paths: [] as string[],
-            depth: replacement.path.split('/').length,
-            isDotfile: posix.basename(replacement.path).startsWith('.'),
-            matches: buildPathMatcher([replacement.path, `**/${replacement.path}`]),
+    const replacements = configuration.tools.flatMap((tool) => [
+        ...(tool.replace ?? []).map((path) => ({ tool: tool.name, path, shared: false })),
+        ...(tool.replace_key ?? []).map(({ file, ...selector }) => ({
+            tool: tool.name,
+            path: file,
+            shared: true,
+            ...selector,
         })),
-    );
-    for (const path of files.inventory) {
-        for (const replacement of replacements) {
-            if (
-                replacement.matches(path) &&
-                (replacement.isDotfile ||
-                    files.projectFolders.has(path.split('/').slice(0, -replacement.depth).join('/')))
-            )
-                replacement.paths.push(path);
-        }
-    }
-    return replacements.flatMap(({ replacement, paths }) => {
-        if (
+    ]);
+    return replacements.flatMap((replacement) => {
+        const matches = buildPathMatcher([replacement.path, `**/${replacement.path}`]);
+        const cascading = isCascadingConfig(replacement.path);
+        const paths = [...files.inventory].filter(
+            (path) => matches(path) && (cascading || files.projectFolders.has(posix.dirname(path))),
+        );
+        const rootOnly =
             !picomatch.scan(replacement.path).isGlob &&
             !files.inventory.has(replacement.path) &&
-            find(root, replacement.path) !== undefined
-        )
-            paths.push(replacement.path);
-        return listReplacementConflicts(root, paths, replacement);
+            find(root, replacement.path) !== undefined;
+        return listReplacementConflicts(root, [...paths, ...(rootOnly ? [replacement.path] : [])], replacement);
     });
 }
 
@@ -118,7 +108,7 @@ export function listConflictingConfigs(
             .map((file) => file.path),
     );
     const selected = [...configurations];
-    const located = { inventory, projectFolders: new Set(['', ...listProjectFolders(inventory, selected)]) };
+    const located = { inventory, projectFolders: new Set(['.', ...listProjectFolders(inventory, selected)]) };
     return selected.flatMap((configuration) => listConfigurationConflicts(root, configuration, located));
 }
 

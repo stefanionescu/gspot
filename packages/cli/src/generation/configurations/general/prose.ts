@@ -12,9 +12,11 @@ import {
     ACRONYMS,
     ACRONYM_NAME,
     LENGTH_STYLES,
+    ALT_TEXT_TOKENS,
     ACRONYM_MESSAGE,
     ACRONYM_PATTERN,
     BANNED_HEADINGS,
+    ALT_TEXT_MESSAGE,
     VALE_STYLES_PATH,
     VALE_REGEX_SYMBOLS,
     CAPITALIZATION_STYLES,
@@ -130,4 +132,21 @@ export function buildAcceptedWordsFile(planned: PlannedConfig): string {
     const words = listAllowedWords(planned.session);
 
     return words.toSorted((left, right) => compareText(left, right)).join('\n');
+}
+
+/**
+Build the Vale image alternative rule for the selected level.
+
+@param planned the config file and scope.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: CONFIG_BUILDERS selects this configuration's generator through its shared builder interface.
+export function buildAltTextStyle(planned: PlannedConfig): string {
+    return stringify({
+        extends: 'existence',
+        message: ALT_TEXT_MESSAGE,
+        level: 'error',
+        scope: 'raw',
+        nonword: true,
+        tokens: [ALT_TEXT_TOKENS[0], ...(planned.level === 'all' ? [ALT_TEXT_TOKENS[1]] : [])],
+    });
 }

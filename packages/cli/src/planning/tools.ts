@@ -12,13 +12,13 @@ import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { PRETTIER_TOOL, STYLELINT_TOOL } from '#cli/config/planning.ts';
 import { getTool, findToolProjectPackage } from '#cli/manifests/tools.ts';
-import { isSettingEmpty, findSettingsSkip } from '#cli/planning/skips.ts';
 import type { PrettierPlugin } from '#cli/types/generation/formatting.ts';
 import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
 import { isCoverageOff, hasCoverageArguments } from '#cli/planning/checks.ts';
 import { selectScopePath, listNestedScopes } from '#cli/repository/scopes.ts';
 import type { LicenseProject, ConfiguredCheck } from '#cli/types/planning.ts';
 import { PIP_LICENSES_COMMAND, LICENSE_CHECKER_COMMAND } from '#cli/config/licenses.ts';
+import { isSettingEmpty, findSystemSkip, findSettingsSkip } from '#cli/planning/skips.ts';
 import { ESLINT_MANIFEST_TOOL, LICENSES_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { STYLELINT_COMPONENTS } from '#cli/config/generation/configurations/language/language.ts';
 
@@ -92,6 +92,18 @@ export function listCheckTools(planned: ConfiguredCheck): string[] {
     );
     addPeerPackages(names, planned.scope.configurations);
     return [...names];
+}
+
+/**
+List the tools for checks that this machine can run.
+
+@param checks the configured checks across all scopes.
+@returns each required tool once.
+*/
+export function listHostCheckTools(checks: ConfiguredCheck[]): Set<string> {
+    const host = { platform: getOperatingSystem(), arch: process.arch };
+    const runnable = checks.filter((planned) => findSystemSkip(planned.check, planned.tool, host) === undefined);
+    return new Set(runnable.flatMap((planned) => listCheckTools(planned)));
 }
 
 /**

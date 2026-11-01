@@ -54,4 +54,6 @@ export const KNIP_TABLE = 'tools.knip';
 
 export const KNIP_CHECK = 'javascript/knip';
 
+export const BIOME_TYPESCRIPT_FILES = ['**/*.{ts,tsx,mts,cts,astro,vue,svelte}'];
+
 export const UNQUOTED_COMMENT = /('[^']*'|"(?:[^"\\]|\\.)*")|(?<![^\s;&|()])#.*/gu;

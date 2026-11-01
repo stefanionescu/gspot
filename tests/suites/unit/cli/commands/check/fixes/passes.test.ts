@@ -34,7 +34,7 @@ test.each([...FIX_LINTER_CASES])(
                         {
                             id: 'project/native',
                             command: [...command, ...row.formatter, '{files}'],
-                            fix: [...command, '--fix', '{files}'],
+                            fix: [...command, ...row.formatter, '--fix', '{files}'],
                             exit_codes: check.exit_codes!,
                             output: check.output,
                             paths: [row.path],

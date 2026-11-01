@@ -22,8 +22,9 @@ None of these settings turns a lint rule on or off, and none takes a severity; t
 | ESLint for some files | `[[tools.eslint.override]]` with `paths` and `rules` | The same, for the files of `paths`    |
 | Stylelint             | `tools.stylelint.rules`                              | The options of each rule              |
 | markdownlint          | `tools.markdownlint.rules`                           | An option table for each rule ID      |
-| yamllint              | `tools.yamllint.rules`                               | The options of each rule              |
 | commitlint            | `tools.commitlint.rules`, `types`, and `scopes`      | Rule options, and the accepted values |
+
+## Settings that set rule options
 
 gspot writes the options of some rules from a setting, and refuses them in these tables. Change the setting instead:
 
@@ -36,6 +37,8 @@ gspot writes the options of some rules from a setting, and refuses them in these
 | `no-restricted-imports`                                                                                                                                  | `tools.eslint.restricted_imports`                                                                                  |
 | `gspot/import-boundaries`                                                                                                                                | `javascript.import_boundaries`, see [Import rules](/configure/import-rules/#keep-relative-imports-inside-a-folder) |
 | `n/file-extension-in-import`                                                                                                                             | `tools.eslint.import_extension`                                                                                    |
+| `n/no-process-env`, `no-restricted-properties`, `no-restricted-syntax`                                                                                   | `structure.environment_readers`                                                                                    |
+| `barrel-files/avoid-barrel-files`                                                                                                                        | `limits.index_exports`                                                                                             |
 
 ## ESLint
 
@@ -66,10 +69,12 @@ This table holds options only, without a severity; the level decides which rules
 
 Options for a rule that no block turns on stop ESLint when it loads the config. The error names the rule.
 
-`gspot explain eslint/eqeqeq` reads the rule from the ESLint that `gspot install` put in `.gspot/node_modules`. It
+`gspot explain javascript/eslint eqeqeq` reads the rule from the ESLint that `gspot install` put in `.gspot/node_modules`. It
 prints what the rule looks for, links its documentation, which lists its options, and prints the commands that set its
 options or ignore it. Before `gspot install`, explain asks you to run it. Stylelint rules work the same way, such as
-`gspot explain stylelint/color-no-invalid-hex`.
+`gspot explain css/stylelint color-no-invalid-hex`.
+
+For a Ruff rule, `gspot explain python/ruff E501` prints its summary. Add `--verbose` for its full explanation.
 
 ## Your own ESLint rules
 

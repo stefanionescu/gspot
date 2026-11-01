@@ -1,10 +1,8 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { compareText, quoteArgument } from '#cli/system/text.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -12,13 +10,15 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { runChecks, buildCheckSession } from '#cli/commands/check/run.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
 import { getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 import { listBuiltFiles, readSuccessfulBuild } from '#cli/checks/framework/site/build.ts';
 import { BUILD_OUTPUT_CHECKS, WORKSPACE_SITE_FILES } from '#tests/config/checks/framework/site.ts';
 
 test('build: a push run builds the site without changing committed dist files or Git status', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['site'], {
             level: 'all',
             tables: `[site]\nbuild_command = ${JSON.stringify(buildProgramCommand('fakes/tool', '--write', 'dist/index.html=built'))}\n`,
@@ -37,7 +37,7 @@ test('build: a push run builds the site without changing committed dist files or
 
 test('build: a build that reads an untracked file fails until the file is in the paths', async () => {
     const command = buildProgramCommand('fakes/site-build', '--copy', 'local-input.txt=dist/index.html');
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['site'], {
             level: 'all',
             tables: `[site]\nbuild_command = ${JSON.stringify(command)}\n`,
@@ -54,7 +54,7 @@ test('build: a build that reads an untracked file fails until the file is in the
     expect(output).toContain("ENOENT: no such file or directory, stat 'local-input.txt'");
     const checkedSession = await openSession(sandbox.path, { resources });
     const corrected = await readSuccessfulBuild(
-        buildCheckSession(checkedSession),
+        buildCheckSession(checkedSession, CHECK_GENERATION),
         planSandboxCheck(checkedSession, 'site/build', { paths: ['local-input.txt'] }),
     );
     expect(corrected.built).toBe(true);
@@ -62,7 +62,7 @@ test('build: a build that reads an untracked file fails until the file is in the
 });
 
 test.each([0, 7])("build: a run deletes the build's copy after exit %i", async (code) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['site'], {
             level: 'all',
             tables: `[site]\nbuild_command = ${JSON.stringify(buildProgramCommand('fakes/tool'))}\n`,
@@ -92,7 +92,7 @@ test.each([0, 7])("build: a run deletes the build's copy after exit %i", async (
 });
 
 test('build: a dist link that leaves the build folder is refused', async () => {
-    await using sandbox = await testdir({ 'dist/local.txt': 'local', 'external.txt': 'external' });
+    await using sandbox = await createGitSandbox({ 'dist/local.txt': 'local', 'external.txt': 'external' });
 
     const link = join(sandbox.path, 'dist/linked.txt');
     await symlink('../external.txt', link);
@@ -106,7 +106,7 @@ test('build: a dist link that leaves the build folder is refused', async () => {
 
 test("build: a scope's site build copies only the workspace packages it depends on", async () => {
     const command = buildProgramCommand('fakes/site-build', '--import', 'core=dist/index.html');
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         ...WORKSPACE_SITE_FILES,
         'gspot.toml': buildSandboxSettings([], {
             scopes: [{ path: 'web', configurations: ['site', 'javascript'] }],
@@ -120,7 +120,7 @@ test("build: a scope's site build copies only the workspace packages it depends 
     using resources = new DisposableStack();
     const session = await openSession(sandbox.path, { resources });
     const input = planSandboxCheck(session, 'site/build', { scope: 'web' });
-    const built = await readSuccessfulBuild(buildCheckSession(session), input);
+    const built = await readSuccessfulBuild(buildCheckSession(session, CHECK_GENERATION), input);
     expect(built.built, built.failure).toBe(true);
     expect(await readFile(join(built.folder, 'index.html'), 'utf8')).toBe('<h1>Workspace site</h1>');
     expect(await isOnDisk(join(built.cwd, '../packages/unused/private.txt'))).toBe(false);
@@ -132,7 +132,7 @@ test("build: a scope's site build copies only the workspace packages it depends 
 
 test('build: a failed site build skips every check that reads the build, and a new session builds again', async () => {
     const failing = buildProgramCommand('fakes/tool', '--stderr', 'Test build failure\n', '--exit', '1');
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['site'], {
             level: 'all',
             tables: `[site]\nbuild_command = ${JSON.stringify(failing)}\n`,

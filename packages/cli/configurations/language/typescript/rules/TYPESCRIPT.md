@@ -94,8 +94,7 @@ interval and its unit.
 ### TypeScript types
 
 - Use plain and discriminated unions for alternatives.
-- Use interfaces only when a framework contract, declaration merging, or `implements` relationship makes one the
-  clearest tool.
+- Write a `type` alias. Use an `interface` only to merge with a declaration in a `.d.ts` file.
 - Avoid return-type-only generics. When you call an existing one, specify the type argument explicitly.
 - Give the keys of an index signature meaningful names.
 - Prefer `Map` for key/value operations.

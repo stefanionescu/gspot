@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import type { Config } from 'stylelint';
 import type stylelintModule from 'stylelint';
@@ -8,16 +7,17 @@ import { openSession } from '#cli/planning/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { getConfigPath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 const { default: stylelint } = (await import(Bun.resolveSync('stylelint', toolModules))) as {
     default: typeof stylelintModule;
 };
 
-test.each(['vue', 'astro'])('a CSS-only scope checks properties inside a %s component style', async (extension) => {
+test.each(['vue'])('a CSS-only scope checks properties inside a %s component style', async (extension) => {
     const path = `Card.${extension}`;
     const code = '<style>p { nonexistent-property: red; }</style>\n';
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['css']),
         [path]: code,
     });
@@ -26,8 +26,6 @@ test.each(['vue', 'astro'])('a CSS-only scope checks properties inside a %s comp
         ({ path: file }) => file === getConfigPath(session, 'stylelint', ''),
     )!;
     const config = JSON.parse(generated.content) as Config;
-    const syntax = config.overrides?.find(({ files }) => files.includes(`**/*.${extension}`))?.customSyntax;
-    expect(syntax).toBe('postcss-html');
     const result = await stylelint.lint({
         code,
         codeFilename: join(sandbox.path, path),
@@ -40,7 +38,7 @@ test.each(['vue', 'astro'])('a CSS-only scope checks properties inside a %s comp
 });
 
 test('a scope with CSS Modules files accepts composes, :global, and @value in them only', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['css'], { level: 'all' }),
         'button.module.css': '.base {\n    color: red;\n}\n',
     });

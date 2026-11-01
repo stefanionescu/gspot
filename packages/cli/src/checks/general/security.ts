@@ -1,21 +1,20 @@
 import { join } from 'node:path';
 import { CONFIG_FLAG } from '#cli/config/flags.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import { buildConfigs } from '#cli/generation/configs.ts';
+import type { CheckSession } from '#cli/types/session.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
-import { getConfigTarget } from '#cli/generation/selection.ts';
-import type { Session, CheckSession } from '#cli/types/session.ts';
+import { getConfigTarget } from '#cli/runs/command/placeholders.ts';
 import { SEMGREP_TOOL, SEMGREP_RULE_EXTENSION } from '#cli/config/checks/general/general.ts';
 
-function listSemgrepRuleFiles(session: Session, planned: PlannedCheck): string[] {
+function listSemgrepRuleFiles(session: CheckSession, planned: PlannedCheck): string[] {
     const { configurations, path: scopePath, settings } = planned.scope;
     const ruleFiles = configurations.flatMap((configuration) =>
         configuration.configs
             .filter((file) => file.tool.includes(SEMGREP_TOOL) && file.target.endsWith(SEMGREP_RULE_EXTENSION))
             .filter((file) => file.level !== 'all' || session.settings.level === 'all')
-            .map((file) => getConfigTarget(scopePath, file, buildConfigs(session))),
+            .map((file) => getConfigTarget(scopePath, file, session.generation.buildConfigs(session))),
     );
     return [...new Set([...ruleFiles, ...getTable(settings, 'tools.semgrep').rule_files])];
 }

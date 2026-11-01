@@ -1,6 +1,7 @@
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/planning/session.ts';
 import { runBuiltInCheck } from '#cli/runs/results.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/runs.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildCheckSession } from '#cli/commands/check/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -18,8 +19,9 @@ test('the built-in dispatcher attaches the check ID, fixability, and default hel
             { file: 'source.js', rule: 'name', message: 'Choose a descriptive name.' },
             { file: 'source.js', rule: 'name', message: 'Choose another name.', help: 'Use the project vocabulary.' },
         ],
-        buildCheckSession(session),
+        buildCheckSession(session, CHECK_GENERATION),
         { ...planned, check: { ...planned.check, help: 'Rename this identifier.' } },
+        {},
     );
     expect(result.status).toBe('failed');
     expect(result.findings).toStrictEqual([

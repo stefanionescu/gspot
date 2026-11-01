@@ -1,10 +1,11 @@
 ---
 title: Spelling and prose
 description: Check spelling and prose, and allow words your project needs.
+configurations: [prose, spelling]
 ---
 
 The `spelling` configuration runs typos on code, comments, and documentation. The `prose` configuration runs Vale on
-documentation, and at level `all` on code comments too. gspot selects both in every repository.
+documentation, and at level `all` on code comments too. See the [always-selected configurations](/reference/configurations/#always-selected).
 
 ## Spelling
 

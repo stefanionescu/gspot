@@ -1,26 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { openFiles } from '#cli/system/files/open.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { readFile, writeFile } from 'node:fs/promises';
-import type { GspotError } from '#cli/system/errors.ts';
 import { planBlock, writePlans, planRemovals } from '#cli/repository/writer.ts';
-
-test('block updates and removal refuse a non-UTF-8 file with a file error and keep its bytes', async () => {
-    await using sandbox = await testdir();
-    const bytes = Buffer.from([0xff, 0xfe, 0x41, 0x00]);
-    await writeFile(join(sandbox.path, 'AGENTS.md'), bytes);
-    const writer = openFiles(sandbox.path);
-    const failure = matchFields<GspotError>({
-        name: 'GspotError',
-        code: 'filesystem',
-        message: 'AGENTS.md is not UTF-8 text. Save it as UTF-8, then run the command again.',
-    });
-    expect(() => planBlock(writer, 'AGENTS.md', 'instructions')).toThrow(failure);
-    expect(() => planRemovals(writer, ['AGENTS.md'])).toThrow(failure);
-    expect(await readFile(join(sandbox.path, 'AGENTS.md'))).toStrictEqual(bytes);
-});
 
 test('managed block updates and removal keep your text around the block', async () => {
     await using sandbox = await testdir();

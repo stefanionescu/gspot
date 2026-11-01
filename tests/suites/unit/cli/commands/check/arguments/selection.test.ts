@@ -138,7 +138,7 @@ test.each([false, true])('run again resolves a scope from the calling folder (st
     expect(repeated.report.checks[0]?.findings).toStrictEqual(result.report.checks[0]?.findings);
 });
 
-test('--staged keeps every stage while --hook pre-commit runs only commit checks', async () => {
+test('--staged keeps every stage while --stage commit selects only commit checks', async () => {
     const definitions = (['commit', 'push', 'manual'] as const).map((stage) => ({
         id: `sandbox/${stage}`,
         command: buildProgramCommand('fakes/tool'),
@@ -166,14 +166,24 @@ test('--staged keeps every stage while --hook pre-commit runs only commit checks
             'check',
             '--only',
             'sandbox/commit,sandbox/push',
-            '--hook',
-            'pre-commit',
+            '--staged',
+            '--stage',
+            'commit',
             '--json',
         ]),
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     expect(checked.report.checks.map((check) => [check.check, check.status])).toStrictEqual([
         ['sandbox/commit', 'passed'],
+    ]);
+    expect(checked.report.stage).toBe('commit');
+    const pushed = parseCheckReport(
+        await runGspot(sandbox.path, ['check', '--only', 'sandbox/commit,sandbox/push', '--stage', 'push', '--json']),
+    );
+    expect(pushed.code, pushed.stdout + pushed.stderr).toBe(0);
+    expect(pushed.report.stage).toBe('push');
+    expect(pushed.report.checks.map((check) => [check.check, check.status])).toStrictEqual([
+        ['sandbox/push', 'passed'],
     ]);
 });
 
@@ -246,4 +256,31 @@ test('a staged change to gspot.toml alone rechecks every file a configuration ch
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     expect(checked.report.checks[0]?.findings).toMatchObject([{ file: 'db/report.sql', rule: 'file-lines' }]);
+});
+
+test.each(['all', 'message', 'manual'])('--stage refuses %s as a command-line stage', async (stage) => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
+    const result = await runGspot(sandbox.path, ['check', '--stage', stage, '--json']);
+    expect(result.code).toBe(2);
+    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments' });
+    expect(result.stdout).toContain('Allowed choices are commit, push');
+});
+
+test('check refuses the removed pre-commit hook selector and a stage without its value', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
+    for (const flags of [['--hook', 'pre-commit'], ['--stage']]) {
+        const result = await runGspot(sandbox.path, ['check', ...flags, '--json']);
+        expect(result.code).toBe(2);
+        expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments' });
+    }
+});
+
+test.each(['pre-push', 'commit-msg'])('--stage and --hook %s are mutually exclusive', async (hook) => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const result = await runGspot(sandbox.path, ['check', '--stage', 'commit', '--hook', hook, '--json']);
+    expect(result.code).toBe(2);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+        error: 'arguments',
+        message: '--stage cannot run with --hook. Choose a stage or a Git hook.',
+    });
 });
