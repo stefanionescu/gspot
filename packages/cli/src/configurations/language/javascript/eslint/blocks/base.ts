@@ -32,6 +32,7 @@ import {
     NODE_RUNTIMES,
     RUNTIME_GLOBALS,
     PIN_RANGES_RULE,
+    SCRIPT_NAMES_RULE,
     GSPOT_RULE_PREFIX,
     GSPOT_PRESET_LEVELS,
     IMPORT_LAYOUT_RULES,
@@ -240,7 +241,12 @@ export function buildClosingBlocks(
             fields: { files: 'files' in preset ? [...preset.files] : eslintFiles.code },
             presets: [{ importName: preset.importName, path: preset.path, merge: 'fields' as const }],
         })),
-        { fields: { files: [PACKAGE_JSON_PATTERN], rules: { [PIN_RANGES_RULE]: ['error', PUBLISHED_PIN_OPTIONS] } } },
+        {
+            fields: {
+                files: [PACKAGE_JSON_PATTERN],
+                rules: { [PIN_RANGES_RULE]: ['error', PUBLISHED_PIN_OPTIONS], [SCRIPT_NAMES_RULE]: 'error' },
+            },
+        },
         ...(privatePackages.length === 0
             ? []
             : [{ fields: { files: privatePackages, rules: { [PIN_RANGES_RULE]: ['error', PRIVATE_PIN_OPTIONS] } } }]),
