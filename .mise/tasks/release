@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Check the tool pins against the release-age hold, tag a tested main commit, publish both npm packages, deploy the docs site, and create the GitHub release."
+#MISE description="Check the tool pins against the release-age hold, tag a tested main commit, publish both npm packages, deploy the docs site, create the GitHub release, and set the repository description and homepage from the CLI package."
 #MISE depends=["build"]
 set -euo pipefail
 
@@ -120,6 +120,8 @@ main() {
     local cli_spec
     local plugin_tag
     local cli_tag
+    local description
+    local homepage
 
     assert_release_commit
     bun packages/cli/pin-ages.ts || exit 1
@@ -136,6 +138,9 @@ main() {
     publish_package packages/cli "${cli_spec}"
     mise run docs:deploy || exit 1
     create_release "${cli_tag}"
+    description=$(npm pkg get description --prefix packages/cli | jq -r .) || exit 1
+    homepage=$(npm pkg get homepage --prefix packages/cli | jq -r .) || exit 1
+    gh repo edit --description "${description}" --homepage "${homepage}" || exit 1
 }
 
 main "$@"
