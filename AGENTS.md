@@ -210,11 +210,3 @@ repository.
 - RuleTester cases, command arguments, and sandbox file names stay beside their call.
 - `tests/types/` holds the types of the tests, and `tests/schemas/` the schemas that read tool output in tests. Each
   stays one flat folder of topic files.
-
-## Dependency overrides
-
-The root `package.json` overrides keep transitive packages on security fixes.
-
-| Override   | Version  | Advisory and reason                                                                                                                                                                                                                                                                                                                                                              |
-| ---------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `undici@7` | `7.30.1` | [GHSA-4qv8-2p9j-2685](https://github.com/advisories/GHSA-4qv8-2p9j-2685), [GHSA-f72v-6w45-q472](https://github.com/advisories/GHSA-f72v-6w45-q472), [GHSA-xjj6-f33q-929c](https://github.com/advisories/GHSA-xjj6-f33q-929c) — Bounds EventSource memory and content-encoding handling, and checks Subresource Integrity for algorithm names in any case; Miniflare pins 7.29.1. |

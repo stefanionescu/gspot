@@ -4,4 +4,4 @@
 #MISE dir="{{config_root}}/docs"
 set -euo pipefail
 
-bun run wrangler deploy
+wrangler deploy

@@ -13,8 +13,7 @@
     },
     "description": "Documentation site for the gspot CLI.",
     "devDependencies": {
-        "purgecss": "8.0.0",
-        "wrangler": "4.151.1"
+        "purgecss": "8.0.0"
     },
     "engines": {
         "node": ">=24.15.0"
