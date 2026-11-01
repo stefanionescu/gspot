@@ -117,15 +117,40 @@ test('an unfetched remote tip selects the same outgoing commits and files as a n
     runGitStep(sandbox.path, ['update-ref', 'refs/remotes/other/main', reviewed]);
     const unfetched = await readPushedRevisions(
         sandbox.path,
-        `refs/heads/reviewed ${reviewed} refs/heads/main ${'f'.repeat(base.length)}\n`,
+        `refs/heads/reviewed ${reviewed} refs/heads/feature ${'f'.repeat(base.length)}\n`,
         'origin',
     );
     const created = await readPushedRevisions(
         sandbox.path,
-        `refs/heads/reviewed ${reviewed} refs/heads/main ${zero}\n`,
+        `refs/heads/reviewed ${reviewed} refs/heads/feature ${zero}\n`,
         'origin',
     );
     expect(unfetched).toEqual(created);
     expect(unfetched.revisions[0]).toMatchObject({ commits: [reviewed], paths: ['changed.sh'] });
     expect(runGitStep(sandbox.path, ['rev-parse', 'HEAD'])).toBe(broken);
+});
+
+test('a push refuses to rewrite the default branch, and needs its remote tip in the clone', async () => {
+    await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
+    commitAll(sandbox.path);
+    const first = runGitStep(sandbox.path, ['rev-parse', 'HEAD']).trim();
+    await writeFile(join(sandbox.path, 'source.ts'), 'export const remote = true;\n');
+    commitAll(sandbox.path);
+    const remote = runGitStep(sandbox.path, ['rev-parse', 'HEAD']).trim();
+    runGitStep(sandbox.path, ['reset', '-q', '--hard', first]);
+    await writeFile(join(sandbox.path, 'source.ts'), 'export const local = true;\n');
+    commitAll(sandbox.path);
+    const local = runGitStep(sandbox.path, ['rev-parse', 'HEAD']).trim();
+    const rewritten = await captureRejection(
+        readPushedRevisions(sandbox.path, `refs/heads/main ${local} refs/heads/main ${remote}\n`),
+    );
+    expect(rewritten.message).toContain('Do not force-push refs/heads/main');
+    const unfetched = await captureRejection(
+        readPushedRevisions(sandbox.path, `refs/heads/main ${local} refs/heads/main ${'a'.repeat(40)}\n`),
+    );
+    expect(unfetched.message).toContain('Fetch, then push.');
+    const feature = await readPushedRevisions(sandbox.path, `refs/heads/main ${local} refs/heads/feature ${remote}\n`);
+    expect(feature.revisions.map(({ hash }) => hash)).toStrictEqual([local]);
+    const forward = await readPushedRevisions(sandbox.path, `refs/heads/main ${local} refs/heads/main ${first}\n`);
+    expect(forward.revisions.map(({ hash }) => hash)).toStrictEqual([local]);
 });

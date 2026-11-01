@@ -84,6 +84,11 @@ export const MESSAGE_REFERENCES = [
         pattern: /^(?:Refs|Closes):(?!.*#\d)/u,
         message: 'has a Refs: or Closes: footer without an issue number. Write it as `Refs: #123`, or remove it.',
     },
+    {
+        rule: 'ci-skip',
+        pattern: /\[(?:skip ci|ci skip|no ci|skip actions|actions skip)\]|^skip-checks: ?true/imu,
+        message: 'stops CI. Remove the marker: every commit runs the checks.',
+    },
 ] as const;
 
 export const STALE_LOCKFILE_SECTIONS = [

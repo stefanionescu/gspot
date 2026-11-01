@@ -214,7 +214,7 @@ test('pre-push of a forced rewind checks the rewound commit', async () => {
         sandbox.path,
         PUSH_CHECK_COMMAND,
         {},
-        { stdin: `refs/heads/rewound ${base} refs/heads/main ${broken}\n` },
+        { stdin: `refs/heads/rewound ${base} refs/heads/feature ${broken}\n` },
     );
     expect(forced.code, forced.stdout + forced.stderr).toBe(0);
     expect((JSON.parse(forced.stdout) as PushReport).revisions[0]!.report.checks[0]?.fileCount).toBe(1);

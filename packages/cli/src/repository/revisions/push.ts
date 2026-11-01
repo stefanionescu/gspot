@@ -5,8 +5,8 @@ import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import { readHead } from '#cli/repository/revisions/files.ts';
-import { readMergeBase, readDefaultRef } from '#cli/repository/revisions/changes.ts';
 import { runGit, readGitText, readGitLines, readGitPaths } from '#cli/repository/git/run.ts';
+import { readMergeBase, readDefaultRef, listRemoteHeads } from '#cli/repository/revisions/changes.ts';
 import type { PushLine, Comparison, PushSearch, PushRevision, PushedRevisions } from '#cli/types/repository.ts';
 
 import {
@@ -16,16 +16,22 @@ import {
     ABSENT_HASH,
     HASH_PATTERN,
     REMOTES_FLAG,
+    REMOTES_PREFIX,
+    BRANCHES_PREFIX,
     NON_COMMIT_REASON,
     GIT_LOG_ARGUMENTS,
     DELETED_REF_REASON,
     GIT_TREE_ARGUMENTS,
     GIT_PEEL_ARGUMENTS,
+    FORCE_PUSH_MESSAGE,
+    DEFAULT_BRANCH_REFS,
     PEEL_FAILURE_MESSAGE,
     GIT_REMOTE_ARGUMENTS,
     GIT_SHALLOW_ARGUMENTS,
     GIT_REV_LIST_ARGUMENTS,
+    UNFETCHED_PUSH_MESSAGE,
     GIT_DIFF_NAMES_ARGUMENTS,
+    GIT_IS_ANCESTOR_ARGUMENTS,
     INVALID_PUSH_INPUT_MESSAGE,
     GIT_ROOT_COMMITS_ARGUMENTS,
     GIT_SHALLOW_FILE_ARGUMENTS,
@@ -132,12 +138,35 @@ function addRevision(pushed: PushedRevisions, revision: PushRevision): void {
     duplicate.commits = [...new Set([...duplicate.commits, ...revision.commits])];
 }
 
+async function listDefaultBranches(
+    root: string,
+    remote: string | undefined,
+    cancelSignal?: AbortSignal,
+): Promise<readonly string[]> {
+    const prefix = `${REMOTES_PREFIX}${remote ?? ''}/`;
+    const heads = await listRemoteHeads(root, cancelSignal);
+    const target = heads.find(([name]) => name === `${prefix}HEAD`)?.[1];
+    return target === undefined ? DEFAULT_BRANCH_REFS : [`${BRANCHES_PREFIX}${target.slice(prefix.length)}`];
+}
+
+async function assertFastForward(search: PushSearch, line: PushLine): Promise<void> {
+    if (ABSENT_HASH.test(line.remoteHash)) return;
+    const fill = (message: string): string =>
+        message.replace('{ref}', () => line.remoteRef).replace('{hash}', () => line.remoteHash);
+    if (!search.commits.has(line.remoteHash)) throw new GspotError('git', fill(UNFETCHED_PUSH_MESSAGE));
+    const ancestry = await runGit(search.root, [...GIT_IS_ANCESTOR_ARGUMENTS, line.remoteHash, line.localHash], {
+        cancelSignal: search.cancelSignal,
+    });
+    if (ancestry.code !== 0) throw new GspotError('git', fill(FORCE_PUSH_MESSAGE));
+}
+
 async function addPushLine(search: PushSearch, pushed: PushedRevisions, line: PushLine): Promise<void> {
     if (ABSENT_HASH.test(line.localHash)) {
         pushed.skipped.push({ ref: line.remoteRef, hash: line.localHash, reason: DELETED_REF_REASON });
         return;
     }
     assertCommitPresent(search.commits, line.localHash);
+    if (search.defaultBranches.includes(line.remoteRef)) await assertFastForward(search, line);
     const commit = search.commits.get(line.localHash);
     if (commit === undefined) {
         pushed.skipped.push({ ref: line.localRef, hash: line.localHash, reason: NON_COMMIT_REASON });
@@ -177,11 +206,13 @@ export async function readPushedRevisions(
     const shallowAnswer = await readGitText(root, GIT_SHALLOW_ARGUMENTS, { cancelSignal });
     const isShallow = shallowAnswer.trim() === 'true';
     const remotes = remote === undefined ? [] : await readGitLines(root, GIT_REMOTE_ARGUMENTS, { cancelSignal });
+    const remoteName = remotes.find((name) => name === remote);
     const context: PushSearch = {
         root: root,
         cancelSignal,
         commits: await readPeeledCommits(root, lines, cancelSignal),
-        remote: remotes.find((name) => name === remote),
+        remote: remoteName,
+        defaultBranches: await listDefaultBranches(root, remoteName, cancelSignal),
         boundaries: isShallow ? await readShallowBoundaries(root, cancelSignal) : new Set<string>(),
     };
     const result: PushedRevisions = { revisions: [], skipped: [] };

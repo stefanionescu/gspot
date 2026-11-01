@@ -1,4 +1,5 @@
 allowed_words = ["Xcode"]
+ignored_paths = ["**/xcuserdata/**", "**/*.xcuserstate"]
 
 [configuration]
 description = "An Xcode project: property lists that parse, complete string catalogs, asset catalogs that hold their images, Swift files that belong to a target, no arbitrary loads, and entitlements on a list."

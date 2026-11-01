@@ -67,6 +67,19 @@ export const GIT_UPSTREAM_ARGUMENTS = ['for-each-ref', '--format=%(upstream)', '
 
 export const ORIGIN_HEAD = 'refs/remotes/origin/HEAD';
 
+export const REMOTES_PREFIX = 'refs/remotes/';
+
+export const BRANCHES_PREFIX = 'refs/heads/';
+
+export const DEFAULT_BRANCH_REFS = ['refs/heads/main', 'refs/heads/master'] as const;
+
+export const GIT_IS_ANCESTOR_ARGUMENTS = ['merge-base', '--is-ancestor'] as const;
+
+export const FORCE_PUSH_MESSAGE =
+    'Do not force-push {ref}: its remote tip {hash} is not an ancestor of the pushed commit. Merge the remote branch, then push.';
+
+export const UNFETCHED_PUSH_MESSAGE = 'The remote tip {hash} of {ref} is not in this clone. Fetch, then push.';
+
 export const GIT_MERGE_BASE_ARGUMENTS = ['merge-base', '--'] as const;
 
 export const GIT_STAGED_DIFF_ARGUMENTS = [

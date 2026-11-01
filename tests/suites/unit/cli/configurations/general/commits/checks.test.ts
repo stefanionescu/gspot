@@ -70,6 +70,11 @@ test('references reports finding IDs, plan steps, and issue footers without a nu
     ]);
 });
 
+test('a marker that stops CI is reported', async () => {
+    const findings = await checkMessage('fix(cli): retain the message\n\n[skip ci]\n');
+    expect(findings.map(({ rule }) => rule)).toStrictEqual(['ci-skip']);
+});
+
 test.each([';', 'auto', undefined])(
     'the scissors marker selects the comment character over core.commentChar %p',
     async (commentChar) => {

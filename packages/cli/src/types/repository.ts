@@ -227,6 +227,7 @@ export type PushLine = { localRef: string; localHash: string; remoteRef: string;
 export type Comparison = { base: string; changed: string[] | undefined; range: string[] };
 
 export type PushSearch = {
+    defaultBranches: readonly string[];
     root: string;
     cancelSignal: AbortSignal | undefined;
     commits: Map<string, string | undefined>;

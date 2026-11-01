@@ -37,7 +37,7 @@ example = "The trailer `Claude-Session: https://claude.ai/code/session_01Abc` re
 help = "Remove the line that the finding names."
 name = "references"
 stage = "message"
-summary = "Checks a new commit message for links to AI chat sessions and the `Claude-Session:` trailer, finding IDs such as `C3-BUG-019`, plan steps such as `steps 7.01 to 7.36` or `stage 45`, and `Refs:` or `Closes:` footers without an issue number."
+summary = "Checks a new commit message for links to AI chat sessions and the `Claude-Session:` trailer, finding IDs such as `C3-BUG-019`, plan steps such as `steps 7.01 to 7.36` or `stage 45`, markers that stop CI such as `[skip ci]`, and `Refs:` or `Closes:` footers without an issue number."
 why = "A reader of the history cannot open a chat session, a private finding, or a plan step, and a session link shares the chat with everyone who can read the repository."
 
 [[check]]
