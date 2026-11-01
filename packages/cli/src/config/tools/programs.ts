@@ -14,7 +14,9 @@ export const MISE_LAUNCHER_FOLDER = 'shims';
 
 export const MISE_WHICH = 'which';
 
-export const NPM_BIN_FOLDER = 'node_modules/.bin';
+export const BIN_FOLDER_NAME = '.bin';
+
+export const NPM_BIN_FOLDER = `node_modules/${BIN_FOLDER_NAME}`;
 
 export const MISE_CONFIG_NAME = /^(?:\.?mise|\.rtx|\.tool-versions$|\.config$)/u;
 

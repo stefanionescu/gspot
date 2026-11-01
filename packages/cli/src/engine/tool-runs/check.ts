@@ -5,6 +5,7 @@ import type { Tool } from '#cli/types/manifests.ts';
 import { findToolPath } from '#cli/tools/inspect.ts';
 import { listOtherTools } from '#cli/engine/tools.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { listToolStart } from '#cli/tools/packages.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -242,7 +243,10 @@ export function buildCommandLaunch(
 ): CommandLaunch {
     const { session, root, toolPath } = expansion;
     const { cwd, files, substitutions, env } = buildCommandSetup(session, planned, root);
-    const command = expansion.command.with(0, toolPath);
+    const command = [
+        ...listToolStart(session.toolsRoot, planned.tool as Tool, toolPath),
+        ...expansion.command.slice(1),
+    ];
     const commandArguments = expandCommand(session, planned, command, substitutions);
     const commandLines = command.some((argument) => FILES_PLACEHOLDER.test(argument))
         ? buildCommandLines(planned, { session, command, substitutions })

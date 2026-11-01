@@ -5,12 +5,20 @@ import type { CommandLine, Substitutions } from '#cli/types/engine/tool-runs.ts'
 import { expandCommand, buildFileCommandLines } from '#cli/engine/tool-runs/placeholders.ts';
 
 import {
+    BATCH_FILE,
     UNIX_COMMAND_LIMIT,
+    WINDOWS_PROCESS_LIMIT,
     WINDOWS_COMMAND_LIMIT,
+    WINDOWS_QUOTES_LENGTH,
     TOOL_ARGUMENTS_MESSAGE,
     WINDOWS_ESCAPE_EXPANSION,
     WINDOWS_ARGUMENT_OVERHEAD,
 } from '#cli/config/engine.ts';
+
+function selectCommandLimit(platform: NodeJS.Platform, isBatchFile: boolean): number {
+    if (platform !== 'win32') return UNIX_COMMAND_LIMIT;
+    return isBatchFile ? WINDOWS_COMMAND_LIMIT : WINDOWS_PROCESS_LIMIT;
+}
 
 /**
 Splits a command into command lines that fit the system argument limit.
@@ -45,27 +53,17 @@ Splits file arguments while reserving space for the executable and fixed argumen
 @returns the batches, in order.
 */
 export function splitFileArguments(files: string[], fixed: string[], platform: NodeJS.Platform): string[][] {
-    const limit = platform === 'win32' ? WINDOWS_COMMAND_LIMIT : UNIX_COMMAND_LIMIT;
-    const budget =
-        limit -
-        fixed.reduce(
-            (size, argument) =>
-                size +
-                (platform === 'win32'
-                    ? argument.length * WINDOWS_ESCAPE_EXPANSION + WINDOWS_ARGUMENT_OVERHEAD
-                    : Buffer.byteLength(argument) + 1),
-            0,
-        );
+    const isBatchFile = platform === 'win32' && BATCH_FILE.test(fixed[0] ?? '');
+    const measure = (argument: string): number => {
+        if (isBatchFile) return argument.length * WINDOWS_ESCAPE_EXPANSION + WINDOWS_ARGUMENT_OVERHEAD;
+        return platform === 'win32' ? argument.length + WINDOWS_QUOTES_LENGTH : Buffer.byteLength(argument) + 1;
+    };
+    const limit = selectCommandLimit(platform, isBatchFile);
+    const budget = limit - fixed.reduce((size, argument) => size + measure(argument), 0);
     if (budget < 0) throw new CheckStop('error', TOOL_ARGUMENTS_MESSAGE);
     const batches: string[][] = [[]];
     let used = 0;
-    const measured = files.map((file) => ({
-        file,
-        size:
-            platform === 'win32'
-                ? file.length * WINDOWS_ESCAPE_EXPANSION + WINDOWS_ARGUMENT_OVERHEAD
-                : Buffer.byteLength(file) + 1,
-    }));
+    const measured = files.map((file) => ({ file, size: measure(file) }));
     for (const { file, size } of measured) {
         if (size > budget) throw new CheckStop('error', `${file} is too long for one command line. Shorten its path.`);
         const last = batches.at(-1) as string[];

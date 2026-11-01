@@ -20,6 +20,7 @@ const devEnginesSchema = z.object({
 export const packageJsonSchema = z.looseObject({
     name: z.string().optional(),
     version: z.string().optional(),
+    bin: z.union([z.string(), stringRecordSchema]).optional(),
     imports: z.record(z.string(), z.unknown()).optional(),
     files: stringsSchema.optional(),
     packageManager: z.string().optional(),

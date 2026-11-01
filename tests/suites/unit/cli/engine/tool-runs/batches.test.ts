@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { splitFileArguments } from '#cli/engine/tool-runs/batches.ts';
-import { UNIX_COMMAND_LIMIT, WINDOWS_COMMAND_LIMIT } from '#cli/config/engine.ts';
+import { UNIX_COMMAND_LIMIT, WINDOWS_PROCESS_LIMIT, WINDOWS_COMMAND_LIMIT } from '#cli/config/engine.ts';
 
 test('Windows batches leave room for quoted paths and the absolute executable path', () => {
     const files = Array.from({ length: 5000 }, (_, index) => `docs/café folder (draft)/page-${String(index)}.md`);
@@ -15,6 +15,19 @@ test('Windows batches leave room for quoted paths and the absolute executable pa
         const command = [...fixed, ...batch].map((argument) => `"${argument}"`).join(' ');
         expect(command.length).toBeLessThanOrEqual(WINDOWS_COMMAND_LIMIT);
     }
+});
+
+test('a Windows program that is no batch file gets the CreateProcess limit', () => {
+    const files = Array.from({ length: 5000 }, (_, index) => `docs/café folder (draft)/page-${String(index)}.md`);
+    const fixed = ['C:/node/node.exe', 'C:/workspace/.gspot/node_modules/markdownlint/bin.js'];
+    const batches = splitFileArguments(files, fixed, 'win32');
+    expect(batches.length).toBeGreaterThan(1);
+    expect(batches.flat()).toStrictEqual(files);
+    for (const batch of batches) {
+        const command = [...fixed, ...batch].map((argument) => `"${argument}"`).join(' ');
+        expect(command.length).toBeLessThanOrEqual(WINDOWS_PROCESS_LIMIT);
+    }
+    expect(batches[0]!.join(' ').length).toBeGreaterThan(WINDOWS_COMMAND_LIMIT);
 });
 
 test('a long Unicode list splits under the byte limit in order, and a path or tool arguments that cannot fit are refused', () => {

@@ -3,6 +3,7 @@ import { getTool } from '#cli/tools/pins.ts';
 import { dirname, delimiter } from 'node:path';
 import { CheckStop } from '#cli/system/errors.ts';
 import { listOtherTools } from '#cli/engine/tools.ts';
+import { listToolStart } from '#cli/tools/packages.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -26,7 +27,8 @@ async function getCheckTool(
         if (availability.status === 'error') throw new CheckStop('error', availability.note);
         throw new CheckStop('missing', availability.note);
     }
-    return { name: tool.name, path: availability.path, env };
+    const start = listToolStart(session.toolsRoot, tool, availability.path);
+    return { name: tool.name, path: availability.path, start, env };
 }
 
 function findProcessFailure(result: SpawnResult, name: string, timeoutSeconds: number): ProcessFailure | undefined {
@@ -106,14 +108,14 @@ export async function runCheckTool(
     command: readonly string[] | CheckToolProgram,
     options: CheckToolOptions,
 ): Promise<SpawnResult> {
-    const { name, path, env } = await getCheckTool(
+    const { name, path, start, env } = await getCheckTool(
         session,
         planned,
         'tool' in command ? command.tool : (command[0] as string),
         options,
     );
     const commandArguments =
-        'tool' in command ? [process.execPath, command.modulePath, path] : [path, ...command.slice(1)];
+        'tool' in command ? [process.execPath, command.modulePath, path] : [...start, ...command.slice(1)];
     const otherTools = listOtherTools(planned.scope, planned.check);
     const toolEnvironment = await buildOtherToolEnvironment(session, otherTools, env);
     const { result, failure } = await session.limitProcess(() =>

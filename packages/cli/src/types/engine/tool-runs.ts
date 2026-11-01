@@ -99,7 +99,7 @@ export type Substitutions = {
 
 export type CommandLine = { commandArguments: string[]; file?: string };
 
-export type CheckTool = { name: string; path: string; env: Record<string, string> };
+export type CheckTool = { name: string; path: string; start: string[]; env: Record<string, string> };
 
 export type CommandSetup = {
     root: string;

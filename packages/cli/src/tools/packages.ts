@@ -1,15 +1,19 @@
-import { join, relative } from 'node:path';
 import { createRequire } from 'node:module';
 import { find } from '#cli/system/files/reads.ts';
 import type { Files } from '#cli/types/system.ts';
 import { existsSync, readFileSync } from 'node:fs';
+import type { Tool } from '#cli/types/manifests.ts';
+import { join, dirname, relative } from 'node:path';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { PackageJson } from '#cli/types/parsers.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { InstalledDependency } from '#cli/types/tools.ts';
+import { BIN_FOLDER_NAME } from '#cli/config/tools/programs.ts';
 
 /**
 Read and validate a package.json outside the tool project, without its boundary.
@@ -47,6 +51,25 @@ export function readToolProjectPackage(files: Files, root: string, path: string)
     const local = convertToPosixPath(relative(root, target));
     const text = find(root, local);
     return text === undefined ? undefined : parseJsonFile(path, text, packageJsonSchema);
+}
+
+/**
+List the words that start a tool. An npm tool of the tool project starts through Node at the script that its package
+names, so a Windows run skips the .cmd shim and its short command line.
+
+@param root the folder that holds the tool project.
+@param tool the tool to start.
+@param path the resolved executable.
+@returns the program and its first arguments.
+*/
+export function listToolStart(root: string, tool: Tool, path: string): string[] {
+    const npm = tool.installers['npm'];
+    const binFolder = join(root, GSPOT_PATHS.nodeModules, BIN_FOLDER_NAME);
+    if (npm === undefined || dirname(path) !== binFolder) return [path];
+    const packagePath = join(root, GSPOT_PATHS.nodeModules, npm.name, PACKAGE_JSON);
+    const bin = readToolProjectPackage(openFiles(root), root, packagePath)?.bin;
+    const script = typeof bin === 'object' ? bin[tool.name] : bin;
+    return script === undefined ? [path] : [process.execPath, join(dirname(packagePath), script)];
 }
 
 /**
