@@ -9,6 +9,7 @@ import type { RunCache, FileContents, CommandResult } from '#cli/types/system.ts
 
 import type {
     Level,
+    Scope,
     Settings,
     TomlTable,
     SettingsEdit,
@@ -115,6 +116,7 @@ export type InitScan = {
     repository: Repository;
     repositorySetup: RepositorySetup;
     configurations: InitConfigurations;
+    scopes: Pick<Scope, 'path' | 'configurations'>[];
     everySelected: Configuration[];
     conflicts: ConflictingConfigs;
 };
@@ -122,7 +124,13 @@ export type InitScan = {
 export type InitPlan = {
     from?: { file: string; leftOut: LeftOutSetting[] };
     level: Level;
-    configurations: { configuration: string; origin: ConfigurationOrigin; checks: number; checksOff: number }[];
+    configurations: {
+        configuration: string;
+        origin: ConfigurationOrigin;
+        scopes: string[];
+        checks: number;
+        checksOff: number;
+    }[];
     write: InitFileRow[];
     delete: InitFileRow[];
     keep: InitFileRow[];

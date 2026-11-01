@@ -59,7 +59,7 @@ async function runInitCommand(root: string, options: InitOptions): Promise<Comma
     const initPlan = await planInit(root, options);
     const { plan, settingsText } = initPlan;
     print(formatDetection(initPlan.detection));
-    print(formatInitPlan(plan));
+    print(formatInitPlan(plan, settingsText));
     const json: InitJson = {
         root,
         plan,
@@ -150,6 +150,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
         repository: session.repository,
         repositorySetup,
         configurations: initConfigurations,
+        scopes: session.scopes,
         everySelected,
         conflicts,
         template: options.template,

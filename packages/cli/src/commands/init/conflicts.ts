@@ -88,11 +88,12 @@ Refuse to replace a config file unless Git holds it unchanged in the last commit
 export function assertFilesCommitted(root: string, paths: string[]): void {
     const committed = listCommittedPaths(root, paths);
     const uncommitted = paths.filter((path) => !committed.has(path));
-    if (uncommitted.length > 0)
-        throw new GspotError(
-            'arguments',
-            `init replaces ${uncommitted.join(', ')}, and Git does not hold them unchanged at HEAD. Commit them or move them away, then run gspot init again.`,
-        );
+    if (uncommitted.length === 0) return;
+    const pronoun = uncommitted.length === 1 ? 'it' : 'them';
+    throw new GspotError(
+        'arguments',
+        `init replaces ${uncommitted.join(', ')}, and Git does not hold ${pronoun} unchanged at HEAD. Commit ${pronoun} or move ${pronoun} away, then run gspot init again.`,
+    );
 }
 
 /**

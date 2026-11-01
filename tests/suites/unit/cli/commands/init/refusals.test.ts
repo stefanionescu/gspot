@@ -81,7 +81,7 @@ test.each(UNCOMMITTED_FORMAT_CASES)('init refuses to replace $path absent from H
     const result = await runGspot(sandbox.path, ['init', '--configurations', 'javascript']);
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(result.stderr).toBe(
-        `init replaces ${path}, and Git does not hold them unchanged at HEAD. Commit them or move them away, then run gspot init again.\n`,
+        `init replaces ${path}, and Git does not hold it unchanged at HEAD. Commit it or move it away, then run gspot init again.\n`,
     );
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

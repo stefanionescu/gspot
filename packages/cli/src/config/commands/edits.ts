@@ -175,6 +175,12 @@ export const CI_FILE_NOTES = {
 
 export const GSPOT_FOLDER_NOTE = 'generated files';
 
+export const ADDS_BLOCK_NOTE = 'adds the gspot block';
+
+export const INSTALL_LOCKFILE_NOTE = 'lockfile written by gspot install';
+
+export const ALWAYS_SELECTED_NOUN = 'always-selected configuration';
+
 export const UNREAD_SUBMODULE_MESSAGE = 'submodule; init does not read it';
 
 export const LINT_FOLDER_MESSAGE = 'a folder of lint scripts; check remaining references before deleting it';

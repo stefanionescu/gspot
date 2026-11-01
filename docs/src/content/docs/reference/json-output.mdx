@@ -67,7 +67,7 @@ The object of `gspot init --json` also has the [generated-file fields](#generate
 | `settingsText` | The text of the new `gspot.toml`. |
 
 `plan` holds `level`, `configurations`, and the file lists `write`, `delete`, `keep`, `change`, and `lintFolders`. Each
-item of `configurations` has `configuration`, `origin`, `checks`, and `checksOff`. Each file row has `path` and `note`. With `--from`, `plan`
+item of `configurations` has `configuration`, `origin`, `scopes`, `checks`, and `checksOff`. Each file row has `path` and `note`. With `--from`, `plan`
 also has `from`, with the `file` that `--from` names and the `leftOut` settings.
 
 ## `gspot install`

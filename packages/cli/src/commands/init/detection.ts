@@ -38,9 +38,10 @@ function formatDetectedScopes(summary: DetectionSummary): string | undefined {
 
 function formatDetectedTools(summary: DetectionSummary): (string | undefined)[] {
     const { repositorySetup } = summary;
-    const hooks = repositorySetup.hooks.map(
-        (hook) => `${hook.path}/  ${hook.files.join(', ')} (${hook.kind === 'husky' ? 'husky' : OWN_HOOKS})`,
-    );
+    const hooks = repositorySetup.hooks.map((hook) => {
+        const location = hook.files.length === 0 ? hook.path : `${hook.path}/  ${hook.files.join(', ')}`;
+        return `${location} (${hook.kind === 'husky' ? 'husky' : OWN_HOOKS})`;
+    });
     const lint = repositorySetup.lintFolders.map((folder) => `${folder}/`);
     return [
         formatDetectionRow(HOOKS_LABEL, hooks.length === 0 ? ['none'] : hooks),

@@ -8,6 +8,7 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { InitJson } from '#cli/types/commands/edits.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { WORKSPACE_PYTHON_FILES } from '#tests/config/commands/init/settings.ts';
 
 import {
     GIT_PLAN_CASES,
@@ -168,4 +169,18 @@ test('init identifies a configuration detected from a file', async () => {
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
     expect(plan.configurations.find(({ configuration }) => configuration === 'docker')?.origin).toBe('detected');
+});
+
+test('the init plan prints each scope, folds the always-selected configurations, and shows gspot.toml', async () => {
+    await using sandbox = await createGitSandbox({ ...WORKSPACE_PYTHON_FILES, 'AGENTS.md': '# Agents\n' });
+    const result = await runGspot(sandbox.path, ['init']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).toMatch(/^ {2}python +detected +service +\d+ checks \(\d+ off at basic\)$/mu);
+    expect(result.stdout).toMatch(/^ {2}\d+ always-selected configurations: \d+ checks \(\d+ off at basic\)$/mu);
+    expect(result.stdout).not.toMatch(/^ {2}format /mu);
+    expect(result.stdout).toContain('gspot.toml\n  # Change these settings');
+    expect(result.stdout).toMatch(
+        /^ {2}\.gspot\/package\.json +\d+ pinned npm tools; lockfile written by gspot install$/mu,
+    );
+    expect(result.stdout).toMatch(/^change\n(?: {2}.+\n)*? {2}AGENTS\.md +adds the gspot block$/mu);
 });
