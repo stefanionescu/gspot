@@ -32,13 +32,11 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'sugg
             const scopeArgument = path === '' ? '' : ` --scope ${quoteArgument(path)}`;
             return names.flatMap((name) => {
                 const configuration = configurationsByName.get(name);
-                if (
-                    configuration === undefined ||
-                    configuration.group === 'general' ||
-                    found.has(name) ||
-                    Object.values(configuration.detect).every((patterns) => Object.keys(patterns).length === 0)
-                )
-                    return [];
+                if (configuration === undefined || configuration.group === 'general' || found.has(name)) return [];
+                const hasDetectConditions = Object.values(configuration.detect).some(
+                    (patterns) => Object.keys(patterns).length > 0,
+                );
+                if (!hasDetectConditions) return [];
                 return [
                     {
                         configuration: name,

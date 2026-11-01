@@ -19,8 +19,9 @@ import {
     MISE_WHICH,
     NPM_BIN_FOLDER,
     TOOL_ENVIRONMENT,
-    MISE_CONFIG_NAME,
+    MISE_CONFIG_NAMES,
     MISE_PROJECT_FILES,
+    MISE_CONFIG_PREFIXES,
     MISE_LAUNCHER_FOLDER,
 } from '#cli/config/tools/programs.ts';
 import {
@@ -113,8 +114,10 @@ export function buildMiseTrust(root: string, project: string): MiseTrust {
     if (files.read(GSPOT_PATHS.miseProject)?.bytes.toString('utf8') !== project)
         return { refusal: MISE_STALE_PROJECT_MESSAGE };
     const names = files.list(GSPOT_FOLDER);
-    if (names.some((name) => MISE_CONFIG_NAME.test(name) && !MISE_PROJECT_FILES.has(name)))
-        return { refusal: MISE_PROJECT_MESSAGE };
+    const configNames = names.filter(
+        (name) => MISE_CONFIG_NAMES.has(name) || MISE_CONFIG_PREFIXES.some((prefix) => name.startsWith(prefix)),
+    );
+    if (configNames.some((name) => !MISE_PROJECT_FILES.has(name))) return { refusal: MISE_PROJECT_MESSAGE };
     const folder = realpathSync(join(root, GSPOT_FOLDER));
     return {
         variables: {

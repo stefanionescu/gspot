@@ -6,10 +6,15 @@ import { selectScopePath } from '#cli/repository/scopes.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import type { FileNames } from '#cli/types/configurations/general.ts';
 import { UNUSED_RECORD_RULE } from '#cli/config/configurations/naming.ts';
+import type { FileNames, NamedCategory, NamingOverride } from '#cli/types/configurations/general.ts';
 import { listNamedFiles, parseIdentifiers } from '#cli/configurations/general/naming/checks/source-names.ts';
 import { buildFileIdentifier, buildFolderIdentifiers } from '#cli/configurations/general/naming/checks/paths.ts';
+
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three name lists share this one reading of an override without categories.
+function isCategoryCovered(override: Pick<NamingOverride, 'categories'>, category: NamedCategory): boolean {
+    return override.categories === undefined || override.categories.includes(category);
+}
 
 async function readSourceNames(session: Session, planned: PlannedCheck): Promise<FileNames[]> {
     const files: FileNames[] = [];
@@ -55,17 +60,12 @@ export async function checkAllowedNames(session: Session, planned: PlannedCheck)
                 .filter((file) => matches(file.path))
                 .flatMap((file) => {
                     const declarations = file.declarations
-                        .filter(
-                            (identifier) =>
-                                override.categories === undefined || override.categories.includes(identifier.category),
-                        )
+                        .filter((identifier) => isCategoryCovered(override, identifier.category))
                         .map((identifier) => identifier.name);
-                    return override.categories === undefined || override.categories.includes('files')
-                        ? [file.stem, ...declarations]
-                        : declarations;
+                    return isCategoryCovered(override, 'files') ? [file.stem, ...declarations] : declarations;
                 }),
         );
-        if (override.categories === undefined || override.categories.includes('folders')) {
+        if (isCategoryCovered(override, 'folders')) {
             for (const identifier of folders) {
                 if (matches(identifier.folder ?? identifier.file)) sourceNames.add(identifier.name);
             }

@@ -18,7 +18,9 @@ export const BIN_FOLDER_NAME = '.bin';
 
 export const NPM_BIN_FOLDER = `node_modules/${BIN_FOLDER_NAME}`;
 
-export const MISE_CONFIG_NAME = /^(?:\.?mise|\.rtx|\.tool-versions$|\.config$)/u;
+export const MISE_CONFIG_PREFIXES = ['mise', '.mise', '.rtx'] as const;
+
+export const MISE_CONFIG_NAMES: ReadonlySet<string> = new Set(['.tool-versions', '.config']);
 
 export const MISE_PROJECT_FILES = new Set([MISE_CONFIG_FILE, MISE_LOCKFILE]);
 

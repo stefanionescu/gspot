@@ -88,7 +88,7 @@ function findGeneratedKind(path: string, prefix: Buffer): FileClassification | u
     if (isGspotPath(path) || path === BASELINE_FILE) return { kind: 'generated', origin: KIND_ORIGINS.gspot };
     if (BUILD_LAUNCHERS.has(posix.basename(path))) return { kind: 'generated', origin: KIND_ORIGINS.buildLauncher };
     const start = prefix.subarray(0, BANNER_BYTES).toString('utf8');
-    return hasGeneratedHeader(start) || GENERATOR_OUTPUT_BANNERS.some((banner) => banner.test(start))
+    return hasGeneratedHeader(start) || GENERATOR_OUTPUT_BANNERS.some(({ pattern }) => pattern.test(start))
         ? { kind: 'generated', origin: KIND_ORIGINS.banner }
         : undefined;
 }

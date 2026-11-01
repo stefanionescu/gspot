@@ -6,6 +6,7 @@ import { findFunctionNode } from '#cli/parsers/code/bash.ts';
 import type { EnvironmentRead } from '#cli/types/parsers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { ParsedSource } from '#cli/types/configurations/general.ts';
 import { readParsedSources } from '#cli/configurations/general/structure/checks/parsed-sources.ts';
 import { UNNAMED_VARIABLE_LABEL, READ_OUTSIDE_READER_RULE } from '#cli/config/configurations/structure.ts';
 
@@ -14,6 +15,29 @@ import {
     listSwiftEnvironmentReads,
     listPythonEnvironmentReads,
 } from '#cli/parsers/code/environment.ts';
+
+function listEnvironmentReads(
+    source: ParsedSource,
+    environmentFunctions: string[],
+    readerVariables: Set<string>,
+): EnvironmentRead[] {
+    const { language, tree } = source;
+    switch (language) {
+        case 'python': {
+            return listPythonEnvironmentReads(tree.rootNode, environmentFunctions);
+        }
+        case 'bash': {
+            return listBashEnvironmentReads(tree.rootNode, readerVariables);
+        }
+        case 'swift': {
+            return listSwiftEnvironmentReads(tree.rootNode);
+        }
+        default: {
+            const unknown: never = language;
+            throw new Error(`No environment reader for ${String(unknown)}.`);
+        }
+    }
+}
 
 /**
 Reports each line that reads an environment variable outside the files that structure.environment_readers lists.
@@ -42,11 +66,7 @@ export async function checkEnvironmentReaders(session: Session, planned: Planned
     );
     return parsed.flatMap((source) => {
         if (isReader(source.path)) return [];
-        let reads: EnvironmentRead[];
-        if (source.language === 'python')
-            reads = listPythonEnvironmentReads(source.tree.rootNode, environmentFunctions);
-        else if (source.language === 'bash') reads = listBashEnvironmentReads(source.tree.rootNode, readerVariables);
-        else reads = listSwiftEnvironmentReads(source.tree.rootNode);
+        const reads = listEnvironmentReads(source, environmentFunctions, readerVariables);
         const lines = new Map<number, EnvironmentRead>();
         for (const read of reads) if (!lines.has(read.line)) lines.set(read.line, read);
         return [...lines].map(([line, read]) => {

@@ -76,11 +76,14 @@ function listRepositoryPaths(session: Session, planned: PlannedCheck): Set<strin
     const configs = planned.scope.configurations.flatMap((configuration) => configuration.configs);
     for (const config of configs) repositoryPaths.add(config.target);
     for (const path of listGeneratorPaths(planned)) repositoryPaths.add(path);
-    const checks = readConfigurations()
-        .values()
-        .flatMap((configuration) => configuration.checks);
-    for (const check of checks) repositoryPaths.add(check.id);
-    for (const check of Object.values(session.settings.commandChecks)) repositoryPaths.add(check.id);
+    // A check ID reads like a path, such as docs/lychee, and a document may name it.
+    const checkNames = [
+        ...readConfigurations()
+            .values()
+            .flatMap((configuration) => configuration.checks),
+        ...Object.values(session.settings.commandChecks),
+    ].map((check) => check.id);
+    for (const name of checkNames) repositoryPaths.add(name);
     return repositoryPaths;
 }
 

@@ -122,9 +122,8 @@ export function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): 
                 !CONVENTIONAL_ASSETS.test(file.path),
         )
         .filter((file) => {
-            const belowAssets = file.path.slice(
-                (ASSET_FOLDER.exec(file.path)?.index ?? 0) + (ASSET_FOLDER.exec(file.path)?.[0].length ?? 0),
-            );
+            const folder = ASSET_FOLDER.exec(file.path);
+            const belowAssets = file.path.slice((folder?.index ?? 0) + (folder?.[0].length ?? 0));
             const reference = new RegExp(
                 `${ASSET_REFERENCE_PREFIX}/?${escapeRegExp(belowAssets)}${ASSET_REFERENCE_SUFFIX}`,
                 'u',
