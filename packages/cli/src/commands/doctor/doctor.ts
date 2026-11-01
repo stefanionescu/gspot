@@ -23,9 +23,9 @@ import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
 import { findMissingBuild, listDistinctTools } from '#cli/tools/pins.ts';
 import type { Session, HookStatus, ToolInspection } from '#cli/types/tools.ts';
-import type { CiState, Suggestions, DoctorReport } from '#cli/types/commands/reports.ts';
 import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/setup.ts';
 import { AVAILABLE_TOOL_STATES, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
+import type { CiState, DoctorTool, Suggestions, DoctorReport } from '#cli/types/commands/reports.ts';
 
 import {
     CI_FILES,
@@ -51,11 +51,10 @@ function formatToolVersion(tool: ToolInspection): string {
 function formatTools(tools: ToolInspection[]): string[] {
     const width = Math.max(...tools.map((tool) => formatToolVersion(tool).length)) + VERSION_GAP;
     return tools.map((tool) => {
-        const tail = !AVAILABLE_TOOL_STATES.has(tool.state) || tool.path === undefined ? (tool.note ?? '') : tool.path;
         const label = styleText(TOOL_STATE_COLORS[tool.state], tool.state.padEnd(COLUMN_WIDTHS.label), {
             stream: process.stdout,
         });
-        return `  ${label} ${formatToolVersion(tool).padEnd(width)} ${tail}`.trimEnd();
+        return `  ${label} ${formatToolVersion(tool).padEnd(width)} ${tool.note ?? ''}`.trimEnd();
     });
 }
 
@@ -78,9 +77,9 @@ function formatSuggestions(suggestions: Suggestions): string[] {
     return sections.flat();
 }
 
-function inspectScopeTools(session: Session): ToolInspection[] {
+function inspectScopeTools(session: Session): DoctorTool[] {
     const platform = getOperatingSystem();
-    const inspections = new Map<string, ToolInspection>();
+    const inspections = new Map<string, DoctorTool>();
     const pins = listDistinctTools(session.toolConfigurations).filter(
         (tool) => findMissingBuild(tool, { platform, arch: process.arch }) === undefined,
     );
@@ -92,7 +91,7 @@ function inspectScopeTools(session: Session): ToolInspection[] {
         for (const tool of pins) {
             if (!toolNames.has(tool.name)) continue;
             const inspection = inspectTool({ ...session, cwd: join(session.root, scopePath), miseBinPaths }, tool);
-            inspections.set(JSON.stringify(inspection), inspection);
+            inspections.set(JSON.stringify(inspection), { ...inspection, kind: tool.kind });
         }
     }
     return inspections
@@ -146,15 +145,15 @@ function listMissingEnvironments(session: Session): string[] {
     return [...new Set(scopes)].toSorted((left, right) => compareText(left, right));
 }
 
-function formatDoctorReport(report: DoctorReport, states: { hooks: string; ci: string }): string {
+function formatDoctorReport(report: DoctorReport, states: { hooks: string; ci: string; broken: DoctorTool[] }): string {
+    const programs = states.broken.filter((tool) => tool.kind === 'program');
+    const packages = states.broken.length - programs.length;
+    const ready = report.tools.filter((tool) => tool.kind === 'program').length - programs.length;
     const lines = [
-        ...formatTools(
-            report.tools.filter((tool) => !AVAILABLE_TOOL_STATES.has(tool.state) || tool.path === undefined),
-        ),
-        ...(report.tools.some((tool) => !AVAILABLE_TOOL_STATES.has(tool.state) || tool.path === undefined)
-            ? ['Run gspot install to install the missing or outdated tools.']
-            : []),
-        `tools: ${String(report.tools.filter((tool) => AVAILABLE_TOOL_STATES.has(tool.state) && tool.path !== undefined).length)} ready`,
+        ...formatTools(programs),
+        ...(programs.length === 0 ? [] : ['Run gspot install to install the missing or outdated tools.']),
+        ...(packages === 0 ? [] : [`missing npm packages: ${String(packages)} (run gspot install)`]),
+        `tools: ${String(ready)} ready`,
         ...report.environments.map(
             (path) =>
                 `  ${styleText('red', 'missing'.padEnd(COLUMN_WIDTHS.label), { stream: process.stdout })} ${path}  ${PROJECT_ENVIRONMENT_MESSAGE}`,
@@ -189,14 +188,12 @@ async function runDoctorCommand(root: string): Promise<CommandResult> {
         ci,
         ruleFiles: selectRuleFiles(session).length,
     };
-    const isBroken =
-        !hooks.ready ||
-        report.environments.length > 0 ||
-        report.tools.some((tool) => !AVAILABLE_TOOL_STATES.has(tool.state) || tool.path === undefined);
+    const broken = report.tools.filter((tool) => !AVAILABLE_TOOL_STATES.has(tool.state) || tool.path === undefined);
+    const needsAction = !hooks.ready || report.environments.length > 0 || broken.length > 0;
     return {
-        text: formatDoctorReport(report, { hooks: hooksText, ci: ciText }),
+        text: formatDoctorReport(report, { hooks: hooksText, ci: ciText, broken }),
         json: report,
-        exitCode: isBroken ? EXIT_FINDINGS : 0,
+        exitCode: needsAction ? EXIT_FINDINGS : 0,
     };
 }
 

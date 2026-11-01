@@ -12,7 +12,7 @@ dependencies = ["drizzle-orm"]
 dependencies = ["pg", "postgres", "@neondatabase/serverless"]
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-drizzle"
 npm = "eslint-plugin-drizzle"
 rule_prefix = "drizzle"

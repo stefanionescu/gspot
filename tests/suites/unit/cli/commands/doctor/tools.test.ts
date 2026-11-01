@@ -50,7 +50,7 @@ test.each(['ok', 'newer', 'outdated'] as const)(
             sandbox.path,
             Object.fromEntries(
                 tools.map((tool) => {
-                    if (tool.kind === 'library') {
+                    if (tool.kind === 'package') {
                         const name = tool.installers['npm']!.name;
                         return [
                             join(GSPOT_PATHS.nodeModules, name, 'package.json'),
@@ -89,6 +89,7 @@ test('doctor lists a tool once when two scopes find the same install', async () 
     expect(report.tools.filter(({ name }) => name === 'eslint-plugin-zod')).toStrictEqual([
         {
             name: 'eslint-plugin-zod',
+            kind: 'package',
             state: 'missing',
             help: 'Run gspot install.',
             want: getTool(readConfigurations().values(), 'eslint-plugin-zod').version!,
@@ -117,6 +118,7 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
     const missing = await runGspot(sandbox.path, ['doctor', '--json']);
     const pytestCov = {
         name: 'pytest-cov',
+        kind: 'package' as const,
         path: join(sandbox.path, 'tool-bin', 'pytest'),
         help: 'Install pytest-cov in the Python environment used by pytest.',
     };
@@ -168,6 +170,7 @@ test('doctor and gspot check report a missing xmllint with its install command',
     expect(doctor.code, doctor.stdout + doctor.stderr).toBe(1);
     expect((JSON.parse(doctor.stdout) as DoctorReport).tools.find(({ name }) => name === 'xmllint')).toStrictEqual({
         name: 'xmllint',
+        kind: 'program',
         state: 'missing',
         help,
     });
@@ -178,6 +181,16 @@ test('doctor and gspot check report a missing xmllint with its install command',
     expect(checked.report.checks).toMatchObject([
         { check: 'data-files/xmllint', status: 'missing', findings: [], note: `xmllint is not installed. ${help}` },
     ]);
+});
+
+test('doctor lists programs by name and folds the npm packages into one line', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['javascript']) });
+    using _lookup = fakeExecutableLookup(null);
+    const result = await runGspot(sandbox.path, ['doctor']);
+    expect(result.code).toBe(1);
+    expect(result.stdout).toContain('prettier');
+    expect(result.stdout).not.toContain('eslint-plugin-');
+    expect(result.stdout).toMatch(/^missing npm packages: \d+ \(run gspot install\)$/mu);
 });
 
 test('doctor --json reports every field when the required tools are missing', async () => {
@@ -191,12 +204,14 @@ test('doctor --json reports every field when the required tools are missing', as
     const taplo = String(getTool(readConfigurations().values(), 'taplo').version);
     expect(report.tools).toContainEqual({
         name: 'prettier',
+        kind: 'program',
         state: 'missing',
         help: 'Run gspot install.',
         want: prettier,
     });
     expect(report.tools).toContainEqual({
         name: 'taplo',
+        kind: 'program',
         state: 'missing',
         help: `Install mise (https://mise.jdx.dev/getting-started.html), or install taplo ${taplo} yourself.`,
         want: taplo,

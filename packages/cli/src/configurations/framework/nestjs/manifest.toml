@@ -14,7 +14,7 @@ filenames = ["nest-cli.json"]
 kinds = ["controller", "service", "module", "guard", "pipe", "filter", "interceptor", "middleware", "decorator", "gateway", "resolver", "repository", "entity", "dto", "strategy", "provider"]
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "@darraghor/eslint-plugin-nestjs-typed"
 npm = "@darraghor/eslint-plugin-nestjs-typed"
 rule_prefix = "@darraghor/nestjs-typed"

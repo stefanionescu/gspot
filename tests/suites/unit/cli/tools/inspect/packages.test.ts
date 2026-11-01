@@ -26,7 +26,7 @@ test('a library is found only in the tool project', async () => {
     expect(
         inspectTool(buildToolSearch(sandbox.path), {
             name: 'globals',
-            kind: 'library' as const,
+            kind: 'package' as const,
             version: '17.12.0',
             installers: { npm: { name: 'globals', version: '17.12.0' } },
         }).state,
@@ -34,7 +34,7 @@ test('a library is found only in the tool project', async () => {
     expect(
         inspectTool(buildToolSearch(sandbox.path), {
             name: 'eslint-plugin-n',
-            kind: 'library' as const,
+            kind: 'package' as const,
             version: '18.3.0',
             installers: { npm: { name: 'eslint-plugin-n', version: '18.3.0' } },
         }).state,
@@ -48,7 +48,7 @@ test('an absent library is missing, and one above its pin is newer', async () =>
 
     const absent = inspectTool(buildToolSearch(sandbox.path), {
         name: 'eslint-plugin-regexp',
-        kind: 'library' as const,
+        kind: 'package' as const,
         version: '3.3.0',
         installers: { npm: { name: 'eslint-plugin-regexp', version: '3.3.0' } },
     });
@@ -56,7 +56,7 @@ test('an absent library is missing, and one above its pin is newer', async () =>
     expect(absent.want).toBe('3.3.0');
     const laterVersion = inspectTool(buildToolSearch(sandbox.path), {
         name: 'typescript',
-        kind: 'library' as const,
+        kind: 'package' as const,
         version: '0.0.0-test',
         installers: { npm: { name: 'typescript', version: '0.0.0-test' } },
     });
@@ -125,7 +125,7 @@ test('a library linked inside the tool project is accepted and one linked outsid
     const context = buildToolSearch(sandbox.path);
     const tool = {
         name: 'globals',
-        kind: 'library' as const,
+        kind: 'package' as const,
         version: '17.12.0',
         installers: { npm: { name: 'globals', version: '17.12.0' } },
     };
@@ -149,7 +149,7 @@ test('library reads are kept per session and see a new install in the next sessi
     const session = await openSession(sandbox.path);
     const pin = {
         name: 'example',
-        kind: 'library' as const,
+        kind: 'package' as const,
         version: '1.0.0',
         installers: { npm: { name: 'example', version: '1.0.0' } },
     };
@@ -162,7 +162,7 @@ test('library reads are kept per session and see a new install in the next sessi
     expect(
         inspectTool(next, {
             name: 'example',
-            kind: 'library' as const,
+            kind: 'package' as const,
             version: '2.0.0',
             installers: { npm: { name: 'example', version: '2.0.0' } },
         }).state,
@@ -179,7 +179,7 @@ test.each([...PACKAGE_METADATA_FAILURES])(
         const context = buildToolSearch(sandbox.path);
         const tool = {
             name: 'teller',
-            kind: 'library' as const,
+            kind: 'package' as const,
             version: '5.0.1',
             installers: { npm: { name: 'teller', version: '5.0.1' } },
         };

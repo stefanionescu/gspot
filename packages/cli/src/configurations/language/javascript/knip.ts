@@ -121,7 +121,7 @@ export function buildKnipFile(planned: PlannedConfig): string {
     ]);
     const tools = listDistinctTools(configurations);
     const toolBinaries = [
-        ...tools.filter((tool) => tool.kind !== 'library').map((tool) => tool.name),
+        ...tools.filter((tool) => tool.kind !== 'package').map((tool) => tool.name),
         startRunner.name,
     ];
     const toolPackages = tools.flatMap((tool) => tool.installers['npm']?.name ?? []);

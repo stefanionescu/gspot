@@ -51,7 +51,7 @@ function findVersionFailure(
 ): ParsedToolVersion | undefined {
     const failure = findRunFailure(result, tool, text);
     if (failure !== undefined) return failure;
-    return version === undefined && tool.kind === 'library'
+    return version === undefined && tool.kind === 'package'
         ? { state: 'missing', note: `The version command of the host tool does not list ${tool.name}.` }
         : undefined;
 }

@@ -26,13 +26,13 @@ key = "stylelint"
 pointer = true
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "stylelint-config-standard"
 npm = "stylelint-config-standard"
 version = "40.0.0"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "postcss-html"
 npm = "postcss-html"
 version = "2.0.0"

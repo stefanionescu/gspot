@@ -18,7 +18,7 @@ filenames = ["svelte.config.js", "svelte.config.ts"]
 "tools.eslint.import_extension" = "extensionless"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-svelte"
 npm = "eslint-plugin-svelte"
 rule_prefix = "svelte"
@@ -28,7 +28,7 @@ version = "3.23.1"
 extensions = [".svelte"]
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "svelte-eslint-parser"
 npm = "svelte-eslint-parser"
 version = "1.9.0"
@@ -39,7 +39,7 @@ npm = "svelte-check"
 version = "4.7.7"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "prettier-plugin-svelte"
 npm = "prettier-plugin-svelte"
 version = "4.1.1"

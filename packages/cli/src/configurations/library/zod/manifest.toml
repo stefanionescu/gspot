@@ -9,7 +9,7 @@ title = "Zod"
 dependencies = ["zod"]
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-zod"
 npm = "eslint-plugin-zod"
 rule_prefix = "zod"

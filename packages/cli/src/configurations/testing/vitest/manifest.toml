@@ -23,7 +23,7 @@ npm = "vitest"
 system = true
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "@vitest/eslint-plugin"
 npm = "@vitest/eslint-plugin"
 rule_prefix = "vitest"
@@ -31,7 +31,7 @@ version = "1.6.27"
 
 [[tool]]
 install_help = "Run npm install --save-dev @vitest/coverage-v8."
-kind = "library"
+kind = "package"
 name = "@vitest/coverage-v8"
 npm = "@vitest/coverage-v8"
 system = true

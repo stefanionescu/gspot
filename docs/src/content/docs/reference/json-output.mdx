@@ -249,16 +249,16 @@ after its check, such as `gspot explain javascript/eslint no-console --json`.
 `gspot doctor --json` returns the state of the setup. `exitCode` holds `1` when a tool, environment, or hook needs
 your action.
 
-| Field          | Meaning                                                                                |
-| -------------- | -------------------------------------------------------------------------------------- |
-| `tools`        | Each tool with `name` and `state`, and `want`, `found`, `path`, and `help` when known. |
-| `environments` | Project environments that a check needs and that are missing.                          |
-| `suggestions`  | Configurations to add, and files that no configuration checks.                         |
-| `addCommands`  | The `gspot add` commands for the detected configurations.                              |
-| `hooks`        | The state of the Git hooks.                                                            |
-| `ci`           | The state of the CI workflow.                                                          |
-| `ruleFiles`    | The number of rule files for coding agents.                                            |
-| `submodules`   | Submodule paths, whose contents gspot does not read.                                   |
+| Field          | Meaning                                                                                         |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| `tools`        | Each tool with `name`, `kind`, and `state`, and `want`, `found`, `path`, and `help` when known. |
+| `environments` | Project environments that a check needs and that are missing.                                   |
+| `suggestions`  | Configurations to add, and files that no configuration checks.                                  |
+| `addCommands`  | The `gspot add` commands for the detected configurations.                                       |
+| `hooks`        | The state of the Git hooks.                                                                     |
+| `ci`           | The state of the CI workflow.                                                                   |
+| `ruleFiles`    | The number of rule files for coding agents.                                                     |
+| `submodules`   | Submodule paths, whose contents gspot does not read.                                            |
 
 `hooks` has `ready`, and when known, `tool`, what runs the hooks, and `lines`, what to do about them. `ci`
 has `enabled`, and when known, `provider` and the workflow `file`.

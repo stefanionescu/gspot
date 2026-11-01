@@ -1,7 +1,7 @@
 import type { HookStatus, ToolInspection } from '#cli/types/tools.ts';
-import type { Check, Setting, Configuration } from '#cli/types/manifests.ts';
 import type { StageFilter, CheckDescription } from '#cli/types/engine/plan.ts';
 import type { CommandResult, CanceledCommandJson } from '#cli/types/system.ts';
+import type { Tool, Check, Setting, Configuration } from '#cli/types/manifests.ts';
 import type { RunReport, PushInput, CheckProgress } from '#cli/types/engine/run.ts';
 import type { InheritedSetting, RemovedConfiguration } from '#cli/types/settings.ts';
 import type { CI_FILES, CHECK_STAGES, CHECK_INPUT_HOOKS } from '#cli/config/commands/reports.ts';
@@ -111,9 +111,11 @@ export type Suggestions = {
     lintJobs: SuggestionRow[];
 };
 
+export type DoctorTool = ToolInspection & { kind: Tool['kind'] };
+
 export type DoctorReport = {
     submodules: string[];
-    tools: ToolInspection[];
+    tools: DoctorTool[];
     environments: string[];
     suggestions: Suggestions;
     addCommands: string[];

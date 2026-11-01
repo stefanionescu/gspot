@@ -137,7 +137,7 @@ export const CHECK_NEEDS = ['build', 'docker', 'network'] as const;
 
 export const CHECK_CWD_VALUES = ['root', 'scope'] as const;
 
-export const TOOL_KINDS = ['program', 'library'] as const;
+export const TOOL_KINDS = ['program', 'package'] as const;
 
 export const TOOL_BUILDS = OPERATING_SYSTEMS.map((system) => system.name);
 

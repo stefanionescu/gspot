@@ -15,7 +15,7 @@ extensions = [".vue"]
 "tools.eslint.import_extension" = "extensionless"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-vue"
 npm = "eslint-plugin-vue"
 rule_prefix = "vue"
@@ -25,13 +25,13 @@ version = "10.11.1"
 extensions = [".vue"]
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "vue-eslint-parser"
 npm = "vue-eslint-parser"
 version = "10.4.1"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-vuejs-accessibility"
 npm = "eslint-plugin-vuejs-accessibility"
 rule_prefix = "vuejs-accessibility"

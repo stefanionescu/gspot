@@ -9,7 +9,7 @@ title = "TanStack Query"
 dependencies = ["@tanstack/react-query", "@tanstack/query-core", "@tanstack/vue-query", "@tanstack/svelte-query", "@tanstack/solid-query", "@tanstack/angular-query-experimental"]
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "@tanstack/eslint-plugin-query"
 npm = "@tanstack/eslint-plugin-query"
 rule_prefix = "@tanstack/query"

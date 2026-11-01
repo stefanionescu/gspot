@@ -47,7 +47,7 @@ function inspectLibraryCommand(inspected: InspectedTool, command: string[]): Too
         : inspectExecutablePath({ ...inspected, tool: { ...tool, version_command: commandArguments } }, path);
 }
 
-function inspectLibrary(inspected: InspectedTool): ToolInspection {
+function inspectPackage(inspected: InspectedTool): ToolInspection {
     const { root, cwd, tool } = inspected;
     if (tool.system === true && tool.version_command !== undefined)
         return inspectLibraryCommand(inspected, tool.version_command);
@@ -166,7 +166,7 @@ export function inspectTool(search: ToolSearch, tool: Tool): ToolInspection {
         want,
         miseBinPaths: search.miseBinPaths,
     };
-    const inspection = tool.kind === 'library' ? inspectLibrary(inspected) : inspectExecutable(inspected);
+    const inspection = tool.kind === 'package' ? inspectPackage(inspected) : inspectExecutable(inspected);
     if (inspection.state === 'ok') delete inspection.help;
     inspections.set(key, inspection);
     return inspection;

@@ -10,7 +10,7 @@ dependencies = ["expo"]
 filenames = ["app.json", "app.config.js", "app.config.ts", "eas.json"]
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-expo"
 npm = "eslint-plugin-expo"
 rule_prefix = "expo"

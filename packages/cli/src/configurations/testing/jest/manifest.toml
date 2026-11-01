@@ -15,7 +15,7 @@ name = "jest"
 system = true
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-jest"
 npm = "eslint-plugin-jest"
 rule_prefix = "jest"

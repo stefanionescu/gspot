@@ -88,27 +88,27 @@ forbidden = true
 level = "all"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "@eslint/js"
 npm = "@eslint/js"
 version = "10.0.1"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "@gspothq/eslint-plugin"
 npm = "@gspothq/eslint-plugin"
 version = "0.2.3"
 rule_prefix = "gspot"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-sonarjs"
 npm = "eslint-plugin-sonarjs"
 rule_prefix = "sonarjs"
 version = "4.2.2"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-unicorn"
 npm = "eslint-plugin-unicorn"
 rule_prefix = "unicorn"
@@ -116,61 +116,61 @@ rule_url = "https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs
 version = "78.0.0"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-security"
 npm = "eslint-plugin-security"
 rule_prefix = "security"
 version = "4.2.0"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-perfectionist"
 npm = "eslint-plugin-perfectionist"
 rule_prefix = "perfectionist"
 version = "5.12.1"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-n"
 npm = "eslint-plugin-n"
 rule_prefix = "n"
 version = "18.4.1"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-jsdoc"
 npm = "eslint-plugin-jsdoc"
 rule_prefix = "jsdoc"
 version = "65.3.11"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-regexp"
 npm = "eslint-plugin-regexp"
 rule_prefix = "regexp"
 version = "3.3.1"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-import-x"
 npm = "eslint-plugin-import-x"
 rule_prefix = "import-x"
 version = "4.17.1"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "picomatch"
 npm = "picomatch"
 version = "4.0.7"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-import-resolver-typescript"
 npm = "eslint-import-resolver-typescript"
 version = "4.4.5"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-boundaries"
 npm = "eslint-plugin-boundaries"
 rule_prefix = "boundaries"
@@ -186,20 +186,20 @@ level = "all"
 setting = "trpc.server_files"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-package-json"
 npm = "eslint-plugin-package-json"
 rule_prefix = "package-json"
 version = "1.10.1"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-config-prettier"
 npm = "eslint-config-prettier"
 version = "10.1.8"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "globals"
 npm = "globals"
 version = "17.13.0"

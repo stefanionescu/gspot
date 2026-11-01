@@ -46,7 +46,7 @@ system = true
 version_command = ["--version"]
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "@next/eslint-plugin-next"
 npm = "@next/eslint-plugin-next"
 rule_prefix = "@next/next"

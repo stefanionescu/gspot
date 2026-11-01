@@ -10,7 +10,7 @@ dependencies = ["next-intl", "react-i18next", "i18next", "react-intl", "@lingui/
 dependencies = ["next-intl"]
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-i18next"
 npm = "eslint-plugin-i18next"
 rule_prefix = "i18next"

@@ -16,7 +16,7 @@ filenames = ["astro.config.mjs", "astro.config.ts"]
 "tools.eslint.import_extension" = "extensionless"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-astro"
 npm = "eslint-plugin-astro"
 rule_prefix = "astro"
@@ -36,13 +36,13 @@ version = "0.9.10"
 version_command = ["astro", "check", "--version"]
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "@emnapi/runtime"
 npm = "@emnapi/runtime"
 version = "1.11.3"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "prettier-plugin-astro"
 npm = "prettier-plugin-astro"
 version = "1.1.1"

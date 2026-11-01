@@ -24,7 +24,7 @@ version_pattern = "(\\d+\\.\\d+\\.\\d+)"
 
 [[tool]]
 install_help = "Install pytest-cov in the Python environment used by pytest."
-kind = "library"
+kind = "package"
 name = "pytest-cov"
 system = true
 version_command = ["pytest", "--version", "--version"]

@@ -25,7 +25,7 @@ requires = ["ajv"]
 version = "6.1.0"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "ajv"
 npm = "ajv"
 version = "8.20.0"

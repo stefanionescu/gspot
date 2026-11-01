@@ -7,7 +7,7 @@ title = "Testing Library"
 dependencies = ["@testing-library/*"]
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-testing-library"
 npm = "eslint-plugin-testing-library"
 rule_prefix = "testing-library"

@@ -17,7 +17,7 @@ filenames = ["tsconfig.json", "tsconfig.*.json"]
 prefixes = ["tsconfig"]
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "typescript-eslint"
 npm = "typescript-eslint"
 requires = ["tsc"]

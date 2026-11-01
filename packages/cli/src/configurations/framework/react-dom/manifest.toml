@@ -7,7 +7,7 @@ title = "React DOM"
 dependencies = ["react-dom"]
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-jsx-a11y-x"
 npm = "eslint-plugin-jsx-a11y-x"
 rule_prefix = "jsx-a11y-x"

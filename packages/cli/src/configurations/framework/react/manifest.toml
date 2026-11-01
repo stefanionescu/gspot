@@ -31,21 +31,21 @@ paths = ["**/*.tsx", "**/*.jsx"]
 reason = "A variable that holds a component, such as a memo or lazy result, takes the component's capital."
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-react-hooks"
 npm = "eslint-plugin-react-hooks"
 rule_prefix = "react-hooks"
 version = "7.1.1"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "@eslint-react/eslint-plugin"
 npm = "@eslint-react/eslint-plugin"
 rule_prefix = "@eslint-react"
 version = "5.28.0"
 
 [[tool]]
-kind = "library"
+kind = "package"
 name = "eslint-plugin-react-refresh"
 npm = "eslint-plugin-react-refresh"
 rule_prefix = "react-refresh"
