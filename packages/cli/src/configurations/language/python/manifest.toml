@@ -329,7 +329,7 @@ example = "`eval(user_input)` reports S307. Parse the input instead, and allow o
 exit_codes = [1]
 files = { extensions = [".py", ".pyi"] }
 fix = ["ruff", "check", "--no-cache", "--fix", "--quiet", "{files}"]
-help = "Run `gspot check --fix` for the rules that fix themselves. Turn one rule off with `gspot ignore python/ruff --rule <rule> --reason \"<why>\"`, and add `--paths` to limit it."
+help = "Run `gspot check --fix` for the rules that fix themselves."
 limits = { "C901" = "cyclomatic_complexity", "PLR0915" = "function_statements", "PLR0913" = "function_parameters", "PLR0917" = "function_parameters", "PLR0912" = "function_branches", "PLR0911" = "function_returns" }
 limit_languages = ["python"]
 name = "ruff"
@@ -365,7 +365,7 @@ cwd = "scope"
 example = "`count: int = \"one\"` reports an incompatible type. Assign a number, such as `count: int = 1`, or change the annotation to `str`."
 exit_codes = [1]
 files = { extensions = [".py", ".pyi"] }
-help = "Fix the type, or narrow it where the value arrives. Accept a file that needs another dependency set with `gspot ignore python/basedpyright --paths <path> --reason \"<why>\"`."
+help = "Fix the type, or narrow it where the value arrives."
 name = "basedpyright"
 output = { format = "json", list = "generalDiagnostics", line_base = 0, fields = { file = "file", line = "range.start.line", column = "range.start.character", rule = "rule", message = "message" } }
 runs = "scope"
@@ -390,7 +390,7 @@ cwd = "scope"
 env = { PYTHONDONTWRITEBYTECODE = "1" }
 example = "An import of a third-party package missing from the project dependencies reports a finding. Declare the package and update the lockfile, or remove the import."
 files = { extensions = [".py"], filenames = ["pyproject.toml"] }
-help = "Declare the dependency, or remove the one nothing imports. Turn one rule off with `gspot ignore python/deptry --rule <rule> --reason \"<why>\"`."
+help = "Declare the dependency, or remove the one nothing imports."
 name = "deptry"
 output = { format = "regex", pattern = "^(?<file>[^:\\s][^:]*?)(?::(?<line>\\d+):(?<column>\\d+))?: (?<rule>DEP\\d+) (?<message>.*)$" }
 runs = "scope"
@@ -402,7 +402,7 @@ why = "An import that works through somebody else's dependency breaks the day th
 [[check]]
 example = "A function that no Python file of the scope calls reports `unused-function`. Delete it. A file of hooks that a framework calls by name gets an ignore for its path."
 files = { extensions = [".py"] }
-help = "Delete the unused definition or the unreachable code. For a definition that a framework uses by name, run `gspot ignore python/vulture --paths <file> --reason \"<why>\"`."
+help = "Delete the unused definition or the unreachable code."
 level = "all"
 name = "vulture"
 runs = "scope"
@@ -434,7 +434,7 @@ files = { filenames = [
     "source",
     "generated",
 ] }
-help = "Export the requirements file from the lockfile, declare it generated, and replace `pip install` with the locked command. Accept a reviewed path with `gspot ignore python/pip-installs --paths <glob> --reason \"<why>\"`."
+help = "Export the requirements file from the lockfile, declare it generated, and replace `pip install` with the locked command."
 level = "all"
 name = "pip-installs"
 runs = "scope"

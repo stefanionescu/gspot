@@ -193,7 +193,7 @@ export type PathExplanation = {
     fileKindOrigin?: string;
     tags: string[];
     configurations: string[];
-    checks: { check: string; stage: string; configuration?: string }[];
+    checks: { check: string; stage: string; state: string; configuration?: string }[];
     ignores: { check?: string; rule?: string; reason: string }[];
     unchecked?: string;
     remedy?: string;

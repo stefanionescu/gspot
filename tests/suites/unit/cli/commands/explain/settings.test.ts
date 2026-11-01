@@ -135,6 +135,16 @@ test('a neutral format setting stays settable without a reason', async () => {
     });
 });
 
+test.each([
+    { key: 'level', flag: '' },
+    { key: 'limits.file_lines', flag: ' [--reason "<why>"]' },
+])('explain offers --reason for $key only when the setting can need one', async ({ key, flag }) => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const result = await runGspot(sandbox.path, ['explain', key]);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).toContain(`Change it: gspot set ${key} <value>${flag}\n`);
+});
+
 test('explain shows the default of a path setting joined with the scope, as gspot uses it', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { rules: true, scopes: [{ path: 'web', configurations: ['site'] }] }),

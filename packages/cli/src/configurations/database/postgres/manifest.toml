@@ -31,7 +31,7 @@ tool = "squawk"
 command = ["squawk", "--config", "{config_file:squawk}", "--reporter", "json", "{files}"]
 example = "A migration that adds a constraint with a full table scan reports a finding. Create the constraint first, and validate it in a separate migration."
 files = { paths = ["{setting:postgres.migrations_folder}/**/*.sql"] }
-help = "Follow the advice squawk prints for the rule. Turn one rule off with `gspot ignore postgres/squawk --rule <rule> --reason \"<why>\"`."
+help = "Follow the advice squawk prints for the rule."
 name = "squawk"
 output = { format = "json", line_base = 0, fields = { file = "file", line = "line", column = "column", rule = "rule_name", message = "message help" } }
 stage = "commit"

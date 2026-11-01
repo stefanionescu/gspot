@@ -52,7 +52,7 @@ why = "A bucket with no policy refuses every upload, and when public serves ever
 
 [[check]]
 example = "Client code that reads a Supabase service-role key reports a finding. Move the key and the privileged work into an edge function."
-help = "Move code to edge functions or tests, or run `gspot ignore supabase/service-role-key` with a reason."
+help = "Move code to edge functions or tests."
 name = "service-role-key"
 runs = "scope"
 stage = "commit"

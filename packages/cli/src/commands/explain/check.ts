@@ -19,6 +19,7 @@ import {
     REPOSITORY_COMMAND,
     RUN_IN_COPY_MESSAGE,
     SELECTED_YES_MESSAGE,
+    ASK_BEFORE_TURNING_OFF,
 } from '#cli/config/commands/reports.ts';
 
 function listCheckIgnores(session: Session | undefined, checkId: string): CheckIgnore[] {
@@ -105,8 +106,9 @@ function formatCheckExplanation(
         `Why it matters: ${check.why.replaceAll(CODE_MARK, '')}`,
         `What to do: ${check.help.replaceAll(CODE_MARK, '')}`,
         ...(check.when?.setting === undefined ? [] : [`Required setting: ${check.when.setting}`]),
-        ...Object.entries(minVersions).map(([name, version]) => `Needs ${name} ${version} or newer`),
+        ...Object.entries(minVersions).map(([name, version]) => `Needs ${name} ${version} or newer.`),
         '',
+        ASK_BEFORE_TURNING_OFF,
         `Turn it off for some paths: ${facts.turnOff.paths}`,
         ...(facts.turnOff.rule === undefined ? [] : [`Turn one of its lint rules off: ${facts.turnOff.rule}`]),
         ...(check.run_in_copy === true ? [RUN_IN_COPY_MESSAGE] : []),

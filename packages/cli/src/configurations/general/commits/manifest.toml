@@ -34,7 +34,7 @@ why = "Release notes, blame, and bisect depend on typed, scoped subjects, and a 
 
 [[check]]
 example = "The trailer `Claude-Session: https://claude.ai/code/session_01Abc` reports `session-link`. Remove the line, and describe the change in the message itself."
-help = "Remove the line that the finding names. For a reviewed exception, run `gspot ignore commits/references --rule <rule> --reason \"<why>\"`."
+help = "Remove the line that the finding names."
 name = "references"
 stage = "message"
 summary = "Checks a new commit message for links to AI chat sessions and the `Claude-Session:` trailer, finding IDs such as `C3-BUG-019`, plan steps such as `steps 7.01 to 7.36` or `stage 45`, and `Refs:` or `Closes:` footers without an issue number."

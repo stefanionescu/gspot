@@ -15,6 +15,7 @@ export type PlanOptions = {
     range?: string[] | undefined;
     shallow?: boolean | undefined;
     stage: StageFilter | 'any';
+    keepLevelOff?: boolean | undefined;
     staged?: string[] | undefined;
     changed?: string[] | undefined;
     only?: string[] | undefined;

@@ -21,7 +21,7 @@ version_command = ["--disable-version-check", "--version"]
 command = ["semgrep", "scan", "--strict", "--error", "--metrics", "off", "--disable-version-check", "--no-rewrite-rule-ids", "--quiet", "--json", "{files}"]
 example = "`eval(userInput)` matches a rule against dynamic evaluation and reports its ID and location. Parse the input instead, and allow only known operations."
 exit_codes = [1, 3]
-help = "Change the code the way the message says. Turn one rule off for a path with `gspot ignore security/semgrep --rule <rule> --paths <glob> --reason \"<why>\"`."
+help = "Change the code the way the message says."
 name = "semgrep"
 output = { format = "semgrep" }
 stage = "push"

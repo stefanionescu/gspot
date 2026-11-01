@@ -248,7 +248,7 @@ tool = "vale"
 
 [[check]]
 example = "`Release on 03/04/2026.` reports an ambiguous date. Write `Release on March 4, 2026.` instead."
-help = "Rewrite the sentence the alert names, add a real name and its reason to the `spelling.allowed_words` setting, or use `gspot ignore prose/vale --rule <rule> --reason \"<why>\"`."
+help = "Rewrite the sentence the alert names, or add a real name and its reason to the `spelling.allowed_words` setting."
 name = "vale"
 stage = "commit"
 summary = "In Markdown, checks ambiguous dates, link text and alternative text at level basic, and the complete gspot style and upstream packages at level all. At level all, code comments get the comment rules: conscious language, placeholders, merge-conflict markers, session identifiers, straight quotes and em dashes."

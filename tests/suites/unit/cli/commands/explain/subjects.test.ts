@@ -19,6 +19,28 @@ import {
     UNKNOWN_SUBJECT_CASES,
 } from '#tests/config/commands/reports.ts';
 
+test('a path explanation names its scope and kind, and shows the checks that the level turns off', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash']),
+        'run.sh': 'echo example\n',
+    });
+    const result = await runGspot(sandbox.path, ['explain', './run.sh']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).toContain('run.sh  (scope ., kind source');
+    expect(result.stdout).toMatch(/^ {2}bash\/shellcheck {2}\w+ {2}on$/mu);
+    expect(result.stdout).toMatch(/^ {2}\S+ {2}\w+ {2}off \(level\)$/mu);
+});
+
+test('explain asks before it offers to turn a check off', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash']) });
+    const result = await runGspot(sandbox.path, ['explain', 'bash/shellcheck']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const lines = result.stdout.split('\n');
+    const question = lines.indexOf('Ask the user before you turn a check off.');
+    expect(question).toBeGreaterThan(-1);
+    expect(lines[question + 1]).toStartWith('Turn it off for some paths: gspot ignore bash/shellcheck');
+});
+
 test('a path explanation lists the command checks and the ignores that apply', async () => {
     await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings([], {
@@ -48,9 +70,12 @@ test('a path explanation lists the command checks and the ignores that apply', a
     expect(explanation.checks.find(({ check }) => check === 'project/syntax')).toStrictEqual({
         check: 'project/syntax',
         stage: 'manual',
+        state: 'on',
     });
     expect(JSON.parse(corrected.stdout)).not.toHaveProperty('unchecked');
-    expect((JSON.parse(ignored.stdout) as PathExplanation).checks).toStrictEqual(explanation.checks);
+    expect((JSON.parse(ignored.stdout) as PathExplanation).checks.map(({ check }) => check)).toStrictEqual(
+        explanation.checks.map(({ check }) => check),
+    );
 });
 
 test('a configuration name stays a name, and a tracked or ./ path explains the file', async () => {
@@ -132,7 +157,7 @@ test.each([...CHECK_TOOL_MINIMUMS])(
         const configurationsByName = readConfigurations();
         const expected = tools.map((name) => {
             const minimum = getTool(configurationsByName.values(), name).min_version;
-            return `Needs ${name} ${String(minimum)} or newer`;
+            return `Needs ${name} ${String(minimum)} or newer.`;
         });
         const result = await runGspot(sandbox.path, ['explain', check]);
         expect(result.code, result.stdout + result.stderr).toBe(0);

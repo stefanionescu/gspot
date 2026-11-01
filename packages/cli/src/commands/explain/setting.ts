@@ -6,9 +6,9 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { formatScope, quoteArgument } from '#cli/system/text.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { NOT_SET, REASON_HELP } from '#cli/config/commands/reports.ts';
 import { RECORD_FIELDS, findSettingSchema } from '#cli/settings/lookup.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
+import { NOT_SET, REASON_HELP, REASON_OPTION_TEXT } from '#cli/config/commands/reports.ts';
 import { findSetting, getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 import type { Explanation, SettingScope, ExplainedSetting } from '#cli/types/commands/reports.ts';
 
@@ -26,16 +26,23 @@ function formatSettingScope(key: string, setting: Setting, scopeSetting: Setting
     ];
 }
 
+function formatReasonLines(setting: Setting, { shipped, inherited }: SettingScope): string[] {
+    const value = inherited?.value;
+    const isLoose = value !== undefined && isLoosening(setting, value, shipped);
+    return [
+        ...(isLoose ? [REASON_HELP] : []),
+        ...(inherited?.reason === undefined ? [] : [`Reason on record: ${inherited.reason}`]),
+    ];
+}
+
 function formatChangeLines(key: string, setting: Setting, scopeSetting: SettingScope): string[] {
     if (Object.hasOwn(RECORD_FIELDS, key))
         return [`Change it: write [[${key}]] records by hand in gspot.toml, then run gspot apply.`];
-    const { scope, shipped, inherited } = scopeSetting;
+    const { scope } = scopeSetting;
     const target = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
-    const value = inherited?.value;
     return [
-        ...(value !== undefined && isLoosening(setting, value, shipped) ? [REASON_HELP] : []),
-        ...(inherited?.reason === undefined ? [] : [`Reason on record: ${inherited.reason}`]),
-        `Change it: gspot set ${quoteArgument(key)} <value>${target} [--reason "<why>"]`,
+        ...formatReasonLines(setting, scopeSetting),
+        `Change it: gspot set ${quoteArgument(key)} <value>${target}${setting.reason_when === undefined ? '' : REASON_OPTION_TEXT}`,
         `Back to the default: gspot unset ${quoteArgument(key)}${target}`,
     ];
 }

@@ -49,7 +49,7 @@ tool = "trivy"
 command = ["hadolint", "--no-color", "--config", "{config_file:hadolint}", "{files}"]
 example = "`FROM node:latest` reports DL3007, because that tag moves. Pin an explicit version tag or a digest."
 files = { paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "!**/*.dockerignore"] }
-help = "Change the instruction the way the rule says. Turn one rule off with `gspot ignore docker/hadolint --rule <rule> --reason \"<why>\"`."
+help = "Change the instruction the way the rule says."
 name = "hadolint"
 output = { format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+) (?<rule>[A-Z]+\\d+) [a-z]+: (?<message>.*)$" }
 stage = "commit"
@@ -82,7 +82,7 @@ command = ["trivy", "config", "--misconfig-scanners", "dockerfile", "--quiet", "
 example = "A Dockerfile whose final stage runs as root reports a finding. Create an unprivileged user, and switch to it with `USER` before the application starts."
 exit_codes = [10]
 files = { paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "!**/*.dockerignore"] }
-help = "Change the file the way the message says. Accept one advisory with `gspot ignore docker/trivy-config --rule <rule> --reason \"<why>\"`."
+help = "Change the file the way the message says."
 name = "trivy-config"
 output = { format = "json", list = "Results", children = "Misconfigurations", fields = { file = "Target", line = "CauseMetadata.StartLine", rule = "ID", message = "Message" } }
 run_in_copy = true
@@ -94,7 +94,7 @@ why = "A root user turns any bug in the service into full control of the contain
 [[check]]
 example = "An image with a vulnerable package reports the advisory. Move to an image version with the fixed package."
 files = { paths = ["**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose.{yml,yaml}", "**/compose.*.{yml,yaml}", "**/compose-*.{yml,yaml}"] }
-help = "Move to a newer tag of the image. Accept one advisory with `gspot ignore docker/trivy-image --rule <rule> --reason \"<why>\"`."
+help = "Move to a newer tag of the image."
 name = "trivy-image"
 needs = ["docker"]
 runs = "scope"

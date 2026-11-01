@@ -90,7 +90,7 @@ cwd = "scope"
 example = "`value as! NSString` reports `force_cast`. Use `as?` and handle the failure, or change the input type so no cast remains."
 files = { extensions = [".swift"] }
 fix = ["swiftlint", "lint", "--fix", "--quiet", "--no-cache", "{files}"]
-help = "Run `gspot check --fix` for the rules that fix themselves. Turn one rule off with `gspot ignore swift/swiftlint --rule <rule> --reason \"<why>\"`."
+help = "Run `gspot check --fix` for the rules that fix themselves."
 limits = { "file_length" = "file_lines", "function_parameter_count" = "function_parameters", "function_body_length" = "function_lines", "type_body_length" = "type_lines", "closure_body_length" = "closure_lines", "cyclomatic_complexity" = "cyclomatic_complexity" }
 limit_languages = ["swift"]
 name = "swiftlint"

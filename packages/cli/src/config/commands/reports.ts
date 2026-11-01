@@ -77,7 +77,11 @@ export const RERUN_LABEL = 'rerun:';
 
 export const NOT_SET = 'not set';
 
+export const ASK_BEFORE_TURNING_OFF = 'Ask the user before you turn a check off.';
+
 export const OFF_LABEL = 'off';
+
+export const REASON_OPTION_TEXT = ' [--reason "<why>"]';
 
 export const OFF_CAUSES: ReadonlySet<string> = new Set(['level', 'ignore']);
 
@@ -90,10 +94,6 @@ export const VALUE_WIDTH = 28;
 export const LIST_KINDS = ['configurations', 'settings'] as const;
 
 export const REASON_HEADER = 'reason needed when';
-
-export const OFF_BY_LEVEL = 'off (level)';
-
-export const NO_MATCHING_FILES = 'no matching files';
 
 export const LIST_USAGE = '[options] [configurations|settings]';
 

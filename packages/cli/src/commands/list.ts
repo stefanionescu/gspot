@@ -3,27 +3,17 @@ import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { isRootOnlyCheck } from '#cli/engine/files.ts';
 import type { CommandResult } from '#cli/types/system.ts';
-import { isActive, planChecks } from '#cli/engine/plan.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import { formatCount, formatScope } from '#cli/system/text.ts';
 import { listInheritedSettings } from '#cli/settings/inherit.ts';
+import { planChecks, formatCheckState } from '#cli/engine/plan.ts';
 import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
 import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/reports.ts';
-
-import {
-    KEY_GAP,
-    NOT_SET,
-    LIST_USAGE,
-    LIST_KINDS,
-    VALUE_WIDTH,
-    OFF_BY_LEVEL,
-    REASON_HEADER,
-    NO_MATCHING_FILES,
-} from '#cli/config/commands/reports.ts';
+import { KEY_GAP, NOT_SET, LIST_USAGE, LIST_KINDS, VALUE_WIDTH, REASON_HEADER } from '#cli/config/commands/reports.ts';
 
 function formatScopeGroup(scopes: readonly string[]): string {
     const nested = scopes.filter((scope) => scope !== '');
@@ -125,12 +115,6 @@ function buildSettingRows(settings: Settings, scopes: Scope[]): SettingsListJson
             scope: scopePath,
         }));
     });
-}
-
-function formatCheckState(planned: PlannedCheck | undefined): string {
-    if (planned === undefined) return OFF_BY_LEVEL;
-    if (planned.skip !== undefined) return `off (${planned.skip.cause})`;
-    return isActive(planned) ? 'on' : NO_MATCHING_FILES;
 }
 
 export const listCommand: CommandDefinition<[(typeof LIST_KINDS)[number]]> = {

@@ -65,7 +65,7 @@ command = ["shellcheck", "--rcfile", "{config_file:shellcheckrc}", "--severity=s
 example = "In a Bash script, `printf \"%s\\n\" $name` reports SC2086 because the expansion permits word splitting and globbing. Use `printf \"%s\\n\" \"$name\"` to pass the value as one argument."
 exit_codes = [1]
 files = { tags = ["bash", "sh", "bats"] }
-help = "Read the SC code in the finding; `gspot explain shellcheck/SC2086` links to its page. Turn one code off with `gspot ignore bash/shellcheck --rule SC2086 --reason \"<why>\"`."
+help = "Read the SC code in the finding; `gspot explain shellcheck/SC2086` links to its page."
 name = "shellcheck"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?:note|warning|error|style): (?<message>.*?) \\[(?<rule>SC\\d+)\\]$" }
 stage = "commit"
@@ -104,7 +104,7 @@ why = "Without a summary, the reader must trace the function in their head, and 
 
 [[check]]
 example = "A private function `_orphan` that no script calls reports a finding. Delete it, or record a hook that needs it with `gspot ignore` and a reason."
-help = "Delete the function. For a required hook entry point, run `gspot ignore bash/unused-functions --paths <file> --reason \"<why>\"`."
+help = "Delete the function."
 name = "unused-functions"
 runs = "scope"
 stage = "commit"
@@ -142,7 +142,7 @@ why = "No check reads code inside a heredoc."
 
 [[check]]
 example = "`killall worker` reports `broad-kill`. Stop the one process by its ID, or ignore the rule for that script with a reason."
-help = "Stop one process by its ID, delete only paths the script created, and handle each failure. Accept a required cleanup with `gspot ignore bash/safety --rule <rule> --paths <glob> --reason \"<why>\"`."
+help = "Stop one process by its ID, delete only paths the script created, and handle each failure."
 name = "safety"
 stage = "commit"
 summary = "Finds broad process kills and recursive deletes, except traps that remove mktemp paths. At level all, also reports discarded failures."

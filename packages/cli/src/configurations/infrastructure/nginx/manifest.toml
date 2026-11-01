@@ -28,7 +28,7 @@ tool = "gixy"
 [[check]]
 command = ["gixy", "--config", "{config_file:gixy}", "--format", "json", "{file}"]
 example = "A location for `/proxy/(.*)` with `proxy_pass http://$1` sends requests to any host and reports `ssrf`. Point `proxy_pass` at a fixed upstream instead."
-help = "Change the block the way the rule page says. Turn one rule off with `gspot ignore nginx/gixy --rule <rule> --reason \"<why>\"`."
+help = "Change the block the way the rule page says."
 name = "gixy"
 output = { format = "json", fields = { file = "path", line = "line", rule = "plugin", message = "summary" } }
 stage = "commit"

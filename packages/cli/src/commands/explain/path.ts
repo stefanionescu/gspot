@@ -1,4 +1,3 @@
-import { planChecks } from '#cli/engine/plan.ts';
 import { formatScope } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
@@ -7,12 +6,12 @@ import { listCheckedFiles } from '#cli/engine/files.ts';
 import { EVERY_CHECK } from '#cli/config/commands/help.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
+import { planChecks, formatCheckState } from '#cli/engine/plan.ts';
 import { selectScopePath, buildArgumentPath } from '#cli/repository/scopes.ts';
 import type { Explanation, PathExplanation } from '#cli/types/commands/reports.ts';
 
 import {
     UNCHECKED_REASON,
-    REPOSITORY_COMMAND,
     MARK_GENERATED_MESSAGE,
     BINARY_ELIGIBLE_MESSAGE,
     VENDORED_ELIGIBLE_MESSAGE,
@@ -29,11 +28,12 @@ function buildPathExplanation(session: Session, file: TrackedFile): PathExplanat
     const { path } = file;
     const scopePath = selectScopePath(path, session.scopes);
     const scope = session.scopes.find((each) => each.path === scopePath) as Scope;
-    const checks = planChecks(session, { stage: 'any' }).filter((check) =>
+    const checks = planChecks(session, { stage: 'any', keepLevelOff: true }).filter((check) =>
         listCheckedFiles(session.scopes, check).some((checkedFile) => checkedFile.path === file.path),
     );
+    const running = checks.filter(({ skip }) => skip?.cause !== 'level');
     const covering = new Set(
-        checks.flatMap(({ configuration }) => (configuration === undefined ? [] : [configuration.name])),
+        running.flatMap(({ configuration }) => (configuration === undefined ? [] : [configuration.name])),
     );
     const report: PathExplanation = {
         path,
@@ -44,6 +44,7 @@ function buildPathExplanation(session: Session, file: TrackedFile): PathExplanat
         checks: checks.map((check) => ({
             check: check.check.id,
             stage: check.check.stage,
+            state: formatCheckState(check),
             ...(check.configuration !== undefined && { configuration: check.configuration.name }),
         })),
         ignores: session.settings.ignore
@@ -60,7 +61,7 @@ function buildPathExplanation(session: Session, file: TrackedFile): PathExplanat
     };
     const unchecked = formatUncheckedKind(file);
     if (unchecked !== undefined) report.unchecked = unchecked;
-    if (report.checks.length === 0 && file.kind === 'source') {
+    if (running.length === 0 && file.kind === 'source') {
         report.unchecked = UNCHECKED_REASON;
         report.remedy = MARK_GENERATED_MESSAGE;
     }
@@ -69,16 +70,14 @@ function buildPathExplanation(session: Session, file: TrackedFile): PathExplanat
 
 function formatPathExplanation(explanation: PathExplanation): string {
     const by = explanation.fileKindOrigin === undefined ? '' : ` by ${explanation.fileKindOrigin}`;
-    const checks = explanation.checks.map(
-        (check) => `  ${check.check}  ${check.stage}  (${check.configuration ?? REPOSITORY_COMMAND})`,
-    );
+    const checks = explanation.checks.map((check) => `  ${check.check}  ${check.stage}  ${check.state}`);
     const ignores = explanation.ignores.map((ignore) => {
         const rule = ignore.rule === undefined ? '' : ` ${ignore.rule}`;
         const reason = `  ${ignore.reason}`;
         return `  ${ignore.check ?? EVERY_CHECK}${rule}${reason}`;
     });
     const lines = [
-        `${explanation.path}  (scope ${formatScope(explanation.scope)}, ${explanation.fileKind}${by})`,
+        `${explanation.path}  (scope ${formatScope(explanation.scope)}, kind ${explanation.fileKind}${by})`,
         '',
         ...(explanation.unchecked === undefined ? [] : [explanation.unchecked]),
         ...(explanation.configurations.length === 0 ? [] : [`Checked by: ${explanation.configurations.join(', ')}`]),

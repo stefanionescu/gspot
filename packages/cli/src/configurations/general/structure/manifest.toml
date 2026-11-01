@@ -18,7 +18,7 @@ why = "An import that crosses the layers that the rules describe, or a file outs
 
 [[check]]
 example = "With TypeScript at level `all`, a `feature/only.ts` alone in its folder reports `lone-file`. Move it up beside related code, and update its imports."
-help = "Move the file up beside its neighbors, or use `gspot ignore structure/lone-files` with paths and a reason."
+help = "Move the file up beside its neighbors."
 level = "all"
 name = "lone-files"
 runs = "scope"
@@ -28,7 +28,7 @@ why = "A folder with one file adds a level to every import path and groups nothi
 
 [[check]]
 example = "At level `all`, a `src/models/` whose only entry is `src/models/user/` reports `pass-through-folder`. Move `user/` up to `src/user/`, and update its imports."
-help = "Move the inner folder up one level, or use `gspot ignore structure/pass-through-folders` with paths and a reason when a tool or a framework fixes the layout."
+help = "Move the inner folder up one level."
 level = "all"
 name = "pass-through-folders"
 runs = "scope"

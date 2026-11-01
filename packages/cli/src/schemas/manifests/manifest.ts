@@ -20,6 +20,7 @@ import {
     CHECK_NEEDS,
     GSPOT_PATHS,
     NAME_PATTERN,
+    IGNORE_COMMAND,
     NAMED_CATEGORIES,
     CHECK_CWD_VALUES,
     SETTING_LANGUAGES,
@@ -144,7 +145,9 @@ const checkFieldsSchema = z.strictObject({
     summary: nonemptyStringSchema,
     example: z.string().trim().min(1),
     why: nonemptyStringSchema,
-    help: nonemptyStringSchema,
+    help: nonemptyStringSchema.refine((help) => !help.includes(IGNORE_COMMAND), {
+        error: `A check's help gives the fix alone. Remove ${IGNORE_COMMAND}: gspot explain names it.`,
+    }),
 });
 
 export const checkSchema = checkFieldsSchema.transform(({ tool, ...check }) => {

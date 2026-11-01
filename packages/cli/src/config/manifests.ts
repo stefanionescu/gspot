@@ -129,6 +129,8 @@ export const GROUPS = [
 
 export const LEVELS = ['basic', 'all'] as const;
 
+export const IGNORE_COMMAND = 'gspot ignore';
+
 export const STAGES = ['commit', 'push', 'manual', 'message'] as const;
 
 export const CHECK_RUNS = ['files', 'scope', 'once', 'history'] as const;

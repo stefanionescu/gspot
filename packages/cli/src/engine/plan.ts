@@ -13,7 +13,14 @@ import { findFirstSkip, findSettingsSkip } from '#cli/engine/skips.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { isRootOnlyCheck, selectCheckFiles } from '#cli/engine/files.ts';
 import type { PlanOptions, PlannedScope, PlannedCheck } from '#cli/types/engine/plan.ts';
-import { ROOT_RUNS, COVERAGE_DIMENSIONS, COVERAGE_INI_SECTION } from '#cli/config/engine.ts';
+
+import {
+    ROOT_RUNS,
+    OFF_BY_LEVEL,
+    NO_MATCHING_FILES,
+    COVERAGE_DIMENSIONS,
+    COVERAGE_INI_SECTION,
+} from '#cli/config/engine.ts';
 
 function listScopeChecks(settings: Settings, scope: Scope): ScopeCheck[] {
     const isRoot = scope.path === '';
@@ -90,11 +97,10 @@ function planScope(planned: PlannedScope, plannedRepositoryChecks: Set<string>):
         const isRootCheck = (ROOT_RUNS as readonly string[]).includes(configured.check.runs);
         if (isRootCheck && plannedRepositoryChecks.has(configured.check.id)) continue;
         const check = planCheck(planned, configured);
-        if (check.skip?.cause === 'level') continue;
         if (isRootCheck) plannedRepositoryChecks.add(configured.check.id);
         checks.push(check);
     }
-    return checks;
+    return planned.options.keepLevelOff === true ? checks : checks.filter(({ skip }) => skip?.cause !== 'level');
 }
 
 function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
@@ -128,6 +134,17 @@ export function isActive(planned: PlannedCheck): boolean {
         planned.check.stage === 'message' ||
         (planned.check.runs === 'history' && (planned.commits?.length ?? 0) > 0)
     );
+}
+
+/**
+Word the state of a planned check for list and explain.
+
+@param planned the plan of the check, or undefined when the level leaves it out of the plan.
+*/
+export function formatCheckState(planned: PlannedCheck | undefined): string {
+    if (planned === undefined) return OFF_BY_LEVEL;
+    if (planned.skip !== undefined) return `off (${planned.skip.cause})`;
+    return isActive(planned) ? 'on' : NO_MATCHING_FILES;
 }
 
 /**
