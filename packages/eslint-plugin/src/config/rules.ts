@@ -341,3 +341,9 @@ export const EFFECT_ONLY_BRANCH = 'true,false';
 export const EFFECT_RETURN_BRANCH = 'true,true';
 
 export const BARE_RETURN_BRANCH = 'false,true';
+
+export const NULLISH_TYPE_KEYWORDS: ReadonlySet<string> = new Set(['TSNullKeyword', 'TSUndefinedKeyword']);
+
+export const ALIAS_MEMBER_LIMIT = 2;
+
+export const ALIAS_USE_LIMIT = 2;

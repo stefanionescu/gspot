@@ -4,6 +4,7 @@ import { noInMisuse } from './rules/no-in-misuse.ts';
 import { noClientEnv } from './rules/no-client-env.ts';
 import { noGlobalThis } from './rules/no-global-this.ts';
 import { noTryPromise } from './rules/no-try-promise.ts';
+import { useTypeAlias } from './rules/use-type-alias.ts';
 import { preferLiteral } from './rules/prefer-literal.ts';
 import { noPathCommand } from './rules/no-path-command.ts';
 import { noSmallSwitch } from './rules/no-small-switch.ts';
@@ -18,6 +19,7 @@ import { noTrivialFiles } from './rules/no-trivial-files.ts';
 import { noCommentedCode } from './rules/no-commented-code.ts';
 import { noIgnoredReturn } from './rules/no-ignored-return.ts';
 import { noUnthrownError } from './rules/no-unthrown-error.ts';
+import { preferTypeGuard } from './rules/prefer-type-guard.ts';
 import { importBoundaries } from './rules/import-boundaries.ts';
 import { noInsecureRandom } from './rules/no-insecure-random.ts';
 import { noRenamedExports } from './rules/no-renamed-exports.ts';
@@ -39,6 +41,7 @@ import { noEmptyReturnValue } from './rules/no-empty-return-value.ts';
 import { noSwitchCaseLabels } from './rules/no-switch-case-labels.ts';
 import { noIdenticalOperands } from './rules/no-identical-operands.ts';
 import { noNegatedComparison } from './rules/no-negated-comparison.ts';
+import { noRedundantOptional } from './rules/no-redundant-optional.ts';
 import { noUndefinedArgument } from './rules/no-undefined-argument.ts';
 import { preferBooleanReturn } from './rules/prefer-boolean-return.ts';
 import { noCommentsInImports } from './rules/no-comments-in-imports.ts';
@@ -50,11 +53,14 @@ import { noEqualLoopCondition } from './rules/no-equal-loop-condition.ts';
 import { noPositiveIndexCheck } from './rules/no-positive-index-check.ts';
 import { noUpdatedLoopCounter } from './rules/no-updated-loop-counter.ts';
 import { noKeywordDeclarations } from './rules/no-keyword-declarations.ts';
+import { noUselessIntersection } from './rules/no-useless-intersection.ts';
 import { preferImmediateReturn } from './rules/prefer-immediate-return.ts';
 import { noAdjacentMultilineIf } from './rules/no-adjacent-multiline-if.ts';
 import { noExcessCallArguments } from './rules/no-excess-call-arguments.ts';
 import { noPublicTemporaryPath } from './rules/no-public-temporary-path.ts';
 import { noTransposedAssignment } from './rules/no-transposed-assignment.ts';
+import { preferPromiseShorthand } from './rules/prefer-promise-shorthand.ts';
+import { noDuplicateInComposite } from './rules/no-duplicate-in-composite.ts';
 import { noMisplacedLoopCounter } from './rules/no-misplaced-loop-counter.ts';
 import { noFloatingPointEquality } from './rules/no-floating-point-equality.ts';
 import { noUnsafeSanitizerBypass } from './rules/no-unsafe-sanitizer-bypass.ts';
@@ -66,6 +72,12 @@ import { noInconsistentFunctionCall } from './rules/no-inconsistent-function-cal
 import { noUnenclosedMultilineBlock } from './rules/no-unenclosed-multiline-block.ts';
 
 const rules = {
+    'no-useless-intersection': noUselessIntersection,
+    'no-redundant-optional': noRedundantOptional,
+    'prefer-promise-shorthand': preferPromiseShorthand,
+    'prefer-type-guard': preferTypeGuard,
+    'use-type-alias': useTypeAlias,
+    'no-duplicate-in-composite': noDuplicateInComposite,
     'no-ignored-return': noIgnoredReturn,
     'no-misleading-array-reverse': noMisleadingArrayReverse,
     'no-positive-index-check': noPositiveIndexCheck,

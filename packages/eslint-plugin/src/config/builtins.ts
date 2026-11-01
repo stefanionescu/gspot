@@ -288,3 +288,28 @@ export const CHAINED_USES: ReadonlyMap<string, 'handled' | 'caught'> = new Map([
     ['then', 'handled'],
     ['catch', 'caught'],
 ]);
+
+export const BOOLEAN_NAME = 'Boolean';
+
+export const SETTLE_ACTIONS = ['resolve', 'reject'] as const;
+
+export const UNDEFINED_TYPE = 'undefined';
+
+export const LIBRARY_PATH = /[\\/]node_modules[\\/]/u;
+
+export const ABSORBING_TYPES: ReadonlyMap<string, string> = new Map([
+    ['TSAnyKeyword', 'any'],
+    ['TSNeverKeyword', 'never'],
+]);
+
+export const EMPTY_TYPE_NAMES: ReadonlySet<string> = new Set(['null', 'undefined', 'void']);
+
+export const LITERAL_UNION_MEMBERS: ReadonlySet<string> = new Set([
+    'TSStringKeyword',
+    'TSNumberKeyword',
+    'TSTypeReference',
+]);
+
+export const INTERFACE_DECLARATION = /^(?:export\s+)?(?:declare\s+)?interface\s+[\w$]+\s*(?:(?:<[^{]*>)\s*)?\{/u;
+
+export const LITERAL_UNION_SIZE = 2;
