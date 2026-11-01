@@ -58,7 +58,6 @@ export type RunOptions = PlanOptions & {
     unstagedChanges?: number | undefined;
     cwd: string;
     pathArguments: string[];
-    push?: PushInput | undefined;
     fix: boolean;
     verbose?: boolean | undefined;
 };

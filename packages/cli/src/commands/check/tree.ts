@@ -55,7 +55,6 @@ function buildRunOptions(options: CheckOptions, filters: RunFilters, revision: R
         only: options.only,
         paths,
         messageFile: options.messageFile,
-        push: options.push,
         ...buildHistorySelection(revision, changed),
         unstagedChanges: staging.unstaged,
     };
