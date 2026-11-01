@@ -291,6 +291,16 @@ paths = ["tests/suites/**"]
 name = "package-scripts"
 paths = ["packages/*/build.ts", "packages/cli/pin-ages.ts"]
 
+[[command_check]]
+id = "unit-tests"
+command = ["mise", "run", "test", "unit"]
+paths = ["**"]
+stage = "push"
+summary = "Runs the unit suite."
+help = "Run `mise run test unit`, and fix each failed test."
+exit_codes = [1]
+output = { format = "none" }
+
 [[ignore]]
 check = "dependencies/osv-scanner"
 rule = "GHSA-3g3m-2fjr-6pw4"
