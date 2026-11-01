@@ -263,7 +263,7 @@ test.each(['all', 'message', 'manual'])('--stage refuses %s as a command-line st
     const result = await runGspot(sandbox.path, ['check', '--stage', stage, '--json']);
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments' });
-    expect(result.stdout).toContain('Allowed choices are commit, push');
+    expect(result.stdout).toContain(`The value ${stage} is not valid for --stage. Use commit or push.`);
 });
 
 test('check refuses --stage without its value', async () => {

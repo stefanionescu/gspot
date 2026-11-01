@@ -76,7 +76,7 @@ Print the command result in the chosen format.
 
 @param result the command output.
 */
-export function printResult(result: CommandResult): void {
+export function printResult(result: CommandResult<object>): void {
     const fields: CommandJson = { version: cliPackage.version, exitCode: result.exitCode, notes: options.notes };
     if (options.isJson) {
         const notes = result.json.notes ?? [];
@@ -94,6 +94,16 @@ Keep warnings in the JSON result, or print them without terminal controls on std
 export function printWarning(text: string): void {
     if (options.isJson) options.notes.push(text);
     else printError(`${styleText('yellow', '[warn]', { stream: process.stderr })} ${text}`);
+}
+
+/**
+Write progress text to stderr, unless --json keeps the output to the result.
+
+@param text the text, with the terminal controls it needs.
+*/
+export function writeProgress(text: string): void {
+    if (options.isJson) return;
+    process.stderr.write(text);
 }
 
 /**

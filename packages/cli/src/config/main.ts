@@ -26,6 +26,17 @@ export const USAGE_LINE = 'Usage: gspot <command> [options]';
 
 export const HELP_FLAG = '-h, --help';
 
+export const VERSION_FLAG = '--version';
+
+export const INVALID_VALUE =
+    /^error: (?:option '(?<option>--[a-z-]+)(?: [^']*)?' argument|command-argument value) '(?<value>.*)' is invalid(?: for argument '[^']+')?\. (?<detail>.*)$/su;
+
+export const ALLOWED_CHOICES = /^Allowed choices are (.+)\.$/u;
+
+export const UNKNOWN_COMMAND_ERROR_CODE = 'commander.unknownCommand';
+
+export const UNKNOWN_OPTION_ERROR_CODE = 'commander.unknownOption';
+
 export const JSON_FLAG = '--json';
 
 export const HELP_ERROR_CODE = 'commander.help';

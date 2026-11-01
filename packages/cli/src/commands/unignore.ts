@@ -2,11 +2,10 @@ import { isTable } from '#cli/system/tables.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { CommandResult } from '#cli/types/system.ts';
-import { type Command } from '@commander-js/extra-typings';
+import { RULE_OPTION } from '#cli/config/commands/help.ts';
 import { assertCheckExists } from '#cli/manifests/read.ts';
 import type { TomlTable, IgnoreRecord } from '#cli/types/settings.ts';
-import { RULE_OPTION, COMMAND_HELP, PATHS_OPTION } from '#cli/config/commands/help.ts';
-import { buildIgnorePaths, writeSettingsEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
+import { pathsOption, buildIgnorePaths, writeSettingsEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
 
 import {
     NO_CHECK_IGNORE_TEXTS,
@@ -14,11 +13,11 @@ import {
     RULE_WITHOUT_CHECK_MESSAGE,
 } from '#cli/config/commands/edits.ts';
 import type {
+    IgnoreFlags,
     IgnoreTarget,
     IgnoreOptions,
     IgnoreRemoval,
-    CommandLocation,
-    CommandCompletion,
+    CommandDefinition,
 } from '#cli/types/commands/edits.ts';
 
 function removeIgnores(table: TomlTable, options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreRemoval {
@@ -120,36 +119,12 @@ async function runUnignoreCommand(
     });
 }
 
-/**
-Register the unignore command.
-
-@param program the gspot program that gets the command.
-@param onResult receives the result of the command.
-@param location the calling folder and the Git root validated before the action.
-*/
-export function registerUnignore(program: Command, onResult: CommandCompletion, location: CommandLocation): void {
-    program
-        .command('unignore')
-        .argument('[check]', COMMAND_HELP.unignore.arguments['check'])
-        .summary(COMMAND_HELP.unignore.summary)
-        .description(COMMAND_HELP.unignore.description)
-        .option(RULE_OPTION, COMMAND_HELP.unignore.options[RULE_OPTION])
-        .option(
-            PATHS_OPTION,
-            COMMAND_HELP.unignore.options[PATHS_OPTION],
-            (value: string, previous: string[] | undefined) => [...(previous ?? []), value],
-        )
-        .action(async (check, flags) => {
-            if (check === undefined && flags.rule !== undefined)
-                throw new GspotError('arguments', RULE_WITHOUT_CHECK_MESSAGE);
-            onResult(
-                await runUnignoreCommand({
-                    root: location.root,
-                    cwd: location.cwd,
-                    check,
-                    rule: flags.rule,
-                    paths: flags.paths,
-                }),
-            );
-        });
-}
+export const unignoreCommand: CommandDefinition<[string | undefined], Partial<IgnoreFlags>> = {
+    name: 'unignore',
+    arguments: [{ term: '[check]' }],
+    options: [{ flags: RULE_OPTION }, pathsOption],
+    run: async ([check], { rule, paths }, { root, cwd }) => {
+        if (check === undefined && rule !== undefined) throw new GspotError('arguments', RULE_WITHOUT_CHECK_MESSAGE);
+        return await runUnignoreCommand({ root, cwd, check, rule, paths });
+    },
+};

@@ -78,7 +78,7 @@ export const ARGUMENT_REFUSALS = [
     [
         'an empty --only list',
         ['check', '--only', ','],
-        "Option '--only <checks>' argument ',' is invalid. Name a check, such as --only python/ruff. Run gspot check --help to see its arguments and options.",
+        'The value , is not valid for --only. Name a check, such as --only python/ruff. Run gspot check --help to see its arguments and options.',
     ],
 ] as const;
 

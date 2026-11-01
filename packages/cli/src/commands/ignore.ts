@@ -3,17 +3,16 @@ import type { Session } from '#cli/types/tools.ts';
 import { mergeIgnore } from '#cli/settings/text.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
-import { type Command } from '@commander-js/extra-typings';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { ignoreSchema } from '#cli/schemas/settings/file.ts';
 import { hasRuleOutput } from '#cli/engine/outputs/formats.ts';
 import { readCheckRuleDocs } from '#cli/configurations/rules.ts';
 import { IGNORE_CHECK_MESSAGE } from '#cli/config/commands/edits.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
+import { EVERY_CHECK, RULE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
 import { listChecksById, assertCheckExists, readConfigurations } from '#cli/manifests/read.ts';
-import { buildIgnorePaths, writeSettingsEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
-import type { IgnoreOptions, CommandLocation, CommandCompletion } from '#cli/types/commands/edits.ts';
-import { EVERY_CHECK, RULE_OPTION, COMMAND_HELP, PATHS_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
+import type { IgnoreFlags, IgnoreOptions, CommandDefinition } from '#cli/types/commands/edits.ts';
+import { pathsOption, buildIgnorePaths, writeSettingsEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
 
 function formatIgnoreSummary(options: IgnoreOptions, paths: string[] | undefined): string {
     const check = options.check ?? EVERY_CHECK;
@@ -70,38 +69,13 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
     });
 }
 
-/**
-Register the ignore command.
-
-@param program the gspot program that gets the command.
-@param onResult receives the result of the command.
-@param location the calling folder and the Git root validated before the action.
-*/
-export function registerIgnore(program: Command, onResult: CommandCompletion, location: CommandLocation): void {
-    program
-        .command('ignore')
-        .argument('[check]', COMMAND_HELP.ignore.arguments['check'])
-        .summary(COMMAND_HELP.ignore.summary)
-        .description(COMMAND_HELP.ignore.description)
-        .requiredOption(REASON_OPTION, COMMAND_HELP.ignore.options[REASON_OPTION])
-        .option(RULE_OPTION, COMMAND_HELP.ignore.options[RULE_OPTION])
-        .option(
-            PATHS_OPTION,
-            COMMAND_HELP.ignore.options[PATHS_OPTION],
-            (value: string, previous: string[] | undefined) => [...(previous ?? []), value],
-        )
-        .action(async (check, flags) => {
-            const message = validateReason(`gspot ignore ${check ?? ''}`.trimEnd(), flags.reason, IGNORE_CHECK_MESSAGE);
-            if (message !== undefined) throw new GspotError('arguments', message);
-            onResult(
-                await runIgnoreCommand({
-                    root: location.root,
-                    cwd: location.cwd,
-                    check,
-                    paths: flags.paths,
-                    rule: flags.rule,
-                    reason: flags.reason,
-                }),
-            );
-        });
-}
+export const ignoreCommand: CommandDefinition<[string | undefined], IgnoreFlags> = {
+    name: 'ignore',
+    arguments: [{ term: '[check]' }],
+    options: [{ flags: REASON_OPTION, required: true }, { flags: RULE_OPTION }, pathsOption],
+    run: async ([check], { reason, rule, paths }, { root, cwd }) => {
+        const message = validateReason(`gspot ignore ${check ?? ''}`.trimEnd(), reason, IGNORE_CHECK_MESSAGE);
+        if (message !== undefined) throw new GspotError('arguments', message);
+        return await runIgnoreCommand({ root, cwd, check, paths, rule, reason });
+    },
+};

@@ -97,6 +97,28 @@ test.each(VERSION_ARGUMENTS.map((commandArguments) => ({ commandArguments })))(
     },
 );
 
+test.each([
+    { commandArguments: ['--version', 'extra'], message: 'There is no command called extra.' },
+    { commandArguments: ['bogus', '--version'], message: 'There is no command called bogus.' },
+    { commandArguments: ['check', '--version'], message: "Unknown option '--version'." },
+])('$commandArguments exits 2 instead of printing the version', async ({ commandArguments, message }) => {
+    await using sandbox = await testdir({ 'gspot.toml': MALFORMED_SETTINGS });
+    const result = await runGspot(sandbox.path, commandArguments);
+    expect(result.code).toBe(2);
+    expect(result.stdout).toBe('');
+    expect(result.stderr).toContain(message);
+});
+
+test('an argument choice names the command and the values to use', async () => {
+    await using sandbox = await testdir();
+    const result = await runGspot(sandbox.path, ['list', 'bogus']);
+    expect(result).toStrictEqual({
+        code: 2,
+        stdout: '',
+        stderr: 'The value bogus is not valid for gspot list. Use configurations or settings. Run gspot list --help to see its arguments and options.\n',
+    });
+});
+
 test('check treats --version after the separator as a file path', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),

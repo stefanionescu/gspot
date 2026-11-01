@@ -70,7 +70,6 @@ type CheckStage = (typeof CHECK_STAGES)[number];
 
 export type CheckFlags = {
     stage?: CheckStage;
-    json?: boolean;
     only?: string[];
     staged?: boolean;
     changed?: boolean;

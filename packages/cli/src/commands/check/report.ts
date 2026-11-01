@@ -1,7 +1,6 @@
 import { styleText } from 'node:util';
 import { randomUUID } from 'node:crypto';
 import { LINE_BREAK } from '#cli/config/parsers.ts';
-import { printWarning } from '#cli/system/terminal.ts';
 import { SHORT_HASH_LENGTH } from '#cli/config/engine.ts';
 import { formatExplainCommand } from '#cli/engine/results.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
@@ -9,6 +8,7 @@ import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { formatCount, quoteArgument } from '#cli/system/text.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { CODE_MARK, EVERY_CHECK } from '#cli/config/commands/help.ts';
+import { print, printWarning, writeProgress } from '#cli/system/terminal.ts';
 import type { FixReport, RunReport, CheckResult, CheckProgress } from '#cli/types/engine/run.ts';
 
 import {
@@ -232,9 +232,9 @@ Stop GitHub workflow command parsing until the check's output has finished.
 export function beginCheckReport(): (() => void) | undefined {
     if (readEnvironmentVariable('GITHUB_ACTIONS') !== 'true') return undefined;
     const token = randomUUID();
-    process.stdout.write(`::stop-commands::${token}\n`);
+    print(`::stop-commands::${token}`);
     return () => {
-        process.stdout.write(`::${token}::\n`);
+        print(`::${token}::`);
     };
 }
 
@@ -246,7 +246,7 @@ Rewrite the progress line when stderr points to a terminal.
 export function printProgress(progress: CheckProgress): void {
     if (!process.stderr.isTTY) return;
     const subject = formatCheckedContent(progress.comparison);
-    process.stderr.write(
+    writeProgress(
         `${PROGRESS_CLEAR}Checking ${subject}: ${String(progress.finished)} of ${String(progress.total)} checks done`,
     );
 }

@@ -4,19 +4,17 @@ import { GspotError } from '#cli/system/errors.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { runPushCheck } from '#cli/commands/check/push.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
-import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { constants, accessSync, existsSync } from 'node:fs';
 import { printProgress } from '#cli/commands/check/report.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
-import type { CheckProgress } from '#cli/types/engine/run.ts';
-import { runCancelableCommand } from '#cli/system/terminal.ts';
 import { TRAILING_NEWLINE } from '#cli/config/repository/git.ts';
+import { InvalidArgumentError } from '@commander-js/extra-typings';
 import { readGitText, readGitPaths } from '#cli/repository/git/run.ts';
 import { readStagedPaths } from '#cli/repository/revisions/changes.ts';
-import type { CommandLocation, CommandCompletion } from '#cli/types/commands/edits.ts';
-import { Option, type Command, InvalidArgumentError } from '@commander-js/extra-typings';
+import { writeProgress, runCancelableCommand } from '#cli/system/terminal.ts';
+import type { CommandLocation, CommandDefinition } from '#cli/types/commands/edits.ts';
 import { BASE_FLAG, STAGED_FLAG, GIT_WRITE_TREE_ARGUMENTS } from '#cli/config/engine.ts';
 import type { CheckFlags, CheckOptions, CheckCommandJson } from '#cli/types/commands/reports.ts';
 
@@ -65,29 +63,6 @@ function parseCheckNames(value: string, previous: string[] | undefined): string[
         .filter((check) => check !== '');
     if (checks.length === 0) throw new InvalidArgumentError(EMPTY_CHECKS_MESSAGE);
     return [...(previous ?? []), ...checks];
-}
-
-function buildCheckOptions(paths: string[], flags: CheckFlags, cwd: string): CheckOptions {
-    const hook = flags.hook;
-    return {
-        cwd,
-        staged: flags.staged === true,
-        fix: flags.fix === true,
-        verbose: flags.verbose === true,
-        paths: hook === 'commit-msg' ? [] : paths,
-        hook,
-        changed: flags.changed === true,
-        only: flags.only,
-        base: flags.base,
-        messageFile: hook === 'commit-msg' && paths[0] !== undefined ? resolve(cwd, paths[0]) : undefined,
-        stage: hook === 'commit-msg' ? 'message' : flags.stage,
-        onProgress:
-            flags.json === true
-                ? undefined
-                : (progress: CheckProgress) => {
-                      printProgress(progress);
-                  },
-    };
 }
 
 function assertPushFlags(flags: CheckFlags): void {
@@ -160,7 +135,22 @@ function parseCheckFlags(
     flags: CheckFlags,
     location: CommandLocation,
 ): { root: string; options: CheckOptions } {
-    const options = buildCheckOptions(paths, flags, location.cwd);
+    const { cwd } = location;
+    const { hook } = flags;
+    const options: CheckOptions = {
+        cwd,
+        staged: flags.staged === true,
+        fix: flags.fix === true,
+        verbose: flags.verbose === true,
+        paths: hook === 'commit-msg' ? [] : paths,
+        hook,
+        changed: flags.changed === true,
+        only: flags.only,
+        base: flags.base,
+        messageFile: hook === 'commit-msg' && paths[0] !== undefined ? resolve(cwd, paths[0]) : undefined,
+        stage: hook === 'commit-msg' ? 'message' : flags.stage,
+        onProgress: printProgress,
+    };
     assertCheckSelection(options, flags);
     assertMessageSelection(options, paths);
     assertReadableMessageFile(options);
@@ -240,33 +230,22 @@ async function runCheckCommand(
             return await runCheckSelection(root, options, cancelSignal);
         }, CHECK_STOPPED_MESSAGE);
     } finally {
-        if (flags.json !== true && process.stderr.isTTY) process.stderr.write(PROGRESS_CLEAR);
+        if (process.stderr.isTTY) writeProgress(PROGRESS_CLEAR);
     }
 }
 
-/**
-Register the check command.
-
-@param program the gspot program that gets the command.
-@param onResult receives the result of the command.
-@param location the calling folder and the Git root validated before the action.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: main.ts registers the command through it, like every other command.
-export function registerCheck(program: Command, onResult: CommandCompletion, location: CommandLocation): void {
-    program
-        .command('check')
-        .argument('[paths...]', COMMAND_HELP.check.arguments['paths'])
-        .summary(COMMAND_HELP.check.summary)
-        .description(COMMAND_HELP.check.description)
-        .option(ONLY_OPTION, COMMAND_HELP.check.options[ONLY_OPTION], parseCheckNames)
-        .option(STAGED_FLAG, COMMAND_HELP.check.options[STAGED_FLAG])
-        .addOption(new Option(STAGE_OPTION, COMMAND_HELP.check.options[STAGE_OPTION]).choices(CHECK_STAGES))
-        .option(CHANGED_FLAG, COMMAND_HELP.check.options[CHANGED_FLAG])
-        .option(BASE_OPTION, COMMAND_HELP.check.options[BASE_OPTION])
-        .option(FIX_FLAG, COMMAND_HELP.check.options[FIX_FLAG])
-        .addOption(new Option(HOOK_OPTION, COMMAND_HELP.check.options[HOOK_OPTION]).choices(CHECK_INPUT_HOOKS))
-        .option(VERBOSE_FLAG, COMMAND_HELP.check.options[VERBOSE_FLAG])
-        .action(async (paths, flags) => {
-            onResult(await runCheckCommand(paths, flags, location));
-        });
-}
+export const checkCommand: CommandDefinition<[string[]], CheckFlags> = {
+    name: 'check',
+    arguments: [{ term: '[paths...]' }],
+    options: [
+        { flags: ONLY_OPTION, parse: parseCheckNames },
+        { flags: STAGED_FLAG },
+        { flags: STAGE_OPTION, choices: CHECK_STAGES },
+        { flags: CHANGED_FLAG },
+        { flags: BASE_OPTION },
+        { flags: FIX_FLAG },
+        { flags: HOOK_OPTION, choices: CHECK_INPUT_HOOKS },
+        { flags: VERBOSE_FLAG },
+    ],
+    run: async ([paths], flags, location) => await runCheckCommand(paths, flags, location),
+};

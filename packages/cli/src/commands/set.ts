@@ -10,17 +10,16 @@ import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import type { TomlTable, InheritedSetting } from '#cli/types/settings.ts';
-import { type Command, CommanderError } from '@commander-js/extra-typings';
+import { SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
 import { getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 import { formatSettingValueError } from '#cli/settings/validation/messages.ts';
-import { COMMAND_HELP, SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
+import { NUMBER_TEXT, TOML_COMPOUND_START } from '#cli/config/commands/edits.ts';
 import { readSetting, writeSettingsEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
-import { NUMBER_TEXT, DASH_VALUE_HELP, COMMAND_SUGGESTION, TOML_COMPOUND_START } from '#cli/config/commands/edits.ts';
 
 import type {
     SetOptions,
-    CommandLocation,
-    CommandCompletion,
+    ReasonFlags,
+    CommandDefinition,
     ParsedSettingValue,
     SettingsEditContext,
     SettingReasonContext,
@@ -167,38 +166,10 @@ async function runSetCommand(options: SetOptions): Promise<CommandResult> {
     }
 }
 
-/**
-Register the set command.
-
-@param program the gspot program that gets the command.
-@param onResult receives the result of the command.
-@param location the calling folder and the Git root validated before the action.
-*/
-export function registerSet(program: Command, onResult: CommandCompletion, location: CommandLocation): void {
-    program
-        .command('set')
-        .argument('<setting>', COMMAND_HELP.set.arguments['setting'])
-        .argument('<values...>', COMMAND_HELP.set.arguments['values'])
-        .summary(COMMAND_HELP.set.summary)
-        .description(COMMAND_HELP.set.description)
-        .option(REASON_OPTION, COMMAND_HELP.set.options[REASON_OPTION])
-        .option(SCOPE_OPTION, COMMAND_HELP.set.options[SCOPE_OPTION], stripTrailingSlashes)
-        .exitOverride((error) => {
-            if (error.code !== 'commander.unknownOption') throw error;
-            const suggestion = COMMAND_SUGGESTION.exec(error.message)?.[0] ?? '';
-            const message = `${error.message.replace(suggestion, '').trimEnd()}. ${DASH_VALUE_HELP} ${suggestion}`;
-            throw new CommanderError(error.exitCode, error.code, message);
-        })
-        .action(async (setting, values, flags) => {
-            onResult(
-                await runSetCommand({
-                    root: location.root,
-                    cwd: location.cwd,
-                    key: setting,
-                    values: values,
-                    reason: flags.reason,
-                    scope: flags.scope,
-                }),
-            );
-        });
-}
+export const setCommand: CommandDefinition<[string, string[]], ReasonFlags> = {
+    name: 'set',
+    arguments: [{ term: '<setting>' }, { term: '<values...>' }],
+    options: [{ flags: REASON_OPTION }, { flags: SCOPE_OPTION, parse: stripTrailingSlashes }],
+    run: async ([key, values], { reason, scope }, { root, cwd }) =>
+        await runSetCommand({ root, cwd, key, values, reason, scope }),
+};

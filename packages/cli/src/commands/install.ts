@@ -3,15 +3,13 @@ import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { Generation } from '#cli/types/tools.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
-import { type Command } from '@commander-js/extra-typings';
-import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
 import { installTools } from '#cli/tools/installers/install.ts';
 import type { Files, CommandResult } from '#cli/types/system.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
-import type { CommandLocation, CommandCompletion, InstallCommandJson } from '#cli/types/commands/edits.ts';
+import type { CommandDefinition, InstallCommandJson } from '#cli/types/commands/edits.ts';
 
 import {
     TOOL_PROJECT_FILES,
@@ -46,24 +44,11 @@ async function runInstallCommand(root: string, cancelSignal: AbortSignal): Promi
     };
 }
 
-/**
-Register the install command.
-
-@param program the gspot program that gets the command.
-@param onResult receives the result of the command.
-@param location the calling folder and the Git root validated before the action.
-*/
-export function registerInstall(program: Command, onResult: CommandCompletion, location: CommandLocation): void {
-    program
-        .command('install')
-        .summary(COMMAND_HELP.install.summary)
-        .description(COMMAND_HELP.install.description)
-        .action(async () => {
-            onResult(
-                await runCancelableCommand(
-                    (cancelSignal) => runInstallCommand(location.root, cancelSignal),
-                    INSTALLATION_STOPPED_MESSAGE,
-                ),
-            );
-        });
-}
+export const installCommand: CommandDefinition = {
+    name: 'install',
+    run: async (_arguments, _flags, { root }) =>
+        await runCancelableCommand(
+            (cancelSignal) => runInstallCommand(root, cancelSignal),
+            INSTALLATION_STOPPED_MESSAGE,
+        ),
+};

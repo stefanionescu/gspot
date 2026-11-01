@@ -8,10 +8,8 @@ import { spawnProcess } from '#cli/system/processes.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';
 import { findMissingEnvironment } from '#cli/tools/uv.ts';
 import type { CommandResult } from '#cli/types/system.ts';
-import type { Command } from '@commander-js/extra-typings';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { readGitSetting } from '#cli/repository/git/run.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { readHookStatus } from '#cli/tools/installers/hooks.ts';
@@ -22,10 +20,10 @@ import { VERSION_FLAG } from '#cli/config/repository/javascript.ts';
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
+import type { CommandDefinition } from '#cli/types/commands/edits.ts';
 import { findMissingBuild, listDistinctTools } from '#cli/tools/pins.ts';
 import type { Session, HookStatus, ToolInspection } from '#cli/types/tools.ts';
 import type { Suggestions, DoctorReport } from '#cli/types/commands/reports.ts';
-import type { CommandLocation, CommandCompletion } from '#cli/types/commands/edits.ts';
 import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/setup.ts';
 import { AVAILABLE_TOOL_STATES, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 
@@ -203,20 +201,7 @@ async function runDoctorCommand(root: string): Promise<CommandResult> {
     };
 }
 
-/**
-Register the doctor command.
-
-@param program the gspot program that gets the command.
-@param onResult receives the result of the command.
-@param location the calling folder and the Git root validated before the action.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: main.ts registers the command through it, like every other command.
-export function registerDoctor(program: Command, onResult: CommandCompletion, location: CommandLocation): void {
-    program
-        .command('doctor')
-        .summary(COMMAND_HELP.doctor.summary)
-        .description(COMMAND_HELP.doctor.description)
-        .action(async () => {
-            onResult(await runDoctorCommand(location.root));
-        });
-}
+export const doctorCommand: CommandDefinition = {
+    name: 'doctor',
+    run: async (_arguments, _flags, { root }) => await runDoctorCommand(root),
+};

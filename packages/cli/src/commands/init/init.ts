@@ -9,7 +9,6 @@ import { readSettings } from '#cli/settings/read.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import type { ApplyReport } from '#cli/types/generation.ts';
 import { selectForInit } from '#cli/repository/proposals.ts';
@@ -21,12 +20,12 @@ import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { formatDetection } from '#cli/commands/init/detection.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import type { RepositoryListing } from '#cli/types/repository.ts';
+import { InvalidArgumentError } from '@commander-js/extra-typings';
 import type { RunCache, CommandResult } from '#cli/types/system.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { planInitFiles, formatInitPlan } from '#cli/commands/init/plan.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 import { buildInitSettings, buildSettingsDraft } from '#cli/commands/init/settings.ts';
-import { Option, type Command, InvalidArgumentError } from '@commander-js/extra-typings';
 
 import {
     assertFilesCommitted,
@@ -36,11 +35,11 @@ import {
 import type {
     InitJson,
     InitScan,
+    InitFlags,
     InitOptions,
     InitPlanning,
-    CommandLocation,
     DetectionSummary,
-    CommandCompletion,
+    CommandDefinition,
 } from '#cli/types/commands/edits.ts';
 import {
     FROM_OPTION,
@@ -169,32 +168,22 @@ async function writeInitFiles(root: string, initPlan: InitPlanning): Promise<App
     return applied;
 }
 
-/**
-Register the init command.
-
-@param program the gspot program that gets the command.
-@param onResult receives the result of the command.
-@param location the calling folder and the Git root validated before the action.
-*/
-export function registerInit(program: Command, onResult: CommandCompletion, location: CommandLocation): void {
-    program
-        .command('init')
-        .summary(COMMAND_HELP.init.summary)
-        .description(COMMAND_HELP.init.description)
-        .option(FROM_OPTION, COMMAND_HELP.init.options[FROM_OPTION])
-        .option(CONFIGURATIONS_OPTION, COMMAND_HELP.init.options[CONFIGURATIONS_OPTION], parseConfigurationNames)
-        .option(NO_CONFIGURATIONS_FLAG, COMMAND_HELP.init.options[NO_CONFIGURATIONS_FLAG])
-        .addOption(new Option(LEVEL_OPTION, COMMAND_HELP.init.options[LEVEL_OPTION]).choices(LEVELS))
-        .action(async (flags) => {
-            assertTemplateFlags(flags.from, flags.configurations);
-            const template = flags.from === undefined ? undefined : readTemplate(flags.from, location.cwd);
-            onResult(
-                await runInitCommand(location.root, {
-                    cwd: location.cwd,
-                    level: flags.level,
-                    template,
-                    configurations: flags.configurations === false ? [] : flags.configurations,
-                }),
-            );
+export const initCommand: CommandDefinition<[], InitFlags> = {
+    name: 'init',
+    options: [
+        { flags: FROM_OPTION },
+        { flags: CONFIGURATIONS_OPTION, parse: parseConfigurationNames },
+        { flags: NO_CONFIGURATIONS_FLAG },
+        { flags: LEVEL_OPTION, choices: LEVELS },
+    ],
+    run: async (_arguments, { from, configurations, level }, { root, cwd }) => {
+        assertTemplateFlags(from, configurations);
+        const template = from === undefined ? undefined : readTemplate(from, cwd);
+        return await runInitCommand(root, {
+            cwd,
+            level,
+            template,
+            configurations: configurations === false ? [] : configurations,
         });
-}
+    },
+};

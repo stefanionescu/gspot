@@ -1,10 +1,9 @@
 import { isTable } from '#cli/system/tables.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
-import { type Command } from '@commander-js/extra-typings';
+import { SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
-import { COMMAND_HELP, SCOPE_OPTION } from '#cli/config/commands/help.ts';
-import type { CommandLocation, CommandCompletion, ConfigurationsOptions } from '#cli/types/commands/edits.ts';
+import type { ScopeFlags, CommandDefinition, ConfigurationsOptions } from '#cli/types/commands/edits.ts';
 import { writeSettingsEdit, formatConfigurationChange, readConfigurationEditContext } from '#cli/commands/edits.ts';
 
 function restoreConfigurations(table: TomlTable, added: string[]): void {
@@ -50,29 +49,10 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
     });
 }
 
-/**
-Register the add command.
-
-@param program the gspot program that gets the command.
-@param onResult receives the result of the command.
-@param location the calling folder and the Git root validated before the action.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: main.ts registers the command through it, like every other command.
-export function registerAdd(program: Command, onResult: CommandCompletion, location: CommandLocation): void {
-    program
-        .command('add')
-        .argument('<configuration...>', COMMAND_HELP.add.arguments['configuration'])
-        .summary(COMMAND_HELP.add.summary)
-        .description(COMMAND_HELP.add.description)
-        .option(SCOPE_OPTION, COMMAND_HELP.add.options[SCOPE_OPTION], stripTrailingSlashes)
-        .action(async (configurations, flags) => {
-            onResult(
-                await runAddCommand({
-                    root: location.root,
-                    cwd: location.cwd,
-                    configurations: [...new Set(configurations)],
-                    scope: flags.scope,
-                }),
-            );
-        });
-}
+export const addCommand: CommandDefinition<[string[]], ScopeFlags> = {
+    name: 'add',
+    arguments: [{ term: '<configuration...>' }],
+    options: [{ flags: SCOPE_OPTION, parse: stripTrailingSlashes }],
+    run: async ([configurations], { scope }, { root, cwd }) =>
+        await runAddCommand({ root, cwd, configurations: [...new Set(configurations)], scope }),
+};

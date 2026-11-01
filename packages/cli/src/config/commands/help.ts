@@ -65,7 +65,7 @@ export const COMMAND_HELP = {
         description:
             'Run the checks and print each finding with its file, line, lint rule, and help.\n\nWithout options, gspot runs the commit and push checks on the working tree. Commit message checks run with --hook commit-msg. Manual checks run only when --only names them.',
         arguments: {
-            paths: 'Files or folders to check, relative to the current folder (default: the whole repository)',
+            '[paths...]': 'Files or folders to check, relative to the current folder (default: the whole repository)',
         },
         options: {
             '--only <checks>':
@@ -94,7 +94,7 @@ export const COMMAND_HELP = {
         description:
             'Select configurations in gspot.toml, then write the generated files again. gspot also selects the configurations that they need, but gspot.toml lists only the names you give.\n\nTo find the configurations that new code needs, run gspot doctor. It prints the gspot add line to run for each scope.\n\nRun gspot install next when the configurations need new tools.',
         arguments: {
-            configuration: 'Configuration names, such as pytest. Run gspot list to see them',
+            '<configuration...>': 'Configuration names, such as pytest. Run gspot list to see them',
         },
         options: {
             '--scope <path>': 'Select them in this scope, relative to the repository root (default: the root)',
@@ -112,7 +112,7 @@ export const COMMAND_HELP = {
         description:
             'Remove configurations, then write the generated files again. gspot.toml records the removal and your reason, so gspot doctor does not suggest them again. gspot add undoes it.\n\ngspot refuses to remove a configuration that another selected configuration needs.',
         arguments: {
-            configuration: 'Configuration names',
+            '<configuration...>': 'Configuration names',
         },
         options: {
             '--scope <path>': 'Remove them from this scope, relative to the repository root (default: the root)',
@@ -131,8 +131,8 @@ export const COMMAND_HELP = {
         description:
             'Change one setting in gspot.toml, then write the generated files again. gspot checks the value first.\n\ngspot replaces the value. For a list, give every item: gspot replaces the whole list, so gspot.toml holds exactly the items you typed, and the same command always writes the same list. To remove single items, run gspot unset <setting> <items...>. For a setting that holds a table, such as spelling.allowed_words, give one TOML inline table, and gspot adds its keys.\n\nFor an ignore, run gspot ignore <check> --reason "<why>". Write other records, such as [[command_check]], by hand.',
         arguments: {
-            setting: 'The setting name, such as limits.file_lines. Run gspot list settings to see them',
-            values: 'The new value: every item of a list, or the table keys to add',
+            '<setting>': 'The setting name, such as limits.file_lines. Run gspot list settings to see them',
+            '<values...>': 'The new value: every item of a list, or the table keys to add',
         },
         options: {
             '--reason <text>': 'Why you change it. Needed when the change makes a check weaker',
@@ -151,8 +151,8 @@ export const COMMAND_HELP = {
         description:
             'Remove your value of a setting from gspot.toml, then write the generated files again. The root value or the default applies again.\n\nWith items, remove only those list items or table keys.',
         arguments: {
-            setting: 'The setting name, such as naming.banned_words',
-            items: 'List items or table keys to remove (default: the whole value)',
+            '<setting>': 'The setting name, such as naming.banned_words',
+            '[items...]': 'List items or table keys to remove (default: the whole value)',
         },
         options: {
             '--scope <path>': 'Change it in this scope, relative to the repository root (default: the root)',
@@ -170,7 +170,7 @@ export const COMMAND_HELP = {
         description:
             'Turn off a check, or one of its lint rules, everywhere or for some paths. Without a check, the paths stay out of every check and every generated file.\n\ngspot writes the ignore and your reason to gspot.toml, then writes the generated files again. Each report counts the ignores. gspot check --verbose prints them with their reasons.',
         arguments: {
-            check: 'The check, such as python/ruff. Leave it out to keep --paths out of every check',
+            '[check]': 'The check, such as python/ruff. Leave it out to keep --paths out of every check',
         },
         options: {
             '--reason <text>': 'Why you turn it off (required)',
@@ -192,7 +192,7 @@ export const COMMAND_HELP = {
         description:
             'Remove the ignores of a check from gspot.toml, then write the generated files again.\n\nWith --rule, remove only the ignores of that lint rule. With --paths, take those paths out of the ignores. An ignore without paths covers every path, so --paths cannot narrow it. unignore keeps that ignore and says so.',
         arguments: {
-            check: 'The check, such as python/ruff. Leave it out to change the ignores that cover every check',
+            '[check]': 'The check, such as python/ruff. Leave it out to change the ignores that cover every check',
         },
         options: {
             '--rule <rule>': 'Remove only the ignores of this lint rule',
@@ -211,7 +211,7 @@ export const COMMAND_HELP = {
         description:
             'List the selected and the available configurations, with the state of each check in each scope. gspot list settings lists each setting, its value, and where the value comes from.\n\nlist changes nothing.',
         arguments: {
-            kind: 'What to list',
+            '[kind]': 'What to list',
         },
         options: {
             '--json': 'Print the result as JSON, with long values in full and the values that each scope inherits',
@@ -228,9 +228,9 @@ export const COMMAND_HELP = {
         description:
             'Explain one thing: what it means, its state in this repository, and the commands that change it.\n\nexplain changes nothing.',
         arguments: {
-            subject:
+            '<subject>':
                 'A check (python/ruff), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts)',
-            rule: 'A lint rule of the named check, such as E501 for python/ruff',
+            '[rule]': 'A lint rule of the named check, such as E501 for python/ruff',
         },
         options: {
             '--verbose': 'Print the full rule explanation',

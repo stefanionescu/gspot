@@ -6,7 +6,6 @@ import { buildSettings } from '#cli/settings/read.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
 import type { CommandResult } from '#cli/types/system.ts';
-import { type Command } from '@commander-js/extra-typings';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { MANAGED_KEYS_NOTE } from '#cli/config/generation.ts';
@@ -14,11 +13,11 @@ import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { removeKey, getScopeTable } from '#cli/settings/edit.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
+import { SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
 import { selectForInit, listDetectedAdditions } from '#cli/repository/proposals.ts';
-import { COMMAND_HELP, SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
 import { GSPOT_REMOVE, REMOVE_CONFIGURATION_MESSAGE } from '#cli/config/commands/edits.ts';
 import { findSetting, listWrittenKeys, listSettingsTables } from '#cli/settings/inherit.ts';
-import type { CommandLocation, CommandCompletion, ConfigurationsOptions } from '#cli/types/commands/edits.ts';
+import type { ScopeFlags, CommandDefinition, ConfigurationsOptions } from '#cli/types/commands/edits.ts';
 import { writeSettingsEdit, formatConfigurationChange, readConfigurationEditContext } from '#cli/commands/edits.ts';
 
 function assertRemovable(names: string[], kept: string[], configurationsByName: Map<string, Configuration>): void {
@@ -142,32 +141,16 @@ function findRequirementChain(
     return findChain(from);
 }
 
-/**
-Register the remove command.
-
-@param program the gspot program that gets the command.
-@param onResult receives the result of the command.
-@param location the calling folder and the Git root validated before the action.
-*/
-export function registerRemove(program: Command, onResult: CommandCompletion, location: CommandLocation): void {
-    program
-        .command('remove')
-        .argument('<configuration...>', COMMAND_HELP.remove.arguments['configuration'])
-        .summary(COMMAND_HELP.remove.summary)
-        .description(COMMAND_HELP.remove.description)
-        .requiredOption(REASON_OPTION, COMMAND_HELP.remove.options[REASON_OPTION])
-        .option(SCOPE_OPTION, COMMAND_HELP.remove.options[SCOPE_OPTION], stripTrailingSlashes)
-        .action(async (configurations, flags) => {
-            const invalid = validateReason(GSPOT_REMOVE, flags.reason, REMOVE_CONFIGURATION_MESSAGE);
-            if (invalid !== undefined) throw new GspotError('arguments', invalid);
-            onResult(
-                await runRemoveCommand({
-                    root: location.root,
-                    cwd: location.cwd,
-                    configurations: [...new Set(configurations)],
-                    reason: flags.reason,
-                    scope: flags.scope,
-                }),
-            );
-        });
-}
+export const removeCommand: CommandDefinition<[string[]], ScopeFlags & { reason: string }> = {
+    name: 'remove',
+    arguments: [{ term: '<configuration...>' }],
+    options: [
+        { flags: REASON_OPTION, required: true },
+        { flags: SCOPE_OPTION, parse: stripTrailingSlashes },
+    ],
+    run: async ([configurations], { reason, scope }, { root, cwd }) => {
+        const invalid = validateReason(GSPOT_REMOVE, reason, REMOVE_CONFIGURATION_MESSAGE);
+        if (invalid !== undefined) throw new GspotError('arguments', invalid);
+        return await runRemoveCommand({ root, cwd, configurations: [...new Set(configurations)], reason, scope });
+    },
+};

@@ -2,19 +2,12 @@ import { GspotError } from '#cli/system/errors.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
-import { type Command } from '@commander-js/extra-typings';
+import { SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { removeKey, removeFromList } from '#cli/settings/edit.ts';
-import { COMMAND_HELP, SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { readSetting, writeSettingsEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
-
-import type {
-    UnsetOptions,
-    CommandLocation,
-    CommandCompletion,
-    SettingsEditOptions,
-} from '#cli/types/commands/edits.ts';
+import type { ScopeFlags, UnsetOptions, CommandDefinition, SettingsEditOptions } from '#cli/types/commands/edits.ts';
 
 function removeTableKeys(scopeTable: TomlTable, key: string, names: string[]): void {
     const written = findValueAt(scopeTable, key.split('.'));
@@ -62,31 +55,9 @@ async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
     });
 }
 
-/**
-Register the unset command.
-
-@param program the gspot program that gets the command.
-@param onResult receives the result of the command.
-@param location the calling folder and the Git root validated before the action.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: main.ts registers the command through it, like every other command.
-export function registerUnset(program: Command, onResult: CommandCompletion, location: CommandLocation): void {
-    program
-        .command('unset')
-        .argument('<setting>', COMMAND_HELP.unset.arguments['setting'])
-        .argument('[items...]', COMMAND_HELP.unset.arguments['items'])
-        .summary(COMMAND_HELP.unset.summary)
-        .description(COMMAND_HELP.unset.description)
-        .option(SCOPE_OPTION, COMMAND_HELP.unset.options[SCOPE_OPTION], stripTrailingSlashes)
-        .action(async (setting, keys, flags) => {
-            onResult(
-                await runUnsetCommand({
-                    root: location.root,
-                    cwd: location.cwd,
-                    key: setting,
-                    keys: keys,
-                    scope: flags.scope,
-                }),
-            );
-        });
-}
+export const unsetCommand: CommandDefinition<[string, string[]], ScopeFlags> = {
+    name: 'unset',
+    arguments: [{ term: '<setting>' }, { term: '[items...]' }],
+    options: [{ flags: SCOPE_OPTION, parse: stripTrailingSlashes }],
+    run: async ([key, keys], { scope }, { root, cwd }) => await runUnsetCommand({ root, cwd, key, keys, scope }),
+};

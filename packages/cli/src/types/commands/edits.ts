@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 import type { ApplyReport } from '#cli/types/generation.ts';
 import type { Session, Generation } from '#cli/types/tools.ts';
+import type { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { Setting, Configuration } from '#cli/types/manifests.ts';
 import type { prettierSettingsSchema } from '#cli/schemas/commands.ts';
 import type { IMPORT_EXTENSION_STYLES } from '#cli/config/settings/schema.ts';
@@ -26,6 +27,41 @@ import type {
 } from '#cli/types/repository.ts';
 
 export type CommandLocation = { readonly root: string; readonly cwd: string };
+
+export type CommandArgument = { term: string; choices?: readonly string[]; defaultValue?: string };
+
+export type CommandOption = {
+    flags: string;
+    choices?: readonly string[];
+    required?: boolean;
+    parse?: (value: string, previous: string[] | undefined) => unknown;
+};
+
+export type CommandDefinition<Arguments extends readonly unknown[] = readonly unknown[], Flags = object> = {
+    name: keyof typeof COMMAND_HELP;
+    usage?: string;
+    arguments?: readonly CommandArgument[];
+    options?: readonly CommandOption[];
+    run(args: Arguments, flags: Flags, location: CommandLocation): Promise<CommandResult<object>>;
+};
+
+export type CommandHelp = {
+    summary: string;
+    group: string;
+    description: string;
+    arguments: Readonly<Record<string, string>>;
+    options: Readonly<Record<string, string>>;
+    exitCodes: readonly (readonly [string, string])[];
+    example: string;
+};
+
+export type ScopeFlags = { scope?: string | undefined };
+
+export type ReasonFlags = ScopeFlags & { reason?: string | undefined };
+
+export type IgnoreFlags = { reason: string; rule?: string | undefined; paths?: string[] | undefined };
+
+export type InitFlags = { from?: string; configurations?: string[] | false; level?: Level };
 
 export type IgnoreOptions = {
     root: string;
@@ -185,4 +221,4 @@ export type SettingsEditOptions = {
 
 export type ImportExtensionStyle = (typeof IMPORT_EXTENSION_STYLES)[number];
 
-export type CommandCompletion = (result: CommandResult) => void;
+export type CommandCompletion = (result: CommandResult<object>) => void;

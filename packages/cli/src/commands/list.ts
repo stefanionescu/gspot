@@ -4,16 +4,14 @@ import { openSession } from '#cli/engine/session.ts';
 import { isRootOnlyCheck } from '#cli/engine/files.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { isActive, planChecks } from '#cli/engine/plan.ts';
-import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import { listInheritedSettings } from '#cli/settings/inherit.ts';
 import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
-import { Argument, type Command } from '@commander-js/extra-typings';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
+import type { CommandDefinition } from '#cli/types/commands/edits.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/configurations/general.ts';
-import type { CommandLocation, CommandCompletion } from '#cli/types/commands/edits.ts';
 import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/reports.ts';
 
 import {
@@ -124,24 +122,12 @@ function formatCheckState(planned: PlannedCheck | undefined): string {
     return isActive(planned) ? 'on' : NO_MATCHING_FILES;
 }
 
-/**
-Register the list command.
-
-@param program the gspot program that gets the command.
-@param onResult receives the result of the command.
-@param location the calling folder and the Git root validated before the action.
-*/
-export function registerList(program: Command, onResult: CommandCompletion, location: CommandLocation): void {
-    program
-        .command('list')
-        .usage(LIST_USAGE)
-        .summary(COMMAND_HELP.list.summary)
-        .description(COMMAND_HELP.list.description)
-        .addArgument(
-            new Argument('[kind]', COMMAND_HELP.list.arguments.kind).choices(LIST_KINDS).default('configurations'),
-        )
-        .action(async (kind) => {
-            const session = await openSession(location.root);
-            onResult(kind === 'settings' ? buildSettingsResult(session) : buildConfigurationsResult(session));
-        });
-}
+export const listCommand: CommandDefinition<[(typeof LIST_KINDS)[number]]> = {
+    name: 'list',
+    usage: LIST_USAGE,
+    arguments: [{ term: '[kind]', choices: LIST_KINDS, defaultValue: 'configurations' }],
+    run: async ([kind], _flags, { root }) => {
+        const session = await openSession(root);
+        return kind === 'settings' ? buildSettingsResult(session) : buildConfigurationsResult(session);
+    },
+};

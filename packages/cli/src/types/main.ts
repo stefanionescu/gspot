@@ -50,3 +50,5 @@ export type CliReference = {
     cloneInstalls: { lockfile: string; note: string | undefined; command: string }[];
     suppressions: { name: string; form: NonNullable<Tool['suppression']> }[];
 };
+
+export type InvalidValue = { option: string | undefined; value: string; detail: string };

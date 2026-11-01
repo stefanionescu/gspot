@@ -8,6 +8,7 @@ import { findSetting } from '#cli/settings/inherit.ts';
 import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { PATHS_OPTION } from '#cli/config/commands/help.ts';
 import { buildArgumentPaths } from '#cli/settings/paths.ts';
 import type { ApplyReport } from '#cli/types/generation.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
@@ -25,6 +26,7 @@ import { assertConfigurationsExist, assertConfigurationsEditable } from '#cli/ma
 import type { Scope, Settings, TomlTable, SettingsEdit, SettingMatch, AvailableSettings } from '#cli/types/settings.ts';
 
 import type {
+    CommandOption,
     SettingsEditOptions,
     ConfigurationChange,
     SettingsEditContext,
@@ -221,3 +223,8 @@ export async function writeSettingsEdit(
         exitCode: 0,
     };
 }
+
+export const pathsOption: CommandOption = {
+    flags: PATHS_OPTION,
+    parse: (value: string, previous: string[] | undefined) => [...(previous ?? []), value],
+};
