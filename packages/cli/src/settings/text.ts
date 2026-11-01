@@ -1,13 +1,11 @@
 import { isDeepStrictEqual } from 'node:util';
 import { compareText } from '#cli/system/text.ts';
-import { isReasonedValue } from '#cli/settings/file.ts';
-import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { TomlBlock, TomlValue } from '#cli/types/parsers.ts';
 import { stringify, parseDocument } from '@decimalturn/toml-patch';
+import { findValueAt, normalizeTables } from '#cli/system/tables.ts';
 import type { TomlTable, TaploLayout } from '#cli/types/settings.ts';
-import { isTable, findValueAt, normalizeTables } from '#cli/system/tables.ts';
 import { ROOT_KEYS, TOML_FORMAT, LAST_TABLES, FIRST_TABLES } from '#cli/config/settings/validation.ts';
 
 import {
@@ -27,28 +25,7 @@ function sortTable(table: TomlTable): TomlTable {
             .toSorted((left, right) => compareText(left, right)),
         ...LAST_TABLES,
     ];
-    return Object.fromEntries(
-        order.filter((key) => Object.hasOwn(table, key)).map((key) => [key, sortValue(table[key], [key])]),
-    );
-}
-
-function sortValue(value: unknown, keys: string[]): unknown {
-    if (Array.isArray(value)) return value.map((element: unknown) => sortValue(element, keys));
-    if (!isTable(value)) return value;
-    const fields: Readonly<Record<string, readonly string[]>> = RECORD_FIELDS;
-    const recordOrder: readonly string[] | undefined = isReasonedValue(value)
-        ? ['value', 'reason']
-        : fields[keys.join('.')];
-    const names = Object.keys(value);
-    let order = names;
-    if (recordOrder !== undefined)
-        order = [
-            ...recordOrder.filter((key) => Object.hasOwn(value, key)),
-            ...names.filter((key) => !recordOrder.includes(key)),
-        ];
-    else if (keys[0] === 'tools' && keys.at(-1) === 'rules')
-        order = names.toSorted((left, right) => compareText(left, right));
-    return Object.fromEntries(order.map((key) => [key, sortValue(value[key], [...keys, key])]));
+    return Object.fromEntries(order.filter((key) => Object.hasOwn(table, key)).map((key) => [key, table[key]]));
 }
 
 function readTaploLayout(written: TomlTable): TaploLayout {
