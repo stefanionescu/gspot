@@ -293,7 +293,10 @@ export const EDITORCONFIG_FIXED_SECTIONS = {
 
 export const UNREPRESENTABLE_SELECTOR = /[\r\n]|[!+?*@]\(/u;
 
-export const PRETTIER_FIXED_OPTIONS = { endOfLine: 'lf', embeddedLanguageFormatting: 'off' } as const;
+export const PRETTIER_MARKDOWN_OVERRIDE = {
+    files: ['*.md', '*.mdx'],
+    options: { embeddedLanguageFormatting: 'off' },
+} as const;
 
 export const DEFAULT_QUOTES = { prettier: 'single', ruff: 'double' } as const;
 

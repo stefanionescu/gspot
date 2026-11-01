@@ -48,12 +48,6 @@ version = "4.1.1"
 module = "plugin.js"
 extensions = [".svelte"]
 
-[[tool.prettier.overrides]]
-files = "*.svelte"
-
-[tool.prettier.overrides.options]
-embeddedLanguageFormatting = "auto"
-
 [eslint]
 required_tools = ["eslint-plugin-svelte", "svelte-eslint-parser"]
 all_level_rules = ["svelte/no-useless-mustaches", "svelte/prefer-const", "svelte/require-event-dispatcher-types"]

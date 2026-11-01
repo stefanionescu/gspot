@@ -19,8 +19,8 @@ import {
     PRETTIER_CHECK,
     DEFAULT_QUOTES,
     EDITORCONFIG_ROOT_LINE,
-    PRETTIER_FIXED_OPTIONS,
     UNREPRESENTABLE_SELECTOR,
+    PRETTIER_MARKDOWN_OVERRIDE,
     EDITORCONFIG_FIXED_SECTIONS,
 } from '#cli/config/configurations/general.ts';
 
@@ -151,7 +151,11 @@ export function buildPrettierFile(planned: PlannedConfig): string {
     const plugins = listPrettierPlugins(planned.session.scopes.flatMap(({ configurations }) => configurations))
         .values()
         .toArray();
-    const overrides = [...plugins.flatMap((plugin) => plugin.overrides), ...listFormatOverrides(settings)];
+    const overrides = [
+        PRETTIER_MARKDOWN_OVERRIDE,
+        ...plugins.flatMap((plugin) => plugin.overrides),
+        ...listFormatOverrides(settings),
+    ];
     const value = {
         tabWidth: format.indent_width,
         useTabs: format.indent_style === 'tab',
@@ -159,9 +163,8 @@ export function buildPrettierFile(planned: PlannedConfig): string {
         singleQuote: (format.quotes ?? DEFAULT_QUOTES.prettier) === 'single',
         trailingComma: format.trailing_commas,
         semi: format.semicolons,
-        ...PRETTIER_FIXED_OPTIONS,
         ...buildPluginsOption(plugins),
-        ...(overrides.length > 0 && { overrides }),
+        overrides,
     };
     return JSON.stringify(value, null, JSON_INDENT);
 }

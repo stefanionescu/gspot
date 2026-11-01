@@ -52,18 +52,19 @@ test('Prettier loads the selected plugin through the root link file', async () =
     ]);
 });
 
-test('the Prettier plugin overrides come before your overrides', async () => {
+test('Prettier keeps Markdown samples as written, and the plugin overrides come before your overrides', async () => {
     const settings = {
-        configurations: ['svelte'],
+        configurations: ['astro'],
         format: { override: [{ paths: ['docs/**'], print_width: 80 }] },
     };
     const pluginPolicy = JSON.parse(
         await buildGeneratedFile(stringify(settings), getManifestTarget('format', 'prettier.json'), {
-            'source.svelte': '<h1>Example</h1>\n',
+            'source.astro': '<h1>Example</h1>\n',
         }),
     ) as Options;
     expect(pluginPolicy['overrides']).toMatchObject([
-        { files: '*.svelte', options: { embeddedLanguageFormatting: 'auto' } },
+        { files: ['*.md', '*.mdx'], options: { embeddedLanguageFormatting: 'off' } },
+        { files: '*.astro', options: { parser: 'astro' } },
         { files: ['docs/**'], options: { printWidth: 80 } },
     ]);
 });
