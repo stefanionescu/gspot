@@ -3,8 +3,7 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
-import { SYMLINK_MODE } from '#cli/config/files/modes.ts';
-import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
+import { BYTES_PER_KILOBYTE } from '#cli/config/engine.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import type { CheckFinding } from '#cli/types/engine/check.ts';
@@ -12,9 +11,9 @@ import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { lstatSync, realpathSync, readlinkSync } from 'node:fs';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { isInside, extractParentFolder } from '#cli/system/paths.ts';
-import { LFS_FILTER, FILTER_ATTRIBUTE } from '#cli/config/repository/files.ts';
 import { join, posix, dirname, resolve, relative, isAbsolute } from 'node:path';
-import { REPOSITORY_RULES, OUTWARD_LINK_HELP, ABSOLUTE_LINK_HELP } from '#cli/config/configurations/general/general.ts';
+import { LFS_FILTER, SYMLINK_MODE, FILTER_ATTRIBUTE } from '#cli/config/repository/files.ts';
+import { REPOSITORY_RULES, OUTWARD_LINK_HELP, ABSOLUTE_LINK_HELP } from '#cli/config/configurations/structure.ts';
 
 function listInvalidLinks(session: Session): CheckFinding[] {
     return session.repository.index

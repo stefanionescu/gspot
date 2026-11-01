@@ -5,14 +5,14 @@ import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { visit } from 'unist-util-visit';
 import { fromMarkdown } from 'mdast-util-from-markdown';
+import { EACH_PLACEHOLDER } from '#cli/config/engine.ts';
 import { gfmTable } from 'micromark-extension-gfm-table';
 import type { Tool, Check } from '#cli/types/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';
 import { gfmTableFromMarkdown } from 'mdast-util-gfm-table';
-import { SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
-import { EACH_PLACEHOLDER } from '#cli/config/engine/tool-runs.ts';
 import { listAssets, buildAssetPath } from '#cli/system/assets.ts';
+import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
 import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import type { SettingDefinition } from '#cli/types/settings/definitions.ts';
 

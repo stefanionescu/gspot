@@ -34,7 +34,7 @@ import {
     GIT_COMMAND_CONFIGURATION,
     GIT_LOCAL_VARIABLES_ARGUMENTS,
     GIT_NONLOCAL_ENVIRONMENT_NAME,
-} from '#cli/config/system/system.ts';
+} from '#cli/config/repository/git.ts';
 
 let inheritedGit: { localVariables: string[]; repository?: GitLookup } | undefined;
 

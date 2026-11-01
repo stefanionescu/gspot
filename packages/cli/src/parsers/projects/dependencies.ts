@@ -1,5 +1,4 @@
 import { posix } from 'node:path';
-import { LINE_BREAK } from '#cli/config/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
@@ -16,6 +15,7 @@ import type {
 } from '#cli/types/parsers/projects.ts';
 import {
     PIPFILE,
+    LINE_BREAK,
     GIT_SUFFIX,
     PYTEST_TABLE,
     PACKAGE_JSON,
@@ -29,7 +29,7 @@ import {
     JAVASCRIPT_RUNTIMES,
     REQUIREMENT_NAME_END,
     PYTHON_NAME_SEPARATORS,
-} from '#cli/config/parsers/projects.ts';
+} from '#cli/config/parsers.ts';
 
 function parseRequirementName(requirement: string): string | undefined {
     const trimmed = requirement.trim();

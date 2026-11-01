@@ -2,26 +2,26 @@ import { join, dirname } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import type { CheckFinding } from '#cli/types/engine/check.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { buildTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
-import { TSCONFIG_COPY_FOLDER } from '#cli/config/configurations/cross-configuration/tsc.ts';
 import { svelteFindingSchema, failureMessageSchema } from '#cli/schemas/configurations/framework/framework.ts';
 
 import {
     FAILURE_LINE,
     FINDING_LINE,
     SVELTE_CHECK_RULE,
+    TSCONFIG_COPY_FOLDER,
     SVELTE_CHECK_COMMAND,
     SVELTE_TSCONFIG_FLAG,
-} from '#cli/config/configurations/framework/framework.ts';
+} from '#cli/config/configurations/framework.ts';
 
 function parseSvelteCheckFindings(planned: PlannedCheck, stdout: string): CheckFinding[] {
     const lines = stdout.split('\n');

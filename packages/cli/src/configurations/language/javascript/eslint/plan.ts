@@ -1,18 +1,17 @@
 import { basename } from 'node:path/posix';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { MISE_TASKS_GLOB } from '#cli/config/files/names.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import { NODE_SHEBANG_TAG } from '#cli/config/repository/files.ts';
+import { BASE_RULES } from '#cli/config/configurations/eslint.ts';
 import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import type { Config, Configuration } from '#cli/types/manifests.ts';
+import { CODE_LANGUAGES } from '#cli/config/configurations/blocks.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import type { PlannedEslintFile } from '#cli/types/generation/eslint.ts';
+import { MISE_TASKS_GLOB, NODE_SHEBANG_TAG } from '#cli/config/configurations/structure.ts';
 import { buildFilePatterns } from '#cli/configurations/language/javascript/eslint/files.ts';
-import { CODE_LANGUAGES } from '#cli/config/configurations/generators/language/javascript/eslint/eslint.ts';
-import { BASE_RULES } from '#cli/config/configurations/generators/language/javascript/eslint/blocks/blocks.ts';
 import { buildRuleOptions } from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
 import { buildScopeLimitRules } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
 

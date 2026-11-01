@@ -1,10 +1,9 @@
 import type { Ignore } from 'ignore';
-import type { FILE_KINDS } from '#cli/config/files/kinds.ts';
+import type { FILE_KINDS } from '#cli/config/manifests.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { GitIndexFile } from '#cli/types/parsers/parsers.ts';
+import type { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { DependencyFile } from '#cli/types/parsers/projects.ts';
-import type { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
-import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 
 export type GitignoreMatcher = { base: string; matcher: Ignore };
 
@@ -48,5 +47,5 @@ export type FileKindRules = { generatedPaths: GeneratedPaths[]; attributes: Repo
 export type CoveredFilesOptions = {
     configurations: Configuration[];
     scopePath: string;
-    settings: Pick<ScopeSettings, 'test_files' | 'valuesByKey'>;
+    settings: { test_files: string[]; valuesByKey: Record<string, unknown> };
 };

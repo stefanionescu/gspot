@@ -14,7 +14,7 @@ import {
     ARGUMENTS_SECTION,
     LEADING_UNDERSCORES,
     SHELLCHECK_TOOL_COMMENT,
-} from '#cli/config/configurations/language/bash.ts';
+} from '#cli/config/configurations/bash.ts';
 
 function findCommentBlock(lines: string[], start: number): string[] {
     const block: string[] = [];

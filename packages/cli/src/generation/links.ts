@@ -6,11 +6,10 @@ import { listCheckTools } from '#cli/engine/tools.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { Config } from '#cli/types/manifests.ts';
 import { formatHeader } from '#cli/generation/header.ts';
-import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { GSPOT_FOLDER, PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import type { ManagedKeys } from '#cli/types/repository/repository.ts';
 import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
@@ -24,7 +23,7 @@ import {
     TARGET_PLACEHOLDER,
     OVERRIDES_PLACEHOLDER,
     TARGET_MODULE_PLACEHOLDER,
-} from '#cli/config/generation/generation.ts';
+} from '#cli/config/generation.ts';
 
 function fillTarget(body: string, linkFilePath: string, targetPath: string): string {
     const relativePath = convertToPosixPath(relative(dirname(linkFilePath), targetPath));

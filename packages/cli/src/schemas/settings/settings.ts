@@ -2,13 +2,11 @@ import { z } from 'zod';
 import semver from 'semver';
 import { isTable } from '#cli/system/tables.ts';
 import parseExpression from 'spdx-expression-parse';
-import { CI_PINS } from '#cli/config/generation/generation.ts';
+import { SETTING_LANGUAGES } from '#cli/config/manifests.ts';
 import { namingOverrideSchema } from '#cli/schemas/manifests/manifests.ts';
 import type { ImportRule, SettingsError } from '#cli/types/settings/settings.ts';
-import { CI_PROVIDERS, GITHUB_ONLY_CI_KEYS } from '#cli/config/settings/settings.ts';
 import type { NamingCategory, SettingLanguage } from '#cli/types/settings/naming.ts';
 import { commandSchema, nonemptyStringSchema, operatingSystemSchema } from '#cli/schemas/manifests/fields.ts';
-import { SETTING_LANGUAGES, NAMING_TABLE_CATEGORIES, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/naming.ts';
 
 import {
     relativePathSchema,
@@ -16,6 +14,13 @@ import {
     nonemptyPathsSchema,
     namingCategorySchema,
 } from '#cli/schemas/settings/fields.ts';
+import {
+    CI_PINS,
+    CI_PROVIDERS,
+    GITHUB_ONLY_CI_KEYS,
+    NAMING_TABLE_CATEGORIES,
+    NAMING_LANGUAGE_CATEGORIES,
+} from '#cli/config/settings/schema.ts';
 
 export const ciFields = {
     enabled: z.boolean().default(false).meta({

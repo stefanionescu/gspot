@@ -2,7 +2,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { type Tool } from '#cli/types/manifests.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { UNCLOSED_SEQUENCE } from '#tests/config/yaml.ts';
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
 import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';

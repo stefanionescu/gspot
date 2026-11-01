@@ -1,8 +1,8 @@
 import type { Node as SqlNode } from '@pgsql/types';
 import type { TextRange } from '#cli/types/text.ts';
 import type { Node, Tree, Parser } from 'web-tree-sitter';
+import type { GRAMMAR_NAMES } from '#cli/config/parsers.ts';
 import type { RunCache } from '#cli/types/system/system.ts';
-import type { GRAMMAR_NAMES } from '#cli/config/parsers/code.ts';
 
 export type TrapScript = {
     trap: Node;

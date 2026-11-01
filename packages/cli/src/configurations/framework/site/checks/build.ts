@@ -13,7 +13,7 @@ import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { type SiteBuild } from '#cli/types/configurations/framework/site.ts';
-import { BUILD_RULE, UNBUILT_SITE_NOTE } from '#cli/config/configurations/framework/site.ts';
+import { BUILD_RULE, UNBUILT_SITE_NOTE } from '#cli/config/configurations/framework.ts';
 
 const SITE_BUILDS = Symbol('site builds');
 

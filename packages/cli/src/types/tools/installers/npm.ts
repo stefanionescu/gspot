@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import { type LOCKFILES } from '#cli/config/files/lockfiles.ts';
+import type { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import type { bunPackageSchema } from '#cli/schemas/tools/installers/npm.ts';
 import { type ToolInstall, type ToolPackageManager } from '#cli/types/tools/installers/installers.ts';
 

@@ -22,7 +22,7 @@ import {
     MIGRATION_VERSION,
     DOLLAR_TAG_BLOCKER,
     PRISMA_MIGRATION_FILE,
-} from '#cli/config/parsers/code.ts';
+} from '#cli/config/parsers.ts';
 
 async function parsePostgres(text: string): Promise<Parsed<ParseResult, { text: string; offset: number }>> {
     const { SqlError, parse: parseSql } = await import('libpg-query');

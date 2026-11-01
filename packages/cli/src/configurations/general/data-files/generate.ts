@@ -1,9 +1,9 @@
 import { stringify as stringifyYaml } from 'yaml';
 import { getTable } from '#cli/settings/scopes.ts';
-import { CONFIG_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
-import { V8R_TABLE, V8R_NOTES, TAPLO_FORMATTING } from '#cli/config/configurations/generators/general.ts';
+import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
+import { V8R_TABLE, V8R_NOTES, TAPLO_FORMATTING } from '#cli/config/configurations/general.ts';
 
 /**
 Build v8r.yml: the v8r schema catalog, including the configured file selectors.

@@ -2,8 +2,6 @@ export const PROCESS_ARGUMENTS_START = 2;
 
 export const UNKNOWN_COMMAND_NAME = /unknown command '([^']+)'/u;
 
-export const COMMAND_SUGGESTION = /\(Did you mean ([^?)]+)\??\)/u;
-
 export const COMMANDER_ERROR_PREFIX = 'error: ';
 
 export const COMMANDS_HELP_MESSAGE = 'Run gspot --help to see the commands.';
@@ -23,8 +21,6 @@ export const PROGRAM_EXIT_CODES = [
 
 export const PROGRAM_HELP_FOOTER =
     'Example:\n  gspot init\n\nRun gspot <command> --help to see the options of one command.\n';
-
-export const CODE_MARK = '`';
 
 export const USAGE_LINE = 'Usage: gspot <command> [options]';
 

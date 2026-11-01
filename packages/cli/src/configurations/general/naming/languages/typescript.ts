@@ -11,7 +11,7 @@ import {
     COMPONENT_FACTORY,
     TYPESCRIPT_CALLABLE_NODES,
     TYPESCRIPT_PARAMETER_NODES,
-} from '#cli/config/configurations/general/naming/languages.ts';
+} from '#cli/config/configurations/naming.ts';
 
 function addPattern(found: FileIdentifiers, node: Node | null, category: NamedCategory): void {
     if (node === null) return;

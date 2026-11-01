@@ -14,7 +14,7 @@ import {
     SWIFT_BUILD_FOLDER,
     BUILD_SOURCE_FOLDER,
     SCOPE_FOLDER_PREFIX,
-} from '#cli/config/configurations/language/swift.ts';
+} from '#cli/config/configurations/builds.ts';
 
 /**
 Runs Periphery over the project and reports every declaration nothing uses.

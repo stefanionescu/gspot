@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { type DoctorReport } from '#cli/types/commands/doctor.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';

@@ -1,17 +1,12 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { formatSettingsError } from '#cli/settings/validation/messages.ts';
 import { parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
 import { assertSettings, formatSettingsIssue } from '#cli/settings/validation/schema.ts';
 import type { Settings, TomlTable, SettingsError, ParsedSettings } from '#cli/types/settings/settings.ts';
-
-import {
-    SETTINGS_FILE,
-    COMMAND_CHECK_WHY,
-    COMMAND_CHECK_HELP,
-    COMMAND_CHECK_DEFAULTS,
-} from '#cli/config/settings/settings.ts';
+import { COMMAND_CHECK_WHY, COMMAND_CHECK_HELP, COMMAND_CHECK_DEFAULTS } from '#cli/config/settings/validation.ts';
 
 function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settings['commandChecks'] {
     return Object.fromEntries(

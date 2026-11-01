@@ -1,18 +1,21 @@
 import { z } from 'zod';
 import semver from 'semver';
 import type { ToolInstallers } from '#cli/types/manifests.ts';
-import { RULE_PLACEHOLDER } from '#cli/config/placeholders.ts';
-import { TOOL_KINDS, TOOL_BUILDS } from '#cli/config/manifests/names.ts';
 import { regexSchema, commandSchema, conditionSchema } from '#cli/schemas/manifests/fields.ts';
-import { CASE_NAMES, MAX_EXIT_CODE, NAMED_CATEGORIES } from '#cli/config/manifests/manifests.ts';
 
 import {
+    TOOL_KINDS,
+    CASE_NAMES,
+    TOOL_BUILDS,
+    MAX_EXIT_CODE,
+    RULE_PLACEHOLDER,
+    NAMED_CATEGORIES,
     EXTENSION_PATTERN,
     MINIMUM_VERSION_PATTERN,
     NUMERIC_MINIMUM_MESSAGE,
     SHIPPED_CHECKSUM_PATTERN,
     INSTALLER_VERSION_MESSAGE,
-} from '#cli/config/manifests/tool.ts';
+} from '#cli/config/manifests.ts';
 
 const identifierCategorySchema = z.enum(NAMED_CATEGORIES);
 

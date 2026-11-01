@@ -1,13 +1,13 @@
 import { styleText } from 'node:util';
 import { randomUUID } from 'node:crypto';
-import { CODE_MARK } from '#cli/config/main.ts';
-import { LINE_BREAK } from '#cli/config/text.ts';
-import { EVERY_CHECK } from '#cli/config/ignores.ts';
+import { LINE_BREAK } from '#cli/config/parsers.ts';
 import { printWarning } from '#cli/system/terminal.ts';
+import { SHORT_HASH_LENGTH } from '#cli/config/engine.ts';
 import { formatExplainCommand } from '#cli/engine/results.ts';
-import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
+import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { formatCount, quoteArgument } from '#cli/system/text.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { CODE_MARK, EVERY_CHECK } from '#cli/config/commands/help.ts';
 import { type Finding, type CheckResult } from '#cli/types/engine/check.ts';
 import { type FixReport, type RunReport, type CheckProgress } from '#cli/types/commands/check.ts';
 
@@ -18,13 +18,12 @@ import {
     NOTE_STATUSES,
     PROGRESS_CLEAR,
     FINDINGS_SHOWN,
-    SHORT_HASH_LENGTH,
     FIXER_ERROR_PREFIX,
     CHECK_STATUS_COLORS,
     TOOL_MISSING_MESSAGE,
     STANDARD_INSTALL_HELP,
     UNCHANGED_FIX_MESSAGE,
-} from '#cli/config/commands/check.ts';
+} from '#cli/config/commands/reports.ts';
 
 function formatCheckedContent(comparison: CheckProgress['comparison']): string {
     if (comparison?.content === 'index') return STAGED_FILES;

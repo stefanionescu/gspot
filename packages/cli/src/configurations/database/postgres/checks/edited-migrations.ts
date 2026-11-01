@@ -1,11 +1,11 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { FROZEN_NONE } from '#cli/config/parsers.ts';
 import type { Session } from '#cli/types/session.ts';
-import { FROZEN_NONE } from '#cli/config/parsers/code.ts';
 import type { CheckFinding } from '#cli/types/engine/check.ts';
 import { selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
-import { FROZEN_RULE, FROZEN_THROUGH_NOTE, FROZEN_EDIT_MESSAGE } from '#cli/config/configurations/database/postgres.ts';
+import { FROZEN_RULE, FROZEN_THROUGH_NOTE, FROZEN_EDIT_MESSAGE } from '#cli/config/configurations/infrastructure.ts';
 
 import {
     extractForwardText,

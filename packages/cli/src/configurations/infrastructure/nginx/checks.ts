@@ -11,13 +11,13 @@ import type { Session, CheckSession } from '#cli/types/session.ts';
 import { parseNginxDirectives } from '#cli/parsers/formats/nginx.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { DOCKER_TOOL, DOCKER_DAEMON_NOTE } from '#cli/config/tools/tools.ts';
+import { DOCKER_TOOL, DOCKER_DAEMON_NOTE } from '#cli/config/engine.ts';
 import type { Mount, NginxMounts } from '#cli/types/configurations/infrastructure.ts';
 import { type CheckFinding, type BuiltInCheckResult } from '#cli/types/engine/check.ts';
-import { SYNTAX_RULE } from '#cli/config/configurations/cross-configuration/cross-configuration.ts';
 
 import {
     NGINX_CONF,
+    SYNTAX_RULE,
     NGINX_TABLE,
     LOCAL_NAMES,
     VOLUME_FLAG,

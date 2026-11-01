@@ -22,12 +22,11 @@ import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 import type { SqlStatement, SqlNodeFields } from '#cli/types/parsers/code.ts';
 import { formatOutputTail, assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
-import { SYNTAX_RULE } from '#cli/config/configurations/cross-configuration/cross-configuration.ts';
 import type { FunctionEntrypoint, SupabaseProjectFile } from '#cli/types/configurations/platform.ts';
 import { denoLintOutputSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations/platform.ts';
 
 import {
-    RULES,
+    SYNTAX_RULE,
     DENO_LOCATION,
     SHARED_PREFIX,
     DENO_LINT_NAME,
@@ -37,6 +36,7 @@ import {
     DENO_LINT_COMMAND,
     DENO_CHECK_COMMAND,
     FUNCTION_ENTRYPOINT,
+    SUPABASE_CHECK_RULES,
     DENO_IMPORT_MAP_FLAG,
     SERVICE_ROLE_KEY_TAGS,
     SUPABASE_PROJECT_FILE,
@@ -44,7 +44,7 @@ import {
     SERVICE_ROLE_KEY_MESSAGE,
     DENO_CHECK_FAILED_MESSAGE,
     SERVICE_ROLE_KEY_EXTENSIONS,
-} from '#cli/config/configurations/platform.ts';
+} from '#cli/config/configurations/infrastructure.ts';
 
 function listEqualityBuckets(expression: SqlNodeFields['A_Expr']): string[] {
     for (const [column, value] of [
@@ -233,7 +233,7 @@ export async function checkStoragePolicies(session: Session, planned: PlannedChe
         .filter((bucket) => !policed.has(bucket))
         .map((bucket) => ({
             ...place,
-            rule: RULES.bucketPolicy,
+            rule: SUPABASE_CHECK_RULES.bucketPolicy,
             message: `The bucket ${bucket} has no policy on storage.objects in any migration.`,
         }));
 }
@@ -325,7 +325,7 @@ export function checkServiceRoleKey(session: Session, planned: PlannedCheck): Ch
                     {
                         file: file.path,
                         line: index + 1,
-                        rule: RULES.serviceRoleKey,
+                        rule: SUPABASE_CHECK_RULES.serviceRoleKey,
                         message: message,
                     },
                 ];

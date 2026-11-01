@@ -1,4 +1,4 @@
-import { NPM_TOOL_PROJECT } from '#cli/config/generation/generation.ts';
+import { NPM_TOOL_PROJECT } from '#cli/config/generation.ts';
 
 export const FAILED_INSTALL_CASES = [
     { operation: 'installation', frozen: true },

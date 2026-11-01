@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';

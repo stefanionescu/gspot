@@ -3,7 +3,7 @@ import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import { isTable, findValueAt, normalizeTables } from '#cli/system/tables.ts';
 import type { KeyPath, EditableFile } from '#cli/types/parsers/editable-file.ts';
 import { patch, stringify, parseDocument, parse as parseToml } from '@decimalturn/toml-patch';
-import { MESSAGE_END, PATCH_FORMAT, TABLE_PROPERTY_FLAGS, MISSING_RANGE_MESSAGE } from '#cli/config/parsers/formats.ts';
+import { MESSAGE_END, PATCH_FORMAT, TABLE_PROPERTY_FLAGS, MISSING_RANGE_MESSAGE } from '#cli/config/parsers.ts';
 
 import {
     type TomlBlock,

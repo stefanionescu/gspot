@@ -1,13 +1,11 @@
+import { EXTENSION_PATTERN } from '#cli/config/manifests.ts';
 import { isInScope, joinScope } from '#cli/repository/scopes.ts';
-import { EXTENSION_PATTERN } from '#cli/config/manifests/tool.ts';
 import { escapeGlob, extractExtension } from '#cli/system/paths.ts';
+import { CODE_LANGUAGES } from '#cli/config/configurations/blocks.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { buildPathMatcher, includeFolderContents } from '#cli/system/matchers.ts';
+import { COMPONENT_CONFIGURATIONS } from '#cli/config/configurations/javascript.ts';
 
-import {
-    CODE_LANGUAGES,
-    COMPONENT_CONFIGURATIONS,
-} from '#cli/config/configurations/generators/language/javascript/eslint/eslint.ts';
 import {
     type EslintFiles,
     type PathExpressions,

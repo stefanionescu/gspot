@@ -1,16 +1,14 @@
 import { posix } from 'node:path';
 import { find, read } from '#cli/system/files/reads.ts';
-import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { type RunCache } from '#cli/types/system/system.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import { REQUIREMENTS_FILE } from '#cli/config/files/names.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
-import { HOOK_PACKAGES } from '#cli/config/repository/repository.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers/projects.ts';
 import { isInInstalledFolder, listEnclosingFolders } from '#cli/system/paths.ts';
-import { PACKAGE_JSON, DEPENDENCY_SECTIONS } from '#cli/config/parsers/projects.ts';
+import { HOOK_PACKAGES, REQUIREMENTS_FILE } from '#cli/config/repository/files.ts';
 import { type PackageJson, type DependencyFile } from '#cli/types/parsers/projects.ts';
+import { GSPOT_FOLDER, PACKAGE_JSON, DEPENDENCY_SECTIONS } from '#cli/config/parsers.ts';
 import { parseRequirements, DEPENDENCY_FILE_PARSERS } from '#cli/parsers/projects/dependencies.ts';
 
 /**

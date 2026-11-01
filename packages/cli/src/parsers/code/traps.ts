@@ -9,7 +9,7 @@ import {
     FORWARDED_ARGUMENTS,
     TRAP_STRING_ESCAPES,
     TRAP_EXPANSION_NODES,
-} from '#cli/config/parsers/code.ts';
+} from '#cli/config/parsers.ts';
 
 function readTrapBody(body: Node): { text: string; sourceRows: TrapScript['sourceRows'] } {
     const quoted = body.text.slice(1, -1);

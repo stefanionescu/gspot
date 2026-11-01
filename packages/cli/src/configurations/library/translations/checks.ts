@@ -13,12 +13,12 @@ import type { MessageFiles, ParsedMessage } from '#cli/types/configurations/libr
 import { TYPE, parse, type MessageFormatElement } from '@formatjs/icu-messageformat-parser';
 
 import {
-    RULES,
     EMPTY_MESSAGE,
     PLURAL_FORMAT,
     ARGUMENT_FORMATS,
+    TRANSLATION_RULES,
     MESSAGE_FILE_SUFFIX,
-} from '#cli/config/configurations/library.ts';
+} from '#cli/config/configurations/framework.ts';
 
 function flattenMessages(value: unknown, prefix = ''): Map<string, string> {
     if (value === null || typeof value !== 'object') return new Map();
@@ -65,7 +65,7 @@ function listLocalMessageFindings(
                   {
                       file: path,
                       line,
-                      rule: RULES.message,
+                      rule: TRANSLATION_RULES.message,
                       message: `${key}: ${error}`,
                   },
               ],
@@ -78,7 +78,7 @@ function listLocalMessageFindings(
                   {
                       file: path,
                       line,
-                      rule: RULES.extraKey,
+                      rule: TRANSLATION_RULES.extraKey,
                       message: `The key ${key} is not in ${base}; delete it or add it to the base locale.`,
                   },
               ],
@@ -100,7 +100,7 @@ function compareMessages(
         .map((key) => ({
             file: path,
             line: 1,
-            rule: RULES.missingKey,
+            rule: TRANSLATION_RULES.missingKey,
             message: `The key ${key} of ${base} has no message here.`,
         }))
         .toArray();
@@ -116,7 +116,7 @@ function compareMessages(
                   {
                       file: path,
                       line,
-                      rule: RULES.messageArguments,
+                      rule: TRANSLATION_RULES.messageArguments,
                       message: `${key}: ${message}`,
                   },
               ];
@@ -238,7 +238,7 @@ export function checkMessages(session: Session, planned: PlannedCheck): CheckFin
         ...absent.map((path) => ({
             file: path,
             line: 1,
-            rule: RULES.baseLocale,
+            rule: TRANSLATION_RULES.baseLocale,
             message: `The base locale ${base}${MESSAGE_FILE_SUFFIX} is missing from ${posix.dirname(path)}. Restore it or choose the intended base locale.`,
         })),
     );

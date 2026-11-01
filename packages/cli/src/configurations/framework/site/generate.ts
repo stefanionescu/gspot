@@ -1,5 +1,5 @@
-import { JSON_INDENT } from '#cli/config/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
+import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import type { PlannedConfig } from '#cli/types/generation/files.ts';
 
 /**

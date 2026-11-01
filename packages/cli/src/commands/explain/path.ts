@@ -1,12 +1,12 @@
 import { planChecks } from '#cli/engine/plan.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { EVERY_CHECK } from '#cli/config/ignores.ts';
 import type { Session } from '#cli/types/session.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
-import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
+import { EVERY_CHECK } from '#cli/config/commands/help.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
+import { ROOT_SCOPE_LABEL } from '#cli/config/configurations/general.ts';
 import { selectScopePath, buildArgumentPath } from '#cli/repository/scopes.ts';
 import type { Explanation, PathExplanation } from '#cli/types/commands/explain.ts';
 
@@ -17,7 +17,7 @@ import {
     BINARY_ELIGIBLE_MESSAGE,
     VENDORED_ELIGIBLE_MESSAGE,
     GENERATED_ELIGIBLE_MESSAGE,
-} from '#cli/config/commands/explain.ts';
+} from '#cli/config/commands/reports.ts';
 
 function formatUncheckedKind(file: TrackedFile): string | undefined {
     if (file.kind === 'binary') return BINARY_ELIGIBLE_MESSAGE;

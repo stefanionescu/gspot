@@ -1,0 +1,231 @@
+import type { Group } from '#cli/types/manifests.ts';
+import { COPIES_FOLDER } from '#cli/config/engine.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { LFS_GUARD_PREFIX } from '#cli/config/repository/setup.ts';
+import { GENERATED_HEADER_MARK } from '#cli/config/repository/files.ts';
+
+export const CACHED_PATHS = {
+    linux: {
+        mise: ['~/.cache/mise/downloads-cas'],
+        npm: ['~/.npm/_cacache'],
+        pnpm: ['~/.local/share/pnpm/store'],
+        yarn: ['~/.cache/yarn', '~/.yarn/berry/cache'],
+        bun: ['~/.bun/install/cache'],
+        uv: ['~/.cache/uv'],
+    },
+    macos: {
+        mise: ['~/Library/Caches/mise/downloads-cas'],
+        npm: ['~/.npm/_cacache'],
+        pnpm: ['~/Library/pnpm/store'],
+        yarn: ['~/Library/Caches/Yarn', '~/.yarn/berry/cache'],
+        bun: ['~/.bun/install/cache'],
+        uv: ['~/.cache/uv'],
+    },
+    windows: {
+        mise: ['${{ runner.temp }}/mise/downloads-cas'],
+        npm: ['~/AppData/Local/npm-cache/_cacache'],
+        pnpm: ['~/AppData/Local/pnpm/store'],
+        yarn: ['~/AppData/Local/Yarn/Cache', '~/AppData/Local/Yarn/Berry/cache'],
+        bun: ['~/.bun/install/cache'],
+        uv: ['~/AppData/Local/uv/cache'],
+    },
+} as const;
+
+export const GITHUB_WORKFLOW = '.github/workflows/gspot.yml';
+
+export const GITLAB_WORKFLOW = '.gitlab/ci/gspot.yml';
+
+export const CI_TIMEOUT_MINUTES = 60;
+
+export const MISE_TOKEN_ENVIRONMENT = { MISE_GITHUB_TOKEN: '${{ github.token }}' } as const;
+
+export const CI_BASE_VARIABLE = 'GSPOT_CI_BASE';
+
+export const CI_CACHE_FILES = [
+    GSPOT_PATHS.npmProject,
+    `${GSPOT_FOLDER}/*lock*`,
+    GSPOT_PATHS.pythonProject,
+    GSPOT_PATHS.miseProject,
+] as const;
+
+export const CI_JOB_NAME = 'lint';
+
+export const CI_CACHE_STEP = 'cache';
+
+export const CI_CACHE_PREFIX = 'gspot-${{ runner.os }}-${{ runner.arch }}-';
+
+export const CI_CACHE_MISS_CONDITION = `steps.${CI_CACHE_STEP}.outputs.cache-hit != 'true'`;
+
+export const CI_CACHE_SAVED_KEY = `\${{ steps.${CI_CACHE_STEP}.outputs.cache-primary-key }}`;
+
+export const CHECKOUT_OPTIONS = { 'fetch-depth': 0, 'persist-credentials': false } as const;
+
+export const GITHUB_BASE_EXPRESSION =
+    "${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.before }}";
+
+export const GITHUB_PUSH_CONDITION =
+    "github.event_name != 'push' || github.ref_name == github.event.repository.default_branch";
+
+export const GITHUB_EVENTS = { push: { branches: ['**'] }, pull_request: {}, merge_group: {} } as const;
+
+export const GITHUB_CONCURRENCY = {
+    group: "${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}",
+    'cancel-in-progress': "${{ github.event_name == 'pull_request' }}",
+} as const;
+
+export const GITLAB_BASE_LINE = `${CI_BASE_VARIABLE}="\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-\${CI_COMMIT_BEFORE_SHA:-}}"`;
+
+export const GITLAB_RULES = [
+    { if: '$CI_PIPELINE_SOURCE == "merge_request_event"', interruptible: true },
+    { if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH', interruptible: false },
+] as const;
+
+export const CI_STEP_NAMES = {
+    checkout: 'Check out source',
+    restoreCache: 'Restore caches',
+    mise: 'Set up mise',
+    setup: 'Set up the project',
+    projectInstall: 'Install project dependencies',
+    install: 'Install gspot tools',
+    saveCache: 'Save caches',
+    check: 'Lint',
+    gspot: 'Install gspot',
+} as const;
+
+export const NEXT_TYPEGEN_LINE = 'npx --no -- next typegen';
+
+export const CI_DIFF_LINES = ['git add --intent-to-add -- .gspot', 'git diff --exit-code -- .gspot'] as const;
+
+export const CI_INSTALL_COMMAND = 'gspot install';
+
+export const CI_CHECK_COMMAND = `gspot check --base "\${${CI_BASE_VARIABLE}}"`;
+
+export const GITHUB_EXPRESSION_START = '${{';
+
+export const GITHUB_EXPRESSION_MESSAGE =
+    'GitHub expands "${{" in a workflow command before the shell runs it. Remove "${{" from ci.setup_command and from the scope paths.';
+
+export const AUTO_LF_ATTRIBUTES = ['text=auto', 'eol=lf'] as const;
+
+export const ATTRIBUTE_QUOTED_CHARACTERS = /[\s"]/u;
+
+export const ATTRIBUTE_GLOB_CHARACTERS = /[\\*?[]/gu;
+
+export const LF_ATTRIBUTES = 'text eol=lf';
+
+export const GIT_ATTRIBUTES_BLOCK = `${GSPOT_FOLDER}/** linguist-generated
+${GSPOT_FOLDER}/** ${LF_ATTRIBUTES}
+.gitignore ${LF_ATTRIBUTES}
+.gitattributes ${LF_ATTRIBUTES}`;
+
+export const TOOL_FOLDER_IGNORES = ['node_modules/', '.venv/', 'vale/'] as const;
+
+export const NPM_TOOL_PROJECT = { name: 'tools', private: true } as const;
+
+export const JSON_EXTENSIONS = new Set(['.json']);
+
+export const SLASH_COMMENT_EXTENSIONS = new Set(['.mjs', '.jsonc']);
+
+export const SLASH_COMMENT_FILES = new Set(['pyrightconfig.json']);
+
+export const GENERATED_HEADER_TEXT = `${GENERATED_HEADER_MARK}. Do not edit this file; change gspot.toml, then run gspot apply.`;
+
+export const PUSH_INPUT_SAVE = 'input=$(cat)';
+
+export const PUSH_INPUT_REPLAY = String.raw`printf '%s\n' "$input" | `;
+
+export const COMMIT_MESSAGE_PATH_LINES = [
+    'case "$1" in /*|[A-Za-z]:*) message=$1 ;; *) message="$PWD/$1" ;; esac',
+    'if command -v cygpath >/dev/null 2>&1; then message=$(cygpath -w "$message"); fi',
+    'set -- "$message"',
+] as const;
+
+export const LFS_MISSING_GUARD = `${LFS_GUARD_PREFIX}{ echo 'This repository uses Git LFS. Install git-lfs, then run git lfs install --skip-repo.' >&2; exit 2; }`;
+
+export const DIFF_CONTEXT_LINES = 3;
+
+export const ON_DISK_LABEL = 'on disk';
+
+export const BLOCK_ON_DISK_LABEL = 'managed block on disk';
+
+export const RULES_HEADING = '# Rules';
+
+export const ALL_LEVEL_MARKER = '<!-- level: all -->';
+
+export const BLANK_LINE = '\n\n';
+
+export const RULE_OPENING_PREFIX = 'Read this rule ';
+
+export const MARKDOWN_HEADING = /^(#{1,5}) /u;
+
+export const SETTINGS_COMMANDS = ['set', 'unset', 'unignore'] as const;
+
+export const COMMANDS_HEADING = '## Commands';
+
+export const GENERATED_FILES_HEADING = '## Generated files';
+
+export const GENERATED_FILES_LINE =
+    '`.gitattributes` marks each file that gspot writes `linguist-generated`, in the block between the gspot markers.';
+
+export const EDIT_KEYS_LINE = 'You can edit the other keys of that file.';
+
+export const FIRST_READ_LINE = 'Read these rules first:';
+
+export const RULE_INDEX_LINES = [
+    'Read a rule below when its sentence fits your task.',
+    'A rule marked `in <folder>/` applies only to files in that folder.',
+    'A more specific rule wins over a general one.',
+] as const;
+
+export const MANAGED_KEYS_NOTE =
+    'Keys that gspot no longer manages stay in your files. Review shared config files after removing a configuration.';
+
+export const TOOLS_CHANGED_NOTE =
+    'The tools changed. Run gspot install; until then gspot/generated-files fails on the tool lockfile.';
+
+export const STALE_LOCKFILE_NOTE =
+    'The tool lockfile is missing or stale. Run gspot install; until then gspot/generated-files fails on it.';
+
+export const HOOKS_CHANGED_NOTE = 'Git hooks changed. Run gspot install.';
+
+export const GENERATED_FILE_NOUN = 'generated file';
+
+export const CHANGE_LABEL_WIDTH = 9;
+
+export const TOOL_PROJECT_FILES: readonly string[] = [
+    GSPOT_PATHS.npmProject,
+    GSPOT_PATHS.pythonProject,
+    GSPOT_PATHS.miseProject,
+];
+
+export const SEMGREP_RULE_PACK_FILE = 'semgrep.yml';
+
+export const CONFIG_REFERENCE = /(?:['"]\.\/|\bnew\s+URL\(\s*['"])(?<path>[^'"]+)['"]/gu;
+
+export const TS_EXTENSION = '.ts';
+
+export const CONFIG_SCOPES_FOLDER = 'scopes';
+
+export const BUILD_OUTPUT_FOLDERS: ReadonlySet<string> = new Set(['.build', 'DerivedData']);
+
+export const BUILD_OUTPUT_PATTERNS = ['dist/', 'build/', 'coverage/'] as const;
+
+export const GSPOT_FOLDER_PATTERNS = [`${GSPOT_FOLDER}/**`, `${COPIES_FOLDER}/**`] as const;
+
+export const TARGET_PLACEHOLDER = /\{target_(?:json|module)\}/gu;
+
+export const TARGET_MODULE_PLACEHOLDER = '{target_module}';
+
+export const OVERRIDES_PLACEHOLDER = '{overrides_json}';
+
+export const GROUP_LABELS = {
+    language: 'Languages',
+    framework: 'Frameworks',
+    platform: 'Platforms',
+    database: 'Databases',
+    testing: 'Testing',
+    infrastructure: 'Infrastructure',
+    library: 'Libraries',
+    general: 'General',
+} as const satisfies Record<Group, string>;

@@ -2,7 +2,7 @@ import type { Session } from '#cli/types/session.ts';
 import type { CheckFinding } from '#cli/types/engine/check.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { extractBaseName, extractParentFolder } from '#cli/system/paths.ts';
-import { FILE_FOLDER_CLASH_RULE } from '#cli/config/configurations/general/structure.ts';
+import { FILE_FOLDER_CLASH_RULE } from '#cli/config/configurations/structure.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/configurations/general/structure/checks/folder-tree.ts';
 
 /**

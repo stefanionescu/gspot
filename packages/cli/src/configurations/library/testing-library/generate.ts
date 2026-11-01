@@ -1,11 +1,11 @@
 import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
-import { CONFIGURATION_PLUGINS } from '#cli/config/configurations/generators/language/javascript/eslint/eslint.ts';
 
 import {
+    CONFIGURATION_PLUGINS,
     TESTING_LIBRARY_SCOPE,
     TESTING_LIBRARY_PRESETS,
     TESTING_LIBRARY_DEFAULT_PRESET,
-} from '#cli/config/configurations/generators/library.ts';
+} from '#cli/config/configurations/framework.ts';
 
 /**
 Apply the Testing Library presets of the frameworks in use.

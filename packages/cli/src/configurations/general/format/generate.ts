@@ -1,10 +1,10 @@
 import { isTable } from '#cli/system/tables.ts';
-import { JSON_INDENT } from '#cli/config/text.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { listPrettierPlugins } from '#cli/engine/tools.ts';
+import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { includeFolderContents } from '#cli/system/matchers.ts';
@@ -20,7 +20,7 @@ import {
     PRETTIER_FIXED_OPTIONS,
     UNREPRESENTABLE_SELECTOR,
     EDITORCONFIG_FIXED_SECTIONS,
-} from '#cli/config/configurations/generators/general.ts';
+} from '#cli/config/configurations/general.ts';
 
 function buildSectionPath(pattern: string, scopePath: string): string {
     if (pattern.startsWith('!') || UNREPRESENTABLE_SELECTOR.test(pattern))

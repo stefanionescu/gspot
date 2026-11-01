@@ -9,7 +9,7 @@ import {
     ESCAPED_CHARACTER,
     NGINX_PUNCTUATION,
     WHITESPACE_CHARACTER,
-} from '#cli/config/parsers/formats.ts';
+} from '#cli/config/parsers.ts';
 
 function findQuotedEnd(text: string, start: number): number {
     const quote = text.charAt(start);

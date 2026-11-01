@@ -3,9 +3,9 @@ import { setKey } from '#cli/settings/edit.ts';
 import { isTable } from '#cli/system/tables.ts';
 import { find } from '#cli/system/files/reads.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { PBXPROJ_SUFFIX } from '#cli/config/parsers.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
-import { PBXPROJ_SUFFIX } from '#cli/config/files/names.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { stripDefaults } from '#cli/commands/init/defaults.ts';
@@ -15,10 +15,16 @@ import { buildFilenameMatcher } from '#cli/system/matchers.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
 import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
+import { SWIFT_CONFIGURATION } from '#cli/config/configurations/structure.ts';
 import { buildImportExtensionTables } from '#cli/commands/init/import-extension.ts';
-import { SWIFT_CONFIGURATION, OPENAPI_CONFIGURATION } from '#cli/config/manifests/names.ts';
-import { PREFACE_BODY, LEADING_COMMENTS, XCODE_DESTINATIONS } from '#cli/config/commands/init.ts';
 import type { InitOptions, SettingsDraft, InitConfigurations, ScopeConfigurations } from '#cli/types/commands/init.ts';
+
+import {
+    PREFACE_BODY,
+    LEADING_COMMENTS,
+    XCODE_DESTINATIONS,
+    OPENAPI_CONFIGURATION,
+} from '#cli/config/commands/edits.ts';
 
 function buildOpenApiTables(
     scopes: ScopeConfigurations[],

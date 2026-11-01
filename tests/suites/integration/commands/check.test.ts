@@ -4,7 +4,7 @@ import { getTool } from '#cli/tools/pins.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { join, dirname, delimiter } from 'node:path';
-import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';

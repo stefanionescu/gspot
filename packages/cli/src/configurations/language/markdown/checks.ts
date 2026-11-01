@@ -2,16 +2,16 @@ import { parseAllDocuments } from 'yaml';
 import { read } from '#cli/system/files/reads.ts';
 import { getPosition } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
+import { JSONC_OPTIONS } from '#cli/config/parsers.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
-import { JSONC_OPTIONS } from '#cli/config/parsers/formats.ts';
 import type { CheckFinding } from '#cli/types/engine/check.ts';
 import type { CodeFence } from '#cli/types/parsers/formats.ts';
 import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import type { ParseCache, GrammarName } from '#cli/types/parsers/code.ts';
+import { SYNTAX_RULE } from '#cli/config/configurations/infrastructure.ts';
 import { parse, type ParseError, type ParseOptions, printParseErrorCode } from 'jsonc-parser';
-import { SYNTAX_RULE } from '#cli/config/configurations/cross-configuration/cross-configuration.ts';
 
 import type {
     FenceParser,
@@ -32,7 +32,7 @@ import {
     SYNTAX_ERROR_MESSAGE,
     GRAMMAR_FENCE_PARSERS,
     CAMEL_CASE_REPLACEMENT,
-} from '#cli/config/configurations/language/language.ts';
+} from '#cli/config/configurations/language.ts';
 
 function findJsonSyntaxError(body: string, options: ParseOptions): FenceSyntaxError | undefined {
     const errors: ParseError[] = [];

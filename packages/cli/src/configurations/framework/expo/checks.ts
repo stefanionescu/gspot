@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { type CheckFinding } from '#cli/types/engine/check.ts';
 import { findInstalledDependency } from '#cli/tools/packages.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
@@ -18,7 +18,7 @@ import {
     BLOCK_END_PREFIXES,
     EXPO_DOCTOR_COMMAND,
     UNINSTALLED_EXPO_MESSAGE,
-} from '#cli/config/configurations/framework/framework.ts';
+} from '#cli/config/configurations/framework.ts';
 
 function parseExpoDoctor(stdout: string): string[] {
     const lines = stripVTControlCharacters(stdout)

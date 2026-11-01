@@ -1,6 +1,6 @@
-import { CODE_MARK } from '#cli/config/main.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
+import { CODE_MARK } from '#cli/config/commands/help.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { checkStageSchema } from '#cli/schemas/manifests/fields.ts';
 import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
@@ -15,7 +15,7 @@ import {
     ESLINT_FILES_MESSAGE,
     LANGUAGE_FILES_MESSAGE,
     PRETTIER_FILES_MESSAGE,
-} from '#cli/config/commands/explain.ts';
+} from '#cli/config/commands/reports.ts';
 
 function listConfigurationRemovals(session: Session | undefined, name: string): ConfigurationExplanation['removed'] {
     return (session === undefined ? [] : listRemovedConfigurations(session.settings))

@@ -1,10 +1,9 @@
 import { join } from 'node:path/posix';
 import { find } from '#cli/system/files/reads.ts';
-import { PBXPROJ_FILE } from '#cli/config/files/names.ts';
 import type { RunCache } from '#cli/types/system/system.ts';
-import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
 import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
 import type { PlannedConfig } from '#cli/types/generation/files.ts';
+import { PBXPROJ_FILE, PACKAGE_SWIFT } from '#cli/config/parsers.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 
 import {
@@ -15,7 +14,7 @@ import {
     SWIFTFORMAT_ALWAYS_OFF,
     SWIFTFORMAT_ALL_LEVEL_ON,
     SWIFTFORMAT_DEFAULT_LEVEL_OFF,
-} from '#cli/config/configurations/generators/language/swift.ts';
+} from '#cli/config/configurations/swift.ts';
 
 function readSwiftVersion(cache: RunCache, scopePath: string, projectPath: string): string | undefined {
     const packageText = find(cache, join(scopePath, PACKAGE_SWIFT));

@@ -1,11 +1,11 @@
 import type { Session } from '#cli/types/session.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import type { CheckFinding } from '#cli/types/engine/check.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { listSourceConfigurations } from '#cli/manifests/select.ts';
-import { DECLARATION_EXTENSIONS } from '#cli/config/system/system.ts';
+import { LONE_FILE_RULE } from '#cli/config/configurations/structure.ts';
 import { extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
-import { LONE_FILE_RULE } from '#cli/config/configurations/general/structure.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/configurations/general/structure/checks/folder-tree.ts';
 
 /**

@@ -1,7 +1,6 @@
 import { getTable } from '#cli/settings/scopes.ts';
-import { DRIZZLE_RULES } from '#cli/config/configurations/generators/library.ts';
 import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
-import { CONFIGURATION_PLUGINS } from '#cli/config/configurations/generators/language/javascript/eslint/eslint.ts';
+import { DRIZZLE_RULES, CONFIGURATION_PLUGINS } from '#cli/config/configurations/framework.ts';
 
 /**
 Require safe changes in Drizzle queries.

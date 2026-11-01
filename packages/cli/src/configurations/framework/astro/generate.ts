@@ -1,6 +1,4 @@
-import { TYPESCRIPT_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import type { EslintScope, ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
-import { CONFIGURATION_PLUGINS } from '#cli/config/configurations/generators/language/javascript/eslint/eslint.ts';
 
 import {
     ASTRO_RULES,
@@ -8,7 +6,9 @@ import {
     ASTRO_TYPED_RULES,
     ASTRO_RULE_OPTIONS,
     ASTRO_SCRIPT_FILES,
-} from '#cli/config/configurations/generators/framework.ts';
+    CONFIGURATION_PLUGINS,
+    TYPESCRIPT_CONFIGURATION,
+} from '#cli/config/configurations/framework.ts';
 
 /**
 Apply Astro's presets and its component parser.

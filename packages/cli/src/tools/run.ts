@@ -1,7 +1,7 @@
 import { spawnProcess } from '#cli/system/processes.ts';
-import { TOOL_ENVIRONMENT } from '#cli/config/tools/tools.ts';
 import type { SpawnResult } from '#cli/types/system/system.ts';
 import type { ToolRunOptions } from '#cli/types/tools/tools.ts';
+import { TOOL_ENVIRONMENT } from '#cli/config/tools/programs.ts';
 import { buildGitEnvironment } from '#cli/repository/git/run.ts';
 
 /**

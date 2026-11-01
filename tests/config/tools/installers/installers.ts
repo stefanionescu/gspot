@@ -1,6 +1,6 @@
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { HUSKY_STUBS } from '#tests/config/repository/repository.ts';
-import { PYTHON_TOOL_PROJECT as PYTHON_PROJECT } from '#cli/config/tools/installers/installers.ts';
+import { PYTHON_TOOL_PROJECT as PYTHON_PROJECT } from '#cli/config/tools/installers.ts';
 
 export const REGISTRY_PASSWORDS = [
     ['https://alex@example.com/simple', []],

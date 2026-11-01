@@ -6,13 +6,15 @@ import { statSync, lstatSync, realpathSync } from 'node:fs';
 import { decodeGitPaths } from '#cli/repository/git/output.ts';
 import type { ListedFile } from '#cli/types/repository/files.ts';
 import type { GitIndexFile } from '#cli/types/parsers/parsers.ts';
+import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/system.ts';
 import { buildGitError, runGitForBytes } from '#cli/repository/git/run.ts';
 import { isInside, extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
-import { GITLINK_MODE, GIT_FILE_MODES, EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
 
 import {
+    GITLINK_MODE,
+    GIT_FILE_MODES,
+    EXECUTABLE_FILE,
     EXECUTABLE_BITS,
-    INSTALLED_DEPENDENCY_FOLDERS,
     GIT_UNTRACKED_FILES_ARGUMENTS,
 } from '#cli/config/repository/files.ts';
 

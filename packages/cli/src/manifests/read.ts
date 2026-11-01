@@ -6,9 +6,8 @@ import { listAssets, buildAssetPath } from '#cli/system/assets.ts';
 import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
 import { manifestSchema } from '#cli/schemas/manifests/manifest.ts';
 import { compareText, formatSimilarNames } from '#cli/system/text.ts';
-import { CONFIGURATIONS_FOLDER } from '#cli/config/manifests/names.ts';
 import type { ShippedRule } from '#cli/types/generation/generation.ts';
-import { RULES_FOLDER, MANIFEST_FILE } from '#cli/config/manifests/manifests.ts';
+import { RULES_FOLDER, MANIFEST_FILE, CONFIGURATIONS_FOLDER } from '#cli/config/manifests.ts';
 import type { Tool, Check, Configuration, ParsedManifest, ConfigurationCheck } from '#cli/types/manifests.ts';
 
 let shippedConfigurations: Map<string, Configuration> | undefined;

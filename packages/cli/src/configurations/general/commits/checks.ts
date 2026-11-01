@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { formatCount } from '#cli/system/text.ts';
+import { PRIVATE_FILE } from '#cli/config/system.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { type PlannedCheck } from '#cli/types/engine/planning.ts';
@@ -17,7 +17,7 @@ import {
     COMMITLINT_CHECK,
     MESSAGE_REFERENCES,
     GIT_COMMIT_MESSAGE_ARGUMENTS,
-} from '#cli/config/configurations/general/general.ts';
+} from '#cli/config/configurations/general.ts';
 
 /**
 Checks every pushed commit message, including empty commits that change no files.

@@ -3,22 +3,20 @@ import { readFile } from 'node:fs/promises';
 import { getTool } from '#cli/tools/pins.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { existsSync, utimesSync } from 'node:fs';
-import { JSON_INDENT } from '#cli/config/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { LEVELS } from '#cli/config/manifests/names.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { VALE_PACKAGES_INI } from '#tests/config/vale.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
+import { LEVELS, GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { PREVIOUS_BYTES } from '#tests/config/tools/installers/installers.ts';
 import { downloadArchive, hasValePackages, installValePackages } from '#cli/tools/installers/vale.ts';
-import { VALE_PACKAGE_FOLDERS, VALE_PACKAGE_RELEASES } from '#cli/config/tools/installers/installers.ts';
+import { JSON_INDENT, VALE_PACKAGE_FOLDERS, VALE_PACKAGE_RELEASES } from '#cli/config/tools/installers.ts';
 
 test.each([...LEVELS])(
     'Vale packages are ready at %s only with the generated vale.ini and the installed folders',

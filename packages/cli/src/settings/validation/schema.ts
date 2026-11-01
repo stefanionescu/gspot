@@ -9,14 +9,13 @@ import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import type { WrittenConfiguration } from '#cli/types/manifests.ts';
 import { listUnknownConfigurations } from '#cli/manifests/select.ts';
-import { NO_CHECK_PATHS_MESSAGE } from '#cli/config/settings/settings.ts';
-import { RECORD_PATHS_MESSAGE } from '#cli/config/settings/validation.ts';
 import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
 import { formatFileValueError } from '#cli/settings/validation/messages.ts';
 import { validateSettingReasons } from '#cli/settings/validation/reasons.ts';
 import type { Settings, SettingsError } from '#cli/types/settings/settings.ts';
 import { validateKeys, formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { RECORD_FIELDS, findChildSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
+import { RECORD_PATHS_MESSAGE, NO_CHECK_PATHS_MESSAGE } from '#cli/config/settings/validation.ts';
 
 import {
     validateScopePaths,

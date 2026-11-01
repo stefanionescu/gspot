@@ -7,13 +7,13 @@ import { openSession } from '#cli/engine/session.ts';
 import { buildCheckSession } from '#cli/engine/run.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
+import { GENERATED_HEADER_TEXT } from '#cli/config/generation.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { type CommandArgument } from '#cli/types/engine/tool-runs.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { GENERATED_HEADER_TEXT } from '#cli/config/generation/generation.ts';
 import { buildCommandSetup, buildCommandLaunch } from '#cli/engine/tool-runs/check.ts';
 
 import {

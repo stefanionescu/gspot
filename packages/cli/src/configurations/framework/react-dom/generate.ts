@@ -1,7 +1,11 @@
-import { REACT_NATIVE_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
-import { REACT_FILES, REACT_DOM_RULE_OPTIONS } from '#cli/config/configurations/generators/framework.ts';
-import { CONFIGURATION_PLUGINS } from '#cli/config/configurations/generators/language/javascript/eslint/eslint.ts';
+
+import {
+    REACT_FILES,
+    CONFIGURATION_PLUGINS,
+    REACT_DOM_RULE_OPTIONS,
+    REACT_NATIVE_CONFIGURATION,
+} from '#cli/config/configurations/framework.ts';
 
 /**
 Apply the accessibility lint rules to the React DOM files.

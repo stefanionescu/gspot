@@ -1,14 +1,14 @@
 import { read } from '#cli/system/files/reads.ts';
-import { WHITESPACE_RUN } from '#cli/config/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
+import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import { type CheckFinding } from '#cli/types/engine/check.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import type { HeaderBlock, ParsedHeadersFile } from '#cli/types/configurations/platform.ts';
-import { SYNTAX_RULE } from '#cli/config/configurations/cross-configuration/cross-configuration.ts';
 
 import {
+    SYNTAX_RULE,
     HEADERS_FILE,
     DETACH_PREFIX,
     PATH_PREFIXES,
@@ -26,7 +26,7 @@ import {
     MALFORMED_HEADER_MESSAGE,
     HEADER_WITHOUT_PATH_MESSAGE,
     REDIRECT_DESTINATION_MESSAGE,
-} from '#cli/config/configurations/platform.ts';
+} from '#cli/config/configurations/infrastructure.ts';
 
 function splitContentLines(text: string): NumberedLine[] {
     return text

@@ -1,17 +1,17 @@
-import { JSON_INDENT } from '#cli/config/text.ts';
 import { read } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { listDistinctTools } from '#cli/tools/pins.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
 import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
-import { JAVASCRIPT_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import type { Settings, TableSettings } from '#cli/types/settings/settings.ts';
+import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/blocks.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
 
@@ -25,7 +25,7 @@ import {
     COMMAND_WORD_SEPARATORS,
     KNIP_IGNORED_DEPENDENCIES,
     KNIP_JAVASCRIPT_ENTRY_FILES,
-} from '#cli/config/configurations/generators/language/javascript/javascript.ts';
+} from '#cli/config/configurations/javascript.ts';
 
 function selectEntryFiles(settings: Settings, scopes: Scope[], scopePath: string): string[] {
     const authored = listApplicableTables(settings, scopePath).flatMap(

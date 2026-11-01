@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { LEVELS } from '#cli/config/manifests/names.ts';
+import { LEVELS } from '#cli/config/manifests.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';

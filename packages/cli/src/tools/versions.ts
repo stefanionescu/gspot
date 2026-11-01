@@ -4,15 +4,15 @@ import type { Tool } from '#cli/types/manifests.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { Files } from '#cli/types/system/files.ts';
-import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { join, dirname, basename, relative } from 'node:path';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import type { SpawnResult } from '#cli/types/system/system.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
+import { GSPOT_FOLDER, PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { VERSION_FLAG } from '#cli/config/repository/javascript.ts';
 import { readHostPackage, readToolProjectPackage } from '#cli/tools/packages.ts';
+import { NO_VERSION, NPM_BIN_FOLDER, TOOL_ENVIRONMENT } from '#cli/config/tools/programs.ts';
 import type { InspectedTool, ToolInspection, ParsedToolVersion } from '#cli/types/tools/inspection.ts';
-import { NO_VERSION, VERSION_FLAG, NPM_BIN_FOLDER, TOOL_ENVIRONMENT } from '#cli/config/tools/tools.ts';
 
 function findVersionAbove(files: Files | undefined, root: string, start: string, name: string): string | undefined {
     for (let folder = start; folder !== dirname(folder); folder = dirname(folder)) {

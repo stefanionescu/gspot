@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
 

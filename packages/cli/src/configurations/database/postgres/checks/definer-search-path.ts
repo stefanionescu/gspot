@@ -12,7 +12,7 @@ import {
     PUBLIC_SCHEMA,
     SECURITY_DEFINER_MESSAGE,
     DEFINER_SEARCH_PATH_RULE,
-} from '#cli/config/configurations/database/postgres.ts';
+} from '#cli/config/configurations/infrastructure.ts';
 
 function buildFunctionKey(names: Node[] | undefined, parameters: (TypeName | undefined)[]): string {
     const path = listNodeFields(names, 'String').map(({ sval = '' }) => sval);

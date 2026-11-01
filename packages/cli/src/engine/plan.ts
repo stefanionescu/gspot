@@ -2,18 +2,18 @@ import { isTable } from '#cli/system/tables.ts';
 import { find } from '#cli/system/files/reads.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
+import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { getTool, findToolName } from '#cli/tools/pins.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Settings } from '#cli/types/settings/settings.ts';
-import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import type { Check, ScopeCheck } from '#cli/types/manifests.ts';
 import { findFirstSkip, findSettingsSkip } from '#cli/engine/skips.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { isRootOnlyCheck, selectCheckFiles } from '#cli/engine/files.ts';
-import { ROOT_RUNS, COVERAGE_DIMENSIONS, COVERAGE_INI_SECTION } from '#cli/config/engine/planning.ts';
+import { ROOT_RUNS, COVERAGE_DIMENSIONS, COVERAGE_INI_SECTION } from '#cli/config/engine.ts';
 
 import {
     type PlanOptions,

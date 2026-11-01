@@ -6,7 +6,7 @@ import { parse } from '@decimalturn/toml-patch';
 import { findValueAt } from '#cli/system/tables.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { readTree } from '#tests/setup/system/files.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

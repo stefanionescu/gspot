@@ -5,11 +5,9 @@ import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { listCheckFiles } from '#cli/engine/files.ts';
-import { SQL_EXTENSION } from '#cli/config/files/names.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
-import { SYMLINK_MODE, GITLINK_MODE } from '#cli/config/files/modes.ts';
+import { SYMLINK_MODE, GITLINK_MODE } from '#cli/config/repository/files.ts';
 import { readHead, readBlobs, listRevisionFiles } from '#cli/repository/revisions/files.ts';
-import { SYNTAX_RULE } from '#cli/config/configurations/cross-configuration/cross-configuration.ts';
 import { type Migration, type MigrationRead } from '#cli/types/configurations/database/postgres.ts';
 
 import {
@@ -19,11 +17,13 @@ import {
     compareMigrationVersions,
 } from '#cli/parsers/code/sql.ts';
 import {
+    SYNTAX_RULE,
     SQUAWK_CHECK,
+    SQL_EXTENSION,
     MIGRATION_DOWN,
     MIGRATION_SYNTAX_SKIP,
     DOWN_MIGRATION_SUFFIX,
-} from '#cli/config/configurations/database/postgres.ts';
+} from '#cli/config/configurations/infrastructure.ts';
 
 const MIGRATIONS = Symbol('migrations');
 

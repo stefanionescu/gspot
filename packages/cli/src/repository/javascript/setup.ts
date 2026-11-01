@@ -1,9 +1,9 @@
 import semver from 'semver';
-import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import type { SetupReference } from '#cli/types/reference.ts';
 
 import {
+    LOCKFILES,
     START_RUNNERS,
     FROZEN_INSTALLS,
     YARN_BERRY_MAJOR,

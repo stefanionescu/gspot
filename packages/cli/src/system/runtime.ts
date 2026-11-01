@@ -1,5 +1,5 @@
 import semver from 'semver';
-import { RUNTIME_NAMES } from '#cli/config/system/system.ts';
+import { RUNTIME_NAMES } from '#cli/config/system.ts';
 
 /**
 Compare the running Node.js, or Bun when it runs gspot, with the minimum versions in the engines field of the

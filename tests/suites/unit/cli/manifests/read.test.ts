@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';

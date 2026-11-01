@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { licensesSchema } from '#cli/schemas/settings/settings.ts';
 import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
-import { ALLOWED_WORD, REEXPORT_MODES, SPELLING_LOCALES } from '#cli/config/settings/settings.ts';
+import { ALLOWED_WORD, REEXPORT_MODES, SPELLING_LOCALES } from '#cli/config/settings/schema.ts';
 
 import {
     percentageSchema,

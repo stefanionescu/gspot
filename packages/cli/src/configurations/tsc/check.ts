@@ -9,7 +9,7 @@ import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import { TYPESCRIPT_TAG } from '#cli/config/configurations/cross-configuration/tsc.ts';
+import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
 
 import {
     runTsc,

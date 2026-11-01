@@ -8,7 +8,7 @@ import { runGspotStep } from '#tests/setup/cli/commands.ts';
 import type { SandboxWrite } from '#tests/types/changes.ts';
 import type { SandboxChanges } from '#tests/types/samples.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { runGitStep, markExecutable } from '#tests/setup/system/git.ts';

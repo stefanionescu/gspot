@@ -2,7 +2,7 @@ import { stat } from 'node:fs/promises';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import type { ChildProcess } from 'node:child_process';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
+import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { POLL_INTERVAL_MILLISECONDS } from '#tests/config/setup/system.ts';
 import { spawnProcess, spawnProcessBlocking } from '#cli/system/processes.ts';

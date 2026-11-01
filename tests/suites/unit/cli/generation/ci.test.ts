@@ -7,15 +7,16 @@ import { openSession } from '#cli/engine/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { CI_NODE } from '#cli/config/repository/javascript.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/typescript.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import type { Pipeline } from '#cli/types/generation/generation.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { GITHUB_EXPRESSION_MESSAGE } from '#cli/config/generation.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { type GithubWorkflow, type GitlabPipeline } from '#tests/types/ci.ts';
-import { CI_NODE, GITHUB_EXPRESSION_MESSAGE } from '#cli/config/generation/generation.ts';
 import { SETUP_CASES, LINUX_PIPELINE, SETUP_ARGUMENTS } from '#tests/config/generation/generation.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/ci.ts';
 

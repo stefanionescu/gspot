@@ -15,7 +15,7 @@ import {
     PARAMETER_DEPTH,
     PARAMETER_PREFIX,
     TABLE_PARAMETERS,
-} from '#cli/config/configurations/general/naming/languages.ts';
+} from '#cli/config/configurations/naming.ts';
 
 function listColumnNames(nodes: Node[] | undefined): SqlName[] {
     const names: SqlName[] = [];

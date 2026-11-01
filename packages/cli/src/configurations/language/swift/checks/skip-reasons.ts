@@ -12,7 +12,7 @@ import {
     SKIP_REASON_ARGUMENT,
     SWIFT_STRING_LITERAL,
     DISABLED_TEST_MESSAGE,
-} from '#cli/config/configurations/language/swift.ts';
+} from '#cli/config/configurations/builds.ts';
 
 function hasReason(reason: Node | undefined): boolean {
     if (reason === undefined || reason.text === 'nil') return false;

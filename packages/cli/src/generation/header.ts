@@ -1,13 +1,13 @@
 import { posix } from 'node:path';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { extractExtension } from '#cli/system/paths.ts';
-import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 
 import {
     JSON_EXTENSIONS,
     SLASH_COMMENT_FILES,
     GENERATED_HEADER_TEXT,
     SLASH_COMMENT_EXTENSIONS,
-} from '#cli/config/generation/generation.ts';
+} from '#cli/config/generation.ts';
 
 /**
 Format the header of a generated file outside .gspot.

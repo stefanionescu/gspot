@@ -1,7 +1,6 @@
 import type { z } from 'zod';
 import type { JsonValue } from '#cli/types/shapes.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
-import type { Settings } from '#cli/types/settings/settings.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { Group, Configuration } from '#cli/types/manifests.ts';
 import type { ciJobSchema } from '#cli/schemas/repository/repository.ts';
@@ -79,5 +78,8 @@ export type ConfigurationSelection = {
     repository: Repository;
     configurationsByName: Map<string, Configuration>;
     scopes: readonly { path: string; configurations: Configuration[] }[];
-    settings: Pick<Settings, 'removed_configurations' | 'scopes'>;
+    settings: {
+        removed_configurations: string[];
+        scopes: ReadonlyMap<string, { removed_configurations: string[] }>;
+    };
 };

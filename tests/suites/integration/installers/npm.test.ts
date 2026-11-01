@@ -1,13 +1,14 @@
 import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
 import { runTool } from '#cli/tools/run.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
 import type { ApplyReport } from '#cli/types/generation/files.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import prettierPackage from 'prettier/package.json' with { type: 'json' };

@@ -4,8 +4,8 @@ import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildBaseResult } from '#cli/engine/results.ts';
+import { PYTHON_EXTENSION } from '#cli/config/parsers.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { PYTHON_EXTENSION } from '#cli/config/parsers/code.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { type PlannedCheck } from '#cli/types/engine/planning.ts';
 import type { EnvironmentRead } from '#cli/types/parsers/code.ts';
@@ -24,7 +24,7 @@ import {
     GITLEAKS_STAGED_FLAG,
     GITLEAKS_STAGED_CHECK,
     ENVIRONMENT_READ_LANGUAGES,
-} from '#cli/config/configurations/general/general.ts';
+} from '#cli/config/configurations/general.ts';
 
 async function readEnvironmentReferences(
     session: Session,

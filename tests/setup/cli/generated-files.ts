@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
 import { openSession } from '#cli/engine/session.ts';
 import type { Session } from '#cli/types/session.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { ROOT_LABEL } from '#tests/config/messages.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { extractConfigName } from '#cli/engine/files.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';

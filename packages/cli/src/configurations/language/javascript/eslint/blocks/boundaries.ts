@@ -1,9 +1,8 @@
 import { escapeGlob } from '#cli/system/paths.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { TRPC_CONFIGURATION } from '#cli/config/manifests/names.ts';
+import { IMPORT_RULE_CATEGORY } from '#cli/config/configurations/structure.ts';
 import { listAllowedRules, formatRefusedImport } from '#cli/settings/import-rules.ts';
 import { listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
-import { CODE_LANGUAGES } from '#cli/config/configurations/generators/language/javascript/eslint/eslint.ts';
 
 import type {
     EslintBlock,
@@ -13,9 +12,10 @@ import type {
 } from '#cli/types/generation/eslint.ts';
 import {
     TEMPLATE_OPEN,
+    CODE_LANGUAGES,
+    TRPC_CONFIGURATION,
     TEST_IMPORT_POLICY,
     OTHER_BOUNDARY_FILE,
-    IMPORT_RULE_CATEGORY,
     TRPC_SERVER_CATEGORY,
     TEMPLATE_OPEN_ESCAPED,
     TEST_BOUNDARY_CATEGORY,
@@ -26,7 +26,7 @@ import {
     BOUNDARY_SOURCE_TEMPLATE,
     BOUNDARY_DEPENDENCY_NODES,
     BOUNDARY_DEPENDENCY_SELECTORS,
-} from '#cli/config/configurations/generators/language/javascript/eslint/blocks/blocks.ts';
+} from '#cli/config/configurations/blocks.ts';
 
 function buildDependencyPolicies({
     importRules,

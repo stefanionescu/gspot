@@ -12,17 +12,15 @@ import { getTool, listPackagePins } from '#cli/tools/pins.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
 import { type SpawnResult } from '#cli/types/system/system.ts';
 import { type UvLockfile } from '#cli/types/parsers/projects.ts';
-import { CONFIG_TOML_FORMAT } from '#cli/config/generation/toml.ts';
+import { GSPOT_PATHS, UV_LOCKFILE } from '#cli/config/manifests.ts';
 import { uvLockfileSchema } from '#cli/schemas/parsers/projects.ts';
 import { type GeneratedFile } from '#cli/types/generation/files.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import type { ReplacementRequest } from '#cli/types/repository/repository.ts';
-import { PRIVATE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
-import { UV_LOCKFILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
-import { UV_TOOL, UV_FLAGS, UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/tools.ts';
+import { PRIVATE_FILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { runInstallStep, explainReleaseAgeHold } from '#cli/tools/installers/steps.ts';
-import { PYPROJECT_TOML, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/projects.ts';
+import { GSPOT_FOLDER, PYPROJECT_TOML, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers.ts';
 import { uvSettingsSchema, uvProjectSettingsSchema } from '#cli/schemas/tools/installers/installers.ts';
 
 import {
@@ -37,19 +35,23 @@ import type {
     PythonIndexSettings,
 } from '#cli/types/tools/installers/installers.ts';
 import {
+    UV_TOOL,
+    UV_FLAGS,
     URL_SCHEME,
     INDEX_SETTINGS,
     PYTHON_TOOL_NOUN,
     UV_SETTINGS_FILE,
     UV_VENV_ARGUMENTS,
+    CONFIG_TOML_FORMAT,
     PYTHON_TOOL_PROJECT,
     UV_INSTALL_ARGUMENTS,
     UV_LOCKFILE_ARGUMENTS,
+    UV_PROJECT_ENVIRONMENT,
     PYTHON_PACKAGE_ORIGINS,
     REQUIREMENT_PACKAGE_NAME,
     PYTHON_DEFAULT_INDEX_ORIGIN,
     UV_LOCKFILE_CREDENTIAL_MESSAGE,
-} from '#cli/config/tools/installers/installers.ts';
+} from '#cli/config/tools/installers.ts';
 
 async function runUv(
     install: ToolInstall,

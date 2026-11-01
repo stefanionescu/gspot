@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { GIT_MODES } from '#cli/config/parsers/parsers.ts';
+import { GIT_MODES } from '#cli/config/repository/files.ts';
 
 export const gitFileSchema = z.object({
     mode: z.enum(GIT_MODES),

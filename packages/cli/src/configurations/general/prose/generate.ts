@@ -3,10 +3,10 @@ import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { dirname, relative } from 'node:path/posix';
 import type { Session } from '#cli/types/session.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { buildValeIni } from '#cli/tools/installers/vale.ts';
 import type { PlannedConfig } from '#cli/types/generation/files.ts';
-import { VALE_PACKAGES, VALE_PACKAGE_URLS } from '#cli/config/tools/installers/installers.ts';
+import { VALE_PACKAGES, VALE_STYLES_PATH, VALE_PACKAGE_URLS } from '#cli/config/tools/installers.ts';
 
 import {
     ACRONYMS,
@@ -17,12 +17,11 @@ import {
     ACRONYM_PATTERN,
     BANNED_HEADINGS,
     ALT_TEXT_MESSAGE,
-    VALE_STYLES_PATH,
     VALE_REGEX_SYMBOLS,
     CAPITALIZATION_STYLES,
     BANNED_HEADING_MESSAGE,
     ACRONYM_DEFINITION_PATTERN,
-} from '#cli/config/configurations/generators/general.ts';
+} from '#cli/config/configurations/prose.ts';
 
 function listExceptions(words: string[]): string[] {
     return [...new Set([...words, ...ACRONYMS])]

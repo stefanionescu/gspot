@@ -2,27 +2,29 @@ import { GspotError } from '#cli/system/errors.ts';
 import { chmodSync, writeFileSync } from 'node:fs';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
-import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
-import { JSCONFIG_FILE } from '#cli/config/files/names.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { join, dirname, extname, relative } from 'node:path';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import type { CheckResult } from '#cli/types/engine/check.ts';
-import { RAN_STATUSES } from '#cli/config/engine/tool-runs.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
+import { RAN_STATUSES, JSCONFIG_FILE } from '#cli/config/engine.ts';
 import type { ParsedTsconfig } from '#cli/types/parsers/projects.ts';
-import { DECLARATION_EXTENSIONS } from '#cli/config/system/system.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { createCopy, createCheckCopy } from '#cli/engine/copies/files.ts';
 import { listCheckedFiles, extractConfigName } from '#cli/engine/files.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/engine/results.ts';
+import { PRIVATE_FILE, DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
-import { TSC_UNFORMATTED_OUTPUT } from '#cli/config/configurations/cross-configuration/tsc.ts';
-import { JSCONFIG_TSBUILDINFO, JAVASCRIPT_TSC_COMMAND } from '#cli/config/configurations/language/language.ts';
 import { listCompilerFiles, addTsbuildinfoFlag, restoreCommandPaths } from '#cli/configurations/tsc/compiler.ts';
+
+import {
+    JSCONFIG_TSBUILDINFO,
+    TSC_UNFORMATTED_OUTPUT,
+    JAVASCRIPT_TSC_COMMAND,
+} from '#cli/config/configurations/javascript.ts';
 
 function buildScopeCompilerProject(
     session: Session,

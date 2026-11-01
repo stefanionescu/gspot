@@ -1,7 +1,7 @@
 import { GspotError } from '#cli/system/errors.ts';
 import type { Parsed } from '#cli/types/shapes.ts';
 import type { CheckFinding } from '#cli/types/engine/check.ts';
-import { SYNTAX_RULE } from '#cli/config/configurations/cross-configuration/cross-configuration.ts';
+import { SYNTAX_RULE } from '#cli/config/configurations/infrastructure.ts';
 
 /**
 Parse a check input and turn a file error into a syntax finding.

@@ -4,16 +4,16 @@ import { join, posix, relative } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { PACKAGE_SWIFT } from '#cli/config/parsers.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
-import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
+import { MODE_BITS, PRIVATE_FOLDER } from '#cli/config/system.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
-import { MODE_BITS, PRIVATE_FOLDER } from '#cli/config/files/modes.ts';
 import { statSync, lstatSync, mkdirSync, realpathSync } from 'node:fs';
 import type { SwiftBuildPlan, SwiftBuildSetup, SwiftBuildPurpose } from '#cli/types/configurations/language/swift.ts';
 
@@ -38,7 +38,7 @@ import {
     XCODE_DESTINATION_FLAG,
     XCODE_WORKSPACE_SUFFIX,
     PACKAGE_SCRATCH_FOLDER,
-} from '#cli/config/configurations/language/swift.ts';
+} from '#cli/config/configurations/builds.ts';
 
 function readBuildSources(root: string, paths: string[]): Map<string, FileContents> {
     const source = openFiles(root);

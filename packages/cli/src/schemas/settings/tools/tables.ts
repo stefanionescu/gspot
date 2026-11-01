@@ -19,7 +19,7 @@ import {
     DOCSTRING_CONVENTIONS,
     IMPORT_EXTENSION_STYLES,
     MARKDOWNLINT_RULE_ID_REFUSAL,
-} from '#cli/config/settings/tools/tables.ts';
+} from '#cli/config/settings/schema.ts';
 
 const eslintTableSchema = z.strictObject({
     import_extension: z

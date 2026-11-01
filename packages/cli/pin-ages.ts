@@ -3,9 +3,9 @@ import pLimit from 'p-limit';
 import { listPackagePins } from '#cli/tools/pins.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
+import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { generalTableSchemas } from '#cli/schemas/settings/general.ts';
-import { GSPOT_PACKAGES, SECONDS_PER_DAY } from '#cli/config/tools/installers/npm.ts';
+import { GSPOT_PACKAGES, SECONDS_PER_DAY } from '#cli/config/tools/installers.ts';
 
 const lookupLimit = pLimit(8);
 const npmTimesSchema = z.record(z.string(), z.string());

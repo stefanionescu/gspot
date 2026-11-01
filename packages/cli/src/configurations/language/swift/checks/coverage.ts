@@ -1,8 +1,8 @@
 import { realpathSync } from 'node:fs';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { MAX_PERCENTAGE } from '#cli/config/units.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { PACKAGE_SWIFT } from '#cli/config/parsers.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
@@ -11,7 +11,7 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import type { CheckFinding } from '#cli/types/engine/check.ts';
-import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
+import { MAX_PERCENTAGE } from '#cli/config/settings/schema.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import type { TableSettings } from '#cli/types/settings/settings.ts';
@@ -47,7 +47,7 @@ import {
     COVERAGE_VIEWER_MESSAGE,
     MISSING_COVERAGE_MESSAGE,
     SWIFT_TESTING_FAILURE_LINE,
-} from '#cli/config/configurations/language/swift.ts';
+} from '#cli/config/configurations/builds.ts';
 
 function findFailureFile(planned: PlannedCheck, file: string, cwd: string): string | undefined {
     const restored = file.replaceAll(

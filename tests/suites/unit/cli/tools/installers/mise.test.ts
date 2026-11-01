@@ -6,9 +6,9 @@ import { listMisePins } from '#cli/tools/pins.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import * as processes from '#cli/system/processes.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
@@ -16,9 +16,9 @@ import type { MiseProject } from '#tests/types/packages.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { MISE_PROJECT_MESSAGE } from '#cli/config/tools/installers.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { MISE_PROJECT_MESSAGE } from '#cli/config/tools/installers/installers.ts';
 import { installMiseTools, isMiseLockfileFresh } from '#cli/tools/installers/mise.ts';
 
 test('mise lock freshness needs the tool, its version, a URL and a sha256 checksum', () => {

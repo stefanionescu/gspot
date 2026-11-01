@@ -1,7 +1,7 @@
 import type { Constraint } from '@pgsql/types';
 import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 import type { SqlStatement, SqlStatementVisitors } from '#cli/types/parsers/code.ts';
-import { PUBLIC_SCHEMA, SCHEMA_NAME_INDEX, CONSTRAINT_SUFFIXES } from '#cli/config/configurations/database/postgres.ts';
+import { PUBLIC_SCHEMA, SCHEMA_NAME_INDEX, CONSTRAINT_SUFFIXES } from '#cli/config/configurations/infrastructure.ts';
 
 import type {
     Schema,

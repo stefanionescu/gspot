@@ -7,20 +7,20 @@ import { isInScope } from '#cli/repository/scopes.ts';
 import { listRuleFiles } from '#cli/manifests/read.ts';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import type { SourcePosition } from '#cli/types/text.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { detectConditions } from '#cli/repository/detect.ts';
+import { GROUPS, GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { FIRST_READ } from '#cli/config/settings/validation.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { type Repository } from '#cli/types/repository/files.ts';
-import { GROUPS, GROUP_LABELS } from '#cli/config/manifests/names.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { type Level, type Configuration } from '#cli/types/manifests.ts';
 import type { RuleFile, RuleSection, ShippedRule, AgentsBlockContent } from '#cli/types/generation/generation.ts';
 
 import {
-    FIRST_READ,
     BLANK_LINE,
+    GROUP_LABELS,
     RULES_HEADING,
     EDIT_KEYS_LINE,
     FIRST_READ_LINE,
@@ -32,7 +32,7 @@ import {
     RULE_OPENING_PREFIX,
     GENERATED_FILES_LINE,
     GENERATED_FILES_HEADING,
-} from '#cli/config/generation/generation.ts';
+} from '#cli/config/generation.ts';
 
 function listConfigurationRules(configurations: Configuration[], repository: Repository): ShippedRule[] {
     const conditions = configurations.flatMap((configuration) => Object.values(configuration.rules));

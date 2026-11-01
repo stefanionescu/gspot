@@ -1,7 +1,8 @@
 import type { Session } from '#cli/types/session.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
+import type { CHECK_HOOKS } from '#cli/config/tools/installers.ts';
 import type { ManagedKeys } from '#cli/types/repository/repository.ts';
-import { type CHECK_HOOKS, type IGNORE_SECTION_TITLES } from '#cli/config/generation/generation.ts';
+import type { IGNORE_SECTION_TITLES } from '#cli/config/configurations/registry.ts';
 import { type Tool, type Level, type Config, type Configuration, type SourcedConfig } from '#cli/types/manifests.ts';
 
 type ManagedBlock = { path: string; body: string };

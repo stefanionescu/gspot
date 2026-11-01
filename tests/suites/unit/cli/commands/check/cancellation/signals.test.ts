@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { stringify } from '@decimalturn/toml-patch';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
+import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/setup/environment.ts';

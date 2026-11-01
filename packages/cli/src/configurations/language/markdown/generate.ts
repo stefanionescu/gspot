@@ -1,4 +1,4 @@
-import { JSON_INDENT } from '#cli/config/text.ts';
+import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import { refuseIdleRuleOptions } from '#cli/configurations/rule-options.ts';
 import type { OwnedConfig, PlannedConfig } from '#cli/types/generation/files.ts';
@@ -9,7 +9,7 @@ import {
     MARKDOWNLINT_RULES,
     MARKDOWNLINT_ALL_RULES,
     MARKDOWNLINT_PRETTIER_DISABLED,
-} from '#cli/config/configurations/generators/language/language.ts';
+} from '#cli/config/configurations/language.ts';
 
 /**
 Build markdownlint.jsonc: the Markdown lint rules for the level, indentation, and your own rule options.

@@ -20,7 +20,7 @@ import {
     CONFIG_REFERENCE,
     CONFIG_SCOPES_FOLDER,
     SEMGREP_RULE_PACK_FILE,
-} from '#cli/config/generation/generation.ts';
+} from '#cli/config/generation.ts';
 import type {
     BuiltConfig,
     OwnedConfig,

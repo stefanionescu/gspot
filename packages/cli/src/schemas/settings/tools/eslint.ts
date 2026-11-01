@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { relativePathSchema } from '#cli/schemas/settings/fields.ts';
 import { buildRuleTableSchema } from '#cli/schemas/settings/tools/rules.ts';
-import { ESLINT_SEVERITIES, ESLINT_PLUGIN_NAME, ESLINT_PLUGIN_MODULE } from '#cli/config/settings/tools/eslint.ts';
+import { ESLINT_SEVERITIES, ESLINT_PLUGIN_NAME, ESLINT_PLUGIN_MODULE } from '#cli/config/settings/schema.ts';
 
 const firstEslintOptionSchema = z.union([
     z.string().refine((value) => !(ESLINT_SEVERITIES as readonly string[]).includes(value)),

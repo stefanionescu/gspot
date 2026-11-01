@@ -6,28 +6,28 @@ import { getTool } from '#cli/tools/pins.ts';
 import { isInside } from '#cli/system/paths.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import { readFileSync, realpathSync } from 'node:fs';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { join, dirname, resolve, relative } from 'node:path';
-import { RULE_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import type { Tool, Configuration } from '#cli/types/manifests.ts';
+import { ESLINT_MANIFEST_TOOL } from '#cli/config/repository/setup.ts';
+import { GSPOT_PATHS, RULE_PLACEHOLDER } from '#cli/config/manifests.ts';
 import { listExecutablePaths, listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
-import { ESLINT_MANIFEST_TOOL, STYLELINT_MANIFEST_TOOL } from '#cli/config/manifests/names.ts';
 import type { LintRuleDocs, RuleToolSearch, RuleDocsOptions } from '#cli/types/tools/tools.ts';
 import { ruffRuleSchema, installedRulesSchema, ruleDocumentationSchema } from '#cli/schemas/tools/tools.ts';
 
 import {
     ESLINT_BUILTIN_RULES,
+    STYLELINT_MANIFEST_TOOL,
     MARKDOWNLINT_RULE_SCHEMA,
     SWIFTLINT_RULE_ARGUMENTS,
     INSTALL_FOR_RULES_MESSAGE,
     SWIFTLINT_RULE_IDENTIFIER,
     SHELLCHECK_RULE_IDENTIFIER,
     MARKDOWNLINT_RULE_DESCRIPTION,
-} from '#cli/config/tools/tools.ts';
+} from '#cli/config/tools/programs.ts';
 
 /**
 Read the longest declared plugin prefix of a qualified lint rule.

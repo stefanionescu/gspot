@@ -1,7 +1,6 @@
 import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
-import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { readCachedPrefix } from '#cli/system/files/reads.ts';
 import { BANNER_BYTES } from '#cli/config/repository/files.ts';
@@ -10,8 +9,9 @@ import { detectConfigurations } from '#cli/repository/detect.ts';
 import type { Generation } from '#cli/types/generation/files.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
+import { ROOT_SCOPE_LABEL } from '#cli/config/configurations/general.ts';
 import { readLintJobs, readRepositorySetup } from '#cli/repository/setup.ts';
-import { LEVEL_COMMAND, LINT_JOB_NOTE } from '#cli/config/commands/doctor.ts';
+import { LEVEL_COMMAND, LINT_JOB_NOTE } from '#cli/config/commands/reports.ts';
 import type { Suggestions, SuggestionRow } from '#cli/types/commands/doctor.ts';
 import { expandSuggestions, listSelectedConfigurations } from '#cli/manifests/select.ts';
 import type { RepositorySetup, ConflictingConfig, ConfigurationEvidence } from '#cli/types/repository/repository.ts';

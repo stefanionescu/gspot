@@ -4,7 +4,6 @@ import { stripVTControlCharacters } from 'node:util';
 import { join, relative, isAbsolute } from 'node:path';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { Tool, Check } from '#cli/types/manifests.ts';
-import { FILE_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import type { SpawnResult } from '#cli/types/system/system.ts';
 import type { OutputPaths } from '#cli/types/engine/outputs.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
@@ -15,10 +14,11 @@ import type { CommandRun, OutputCheck, ParsedFindings, CommandLineOutput } from 
 import {
     TAIL_LINES,
     OUT_OF_MEMORY,
+    FILE_PLACEHOLDER,
     STACK_FRAME_LINE,
     OUT_OF_MEMORY_MESSAGE,
     NO_ERROR_OUTPUT_MESSAGE,
-} from '#cli/config/engine/tool-runs.ts';
+} from '#cli/config/engine.ts';
 
 function buildUnexplainedFailure(check: Check, tool: Tool, result: SpawnResult, file: string | undefined): Finding {
     const emptyOutputText = `${tool.name} exited ${String(result.code)}`;

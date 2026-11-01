@@ -1,5 +1,5 @@
 import { compareText } from '#cli/system/text.ts';
-import { PRIVATE_FOLDER } from '#cli/config/files/modes.ts';
+import { PRIVATE_FOLDER } from '#cli/config/system.ts';
 import { readContainedPath } from '#cli/system/files/reads.ts';
 import type { Files, FileBounds } from '#cli/types/system/files.ts';
 import { extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';

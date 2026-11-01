@@ -25,7 +25,7 @@ allowed_names = ["rule_id"]
 reason = "SwiftLint JSON diagnostics identify the native rule using rule_id."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/configurations/platform.ts", "packages/cli/src/types/configurations/general/naming.ts", "packages/cli/src/types/manifests.ts", "packages/cli/src/types/engine/outputs.ts", "packages/cli/src/types/settings/**"]
+paths = ["packages/cli/src/types/configurations/platform.ts", "packages/cli/src/types/configurations/general/naming.ts", "packages/cli/src/types/manifests.ts", "packages/cli/src/types/engine/outputs.ts", "packages/cli/src/types/settings/**", "packages/cli/src/types/repository/files.ts", "packages/cli/src/types/repository/repository.ts"]
 categories = ["properties"]
 cases = ["camel", "upper-snake", "snake"]
 reason = "These properties retain the serialized gspot.toml, configuration manifest and tool report field names."
@@ -58,7 +58,7 @@ allowed_names = ["with"]
 reason = "GitHub Actions calls its action argument record with."
 
 [[naming.override]]
-paths = ["packages/cli/src/configurations/general/data-files/generate.ts", "packages/cli/src/config/configurations/generators/general.ts"]
+paths = ["packages/cli/src/configurations/general/data-files/generate.ts", "packages/cli/src/config/configurations/general.ts"]
 allow_digits = true
 reason = "v8r is the name of the tool."
 
@@ -88,7 +88,7 @@ allowed_names = ["data"]
 reason = "Astro content entries keep their fields in data."
 
 [[naming.override]]
-paths = ["packages/cli/src/config/configurations/language/swift.ts"]
+paths = ["packages/cli/src/config/configurations/builds.ts"]
 allowed_names = ["DERIVED_DATA_FLAG", "DERIVED_DATA_FOLDER"]
 reason = "Xcode names its build folder DerivedData and its flag -derivedDataPath."
 
@@ -103,7 +103,7 @@ allowed_names = ["raw"]
 reason = "toml-patch and the TypeScript compiler API name the source text raw."
 
 [[naming.override]]
-paths = ["packages/cli/src/config/configurations/generators/language/javascript/javascript.ts", "packages/cli/src/configurations/language/javascript/knip.ts", "tests/types/tools.ts"]
+paths = ["packages/cli/src/config/configurations/javascript.ts", "packages/cli/src/configurations/language/javascript/knip.ts", "tests/types/tools.ts"]
 allowed_names = ["KNIP_JAVASCRIPT_ENTRY_FILES", "selectEntryFiles", "entry", "entries"]
 reason = "knip names its start files entry, and tools.knip.entry passes them on."
 
@@ -113,7 +113,7 @@ allowed_names = ["reason_when"]
 reason = "gspot list settings --json and the shipped setting definitions name this field reason_when."
 
 [[naming.override]]
-paths = ["packages/cli/src/configurations/general/data-files/**", "packages/cli/src/configurations/general/data-files/checks.ts", "packages/cli/src/config/configurations/general/data-files.ts", "packages/cli/src/types/configurations/general/data-files.ts", "packages/cli/src/configurations/general/data-files/generate.ts", "tests/suites/unit/cli/configurations/general/data-files.test.ts", "tests/config/integration/checks/general/data-files.ts", "tests/suites/integration/configurations/general/data-files.test.ts", "tests/config/integration/checks/general/security/sensitive-data.ts", "tests/suites/integration/configurations/general/security/sensitive-data.test.ts"]
+paths = ["packages/cli/src/configurations/general/data-files/**", "packages/cli/src/configurations/general/data-files/checks.ts", "packages/cli/src/types/configurations/general/data-files.ts", "packages/cli/src/configurations/general/data-files/generate.ts", "tests/suites/unit/cli/configurations/general/data-files.test.ts", "tests/config/integration/checks/general/data-files.ts", "tests/suites/integration/configurations/general/data-files.test.ts", "tests/config/integration/checks/general/security/sensitive-data.ts", "tests/suites/integration/configurations/general/security/sensitive-data.test.ts"]
 allowed_names = ["data-files", "data-files.test", "sensitive-data", "sensitive-data.test"]
 reason = "These files and folders take the names of the data-files configuration and the security/sensitive-data check."
 
@@ -187,42 +187,46 @@ path = "tests"
 configurations = ["zod"]
 
 [[import_rule]]
-name = "cli-config"
-paths = ["packages/cli/src/config/**"]
-can_import = ["cli-types"]
+name = "cli-schemas"
+paths = ["packages/cli/src/schemas/**"]
+can_import = ["cli-types", "system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main"]
 
 [[import_rule]]
 name = "cli-types"
 paths = ["packages/cli/src/types/**"]
-can_import = ["cli-config", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "commands"]
+can_import = ["cli-schemas", "system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main"]
 
 [[import_rule]]
 name = "system"
-paths = ["packages/cli/src/system/**"]
+paths = ["packages/cli/src/system/**", "packages/cli/src/config/system.ts"]
 
 [[import_rule]]
 name = "parsers"
-paths = ["packages/cli/src/parsers/**", "packages/cli/src/schemas/parsers/**"]
+paths = ["packages/cli/src/parsers/**", "packages/cli/src/config/parsers.ts"]
 
 [[import_rule]]
 name = "manifests"
-paths = ["packages/cli/src/manifests/**", "packages/cli/src/schemas/manifests/**"]
+paths = ["packages/cli/src/manifests/**", "packages/cli/src/config/manifests.ts"]
 
 [[import_rule]]
 name = "repository"
-paths = ["packages/cli/src/repository/**", "packages/cli/src/schemas/repository/**"]
+paths = ["packages/cli/src/repository/**", "packages/cli/src/config/repository/**"]
 
 [[import_rule]]
 name = "settings"
-paths = ["packages/cli/src/settings/**", "packages/cli/src/schemas/settings/**"]
+paths = ["packages/cli/src/settings/**", "packages/cli/src/config/settings/**"]
 
 [[import_rule]]
 name = "tools"
-paths = ["packages/cli/src/tools/**", "packages/cli/src/schemas/tools/**"]
+paths = ["packages/cli/src/tools/**", "packages/cli/src/config/tools/**"]
 
 [[import_rule]]
 name = "engine"
-paths = ["packages/cli/src/engine/**", "packages/cli/src/schemas/engine/**"]
+paths = ["packages/cli/src/engine/**", "packages/cli/src/config/engine.ts"]
+
+[[import_rule]]
+name = "configurations"
+paths = ["packages/cli/src/configurations/**", "packages/cli/src/config/configurations/**"]
 
 [[import_rule]]
 name = "shipped-config"
@@ -230,20 +234,16 @@ paths = ["packages/cli/src/configurations/*/*/files/**"]
 can_import = ["cli-types"]
 
 [[import_rule]]
-name = "configurations"
-paths = ["packages/cli/src/configurations/**", "packages/cli/src/schemas/configurations/**"]
-
-[[import_rule]]
 name = "generation"
-paths = ["packages/cli/src/generation/**"]
+paths = ["packages/cli/src/generation/**", "packages/cli/src/config/generation.ts"]
 
 [[import_rule]]
 name = "commands"
-paths = ["packages/cli/src/commands/**", "packages/cli/src/schemas/commands.ts"]
+paths = ["packages/cli/src/commands/**", "packages/cli/src/config/commands/**"]
 
 [[import_rule]]
 name = "main"
-paths = ["packages/cli/src/main.ts", "packages/cli/src/bin.ts", "packages/cli/src/reference.ts"]
+paths = ["packages/cli/src/main.ts", "packages/cli/src/bin.ts", "packages/cli/src/reference.ts", "packages/cli/src/config/main.ts"]
 
 [[import_rule]]
 name = "plugin-config"
@@ -263,12 +263,12 @@ can_import = ["plugin-config", "plugin-types"]
 [[import_rule]]
 name = "docs-config"
 paths = ["docs/src/config/**"]
-can_import = ["cli-config", "docs-types"]
+can_import = ["system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main", "cli-schemas", "cli-types", "docs-types"]
 
 [[import_rule]]
 name = "docs-types"
 paths = ["docs/src/types/**"]
-can_import = ["cli-types", "settings", "main", "docs-config"]
+can_import = ["system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main", "cli-schemas", "cli-types", "docs-config"]
 
 [[import_rule]]
 name = "docs"
@@ -277,12 +277,12 @@ paths = ["docs/src/*.*", "docs/src/!(config|types)/**"]
 [[import_rule]]
 name = "tests-data"
 paths = ["tests/config/**"]
-can_import = ["cli-config", "tests-setup"]
+can_import = ["system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main", "cli-schemas", "cli-types", "tests-setup"]
 
 [[import_rule]]
 name = "tests-types"
 paths = ["tests/types/**"]
-can_import = ["cli-types", "plugin-types", "tests-data"]
+can_import = ["system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main", "cli-schemas", "cli-types", "plugin-types", "tests-data"]
 
 [[import_rule]]
 name = "tests-setup"

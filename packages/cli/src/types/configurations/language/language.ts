@@ -1,5 +1,6 @@
 import type { Node } from 'web-tree-sitter';
-import type { DOCSTRING_STYLES, GRAMMAR_FENCE_PARSERS } from '#cli/config/configurations/language/language.ts';
+import type { DOCSTRING_STYLES } from '#cli/config/configurations/registry.ts';
+import type { GRAMMAR_FENCE_PARSERS } from '#cli/config/configurations/language.ts';
 
 export type MarkupAttribute = { name: string; value: string; element: string; node: Node };
 

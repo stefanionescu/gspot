@@ -8,10 +8,9 @@ import { buildMiseInstall } from '#cli/tools/installers/mise.ts';
 import { runNpmPack } from '#tests/setup/runner/npm-registry.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { findMisePin, listDistinctTools } from '#cli/tools/pins.ts';
-import { MISE_BIN_PATHS_ARGUMENTS } from '#cli/config/tools/tools.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
-import { MISE_INSTALL_ARGUMENTS } from '#cli/config/tools/installers/installers.ts';
 import { REPOSITORY_ROOT, TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
+import { MISE_INSTALL_ARGUMENTS, MISE_BIN_PATHS_ARGUMENTS } from '#cli/config/tools/installers.ts';
 
 import {
     LINE_BREAK,

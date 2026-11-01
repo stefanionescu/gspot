@@ -1,13 +1,13 @@
 import { read } from '#cli/system/files/reads.ts';
 import { getLimit } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
+import { GRAMMAR_NAMES } from '#cli/config/parsers.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
-import { GRAMMAR_NAMES } from '#cli/config/parsers/code.ts';
 import type { GrammarName } from '#cli/types/parsers/code.ts';
 import { countCodeLines } from '#cli/parsers/code/comments.ts';
 import type { CheckFinding } from '#cli/types/engine/check.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
-import { FILE_LINES_RULE } from '#cli/config/configurations/general/structure.ts';
+import { FILE_LINES_RULE } from '#cli/config/configurations/structure.ts';
 
 /**
 Reports source files over the code-line limit of their language.

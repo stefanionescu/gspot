@@ -1,26 +1,26 @@
-import { JSON_INDENT } from '#cli/config/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import { join, dirname, relative } from 'node:path';
-import { JSCONFIG_FILE } from '#cli/config/files/names.ts';
+import { JSCONFIG_FILE } from '#cli/config/engine.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
+import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import { convertToGlobs } from '#cli/configurations/ignores.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import type { ParsedTsconfig } from '#cli/types/parsers/projects.ts';
-import { DECLARATION_EXTENSIONS } from '#cli/config/system/system.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
-import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/generators/language/javascript/eslint/eslint.ts';
 
 import {
     STANDALONE_OPTIONS,
     JAVASCRIPT_OPTIONS,
+    ESLINT_SETTINGS_TABLE,
     JAVASCRIPT_EXTENSIONS,
     SOURCE_SELECTION_FIELDS,
     JAVASCRIPT_IGNORED_GLOBS,
     JAVASCRIPT_BUNDLED_IMPORTS,
-} from '#cli/config/configurations/generators/language/javascript/javascript.ts';
+} from '#cli/config/configurations/javascript.ts';
 
 function buildExtendedExclude(
     planned: PlannedConfig,

@@ -2,25 +2,30 @@ import { basename } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
 import { selectCheckFiles } from '#cli/engine/files.ts';
-import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { getTool, findPackagePin } from '#cli/tools/pins.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Settings } from '#cli/types/settings/settings.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
+import { GSPOT_FOLDER, PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
+import { ESLINT_MANIFEST_TOOL } from '#cli/config/repository/setup.ts';
 import { isCoverageOff, hasCoverageArguments } from '#cli/engine/plan.ts';
 import type { PrettierPlugin } from '#cli/types/generation/formatting.ts';
 import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
 import { selectScopePath, listNestedScopes } from '#cli/repository/scopes.ts';
-import { PRETTIER_TOOL, STYLELINT_TOOL } from '#cli/config/engine/planning.ts';
 import type { LicenseProject, ConfiguredCheck } from '#cli/types/engine/planning.ts';
-import { PIP_LICENSES_COMMAND, LICENSE_CHECKER_COMMAND } from '#cli/config/licenses.ts';
 import { isSettingEmpty, findSystemSkip, findSettingsSkip } from '#cli/engine/skips.ts';
-import { ESLINT_MANIFEST_TOOL, LICENSES_CONFIGURATION } from '#cli/config/manifests/names.ts';
-import { STYLELINT_COMPONENTS } from '#cli/config/configurations/generators/language/language.ts';
+
+import {
+    PRETTIER_TOOL,
+    STYLELINT_TOOL,
+    PIP_LICENSES_COMMAND,
+    STYLELINT_COMPONENTS,
+    LICENSES_CONFIGURATION,
+    LICENSE_CHECKER_COMMAND,
+} from '#cli/config/engine.ts';
 
 function isToolConditionMet(scope: Scope, conditions: Tool['when']): boolean {
     return (

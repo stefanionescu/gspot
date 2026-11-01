@@ -1,5 +1,5 @@
 import { extractExtension } from '#cli/system/paths.ts';
-import { GROUP_LABELS } from '#cli/config/manifests/names.ts';
+import { GROUP_LABELS } from '#cli/config/generation.ts';
 import type { DetectionSummary } from '#cli/types/commands/init.ts';
 import { buildFileMatcher } from '#cli/repository/files/selection.ts';
 
@@ -18,7 +18,7 @@ import {
     DETECTION_GAP_WIDTH,
     UNCHECKED_FILES_SHOWN,
     DETECTION_LABEL_WIDTH,
-} from '#cli/config/commands/init.ts';
+} from '#cli/config/commands/edits.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Eleven rows of the init summary share this label and gap layout.
 function formatDetectionRow(label: string, names: string[]): string | undefined {

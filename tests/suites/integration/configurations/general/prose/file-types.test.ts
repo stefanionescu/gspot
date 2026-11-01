@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { spawnRootCheck } from '#tests/setup/cli/commands.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';

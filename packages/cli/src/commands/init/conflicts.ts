@@ -7,7 +7,7 @@ import { isEditedInPlace } from '#cli/repository/conflicts.ts';
 import { parsePrettierFile } from '#cli/commands/init/format.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import type { InitPlan, ConflictingConfigs } from '#cli/types/commands/init.ts';
-import { VERIFY_FLAG, NAME_ONLY_FLAG, READ_COMMITTED_MESSAGE } from '#cli/config/commands/init.ts';
+import { VERIFY_FLAG, NAME_ONLY_FLAG, READ_COMMITTED_MESSAGE } from '#cli/config/commands/edits.ts';
 import type { WritePlan, ManagedKeys, RepositorySetup, ConflictingConfig } from '#cli/types/repository/repository.ts';
 
 function listCommittedPaths(root: string, paths: string[]): Set<string> {

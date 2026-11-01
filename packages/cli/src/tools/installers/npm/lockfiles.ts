@@ -3,23 +3,17 @@ import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { modify, applyEdits } from 'jsonc-parser';
 import { GspotError } from '#cli/system/errors.ts';
-import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
-import { NPM_PACKAGE_FOLDER } from '#cli/config/files/names.ts';
+import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
 import { type Dependencies } from '#cli/types/parsers/projects.ts';
 import { bunLockfileSchema } from '#cli/schemas/parsers/projects.ts';
 import { type PackageManager } from '#cli/types/repository/javascript.ts';
-import { PNPM_PEER_START, PNPM_ROOT_IMPORTER } from '#cli/config/parsers/projects.ts';
+import { PNPM_PEER_START, NPM_PACKAGE_FOLDER, PNPM_ROOT_IMPORTER } from '#cli/config/parsers.ts';
+import { INTEGRITY, BUN_LOCKFILE, NPM_SETTING_PREFIX, LOCKFILE_WORKSPACE_KEYS } from '#cli/config/tools/installers.ts';
 
-import {
-    INTEGRITY,
-    BUN_LOCKFILE,
-    NPM_SETTING_PREFIX,
-    LOCKFILE_WORKSPACE_KEYS,
-} from '#cli/config/tools/installers/npm.ts';
 import {
     type Lockfile,
     type BunPackage,

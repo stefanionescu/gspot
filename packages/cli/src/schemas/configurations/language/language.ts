@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { DOCSTRING_STYLES } from '#cli/config/configurations/language/language.ts';
+import { DOCSTRING_STYLES } from '#cli/config/configurations/registry.ts';
 
 const toolDeptrySchema = z.object({
     extend_exclude: z.string().array().default([]),

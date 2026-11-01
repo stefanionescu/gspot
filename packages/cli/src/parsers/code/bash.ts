@@ -33,7 +33,7 @@ import {
     TEMPORARY_FILE_COMMAND,
     LOCAL_DECLARATION_WORDS,
     ALL_POSITIONAL_PARAMETERS,
-} from '#cli/config/parsers/code.ts';
+} from '#cli/config/parsers.ts';
 
 function findHighestParameter(node: Node): number {
     const expansions = node.descendantsOfType([...EXPANSION_NODES]);

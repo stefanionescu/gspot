@@ -1,8 +1,7 @@
-import { DIGITS_ONLY } from '#cli/config/text.ts';
-import { SQL_EXTENSION } from '#cli/config/files/names.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { CheckFinding } from '#cli/types/engine/check.ts';
 import type { NamingCase } from '#cli/types/settings/naming.ts';
+import { SQL_EXTENSION } from '#cli/config/configurations/infrastructure.ts';
 import { splitWords } from '#cli/configurations/general/naming/checks/settings.ts';
 
 import type {
@@ -23,6 +22,7 @@ import {
     UPPER_WORD,
     CAMEL_WORD,
     LOWER_WORD,
+    DIGITS_ONLY,
     PASCAL_WORD,
     VOWEL_SUFFIX,
     NUMERIC_WORDS,
@@ -34,7 +34,7 @@ import {
     WORD_FORM_SUFFIXES,
     WORD_FORM_CONSONANT,
     SWIFTLINT_CATEGORIES,
-} from '#cli/config/configurations/general/naming/naming.ts';
+} from '#cli/config/configurations/naming.ts';
 
 function isSnakeMigration(name: string): boolean {
     const stamp = name.slice(0, MIGRATION_DIGITS);

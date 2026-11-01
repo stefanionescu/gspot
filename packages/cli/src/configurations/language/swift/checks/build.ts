@@ -1,7 +1,7 @@
 import { join, relative } from 'node:path';
 import { remember } from '#cli/system/cache.ts';
+import { PRIVATE_FILE } from '#cli/config/system.ts';
 import { type Files } from '#cli/types/system/files.ts';
-import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { type CheckFinding } from '#cli/types/engine/check.ts';
@@ -21,7 +21,7 @@ import {
     REPORTED_LEVELS,
     SWIFT_BUILD_NAME,
     MACOS_PRIVATE_PATH,
-} from '#cli/config/configurations/language/swift.ts';
+} from '#cli/config/configurations/builds.ts';
 
 const SWIFT_BUILD_OUTPUTS = Symbol('swift build outputs');
 

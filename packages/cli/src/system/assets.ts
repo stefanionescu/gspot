@@ -2,8 +2,8 @@ import { createRequire } from 'node:module';
 import { statSync, readdirSync } from 'node:fs';
 import { compareText } from '#cli/system/text.ts';
 import { join, dirname, relative } from 'node:path';
+import { CLI_PACKAGE_JSON } from '#cli/config/system.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { CLI_PACKAGE_JSON } from '#cli/config/system/system.ts';
 
 const packageFolder = dirname(createRequire(import.meta.url).resolve(CLI_PACKAGE_JSON));
 

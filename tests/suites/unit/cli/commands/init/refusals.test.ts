@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import { PACKAGE_JSON_ERROR } from '#tests/config/paths.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';

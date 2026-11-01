@@ -1,15 +1,14 @@
 import { read } from '#cli/system/files/reads.ts';
 import { findToolName } from '#cli/tools/pins.ts';
 import { mapSettingPaths } from '#cli/settings/paths.ts';
-import { INSTALL_HELP } from '#cli/config/tools/tools.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { TOOL_LOCKFILES } from '#cli/config/files/gspot.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
+import { INSTALL_HELP } from '#cli/config/tools/programs.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { SourceComment } from '#cli/types/parsers/code.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import { type PlannedCheck } from '#cli/types/engine/planning.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
@@ -28,11 +27,12 @@ import {
     GSPOT_RULES,
     BRACKET_HELP,
     REASON_ABOVE,
+    TOOL_LOCKFILES,
     NEGATED_PATTERN,
     UNESCAPED_BRACKET,
     GENERATED_FILE_FINDINGS,
     SUPPRESSION_KIND_MESSAGES,
-} from '#cli/config/configurations/general/general.ts';
+} from '#cli/config/configurations/structure.ts';
 
 function findReasonAbove(previous: SourceComment | undefined, comment: SourceComment): string | undefined {
     if (

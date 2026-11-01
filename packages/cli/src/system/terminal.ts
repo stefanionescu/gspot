@@ -1,13 +1,13 @@
-import { EXIT_ERROR } from '#cli/config/terminal.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { styleText, stripVTControlCharacters } from 'node:util';
 
 import {
+    EXIT_ERROR,
     SIGNAL_EXIT_CODES,
     RESULT_JSON_INDENT,
     TERMINAL_COLOR_SEQUENCE,
     TERMINAL_CONTROL_CHARACTERS,
-} from '#cli/config/system/system.ts';
+} from '#cli/config/system.ts';
 import type {
     CommandJson,
     OutputState,

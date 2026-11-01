@@ -1,6 +1,7 @@
 import { pathToFileURL } from 'node:url';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { LEADING_SLASH } from '#cli/config/parsers.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
@@ -12,7 +13,6 @@ import { read, readBytes } from '#cli/system/files/reads.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import type { CheckFinding } from '#cli/types/engine/check.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
-import { LEADING_SLASH } from '#cli/config/files/path-patterns.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { splitFileArguments } from '#cli/engine/tool-runs/batches.ts';
@@ -23,7 +23,7 @@ import { readSitemapUrls } from '#cli/configurations/framework/site/checks/sitem
 import { listBuiltFiles, readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
 
 import {
-    RULES,
+    SITE_RULES,
     REMAP_FLAG,
     INDEX_PAGE,
     LYCHEE_TOOL,
@@ -45,7 +45,7 @@ import {
     UNLISTED_PAGE_MESSAGE,
     HTML_VALIDATE_CONFIG_FLAG,
     HTML_VALIDATE_FORMATTER_FLAG,
-} from '#cli/config/configurations/framework/site.ts';
+} from '#cli/config/configurations/framework.ts';
 
 function listPossiblePages(pathname: string): [string, ...string[]] {
     const path = decodeURIComponent(pathname).replace(LEADING_SLASH, '');
@@ -196,7 +196,7 @@ export async function checkPurgecss(session: CheckSession, planned: PlannedCheck
             .map((selector) => ({
                 file: `${getTable(planned.scope.settings, 'site')['build_folder']}/${convertToPosixPath(normalize(isAbsolute(sheet.file) ? relative(build.folder, sheet.file) : sheet.file))}`,
                 line: 1,
-                rule: RULES.unusedSelector,
+                rule: SITE_RULES.unusedSelector,
                 message: `No built page uses the selector ${selector.trim()}.`,
             })),
     );
@@ -229,7 +229,7 @@ export async function checkSitemap(session: CheckSession, planned: PlannedCheck)
         .map((url) => ({
             file: `${getTable(planned.scope.settings, 'site')['build_folder']}/${convertToPosixPath(normalize(sitemapFile))}`,
             line: 1,
-            rule: RULES.missingPage,
+            rule: SITE_RULES.missingPage,
             message: `The sitemap lists ${url.href}, and the build wrote no such page.`,
         }));
     const unlisted = [...files]
@@ -244,7 +244,7 @@ export async function checkSitemap(session: CheckSession, planned: PlannedCheck)
         .map((path) => ({
             file: `${getTable(planned.scope.settings, 'site')['build_folder']}/${convertToPosixPath(normalize(path))}`,
             line: 1,
-            rule: RULES.unlistedPage,
+            rule: SITE_RULES.unlistedPage,
             message: UNLISTED_PAGE_MESSAGE,
         }));
     return [...findings, ...missing, ...unlisted];

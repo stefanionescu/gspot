@@ -1,8 +1,8 @@
-import { JSON_INDENT } from '#cli/config/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
+import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
-import { JSCPD_CHECK, JSCPD_IGNORED, JSCPD_IMPORT_PATTERNS } from '#cli/config/configurations/generators/general.ts';
+import { JSCPD_CHECK, JSCPD_IGNORED, JSCPD_IMPORT_PATTERNS } from '#cli/config/configurations/general.ts';
 
 /**
 Build jscpd.json: the duplicate size limits, the skipped import lines, and the ignored paths.

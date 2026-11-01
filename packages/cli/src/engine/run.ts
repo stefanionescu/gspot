@@ -19,7 +19,6 @@ import { buildMiseInstall } from '#cli/tools/installers/mise.ts';
 import { type PlannedCheck } from '#cli/types/engine/planning.ts';
 import { type IgnoreRecord } from '#cli/types/settings/settings.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
-import { DOCKER_TOOL, DOCKER_DAEMON_NOTE } from '#cli/config/tools/tools.ts';
 import { type Session, type CheckSession, type CheckGeneration } from '#cli/types/session.ts';
 import { buildBaseResult, runBuiltInCheck, normalizeResultPaths } from '#cli/engine/results.ts';
 import { type Finding, type CheckCode, type CheckResult, type CheckRunOptions } from '#cli/types/engine/check.ts';
@@ -34,13 +33,15 @@ import {
 import {
     HOOK_FLAG,
     BASE_FLAG,
+    DOCKER_TOOL,
     STAGED_FLAG,
     CHECK_COMMAND,
     FAILED_STATUSES,
     SHORT_HASH_LENGTH,
+    DOCKER_DAEMON_NOTE,
     CANCELED_CHECK_NOTE,
     DOCKER_MISSING_MESSAGE,
-} from '#cli/config/commands/check.ts';
+} from '#cli/config/engine.ts';
 
 function isIgnoreMatch(record: IgnoreRecord, finding: Finding): boolean {
     if ((['check', 'rule'] as const).some((key) => record[key] !== undefined && record[key] !== finding[key]))

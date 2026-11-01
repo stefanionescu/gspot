@@ -8,7 +8,7 @@ import {
     TRIVY_SKIPPED_FOLDERS,
     HADOLINT_DEFAULT_LEVEL_OFF,
     HADOLINT_FAILURE_THRESHOLD,
-} from '#cli/config/configurations/generators/infrastructure.ts';
+} from '#cli/config/configurations/infrastructure.ts';
 
 /**
 Build hadolint.yml: the Hadolint exclusions and trusted registry settings.

@@ -1,25 +1,25 @@
 import { join, basename } from 'node:path/posix';
 import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { listLinkFilePaths } from '#cli/generation/links.ts';
 import { convertToGlob } from '#cli/configurations/ignores.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
 import { listOwnedConfigs } from '#cli/generation/selection.ts';
+import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import type { IgnoreSection } from '#cli/types/generation/files.ts';
+import { IGNORE_SECTION_TITLES } from '#cli/config/configurations/registry.ts';
 import { isMarkdownlintShared } from '#cli/configurations/language/markdown/generate.ts';
 
 import {
     GITHUB_WORKFLOW,
     GITLAB_WORKFLOW,
     BUILD_OUTPUT_FOLDERS,
-    IGNORE_SECTION_TITLES,
     BUILD_OUTPUT_PATTERNS,
     GSPOT_FOLDER_PATTERNS,
-} from '#cli/config/generation/generation.ts';
+} from '#cli/config/generation.ts';
 
 /**
 List the paths outside .gspot/ that a run writes: the root targets and link file paths of the config files it writes, and the CI workflow when CI runs.

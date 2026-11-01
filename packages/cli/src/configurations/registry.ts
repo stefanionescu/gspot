@@ -10,7 +10,6 @@ import { checkFences } from '#cli/configurations/language/markdown/checks.ts';
 import { checkExpoDoctor } from '#cli/configurations/framework/expo/checks.ts';
 import { buildLycheeFile } from '#cli/configurations/general/docs/generate.ts';
 import { checkJscpd } from '#cli/configurations/general/duplication/checks.ts';
-import { MARKDOWNLINT_PATH_PREFIX } from '#cli/config/configurations/checks.ts';
 import { checkNextjsTsc } from '#cli/configurations/framework/nextjs/checks.ts';
 import { checkPaths } from '#cli/configurations/general/naming/checks/paths.ts';
 import { buildKnipFile } from '#cli/configurations/language/javascript/knip.ts';
@@ -18,7 +17,6 @@ import { checkGeneratorOutputs } from '#cli/configurations/generator-outputs.ts'
 import { checkSyntax } from '#cli/configurations/infrastructure/nginx/checks.ts';
 import { checkSafety } from '#cli/configurations/language/bash/checks/safety.ts';
 import { buildSqlfluffFile } from '#cli/configurations/language/sql/generate.ts';
-import { YAML_RULE_DOCS } from '#cli/config/configurations/general/data-files.ts';
 import { checkSvelteCheck } from '#cli/configurations/framework/svelte/checks.ts';
 import { buildTyposFile } from '#cli/configurations/general/spelling/generate.ts';
 import { buildStylelintFile } from '#cli/configurations/language/css/generate.ts';
@@ -62,6 +60,7 @@ import { checkAllowedNames } from '#cli/configurations/general/naming/checks/all
 import { checkImportRules } from '#cli/configurations/general/structure/checks/import-rules.ts';
 import { checkBashDocComments } from '#cli/configurations/language/bash/checks/doc-comments.ts';
 import { checkHeaders, checkRedirects } from '#cli/configurations/platform/cloudflare/checks.ts';
+import { YAML_RULE_DOCS, MARKDOWNLINT_PATH_PREFIX } from '#cli/config/configurations/registry.ts';
 import { buildV8rFile, buildTaploFile } from '#cli/configurations/general/data-files/generate.ts';
 import { checkBashFunctionSize } from '#cli/configurations/language/bash/checks/function-size.ts';
 import { checkSwiftDocComments } from '#cli/configurations/language/swift/checks/doc-comments.ts';

@@ -5,7 +5,7 @@ import { readBytes } from '#cli/system/files/reads.ts';
 import type { CheckFinding } from '#cli/types/engine/check.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import type { SitemapUrls } from '#cli/types/configurations/framework/site.ts';
-import { RULES, SITEMAP_FILE, SITEMAP_LOCATION, SITEMAP_EXTENSION } from '#cli/config/configurations/framework/site.ts';
+import { SITE_RULES, SITEMAP_FILE, SITEMAP_LOCATION, SITEMAP_EXTENSION } from '#cli/config/configurations/framework.ts';
 
 function parseSitemapUrl(value: string): URL | undefined {
     const url = URL.parse(value);
@@ -30,7 +30,7 @@ function readSitemapLocations(folder: string, file: string, planned: PlannedChec
             findings.push({
                 file: `${getTable(planned.scope.settings, 'site').build_folder}/${file}`,
                 ...getPosition(text, match.index),
-                rule: RULES.invalidUrl,
+                rule: SITE_RULES.invalidUrl,
                 message: `The sitemap lists ${value}, which is not an absolute URL with valid escapes.`,
             });
         } else {

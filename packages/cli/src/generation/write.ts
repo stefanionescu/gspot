@@ -3,16 +3,18 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import { readHooks } from '#cli/repository/setup.ts';
 import type { Session } from '#cli/types/session.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { listOwnablePaths } from '#cli/generation/links.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { listExpectedPaths } from '#cli/generation/outdated.ts';
+import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
-import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
+import { SCANNER_KEY, BUNFIG_FILE } from '#cli/config/configurations/general.ts';
 import { type Generation, type ApplyReport } from '#cli/types/generation/files.ts';
-import { SCANNER_KEY, BUNFIG_FILE } from '#cli/config/configurations/generators/general.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER, INSTALLED_TOOL_FOLDERS } from '#cli/config/files/gspot.ts';
+import { OWNER_WRITABLE_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/repository/setup.ts';
 
 import {
     planBlock,
@@ -30,7 +32,7 @@ import {
     TOOLS_CHANGED_NOTE,
     GENERATED_FILE_NOUN,
     STALE_LOCKFILE_NOTE,
-} from '#cli/config/generation/generation.ts';
+} from '#cli/config/generation.ts';
 
 function deleteUnusedToolFolders(writer: Files, paths: ReadonlySet<string>, generated: Generation): void {
     for (const [path, keep] of [

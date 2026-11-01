@@ -3,8 +3,8 @@ import { styleText } from 'node:util';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { openSession } from '#cli/engine/session.ts';
 import type { Session } from '#cli/types/session.ts';
+import { EXIT_FINDINGS } from '#cli/config/engine.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { EXIT_FINDINGS } from '#cli/config/terminal.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';
 import { findMissingEnvironment } from '#cli/tools/uv.ts';
@@ -17,18 +17,19 @@ import { getOperatingSystem } from '#cli/system/environment.ts';
 import { readHookStatus } from '#cli/tools/installers/hooks.ts';
 import { compareText, quoteArgument } from '#cli/system/text.ts';
 import { buildMiseInstall } from '#cli/tools/installers/mise.ts';
+import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { VERSION_FLAG } from '#cli/config/repository/javascript.ts';
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';
 import type { ToolInspection } from '#cli/types/tools/inspection.ts';
 import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
-import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import type { CommandLocation } from '#cli/types/commands/commands.ts';
 import { findMissingBuild, listDistinctTools } from '#cli/tools/pins.ts';
 import type { HookStatus } from '#cli/types/tools/installers/installers.ts';
 import type { Suggestions, DoctorReport } from '#cli/types/commands/doctor.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/repository.ts';
-import { VERSION_FLAG, AVAILABLE_TOOL_STATES, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/tools.ts';
+import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/setup.ts';
+import { AVAILABLE_TOOL_STATES, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 
 import {
     VERSION_GAP,
@@ -40,7 +41,7 @@ import {
     REMOTE_URL_SCHEME,
     ORIGIN_URL_SETTING,
     SUGGESTION_SECTIONS,
-} from '#cli/config/commands/doctor.ts';
+} from '#cli/config/commands/reports.ts';
 
 function formatToolVersion(tool: ToolInspection): string {
     const found = tool.found ?? '';

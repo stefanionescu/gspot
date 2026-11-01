@@ -1,10 +1,11 @@
 import { z } from 'zod';
+import { RESERVED_SEGMENTS } from '#cli/config/system.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
+import { NO_CHECK_PATHS_MESSAGE } from '#cli/config/settings/validation.ts';
 import { configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { levelSchema, commandCheckFields } from '#cli/schemas/manifests/fields.ts';
 import { toolsSchema as publicToolsSchema } from '#cli/schemas/settings/tools/tables.ts';
-import { DEVICE_NAME, UNSAFE_PATH_END, UNSAFE_CHARACTERS, RESERVED_SEGMENTS } from '#cli/config/system/files.ts';
 import { ciSchema, hooksSchema, rulesSchema, namingSchema, importRulesSchema } from '#cli/schemas/settings/settings.ts';
 
 import {
@@ -14,16 +15,18 @@ import {
     removedConfigurationsSchema,
 } from '#cli/schemas/settings/fields.ts';
 import {
+    DEVICE_NAME,
     LEVEL_SUMMARY,
+    UNSAFE_PATH_END,
     COMMAND_CHECK_ID,
+    UNSAFE_CHARACTERS,
     ALL_LEVEL_SUMMARY,
     GSPOT_FOLDER_PATH,
     SETTINGS_EXAMPLES,
     TABLE_DESCRIPTIONS,
     SCOPE_PATH_MESSAGES,
     NO_CHECK_RULE_MESSAGE,
-    NO_CHECK_PATHS_MESSAGE,
-} from '#cli/config/settings/settings.ts';
+} from '#cli/config/settings/schema.ts';
 
 export const ignoreSchema = z
     .strictObject({

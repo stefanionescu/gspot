@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 import type ts from 'typescript';
-import type { PYTHON_LOCKFILES, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects.ts';
+import type { PYTHON_LOCKFILES, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers.ts';
 
 import type {
     pipfileSchema,

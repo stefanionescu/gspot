@@ -5,8 +5,8 @@ import { LIMIT_RULES_BY_CHECK } from '#cli/manifests/limits.ts';
 import { type Scope } from '#cli/types/settings/inheritance.ts';
 import { type Settings } from '#cli/types/settings/settings.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { JAVASCRIPT_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { getLimit, getTable, findParentScope } from '#cli/settings/scopes.ts';
+import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/javascript.ts';
 import { joinScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { buildLimitRuleBlocks } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
 
@@ -16,11 +16,6 @@ import {
     buildNodePatterns,
 } from '#cli/configurations/language/javascript/eslint/files.ts';
 import {
-    ESLINT_CHECK,
-    CODE_LANGUAGES,
-    ESLINT_SETTINGS_TABLE,
-} from '#cli/config/configurations/generators/language/javascript/eslint/eslint.ts';
-import {
     type EslintRuleBlock,
     type EslintBlockFields,
     type EslintRuleOptions,
@@ -28,6 +23,8 @@ import {
     type ScopeEslintSettings,
 } from '#cli/types/generation/eslint.ts';
 import {
+    ESLINT_CHECK,
+    CODE_LANGUAGES,
     TYPED_LANGUAGES,
     ENVIRONMENT_RULES,
     TRIVIAL_FILES_RULE,
@@ -35,8 +32,9 @@ import {
     ENVIRONMENT_LANGUAGES,
     TRIVIAL_FUNCTIONS_RULE,
     CLIENT_ENVIRONMENT_RULE,
+    JAVASCRIPT_CONFIGURATION,
     PACKAGE_JSON_RULE_PREFIX,
-} from '#cli/config/configurations/generators/language/javascript/eslint/blocks/blocks.ts';
+} from '#cli/config/configurations/blocks.ts';
 
 function listManifestRuleBlocks(scope: Scope, excluded: string[]): EslintRuleBlock[] {
     const tables = scope.configurations.map(({ eslint }) => eslint);

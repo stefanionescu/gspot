@@ -1,5 +1,4 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { INDEX_LINE } from '#cli/config/parsers/parsers.ts';
 import type { GitFile } from '#cli/types/parsers/parsers.ts';
 import { listGitFiles } from '#cli/repository/files/tracked.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';
@@ -9,12 +8,13 @@ import { runGit, runGitStream, runGitForBytes } from '#cli/repository/git/run.ts
 import { parseGitBlobs, parseTreeFiles, parseListingLine, stripIndexStages } from '#cli/repository/git/output.ts';
 
 import {
+    INDEX_LINE,
     GIT_HEAD_ARGUMENTS,
     GIT_BLOBS_ARGUMENTS,
     GIT_LS_TREE_ARGUMENTS,
     UNREADABLE_HISTORY_MESSAGE,
     GIT_SYMBOLIC_HEAD_ARGUMENTS,
-} from '#cli/config/repository/revisions.ts';
+} from '#cli/config/repository/git.ts';
 
 /**
 Read complete index or tree entries without Git path quoting. Reject unresolved conflicts.

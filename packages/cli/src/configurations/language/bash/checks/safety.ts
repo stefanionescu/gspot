@@ -9,7 +9,7 @@ import {
     BROAD_KILL_COMMANDS,
     IGNORED_FAILURE_MESSAGE,
     RECURSIVE_REMOVE_MESSAGE,
-} from '#cli/config/configurations/language/bash.ts';
+} from '#cli/config/configurations/bash.ts';
 
 /**
 Reports each unsafe process kill or removal, and at level `all`, each discarded failure.

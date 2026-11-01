@@ -1,6 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 import { isTable } from '#cli/system/tables.ts';
-import { WHITESPACE_RUN } from '#cli/config/text.ts';
+import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import type { Setting } from '#cli/types/settings/inheritance.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';

@@ -8,19 +8,16 @@ import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
+import { PYTHON_CONFIGURATION } from '#cli/config/engine.ts';
 import type { CheckFinding } from '#cli/types/engine/check.ts';
-import { SWIFT_IMPORT_NODE } from '#cli/config/parsers/code.ts';
 import { findImportedModule } from '#cli/parsers/code/swift.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import type { ImportRule } from '#cli/types/settings/settings.ts';
-import { NODE_SHEBANG_TAG } from '#cli/config/repository/files.ts';
-import { SWIFT_EXTENSION, MISE_TASKS_GLOB } from '#cli/config/files/names.ts';
+import { SWIFT_EXTENSION, SWIFT_IMPORT_NODE } from '#cli/config/parsers.ts';
+import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/javascript.ts';
 import { listAllowedRules, formatRefusedImport } from '#cli/settings/import-rules.ts';
-import { SWIFT_CONFIGURATION, PYTHON_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { listSwiftModules } from '#cli/configurations/general/structure/checks/swift-modules.ts';
-import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/generators/language/javascript/eslint/eslint.ts';
-import { IMPORT_RULE_CATEGORY } from '#cli/config/configurations/generators/language/javascript/eslint/blocks/blocks.ts';
 
 import {
     type RuleLookup,
@@ -30,18 +27,22 @@ import {
     type LocatedImport,
 } from '#cli/types/configurations/general/structure.ts';
 import {
+    MISE_TASKS_GLOB,
     RELATIVE_IMPORT,
     CONFIG_PATTERNS,
+    NODE_SHEBANG_TAG,
     IMPORT_RULES_SKIP,
     PYTHON_EXTENSIONS,
+    SWIFT_CONFIGURATION,
     PYTHON_SOURCE_ROOTS,
+    IMPORT_RULE_CATEGORY,
     PYTHON_FROM_STATEMENT,
     PYTHON_MODULE_SUFFIXES,
     UNCOVERED_FILE_MESSAGE,
     IMPORT_RULE_EXTENSIONS,
     IMPORT_RULE_CHECK_RULES,
     PYTHON_IMPORT_STATEMENT,
-} from '#cli/config/configurations/general/structure.ts';
+} from '#cli/config/configurations/structure.ts';
 
 function buildRuleLookup(rules: ImportRule[]): RuleLookup {
     const matchers = rules.map((rule) => buildPathMatcher(rule.paths));

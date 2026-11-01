@@ -18,7 +18,7 @@ import {
     SWIFTLINT_CONFIG_FILE,
     SWIFTLINT_CONFIG_FLAG,
     SWIFTLINT_ANALYZE_COMMAND,
-} from '#cli/config/configurations/language/swift.ts';
+} from '#cli/config/configurations/builds.ts';
 
 /**
 Runs the SwiftLint analyzer rules over the compiler log of the build.

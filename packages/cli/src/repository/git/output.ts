@@ -1,14 +1,13 @@
 import type { z } from 'zod';
 import { posix } from 'node:path';
-import { OCTAL_RADIX } from '#cli/config/units.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
-import { LINE_FEED, WHITESPACE_RUN } from '#cli/config/text.ts';
 import { gitFileSchema } from '#cli/schemas/parsers/parsers.ts';
-import { LEADING_SLASH } from '#cli/config/files/path-patterns.ts';
+import { OCTAL_RADIX, LEADING_SLASH, WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import type { GitFile, GitStream, GitIndexFile, AttributePattern } from '#cli/types/parsers/parsers.ts';
 
 import {
+    LINE_FEED,
     TREE_LINE,
     INDEX_LINE,
     SIZE_GROUP,
@@ -28,7 +27,7 @@ import {
     ATTRIBUTE_ASSIGNMENT_SIDES,
     INVALID_GIT_STREAM_MESSAGE,
     UNSUPPORTED_GIT_FILE_MESSAGE,
-} from '#cli/config/parsers/parsers.ts';
+} from '#cli/config/repository/git.ts';
 
 async function readNextChunk(stream: GitStream): Promise<Buffer | undefined> {
     while (stream.cursor === stream.chunk.length) {

@@ -1,4 +1,4 @@
-import { EXIT_ERROR } from '#cli/config/terminal.ts';
+import { EXIT_ERROR } from '#cli/config/system.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { validateRuntimeVersion } from '#cli/system/runtime.ts';
 import { setOutputOptions, printUnexpectedError } from '#cli/system/terminal.ts';

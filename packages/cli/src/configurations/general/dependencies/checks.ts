@@ -3,24 +3,18 @@ import { isTable } from '#cli/system/tables.ts';
 import { getPosition } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
-import { MISE_FILES } from '#cli/config/files/names.ts';
 import { read, find } from '#cli/system/files/reads.ts';
-import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import type { CheckFinding } from '#cli/types/engine/check.ts';
+import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { miseToolsSchema } from '#cli/schemas/configurations/general.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import { readCachedPackageJson, readDependencySpecifiers } from '#cli/repository/dependencies.ts';
+import { PACKAGE_JSON, IMPORTER_LOCKFILES, PNPM_ROOT_IMPORTER, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers.ts';
 
-import {
-    PACKAGE_JSON,
-    IMPORTER_LOCKFILES,
-    PNPM_ROOT_IMPORTER,
-    JAVASCRIPT_LOCKFILES,
-} from '#cli/config/parsers/projects.ts';
 import {
     listSpecifiers,
     listLockfileUrls,
@@ -28,6 +22,7 @@ import {
     findNearestLockfile,
 } from '#cli/parsers/projects/lockfiles.ts';
 import {
+    MISE_FILES,
     NPM_TOOL_PREFIX,
     DEPENDENCY_RULES,
     DOWNLOAD_PROTOCOLS,
@@ -36,7 +31,7 @@ import {
     LOCKFILE_UPDATE_COMMANDS,
     PACKAGE_MANAGER_HASH_SEPARATOR,
     PACKAGE_MANAGER_VERSION_SEPARATOR,
-} from '#cli/config/configurations/general/general.ts';
+} from '#cli/config/configurations/general.ts';
 
 function validateUrl(url: URL, hosts: Set<string>): string | undefined {
     if (url.protocol !== 'https:') return `${url.href} is not HTTPS.`;

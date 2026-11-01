@@ -1,7 +1,7 @@
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { text } from 'node:stream/consumers';
-import { PURGECSS_TOOL } from '#cli/config/configurations/framework/site.ts';
+import { PURGECSS_TOOL } from '#cli/config/configurations/framework.ts';
 import type { PurgecssRequest, PurgecssConstructor } from '#cli/types/configurations/framework/site.ts';
 
 const executable = process.argv[2] as string;

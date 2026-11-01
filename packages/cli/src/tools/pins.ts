@@ -1,9 +1,8 @@
 import { compareText } from '#cli/system/text.ts';
-import { UV_TOOL } from '#cli/config/tools/tools.ts';
+import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
 import type { Host } from '#cli/types/engine/planning.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { NODE_TOOL } from '#cli/config/tools/installers/npm.ts';
-import { OPERATING_SYSTEMS } from '#cli/config/system/system.ts';
+import { UV_TOOL, NODE_TOOL } from '#cli/config/tools/installers.ts';
 import type { Tool, Check, PackagePin, MiseToolPin, PackagePins, Configuration } from '#cli/types/manifests.ts';
 
 /**

@@ -24,7 +24,7 @@ import {
     GIT_VERIFY_COMMIT_ARGUMENTS,
     GIT_LOCAL_BRANCHES_ARGUMENTS,
     GIT_CHANGED_COMMITS_ARGUMENTS,
-} from '#cli/config/repository/revisions.ts';
+} from '#cli/config/repository/git.ts';
 
 async function listRemoteHeads(root: string, cancelSignal?: AbortSignal): Promise<[string, string][]> {
     const lines = await readGitLines(root, GIT_REMOTE_HEADS_ARGUMENTS, {

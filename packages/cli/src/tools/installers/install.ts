@@ -1,8 +1,8 @@
 import which from 'which';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
-import { MISE_TOOL } from '#cli/config/tools/tools.ts';
 import { listDistinctTools } from '#cli/tools/pins.ts';
+import { MISE_TOOL } from '#cli/config/tools/installers.ts';
 import { installHooks } from '#cli/tools/installers/hooks.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import { installMiseTools } from '#cli/tools/installers/mise.ts';

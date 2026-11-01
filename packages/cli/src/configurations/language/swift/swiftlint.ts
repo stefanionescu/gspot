@@ -11,7 +11,7 @@ import {
     SWIFTLINT_ALWAYS_OFF,
     SWIFTLINT_FUNCTION_NESTING,
     SWIFTLINT_DEFAULT_LEVEL_OFF,
-} from '#cli/config/configurations/generators/language/swift.ts';
+} from '#cli/config/configurations/swift.ts';
 
 function buildSwiftlintOptions(planned: PlannedConfig, offSet: Set<string>) {
     const { format } = planned.scope.settings.tables;

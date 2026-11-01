@@ -1,5 +1,5 @@
 import { dirname } from 'node:path';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 
 export const UNQUOTED_FINDING_PREFIX = '  scripts/b.sh:2:6  SC2086  ';
 

@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 import type { Finding } from '#cli/types/engine/check.ts';
-import type { CHECK_RUNS } from '#cli/config/manifests/names.ts';
+import type { CHECK_RUNS } from '#cli/config/manifests.ts';
 import type { outputSchema } from '#cli/schemas/manifests/output.ts';
 import type { reportedTypoSchema } from '#cli/schemas/engine/typos.ts';
 

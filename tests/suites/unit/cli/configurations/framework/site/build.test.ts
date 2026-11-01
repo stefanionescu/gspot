@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { compareText, quoteArgument } from '#cli/system/text.ts';
 import { runChecks, buildCheckSession } from '#cli/engine/run.ts';

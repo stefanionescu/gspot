@@ -9,28 +9,28 @@ import { openJsonFile } from '#cli/parsers/formats/json.ts';
 import { openTomlFile } from '#cli/parsers/formats/toml.ts';
 import { decodeUtf8Text } from '#cli/system/files/reads.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
-import { LEADING_NEWLINE } from '#cli/config/parsers/formats.ts';
-import { GITIGNORE_FILE } from '#cli/config/repository/files.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
-import { TEMPORARY_FILE_NAME } from '#cli/config/system/files.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
+import { GSPOT_FOLDER, LEADING_NEWLINE } from '#cli/config/parsers.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
 import { parseAttributePatterns } from '#cli/repository/git/output.ts';
 import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
-import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
-import { VALE_TEMPORARY_NAME } from '#cli/config/tools/installers/installers.ts';
-import { GSPOT_FOLDER, INSTALLED_TOOL_FOLDERS } from '#cli/config/files/gspot.ts';
+import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/files.ts';
 import { openFiles, walkFiles, deleteEmptyFolders } from '#cli/system/files/open.ts';
 import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
 import type { WritePlan, ManagedKeys, ReplacementRequest } from '#cli/types/repository/repository.ts';
 
 import {
+    AGENTS_FILE,
     TOML_BARE_KEY,
     TOML_EXTENSION,
     EMPTY_JSON_TEXT,
+    OWNER_WRITABLE_FILE,
+    TEMPORARY_FILE_NAME,
+    VALE_TEMPORARY_NAME,
     TRAILING_BLANK_LINE,
-} from '#cli/config/repository/repository.ts';
+    INSTALLED_TOOL_FOLDERS,
+} from '#cli/config/repository/setup.ts';
 
 function openManagedKeysFile(path: string, onDisk: FileContents | undefined, keys: ManagedKeys['keys']): EditableFile {
     const text = onDisk === undefined ? undefined : decodeUtf8Text(path, onDisk.bytes);

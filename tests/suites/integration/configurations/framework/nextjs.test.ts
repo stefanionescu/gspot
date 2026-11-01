@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { JSON_INDENT } from '#cli/config/text.ts';
 import { compareText } from '#cli/system/text.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { type Sandbox } from '#tests/types/sandbox.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { tsconfigSchema } from '#tests/schemas/tsconfig.ts';
+import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { type RunReport } from '#cli/types/commands/check.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';

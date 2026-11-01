@@ -6,25 +6,24 @@ import { find, read } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { getTable, getLimit } from '#cli/settings/scopes.ts';
-import { REQUIREMENTS_FILE } from '#cli/config/files/names.ts';
-import { PYTHON_EXTENSION } from '#cli/config/parsers/code.ts';
 import { countCodeLines } from '#cli/parsers/code/comments.ts';
-import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { type PlannedCheck } from '#cli/types/engine/planning.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
+import { REQUIREMENTS_FILE } from '#cli/config/repository/files.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
-import { PATH_SEPARATOR_PATTERN } from '#cli/config/files/path-patterns.ts';
+import { PYPROJECT_TOML, PYTHON_EXTENSION } from '#cli/config/parsers.ts';
+import { PATH_SEPARATOR_PATTERN } from '#cli/config/configurations/blocks.ts';
 import { type CheckResult, type CheckFinding } from '#cli/types/engine/check.ts';
 import { splitWords } from '#cli/configurations/general/naming/checks/settings.ts';
 import { joinScope, isInScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { runCommandCheck, runCommandBatches } from '#cli/engine/tool-runs/check.ts';
-import { RUFF_TABLE } from '#cli/config/configurations/generators/language/language.ts';
 import { findDocstring, readPythonFiles, parsePythonModule } from '#cli/parsers/code/python.ts';
 import { deptrySchema, docstringStyleSchema } from '#cli/schemas/configurations/language/language.ts';
 import { type PydoclintOptions, type PythonDocstringStyle } from '#cli/types/configurations/language/language.ts';
 
 import {
+    RUFF_TABLE,
     PIP_INSTALL,
     PYTHON_RULES,
     PLACEHOLDERS,
@@ -49,7 +48,7 @@ import {
     REQUIREMENTS_FOLDER_FILE,
     REQUIREMENTS_FILE_MESSAGE,
     PYDOCLINT_ALL_LEVEL_OPTIONS,
-} from '#cli/config/configurations/language/language.ts';
+} from '#cli/config/configurations/python.ts';
 
 function listFirstParty(planned: PlannedCheck, written: string[]): string[] {
     const externals = getTable(planned.scope.settings, 'python').externals;

@@ -3,7 +3,7 @@ import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { CheckFinding } from '#cli/types/engine/check.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
-import { ROW_SECURITY_RULE } from '#cli/config/configurations/database/postgres.ts';
+import { ROW_SECURITY_RULE } from '#cli/config/configurations/infrastructure.ts';
 import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 

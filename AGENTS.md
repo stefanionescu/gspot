@@ -130,30 +130,36 @@ repository.
 
 ### Values, types, and schemas
 
-- Each package keeps fixed values in `config/`, TypeScript types in `types/`, and runtime schemas in `schemas/`.
-- Other files take their constants from `config/` and their types from `types/`. They declare no module-level
-  literal constants or types. Declare schemas only in `schemas/`, including schemas used by one file.
-  A value computed at import time stays with the behavior that uses it.
-- Each folder of code reads one file in `config/`, one in `types/`, and one in `schemas/`. That file takes the path
-  of the folder, such as `packages/cli/src/config/engine/copies.ts` for the files in `packages/cli/src/engine/copies/`.
-- When the folder of that path also holds files of subfolders, the file sits inside it under the folder name, such as
-  `packages/cli/src/config/generation/generation.ts` for the files in `packages/cli/src/generation/`.
-- The files at the top of a package read `packages/cli/src/config/main.ts`, or
-  `packages/eslint-plugin/src/config/plugin.ts` in the ESLint plugin.
-- A value that code in other folders also reads stays in the file of the folder it belongs to. The others import it.
-- Values that several folders read and no folder owns go in a topic file, such as
-  `packages/cli/src/config/files/names.ts`.
-- When a folder's file passes the file length limit, move its largest topic to a file named for that topic, such as
-  `packages/cli/src/schemas/settings/tables.ts`.
-- When two files of one folder need values of the same kind, prefix each name with its check, rule, or language, such
-  as `DOCS_RULES` and `GSPOT_RULES`.
+- `packages/cli/src/`, `packages/eslint-plugin/src/`, `docs/src/`, and `tests/` keep fixed values in `config/`,
+  TypeScript types in `types/`, and runtime schemas in `schemas/`. No `values.ts`, `types.ts`, or `schemas.ts` sits
+  beside code. Other files declare no module-level literal constants, types, or schemas. A value computed at import
+  time stays with the behavior that uses it.
+- Each of these folders holds one file per layer: `config/<layer>.ts`, `types/<layer>.ts`, and `schemas/<layer>.ts`.
+- The CLI layers follow the folders under "Commands and layers." Layer `main` serves `main.ts`, `bin.ts`, and
+  `reference.ts`.
+- The layers of `tests/` follow the CLI layers of `tests/suites/unit/cli/`, and add `eslint-plugin`, `integration`,
+  `e2e`, and `setup`. The ESLint plugin and the docs site form one layer each, with one file per topic.
+- A value, type, or schema that several layers read sits in the file of the lowest layer that all of them may import.
+  In `tests/`, that layer means `setup`. Values of one subject stay together, in the lowest layer that any of them
+  needs.
+- A tool's rule table that a settings schema reads sits in the `manifest.toml` of the configuration that owns the tool.
+- A file splits only when it passes the file length limit. It then becomes a folder `<layer>/` with one file per
+  topic, named for the topic, such as `packages/cli/src/config/configurations/naming.ts`. Take a subfolder of the
+  layer or one subject as a topic.
+- No file holds a single export, no file takes the name of its folder, and no folder holds one file. Merge a small
+  topic into the closest topic file.
+- When two values of one file need the same name, prefix each with its check, rule, or language, such as
+  `SITE_RULES` and `TRANSLATION_RULES`.
 - Infer each type that a schema describes from that schema: `z.infer<typeof schema>`, or `z.input` for the value
-  before its defaults and transforms. The type stays in `types/` and imports the schema with `import type`. Write a
-  type in plain TypeScript only when no schema describes it.
+  before its defaults and transforms. `types/` may import the schema file of any layer. Write a type in plain
+  TypeScript only when no schema describes it.
 - When runtime code reads a list of allowed names, declare it as an `as const` array in `config/`, its type as
-  `(typeof LIST)[number]` in `types/`, and its schema as `z.enum(LIST)`. A list whose values each carry a description
-  keeps its schema literals as the one list.
+  `(typeof LIST)[number]` in `types/`, and its schema as `z.enum(LIST)` in `schemas/`. A list whose values each carry
+  a description keeps its schema literals as the one list.
 - When only types read a list of names, write it as a union type in `types/`, with no array.
+- Ambient declarations, such as `packages/cli/src/types/global.d.ts`, sit in `types/` beside the layer files.
+- The `[[import_rule]]` record of each CLI layer in `gspot.toml` also names its files in `config/`, `types/`, and
+  `schemas/`, so `gspot check` reports a value that a layer reads from a layer above it.
 
 ### Configurations
 
@@ -187,8 +193,7 @@ repository.
 - The layers of `packages/cli/src/` run from the base up: `system/`, `parsers/`, `manifests/`, `repository/`,
   `settings/`, `tools/`, `engine/`, `configurations/`, `generation/`, `commands/`, then `main.ts`, `bin.ts`, and
   `reference.ts`.
-- A layer imports only the layers before it. Every layer may import `config/` and `types/`, and the `schemas/` files
-  of a layer belong to that layer. `types/` imports the schemas of any layer, to infer types from them.
+- A layer imports only itself and the layers before it, its values, types, and schemas included.
 - The `[[import_rule]]` records in `gspot.toml` list the layers in this order, and `gspot check` reports an import
   that breaks it.
 

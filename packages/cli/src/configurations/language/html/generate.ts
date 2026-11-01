@@ -1,5 +1,5 @@
-import { JSON_INDENT } from '#cli/config/text.ts';
 import { listIgnoredRules } from '#cli/settings/scopes.ts';
+import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import type { PlannedConfig } from '#cli/types/generation/files.ts';
 
 import {
@@ -7,7 +7,7 @@ import {
     HTML_VALIDATE_EXTENDS,
     HTML_DEFAULT_LEVEL_OFF,
     HTML_VALIDATE_OVERRIDES,
-} from '#cli/config/configurations/generators/language/language.ts';
+} from '#cli/config/configurations/language.ts';
 
 /**
 Build html-validate.json: the HTML validation rules for source files or built site pages.

@@ -1,13 +1,13 @@
 import { posix } from 'node:path';
 import { relative } from 'node:path/posix';
-import { JSON_INDENT } from '#cli/config/text.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { CONFIG_TOML_FORMAT } from '#cli/config/generation/toml.ts';
+import { UV_LOCKFILE } from '#cli/config/manifests.ts';
+import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { type PlannedConfig } from '#cli/types/generation/files.ts';
+import { DEFAULT_QUOTES } from '#cli/config/configurations/general.ts';
 import { type FormatSettings } from '#cli/types/generation/formatting.ts';
-import { DEFAULT_QUOTES } from '#cli/config/configurations/generators/general.ts';
-import { UV_LOCKFILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
+import { JSON_INDENT, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
 import { getTable, getLimit, listIgnores, listIgnoredRules } from '#cli/settings/scopes.ts';
 
@@ -22,7 +22,7 @@ import {
     BASEDPYRIGHT_OPTIONS,
     BASEDPYRIGHT_DEFAULT_OPTIONS,
     BASEDPYRIGHT_ALL_LEVEL_OPTIONS,
-} from '#cli/config/configurations/generators/language/language.ts';
+} from '#cli/config/configurations/python.ts';
 
 function listIgnoredGlobs(planned: PlannedConfig, checkId: string, root: string): string[] {
     const shared = convertToGlobs(planned.ignoreSections).filter(

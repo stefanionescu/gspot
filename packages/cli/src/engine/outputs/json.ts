@@ -1,5 +1,5 @@
-import { LINE_BREAK } from '#cli/config/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { LINE_BREAK } from '#cli/config/parsers.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import type { Finding } from '#cli/types/engine/check.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
@@ -11,7 +11,7 @@ import {
     JSON_PREVIEW_LENGTH,
     EMPTY_FINDING_MESSAGE,
     INVALID_FINDING_MESSAGE,
-} from '#cli/config/engine/outputs.ts';
+} from '#cli/config/engine.ts';
 
 function buildJsonSyntaxError(stdout: string, cause?: unknown): GspotError {
     const first = stdout

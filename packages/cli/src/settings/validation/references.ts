@@ -1,18 +1,23 @@
 import { isInScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { listRuleFiles } from '#cli/manifests/read.ts';
 import type { Files } from '#cli/types/system/files.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { LIMIT_SETTING_RULES } from '#cli/manifests/limits.ts';
-import { FIRST_READ } from '#cli/config/generation/generation.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { formatCodeList, formatSimilarNames } from '#cli/system/text.ts';
 import type { AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import { getSettingValue, listSettingsTables } from '#cli/settings/inherit.ts';
 import type { Settings, SettingsError } from '#cli/types/settings/settings.ts';
-import { SETTING_RULES, SWIFT_TARGET_MESSAGE, COVERAGE_LINES_SETTING } from '#cli/config/settings/validation.ts';
+
+import {
+    FIRST_READ,
+    SETTING_RULES,
+    SWIFT_TARGET_MESSAGE,
+    COVERAGE_LINES_SETTING,
+} from '#cli/config/settings/validation.ts';
 
 function readPathStats(files: Files, path: string): ReturnType<Files['readStats']> | Error {
     try {

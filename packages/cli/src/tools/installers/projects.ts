@@ -1,14 +1,15 @@
 import which from 'which';
-import { UV_TOOL } from '#cli/config/tools/tools.ts';
 import type { Session } from '#cli/types/session.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { Files } from '#cli/types/system/files.ts';
+import { UV_TOOL } from '#cli/config/tools/installers.ts';
 import { listExecutablePaths } from '#cli/tools/locate.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import { listMisePins, listPackagePins } from '#cli/tools/pins.ts';
 import { isMiseLockfileFresh } from '#cli/tools/installers/mise.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
 import type { NpmToolInstall } from '#cli/types/tools/installers/npm.ts';
 import type { PackageManager } from '#cli/types/repository/javascript.ts';

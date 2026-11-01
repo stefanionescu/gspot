@@ -9,7 +9,7 @@ import { readSettings } from '#cli/settings/read.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { MANAGED_KEYS_NOTE } from '#tests/config/messages.ts';
 import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { TomlTable } from '#cli/types/settings/settings.ts';
 import type { ApplyReport } from '#cli/types/generation/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

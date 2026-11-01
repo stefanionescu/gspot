@@ -1,5 +1,5 @@
 import type { PlannedConfig } from '#cli/types/generation/files.ts';
-import { NON_PYTHON_TEST_PATTERNS } from '#cli/config/configurations/generators/testing.ts';
+import { NON_PYTHON_TEST_PATTERNS } from '#cli/config/configurations/framework.ts';
 
 /**
 Build the coverage exclusions for the test files of this scope.

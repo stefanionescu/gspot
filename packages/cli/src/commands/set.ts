@@ -2,9 +2,7 @@ import { setKey } from '#cli/settings/edit.ts';
 import { parse } from '@decimalturn/toml-patch';
 import { GspotError } from '#cli/system/errors.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
-import { COMMAND_SUGGESTION } from '#cli/config/main.ts';
 import { listSettingReaders } from '#cli/engine/skips.ts';
-import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
@@ -16,15 +14,10 @@ import { getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 import { formatSettingValueError } from '#cli/settings/validation/messages.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import type { Setting, InheritedSetting } from '#cli/types/settings/inheritance.ts';
+import { COMMAND_HELP, SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
 import { readSetting, writeSettingsEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
+import { NUMBER_TEXT, DASH_VALUE_HELP, COMMAND_SUGGESTION, TOML_COMPOUND_START } from '#cli/config/commands/edits.ts';
 
-import {
-    NUMBER_TEXT,
-    SCOPE_OPTION,
-    REASON_OPTION,
-    DASH_VALUE_HELP,
-    TOML_COMPOUND_START,
-} from '#cli/config/commands/commands.ts';
 import {
     type SetOptions,
     type CommandLocation,

@@ -4,7 +4,7 @@ import { isReasonedValue } from '#cli/settings/file.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { TomlTable } from '#cli/types/settings/settings.ts';
-import { SETTINGS_PREFACE } from '#cli/config/settings/settings.ts';
+import { SETTINGS_PREFACE } from '#cli/config/settings/validation.ts';
 import { isTable, addTable, findValueAt } from '#cli/system/tables.ts';
 import type { SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings/edits.ts';
 

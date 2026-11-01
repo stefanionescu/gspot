@@ -1,19 +1,25 @@
 import { posix } from 'node:path';
 import { isUtf8 } from 'node:buffer';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
-import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { getTable, listIgnores } from '#cli/settings/scopes.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import type { PlannedCheck, PlannedScope } from '#cli/types/engine/planning.ts';
 import type { Check, ScopeCheck, Configuration } from '#cli/types/manifests.ts';
 import { isInScope, joinScope, selectScopePath, listNestedScopes } from '#cli/repository/scopes.ts';
-import { ROOT_RUNS, ENCODING_CHECK, LARGE_FILES_CHECK, IGNORED_PATHS_MESSAGE } from '#cli/config/engine/planning.ts';
+
+import {
+    ROOT_RUNS,
+    ENCODING_CHECK,
+    LARGE_FILES_CHECK,
+    BYTES_PER_KILOBYTE,
+    IGNORED_PATHS_MESSAGE,
+} from '#cli/config/engine.ts';
 
 /**
 Get the name that a config-file placeholder uses for a config file.

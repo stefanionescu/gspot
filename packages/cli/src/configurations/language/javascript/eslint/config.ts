@@ -1,49 +1,46 @@
-import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
 import type ts from 'typescript';
-import { JSON_INDENT } from '#cli/config/text.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
+import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import { join, dirname, basename, relative } from 'node:path/posix';
 import { refuseIdleRuleOptions } from '#cli/configurations/rule-options.ts';
-import type { ConfigOutput, GeneratedFile, PlannedConfig } from '#cli/types/generation/files.ts';
+import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
 import { buildRuntimes } from '#cli/configurations/language/javascript/eslint/runtimes.ts';
 import { buildBlockCalls } from '#cli/configurations/language/javascript/eslint/block-calls.ts';
 import { buildPlannedEslintFile } from '#cli/configurations/language/javascript/eslint/plan.ts';
+import type { ConfigOutput, GeneratedFile, PlannedConfig } from '#cli/types/generation/files.ts';
 import { splitSettingsBlocks } from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
-import type { BlockWriter, EslintBlock, EslintPlugins, PlannedEslintBlock } from '#cli/types/generation/eslint.ts';
 import { buildBoundaryBlocks } from '#cli/configurations/language/javascript/eslint/blocks/boundaries.ts';
 import { listConfigurationBlocks } from '#cli/configurations/language/javascript/eslint/configuration-blocks.ts';
+import type { BlockWriter, EslintBlock, EslintPlugins, PlannedEslintBlock } from '#cli/types/generation/eslint.ts';
+import { buildClosingBlocks, buildOpeningBlocks } from '#cli/configurations/language/javascript/eslint/blocks/base.ts';
 
-import {
-    buildClosingBlocks,
-    buildOpeningBlocks,
-} from '#cli/configurations/language/javascript/eslint/blocks/base.ts';
 import {
     listLocalPlugins,
     buildLocalPluginBlocks,
 } from '#cli/configurations/language/javascript/eslint/blocks/local-plugins.ts';
 import {
-    ESLINT_PLUGIN_IMPORTS,
-    BOUNDARIES_PLUGIN_IMPORT,
-    LEVEL_ALL_PLUGIN_IMPORTS,
-} from '#cli/config/configurations/generators/language/javascript/eslint/blocks/blocks.ts';
-import {
-    NAME_HYPHEN,
     ESLINT_CHECK,
     ESLINT_INDENT,
+    PRESETS_AFTER_CONFIGURATIONS,
+    PRESETS_BEFORE_CONFIGURATIONS,
+} from '#cli/config/configurations/blocks.ts';
+import {
+    NAME_HYPHEN,
     GLOBALS_IMPORT,
     ESLINT_FUNCTIONS,
     ESLINT_BASE_LABEL,
+    ESLINT_PLUGIN_IMPORTS,
     ESLINT_FUNCTIONS_FILE,
     ESLINT_PLUGIN_IMPORTERS,
     IMPORT_NAME_PUNCTUATION,
+    BOUNDARIES_PLUGIN_IMPORT,
+    LEVEL_ALL_PLUGIN_IMPORTS,
     CONFIGURATION_BLOCKS_SUFFIX,
-    PRESETS_AFTER_CONFIGURATIONS,
-    PRESETS_BEFORE_CONFIGURATIONS,
-} from '#cli/config/configurations/generators/language/javascript/eslint/eslint.ts';
+} from '#cli/config/configurations/javascript.ts';
 
 function buildConfigurationFiles(
     planned: PlannedConfig,

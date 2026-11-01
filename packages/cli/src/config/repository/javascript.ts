@@ -1,3 +1,50 @@
+export const LOCKFILES = [
+    {
+        file: 'bun.lock',
+        configuration: 'javascript',
+        packageManager: 'bun',
+        toolProject: true,
+        copied: true,
+    },
+    { file: 'bun.lockb', configuration: 'javascript', packageManager: 'bun' },
+    {
+        file: 'pnpm-lock.yaml',
+        configuration: 'javascript',
+        packageManager: 'pnpm',
+        toolProject: true,
+        copied: true,
+    },
+    {
+        file: 'yarn.lock',
+        configuration: 'javascript',
+        packageManager: 'yarn',
+        copied: true,
+    },
+    {
+        file: 'package-lock.json',
+        configuration: 'javascript',
+        packageManager: 'npm',
+        toolProject: true,
+        copied: true,
+    },
+    { file: 'npm-shrinkwrap.json', configuration: 'javascript', packageManager: 'npm' },
+    {
+        file: 'uv.lock',
+        configuration: 'python',
+        packageManager: 'uv',
+        copied: true,
+    },
+    { file: 'poetry.lock', configuration: 'python', packageManager: 'poetry' },
+    { file: 'pdm.lock', configuration: 'python', packageManager: 'pdm' },
+    { file: 'Cargo.lock', packageManager: 'cargo' },
+    { file: 'go.sum', packageManager: 'go' },
+    { file: 'Gemfile.lock', packageManager: 'bundler' },
+    { file: 'Package.resolved', configuration: 'swift', packageManager: 'swift', copied: true },
+    { file: 'Podfile.lock', packageManager: 'cocoapods' },
+] as const;
+
+export const CI_NODE = 'node@24.20.0';
+
 export const PACKAGE_MANAGER_HASH_SUFFIX = '+sha';
 
 export const YARN_BERRY_MAJOR = 2;
@@ -63,3 +110,5 @@ export const FROZEN_INSTALLS = {
 export const YARN_BERRY_INSTALL = ['yarn', 'install', '--immutable'] as const;
 
 export const PACKAGE_MANAGER_LABELS = { bun: 'Bun', npm: 'npm', pnpm: 'pnpm', yarn: 'Yarn', mise: 'mise' } as const;
+
+export const VERSION_FLAG = '--version';

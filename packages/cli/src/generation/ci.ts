@@ -1,20 +1,21 @@
 import { getUvPin } from '#cli/tools/pins.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { CI_PINS } from '#cli/config/settings/schema.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { STRICT_MODE } from '#cli/config/configurations/bash.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
-import { NEXTJS_CONFIGURATION } from '#cli/config/manifests/names.ts';
-import { STRICT_MODE } from '#cli/config/configurations/language/bash.ts';
 import { frozenInstallArguments } from '#cli/repository/javascript/setup.ts';
-import { FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/javascript.ts';
+import { NEXTJS_CONFIGURATION } from '#cli/config/configurations/javascript.ts';
 import { Scalar, Document, type Node, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
 import type { PackageManager, PackageManagerPin } from '#cli/types/repository/javascript.ts';
 import type { Pipeline, ActionPin, FrozenLockfile } from '#cli/types/generation/generation.ts';
+import { CI_NODE, FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/javascript.ts';
 
 import {
     findPackageManagerPin,
@@ -22,8 +23,6 @@ import {
     buildPackageManagerCommand,
 } from '#cli/repository/javascript/package-manager.ts';
 import {
-    CI_PINS,
-    CI_NODE,
     CI_JOB_NAME,
     GITLAB_RULES,
     CACHED_PATHS,
@@ -50,7 +49,7 @@ import {
     GITHUB_EXPRESSION_START,
     CI_CACHE_MISS_CONDITION,
     GITHUB_EXPRESSION_MESSAGE,
-} from '#cli/config/generation/generation.ts';
+} from '#cli/config/generation.ts';
 
 function buildActionPin({ name, sha, version }: ActionPin): Scalar {
     const node = new Scalar(`${name}@${sha}`);

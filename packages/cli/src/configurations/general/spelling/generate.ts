@@ -1,7 +1,7 @@
 import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { stringify } from '@decimalturn/toml-patch';
-import { CONFIG_TOML_FORMAT } from '#cli/config/generation/toml.ts';
+import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import type { IgnoreSection, PlannedConfig } from '#cli/types/generation/files.ts';
 import { convertToGlobs, keepFirstPatterns, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
 
@@ -13,7 +13,7 @@ import {
     EXTEND_EXCLUDE_LINE,
     TYPOS_LOCKFILE_GLOBS,
     TYPOS_IGNORE_PATTERNS,
-} from '#cli/config/configurations/generators/general.ts';
+} from '#cli/config/configurations/prose.ts';
 
 function buildTyposSections(planned: PlannedConfig): IgnoreSection[] {
     const sections = [...planned.ignoreSections, ...listCheckIgnoreSections(planned.scope.settings, TYPOS_CHECK)].map(

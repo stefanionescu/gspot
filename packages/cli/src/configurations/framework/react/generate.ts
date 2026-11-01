@@ -1,6 +1,5 @@
 import type { ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
-import { REACT_RULES, REACT_FILES } from '#cli/config/configurations/generators/framework.ts';
-import { CONFIGURATION_PLUGINS } from '#cli/config/configurations/generators/language/javascript/eslint/eslint.ts';
+import { REACT_RULES, REACT_FILES, CONFIGURATION_PLUGINS } from '#cli/config/configurations/framework.ts';
 
 /**
 Apply the React, hooks, and refresh lint rules for the JSX mode.

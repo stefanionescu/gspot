@@ -4,7 +4,7 @@ import { type CheckResult } from '#cli/types/engine/check.ts';
 import { DEFAULT_DIALECT } from '#cli/config/repository/files.ts';
 import { type PlannedCheck } from '#cli/types/engine/planning.ts';
 import { runCommandBatches } from '#cli/engine/tool-runs/check.ts';
-import { BATS_EXTENSION, SHELLCHECK_DIALECT_FLAG } from '#cli/config/configurations/language/bash.ts';
+import { BATS_EXTENSION, SHELLCHECK_DIALECT_FLAG } from '#cli/config/configurations/bash.ts';
 
 /**
 Runs ShellCheck, and passes a dialect only for scripts without a shebang.

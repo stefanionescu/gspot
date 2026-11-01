@@ -2,13 +2,12 @@ import { join, dirname } from 'node:path';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { printWarning } from '#cli/system/terminal.ts';
-import { COPIES_FOLDER } from '#cli/config/files/gspot.ts';
 import { isProcessRunning } from '#cli/system/processes.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
-import { TEMPORARY_REMOVAL_OPTIONS } from '#cli/config/system/files.ts';
+import { TEMPORARY_REMOVAL_OPTIONS } from '#cli/config/system.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import type { Files, TemporaryFolder } from '#cli/types/system/files.ts';
 import { rmSync, rmdirSync, readdirSync, mkdtempSync, realpathSync } from 'node:fs';
-import { COPY_FOLDER_NAME, COPY_IGNORE_FILE, COPY_IGNORE_TEXT } from '#cli/config/engine/copies.ts';
+import { COPIES_FOLDER, COPY_FOLDER_NAME, COPY_IGNORE_FILE, COPY_IGNORE_TEXT } from '#cli/config/engine.ts';
 
 function deleteCopyFolder(path: string): void {
     try {

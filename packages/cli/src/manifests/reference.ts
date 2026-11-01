@@ -1,9 +1,8 @@
 import { posix } from 'node:path';
 import { listRuleFiles } from '#cli/manifests/read.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { ConfigurationReference } from '#cli/types/reference.ts';
-import { DETECTION_LABELS, DETECTION_ALTERNATIVES } from '#cli/config/manifests/manifests.ts';
+import { GSPOT_PATHS, DETECTION_LABELS, DETECTION_ALTERNATIVES } from '#cli/config/manifests.ts';
 
 /**
 Describe detection evidence and exclusions with the same vocabulary in help and documentation.

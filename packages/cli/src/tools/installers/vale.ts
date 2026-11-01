@@ -1,33 +1,36 @@
 import { createHash } from 'node:crypto';
 import { getTool } from '#cli/tools/pins.ts';
-import { JSON_INDENT } from '#cli/config/text.ts';
-import { CONFIG_FLAG } from '#cli/config/flags.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Level } from '#cli/types/manifests.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { join, posix, dirname, resolve } from 'node:path';
-import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
+import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import type { Settings } from '#cli/types/settings/settings.ts';
-import { VALE_TOOL, PROSE_GRAMMARS } from '#cli/config/prose.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
+import { VALE_TEMPORARY_NAME } from '#cli/config/repository/setup.ts';
 import { runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
 import { deleteStaleTemporaryPaths } from '#cli/system/files/folders.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
-import { VALE_STYLES_PATH } from '#cli/config/configurations/generators/general.ts';
 import { rmSync, mkdirSync, renameSync, mkdtempSync, writeFileSync } from 'node:fs';
 import type { ToolInstall, ArchiveDownload } from '#cli/types/tools/installers/installers.ts';
 
 import {
+    VALE_TOOL,
     VOCAB_LINE,
+    JSON_INDENT,
+    CONFIG_FLAG,
     ALT_TEXT_ON,
     ALT_TEXT_OFF,
     VALE_PACKAGES,
     BLOCK_IGNORES,
     TOKEN_IGNORES,
+    PROSE_GRAMMARS,
     MIN_ALERT_LINE,
     NO_STYLES_LINE,
     VALE_OFF_RULES,
+    VALE_STYLES_PATH,
     VALE_PACKAGE_URLS,
     VALE_INSTALL_STEP,
     ALL_FILES_SECTION,
@@ -38,13 +41,12 @@ import {
     VALE_COMMENT_RULES,
     STYLES_PATH_COMMENT,
     VALE_INSTALL_PREFIX,
-    VALE_TEMPORARY_NAME,
     VALE_SKIPPED_SCOPES,
     MARKUP_RULES_COMMENT,
     VALE_PACKAGE_FOLDERS,
     VALE_PACKAGE_RELEASES,
     VALE_INSTALL_ARGUMENTS,
-} from '#cli/config/tools/installers/installers.ts';
+} from '#cli/config/tools/installers.ts';
 
 async function downloadValePackages(install: ToolInstall, folder: string): Promise<string[]> {
     const packages: string[] = [];

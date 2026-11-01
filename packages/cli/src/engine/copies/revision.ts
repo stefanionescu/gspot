@@ -3,21 +3,21 @@ import { setImmediate } from 'node:timers/promises';
 import { openFiles } from '#cli/system/files/open.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import type { Files } from '#cli/types/system/files.ts';
-import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { writeCopyFiles } from '#cli/engine/copies/files.ts';
 import { splitSystemPath } from '#cli/system/files/reads.ts';
 import type { GitFile } from '#cli/types/parsers/parsers.ts';
 import { copyValePackages } from '#cli/engine/copies/vale.ts';
+import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { createCopyFolder } from '#cli/engine/copies/folders.ts';
 import { runGit, readGitText } from '#cli/repository/git/run.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';
 import { join, posix, dirname, basename, relative } from 'node:path';
-import { SYMLINK_MODE, GITLINK_MODE } from '#cli/config/files/modes.ts';
 import { listPackageFiles } from '#cli/repository/javascript/workspaces.ts';
-import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
+import { SYMLINK_MODE, GITLINK_MODE } from '#cli/config/repository/files.ts';
+import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { PACKAGE_JSON, PACKAGE_SWIFT, PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { visitGitBlobs, listRevisionFiles } from '#cli/repository/revisions/files.ts';
-import { TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/system.ts';
-import { PACKAGE_JSON, PACKAGE_SWIFT, PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
+import { TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/repository/git.ts';
 import type { CopyFile, RevisionCopy, CopyIndexFile, RevisionDependencies } from '#cli/types/engine/copies.ts';
 import { statSync, chmodSync, lstatSync, mkdirSync, realpathSync, copyFileSync, writeFileSync } from 'node:fs';
 import { copyDependencies, readIgnoredPaths, readDeclarationDependencies } from '#cli/engine/copies/dependencies.ts';
@@ -39,7 +39,7 @@ import {
     GIT_UPDATE_INDEX_ARGUMENTS,
     DECLARATION_CONFIG_EXTENSIONS,
     INSTALLED_DEPENDENCIES_MESSAGE,
-} from '#cli/config/engine/copies.ts';
+} from '#cli/config/engine.ts';
 
 function listDependencyFolders(installed: Files, projects: string[]): string[] {
     return projects.flatMap((path) => {

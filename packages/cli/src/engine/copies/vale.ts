@@ -1,11 +1,11 @@
 import { join, resolve } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { Files } from '#cli/types/system/files.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { preparePath } from '#cli/system/files/bounded.ts';
 import { statSync, symlinkSync, realpathSync } from 'node:fs';
-import { INSTALLED_VALE_MESSAGE } from '#cli/config/engine/copies.ts';
+import { INSTALLED_VALE_MESSAGE } from '#cli/config/engine.ts';
 
 function assertValeMatches(installed: Files, destination: Files, config: string): void {
     const onDisk = installed.read(config);

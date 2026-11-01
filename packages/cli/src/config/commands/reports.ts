@@ -1,0 +1,166 @@
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation.ts';
+
+export const PROGRESS_CLEAR = '\r\u{1B}[2K';
+
+export const CHECK_LIST_SEPARATOR = ',';
+
+export const PUSH_STDIN_MESSAGE =
+    '--hook pre-push reads the lines that Git writes to standard input. Run it from the pre-push hook.';
+
+export const CHECK_STAGES = ['commit', 'push'] as const;
+
+export const CHECK_INPUT_HOOKS = ['pre-push', 'commit-msg'] as const;
+
+export const STAGE_OPTION = '--stage <commit|push>';
+
+export const STAGE_FLAG = '--stage';
+
+export const COMMIT_FILE_MESSAGE = '--hook commit-msg needs one commit message file after --.';
+
+export const CHECK_STOPPED_MESSAGE = 'Check stopped before every check finished.';
+
+export const ONLY_OPTION = '--only <checks>';
+
+export const BASE_OPTION = '--base <ref>';
+
+export const FIX_FLAG = '--fix';
+
+export const HOOK_OPTION = '--hook <hook>';
+
+export const VERBOSE_FLAG = '--verbose';
+
+export const PUSH_INPUT_MESSAGE = 'Git sent pre-push input that is not UTF-8 text.';
+
+export const EMPTY_CHECKS_MESSAGE = 'Name a check, such as --only python/ruff.';
+
+export const GIT_SETUP_FILES_ARGUMENTS = ['ls-files', '--cached', '-z', '--', SETTINGS_FILE, GSPOT_FOLDER] as const;
+
+export const SETUP_PATHS = [SETTINGS_FILE, `${GSPOT_FOLDER}/`] as const;
+
+export const STAGE_SETUP_MESSAGE = `Stage ${SETTINGS_FILE} and ${GSPOT_FOLDER}/.`;
+
+export const CHANGED_FLAG = '--changed';
+
+export const EMPTY_PUSH_MESSAGE = 'The push sends no commits to check.\n';
+
+export const NO_PENDING_REFS = 'none; see canceled checks above';
+
+export const NOTE_STATUSES = new Set(['missing', 'error', 'skipped']);
+
+export const FINDINGS_SHOWN = 200;
+
+export const CHECK_STATUS_COLORS = {
+    passed: 'green',
+    failed: 'red',
+    missing: 'red',
+    error: 'red',
+    skipped: 'yellow',
+} as const;
+
+export const FIXER_ERROR_PREFIX = /^(?:[\w.]*(?:Error|error))(?: \[[^\]]+\])?:\s*/u;
+
+export const TOOL_MISSING_MESSAGE = ' (a tool is missing; run gspot install)';
+
+export const STAGED_FILES = 'the staged files';
+
+export const UNCHANGED_FIX_MESSAGE = 'No fixer changed anything.';
+
+export const WORKING_TREE = 'the working tree';
+
+export const RUN_AGAIN = 'run again:';
+
+export const STANDARD_INSTALL_HELP = ' Run gspot install.';
+
+export const KEY_GAP = 2;
+
+export const VALUE_WIDTH = 28;
+
+export const LIST_KINDS = ['configurations', 'settings'] as const;
+
+export const REASON_HEADER = 'reason needed when';
+
+export const OFF_BY_LEVEL = 'off (level)';
+
+export const NO_MATCHING_FILES = 'no matching files';
+
+export const LIST_USAGE = '[options] [configurations|settings]';
+
+export const VERSION_GAP = 4;
+
+export const TOOL_STATE_COLORS = {
+    ok: 'green',
+    error: 'red',
+    missing: 'red',
+    outdated: 'red',
+    newer: 'red',
+    system: 'dim',
+} as const;
+
+export const COLUMN_WIDTHS = { label: 9, name: 34, note: 30 } as const;
+
+export const SUGGESTION_SECTIONS = [
+    { key: 'detected', title: 'detected, not selected' },
+    { key: 'suggested', title: 'suggested, not selected' },
+    { key: 'undetected', title: 'selected, but no files yet' },
+    { key: 'unowned', title: 'config files gspot does not own' },
+    { key: 'lintJobs', title: 'existing lint jobs' },
+] as const;
+
+export const LEVEL_COMMAND = 'gspot set level all';
+
+export const LINT_JOB_NOTE = 'an existing lint job';
+
+export const CI_FILE_LABELS = {
+    github: GITHUB_WORKFLOW,
+    gitlab: `${GITLAB_WORKFLOW} (include from .gitlab-ci.yml)`,
+} as const;
+
+export const ORIGIN_URL_SETTING = 'remote.origin.url';
+
+export const REMOTE_URL_SCHEME = /^(?:https?|ssh):\/\//u;
+
+export const REMOTE_URL_USER = /^[^@/]+@/u;
+
+export const CI_OFF_NOTES = {
+    github: 'off; gspot set ci.enabled true writes the check workflow',
+    gitlab: 'off; gspot set ci.enabled true and gspot set ci.provider gitlab write the check workflow',
+} as const;
+
+export const RUN_IN_COPY_MESSAGE = 'Runs on a copy of the selected files in a temporary folder.';
+
+export const REPOSITORY_COMMAND = 'repository command';
+
+export const SELECTED_YES_MESSAGE = 'Selected in this repository: yes';
+
+export const DETECTED_BY = 'Detected by';
+
+export const LANGUAGE_FILES_MESSAGE = 'every file a language configuration selects';
+
+export const PRETTIER_FILES_MESSAGE = 'the file types of the selected Prettier plugins';
+
+export const ESLINT_FILES_MESSAGE = 'the file types of the selected ESLint plugins';
+
+export const TOOL_PINS = 'Tools it pins';
+
+export const BINARY_ELIGIBLE_MESSAGE = 'binary: eligible for secrets and size checks';
+
+export const GENERATED_ELIGIBLE_MESSAGE = 'generated: eligible for secret checks and checks for stale generated files';
+
+export const VENDORED_ELIGIBLE_MESSAGE = 'vendored: eligible for secrets, license, and security checks';
+
+export const UNCHECKED_REASON = 'no selected check reads this file';
+
+export const MARK_GENERATED_MESSAGE =
+    'Mark generated or copied files linguist-generated or linguist-vendored in .gitattributes, or run gspot add <configuration>.';
+
+export const REASON_HELP =
+    'If you set this value, give a reason: write it as { value = ..., reason = "..." }, or run gspot set with --reason.';
+
+export const LINT_RULE_LABELS = [
+    ['description', 'What it looks for'],
+    ['why', 'Why'],
+    ['fix', 'What to do'],
+    ['example', 'Example'],
+] as const;

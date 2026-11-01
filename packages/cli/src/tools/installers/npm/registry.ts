@@ -1,7 +1,7 @@
 import which from 'which';
 import { join, dirname, resolve } from 'node:path';
+import { PRIVATE_FILE } from '#cli/config/system.ts';
 import { realpathSync, writeFileSync } from 'node:fs';
-import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import { NPM_TOOL } from '#cli/config/repository/javascript.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
@@ -21,7 +21,7 @@ import {
     NPM_SCOPE_REGISTRY_KEY,
     ENCODED_CREDENTIAL_KEY,
     NPM_SETTING_VARIABLE_PREFIX,
-} from '#cli/config/tools/installers/npm.ts';
+} from '#cli/config/tools/installers.ts';
 
 async function readRegistrySettings(root: string): Promise<Record<string, unknown>> {
     const [npmConfig, { default: npmDefinitions }] = await Promise.all([

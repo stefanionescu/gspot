@@ -1,5 +1,5 @@
 import { join } from 'node:path/posix';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { SETTING_REASON } from '#tests/config/commands/set.ts';
 
 export const BUN_PROJECT_FILES = {

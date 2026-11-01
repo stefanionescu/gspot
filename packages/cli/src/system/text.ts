@@ -1,12 +1,5 @@
 import type { TextRange, TextPosition } from '#cli/types/text.ts';
-
-import {
-    TYPO_MIN,
-    LIST_LIMIT,
-    TYPO_FRACTION,
-    UNQUOTED_ARGUMENT,
-    SIMILAR_NAME_LIMIT,
-} from '#cli/config/system/system.ts';
+import { TYPO_MIN, LIST_LIMIT, TYPO_FRACTION, UNQUOTED_ARGUMENT, SIMILAR_NAME_LIMIT } from '#cli/config/system.ts';
 
 /**
 Count the fewest inserted, deleted, or replaced characters that turn one text into the other.

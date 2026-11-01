@@ -1,8 +1,8 @@
 import type { Finding } from '#cli/types/engine/check.ts';
+import { KNIP_ISSUE_MESSAGES } from '#cli/config/engine.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { knipOutputSchema } from '#cli/schemas/engine/knip.ts';
 import type { ToolOutput } from '#cli/types/engine/outputs.ts';
-import { KNIP_ISSUE_MESSAGES } from '#cli/config/engine/outputs.ts';
 
 /**
 Read the Knip JSON categories, and keep grouped symbols and source positions.

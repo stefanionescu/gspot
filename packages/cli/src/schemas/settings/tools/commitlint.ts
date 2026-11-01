@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { RULE_CONDITIONS } from '#cli/config/settings/tools/tables.ts';
+import { RULE_CONDITIONS } from '#cli/config/settings/schema.ts';
 import { buildRuleTableSchema } from '#cli/schemas/settings/tools/rules.ts';
 import { allowReasonedValue, nonemptyStringsSchema } from '#cli/schemas/settings/fields.ts';
 

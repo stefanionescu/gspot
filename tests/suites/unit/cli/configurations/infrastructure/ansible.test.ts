@@ -1,7 +1,7 @@
 import { createFileTree } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { COMMAND_PLAYBOOK } from '#tests/config/ansible.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';

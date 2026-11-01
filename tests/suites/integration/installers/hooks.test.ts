@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { HOOKS_SETTINGS } from '#tests/config/hooks.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { readGitSetting } from '#cli/repository/git/run.ts';

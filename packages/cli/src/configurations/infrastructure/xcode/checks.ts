@@ -7,12 +7,11 @@ import type { Session } from '#cli/types/session.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { CheckFinding } from '#cli/types/engine/check.ts';
-import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
 import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { parseProjectSources } from '#cli/parsers/projects/xcode.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
-import { PBXPROJ_SUFFIX, SWIFT_EXTENSION } from '#cli/config/files/names.ts';
+import { PACKAGE_SWIFT, PBXPROJ_SUFFIX, SWIFT_EXTENSION } from '#cli/config/parsers.ts';
 import { stringsFileSchema, assetContentsSchema } from '#cli/schemas/configurations/infrastructure.ts';
 
 import {

@@ -1,5 +1,4 @@
 import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
-import { CONFIGURATION_PLUGINS } from '#cli/config/configurations/generators/language/javascript/eslint/eslint.ts';
 
 import {
     NEXT_RULES,
@@ -7,7 +6,8 @@ import {
     NEXT_RULE_OPTIONS,
     NEXT_SERVER_FILES,
     NEXT_PAGES_FOLDERS,
-} from '#cli/config/configurations/generators/framework.ts';
+    CONFIGURATION_PLUGINS,
+} from '#cli/config/configurations/framework.ts';
 
 /**
 Apply the Next.js presets and the pages and JSX settings.

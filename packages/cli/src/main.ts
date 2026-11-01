@@ -1,8 +1,8 @@
 import { registerAdd } from '#cli/commands/add.ts';
 import { registerSet } from '#cli/commands/set.ts';
+import { EXIT_ERROR } from '#cli/config/system.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { registerList } from '#cli/commands/list.ts';
-import { EXIT_ERROR } from '#cli/config/terminal.ts';
 import { registerApply } from '#cli/commands/apply.ts';
 import { registerUnset } from '#cli/commands/unset.ts';
 import { registerIgnore } from '#cli/commands/ignore.ts';
@@ -10,14 +10,15 @@ import { registerRemove } from '#cli/commands/remove.ts';
 import { registerInit } from '#cli/commands/init/init.ts';
 import { registerInstall } from '#cli/commands/install.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { registerCheck } from '#cli/commands/check/check.ts';
 import { registerUnignore } from '#cli/commands/unignore.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { registerDoctor } from '#cli/commands/doctor/doctor.ts';
 import { beginCheckReport } from '#cli/commands/check/report.ts';
 import { registerExplain } from '#cli/commands/explain/explain.ts';
+import { COMMAND_SUGGESTION } from '#cli/config/commands/edits.ts';
 import { runGit, buildGitError } from '#cli/repository/git/run.ts';
+import { CODE_MARK, COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { Command, type Argument, CommanderError } from '@commander-js/extra-typings';
 import { printError, printResult, setOutputOptions, printUnexpectedError } from '#cli/system/terminal.ts';
@@ -25,13 +26,11 @@ import { printError, printResult, setOutputOptions, printUnexpectedError } from 
 import {
     HELP_FLAG,
     JSON_FLAG,
-    CODE_MARK,
     USAGE_LINE,
     GLOBAL_OPTIONS,
     HELP_ERROR_CODE,
     HELP_TERM_WIDTH,
     EXIT_CODE_SPACING,
-    COMMAND_SUGGESTION,
     PROGRAM_EXIT_CODES,
     PROGRAM_HELP_FOOTER,
     UNKNOWN_COMMAND_NAME,

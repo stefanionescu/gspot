@@ -3,7 +3,7 @@ import { createFileTree } from 'testdirs';
 import { getTool } from '#cli/tools/pins.ts';
 import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';

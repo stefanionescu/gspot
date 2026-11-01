@@ -17,15 +17,12 @@ import { buildDrizzleBlocks } from '#cli/configurations/library/drizzle/generate
 import { buildZustandBlocks } from '#cli/configurations/library/zustand/generate.ts';
 import { buildReactDomBlocks } from '#cli/configurations/framework/react-dom/generate.ts';
 import { buildTypescriptBlocks } from '#cli/configurations/language/typescript/generate.ts';
+import { SUPABASE_RULES, PLUGIN_RULE_BLOCKS } from '#cli/config/configurations/javascript.ts';
 import { buildTanstackQueryBlocks } from '#cli/configurations/library/tanstack-query/generate.ts';
 import { buildTestingLibraryBlocks } from '#cli/configurations/library/testing-library/generate.ts';
 import { joinScope, isInScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { buildTestFiles, listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
 
-import {
-    SUPABASE_RULES,
-    PLUGIN_RULE_BLOCKS,
-} from '#cli/config/configurations/generators/language/javascript/eslint/eslint.ts';
 import {
     type EslintScope,
     type EslintPlugins,

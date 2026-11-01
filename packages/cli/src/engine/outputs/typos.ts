@@ -1,7 +1,7 @@
 import { resolve, relative } from 'node:path';
-import { LINE_FEED } from '#cli/config/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
+import { LINE_FEED } from '#cli/config/repository/git.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { Finding } from '#cli/types/engine/check.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';

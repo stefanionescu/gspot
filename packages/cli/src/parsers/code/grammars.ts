@@ -4,14 +4,14 @@ import { remember } from '#cli/system/cache.ts';
 import { read } from '#cli/system/files/reads.ts';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { Parser, Language, type Tree } from 'web-tree-sitter';
-import { DECLARATION_EXTENSIONS } from '#cli/config/system/system.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 
 import {
     GRAMMARS_FOLDER,
     GRAMMAR_EXTENSIONS,
     GRAMMAR_CONFIGURATIONS,
     GRAMMAR_FILE_EXTENSION,
-} from '#cli/config/parsers/code.ts';
+} from '#cli/config/parsers.ts';
 import {
     type ParseCache,
     type SourceTree,

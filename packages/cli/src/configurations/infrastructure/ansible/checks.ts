@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import { isInInstalledFolder } from '#cli/system/paths.ts';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';

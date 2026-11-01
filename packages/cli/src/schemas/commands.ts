@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { TRAILING_COMMAS } from '#cli/config/settings/fields.ts';
+import { TRAILING_COMMAS } from '#cli/config/settings/schema.ts';
 
 const prettierOptionsSchema = z.object({
     tabWidth: z.number().optional(),

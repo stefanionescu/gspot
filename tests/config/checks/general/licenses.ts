@@ -1,4 +1,4 @@
-import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 
 const ABSENT_PACKAGE_LOCKFILE = `[[package]]
 name = "Absent_Package"

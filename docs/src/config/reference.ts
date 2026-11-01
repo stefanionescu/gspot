@@ -1,4 +1,4 @@
-import { DOCS_PATHS } from '#cli/config/files/names.ts';
+import { DOCS_PATHS } from '#cli/config/manifests.ts';
 
 export const SCHEMA_TYPE_LABELS: Readonly<Record<string, string>> = {
     string: 'Text',

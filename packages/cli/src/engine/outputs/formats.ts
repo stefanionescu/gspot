@@ -1,5 +1,6 @@
 import { realpathSync } from 'node:fs';
 import { sep, posix, isAbsolute } from 'node:path';
+import { DRIVE_LETTER } from '#cli/config/system.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import type { Check } from '#cli/types/manifests.ts';
 import { stripVTControlCharacters } from 'node:util';
@@ -7,11 +8,10 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { Finding } from '#cli/types/engine/check.ts';
 import { parseJsonFindings } from '#cli/engine/outputs/json.ts';
 import { parseKnipFindings } from '#cli/engine/outputs/knip.ts';
-import { DRIVE_LETTER } from '#cli/config/files/path-patterns.ts';
 import { parseTyposFindings } from '#cli/engine/outputs/typos.ts';
 import { parseSemgrepFindings } from '#cli/engine/outputs/semgrep.ts';
 import { parseMarkdownlintFindings } from '#cli/engine/outputs/markdownlint.ts';
-import { FILE_GROUP, TAPLO_OUTPUTS, MISSING_PATH_CODES } from '#cli/config/engine/outputs.ts';
+import { FILE_GROUP, TAPLO_OUTPUTS, MISSING_PATH_CODES } from '#cli/config/engine.ts';
 import type { CheckOutput, OutputPaths, ParsingCheck, OutputParser } from '#cli/types/engine/outputs.ts';
 import { parseLineFindings, parseRegexFindings, parseGroupedFindings } from '#cli/engine/outputs/text.ts';
 

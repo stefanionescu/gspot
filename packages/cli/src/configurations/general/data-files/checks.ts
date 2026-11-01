@@ -27,7 +27,7 @@ import {
     YAML_REQUIRED_NAMES,
     YAML_VERSION_COMMENT,
     YAML_GENERATED_ANCHOR,
-} from '#cli/config/configurations/general/data-files.ts';
+} from '#cli/config/configurations/general.ts';
 
 function listScalarFindings(node: Scalar, isKey: boolean): YamlFinding[] {
     const source = node.source ?? '';

@@ -1,7 +1,11 @@
-import { TYPESCRIPT_CONFIGURATION } from '#cli/config/manifests/names.ts';
-import { VUE_RULES, VUE_FILES } from '#cli/config/configurations/generators/framework.ts';
 import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
-import { CONFIGURATION_PLUGINS } from '#cli/config/configurations/generators/language/javascript/eslint/eslint.ts';
+
+import {
+    VUE_RULES,
+    VUE_FILES,
+    CONFIGURATION_PLUGINS,
+    TYPESCRIPT_CONFIGURATION,
+} from '#cli/config/configurations/framework.ts';
 
 /**
 Apply the Vue presets, accessibility lint rules, and component parsing.

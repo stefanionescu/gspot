@@ -1,7 +1,7 @@
 import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import { TABLE_KEY_SEGMENTS } from '#cli/config/settings/inheritance.ts';
+import { TABLE_KEY_SEGMENTS } from '#cli/config/settings/schema.ts';
 import { UNDER_TABLE, AT_TOP_LEVEL } from '#cli/config/settings/validation.ts';
 import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
 import type { Settings, SettingsError, SettingsTable } from '#cli/types/settings/settings.ts';

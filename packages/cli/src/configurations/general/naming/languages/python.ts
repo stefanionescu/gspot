@@ -12,7 +12,7 @@ import {
     IMPLICIT_PARAMETERS,
     TYPE_ALIAS_ANNOTATION,
     PYTHON_PARAMETER_NODES,
-} from '#cli/config/configurations/general/naming/languages.ts';
+} from '#cli/config/configurations/naming.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Three identifier readers in this file find the block that holds a definition through it.
 function getHolderType(node: Node): string {

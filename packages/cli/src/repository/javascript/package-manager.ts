@@ -4,24 +4,14 @@ import { join, dirname } from 'node:path';
 import { remember } from '#cli/system/cache.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import { VERSION_FLAG } from '#cli/config/tools/tools.ts';
-import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import type { RunCache } from '#cli/types/system/system.ts';
-import { CI_NODE } from '#cli/config/generation/generation.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { PackageJson } from '#cli/types/parsers/projects.ts';
+import { GSPOT_FOLDER, PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { packageManagerSchema, packageManagerPinSchema } from '#cli/schemas/repository/javascript.ts';
 
-import {
-    NPM_TOOL,
-    START_RUNNERS,
-    PACKAGE_MANAGERS,
-    PACKAGE_MANAGER_HASH_SUFFIX,
-} from '#cli/config/repository/javascript.ts';
 import type {
     StartRunner,
     PackageManager,
@@ -29,6 +19,15 @@ import type {
     PackageManagerField,
     PackageManagerCommand,
 } from '#cli/types/repository/javascript.ts';
+import {
+    CI_NODE,
+    NPM_TOOL,
+    LOCKFILES,
+    VERSION_FLAG,
+    START_RUNNERS,
+    PACKAGE_MANAGERS,
+    PACKAGE_MANAGER_HASH_SUFFIX,
+} from '#cli/config/repository/javascript.ts';
 
 const PACKAGE_MANAGER_VERSIONS = Symbol('package manager versions');
 

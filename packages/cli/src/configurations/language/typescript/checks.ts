@@ -2,22 +2,23 @@ import { join, posix, relative } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { type CheckFinding } from '#cli/types/engine/check.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { claimProjectCheck } from '#cli/configurations/tsc/compiler.ts';
+import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { selectRequiredTsconfigOptions } from '#cli/configurations/tsc/scope-tsconfig.ts';
-import { TYPESCRIPT_TAG, PARENT_TSCONFIG_SKIP } from '#cli/config/configurations/cross-configuration/tsc.ts';
 
 import {
     OPTION_HELP,
     TSCONFIG_NAME,
+    PARENT_TSCONFIG_SKIP,
     STRICT_FAMILY_OPTIONS,
     MISSING_TSCONFIG_RULE,
     MISSING_TSCONFIG_MESSAGE,
-} from '#cli/config/configurations/language/language.ts';
+} from '#cli/config/configurations/language.ts';
 
 /**
 Reports each required compiler option that a scope tsconfig leaves off.

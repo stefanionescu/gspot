@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { INSTALL_OUTPUT_LIMIT } from '#cli/config/tools/installers/installers.ts';
+import { INSTALL_OUTPUT_LIMIT } from '#cli/config/tools/installers.ts';
 import { LEAKED_LOCKFILES, REGISTRY_PASSWORDS } from '#tests/config/tools/installers/installers.ts';
 
 import {

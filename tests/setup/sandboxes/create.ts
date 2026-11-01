@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import { format } from 'prettier';
 import { afterAll, beforeAll } from 'bun:test';
-import { JSON_INDENT } from '#cli/config/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import type { Level } from '#cli/types/manifests.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { formatSchema } from '#cli/schemas/settings/fields.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkPackages } from '#tests/setup/sandboxes/node-modules.ts';
 import { commitAll, markExecutable } from '#tests/setup/system/git.ts';

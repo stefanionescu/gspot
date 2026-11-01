@@ -1,12 +1,11 @@
+import { EXIT_ERROR } from '#cli/config/system.ts';
 import type { Session } from '#cli/types/session.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import type { CheckResult } from '#cli/types/engine/check.ts';
-import { INCOMPLETE_STATUSES } from '#cli/config/engine/runs.ts';
-import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/terminal.ts';
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { buildBaseResult, formatExplainCommand } from '#cli/engine/results.ts';
-import { FAILED_STATUSES, NO_FILES_MESSAGE } from '#cli/config/commands/check.ts';
 import type { FixReport, RunReport, FinishedRun } from '#cli/types/commands/check.ts';
+import { EXIT_FINDINGS, FAILED_STATUSES, NO_FILES_MESSAGE, INCOMPLETE_STATUSES } from '#cli/config/engine.ts';
 
 function listFailedChecks(results: CheckResult[], fixes: FixReport | undefined): string[] {
     const checks = results.filter((result) => FAILED_STATUSES.has(result.status)).map((result) => result.check);

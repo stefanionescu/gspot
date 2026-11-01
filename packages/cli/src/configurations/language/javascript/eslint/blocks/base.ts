@@ -1,19 +1,14 @@
 import { basename } from 'node:path/posix';
 import { escapeGlob } from '#cli/system/paths.ts';
-import { MISE_TASKS_GLOB } from '#cli/config/files/names.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { readCachedPackageJson } from '#cli/repository/dependencies.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { readScopeAliases } from '#cli/repository/javascript/aliases.ts';
-import { JAVASCRIPT_CONFIGURATION } from '#cli/config/manifests/names.ts';
+import { MISE_TASKS_GLOB } from '#cli/config/configurations/structure.ts';
 import { buildSelectorBlocks } from '#cli/configurations/language/javascript/eslint/blocks/selectors.ts';
 import { buildScopeFiles, listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { buildRestrictedImportBlocks } from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
 
-import {
-    PRESETS_AFTER_CONFIGURATIONS,
-    PRESETS_BEFORE_CONFIGURATIONS,
-} from '#cli/config/configurations/generators/language/javascript/eslint/eslint.ts';
 import {
     buildImportIgnores,
     buildNodeScriptBlocks,
@@ -49,8 +44,11 @@ import {
     IMPORT_BOUNDARIES_RULE,
     RESTRICTED_SYNTAX_RULE,
     ROOT_PACKAGE_JSON_RULES,
+    JAVASCRIPT_CONFIGURATION,
     BOUNDARIES_FILES_SETTING,
-} from '#cli/config/configurations/generators/language/javascript/eslint/blocks/blocks.ts';
+    PRESETS_AFTER_CONFIGURATIONS,
+    PRESETS_BEFORE_CONFIGURATIONS,
+} from '#cli/config/configurations/blocks.ts';
 
 function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBlock[]): ConfigurationBlocks['blocks'] {
     const { session, projects } = planned;

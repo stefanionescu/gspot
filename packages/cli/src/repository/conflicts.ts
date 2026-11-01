@@ -2,7 +2,7 @@ import picomatch from 'picomatch';
 import { posix, extname } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
 import { find } from '#cli/system/files/reads.ts';
-import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
@@ -11,7 +11,7 @@ import type { Configuration } from '#cli/types/manifests.ts';
 import { listProjectFolders } from '#cli/repository/scopes.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import type { ManagedKeys, ConflictingConfig } from '#cli/types/repository/repository.ts';
-import { TOML_EXTENSION, JSON_EXTENSION, INI_EXTENSIONS, YAML_EXTENSIONS } from '#cli/config/repository/repository.ts';
+import { TOML_EXTENSION, JSON_EXTENSION, INI_EXTENSIONS, YAML_EXTENSIONS } from '#cli/config/repository/setup.ts';
 
 function listReplacementConflicts(root: string, paths: string[], replacement: ConflictingConfig): ConflictingConfig[] {
     return paths

@@ -3,21 +3,21 @@ import type { Session } from '#cli/types/session.ts';
 import { listIgnoredRules } from '#cli/settings/scopes.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Level, Configuration } from '#cli/types/manifests.ts';
-import { NESTJS_CONFIGURATION } from '#cli/config/manifests/names.ts';
-import { DECLARATION_EXTENSIONS } from '#cli/config/system/system.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
+import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 
 import {
-    TYPESCRIPT_TAG,
     COMPILER_OPTIONS,
     TYPESCRIPT_DEFAULTS,
+    NESTJS_CONFIGURATION,
     DEFAULT_LEVEL_OPTIONS,
     NESTJS_COMPILER_OPTIONS,
     TYPESCRIPT_TSCONFIG_CHECK,
-} from '#cli/config/configurations/cross-configuration/tsc.ts';
+} from '#cli/config/configurations/registry.ts';
 
 /**
 Builds the scope compiler configuration, extending its authored project when present.

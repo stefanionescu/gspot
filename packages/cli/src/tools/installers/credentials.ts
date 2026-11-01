@@ -8,7 +8,7 @@ import {
     EMPTY_OUTPUT_MESSAGE,
     INSTALL_OUTPUT_LIMIT,
     LOCKFILE_URL_PASSWORD,
-} from '#cli/config/tools/installers/installers.ts';
+} from '#cli/config/tools/installers.ts';
 
 /**
 Reject a generated lockfile that holds a configured credential in either URL form.

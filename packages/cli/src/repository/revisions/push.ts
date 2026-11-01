@@ -1,10 +1,9 @@
 import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { isDeepStrictEqual } from 'node:util';
-import { HASH_PATTERN } from '#cli/config/git.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { WHITESPACE_RUN } from '#cli/config/text.ts';
+import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import { readHead } from '#cli/repository/revisions/files.ts';
 import { readMergeBase, readDefaultRef } from '#cli/repository/revisions/changes.ts';
 import { runGit, readGitText, readGitLines, readGitPaths } from '#cli/repository/git/run.ts';
@@ -21,6 +20,7 @@ import {
     TREE_SUFFIX,
     PEEL_SUFFIX,
     ABSENT_HASH,
+    HASH_PATTERN,
     REMOTES_FLAG,
     NON_COMMIT_REASON,
     GIT_LOG_ARGUMENTS,
@@ -36,7 +36,7 @@ import {
     GIT_ROOT_COMMITS_ARGUMENTS,
     GIT_SHALLOW_FILE_ARGUMENTS,
     MISSING_PUSH_REVISION_MESSAGE,
-} from '#cli/config/repository/revisions.ts';
+} from '#cli/config/repository/git.ts';
 
 function parsePushLine(line: string): PushLine {
     const [localRef, localHash, remoteRef, remoteHash, ...verbatim] = line.trim().split(WHITESPACE_RUN);

@@ -1,20 +1,22 @@
 import type ts from 'typescript';
 import { remember } from '#cli/system/cache.ts';
 import { compareText } from '#cli/system/text.ts';
+import { PRIVATE_FILE } from '#cli/config/system.ts';
 import { buildBaseResult } from '#cli/engine/results.ts';
-import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import { listIgnoredRules } from '#cli/settings/scopes.ts';
 import type { RunCache } from '#cli/types/system/system.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import type { CheckResult } from '#cli/types/engine/check.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
-import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
+import { GSPOT_FOLDER, TSCONFIG_FILE } from '#cli/config/parsers.ts';
 import { join, dirname, resolve, relative, isAbsolute } from 'node:path';
+import { PARENT_TSCONFIG_SKIP } from '#cli/config/configurations/language.ts';
+import { TSCONFIG_COPY_FOLDER } from '#cli/config/configurations/framework.ts';
+import { TSC_UNFORMATTED_OUTPUT } from '#cli/config/configurations/javascript.ts';
 import { readTsconfig, listSourceFiles } from '#cli/parsers/projects/tsconfig.ts';
 import type { ParsedTsconfig, TypeScriptProject } from '#cli/types/parsers/projects.ts';
 import type { TypeScriptReferenceCopy } from '#cli/types/configurations/cross-configuration/tsc.ts';
@@ -24,16 +26,13 @@ import {
     TSBUILDINFO_FLAG,
     TSC_BUILD_COMMAND,
     TSC_PROJECT_COMMAND,
-    PARENT_TSCONFIG_SKIP,
-    TSCONFIG_COPY_FOLDER,
     TSCONFIG_TSBUILDINFO,
     TSC_REFERENCE_BUNDLE,
-    TSC_UNFORMATTED_OUTPUT,
     TSC_CONFIG_INPUT_PATHS,
     TSC_COMPILER_INPUT_PATHS,
     TYPESCRIPT_TSCONFIG_CHECK,
     TSC_REFERENCE_OUTPUT_FOLDER,
-} from '#cli/config/configurations/cross-configuration/tsc.ts';
+} from '#cli/config/configurations/registry.ts';
 
 const CHECKED_PROJECTS = Symbol('checked projects');
 

@@ -3,11 +3,12 @@ import { compareText } from '#cli/system/text.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { stringify, parseDocument } from '@decimalturn/toml-patch';
 import type { TomlBlock, TomlValue } from '#cli/types/parsers/formats.ts';
 import { isTable, findValueAt, normalizeTables } from '#cli/system/tables.ts';
 import type { TomlTable, TaploLayout } from '#cli/types/settings/settings.ts';
-import { ROOT_KEYS, TOML_FORMAT, LAST_TABLES, FIRST_TABLES, SETTINGS_FILE } from '#cli/config/settings/settings.ts';
+import { ROOT_KEYS, TOML_FORMAT, LAST_TABLES, FIRST_TABLES } from '#cli/config/settings/validation.ts';
 
 import {
     isTomlKind,

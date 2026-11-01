@@ -4,14 +4,14 @@ import { join } from 'node:path';
 import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { listPackagePins } from '#cli/tools/pins.ts';
-import { TRAILING_PERIOD } from '#cli/config/text.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { VERSION_FLAG } from '#cli/config/tools/tools.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { PACKAGE_JSON, GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { VERSION_FLAG } from '#cli/config/repository/javascript.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
+import { TRAILING_PERIOD } from '#cli/config/settings/validation.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import type { ToolInstall } from '#cli/types/tools/installers/installers.ts';
 import type { ReplacementRequest } from '#cli/types/repository/repository.ts';
 import { runInstallStep, explainReleaseAgeHold } from '#cli/tools/installers/steps.ts';
@@ -39,7 +39,7 @@ import {
     NPM_CONFIG_FOLDER_VARIABLE,
     LOCKFILE_CREDENTIAL_MESSAGE,
     NPM_LOCKFILE_CREDENTIAL_MESSAGE,
-} from '#cli/config/tools/installers/npm.ts';
+} from '#cli/config/tools/installers.ts';
 
 async function createNpmLockfile(
     install: NpmToolInstall,

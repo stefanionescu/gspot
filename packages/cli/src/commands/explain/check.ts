@@ -1,5 +1,5 @@
-import { CODE_MARK } from '#cli/config/main.ts';
 import type { Session } from '#cli/types/session.ts';
+import { CODE_MARK } from '#cli/config/commands/help.ts';
 import { describeCheck } from '#cli/engine/reference.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { getTool, findToolName } from '#cli/tools/pins.ts';
@@ -20,7 +20,7 @@ import {
     REPOSITORY_COMMAND,
     RUN_IN_COPY_MESSAGE,
     SELECTED_YES_MESSAGE,
-} from '#cli/config/commands/explain.ts';
+} from '#cli/config/commands/reports.ts';
 
 function listCheckIgnores(session: Session | undefined, checkId: string): CheckIgnore[] {
     return (session?.settings.ignore ?? [])

@@ -7,8 +7,6 @@ import { type RunCache } from '#cli/types/system/system.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import { NPM_PACKAGE_FOLDER } from '#cli/config/files/names.ts';
-import { LEADING_SLASH } from '#cli/config/files/path-patterns.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import { type LockfileName, type LockedPackageLockfile } from '#cli/types/parsers/projects.ts';
 
@@ -23,7 +21,9 @@ import {
 } from '#cli/schemas/parsers/projects.ts';
 import {
     PACKAGE_JSON,
+    LEADING_SLASH,
     PNPM_PEER_START,
+    NPM_PACKAGE_FOLDER,
     PNPM_ROOT_IMPORTER,
     YARN_CLASSIC_HEADER,
     LOCKFILE_URL_FIELDS,
@@ -32,7 +32,7 @@ import {
     YARN_CLASSIC_PROPERTY,
     PYTHON_NAME_SEPARATORS,
     type IMPORTER_LOCKFILES,
-} from '#cli/config/parsers/projects.ts';
+} from '#cli/config/parsers.ts';
 
 function parseNpmPackages(path: string, text: string): string[] {
     return Object.entries(parseJsonFile(path, text, npmLockfileSchema).packages).flatMap(([folder, lockedPackage]) => {

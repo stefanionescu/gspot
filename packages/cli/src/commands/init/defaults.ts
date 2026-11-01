@@ -7,7 +7,7 @@ import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import type { WrittenTable } from '#cli/types/commands/init.ts';
-import { DETECTED_SETTINGS } from '#cli/config/commands/init.ts';
+import { DETECTED_SETTINGS } from '#cli/config/commands/edits.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { findSetting, getSettingValue } from '#cli/settings/inherit.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';

@@ -4,14 +4,15 @@ import { isInside } from '#cli/system/paths.ts';
 import { findPackagePin } from '#cli/tools/pins.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { MISE_TOOL } from '#cli/config/tools/installers.ts';
+import { PACKAGE_JSON, GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { readToolVersion, classifyToolVersion } from '#cli/tools/versions.ts';
 import { readToolProjectPackage, findInstalledDependency } from '#cli/tools/packages.ts';
 import { listExecutablePaths, listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
 import { type ToolAvailability, type InstalledDependency } from '#cli/types/tools/tools.ts';
 import type { ToolSearch, InspectedTool, ToolInspection } from '#cli/types/tools/inspection.ts';
-import { MISE_TOOL, INSTALL_HELP, MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/tools/tools.ts';
+import { INSTALL_HELP, MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/tools/programs.ts';
 
 function buildInstallHelp(tool: Tool): string {
     const toolProjectPackage = findPackagePin(tool);

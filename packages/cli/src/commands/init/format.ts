@@ -6,16 +6,14 @@ import { selectScopePath } from '#cli/repository/scopes.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import { LINE_BREAK, DIGITS_ONLY } from '#cli/config/text.ts';
-import { PYTHON_EXTENSION } from '#cli/config/parsers/code.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
 import type { TomlTable } from '#cli/types/settings/settings.ts';
+import { DIGITS_ONLY } from '#cli/config/configurations/naming.ts';
+import { PYTHON_FILES } from '#cli/config/configurations/python.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
-import { FORMAT_CONFIGURATION } from '#cli/config/manifests/names.ts';
-import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
-import { DEFAULT_QUOTES } from '#cli/config/configurations/generators/general.ts';
+import { DEFAULT_QUOTES } from '#cli/config/configurations/general.ts';
 import { ruffFormatSchema, prettierSettingsSchema } from '#cli/schemas/commands.ts';
-import { PYTHON_FILES } from '#cli/config/configurations/generators/language/language.ts';
+import { LINE_BREAK, PACKAGE_JSON, PYPROJECT_TOML, PYTHON_EXTENSION } from '#cli/config/parsers.ts';
 
 import type {
     SettingsDraft,
@@ -27,11 +25,12 @@ import {
     PRETTIER_DEFAULTS,
     EDITORCONFIG_FILE,
     RUFF_SETTINGS_FILES,
+    FORMAT_CONFIGURATION,
     PRETTIER_SCRIPT_FILE,
     EDITORCONFIG_SECTION,
     EDITORCONFIG_COMMENT,
     PRETTIER_FILE_FORMATS,
-} from '#cli/config/commands/init.ts';
+} from '#cli/config/commands/edits.ts';
 
 function convertQuotes(singleQuote: boolean | undefined): 'single' | 'double' | undefined {
     if (singleQuote === undefined) return undefined;

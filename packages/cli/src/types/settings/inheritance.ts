@@ -1,5 +1,5 @@
+import type { PATH_ROLES } from '#cli/config/manifests.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import type { PATH_ROLES } from '#cli/config/settings/schema.ts';
 import type { ScopeFolder } from '#cli/types/repository/files.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { ReasonRequirement } from '#cli/types/settings/definitions.ts';

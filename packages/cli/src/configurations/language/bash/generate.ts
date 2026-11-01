@@ -6,7 +6,7 @@ import {
     SHELLCHECK_CHECKS,
     SHELLCHECK_OPTIONS,
     SHELLCHECK_ALL_LEVEL_ON,
-} from '#cli/config/configurations/generators/language/language.ts';
+} from '#cli/config/configurations/bash.ts';
 
 /**
 Build shellcheckrc: the ShellCheck source-path and excluded-rule settings.

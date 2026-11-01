@@ -7,14 +7,15 @@ import { printWarning } from '#cli/system/terminal.ts';
 import { isProcessRunning } from '#cli/system/processes.ts';
 import { rmSync, lstatSync, mkdtempSync, realpathSync } from 'node:fs';
 import type { Files, TemporaryFolder } from '#cli/types/system/files.ts';
-import { DRIVE_LETTER, GLOB_EXCLUDE } from '#cli/config/files/path-patterns.ts';
 
 import {
+    DRIVE_LETTER,
+    GLOB_EXCLUDE,
     PARENT_SEGMENT,
     TEMPORARY_FILE_PREFIX,
     TEMPORARY_REMOVAL_OPTIONS,
     TEMPORARY_STALE_MILLISECONDS,
-} from '#cli/config/system/files.ts';
+} from '#cli/config/system.ts';
 
 function isStaleTemporaryPath(path: string, pid: string | undefined): boolean {
     if (pid !== undefined) return !isProcessRunning(Number(pid));

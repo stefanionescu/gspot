@@ -3,7 +3,6 @@ import { onExit } from 'signal-exit';
 import { execa, execaSync, type Options } from 'execa';
 import type { ChildProcess } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
-import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { dirname, resolve, delimiter, isAbsolute } from 'node:path';
 import { foldVariableName, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
@@ -30,10 +29,11 @@ import {
     TASKKILL_GONE_CODE,
     EMPTY_COMMAND_MESSAGE,
     CANCELED_START_MESSAGE,
+    MILLISECONDS_PER_SECOND,
     PROCESS_CLEANUP_MESSAGE,
     EXIT_CLEANUP_MILLISECONDS,
     OUTPUT_CLOSE_MILLISECONDS,
-} from '#cli/config/system/system.ts';
+} from '#cli/config/system.ts';
 
 function buildExecaOptions(options: SpawnOptions, executable: string) {
     const env: Record<string, string | undefined> = { ...buildSpawnEnvironment(options.env), PWD: options.cwd };

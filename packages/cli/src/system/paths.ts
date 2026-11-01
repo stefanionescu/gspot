@@ -1,8 +1,12 @@
 import { sep, join, posix, isAbsolute } from 'node:path';
-import { PYTHON_EXECUTABLE } from '#cli/config/tools/tools.ts';
-import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
-import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/files.ts';
-import { EXECUTABLE_LAYOUTS, DECLARATION_EXTENSIONS } from '#cli/config/system/system.ts';
+
+import {
+    PYTHON_EXECUTABLE,
+    EXECUTABLE_LAYOUTS,
+    DECLARATION_EXTENSIONS,
+    GLOB_SPECIAL_CHARACTERS,
+    INSTALLED_DEPENDENCY_FOLDERS,
+} from '#cli/config/system.ts';
 
 export const executableLayout = process.platform === 'win32' ? EXECUTABLE_LAYOUTS.windows : EXECUTABLE_LAYOUTS.posix;
 

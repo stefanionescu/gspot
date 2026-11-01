@@ -1,17 +1,16 @@
 import { quoteArgument } from '#cli/system/text.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
 import type { StartRunner } from '#cli/types/repository/javascript.ts';
+import { LFS_HOOKS, HOOK_SHEBANG } from '#cli/config/repository/setup.ts';
 import type { HookName, GeneratedFile } from '#cli/types/generation/files.ts';
 
 import {
-    LFS_HOOKS,
-    HOOK_CHECKS,
-    HOOK_SHEBANG,
     PUSH_INPUT_SAVE,
     LFS_MISSING_GUARD,
     PUSH_INPUT_REPLAY,
     COMMIT_MESSAGE_PATH_LINES,
-} from '#cli/config/generation/generation.ts';
+} from '#cli/config/generation.ts';
 
 function buildHookScript(name: HookName, runner: StartRunner, lfsHooks: readonly string[]): string {
     const program = runner.command.split(' ', 1)[0] as string;

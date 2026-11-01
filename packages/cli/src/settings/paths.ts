@@ -6,7 +6,7 @@ import { escapeGlob } from '#cli/system/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
-import { GLOB_BRACKETS } from '#cli/config/files/path-patterns.ts';
+import { GLOB_BRACKETS } from '#cli/config/settings/validation.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { PathVisitor } from '#cli/types/settings/inheritance.ts';
 

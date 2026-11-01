@@ -23,7 +23,7 @@ import {
     SWIFT_ACCESSOR_OWNERS,
     TRIVIAL_FUNCTION_RULES,
     COUNTED_FUNCTION_NODES,
-} from '#cli/config/configurations/general/structure.ts';
+} from '#cli/config/configurations/structure.ts';
 
 function extractFunctionBody(node: Node, language: ParsedLanguage): Node[] {
     const body = node.childForFieldName('body') ?? node;

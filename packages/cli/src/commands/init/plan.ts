@@ -1,13 +1,14 @@
 import { styleText } from 'node:util';
 import { formatCount } from '#cli/system/text.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
+import { GENERATED_FILE_NOUN } from '#cli/config/generation.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { Settings } from '#cli/types/settings/settings.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import type { Generation } from '#cli/types/generation/files.ts';
 import { listMisePins, listPackagePins } from '#cli/tools/pins.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import { GENERATED_FILE_NOUN } from '#cli/config/generation/generation.ts';
 import type { InitPlan, InitScan, InitFileRow, ConflictingConfigs } from '#cli/types/commands/init.ts';
 
 import {
@@ -28,7 +29,7 @@ import {
     LINT_FOLDERS_HEADING,
     CHANGE_LATER_MESSAGE,
     UNREAD_SUBMODULE_MESSAGE,
-} from '#cli/config/commands/init.ts';
+} from '#cli/config/commands/edits.ts';
 
 function buildToolProjectRows(configurations: Configuration[]): InitPlan['change'] {
     const pins = listPackagePins(configurations);

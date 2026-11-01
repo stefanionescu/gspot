@@ -2,23 +2,22 @@ import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { mergeValue } from '#cli/settings/inherit.ts';
 import { readNamingDefaults } from '#cli/manifests/read.ts';
-import { SETTING_LANGUAGES } from '#cli/config/settings/naming.ts';
+import { SETTING_LANGUAGES } from '#cli/config/manifests.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools/tables.ts';
 import type { Level, Configuration } from '#cli/types/manifests.ts';
 import { importRulesSchema } from '#cli/schemas/settings/settings.ts';
 import { getSettingType, unwrapSettingSchema } from '#cli/settings/lookup.ts';
 import type { Setting, AvailableSettings } from '#cli/types/settings/inheritance.ts';
-import { TABLE_KEY_SEGMENTS, SHIPPED_DEFAULT_ORIGIN } from '#cli/config/settings/inheritance.ts';
 import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
+import { TABLE_KEY_SEGMENTS, LANGUAGE_GROUP_TABLES, SHIPPED_DEFAULT_ORIGIN } from '#cli/config/settings/schema.ts';
 
 import {
     BUILD_SCRIPT,
     OPENNEXT_PACKAGE,
     OVERRIDING_GROUPS,
-    LANGUAGE_GROUP_TABLES,
     OPENNEXT_TYPE_DEFAULTS,
-} from '#cli/config/settings/settings.ts';
+} from '#cli/config/settings/validation.ts';
 
 function addDefault(availableSettings: AvailableSettings, configuration: Configuration, setting: Setting): void {
     const previous = availableSettings.defaults.get(setting.name);

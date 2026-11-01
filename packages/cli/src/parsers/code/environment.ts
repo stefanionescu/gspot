@@ -1,17 +1,18 @@
 import type ts from 'typescript';
 import type { Node } from 'web-tree-sitter';
-import { WHITESPACE_RUN } from '#cli/config/text.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
-import { OCTAL_RADIX, HEXADECIMAL_RADIX } from '#cli/config/units.ts';
 import type { EnvironmentRead, EnvironmentKind, EnvironmentNames, EnvironmentScope } from '#cli/types/parsers/code.ts';
 
 import {
     OS_MODULE,
+    OCTAL_RADIX,
     VARIABLE_NAME,
+    WHITESPACE_RUN,
     EXPANSION_NODES,
     ASTRO_EXTENSION,
     SCRIPT_LANGUAGE,
     COMPONENT_SCRIPT,
+    HEXADECIMAL_RADIX,
     SWIFT_ENVIRONMENT,
     ASTRO_FRONT_MATTER,
     MAXIMUM_CODE_POINT,
@@ -23,7 +24,7 @@ import {
     OS_ENVIRONMENT_MEMBERS,
     JAVASCRIPT_ENVIRONMENT_FIELDS,
     JAVASCRIPT_ENVIRONMENT_GETTERS,
-} from '#cli/config/parsers/code.ts';
+} from '#cli/config/parsers.ts';
 
 function findGetterKey(node: ts.CallExpression, source: ts.SourceFile, getters: Set<string>): string | undefined {
     const ts = requireTypescript();

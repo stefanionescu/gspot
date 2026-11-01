@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

@@ -4,15 +4,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { splitSystemPath } from '#cli/system/files/reads.ts';
 import { type FileBounds, type FileContents } from '#cli/types/system/files.ts';
 import { GspotError, hasErrorCode, buildWriteError } from '#cli/system/errors.ts';
-import { MODE_BITS, PRIVATE_FILE, PERMISSION_BITS } from '#cli/config/files/modes.ts';
 
-import {
-    WRITABLE_FILE,
-    READ_ONLY_FILE,
-    OWNER_WRITE_BIT,
-    TEMPORARY_FILE_SUFFIX,
-    TEMPORARY_FILE_PREFIX,
-} from '#cli/config/system/files.ts';
 import {
     openSync,
     lstatSync,
@@ -26,6 +18,16 @@ import {
     readlinkSync,
     writeFileSync,
 } from 'node:fs';
+import {
+    MODE_BITS,
+    PRIVATE_FILE,
+    WRITABLE_FILE,
+    READ_ONLY_FILE,
+    PERMISSION_BITS,
+    OWNER_WRITE_BIT,
+    TEMPORARY_FILE_SUFFIX,
+    TEMPORARY_FILE_PREFIX,
+} from '#cli/config/system.ts';
 
 function prepareParentFolder(folder: string): Stats {
     try {

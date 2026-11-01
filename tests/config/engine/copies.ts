@@ -1,4 +1,4 @@
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 
 export const CRLF_PACKAGE_FILES = {
     'package.json': '{\n    "name": "crlf"\n}\n',

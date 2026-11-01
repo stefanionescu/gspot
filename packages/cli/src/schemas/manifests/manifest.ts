@@ -1,19 +1,8 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
-import { FILE_KINDS } from '#cli/config/files/kinds.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
-import { SETTING_LANGUAGES } from '#cli/config/settings/naming.ts';
-import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects.ts';
+import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers.ts';
 import { manifestToolSchema, writtenNamingOverrideSchema } from '#cli/schemas/manifests/manifests.ts';
-import { CASE_NAMES, NAME_PATTERN, NAMED_CATEGORIES, RULE_FILE_PATTERN } from '#cli/config/manifests/manifests.ts';
 
-import {
-    GROUPS,
-    CHECK_RUNS,
-    CHECK_NEEDS,
-    CHECK_CWD_VALUES,
-    SHIPPED_FILES_FOLDER,
-} from '#cli/config/manifests/names.ts';
 import {
     levelSchema,
     regexSchema,
@@ -22,6 +11,20 @@ import {
     nonemptyStringSchema,
     operatingSystemSchema,
 } from '#cli/schemas/manifests/fields.ts';
+import {
+    GROUPS,
+    FILE_KINDS,
+    CASE_NAMES,
+    CHECK_RUNS,
+    GSPOT_PATHS,
+    CHECK_NEEDS,
+    NAME_PATTERN,
+    NAMED_CATEGORIES,
+    CHECK_CWD_VALUES,
+    SETTING_LANGUAGES,
+    RULE_FILE_PATTERN,
+    SHIPPED_FILES_FOLDER,
+} from '#cli/config/manifests.ts';
 
 const pathContainerSchema = z.strictObject({
     open: z.string().min(1),

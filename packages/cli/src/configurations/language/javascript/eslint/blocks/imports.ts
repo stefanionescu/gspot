@@ -1,11 +1,12 @@
 import picomatch from 'picomatch';
 import { escapeGlob } from '#cli/system/paths.ts';
+import { FOLDER_CONTENTS } from '#cli/config/system.ts';
 import { findParentScope } from '#cli/settings/scopes.ts';
 import { type Scope } from '#cli/types/settings/inheritance.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
+import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/javascript.ts';
 import { buildNodePatterns } from '#cli/configurations/language/javascript/eslint/files.ts';
-import { FOLDER_CONTENTS, PATH_SEPARATOR_PATTERN } from '#cli/config/files/path-patterns.ts';
 import { readScopeAliases, readPackageAliases } from '#cli/repository/javascript/aliases.ts';
 
 import {
@@ -14,20 +15,18 @@ import {
     type EslintImportBoundaryRule,
 } from '#cli/types/generation/eslint.ts';
 import {
-    CODE_LANGUAGES,
-    ESLINT_SETTINGS_TABLE,
-} from '#cli/config/configurations/generators/language/javascript/eslint/eslint.ts';
-import {
     REGEX_SYMBOLS,
+    CODE_LANGUAGES,
     ANY_DEPTH_PREFIX,
     IMPORT_EXTENSIONS,
     EXTENSIONLESS_CODE,
     FILE_EXTENSION_RULE,
     NODE_SCRIPT_PATTERNS,
+    PATH_SEPARATOR_PATTERN,
     IMPORT_BOUNDARIES_RULE,
     IMPORT_BOUNDARY_FOLDERS,
     TYPESCRIPT_EXTENSION_MAP,
-} from '#cli/config/configurations/generators/language/javascript/eslint/blocks/blocks.ts';
+} from '#cli/config/configurations/blocks.ts';
 
 /**
 Build the n/file-extension-in-import blocks for each project and path style.

@@ -5,8 +5,8 @@ import type { Session } from '#cli/types/session.ts';
 import type { CheckFinding } from '#cli/types/engine/check.ts';
 import { selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import { GRANT_ALL_RULE, GRANT_ALL_MESSAGE } from '#cli/config/configurations/infrastructure.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
-import { GRANT_ALL_RULE, GRANT_ALL_MESSAGE } from '#cli/config/configurations/database/postgres.ts';
 
 /**
 Reports each grant of every privilege in a migration after the frozen ones.

@@ -10,7 +10,7 @@ import {
     TOOL_ARGUMENTS_MESSAGE,
     WINDOWS_ESCAPE_EXPANSION,
     WINDOWS_ARGUMENT_OVERHEAD,
-} from '#cli/config/engine/tool-runs.ts';
+} from '#cli/config/engine.ts';
 
 /**
 Splits a command into command lines that fit the system argument limit.

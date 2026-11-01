@@ -3,14 +3,18 @@ import { compareText } from '#cli/system/text.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { joinDefaultPaths } from '#cli/settings/paths.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { commandSchema } from '#cli/schemas/manifests/fields.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
-import { SHIPPED_DEFAULT_ORIGIN } from '#cli/config/settings/inheritance.ts';
 import type { Settings, SettingsTable } from '#cli/types/settings/settings.ts';
 import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
-import { CATEGORY_PARENTS, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/naming.ts';
-import { SETTINGS_FILE, CATEGORY_KEY_SEGMENTS, LANGUAGE_GROUP_TABLES } from '#cli/config/settings/settings.ts';
+import { CATEGORY_PARENTS, CATEGORY_KEY_SEGMENTS } from '#cli/config/settings/validation.ts';
 
+import {
+    LANGUAGE_GROUP_TABLES,
+    SHIPPED_DEFAULT_ORIGIN,
+    NAMING_LANGUAGE_CATEGORIES,
+} from '#cli/config/settings/schema.ts';
 import type {
     Setting,
     SettingMatch,

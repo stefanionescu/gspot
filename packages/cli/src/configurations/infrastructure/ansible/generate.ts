@@ -1,7 +1,7 @@
 import { stringify } from 'yaml';
 import { listIgnoredRules } from '#cli/settings/scopes.ts';
 import type { PlannedConfig } from '#cli/types/generation/files.ts';
-import { ANSIBLE_LINT_CHECK, ANSIBLE_LINT_ALWAYS_OFF } from '#cli/config/generation/generation.ts';
+import { ANSIBLE_LINT_CHECK, ANSIBLE_LINT_ALWAYS_OFF } from '#cli/config/configurations/infrastructure.ts';
 
 /**
 Build the Ansible exclusions from configured rule ignores.

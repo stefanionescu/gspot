@@ -1,10 +1,11 @@
 import { z } from 'zod';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
+import { FROZEN_ALL, FROZEN_NONE } from '#cli/config/parsers.ts';
+import { BUILD_SCRIPT } from '#cli/config/settings/validation.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools/tables.ts';
 import type { ToolTableSchemas } from '#cli/types/settings/tables.ts';
 import { generalTableSchemas } from '#cli/schemas/settings/general.ts';
-import { BUILD_SCRIPT, TABLE_DESCRIPTIONS } from '#cli/config/settings/settings.ts';
-import { FROZEN_ALL, FROZEN_NONE, FROZEN_VERSION } from '#cli/config/parsers/code.ts';
+import { FROZEN_VERSION, TABLE_DESCRIPTIONS } from '#cli/config/settings/schema.ts';
 import { commandSchema, nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
 
 import {

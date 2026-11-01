@@ -1,5 +1,5 @@
-import type { LEFT_OUT_NOTES } from '#cli/config/commands/init.ts';
-import type { REASON_DESCRIPTIONS } from '#cli/config/settings/fields.ts';
+import type { REASON_DESCRIPTIONS } from '#cli/config/manifests.ts';
+import type { LEFT_OUT_NOTES } from '#cli/config/settings/schema.ts';
 
 export type ReasonedSettingDefinition = SettingDefinition &
     Required<Pick<SettingDefinition, 'description' | 'reason_when'>>;

@@ -2,9 +2,9 @@ import { readGitLines } from '#cli/repository/git/run.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { readPushedRevisions } from '#cli/repository/revisions/push.ts';
-import { NO_PENDING_REFS, EMPTY_PUSH_MESSAGE } from '#cli/config/commands/check.ts';
+import { NO_PENDING_REFS, EMPTY_PUSH_MESSAGE } from '#cli/config/commands/reports.ts';
 import { type PushRevision, type PushedRevisions } from '#cli/types/repository/revisions.ts';
 import { type PushReport, type CheckOptions, type RevisionCheckResult } from '#cli/types/commands/check.ts';
 

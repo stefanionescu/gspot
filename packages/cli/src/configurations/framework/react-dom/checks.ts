@@ -1,17 +1,12 @@
 import { posix } from 'node:path';
 import { intersects, validRange } from 'semver';
 import type { Session } from '#cli/types/session.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import type { CheckFinding } from '#cli/types/engine/check.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
 import { readDependencySpecifiers } from '#cli/repository/dependencies.ts';
-
-import {
-    REACT_PACKAGE,
-    REACT_DOM_PACKAGE,
-    REACT_VERSIONS_RULE,
-} from '#cli/config/configurations/framework/framework.ts';
+import { REACT_PACKAGE, REACT_DOM_PACKAGE, REACT_VERSIONS_RULE } from '#cli/config/configurations/framework.ts';
 
 function rangesCanMeet(react: string, reactDom: string): boolean {
     const first = validRange(react);

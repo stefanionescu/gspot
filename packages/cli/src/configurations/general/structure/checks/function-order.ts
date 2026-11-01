@@ -12,7 +12,7 @@ import {
     SCRIPT_FUNCTION_VALUES,
     PRIVATE_SWIFT_VISIBILITIES,
     SCRIPT_FUNCTION_DECLARATIONS,
-} from '#cli/config/configurations/general/structure.ts';
+} from '#cli/config/configurations/structure.ts';
 
 function describePythonFunction(statement: Node): TopLevelFunction | undefined {
     const declaration =

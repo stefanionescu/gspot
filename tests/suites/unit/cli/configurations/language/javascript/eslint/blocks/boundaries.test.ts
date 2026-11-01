@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { APP_SCOPE_SETTINGS } from '#tests/config/toml.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
 import type { ToolPackageJson } from '#tests/types/packages.ts';

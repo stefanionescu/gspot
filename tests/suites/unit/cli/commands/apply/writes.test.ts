@@ -1,20 +1,21 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { type ApplyReport } from '#cli/types/generation/files.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { UPDATED_AGENTS } from '#tests/config/commands/contents.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
+import { TOOLS_CHANGED_NOTE, STALE_LOCKFILE_NOTE } from '#cli/config/generation.ts';
 import { FORMAT_SETTINGS, PRETTIER_PATH_IGNORE } from '#tests/config/commands/apply.ts';
 import { getRuleFilePath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { TOOLS_CHANGED_NOTE, STALE_LOCKFILE_NOTE } from '#cli/config/generation/generation.ts';
 
 test('apply leaves generated files writable, keeps their bytes, and deletes a stray owned file and its folder', async () => {
     await using sandbox = await createGitSandbox({

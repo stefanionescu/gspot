@@ -4,7 +4,7 @@ import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { SOURCE_KIND } from '#cli/config/repository/files.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';

@@ -21,7 +21,7 @@ import {
     MAIN_FUNCTION_MESSAGE,
     EXECUTABLE_BIT_MESSAGE,
     LIBRARY_COMMAND_FINDINGS,
-} from '#cli/config/configurations/language/bash.ts';
+} from '#cli/config/configurations/bash.ts';
 
 function validateStrictMode(codeLines: NumberedLine[]): LayoutFinding[] {
     const first = codeLines.findIndex((line) => !OPTION_COMMANDS.some((command) => line.text.startsWith(command)));

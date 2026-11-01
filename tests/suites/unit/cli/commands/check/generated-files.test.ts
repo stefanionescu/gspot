@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { NPM_CHECK_IGNORES } from '#tests/config/ignores.ts';
 import type { ApplyReport } from '#cli/types/generation/files.ts';

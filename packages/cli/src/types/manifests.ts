@@ -1,6 +1,6 @@
 import type { z } from 'zod';
+import type { LEVELS, GROUPS } from '#cli/config/manifests.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import { type LEVELS, type GROUPS } from '#cli/config/manifests/names.ts';
 import type { namingOverrideSchema } from '#cli/schemas/manifests/manifests.ts';
 import type { checkSchema, manifestSchema } from '#cli/schemas/manifests/manifest.ts';
 

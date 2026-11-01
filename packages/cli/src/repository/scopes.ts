@@ -1,14 +1,14 @@
 import { resolve, relative } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { DependencyFile } from '#cli/types/parsers/projects.ts';
+import { GLOB_EXCLUDE, FOLDER_CONTENTS } from '#cli/config/system.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
 import type { ScopeFolder, TrackedFile } from '#cli/types/repository/files.ts';
-import { GLOB_EXCLUDE, FOLDER_CONTENTS } from '#cli/config/files/path-patterns.ts';
-import { LINT_FOLDERS, EVERY_FILE_GLOBS } from '#cli/config/repository/repository.ts';
+import { LINT_FOLDERS, EVERY_FILE_GLOBS } from '#cli/config/repository/setup.ts';
 import { isInside, escapeGlob, convertToPosixPath, isInInstalledFolder } from '#cli/system/paths.ts';
 
 /**

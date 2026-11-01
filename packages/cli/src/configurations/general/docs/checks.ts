@@ -1,24 +1,21 @@
 import { join, posix } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
 import { statSync, readdirSync } from 'node:fs';
-import { WHITESPACE_RUN } from '#cli/config/text.ts';
 import type { Session } from '#cli/types/session.ts';
+import { TRAILING_SLASH } from '#cli/config/system.ts';
 import { find, read } from '#cli/system/files/reads.ts';
-import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
+import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { NPM_BIN_FOLDER } from '#cli/config/tools/tools.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { LICENSE_FILE } from '#cli/config/repository/files.ts';
+import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
 import { parseMiseTasks } from '#cli/parsers/projects/mise.ts';
 import type { CheckFinding } from '#cli/types/engine/check.ts';
-import { LEADING_DOT_SLASH } from '#cli/config/engine/outputs.ts';
 import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
-import { TRAILING_SLASH } from '#cli/config/files/path-patterns.ts';
+import { PACKAGE_JSON, WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { joinScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { readCachedPackageJson } from '#cli/repository/dependencies.ts';
-import { MISE_FILES, MISE_TASK_FOLDERS } from '#cli/config/files/names.ts';
 import { buildGitignoreMatcher } from '#cli/repository/files/gitignore.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import { replaceSettingPlaceholders } from '#cli/engine/tool-runs/placeholders.ts';
@@ -28,6 +25,7 @@ import { listExecutableNames, includeParentFolders, listEnclosingFolders } from 
 import {
     BUN_RUN,
     MISE_RUN,
+    MISE_FILES,
     DOCS_RULES,
     README_FILE,
     RUN_COMMAND,
@@ -38,16 +36,18 @@ import {
     MISE_CONF_FILES,
     CODE_SPAN_START,
     TITLE_ATTRIBUTE,
+    ROOT_SCOPE_LABEL,
     EMPHASIS_MARKERS,
     PATH_TOKEN_SKIPS,
     REMOTE_ARGUMENTS,
     TOKEN_SEPARATORS,
+    MISE_TASK_FOLDERS,
     INLINE_LINK_TARGET,
     MARKDOWN_EXTENSIONS,
     TRAILING_PUNCTUATION,
     RELATIVE_PATH_PREFIXES,
     MISSING_LICENSE_MESSAGE,
-} from '#cli/config/configurations/general/general.ts';
+} from '#cli/config/configurations/general.ts';
 
 function listGeneratorPaths(planned: PlannedCheck): string[] {
     const paths: string[] = [];

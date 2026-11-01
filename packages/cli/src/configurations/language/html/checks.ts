@@ -18,7 +18,7 @@ import {
     ACTIVE_DOCUMENT_TYPES,
     EXECUTABLE_SCRIPT_TYPES,
     DOCUMENT_URL_ATTRIBUTES,
-} from '#cli/config/configurations/language/language.ts';
+} from '#cli/config/configurations/language.ts';
 
 function listElementAttributes(element: Node): MarkupAttribute[] {
     const tag = element.namedChildren.find((child) => child.type === 'start_tag' || child.type === 'self_closing_tag');

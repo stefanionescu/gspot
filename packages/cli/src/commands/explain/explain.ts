@@ -6,7 +6,7 @@ import { formatSimilarNames } from '#cli/system/text.ts';
 import type { Command } from '@commander-js/extra-typings';
 import { explainPath } from '#cli/commands/explain/path.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { listInheritedSettings } from '#cli/settings/inherit.ts';
 import { explainSetting } from '#cli/commands/explain/setting.ts';
 import type { Explanation } from '#cli/types/commands/explain.ts';

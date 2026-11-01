@@ -1,14 +1,14 @@
 import { escapeGlob } from '#cli/system/paths.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
-import { CONFIGURATION_PLUGINS } from '#cli/config/configurations/generators/language/javascript/eslint/eslint.ts';
 
 import {
     TS_PATTERN,
     NESTJS_RULES,
     SWAGGER_PACKAGE,
+    CONFIGURATION_PLUGINS,
     NESTJS_INJECTABLE_FILTER_PATHS,
-} from '#cli/config/configurations/generators/framework.ts';
+} from '#cli/config/configurations/framework.ts';
 
 /**
 Apply the NestJS presets, and the no-Swagger preset when the scope does not use @nestjs/swagger, to the TypeScript

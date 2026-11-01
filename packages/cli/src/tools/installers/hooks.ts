@@ -1,26 +1,27 @@
 import { resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { LINE_BREAK } from '#cli/config/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { LINE_BREAK } from '#cli/config/parsers.ts';
 import { readHooks } from '#cli/repository/setup.ts';
 import type { Session } from '#cli/types/session.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { runGitBlocking } from '#cli/repository/git/run.ts';
 import type { HookName } from '#cli/types/generation/files.ts';
 import { type Repository } from '#cli/types/repository/files.ts';
 import type { ConfiguredCheck } from '#cli/types/engine/planning.ts';
 import { type RepositorySetup } from '#cli/types/repository/repository.ts';
-import { CHECK_HOOKS, HOOK_CHECKS } from '#cli/config/generation/generation.ts';
 import type { HookPlan, HookStatus } from '#cli/types/tools/installers/installers.ts';
 
 import {
+    CHECK_HOOKS,
+    HOOK_CHECKS,
     SET_HOOKS_PATH,
     UNSET_HOOKS_NOTE,
     UNSET_HOOKS_PATH,
     HOOK_COMMENT_LINE,
     HOOK_FOLDER_KINDS,
     NOT_INSTALLED_STATUS,
-} from '#cli/config/tools/installers/installers.ts';
+} from '#cli/config/tools/installers.ts';
 
 function formatForeignHooks(hooks: RepositorySetup['hooks'], session: Session): string {
     const runner = session.startRunner;

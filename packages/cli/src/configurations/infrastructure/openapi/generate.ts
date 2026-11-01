@@ -1,6 +1,6 @@
 import { stringify as stringifyYaml } from 'yaml';
 import type { PlannedConfig } from '#cli/types/generation/files.ts';
-import { SPECTRAL_DEFAULT_LEVEL_OFF } from '#cli/config/configurations/generators/infrastructure.ts';
+import { SPECTRAL_DEFAULT_LEVEL_OFF } from '#cli/config/configurations/infrastructure.ts';
 
 /**
 Build spectral.yml: the OpenAPI preset and the Spectral rules at this level.

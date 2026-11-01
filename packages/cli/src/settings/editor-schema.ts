@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { DOCS_PATHS } from '#cli/config/files/names.ts';
+import { DOCS_PATHS } from '#cli/config/manifests.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { HIDDEN_FACT_KEYS, SCHEMA_DESCRIPTION, JSON_SCHEMA_DIALECT } from '#cli/config/settings/schema.ts';
 
 /**

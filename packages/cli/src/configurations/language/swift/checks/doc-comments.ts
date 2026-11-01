@@ -14,7 +14,7 @@ import {
     DOCUMENTED_PARAMETER,
     MISSING_PARAMETER_RULE,
     DOCUMENTED_DECLARATIONS,
-} from '#cli/config/configurations/language/swift.ts';
+} from '#cli/config/configurations/builds.ts';
 
 function isPublicDeclaration(declaration: Node): boolean {
     const modifiers = declaration.namedChildren.find((child) => child.type === 'modifiers')?.namedChildren ?? [];

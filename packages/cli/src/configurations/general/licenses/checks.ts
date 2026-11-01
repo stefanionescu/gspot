@@ -13,22 +13,17 @@ import { buildVenvPythonPath } from '#cli/system/paths.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import type { CheckFinding } from '#cli/types/engine/check.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readDependencySpecifiers } from '#cli/repository/dependencies.ts';
+import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import type { PlannedCheck, LicenseProject } from '#cli/types/engine/planning.ts';
-import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
-import { PIP_LICENSES_COMMAND, LICENSE_CHECKER_COMMAND } from '#cli/config/licenses.ts';
+import { PIP_LICENSES_COMMAND, LICENSE_CHECKER_COMMAND } from '#cli/config/engine.ts';
 import { splitIdentity, PACKAGE_PARSERS, findNearestLockfile } from '#cli/parsers/projects/lockfiles.ts';
 import { pythonLicenseOutputSchema, javascriptLicenseOutputSchema } from '#cli/schemas/configurations/general.ts';
+import { PACKAGE_JSON, PYTHON_LOCKFILES, JAVASCRIPT_LOCKFILES, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers.ts';
 
-import {
-    PACKAGE_JSON,
-    PYTHON_LOCKFILES,
-    JAVASCRIPT_LOCKFILES,
-    PYTHON_NAME_SEPARATORS,
-} from '#cli/config/parsers/projects.ts';
 import type {
     AllowedPackage,
     LicensedPackage,
@@ -44,7 +39,7 @@ import {
     EMPTY_SCAN_MESSAGE,
     CLASSIFIER_SEPARATOR,
     NO_ALLOWED_LICENSES_NOTE,
-} from '#cli/config/configurations/general/general.ts';
+} from '#cli/config/configurations/general.ts';
 
 function isSpdxExpression(license: string): boolean {
     try {

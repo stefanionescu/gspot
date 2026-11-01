@@ -1,9 +1,8 @@
 import { z } from 'zod';
-import { LEVELS, STAGES } from '#cli/config/manifests/names.ts';
+import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
+import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers.ts';
 import { outputSchema } from '#cli/schemas/manifests/output.ts';
-import { OPERATING_SYSTEMS } from '#cli/config/system/system.ts';
-import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects.ts';
-import { MAX_EXIT_CODE, VALID_UNICODE_MESSAGE, DEFAULT_OUTPUT_FORMAT } from '#cli/config/manifests/manifests.ts';
+import { LEVELS, STAGES, MAX_EXIT_CODE, VALID_UNICODE_MESSAGE, DEFAULT_OUTPUT_FORMAT } from '#cli/config/manifests.ts';
 
 const findingExitCodesSchema = z.number().int().min(1).max(MAX_EXIT_CODE).array();
 

@@ -1,8 +1,7 @@
+import { ROOT_RUNS } from '#cli/config/engine.ts';
 import { openSession } from '#cli/engine/session.ts';
 import type { Session } from '#cli/types/session.ts';
 import { isRootOnlyCheck } from '#cli/engine/files.ts';
-import { ROOT_RUNS } from '#cli/config/engine/planning.ts';
-import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import { isActive, planChecks } from '#cli/engine/plan.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
@@ -13,6 +12,7 @@ import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
 import { Argument, type Command } from '@commander-js/extra-typings';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
+import { ROOT_SCOPE_LABEL } from '#cli/config/configurations/general.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 
 import {
@@ -28,7 +28,7 @@ import {
     OFF_BY_LEVEL,
     REASON_HEADER,
     NO_MATCHING_FILES,
-} from '#cli/config/commands/commands.ts';
+} from '#cli/config/commands/reports.ts';
 
 function buildSettingsResult(session: Session): CommandResult {
     const settings = buildSettingRows(session.settings, session.scopes);

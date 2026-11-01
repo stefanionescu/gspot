@@ -1,7 +1,6 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { DOCS_PATHS } from '#cli/config/files/names.ts';
 import { formatSimilarNames } from '#cli/system/text.ts';
-import { SOURCE_FILE_GROUPS } from '#cli/config/manifests/manifests.ts';
+import { DOCS_PATHS, SOURCE_FILE_GROUPS } from '#cli/config/manifests.ts';
 import { type Configuration, type RequirementWalk, type WrittenConfiguration } from '#cli/types/manifests.ts';
 
 function addRequiredConfigurations(walk: RequirementWalk, name: string): void {

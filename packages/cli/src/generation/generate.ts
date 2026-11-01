@@ -1,13 +1,14 @@
 import { basename } from 'node:path/posix';
-import { JSON_INDENT } from '#cli/config/text.ts';
 import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { listPackagePins } from '#cli/tools/pins.ts';
 import type { Session } from '#cli/types/session.ts';
-import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { AGENTS_FILE } from '#cli/config/repository/setup.ts';
+import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { listWrittenPaths } from '#cli/generation/ignores.ts';
 import { buildLinkFieldEdits } from '#cli/generation/links.ts';
 import { listHookNames } from '#cli/tools/installers/hooks.ts';
@@ -16,14 +17,13 @@ import type { Generation } from '#cli/types/generation/files.ts';
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
 import { buildPythonInstall } from '#cli/tools/installers/pypi.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
-import { SWIFT_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { FROZEN_INSTALLS } from '#cli/config/repository/javascript.ts';
 import { parseAttributePatterns } from '#cli/repository/git/output.ts';
-import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
-import { LFS_FILTER, FILTER_ATTRIBUTE } from '#cli/config/repository/files.ts';
+import { SWIFT_CONFIGURATION } from '#cli/config/configurations/structure.ts';
 import { readPackageManagerVersion } from '#cli/repository/javascript/package-manager.ts';
 import { buildBunScannerEdits } from '#cli/configurations/general/dependencies/generate.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
+import { LFS_FILTER, FILTER_ATTRIBUTE, GITATTRIBUTES_FILE } from '#cli/config/repository/files.ts';
 import type { RuleFile, FrozenLockfile, CiPackageManager } from '#cli/types/generation/generation.ts';
 
 import {
@@ -40,7 +40,7 @@ import {
     GIT_ATTRIBUTES_BLOCK,
     ATTRIBUTE_GLOB_CHARACTERS,
     ATTRIBUTE_QUOTED_CHARACTERS,
-} from '#cli/config/generation/generation.ts';
+} from '#cli/config/generation.ts';
 
 function listWorkflowPackageManagers(session: Session, generated: Generation, lockfiles: string[]): CiPackageManager[] {
     const packageManagers = new Set<CiPackageManager>(

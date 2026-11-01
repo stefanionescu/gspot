@@ -1,15 +1,12 @@
 import { posix } from 'node:path';
 import { read } from '#cli/system/files/reads.ts';
-import { WHITESPACE_RUN } from '#cli/config/text.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { extractExtension } from '#cli/system/paths.ts';
-import { MARKERS } from '#cli/config/parsers/formats.ts';
-import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
+import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import type { Config, Configuration } from '#cli/types/manifests.ts';
-import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
+import { MARKERS, SCRIPT_TAG, GSPOT_FOLDER, WHITESPACE_RUN, JAVASCRIPT_RUNTIMES } from '#cli/config/parsers.ts';
 
 import type {
     FileTags,
@@ -24,7 +21,6 @@ import {
     SET_STATE,
     SET_VALUES,
     LFS_FILTER,
-    SCRIPT_TAG,
     BINARY_TAG,
     RUNTIME_TAG,
     SHEBANG_TAG,
@@ -49,6 +45,7 @@ import {
     TRAILING_VERSION,
     VENDORED_FOLDERS,
     BINARY_EXTENSIONS,
+    GITATTRIBUTES_FILE,
     MARKDOWN_EXTENSION,
     VENDORED_ATTRIBUTE,
     GENERATED_ATTRIBUTE,

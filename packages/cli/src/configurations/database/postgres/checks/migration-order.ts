@@ -2,7 +2,7 @@ import type { Session } from '#cli/types/session.ts';
 import type { CheckFinding } from '#cli/types/engine/check.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
 import { compareMigrationVersions } from '#cli/parsers/code/sql.ts';
-import { RULES, MISSING_VERSION_MESSAGE } from '#cli/config/configurations/database/postgres.ts';
+import { MIGRATION_RULES, MISSING_VERSION_MESSAGE } from '#cli/config/configurations/infrastructure.ts';
 import { readMigrations, readCommittedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 
 /**
@@ -21,7 +21,7 @@ export async function checkMigrationOrder(session: Session, planned: PlannedChec
             findings.push({
                 file: migration.path,
                 line: 1,
-                rule: RULES.version,
+                rule: MIGRATION_RULES.version,
                 message: MISSING_VERSION_MESSAGE,
             });
         const earlier = seen.get(migration.version);
@@ -29,7 +29,7 @@ export async function checkMigrationOrder(session: Session, planned: PlannedChec
             findings.push({
                 file: migration.path,
                 line: 1,
-                rule: RULES.duplicateVersion,
+                rule: MIGRATION_RULES.duplicateVersion,
                 message: `${earlier} already has the version ${migration.version}.`,
             });
         seen.set(migration.version, migration.name);
@@ -54,7 +54,7 @@ export async function checkMigrationOrder(session: Session, planned: PlannedChec
         ...late.map((migration) => ({
             file: migration.path,
             line: 1,
-            rule: RULES.order,
+            rule: MIGRATION_RULES.order,
             message: `A new migration sorts before ${newest.name}, which is already committed.`,
         })),
     ];

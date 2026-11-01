@@ -1,4 +1,4 @@
-import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { NPM_CHECK_IGNORES } from '#tests/config/ignores.ts';
 
 export const GENERATOR_LIMITS = [

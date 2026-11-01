@@ -6,7 +6,7 @@ import {
     SQL_FILE_EXTENSIONS,
     SQLFLUFF_CAPITALISATION,
     SQLFLUFF_DEFAULT_LEVEL_OFF,
-} from '#cli/config/configurations/generators/language/language.ts';
+} from '#cli/config/configurations/python.ts';
 
 /**
 Build sqlfluff.cfg: the SQL dialect, formatting choices, and SQLFluff rule exclusions.

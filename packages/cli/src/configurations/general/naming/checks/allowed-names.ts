@@ -4,10 +4,10 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { readNamingDefaults } from '#cli/manifests/read.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import type { CheckFinding } from '#cli/types/engine/check.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { PlannedCheck } from '#cli/types/engine/planning.ts';
+import { UNUSED_RECORD_RULE } from '#cli/config/configurations/naming.ts';
 import type { FileNames } from '#cli/types/configurations/general/naming.ts';
-import { UNUSED_RECORD_RULE } from '#cli/config/configurations/general/naming/naming.ts';
 import { listNamedFiles, parseIdentifiers } from '#cli/configurations/general/naming/checks/source-names.ts';
 import { buildFileIdentifier, buildFolderIdentifiers } from '#cli/configurations/general/naming/checks/paths.ts';
 

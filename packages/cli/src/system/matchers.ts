@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 import picomatch from 'picomatch';
-import { GLOB_EXCLUDE, TRAILING_SLASH, FOLDER_CONTENTS } from '#cli/config/files/path-patterns.ts';
+import { GLOB_EXCLUDE, TRAILING_SLASH, FOLDER_CONTENTS } from '#cli/config/system.ts';
 
 const matcherCache = new Map<string, (path: string) => boolean>();
 

@@ -12,17 +12,17 @@ import { type PlannedCheck } from '#cli/types/engine/planning.ts';
 import type { ConfigurationCheck } from '#cli/types/manifests.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { runTsc, restoreCommandPaths } from '#cli/configurations/tsc/compiler.ts';
-import { TYPESCRIPT_TAG } from '#cli/config/configurations/cross-configuration/tsc.ts';
 
 import {
     TSC_TOOL,
     CAUSE_MARKS,
     SHOWN_LINES,
     MARKED_LINES,
+    TYPESCRIPT_TAG,
     CI_ENVIRONMENT,
     TYPESCRIPT_TSC_CHECK,
     NEXT_TYPEGEN_COMMAND,
-} from '#cli/config/configurations/framework/framework.ts';
+} from '#cli/config/configurations/framework.ts';
 
 function formatNextjsFailure(text: string): string {
     const lines = stripVTControlCharacters(text).trim().split('\n');
