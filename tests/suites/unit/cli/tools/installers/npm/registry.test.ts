@@ -40,7 +40,7 @@ test.skipIf(isWindows)('npm reads the global registry beside the real Node execu
     await using sandbox = await testdir(LINKED_NODE_FILES);
     const linkedNode = join(sandbox.path, 'linked/bin/node');
     await symlink('../../actual/bin/node', linkedNode);
-    using _lookup = fakeExecutableLookup((name) => (name === 'node' ? linkedNode : undefined));
+    using _lookup = fakeExecutableLookup((name) => (name === 'node' ? linkedNode : null));
     using _environment = overrideEnvironment({
         ...NPM_PREFIX_ENVIRONMENT,
         npm_config_userconfig: join(sandbox.path, 'absent.npmrc'),
