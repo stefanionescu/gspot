@@ -84,12 +84,12 @@ export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'e
             description:
                 'Finds relative imports that leave the nearest boundary folder: imports, re-exports, dynamic and type imports, import-equals declarations, and require calls. By default every second-level folder, such as `src/cart` or `packages/shop`, is a boundary. Set folders to project paths or folder globs to choose other boundaries. Paths and aliases are relative to `settings.gspot.root`, or to the working folder of ESLint.',
             why: 'Relative paths between folders couple separate parts of a project to the tree shape.',
-            fix: 'Keep relative imports within the selected folder. eslint --fix uses a configured alias when one exists, and keeps a query such as `?raw`. Otherwise, move shared code into this folder or into a package both projects depend on, and import its package name.',
+            fix: 'Keep relative imports within the selected folder. eslint --fix uses a configured alias when one exists, and keeps a query such as `?raw`. Otherwise, add an alias for the target in package.json `imports`, or in tsconfig `paths` when a bundler resolves them, run gspot apply, and import through it. Or move the shared code into a package that both folders depend on, and import its package name.',
         },
         schema: [IMPORT_BOUNDARY_OPTIONS_SCHEMA],
         messages: {
             alias: 'Import "{{alias}}" instead of climbing folders with "{{source}}".',
-            escape: 'Relative import "{{source}}" leaves the "{{folder}}" folder for "{{target}}". Import through an alias, or move the shared code into this folder.',
+            escape: 'Relative import "{{source}}" leaves the "{{folder}}" folder for "{{target}}". Add an alias for {{target}} in package.json `imports` (or tsconfig `paths` when a bundler resolves them), run gspot apply, and import through it. Or move the shared code into a package that both folders depend on.',
         },
     },
     create(context, [options]) {
