@@ -1,6 +1,6 @@
+import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { compareText } from '#cli/system/text.ts';
-import { posix, dirname, relative } from 'node:path';
 import { listCheckTools } from '#cli/engine/tools.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { formatHeader } from '#cli/generation/header.ts';
@@ -15,7 +15,7 @@ import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
 import type { ConfigOwner } from '#cli/types/configurations/language.ts';
 import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
-import { escapeGlob, convertToPosixPath, extractParentFolder, includeParentFolders } from '#cli/system/paths.ts';
+import { escapeGlob, findOutermostFolder, extractParentFolder, buildModuleSpecifier } from '#cli/system/paths.ts';
 
 import {
     GITHUB_WORKFLOW,
@@ -26,8 +26,7 @@ import {
 } from '#cli/config/generation.ts';
 
 function fillTarget(body: string, linkFilePath: string, targetPath: string): string {
-    const relativePath = convertToPosixPath(relative(dirname(linkFilePath), targetPath));
-    const target = relativePath.startsWith('./') || relativePath.startsWith('../') ? relativePath : `./${relativePath}`;
+    const target = buildModuleSpecifier(linkFilePath, targetPath);
     return body.replaceAll(TARGET_PLACEHOLDER, (placeholder) => {
         if (placeholder === TARGET_MODULE_PLACEHOLDER) {
             return JSON.stringify(
@@ -111,13 +110,11 @@ export function listLinkFilePaths(owner: ConfigOwner, config: Config): string[] 
         settings: scope.settings,
     }).filter((file) => isInScope(file.path, scopePath) && children.every((child) => !isInScope(file.path, child)));
     const folders = new Set(
-        owned.flatMap(({ path }) =>
-            [...includeParentFolders([extractParentFolder(path)])]
-                .filter((folder) => folder !== '' && isMatch(folder))
-                .toSorted((left, right) => left.length - right.length)
-                .slice(0, 1)
-                .map((folder) => (isInScope(folder, scopePath) ? folder : scopePath)),
-        ),
+        owned.flatMap(({ path }) => {
+            const folder = findOutermostFolder(extractParentFolder(path), isMatch);
+            if (folder === undefined) return [];
+            return [isInScope(folder, scopePath) ? folder : scopePath];
+        }),
     );
     return [...folders].map((folder) => `${folder}/${pointer.path}`);
 }
@@ -186,16 +183,7 @@ export function buildLinkFieldEdits(
         const document = parseJsonFile(path, source.bytes.toString('utf8'));
         const keys = linkFileFields
             .values()
-            .map((row) => {
-                const relativePath = convertToPosixPath(relative(dirname(path), row.target));
-                return {
-                    ...row,
-                    extends:
-                        relativePath.startsWith('./') || relativePath.startsWith('../')
-                            ? relativePath
-                            : `./${relativePath}`,
-                };
-            })
+            .map((row) => ({ ...row, extends: buildModuleSpecifier(path, row.target) }))
             .filter(
                 (row) =>
                     Object.hasOwn(document, row.key) &&
@@ -237,7 +225,7 @@ export function buildLinkFiles(
                         .toSorted(([left], [right]) => compareText(left, right))
                         .map(([scope, target]) => ({
                             files: [scope === '' ? '**' : `${escapeGlob(scope)}/**`],
-                            extends: `./${posix.relative(posix.dirname(path), target)}`,
+                            extends: buildModuleSpecifier(path, target),
                         })),
                 ),
         );

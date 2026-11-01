@@ -1,11 +1,14 @@
+import { remember } from '#cli/system/cache.ts';
 import type { Session } from '#cli/types/tools.ts';
 import type { Scope } from '#cli/types/settings.ts';
 import { listCheckTools } from '#cli/engine/tools.ts';
-import type { Config } from '#cli/types/repository.ts';
 import type { UsedNames } from '#cli/types/generation.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
+import type { Config, TrackedFile } from '#cli/types/repository.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import type { OwnedConfig } from '#cli/types/configurations/language.ts';
+
+const OWNED_CONFIGS = Symbol('owned configs');
 
 function isConfigWritten(session: Session, file: Config, usedNames: UsedNames): boolean {
     if (file.level === 'all' && session.settings.level !== 'all') return false;
@@ -16,10 +19,11 @@ function isConfigWritten(session: Session, file: Config, usedNames: UsedNames): 
     return constraints.every(([names, available]) => names.length === 0 || names.some((name) => available.has(name)));
 }
 
-function listScopeConfigs(session: Session, scope: Scope, usedNames: UsedNames): OwnedConfig[] {
-    const ownFiles = session.repository.files.filter(
-        (file) => selectScopePath(file.path, session.scopes) === scope.path,
-    );
+function listScopeConfigs(
+    session: Session,
+    scope: Scope,
+    { usedNames, ownFiles }: { usedNames: UsedNames; ownFiles: TrackedFile[] },
+): OwnedConfig[] {
     const checks = session.configuredChecks.filter(
         (planned) => planned.scope.path === scope.path || planned.check.runs === 'once',
     );
@@ -69,11 +73,18 @@ List the config files that this run writes, with the scope that owns each.
 @param session the repository to build for.
 */
 export function listOwnedConfigs(session: Session): OwnedConfig[] {
-    const repositoryNames = {
-        tools: new Set(
-            session.toolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
-        ),
-        checks: new Set(session.configuredChecks.map((planned) => planned.check.id)),
-    };
-    return session.scopes.flatMap((scope) => listScopeConfigs(session, scope, repositoryNames));
+    return remember(session.cache, OWNED_CONFIGS, session.scopes, () => {
+        const usedNames = {
+            tools: new Set(
+                session.toolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
+            ),
+            checks: new Set(session.configuredChecks.map((planned) => planned.check.id)),
+        };
+        const filesByScope = Map.groupBy(session.repository.files, (file) =>
+            selectScopePath(file.path, session.scopes),
+        );
+        return session.scopes.flatMap((scope) =>
+            listScopeConfigs(session, scope, { usedNames, ownFiles: filesByScope.get(scope.path) ?? [] }),
+        );
+    });
 }

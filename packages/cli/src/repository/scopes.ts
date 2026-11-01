@@ -9,7 +9,16 @@ import { GLOB_EXCLUDE, FOLDER_CONTENTS } from '#cli/config/system.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
 import type { ScopeFolder, TrackedFile } from '#cli/types/repository.ts';
 import { LINT_FOLDERS, EVERY_FILE_GLOBS } from '#cli/config/repository/setup.ts';
-import { isInside, escapeGlob, convertToPosixPath, isInInstalledFolder } from '#cli/system/paths.ts';
+
+import {
+    isInside,
+    escapeGlob,
+    convertToPosixPath,
+    findEnclosingFolder,
+    isInInstalledFolder,
+} from '#cli/system/paths.ts';
+
+const scopeFolderSets = new WeakMap<readonly { path: string }[], ReadonlySet<string>>();
 
 /**
 Build a command path from its calling folder within the repository.
@@ -171,9 +180,10 @@ Find the scope of a file: the deepest scope that contains it, else the root.
 @param scopes the scopes to search.
 */
 export function selectScopePath(path: string, scopes: readonly { path: string }[]): string {
-    return (
-        scopes
-            .filter((scope) => scope.path !== '' && isInScope(path, scope.path))
-            .toSorted((left, right) => right.path.length - left.path.length)[0]?.path ?? ''
-    );
+    let folders = scopeFolderSets.get(scopes);
+    if (folders === undefined) {
+        folders = new Set(scopes.map((scope) => scope.path));
+        scopeFolderSets.set(scopes, folders);
+    }
+    return findEnclosingFolder(path, folders) ?? '';
 }

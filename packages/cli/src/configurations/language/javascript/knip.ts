@@ -4,11 +4,11 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { listDistinctTools } from '#cli/tools/pins.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { selectScopePath } from '#cli/repository/scopes.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
-import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/blocks.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
@@ -30,9 +30,7 @@ function selectEntryFiles(settings: Settings, scopes: Scope[], scopePath: string
         (table.javascript?.entry_files ?? []).map((pattern) => joinScopeSelector(pattern, scope)),
     );
     const nearest = scopes
-        .filter((each) => isInScope(scopePath, each.path))
-        .toSorted((left, right) => compareScopeDepth(right.path, left.path))
-        .slice(0, 1)
+        .filter((each) => each.path === selectScopePath(scopePath, scopes))
         .flatMap(({ configurations, settings: scopeSettings }) => [
             ...(configurations.some((configuration) => configuration.name === JAVASCRIPT_CONFIGURATION)
                 ? KNIP_JAVASCRIPT_ENTRY_FILES

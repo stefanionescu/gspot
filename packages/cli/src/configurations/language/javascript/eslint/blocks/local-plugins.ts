@@ -1,10 +1,9 @@
-import { dirname, relative } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Scope } from '#cli/types/settings.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { getTable, findParentScope } from '#cli/settings/scopes.ts';
-import { escapeGlob, convertToPosixPath } from '#cli/system/paths.ts';
+import { escapeGlob, buildModuleSpecifier } from '#cli/system/paths.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/blocks.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/javascript.ts';
 import type { EslintPlugins, EslintBlockFields } from '#cli/types/configurations/language.ts';
@@ -47,10 +46,7 @@ export function listLocalPlugins(scopes: Scope[], targetPath: string, shipped: E
                     'settings',
                     `tools.eslint.plugins: ${name} is the rule prefix of a plugin that gspot loads. Choose another name.`,
                 );
-            const relativePath = convertToPosixPath(relative(dirname(targetPath), path));
-            const target =
-                relativePath.startsWith('./') || relativePath.startsWith('../') ? relativePath : `./${relativePath}`;
-            return [name, [`localPlugin${String(index)}`, target] as const];
+            return [name, [`localPlugin${String(index)}`, buildModuleSpecifier(targetPath, path)] as const];
         }),
     );
 }

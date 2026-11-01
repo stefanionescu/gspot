@@ -137,6 +137,43 @@ export function listEnclosingFolders(folder: string): string[] {
 }
 
 /**
+Find the nearest of the folders that holds a path, so that a lookup costs the folder depth.
+
+@param path the repository-relative path, with forward slashes.
+@param folders the folders to search.
+@returns undefined when no folder holds the path.
+*/
+export function findEnclosingFolder(path: string, folders: ReadonlySet<string>): string | undefined {
+    for (const folder of listEnclosingFolders(path)) if (folders.has(folder)) return folder;
+    return undefined;
+}
+
+/**
+Find the outermost folder below the root that holds a path and passes a test.
+
+@param path the repository-relative path, with forward slashes.
+@param isMatch tests one folder.
+@returns undefined when no such folder holds the path.
+*/
+export function findOutermostFolder(path: string, isMatch: (folder: string) => boolean): string | undefined {
+    const folders = listEnclosingFolders(path).filter((folder) => folder !== '');
+    const matches = folders.filter((folder) => isMatch(folder));
+    return matches.at(-1);
+}
+
+/**
+Build the import specifier that leads from one repository file to another.
+
+@param fromFile the importing file.
+@param toFile the imported file.
+*/
+export function buildModuleSpecifier(fromFile: string, toFile: string): string {
+    const folder = posix.dirname(fromFile);
+    const relativePath = posix.relative(folder, toFile);
+    return relativePath.startsWith('../') ? relativePath : `./${relativePath}`;
+}
+
+/**
 Test whether a path passes through an installed dependency folder.
 
 @param path the repository-relative path.

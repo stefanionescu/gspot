@@ -1,15 +1,16 @@
 import { dirname } from 'node:path/posix';
 import { isDeepStrictEqual } from 'node:util';
-import { escapeGlob } from '#cli/system/paths.ts';
-import { getTable } from '#cli/settings/scopes.ts';
 import type { Scope } from '#cli/types/settings.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
+import { getTable, findParentScope } from '#cli/settings/scopes.ts';
+import { escapeGlob, findEnclosingFolder } from '#cli/system/paths.ts';
 import { buildZodBlocks } from '#cli/configurations/library/zod/generate.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { buildVueBlocks } from '#cli/configurations/framework/vue/generate.ts';
 import { buildAstroBlocks } from '#cli/configurations/framework/astro/generate.ts';
 import { buildReactBlocks } from '#cli/configurations/framework/react/generate.ts';
 import { buildVitestBlocks } from '#cli/configurations/testing/vitest/generate.ts';
+import { joinScope, isInScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { buildNestjsBlocks } from '#cli/configurations/framework/nestjs/generate.ts';
 import { buildNextjsBlocks } from '#cli/configurations/framework/nextjs/generate.ts';
 import { buildSvelteBlocks } from '#cli/configurations/framework/svelte/generate.ts';
@@ -20,7 +21,6 @@ import { buildTypescriptBlocks } from '#cli/configurations/language/typescript/g
 import { SUPABASE_RULES, PLUGIN_RULE_BLOCKS } from '#cli/config/configurations/javascript.ts';
 import { buildTanstackQueryBlocks } from '#cli/configurations/library/tanstack-query/generate.ts';
 import { buildTestingLibraryBlocks } from '#cli/configurations/library/testing-library/generate.ts';
-import { joinScope, isInScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { buildTestFiles, listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
 
 import type {
@@ -64,12 +64,10 @@ function buildConfigurationBlocks(
         planned.session.scopes.map((each) => each.path),
         scopePath,
     );
-    const nextProject =
-        session.repository.dependencyFiles
-            .filter((file) => file.kind === 'package.json' && file.dependencies['next'] !== undefined)
-            .map((file) => (dirname(file.path) === '.' ? '' : dirname(file.path)))
-            .filter((path) => isInScope(scopePath, path))
-            .toSorted((left, right) => -compareScopeDepth(left, right))[0] ?? scopePath;
+    const nextProjects = session.repository.dependencyFiles
+        .filter((file) => file.kind === 'package.json' && file.dependencies['next'] !== undefined)
+        .map((file) => (dirname(file.path) === '.' ? '' : dirname(file.path)));
+    const nextProject = findEnclosingFolder(scopePath, new Set(nextProjects)) ?? scopePath;
     const testFiles = listCodeTestFiles(scope.settings.test_files).map((pattern) =>
         scopePath !== '' && pattern.startsWith(`${scopePath}/**/`) ? pattern.slice(scopePath.length + 1) : pattern,
     );
@@ -104,9 +102,7 @@ function listMatchingScopes(
     return new Set(
         scopeBlocks
             .filter(({ path, blocks }) => {
-                const parent = scopes
-                    .filter((scope) => scope.path !== path && isInScope(path, scope.path))
-                    .toSorted((a, b) => compareScopeDepth(b.path, a.path))[0];
+                const parent = findParentScope(scopes, path);
                 const previous = scopeBlocks.find((each) => each.path === parent?.path);
                 return previous !== undefined && isDeepStrictEqual(blocks.blocks, previous.blocks.blocks);
             })

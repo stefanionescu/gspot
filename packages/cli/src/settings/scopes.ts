@@ -1,3 +1,4 @@
+import { extractParentFolder } from '#cli/system/paths.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';
 import { SETTING_LANGUAGES } from '#cli/config/manifests.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
@@ -10,7 +11,7 @@ import { NO_ROOT_SCOPE_MESSAGE } from '#cli/config/settings/validation.ts';
 import { NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/schema.ts';
 import { tableValuesSchema } from '#cli/schemas/settings/configurations.ts';
 import { getSettingValue, listInheritedSettings } from '#cli/settings/inherit.ts';
-import { isInScope, isScopeCovered, compareScopeDepth } from '#cli/repository/scopes.ts';
+import { isInScope, isScopeCovered, selectScopePath, compareScopeDepth } from '#cli/repository/scopes.ts';
 
 import type {
     Scope,
@@ -93,10 +94,9 @@ Find the nearest scope that holds a path.
 @returns undefined at the root.
 */
 export function findParentScope(scopes: Scope[], path: string): Scope | undefined {
-    return scopes
-        .filter((scope) => scope.path !== path && isInScope(path, scope.path))
-        .toSorted((left, right) => compareScopeDepth(left.path, right.path))
-        .at(-1);
+    if (path === '') return undefined;
+    const parent = selectScopePath(extractParentFolder(path), scopes);
+    return scopes.find((scope) => scope.path === parent);
 }
 
 /**
