@@ -123,6 +123,8 @@ export type ToolSearch = {
     miseFailure?: string | undefined;
 };
 
+export type ToolFolders = { root: string; cwd: string };
+
 export type MiseBinPaths = { folders: string[]; failure?: string | undefined };
 
 export type MiseTrust = { variables: Record<string, string> } | { refusal: string };

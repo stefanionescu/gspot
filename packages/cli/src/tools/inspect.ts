@@ -8,13 +8,16 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { MISE_TOOL } from '#cli/config/tools/installers.ts';
 import { findMisePin, findPackagePin } from '#cli/tools/pins.ts';
 import { PACKAGE_JSON, GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { START_RUNNERS } from '#cli/config/repository/javascript.ts';
 import { readToolVersion, classifyToolVersion } from '#cli/tools/versions.ts';
-import { readToolProjectPackage, findInstalledDependency } from '#cli/tools/packages.ts';
+import { detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
 import { INSTALL_HELP, MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/tools/programs.ts';
+import { readHostPackage, readToolProjectPackage, findInstalledDependency } from '#cli/tools/packages.ts';
 import { readToolBinPaths, listExecutablePaths, listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
 
 import type {
     ToolSearch,
+    ToolFolders,
     InspectedTool,
     ToolInspection,
     ToolAvailability,
@@ -24,14 +27,30 @@ import type {
 
 const TOOL_LOOKUPS = Symbol('tool lookups');
 
-function buildInstallHelp(tool: Tool): string {
-    const toolProjectPackage = findPackagePin(tool);
-    if (toolProjectPackage !== undefined || tool.system !== true) {
-        return toolProjectPackage === undefined && findProgram(MISE_TOOL) === undefined
-            ? `Install mise (${MISE_INSTALL_URL}), or install ${tool.name} ${tool.version ?? ''} yourself.`
-            : INSTALL_HELP;
+function buildProjectInstallHelp(folders: ToolFolders, name: string): string {
+    const { root, cwd } = folders;
+    const project = readHostPackage(join(cwd, PACKAGE_JSON));
+    if (project?.dependencies?.[name] !== undefined || project?.devDependencies?.[name] !== undefined) {
+        const scope = relative(root, cwd);
+        return `Install the project dependencies first: node_modules is missing in ${scope === '' ? 'the repository root' : scope}.`;
     }
-    return tool.install_help ?? `Install ${tool.name}.`;
+    const { installCommand } = START_RUNNERS[detectPackageManager(root, []).name];
+    return `Run ${installCommand.replace('<package>@<version>', () => name)}.`;
+}
+
+function buildSystemInstallHelp(tool: Tool, folders: ToolFolders | undefined): string {
+    const npm = tool.installers['npm'];
+    if (tool.install_help !== undefined || npm === undefined || folders === undefined)
+        return tool.install_help ?? `Install ${tool.name}.`;
+    return buildProjectInstallHelp(folders, npm.name);
+}
+
+function buildInstallHelp(tool: Tool, folders?: ToolFolders): string {
+    const toolProjectPackage = findPackagePin(tool);
+    if (toolProjectPackage === undefined && tool.system === true) return buildSystemInstallHelp(tool, folders);
+    return toolProjectPackage === undefined && findProgram(MISE_TOOL) === undefined
+        ? `Install mise (${MISE_INSTALL_URL}), or install ${tool.name} ${tool.version ?? ''} yourself.`
+        : INSTALL_HELP;
 }
 
 function buildLibraryInspection(inspected: InspectedTool, path: string, found: string): ToolInspection {
@@ -175,7 +194,7 @@ export async function inspectTool(search: ToolSearch, tool: Tool): Promise<ToolI
     const { root } = search;
     const cwd = search.cwd ?? root;
     const toolsRoot = search.toolsRoot ?? root;
-    const help = buildInstallHelp(tool);
+    const help = buildInstallHelp(tool, { root, cwd });
     const want = tool.system === true ? undefined : tool.version;
     const inspected: InspectedTool = {
         root: toolsRoot,

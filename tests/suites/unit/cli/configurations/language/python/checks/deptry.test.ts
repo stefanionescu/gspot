@@ -42,6 +42,7 @@ test('deptry excludes nested scopes and keeps your own exclude patterns', async 
                     '[project]\nname = "example"\nversion = "1.0.0"\n[tool.deptry]\nextend_exclude = ["authored"]\n',
                 ],
                 [join(scope, 'main.py'), 'VALUE = 1\n'],
+                [join(scope, '.venv/pyvenv.cfg'), ''],
             ]),
         ),
         [join(join(GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder), 'deptry')]: 'stub',
@@ -83,6 +84,7 @@ test('deptry counts python.externals as first party beside the known_first_party
         'pyproject.toml':
             '[project]\nname = "example"\nversion = "1.0.0"\n[tool.deptry]\nknown_first_party = ["nodes"]\n',
         'main.py': 'import folder_paths\n',
+        '.venv/pyvenv.cfg': '',
         [join(join(GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder), 'deptry')]: 'stub',
     });
     const { commands } = await runFakeDeptry(sandbox.path);

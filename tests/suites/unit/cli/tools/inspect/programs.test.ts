@@ -282,3 +282,17 @@ test('a lookup keeps its inspection in the tool cache, and a system tool looks a
     await lookUpTool(session, tool, join(sandbox.path, 'app'));
     expect(commands).toHaveBeenCalledTimes(2);
 });
+
+test('a project tool names the install command of its package manager, or the missing install', async () => {
+    const tool = getTool(readConfigurations().values(), 'vitest');
+    using _which = fakeExecutableLookup(null);
+    await using sandbox = await testdir({
+        'pnpm-lock.yaml': '',
+        'package.json': '{"packageManager":"pnpm@10.0.0"}',
+        'app/package.json': '{"devDependencies":{"vitest":"4.0.0"}}',
+    });
+    const root = await inspectTool(buildToolSearch(sandbox.path), tool);
+    expect(root.help).toBe('Run pnpm add --save-dev --save-exact vitest.');
+    const inProject = await inspectTool(buildToolSearch(sandbox.path, { cwd: join(sandbox.path, 'app') }), tool);
+    expect(inProject.help).toBe('Install the project dependencies first: node_modules is missing in app.');
+});

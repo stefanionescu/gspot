@@ -394,6 +394,7 @@ example = "An import of a third-party package missing from the project dependenc
 files = { extensions = [".py"], filenames = ["pyproject.toml"] }
 help = "Declare the dependency, or remove the one nothing imports."
 name = "deptry"
+needs = ["python-environment"]
 output = { format = "regex", pattern = "^(?<file>[^:\\s][^:]*?)(?::(?<line>\\d+):(?<column>\\d+))?: (?<rule>DEP\\d+) (?<message>.*)$" }
 runs = "scope"
 stage = "push"

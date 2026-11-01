@@ -21,6 +21,7 @@ import {
     installPythonTools,
     readPythonSettings,
     planPythonLockfile,
+    installPythonProjects,
     isPythonLockfileFresh,
 } from '#cli/tools/installers/pypi.ts';
 import {
@@ -208,4 +209,17 @@ test('Python resolution excludes releases newer than the minimum release age', a
     const saved = `${PYTHON_TOOL_LOCKFILE}\n[options]\nexclude-newer-span = "P7D"\n`;
     expect(isPythonLockfileFresh(pythonProject, saved, {}, 7)).toBe(true);
     expect(isPythonLockfileFresh(pythonProject, saved, {}, 14)).toBe(false);
+});
+
+test('install syncs each project that has a uv lockfile, and only those', async () => {
+    await using sandbox = await createGitSandbox({
+        ...PYTHON_INSTALL_FILES,
+        'pyproject.toml': '[project]\nname = "root"\nversion = "1.0.0"\n',
+        'uv.lock': 'version = 1\n',
+    });
+    using _boundary = fakeCommands('project-uv', () => Promise.resolve(buildProcessResult()));
+    const install = buildToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const lines = await installPythonProjects(install, 'project-uv');
+    expect(install.steps).toStrictEqual([['project-uv', 'sync', '--locked']]);
+    expect(lines).toStrictEqual(['installed the Python environment of the repository root']);
 });

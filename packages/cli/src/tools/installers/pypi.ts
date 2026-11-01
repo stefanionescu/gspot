@@ -4,6 +4,7 @@ import { isTable } from '#cli/system/tables.ts';
 import { find } from '#cli/system/files/reads.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { stringify } from '@decimalturn/toml-patch';
+import { joinScope } from '#cli/repository/scopes.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import type { SpawnResult } from '#cli/types/system.ts';
 import { uvLockfileSchema } from '#cli/schemas/parsers.ts';
@@ -18,8 +19,8 @@ import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { PRIVATE_FILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { uvSettingsSchema, uvProjectSettingsSchema } from '#cli/schemas/tools.ts';
-import { runInstallStep, explainReleaseAgeHold } from '#cli/tools/installers/steps.ts';
 import { GSPOT_FOLDER, PYPROJECT_TOML, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers.ts';
+import { runInstallStep, explainReleaseAgeHold, runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
 
 import {
     redactInstallOutput,
@@ -49,6 +50,7 @@ import {
     PYTHON_PACKAGE_ORIGINS,
     REQUIREMENT_PACKAGE_NAME,
     PYTHON_DEFAULT_INDEX_ORIGIN,
+    UV_PROJECT_INSTALL_ARGUMENTS,
     UV_LOCKFILE_CREDENTIAL_MESSAGE,
 } from '#cli/config/tools/installers.ts';
 
@@ -236,6 +238,31 @@ export async function installPythonTools(
     });
     const count = listPackagePins(toolConfigurations).python.length;
     return `installed ${formatCount(count, PYTHON_TOOL_NOUN)} in ${GSPOT_PATHS.pythonEnvironment}`;
+}
+
+/**
+Install the environment of each Python project with a uv lockfile, so that its checks read the real packages.
+
+@param install what install needs for this step.
+@param executable the path of uv.
+@returns one line for each project.
+*/
+export async function installPythonProjects(install: ToolInstall, executable: string): Promise<string[]> {
+    const { root, repository, scopes } = install.session;
+    const tracked = new Set(repository.files.map((file) => file.path));
+    const folders = scopes
+        .map((scope) => scope.path)
+        .filter(
+            (folder) => tracked.has(joinScope(folder, UV_LOCKFILE)) && tracked.has(joinScope(folder, PYPROJECT_TOML)),
+        );
+    for (const folder of folders)
+        await runRequiredInstallStep(install, [executable, ...UV_PROJECT_INSTALL_ARGUMENTS], {
+            cwd: join(root, folder),
+            name: `uv sync in ${folder === '' ? 'the repository root' : folder}`,
+        });
+    return folders.map(
+        (folder) => `installed the Python environment of ${folder === '' ? 'the repository root' : folder}`,
+    );
 }
 
 /**

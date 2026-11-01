@@ -14,12 +14,6 @@ import type { PackageManager, ReplacementRequest } from '#cli/types/repository.t
 import { installNpmTools, planNpmLockfile } from '#cli/tools/installers/npm/project.ts';
 import { isLockfileFresh, selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
 
-import {
-    installPythonTools,
-    planPythonLockfile,
-    isPythonLockfileFresh,
-    buildPythonProjectTable,
-} from '#cli/tools/installers/pypi.ts';
 import type {
     Session,
     ToolInstall,
@@ -28,6 +22,13 @@ import type {
     NpmToolInstall,
     ToolProjectsInstall,
 } from '#cli/types/tools.ts';
+import {
+    installPythonTools,
+    planPythonLockfile,
+    installPythonProjects,
+    isPythonLockfileFresh,
+    buildPythonProjectTable,
+} from '#cli/tools/installers/pypi.ts';
 
 function readMiseLockfileState(files: Files, configurations: Session['toolConfigurations']): StaleLockfile | undefined {
     const path = GSPOT_PATHS.miseLockfile;
@@ -129,6 +130,7 @@ export async function installToolProjects(install: ToolInstall, miseBinPaths: st
     if (npm !== undefined) installed.push(await installNpmTools(npm));
     if (uvPath !== undefined && listPackagePins(session.toolConfigurations).python.length > 0)
         installed.push(await installPythonTools(install, uvPath));
+    if (uvPath !== undefined) installed.push(...(await installPythonProjects(install, uvPath)));
     const kinds = new Set([npm === undefined ? undefined : 'npm', uvPath === undefined ? undefined : 'python']);
     kinds.delete(undefined);
     return { installed, tools: tools.filter((tool) => tool.system !== true && kinds.has(findPackagePin(tool)?.kind)) };
