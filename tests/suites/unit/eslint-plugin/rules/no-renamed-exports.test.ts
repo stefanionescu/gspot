@@ -55,12 +55,27 @@ buildRuleTester().run('no-renamed-exports regressions', plugin.rules['no-renamed
             name: 'a snapshot of a member that the module assigns later is not a rename',
         },
         "export { default as Button } from './Button';",
+        { code: "import { owner } from './owner';\nexport { owner };", name: 'an import that keeps its name' },
+        {
+            code: "import { owner as alias } from './owner';\nexport { alias as owner };",
+            name: 'an export that restores the imported name',
+        },
     ],
     invalid: [
         {
             code: 'const owner = 1;\nexport { owner as alias };',
             name: 'an export specifier that renames a local value reports',
             errors: [{ messageId: 'renamed' }],
+        },
+        {
+            code: "import { owner as alias } from './owner';\nexport { alias };",
+            name: 'a rename made in the import and exported reports the imported name',
+            errors: [{ messageId: 'renamed', data: { name: 'alias', source: 'owner' } }],
+        },
+        {
+            code: "import { owner as local } from './owner';\nexport { local as alias };",
+            name: 'a rename in the import and in the export names the imported value',
+            errors: [{ messageId: 'renamed', data: { name: 'alias', source: 'owner' } }],
         },
         {
             code: "export { owner as alias } from './owner';",
