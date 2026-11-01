@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { LEVELS } from '#cli/config/manifests.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
@@ -50,6 +51,19 @@ test.each(ESLINT_LEVEL_CASES)(
         expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
     },
 );
+
+test.each([...LEVELS])('%s lints a JavaScript class, which the default parser gives no decorators', async (level) => {
+    const rules = ['gspot/no-trivial-functions', 'gspot/no-vue-class-components'];
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], { level }),
+        'package.json': '{"private":true,"type":"module"}',
+        'clock.js': 'export class Clock {\n    read() {\n        return 1;\n    }\n}\n',
+    });
+    const eslint = await buildEslint(sandbox.path);
+    expect(await listLintFindings(eslint, sandbox.path, ['clock.js'], rules)).toStrictEqual(
+        level === 'all' ? [{ file: 'clock.js', rule: 'gspot/no-trivial-functions', line: 2 }] : [],
+    );
+});
 
 test.each(ESLINT_LEVEL_CASES)('%s keeps the level of replaced style rules in %s', async (level, extension) => {
     const rules = ['no-labels', 'no-new', 'no-nested-ternary', 'default-case-last', 'no-void'];

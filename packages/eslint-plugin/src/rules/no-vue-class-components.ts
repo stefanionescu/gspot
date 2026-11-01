@@ -22,11 +22,12 @@ function isClassComponent(
     const isVueClass =
         node.superClass?.type === AST_NODE_TYPES.Identifier &&
         readModuleName(node.superClass, source) === VUE_CLASS_BASE;
+    const decorators = 'decorators' in node ? node.decorators : [];
     const members = node.body.body.flatMap((member) => ('decorators' in member ? member.decorators : []));
     return (
         isVueClass ||
-        hasDecorator(node.decorators, VUE_CLASS_DECORATORS, source) ||
-        hasDecorator([...node.decorators, ...members], VUE_PROPERTY_DECORATORS, source)
+        hasDecorator(decorators, VUE_CLASS_DECORATORS, source) ||
+        hasDecorator([...decorators, ...members], VUE_PROPERTY_DECORATORS, source)
     );
 }
 

@@ -67,7 +67,7 @@ function isFrameworkMember(node: FunctionNode): boolean {
     const { parent } = node;
     return (
         parent.type === AST_NODE_TYPES.MethodDefinition &&
-        (parent.decorators.length > 0 ||
+        (('decorators' in parent && parent.decorators.length > 0) ||
             node.params.some((parameter) => parameter.type === AST_NODE_TYPES.TSParameterProperty))
     );
 }
