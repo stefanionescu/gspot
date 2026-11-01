@@ -38,3 +38,42 @@ export const UTILITY_LIBRARIES = new Map([
     ['rambda', { minimum: [0, 8, 8], example: undefined }],
     ['validator', { minimum: [12, 1, 0], example: 'validator/es/lib/isEmail' }],
 ]);
+
+export const MEMOIZE_FUNCTIONS = new Set(['lodash.memoize', 'lodash-es.memoize', 'underscore.memoize']);
+
+export const JQUERY_GLOBALS = new Set(['jQuery', '$']);
+
+export const JQUERY_ORIGINS = new Set(
+    ['jquery', 'jquery.slim', 'jquery.dist.jquery.slim', 'jquery.dist.jquery.slim.js'].flatMap((module) => [
+        module,
+        `${module}.$`,
+        `${module}.jQuery`,
+    ]),
+);
+
+export const JQUERY_METHODS = new Map([
+    ['isArray', { alternative: 'Array.isArray()', isDeprecated: true }],
+    ['parseJSON', { alternative: 'JSON.parse()', isDeprecated: true }],
+    ['now', { alternative: 'Date.now()', isDeprecated: true }],
+    ['trim', { alternative: 'String.prototype.trim()', isDeprecated: true }],
+    ['inArray', { alternative: 'Array.prototype.indexOf()', isDeprecated: false }],
+]);
+
+export const AXIOS_DEPRECATIONS = new Map([
+    ['axios.all', { symbol: 'axios.all()', alternative: 'Promise.all()' }],
+    ['axios.spread', { symbol: 'axios.spread()', alternative: 'array destructuring' }],
+]);
+
+export const AXIOS_CANCEL_TOKEN = 'axios.CancelToken';
+
+export const AXIOS_CONFIG_POSITIONS = new Map([
+    ['axios', [0, 1]],
+    ['axios.request', [0]],
+    ['axios.get', [1]],
+    ['axios.delete', [1]],
+    ['axios.head', [1]],
+    ['axios.options', [1]],
+    ['axios.post', [2]],
+    ['axios.put', [2]],
+    ['axios.patch', [2]],
+]);

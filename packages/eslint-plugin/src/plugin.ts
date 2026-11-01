@@ -36,6 +36,8 @@ import { noEmptyTestTable } from './rules/no-empty-test-table.ts';
 import { noFixedTestWaits } from './rules/no-fixed-test-waits.ts';
 import { noInsecureCookies } from './rules/no-insecure-cookies.ts';
 import { noNestedFunctions } from './rules/no-nested-functions.ts';
+import { preferNativeAxios } from './rules/prefer-native-axios.ts';
+import { requireMemoizeKey } from './rules/require-memoize-key.ts';
 import { requireServerOnly } from './rules/require-server-only.ts';
 import { noEarlyTestReturn } from './rules/no-early-test-return.ts';
 import { noEmptyTestTitles } from './rules/no-empty-test-titles.ts';
@@ -51,6 +53,7 @@ import { noGlobalsShadowing } from './rules/no-globals-shadowing.ts';
 import { noInvariantReturns } from './rules/no-invariant-returns.ts';
 import { noRedundantBoolean } from './rules/no-redundant-boolean.ts';
 import { noTrivialFunctions } from './rules/no-trivial-functions.ts';
+import { preferNativeJquery } from './rules/prefer-native-jquery.ts';
 import { reduceInitialValue } from './rules/reduce-initial-value.ts';
 import { requireErrorChecks } from './rules/require-error-checks.ts';
 import { noEmptyReturnValue } from './rules/no-empty-return-value.ts';
@@ -133,6 +136,9 @@ const rules = {
     'no-floating-point-equality': noFloatingPointEquality,
     'no-equal-loop-condition': noEqualLoopCondition,
     'no-small-switch': noSmallSwitch,
+    'require-memoize-key': requireMemoizeKey,
+    'prefer-native-jquery': preferNativeJquery,
+    'prefer-native-axios': preferNativeAxios,
     'no-setter-in-component': noSetterInComponent,
     'no-self-state-update': noSelfStateUpdate,
     'no-generated-keys': noGeneratedKeys,
