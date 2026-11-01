@@ -1,6 +1,5 @@
 import type { ProseRoute } from '#cli/types/tools.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { HOOKS_PATH_SETTING } from '#cli/config/repository/setup.ts';
 
 export const VALE_STYLES_PATH = `${GSPOT_PATHS.configurations}/general/prose/styles`;
@@ -99,14 +98,6 @@ export const UV_LOCKFILE_CREDENTIAL_MESSAGE =
 const PYTHON_VERSION = '3.13.16';
 
 export const UV_LOCKFILE_ARGUMENTS = ['lock', '--python', PYTHON_VERSION] as const;
-
-export const UV_VENV_ARGUMENTS = [
-    'venv',
-    '--python',
-    PYTHON_VERSION,
-    '--allow-existing',
-    PYTHON_ENVIRONMENT_FOLDER,
-] as const;
 
 export const UV_INSTALL_ARGUMENTS = ['sync', '--locked', '--no-install-project', '--python', PYTHON_VERSION] as const;
 

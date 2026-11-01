@@ -41,7 +41,6 @@ import {
     INDEX_SETTINGS,
     PYTHON_TOOL_NOUN,
     UV_SETTINGS_FILE,
-    UV_VENV_ARGUMENTS,
     CONFIG_TOML_FORMAT,
     PYTHON_TOOL_PROJECT,
     UV_INSTALL_ARGUMENTS,
@@ -223,15 +222,13 @@ export async function installPythonTools(install: ToolInstall, executable: strin
         stringify({ ...indexes, 'exclude-newer': `${String(install.releaseAgeDays)} days` }),
         { mode: PRIVATE_FILE },
     );
-    for (const commandArguments of [UV_VENV_ARGUMENTS, UV_INSTALL_ARGUMENTS]) {
-        await runUv(install, {
-            runFolder,
-            commandArguments,
-            executable,
-            credentials,
-            config: join(settings.path, UV_SETTINGS_FILE),
-        });
-    }
+    await runUv(install, {
+        runFolder,
+        commandArguments: UV_INSTALL_ARGUMENTS,
+        executable,
+        credentials,
+        config: join(settings.path, UV_SETTINGS_FILE),
+    });
     const count = listPackagePins(toolConfigurations).python.length;
     return `installed ${formatCount(count, PYTHON_TOOL_NOUN)} in ${GSPOT_PATHS.pythonEnvironment}`;
 }

@@ -37,13 +37,13 @@ import {
 
 const pythonProject = (parse(PYTHON_TOOL_PROJECT) as { project: PythonToolProject }).project;
 
-test.each(['venv', 'sync'])('a failed uv %s keeps the tool project files and hides index passwords', async (step) => {
+test('a failed uv sync keeps the tool project files and hides index passwords', async () => {
     await using sandbox = await createGitSandbox(PYTHON_INSTALL_FILES);
 
-    using _boundary = fakeCommands('unavailable-uv', (command) => {
+    using _boundary = fakeCommands('unavailable-uv', () => {
         return Promise.resolve(
             buildProcessResult({
-                code: command[1] === step ? 7 : 0,
+                code: 7,
                 stdout: 'index password test%2Bpassword test+password',
                 stderr: 'interpreter unavailable',
             }),
@@ -55,7 +55,7 @@ test.each(['venv', 'sync'])('a failed uv %s keeps the tool project files and hid
     expect(installationError).toMatchObject({
         name: 'GspotError',
         code: 'install',
-        message: `uv ${step} failed (exit 7).\nindex password [redacted] [redacted]\ninterpreter unavailable`,
+        message: 'uv sync failed (exit 7).\nindex password [redacted] [redacted]\ninterpreter unavailable',
     });
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.uvLockfile), 'utf8')).toBe(PYTHON_TOOL_LOCKFILE);
     expect(await readFile(join(sandbox.path, 'uv.toml'), 'utf8')).toBe(UV_TOML);
@@ -151,7 +151,7 @@ test.each(INVALID_UV_SETTINGS)(
 
 async function readInstalledSettings(root: string, releaseAgeDays: number): Promise<unknown> {
     const settings: unknown[] = [];
-    using boundary = fakeCommands('settings-uv', (command) => {
+    using _boundary = fakeCommands('settings-uv', (command) => {
         const file = command[command.indexOf('--config-file') + 1];
         if (file === undefined) throw new Error('The uv command received no settings file.');
         settings.push(parse(readFileSync(file, 'utf8')));
@@ -159,8 +159,7 @@ async function readInstalledSettings(root: string, releaseAgeDays: number): Prom
     });
     const writer = openFiles(root);
     await installPythonTools({ ...buildToolInstall(await openSession(root), writer), releaseAgeDays }, 'settings-uv');
-    expect(boundary).toHaveBeenCalledTimes(2);
-    expect(settings[0]).toStrictEqual(settings[1]);
+    expect(settings).toHaveLength(1);
     return settings[0];
 }
 
