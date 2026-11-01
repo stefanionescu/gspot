@@ -48,8 +48,7 @@ CMD ["node", "dist/main.js"]
 
 ## Package installation and downloads
 
-hadolint reports untagged images, apt cleanup, and shell-form commands, and at level `all` also unpinned packages and
-`ADD` for local files. Also apply these requirements:
+hadolint and Trivy report tags, pins, cache cleanup, and command form. Also apply these requirements:
 
 - Refresh repository metadata and install packages in the same `RUN`, so a stale cache cannot pick an unintended
   version.
@@ -87,8 +86,8 @@ The application's shutdown limit fits the orchestrator's grace period.
 
 ## Runtime
 
-- The final stage runs as a numeric user other than root, such as `USER 1000:1000`, the `node` user of the Node.js
-  images.
+- The final stage runs as a numeric user other than root, such as `USER 1000:1000`, the uid and gid of the `node`
+  user in the Node.js images.
 - Durable state lives in explicit volumes or external storage. Environment-specific values arrive at runtime. A
   production Node.js service sets `NODE_ENV=production` where the runtime expects it.
 - Expose only the required ports, and bind private local services to localhost. Never add Linux capabilities, public

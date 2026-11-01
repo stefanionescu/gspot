@@ -2,17 +2,20 @@ import { promisify } from 'node:util';
 import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
 import { createFileTree } from 'testdirs';
+import { getTool } from '#cli/tools/pins.ts';
 import { LEVELS } from '#cli/config/manifests.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isLinux } from '#tests/setup/system/platform.ts';
 import { randomUUID, generateKeyPair } from 'node:crypto';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { HADOLINT_DEFAULT_LEVEL_OFF } from '#cli/config/configurations/infrastructure.ts';
 import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
@@ -22,6 +25,7 @@ import {
     TRIVY_SCOPE_TABLES,
     TRIVY_SCOPE_RESULTS,
     ROOT_USER_DOCKERFILE,
+    HADOLINT_BOTH_LEVEL_CODES,
 } from '#tests/config/integration/infrastructure.ts';
 
 async function importImage(root: string, tag: string, contents: string | Buffer): Promise<void> {
@@ -146,6 +150,17 @@ test.skipIf(!isLinux || Bun.which('docker') === null)(
 );
 
 const installedSandbox = shareInstalledSandbox(DOCKER_SANDBOX);
+
+test('every rule code of the pinned hadolint has a level', async () => {
+    const { version } = getTool(readConfigurations().values(), 'hadolint');
+    const located = runCommandBlocking(['mise', 'where', `hadolint@${String(version)}`], {
+        cwd: installedSandbox().root,
+    });
+    expect(located.code, located.stderr).toBe(0);
+    const binary = await readFile(join(located.stdout.trim(), 'hadolint'), 'latin1');
+    const levelled = new Set<string>([...HADOLINT_DEFAULT_LEVEL_OFF, ...HADOLINT_BOTH_LEVEL_CODES]);
+    expect(new Set(binary.match(/DL[34]\d{3}/gu)).difference(levelled)).toStrictEqual(new Set());
+});
 
 test.each([...DOCKER_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
     const expected =

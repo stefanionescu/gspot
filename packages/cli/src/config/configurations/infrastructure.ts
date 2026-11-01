@@ -61,7 +61,6 @@ export const HADOLINT_DEFAULT_LEVEL_OFF = [
     'DL3008',
     'DL3010',
     'DL3018',
-    'DL3020',
     'DL3048',
     'DL4001',
 ] as const;
