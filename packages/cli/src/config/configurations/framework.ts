@@ -240,8 +240,9 @@ export const SVELTE_RULES = {
 
 export const VUE_FILES = ['**/*.vue'] as const;
 
+export const VUE_SCOPE_RULES = { 'vue/require-default-prop': 'off' } as const;
+
 export const VUE_RULES = {
-    'vue/require-default-prop': 'off',
     'vue/no-setup-props-reactivity-loss': 'error',
     'vue/no-ref-object-reactivity-loss': 'error',
     'vue/component-api-style': ['error', ['script-setup']],
@@ -301,6 +302,12 @@ export const DRIZZLE_RULES = ['drizzle/enforce-delete-with-where', 'drizzle/enfo
 export const TESTING_LIBRARY_SCOPE = '@testing-library/';
 
 export const TESTING_LIBRARY_DEFAULT_PRESET = 'dom';
+
+export const TESTING_LIBRARY_SETTINGS = {
+    'testing-library/utils-module': 'off',
+    'testing-library/custom-renders': 'off',
+    'testing-library/custom-queries': 'off',
+} as const;
 
 export const TESTING_LIBRARY_PRESETS: readonly string[] = ['angular', 'dom', 'marko', 'react', 'svelte', 'vue'];
 

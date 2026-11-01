@@ -3,6 +3,7 @@ import type { EslintScope, ConfigurationBlocks } from '#cli/types/configurations
 import {
     VUE_RULES,
     VUE_FILES,
+    VUE_SCOPE_RULES,
     CONFIGURATION_PLUGINS,
     TYPESCRIPT_CONFIGURATION,
 } from '#cli/config/configurations/framework.ts';
@@ -16,6 +17,7 @@ export function buildVueBlocks(scope: Pick<EslintScope, 'settings'>): Configurat
     const isTyped = scope.settings.configurations.includes(TYPESCRIPT_CONFIGURATION);
     const blocks: ConfigurationBlocks['blocks'] = [
         { fields: {}, presets: [{ importName: 'vuePlugin', path: 'configs.flat/recommended', merge: 'spread' }] },
+        { fields: { rules: VUE_SCOPE_RULES } },
         {
             fields: { files: VUE_FILES },
             presets: [{ importName: 'vueAccessibility', path: 'configs.flat/recommended', merge: 'spread' }],
