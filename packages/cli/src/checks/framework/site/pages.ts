@@ -1,9 +1,7 @@
-import { gzipSync } from 'node:zlib';
 import { pathToFileURL } from 'node:url';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
-import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { CheckSession } from '#cli/types/session.ts';
@@ -14,7 +12,6 @@ import { selectScopePath } from '#cli/repository/scopes.ts';
 import { read, readBytes } from '#cli/system/files/reads.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { splitFileArguments } from '#cli/runs/command/batches.ts';
 import { getConfigPath } from '#cli/runs/command/placeholders.ts';
@@ -203,44 +200,6 @@ export async function checkPurgecss(session: CheckSession, planned: PlannedCheck
                 message: `No built page uses the selector ${selector.trim()}.`,
             })),
     );
-}
-
-/**
-Compares the compressed size of built files with each size limit.
-
-@param session the repository and its tools.
-@param planned the scope with the size limits.
-@returns one finding per exceeded limit.
-*/
-export async function checkSize(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
-    const limits = getTable(planned.scope.settings, 'site').size_limit.map((limit) => ({
-        ...limit,
-        isCounted: buildPathMatcher(limit.paths),
-    }));
-    const build = await readSuccessfulBuild(session, planned);
-    const sizes = new Map(
-        listBuiltFiles(build.folder)
-            .map((source) => ({
-                source,
-                path: `${getTable(planned.scope.settings, 'site')['build_folder']}/${convertToPosixPath(normalize(source))}`,
-            }))
-            .filter(({ path }) => limits.some((limit) => limit.isCounted(path)))
-            .map(({ source, path }) => [path, gzipSync(readBytes(build.folder, source)).length]),
-    );
-    return limits.flatMap((limit) => {
-        const bytes = [...sizes].filter(([path]) => limit.isCounted(path)).reduce((sum, [, size]) => sum + size, 0);
-        const weight = Math.ceil(bytes / BYTES_PER_KILOBYTE);
-        return weight <= limit.kilobytes
-            ? []
-            : [
-                  {
-                      file: SETTINGS_FILE,
-                      line: 1,
-                      rule: RULES.size,
-                      message: `${limit.paths.join(', ')}: ${String(weight)} kB compressed is over the limit of ${String(limit.kilobytes)} kB.`,
-                  },
-              ];
-    });
 }
 
 /**

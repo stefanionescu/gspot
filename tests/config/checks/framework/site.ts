@@ -1,10 +1,4 @@
-export const BUILD_OUTPUT_CHECKS = [
-    'site/html-validate',
-    'site/purgecss',
-    'site/lychee',
-    'site/size',
-    'site/sitemap',
-] as const;
+export const BUILD_OUTPUT_CHECKS = ['site/html-validate', 'site/purgecss', 'site/lychee', 'site/sitemap'] as const;
 
 export const WORKSPACE_SITE_FILES = {
     'package.json': '{"private":true,"workspaces":["web","packages/*"]}',
@@ -16,22 +10,6 @@ export const WORKSPACE_SITE_FILES = {
 } as const;
 
 export const BUILT_PAGE_CASES = [
-    {
-        check: 'site/size',
-        files: {},
-        settings: `[[site.size_limit]]
-paths = ["dist/**/*.html"]
-kilobytes = 0
-`,
-        expected: { file: 'gspot.toml', rule: 'size', line: 1 },
-        corrected: {
-            files: {},
-            settings: `[[site.size_limit]]
-paths = ["dist/**/*.html"]
-kilobytes = 10
-`,
-        },
-    },
     {
         check: 'site/sitemap',
         files: {

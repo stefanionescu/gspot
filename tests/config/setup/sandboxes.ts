@@ -86,7 +86,6 @@ export const PYTHON_PROJECT_IGNORES = [
     'data-files/v8r',
     'data-files/yamllint',
     'security/semgrep',
-    'security/semgrep-registry',
     'format/editorconfig-checker',
     'python/basedpyright',
     'python/pydoclint',

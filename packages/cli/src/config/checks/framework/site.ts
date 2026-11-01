@@ -58,7 +58,6 @@ export const UNLISTED_PAGE_MESSAGE = 'The build wrote this page, and the sitemap
 
 export const RULES = {
     unusedSelector: 'unused-selector',
-    size: 'size',
     missingPage: 'missing-page',
     unlistedPage: 'unlisted-page',
     invalidUrl: 'invalid-url',

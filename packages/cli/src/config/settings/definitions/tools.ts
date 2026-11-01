@@ -56,11 +56,6 @@ export const TOOL_SETTING_DEFINITIONS = {
         configurations: ['python'],
         description: 'The docstring style that Ruff and pydoclint check: google, numpy, or pep257.',
     },
-    'tools.semgrep.registry_packs': {
-        configurations: ['security'],
-        description: 'The registry packs the manual registry check runs.',
-        default: [] as [],
-    },
     'tools.semgrep.rule_files': {
         configurations: ['security'],
         description: 'Rule files or folders of the repository that Semgrep runs beside the shipped packs.',

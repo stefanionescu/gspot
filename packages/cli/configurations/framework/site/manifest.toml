@@ -86,17 +86,6 @@ tool = "lychee"
 why = "A visitor hits a broken internal link before the author notices it."
 
 [[check]]
-example = "A built page over its limit reports the measured size. Remove unused assets or shrink the page, then rebuild."
-help = "Remove what the page does not need, or raise the ceiling with a reason."
-name = "size"
-needs = ["build"]
-runs = "scope"
-stage = "push"
-summary = "Sums the compressed weight of the built paths each ceiling in site.size_limit names."
-when = { setting = "site.size_limit" }
-why = "Page weight grows a kilobyte at a time, and only a limit catches it."
-
-[[check]]
 example = "A sitemap URL for `/removed/` with no built page reports a stale route. Remove it from the sitemap source, and rebuild."
 help = "Add the page to the sitemap, remove the dead URL, or leave a page out under site.allowed_unlisted_pages."
 name = "sitemap"

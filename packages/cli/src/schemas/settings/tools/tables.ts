@@ -151,11 +151,6 @@ export const toolsSchema = z.strictObject({
         .optional(),
     semgrep: z
         .strictObject({
-            registry_packs: z
-                .string()
-                .array()
-                .default(SETTING_DEFINITIONS['tools.semgrep.registry_packs'].default)
-                .meta(SETTING_DEFINITIONS['tools.semgrep.registry_packs']),
             rule_files: relativePathSchema
                 .array()
                 .default(SETTING_DEFINITIONS['tools.semgrep.rule_files'].default)

@@ -40,10 +40,6 @@ export const RECORD_FIELD_DEFINITIONS = {
             'An exact version, a version range such as `^1.2.0`, or `*`; gspot reports a record that matches no locked package.',
     },
     'licenses.allowed_package.reason': { description: 'Why you accept its license; name the license here.' },
-    'site.size_limit.paths': {
-        description: 'Built files, such as `docs/dist/_astro/*.js`; the size check runs only when a record exists.',
-    },
-    'site.size_limit.kilobytes': { description: 'The most they may weigh together, compressed.' },
     'scope.path': { description: 'The folder of the scope; no two records may name the same folder.' },
     'scope.configurations': {
         description: 'Configurations for this folder, on top of the root ones; `gspot add --scope` writes this list.',
@@ -115,11 +111,6 @@ export const RECORD_FIELD_DEFINITIONS = {
         template: 'repository',
         configurations: ['swift'],
         description: 'Line coverage minimums for named Swift targets.',
-        default: [] as [],
-    },
-    'site.size_limit': {
-        configurations: ['site'],
-        description: 'Size limits: the built paths, and the most kilobytes they may weigh compressed.',
         default: [] as [],
     },
 } as const satisfies Record<string, SettingDefinition>;

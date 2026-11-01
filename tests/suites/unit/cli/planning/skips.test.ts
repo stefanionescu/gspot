@@ -143,21 +143,6 @@ test('shipped Semgrep rules select its tool', async () => {
     );
 });
 
-test('explicit registry packs select Semgrep without local rules', async () => {
-    using _platform = fakePlatform('linux');
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['python'], {
-            tables: '[tools.semgrep]\nregistry_packs = ["p/owasp-top-ten"]\n',
-        }),
-        'source.py': 'PORT = 8080\n',
-    });
-    const session = await openSession(sandbox.path);
-    expect(planChecks(session, { stage: 'manual', only: ['security/semgrep-registry'] })[0]?.skip).toBeUndefined();
-    expect(listToolProjectPins(session.toolConfigurations).python.some((pin) => pin.startsWith('semgrep=='))).toBe(
-        true,
-    );
-});
-
 test('generated and vendored test files do not satisfy a source-tag condition', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['swift']),

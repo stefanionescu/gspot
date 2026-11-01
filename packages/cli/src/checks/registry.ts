@@ -59,6 +59,7 @@ import { checkEncoding, checkLargeFiles, checkLocalFiles } from '#cli/checks/gen
 import { listSwiftlintConfigs, checkSwiftlintAnalyze } from '#cli/checks/language/swift/swiftlint.ts';
 import { checkCompose, checkTrivyImage, checkDockerignore } from '#cli/checks/infrastructure/docker.ts';
 import { checkLockfiles, checkStaleLockfile, checkPackageManagerPin } from '#cli/checks/general/dependencies.ts';
+import { checkLychee, checkSitemap, checkPurgecss, checkHtmlValidate } from '#cli/checks/framework/site/pages.ts';
 
 import {
     checkDenoLint,
@@ -66,13 +67,6 @@ import {
     checkServiceRoleKey,
     checkStoragePolicies,
 } from '#cli/checks/platform/supabase.ts';
-import {
-    checkSize,
-    checkLychee,
-    checkSitemap,
-    checkPurgecss,
-    checkHtmlValidate,
-} from '#cli/checks/framework/site/pages.ts';
 import {
     checkSuppressions,
     checkGeneratedFiles,
@@ -163,7 +157,6 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'site/lychee': { check: checkLychee },
     'site/purgecss': { check: checkPurgecss },
     'site/sitemap': { check: checkSitemap },
-    'site/size': { check: checkSize },
     'site/unused-assets': { check: checkSiteUnusedAssets },
     'structure/environment-readers': { check: checkEnvironmentReaders },
     'structure/file-folder-clashes': { check: checkFileFolderClashes },

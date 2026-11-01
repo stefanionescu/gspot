@@ -132,11 +132,10 @@ test("build: a scope's site build copies only the workspace packages it depends 
 
 test('build: a failed site build skips every check that reads the build, and a new session builds again', async () => {
     const failing = buildProgramCommand('fakes/tool', '--stderr', 'Test build failure\n', '--exit', '1');
-    const tables = '[[site.size_limit]]\npaths = ["dist/**"]\nkilobytes = 100\n';
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['site'], {
             level: 'all',
-            tables: `[site]\nbuild_command = ${JSON.stringify(failing)}\n${tables}`,
+            tables: `[site]\nbuild_command = ${JSON.stringify(failing)}\n`,
         }),
         'page.html': '<!doctype html><html lang="en"><title>Example</title></html>',
     });
@@ -184,7 +183,7 @@ test('build: a failed site build skips every check that reads the build, and a n
         join(sandbox.path, 'gspot.toml'),
         buildSandboxSettings(['site'], {
             level: 'all',
-            tables: `[site]\nbuild_command = ${JSON.stringify(built)}\n${tables}`,
+            tables: `[site]\nbuild_command = ${JSON.stringify(built)}\n`,
         }),
     );
     const next = await openSession(sandbox.path, { resources });

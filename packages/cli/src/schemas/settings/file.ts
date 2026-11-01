@@ -83,7 +83,6 @@ const scopeBody = {
         })
         .optional(),
     licenses: configurationTableSchemas.licenses.unwrap().omit({ allowed_package: true }).optional(),
-    site: configurationTableSchemas.site.unwrap().omit({ size_limit: true }).optional(),
     naming: namingSchema.omit({ override: true }).optional(),
     structure: rootStructure.unwrap().pick({ environment_readers: true }).optional(),
     format: formatSchema.omit({ override: true }).optional(),

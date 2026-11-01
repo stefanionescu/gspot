@@ -151,16 +151,6 @@ export const configurationTableSchemas = {
                 relativePathSchema.meta({ path_role: 'build' }).array(),
                 SETTING_DEFINITIONS['site.allowed_unlisted_pages'],
             ),
-            size_limit: z
-                .strictObject({
-                    paths: destinationPathSchema.array().min(1).meta(SETTING_DEFINITIONS['site.size_limit.paths']),
-                    kilobytes: nonnegativeIntegerSchema.describe(
-                        SETTING_DEFINITIONS['site.size_limit.kilobytes'].description,
-                    ),
-                })
-                .array()
-                .default(SETTING_DEFINITIONS['site.size_limit'].default)
-                .meta(SETTING_DEFINITIONS['site.size_limit']),
         })
         .optional(),
     spelling: z

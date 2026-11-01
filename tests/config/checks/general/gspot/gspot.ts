@@ -80,7 +80,7 @@ export const UNMATCHED_PATH_CASES = [
         files: { 'src/kept.txt': 'kept\n' },
         settings: {
             configurations: ['site', 'supabase', 'docs'],
-            site: { build_folder: 'future/site', size_limit: [{ paths: ['future/assets/**'], kilobytes: 5 }] },
+            site: { build_folder: 'future/site' },
             supabase: { types_file: 'future/types.ts' },
             docs: {
                 allowed_urls: {
