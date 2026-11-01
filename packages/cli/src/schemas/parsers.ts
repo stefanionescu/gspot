@@ -113,7 +113,10 @@ export const yarnPackageSchema = z.looseObject({
 
 const uvSourceSchema = z.looseObject({
     virtual: z.string().optional(),
+    registry: z.string().optional(),
 });
+
+const uvArchiveSchema = z.looseObject({ url: z.string().optional() });
 
 const uvRequirementSchema = z.object({
     name: z.string(),
@@ -133,6 +136,8 @@ export const uvLockfileSchema = z.looseObject({
             name: z.string(),
             version: z.string().optional(),
             source: uvSourceSchema.optional(),
+            sdist: uvArchiveSchema.optional(),
+            wheels: uvArchiveSchema.array().optional(),
             metadata: uvMetadataSchema.optional(),
         })
         .array()

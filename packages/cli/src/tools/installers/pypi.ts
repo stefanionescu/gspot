@@ -1,6 +1,5 @@
 import { join, resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { isTable } from '#cli/system/tables.ts';
 import { find } from '#cli/system/files/reads.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { stringify } from '@decimalturn/toml-patch';
@@ -123,37 +122,29 @@ function parsePythonToolLockfile(lockfile: string, minimumReleaseAge?: number): 
 }
 
 function hasAllowedPythonOrigins(lockfile: UvLockfile, indexes: PythonIndexSettings['settings']): boolean {
-    const configured = Object.entries(indexes).flatMap(([key, value]) => {
-        if (key === 'index' && Array.isArray(value))
-            return value.flatMap((index) => (isTable(index) && typeof index['url'] === 'string' ? [index['url']] : []));
-        if (['index-url', 'extra-index-url', 'find-links'].includes(key)) {
-            if (Array.isArray(value)) return value.filter((url): url is string => typeof url === 'string');
-            if (typeof value === 'string') return [value];
-        }
-        return [];
-    });
+    const configured = [
+        ...(indexes.index ?? []).map((index) => index.url),
+        ...(indexes['index-url'] === undefined ? [] : [indexes['index-url']]),
+        ...(indexes['extra-index-url'] ?? []),
+        ...(indexes['find-links'] ?? []),
+    ];
     const hasDefaultIndexOverride =
-        indexes['index-url'] !== undefined || indexes.index?.some((index) => index['default'] === true) === true;
+        indexes['index-url'] !== undefined || indexes.index?.some((index) => index.default === true) === true;
     const origins = new Set(
         [...PYTHON_PACKAGE_ORIGINS, ...(hasDefaultIndexOverride ? [] : [PYTHON_DEFAULT_INDEX_ORIGIN]), ...configured]
             .filter((url) => URL.canParse(url))
             .map((url) => new URL(url).origin),
     );
-    return lockfile.package.every((lockedPackage) => {
-        const addresses = [
-            lockedPackage.source?.['registry'],
-            ...(isTable(lockedPackage['sdist']) ? [lockedPackage['sdist']['url']] : []),
-            ...(Array.isArray(lockedPackage['wheels'])
-                ? lockedPackage['wheels'].map((wheel: unknown) => (isTable(wheel) ? wheel['url'] : undefined))
-                : []),
-        ];
-        return addresses.every(
-            (address) =>
-                address === undefined ||
-                (typeof address === 'string' &&
-                    (URL.canParse(address) ? origins.has(new URL(address).origin) : configured.includes(address))),
+    return lockfile.package
+        .flatMap(({ source, sdist, wheels = [] }) => [
+            source?.registry,
+            sdist?.url,
+            ...wheels.map((wheel) => wheel.url),
+        ])
+        .filter((address) => address !== undefined)
+        .every((address) =>
+            URL.canParse(address) ? origins.has(new URL(address).origin) : configured.includes(address),
         );
-    });
 }
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The lockfile step and the install step write the same private settings file through it.

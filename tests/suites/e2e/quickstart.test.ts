@@ -13,12 +13,12 @@ import { SWIFT_TUTORIAL, PYTHON_TUTORIAL } from '#tests/config/e2e.ts';
 import { listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { runCommand, runCommandBlocking } from '#tests/setup/system/processes.ts';
 
-test('the Python quickstart reports its finding through the installed hook and passes after the fix', async () => {
+test('a Python project reports its finding through the installed hook and passes after the fix', async () => {
     await runQuickstart(PYTHON_TUTORIAL);
 });
 
 test.skipIf(!hasToolBuild('swiftlint') || Bun.which('swift') === null)(
-    'the Swift quickstart reports its finding through the installed hook and passes after the fix',
+    'a Swift project reports its finding through the installed hook and passes after the fix',
     async () => {
         await runQuickstart(SWIFT_TUTORIAL);
     },

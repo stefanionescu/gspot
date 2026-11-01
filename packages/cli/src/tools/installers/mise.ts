@@ -3,10 +3,10 @@ import { join, dirname } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { stringify } from '@decimalturn/toml-patch';
 import type { Tool } from '#cli/types/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { parse, stringify } from '@decimalturn/toml-patch';
 import { miseLockfileSchema } from '#cli/schemas/tools.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
@@ -89,20 +89,13 @@ function isLockedRelease(pin: MiseToolPin, locked: object): boolean {
 }
 
 function writeChecksums(lockfile: string, pins: MiseToolPin[]): string {
-    const document = parse(lockfile) as Record<string, unknown>;
-    const tools = document['tools'];
-    if (!isTable(tools))
+    const document = parseMiseLockfile(lockfile);
+    if (document === undefined)
         throw new GspotError('install', 'mise lock produced no tool records. Run gspot install again.');
-    for (const pin of pins) {
-        const versions = tools[pin.name];
-        if (!Array.isArray(versions)) continue;
-        const selected = versions.filter(
-            (version): version is Record<string, unknown> => isTable(version) && version['version'] === pin.version,
-        );
-        for (const version of selected) {
-            fillVersionChecksums(version, pin);
+    for (const pin of pins)
+        for (const version of document.tools[pin.name] ?? []) {
+            if (version.version === pin.version) fillVersionChecksums(version, pin);
         }
-    }
     return stringify(document);
 }
 

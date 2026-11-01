@@ -7,9 +7,11 @@ export const miseLockfileSchema = z.looseObject({
     tools: z.record(z.string(), miseVersionSchema.array()),
 });
 
-const uvIndexSchema = z.looseObject({ url: z.string() });
+const uvIndexSchema = z.looseObject({ url: z.string(), default: z.boolean().optional() });
 
 export const uvSettingsSchema = z.looseObject({
+    'index-url': z.string().optional(),
+    'extra-index-url': z.string().array().optional(),
     'find-links': z.string().array().optional(),
     index: uvIndexSchema.array().optional(),
 });
