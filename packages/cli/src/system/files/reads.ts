@@ -58,6 +58,16 @@ export function readBytes(source: string | RunCache, path: string): Buffer {
     return bytes;
 }
 
+function decodeHeldText(source: string | RunCache, path: string): string {
+    const bytes = readBytes(source, path);
+    if (typeof source === 'string') return decodeUtf8Text(path, bytes);
+    const held = source.texts.get(bytes);
+    if (held !== undefined) return held;
+    const text = decodeUtf8Text(path, bytes);
+    source.texts.set(bytes, text);
+    return text;
+}
+
 /**
 Read UTF-8 text, or return undefined for a missing file.
 
@@ -67,7 +77,7 @@ Read UTF-8 text, or return undefined for a missing file.
 */
 export function find(source: string | RunCache, path: string): string | undefined {
     try {
-        return decodeUtf8Text(path, readBytes(source, path));
+        return decodeHeldText(source, path);
     } catch (error) {
         if (hasErrorCode(error, 'ENOENT')) return undefined;
         if (hasErrorCode(error, 'EACCES') || hasErrorCode(error, 'EPERM') || hasErrorCode(error, 'EISDIR'))
@@ -118,8 +128,8 @@ Decode UTF-8 bytes as text.
 @returns the text, or undefined for invalid UTF-8.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers decode UTF-8 bytes, or get undefined, through this one test.
-export function decodeUtf8(bytes: Uint8Array): string | undefined {
-    return isUtf8(bytes) ? Buffer.from(bytes).toString('utf8') : undefined;
+export function decodeUtf8(bytes: Buffer): string | undefined {
+    return isUtf8(bytes) ? bytes.toString('utf8') : undefined;
 }
 
 /**

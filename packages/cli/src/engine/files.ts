@@ -135,13 +135,17 @@ function listReadableFiles(planned: PlannedScope, check: Check, files: TrackedFi
         const owner = selectScopePath(file.path, scopes);
         const scope = scopes.find((scope) => scope.path === owner) as Scope;
         if (file.size > getTable(scope.settings, 'repository').max_file_kilobytes * BYTES_PER_KILOBYTE) return false;
-        return (
-            check.id === ENCODING_CHECK ||
-            !file.tags.includes('text') ||
-            file.tags.includes('symlink') ||
-            isUtf8(readBytes(planned.session.cache, file.path))
-        );
+        if (check.id === ENCODING_CHECK || !file.tags.includes('text') || file.tags.includes('symlink')) return true;
+        file.isUtf8 ??= isUtf8(readBytes(planned.session.cache, file.path));
+        return file.isUtf8;
     });
+}
+
+function listToolFiles(planned: PlannedScope, scopeCheck: ScopeCheck, files: TrackedFile[]): TrackedFile[] {
+    const { check } = scopeCheck;
+    const narrowed = check.runs === 'files' ? listNarrowedFiles(planned, scopeCheck, files) : files;
+    const readable = listReadableFiles(planned, check, narrowed);
+    return check.command === undefined ? readable : readable.filter((file) => !file.tags.includes('symlink'));
 }
 
 /**
@@ -210,14 +214,10 @@ export function selectCheckFiles(
         triggerPaths.length === 0
             ? listRunFiles(planned, scopeCheck, scopePath)
             : listScopeFiles(planned, scopePath, check.runs);
-    files = listReadableFiles(planned, check, files);
-    if (check.command !== undefined) files = files.filter((file) => !file.tags.includes('symlink'));
+    files = listToolFiles(planned, scopeCheck, files);
     if (!keepsChildScopes) files = files.filter((file) => children.every((child) => !isInScope(file.path, child)));
-    if (check.runs === 'files')
-        return { ...stripIgnoredFiles(listNarrowedFiles(planned, scopeCheck, files), check, scope), triggerPaths };
-    const selected = stripIgnoredFiles(files, check, scope);
-    if (check.id === ENCODING_CHECK) triggerPaths.push(...planned.session.repository.unreadablePaths);
-    return { ...selected, triggerPaths };
+    const unreadablePaths = check.id === ENCODING_CHECK ? planned.session.repository.unreadablePaths : [];
+    return { ...stripIgnoredFiles(files, check, scope), triggerPaths: [...triggerPaths, ...unreadablePaths] };
 }
 
 /**

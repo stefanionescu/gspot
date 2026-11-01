@@ -74,6 +74,7 @@ export type TrackedFile = {
     tags: string[];
     executable: boolean;
     size: number;
+    isUtf8?: boolean;
 };
 
 export type Repository = {

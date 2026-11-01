@@ -24,6 +24,7 @@ export type TemporaryFolder = Disposable & { path: string };
 export type RunCache = {
     root: string;
     sources: Map<string, Buffer>;
+    texts: WeakMap<Buffer, string>;
     values: Map<symbol, Map<unknown, unknown>>;
 };
 
