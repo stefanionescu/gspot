@@ -97,7 +97,10 @@ function formatRulesIndex(files: RuleFile[]): string[] {
     ];
 }
 
-function formatSettingsCommands(): string {
+/**
+List the commands that change gspot.toml, as the AGENTS.md block and the gspot.toml preface name them.
+*/
+export function formatSettingsCommands(): string {
     const commands = SETTINGS_COMMANDS.map((command, index) => (index === 0 ? `gspot ${command}` : command));
     return new Intl.ListFormat('en', { type: 'disjunction' }).format(commands.map((command) => '`' + command + '`'));
 }
@@ -138,8 +141,8 @@ and the ones that the level leaves empty.
 */
 export function selectRuleFiles(session: Pick<Session, 'settings' | 'scopes' | 'repository'>): RuleFile[] {
     const { repository } = session;
-    const { rules, level } = session.settings;
-    if (!rules.enabled) return [];
+    const { rule_files: ruleFiles, level } = session.settings;
+    if (!ruleFiles.enabled) return [];
     const configurations = listSelectedConfigurations(session.scopes);
     const scopeRules = session.scopes.map((scope) => ({
         path: scope.path,
@@ -147,7 +150,7 @@ export function selectRuleFiles(session: Pick<Session, 'settings' | 'scopes' | '
     }));
     const selected: RuleFile[] = [];
     const shipped = listConfigurationRules(configurations, repository).filter(({ path }) =>
-        rules.exclude.every(
+        ruleFiles.exclude.every(
             (excluded) => !isInScope(`${GSPOT_PATHS.configurations}/${path}`, stripTrailingSlashes(excluded)),
         ),
     );

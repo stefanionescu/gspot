@@ -42,7 +42,7 @@ export function buildSandboxSettings(
         })
         .join('');
     const tables = options.tables ?? '';
-    const rules = options.rules === true || tables.includes('[rules]') ? '' : '\n[rules]\nenabled = false\n';
+    const rules = options.rules === true || tables.includes('[rule_files]') ? '' : '\n[rule_files]\nenabled = false\n';
     return `${levelLine}configurations = [${selected}]\n${scopes}${tables}${ignored}${rules}`;
 }
 

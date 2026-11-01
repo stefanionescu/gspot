@@ -33,12 +33,12 @@ gspot.
 
 ## Leave out some rules
 
-`gspot set rules.exclude .gspot/configurations/language/javascript/rules/BUN.md` leaves out one file. A folder, such as
+`gspot set rule_files.exclude .gspot/configurations/language/javascript/rules/BUN.md` leaves out one file. A folder, such as
 `.gspot/configurations/language/bash`, leaves out every rule in it.
 
 ## Turn rules off
 
-Run `gspot set rules.enabled false`. gspot deletes the rules and its managed block. If `AGENTS.md` holds nothing else,
+Run `gspot set rule_files.enabled false`. gspot deletes the rules and its managed block. If `AGENTS.md` holds nothing else,
 gspot deletes the file.
 
 ## These docs for agents

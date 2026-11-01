@@ -155,7 +155,7 @@ export type ToolInstall = {
 
 export type MiseInstall = { installed: string; note: string; binPaths: string[] };
 
-export type StaleLockfile = { path: string; kind: 'missing' | 'changed' };
+export type StaleLockfile = { path: string; kind: 'absent' | 'changed' };
 
 export type UvCommand = {
     runFolder: string;

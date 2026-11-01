@@ -146,7 +146,7 @@ test('list shows each removed configuration with its scope and reason', async ()
     await using sandbox = await createGitSandbox({
         'gspot.toml': [
             'configurations = ["bash"]',
-            '[rules]',
+            '[rule_files]',
             'enabled = false',
             '[removed_configurations]',
             'markdown = "The project keeps no Markdown files."',

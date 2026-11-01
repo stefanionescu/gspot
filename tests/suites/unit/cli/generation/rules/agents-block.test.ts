@@ -43,11 +43,11 @@ test('with no configurations the block still lists the general rules', async () 
     expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
 });
 
-test('a rule file that rules.exclude names leaves the index', async () => {
+test('a rule file that rule_files.exclude names leaves the index', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['spelling'], {
             rules: true,
-            tables: `[rules]\nexclude = ["${getRuleFilePath('engineering', 'CLI.md')}"]\n`,
+            tables: `[rule_files]\nexclude = ["${getRuleFilePath('engineering', 'CLI.md')}"]\n`,
         }),
     });
 

@@ -53,7 +53,8 @@ program shows, and use it everywhere. For example, a command-line tool that writ
 | --------------------------- | -------------------- | ------------------------------------------------------------- |
 | config file, generated file | generated file       | A file that the tool writes from its settings.                |
 | key, field, setting         | setting              | A value that the user writes in the settings file.            |
-| delete, remove              | remove               | Take a value out of a setting.                                |
+| delete, remove              | remove               | Take a configuration out of the settings file.                |
+| clear, unset                | unset                | Take a value out of a setting.                                |
 | program, tool               | tool                 | A program that the tool installs and runs.                    |
 | rule, for two concepts      | lint rule, rule file | A rule of a linter; a file of instructions for coding agents. |
 

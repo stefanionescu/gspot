@@ -27,15 +27,15 @@ import {
 
 export const ciFields = {
     enabled: z.boolean().default(false).meta({
-        template: 'ci',
+        leftOut: 'ci',
         description: 'Whether gspot writes a CI workflow; set it at the root only.',
     }),
     provider: z.enum(CI_PROVIDERS).default('github').meta({
-        template: 'ci',
+        leftOut: 'ci',
         description: 'Which CI service gets the workflow; set it at the root only.',
     }),
     setup_command: commandSchema.optional().meta({
-        template: 'code',
+        leftOut: 'code',
         description: 'A command CI runs before `gspot install`, in place of the frozen install of each lockfile.',
     }),
     operating_systems: operatingSystemSchema
@@ -128,7 +128,7 @@ export const pythonSchema = z
     .strictObject({
         externals: allowReasonedValue(z.string().min(1).array(), {
             reason_when: 'adding',
-            template: 'repository',
+            leftOut: 'repository',
             configurations: ['python'],
             description:
                 'Modules that the host application provides at run time, such as folder_paths. A name covers its submodules.',
@@ -185,7 +185,7 @@ export const licensesSchema = z.strictObject({
         .array()
         .default([] as [])
         .meta({
-            template: 'repository',
+            leftOut: 'repository',
             configurations: ['licenses'],
             description: 'Packages accepted under a license outside the list: name, exact version, and reason.',
         }),
@@ -263,7 +263,7 @@ export const namingSchema = z.strictObject({
     html: languageSchemas['html'].optional(),
 });
 
-export const rulesSchema = z.strictObject({
+export const ruleFilesSchema = z.strictObject({
     enabled: z.boolean().default(true).meta({
         description: 'Write the rules and the AGENTS.md block.',
     }),

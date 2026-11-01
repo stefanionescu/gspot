@@ -12,7 +12,9 @@ import { print, printWarning, writeProgress } from '#cli/system/terminal.ts';
 import type { FixReport, RunReport, CheckResult, CheckProgress } from '#cli/types/engine/run.ts';
 
 import {
-    RUN_AGAIN,
+    OFF_LABEL,
+    OFF_CAUSES,
+    RERUN_LABEL,
     STAGED_FILES,
     WORKING_TREE,
     NOTE_STATUSES,
@@ -93,10 +95,15 @@ function formatFindings(findings: readonly Finding[], { verbose }: { verbose: bo
     return lines;
 }
 
-function formatCheck(result: CheckResult, { verbose }: { verbose: boolean }): string[] {
-    const status = styleText(CHECK_STATUS_COLORS[result.status], result.status, { stream: process.stdout });
+function formatCheckLine(result: CheckResult): string {
+    const label = OFF_CAUSES.has(result.cause ?? '') ? OFF_LABEL : result.status;
+    const status = styleText(CHECK_STATUS_COLORS[result.status], label, { stream: process.stdout });
     const scope = result.scope === '' ? '' : `${result.scope}  `;
-    const lines = [`${scope}${result.check}  ${status}  ${formatCheckTail(result)}`.trimEnd()];
+    return `${scope}${result.check}  ${status}  ${formatCheckTail(result)}`.trimEnd();
+}
+
+function formatCheck(result: CheckResult, { verbose }: { verbose: boolean }): string[] {
+    const lines = [formatCheckLine(result)];
     if (verbose) {
         if (result.command)
             lines.push(`  ${styleText('dim', '$ ' + result.command.join(' '), { stream: process.stdout })}`);
@@ -104,8 +111,8 @@ function formatCheck(result: CheckResult, { verbose }: { verbose: boolean }): st
     }
     if (result.status === 'failed' || result.status === 'error')
         lines.push(...formatFindings(result.findings, { verbose }));
-    if (result.reproduce !== undefined)
-        lines.push(`  ${styleText('dim', RUN_AGAIN, { stream: process.stdout })} ${result.reproduce}`);
+    if (result.rerun !== undefined)
+        lines.push(`  ${styleText('dim', RERUN_LABEL, { stream: process.stdout })} ${result.rerun}`);
     return lines;
 }
 
@@ -125,7 +132,8 @@ function formatSummary(report: RunReport, { selectedOnly }: { selectedOnly: bool
     const needsInstall = missing.some((check) => (check.note ?? '').endsWith(STANDARD_INSTALL_HELP));
     const errors = report.checks.filter((check) => check.status === 'error').length;
     const passed = report.checks.filter((check) => check.status === 'passed').length;
-    const skipped = report.checks.filter((check) => check.status === 'skipped').length;
+    const off = report.checks.filter((check) => OFF_CAUSES.has(check.cause ?? '')).length;
+    const skipped = report.checks.filter((check) => check.status === 'skipped').length - off;
     const findings = failed.reduce((count, check) => count + check.findings.length, 0);
     const sentences = [];
     if (failed.length > 0)
@@ -134,7 +142,11 @@ function formatSummary(report: RunReport, { selectedOnly }: { selectedOnly: bool
         sentences.push(
             `Could not run: ${formatCount(missing.length + errors, 'check')}${needsInstall && !selectedOnly ? TOOL_MISSING_MESSAGE : ''}.`,
         );
-    sentences.push(`Passed: ${formatCount(passed, 'check')}.`, `Skipped: ${formatCount(skipped, 'check')}.`);
+    sentences.push(
+        `Passed: ${formatCount(passed, 'check')}.`,
+        ...(off === 0 ? [] : [`Off: ${formatCount(off, 'check')}.`]),
+        `Skipped: ${formatCount(skipped, 'check')}.`,
+    );
     const text = sentences.join(' ');
     return report.exitCode === 0 ? text : styleText('red', text, { stream: process.stdout });
 }

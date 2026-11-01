@@ -88,7 +88,7 @@ test('generated-files adds repeatable diffs only under verbose and never execute
 
 test('turning rules off reports exactly the stray rule files that apply removes', async () => {
     await using sandbox = await createGitSandbox({});
-    const settings = buildSandboxSettings([], { rules: true, tables: '[rules]\nenabled = true\n' });
+    const settings = buildSandboxSettings([], { rules: true, tables: '[rule_files]\nenabled = true\n' });
     await createFileTree(sandbox.path, { 'gspot.toml': settings });
     expect(await runGspot(sandbox.path, ['apply'])).toHaveProperty('code', 0);
     const initial = await openSession(sandbox.path);
@@ -121,13 +121,13 @@ test('generated-files reports absent files and tool lockfiles without writing th
     );
     expect(checked.code).toBe(1);
     const findings = checked.report.checks.flatMap(({ findings }) => findings);
-    expect(findings.every(({ rule }) => rule === 'missing')).toBe(true);
+    expect(findings.every(({ rule }) => rule === 'absent')).toBe(true);
     expect(findings.find(({ file }) => file === '.gspot/configurations/language/bash/shellcheckrc')).toMatchObject({
-        rule: 'missing',
+        rule: 'absent',
         help: 'Run gspot apply.',
     });
     expect(findings.find(({ file }) => file === GSPOT_PATHS.miseLockfile)).toMatchObject({
-        rule: 'missing',
+        rule: 'absent',
         help: 'Run gspot install.',
     });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
@@ -150,7 +150,7 @@ test.each([
     );
     expect(
         checked.report.checks.flatMap(({ findings }) => findings).map(({ file, rule }) => ({ file, rule })),
-    ).toStrictEqual(lockfiles.map((file) => ({ file, rule: 'missing' })));
+    ).toStrictEqual(lockfiles.map((file) => ({ file, rule: 'absent' })));
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 

@@ -152,6 +152,14 @@ export const LEADING_DOT_SLASH = /^\.\//u;
 
 export const STAGE_FILTERS = [...STAGES, 'all'] as const;
 
+export const REPORT_STAGES = {
+    commit: ['commit'],
+    push: ['push'],
+    message: ['message'],
+    manual: ['manual'],
+    all: ['commit', 'push'],
+} as const;
+
 export const COVERAGE_DIMENSIONS = ['lines', 'branches', 'functions', 'statements'] as const;
 
 export const ROOT_RUNS = ['once', 'history'] as const;

@@ -69,7 +69,13 @@ export const UNCHANGED_FIX_MESSAGE = 'No fixer changed anything.';
 
 export const WORKING_TREE = 'the working tree';
 
-export const RUN_AGAIN = 'run again:';
+export const RERUN_LABEL = 'rerun:';
+
+export const NOT_SET = 'not set';
+
+export const OFF_LABEL = 'off';
+
+export const OFF_CAUSES: ReadonlySet<string> = new Set(['level', 'ignore']);
 
 export const STANDARD_INSTALL_HELP = ' Run gspot install.';
 
@@ -104,7 +110,7 @@ export const SUGGESTION_SECTIONS = [
     { key: 'detected', title: 'detected, not selected' },
     { key: 'suggested', title: 'suggested, not selected' },
     { key: 'undetected', title: 'selected, but no files yet' },
-    { key: 'unowned', title: 'config files gspot does not own' },
+    { key: 'unowned', title: 'your tool configs that gspot does not replace' },
     { key: 'lintJobs', title: 'existing lint jobs' },
 ] as const;
 

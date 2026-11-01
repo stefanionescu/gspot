@@ -110,7 +110,7 @@ function addManagedBlocks(session: Session, rules: RuleFile[], generated: Genera
     const text = find(cache, GITATTRIBUTES_FILE) ?? '';
     const authored = stripBlock(text, { path: GITATTRIBUTES_FILE });
     generated.blocks.push({ path: GITATTRIBUTES_FILE, body: buildAttributesBlock(outsidePaths, authored) });
-    if (!settings.rules.enabled) return;
+    if (!settings.rule_files.enabled) return;
     const agents = find(cache, AGENTS_FILE) ?? '';
     const agentsText = stripBlock(agents, { path: AGENTS_FILE });
     const block = buildAgentsBlock({

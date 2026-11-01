@@ -34,7 +34,7 @@ function readMiseLockfileState(files: Files, configurations: Session['toolConfig
     const path = GSPOT_PATHS.miseLockfile;
     const saved = files.read(path);
     if (isMiseLockfileFresh(listMisePins(configurations), saved?.bytes.toString('utf8'))) return undefined;
-    return { path, kind: saved === undefined ? 'missing' : 'changed' };
+    return { path, kind: saved === undefined ? 'absent' : 'changed' };
 }
 
 function readNpmLockfileState(
@@ -45,7 +45,7 @@ function readNpmLockfileState(
 ): StaleLockfile | undefined {
     const path = `${GSPOT_FOLDER}/${selectLockfileName(packageManager)}`;
     const saved = files.read(path);
-    if (saved === undefined) return { path, kind: 'missing' };
+    if (saved === undefined) return { path, kind: 'absent' };
     const dependencies = listPackagePins(configurations).npm;
     return isLockfileFresh(packageManager, saved.bytes.toString('utf8'), dependencies, environment)
         ? undefined
@@ -60,7 +60,7 @@ function readPythonLockfileState(
 ): StaleLockfile | undefined {
     const path = GSPOT_PATHS.uvLockfile;
     const saved = files.read(path);
-    if (saved === undefined) return { path, kind: 'missing' };
+    if (saved === undefined) return { path, kind: 'absent' };
     const matches = isPythonLockfileFresh(
         buildPythonProjectTable(configurations),
         saved.bytes.toString('utf8'),

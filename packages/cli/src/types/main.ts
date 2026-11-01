@@ -1,7 +1,6 @@
 import type { z } from 'zod';
 import type cliPackage from '#cli-package';
 import type { LintRuleDocs } from '#cli/types/tools.ts';
-import type { STAGE_FILTERS } from '#cli/config/engine.ts';
 import type { DOCS_PATHS } from '#cli/config/manifests.ts';
 import type { GROUP_LABELS } from '#cli/config/generation.ts';
 import type { SetupReference } from '#cli/types/repository.ts';
@@ -32,7 +31,6 @@ export type CliReference = {
     package: typeof cliPackage;
     docs: typeof DOCS_PATHS;
     groups: typeof GROUP_LABELS;
-    reportStages: typeof STAGE_FILTERS;
     commands: CommandReference[];
     globalOptions: typeof GLOBAL_OPTIONS;
     exitCodes: typeof PROGRAM_EXIT_CODES;

@@ -6,7 +6,7 @@ import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
-test('a reproduction quotes a check name and protects a path beginning with a dash', async () => {
+test('a rerun line quotes a check name and protects a path beginning with a dash', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             tables: stringify({
@@ -27,7 +27,7 @@ test('a reproduction quotes a check name and protects a path beginning with a da
         await runGspot(sandbox.path, ['check', './-entry.txt', '--only', 'project/check$literal', '--json']),
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    const command = checked.report.checks[0]!.reproduce!;
+    const command = checked.report.checks[0]!.rerun!;
     expect(command).toBe("gspot check ./-entry.txt --only 'project/check$literal'");
     const parsed = await parseBashScript(command);
     const reproducedArguments = parsed.commands[0]!.arguments;

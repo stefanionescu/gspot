@@ -120,7 +120,7 @@ export type InitScan = {
 };
 
 export type InitPlan = {
-    template?: { file: string; leftOut: LeftOutSetting[] };
+    from?: { file: string; leftOut: LeftOutSetting[] };
     level: Level;
     configurations: { configuration: string; origin: ConfigurationOrigin; checks: number; checksOff: number }[];
     write: InitFileRow[];

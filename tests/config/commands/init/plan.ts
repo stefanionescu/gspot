@@ -7,7 +7,7 @@ export const REPLACED_PYPROJECT_TABLES = [
     {
         configuration: 'python',
         table: 'tool.basedpyright',
-        note: 'tool.basedpyright settings stay here, and the generated basedpyright config file takes over. Delete the section; the generated config file replaces it.',
+        note: 'tool.basedpyright settings stay here, and the generated file for basedpyright takes over. Delete the section; the generated file replaces it.',
         text: '[tool.basedpyright]\ntypeCheckingMode = "basic"\n',
         source: { file: 'main.py', text: 'VALUE = 1\n' },
         generated: 'pyrightconfig.json',
@@ -15,7 +15,7 @@ export const REPLACED_PYPROJECT_TABLES = [
     {
         configuration: 'sql',
         table: 'tool.sqlfluff',
-        note: 'tool.sqlfluff settings stay here, and the generated sqlfluff config file takes over. Delete the section; the generated config file replaces it.',
+        note: 'tool.sqlfluff settings stay here, and the generated file for sqlfluff takes over. Delete the section; the generated file replaces it.',
         text: '[tool.sqlfluff.core]\ndialect = "postgres"\n',
         source: { file: 'query.sql', text: 'SELECT 1;\n' },
         generated: `${GSPOT_PATHS.configurations}/language/sql/sqlfluff.cfg`,
@@ -169,7 +169,7 @@ export const STOPPED_ERROR_MESSAGE =
     'gspot stopped because of an internal error. Report it at https://github.com/stefanionescu/gspot/issues.\n';
 
 export const SQLFLUFF_KEPT_NOTE =
-    'sqlfluff settings stay here, and the generated sqlfluff config file takes over. Delete the section; the generated config file replaces it.';
+    'sqlfluff settings stay here, and the generated file for sqlfluff takes over. Delete the section; the generated file replaces it.';
 
 export const INVALID_CSS = `a {
     invalid-property: 1;

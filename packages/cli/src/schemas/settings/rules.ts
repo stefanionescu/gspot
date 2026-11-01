@@ -85,7 +85,7 @@ export const commitlintSchema = z
             ],
         }),
         scopes: nonemptyStringsSchema.default([] as []).meta({
-            template: 'repository',
+            leftOut: 'repository',
             configurations: ['commits'],
             description:
                 'Commit scopes that the scope-enum rule accepts, and a message may leave out its scope. When empty, gspot uses the last segment of each project scope path, or no list without project scopes.',

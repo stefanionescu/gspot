@@ -96,7 +96,7 @@ export const HIDDEN_FACT_KEYS = [
     'reason_values',
     'language_defaults',
     'path_role',
-    'template',
+    'leftOut',
     'default_all',
     'reasoned',
     'variantOf',
@@ -162,7 +162,7 @@ export const SETTINGS_EXAMPLES = [
     },
     { hooks: { enabled: true } },
     { ci: { enabled: true, provider: 'github', operating_systems: ['linux'] } },
-    { rules: { enabled: true } },
+    { rule_files: { enabled: true } },
     { tool_timeout_seconds: 300 },
     { import_rule: [{ name: 'core', paths: ['src/core/**'] }] },
 ] as const;
@@ -217,7 +217,7 @@ export const TABLE_DESCRIPTIONS: Readonly<Record<string, string>> = {
         'Whether files may re-export the exports of other files, and which files may read environment variables.',
     hooks: 'Whether gspot install turns on the Git hooks.',
     ci: 'Whether gspot writes a CI workflow, for which provider, and on which systems it runs.',
-    rules: 'Whether gspot writes rules for coding agents, and which rule files it leaves out.',
+    rule_files: 'Whether gspot writes rule files for coding agents, and which ones it leaves out.',
 };
 
 export const ALLOWED_WORD = /^[\p{L}\p{N}][\p{L}\p{M}\p{N}_]*(?:[-'\u{2019}][\p{L}\p{M}\p{N}_]+)*$/u;

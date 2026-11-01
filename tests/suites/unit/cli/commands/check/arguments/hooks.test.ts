@@ -21,7 +21,7 @@ test('the commit-msg selector keeps the message stage and reads the file after -
         ]),
     );
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(result.report.stage).toBe('message');
+    expect(result.report.stages).toStrictEqual(['message']);
     expect(result.report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
         { check: 'commits/references', status: 'passed' },
     ]);

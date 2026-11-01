@@ -16,6 +16,7 @@ import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/comman
 
 import {
     KEY_GAP,
+    NOT_SET,
     LIST_USAGE,
     LIST_KINDS,
     VALUE_WIDTH,
@@ -31,7 +32,7 @@ function buildSettingsResult(session: Session): CommandResult {
     );
     const width = Math.max(...displayed.map((row) => row.key.length)) + KEY_GAP;
     const lines = displayed.map((row) => {
-        const value = row.value === undefined ? 'unset' : JSON.stringify(row.value);
+        const value = row.value === undefined ? NOT_SET : JSON.stringify(row.value);
         const shortened = value.length > VALUE_WIDTH ? `${value.slice(0, VALUE_WIDTH - 1)}…` : value;
         const scope = row.scope === '' ? '' : `  [scope ${row.scope}]`;
         return `${row.key.padEnd(width)}${shortened.padEnd(VALUE_WIDTH)} ${(row.reasonRequirement ?? '').padEnd(REASON_HEADER.length)}  ${row.source}${scope}`;

@@ -25,7 +25,7 @@ function addConflictingConfig(file: ConflictingConfig, conflicts: ConflictingCon
     if (shared)
         conflicts.kept.push({
             path,
-            note: `${file.table ?? file.key ?? file.tool} settings stay here, and the generated ${tool} config file takes over. Delete the section; the generated config file replaces it.`,
+            note: `${file.table ?? file.key ?? file.tool} settings stay here, and the generated file for ${tool} takes over. Delete the section; the generated file replaces it.`,
         });
     else
         conflicts.deleted.push({

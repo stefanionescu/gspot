@@ -36,14 +36,14 @@ the order of untouched settings and tables.
 
 ### Add rules and checks of your own
 
-| You want to                                               | Do this                                                           | Read                                                              |
-| --------------------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Add a JavaScript or TypeScript lint rule                  | A plugin module and a `[[tools.eslint.plugins]]` record           | [Lint rule options](/configure/lint-rules/#your-own-eslint-rules) |
-| Add a rule for any language                               | A Semgrep rule file in `tools.semgrep.rule_files`                 | [Security](/topics/security/#semgrep)                             |
-| Describe the layers of your code                          | `[[import_rule]]` records                                         | [Import rules](/configure/import-rules/)                          |
-| Run a tool or script of your own, in the hooks and CI too | A `[[command_check]]` record                                      | [Command checks](/configure/command-checks/)                      |
-| Give coding agents rules of your own                      | Write them in `AGENTS.md`, outside the gspot managed block        | [Coding agents](/use/coding-agents/)                              |
-| Leave out rules that gspot ships for agents               | `gspot set rules.exclude <path>...`, with every path to leave out | [Coding agents](/use/coding-agents/)                              |
+| You want to                                               | Do this                                                                | Read                                                              |
+| --------------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Add a JavaScript or TypeScript lint rule                  | A plugin module and a `[[tools.eslint.plugins]]` record                | [Lint rule options](/configure/lint-rules/#your-own-eslint-rules) |
+| Add a rule for any language                               | A Semgrep rule file in `tools.semgrep.rule_files`                      | [Security](/topics/security/#semgrep)                             |
+| Describe the layers of your code                          | `[[import_rule]]` records                                              | [Import rules](/configure/import-rules/)                          |
+| Run a tool or script of your own, in the hooks and CI too | A `[[command_check]]` record                                           | [Command checks](/configure/command-checks/)                      |
+| Give coding agents rules of your own                      | Write them in `AGENTS.md`, outside the gspot managed block             | [Coding agents](/use/coding-agents/)                              |
+| Leave out rules that gspot ships for agents               | `gspot set rule_files.exclude <path>...`, with every path to leave out | [Coding agents](/use/coding-agents/)                              |
 
 ### Set up CI and hooks
 

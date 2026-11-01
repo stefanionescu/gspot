@@ -160,9 +160,9 @@ test('a staged check keeps each Python scope config and reports the installed de
     expect(
         checked.report.checks.flatMap((check) => check.findings).map(({ file, rule }) => ({ file, rule })),
     ).toStrictEqual([
-        { file: GSPOT_PATHS.miseLockfile, rule: 'missing' },
-        { file: `${GSPOT_FOLDER}/package-lock.json`, rule: 'missing' },
-        { file: GSPOT_PATHS.uvLockfile, rule: 'missing' },
+        { file: GSPOT_PATHS.miseLockfile, rule: 'absent' },
+        { file: `${GSPOT_FOLDER}/package-lock.json`, rule: 'absent' },
+        { file: GSPOT_PATHS.uvLockfile, rule: 'absent' },
     ]);
     const contents = await readFile(join(sandbox.path, getManifestTarget('python', 'basedpyright.json')));
     expect(contents).toStrictEqual(previous);
@@ -225,7 +225,7 @@ test('staged checks use index bytes and settings on an unborn branch while prese
     expect(failedReport.comparison?.content).toBe('index');
     expect(failedReport.checks).toMatchObject([
         {
-            reproduce: 'gspot check --only project/bash-syntax --staged',
+            rerun: 'gspot check --only project/bash-syntax --staged',
             findings: [
                 { file: SCRIPT_SPACES, line: 1 },
                 { file: SCRIPT_SPACES, line: 1 },

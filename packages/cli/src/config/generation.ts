@@ -179,13 +179,13 @@ export const RULE_INDEX_LINES = [
 ] as const;
 
 export const MANAGED_KEYS_NOTE =
-    'Keys that gspot no longer manages stay in your files. Review shared config files after removing a configuration.';
+    'Keys that gspot no longer manages stay in your files. Review your shared tool configs after you remove a configuration.';
 
 export const TOOLS_CHANGED_NOTE =
     'The tools changed. Run gspot install; until then gspot/generated-files fails on the tool lockfile.';
 
 export const STALE_LOCKFILE_NOTE =
-    'The tool lockfile is missing or stale. Run gspot install; until then gspot/generated-files fails on it.';
+    'The tool lockfile is absent or stale. Run gspot install; until then gspot/generated-files fails on it.';
 
 export const HOOKS_CHANGED_NOTE = 'Git hooks changed. Run gspot install.';
 

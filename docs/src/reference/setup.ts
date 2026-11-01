@@ -9,15 +9,8 @@ import {
     RELEASE_AGE_EXCLUSIONS,
 } from '#docs/config/reference.ts';
 
-export const {
-    runtimeMinimums,
-    packageManagerMinimums,
-    setup,
-    yarnClassicInstall,
-    cloneInstalls,
-    runners,
-    reportStages,
-} = CLI_REFERENCE;
+export const { runtimeMinimums, packageManagerMinimums, setup, yarnClassicInstall, cloneInstalls, runners } =
+    CLI_REFERENCE;
 
 const REFERENCE_URL = CLI_REFERENCE.docs.reference;
 

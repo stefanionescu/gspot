@@ -14,7 +14,7 @@ export const CONFLICTING_CONFIG_CASES = [
 ] as const;
 
 export const GENERATED_BASH_FILES = {
-    'gspot.toml': 'configurations = ["bash"]\n[rules]\nenabled = false\n',
+    'gspot.toml': 'configurations = ["bash"]\n[rule_files]\nenabled = false\n',
     'run.sh': '#!/usr/bin/env bash\necho ok\n',
 };
 

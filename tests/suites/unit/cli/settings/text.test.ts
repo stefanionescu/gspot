@@ -42,7 +42,7 @@ test('setting level keeps the opening init comment first', async () => {
     setKey(edit.table, 'level', 'all');
     const result = buildEditedSettings(sandbox.path, edit);
     const [opening] = result.text.split('\n', 1);
-    expect(opening).toBe('# Change these settings with gspot set, unset, add, remove, ignore, or unignore.');
+    expect(opening).toBe(text.split('\n', 1)[0]);
     expect(result.settings.level).toBe('all');
 });
 

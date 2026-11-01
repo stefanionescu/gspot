@@ -151,7 +151,7 @@ export function assertSettings(settings: Settings, root: string): SettingsError[
                       message: `There is no check called ${ignore.check}.${formatSimilarNames(ignore.check, checks)}`,
                   },
         ),
-        ...validateRuleExcludes(settings.rules.exclude, configurationsByName),
+        ...validateRuleExcludes(settings.rule_files.exclude, configurationsByName),
         ...validateScopePaths(root, settings),
         ...validateRuleFilePaths(root, settings),
         ...validateKeys(rootKeys, settings, scopes, buildAvailableSettings(general, settings.level)),

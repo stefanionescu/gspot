@@ -1,7 +1,6 @@
 import semver from 'semver';
 import { buildProgram } from '#cli/main.ts';
 import { findPackagePin } from '#cli/tools/pins.ts';
-import { STAGE_FILTERS } from '#cli/config/engine.ts';
 import { DOCS_PATHS } from '#cli/config/manifests.ts';
 import { GROUP_LABELS } from '#cli/config/generation.ts';
 import { describeCheck } from '#cli/engine/reference.ts';
@@ -112,7 +111,6 @@ export function readCliReference(): CliReference {
         package: cliPackage,
         docs: DOCS_PATHS,
         groups: GROUP_LABELS,
-        reportStages: STAGE_FILTERS,
         commands: buildProgram(() => {}).commands.map((command) => buildCommandReference(command)),
         globalOptions: GLOBAL_OPTIONS,
         exitCodes: PROGRAM_EXIT_CODES,

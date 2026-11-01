@@ -20,7 +20,7 @@ indent_width = 4
 [dependencies]
 min_release_age_days = 14
 allowed_registries = { value = ["registry.npmjs.org", "registry.example.com"], reason = "The repository resolves packages through both registries." }
-[rules]
+[rule_files]
 enabled = false
 [[scope]]
 path = "api"

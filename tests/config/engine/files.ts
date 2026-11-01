@@ -197,7 +197,7 @@ configurations = ["format"]
 file_lines = 250
 [format]
 indent_width = 4
-[rules]
+[rule_files]
 enabled = false
 [[scope]]
 path = "api"

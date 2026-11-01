@@ -83,7 +83,7 @@ const EDITORCONFIG_SETTINGS = `configurations = ["format"]
 [[ignore]]
 check = "format/prettier"
 reason = "This sandbox uses EditorConfig without Prettier."
-[rules]
+[rule_files]
 enabled = false
 `;
 
@@ -97,7 +97,7 @@ reason = "This sandbox has no analyzer build log."
 [[ignore]]
 check = "swift/periphery"
 reason = "This sandbox has no Xcode project."
-[rules]
+[rule_files]
 enabled = false
 `;
 
@@ -183,7 +183,7 @@ export const COMMANDS_HEADING = '## Commands';
 
 export const SWITCH_CASES = [
     { name: 'hooks', path: '.gspot/hooks/pre-commit' },
-    { name: 'rules', path: '.gspot/configurations/general/engineering/rules/WORKING.md' },
+    { name: 'rule_files', path: '.gspot/configurations/general/engineering/rules/WORKING.md' },
     { name: 'ci', path: '.github/workflows/gspot.yml' },
 ] as const;
 

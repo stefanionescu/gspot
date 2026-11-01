@@ -7,7 +7,7 @@ import { NO_CHECK_PATHS_MESSAGE } from '#cli/config/settings/validation.ts';
 import { levelSchema, commandCheckFields } from '#cli/schemas/manifests/tools.ts';
 import { toolsSchema as publicToolsSchema } from '#cli/schemas/settings/tools.ts';
 import { configurationTableSchemas } from '#cli/schemas/settings/configurations.ts';
-import { ciSchema, rulesSchema, namingSchema, importRulesSchema } from '#cli/schemas/settings/tables.ts';
+import { ciSchema, namingSchema, ruleFilesSchema, importRulesSchema } from '#cli/schemas/settings/tables.ts';
 
 import {
     formatSchema,
@@ -237,7 +237,7 @@ export const settingsSchema = z
         structure: rootStructure.unwrap().prefault({}),
         hooks: hooksSchema.optional(),
         ci: ciSchema.optional(),
-        rules: rulesSchema.prefault({}),
+        rule_files: ruleFilesSchema.prefault({}),
     })
     .superRefine((written, context) => {
         const records = [

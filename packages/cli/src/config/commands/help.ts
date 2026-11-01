@@ -11,15 +11,14 @@ export const COMMAND_HELP = {
         summary: 'Find what this repository needs, then write gspot.toml and the generated files',
         group: 'Set up a repository:',
         description:
-            'Find the configurations this repository needs and print a plan. gspot writes gspot.toml and the generated files: the tool settings, the rule files for coding agents, and the Git hooks. CI starts off; turn it on with gspot set ci.enabled true.\n\ninit deletes or replaces the config files that gspot replaces. Git must hold each one unchanged at HEAD; read the old one with git show HEAD:<path>. init installs no tools and runs no checks. Run gspot install next.\n\nWith --from, init also selects the configurations of the gspot.toml of another repository, and copies its settings that fit any repository. The plan lists each one it leaves out.',
+            'Find the configurations this repository needs and print a plan. gspot writes gspot.toml and the generated files: the tool settings, the rule files for coding agents, and the Git hooks. CI starts off; turn it on with gspot set ci.enabled true.\n\ninit deletes your tool configs that gspot replaces. Each one must be committed unchanged, so git show HEAD:<path> can restore it. init installs no tools and runs no checks. Run gspot install next.\n\nWith --from, init also selects the configurations of the gspot.toml of another repository, and copies its settings that fit any repository. The plan lists each one it leaves out.',
         arguments: {},
         options: {
             '--from <file>': "Start from another repository's gspot.toml",
             '--configurations <names>':
                 'Use these configurations at the root; repeat the flag or separate names with commas',
             '--no-configurations': 'Select no configurations at the root',
-            '--level <level>':
-                'Start at this level, so the plan replaces the config files that this level runs (default: basic)',
+            '--level <level>': 'Start at this level, so the plan replaces your tool configs that this level runs',
             '--json': 'Print the result as JSON',
         },
         exitCodes: [
@@ -77,7 +76,7 @@ export const COMMAND_HELP = {
                 'Compare with this branch, tag, or commit; an empty, all-zero, or absent full hash checks every file',
             '--fix': 'Run the fixers, then run the checks on the fixed files',
             '--hook <hook>': 'Run the pre-push or commit-msg hook. Put the arguments that Git gives the hook after --',
-            '--verbose': 'Also print the passed and skipped checks, each command, and each ignore',
+            '--verbose': 'Also print the passed, off, and skipped checks, each command, and each ignore',
             '--json': 'Print the report as JSON',
         },
         exitCodes: [

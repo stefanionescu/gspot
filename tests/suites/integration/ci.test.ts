@@ -30,7 +30,7 @@ application:
             : GITHUB_WORKFLOW;
     const settings = stringify({
         configurations: [],
-        rules: { enabled: false },
+        rule_files: { enabled: false },
         ci: { enabled: true, provider },
         command_check: [
             {

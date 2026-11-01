@@ -76,7 +76,7 @@ export const generalTableSchemas = {
                 .array()
                 .default([] as [])
                 .meta({
-                    template: 'repository',
+                    leftOut: 'repository',
                     configurations: ['swift'],
                     description: 'Line coverage minimums for named Swift targets.',
                 }),
@@ -101,7 +101,7 @@ export const generalTableSchemas = {
                 ],
             }),
             bun_scanner: nonemptyStringSchema.optional().meta({
-                template: 'code',
+                leftOut: 'code',
                 configurations: ['dependencies'],
                 description:
                     'The npm package that Bun runs as its install security scanner. Without it, Bun runs no scanner.',
@@ -134,7 +134,7 @@ export const generalTableSchemas = {
                         'The example environment files to search for environment keys; a key may appear in any one of them.',
                 }),
             environment_functions: nonemptyStringsSchema.default([] as []).meta({
-                template: 'repository',
+                leftOut: 'repository',
                 configurations: ['secrets'],
                 description:
                     'Functions of this project that read environment variables, such as read_env. secrets/env-examples reads the keys they take.',

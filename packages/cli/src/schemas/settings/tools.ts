@@ -42,7 +42,7 @@ export const javascriptSchema = z
             }),
         externals: allowReasonedValue(z.string().min(1).array(), {
             reason_when: 'adding',
-            template: 'repository',
+            leftOut: 'repository',
             configurations: ['javascript'],
             description:
                 'Import specifiers that the runtime provides, such as ../../scripts/app.js in a host application. Globs match several.',
@@ -56,7 +56,7 @@ const eslintTableSchema = z.strictObject({
         .enum(IMPORT_EXTENSION_STYLES)
         .default('js')
         .meta({
-            template: 'repository',
+            leftOut: 'repository',
             configurations: ['javascript'],
             description:
                 'The import suffix in this scope: js for compiled ESM, ts for Deno and Bun, or extensionless for code that a bundler builds.',
@@ -132,7 +132,7 @@ const knipSchema = z.strictObject({
     ignore_dependencies: allowReasonedValue(
         z.string().min(1).regex(KNIP_PACKAGE_NAME, 'Use an exact package name, without a regular expression.').array(),
         {
-            template: 'repository',
+            leftOut: 'repository',
             configurations: ['javascript'],
             description:
                 'Exact package names that knip does not report as unused; new names need a reason, and a scope list applies to that project only.',
@@ -169,7 +169,7 @@ export const toolsSchema = z.strictObject({
             image: nonemptyStringSchema
                 .default('nginx:1.29.3-alpine@sha256:b3c656d55d7ad751196f21b7fd2e8d4da9cb430e32f646adcf92441b72f82b14')
                 .meta({
-                    template: 'code',
+                    leftOut: 'code',
                     configurations: ['nginx'],
                     description: 'The image nginx -t runs in; name the one the deployment uses.',
                 }),
@@ -203,7 +203,7 @@ export const toolsSchema = z.strictObject({
                 .enum(SQLFLUFF_DIALECTS)
                 .default('ansi')
                 .meta({
-                    template: 'repository',
+                    leftOut: 'repository',
                     configurations: ['sql'],
                     description:
                         'The SQL dialect that SQLFluff parses, such as postgres. The postgres configuration sets it.',
@@ -217,7 +217,7 @@ export const toolsSchema = z.strictObject({
                 .array()
                 .default([] as [])
                 .meta({
-                    template: 'repository',
+                    leftOut: 'repository',
                     configurations: ['swift'],
                     description: 'Imports the analyzer keeps although it sees no use of them.',
                 }),
@@ -253,7 +253,7 @@ export const toolsSchema = z.strictObject({
                 .boolean()
                 .default(true)
                 .meta({
-                    template: 'repository',
+                    leftOut: 'repository',
                     configurations: ['postgres'],
                     description: 'Whether the migration runner wraps every migration in a transaction.',
                 }),
@@ -263,7 +263,7 @@ export const toolsSchema = z.strictObject({
     purgecss: z
         .strictObject({
             safelist: allowReasonedValue(nonemptyStringsSchema, {
-                template: 'repository',
+                leftOut: 'repository',
                 configurations: ['site'],
                 description: 'Class names a script adds at run time: the names and the reason.',
                 reason_when: 'adding',

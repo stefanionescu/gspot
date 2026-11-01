@@ -64,7 +64,7 @@ export type RunReport = {
     notes: string[];
     comparison?: { content: 'working-tree' | 'index' | 'commit'; reference: string };
     version: string;
-    stage: StageFilter;
+    stages: readonly Check['stage'][];
     started: string;
     duration: number;
     checks: readonly CheckResult[];
@@ -117,7 +117,7 @@ export type CheckResult = {
     note?: string;
     stack?: string;
     cause?: SkipCause | 'no-files';
-    reproduce?: string;
+    rerun?: string;
     command?: readonly string[];
 };
 
@@ -139,7 +139,7 @@ export type StylelintComponent = {
 export type OutdatedFile = {
     diff?: string;
     path: string;
-    kind: 'changed' | 'missing' | 'stray';
+    kind: 'changed' | 'absent' | 'stray';
 };
 
 export type CheckGeneration = {

@@ -112,8 +112,8 @@ function buildFileRow(
         return {
             path: config.path,
             note: config.shared
-                ? `beside the generated ${config.tool} config file; move any ${config.table ?? config.key ?? config.tool} setting you still need into gspot.toml, then delete the section`
-                : `beside the generated ${config.tool} config file; move any setting you still need into gspot.toml, then delete the file`,
+                ? `beside the generated file for ${config.tool}; move any ${config.table ?? config.key ?? config.tool} setting you still need into gspot.toml, then delete the section`
+                : `beside the generated file for ${config.tool}; move any setting you still need into gspot.toml, then delete the file`,
         };
     if (configuration.group === 'general') return buildInactiveFileRow(session, config, configuration);
     return {

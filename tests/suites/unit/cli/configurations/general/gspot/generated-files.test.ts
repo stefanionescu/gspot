@@ -22,9 +22,9 @@ test('gspot/generated-files reports an edited file with the apply help and passe
     const initial = await runChecks(session, buildRunOptions({ only: ['gspot/generated-files'] }));
     const missingLocks = initial.report.checks[0]!.findings;
     expect(missingLocks).toMatchObject([
-        { file: GSPOT_PATHS.miseLockfile, rule: 'missing' },
-        { file: `${GSPOT_FOLDER}/package-lock.json`, rule: 'missing' },
-        { file: GSPOT_PATHS.uvLockfile, rule: 'missing' },
+        { file: GSPOT_PATHS.miseLockfile, rule: 'absent' },
+        { file: `${GSPOT_FOLDER}/package-lock.json`, rule: 'absent' },
+        { file: GSPOT_PATHS.uvLockfile, rule: 'absent' },
     ]);
     const generated = await readFile(join(sandbox.path, shellcheckrc), 'utf8');
     await writeFile(join(sandbox.path, shellcheckrc), `${generated}disable=SC2034\n`);

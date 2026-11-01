@@ -24,24 +24,25 @@ test('init --from copies the settings that fit any repository and lists each one
     const result = await runGspot(sandbox.path, ['init', '--from', join(team.path, 'gspot.toml'), '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const json = JSON.parse(result.stdout) as {
-        plan: { template: { file: string; leftOut: { key: string; note: string }[] }; configurations: unknown[] };
+        plan: { from: { file: string; leftOut: { key: string; note: string }[] }; configurations: unknown[] };
     };
-    expect(json.plan.template.file).toBe(join(team.path, 'gspot.toml'));
-    expect(json.plan.template.leftOut.toSorted((a, b) => compareText(a.key, b.key))).toStrictEqual(
+    expect(json.plan.from.file).toBe(join(team.path, 'gspot.toml'));
+    expect(json.plan.from.leftOut.toSorted((a, b) => compareText(a.key, b.key))).toStrictEqual(
         TEAM_LEFT_OUT.toSorted((a, b) => compareText(a.key, b.key)),
     );
     expect(json.plan.configurations).toContainEqual(
         expect.objectContaining({ configuration: 'typescript', origin: 'template' }),
     );
     const written = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
-    expect(parseTomlFile('gspot.toml', written)).toMatchObject({
+    const table = parseTomlFile('gspot.toml', written);
+    expect(table).toMatchObject({
         configurations: ['typescript'],
         limits: { function_lines: { value: 80, reason: 'The parsers are state machines.' } },
     });
     expect(written).toContain('# The parsers are state machines.');
     expect(written).not.toContain('test_files');
-    expect(written).not.toContain('[[scope]]');
-    expect(written).not.toContain('[[command_check]]');
+    expect(table).not.toHaveProperty('scope');
+    expect(table).not.toHaveProperty('command_check');
     expect(written).not.toContain('[ci]');
 });
 

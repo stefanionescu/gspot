@@ -144,7 +144,7 @@ test('the pre-push report prints a command that reproduces the same findings', a
     await using sandbox = await createGitSandbox({});
     const { base, broken } = await preparePushRepository(sandbox.path);
     const failedReport = await runBrokenPushCheck(sandbox.path, base, broken);
-    const reproduction = failedReport.checks.map(({ reproduce }) => reproduce);
+    const reproduction = failedReport.checks.map(({ rerun }) => rerun);
     expect(reproduction).toStrictEqual([`gspot check --only project/bash-syntax --base ${base.slice(0, 7)}`]);
     await using checkout = await testdir();
     runGitStep(sandbox.path, ['worktree', 'add', '--detach', checkout.path, broken]);
@@ -153,7 +153,7 @@ test('the pre-push report prints a command that reproduces the same findings', a
             'bash',
             '-c',
             'runtime=$1; cli=$2; gspot() { "$runtime" "$cli" "$@"; }; eval "$3"',
-            'reproduce',
+            'rerun',
             process.execPath,
             CLI_BIN,
             reproduction[0]!.replace(CHECK_COMMAND, 'gspot check --json'),

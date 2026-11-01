@@ -57,7 +57,7 @@ gspot check --hook commit-msg -- .git/COMMIT_EDITMSG
 ```
 
 The pre-push hook needs the remote arguments and revision updates that Git passes on standard input, so test it with
-`git push`. After a failed push, the `run again:` line checks the files changed after the remote hash with
+`git push`. After a failed push, the `rerun:` line checks the files changed after the remote hash with
 `gspot check --only <check> --base <hash>`. To compare with a branch outside a push:
 
 ```shell

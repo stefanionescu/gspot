@@ -202,7 +202,7 @@ test.each([...STYLELINT_REPLACEMENT_CASES])(
         const plan = (JSON.parse(written.stdout) as InitJson).plan;
         expect(plan.delete).toContainEqual({
             path: authoredConfiguration,
-            note: 'replaced by the generated stylelint config file',
+            note: 'replaced by the generated file for stylelint',
         });
         expect(plan.change.filter(({ path }) => path === packagePath)).toStrictEqual(
             changed.map((path) => ({ path, note: 'managed stylelint fields; other content stays' })),

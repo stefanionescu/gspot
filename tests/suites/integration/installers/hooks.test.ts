@@ -159,7 +159,7 @@ test('a hook ignores a nested gspot.toml and checks the index at the Git root', 
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], {
             tables: stringify({
-                rules: { enabled: false },
+                rule_files: { enabled: false },
                 hooks: { enabled: true },
                 command_check: [
                     {

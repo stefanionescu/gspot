@@ -187,7 +187,7 @@ export const INVALID_UV_SETTINGS = [
 ];
 
 export const PYTHON_INSTALL_FILES = {
-    'gspot.toml': 'configurations = []\n[rules]\nenabled = false\n',
+    'gspot.toml': 'configurations = []\n[rule_files]\nenabled = false\n',
     [GSPOT_PATHS.pythonProject]: PYTHON_TOOL_PROJECT,
     [GSPOT_PATHS.uvLockfile]: PYTHON_TOOL_LOCKFILE,
     'uv.toml': UV_TOML,

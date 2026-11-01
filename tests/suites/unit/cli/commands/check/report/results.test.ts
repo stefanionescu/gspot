@@ -141,7 +141,7 @@ test.each([true, false])('report colors follow stdout when its terminal state is
 });
 
 test('the report prints planned skips once with their reason only in verbose output', () => {
-    const { reproduce: _reproduce, ...check } = FAILED_CHECK_REPORT.checks[0];
+    const { rerun: _reproduce, ...check } = FAILED_CHECK_REPORT.checks[0];
     const skipped: RunReport = {
         ...FAILED_CHECK_REPORT,
         checks: [{ ...check, status: 'skipped', cause: 'condition', note: 'disabled', findings: [] }],

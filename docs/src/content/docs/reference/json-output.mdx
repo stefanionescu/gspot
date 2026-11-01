@@ -3,8 +3,6 @@ title: JSON output
 description: The JSON object that every gspot command prints under `--json`.
 ---
 
-import { reportStages } from '#docs/reference/setup.ts';
-
 Add `--json` to any command to print one JSON object to standard output. Progress text stays on standard error. Run
 from any folder in the repository.
 
@@ -70,7 +68,7 @@ holds repository-relative paths.
 
 `plan` holds `level`, `configurations`, and the file lists `write`, `delete`, `keep`, `change`, and `lintFolders`. Each
 item of `configurations` has `configuration`, `origin`, `checks`, and `checksOff`. Each file row has `path` and `note`. With `--from`, `plan`
-also has `template`, with the template `file` and the `leftOut` settings.
+also has `from`, with the `file` that `--from` names and the `leftOut` settings.
 
 ## `gspot install`
 
@@ -98,7 +96,7 @@ gspot neither computes nor includes those diffs.
 
 | Field             | Meaning                                                                                      |
 | ----------------- | -------------------------------------------------------------------------------------------- |
-| `stage`           | One of <code>{reportStages.join(', ')}</code>. `all` selects the default stages.             |
+| `stages`          | The stages that ran, such as `commit` and `push`.                                            |
 | `started`         | Start time as an ISO 8601 timestamp.                                                         |
 | `duration`        | Elapsed run time in milliseconds.                                                            |
 | `comparison`      | When present, the selected content (`working-tree`, `index`, or `commit`) and its reference. |
@@ -111,7 +109,7 @@ gspot neither computes nor includes those diffs.
 | `notChecked`      | When present, detected configurations that `gspot.toml` neither selects nor removes.         |
 
 Each `checks` item has `check`, `scope`, `status`, `fileCount`, `duration`, and `findings`. It can also have `files`,
-`note`, `reproduce`, `command`, and, for a skipped check, `cause`. Under `--verbose`, an internal check error also has
+`note`, `rerun`, `command`, and, for a skipped check, `cause`. Under `--verbose`, an internal check error also has
 `stack` with its message and stack. `status` holds `passed`, `failed`, `missing`,
 `error`, or `skipped`. `missing` and `error` make the run incomplete, with exit code `2`. `cause` holds `system`,
 `replaced`, `setting`, `condition`, `level`, `ignore`, or `no-files`.

@@ -65,7 +65,7 @@ function splitIgnores(
 
 function findSettingNote(key: string): string | undefined {
     const schema = findSettingSchema(key);
-    const local = (schema?.meta() as SettingDefinition | undefined)?.template;
+    const local = (schema?.meta() as SettingDefinition | undefined)?.leftOut;
     if (local !== undefined) return LEFT_OUT_NOTES[local];
     if (schema === undefined) return undefined;
     return hasPathRole(z.toJSONSchema(schema, { io: 'input', unrepresentable: 'any' }))

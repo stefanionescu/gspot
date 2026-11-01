@@ -48,7 +48,7 @@ export const VERIFY_FLAG = '--verify';
 export const NAME_ONLY_FLAG = '--name-only';
 
 export const READ_COMMITTED_MESSAGE =
-    'Cannot read committed config files. Run git status, then commit or stash the change.';
+    'Cannot read your committed tool configs. Run git status, then commit or stash the change.';
 
 export const PRETTIER_SCRIPT_NOTE =
     'gspot cannot read this Prettier config, so set format.indent_width and format.print_width by hand';
@@ -161,7 +161,7 @@ export const DELETED_RULES_NOTE =
 export const LINT_FOLDERS_HEADING = 'lint folders; delete when nothing calls them';
 
 export const CHANGE_LATER_MESSAGE =
-    'Change the hooks and rule files later with gspot set hooks.enabled or rules.enabled.';
+    'Change the hooks and rule files later with gspot set hooks.enabled or rule_files.enabled.';
 
 export const TOOL_PIN_NOUN = 'tool pin';
 
@@ -186,7 +186,7 @@ export const XCODE_DESTINATIONS = new Map<string | undefined, string>([
     ['xrsimulator', 'generic/platform=visionOS Simulator'],
 ]);
 
-export const PREFACE_BODY = '# Change these settings with gspot set, unset, add, remove, ignore, or unignore.';
+export const HAND_EDIT_RECORDS = '[[scope]], [[command_check]], and [[import_rule]] take a hand edit.';
 
 export const LEADING_COMMENTS = /^(?:#[^\n]*\n|[ \t]*\n)*/u;
 

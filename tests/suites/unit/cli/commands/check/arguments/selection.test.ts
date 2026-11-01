@@ -101,7 +101,7 @@ test.each([false, true])('path arguments narrow project-wide findings (staged: %
         await runGspot(sandbox.path, ['check', 'src/selected.ts', '--only', 'sandbox/project', '--json', ...flags]),
     );
     expect(narrowed.code, narrowed.stdout + narrowed.stderr).toBe(1);
-    expect(narrowed.report.checks[0]?.reproduce).toBe(
+    expect(narrowed.report.checks[0]?.rerun).toBe(
         `gspot check src/selected.ts --only sandbox/project${staged ? ' --staged' : ''}`,
     );
     expect(narrowed.report.checks[0]?.findings.map((finding) => finding.message)).toStrictEqual(['here', 'fileless']);
@@ -115,7 +115,7 @@ test.each([false, true])('path arguments narrow project-wide findings (staged: %
     ]);
 });
 
-test.each([false, true])('run again resolves a scope from the calling folder (staged: %p)', async (staged) => {
+test.each([false, true])('rerun resolves a scope from the calling folder (staged: %p)', async (staged) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { scopes: [{ path: 'app', configurations: ['bash'] }] }),
         'app/run.sh': 'cleanup() { printf "unused\\n"; }\n',
@@ -131,9 +131,9 @@ test.each([false, true])('run again resolves a scope from the calling folder (st
         await runGspot(cwd, ['check', '--only', 'bash/unused-functions', '--json', ...(staged ? ['--staged'] : [])]),
     );
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    const reproduce = result.report.checks[0]!.reproduce!;
-    expect(reproduce).toBe(`gspot check ../app --only bash/unused-functions${staged ? ' --staged' : ''}`);
-    const repeated = parseCheckReport(await runGspot(cwd, [...reproduce.split(' ').slice(1), '--json']));
+    const rerun = result.report.checks[0]!.rerun!;
+    expect(rerun).toBe(`gspot check ../app --only bash/unused-functions${staged ? ' --staged' : ''}`);
+    const repeated = parseCheckReport(await runGspot(cwd, [...rerun.split(' ').slice(1), '--json']));
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(1);
     expect(repeated.report.checks[0]?.findings).toStrictEqual(result.report.checks[0]?.findings);
 });
@@ -176,12 +176,12 @@ test('--staged keeps every stage while --stage commit selects only commit checks
     expect(checked.report.checks.map((check) => [check.check, check.status])).toStrictEqual([
         ['sandbox/commit', 'passed'],
     ]);
-    expect(checked.report.stage).toBe('commit');
+    expect(checked.report.stages).toStrictEqual(['commit']);
     const pushed = parseCheckReport(
         await runGspot(sandbox.path, ['check', '--only', 'sandbox/commit,sandbox/push', '--stage', 'push', '--json']),
     );
     expect(pushed.code, pushed.stdout + pushed.stderr).toBe(0);
-    expect(pushed.report.stage).toBe('push');
+    expect(pushed.report.stages).toStrictEqual(['push']);
     expect(pushed.report.checks.map((check) => [check.check, check.status])).toStrictEqual([
         ['sandbox/push', 'passed'],
     ]);
@@ -214,7 +214,7 @@ test('a manual check runs only when --only names it', async () => {
     ]);
 });
 
-test('a scope path narrows to its checks and its reproduce command finds the same findings', async () => {
+test('a scope path narrows to its checks and its rerun command finds the same findings', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], NAMING_SCOPE_SETTINGS),
         'api/port.js': 'export const helperCommand = 1;\n',
@@ -226,11 +226,11 @@ test('a scope path narrows to its checks and its reproduce command finds the sam
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const failed = checked.report.checks.filter((check) => check.status === 'failed');
-    expect(failed.map(({ scope, reproduce }) => ({ scope, reproduce }))).toStrictEqual([
-        { scope: 'api', reproduce: 'gspot check api --only naming/identifiers' },
+    expect(failed.map(({ scope, rerun }) => ({ scope, rerun }))).toStrictEqual([
+        { scope: 'api', rerun: 'gspot check api --only naming/identifiers' },
     ]);
-    const [, ...reproduce] = failed[0]!.reproduce!.split(' ');
-    const repeated = parseCheckReport(await runGspot(sandbox.path, [...reproduce, '--json']));
+    const [, ...rerun] = failed[0]!.rerun!.split(' ');
+    const repeated = parseCheckReport(await runGspot(sandbox.path, [...rerun, '--json']));
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(1);
     expect(repeated.report.checks.flatMap((check) => check.findings)).toStrictEqual(
         checked.report.checks.flatMap((check) => check.findings),

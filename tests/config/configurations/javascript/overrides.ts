@@ -143,7 +143,7 @@ export const store = create(() => ({ readFile, join }));
 
 export const ESLINT_OVERRIDES_SETTINGS = `configurations = [ "javascript" ]
 
-[rules]
+[rule_files]
 enabled = false
 
 [tools.eslint.rules]

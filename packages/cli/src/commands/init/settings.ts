@@ -13,6 +13,7 @@ import { stripDefaults } from '#cli/commands/init/defaults.ts';
 import { readScopeFormat } from '#cli/commands/init/format.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { buildFilenameMatcher } from '#cli/system/matchers.ts';
+import { formatSettingsCommands } from '#cli/generation/rules.ts';
 import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
 import { SWIFT_CONFIGURATION } from '#cli/config/configurations/structure.ts';
 import type { Repository, InitConfigurations } from '#cli/types/repository.ts';
@@ -20,8 +21,8 @@ import { buildImportExtensionTables } from '#cli/commands/init/import-extension.
 import type { InitOptions, SettingsDraft, ScopeConfigurations } from '#cli/types/commands/edits.ts';
 
 import {
-    PREFACE_BODY,
     LEADING_COMMENTS,
+    HAND_EDIT_RECORDS,
     XCODE_DESTINATIONS,
     OPENAPI_CONFIGURATION,
 } from '#cli/config/commands/edits.ts';
@@ -131,7 +132,7 @@ export function buildInitSettings(
 ): string {
     const document = buildSettingsTable(draft, repository, configurationsByName);
     setKey(document, 'hooks.enabled', true);
-    setKey(document, 'rules.enabled', true);
+    setKey(document, 'rule_files.enabled', true);
     delete document['ci'];
     const checked = settingsSchema.safeParse(document);
     if (draft.template !== undefined && !checked.success) {
@@ -143,7 +144,8 @@ export function buildInitSettings(
             `The settings copied from ${draft.template.file} do not fit this repository. Edit a copy of the file, then run gspot init again:\n${errors}`,
         );
     }
-    return `${PREFACE_BODY.trimEnd()}\n${buildSettingsText(draft.base, stripDefaults(document))}`;
+    const preface = `# Change these settings with ${formatSettingsCommands()}. ${HAND_EDIT_RECORDS}`;
+    return `${preface}\n${buildSettingsText(draft.base, stripDefaults(document))}`;
 }
 
 /**

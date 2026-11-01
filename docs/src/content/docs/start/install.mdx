@@ -146,7 +146,7 @@ Commit first, so you can go back.
 
 1. Save the paths marked `linguist-generated` in the gspot block of `.gitattributes`. It lists the generated files
    outside `.gspot/`. Review [Generated files](/reference/generated-files/) for keys gspot sets in your own files.
-2. Run `gspot set rules.enabled false` and `gspot set ci.enabled false`. gspot deletes the rules, its `AGENTS.md`
+2. Run `gspot set rule_files.enabled false` and `gspot set ci.enabled false`. gspot deletes the rules, its `AGENTS.md`
    managed block, and the CI workflow. Then run `git config --unset core.hooksPath`. If Husky, Lefthook, or your own
    hooks run gspot, delete those lines.
 3. Restore your earlier config files from Git, such as `git show <commit>:.eslintrc.json`, or set up the tools you want.

@@ -8,7 +8,7 @@ const APPLY_HELP = 'Run gspot apply.';
 
 export const GENERATED_FILE_FINDINGS = {
     changed: { message: 'This generated file is out of date.', help: APPLY_HELP },
-    missing: { message: 'This generated file is missing.', help: APPLY_HELP },
+    absent: { message: 'This generated file is absent.', help: APPLY_HELP },
     stray: {
         message: 'gspot wrote this file, and no selected configuration writes it now.',
         help: 'Run gspot apply to delete it.',

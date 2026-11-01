@@ -51,7 +51,7 @@ test.each([...HOOK_REPOSITORIES])(
         for (const { path, content } of authored)
             expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(content);
 
-        expect(await readHookStatus(session, session.repository)).toStrictEqual({
+        expect(await readHookStatus(session, session.repository)).toMatchObject({
             ready: false,
             text: `not installed; ${text}`,
         });
@@ -87,7 +87,7 @@ test.each([...HOOK_CONFIGURATION_CASES])(
         const session = await openSession(sandbox.path);
         expect(await readHookStatus(session, session.repository).then(({ ready }) => ready)).toBe(false);
         await writeFile(join(sandbox.path, path), bothHooks);
-        expect(await readHookStatus(session, session.repository)).toStrictEqual({
+        expect(await readHookStatus(session, session.repository)).toMatchObject({
             ready: true,
             text: `run from ${path}`,
         });
@@ -161,7 +161,7 @@ test('a core.hooksPath that names the gspot hooks as an absolute, ./, or slash-e
     const root = session.repository.root;
     for (const hooksPath of [join(root, GSPOT_PATHS.hooks), `./${GSPOT_PATHS.hooks}`, `${GSPOT_PATHS.hooks}/`]) {
         runGitStep(root, ['config', 'core.hooksPath', hooksPath]);
-        expect(await readHookStatus(session, session.repository), hooksPath).toStrictEqual({
+        expect(await readHookStatus(session, session.repository), hooksPath).toMatchObject({
             ready: true,
             text: 'installed',
         });

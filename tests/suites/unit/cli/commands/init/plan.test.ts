@@ -75,7 +75,7 @@ test('init plans no scope for an old lint folder, and --level all replaces the c
     expect(readSettings(settingsText, sandbox.path)).toMatchObject({ level: 'all', scopes: {} });
     expect(plan.lintFolders.map(({ path }) => path)).toStrictEqual(['quality/']);
     expect(plan.delete).toStrictEqual([
-        { path: '.commitlintrc.json', note: 'replaced by the generated commitlint config file' },
+        { path: '.commitlintrc.json', note: 'replaced by the generated file for commitlint' },
     ]);
 });
 

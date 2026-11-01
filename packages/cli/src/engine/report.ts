@@ -4,7 +4,14 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { buildBaseResult, formatExplainCommand } from '#cli/engine/results.ts';
 import type { FixReport, RunReport, CheckResult, FinishedRun } from '#cli/types/engine/run.ts';
-import { EXIT_FINDINGS, FAILED_STATUSES, NO_FILES_MESSAGE, INCOMPLETE_STATUSES } from '#cli/config/engine.ts';
+
+import {
+    EXIT_FINDINGS,
+    REPORT_STAGES,
+    FAILED_STATUSES,
+    NO_FILES_MESSAGE,
+    INCOMPLETE_STATUSES,
+} from '#cli/config/engine.ts';
 
 function listFailedChecks(results: CheckResult[], fixes: FixReport | undefined): string[] {
     const checks = results.filter((result) => FAILED_STATUSES.has(result.status)).map((result) => result.check);
@@ -68,7 +75,7 @@ export function buildRunReport(run: FinishedRun): RunReport {
         ...buildNotCheckedReport(session),
         version: cliPackage.version,
         notes: [],
-        stage: options.stage,
+        stages: REPORT_STAGES[options.stage],
         started: started.toISOString(),
         duration: Date.now() - started.getTime(),
         checks,

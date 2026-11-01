@@ -4,9 +4,9 @@ import { buildSettings } from '#cli/settings/read.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import { listSettingReaders } from '#cli/engine/skips.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { REASON_HELP } from '#cli/config/commands/reports.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
+import { NOT_SET, REASON_HELP } from '#cli/config/commands/reports.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/configurations/general.ts';
 import { RECORD_FIELDS, findSettingSchema } from '#cli/settings/lookup.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
@@ -15,12 +15,13 @@ import type { Explanation, SettingScope, ExplainedSetting } from '#cli/types/com
 
 function formatSettingScope(key: string, setting: Setting, scopeSetting: SettingScope): string[] {
     const { scope, shipped, inherited } = scopeSetting;
-    const { value, source } = inherited ?? { value: undefined, source: 'unset' };
+    const shown =
+        inherited?.value === undefined ? NOT_SET : `${JSON.stringify(inherited.value)} (from ${inherited.source})`;
     return [
         '',
         `Scope: ${scope === '' ? ROOT_SCOPE_LABEL : scope}`,
-        `Shipped default: ${shipped === undefined ? 'none' : JSON.stringify(shipped)}`,
-        `Current value: ${JSON.stringify(value)} (from ${source})`,
+        `Shipped default: ${shipped === undefined ? NOT_SET : JSON.stringify(shipped)}`,
+        `Current value: ${shown}`,
         ...(scopeSetting.readBy.length === 0 ? [] : [`Read by: ${scopeSetting.readBy.join(', ')}`]),
         ...formatChangeLines(key, setting, scopeSetting),
     ];

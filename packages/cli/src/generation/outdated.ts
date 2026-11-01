@@ -20,7 +20,7 @@ import { ON_DISK_LABEL, DIFF_CONTEXT_LINES, BLOCK_ON_DISK_LABEL } from '#cli/con
 function listOutdatedOutputs(files: Files, generated: Generation): OutdatedFile[] {
     return generated.files.flatMap((file): OutdatedFile[] => {
         const onDisk = files.read(file.path);
-        if (onDisk === undefined) return [{ path: file.path, kind: 'missing' }];
+        if (onDisk === undefined) return [{ path: file.path, kind: 'absent' }];
         const mode = file.executable === true ? EXECUTABLE_FILE : OWNER_WRITABLE_FILE;
         if (isSameContents(onDisk, { bytes: Buffer.from(file.content), mode })) return [];
         return [{ path: file.path, kind: 'changed' }];
@@ -33,7 +33,7 @@ function listOutdatedBlocks(files: Files, generated: Generation): OutdatedFile[]
         const text = files.read(block.path)?.bytes.toString('utf8') ?? '';
         const onDisk = findBlockBody(text, { path: block.path });
         const wanted = block.body.trim();
-        if (onDisk === undefined) outdated.push({ path: block.path, kind: 'missing' });
+        if (onDisk === undefined) outdated.push({ path: block.path, kind: 'absent' });
         else if (onDisk !== wanted) outdated.push({ path: block.path, kind: 'changed' });
     }
     return outdated;
@@ -42,7 +42,7 @@ function listOutdatedBlocks(files: Files, generated: Generation): OutdatedFile[]
 function listOutdatedManagedKeys(files: Files, generated: Generation): OutdatedFile[] {
     return generated.managedKeys.flatMap((output): OutdatedFile[] => {
         const onDisk = files.read(output.path);
-        if (onDisk === undefined) return [{ path: output.path, kind: 'missing' }];
+        if (onDisk === undefined) return [{ path: output.path, kind: 'absent' }];
         return hasManagedKeys(output, onDisk) ? [] : [{ path: output.path, kind: 'changed' }];
     });
 }
@@ -92,7 +92,7 @@ function buildGeneratedDiff(root: string, generated: Generation, path: string): 
 }
 
 /**
-Find changed, missing, or stray generated files. Managed blocks and file edits count too.
+Find changed, absent, or stray generated files. Managed blocks and file edits count too.
 
 @param session the repository to compare.
 @param generated the files that this run generates.

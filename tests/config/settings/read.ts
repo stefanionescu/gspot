@@ -226,7 +226,7 @@ export const OPENAPI_SCOPE_SETTINGS = {
 } as const;
 
 export const NESTED_SCOPE_SETTINGS = `configurations = ["bash", "swift", "structure"]
-[rules]
+[rule_files]
 enabled = false
 [limits.bash]
 file_lines = 100

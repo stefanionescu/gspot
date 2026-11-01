@@ -87,7 +87,7 @@ const TEST_VERSION = '0.0.0-test';
 export const FAILED_CHECK_REPORT = {
     version: TEST_VERSION,
     notes: [] as string[],
-    stage: 'all' as const,
+    stages: ['commit', 'push'] as const,
     started: '2026-09-18T00:00:00.000Z',
     duration: 10,
     checks: [
@@ -97,7 +97,7 @@ export const FAILED_CHECK_REPORT = {
             status: 'failed' as const,
             fileCount: 3,
             duration: 120,
-            reproduce: 'gspot check --only bash/shellcheck',
+            rerun: 'gspot check --only bash/shellcheck',
             findings: [
                 {
                     check: 'bash/shellcheck',

@@ -80,7 +80,7 @@ export const ROOT_KEYS = [
 export const FIRST_TABLES = [
     'hooks',
     'ci',
-    'rules',
+    'rule_files',
     'format',
     'limits',
     'naming',

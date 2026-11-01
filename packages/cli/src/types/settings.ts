@@ -41,7 +41,7 @@ export type ReasonedSettingDefinition = SettingDefinition &
     Required<Pick<SettingDefinition, 'description' | 'reason_when'>>;
 
 export type SettingDefinition = {
-    template?: keyof typeof LEFT_OUT_NOTES;
+    leftOut?: keyof typeof LEFT_OUT_NOTES;
     description?: string;
     minimum?: number;
     maximum?: number;

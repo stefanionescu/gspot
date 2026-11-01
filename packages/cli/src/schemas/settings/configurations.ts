@@ -7,7 +7,7 @@ import { toolsSchema, javascriptSchema } from '#cli/schemas/settings/tools.ts';
 import { FROZEN_VERSION, TABLE_DESCRIPTIONS } from '#cli/config/settings/schema.ts';
 import { hooksSchema, generalTableSchemas } from '#cli/schemas/settings/general.ts';
 import { commandSchema, nonemptyStringSchema } from '#cli/schemas/manifests/tools.ts';
-import { ciFields, rulesSchema, namingSchema, pythonSchema } from '#cli/schemas/settings/tables.ts';
+import { ciFields, namingSchema, pythonSchema, ruleFilesSchema } from '#cli/schemas/settings/tables.ts';
 
 import {
     formatSchema,
@@ -30,7 +30,7 @@ export const configurationTableSchemas = {
                     'Tracked Worker types file from the repository root; OpenNext defaults to cloudflare-env.d.ts.',
             }),
             types_interface: nonemptyStringSchema.default('Env').meta({
-                template: 'repository',
+                leftOut: 'repository',
                 configurations: ['cloudflare'],
                 description: 'Environment interface name passed to wrangler types; OpenNext defaults to CloudflareEnv.',
             }),
@@ -42,7 +42,7 @@ export const configurationTableSchemas = {
     drizzle: z
         .strictObject({
             client_names: nonemptyStringsSchema.default(['db'] as ['db']).meta({
-                template: 'repository',
+                leftOut: 'repository',
                 configurations: ['drizzle'],
                 description:
                     'The Drizzle client identifiers checked for update and delete operations without a where clause.',
@@ -98,7 +98,7 @@ export const configurationTableSchemas = {
                     'The committed OpenAPI document, relative to the repository root, which init fills in when it finds one; without it, the OpenAPI checks do not run.',
             }),
             generate_command: commandSchema.optional().meta({
-                template: 'code',
+                leftOut: 'code',
                 configurations: ['openapi'],
                 description:
                     'The command that writes the OpenAPI document from the code, run in the project scope folder.',
@@ -108,7 +108,7 @@ export const configurationTableSchemas = {
     postgres: z
         .strictObject({
             client_schemas: nonemptyStringsSchema.default([] as []).meta({
-                template: 'repository',
+                leftOut: 'repository',
                 configurations: ['postgres'],
                 description: 'The schemas clients reach, where every table needs row level security.',
             }),
@@ -116,7 +116,7 @@ export const configurationTableSchemas = {
                 .union([z.enum([FROZEN_NONE, FROZEN_ALL]), z.string().regex(FROZEN_VERSION)])
                 .default('none')
                 .meta({
-                    template: 'repository',
+                    leftOut: 'repository',
                     configurations: ['postgres'],
                     description:
                         'The last migration version that has run everywhere (none, all, or a version); Squawk skips those migrations, and they may not change.',
@@ -132,7 +132,7 @@ export const configurationTableSchemas = {
     site: z
         .strictObject({
             build_command: commandSchema.default(['npm', ...BUILD_SCRIPT] as string[]).meta({
-                template: 'code',
+                leftOut: 'code',
                 configurations: ['site'],
                 description:
                     'The command that builds the site. Without it, gspot runs the build script of the package manager.',
@@ -158,7 +158,7 @@ export const configurationTableSchemas = {
                     'The folder, relative to the repository root, with one folder for each edge function; the default starts from the project scope.',
             }),
             schemas: nonemptyStringsSchema.default(['public'] as ['public']).meta({
-                template: 'repository',
+                leftOut: 'repository',
                 configurations: ['supabase'],
                 description: 'The database schemas to include in generated types.',
             }),
@@ -172,7 +172,7 @@ export const configurationTableSchemas = {
     translations: z
         .strictObject({
             base_locale: nonemptyStringSchema.default('en').meta({
-                template: 'repository',
+                leftOut: 'repository',
                 configurations: ['translations'],
                 description: 'The locale whose message keys every other locale must contain.',
             }),
@@ -190,12 +190,12 @@ export const configurationTableSchemas = {
                     'The Xcode project or workspace, relative to the repository root, which init fills in when it finds one; without it, the checks use the Swift package.',
             }),
             xcode_scheme: nonemptyStringSchema.optional().meta({
-                template: 'repository',
+                leftOut: 'repository',
                 configurations: ['swift'],
                 description: 'The shared scheme the build, the analyzer, and Periphery use.',
             }),
             xcode_destination: nonemptyStringSchema.default('generic/platform=iOS Simulator').meta({
-                template: 'repository',
+                leftOut: 'repository',
                 configurations: ['swift'],
                 description: 'The xcodebuild destination.',
             }),
@@ -211,7 +211,7 @@ export const configurationTableSchemas = {
                 .array()
                 .default([] as [])
                 .meta({
-                    template: 'repository',
+                    leftOut: 'repository',
                     configurations: ['xcode'],
                     description: 'The entitlements the app may hold; empty turns the check off.',
                 }),
@@ -240,13 +240,14 @@ for (const [name, schema] of Object.entries(configurationTableSchemas)) {
 }
 
 export const tableSettingSchemas = Object.fromEntries(
-    Object.entries({ hooks: hooksSchema.shape, ci: ciFields, rules: rulesSchema.shape }).flatMap(([section, fields]) =>
-        Object.entries<z.ZodType>(fields).map(
-            ([key, field]) =>
-                [
-                    `${section}.${key}`,
-                    field.safeParse(undefined).success ? field : field.optional().describe(field.description ?? ''),
-                ] as const,
-        ),
+    Object.entries({ hooks: hooksSchema.shape, ci: ciFields, rule_files: ruleFilesSchema.shape }).flatMap(
+        ([section, fields]) =>
+            Object.entries<z.ZodType>(fields).map(
+                ([key, field]) =>
+                    [
+                        `${section}.${key}`,
+                        field.safeParse(undefined).success ? field : field.optional().describe(field.description ?? ''),
+                    ] as const,
+            ),
     ),
 );

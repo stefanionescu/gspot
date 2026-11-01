@@ -135,9 +135,7 @@ export function planInitFiles(
     ];
     return {
         level: settings.level,
-        ...(scan.template === undefined
-            ? {}
-            : { template: { file: scan.template.file, leftOut: scan.template.leftOut } }),
+        ...(scan.template === undefined ? {} : { from: { file: scan.template.file, leftOut: scan.template.leftOut } }),
         configurations: buildConfigurationRows(scan, settings),
         write,
         delete: conflicts.deleted
@@ -145,7 +143,7 @@ export function planInitFiles(
             .map(({ path, tool, unreadablePrettier }) => ({
                 path,
                 note: [
-                    `replaced by the generated ${tool} config file`,
+                    `replaced by the generated file for ${tool}`,
                     ...(unreadablePrettier ? [PRETTIER_SCRIPT_NOTE] : []),
                 ].join('; '),
             })),
@@ -170,11 +168,11 @@ Format the plan that init prints before it writes anything.
 export function formatInitPlan(plan: InitPlan): string {
     const lines = [
         ...formatConfigurationSection(plan.configurations, plan.level),
-        ...(plan.template === undefined
+        ...(plan.from === undefined
             ? []
             : formatFileSection(
-                  `left out of ${plan.template.file}`,
-                  plan.template.leftOut.map(({ key, note }) => ({ path: key, note })),
+                  `left out of ${plan.from.file}`,
+                  plan.from.leftOut.map(({ key, note }) => ({ path: key, note })),
               )),
         ...formatFileSection('write', plan.write),
         ...formatFileSection(`delete ${styleText('dim', DELETED_RULES_NOTE, { stream: process.stdout })}`, plan.delete),

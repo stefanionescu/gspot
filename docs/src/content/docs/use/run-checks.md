@@ -6,7 +6,7 @@ description: Read a finding, explain it, fix it, and read the report.
 A failed check prints one line with its check ID, `failed`, and the number of findings. In a nested scope, the line
 starts with the scope path. Under it, each finding prints its file, line and column, lint rule, and message.
 
-`help:` says what to do, and `run again:` gives the command that runs that check alone. Without `--verbose`, the report
+`help:` says what to do, and `rerun:` gives the command that runs that check alone. Without `--verbose`, the report
 prints the first 200 findings of each check.
 
 ```text
@@ -14,7 +14,7 @@ javascript/eslint  failed  2 findings
   src/checkout.ts:4:8  @typescript-eslint/require-await  Async function 'pay' has no 'await' expression.
   src/checkout.ts:8:13  no-empty  Empty block statement.
   help: Run `gspot check --fix` for the rules that fix themselves, then read each remaining line; `gspot explain javascript/eslint <rule>` links the rule documentation.
-  run again: gspot check --only javascript/eslint --staged
+  rerun: gspot check --only javascript/eslint --staged
 ```
 
 Fix the file, then run the check again.
@@ -86,9 +86,10 @@ names the file and exits with code 2.
 | `missing` | The tool needs installation: run `gspot install`.                                           | 2         |
 | `error`   | The check stopped with an error; findings collected before it stopped remain in the report. | 2         |
 | `passed`  | No findings.                                                                                | 0         |
+| `off`     | The level or an ignore turns the check off. `--json` reports `skipped` with its `cause`.    | 0         |
 | `skipped` | The check did not run; the line says why.                                                   | 0         |
 
-The report shows `failed`, `missing`, and `error` rows. Add `--verbose` for the `passed` and `skipped` rows, each
+The report shows `failed`, `missing`, and `error` rows. Add `--verbose` for the `passed`, `off`, and `skipped` rows, each
 command, and each ignore with its reason. `gspot check --json` prints the whole report as one JSON object.
 
 When a lint rule does not fit your code, [ignore the finding](/use/ignore/). To change a limit, see

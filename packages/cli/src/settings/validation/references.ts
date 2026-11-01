@@ -112,7 +112,7 @@ export function validateRuleExcludes(
         .flatMap((configuration) => listRuleFiles(configuration).map((file) => file.path))
         .toArray();
     return exclude.flatMap((excluded, index) => {
-        const location: KeyPath = ['rules', 'exclude', index];
+        const location: KeyPath = ['rule_files', 'exclude', index];
         const hasFirstRead = FIRST_READ.some((file) =>
             isInScope(`${GSPOT_PATHS.configurations}/${file}`, stripTrailingSlashes(excluded)),
         );
@@ -120,7 +120,7 @@ export function validateRuleExcludes(
             return [
                 {
                     path: location,
-                    message: `[rules] exclude names ${formatCodeList([excluded])}, which holds a file every agent opens first (${formatCodeList(FIRST_READ)}). Remove the entry.`,
+                    message: `[rule_files] exclude names ${formatCodeList([excluded])}, which holds a file every agent opens first (${formatCodeList(FIRST_READ)}). Remove the entry.`,
                 },
             ];
         const isRuleMatch = paths.some((path) =>
@@ -134,7 +134,7 @@ export function validateRuleExcludes(
         return [
             {
                 path: location,
-                message: `[rules] exclude names ${formatCodeList([excluded])}, which matches no rule.${suggestion}`,
+                message: `[rule_files] exclude names ${formatCodeList([excluded])}, which matches no rule.${suggestion}`,
             },
         ];
     });

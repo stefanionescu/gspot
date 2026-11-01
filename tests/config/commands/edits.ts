@@ -1,5 +1,5 @@
 export const FORMAT_SETTINGS = `configurations = ["format"]
-[rules]
+[rule_files]
 enabled = false
 `;
 
@@ -69,7 +69,7 @@ export const LITERAL_ROUTE_CASES = [
 ] as const;
 
 const PARENT_CONFIGURATION_SETTINGS = `configurations = ["markdown"]
-[rules]
+[rule_files]
 enabled = false
 [[scope]]
 path = "api"
@@ -80,7 +80,7 @@ configurations = ["python"]
 `;
 
 export const PARENT_REQUIREMENT_SETTINGS = `configurations = ["markdown"]
-[rules]
+[rule_files]
 enabled = false
 [[scope]]
 path = "api"
@@ -91,7 +91,7 @@ configurations = ["bash"]
 `;
 
 export const EXCLUDED_CONFIGURATION_SETTINGS = `configurations = ["typescript"]
-[rules]
+[rule_files]
 enabled = false
 [[scope]]
 path = "api"
@@ -99,7 +99,7 @@ removed_configurations = { typescript = "The API scope uses Bash without the inh
 `;
 
 export const INHERITED_CONFIGURATION_SETTINGS = `configurations = ["markdown", "bash"]
-[rules]
+[rule_files]
 enabled = false
 [[scope]]
 path = "api"
@@ -144,7 +144,7 @@ export const UNKNOWN_CONFIGURATION_REFUSALS = ['not-a-real-config-a', 'not-a-rea
     .join('');
 
 export const SET_SETTINGS = `configurations = ["markdown", "structure"]
-[rules]
+[rule_files]
 enabled = false
 [[scope]]
 path = "api"
@@ -197,7 +197,7 @@ export const KEPT_SETTING_CHANGES = [
 
 export const STOPPED_APPLY_FILES = {
     'gspot.toml': `configurations = ["bash", "structure"]
-[rules]
+[rule_files]
 enabled = false
 `,
     'entry.sh': 'echo example\n',
@@ -244,7 +244,7 @@ export const SET_VALUE_REFUSALS = [
 ] as const;
 
 const COMMAND_VALUE_SETTINGS = `configurations = ["site"]
-[rules]
+[rule_files]
 enabled = false
 [site]
 allowed_unlisted_pages = { value = ["private/index.html"], reason = "The private page belongs outside the public site map." }

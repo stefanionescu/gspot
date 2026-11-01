@@ -167,7 +167,7 @@ function finishResult(run: Run, result: CheckResult): void {
         result.scope === ''
             ? undefined
             : convertToPosixPath(relative(run.options.cwd, join(run.session.toolsRoot, result.scope))) || '.';
-    result.reproduce = formatReproduceCommand(result.check, scopeArgument, buildReproduceOptions(run.options));
+    result.rerun = formatReproduceCommand(result.check, scopeArgument, buildReproduceOptions(run.options));
 }
 
 async function runActiveChecks(run: Run, checks: PlannedCheck[]): Promise<CheckResult[]> {
