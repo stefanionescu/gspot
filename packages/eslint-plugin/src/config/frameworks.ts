@@ -110,3 +110,29 @@ export const READONLY_MAPPED = /^\{\s*(?:\+\s*)?readonly\s*\[/u;
 
 export const READONLY_MEMBER =
     /^(?:(?:public|protected|private|static|declare|override|abstract)\s+)*(?:readonly|get)\s+[^\s:?(]/u;
+
+export const VUE_REF = 'vue.ref';
+
+export const VUE_REACTIVE = 'vue.reactive';
+
+export const VUE_ON_UPDATED = 'vue.onUpdated';
+
+export const VUE_DEFINE_COMPONENT = 'vue.defineComponent';
+
+export const VUE_OPTION_PROPERTIES =
+    'ExportDefaultDeclaration > ObjectExpression > Property, CallExpression > ObjectExpression > Property';
+
+export const GUARD_TESTS = new Map([
+    ['IfStatement', 'test'],
+    ['ConditionalExpression', 'test'],
+    ['LogicalExpression', 'left'],
+]);
+
+export const TERMINATING_STATEMENTS = new Set<string>([
+    'ReturnStatement',
+    'ThrowStatement',
+    'BreakStatement',
+    'ContinueStatement',
+]);
+
+export const VOLATILE_CALLS = new Set(['Date.now', 'Math.random', 'performance.now']);

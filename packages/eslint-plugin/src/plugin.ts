@@ -71,6 +71,7 @@ import { noEmptyReturnValue } from './rules/no-empty-return-value.ts';
 import { noMixedReturnTypes } from './rules/no-mixed-return-types.ts';
 import { noNestedVitestMock } from './rules/no-nested-vitest-mock.ts';
 import { noSwitchCaseLabels } from './rules/no-switch-case-labels.ts';
+import { noVueUpdatedWrites } from './rules/no-vue-updated-writes.ts';
 import { noComponentDebounce } from './rules/no-component-debounce.ts';
 import { noIdenticalOperands } from './rules/no-identical-operands.ts';
 import { noNegatedComparison } from './rules/no-negated-comparison.ts';
@@ -197,6 +198,7 @@ const rules = {
     'no-cypress-then-assertions': noCypressThenAssertions,
     'no-component-debounce': noComponentDebounce,
     'prefer-readonly-props': preferReadonlyProps,
+    'no-vue-updated-writes': noVueUpdatedWrites,
     'no-setter-in-component': noSetterInComponent,
     'no-self-state-update': noSelfStateUpdate,
     'no-generated-keys': noGeneratedKeys,
