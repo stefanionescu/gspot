@@ -88,6 +88,21 @@ export const GITHUB_CONCURRENCY = {
 
 export const GITLAB_BASE_LINE = `${CI_BASE_VARIABLE}="\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-\${CI_COMMIT_BEFORE_SHA:-}}"`;
 
+export const GITLAB_MISE_IMAGE = 'ghcr.io/jdx/mise';
+
+export const GITLAB_MISE_FOLDER = '.cache/mise';
+
+export const GITLAB_VARIABLES = {
+    GIT_DEPTH: '0',
+    MISE_DATA_DIR: `$CI_PROJECT_DIR/${GITLAB_MISE_FOLDER}/data`,
+    MISE_CACHE_DIR: `$CI_PROJECT_DIR/${GITLAB_MISE_FOLDER}/cache`,
+} as const;
+
+export const GITLAB_CACHE = {
+    key: { files: [GSPOT_PATHS.miseProject, GSPOT_PATHS.miseLockfile] },
+    paths: [`${GITLAB_MISE_FOLDER}/`],
+} as const;
+
 export const GITLAB_RULES = [
     { if: '$CI_PIPELINE_SOURCE == "merge_request_event"', interruptible: true },
     { if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH', interruptible: false },

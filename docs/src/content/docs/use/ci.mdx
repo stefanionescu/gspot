@@ -71,7 +71,20 @@ Both settings work on GitHub only; gspot refuses them with `ci.provider = "gitla
 ## Install steps
 
 Each GitHub job installs mise and the pinned gspot version once. It adds the installed programs to `PATH`, then uses
-that gspot executable for tool installation and checks. The GitLab job needs mise on the CI machine.
+that gspot executable for tool installation and checks. The GitLab job runs in the `ghcr.io/jdx/mise` image at the
+pinned mise version, on GitLab's own runners. It keeps its mise folders under the project folder, so GitLab can cache
+them, with a cache key from the `.gspot` lockfiles.
+
+The GitLab job runs in the `.pre` stage, and only in merge request pipelines and pipelines of the default branch. GitLab
+runs `.pre` only when a pipeline also has a job in another stage. To run one pipeline for each merge request, add this
+block to your `.gitlab-ci.yml`:
+
+```yaml
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+```
 
 Before `gspot install`, the GitHub job installs the locked dependencies of the root and of each scope, so the checks
 that read them find them:

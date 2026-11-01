@@ -22,6 +22,7 @@ import { findPackageManagerPin, buildPackageManagerCommand } from '#cli/reposito
 import {
     CI_JOB_NAME,
     GITLAB_RULES,
+    GITLAB_CACHE,
     CACHED_PATHS,
     CI_DIFF_LINES,
     CI_CACHE_STEP,
@@ -32,10 +33,12 @@ import {
     GITHUB_WORKFLOW,
     GITLAB_WORKFLOW,
     GITHUB_SCHEDULE,
+    GITLAB_VARIABLES,
     CI_CHECK_COMMAND,
     CI_BASE_VARIABLE,
     CHECKOUT_OPTIONS,
     GITLAB_BASE_LINE,
+    GITLAB_MISE_IMAGE,
     NEXT_TYPEGEN_LINE,
     CI_TESTS_JOB_NAME,
     CI_ADVISORIES_JOB,
@@ -226,9 +229,11 @@ export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
     const check = [GITLAB_BASE_LINE, CI_CHECK_COMMAND].join('\n');
     const content = stringify({
         gspot: {
-            stage: 'test',
+            image: `${GITLAB_MISE_IMAGE}:${CI_PINS.mise.version}-debian`,
+            stage: '.pre',
             timeout: `${String(CI_TIMEOUT_MINUTES)}m`,
-            variables: { GIT_DEPTH: '0' },
+            variables: GITLAB_VARIABLES,
+            cache: GITLAB_CACHE,
             rules: GITLAB_RULES,
             script: [STRICT_MODE, ...setup, ...install, CI_INSTALL_COMMAND, ...CI_DIFF_LINES, check],
         },
