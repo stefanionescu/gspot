@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import cliPackage from './package.json' with { type: 'json' };
-import { rmSync, chmodSync, mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, rmSync, chmodSync, mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const packageFolder = import.meta.dir;
 const rootFolder = join(packageFolder, '../..');
@@ -124,3 +124,4 @@ writeFileSync(
     join(packageFolder, 'README.md'),
     readFileSync(join(rootFolder, 'README.md'), 'utf8').replaceAll('(docs/public/', `(${assetURL}`),
 );
+cpSync(join(rootFolder, 'LICENSE.md'), join(packageFolder, 'LICENSE.md'));

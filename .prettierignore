@@ -14,6 +14,7 @@ build/
 /docs/dist/
 /findings/
 /packages/*/dist/
+/packages/*/LICENSE.md
 /packages/cli/grammars/
 /packages/cli/README.md
 node_modules/
@@ -34,8 +35,6 @@ node_modules/
 # Generator outputs
 docs/cloudflare-env.d.ts
 docs/worker-configuration.d.ts
-packages/cli/LICENSE.md
-packages/eslint-plugin/LICENSE.md
 
 # Paths that configurations leave out, such as installed dependencies and local secrets
 **/.dev.vars

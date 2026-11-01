@@ -1,8 +1,5 @@
 * text=auto eol=lf
 
-packages/cli/LICENSE.md linguist-generated
-packages/eslint-plugin/LICENSE.md linguist-generated
-
 # >>> gspot managed >>>
 .gspot/** linguist-generated
 /.editorconfig linguist-generated

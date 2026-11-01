@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Build the CLI package: the bundle in a clean dist folder, the grammars, and the npm README."
+#MISE description="Build the CLI package: the bundle in a clean dist folder, the grammars, the npm README, and the license."
 #MISE dir="{{config_root}}/packages/cli"
 set -euo pipefail
 
