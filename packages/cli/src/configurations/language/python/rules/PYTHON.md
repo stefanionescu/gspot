@@ -55,8 +55,8 @@ by moving shared data or interfaces into a lower-level module.
 
 <!-- level: all -->
 
-Take typing and `collections.abc` symbols directly. Use absolute cross-package imports. Explicit relative ones serve
-siblings inside a package where surrounding code does that. Never use an implicit relative or dynamic import through
+Take typing and `collections.abc` symbols directly. Use absolute cross-package imports. Use explicit relative imports
+for siblings inside a package where surrounding code does that. Never use an implicit relative or dynamic import through
 `importlib.import_module`, `__import__`, or `builtins.__import__`. In runtime code, never import inside a function,
 method, or class body.
 

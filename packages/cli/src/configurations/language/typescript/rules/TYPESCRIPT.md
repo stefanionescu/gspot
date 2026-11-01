@@ -10,10 +10,10 @@ Do not edit compiler output with string replacement. Change the source or the co
 
 ## Values and shapes
 
-`as const` fixes a value set when it improves precision without obscuring the runtime shape. Represent grouped data with
-an object literal. Annotate rather than cast when the type matters, and destructure where that names the fields in use.
-`T[]` serves arrays and `Array<T>` or `ReadonlyArray<T>` complex element types; `readonly` marks a contract, not
-decoration.
+Use `as const` to fix a value set when it improves precision without obscuring the runtime shape. Represent grouped data
+with an object literal. Annotate rather than cast when the type matters, and destructure where that names the fields in
+use. Write `T[]` for arrays, and `Array<T>` or `ReadonlyArray<T>` for complex element types. Use `readonly` to mark a
+contract, not as decoration.
 
 Use `unknown` plus narrowing for untrusted values. Casts give way to runtime narrowing, typed helpers, or fixing the
 source type. Represent known variants with discriminated unions.
@@ -38,8 +38,8 @@ minimal. A discriminated union or options object replaces overloads when clearer
 
 ## Errors and async work
 
-`Promise.all` serves bounded independent fan-out. Order, rate limits, or failure isolation call for sequential `await`.
-Large fan-out, provider calls, and batch work use runtime concurrency utilities. Detach a promise only deliberately. Log
+Use `Promise.all` for a bounded set of independent calls. Use sequential `await` when order, rate limits, or failure
+isolation matter. Use runtime concurrency utilities for large fan-out, provider calls, and batch work. Detach a promise only deliberately. Log
 and supervise it; never swallow a rejection.
 
 ```ts

@@ -4,8 +4,8 @@ Read this rule when you write text that people read in files: documentation, com
 
 TALKING.md covers what you say to the user.
 
-Write in plain language under `ISO 24495-1`: short sentences and common words. State the action or result early. Explain
-a technical term when the reader needs it.
+Write in plain language. From `ISO 24495-1`, apply its principles for short sentences, common words, and finding
+information: state the action or result early, and explain a technical term when the reader needs it.
 
 ## Evidence
 
@@ -72,5 +72,5 @@ comment, documentation, a log line, and release notes.
 
 ## References
 
-See the [Google developer documentation style guide](https://developers.google.com/style) for general writing guidance.
-Project-specific requirements take precedence.
+Use the [Google developer documentation style guide](https://developers.google.com/style) for tone, grammar,
+punctuation, and formatting. Project-specific requirements take precedence.

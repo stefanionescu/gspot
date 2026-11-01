@@ -10,7 +10,7 @@ keep a second contract that the compiler does not compare.
 
 Parse values at the boundary that receives them and pass the parsed result inward. Static types, a constructed
 validator, and successful client validation do not validate a server request. An invalid provider response shows an
-integration failure, not bad user input. A valid identifier proves no access.
+integration failure, not bad user input. Check access separately, because a valid identifier proves no access.
 
 Choose thrown or returned validation issues to match the boundary. Async checks need async parsing; a safe parse does
 not catch exceptions thrown by custom code or transport decoding. Keep resource limits on collections and nesting.

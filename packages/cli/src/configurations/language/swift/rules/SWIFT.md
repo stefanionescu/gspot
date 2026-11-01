@@ -36,7 +36,7 @@ A force unwrap or cast needs a proven invariant. Avoid global mutable state: pre
 `static var` to a stored one.
 
 Use `guard` for early exits and `for ... where` for a loop with one condition. Prefer `for` to `forEach` for control
-flow or async work. `map`, `compactMap`, and `filter` express side-effect-free transformation. Pattern bindings put
+flow or async work. Use `map`, `compactMap`, and `filter` for side-effect-free transformation. In a pattern binding, put
 `let` on each element where that avoids ambiguity.
 
 Use weak capture only when a callback must not extend the lifetime of an object it holds. Otherwise, capture the
