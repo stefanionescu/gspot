@@ -1,0 +1,28 @@
+import plugin from '#eslint-plugin/plugin.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+
+buildRuleTester().run('require-error-checks', plugin.rules['require-error-checks'], {
+    valid: [
+        'it("fails", () => { expect(run).to.throw(RangeError); });',
+        'it("fails", () => { expect(run).to.throw("negative"); });',
+        'it("fails", () => { expect(run).to.not.throw(); });',
+        'expect(run).to.throw();',
+        'test("fails", () => { expect(run).to.throw(); });',
+        'it("fails", (done) => { try { run(); } catch (error) { done(error); } });',
+        'it("fails", () => { try { run(); } catch (error) { log(); } });',
+    ],
+    invalid: [
+        {
+            code: 'it("fails", () => { expect(run).to.throw(); });',
+            errors: [{ messageId: 'errorType', column: 36 }],
+        },
+        {
+            code: 'describe("cart", () => { run.should.throw(Error); });',
+            errors: [{ messageId: 'errorType' }],
+        },
+        {
+            code: 'it("fails", (done) => { try { run(); } catch (error) { done(); } });',
+            errors: [{ messageId: 'ignoredError', column: 47 }],
+        },
+    ],
+});

@@ -1,0 +1,26 @@
+import plugin from '#eslint-plugin/plugin.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+
+buildRuleTester().run('no-self-comparing-assertions', plugin.rules['no-self-comparing-assertions'], {
+    valid: [
+        'expect(total).to.equal(total);',
+        'import { expect } from "chai";\nexpect(total).to.equal(3);',
+        'import { expect } from "chai";\nexpect(1).to.equal(1);',
+        'import { assert } from "chai";\nassert.equal(total, sum);',
+        'import { expect } from "chai";\nother(total).to.equal(total);',
+    ],
+    invalid: [
+        {
+            code: 'import { expect } from "chai";\nexpect(total).to.equal(total);',
+            errors: [{ messageId: 'duplicate', line: 2, column: 8 }],
+        },
+        {
+            code: 'import { assert } from "chai";\nassert.deepEqual(cart.items, cart.items);',
+            errors: [{ messageId: 'duplicate', line: 2, column: 18 }],
+        },
+        {
+            code: 'import "chai/register-should";\nimport "chai";\ntotal.should.equal(total);',
+            errors: [{ messageId: 'duplicate', line: 3, column: 1 }],
+        },
+    ],
+});

@@ -261,8 +261,6 @@ export const UNUSED_CALL_PARENTS = new Set([
 export const COLLECTION_SIZE_MEMBERS = new Set(['length', 'size']);
 export const COLLECTION_TYPE_NAMES = new Set(['Array', 'Map', 'Set', 'WeakMap', 'WeakSet']);
 
-export const FIXED_WAIT_EXTENSIONS = ['js', 'mjs', 'cjs', 'jsx', 'vue', 'ts', 'mts', 'cts', 'tsx'];
-export const FIXED_WAIT_MARKERS = ['test', 'spec', 'cy', 'e2e', 'mock'];
 export const SIGNED_NUMBER_OPERATORS = new Set(['+', '-']);
 
 export const EQUALITY_OPERATORS = new Set(['==', '===', '!=', '!==']);

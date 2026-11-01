@@ -238,3 +238,80 @@ export const TEST_DECLARATIONS = new Set([
 ]);
 
 export const TITLED_TEST_DECLARATIONS = new Set(['test.skip', 'test.fail', 'test.fail.only', 'test.fixme']);
+
+export const TEST_FILE_EXTENSIONS = ['js', 'mjs', 'cjs', 'jsx', 'vue', 'ts', 'mts', 'cts', 'tsx'];
+
+export const TEST_FILE_MARKERS = ['test', 'spec', 'cy', 'e2e', 'mock'];
+
+export const TEST_FOLDERS = new Set(['__tests__', '__mocks__']);
+
+export const TESTING_LIBRARY_MODULES = [
+    '@testing-library/dom',
+    '@testing-library/react',
+    '@testing-library/vue',
+    '@testing-library/angular',
+    '@testing-library/svelte',
+    '@testing-library/preact',
+];
+
+export const TESTING_LIBRARY_DEBUGGERS = [
+    'screen.debug',
+    'screen.logTestingPlaygroundURL',
+    'render.debug',
+    'prettyDOM',
+    'logRoles',
+];
+
+export const DEBUG_ROOTS = new Set(['cy', 'page', 'screen']);
+
+export const DEBUG_METHODS = new Map([
+    ['pause', ['cypress', 'page']],
+    ['debug', ['cypress', 'library']],
+    ['logTestingPlaygroundURL', ['library']],
+]);
+
+export const CYPRESS_ACTIONS = new Map([
+    ['click', 0],
+    ['check', 0],
+    ['clear', 0],
+    ['dblclick', 0],
+    ['rightclick', 0],
+    ['select', 1],
+    ['trigger', 1],
+    ['type', 1],
+    ['uncheck', 0],
+]);
+
+export const PLAYWRIGHT_ACTIONS = new Map([
+    ['check', 0],
+    ['clear', 0],
+    ['click', 0],
+    ['dblclick', 0],
+    ['dragTo', 1],
+    ['fill', 1],
+    ['hover', 0],
+    ['selectOption', 1],
+    ['selectText', 0],
+    ['setChecked', 1],
+    ['tap', 0],
+    ['uncheck', 0],
+]);
+
+export const PLAYWRIGHT_LOCATORS = new Set(['locator', 'frameLocator']);
+
+export const PLAYWRIGHT_QUERY_PREFIX = 'getBy';
+
+export const QUERY_METHOD = /^(?:get|query|find)(?:All)?By[A-Z]/u;
+
+export const ALL_QUERY_METHOD = /^(?:get|query)AllBy[A-Z]/u;
+
+export const PRESENCE_MATCHERS = new Set(['toBeInTheDocument', 'toBeTruthy', 'toBeDefined']);
+
+export const QUERY_ASSERTION =
+    'CallExpression[arguments.length=0][callee.type="MemberExpression"][callee.property.name=/^(?:toBeInTheDocument|toBeTruthy|toBeDefined|toBeNull|toBeFalsy)$/]';
+
+export const REMOVAL_CALLBACK = [
+    'CallExpression > CallExpression.arguments:first-child',
+    'CallExpression > ArrowFunctionExpression.arguments:first-child[async=false] > CallExpression.body',
+    'CallExpression > :matches(ArrowFunctionExpression, FunctionExpression).arguments:first-child[async=false][generator=false] > BlockStatement.body[body.length=1] > ReturnStatement > CallExpression.argument',
+].join(', ');

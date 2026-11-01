@@ -9,13 +9,16 @@ import type { TestCall, TableCall, TestOrigin, TestCallee, FileContext, PackageF
 import {
     CALL_STEP,
     TEST_KINDS,
+    TEST_FOLDERS,
     TABLE_ORIGINS,
     TABLE_MODULES,
     TABLE_TEST_NAMES,
     PACKAGE_MANIFEST,
+    TEST_FILE_MARKERS,
     DEPENDENCY_FIELDS,
     REPOSITORY_MARKER,
     TABLE_DEPENDENCIES,
+    TEST_FILE_EXTENSIONS,
     RUNNING_TEST_MODIFIERS,
     PLAYWRIGHT_SUITE_MODES,
     TEST_FRAMEWORK_MODULES,
@@ -257,4 +260,63 @@ export function isSameTokens(left: TSESTree.Node, right: TSESTree.Node, source: 
     const leftTokens = source.getTokens(left).map(({ value }) => value);
     const rightTokens = source.getTokens(right).map(({ value }) => value);
     return left.type === right.type && leftTokens.join('\0') === rightTokens.join('\0');
+}
+
+/**
+Check whether a path names a test-related file: a `.test.`, `.spec.`, `.cy.`, `.e2e.`, or `.mock.` file, or a file in
+a `__tests__` or `__mocks__` folder.
+
+@param path the path of the file.
+@param configured the file extensions from the `testFileExtensions` setting, if any.
+*/
+export function isTestRelatedPath(path: string, configured: unknown): boolean {
+    if (path.split(/[\\/]/u).some((folder) => TEST_FOLDERS.has(folder))) return true;
+    const extensions: unknown[] =
+        Array.isArray(configured) && configured.length > 0 ? configured : TEST_FILE_EXTENSIONS;
+    return extensions.some(
+        (extension) =>
+            typeof extension === 'string' &&
+            TEST_FILE_MARKERS.some((marker) => path.endsWith(`.${marker}.${extension.replace(/^\./u, '')}`)),
+    );
+}
+
+/**
+Check whether an expression chains Cypress commands from `cy`.
+
+@param node the expression to read.
+*/
+export function isCypressChain(node: TSESTree.Node): boolean {
+    let value = node;
+    while (value.type !== AST_NODE_TYPES.Identifier) {
+        switch (value.type) {
+            case AST_NODE_TYPES.MemberExpression: {
+                value = value.object;
+                break;
+            }
+            case AST_NODE_TYPES.CallExpression: {
+                value = value.callee;
+                break;
+            }
+            case AST_NODE_TYPES.ChainExpression: {
+                value = value.expression;
+                break;
+            }
+            default: {
+                return false;
+            }
+        }
+    }
+    return value.name === 'cy';
+}
+
+/**
+Check whether a node calls a function by one plain name, such as `expect(value)`.
+
+@param node the node to read.
+@param name the name of the function.
+*/
+export function isCallOf(node: TSESTree.Node, name: string): node is TSESTree.CallExpression {
+    if (node.type !== AST_NODE_TYPES.CallExpression) return false;
+    const { callee } = node;
+    return ASTUtils.isIdentifier(callee) && callee.name === name;
 }

@@ -94,3 +94,25 @@ export type TestCall = TestCallee & {
     kind: 'test' | 'suite' | 'hook';
     callback: TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression | undefined;
 };
+
+export type AssertionFinding = [TSESTree.Node, 'complete' | 'call'];
+
+export type OrderedArguments = {
+    first: TSESTree.CallExpressionArgument;
+    second: TSESTree.CallExpressionArgument;
+    format: string;
+};
+
+export type ChainLink = { name: TSESTree.Identifier; values: TSESTree.CallExpressionArgument[] | undefined };
+
+export type UncertainPair = { first: string; second: string; minimum: number; needsShape: boolean };
+
+export type QueryUse = { method: TSESTree.Identifier; isPresence: boolean };
+
+export type MemberCall = TSESTree.CallExpression & { callee: TSESTree.MemberExpression };
+
+export type ExpectSubject = { value: TSESTree.CallExpressionArgument; isNegated: boolean };
+
+export type UiFrameworks = { hasCypress: boolean; hasPlaywright: boolean };
+
+export type AssertionChain = { values: TSESTree.Node[]; hasAssertionProperty: boolean; root: TSESTree.Node };

@@ -37,7 +37,9 @@ import { noNestedFunctions } from './rules/no-nested-functions.ts';
 import { requireServerOnly } from './rules/require-server-only.ts';
 import { noEarlyTestReturn } from './rules/no-early-test-return.ts';
 import { noEmptyTestTitles } from './rules/no-empty-test-titles.ts';
+import { noForcedUiActions } from './rules/no-forced-ui-actions.ts';
 import { noPoweredByHeader } from './rules/no-powered-by-header.ts';
+import { noUiTestDebugging } from './rules/no-ui-test-debugging.ts';
 import { noAsyncConstructor } from './rules/no-async-constructor.ts';
 import { noDiscardedPostfix } from './rules/no-discarded-postfix.ts';
 import { noElementOverwrite } from './rules/no-element-overwrite.ts';
@@ -46,6 +48,7 @@ import { noInvariantReturns } from './rules/no-invariant-returns.ts';
 import { noRedundantBoolean } from './rules/no-redundant-boolean.ts';
 import { noTrivialFunctions } from './rules/no-trivial-functions.ts';
 import { reduceInitialValue } from './rules/reduce-initial-value.ts';
+import { requireErrorChecks } from './rules/require-error-checks.ts';
 import { noEmptyReturnValue } from './rules/no-empty-return-value.ts';
 import { noNestedVitestMock } from './rules/no-nested-vitest-mock.ts';
 import { noSwitchCaseLabels } from './rules/no-switch-case-labels.ts';
@@ -57,6 +60,7 @@ import { preferBooleanReturn } from './rules/prefer-boolean-return.ts';
 import { noCommentsInImports } from './rules/no-comments-in-imports.ts';
 import { noDuplicateTestRows } from './rules/no-duplicate-test-rows.ts';
 import { noDuplicatedBranches } from './rules/no-duplicated-branches.ts';
+import { noInvertedAssertions } from './rules/no-inverted-assertions.ts';
 import { preferReadonlyStatic } from './rules/prefer-readonly-static.ts';
 import { redundantTypeAliases } from './rules/redundant-type-aliases.ts';
 import { noBitwiseInCondition } from './rules/no-bitwise-in-condition.ts';
@@ -68,11 +72,13 @@ import { noInlineInterpolation } from './rules/no-inline-interpolation.ts';
 import { noKeywordDeclarations } from './rules/no-keyword-declarations.ts';
 import { noUselessIntersection } from './rules/no-useless-intersection.ts';
 import { preferImmediateReturn } from './rules/prefer-immediate-return.ts';
+import { testingLibraryQueries } from './rules/testing-library-queries.ts';
 import { noAdjacentMultilineIf } from './rules/no-adjacent-multiline-if.ts';
 import { noAsyncSuiteCallbacks } from './rules/no-async-suite-callbacks.ts';
 import { noDuplicateTestTitles } from './rules/no-duplicate-test-titles.ts';
 import { noExcessCallArguments } from './rules/no-excess-call-arguments.ts';
 import { noPublicTemporaryPath } from './rules/no-public-temporary-path.ts';
+import { noIncompleteAssertions } from './rules/no-incomplete-assertions.ts';
 import { noTransposedAssignment } from './rules/no-transposed-assignment.ts';
 import { preferPromiseShorthand } from './rules/prefer-promise-shorthand.ts';
 import { noDuplicateInComposite } from './rules/no-duplicate-in-composite.ts';
@@ -84,6 +90,8 @@ import { noUnsafeSecurityHeaders } from './rules/no-unsafe-security-headers.ts';
 import { noMisleadingArrayReverse } from './rules/no-misleading-array-reverse.ts';
 import { noNestedTemplateLiterals } from './rules/no-nested-template-literals.ts';
 import { noOverflowingTestTimeout } from './rules/no-overflowing-test-timeout.ts';
+import { noSelfComparingAssertions } from './rules/no-self-comparing-assertions.ts';
+import { noUncertainChaiAssertions } from './rules/no-uncertain-chai-assertions.ts';
 import { noImpossibleCollectionSize } from './rules/no-impossible-collection-size.ts';
 import { noInconsistentFunctionCall } from './rules/no-inconsistent-function-call.ts';
 import { noUnenclosedMultilineBlock } from './rules/no-unenclosed-multiline-block.ts';
@@ -117,6 +125,14 @@ const rules = {
     'no-floating-point-equality': noFloatingPointEquality,
     'no-equal-loop-condition': noEqualLoopCondition,
     'no-small-switch': noSmallSwitch,
+    'no-incomplete-assertions': noIncompleteAssertions,
+    'no-inverted-assertions': noInvertedAssertions,
+    'no-self-comparing-assertions': noSelfComparingAssertions,
+    'require-error-checks': requireErrorChecks,
+    'no-uncertain-chai-assertions': noUncertainChaiAssertions,
+    'no-ui-test-debugging': noUiTestDebugging,
+    'no-forced-ui-actions': noForcedUiActions,
+    'testing-library-queries': testingLibraryQueries,
     'no-async-suite-callbacks': noAsyncSuiteCallbacks,
     'no-code-after-done': noCodeAfterDone,
     'no-overflowing-test-timeout': noOverflowingTestTimeout,
