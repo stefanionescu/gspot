@@ -122,9 +122,8 @@ gspot set ci.setup_command -- bun install --frozen-lockfile
 
 gspot quotes each argument, so spaces, quotes, and `$` reach the command as plain text.
 
-On GitHub, both the gspot installation step and the tool installation step give mise the job token as
-`MISE_GITHUB_TOKEN`, so tool downloads skip the low rate limit for anonymous requests. In other pipelines, set
-`MISE_GITHUB_TOKEN` yourself.
+The gspot installation step gives mise the job token as `MISE_GITHUB_TOKEN`; `gspot install` downloads the exact URLs of
+the mise lockfile under `.gspot/`. In other pipelines, set `MISE_GITHUB_TOKEN` yourself.
 
 The GitHub job caches mise and the package managers used by project lockfiles and the tool projects in `.gspot/`.
 It uses each runner system's cache paths. It restores only an exact match for the cache key, including the lockfile

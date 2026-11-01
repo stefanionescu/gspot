@@ -123,7 +123,18 @@ export const CI_STEP_NAMES = {
 
 export const NEXT_TYPEGEN_LINE = 'npx --no -- next typegen';
 
-export const CI_DIFF_LINES = ['git add --intent-to-add -- .gspot', 'git diff --exit-code -- .gspot'] as const;
+const CI_DIFF_MESSAGE = 'gspot install changed .gspot/. Run gspot install, then commit .gspot/.';
+
+export const CI_DIFF_LINES = {
+    github: [
+        'git add --intent-to-add -- .gspot',
+        `git diff --exit-code -- .gspot || { echo "::error::${CI_DIFF_MESSAGE}"; exit 1; }`,
+    ],
+    gitlab: [
+        'git add --intent-to-add -- .gspot',
+        `git diff --exit-code -- .gspot || { echo "${CI_DIFF_MESSAGE}"; exit 1; }`,
+    ],
+} as const;
 
 export const CI_INSTALL_COMMAND = 'gspot install';
 

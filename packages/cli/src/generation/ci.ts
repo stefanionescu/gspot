@@ -102,17 +102,17 @@ function buildJob(
                 uses: buildActionPin(CI_PINS.actions.mise),
                 with: { version: CI_PINS.mise.version, cache: false },
             },
+            {
+                name: CI_STEP_NAMES.gspot,
+                env: { ...MISE_TOKEN_ENVIRONMENT },
+                run: `mise install ${tools}\nmise bin-paths ${tools} >> "$GITHUB_PATH"`,
+            },
             ...(pipeline.setupCommand === undefined
                 ? []
                 : [{ name: CI_STEP_NAMES.setup, run: quoteCommand(pipeline.setupCommand) }]),
             ...(pipeline.projectInstall.length === 0
                 ? []
                 : [{ name: CI_STEP_NAMES.projectInstall, run: pipeline.projectInstall.join('\n') }]),
-            {
-                name: CI_STEP_NAMES.gspot,
-                env: { ...MISE_TOKEN_ENVIRONMENT },
-                run: `mise install ${tools}\nmise bin-paths ${tools} >> "$GITHUB_PATH"`,
-            },
             { name: CI_STEP_NAMES.install, run: [CI_INSTALL_COMMAND, ...CI_DIFF_LINES].join('\n') },
             {
                 name: CI_STEP_NAMES.saveCache,
@@ -235,7 +235,7 @@ export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
             variables: GITLAB_VARIABLES,
             cache: GITLAB_CACHE,
             rules: GITLAB_RULES,
-            script: [STRICT_MODE, ...setup, ...install, CI_INSTALL_COMMAND, ...CI_DIFF_LINES, check],
+            script: [STRICT_MODE, ...install, ...setup, CI_INSTALL_COMMAND, ...CI_DIFF_LINES, check],
         },
     });
     return { path: GITLAB_WORKFLOW, content: `${formatHeader(GITLAB_WORKFLOW)}${content}`, kind: 'workflow' };
