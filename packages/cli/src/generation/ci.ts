@@ -13,10 +13,10 @@ import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
 import { frozenInstallArguments } from '#cli/repository/javascript/setup.ts';
 import { NEXTJS_CONFIGURATION } from '#cli/config/configurations/javascript.ts';
 import type { PackageManager, PackageManagerPin } from '#cli/types/repository.ts';
-import type { Pipeline, ActionPin, FrozenLockfile } from '#cli/types/generation.ts';
 import { type Session, type MiseToolPin, type GeneratedFile } from '#cli/types/tools.ts';
 import { Scalar, Document, type Node, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
 import { CI_NODE, FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/javascript.ts';
+import type { Pipeline, ActionPin, FrozenLockfile, GithubJobPurpose } from '#cli/types/generation.ts';
 
 import {
     findPackageManagerPin,
@@ -35,21 +35,25 @@ import {
     CI_CACHE_PREFIX,
     GITHUB_WORKFLOW,
     GITLAB_WORKFLOW,
+    GITHUB_SCHEDULE,
     CI_CHECK_COMMAND,
     CI_BASE_VARIABLE,
     CHECKOUT_OPTIONS,
     GITLAB_BASE_LINE,
     NEXT_TYPEGEN_LINE,
     CI_TESTS_JOB_NAME,
+    CI_ADVISORIES_JOB,
     CI_INSTALL_COMMAND,
     GITHUB_CONCURRENCY,
     CI_TIMEOUT_MINUTES,
     CI_CACHE_SAVED_KEY,
     GITHUB_PUSH_CONDITION,
+    CI_ADVISORIES_COMMAND,
     MISE_TOKEN_ENVIRONMENT,
     GITHUB_BASE_EXPRESSION,
     GITHUB_EXPRESSION_START,
     CI_CACHE_MISS_CONDITION,
+    GITHUB_SCHEDULE_CONDITION,
     GITHUB_EXPRESSION_MESSAGE,
 } from '#cli/config/generation.ts';
 
@@ -70,7 +74,7 @@ function buildGspotTools(pipeline: Pipeline): string {
 function buildJob(
     pipeline: Pipeline,
     platform: Pipeline['operatingSystems'][number],
-    checkCommand: string,
+    purpose: GithubJobPurpose,
 ): Record<string, unknown> {
     const machine = CI_PINS.githubRunners[platform];
     const tools = buildGspotTools(pipeline);
@@ -84,7 +88,7 @@ function buildJob(
     return {
         'runs-on': platform === 'linux' ? pipeline.linuxRunner : machine.label,
         'timeout-minutes': CI_TIMEOUT_MINUTES,
-        if: GITHUB_PUSH_CONDITION,
+        if: purpose.condition,
         defaults: { run: { shell: 'bash' } },
         steps: [
             { name: CI_STEP_NAMES.checkout, uses: buildActionPin(CI_PINS.actions.checkout), with: CHECKOUT_OPTIONS },
@@ -117,11 +121,7 @@ function buildJob(
                 uses: buildActionPin(CI_PINS.actions.saveCache),
                 with: { key: CI_CACHE_SAVED_KEY, path: cache.path },
             },
-            {
-                name: CI_STEP_NAMES.check,
-                env: { [CI_BASE_VARIABLE]: GITHUB_BASE_EXPRESSION },
-                run: checkCommand + '\n',
-            },
+            purpose.lastStep,
         ],
     };
 }
@@ -177,20 +177,36 @@ export function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
     if (commands.some((command) => command.includes(GITHUB_EXPRESSION_START)))
         throw new GspotError('settings', GITHUB_EXPRESSION_MESSAGE);
     const platforms = pipeline.operatingSystems;
-    const jobs = Object.entries(buildJobCommands(pipeline)).flatMap(([name, command]) =>
-        platforms.map((platform): [string, Record<string, unknown>] =>
+    const jobs = Object.entries(buildJobCommands(pipeline)).flatMap(([name, command]) => {
+        const lint = {
+            condition: GITHUB_PUSH_CONDITION,
+            lastStep: {
+                name: CI_STEP_NAMES.check,
+                env: { [CI_BASE_VARIABLE]: GITHUB_BASE_EXPRESSION },
+                run: command + '\n',
+            },
+        };
+        return platforms.map((platform): [string, Record<string, unknown>] =>
             platforms.length === 1
-                ? [name, buildJob(pipeline, platform, command)]
-                : [`${name}-${platform}`, { name: `${name} (${platform})`, ...buildJob(pipeline, platform, command) }],
-        ),
-    );
+                ? [name, buildJob(pipeline, platform, lint)]
+                : [`${name}-${platform}`, { name: `${name} (${platform})`, ...buildJob(pipeline, platform, lint) }],
+        );
+    });
+    const scan = {
+        condition: GITHUB_SCHEDULE_CONDITION,
+        lastStep: { name: CI_STEP_NAMES.advisories, run: CI_ADVISORIES_COMMAND + '\n' },
+    };
+    const hasLockfiles = pipeline.lockfiles.length > 0;
+    const scanJobs = platforms
+        .slice(0, 1)
+        .map((platform): [string, Record<string, unknown>] => [CI_ADVISORIES_JOB, buildJob(pipeline, platform, scan)]);
     const workflow = new Document(
         {
             name: 'gspot',
-            on: GITHUB_EVENTS,
+            on: hasLockfiles ? { ...GITHUB_EVENTS, schedule: GITHUB_SCHEDULE } : GITHUB_EVENTS,
             permissions: { contents: 'read' },
             concurrency: GITHUB_CONCURRENCY,
-            jobs: Object.fromEntries(jobs),
+            jobs: Object.fromEntries(hasLockfiles ? [...jobs, ...scanJobs] : jobs),
         },
         { aliasDuplicateObjects: false },
     );

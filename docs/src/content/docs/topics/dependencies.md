@@ -57,8 +57,10 @@ not matter. When init replaces `.license-checker.json`, move packages you still 
 
 ## Vulnerabilities
 
-`dependencies/osv-scanner` reads your lockfiles and reports known vulnerable packages at push. Update the package, then
-check again. An accepted advisory needs an [ignore with a reason](/use/ignore/).
+`dependencies/osv-scanner` reads your lockfiles and reports known vulnerable packages at push. The GitHub workflow that
+gspot writes also runs it every Monday at 06:00 UTC over every lockfile, because a new advisory can name a version that
+no commit changed. Update the package, then check again. An accepted advisory needs an
+[ignore with a reason](/use/ignore/).
 
 The check skips `.gspot/`, because you cannot change the versions that gspot pins for its tools.
 

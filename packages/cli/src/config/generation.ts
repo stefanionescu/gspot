@@ -68,8 +68,16 @@ export const CHECKOUT_OPTIONS = { 'fetch-depth': 0, 'persist-credentials': false
 export const GITHUB_BASE_EXPRESSION =
     "${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.before }}";
 
+export const GITHUB_SCHEDULE = [{ cron: '0 6 * * 1' }] as const;
+
+export const GITHUB_SCHEDULE_CONDITION = "github.event_name == 'schedule'";
+
 export const GITHUB_PUSH_CONDITION =
-    "github.event_name != 'push' || github.ref_name == github.event.repository.default_branch";
+    "github.event_name != 'schedule' && (github.event_name != 'push' || github.ref_name == github.event.repository.default_branch)";
+
+export const CI_ADVISORIES_JOB = 'advisories';
+
+export const CI_ADVISORIES_COMMAND = 'gspot check --only dependencies/osv-scanner';
 
 export const GITHUB_EVENTS = { push: { branches: ['**'] }, pull_request: {}, merge_group: {} } as const;
 
@@ -94,6 +102,7 @@ export const CI_STEP_NAMES = {
     install: 'Install gspot tools',
     saveCache: 'Save caches',
     check: 'Lint',
+    advisories: 'Scan the lockfiles',
     gspot: 'Install gspot',
 } as const;
 

@@ -39,6 +39,15 @@ test.each<Partial<Pipeline>>([{ setupCommand: ['echo', '${{ secrets.DEPLOY_KEY }
     },
 );
 
+test('the GitHub workflow scans the lockfiles every week in one job, apart from the lint job', () => {
+    const workflow = parse(buildGithubWorkflow(LINUX_PIPELINE).content) as GithubWorkflow;
+    expect(workflow.on['schedule']).toStrictEqual([{ cron: '0 6 * * 1' }]);
+    const scan = workflow.jobs['advisories']!;
+    expect(scan.if).toBe("github.event_name == 'schedule'");
+    expect(scan.steps.at(-1)?.run).toBe('gspot check --only dependencies/osv-scanner\n');
+    expect(workflow.jobs['lint']!.if).toContain("github.event_name != 'schedule'");
+});
+
 test('the cache key escapes apostrophes without restoring another key', () => {
     const steps = (
         parse(
@@ -59,7 +68,7 @@ test('two operating systems get one job each, and the Linux job uses the configu
             linuxRunner: 'linux-large',
         }).content,
     ) as GithubWorkflow;
-    expect(Object.keys(workflow.jobs)).toStrictEqual(['lint-linux', 'lint-macos']);
+    expect(Object.keys(workflow.jobs)).toStrictEqual(['lint-linux', 'lint-macos', 'advisories']);
     expect(workflow.jobs['lint-linux']?.['runs-on']).toBe('linux-large');
 });
 
@@ -67,7 +76,7 @@ test('test checks move to a tests job that differs from the lint job only in its
     const { jobs } = parse(
         buildGithubWorkflow({ ...LINUX_PIPELINE, testChecks: ['jest/coverage', 'pytest/coverage'] }).content,
     ) as GithubWorkflow;
-    expect(Object.keys(jobs)).toStrictEqual(['lint', 'tests']);
+    expect(Object.keys(jobs)).toStrictEqual(['lint', 'tests', 'advisories']);
     expect(jobs['lint']!.steps.at(-1)?.run).toBe(`${CI_CHECK_COMMAND} --skip jest/coverage,pytest/coverage\n`);
     expect(jobs['tests']!.steps.at(-1)?.run).toBe(`${CI_CHECK_COMMAND} --only jest/coverage,pytest/coverage\n`);
     expect(jobs['tests']!.steps.slice(0, -1)).toStrictEqual(jobs['lint']!.steps.slice(0, -1));
@@ -75,7 +84,7 @@ test('test checks move to a tests job that differs from the lint job only in its
 
 test('without test checks, the lint job runs every check and no tests job exists', () => {
     const { jobs } = parse(buildGithubWorkflow(LINUX_PIPELINE).content) as GithubWorkflow;
-    expect(Object.keys(jobs)).toStrictEqual(['lint']);
+    expect(Object.keys(jobs)).toStrictEqual(['lint', 'advisories']);
     expect(jobs['lint']!.steps.at(-1)?.run).toBe(`${CI_CHECK_COMMAND}\n`);
 });
 
@@ -87,7 +96,7 @@ test('each operating system gets one pair of jobs', () => {
             testChecks: ['vitest/coverage'],
         }).content,
     ) as GithubWorkflow;
-    expect(Object.keys(jobs)).toStrictEqual(['lint-linux', 'lint-macos', 'tests-linux', 'tests-macos']);
+    expect(Object.keys(jobs)).toStrictEqual(['lint-linux', 'lint-macos', 'tests-linux', 'tests-macos', 'advisories']);
     expect(jobs['tests-macos']?.name).toBe('tests (macos)');
 });
 
