@@ -12,7 +12,12 @@ export type RelativeImport = { target: string; query: string };
 
 export type RenamedValue = { node: TSESTree.Node; name: string; source: string };
 
-export type TrivialFunctionsOptions = [{ trivialFunctionStatements: number }];
+export type TrivialFunctionsOptions = [
+    {
+        trivialFunctionStatements: number;
+        exportNames: readonly { files: readonly string[]; names: readonly string[] }[];
+    },
+];
 
 export type TrivialFilesOptions = [{ allowIndex: boolean }];
 

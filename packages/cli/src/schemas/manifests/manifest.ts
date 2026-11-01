@@ -178,6 +178,11 @@ const rulesOffSchema = z.strictObject({
     files: z.string().min(1).array().min(1).optional(),
 });
 
+const exportNamesSchema = z.strictObject({
+    files: z.string().min(1).array().min(1),
+    names: z.string().min(1).array().min(1),
+});
+
 export const manifestSchema = z
     .strictObject({
         folder: z.string(),
@@ -188,6 +193,7 @@ export const manifestSchema = z
                 all_level_rules: allLevelRulesSchema.prefault([]),
                 selectors: selectorSchema.array().default([]),
                 rules_off: rulesOffSchema.array().default([]),
+                export_names: exportNamesSchema.array().default([]),
                 required_tools: z.string().min(1).array().default([]),
             })
             .prefault({}),

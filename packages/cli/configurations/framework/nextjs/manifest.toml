@@ -56,6 +56,26 @@ version = "16.4.2"
 required_tools = ["@next/eslint-plugin-next"]
 all_level_rules = ["@next/next/next-script-for-ga", "@next/next/no-img-element", "@next/next/no-page-custom-font"]
 
+[[eslint.export_names]]
+files = ["**/app/**/route.{js,ts}"]
+names = ["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
+
+[[eslint.export_names]]
+files = ["**/app/**/{page,layout,template,default,loading,error,not-found,global-error}.{js,jsx,ts,tsx}"]
+names = ["default", "generateMetadata", "generateStaticParams", "generateViewport"]
+
+[[eslint.export_names]]
+files = ["**/pages/**/*.{js,jsx,ts,tsx}"]
+names = ["default", "getStaticProps", "getStaticPaths", "getServerSideProps"]
+
+[[eslint.export_names]]
+files = ["**/{middleware,proxy}.{js,ts}"]
+names = ["default", "middleware", "proxy"]
+
+[[eslint.export_names]]
+files = ["**/instrumentation.{js,ts}"]
+names = ["register", "onRequestError"]
+
 [[eslint.rules_off]]
 files = ["**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"]
 reason = "Next.js discovers route files by name, so each file can hold one export in its own folder."

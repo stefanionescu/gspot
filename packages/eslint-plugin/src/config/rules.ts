@@ -208,6 +208,20 @@ export const TRIVIAL_FUNCTION_OPTIONS_SCHEMA = {
             type: 'integer',
             minimum: 1,
         },
+        exportNames: {
+            description:
+                'Exports that a framework calls by name, such as GET in a route file. In a file that matches files, a function exported under one of names is not reported. `default` names the default export. Paths are relative to `settings.gspot.root`, or to the working folder of ESLint.',
+            type: 'array',
+            items: {
+                type: 'object',
+                properties: {
+                    files: { type: 'array', items: { type: 'string' }, minItems: 1 },
+                    names: { type: 'array', items: { type: 'string' }, minItems: 1 },
+                },
+                required: ['files', 'names'],
+                additionalProperties: false,
+            },
+        },
     },
     additionalProperties: false,
 } satisfies JSONSchema4;

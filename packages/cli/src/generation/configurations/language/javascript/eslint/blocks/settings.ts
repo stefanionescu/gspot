@@ -106,12 +106,19 @@ function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'no
     const orderedScopes = scopes.toSorted((a, b) => compareScopeDepth(a.path, b.path));
     for (const scope of orderedScopes) {
         const parent = findParentScope(scopes, scope.path);
+        const exportNames = scope.configurations.flatMap((configuration) => configuration.eslint.export_names);
+        const isExportNamesChanged =
+            parent === undefined ||
+            !isDeepStrictEqual(
+                exportNames,
+                parent.configurations.flatMap((configuration) => configuration.eslint.export_names),
+            );
         const limits = CODE_LANGUAGES.map((language) => ({
             language,
             value: getLimit(scope.settings, trivialFunctionLimit, language),
         })).filter(
             ({ language, value }) =>
-                parent === undefined || value !== getLimit(parent.settings, trivialFunctionLimit, language),
+                isExportNamesChanged || value !== getLimit(parent.settings, trivialFunctionLimit, language),
         );
         const groups = new Map<number, string[]>();
         for (const { language, value } of limits) groups.set(value, [...(groups.get(value) ?? []), language]);
@@ -133,7 +140,10 @@ function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'no
                 ...splitGlobs(patterns),
                 rules: {
                     [TRIVIAL_FILES_RULE]: ['error', { allowIndex: isAllowIndex }],
-                    [TRIVIAL_FUNCTIONS_RULE]: ['error', { trivialFunctionStatements }],
+                    [TRIVIAL_FUNCTIONS_RULE]: [
+                        'error',
+                        { trivialFunctionStatements, ...(exportNames.length > 0 && { exportNames }) },
+                    ],
                 },
             });
         }

@@ -58,6 +58,18 @@ embeddedLanguageFormatting = "auto"
 required_tools = ["eslint-plugin-svelte", "svelte-eslint-parser"]
 all_level_rules = ["svelte/no-useless-mustaches", "svelte/prefer-const", "svelte/require-event-dispatcher-types"]
 
+[[eslint.export_names]]
+files = ["**/routes/**/+server.{js,ts}"]
+names = ["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "fallback"]
+
+[[eslint.export_names]]
+files = ["**/routes/**/+{page,layout}{,.server}.{js,ts}"]
+names = ["load", "entries"]
+
+[[eslint.export_names]]
+files = ["**/hooks{,.server,.client}.{js,ts}"]
+names = ["handle", "handleFetch", "handleError", "reroute", "init"]
+
 [[check]]
 example = "A component containing `<img src={source} />` reports `a11y_missing_attribute`. Give the image a text alternative, such as `<img src={source} alt={caption} />`."
 help = "Fix each warning and error svelte-check prints; both fail the check."

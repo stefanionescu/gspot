@@ -150,3 +150,64 @@ buildRuleTester().run<
         },
     ],
 });
+
+buildRuleTester().run<
+    keyof (typeof plugin.rules)['no-trivial-functions']['meta']['messages'],
+    [Partial<TrivialFunctionsOptions[0]>]
+>('no-trivial-functions overloads and framework exports', plugin.rules['no-trivial-functions'], {
+    valid: [
+        'function parse(value: string): number;\nfunction parse(value: number): number;\nfunction parse(value: unknown) { return Number(value); }',
+        'export function parse(value: string): number;\nexport function parse(value: number): number;\nexport function parse(value: unknown) { return Number(value); }',
+        'class Parser { parse(value: string): number;\nparse(value: number): number;\nparse(value: unknown) { return Number(value); } }',
+        ...(
+            [
+                ['/repo/app/items/route.ts', 'export async function GET() { return Response.json(items); }'],
+                [
+                    '/repo/app/items/route.ts',
+                    'export const POST = async (request: Request) => Response.json(await request.json());',
+                ],
+                ['/repo/app/page.tsx', 'export default function Page() { return <main />; }'],
+                ['/repo/app/page.tsx', 'export async function generateMetadata() { return { title: "Items" }; }'],
+            ] as const
+        ).map(([filename, code]) => ({
+            code,
+            filename,
+            options: [
+                {
+                    exportNames: [
+                        { files: ['**/app/**/route.ts'], names: ['GET', 'POST'] },
+                        { files: ['**/app/**/page.tsx'], names: ['default', 'generateMetadata'] },
+                    ],
+                },
+            ] as const,
+        })),
+    ],
+    invalid: [
+        {
+            code: 'export async function GET() { return Response.json(items); }',
+            filename: '/repo/lib/items.ts',
+            options: [{ exportNames: [{ files: ['**/app/**/route.ts'], names: ['GET'] }] }],
+            errors: [{ messageId: 'trivial', data: { name: "async function 'GET'", statements: '1 statement' } }],
+        },
+        {
+            code: 'export async function PUT() { return Response.json(items); }',
+            filename: '/repo/app/items/route.ts',
+            options: [{ exportNames: [{ files: ['**/app/**/route.ts'], names: ['GET'] }] }],
+            errors: [{ messageId: 'trivial', data: { name: "async function 'PUT'", statements: '1 statement' } }],
+        },
+        {
+            code: 'async function GET() { return Response.json(items); }\nGET();',
+            filename: '/repo/app/items/route.ts',
+            options: [{ exportNames: [{ files: ['**/app/**/route.ts'], names: ['GET'] }] }],
+            errors: [{ messageId: 'trivial' }],
+        },
+        {
+            code: 'declare function parse(value: string): number;\nfunction other(value: unknown) { return Number(value); }',
+            errors: [{ messageId: 'trivial', data: { name: "function 'other'", statements: '1 statement' } }],
+        },
+        {
+            code: 'class Parser { parse(value: string): number;\nformat(value: unknown) { return String(value); } }',
+            errors: [{ messageId: 'trivial', data: { name: "method 'format'", statements: '1 statement' } }],
+        },
+    ],
+});
