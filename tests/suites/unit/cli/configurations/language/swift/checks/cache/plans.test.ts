@@ -4,8 +4,8 @@ import { createFileTree } from 'testdirs';
 import { runChecks } from '#cli/engine/run.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { openSession } from '#cli/engine/session.ts';
+import type { CheckStop } from '#cli/system/errors.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import type { GspotError } from '#cli/system/errors.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
@@ -66,9 +66,9 @@ test.each([...SWIFT_BUILD_PURPOSES])(
         const session = await openSession(sandbox.path);
         const input = planSandboxCheck(session, check);
         expect(() => planSwiftBuild(session, input, purpose)).toThrow(
-            matchFields<GspotError>({
-                name: 'GspotError',
-                code: 'skip',
+            matchFields<CheckStop>({
+                name: 'CheckStop',
+                status: 'skipped',
                 message: 'Set swift.xcode_project or add Package.swift in this scope.',
             }),
         );

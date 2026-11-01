@@ -1,7 +1,7 @@
 import { join, posix } from 'node:path';
+import { CheckStop } from '#cli/system/errors.ts';
 import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
@@ -30,7 +30,7 @@ export async function checkSwiftlintAnalyze(session: CheckSession, planned: Plan
     const plan = planSwiftBuild(session, planned, 'analyze');
     const build = await runSwiftBuild(session, planned, plan);
     if (build.code !== 0)
-        throw new GspotError('check', `Cannot analyze Swift because the build exited ${String(build.code)}.`);
+        throw new CheckStop('error', `Cannot analyze Swift because the build exited ${String(build.code)}.`);
     const config = join(session.root, getConfigPath(session, planned, SWIFTLINT_TOOL));
     const commandArguments = [...SWIFTLINT_ANALYZE_COMMAND, SWIFTLINT_CONFIG_FLAG, config, COMPILER_LOG_FLAG, plan.log];
     return runCopiedTool(session, planned, {

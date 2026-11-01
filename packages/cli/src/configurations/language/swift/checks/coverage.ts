@@ -1,7 +1,7 @@
 import { realpathSync } from 'node:fs';
+import { CheckStop } from '#cli/system/errors.ts';
 import type { Files } from '#cli/types/system.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
@@ -86,18 +86,18 @@ async function measurePackageCoverage(
     if (tested.code !== 0) {
         const findings = parseFailedTests(planned, `${tested.stdout}\n${tested.stderr}`, cwd);
         if (findings.length > 0) return findings;
-        throw new GspotError('check', formatOutputTail(tested, SWIFT_TESTS_MESSAGE));
+        throw new CheckStop('error', formatOutputTail(tested, SWIFT_TESTS_MESSAGE));
     }
     const reported = await runCheckTool(session, planned, [...SWIFT_CODECOV_COMMAND, SCRATCH_PATH_FLAG, plan.scratch], {
         cwd,
     });
-    if (reported.code !== 0) throw new GspotError('check', formatOutputTail(reported, SWIFT_CODECOV_MESSAGE));
+    if (reported.code !== 0) throw new CheckStop('error', formatOutputTail(reported, SWIFT_CODECOV_MESSAGE));
     const described = await runCheckTool(session, planned, SWIFT_DESCRIBE_COMMAND, { cwd });
-    if (described.code !== 0) throw new GspotError('check', formatOutputTail(described, SWIFT_DESCRIBE_MESSAGE));
+    if (described.code !== 0) throw new CheckStop('error', formatOutputTail(described, SWIFT_DESCRIBE_MESSAGE));
     const reportPath = reported.stdout.trim();
     const coverage = files.read(convertToPosixPath(relative(plan.folder, reportPath)));
     const text = coverage === undefined ? undefined : decodeUtf8(coverage.bytes);
-    if (text === undefined) throw new GspotError('check', MISSING_COVERAGE_MESSAGE);
+    if (text === undefined) throw new CheckStop('error', MISSING_COVERAGE_MESSAGE);
     return parseSwiftCoverage(text, described.stdout, cwd);
 }
 
@@ -114,15 +114,15 @@ async function measureXcodeCoverage(
     if (tested.code !== 0) {
         const findings = parseFailedTests(planned, `${tested.stdout}\n${tested.stderr}`, cwd);
         if (findings.length > 0) return findings;
-        throw new GspotError(
-            'check',
+        throw new CheckStop(
+            'error',
             `Cannot measure coverage because the test run exited ${String(tested.code)}: ${formatOutputTail(tested, TEST_RUNNER_MESSAGE)}`,
         );
     }
     const viewed = await runCheckTool(session, planned, [...XCCOV_COMMAND, bundle], { cwd });
     if (viewed.code !== 0)
-        throw new GspotError(
-            'check',
+        throw new CheckStop(
+            'error',
             `The test run wrote no coverage report: ${formatOutputTail(viewed, COVERAGE_VIEWER_MESSAGE)}`,
         );
     return parseToolOutput('xccov', viewed.stdout, xccovSchema);
@@ -183,8 +183,8 @@ function parseSwiftCoverage(text: string, packageText: string, folder: string): 
                     return file === undefined ? [] : [file];
                 });
                 if (lines.length === 0)
-                    throw new GspotError(
-                        'check',
+                    throw new CheckStop(
+                        'error',
                         `The Swift coverage report has no source lines for target ${target.name}.`,
                     );
                 const count = lines.reduce((total, line) => total + line.count, 0);

@@ -158,14 +158,8 @@ async function runSetCommand(options: SetOptions): Promise<CommandResult> {
     const edit = await readSettingsEditContext(options.root, options.scope);
     const { root, edit: input, scopeTable } = edit;
     const { setting, change, summary, notes } = readSettingChange(edit, options);
-    try {
-        setSetting(scopeTable, change, setting, options);
-        return await writeSettingsEdit(root, { edit: input, summary, notes, cache: edit.cache, listing: edit.listing });
-    } catch (error) {
-        if (error instanceof GspotError && error.code === 'settings')
-            throw new GspotError('arguments', error.message, { cause: error });
-        throw error;
-    }
+    setSetting(scopeTable, change, setting, options);
+    return await writeSettingsEdit(root, { edit: input, summary, notes, cache: edit.cache, listing: edit.listing });
 }
 
 export const setCommand: CommandDefinition<[string, string[]], ReasonFlags> = {

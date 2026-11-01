@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
 import { remember } from '#cli/system/cache.ts';
+import { CheckStop } from '#cli/system/errors.ts';
 import { read } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { listCheckFiles } from '#cli/engine/files.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -103,7 +103,7 @@ Skip the check when a migration does not parse, which postgres/migration-order r
 */
 export async function readParsedMigrations(session: Session, planned: PlannedCheck): Promise<Migration[]> {
     const { migrations, findings } = await readMigrations(session, planned);
-    if (findings.length > 0) throw new GspotError('skip', MIGRATION_SYNTAX_SKIP);
+    if (findings.length > 0) throw new CheckStop('skipped', MIGRATION_SYNTAX_SKIP);
     return migrations;
 }
 

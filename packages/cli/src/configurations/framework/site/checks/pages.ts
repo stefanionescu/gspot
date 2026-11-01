@@ -1,6 +1,6 @@
 import { pathToFileURL } from 'node:url';
+import { CheckStop } from '#cli/system/errors.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { escapeRegExp } from '#cli/system/text.ts';
 import { LEADING_SLASH } from '#cli/config/parsers.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
@@ -153,13 +153,13 @@ export async function checkHtmlValidate(session: CheckSession, planned: PlannedC
     const findings: CheckFinding[] = [];
     for (const batch of splitFileArguments(pages, command, process.platform)) {
         const result = await runCheckTool(session, planned, [...command, ...batch], { cwd: build.cwd });
-        if (![0, 1].includes(result.code)) throw new GspotError('check', `HTML validation failed: ${result.stderr}`);
+        if (![0, 1].includes(result.code)) throw new CheckStop('error', `HTML validation failed: ${result.stderr}`);
         const parsed = parseOutput(planned.check, readBytes(reports.path, HTML_VALIDATE_OUTPUT).toString('utf8'), '', {
             root: build.folder,
             cwd: build.folder,
         });
         if (result.code === 1 && parsed.length === 0)
-            throw new GspotError('check', `HTML validation failed without findings: ${result.stderr}`);
+            throw new CheckStop('error', `HTML validation failed without findings: ${result.stderr}`);
         addBuildFindings(findings, parsed, getTable(planned.scope.settings, 'site').build_folder);
     }
     return findings;
@@ -185,7 +185,7 @@ export async function checkPurgecss(session: CheckSession, planned: PlannedCheck
         },
         { cwd: build.folder, stdin: JSON.stringify({ config, css: sheets, content: PURGECSS_CONTENT }) },
     );
-    if (result.code !== 0) throw new GspotError('check', `Unused CSS analysis failed: ${result.stderr}`);
+    if (result.code !== 0) throw new CheckStop('error', `Unused CSS analysis failed: ${result.stderr}`);
     const report = parseToolOutput('PurgeCSS', result.stdout, purgecssOutputSchema);
     const styles = await readScopeStyles(session, planned);
     return report.flatMap((sheet) =>

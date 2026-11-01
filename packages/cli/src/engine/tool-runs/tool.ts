@@ -1,7 +1,7 @@
 import { runTool } from '#cli/tools/run.ts';
 import { getTool } from '#cli/tools/pins.ts';
 import { dirname, delimiter } from 'node:path';
-import { GspotError } from '#cli/system/errors.ts';
+import { CheckStop } from '#cli/system/errors.ts';
 import { listOtherTools } from '#cli/engine/tools.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
@@ -24,8 +24,8 @@ function getCheckTool(
         inspectTool({ ...session, cwd: options.cwd, miseBinPaths: session.readMiseBinPaths() }, tool),
     );
     if ('status' in availability) {
-        if (availability.status === 'error') throw new GspotError('check', availability.note);
-        throw new GspotError('tool', availability.note);
+        if (availability.status === 'error') throw new CheckStop('error', availability.note);
+        throw new CheckStop('missing', availability.note);
     }
     return { name: tool.name, path: availability.path, env };
 }
@@ -123,7 +123,7 @@ export async function runCheckTool(
             name,
         }),
     );
-    if (failure?.status === 'missing') throw new GspotError('tool', failure.note);
-    if (failure !== undefined) throw new GspotError('check', failure.note);
+    if (failure?.status === 'missing') throw new CheckStop('missing', failure.note);
+    if (failure !== undefined) throw new CheckStop('error', failure.note);
     return result;
 }

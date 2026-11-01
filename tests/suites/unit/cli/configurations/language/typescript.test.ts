@@ -153,8 +153,8 @@ test('a covering ancestor tsconfig is checked once and a child-only project keep
         getBuiltInCheck('typescript/tsconfig')(session, planSandboxCheck(session, 'typescript/tsconfig')),
     ).toThrow(
         expect.objectContaining({
-            name: 'GspotError',
-            code: 'skip',
+            name: 'CheckStop',
+            status: 'skipped',
             message: 'The tsconfig of a parent folder covers this project, and gspot checks it there.',
         }),
     );
@@ -169,8 +169,8 @@ test('a covering ancestor tsconfig is checked once and a child-only project keep
         ),
     ).toThrow(
         expect.objectContaining({
-            name: 'GspotError',
-            code: 'skip',
+            name: 'CheckStop',
+            status: 'skipped',
             message: 'The tsconfig of a parent folder covers this project, and gspot checks it there.',
         }),
     );

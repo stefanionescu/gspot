@@ -1,5 +1,5 @@
+import { CheckStop } from '#cli/system/errors.ts';
 import { join, posix, relative } from 'node:path';
-import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
@@ -65,7 +65,7 @@ export function checkTsconfig(session: Session, planned: PlannedCheck): CheckFin
                 required,
             }),
     );
-    if (projects.length > 0 && unchecked.length === 0) throw new GspotError('skip', PARENT_TSCONFIG_SKIP);
+    if (projects.length > 0 && unchecked.length === 0) throw new CheckStop('skipped', PARENT_TSCONFIG_SKIP);
     return unchecked.flatMap(({ path, parsed }) =>
         [
             ...Object.keys(required).filter((option) => parsed.options[option] !== true),

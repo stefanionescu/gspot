@@ -1,5 +1,5 @@
+import { CheckStop } from '#cli/system/errors.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { FROZEN_NONE } from '#cli/config/parsers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -21,7 +21,7 @@ Reports each migration at or before postgres.frozen_through whose text differs f
 */
 export async function checkEditedMigrations(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const through = getTable(planned.scope.settings, 'postgres')['frozen_through'];
-    if (through === FROZEN_NONE) throw new GspotError('skip', FROZEN_THROUGH_NOTE);
+    if (through === FROZEN_NONE) throw new CheckStop('skipped', FROZEN_THROUGH_NOTE);
     const migrations = await readParsedMigrations(session, planned);
     const texts = await readCommittedMigrations(
         session,

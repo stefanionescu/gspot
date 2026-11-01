@@ -1,5 +1,5 @@
+import { CheckStop } from '#cli/system/errors.ts';
 import { read } from '#cli/system/files/reads.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { SCRIPT_TAG } from '#cli/config/parsers.ts';
 import type { ProseRoute } from '#cli/types/tools.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
@@ -43,7 +43,7 @@ function assertValeRan(result: SpawnResult): void {
     if (result.code === 0 && !result.missing) return;
     const lines = `${result.stderr}\n${result.stdout}`.split('\n').filter((line) => line.trim() !== '');
     const reason = lines.find((line) => VALE_ERROR_LINE.test(line)) ?? lines[0] ?? NO_OUTPUT;
-    throw new GspotError('check', `Vale did not run (exit ${String(result.code)}): ${reason.trim()}`);
+    throw new CheckStop('error', `Vale did not run (exit ${String(result.code)}): ${reason.trim()}`);
 }
 
 async function runValeOnPaths(
@@ -123,7 +123,7 @@ Runs Vale on the scope files, by path where Vale has a grammar and through stdin
 */
 export async function checkVale(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     if (!hasValePackages(session.toolsRoot, session.settings.level))
-        throw new GspotError('tool', VALE_PACKAGES_MESSAGE);
+        throw new CheckStop('missing', VALE_PACKAGES_MESSAGE);
     const command = [VALE_TOOL, CONFIG_FLAG, join(session.root, GSPOT_PATHS.valeConfig), ...VALE_ARGUMENTS];
     const folder = dirname(join(session.root, GSPOT_PATHS.valeConfig));
     const groups = listRouteBatches(

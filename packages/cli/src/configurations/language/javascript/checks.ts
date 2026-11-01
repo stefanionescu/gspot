@@ -1,4 +1,4 @@
-import { GspotError } from '#cli/system/errors.ts';
+import { CheckStop } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { chmodSync, writeFileSync } from 'node:fs';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -68,7 +68,7 @@ export async function checkJavascriptTsc(session: CheckSession, planned: Planned
     const target = getConfigPath(session, planned, extractConfigName(JSCONFIG_FILE));
     const generated = readTsconfig(session.root, join(session.root, target), session.cache);
     if (generated === undefined)
-        throw new GspotError('tool', `The generated file ${target} is missing. Run gspot apply.`);
+        throw new CheckStop('missing', `The generated file ${target} is missing. Run gspot apply.`);
     const project = {
         ...generated,
         ...buildScopeCompilerProject(session, scope, generated),

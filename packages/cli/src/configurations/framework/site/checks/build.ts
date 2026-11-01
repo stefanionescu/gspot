@@ -1,7 +1,7 @@
 import { join, relative } from 'node:path';
 import { remember } from '#cli/system/cache.ts';
+import { CheckStop } from '#cli/system/errors.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { statSync, lstatSync, realpathSync } from 'node:fs';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
@@ -26,8 +26,8 @@ async function runSiteBuild(session: CheckSession, planned: PlannedCheck, copyRo
     const folder = join(copyRoot, folderPath);
     const built = result.code === 0 ? lstatSync(folder, { throwIfNoEntry: false }) : undefined;
     if (built?.isSymbolicLink() === true)
-        throw new GspotError(
-            'check',
+        throw new CheckStop(
+            'error',
             `The build output folder is a link: ${convertToPosixPath(relative(copyRoot, folder))}`,
         );
     const isBuilt = built?.isDirectory() === true;
@@ -60,9 +60,9 @@ export function listBuiltFiles(folder: string): string[] {
         const absolute = join(root, path);
         if (lstatSync(absolute).isDirectory()) return true;
         if (!isInside(relative(root, realpathSync.native(absolute))))
-            throw new GspotError('check', `The build output links outside the build folder: ${path}`);
+            throw new CheckStop('error', `The build output links outside the build folder: ${path}`);
         const stat = statSync(absolute);
-        if (stat.isDirectory()) throw new GspotError('check', `The build output entry is a directory link: ${path}`);
+        if (stat.isDirectory()) throw new CheckStop('error', `The build output entry is a directory link: ${path}`);
         if (stat.isFile()) found.push(path);
         return false;
     });
@@ -77,7 +77,7 @@ Read the site build of this run, which the first caller runs, and skip the check
 */
 export async function readSuccessfulBuild(session: CheckSession, planned: PlannedCheck): Promise<SiteBuild> {
     const build = await readSiteBuild(session, planned);
-    if (!build.built) throw new GspotError('skip', UNBUILT_SITE_NOTE);
+    if (!build.built) throw new CheckStop('skipped', UNBUILT_SITE_NOTE);
     return build;
 }
 

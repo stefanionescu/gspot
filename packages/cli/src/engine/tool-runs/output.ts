@@ -1,11 +1,11 @@
 import { statSync } from 'node:fs';
-import { GspotError } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { join, relative, isAbsolute } from 'node:path';
 import type { SpawnResult } from '#cli/types/system.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { Tool, Check } from '#cli/types/manifests.ts';
 import type { CheckResult } from '#cli/types/engine/run.ts';
+import { CheckStop, GspotError } from '#cli/system/errors.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { parseOutput, OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 
@@ -58,12 +58,12 @@ function isOnDisk(file: string, roots: string[]): boolean {
     );
 }
 
-function throwCrash(planned: OutputCheck, result: SpawnResult, options: { verbose?: boolean | undefined }): never {
+function formatCrash(planned: OutputCheck, result: SpawnResult, options: { verbose?: boolean | undefined }): string {
     const failure = `${planned.tool?.name ?? planned.check.id} failed with exit ${String(result.code)}`;
     const detail = formatOutputTail(result, '', options);
     const message = detail === '' ? `${failure} and printed nothing.` : `${failure}:\n${detail}`;
     const network = planned.check.needs?.includes('network') === true ? ' This check needs network access.' : '';
-    throw new GspotError('output', message + network);
+    return message + network;
 }
 
 function isSilentCrash(check: Check, result: SpawnResult, parsed: Finding[], paths: OutputPaths): boolean {
@@ -74,19 +74,6 @@ function isSilentCrash(check: Check, result: SpawnResult, parsed: Finding[], pat
         OUTPUT_FORMATS[output.format].namesFiles(output) &&
         parsed.every((finding) => finding.file !== '' && !isOnDisk(finding.file, [paths.cwd, paths.root]))
     );
-}
-
-function parseVerifiedFindings(
-    planned: OutputCheck,
-    result: SpawnResult,
-    paths: OutputPaths,
-    options: { verbose?: boolean | undefined },
-): Finding[] {
-    const { check } = planned;
-    if (isReportedCrash(check, planned.tool, result)) throwCrash(planned, result, options);
-    const parsed = parseOutput(check, result.stdout, result.stderr, paths);
-    if (isSilentCrash(check, result, parsed, paths)) throwCrash(planned, result, options);
-    return parsed;
 }
 
 /**
@@ -130,8 +117,13 @@ export function parseCommandFindings(
     paths: OutputPaths,
     options: { verbose?: boolean | undefined },
 ): ParsedFindings {
+    const { check } = planned;
+    if (isReportedCrash(check, planned.tool, result)) return { note: formatCrash(planned, result, options) };
     try {
-        return { findings: parseVerifiedFindings(planned, result, paths, options) };
+        const parsed = parseOutput(check, result.stdout, result.stderr, paths);
+        return isSilentCrash(check, result, parsed, paths)
+            ? { note: formatCrash(planned, result, options) }
+            : { findings: parsed };
     } catch (error) {
         if (error instanceof GspotError && error.code === 'output') return { note: error.message };
         throw error;
@@ -221,8 +213,8 @@ export function assertToolFindings(
     toolName: string,
 ): CheckFinding[] {
     if (result.code !== 0 && findings.length === 0)
-        throw new GspotError(
-            'check',
+        throw new CheckStop(
+            'error',
             `The ${toolName} command failed (exit ${String(result.code)}): ${formatOutputTail(result)}`,
         );
     return findings;

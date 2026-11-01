@@ -19,6 +19,23 @@ export class GspotError extends Error {
     }
 }
 
+export class CheckStop extends Error {
+    readonly status: 'skipped' | 'missing' | 'error';
+
+    /**
+    Stop one check with the status and the note that its result prints.
+
+    @param status how the check ends.
+    @param note why it ends.
+    @param options the underlying cause, when one exists.
+    */
+    constructor(status: CheckStop['status'], note: string, options?: ErrorOptions) {
+        super(note, options);
+        this.name = 'CheckStop';
+        this.status = status;
+    }
+}
+
 /**
 Format a Zod issue and its union branches as field paths and messages.
 

@@ -74,7 +74,7 @@ async function runUv(
     });
     if (result.missing)
         throw new GspotError(
-            'tool',
+            'install',
             formatUnavailableNote(getTool(install.session.toolConfigurations, UV_TOOL), {
                 name: UV_TOOL,
                 state: 'missing',

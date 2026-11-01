@@ -3,7 +3,6 @@ import type { z } from 'zod';
 import { statSync } from 'node:fs';
 import satisfies from 'spdx-satisfies';
 import { getTable } from '#cli/settings/scopes.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { join, dirname, basename } from 'node:path';
 import parseExpression from 'spdx-expression-parse';
 import { listLicenseProjects } from '#cli/engine/tools.ts';
@@ -11,6 +10,7 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { buildVenvPythonPath } from '#cli/system/paths.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
+import { CheckStop, GspotError } from '#cli/system/errors.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
@@ -59,7 +59,7 @@ async function readLicenseOutput<Value>(
 ): Promise<Value> {
     const result = await runCheckTool(session, planned, command, { cwd });
     if (result.code !== 0)
-        throw new GspotError('check', `${command.join(' ')} did not run: ${formatOutputTail(result)}`);
+        throw new CheckStop('error', `${command.join(' ')} did not run: ${formatOutputTail(result)}`);
     return parseToolOutput(command[0], result.stdout, schema);
 }
 
@@ -155,7 +155,7 @@ async function scanProject(
                   ecosystem: 'python' as const,
               };
     const scanned = await scan(session, { ...planned, scope }, start);
-    if (scanned.length === 0) throw new GspotError('tool', EMPTY_SCAN_MESSAGE);
+    if (scanned.length === 0) throw new CheckStop('missing', EMPTY_SCAN_MESSAGE);
     const found = findNearestLockfile(session.cache, dirname(dependencyFile), lockfiles);
     const locked = found === undefined ? undefined : new Set(PACKAGE_PARSERS[found.lockfile](found.path, found.text));
     const lockedKeys =
@@ -175,7 +175,7 @@ async function scanProject(
 
 async function scanLicenses(session: CheckSession, planned: PlannedCheck) {
     const projects = listLicenseProjects(planned.files, session.scopes, session.settings, planned.check);
-    if (projects.length === 0) throw new GspotError('skip', NO_ALLOWED_LICENSES_NOTE);
+    if (projects.length === 0) throw new CheckStop('skipped', NO_ALLOWED_LICENSES_NOTE);
     const scanned = projects.filter(
         (project) =>
             project.skip === undefined &&

@@ -4,7 +4,6 @@ import { getTool } from '#cli/tools/pins.ts';
 import { availableParallelism } from 'node:os';
 import { remember } from '#cli/system/cache.ts';
 import { runFixers } from '#cli/engine/fixes.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
@@ -14,6 +13,7 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import { isActive, planChecks } from '#cli/engine/plan.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { IgnoreRecord } from '#cli/types/settings.ts';
+import { CheckStop, GspotError } from '#cli/system/errors.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { formatUnexpectedError } from '#cli/system/terminal.ts';
@@ -86,10 +86,9 @@ function classifyCheckError(
     error: unknown,
     verbose: boolean,
 ): Pick<CheckResult, 'status' | 'note' | 'cause' | 'stack'> {
-    if (error instanceof GspotError) {
-        if (error.code === 'skip') return { status: 'skipped', cause: 'condition', note: error.message };
-        return { status: error.code === 'tool' ? 'missing' : 'error', note: error.message };
-    }
+    if (error instanceof CheckStop)
+        return { status: error.status, ...(error.status === 'skipped' && { cause: 'condition' }), note: error.message };
+    if (error instanceof GspotError) return { status: 'error', note: error.message };
     return {
         status: 'error',
         note: formatUnexpectedError(name),

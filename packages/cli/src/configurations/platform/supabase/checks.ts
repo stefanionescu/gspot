@@ -1,9 +1,9 @@
 import { statSync } from 'node:fs';
 import type { Node } from '@pgsql/types';
 import { fileURLToPath } from 'node:url';
+import { CheckStop } from '#cli/system/errors.ts';
 import { join, posix, relative } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { joinScope } from '#cli/repository/scopes.ts';
@@ -198,7 +198,7 @@ function listFunctionEntrypoints(
     const base = getTable(planned.scope.settings, 'supabase').functions_folder;
     const entrypoints = listDefaultEntrypoints(planned);
     if (project?.functions !== undefined) addConfiguredFunctions(planned, project.functions, entrypoints);
-    if (entrypoints.size === 0) throw new GspotError('skip', `No edge function under ${base}.`);
+    if (entrypoints.size === 0) throw new CheckStop('skipped', `No edge function under ${base}.`);
     return entrypoints.values().toArray();
 }
 
@@ -255,8 +255,8 @@ export async function checkDenoLint(session: CheckSession, planned: PlannedCheck
             target: posix.dirname(entrypoint.path),
         });
         if (result.code !== 0 && result.stdout.trim() === '')
-            throw new GspotError(
-                'check',
+            throw new CheckStop(
+                'error',
                 formatOutputTail(result, `deno lint stopped with exit ${String(result.code)} and no report.`),
             );
         const report = parseToolOutput(DENO_LINT_NAME, result.stdout, denoLintOutputSchema);

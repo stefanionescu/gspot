@@ -11,10 +11,10 @@ import type { TrackedFile } from '#cli/types/repository.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Files, FileContents } from '#cli/types/system.ts';
-import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { MODE_BITS, PRIVATE_FOLDER } from '#cli/config/system.ts';
 import { statSync, lstatSync, mkdirSync, realpathSync } from 'node:fs';
+import { CheckStop, GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import type { SwiftBuildPlan, SwiftBuildSetup, SwiftBuildPurpose } from '#cli/types/configurations/language.ts';
 
 import {
@@ -126,7 +126,7 @@ export function planSwiftBuild(
     } = getTable(planned.scope.settings, 'swift');
     if (project === undefined) {
         if (!session.repository.files.some(({ path }) => path === joinScope(planned.scope.path, PACKAGE_SWIFT)))
-            throw new GspotError('skip', NO_SWIFT_PROJECT_NOTE);
+            throw new CheckStop('skipped', NO_SWIFT_PROJECT_NOTE);
         const scratch = join(folder, PACKAGE_SCRATCH_FOLDER);
         return {
             folder,

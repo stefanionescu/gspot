@@ -1,7 +1,7 @@
 import picomatch from 'picomatch';
 import { join, posix } from 'node:path';
+import { CheckStop } from '#cli/system/errors.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { readBytes } from '#cli/system/files/reads.ts';
@@ -124,8 +124,8 @@ async function testNginxFile(
             .filter((path) => path !== undefined)
             .toArray();
         if (!parsed.includes(NGINX_MAIN_TARGET))
-            throw new GspotError(
-                'check',
+            throw new CheckStop(
+                'error',
                 `The nginx in ${image} did not read ${NGINX_MAIN_TARGET}, so the check tested none of your files. Set tools.nginx.image to an image whose nginx reads ${NGINX_MAIN_TARGET}.`,
             );
         return {
@@ -136,10 +136,10 @@ async function testNginxFile(
             }),
         };
     }
-    if (DOCKER_DAEMON_ERROR.test(result.stderr)) throw new GspotError('tool', DOCKER_DAEMON_NOTE);
+    if (DOCKER_DAEMON_ERROR.test(result.stderr)) throw new CheckStop('missing', DOCKER_DAEMON_NOTE);
     const errorLine = result.stderr.split('\n').find((line) => line.includes(NGINX_EMERGENCY_MARK));
     if (errorLine === undefined || result.code !== 1)
-        throw new GspotError('check', `The nginx run failed (exit ${String(result.code)}): ${result.stderr.trim()}`);
+        throw new CheckStop('error', `The nginx run failed (exit ${String(result.code)}): ${result.stderr.trim()}`);
     return buildSyntaxResult(path, copies, errorLine);
 }
 
@@ -198,8 +198,8 @@ export async function checkSyntax(session: CheckSession, planned: PlannedCheck):
         { cwd: workFolder.path },
     );
     if (certificate.code !== 0)
-        throw new GspotError(
-            'check',
+        throw new CheckStop(
+            'error',
             `The openssl command could not write the temporary certificate: ${formatOutputTail(certificate)}`,
         );
     const findings: CheckFinding[] = [];

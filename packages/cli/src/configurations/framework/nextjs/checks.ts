@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { getTool } from '#cli/tools/pins.ts';
-import { GspotError } from '#cli/system/errors.ts';
+import { CheckStop } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { createRunCache } from '#cli/system/cache.ts';
 import { listChecksById } from '#cli/manifests/read.ts';
@@ -47,7 +47,7 @@ export async function checkNextjsTsc(session: CheckSession, planned: PlannedChec
     });
     const output = `${generated.stdout}${generated.stderr}`;
     if (generated.code !== 0)
-        throw new GspotError('check', `The next typegen command failed: ${formatNextjsFailure(output)}`);
+        throw new CheckStop('error', `The next typegen command failed: ${formatNextjsFailure(output)}`);
     const compiler = listChecksById(session.configurationsByName.values()).get(
         TYPESCRIPT_TSC_CHECK,
     ) as ConfigurationCheck;

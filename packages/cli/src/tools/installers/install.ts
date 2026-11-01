@@ -1,5 +1,4 @@
 import which from 'which';
-import { GspotError } from '#cli/system/errors.ts';
 import { listDistinctTools } from '#cli/tools/pins.ts';
 import { MISE_TOOL } from '#cli/config/tools/installers.ts';
 import { installHooks } from '#cli/tools/installers/hooks.ts';
@@ -28,27 +27,19 @@ export async function installTools(
     session: Session,
     input: Pick<ToolInstall, 'writer' | 'generated' | 'checkTools'>,
 ): Promise<InstallResult> {
-    try {
-        const context = buildToolInstall(session, input);
-        const { steps } = context;
-        await assertPackageManagerVersion(context);
-        const mise = await installMiseTools(context);
-        const installed = [
-            mise.installed,
-            ...(await installToolProjects(context, mise.binPaths)),
-            await installValePackages(context, mise.binPaths),
-        ];
-        const hooks = await installHooks(session, steps);
-        if (hooks.command !== undefined) installed.push(hooks.note);
-        const notes = [hooks.command === undefined ? hooks.note : '', mise.note];
-        return { installed: installed.filter(Boolean), notes: notes.filter(Boolean), steps };
-    } catch (error) {
-        session.cancelSignal?.throwIfAborted();
-        if (!(error instanceof GspotError) || error.code !== 'tool') throw error;
-        throw new GspotError('install', error.message, {
-            cause: error,
-        });
-    }
+    const context = buildToolInstall(session, input);
+    const { steps } = context;
+    await assertPackageManagerVersion(context);
+    const mise = await installMiseTools(context);
+    const installed = [
+        mise.installed,
+        ...(await installToolProjects(context, mise.binPaths)),
+        await installValePackages(context, mise.binPaths),
+    ];
+    const hooks = await installHooks(session, steps);
+    if (hooks.command !== undefined) installed.push(hooks.note);
+    const notes = [hooks.command === undefined ? hooks.note : '', mise.note];
+    return { installed: installed.filter(Boolean), notes: notes.filter(Boolean), steps };
 }
 
 /**

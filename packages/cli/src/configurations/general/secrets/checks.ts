@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
+import { CheckStop } from '#cli/system/errors.ts';
 import { read } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { buildBaseResult } from '#cli/engine/results.ts';
 import { PYTHON_EXTENSION } from '#cli/config/parsers.ts';
@@ -94,8 +94,8 @@ export async function checkEnvExamples(session: Session, planned: PlannedCheck):
     );
     const examples = planned.files.filter((file) => names.includes(posix.basename(file.path)));
     if (examples.length === 0)
-        throw new GspotError(
-            'skip',
+        throw new CheckStop(
+            'skipped',
             `No example environment file exists in ${planned.scope.path === '' ? 'the repository root' : planned.scope.path}. List the example environment files in secrets.env_examples.`,
         );
     const exampleKeys = new Set(

@@ -1,5 +1,5 @@
 import { join, posix } from 'node:path';
-import { GspotError } from '#cli/system/errors.ts';
+import { CheckStop } from '#cli/system/errors.ts';
 import { escapeRegExp } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
 import type { Level } from '#cli/types/settings.ts';
@@ -159,7 +159,7 @@ Runs deptry on the scope. Passes the project's extend_exclude list again with .g
 export async function checkDeptry(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
     const text = find(session.cache, pyproject);
-    if (text === undefined) throw new GspotError('skip', NO_PYPROJECT_NOTE);
+    if (text === undefined) throw new CheckStop('skipped', NO_PYPROJECT_NOTE);
     const { extend_exclude: exclusions, known_first_party: firstParty } = parseTomlFile(pyproject, text, deptrySchema)
         .tool.deptry;
     return await runCommandCheck(session, planned, {
@@ -213,7 +213,7 @@ export function checkPipInstalls(session: Session, planned: PlannedCheck): Check
             planned.files.some(({ path }) => path === joinScope(planned.scope.path, file)),
         )
     )
-        throw new GspotError('skip', NO_LOCKFILE_NOTE);
+        throw new CheckStop('skipped', NO_LOCKFILE_NOTE);
     const files = planned.files.filter((file) => file.kind === 'source');
     const requirements = files
         .filter((file) => REQUIREMENTS_FILE.test(file.path) || REQUIREMENTS_FOLDER_FILE.test(file.path))

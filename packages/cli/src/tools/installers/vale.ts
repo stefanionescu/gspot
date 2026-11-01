@@ -122,7 +122,7 @@ export async function installValePackages(install: ToolInstall, miseBinPaths: st
         return '';
     const tool = getTool(session.toolConfigurations, VALE_TOOL);
     const available = buildToolAvailability(tool, inspectTool({ ...session, miseBinPaths }, tool));
-    if ('status' in available) throw new GspotError('tool', available.note);
+    if ('status' in available) throw new GspotError('install', available.note);
     const temporary = mkdtempSync(
         join(files.readCanonicalPath(GSPOT_FOLDER), `${VALE_INSTALL_PREFIX}${String(process.pid)}-`),
     );

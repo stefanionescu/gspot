@@ -40,10 +40,8 @@ export type ErrorCode =
     | 'copy'
     | 'writing'
     | 'install'
-    | 'check'
     | 'tool'
-    | 'output'
-    | 'skip';
+    | 'output';
 
 export type SpawnResult = {
     code: number;

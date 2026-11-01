@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { GspotError } from '#cli/system/errors.ts';
+import { CheckStop } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
@@ -49,7 +49,7 @@ Runs Expo Doctor in a scope that depends on expo.
 export async function checkExpoDoctor(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const path = joinScope(planned.scope.path, PACKAGE_JSON);
     if (findInstalledDependency(session.root, path, EXPO_PACKAGE) === undefined)
-        throw new GspotError('tool', UNINSTALLED_EXPO_MESSAGE);
+        throw new CheckStop('missing', UNINSTALLED_EXPO_MESSAGE);
     const result = await runCheckTool(session, planned, EXPO_DOCTOR_COMMAND, {
         cwd: join(session.root, planned.scope.path),
     });

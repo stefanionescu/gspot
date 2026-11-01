@@ -140,11 +140,11 @@ export function readPackageManagerVersion(
             timeoutSeconds,
         });
         if (result.code !== 0)
-            throw new GspotError('tool', `Cannot determine the ${name} version for the tool project.`);
+            throw new GspotError('install', `Cannot determine the ${name} version for the tool project.`);
         const parsed = packageManagerSchema.safeParse({ name, version: result.stdout.trim() });
         if (!parsed.success)
             throw new GspotError(
-                'tool',
+                'install',
                 `Cannot read the ${name} version for the tool project. Check that ${name} --version prints a version.`,
                 { cause: parsed.error },
             );
