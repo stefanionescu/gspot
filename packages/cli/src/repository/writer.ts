@@ -170,15 +170,12 @@ Refuse authored bytes that nobody reviewed.
 export function planReplacements(writer: Files, requests: ReplacementRequest[]): WritePlan[] {
     const generatedPatterns = readGeneratedPatterns(writer);
     const ownablePaths = new Set(requests.map(({ path }) => path));
-    return requests.map(({ path, next, expected }): WritePlan => {
+    return requests.map(({ path, next, previous }): WritePlan => {
         const onDisk = writer.read(path);
-        if (
-            onDisk !== undefined &&
-            !isSameContents(onDisk, next) &&
-            !isOwned(path, writer, generatedPatterns, ownablePaths) &&
-            expected === undefined
-        )
-            return { path, status: 'preserved' };
+        const hasLaterEdit = previous !== undefined && !isSameContents(onDisk, previous);
+        const hasUnreviewedContents = onDisk !== undefined && previous === undefined && !isSameContents(onDisk, next);
+        if (!isOwned(path, writer, generatedPatterns, ownablePaths) && (hasLaterEdit || hasUnreviewedContents))
+            return { path, status: 'refused' };
         return {
             path,
             after: next,
@@ -235,7 +232,7 @@ Refuse the plans when they overwrite a file that gspot did not write; otherwise 
 @param plans one write or removal for each file.
 */
 export function writePlans(writer: Files, plans: WritePlan[]): void {
-    const conflicts = plans.filter((plan) => plan.status === 'preserved').map((plan) => plan.path);
+    const conflicts = plans.filter((plan) => plan.status === 'refused').map((plan) => plan.path);
     if (conflicts.length > 0)
         throw new GspotError(
             'writing',

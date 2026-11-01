@@ -47,7 +47,7 @@ Write gspot.toml when its bytes or mode change.
 export function writeSettings(writer: Files, text: string, previous: FileContents | undefined): void {
     const next = { bytes: Buffer.from(text), mode: previous?.mode ?? OWNER_WRITABLE_FILE };
     if (isDeepStrictEqual(next, previous)) return;
-    writePlans(writer, planReplacements(writer, [{ path: SETTINGS_FILE, next, expected: previous }]));
+    writePlans(writer, planReplacements(writer, [{ path: SETTINGS_FILE, next, previous }]));
 }
 
 /**

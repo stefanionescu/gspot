@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { readFile } from 'node:fs/promises';
 import { openFiles } from '#cli/system/files/open.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
+import { unlink, readFile, writeFile } from 'node:fs/promises';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
 
 test('a batch writes binary bytes, and a removal plan deletes one file and keeps the other', async () => {
@@ -38,7 +38,7 @@ test('a file gspot does not own refuses the whole batch and leaves every file as
             {
                 path: `${GSPOT_FOLDER}/owned.txt`,
                 next: { bytes: Buffer.from('installed'), mode: 0o644 },
-                expected: writer.read(`${GSPOT_FOLDER}/owned.txt`),
+                previous: writer.read(`${GSPOT_FOLDER}/owned.txt`),
             },
         ]),
     );
@@ -60,4 +60,20 @@ test('a file gspot does not own refuses the whole batch and leaves every file as
     );
     expect(await readFile(join(sandbox.path, `${GSPOT_FOLDER}/owned.txt`), 'utf8')).toBe('installed');
     expect(await readFile(join(sandbox.path, 'authored.txt'), 'utf8')).toBe('keep authored');
+});
+
+test.each(['edited', 'deleted'])('a reviewed authored file that was %s is not replaced', async (change) => {
+    await using sandbox = await testdir({ 'authored.txt': 'reviewed\n' });
+    const writer = openFiles(sandbox.path);
+    const previous = writer.read('authored.txt');
+    await (change === 'edited'
+        ? writeFile(join(sandbox.path, 'authored.txt'), 'new edit\n')
+        : unlink(join(sandbox.path, 'authored.txt')));
+    const plans = planReplacements(writer, [
+        { path: 'authored.txt', previous, next: { bytes: Buffer.from('generated\n'), mode: 0o644 } },
+    ]);
+    expect(() => {
+        writePlans(writer, plans);
+    }).toThrow('gspot did not overwrite these files: authored.txt.');
+    expect(writer.read('authored.txt')?.bytes.toString('utf8')).toBe(change === 'edited' ? 'new edit\n' : undefined);
 });

@@ -148,7 +148,7 @@ export async function writeGeneratedFiles(
                 bytes: Buffer.from(file.content),
                 mode: file.executable === true ? EXECUTABLE_FILE : OWNER_WRITABLE_FILE,
             },
-            expected: reviewed?.get(file.path),
+            previous: reviewed?.get(file.path),
         })),
     );
     const blocks = generated.blocks.map((block) => planBlock(writer, block.path, block.body));

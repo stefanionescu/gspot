@@ -62,14 +62,14 @@ export type RepositoryHooks = { hooksPath: string; hooks: RepositorySetup['hooks
 
 export type WritePlan = {
     path: string;
-    status: 'changed' | 'unchanged' | 'preserved';
+    status: 'changed' | 'unchanged' | 'refused';
     after?: FileContents;
 };
 
 export type ReplacementRequest = {
     path: string;
     next: FileContents;
-    expected?: FileContents | undefined;
+    previous?: FileContents | undefined;
 };
 
 export type ManagedKeys = { path: string; keys: { key: KeyPath; value: JsonValue | undefined }[] };

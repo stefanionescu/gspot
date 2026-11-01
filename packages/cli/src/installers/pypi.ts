@@ -171,7 +171,7 @@ export async function planPythonLockfile(
         return {
             path: GSPOT_PATHS.uvLockfile,
             next: { bytes: Buffer.from(saved), mode: OWNER_WRITABLE_FILE },
-            expected: previous,
+            previous,
         };
     }
     using scratch = createTemporaryFolder();
@@ -195,7 +195,7 @@ export async function planPythonLockfile(
     return {
         path: GSPOT_PATHS.uvLockfile,
         next: { bytes: Buffer.from(lockfile), mode: OWNER_WRITABLE_FILE },
-        expected: previous,
+        previous,
     };
 }
 

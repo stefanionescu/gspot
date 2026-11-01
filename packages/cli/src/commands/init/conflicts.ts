@@ -2,6 +2,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { runGitBlocking } from '#cli/system/git.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { writePlans } from '#cli/repository/writer.ts';
+import { isSameContents } from '#cli/system/files/bounded.ts';
 import { isEditedInPlace } from '#cli/repository/conflicts.ts';
 import { parsePrettierFile } from '#cli/commands/init/format.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
@@ -106,7 +107,8 @@ export function deleteConflictingConfigs(
     const kept: string[] = [];
     const plans: WritePlan[] = [];
     for (const file of deleted) {
-        if (reviewed.get(file.path) === undefined) kept.push(file.path);
+        const previous = reviewed.get(file.path);
+        if (previous === undefined || !isSameContents(writer.read(file.path), previous)) kept.push(file.path);
         else plans.push({ path: file.path, status: 'changed' });
     }
     writePlans(writer, plans);

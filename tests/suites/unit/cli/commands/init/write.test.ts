@@ -94,3 +94,19 @@ function fakeTerminalAnswers(lines: Iterable<string> | AsyncIterable<string>): D
     );
     return resources;
 }
+
+test('init keeps a replaced config that changes after the plan reads it', async () => {
+    await using sandbox = await createGitSandbox({ 'typos.toml': '[default.extend-words]\nAuthored = "Authored"\n' });
+    commitAll(sandbox.path);
+    const edited = '[default.extend-words]\nChanged = "Changed"\n';
+    const rename = fs.renameSync;
+    using _publication = spyOn(fs, 'renameSync').mockImplementation((source, target) => {
+        if (String(target) === join(sandbox.path, 'gspot.toml'))
+            fs.writeFileSync(join(sandbox.path, 'typos.toml'), edited);
+        rename(source, target);
+    });
+    const result = await runGspot(sandbox.path, ['init', '--yes', '--configurations', 'spelling']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(await readFile(join(sandbox.path, 'typos.toml'), 'utf8')).toBe(edited);
+    expect(result.stdout).toContain('kept typos.toml: it changed after init read it');
+});

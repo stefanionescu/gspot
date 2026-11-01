@@ -143,7 +143,7 @@ async function writeMiseLockfile(install: ToolInstall, project: GeneratedFile): 
             {
                 path: GSPOT_PATHS.miseLockfile,
                 next: { bytes: Buffer.from(content), mode: OWNER_WRITABLE_FILE },
-                expected: saved,
+                previous: saved,
             },
         ]),
     );
