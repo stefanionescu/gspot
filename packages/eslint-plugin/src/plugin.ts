@@ -51,6 +51,7 @@ import { redundantTypeAliases } from './rules/redundant-type-aliases.ts';
 import { noBitwiseInCondition } from './rules/no-bitwise-in-condition.ts';
 import { noEqualLoopCondition } from './rules/no-equal-loop-condition.ts';
 import { noPositiveIndexCheck } from './rules/no-positive-index-check.ts';
+import { noStringRegexPattern } from './rules/no-string-regex-pattern.ts';
 import { noUpdatedLoopCounter } from './rules/no-updated-loop-counter.ts';
 import { noKeywordDeclarations } from './rules/no-keyword-declarations.ts';
 import { noUselessIntersection } from './rules/no-useless-intersection.ts';
@@ -72,6 +73,7 @@ import { noInconsistentFunctionCall } from './rules/no-inconsistent-function-cal
 import { noUnenclosedMultilineBlock } from './rules/no-unenclosed-multiline-block.ts';
 
 const rules = {
+    'no-string-regex-pattern': noStringRegexPattern,
     'no-useless-intersection': noUselessIntersection,
     'no-redundant-optional': noRedundantOptional,
     'prefer-promise-shorthand': preferPromiseShorthand,

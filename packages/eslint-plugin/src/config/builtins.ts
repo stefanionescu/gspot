@@ -313,3 +313,5 @@ export const LITERAL_UNION_MEMBERS: ReadonlySet<string> = new Set([
 export const INTERFACE_DECLARATION = /^(?:export\s+)?(?:declare\s+)?interface\s+[\w$]+\s*(?:(?:<[^{]*>)\s*)?\{/u;
 
 export const LITERAL_UNION_SIZE = 2;
+
+export const STRING_PATTERN_METHODS: ReadonlySet<string> = new Set(['match', 'matchAll', 'search']);
