@@ -39,6 +39,7 @@ redirects as the current user, and a glob in `sudo command /path/*` expands befo
 through `sudo tee`, and keep the shell string you pass to `sudo` a fixed literal with no input.
 
 ```bash
+# shellcheck disable=SC2312 # The script runs with pipefail, so a failed generator stops it here.
 generate_config | sudo tee /etc/service/config >/dev/null
 
 # run_remote_checks: Runs remote checks and returns non-zero on any failure.
@@ -79,8 +80,10 @@ and never parse process lists, pretty tables, progress bars, or localized text b
 character classes and pin `LC_ALL=C` when converting case.
 
 ```bash
-# get_service_url: Prints a required nonempty service URL from JSON configuration.
-get_service_url() {
+# read_service_url: Prints a required nonempty service URL from JSON configuration.
+# Arguments:
+#   $1: the configuration file.
+read_service_url() {
     local config_file="${1:?Configuration file is required}"
     local service_url
 
@@ -168,8 +171,10 @@ Put recursive deletes in one script. To accept the `bash/safety` finding for tha
 Validate its cleanup path against the approved root folder:
 
 ```bash
-# remove_build_dir: Removes the build child of the approved root folder.
-remove_build_dir() {
+# delete_build_folder: Deletes the build child of the approved root folder.
+# Arguments:
+#   $1: the approved root folder.
+delete_build_folder() {
     local owner_root build_dir
 
     [[ -n ${1:-} ]] || return 1

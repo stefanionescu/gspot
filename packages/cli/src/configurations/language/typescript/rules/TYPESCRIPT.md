@@ -58,7 +58,7 @@ Run a provider operation and release its lock on success or failure.
 @returns the provider's result
 @throws wraps a provider failure while preserving its cause
 */
-export async function createProviderOperation(request: ProviderOperationRequest): Promise<ProviderOperationResult> {
+export async function submitProviderOperation(request: ProviderOperationRequest): Promise<ProviderOperationResult> {
     try {
         return await postProviderOperation(request);
     } catch (error) {
