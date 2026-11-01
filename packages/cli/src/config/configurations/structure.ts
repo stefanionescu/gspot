@@ -124,6 +124,8 @@ export const COMPANION_SUFFIX = /\.(?:test|spec|stories|story|module|styles?|moc
 
 export const SHARED_PREFIX_RULE = 'shared-prefix';
 
+export const TYPE_FILE_CASE = 'pascal';
+
 export const SWIFTPM_TARGET_FOLDERS: Readonly<Record<string, readonly string[]>> = {
     target: ['Sources', 'Source', 'src', 'srcs'],
     executableTarget: ['Sources', 'Source', 'src', 'srcs'],

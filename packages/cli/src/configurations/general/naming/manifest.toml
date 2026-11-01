@@ -302,6 +302,13 @@ allowed_names = ["pre-commit", "pre-push", "commit-msg", "post-checkout", "post-
 reason = "git names its hooks."
 
 [[naming.override]]
+allowed_names = ["main"]
+categories = ["files"]
+languages = ["swift"]
+paths = ["**"]
+reason = "The Swift compiler reads the top-level code of a package from main.swift."
+
+[[naming.override]]
 paths = ["**/e2e/**"]
 categories = ["folders", "files"]
 allow_digits = true

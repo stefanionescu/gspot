@@ -173,3 +173,11 @@ test('mixed-language folders accept the union of language naming cases once', as
     const findings = await runSandboxCheck(sandbox.path, 'naming/paths');
     expect(findings.filter(({ message }) => message.includes('account-pages'))).toStrictEqual([]);
 });
+
+test('main.swift passes the PascalCase file names of Swift', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['swift'], { level: 'all' }),
+        'Sources/App/main.swift': '',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'naming/paths')).toStrictEqual([]);
+});
