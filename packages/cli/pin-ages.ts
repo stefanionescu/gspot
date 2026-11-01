@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import pLimit from 'p-limit';
+import { listPackagePins } from '#cli/tools/pins.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { listToolProjectPins } from '#cli/tools/pins.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import { generalTableSchemas } from '#cli/schemas/settings/general.ts';
 import { GSPOT_PACKAGES, SECONDS_PER_DAY } from '#cli/config/tools/installers/npm.ts';
@@ -29,7 +29,7 @@ async function readPypiRelease(name: string, version: string): Promise<number> {
 
 const days = generalTableSchemas.dependencies.unwrap().parse({}).min_release_age_days;
 const cutoff = Date.now() - days * SECONDS_PER_DAY * MILLISECONDS_PER_SECOND;
-const pins = listToolProjectPins(readConfigurations().values().toArray());
+const pins = listPackagePins(readConfigurations().values().toArray());
 const gspotPackages: readonly string[] = GSPOT_PACKAGES;
 const releases = await Promise.all([
     ...Object.entries(pins.npm)
