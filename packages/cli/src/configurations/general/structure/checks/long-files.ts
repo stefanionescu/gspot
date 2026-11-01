@@ -28,7 +28,7 @@ export async function checkLongFiles(session: Session, planned: PlannedCheck): P
     const findings = await Promise.all(
         sources.map(async ({ file, language, limit }) => {
             const text = read(session.cache, file.path);
-            const count = await countCodeLines(text, language);
+            const count = await countCodeLines(text, language, session);
             return count <= limit
                 ? []
                 : [

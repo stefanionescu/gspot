@@ -74,7 +74,7 @@ async function listLongFunctions(
                     for (let row = first.startPosition.row; row <= first.endPosition.row; row += 1)
                         lines[row - node.startPosition.row] = '';
                 }
-                const count = await countCodeLines(lines.join('\n'), 'python');
+                const count = await countCodeLines(lines.join('\n'), 'python', session);
                 return count <= limit
                     ? []
                     : [

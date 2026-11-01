@@ -9,8 +9,15 @@ import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import { getPosition, replaceRanges } from '#cli/system/text.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 import { getTomlRange, parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
-import type { GrammarName, CommentParser, SourceComment, SourcePosition, ComponentScript } from '#cli/types/parsers.ts';
 
+import type {
+    ParseCache,
+    GrammarName,
+    CommentParser,
+    SourceComment,
+    SourcePosition,
+    ComponentScript,
+} from '#cli/types/parsers.ts';
 import {
     MDX_ESM,
     SCRIPT_TAG,
@@ -125,15 +132,19 @@ const COMMENT_PARSERS = new Map<string, CommentParser>([
     ['.htm', (text) => parseGrammarComments('html', text)],
     ...['.md'].map((extension): [string, CommentParser] => [
         extension,
-        (text) => parseGrammarComments('html', text, extractMarkdownHtml(text)),
+        (text) => parseGrammarComments('html', text, { source: extractMarkdownHtml(text) }),
     ]),
     ['.mdx', parseMdxComments],
     ['.css', (text) => parseGrammarComments('css', text)],
 ]);
 
-async function parseGrammarComments(grammar: GrammarName, text: string, source = text): Promise<SourceComment[]> {
+async function parseGrammarComments(
+    grammar: GrammarName,
+    text: string,
+    { source = text, cache }: { source?: string; cache?: ParseCache | undefined } = {},
+): Promise<SourceComment[]> {
     const parsed = grammar === 'html' ? source.replaceAll(HTML_ALTERNATE_COMMENT_END, ' -->') : source;
-    using tree = await parseSource(grammar, parsed);
+    using tree = await parseSource(grammar, parsed, cache);
     return tree.rootNode
         .descendantsOfType([...COMMENT_NODES])
         .map((node) => buildComment(text, node.startIndex, node.endIndex, node.startPosition.row + 1));
@@ -144,16 +155,17 @@ Replace comments with spaces while preserving source offsets and line breaks.
 
 @param grammar the grammar of the source.
 @param text the source contents.
+@param cache the parsed trees of this run.
 @returns source text with comment contents masked.
 */
-async function maskGrammarComments(grammar: GrammarName | 'sql', text: string): Promise<string> {
+async function maskGrammarComments(grammar: GrammarName | 'sql', text: string, cache: ParseCache): Promise<string> {
     const ranges: TextRange[] = [];
     if (grammar === 'sql') {
         ranges.push(
             ...[...listSqlTokens(text)].filter((token) => ['line-comment', 'block-comment'].includes(token.kind)),
         );
     } else {
-        using tree = await parseSource(grammar, text);
+        using tree = await parseSource(grammar, text, cache);
         for (const node of tree.rootNode.descendantsOfType([...COMMENT_NODES]))
             ranges.push({ start: node.startIndex, end: node.endIndex });
     }
@@ -177,7 +189,7 @@ async function parseMdxComments(text: string): Promise<SourceComment[]> {
         const comment = buildComment(text, start, start + match[0].length, getPosition(text, start).line);
         return { ...comment, text: match[0].slice(1, -1) };
     });
-    const markup = await parseGrammarComments('html', text, extractMarkdownHtml(text));
+    const markup = await parseGrammarComments('html', text, { source: extractMarkdownHtml(text) });
     return [...expressions, ...markup].toSorted((left, right) => left.line - right.line);
 }
 
@@ -225,17 +237,23 @@ Read the text and line of each comment.
 @param path the file, whose name selects the syntax.
 @param text the source contents.
 @param tags the file tags, which identify scripts without a known extension.
+@param cache the parsed trees of this run.
 @returns comments in source order.
 */
-export async function parseComments(path: string, text: string, tags: readonly string[]): Promise<SourceComment[]> {
+export async function parseComments(
+    path: string,
+    text: string,
+    tags: readonly string[],
+    cache?: ParseCache,
+): Promise<SourceComment[]> {
     const lowerPath = path.toLowerCase();
     if (DECLARATION_EXTENSIONS.some((extension) => lowerPath.endsWith(extension)))
-        return parseGrammarComments('typescript', text);
+        return parseGrammarComments('typescript', text, { cache });
     let scriptGrammar: GrammarName | undefined;
     if (tags.includes(SCRIPT_TAG)) scriptGrammar = 'bash';
     else if (tags.includes('python')) scriptGrammar = 'python';
     const grammar = findGrammarByExtension(lowerPath) ?? scriptGrammar;
-    if (grammar !== undefined) return parseGrammarComments(grammar, text);
+    if (grammar !== undefined) return parseGrammarComments(grammar, text, { cache });
     const parser = COMMENT_PARSERS.get(extractExtension(path));
     return parser === undefined ? [] : parser(text, path);
 }
@@ -245,8 +263,9 @@ Skip blank lines and lines that hold only a comment of the grammar.
 
 @param text the source.
 @param grammar the language whose comments count as no code.
+@param cache the parsed trees of this run.
 */
-export async function countCodeLines(text: string, grammar: GrammarName | 'sql'): Promise<number> {
-    const code = await maskGrammarComments(grammar, text);
+export async function countCodeLines(text: string, grammar: GrammarName | 'sql', cache: ParseCache): Promise<number> {
+    const code = await maskGrammarComments(grammar, text, cache);
     return code.split('\n').filter((line) => line.trim() !== '').length;
 }

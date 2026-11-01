@@ -196,7 +196,7 @@ export async function checkSuppressions(session: Session, planned: PlannedCheck)
         for (const file of files) {
             const forms = syntaxes.filter((form) => form.covered.has(file.path));
             const source = read(session.cache, file.path);
-            const comments = await parseComments(file.path, source, file.tags);
+            const comments = await parseComments(file.path, source, file.tags, session);
             found.push(
                 ...comments.flatMap((comment, index) => {
                     const preceding = findReasonAbove(comments[index - 1], comment);

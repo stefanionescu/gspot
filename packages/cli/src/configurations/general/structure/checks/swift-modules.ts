@@ -25,7 +25,7 @@ function selectDefaultFolder(folders: readonly string[], packageFolder: string, 
 }
 
 async function listPackageModules(session: Session, path: string, swiftFiles: string[]): Promise<SwiftModule[]> {
-    using tree = await parseSource('swift', read(session.cache, path));
+    using tree = await parseSource('swift', read(session.cache, path), session);
     const packageFolder = extractParentFolder(path);
     return tree.rootNode.descendantsOfType('call_expression').flatMap((call) => {
         const callee = call.namedChildren[0];
