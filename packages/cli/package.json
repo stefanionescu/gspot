@@ -13,6 +13,9 @@
         "directory": "packages/cli"
     },
     "homepage": "https://generativespotting.com",
+    "bugs": {
+        "url": "https://github.com/stefanionescu/gspot/issues"
+    },
     "keywords": [
         "lint",
         "linter",
