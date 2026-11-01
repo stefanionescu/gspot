@@ -51,6 +51,8 @@ export const CI_CACHE_FILES = [
 
 export const CI_JOB_NAME = 'lint';
 
+export const CI_TESTS_JOB_NAME = 'tests';
+
 export const CI_CACHE_STEP = 'cache';
 
 export const CI_CACHE_PREFIX = 'gspot-${{ runner.os }}-${{ runner.arch }}-';

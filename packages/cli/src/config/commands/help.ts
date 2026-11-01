@@ -70,6 +70,7 @@ export const COMMAND_HELP = {
         options: {
             '--only <checks>':
                 'Run only these checks, including checks off at your level. Separate several with commas, or repeat the option',
+            '--skip <checks>': 'Run every check except these. Separate several with commas, or repeat the option',
             '--staged': 'Check the files as you staged them, not the working tree',
             '--stage <commit|push>': 'Run only the checks assigned to this stage (default: commit and push)',
             '--changed': 'Check the files changed since the upstream branch, or origin/HEAD',

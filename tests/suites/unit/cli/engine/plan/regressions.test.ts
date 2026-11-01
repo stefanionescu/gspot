@@ -75,6 +75,21 @@ test('a replacer with no matching files leaves the original check active', async
     ]);
 });
 
+test('a skipped check leaves the plan, and the check it replaces stays off', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript', 'vue']),
+        'source.ts': 'export const value = 1;\n',
+        'App.vue': '<template><p>Hello</p></template>\n',
+    });
+    const session = await openSession(sandbox.path);
+    const planned = planChecks(session, { stage: 'push', skip: ['vue/vue-tsc'] });
+    expect(planned.map(({ check }) => check.id)).not.toContain('vue/vue-tsc');
+    expect(planned.find(({ check }) => check.id === 'typescript/tsc')?.skip).toStrictEqual({
+        cause: 'replaced',
+        note: 'vue/vue-tsc runs it here',
+    });
+});
+
 test('explicit paths intersect the staged set', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript']),

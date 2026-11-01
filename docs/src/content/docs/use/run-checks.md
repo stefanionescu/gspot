@@ -39,12 +39,13 @@ Fix the file, then run the check again.
 | `gspot check --base origin/main`                      | The files changed since another branch, tag, or commit.           |
 | `gspot check <file> <folder>`                         | Some files and folders, relative to the current folder.           |
 | `gspot check --only javascript/eslint,typescript/tsc` | Some checks.                                                      |
+| `gspot check --skip jest/coverage`                    | Every check except some.                                          |
 
 An explicit `--base <ref>` must name a branch, tag, or commit. gspot checks every file and prints the reason for
 an empty base, an all-zero base, or a full hash that the clone lacks. Without an upstream or `origin/HEAD`, `--changed` asks for `--base`.
 
 Repeat `--only` or separate the checks with commas: `--only a,b` and `--only a --only b` select the same checks. A path
-after `--only` names files to check, not another check.
+after `--only` names files to check, not another check. `--skip` takes its checks the same way.
 
 `--only` can run a check outside your configured level. gspot notes that choice and still requires the check's tools
 and settings.

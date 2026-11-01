@@ -27,6 +27,7 @@ import { LFS_FILTER, FILTER_ATTRIBUTE, GITATTRIBUTES_FILE } from '#cli/config/re
 import type { Pipeline, RuleFile, FrozenLockfile, CiPackageManager } from '#cli/types/generation.ts';
 
 import {
+    listTestChecks,
     buildGithubWorkflow,
     buildGitlabWorkflow,
     listProjectLockfiles,
@@ -81,6 +82,7 @@ function addWorkflow(session: Session, generated: Generation): void {
             linuxRunner: settings.ci.linux_runner,
             lockfiles,
             packageManagers,
+            testChecks: listTestChecks(session),
         }),
     );
 }

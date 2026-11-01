@@ -14,10 +14,10 @@ import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { GITHUB_EXPRESSION_MESSAGE } from '#cli/config/generation.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import type { GithubWorkflow, GitlabPipeline } from '#tests/types/setup.ts';
+import { CI_CHECK_COMMAND, GITHUB_EXPRESSION_MESSAGE } from '#cli/config/generation.ts';
 import { SETUP_CASES, LINUX_PIPELINE, SETUP_ARGUMENTS } from '#tests/config/generation/files.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/ci.ts';
 
@@ -60,6 +60,64 @@ test('two operating systems get one job each, and the Linux job uses the configu
     ) as GithubWorkflow;
     expect(Object.keys(workflow.jobs)).toStrictEqual(['lint-linux', 'lint-macos']);
     expect(workflow.jobs['lint-linux']?.['runs-on']).toBe('linux-large');
+});
+
+test('test checks move to a tests job that differs from the lint job only in its check command', () => {
+    const { jobs } = parse(
+        buildGithubWorkflow({ ...LINUX_PIPELINE, testChecks: ['jest/coverage', 'pytest/coverage'] }).content,
+    ) as GithubWorkflow;
+    expect(Object.keys(jobs)).toStrictEqual(['lint', 'tests']);
+    expect(jobs['lint']!.steps.at(-1)?.run).toBe(`${CI_CHECK_COMMAND} --skip jest/coverage,pytest/coverage\n`);
+    expect(jobs['tests']!.steps.at(-1)?.run).toBe(`${CI_CHECK_COMMAND} --only jest/coverage,pytest/coverage\n`);
+    expect(jobs['tests']!.steps.slice(0, -1)).toStrictEqual(jobs['lint']!.steps.slice(0, -1));
+});
+
+test('without test checks, the lint job runs every check and no tests job exists', () => {
+    const { jobs } = parse(buildGithubWorkflow(LINUX_PIPELINE).content) as GithubWorkflow;
+    expect(Object.keys(jobs)).toStrictEqual(['lint']);
+    expect(jobs['lint']!.steps.at(-1)?.run).toBe(`${CI_CHECK_COMMAND}\n`);
+});
+
+test('each operating system gets one pair of jobs', () => {
+    const { jobs } = parse(
+        buildGithubWorkflow({
+            ...LINUX_PIPELINE,
+            operatingSystems: ['linux', 'macos'],
+            testChecks: ['vitest/coverage'],
+        }).content,
+    ) as GithubWorkflow;
+    expect(Object.keys(jobs)).toStrictEqual(['lint-linux', 'lint-macos', 'tests-linux', 'tests-macos']);
+    expect(jobs['tests-macos']?.name).toBe('tests (macos)');
+});
+
+test('a selected testing configuration gets a tests job on GitHub and one job on GitLab', async () => {
+    const files = {
+        'package.json': '{"private":true,"devDependencies":{"jest":"30.0.0"}}',
+        'source.js': 'export const value = 1;\n',
+    };
+    await using github = await createGitSandbox({
+        ...files,
+        'gspot.toml': buildSandboxSettings(['javascript', 'jest'], { tables: '[ci]\nenabled = true\n' }),
+    });
+    const workflow = parse(
+        buildGeneratedFiles(await openSession(github.path)).files.find(
+            ({ path }) => path === '.github/workflows/gspot.yml',
+        )!.content,
+    ) as GithubWorkflow;
+    expect(workflow.jobs['lint']?.steps.at(-1)?.run).toBe(`${CI_CHECK_COMMAND} --skip jest/coverage\n`);
+    expect(workflow.jobs['tests']?.steps.at(-1)?.run).toBe(`${CI_CHECK_COMMAND} --only jest/coverage\n`);
+    await using gitlab = await createGitSandbox({
+        ...files,
+        'gspot.toml': buildSandboxSettings(['javascript', 'jest'], {
+            tables: '[ci]\nenabled = true\nprovider = "gitlab"\n',
+        }),
+    });
+    const pipeline = parse(
+        buildGeneratedFiles(await openSession(gitlab.path)).files.find(({ path }) => path === '.gitlab/ci/gspot.yml')!
+            .content,
+    ) as GitlabPipeline;
+    expect(Object.keys(pipeline)).toStrictEqual(['gspot']);
+    expect(pipeline.gspot.script.at(-1)).toEndWith(CI_CHECK_COMMAND);
 });
 
 test('the swift configuration defaults the CI jobs to Linux and macOS', async () => {

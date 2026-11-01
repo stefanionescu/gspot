@@ -154,15 +154,17 @@ export function formatCheckState(planned: PlannedCheck | undefined): string {
 }
 
 /**
-Plan the checks of every scope, skip each check that another check replaces, and refuse history checks when the
-pushed history lacks commits.
+Plan the checks of every scope, and skip each check that another check replaces. Leave out the checks that the run
+skips, and refuse history checks when the pushed history lacks commits.
 
 @param session the repository to check.
 @param options what the run narrows to.
 @returns the planned checks in scope order.
 */
 export function planChecks(session: Session, options: PlanOptions): PlannedCheck[] {
-    const checks = planScopes(session, options).flatMap((planned) => skipReplacedChecks(planned));
+    const checks = planScopes(session, options)
+        .flatMap((planned) => skipReplacedChecks(planned))
+        .filter(({ check }) => options.skip?.includes(check.id) !== true);
     if (options.shallow === true) {
         const historyChecks = checks.filter((check) => check.skip === undefined && check.check.runs === 'history');
         if (historyChecks.length > 0)

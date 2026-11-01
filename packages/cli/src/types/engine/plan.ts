@@ -19,6 +19,7 @@ export type PlanOptions = {
     staged?: string[] | undefined;
     changed?: string[] | undefined;
     only?: string[] | undefined;
+    skip?: string[] | undefined;
     paths?: string[] | undefined;
     messageFile?: string | undefined;
 };

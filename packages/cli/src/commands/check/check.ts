@@ -24,6 +24,7 @@ import {
     STAGE_FLAG,
     SETUP_PATHS,
     ONLY_OPTION,
+    SKIP_OPTION,
     HOOK_OPTION,
     BASE_OPTION,
     CHANGED_FLAG,
@@ -147,6 +148,7 @@ function parseCheckFlags(
         hook,
         changed: flags.changed === true,
         only: flags.only,
+        skip: flags.skip,
         base: flags.base,
         messageFile: hook === 'commit-msg' && paths[0] !== undefined ? resolve(cwd, paths[0]) : undefined,
         stage: hook === 'commit-msg' ? 'message' : flags.stage,
@@ -240,6 +242,7 @@ export const checkCommand: CommandDefinition<[string[]], CheckFlags> = {
     arguments: [{ term: '[paths...]' }],
     options: [
         { flags: ONLY_OPTION, parse: parseCheckNames },
+        { flags: SKIP_OPTION, parse: parseCheckNames },
         { flags: STAGED_FLAG },
         { flags: STAGE_OPTION, choices: CHECK_STAGES },
         { flags: CHANGED_FLAG },

@@ -105,6 +105,7 @@ export const LINUX_PIPELINE = {
     lockfiles: ['package-lock.json', 'web/pnpm-lock.yaml'],
     projectInstall: [],
     packageManagers: ['npm' as const, 'pnpm' as const],
+    testChecks: [],
 };
 
 export const START_COMMANDS = [

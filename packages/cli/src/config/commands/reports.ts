@@ -23,6 +23,8 @@ export const CHECK_STOPPED_MESSAGE = 'Check stopped before every check finished.
 
 export const ONLY_OPTION = '--only <checks>';
 
+export const SKIP_OPTION = '--skip <checks>';
+
 export const BASE_OPTION = '--base <ref>';
 
 export const FIX_FLAG = '--fix';
@@ -33,7 +35,7 @@ export const VERBOSE_FLAG = '--verbose';
 
 export const PUSH_INPUT_MESSAGE = 'Git sent pre-push input that is not UTF-8 text.';
 
-export const EMPTY_CHECKS_MESSAGE = 'Name a check, such as --only python/ruff.';
+export const EMPTY_CHECKS_MESSAGE = 'Name a check, such as python/ruff.';
 
 export const GIT_SETUP_FILES_ARGUMENTS = ['ls-files', '--cached', '-z', '--', SETTINGS_FILE, GSPOT_FOLDER] as const;
 

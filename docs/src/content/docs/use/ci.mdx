@@ -6,9 +6,9 @@ description: Run checks in GitHub Actions, GitLab, or an existing pipeline.
 import { cloneInstalls } from '#docs/reference/setup.ts';
 
 gspot writes one workflow file and never touches the others. Keep your tests, builds, and deploys in your own workflow
-files; GitHub runs every workflow file in parallel, so they never wait on gspot. A testing configuration such as `jest`
-or `pytest` runs its tests inside the gspot job. To run your tests only in your own workflow, leave those
-configurations out.
+files; GitHub runs every workflow file in parallel, so they never wait on gspot. On GitHub, a testing configuration such
+as `jest` or `pytest` runs its tests in a separate `tests` job. On GitLab, it runs them inside the gspot job. To run your
+tests only in your own workflow, leave those configurations out.
 
 `gspot init` leaves CI off and keeps your existing workflows. Run `gspot doctor` to see the commands that enable CI
 for your provider. It detects GitHub or GitLab from your CI files or the `origin` remote.
@@ -37,6 +37,10 @@ include:
 On GitHub, the workflow has one job, `lint`. It runs for pull requests, merge queues, and pushes to the default branch.
 A push to another branch skips the job, so open a pull request to check a branch.
 
+When the repository selects a testing configuration such as `jest`, `vitest`, or `pytest`, the workflow adds a `tests`
+job with the same steps, so the lint result does not wait for your test suite. `lint` leaves out the coverage checks
+with `--skip`, and `tests` runs them with `--only`. The GitLab include keeps one job.
+
 The job checks the files changed after the pull or merge request base, or after the previous push. The first push of a
 branch checks every file. Manual checks run only when you name them with `--only`; the generated workflow does not
 run them automatically.
@@ -53,8 +57,8 @@ macOS. To add other systems:
 gspot set ci.operating_systems linux macos windows
 ```
 
-With more than one system, each system gets its own job: `lint-linux`, `lint-macos`, and `lint-windows`. Pick only
-systems where your checks can run.
+With more than one system, each system gets its own job: `lint-linux`, `lint-macos`, and `lint-windows`. A `tests` job
+follows the same names: `tests-linux`, `tests-macos`, and `tests-windows`. Pick only systems where your checks can run.
 
 To run the Linux job on a larger or self-hosted runner, name its label:
 

@@ -38,6 +38,7 @@ import {
     CHECKOUT_OPTIONS,
     GITLAB_BASE_LINE,
     NEXT_TYPEGEN_LINE,
+    CI_TESTS_JOB_NAME,
     CI_INSTALL_COMMAND,
     GITHUB_CONCURRENCY,
     CI_TIMEOUT_MINUTES,
@@ -64,7 +65,11 @@ function buildGspotTools(pipeline: Pipeline): string {
     return quoteCommand(tools);
 }
 
-function buildJob(pipeline: Pipeline, platform: Pipeline['operatingSystems'][number]): Record<string, unknown> {
+function buildJob(
+    pipeline: Pipeline,
+    platform: Pipeline['operatingSystems'][number],
+    checkCommand: string,
+): Record<string, unknown> {
     const machine = CI_PINS.githubRunners[platform];
     const tools = buildGspotTools(pipeline);
     const hashed = [...CI_CACHE_FILES, ...pipeline.lockfiles]
@@ -113,9 +118,18 @@ function buildJob(pipeline: Pipeline, platform: Pipeline['operatingSystems'][num
             {
                 name: CI_STEP_NAMES.check,
                 env: { [CI_BASE_VARIABLE]: GITHUB_BASE_EXPRESSION },
-                run: CI_CHECK_COMMAND + '\n',
+                run: checkCommand + '\n',
             },
         ],
+    };
+}
+
+function buildJobCommands({ testChecks }: Pipeline): Record<string, string> {
+    if (testChecks.length === 0) return { [CI_JOB_NAME]: CI_CHECK_COMMAND };
+    const checks = testChecks.join(',');
+    return {
+        [CI_JOB_NAME]: `${CI_CHECK_COMMAND} --skip ${checks}`,
+        [CI_TESTS_JOB_NAME]: `${CI_CHECK_COMMAND} --only ${checks}`,
     };
 }
 
@@ -149,8 +163,9 @@ function buildFrozenInstall(session: Session, scopePath: string, lockfile: Froze
 }
 
 /**
-Build one lint job for each system, each with one mise setup. Refuse a command from the repository that holds a
-GitHub expression: GitHub expands it before the shell runs.
+Build one lint job for each system, each with one mise setup. With test checks, each system also gets a tests job,
+and its lint job leaves them out. Refuse a command from the repository that holds a GitHub expression: GitHub expands
+it before the shell runs.
 
 @param pipeline what the workflow runs.
 */
@@ -159,10 +174,12 @@ export function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
     if (commands.some((command) => command.includes(GITHUB_EXPRESSION_START)))
         throw new GspotError('settings', GITHUB_EXPRESSION_MESSAGE);
     const platforms = pipeline.operatingSystems;
-    const jobs = platforms.map((platform): [string, Record<string, unknown>] =>
-        platforms.length === 1
-            ? [CI_JOB_NAME, buildJob(pipeline, platform)]
-            : [`${CI_JOB_NAME}-${platform}`, { name: `${CI_JOB_NAME} (${platform})`, ...buildJob(pipeline, platform) }],
+    const jobs = Object.entries(buildJobCommands(pipeline)).flatMap(([name, command]) =>
+        platforms.map((platform): [string, Record<string, unknown>] =>
+            platforms.length === 1
+                ? [name, buildJob(pipeline, platform, command)]
+                : [`${name}-${platform}`, { name: `${name} (${platform})`, ...buildJob(pipeline, platform, command) }],
+        ),
     );
     const workflow = new Document(
         {
@@ -217,6 +234,18 @@ export function listProjectLockfiles(session: Session): string[] {
             .map((lockfile) => joinScope(scopePath, lockfile))
             .filter((path) => tracked.has(path)),
     );
+}
+
+/**
+List the checks of the selected testing configurations that the repository runs.
+
+@param session the repository and its enabled checks.
+*/
+export function listTestChecks(session: Session): string[] {
+    const checks = session.configuredChecks
+        .filter(({ configuration }) => configuration?.group === 'testing')
+        .map(({ check }) => check.id);
+    return [...new Set(checks)];
 }
 
 /**

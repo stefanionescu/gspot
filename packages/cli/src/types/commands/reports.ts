@@ -31,6 +31,7 @@ export type CheckOptions = {
     onProgress?: ((progress: CheckProgress) => void) | undefined;
     cwd: string;
     only?: string[] | undefined;
+    skip?: string[] | undefined;
     paths: string[];
     staged: boolean;
     push?: PushInput | undefined;
@@ -71,6 +72,7 @@ type CheckStage = (typeof CHECK_STAGES)[number];
 export type CheckFlags = {
     stage?: CheckStage;
     only?: string[];
+    skip?: string[];
     staged?: boolean;
     changed?: boolean;
     base?: string;

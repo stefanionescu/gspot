@@ -53,6 +53,7 @@ function buildRunOptions(options: CheckOptions, filters: RunFilters, revision: R
         changed: changed?.paths,
         comparison,
         only: options.only,
+        skip: options.skip,
         paths,
         messageFile: options.messageFile,
         ...buildHistorySelection(revision, changed),
@@ -84,28 +85,28 @@ function selectArgumentPaths(session: Session, options: CheckOptions, changed: s
     return [...selected];
 }
 
-function assertOnlyChecks(session: Session, only: string[] | undefined): string[] {
-    const notes: string[] = [];
+function assertNamedChecks(session: Session, options: Pick<CheckOptions, 'only' | 'skip'>): string[] {
     const selected = session.scopes.flatMap((scope) =>
         scope.configurations.flatMap((configuration) => configuration.checks.map((check) => ({ check, scope }))),
     );
     const shipped = listChecksById(session.configurationsByName.values());
     const settings = session.settings;
-    const requested = only ?? [];
-    for (const id of requested) {
-        assertCheckExists(id, Object.values(settings.commandChecks));
+    const commandChecks = Object.values(settings.commandChecks);
+    for (const id of options.skip ?? []) assertCheckExists(id, commandChecks);
+    return (options.only ?? []).flatMap((id) => {
+        assertCheckExists(id, commandChecks);
         const match = selected.find(({ check }) => check.id === id);
-        if (match === undefined) {
-            const owner = shipped.get(id);
-            if (owner !== undefined)
-                throw new GspotError(
-                    'arguments',
-                    `${id} belongs to ${owner.configuration.name}, which no scope selects. Run gspot add ${owner.configuration.name}.`,
-                );
-        } else if (findSettingsSkip(settings, match.scope, match.check)?.cause === 'level')
-            notes.push(`${id}: --only allows this check to run here; it stays off in hooks at level basic.`);
-    }
-    return notes;
+        if (match !== undefined)
+            return findSettingsSkip(settings, match.scope, match.check)?.cause === 'level'
+                ? [`${id}: --only allows this check to run here; it stays off in hooks at level basic.`]
+                : [];
+        const owner = shipped.get(id);
+        if (owner === undefined) return [];
+        throw new GspotError(
+            'arguments',
+            `${id} belongs to ${owner.configuration.name}, which no scope selects. Run gspot add ${owner.configuration.name}.`,
+        );
+    });
 }
 
 async function warnMissingHooks(session: Session, revision: RevisionSource | undefined): Promise<void> {
@@ -176,7 +177,7 @@ export async function runTreeCheck(
             cancelSignal,
         });
         addRevisionPaths(session, revision);
-        const onlyNotes = assertOnlyChecks(session, options.only);
+        const onlyNotes = assertNamedChecks(session, options);
         const filters = await readRunFilters(session, options, cancelSignal, revision);
         await warnMissingHooks(session, revision);
         const result = await runChecks(session, buildRunOptions(options, filters, revision));

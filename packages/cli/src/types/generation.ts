@@ -53,6 +53,7 @@ export type Pipeline = {
     operatingSystems: NonNullable<Settings['ci']>['operating_systems'];
     linuxRunner: NonNullable<Settings['ci']>['linux_runner'];
     lockfiles: string[];
+    testChecks: string[];
 };
 
 export type FrozenLockfile = keyof typeof FROZEN_INSTALLS;

@@ -78,8 +78,14 @@ export const ARGUMENT_REFUSALS = [
     [
         'an empty --only list',
         ['check', '--only', ','],
-        'The value , is not valid for --only. Name a check, such as --only python/ruff. Run gspot check --help to see its arguments and options.',
+        'The value , is not valid for --only. Name a check, such as python/ruff. Run gspot check --help to see its arguments and options.',
     ],
+    [
+        'an empty --skip list',
+        ['check', '--skip', ','],
+        'The value , is not valid for --skip. Name a check, such as python/ruff. Run gspot check --help to see its arguments and options.',
+    ],
+    ['an unknown --skip check', ['check', '--skip', 'bash/unknown'], 'There is no check called bash/unknown.'],
 ] as const;
 
 const TEST_VERSION = '0.0.0-test';
