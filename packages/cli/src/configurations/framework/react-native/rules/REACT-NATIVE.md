@@ -2,7 +2,7 @@
 
 Read this rule when you change a React Native or Expo app.
 
-Read REACT.md first.
+Read `REACT.md` beside this file first.
 
 ## Components and touch
 

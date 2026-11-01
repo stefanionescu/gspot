@@ -2,8 +2,8 @@
 
 Read this rule when you change Drizzle schemas, queries, or migrations.
 
-These decisions cover Drizzle with PostgreSQL. Use the adapter and APIs of the installed release. SUPABASE.md holds the
-connection and identity decisions for Supabase.
+These decisions cover Drizzle with PostgreSQL. Use the adapter and APIs of the installed release. In a Supabase project, the
+Supabase rule holds the connection and identity decisions.
 
 ## Connections and schema ownership
 

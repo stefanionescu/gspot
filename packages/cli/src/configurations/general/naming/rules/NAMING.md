@@ -91,8 +91,8 @@ domain concept.
 | `Provider`   | Supplies a capability or value, especially when the source may vary. |
 | `Adapter`    | Bridges one interface or framework shape to another.                 |
 
-Use `Route`, `Callback`, `Observer`, and `Listener` only for the framework shapes they name. SWIFT.md defines UI role
-words such as `View`, `ViewModel`, `ViewController`, and `Coordinator`. Never use `Manager`. Keep `Service` for
+Use `Route`, `Callback`, `Observer`, and `Listener` only for the framework shapes they name. In Swift, keep the UI role
+words `View`, `ViewModel`, `ViewController`, and `Coordinator` for those roles. Never use `Manager`. Keep `Service` for
 framework roles, such as a NestJS provider.
 
 ## Functions and methods

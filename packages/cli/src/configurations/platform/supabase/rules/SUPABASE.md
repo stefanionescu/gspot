@@ -2,7 +2,7 @@
 
 Read this rule when you change Supabase migrations, storage, Edge Functions, or `config.toml`.
 
-Read POSTGRES.md too. Supabase uses the API roles `anon`, `authenticated`, and `service_role`.
+Read `POSTGRES.md` beside this file too. Supabase uses the API roles `anon`, `authenticated`, and `service_role`.
 
 ## Layout and migrations
 
@@ -81,7 +81,7 @@ tool. See [migration history](https://supabase.com/docs/guides/local-development
   `functions/_shared/`, which Supabase never deploys.
 - Name a function folder in kebab-case for its callable operation, not its technology: `submit-order`, never
   `SubmitOrder` or `provider_handler`. The folder, the `config.toml` table, and the deployed name match.
-- Edge Functions run on Deno; read DENO.md too.
+- Edge Functions run on Deno; read `DENO.md` beside this file too.
 - Keep `verify_jwt = true` for user-authenticated functions. Set it to `false` only when the function exposes nothing
   but public, harmless behavior, verifies a provider webhook signature, checks a service secret, or takes a Vault secret
   from cron.
