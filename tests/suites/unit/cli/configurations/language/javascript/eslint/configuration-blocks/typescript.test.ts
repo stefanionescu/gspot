@@ -11,6 +11,25 @@ import {
     TYPED_RULE_PROJECTS,
 } from '#tests/config/configurations/javascript/configuration-blocks.ts';
 
+// typescript-estree keeps the first project service of a process, so this test runs first in its file.
+test('a config file outside every tsconfig gets the typed rules, and one that a tsconfig includes stays there', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript']),
+        'package.json': '{"private":true,"type":"module"}',
+        'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src/**/*.ts","vitest.config.ts"]}',
+        'src/value.ts': 'export const value = 1;\n',
+        'vite.config.ts': 'export const port = 3000;\n',
+        'vitest.config.ts': 'export const timeout = 3000;\n',
+        'scripts/deploy.ts': 'export const target = "production";\n',
+    });
+    const eslint = await buildEslint(sandbox.path);
+    const results = await eslint.lintFiles(['vite.config.ts', 'vitest.config.ts', 'scripts/deploy.ts']);
+    expect(results.flatMap(({ messages }) => messages.filter(({ fatal }) => fatal === true))).toStrictEqual([]);
+    expect(results.flatMap(({ messages }) => messages.map(({ message }) => message))).not.toContainEqual(
+        expect.stringContaining('strictNullChecks'),
+    );
+});
+
 test.each([...TYPED_RULE_PROJECTS])('$name gets typed lint rules', async ({ configurations, tables, files, file }) => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([...configurations], { level: 'all', tables }),

@@ -216,6 +216,7 @@ export type PlannedEslintFile = {
     scope: Scope;
     nodeFiles: string[];
     projects: string[];
+    defaultProjectFiles: string[];
     blockWriter: BlockWriter;
     eslintFiles: EslintFiles;
     levelRules: EslintLevelRules;
@@ -262,6 +263,7 @@ export type EslintScope = {
     dependencies: string[];
     sourceFiles: string[];
     projects: string[];
+    defaultProjectFiles: string[];
 };
 
 export type ConfigurationBuilder = (scope: EslintScope, configuration: string) => ConfigurationBlocks;

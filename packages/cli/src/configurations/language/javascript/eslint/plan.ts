@@ -1,14 +1,16 @@
-import { basename } from 'node:path/posix';
-import { escapeGlob } from '#cli/system/paths.ts';
+import type { Session } from '#cli/types/tools.ts';
 import type { Scope } from '#cli/types/settings.ts';
+import { basename, relative } from 'node:path/posix';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
 import type { Config } from '#cli/types/repository.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { BASE_RULES } from '#cli/config/configurations/eslint.ts';
-import { CODE_LANGUAGES } from '#cli/config/configurations/blocks.ts';
+import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
+import { escapeGlob, convertToPosixPath, extractParentFolder } from '#cli/system/paths.ts';
 import { MISE_TASKS_GLOB, NODE_SHEBANG_TAG } from '#cli/config/configurations/structure.ts';
+import { CODE_LANGUAGES, DEFAULT_PROJECT_FILES } from '#cli/config/configurations/blocks.ts';
 import type { PlannedConfig, PlannedEslintFile } from '#cli/types/configurations/language.ts';
 import { buildRuleOptions } from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
 import { buildScopeLimitRules } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
@@ -18,6 +20,21 @@ function listConfigConfigurations(scopes: Scope[], scope: Scope, config: Config)
     if (config.per_scope) return scope.configurations;
     const every = [scope, ...scopes].flatMap((each) => each.configurations);
     return new Map(every.map((configuration) => [configuration.name, configuration])).values().toArray();
+}
+
+function listDefaultProjectFiles(session: Session, projects: string[]): string[] {
+    const isDefaultProjectFile = buildPathMatcher([...DEFAULT_PROJECT_FILES]);
+    const covered = new Set(
+        projects.flatMap((path) => {
+            const project = readTsconfigProject(session.root, extractParentFolder(path), [], session.cache);
+            return [...(project?.projects.values() ?? [])].flatMap(({ fileNames }) =>
+                fileNames.map((file) => convertToPosixPath(relative(session.root, file))),
+            );
+        }),
+    );
+    return session.repository.files
+        .map(({ path }) => path)
+        .filter((path) => isDefaultProjectFile(path) && !covered.has(path));
 }
 
 /**
@@ -48,13 +65,15 @@ export function buildPlannedEslintFile(planned: PlannedConfig): PlannedEslintFil
             ],
         })),
     });
+    const projects = session.repository.files
+        .filter((file) => basename(file.path) === TSCONFIG_FILE)
+        .map((file) => file.path);
     return {
         session,
         nodeFiles,
         scope,
-        projects: session.repository.files
-            .filter((file) => basename(file.path) === TSCONFIG_FILE)
-            .map((file) => file.path),
+        projects,
+        defaultProjectFiles: listDefaultProjectFiles(session, projects),
         levelRules: {
             code: {
                 ...BASE_RULES,

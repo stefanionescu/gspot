@@ -136,6 +136,14 @@ export const EXTENSIONLESS_CODE = { '.js': 'never', '.jsx': 'never', '.ts': 'nev
 
 export const FILE_EXTENSION_RULE = 'n/file-extension-in-import';
 
+export const DENO_IMPORT_EXTENSION = 'ts';
+
+export const DEFAULT_PROJECT_FILES = ['**/*.config.{ts,mts,cts}', '**/scripts/*.ts'] as const;
+
+export const DEFAULT_PROJECT_FILE_LIMIT = 8;
+
+export const DEFAULT_PROJECT_LIMIT_OPTION = 'maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING';
+
 export const IMPORT_EXTENSIONS = [
     '.js',
     '.ts',
