@@ -113,7 +113,7 @@ export const SONAR_FLOW_SAMPLES = [
     },
     {
         name: 'jump',
-        rule: 'no-restricted-syntax',
+        rule: 'gspot/restricted-syntax',
         level: 'basic',
         bad: 'for (const item of items) { use(item); continue; }',
         good: 'for (const item of items) { use(item); }',
@@ -254,7 +254,7 @@ export const SONAR_REGEX_SAMPLES = [
     },
     {
         name: 'dot',
-        rule: 'no-restricted-syntax',
+        rule: 'gspot/restricted-syntax',
         bad: String.raw`export const found = /a[\s\S]b/s.test(text);`,
         good: 'export const found = /a.b/s.test(text);',
     },
