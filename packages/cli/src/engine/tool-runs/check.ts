@@ -13,11 +13,11 @@ import { buildCommandLines } from '#cli/engine/tool-runs/batches.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/engine/results.ts';
 import { hasProjectCoverage, stripCoverageArguments } from '#cli/engine/plan.ts';
+import { listCopyPythonArguments, buildCopyPythonEnvironment } from '#cli/tools/uv.ts';
 import { runToolProcess, buildOtherToolEnvironment } from '#cli/engine/tool-runs/tool.ts';
 import { RAN_STATUSES, FILES_PLACEHOLDER, PYTHON_CONFIGURATION } from '#cli/config/engine.ts';
 import { addCommandLine, buildCheckResult, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import type { CheckResult, CheckSession, CommandLaunch, CheckRunOptions } from '#cli/types/engine/run.ts';
-import { findMissingEnvironment, listCopyPythonArguments, buildCopyPythonEnvironment } from '#cli/tools/uv.ts';
 import type { FolderRun, CommandRun, CommandBatch, CommandSetup, Substitutions } from '#cli/types/engine/tool-runs.ts';
 
 import {
@@ -110,13 +110,7 @@ async function runInFolder(run: FolderRun): Promise<CheckResult> {
               })
             : undefined;
     const folder = options.copyRoot ?? copy?.path;
-    const commandSetup = buildCommandLaunch(planned, {
-        session,
-        command,
-        root: folder ?? session.root,
-        options,
-        toolPath,
-    });
+    const commandSetup = buildCommandLaunch(planned, { session, command, root: folder ?? session.root, toolPath });
     commandSetup.env = buildOtherToolEnvironment(
         session,
         listOtherTools(planned.scope, planned.check, command),
@@ -188,20 +182,13 @@ Resolves the working folder and expands the tool environment values.
 
 @param session the repository and its settings.
 @param planned the check and its files.
-@param setup the overrides and the folder of the run.
-@param setup.options the overrides from the check code.
-@param setup.root the repository, or the copy of it that the command runs in.
+@param root the repository, or the copy of it that the command runs in.
 */
-export function buildCommandSetup(
-    session: CheckSession,
-    planned: PlannedCheck,
-    { options, root }: { options: CheckRunOptions; root: string },
-): CommandSetup {
+export function buildCommandSetup(session: CheckSession, planned: PlannedCheck, root: string): CommandSetup {
     const { scope } = planned;
     const cwd = selectCommandFolder(root, planned);
     const substitutions = buildCommandSubstitutions(root, planned, cwd);
     const files = substitutions.files;
-    if (options.listFileArguments !== undefined) substitutions.files = options.listFileArguments(session, planned);
     const env =
         planned.check.env === undefined
             ? {}
@@ -250,18 +237,17 @@ Expands a check or fix command into file batches that fit the command line.
 @param expansion.session the repository and its tools.
 @param expansion.command the executable and the arguments as declared.
 @param expansion.root the repository, or the copy of it that the tool runs in.
-@param expansion.options the overrides from the check code.
 @param expansion.toolPath the resolved executable path.
 */
 export function buildCommandLaunch(
     planned: PlannedCheck,
-    expansion: { session: CheckSession; command: string[]; root: string; options: CheckRunOptions; toolPath: string },
+    expansion: { session: CheckSession; command: string[]; root: string; toolPath: string },
 ): CommandLaunch {
-    const { session, root, options, toolPath } = expansion;
-    const { cwd, files, substitutions, env } = buildCommandSetup(session, planned, { options, root });
+    const { session, root, toolPath } = expansion;
+    const { cwd, files, substitutions, env } = buildCommandSetup(session, planned, root);
     const command = expansion.command.with(0, toolPath);
     const commandArguments = expandCommand(session, planned, command, substitutions);
-    const commandLines = command.includes(FILES_PLACEHOLDER)
+    const commandLines = command.some((argument) => FILES_PLACEHOLDER.test(argument))
         ? buildCommandLines(planned, { session, command, substitutions })
         : buildFileCommandLines(commandArguments, files);
     return {
@@ -287,9 +273,7 @@ export async function runCommandCheck(
 ): Promise<CheckResult> {
     const tool = planned.tool as Tool;
     const base = buildBaseResult(planned, session);
-    const missingEnvironment = findMissingEnvironment(session, planned);
-    if (missingEnvironment !== undefined) return { ...base, ...missingEnvironment };
-    const setup = buildCommandSetup(session, planned, { options, root: session.root });
+    const setup = buildCommandSetup(session, planned, session.root);
     const command = buildToolCommand(session, planned, options, setup.env);
     const { cwd } = setup;
     const configs = options.listConfigs?.(session, planned) ?? [];

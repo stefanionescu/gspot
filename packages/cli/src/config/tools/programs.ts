@@ -22,11 +22,7 @@ export const MISE_PROJECT_FILES = new Set([MISE_CONFIG_FILE, MISE_LOCKFILE]);
 
 export const TOOL_ENVIRONMENT = { NO_COLOR: '1', FORCE_COLOR: '0' } as const;
 
-export const INTERPRETER_FLAGS: Readonly<Record<string, string>> = { basedpyright: '--pythonpath' };
-
 export const UV_RUN_ARGUMENTS = ['run', '--no-sync'] as const;
-
-export const PYTHON_ENVIRONMENT_CHECKS: ReadonlySet<string> = new Set(['python/basedpyright', 'pytest/coverage']);
 
 export const PROJECT_ENVIRONMENT_MESSAGE = 'The project environment .venv is missing. Run uv sync, then check again.';
 

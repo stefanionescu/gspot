@@ -71,7 +71,7 @@ async function runFixInCopy(
         dependencies: [],
         cancelSignal: session.cancelSignal,
     });
-    const setup = buildCommandLaunch(planned, { session, command, root: scratch.path, options, toolPath });
+    const setup = buildCommandLaunch(planned, { session, command, root: scratch.path, toolPath });
     const files = openFiles(session.root);
     const result = await runFixCommands(session, planned, setup);
     const corrected = openFiles(scratch.path);
@@ -96,7 +96,6 @@ async function runFixTool(
     { command, tool, code }: { command: string[]; tool: Tool; code: CheckCode | undefined },
 ): Promise<FixResult> {
     const options: CheckRunOptions = {
-        listFileArguments: code?.listFileArguments,
         listConfigs: code?.listConfigs,
     };
     const selected = { ...planned, tool };
@@ -118,7 +117,7 @@ async function runFixTool(
     return runFixCommands(
         session,
         selected,
-        buildCommandLaunch(selected, { session, command, root: session.root, options, toolPath }),
+        buildCommandLaunch(selected, { session, command, root: session.root, toolPath }),
     );
 }
 

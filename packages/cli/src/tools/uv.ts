@@ -10,13 +10,7 @@ import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import type { Tool, VersionedInstaller } from '#cli/types/manifests.ts';
 import type { Session, ProcessFailure, ConfiguredCheck } from '#cli/types/tools.ts';
 import { UV_TOOL, UV_FLAGS, UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/installers.ts';
-
-import {
-    UV_RUN_ARGUMENTS,
-    INTERPRETER_FLAGS,
-    PYTHON_ENVIRONMENT_CHECKS,
-    PROJECT_ENVIRONMENT_MESSAGE,
-} from '#cli/config/tools/programs.ts';
+import { UV_RUN_ARGUMENTS, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 
 /**
 List the interpreter arguments for a tool in the Python environment of a copy.
@@ -26,8 +20,8 @@ List the interpreter arguments for a tool in the Python environment of a copy.
 @returns the interpreter flag and executable when the tool accepts them.
 */
 export function listCopyPythonArguments(tool: Tool, environment: Record<string, string>): string[] {
-    const flag = Object.hasOwn(INTERPRETER_FLAGS, tool.name) ? INTERPRETER_FLAGS[tool.name] : undefined;
     const environmentPath = environment[UV_PROJECT_ENVIRONMENT];
+    const flag = tool.interpreter_flag;
     return flag === undefined || environmentPath === undefined ? [] : [flag, buildVenvPythonPath(environmentPath)];
 }
 
@@ -85,7 +79,7 @@ export function findMissingEnvironment(
     session: Session,
     planned: Pick<ConfiguredCheck, 'check' | 'scope'>,
 ): ProcessFailure | undefined {
-    if (!PYTHON_ENVIRONMENT_CHECKS.has(planned.check.id)) return undefined;
+    if (planned.check.needs?.includes('python-environment') !== true) return undefined;
     const scope = planned.scope.path;
     const project = joinScope(scope, PYPROJECT_TOML);
     if (session.repository.files.every((file) => file.path !== project)) return undefined;

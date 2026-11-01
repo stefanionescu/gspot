@@ -162,7 +162,6 @@ test('per-file commands keep the arguments after the file', async () => {
         session,
         command: planned.check.command!,
         root: session.root,
-        options: {},
         toolPath: process.execPath,
     });
     const result = await spawnProcess(setup.commandLines[0]!.commandArguments, {
@@ -194,7 +193,6 @@ test.each([...SHFMT_INDENT_CASES])(
             session,
             command: planned!.check.command!,
             root: session.root,
-            options: {},
             toolPath: process.execPath,
         });
         expect(command.commandArguments[command.commandArguments.indexOf('-i') + 1]).toBe(expected);

@@ -61,6 +61,7 @@ file = "pyproject.toml"
 table = "tool.ruff"
 
 [[tool]]
+interpreter_flag = "--pythonpath"
 min_version = "1.20.0"
 name = "basedpyright"
 npm = "basedpyright"
@@ -367,6 +368,7 @@ exit_codes = [1]
 files = { extensions = [".py", ".pyi"] }
 help = "Fix the type, or narrow it where the value arrives."
 name = "basedpyright"
+needs = ["python-environment"]
 output = { format = "json", list = "generalDiagnostics", line_base = 0, fields = { file = "file", line = "range.start.line", column = "range.start.character", rule = "rule", message = "message" } }
 runs = "scope"
 stage = "push"

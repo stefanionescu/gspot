@@ -1,6 +1,7 @@
 import type { Check } from '#cli/types/manifests.ts';
 import type { CheckCode } from '#cli/types/engine/run.ts';
 import { checkTsc } from '#cli/configurations/tsc/check.ts';
+import { YAML_RULE_DOCS } from '#cli/config/configurations/registry.ts';
 import { checkVale } from '#cli/configurations/general/prose/checks.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import { checkYaml } from '#cli/configurations/general/data-files/checks.ts';
@@ -60,7 +61,6 @@ import { checkAllowedNames } from '#cli/configurations/general/naming/checks/all
 import { checkImportRules } from '#cli/configurations/general/structure/checks/import-rules.ts';
 import { checkBashDocComments } from '#cli/configurations/language/bash/checks/doc-comments.ts';
 import { checkHeaders, checkRedirects } from '#cli/configurations/platform/cloudflare/checks.ts';
-import { YAML_RULE_DOCS, MARKDOWNLINT_PATH_PREFIX } from '#cli/config/configurations/registry.ts';
 import { buildV8rFile, buildTaploFile } from '#cli/configurations/general/data-files/generate.ts';
 import { checkBashFunctionSize } from '#cli/configurations/language/bash/checks/function-size.ts';
 import { checkSwiftDocComments } from '#cli/configurations/language/swift/checks/doc-comments.ts';
@@ -225,10 +225,6 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'javascript/biome': { run: checkJavascriptBiome },
     'licenses/allowed': { check: checkAllowed },
     'markdown/fences': { check: checkFences },
-    'markdown/markdownlint': {
-        listFileArguments: (_session, planned) =>
-            planned.files.map((file) => `${MARKDOWNLINT_PATH_PREFIX}${file.path}`),
-    },
     'naming/allowed-names': { check: checkAllowedNames },
     'naming/identifiers': { check: checkIdentifiers },
     'naming/paths': { check: checkPaths },

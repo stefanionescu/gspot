@@ -77,7 +77,8 @@ function expandArgument(
     argument: string,
     substitutions: Substitutions,
 ): CommandArgument[] {
-    if (argument === FILES_PLACEHOLDER) return substitutions.files;
+    const files = FILES_PLACEHOLDER.exec(argument);
+    if (files !== null) return substitutions.files.map((file) => `${files.groups?.['prefix'] ?? ''}${file}`);
     if (argument === FILE_PLACEHOLDER) return [{ file: true }];
     const workspace = WORKSPACE_PLACEHOLDER.exec(argument)?.[1];
     if (workspace !== undefined)

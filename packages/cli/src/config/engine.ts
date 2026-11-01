@@ -220,7 +220,7 @@ export const COMMAND_PLACEHOLDER = /\{(?<name>[a-z_]+)(?::(?<value>[^{}]+))?\}/g
 
 export const SETTING_ONLY_PLACEHOLDER = /^\{setting:(?<name>[a-z\d_.-]+)\}$/u;
 
-export const FILES_PLACEHOLDER = '{files}';
+export const FILES_PLACEHOLDER = /^\{files(?::prefix=(?<prefix>[^}]*))?\}$/u;
 
 export const COPIES_FOLDER = '.gspot-copies';
 

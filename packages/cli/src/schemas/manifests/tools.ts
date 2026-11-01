@@ -245,6 +245,7 @@ const toolSchema = z
         kind: z.enum(TOOL_KINDS).default('program'),
         version: z.string().optional(),
         min_version: minimumVersionSchema.optional(),
+        interpreter_flag: z.string().min(1).optional(),
         install_help: z.string().min(1).optional(),
         system: z.boolean().optional(),
         builds: z.enum(TOOL_BUILDS).array().min(1).optional(),

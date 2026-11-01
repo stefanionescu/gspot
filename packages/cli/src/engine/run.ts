@@ -11,6 +11,7 @@ import { isEveryPath } from '#cli/settings/scopes.ts';
 import { buildRunReport } from '#cli/engine/report.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { findMissingEnvironment } from '#cli/tools/uv.ts';
 import { isActive, planChecks } from '#cli/engine/plan.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { IgnoreRecord } from '#cli/types/settings.ts';
@@ -63,6 +64,8 @@ async function findUnrunnableResult(
     base: CheckResult,
 ): Promise<CheckResult | undefined> {
     if (isCanceled(session)) return { ...base, status: 'error', note: CANCELED_CHECK_NOTE };
+    const environment = findMissingEnvironment(session, planned);
+    if (environment !== undefined) return { ...base, ...environment };
     if (planned.check.needs?.includes('docker') !== true) return undefined;
     const docker = buildToolAvailability(
         getTool(session.configurationsByName.values(), DOCKER_TOOL),
@@ -273,7 +276,6 @@ export async function runCheckCode(
     if (code?.check !== undefined) return runBuiltInCheck(code.check, session, planned, options);
     return (code?.run ?? runCommandCheck)(session, planned, {
         ...options,
-        listFileArguments: code?.listFileArguments,
         listConfigs: code?.listConfigs,
     });
 }

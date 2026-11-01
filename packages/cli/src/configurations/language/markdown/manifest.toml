@@ -31,10 +31,10 @@ target = "markdownlint-cli2.mjs"
 tool = "markdownlint-cli2"
 
 [[check]]
-command = ["markdownlint-cli2", "--no-globs", "--config", "{config_file:markdownlint-cli2}", "{files}"]
+command = ["markdownlint-cli2", "--no-globs", "--config", "{config_file:markdownlint-cli2}", "{files:prefix=:}"]
 example = "A heading that jumps from level one to level three reports MD001. Change the later heading to level two."
 exit_codes = [1]
-fix = ["markdownlint-cli2", "--fix", "--no-globs", "--config", "{config_file:markdownlint-cli2}", "{files}"]
+fix = ["markdownlint-cli2", "--fix", "--no-globs", "--config", "{config_file:markdownlint-cli2}", "{files:prefix=:}"]
 help = "Run `gspot check --fix` for the rules that fix themselves; read the rule name for the rest."
 name = "markdownlint"
 output = { format = "markdownlint" }

@@ -49,6 +49,7 @@ exit_codes = [1, 5]
 files = { extensions = [".py"] }
 help = "Fix each failed test, and add tests for the code that the report marks uncovered. Lower `coverage.min_line_percent` only with a reason."
 name = "coverage"
+needs = ["python-environment"]
 output = { format = "regex", pattern = "^(?:(?:FAILED|ERROR) (?<file>[^\\s:]+)(?:::\\S+)?(?: - .*)?|FAIL Required test coverage.*|(?:=+ )?no tests ran in .+?(?: =+)?)$" }
 runs = "scope"
 stage = "push"
