@@ -4,7 +4,9 @@ ESLint rules for code that AI coding agents often write.
 
 The rules flag files that only forward to another module, functions of a few statements, and exports that only rename a
 value. They flag imports through index files and relative imports that leave their folder. They also flag comments mixed
-into import blocks and private environment variables read in client code.
+into import blocks and private environment variables read in client code. The security rules flag weak cryptography,
+turned-off TLS checks, queries and templates built from strings, unsafe Express and cloud infrastructure settings, and
+secrets in the code. The accessibility rules flag JSX tables without headers and objects without a text alternative.
 
 The [gspot CLI](https://www.npmjs.com/package/@gspothq/cli) sets this plugin up for you. Install it yourself only
 when you run ESLint without gspot.

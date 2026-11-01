@@ -1,0 +1,17 @@
+import plugin from '#eslint-plugin/plugin.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+
+buildRuleTester().run('xml-parser-xxe', plugin.rules['xml-parser-xxe'], {
+    valid: [
+        "import libxmljs from 'libxmljs';\nlibxmljs.parseXmlString(xml);\nlibxmljs.parseXmlString(xml, { noblanks: true });",
+    ],
+    invalid: [
+        {
+            code: "const libxmljs = require('libxmljs');\nlibxmljs.parseXmlString(xml, { noent: true });\nlibxmljs.parseXml(xml, { noent: false });\nimport { parseXml } from 'libxmljs2';\nparseXml(xml, { noblanks: true, noent: true });",
+            errors: [
+                { messageId: 'entities', line: 2 },
+                { messageId: 'entities', line: 5 },
+            ],
+        },
+    ],
+});

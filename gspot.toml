@@ -161,6 +161,7 @@ writeable = "ESLint accepts writeable as the value of a global."
 styl = "The Stylus stylesheet extension is .styl."
 USAGE = "mise uses USAGE in task argument directives."
 xdescribe = "Jasmine, Jest, and Mocha name their disabled suite xdescribe."
+ede = "OpenSSL names the Triple DES ciphers des-ede and des-ede3."
 
 [tools.eslint]
 import_extension = "ts"

@@ -110,6 +110,7 @@ exceptions:
   - styl
   - USAGE
   - xdescribe
+  - ede
   - API
   - CLI
   - HTTP

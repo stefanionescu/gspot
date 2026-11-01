@@ -1,5 +1,6 @@
 import { unwrapExpression } from './syntax.ts';
-import { readAssignedValue } from './modules.ts';
+import type { MemberAssignment } from './types/plugin.ts';
+import { readAssignedValue, readQualifiedName } from './modules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 /**
@@ -63,4 +64,92 @@ export function readLiteralValue(
     const value = readExpressionValue(node, source);
     if (value?.type !== AST_NODE_TYPES.Literal) return undefined;
     return value.value;
+}
+
+/**
+List the values of call arguments, with the elements of array values in place of the arrays, as `app.use` accepts
+middleware lists.
+
+@param values the arguments.
+@param source the current file and scopes.
+*/
+export function listArgumentValues(values: readonly TSESTree.Node[], source: TSESLint.SourceCode): TSESTree.Node[] {
+    return values.flatMap((value) => {
+        const written = readExpressionValue(value, source) ?? value;
+        if (written.type !== AST_NODE_TYPES.ArrayExpression) return [written];
+        return listArgumentValues(
+            written.elements.filter((element) => element !== null),
+            source,
+        );
+    });
+}
+
+/**
+List the object literals that a call passes at the argument positions that its qualified name selects.
+
+@param node the call or the construction.
+@param source the current file and scopes.
+@param positions the argument positions of each qualified name.
+*/
+export function listOptionLiterals(
+    node: TSESTree.CallExpression | TSESTree.NewExpression,
+    source: TSESLint.SourceCode,
+    positions: Readonly<Record<string, readonly number[]>>,
+): TSESTree.ObjectExpression[] {
+    const name = readQualifiedName(node, source);
+    const indexes = name !== undefined && Object.hasOwn(positions, name) ? positions[name] : undefined;
+    return (indexes ?? []).flatMap((index) => {
+        const value = readExpressionValue(node.arguments[index], source);
+        return value?.type === AST_NODE_TYPES.ObjectExpression ? [value] : [];
+    });
+}
+
+/**
+Tell whether the run time builds part of a string expression. A template literal with an expression does, and so does
+a concatenation with an operand other than a literal.
+
+@param node the string expression.
+@returns true when part of the string comes from the run time.
+*/
+export function isDynamicString(node: TSESTree.Node): boolean {
+    if (node.type === AST_NODE_TYPES.TemplateLiteral) return node.expressions.length > 0;
+    if (node.type !== AST_NODE_TYPES.BinaryExpression || node.operator !== '+') return false;
+    const [isLeftLiteral, isRightLiteral] = [node.left, node.right].map(
+        (operand) =>
+            operand.type === AST_NODE_TYPES.Literal ||
+            (operand.type === AST_NODE_TYPES.TemplateLiteral && operand.expressions.length === 0),
+    );
+    if (isRightLiteral !== true) return true;
+    return node.left.type === AST_NODE_TYPES.BinaryExpression ? isDynamicString(node.left) : isLeftLiteral !== true;
+}
+
+/**
+Find the variable that a declaration or an assignment stores an expression in.
+
+@param node the stored expression.
+@param source the current file and scopes.
+*/
+export function findAssignedVariable(node: TSESTree.Node, source: TSESLint.SourceCode): TSESLint.Scope.Variable | null {
+    const { parent } = node;
+    let target: TSESTree.Node | null = null;
+    if (parent?.type === AST_NODE_TYPES.VariableDeclarator) target = parent.id;
+    else if (parent?.type === AST_NODE_TYPES.AssignmentExpression) target = parent.left;
+    return ASTUtils.isIdentifier(target) ? ASTUtils.findVariable(source.getScope(target), target) : null;
+}
+
+/**
+Find the variable and the property name of an assignment to a property of a variable, such as `form.uploadDir = path`.
+
+@param node an assignment of any target.
+@param source the current file and scopes.
+*/
+export function findMemberAssignment(
+    node: TSESTree.AssignmentExpression,
+    source: TSESLint.SourceCode,
+): MemberAssignment | undefined {
+    const { left } = node;
+    if (left.type !== AST_NODE_TYPES.MemberExpression || !ASTUtils.isIdentifier(left.object)) return undefined;
+    const variable = ASTUtils.findVariable(source.getScope(left), left.object);
+    const property = ASTUtils.getPropertyName(left);
+    return variable === null || property === null ? undefined : { variable, property };
 }

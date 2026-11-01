@@ -1,3 +1,5 @@
+import { readExpressionValue } from './values.ts';
+import type { FunctionNode } from './types/rules.ts';
 import type { LocalFunction } from './types/plugin.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
@@ -29,4 +31,17 @@ export function readLocalFunction(node: TSESTree.Node, source: TSESLint.SourceCo
     const definition = variable.defs[0]?.node;
     if (definition === undefined) return undefined;
     return readFunctionNode(definition.type === AST_NODE_TYPES.VariableDeclarator ? definition.init : definition);
+}
+
+/**
+Find the function that an expression holds or names, through the variables that hold it. A declared function without
+a body does not count.
+
+@param node the expression, such as a callback argument.
+@param source the file and its lexical variables.
+*/
+export function findFunction(node: TSESTree.Node | undefined, source: TSESLint.SourceCode): FunctionNode | undefined {
+    const value = node === undefined ? undefined : (readExpressionValue(node, source) ?? node);
+    const found = value === undefined ? undefined : readLocalFunction(value, source);
+    return found?.type === AST_NODE_TYPES.TSDeclareFunction ? undefined : found;
 }

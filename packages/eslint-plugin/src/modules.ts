@@ -1,5 +1,7 @@
 import { unwrapExpression } from './syntax.ts';
+import type { CallText } from './types/plugin.ts';
 import { DRIVE_LETTER, TRAILING_SLASH } from './config/rules.ts';
+import { NODE_PREFIX, MODULE_SEPARATOR } from './config/plugin.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function readImportSpecifier(node: TSESTree.ImportSpecifier, module: string): string | undefined {
@@ -110,8 +112,19 @@ function readMemberModule(
     return module === undefined || property === null ? undefined : `${module}.${property}`;
 }
 
+function readInnerModule(
+    value: TSESTree.Node,
+    source: TSESLint.SourceCode,
+    seen: Set<TSESTree.Node>,
+): string | undefined {
+    if (value.type === AST_NODE_TYPES.TSExternalModuleReference) return value.expression.value;
+    if (value.type === AST_NODE_TYPES.TaggedTemplateExpression) return readModuleName(value.tag, source, seen);
+    return value.type === AST_NODE_TYPES.NewExpression ? readModuleName(value.callee, source, seen) : undefined;
+}
+
 /**
-Follow imported, required, global, and aliased values to their qualified names.
+Follow imported, required, global, and aliased values to their qualified names. A call, a construction, and a
+tagged template read the name of their callee.
 
 @param node the referenced value.
 @param source the current file and its scopes.
@@ -136,11 +149,42 @@ export function readModuleName(
         case AST_NODE_TYPES.MemberExpression: {
             return readMemberModule(value, source, seen);
         }
-        case AST_NODE_TYPES.TSExternalModuleReference: {
-            return value.expression.value;
-        }
         default: {
-            return undefined;
+            return readInnerModule(value, source, seen);
         }
     }
+}
+
+/**
+Name the imported or global value that an expression reads, as SonarJS names it: the module path without a `node:`
+prefix and with its slashes written as dots, then the members. After `import * as s3 from 'aws-cdk-lib/aws-s3'`,
+`new s3.Bucket()` reads `aws-cdk-lib.aws-s3.Bucket`.
+
+@param node the referenced value.
+@param source the current file and its scopes.
+@returns the dotted name, or undefined for a value that no import or global names.
+*/
+export function readQualifiedName(node: TSESTree.Node, source: TSESLint.SourceCode): string | undefined {
+    const name = readModuleName(node, source);
+    if (name === undefined) return undefined;
+    return name.replace(NODE_PREFIX, '').replaceAll('/', MODULE_SEPARATOR);
+}
+
+/**
+Read the first argument of a call to a module function as text, such as the algorithm of `crypto.createCipheriv`.
+
+@param node a call such as `crypto.createCipheriv(algorithm, key, iv)`.
+@param source the source code of the file.
+@param name the qualified name of the function, as `readQualifiedName` writes it.
+@returns the argument and its string value, or undefined for another function or an argument without a fixed string.
+*/
+export function readCallText(
+    node: TSESTree.CallExpression,
+    source: TSESLint.SourceCode,
+    name: string,
+): CallText | undefined {
+    const [argument] = node.arguments;
+    if (argument === undefined || readQualifiedName(node, source) !== name) return undefined;
+    const value = ASTUtils.getStaticValue(argument, source.getScope(argument))?.value;
+    return typeof value === 'string' ? { argument, text: value } : undefined;
 }

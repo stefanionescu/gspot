@@ -19,6 +19,7 @@ writeable = "writeable"
 styl = "styl"
 USAGE = "USAGE"
 xdescribe = "xdescribe"
+ede = "ede"
 
 [files]
 extend-exclude = [

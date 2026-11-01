@@ -1,3 +1,4 @@
+import type { TableCell } from './plugin.ts';
 import { type TSESTree, type TSESLint } from '@typescript-eslint/utils';
 
 export type ClientEnvOptions = [
@@ -139,3 +140,44 @@ export type StateHook = {
     setter: TSESTree.Identifier;
     name: TSESTree.Node;
 };
+
+export type MethodCall = { call: TSESTree.CallExpression; method: string };
+
+export type UploadForm = { node: TSESTree.Node; hasFolder: boolean; keepsExtensions: boolean };
+
+export type SizedForm = { node: TSESTree.Node; size: number };
+
+export type UploadCall = TSESTree.CallExpression | TSESTree.NewExpression;
+
+export type EscapingSetting = { argument: number; property: string; value: boolean };
+
+export type StorageIssue = { node: TSESTree.Node; messageId: 'omitted' | 'unencrypted' };
+
+export type AdminAccess = { node: TSESTree.Node; messageId: 'openRange' | 'anyAddress' };
+
+export type ClearTextListener = {
+    kind: 'call' | 'construct';
+    position: number;
+    protocols: readonly string[];
+    omission: { path: readonly string[]; required: boolean; invalid?: readonly unknown[] };
+};
+
+export type PublicGrant = TSESLint.ReportDescriptor<'accessLevel' | 'unrestricted'>;
+
+export type ClearTextReport = TSESLint.ReportDescriptor<
+    'clearText' | 'transitEncryption' | 'streamEncryption' | 'noTls'
+>;
+
+export type TableBlock = {
+    cell: TableCell;
+    firstRow: number;
+    lastRow: number;
+    firstColumn: number;
+    lastColumn: number;
+};
+
+export type HeaderIssue = TSESLint.ReportDescriptor<'otherHeader' | 'unknownHeader'>;
+
+export type ScriptSettings = { sources: number; isVersioned: boolean; hasIntegrity: boolean; isAnonymous: boolean };
+
+export type IntegrityMessage = 'missingBoth' | 'missingIntegrity' | 'missingCrossOrigin';

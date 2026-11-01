@@ -1,0 +1,22 @@
+import plugin from '#eslint-plugin/plugin.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+
+buildRuleTester().run('file-permissions', plugin.rules['file-permissions'], {
+    valid: [
+        "import fs from 'fs';\nfs.chmodSync('/tmp/report', 0o750);\nprocess.umask(0o027);",
+        "import fs from 'fs';\nfs.chmodSync('/tmp/report', mode);",
+    ],
+    invalid: [
+        {
+            code: "const fs = require('fs');\nfs.chmodSync('/tmp/a', 0o777);\nfs.chmodSync('/tmp/a', 0o750);\nfs.chmod('/tmp/a', '777', cb);\nfs.chmodSync('/tmp/a', fs.constants.S_IRWXU | fs.constants.S_IRWXO);\nfs.chmodSync('/tmp/a', fs.constants.S_IRWXU | fs.constants.S_IRWXG);\nprocess.umask(0o000);\nprocess.umask(0o027);\nconst mode = 0o776;\nfs.promises.chmod('/a', mode);\nfd.fchmodSync(3, 0o644);",
+            errors: [
+                { messageId: 'permissive', line: 2 },
+                { messageId: 'permissive', line: 4 },
+                { messageId: 'permissive', line: 5 },
+                { messageId: 'permissive', line: 10 },
+                { messageId: 'permissive', line: 11 },
+                { messageId: 'permissive', line: 11 },
+            ],
+        },
+    ],
+});

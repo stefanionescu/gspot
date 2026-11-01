@@ -1,8 +1,10 @@
 import type { RuleDocs } from './types/plugin.ts';
 import { PLUGIN_PREFIX } from './config/plugin.ts';
 import { noInMisuse } from './rules/no-in-misuse.ts';
+import { tableHeader } from './rules/table-header.ts';
 import { noClientEnv } from './rules/no-client-env.ts';
 import { noVueMixins } from './rules/no-vue-mixins.ts';
+import { awsRules, securityRules } from './security.ts';
 import { noGlobalThis } from './rules/no-global-this.ts';
 import { noTryPromise } from './rules/no-try-promise.ts';
 import { useTypeAlias } from './rules/use-type-alias.ts';
@@ -28,6 +30,7 @@ import { preferTypeGuard } from './rules/prefer-type-guard.ts';
 import { importBoundaries } from './rules/import-boundaries.ts';
 import { noCodeAfterDone } from './rules/no-code-after-done.ts';
 import { noEmptyTestFile } from './rules/no-empty-test-file.ts';
+import { noTableAsLayout } from './rules/no-table-as-layout.ts';
 import { restrictedSyntax } from './rules/restricted-syntax.ts';
 import { noExclusiveTests } from './rules/no-exclusive-tests.ts';
 import { noInsecureRandom } from './rules/no-insecure-random.ts';
@@ -68,10 +71,12 @@ import { preferBooleanReturn } from './rules/prefer-boolean-return.ts';
 import { noCommentsInImports } from './rules/no-comments-in-imports.ts';
 import { noDuplicateTestRows } from './rules/no-duplicate-test-rows.ts';
 import { noSetterInComponent } from './rules/no-setter-in-component.ts';
+import { embedAlternativeText } from './rules/embed-alternative-text.ts';
 import { noDuplicatedBranches } from './rules/no-duplicated-branches.ts';
 import { noInvertedAssertions } from './rules/no-inverted-assertions.ts';
 import { preferReadonlyStatic } from './rules/prefer-readonly-static.ts';
 import { redundantTypeAliases } from './rules/redundant-type-aliases.ts';
+import { tableHeaderReference } from './rules/table-header-reference.ts';
 import { noBitwiseInCondition } from './rules/no-bitwise-in-condition.ts';
 import { noEqualLoopCondition } from './rules/no-equal-loop-condition.ts';
 import { noPositiveIndexCheck } from './rules/no-positive-index-check.ts';
@@ -109,6 +114,8 @@ import { noInconsistentFunctionCall } from './rules/no-inconsistent-function-cal
 import { noUnenclosedMultilineBlock } from './rules/no-unenclosed-multiline-block.ts';
 
 const rules = {
+    ...securityRules,
+    ...awsRules,
     'no-string-regex-pattern': noStringRegexPattern,
     'no-useless-intersection': noUselessIntersection,
     'no-redundant-optional': noRedundantOptional,
@@ -215,6 +222,10 @@ const rules = {
     'no-trivial-functions': noTrivialFunctions,
     'restricted-syntax': restrictedSyntax,
     'require-server-only': requireServerOnly,
+    'table-header': tableHeader,
+    'table-header-reference': tableHeaderReference,
+    'no-table-as-layout': noTableAsLayout,
+    'embed-alternative-text': embedAlternativeText,
 };
 
 const selectLevelRules = (levels: readonly RuleDocs['level'][]) =>

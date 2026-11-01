@@ -1,0 +1,17 @@
+import plugin from '#eslint-plugin/plugin.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+
+buildRuleTester().run('static-before-session', plugin.rules['static-before-session'], {
+    valid: [
+        "import express from 'express';\nimport session from 'express-session';\nconst app = express();\napp.use(express.static('public'));\napp.use(session({ secret }));",
+    ],
+    invalid: [
+        {
+            code: "const express = require('express');\nconst session = require('express-session');\nconst app = express();\napp.use(express.static('a'));\napp.use(session({ secret }));\napp.use(express.static('public'));\nmodule.exports = function (app) {\n  app.use(express.static('b'));\n  app.use(require('cookie-session')({}));\n  app.use(express.static('c'));\n};",
+            errors: [
+                { messageId: 'staticAfterSession', line: 6 },
+                { messageId: 'staticAfterSession', line: 10 },
+            ],
+        },
+    ],
+});
