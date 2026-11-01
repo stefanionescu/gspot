@@ -116,6 +116,10 @@ cache immediately after installation, even when later checks report findings.
 
 ## Your own pipeline
 
+Use your own pipeline when your project installs private packages, or when its tests need a database or another
+service. The generated job passes no secret to the install step and starts no service container. Keep `ci.enabled` off
+in that case.
+
 Install mise and the runtime of your project. Then install your dependencies and run gspot the way your repository
 starts it; see [Installation](/start/install/#choose-how-to-install). With Bun:
 
