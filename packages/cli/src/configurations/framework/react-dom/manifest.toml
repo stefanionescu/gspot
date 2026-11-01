@@ -18,10 +18,10 @@ required_tools = ["eslint-plugin-jsx-a11y-x"]
 
 [[check]]
 example = "A project that locks `react 19.1.0` and `react-dom 19.0.0` reports `react-versions`. Install the same version of both."
-files = { filenames = ["package.json"] }
+files = { filenames = ["package.json", "bun.lock", "pnpm-lock.yaml", "yarn.lock", "package-lock.json", "npm-shrinkwrap.json"], kinds = ["source", "generated"] }
 help = "Install the same version of react and react-dom."
 name = "react-versions"
 runs = "scope"
-stage = "push"
+stage = "commit"
 summary = "Checks that `react` and `react-dom` resolve to the same version."
 why = "React stops at run time when react and react-dom differ."

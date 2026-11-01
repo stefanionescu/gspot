@@ -95,6 +95,8 @@ You can edit the other keys of that file.
 
 - Commit straight to `main`. Do not open branches or pull requests.
 - Run the integration file of a changed configuration before you push it.
+- A check runs at commit unless it builds, uses the network or Docker, runs tests, or analyzes a whole program (tsc,
+  knip, basedpyright, deptry, vulture, jscpd, Semgrep).
 - A check that runs a linter takes the linter's name. A check that runs a project command takes the name of what it
   checks.
 - A unit test runs the source in process. It may run Git, `mkfifo`, and the npm tools that `mise run setup` installs

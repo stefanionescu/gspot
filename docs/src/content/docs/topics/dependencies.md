@@ -70,8 +70,8 @@ These checks read the project files, without the network:
 
 | Check                              | Stage             | Reports                                                                                                                             |
 | ---------------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `dependencies/stale-lockfile`      | push              | A `package.json` whose dependencies differ from what its npm, pnpm, or Bun lockfile records.                                        |
-| `dependencies/package-manager-pin` | push              | A `packageManager` field that names another version than the mise pin of that package manager.                                      |
+| `dependencies/stale-lockfile`      | commit            | A `package.json` whose dependencies differ from what its npm, pnpm, or Bun lockfile records.                                        |
+| `dependencies/package-manager-pin` | commit            | A `packageManager` field that names another version than the mise pin of that package manager.                                      |
 | `dependencies/lockfiles`           | commit            | Lockfile downloads that do not use HTTPS or an allowed registry host, and a scope that holds the lockfiles of two package managers. |
 | `dependencies/syncpack`            | push, level `all` | A dependency that two workspace packages resolve to different versions.                                                             |
 

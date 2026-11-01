@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { runChecks } from '#cli/engine/run.ts';
+import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { unlink, writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
@@ -177,6 +178,21 @@ test.each([...MISE_PIN_FILES])(
         expect(await runSandboxCheck(sandbox.path, 'dependencies/package-manager-pin')).toStrictEqual([]);
     },
 );
+
+test.each(['mise.toml', '.config/mise.toml'])('a staged %s alone plans package-manager-pin', async (file) => {
+    await using sandbox = await createGitSandbox({
+        'package.json': JSON.stringify({ name: 'shop', private: true }),
+        [file]: BUN_PIN_SETTINGS,
+        'gspot.toml': buildSandboxSettings(['javascript']),
+    });
+    const session = await openSession(sandbox.path);
+    const [planned] = planChecks(session, {
+        stage: 'commit',
+        staged: [file],
+        only: ['dependencies/package-manager-pin'],
+    });
+    expect(planned?.files.map(({ path }) => path)).toContain(file);
+});
 
 test('package-manager-pin uses the highest-precedence mise file in a folder', async () => {
     await using sandbox = await createGitSandbox({
