@@ -2,18 +2,20 @@
 
 ESLint rules for code that AI coding agents often write.
 
-The rules flag the code such agents leave behind: files that only forward to another module, functions of a few
-statements, and exports that only rename a value. They flag imports that cross folder boundaries, and logic bugs in
-comparisons, loops, returns, and regular expressions. They check tests and assertions for Jest, Vitest, Bun, Mocha,
-Jasmine, chai, Playwright, and Cypress, and the use of React, Vue, lodash, jQuery, and Axios. They also report security
-problems in web servers, cookies, cryptography, and cloud stacks.
+The plugin reports:
 
-The [gspot CLI](https://www.npmjs.com/package/@gspothq/cli) sets this plugin up for you. Install it yourself only
-when you run ESLint without gspot.
+- Files that only forward to another module, functions of a few statements, and exports that only rename a value.
+- Relative imports that leave a boundary folder.
+- Logic bugs in comparisons, loops, returns, and regular expressions.
+- Mistakes in tests and assertions for Jest, Vitest, Bun, Mocha, Jasmine, chai, Playwright, and Cypress.
+- Wrong or outdated use of React, Vue, lodash, jQuery, and Axios.
+- Accessibility problems in JSX tables and `<object>` elements.
+- Security problems in web servers, cookies, cryptography, and cloud stacks.
+
+The [gspot CLI](https://www.npmjs.com/package/@gspothq/cli) sets up this plugin. Install the plugin yourself only when
+you run ESLint without gspot.
 
 ## Install
-
-Use an ESLint flat config file, such as `eslint.config.mjs`. The [rule reference](https://generativespotting.com/reference/eslint-plugin/) lists the supported Node.js and ESLint versions.
 
 | Package manager | Command                                                |
 | --------------- | ------------------------------------------------------ |
@@ -24,7 +26,7 @@ Use an ESLint flat config file, such as `eslint.config.mjs`. The [rule reference
 
 ## Use
 
-Add a plugin config to `eslint.config.mjs`. The [rule reference](https://generativespotting.com/reference/eslint-plugin/) lists which rules `recommended` and `all` enable.
+Add the `recommended` or `all` config to `eslint.config.mjs`:
 
 ```javascript
 import gspot from '@gspothq/eslint-plugin';
@@ -32,22 +34,10 @@ import gspot from '@gspothq/eslint-plugin';
 export default [gspot.configs.all];
 ```
 
-The [rule reference](https://generativespotting.com/reference/eslint-plugin/) lists each rule with its options.
-
-Turn on `gspot/require-server-only` for the files that hold server code:
-
-```javascript
-import gspot from '@gspothq/eslint-plugin';
-
-export default [{ files: ['src/server/**/*.js'], plugins: { gspot }, rules: { 'gspot/require-server-only': 'error' } }];
-```
-
-`gspot/import-boundaries` reads its folders relative to the working folder of ESLint. To use another root, set
-`settings: { gspot: { root: import.meta.dirname } }`.
-
 ## TypeScript
 
-Install `@typescript-eslint/parser` with the TypeScript version it supports, then select your TypeScript files:
+Install `@typescript-eslint/parser` with the TypeScript version it supports, then select your TypeScript files.
+`projectService` gives the rules that read types their type information:
 
 ```javascript
 import gspot from '@gspothq/eslint-plugin';
@@ -57,22 +47,15 @@ export default [
     {
         ...gspot.configs.all,
         files: ['**/*.ts', '**/*.tsx'],
-        languageOptions: { parser: tsParser },
+        languageOptions: { parser: tsParser, parserOptions: { projectService: true } },
     },
 ];
 ```
 
-## Magic numbers
+## Rule reference
 
-`gspot/no-magic-numbers` reports the numbers that `@typescript-eslint/no-magic-numbers` reports. It skips the
-initializer of a module-level `const`, where an array of numbers counts as named. It takes the options of that rule
-and needs `@typescript-eslint/eslint-plugin` installed:
-
-```javascript
-import gspot from '@gspothq/eslint-plugin';
-
-export default [{ files: ['**/*.ts'], plugins: { gspot }, rules: { 'gspot/no-magic-numbers': ['error', { ignore: [0, 1] }] } }];
-```
+The [rule reference](https://generativespotting.com/reference/eslint-plugin/) lists each rule, its options, the configs
+that turn it on, and the supported Node.js and ESLint versions.
 
 ## License
 
