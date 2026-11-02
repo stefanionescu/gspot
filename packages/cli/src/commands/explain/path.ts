@@ -1,9 +1,9 @@
 import { formatScope } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { EVERY_CHECK } from '#cli/config/engine.ts';
 import type { Scope } from '#cli/types/settings.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
-import { EVERY_CHECK } from '#cli/config/commands/help.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import { planChecks, formatCheckState } from '#cli/engine/plan.ts';

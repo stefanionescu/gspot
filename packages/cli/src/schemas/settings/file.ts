@@ -5,11 +5,15 @@ import { levelSchema } from '#cli/schemas/manifests/tools.ts';
 import { hooksSchema } from '#cli/schemas/settings/general.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { commandCheckFields } from '#cli/schemas/manifests/checks.ts';
-import { NO_CHECK_PATHS_MESSAGE } from '#cli/config/settings/validation.ts';
 import { toolsSchema as publicToolsSchema } from '#cli/schemas/settings/tools.ts';
 import { configurationTableSchemas } from '#cli/schemas/settings/configurations.ts';
 import { ciSchema, namingSchema, ruleFilesSchema, importRulesSchema } from '#cli/schemas/settings/tables.ts';
 
+import {
+    WEAKENINGS_CHECK,
+    NO_CHECK_PATHS_MESSAGE,
+    WEAKENINGS_IGNORE_MESSAGE,
+} from '#cli/config/settings/validation.ts';
 import {
     formatSchema,
     relativePathSchema,
@@ -47,6 +51,8 @@ export const ignoreSchema = z
         }),
     })
     .superRefine((ignore, context) => {
+        if (ignore.check === WEAKENINGS_CHECK && ignore.rule === undefined)
+            context.addIssue({ code: 'custom', path: ['rule'], message: WEAKENINGS_IGNORE_MESSAGE });
         if (ignore.check !== undefined) {
             return;
         }

@@ -1,5 +1,6 @@
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { EVERY_CHECK } from '#cli/config/engine.ts';
 import { mergeIgnore } from '#cli/settings/text.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { formatNameList } from '#cli/system/text.ts';
@@ -11,7 +12,7 @@ import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { readCheckRuleDocs } from '#cli/configurations/rules.ts';
 import { IGNORE_CHECK_MESSAGE } from '#cli/config/commands/edits.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
-import { EVERY_CHECK, RULE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
+import { RULE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
 import { listChecksById, assertCheckExists, readConfigurations } from '#cli/manifests/read.ts';
 import type { IgnoreFlags, IgnoreOptions, CommandDefinition } from '#cli/types/commands/edits.ts';
 import { pathsOption, buildIgnorePaths, writeSettingsEdit, readIgnoreEditContext } from '#cli/commands/edits.ts';

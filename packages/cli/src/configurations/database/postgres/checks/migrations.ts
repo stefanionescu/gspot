@@ -6,8 +6,7 @@ import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { listCheckFiles } from '#cli/engine/files.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { SYMLINK_MODE, GITLINK_MODE } from '#cli/config/repository/files.ts';
-import { readHead, readBlobs, listRevisionFiles } from '#cli/repository/revisions/files.ts';
+import { readHead, readCommittedTexts } from '#cli/repository/revisions/files.ts';
 import type { Migration, MigrationRead } from '#cli/types/configurations/infrastructure.ts';
 
 import {
@@ -138,22 +137,7 @@ export async function readCommittedMigrations(
 ): Promise<Map<string, string>> {
     const commit = revision === 'HEAD' ? await readHead(session.root, session.cancelSignal) : revision;
     if (commit === undefined) return new Map<string, string>();
-    return remember(session.cache, COMMITTED_MIGRATIONS, `${commit}\0${JSON.stringify(paths)}`, async () => {
-        const committed = await listRevisionFiles(session.root, { kind: 'commit', hash: commit }, session.cancelSignal);
-        const selected = new Set(paths);
-        const files = committed.filter(
-            (file) => selected.has(file.path) && file.mode !== SYMLINK_MODE && file.mode !== GITLINK_MODE,
-        );
-        const blobs = await readBlobs(
-            session.root,
-            files.map((file) => file.hash),
-            session.cancelSignal,
-        );
-        return new Map(
-            files.map((file, index) => {
-                const content = blobs[index] as Buffer;
-                return [file.path, content.toString('utf8')];
-            }),
-        );
-    });
+    return remember(session.cache, COMMITTED_MIGRATIONS, `${commit}\0${JSON.stringify(paths)}`, async () =>
+        readCommittedTexts(session.root, paths, commit, session.cancelSignal),
+    );
 }

@@ -64,3 +64,29 @@ gspot baseline --prune
 `--prune` lowers each count to what the checks still find, and adds nothing, so the file only shrinks. Only
 `gspot baseline` without `--prune` adds counts. A run of some files or some checks judges only what it read, so a
 full `gspot check` reports every stale count.
+
+## See what a change weakens
+
+`gspot/weakenings` runs at push and in CI. It compares `gspot.toml` and `gspot.baseline.json` with the base revision:
+the pushed range, or `--base` in CI. A plain `gspot check` compares them with the last commit.
+
+The check lists these changes:
+
+- an added or wider ignore
+- a removed configuration
+- a lower level
+- a setting that moves in the direction that needs a reason
+- hooks or rule files turned off
+- a baseline that gains a count
+
+A change with a reason prints as a note with its reason, and a change with no reason fails the check. The first baseline
+prints as a note.
+
+An ignore, a removal, and a setting hold their own reason. A lower level, hooks, rule files, and a baseline have no
+field for one, so give it through an ignore of that rule:
+
+```shell
+gspot ignore gspot/weakenings --rule level --reason "The team moves to level all after the release."
+```
+
+Four rules take this ignore: `level`, `hooks`, `rule-files`, and `baseline`. gspot refuses an ignore of the whole check.

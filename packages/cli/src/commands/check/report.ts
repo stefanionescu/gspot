@@ -1,6 +1,8 @@
 import { styleText } from 'node:util';
 import { randomUUID } from 'node:crypto';
+import { EVERY_CHECK } from '#cli/config/engine.ts';
 import { LINE_BREAK } from '#cli/config/parsers.ts';
+import { CODE_MARK } from '#cli/config/commands/help.ts';
 import { formatCheckedContent } from '#cli/engine/report.ts';
 import { formatExplainCommand } from '#cli/engine/results.ts';
 import { print, printWarning } from '#cli/system/terminal.ts';
@@ -8,7 +10,6 @@ import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { BASELINE_FILE } from '#cli/config/repository/files.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { CODE_MARK, EVERY_CHECK } from '#cli/config/commands/help.ts';
 import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 import { formatCount, formatScope, quoteArgument } from '#cli/system/text.ts';
 import type { FixReport, RunReport, CheckResult, FindingOptions } from '#cli/types/engine/run.ts';

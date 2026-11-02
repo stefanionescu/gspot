@@ -26,6 +26,10 @@ export const OVERRIDING_GROUPS = new Set<string>(['framework', 'platform', 'libr
 
 export const NO_CHECK_PATHS_MESSAGE = 'An ignore without check needs paths.';
 
+export const WEAKENINGS_CHECK = 'gspot/weakenings';
+
+export const WEAKENINGS_IGNORE_MESSAGE = `An ignore of ${WEAKENINGS_CHECK} names one rule, so that the check keeps running.`;
+
 export const NO_SETTINGS_MESSAGE = 'There is no gspot.toml here. Run gspot init to create one.';
 
 export const SETTINGS_ENCODING_MESSAGE = 'gspot.toml must contain valid UTF-8 text.';

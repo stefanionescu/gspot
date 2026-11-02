@@ -67,7 +67,7 @@ export function buildRunReport(run: FinishedRun): RunReport {
     return {
         ...(options.comparison !== undefined && { comparison: options.comparison }),
         version: cliPackage.version,
-        notes: [],
+        notes: checks.flatMap(({ reportNotes }) => reportNotes ?? []),
         stages: REPORT_STAGES[options.stage],
         started: started.toISOString(),
         duration: Date.now() - started.getTime(),

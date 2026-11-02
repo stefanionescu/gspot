@@ -115,7 +115,7 @@ export type CheckRunOptions = {
 
 export type FindingOptions = { verbose: boolean; help: string | undefined };
 
-export type BuiltInCheckResult = { findings: CheckFinding[]; files: string[] };
+export type BuiltInCheckResult = { findings: CheckFinding[]; files: string[]; notes?: string[] };
 
 export type BuiltInCheck = (
     session: CheckSession,
@@ -133,6 +133,7 @@ export type CheckResult = {
     findings: readonly Finding[];
     help?: string;
     note?: string;
+    reportNotes?: readonly string[];
     stack?: string;
     cause?: SkipCause | 'no-files';
     rerun?: string;

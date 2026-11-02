@@ -1,8 +1,8 @@
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { SHEBANG_TAG } from '#cli/config/repository/files.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { FOREIGN_HOOK_FOLDERS } from '#cli/config/repository/setup.ts';
+import { SHEBANG_TAG, SETTINGS_FILE } from '#cli/config/repository/files.ts';
 
 const APPLY_HELP = 'Run gspot apply.';
 
@@ -35,6 +35,32 @@ export const GSPOT_RULES = {
     conflictingConfig: 'conflicting-config',
     staleBaseline: 'stale-baseline',
     detectedConfiguration: 'detected-configuration',
+    oldCommand: 'old-command',
+} as const;
+
+export const WEAKENING_RULES = {
+    baseline: 'baseline',
+    configuration: 'configuration',
+    hooks: 'hooks',
+    level: 'level',
+    ruleFiles: 'rule-files',
+    setting: 'setting',
+} as const;
+
+export const WEAKENING_FIXES = {
+    [WEAKENING_RULES.configuration]: 'Run `gspot remove <configuration> --reason "<why>"`, or select it again.',
+    [WEAKENING_RULES.setting]:
+        'Run `gspot set <key> <value> --reason "<why>"`, or restore the value of the base revision.',
+} as const;
+
+export const WEAKENING_IGNORE_HELP =
+    'Undo the change, or run `gspot ignore gspot/weakenings --rule {rule} --reason "<why>"`.';
+
+export const WEAKENINGS_UNREAD_BASE = {
+    rule: 'base',
+    file: SETTINGS_FILE,
+    change: 'gspot/weakenings compared no settings',
+    reason: 'gspot.toml at the base revision does not fit this version of gspot',
 } as const;
 
 export const REPOSITORY_RULES = {

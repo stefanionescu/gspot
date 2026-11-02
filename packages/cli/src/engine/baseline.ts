@@ -1,4 +1,3 @@
-import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { baselineSchema } from '#cli/schemas/engine.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
@@ -8,13 +7,12 @@ import { BASELINE_FILE } from '#cli/config/repository/files.ts';
 import type { Run, CheckResult, BaselineCount } from '#cli/types/engine/run.ts';
 
 /**
-Read the counts of the committed baseline.
+Parse the text of a baseline file.
 
-@param root the folder of the tree that a run checks.
-@returns one count per file, check, and lint rule, or none when the tree has no baseline.
+@param text the file contents, if the file exists.
+@returns one count per file, check, and lint rule, or none without a file.
 */
-export function readBaseline(root: string): BaselineCount[] {
-    const text = find(root, BASELINE_FILE);
+export function parseBaseline(text: string | undefined): BaselineCount[] {
     if (text === undefined) return [];
     return Object.entries(parseJsonFile(BASELINE_FILE, text, baselineSchema)).flatMap(([file, checks]) =>
         Object.entries(checks).flatMap(([check, rules]) =>

@@ -12,7 +12,7 @@ import { formatCount, formatNameList } from '#cli/system/text.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
 import type { BaselineJson, BaselineFlags } from '#cli/types/commands/reports.ts';
-import { pruneCounts, readBaseline, countFindings, formatBaseline } from '#cli/engine/baseline.ts';
+import { pruneCounts, parseBaseline, countFindings, formatBaseline } from '#cli/engine/baseline.ts';
 
 import {
     PRUNE_FLAG,
@@ -33,7 +33,7 @@ async function runBaselineCommand(
     cancelSignal: AbortSignal,
 ): Promise<CommandResult<BaselineJson>> {
     if (prune && find(root, BASELINE_FILE) === undefined) throw new GspotError('arguments', NO_BASELINE_MESSAGE);
-    const previous = readBaseline(root);
+    const previous = parseBaseline(find(root, BASELINE_FILE));
     const { report } = await runEveryCheck(await openSession(root, { cancelSignal }));
     const stopped = report.checks.filter(({ status }) => INCOMPLETE_STATUSES.has(status)).map(({ check }) => check);
     if (stopped.length > 0)

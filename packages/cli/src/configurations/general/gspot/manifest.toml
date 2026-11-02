@@ -3,7 +3,7 @@ ignored_paths = ["**/coverage/**"]
 
 [configuration]
 always_selected = true
-description = "gspot itself: path patterns in gspot.toml that match files, current generated files, no config files that conflict with the generated ones, a reason on each suppression, and a baseline with no stale counts."
+description = "gspot itself: path patterns in gspot.toml that match files, current generated files, no config files that conflict with the generated ones, a reason on each suppression, a baseline with no stale counts, and a reason for each weakening of the settings against the base revision."
 title = "gspot"
 
 [[tool]]
@@ -66,3 +66,12 @@ runs = "once"
 stage = "commit"
 summary = "Reports each configuration that the files of a scope suggest and that gspot.toml neither selects nor removes."
 why = "A language that no configuration selects passes every check, because no check reads it."
+
+[[check]]
+example = "A push that raises `limits.max_file_lines` with no reason reports `setting`. Run `gspot set limits.max_file_lines 400 --reason \"the generated parser needs it\"`."
+help = "Give the change a reason, or undo it. Each message names the setting or the rule."
+name = "weakenings"
+runs = "once"
+stage = "push"
+summary = "Lists each weakening of `gspot.toml` and `gspot.baseline.json` against the base revision: an added or wider ignore, a removed configuration, a lower level, a looser setting, hooks or rule files turned off, and a baseline that grew. A weakening with no reason is a finding, and one with a reason prints as a note."
+why = "A change to the settings is the easiest way to pass a check, and only its reason tells a reviewer that someone chose it."

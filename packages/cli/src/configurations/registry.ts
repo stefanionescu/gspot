@@ -1,7 +1,14 @@
 import type { Check } from '#cli/types/manifests.ts';
+import { checkBaseline } from '#cli/configurations/general/gspot/checks/baseline.ts';
+import { checkWeakenings } from '#cli/configurations/general/gspot/checks/weakenings.ts';
+import { checkSuppressions } from '#cli/configurations/general/gspot/checks/suppressions.ts';
+import { checkGeneratedFiles } from '#cli/configurations/general/gspot/checks/generated-files.ts';
+import { checkUnmatchedPaths } from '#cli/configurations/general/gspot/checks/unmatched-paths.ts';
+import { checkConflictingConfigs } from '#cli/configurations/general/gspot/checks/conflicting-configs.ts';
+import { checkDetectedConfigurations } from '#cli/configurations/general/gspot/checks/detected-configurations.ts';
 import type { CheckCode } from '#cli/types/engine/run.ts';
 import { checkTsc } from '#cli/configurations/tsc/check.ts';
-import { YAML_RULE_DOCS } from '#cli/config/configurations/registry.ts';
+import { YAML_RULE_DOCS, WEAKENING_RULE_DOCS } from '#cli/config/configurations/registry.ts';
 import { checkYaml } from '#cli/configurations/general/data-files/checks.ts';
 import { checkAllowed } from '#cli/configurations/general/licenses/checks.ts';
 import { checkSemgrep } from '#cli/configurations/general/security/checks.ts';
@@ -100,14 +107,6 @@ import {
     checkPlaceholderDocstrings,
 } from '#cli/configurations/language/python/checks.ts';
 import {
-    checkBaseline,
-    checkSuppressions,
-    checkGeneratedFiles,
-    checkUnmatchedPaths,
-    checkConflictingConfigs,
-    checkDetectedConfigurations,
-} from '#cli/configurations/general/gspot/checks.ts';
-import {
     checkAssets,
     checkXcstrings,
     checkEntitlements,
@@ -154,6 +153,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'gspot/conflicting-configs': { check: checkConflictingConfigs },
     'gspot/suppressions': { check: checkSuppressions },
     'gspot/unmatched-paths': { check: checkUnmatchedPaths },
+    'gspot/weakenings': { check: checkWeakenings, ruleDocs: WEAKENING_RULE_DOCS },
     'html/inline-scripts': { check: checkHtmlInlineScripts },
     'javascript/tsc': { run: checkJavascriptTsc },
     'javascript/biome': { run: checkJavascriptBiome },

@@ -299,6 +299,4 @@ export const COMMAND_HELP = {
     },
 } as const;
 
-export const EVERY_CHECK = 'every check';
-
 export const CODE_MARK = '`';

@@ -95,6 +95,7 @@ export async function runBuiltInCheck(
         ...buildBaseResult(planned, session),
         findings,
         ...(files !== undefined && { files, fileCount: files.length }),
+        ...(!Array.isArray(result) && result.notes !== undefined && { reportNotes: result.notes }),
         status: findings.length > 0 ? 'failed' : 'passed',
         duration: Math.round(performance.now() - started),
     };

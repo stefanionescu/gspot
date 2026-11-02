@@ -240,4 +240,6 @@ export const STAGED_FILES = 'the staged files';
 
 export const WORKING_TREE = 'the working tree';
 
+export const EVERY_CHECK = 'every check';
+
 export const BASELINE_EXEMPT_CHECK = /^(?:gspot|secrets)\//u;

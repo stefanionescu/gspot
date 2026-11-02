@@ -1,4 +1,5 @@
 import type { LintRuleDocs } from '#cli/types/tools.ts';
+import { WEAKENING_RULES } from '#cli/config/configurations/structure.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { YAML_RULES, YAML_MESSAGES } from '#cli/config/configurations/general.ts';
 
@@ -46,6 +47,33 @@ export const COMPILER_OPTIONS = {
 export const NESTJS_COMPILER_OPTIONS = { experimentalDecorators: true, emitDecoratorMetadata: true } as const;
 
 export const TYPESCRIPT_TSCONFIG_CHECK = 'typescript/tsconfig';
+
+export const WEAKENING_RULE_DOCS = {
+    [WEAKENING_RULES.baseline]: {
+        description: '`gspot.baseline.json` counts more findings than at the base revision.',
+        why: 'A count that grows accepts new findings as old ones.',
+        fix: 'Fix the new findings, and run `gspot baseline --prune`.',
+        example: 'A count that rises from one to two in `src/app.ts` reports `baseline`.',
+    },
+    [WEAKENING_RULES.hooks]: {
+        description: '`hooks.enabled` turns off against the base revision.',
+        why: 'Without the hooks, the checks run only when someone asks for them.',
+        fix: 'Set `hooks.enabled` back to true.',
+        example: '`enabled = false` under `[hooks]` reports `hooks`.',
+    },
+    [WEAKENING_RULES.level]: {
+        description: '`level` drops against the base revision.',
+        why: 'A lower level turns off every check that runs only at the higher one.',
+        fix: 'Set `level` back.',
+        example: '`level = "basic"` where the base has `level = "all"` reports `level`.',
+    },
+    [WEAKENING_RULES.ruleFiles]: {
+        description: '`rule_files` turns off the rule files, or leaves more of them out, against the base revision.',
+        why: 'An agent follows only the rules it can read.',
+        fix: 'Set `rule_files.enabled` back to true, or remove the entry from `rule_files.exclude`.',
+        example: '`enabled = false` under `[rule_files]` reports `rule-files`.',
+    },
+} as const satisfies Readonly<Record<string, LintRuleDocs>>;
 
 export const YAML_RULE_DOCS = {
     [YAML_RULES.syntax]: {

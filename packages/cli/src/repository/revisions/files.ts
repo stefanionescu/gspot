@@ -2,8 +2,8 @@ import { GspotError } from '#cli/system/errors.ts';
 import { listGitFiles } from '#cli/repository/files/tracked.ts';
 import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
 import type { GitFile, Revision } from '#cli/types/repository.ts';
-import { GIT_INDEX_FILES_ARGUMENTS } from '#cli/config/repository/files.ts';
 import { runGit, runGitStream, runGitForBytes } from '#cli/repository/git/run.ts';
+import { SYMLINK_MODE, GITLINK_MODE, GIT_INDEX_FILES_ARGUMENTS } from '#cli/config/repository/files.ts';
 import { parseGitBlobs, parseTreeFiles, parseListingLine, stripIndexStages } from '#cli/repository/git/output.ts';
 
 import {
@@ -96,6 +96,36 @@ export async function readBlobs(root: string, requested: string[], cancelSignal?
         cancelSignal,
     );
     return requested.map((hash) => blobs.get(hash) as Buffer);
+}
+
+/**
+Read the committed text of regular files at a revision.
+
+@param root the folder where Git runs.
+@param paths the files to read.
+@param revision the commit to read, or `HEAD`.
+@param cancelSignal stops the command.
+@returns the text of each file that the revision holds, by path. An unborn branch holds none.
+*/
+export async function readCommittedTexts(
+    root: string,
+    paths: string[],
+    revision: string,
+    cancelSignal?: AbortSignal,
+): Promise<Map<string, string>> {
+    const commit = revision === 'HEAD' ? await readHead(root, cancelSignal) : revision;
+    if (commit === undefined) return new Map();
+    const selected = new Set(paths);
+    const committed = await listRevisionFiles(root, { kind: 'commit', hash: commit }, cancelSignal);
+    const files = committed.filter(
+        (file) => selected.has(file.path) && file.mode !== SYMLINK_MODE && file.mode !== GITLINK_MODE,
+    );
+    const blobs = await readBlobs(
+        root,
+        files.map((file) => file.hash),
+        cancelSignal,
+    );
+    return new Map(files.map((file, index) => [file.path, (blobs[index] as Buffer).toString('utf8')]));
 }
 
 /**
