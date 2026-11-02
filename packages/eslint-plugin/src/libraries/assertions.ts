@@ -101,7 +101,7 @@ function getExpectAssertion(node: TSESTree.CallExpression, style: AssertionStyle
 }
 
 function getChaiChain(node: TSESTree.Node): ChaiChain | undefined {
-    const names: (string | null)[] = [];
+    const names: Array<string | null> = [];
     let value = node;
     while (value.type === AST_NODE_TYPES.MemberExpression && !value.computed) {
         const name = ASTUtils.getPropertyName(value);

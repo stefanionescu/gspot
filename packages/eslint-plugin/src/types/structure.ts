@@ -8,12 +8,12 @@ export type RelativeImport = { target: string; query: string };
 
 export type RenamedValue = { node: TSESTree.Node; name: string; source: string };
 
-export type RestrictedSyntaxOptions = readonly {
+export type RestrictedSyntaxOptions = ReadonlyArray<{
     selector: string;
     message: string;
     files?: readonly string[];
     ignores?: readonly string[];
-}[];
+}>;
 
 export type TrivialFilesOptions = [
     { reexports: 'none' | 'index-only'; indexExports: number; forwardingFiles: readonly string[] },

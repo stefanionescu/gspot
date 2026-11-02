@@ -3,7 +3,7 @@ import type { TableCell } from '../../types/accessibility.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { getAttribute, isLayoutTable, buildTableGrid, getElementName } from '../../libraries/jsx.ts';
 
-function hasHeaderLine(grid: readonly (readonly TableCell[])[] | null): boolean {
+function hasHeaderLine(grid: ReadonlyArray<readonly TableCell[]> | null): boolean {
     if (grid === null) return true;
     const columns = Array.from({ length: grid[0]?.length ?? 0 }, (_, column) => column);
     const hasHeaderRow = grid.some((row) => row.every(({ isHeader }) => isHeader));

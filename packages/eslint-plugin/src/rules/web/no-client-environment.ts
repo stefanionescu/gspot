@@ -60,7 +60,7 @@ function getMemberName(member: TSESTree.MemberExpression): string | null {
     return argument === undefined ? null : ASTUtils.getStringIfConstant(argument);
 }
 
-function listEnvironmentNames(node: TSESTree.Node): (string | null)[] {
+function listEnvironmentNames(node: TSESTree.Node): Array<string | null> {
     const { parent } = node;
     if (parent?.type === AST_NODE_TYPES.MemberExpression && parent.object === node) return [getMemberName(parent)];
     if (parent?.type === AST_NODE_TYPES.VariableDeclarator && parent.id.type === AST_NODE_TYPES.ObjectPattern)

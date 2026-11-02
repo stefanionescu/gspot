@@ -12,7 +12,7 @@ function getAnchors({ elements }: AST.Alternative): { start: boolean; end: boole
     };
 }
 
-function isOuterAnchorOnly(anchors: readonly { start: boolean; end: boolean }[]): boolean {
+function isOuterAnchorOnly(anchors: ReadonlyArray<{ start: boolean; end: boolean }>): boolean {
     const [first] = anchors;
     const last = anchors.at(-1);
     if (first === undefined || last === undefined || first.end || last.start) return false;

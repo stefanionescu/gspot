@@ -53,8 +53,10 @@ export const staticBeforeSession = createRule<[], 'staticAfterSession'>({
         const source = context.sourceCode;
         let application: TSESTree.Identifier | undefined;
         let session: TSESTree.CallExpression | undefined;
-        const saved: { application: TSESTree.Identifier | undefined; session: TSESTree.CallExpression | undefined }[] =
-            [];
+        const saved: Array<{
+            application: TSESTree.Identifier | undefined;
+            session: TSESTree.CallExpression | undefined;
+        }> = [];
         return {
             ':function'(node: FunctionNode) {
                 saved.push({ application, session });

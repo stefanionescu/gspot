@@ -25,7 +25,11 @@ export const unverifiedHostname = createRule<[], 'unverified'>({
     create(context) {
         const source = context.sourceCode;
         const returns = new Map<TSESTree.Node, TSESTree.ReturnStatement[]>();
-        const checks: { call: TSESTree.CallExpression; isRejecting: boolean; checker: FunctionNode | undefined }[] = [];
+        const checks: Array<{
+            call: TSESTree.CallExpression;
+            isRejecting: boolean;
+            checker: FunctionNode | undefined;
+        }> = [];
         return {
             ReturnStatement(node) {
                 const owner = source.getAncestors(node).findLast((ancestor) => ASTUtils.isFunction(ancestor));

@@ -139,7 +139,7 @@ function listTableRows(
     return rows;
 }
 
-function fillColumns(row: readonly TableCell[], columns: (TableCell | undefined)[]): boolean {
+function fillColumns(row: readonly TableCell[], columns: Array<TableCell | undefined>): boolean {
     let next = 0;
     for (const [column, occupant] of columns.entries()) {
         if (occupant !== undefined || next >= row.length) continue;
@@ -149,7 +149,7 @@ function fillColumns(row: readonly TableCell[], columns: (TableCell | undefined)
     return next > 0;
 }
 
-function placeRow(row: readonly TableCell[], columns: (TableCell | undefined)[]): PlacedRow {
+function placeRow(row: readonly TableCell[], columns: Array<TableCell | undefined>): PlacedRow {
     const isUsed = fillColumns(row, columns);
     const cells = columns.filter((cell) => cell !== undefined);
     let isOpen = true;
@@ -162,8 +162,8 @@ function placeRow(row: readonly TableCell[], columns: (TableCell | undefined)[])
     return { cells, isUsed, isOpen };
 }
 
-function placeRows(rows: readonly (readonly TableCell[])[]): TableCell[][] {
-    const columns: (TableCell | undefined)[] = Array.from({ length: rows[0]?.length ?? 0 });
+function placeRows(rows: ReadonlyArray<readonly TableCell[]>): TableCell[][] {
+    const columns: Array<TableCell | undefined> = Array.from({ length: rows[0]?.length ?? 0 });
     const grid: TableCell[][] = [];
     for (const row of rows) {
         let isUsed = false;

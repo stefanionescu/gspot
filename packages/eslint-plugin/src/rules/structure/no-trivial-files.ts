@@ -15,7 +15,7 @@ import {
     TRIVIAL_FILE_OPTIONS_SCHEMA,
 } from '../../config/structure.ts';
 
-function listBoundValues(statement: TSESTree.Node): (TSESTree.Node | null)[] {
+function listBoundValues(statement: TSESTree.Node): Array<TSESTree.Node | null> {
     switch (statement.type) {
         case AST_NODE_TYPES.ExportDefaultDeclaration: {
             return [statement.declaration];

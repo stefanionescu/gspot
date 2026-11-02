@@ -24,7 +24,7 @@ const manifestCache = new WeakMap<TSESLint.SourceCode, PackageFacts>();
 
 const importCache = new WeakMap<TSESLint.SourceCode, ReadonlySet<string>>();
 
-function readManifestDependencies(path: string): [string, string][] {
+function readManifestDependencies(path: string): Array<[string, string]> {
     try {
         const manifest = JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown> | null;
         const fields = DEPENDENCY_FIELDS.map((field) => manifest?.[field]);

@@ -31,9 +31,9 @@ function hasValues(link: ChainLink, pair: UncertainPair): boolean {
     return pair.minimum === 0 || (values.length >= pair.minimum && (isShape || !pair.needsShape));
 }
 
-function listUncertainPairs(links: ChainLink[]): [ChainLink, ChainLink][] {
+function listUncertainPairs(links: ChainLink[]): Array<[ChainLink, ChainLink]> {
     const names = links.map(({ name }) => name.name);
-    return UNCERTAIN_CHAI_PAIRS.flatMap((pair): [ChainLink, ChainLink][] => {
+    return UNCERTAIN_CHAI_PAIRS.flatMap((pair): Array<[ChainLink, ChainLink]> => {
         const start = names.indexOf(pair.first);
         const end = names.indexOf(pair.second);
         const [first, second] = [links[start], links[end]];

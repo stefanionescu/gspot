@@ -2,14 +2,14 @@ import { createRule } from '../../rule.ts';
 import { buildTableGrid, getElementName } from '../../libraries/jsx.ts';
 import type { TableCell, TableBlock, HeaderIssue } from '../../types/accessibility.ts';
 
-function listHeaderIds(cells: readonly (TableCell | undefined)[]): Set<string> {
+function listHeaderIds(cells: ReadonlyArray<TableCell | undefined>): Set<string> {
     const ids = cells.flatMap((cell) =>
         cell?.isHeader === true && cell.id !== undefined && cell.id !== '' ? [cell.id] : [],
     );
     return new Set(ids);
 }
 
-function listBlocks(grid: readonly (readonly TableCell[])[]): TableBlock[] {
+function listBlocks(grid: ReadonlyArray<readonly TableCell[]>): TableBlock[] {
     const positions = grid.flatMap((cells, row) => cells.map((cell, column) => ({ cell, row, column })));
     const blocks = new Map<number, TableBlock>();
     for (const { cell, row, column } of positions) {
@@ -21,7 +21,7 @@ function listBlocks(grid: readonly (readonly TableCell[])[]): TableBlock[] {
     return [...blocks.values()];
 }
 
-function listHeaderIssues(grid: readonly (readonly TableCell[])[]): HeaderIssue[] {
+function listHeaderIssues(grid: ReadonlyArray<readonly TableCell[]>): HeaderIssue[] {
     const rowHeaders = grid.map((cells) => listHeaderIds(cells));
     const columnHeaders = Array.from({ length: grid[0]?.length ?? 0 }, (_, column) =>
         listHeaderIds(grid.map((cells) => cells[column])),

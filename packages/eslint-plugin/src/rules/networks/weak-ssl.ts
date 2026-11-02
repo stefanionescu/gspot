@@ -14,7 +14,7 @@ import {
     WEAK_SSL_OPTION_ARGUMENTS,
 } from '../../config/networks.ts';
 
-function listFlags(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node): (string | null)[] {
+function listFlags(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node): Array<string | null> {
     if (node.type === AST_NODE_TYPES.BinaryExpression)
         return [...listFlags(source, node.left), ...listFlags(source, node.right)];
     const isConstant =

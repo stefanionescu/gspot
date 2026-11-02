@@ -26,7 +26,7 @@ function getSuiteBody(node: TSESTree.CallExpression, source: TSESLint.SourceCode
     return body?.type === AST_NODE_TYPES.BlockStatement ? body.body : [];
 }
 
-function listMisplacedHooks(members: SuiteMember[]): [TSESTree.CallExpression, 'before' | 'after' | 'group'][] {
+function listMisplacedHooks(members: SuiteMember[]): Array<[TSESTree.CallExpression, 'before' | 'after' | 'group']> {
     const tests = members.filter(({ kind }) => kind !== 'hook').map(({ index }) => index);
     const first = Math.min(...tests);
     const last = Math.max(...tests);

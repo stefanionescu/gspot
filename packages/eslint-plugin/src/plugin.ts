@@ -192,7 +192,7 @@ const rules = {
     'embed-alternative-text': embedAlternativeText,
 };
 
-const selectLevelRules = (levels: readonly RuleDocs['level'][]) =>
+const selectLevelRules = (levels: ReadonlyArray<RuleDocs['level']>) =>
     Object.fromEntries(
         Object.entries(rules)
             .filter(([, rule]) => rule.meta.docs !== undefined && levels.includes(rule.meta.docs.level))

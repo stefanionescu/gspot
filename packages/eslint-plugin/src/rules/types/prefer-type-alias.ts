@@ -20,7 +20,7 @@ export const preferTypeAlias = createRule<[], 'alias'>({
         messages: { alias: 'This {{kind}} type appears {{count}} times. Declare a type alias for it.' },
     },
     create(context) {
-        const uses = new Map<string, (TSESTree.TSUnionType | TSESTree.TSIntersectionType)[]>();
+        const uses = new Map<string, Array<TSESTree.TSUnionType | TSESTree.TSIntersectionType>>();
         const inspect = (node: TSESTree.TSUnionType | TSESTree.TSIntersectionType) => {
             const isNullable =
                 node.type === AST_NODE_TYPES.TSUnionType &&

@@ -46,7 +46,7 @@ function isUniform(branches: readonly Branch[], source: TSESLint.SourceCode): bo
 function listRepeats(
     { branches, isChain }: { branches: readonly Branch[]; isChain: boolean },
     source: TSESLint.SourceCode,
-): { branch: Branch; first: Branch }[] {
+): Array<{ branch: Branch; first: Branch }> {
     return branches.flatMap((branch, index) => {
         if (index === 0 || (!isChain && !isMultiline(branch.body, source))) return [];
         const first = isChain

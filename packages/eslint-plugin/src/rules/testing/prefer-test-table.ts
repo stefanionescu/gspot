@@ -43,9 +43,12 @@ function compareBodies(
     return isSameShape && isSame ? parameters : undefined;
 }
 
-function listSimilarGroups(tests: SimilarTest[], source: TSESLint.SourceCode): { base: SimilarTest; count: number }[] {
+function listSimilarGroups(
+    tests: SimilarTest[],
+    source: TSESLint.SourceCode,
+): Array<{ base: SimilarTest; count: number }> {
     const grouped = new Set<SimilarTest>();
-    const groups: { base: SimilarTest; count: number }[] = [];
+    const groups: Array<{ base: SimilarTest; count: number }> = [];
     for (const [index, base] of tests.entries()) {
         if (grouped.has(base)) continue;
         const parameters = new Set<TSESTree.Node>();

@@ -119,9 +119,9 @@ function listRedundantWrites(
     flow: SegmentFlow,
     usages: ReadonlyMap<TSESLint.Scope.Variable, ReadonlySet<string>>,
     source: TSESLint.SourceCode,
-): TSESLint.ReportDescriptor<'redundant'>[] {
+): Array<TSESLint.ReportDescriptor<'redundant'>> {
     const state = new Map(flow.incoming);
-    const redundant: TSESLint.ReportDescriptor<'redundant'>[] = [];
+    const redundant: Array<TSESLint.ReportDescriptor<'redundant'>> = [];
     for (const reference of flow.references) {
         const { resolved: variable, writeExpr, from } = reference;
         if (variable === null || !reference.isWrite() || !isReportable(reference, usages, source)) continue;
