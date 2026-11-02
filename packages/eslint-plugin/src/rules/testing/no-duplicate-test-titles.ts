@@ -1,9 +1,10 @@
 import { createRule } from '../../rule.ts';
 import { FUNCTION_NODES } from '../../config/plugin.ts';
 import { usesModule } from '../../libraries/packages.ts';
+import type { FunctionNode } from '../../types/plugin.ts';
 import { getLocalFunction } from '../../language/functions.ts';
+import type { TestCall, TitleScan } from '../../types/testing.ts';
 import { getTestCall, listChildNodes } from '../../libraries/testing.ts';
-import type { TestCall, TitleScan, FunctionNode } from '../../types/rules.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { RUNNING_TEST_MODIFIERS, TEST_FRAMEWORK_MODULES } from '../../config/testing.ts';
 

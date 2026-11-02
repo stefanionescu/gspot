@@ -1,6 +1,6 @@
 import { createRule } from '../../rule.ts';
-import type { SuiteMember } from '../../types/rules.ts';
 import { getTestCall } from '../../libraries/testing.ts';
+import type { SuiteMember } from '../../types/testing.ts';
 import { TEST_AFTER_HOOK_NAMES, MARKED_TEST_MODIFIERS } from '../../config/testing.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

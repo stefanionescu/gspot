@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import type { TableCell } from '../../types/plugin.ts';
+import type { TableCell } from '../../types/accessibility.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { getAttribute, isLayoutTable, buildTableGrid, getElementName } from '../../libraries/jsx.ts';
 

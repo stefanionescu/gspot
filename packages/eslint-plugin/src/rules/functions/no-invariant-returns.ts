@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import type { ReturnScope } from '../../types/rules.ts';
+import type { ReturnScope } from '../../types/functions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {

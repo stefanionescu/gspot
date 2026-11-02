@@ -5,7 +5,7 @@ import { getModuleName } from '../../language/modules.ts';
 import { unwrapExpression } from '../../language/syntax.ts';
 import { getExpressionValue } from '../../language/expressions.ts';
 import { getTypes, getTypeCategory } from '../../language/checker.ts';
-import type { LibraryCall, NativeReplacement } from '../../types/rules.ts';
+import type { LibraryCall, NativeReplacement } from '../../types/libraries.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {

@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import type { ClientEnvironmentOptions } from '../../types/rules.ts';
+import type { ClientEnvironmentOptions } from '../../types/security.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {

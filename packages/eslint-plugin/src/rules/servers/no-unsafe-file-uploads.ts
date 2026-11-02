@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import type { UploadForm } from '../../types/rules.ts';
+import type { UploadForm } from '../../types/security.ts';
 import { getQualifiedName } from '../../language/modules.ts';
 import { MULTER_MODULE, UPLOAD_MESSAGES, FORMIDABLE_MODULE } from '../../config/servers.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';

@@ -1,6 +1,6 @@
 import { createRule } from '../../rule.ts';
-import type { FunctionNode } from '../../types/rules.ts';
 import { haveSameTokens } from '../../language/syntax.ts';
+import type { FunctionNode } from '../../types/plugin.ts';
 import { type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 import { DEFAULT_IDENTICAL_LINES, IDENTICAL_FUNCTIONS_OPTIONS_SCHEMA } from '../../config/functions.ts';
 

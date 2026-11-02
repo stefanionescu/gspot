@@ -1,5 +1,6 @@
 import { createRule } from '../../rule.ts';
-import type { MemberCall, UiFrameworks } from '../../types/rules.ts';
+import type { MemberCall } from '../../types/plugin.ts';
+import type { UiFrameworks } from '../../types/testing.ts';
 import { usesModule, readPackageFacts } from '../../libraries/packages.ts';
 import { listBodyNodes, isCypressChain } from '../../libraries/testing.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';

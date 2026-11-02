@@ -1,9 +1,10 @@
 import { createRule } from '../../rule.ts';
 import { isCallOf } from '../../libraries/testing.ts';
 import { FUNCTION_NODES } from '../../config/plugin.ts';
+import type { MemberCall } from '../../types/plugin.ts';
 import { getModuleName } from '../../language/modules.ts';
 import { unwrapExpression } from '../../language/syntax.ts';
-import type { QueryUse, MemberCall, ExpectSubject } from '../../types/rules.ts';
+import type { QueryUse, ExpectSubject } from '../../types/testing.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {

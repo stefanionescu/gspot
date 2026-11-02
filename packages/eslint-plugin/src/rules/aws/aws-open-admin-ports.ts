@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import type { AdminAccess } from '../../types/rules.ts';
+import type { AdminAccess } from '../../types/aws.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { getCdkName, getCdkResult, getCdkArgument, getCdkProperty } from '../../libraries/aws.ts';
 

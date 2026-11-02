@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import type { PublicGrant } from '../../types/rules.ts';
+import type { PublicGrant } from '../../types/aws.ts';
 import { getExpressionValue } from '../../language/expressions.ts';
 import { getCdkName, findBucketOption } from '../../libraries/aws.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';

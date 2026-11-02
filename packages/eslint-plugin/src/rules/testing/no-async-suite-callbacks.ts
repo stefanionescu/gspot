@@ -1,6 +1,6 @@
 import { createRule } from '../../rule.ts';
 import { usesModule } from '../../libraries/packages.ts';
-import type { FunctionNode } from '../../types/rules.ts';
+import type { FunctionNode } from '../../types/plugin.ts';
 import { findFunction } from '../../language/functions.ts';
 import { getTestCall, listBodyNodes } from '../../libraries/testing.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';

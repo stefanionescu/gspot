@@ -40,49 +40,13 @@ export type CallText = { argument: TSESTree.CallExpressionArgument; text: string
 
 export type MemberAssignment = { variable: TSESLint.Scope.Variable; property: string };
 
-export type CdkPropertyCheck = {
-    path: readonly string[];
-    required: boolean;
-    position?: number;
-    valid?: readonly unknown[];
-    invalid?: readonly unknown[];
-    validNames?: readonly string[];
-    invalidNames?: readonly string[];
-};
+export type RuleContext = Readonly<TSESLint.RuleContext<string, unknown[]>>;
 
-export type CdkIssue = { node: TSESTree.Node; kind: 'omitted' | 'invalid' };
+export type FunctionNode =
+    | TSESTree.FunctionDeclaration
+    | TSESTree.FunctionExpression
+    | TSESTree.ArrowFunctionExpression;
 
-export type CdkTarget = { value: TSESTree.Node; report: TSESTree.Node };
+export type FileContext = Pick<RuleContext, 'filename' | 'settings' | 'sourceCode'>;
 
-export type CdkLiteralTarget = { literal: TSESTree.ObjectExpression; report: TSESTree.Node };
-
-export type CdkPathResult = { targets: CdkTarget[]; issues: CdkIssue[] };
-
-type PolicyKeys = {
-    effect: string;
-    allow: string;
-    actions: string;
-    resources: string;
-    conditions: string;
-    principals: string;
-    isJson: boolean;
-};
-
-export type CdkResult = { status: 'found' | 'missing' | 'unknown'; node: TSESTree.Node };
-
-export type PolicyStatement = { statement: CdkResult; keys: PolicyKeys };
-
-export type CdkFinding = CdkIssue & { property: string };
-
-export type JsxAttributeValue = { node: TSESTree.JSXAttribute; value: unknown };
-
-export type TableCell = {
-    isHeader: boolean;
-    headers: string[] | undefined;
-    id: string | undefined;
-    node: TSESTree.JSXElement;
-    block: number;
-    rowSpan: number;
-};
-
-export type PlacedRow = { cells: TableCell[]; isUsed: boolean; isOpen: boolean };
+export type MemberCall = TSESTree.CallExpression & { callee: TSESTree.MemberExpression };

@@ -1,6 +1,6 @@
-import type { StateHook } from '../types/rules.ts';
 import { REACT_STATE_HOOK } from '../config/react.ts';
 import { getModuleName } from '../language/modules.ts';
+import type { StateHook } from '../types/libraries.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getOwnerName(node: TSESTree.Node): TSESTree.Node | null | undefined {

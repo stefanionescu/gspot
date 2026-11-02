@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import type { FunctionNode } from '../../types/rules.ts';
+import type { FunctionNode } from '../../types/plugin.ts';
 import { EQUALITY_OPERATORS } from '../../config/logic.ts';
 import { findFunction } from '../../language/functions.ts';
 import { getQualifiedName } from '../../language/modules.ts';

@@ -1,7 +1,8 @@
 import { createRule } from '../../rule.ts';
 import { getTestCall } from '../../libraries/testing.ts';
+import type { FileContext } from '../../types/plugin.ts';
+import type { TestCall, EarlyReturnFramework } from '../../types/testing.ts';
 import { usesModule, listImportedModules } from '../../libraries/packages.ts';
-import type { TestCall, FileContext, EarlyReturnFramework } from '../../types/rules.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {

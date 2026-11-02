@@ -1,6 +1,5 @@
-import type { FunctionNode } from '../types/rules.ts';
 import { getExpressionValue } from './expressions.ts';
-import type { LocalFunction } from '../types/plugin.ts';
+import type { FunctionNode, LocalFunction } from '../types/plugin.ts';
 import { ASTUtils, TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getFunctionNode(node: TSESTree.Node | null): LocalFunction | undefined {

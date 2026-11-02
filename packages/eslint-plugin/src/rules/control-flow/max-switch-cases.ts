@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import type { SwitchCasesOptions } from '../../types/rules.ts';
+import type { SwitchCasesOptions } from '../../types/logic.ts';
 import { DEFAULT_SWITCH_CASES, SWITCH_CASES_OPTIONS_SCHEMA } from '../../config/logic.ts';
 
 export const maxSwitchCases = createRule<SwitchCasesOptions, 'cases'>({

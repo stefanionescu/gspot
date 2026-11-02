@@ -1,6 +1,6 @@
 import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
-import type { MagicNumbersOptions } from '#eslint-plugin/types/rules.ts';
+import type { MagicNumbersOptions } from '#eslint-plugin/types/variables.ts';
 
 buildRuleTester().run<keyof (typeof plugin.rules)['no-magic-numbers']['meta']['messages'], MagicNumbersOptions>(
     'no-magic-numbers',

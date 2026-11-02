@@ -5,14 +5,14 @@ import { listArgumentValues, getExpressionValue, getOptionProperties } from '../
 
 import type {
     CdkIssue,
-    CdkTarget,
     CdkResult,
+    CdkTarget,
     CdkFinding,
     CdkPathResult,
     PolicyStatement,
     CdkLiteralTarget,
     CdkPropertyCheck,
-} from '../types/plugin.ts';
+} from '../types/aws.ts';
 import {
     S3_BUCKET,
     POLICY_FROM_JSON,

@@ -1,3 +1,4 @@
+import type { FileContext } from '../types/plugin.ts';
 import { getModuleName } from '../language/modules.ts';
 import { isCallOf, isCypressChain } from './testing.ts';
 import { usesModule, listImportedModules } from './packages.ts';
@@ -6,14 +7,13 @@ import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescr
 import type {
     Assertion,
     ChaiChain,
-    FileContext,
     AssertionKind,
     AssertionChecks,
     AssertionStyles,
     AssertionSubject,
     AssertionPredicate,
     AssertionComparison,
-} from '../types/rules.ts';
+} from '../types/assertions.ts';
 import {
     EXPECT_SETUP,
     CHAI_TERMINALS,

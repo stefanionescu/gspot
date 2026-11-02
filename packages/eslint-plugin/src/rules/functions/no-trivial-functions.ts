@@ -1,9 +1,10 @@
 import picomatch from 'picomatch';
 import { createRule } from '../../rule.ts';
+import { type FunctionNode } from '../../types/plugin.ts';
 import { findPathInFolder } from '../../language/modules.ts';
 import { PLUGIN_PREFIX, FUNCTION_NODES } from '../../config/plugin.ts';
+import { type TrivialFunctionsOptions } from '../../types/functions.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { type FunctionNode, type TrivialFunctionsOptions } from '../../types/rules.ts';
 
 import {
     ONE_STATEMENT,

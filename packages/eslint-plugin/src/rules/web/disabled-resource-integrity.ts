@@ -1,6 +1,6 @@
 import { createRule } from '../../rule.ts';
 import { getTypes } from '../../language/checker.ts';
-import type { ScriptSettings, IntegrityMessage } from '../../types/rules.ts';
+import type { ScriptSettings, IntegrityMessage } from '../../types/security.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {

@@ -1,8 +1,9 @@
 import { createRule } from '../../rule.ts';
 import { usesModule } from '../../libraries/packages.ts';
 import { getTestCall } from '../../libraries/testing.ts';
+import type { FileContext } from '../../types/plugin.ts';
+import type { PlacementState } from '../../types/assertions.ts';
 import { readAssertionKind } from '../../libraries/assertions.ts';
-import type { FileContext, PlacementState } from '../../types/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { STATEMENT_LINKS, EVIDENCE_IMPORTS, EVIDENCE_DEPENDENCIES } from '../../config/assertions/evidence.ts';
 

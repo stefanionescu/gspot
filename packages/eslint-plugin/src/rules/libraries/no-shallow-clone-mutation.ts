@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import type { Isolation } from '../../types/rules.ts';
+import type { Isolation } from '../../types/libraries.ts';
 import { haveSameTokens, unwrapExpression } from '../../language/syntax.ts';
 import { getAssignedValue, getQualifiedName } from '../../language/modules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';

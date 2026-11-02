@@ -1,7 +1,7 @@
 import { createRule } from '../../rule.ts';
-import type { StateHook } from '../../types/rules.ts';
 import { COMPONENT_NAME } from '../../config/react.ts';
 import { FUNCTION_NODES } from '../../config/plugin.ts';
+import type { StateHook } from '../../types/libraries.ts';
 import { getStateHook, isNamedFunction } from '../../libraries/react.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

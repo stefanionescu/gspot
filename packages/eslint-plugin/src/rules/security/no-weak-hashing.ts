@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import type { MethodCall } from '../../types/rules.ts';
+import type { MethodCall } from '../../types/security.ts';
 import { getQualifiedName } from '../../language/modules.ts';
 import { getExpressionValue } from '../../language/expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';

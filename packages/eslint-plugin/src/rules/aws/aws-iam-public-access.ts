@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import type { PolicyStatement } from '../../types/plugin.ts';
+import type { PolicyStatement } from '../../types/aws.ts';
 import { listArgumentValues } from '../../language/expressions.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { ANY_PRINCIPAL, ARN_PRINCIPAL, ANY_PRINCIPALS, JSON_PRINCIPAL_KEY } from '../../config/aws.ts';

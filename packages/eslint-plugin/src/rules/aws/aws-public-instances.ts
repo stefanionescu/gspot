@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import type { CdkResult } from '../../types/plugin.ts';
+import type { CdkResult } from '../../types/aws.ts';
 import { listArgumentValues } from '../../language/expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

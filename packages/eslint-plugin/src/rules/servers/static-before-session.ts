@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import type { FunctionNode } from '../../types/rules.ts';
+import type { FunctionNode } from '../../types/plugin.ts';
 import { getQualifiedName } from '../../language/modules.ts';
 import { listArgumentValues } from '../../language/expressions.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';

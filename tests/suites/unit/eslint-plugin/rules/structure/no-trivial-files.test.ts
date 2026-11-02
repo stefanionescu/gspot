@@ -1,6 +1,6 @@
 import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
-import type { TrivialFilesOptions } from '#eslint-plugin/types/rules.ts';
+import type { TrivialFilesOptions } from '#eslint-plugin/types/structure.ts';
 
 buildRuleTester().run<
     keyof (typeof plugin.rules)['no-trivial-files']['meta']['messages'],

@@ -1,6 +1,6 @@
 import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
-import type { ImportBoundariesOptions } from '#eslint-plugin/types/rules.ts';
+import type { ImportBoundariesOptions } from '#eslint-plugin/types/structure.ts';
 
 buildRuleTester().run<'alias' | 'escape', [Partial<ImportBoundariesOptions[0]>]>(
     'import-boundaries regressions',

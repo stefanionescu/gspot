@@ -1,7 +1,8 @@
 import { FUNCTION_NODES } from '../config/plugin.ts';
+import type { FileContext } from '../types/plugin.ts';
 import { findFunction } from '../language/functions.ts';
 import { usesModule, getRequiredModule } from './packages.ts';
-import type { TestCall, TableCall, TestOrigin, TestCallee, FileContext } from '../types/rules.ts';
+import type { TestCall, TableCall, TestCallee, TestOrigin } from '../types/testing.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {

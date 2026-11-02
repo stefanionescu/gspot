@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import type { TestCall } from '../../types/rules.ts';
+import type { TestCall } from '../../types/testing.ts';
 import { FUNCTION_NODES } from '../../config/plugin.ts';
 import { getTestCall, listBodyNodes } from '../../libraries/testing.ts';
 import { DONE_STOP_STATEMENTS, MARKED_TEST_MODIFIERS } from '../../config/testing.ts';

@@ -5,7 +5,7 @@ import { PLUGIN_PREFIX } from '../../config/plugin.ts';
 import { findPathInFolder } from '../../language/modules.ts';
 import { buildSourceVisitors } from '../../language/syntax.ts';
 import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { RelativeImport, ImportBoundariesOptions } from '../../types/rules.ts';
+import type { RelativeImport, ImportBoundariesOptions } from '../../types/structure.ts';
 
 import {
     RESOURCE_QUERY,

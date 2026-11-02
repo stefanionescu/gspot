@@ -3,7 +3,7 @@ import { getTypes } from '../../language/checker.ts';
 import type { TypeReader } from '../../types/plugin.ts';
 import { usesModule } from '../../libraries/packages.ts';
 import { listChildNodes } from '../../libraries/testing.ts';
-import type { AssertionSearch } from '../../types/rules.ts';
+import type { AssertionSearch } from '../../types/assertions.ts';
 import { readAssertionKind, isChaiPropertyAssertion } from '../../libraries/assertions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

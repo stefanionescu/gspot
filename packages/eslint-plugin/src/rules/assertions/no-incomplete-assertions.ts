@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import type { AssertionFinding } from '../../types/rules.ts';
+import type { AssertionFinding } from '../../types/assertions.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {

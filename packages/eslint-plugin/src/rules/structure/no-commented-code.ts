@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import type { CommentGroup } from '../../types/rules.ts';
+import type { CommentGroup } from '../../types/structure.ts';
 import { type TSESTree, type TSESLint, AST_TOKEN_TYPES } from '@typescript-eslint/utils';
 
 import {

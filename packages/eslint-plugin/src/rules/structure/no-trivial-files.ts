@@ -4,7 +4,7 @@ import { createRule } from '../../rule.ts';
 import { PLUGIN_PREFIX } from '../../config/plugin.ts';
 import { findPathInFolder } from '../../language/modules.ts';
 import { isAlias, isTypeAlias } from '../../language/syntax.ts';
-import type { TrivialFilesOptions } from '../../types/rules.ts';
+import type { TrivialFilesOptions } from '../../types/structure.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {

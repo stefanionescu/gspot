@@ -1,7 +1,8 @@
 import { join, dirname } from 'node:path';
 import { existsSync, readFileSync } from 'node:fs';
 import { PLUGIN_PREFIX } from '../config/plugin.ts';
-import type { FileContext, PackageFacts, VersionCeiling } from '../types/rules.ts';
+import type { FileContext } from '../types/plugin.ts';
+import type { PackageFacts, VersionCeiling } from '../types/libraries.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {

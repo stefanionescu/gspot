@@ -1,5 +1,5 @@
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { PlacedRow, TableCell, JsxAttributeValue } from '../types/plugin.ts';
+import type { PlacedRow, TableCell, JsxAttributeValue } from '../types/accessibility.ts';
 
 import {
     TABLE_CELLS,

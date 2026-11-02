@@ -1,8 +1,7 @@
 import { createRule } from '../../rule.ts';
 import { getTypes } from '../../language/checker.ts';
-import type { TypeReader } from '../../types/plugin.ts';
-import type { FunctionNode } from '../../types/rules.ts';
 import { findFunction } from '../../language/functions.ts';
+import type { TypeReader, FunctionNode } from '../../types/plugin.ts';
 import { getExpressionValue, findAssignedVariable } from '../../language/expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES, AST_TOKEN_TYPES } from '@typescript-eslint/utils';
 

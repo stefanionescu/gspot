@@ -1,6 +1,6 @@
 import { createRule } from '../../rule.ts';
 import { isSameTokens } from '../../libraries/testing.ts';
-import type { AssertionChain } from '../../types/rules.ts';
+import type { AssertionChain } from '../../types/assertions.ts';
 import { listImportedModules } from '../../libraries/packages.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

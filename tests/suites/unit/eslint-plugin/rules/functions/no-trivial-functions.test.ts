@@ -1,6 +1,6 @@
 import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
-import type { TrivialFunctionsOptions } from '#eslint-plugin/types/rules.ts';
+import type { TrivialFunctionsOptions } from '#eslint-plugin/types/functions.ts';
 
 buildRuleTester().run<
     keyof (typeof plugin.rules)['no-trivial-functions']['meta']['messages'],
