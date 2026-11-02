@@ -43,7 +43,8 @@ test("markdownlint at level all adds MD041 only at level all and applies each sc
         { file: 'root.md', line: 7, rule: 'MD045' },
         { file: 'title.md', line: 1, rule: 'MD041' },
     ]);
-    await writeFile(join(root, 'root.md'), MARKDOWN_FILES['root.md'].replace('![]', REQUEST_FLOW_IMAGE));
+    const described = MARKDOWN_FILES['root.md'].replace('![]', () => REQUEST_FLOW_IMAGE);
+    await writeFile(join(root, 'root.md'), described);
     await writeFile(
         join(root, 'app/guide.md'),
         MARKDOWN_FILES['app/guide.md'].replace('Nested label.', 'nested label.'),
@@ -64,9 +65,7 @@ test("markdownlint at level all adds MD041 only at level all and applies each sc
     ]);
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
     expect(await readFile(join(root, 'app/guide.md'), 'utf8')).toBe(MARKDOWN_FILES['app/guide.md']);
-    expect(await readFile(join(root, 'root.md'), 'utf8')).toBe(
-        MARKDOWN_FILES['root.md'].replace('![]', REQUEST_FLOW_IMAGE),
-    );
+    expect(await readFile(join(root, 'root.md'), 'utf8')).toBe(described);
 });
 
 test("markdownlint run by an editor reads the pointer files with each scope's options", async () => {
@@ -78,7 +77,7 @@ test("markdownlint run by an editor reads the pointer files with each scope's op
                 level: 'all',
                 tables: MARKDOWNLINT_TABLES,
             }),
-            'root.md': MARKDOWN_FILES['root.md'].replace('![]', REQUEST_FLOW_IMAGE),
+            'root.md': MARKDOWN_FILES['root.md'].replace('![]', () => REQUEST_FLOW_IMAGE),
             'title.md': TITLED_DOCUMENT,
         },
     });

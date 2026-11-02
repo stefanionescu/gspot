@@ -37,7 +37,10 @@ test('psql commands and variables keep error positions and PostgreSQL casts', as
     ].join('\n');
     const broken = await parseSqlFile(text, createRunCache(process.cwd()));
     expect(broken.error).toStrictEqual({ text: `syntax error at or near "${TYPO.select}"`, line: 4, column: 1 });
-    const corrected = await parseSqlFile(text.replace(`${TYPO.select} 2`, SELECT_SQL), createRunCache(process.cwd()));
+    const corrected = await parseSqlFile(
+        text.replace(`${TYPO.select} 2`, () => SELECT_SQL),
+        createRunCache(process.cwd()),
+    );
     expect(corrected.error).toBeUndefined();
     expect(corrected.statements.map((statement) => getPosition(text, statement.start))).toStrictEqual([
         { line: 2, column: 1 },
@@ -68,7 +71,10 @@ test('an SQL error after Unicode points at the right token', async () => {
         line: 1,
         column: text.lastIndexOf(TYPO.select) + 1,
     });
-    const corrected = await parseSqlFile(text.replace(`${TYPO.select} 2`, SELECT_SQL), createRunCache(process.cwd()));
+    const corrected = await parseSqlFile(
+        text.replace(`${TYPO.select} 2`, () => SELECT_SQL),
+        createRunCache(process.cwd()),
+    );
     expect(corrected.error).toBeUndefined();
 });
 

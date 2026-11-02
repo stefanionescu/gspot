@@ -63,7 +63,8 @@ test('an import rule refuses a leading ! and accepts an extglob', () => {
         'gspot.toml:7: import_rule.1.paths.1: The import rule app cannot exclude !app/generated.ts. Put a narrower rule for those files first, and list what it may import in can_import.',
     );
     const extglobs = ['app/!(procedures).*', '!(procedures)/**'];
-    const settings = readSettings(ORDERED_IMPORT_RULES.replace('["app/**"]', JSON.stringify(extglobs)), sandbox.path);
+    const text = ORDERED_IMPORT_RULES.replace('["app/**"]', () => JSON.stringify(extglobs));
+    const settings = readSettings(text, sandbox.path);
     expect(settings.import_rule[1]?.paths).toStrictEqual(extglobs);
 });
 

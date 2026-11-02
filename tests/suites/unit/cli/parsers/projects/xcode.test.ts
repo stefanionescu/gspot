@@ -45,7 +45,7 @@ test.each([...PROJECT_SYNTAX_CASES])('the project reader accepts $name', ({ sour
 });
 
 test('each native target keeps its own name, sources, and folders', () => {
-    const source = GROUPED_PBXPROJ.replace(NATIVE_TARGET_SOURCE, NAMED_TARGET_SOURCE);
+    const source = GROUPED_PBXPROJ.replace(NATIVE_TARGET_SOURCE, () => NAMED_TARGET_SOURCE);
     expect(parseProjectSources(source, '/repo/App.xcodeproj/project.pbxproj').targets).toStrictEqual([
         {
             name: 'App Kit',

@@ -79,7 +79,7 @@ test('Swift imports follow the import rules through the SwiftPM targets, and a f
 
 test('an Xcode native target is a Swift module named after the target', async () => {
     await using sandbox = await createGitSandbox({
-        'App.xcodeproj/project.pbxproj': GROUPED_PBXPROJ.replace(NATIVE_TARGET_SOURCE, NAMED_TARGET_SOURCE),
+        'App.xcodeproj/project.pbxproj': GROUPED_PBXPROJ.replace(NATIVE_TARGET_SOURCE, () => NAMED_TARGET_SOURCE),
         'First Group/Shared.swift': 'public struct Shared {}\n',
         'Root.swift': 'public struct Root {}\n',
         'Tools/Script.swift': 'import App_Kit\n',

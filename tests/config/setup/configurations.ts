@@ -32,7 +32,7 @@ export const COMMITLINT_PACKAGE =
 
 export const COMMITLINT_GSPOT_PACKAGE = COMMITLINT_PACKAGE.replace(
     '"kept"',
-    `"devDependencies":{"${cliPackage.name}":"${cliPackage.version}"},"kept"`,
+    () => `"devDependencies":{"${cliPackage.name}":"${cliPackage.version}"},"kept"`,
 );
 
 export const CALLED_WORKFLOW = '.github/workflows/called.yml';
