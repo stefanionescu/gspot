@@ -12,10 +12,10 @@ import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { VALE_TEMPORARY_NAME } from '#cli/config/repository/setup.ts';
 import { runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
-import type { ToolInstall, ArchiveDownload } from '#cli/types/tools.ts';
 import { deleteStaleTemporaryPaths } from '#cli/system/files/folders.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { rmSync, mkdirSync, renameSync, mkdtempSync, writeFileSync } from 'node:fs';
+import type { ToolInstall, ArchiveDownload, DownloadSession } from '#cli/types/tools.ts';
 
 import {
     JSON_INDENT,
@@ -66,7 +66,11 @@ async function downloadValePackages(install: ToolInstall, folder: string): Promi
     for (const name of VALE_PACKAGES) {
         const release = VALE_PACKAGE_RELEASES[name];
         const url = VALE_PACKAGE_URLS[name];
-        const bytes = await downloadArchive(install, { url, name: VALE_DOWNLOAD_NAME, limit: VALE_ARCHIVE_LIMIT });
+        const bytes = await downloadArchive(install.session, {
+            url,
+            name: VALE_DOWNLOAD_NAME,
+            limit: VALE_ARCHIVE_LIMIT,
+        });
         const sha256 = createHash('sha256').update(bytes).digest('hex');
         if (sha256 !== release.sha256)
             throw new GspotError(
@@ -225,14 +229,14 @@ export function buildValeIni({
 /**
 Download a release archive within the install timeout and a size limit.
 
-@param install what install needs for this step.
+@param session the time limit and the cancel signal of the download.
 @param download the archive to fetch.
 */
-export async function downloadArchive(install: ToolInstall, download: ArchiveDownload): Promise<Buffer> {
+export async function downloadArchive(session: DownloadSession, download: ArchiveDownload): Promise<Buffer> {
     const advice = selectProxyAdvice();
     try {
-        const signals = [AbortSignal.timeout(install.session.settings.tool_timeout_seconds * MILLISECONDS_PER_SECOND)];
-        if (install.session.cancelSignal !== undefined) signals.push(install.session.cancelSignal);
+        const signals = [AbortSignal.timeout(session.settings.tool_timeout_seconds * MILLISECONDS_PER_SECOND)];
+        if (session.cancelSignal !== undefined) signals.push(session.cancelSignal);
         const response = await fetch(download.url, { signal: AbortSignal.any(signals) });
         if (!response.ok)
             throw new GspotError(
@@ -241,7 +245,7 @@ export async function downloadArchive(install: ToolInstall, download: ArchiveDow
             );
         return await readBoundedArchive(response, download);
     } catch (error) {
-        install.session.cancelSignal?.throwIfAborted();
+        session.cancelSignal?.throwIfAborted();
         if (error instanceof GspotError) throw error;
         throw new GspotError('install', `Cannot download ${download.name} ${download.url}. ${advice}`, {
             cause: error,

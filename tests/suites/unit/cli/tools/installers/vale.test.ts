@@ -158,7 +158,7 @@ test('an oversized archive cancels its response stream before reporting the size
         Object.assign(() => Promise.resolve(new Response(stream)), { preconnect: fetch.preconnect }),
     );
     const error = await captureRejection(
-        downloadArchive(install, {
+        downloadArchive(install.session, {
             url: 'https://example.com/styles.zip',
             name: 'styles',
             limit: 2,
@@ -183,7 +183,7 @@ test('a failed download behind a proxy says how to turn the proxy on', async () 
     const setProxy: unknown = Reflect.get(http, 'setGlobalProxyFromEnv');
     Reflect.deleteProperty(http, 'setGlobalProxyFromEnv');
     const failure = await captureRejection(
-        downloadArchive(install, { url: 'https://example.com/a.zip', name: 'the archive', limit: 1 }),
+        downloadArchive(install.session, { url: 'https://example.com/a.zip', name: 'the archive', limit: 1 }),
     );
     Reflect.set(http, 'setGlobalProxyFromEnv', setProxy);
     expect(failure.message).toBe(

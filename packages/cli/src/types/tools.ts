@@ -140,6 +140,8 @@ export type ExecutableSearch = {
 
 export type ParsedToolVersion = { version: string } | { state: 'missing' | 'error'; note: string };
 
+export type DownloadSession = Pick<Session, 'cancelSignal'> & { settings: Pick<Settings, 'tool_timeout_seconds'> };
+
 export type ArchiveDownload = {
     url: string;
     name: string;
