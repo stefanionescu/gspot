@@ -3,24 +3,22 @@ import type { Node } from 'web-tree-sitter';
 import { read } from '#cli/system/files/reads.ts';
 import { getPosition } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
-import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { DockerInstruction } from '#cli/types/configurations/infrastructure.ts';
+import { WHITESPACE_RUN, DOWNLOAD_COMMANDS, INTERPRETER_COMMANDS } from '#cli/config/parsers.ts';
 
 import {
     NGINX_IMAGE,
     NPM_COMMAND,
     EXEC_FORM_START,
     LOCKED_INSTALLS,
-    DOWNLOAD_COMMANDS,
     INSTRUCTION_RULES,
     LINE_CONTINUATION,
     NPM_INSTALL_VERBS,
     DOCKER_INSTRUCTION,
     PATCH_LEVEL_VERSION,
-    INTERPRETER_COMMANDS,
     INSTRUCTION_MESSAGES,
 } from '#cli/config/configurations/infrastructure.ts';
 

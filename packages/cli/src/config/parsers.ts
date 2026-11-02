@@ -68,6 +68,12 @@ export const BASH_TOKEN_FORMS: Readonly<Record<string, Readonly<Record<string, B
     ERROR: { for: 'brace-for' },
 };
 
+export const DOWNLOAD_COMMANDS: ReadonlySet<string> = new Set(['curl', 'wget']);
+
+export const INTERPRETER_COMMANDS: ReadonlySet<string> = new Set(['sh', 'bash', 'dash', 'ash', 'zsh']);
+
+export const ELEVATE_COMMAND = 'sudo';
+
 export const IFS_VARIABLE = 'IFS';
 
 export const SAVED_IFS = /\$\{?IFS\}?/u;

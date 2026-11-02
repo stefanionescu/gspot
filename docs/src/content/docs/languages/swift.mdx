@@ -81,5 +81,5 @@ gspot check --only swift/tests
 
 ## Security rules
 
-Semgrep also runs the Swift security lint rules of the `swift` configuration on Swift sources and plist files. The
-[Swift configuration](/reference/configurations/swift/) lists them.
+`swift/security` reports always-accessible Keychain items, MD5 and SHA-1 hashes, and each secret in UserDefaults, a
+plist read, or a log. The [Swift configuration](/reference/configurations/swift/) lists every check.

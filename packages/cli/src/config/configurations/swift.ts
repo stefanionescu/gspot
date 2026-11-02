@@ -124,3 +124,65 @@ export const SWIFTLINT_OPT_IN: ReadonlySet<string> = new Set([
 ]);
 
 export const SWIFTLINT_LEVEL_NOTE = ' Off at this level.';
+
+export const LOG_FUNCTIONS: ReadonlySet<string> = new Set(['print', 'NSLog', 'os_log']);
+
+export const LOG_METHODS: ReadonlySet<string> = new Set([
+    'trace',
+    'debug',
+    'info',
+    'notice',
+    'warning',
+    'warn',
+    'error',
+    'fault',
+    'critical',
+    'log',
+]);
+
+export const SECRET_WORD = /token|password|secret|credential/iu;
+
+export const SECRET_VALUE = /^(?:[a-z_]\w*\.)*\w*(?:token|password|secret|credential)\w*$/iu;
+
+export const SECRET_PLIST_KEY = /Secret|Password|PrivateKey/u;
+
+export const PRIVACY_LABEL = 'privacy';
+
+export const PUBLIC_PRIVACY = '.public';
+
+export const USER_DEFAULTS_RECEIVER = /^UserDefaults\b/u;
+
+export const USER_DEFAULTS_DECLARATION = /\b(\w+)\s*[:=]\s*UserDefaults\b/gu;
+
+export const PLIST_READ_EXPRESSION = /^Bundle\.main\.(?:infoDictionary\??|object)$/u;
+
+const WEAK_HASH = {
+    rule: 'weak-hash-algorithm',
+    message: 'MD5 and SHA-1 are broken. Use SHA-256 or stronger from CryptoKit.',
+};
+
+export const UNSAFE_SWIFT_NAMES: ReadonlyMap<string, { rule: string; message: string }> = new Map([
+    [
+        'kSecAttrAccessibleAlways',
+        {
+            rule: 'keychain-accessible-always',
+            message: 'This Keychain class opens the item on a locked device. Choose the class the item needs.',
+        },
+    ],
+    ['Insecure.MD5', WEAK_HASH],
+    ['Insecure.SHA1', WEAK_HASH],
+    ['CC_MD5', WEAK_HASH],
+    ['CC_SHA1', WEAK_HASH],
+]);
+
+export const SWIFT_SECRET_FINDINGS = {
+    log: { rule: 'secret-in-log', message: 'The log may write a token, password, or credential. Redact it.' },
+    defaults: {
+        rule: 'secret-in-userdefaults',
+        message: 'UserDefaults stores this secret unencrypted. Keep it in the Keychain.',
+    },
+    plist: {
+        rule: 'secret-in-plist',
+        message: 'Info.plist ships this secret unencrypted in the app. Read it from the Keychain.',
+    },
+};

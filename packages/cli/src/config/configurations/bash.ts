@@ -104,6 +104,7 @@ export const SAFETY_RULES = {
     gnuTimeout: 'gnu-timeout',
     curlFail: 'curl-fail',
     traceMode: 'trace-mode',
+    evalCommand: 'eval',
 } as const;
 
 export const BASH_FORM_MESSAGES: Readonly<Record<BashForm, string>> = {
@@ -114,6 +115,8 @@ export const BASH_FORM_MESSAGES: Readonly<Record<BashForm, string>> = {
     'brace-for': 'Write `for arg in "$@"; do ... done`.',
     'seq-loop': 'Count with `for (( index = 0; index < count; index++ ))`, not `seq`.',
     'script-ifs': 'Set `IFS` with `local IFS` in a function or in a subshell, and do not save it to restore it.',
+    'curl-pipe-shell':
+        'Nobody can read a script that runs as it downloads. Download it to a file, check it, then run it.',
 };
 
 export const ALL_LEVEL_FORMS: ReadonlySet<BashForm> = new Set(['seq-loop', 'script-ifs']);
@@ -125,6 +128,7 @@ const GNU_TIMEOUT = {
 
 export const COMMAND_FORMS: Readonly<Record<string, BashCommandForm | undefined>> = {
     echo: { rule: SAFETY_RULES.echo, message: 'Write messages with `printf`, not `echo`.' },
+    eval: { rule: SAFETY_RULES.evalCommand, message: '`eval` runs a string as code. Build the command in an array.' },
     timeout: GNU_TIMEOUT,
     gtimeout: GNU_TIMEOUT,
     curl: {

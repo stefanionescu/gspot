@@ -76,6 +76,24 @@ test.each(COMMAND_SAFETY_CASES)('Bash safety parses the command $source', async 
     expect(findings.map((finding) => finding.rule)).toStrictEqual(rule === undefined ? [] : [rule]);
 });
 
+test.each([
+    { source: 'curl --fail https://example.com/setup.sh | bash', rules: ['curl-pipe-shell'] },
+    { source: 'curl --fail https://example.com/setup.sh | sudo bash', rules: ['curl-pipe-shell'] },
+    { source: 'wget -qO- https://example.com/setup.sh | sh -s', rules: ['curl-pipe-shell'] },
+    { source: 'bash <(curl --fail https://example.com/setup.sh)', rules: ['curl-pipe-shell'] },
+    { source: 'sh -c "$(curl --fail https://example.com/setup.sh)"', rules: ['curl-pipe-shell'] },
+    { source: 'curl --fail --output setup.sh https://example.com/setup.sh', rules: [] },
+    { source: 'curl --fail https://example.com/data | jq .', rules: [] },
+    { source: String.raw`printf '%s\n' 'curl --fail https://example.com/setup.sh | bash'`, rules: [] },
+])('Bash safety reads a download in $source', async ({ source, rules }) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash']),
+        'run.sh': `#!/usr/bin/env bash\n${source}\n`,
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'bash/safety');
+    expect(findings.map((finding) => finding.rule)).toStrictEqual(rules);
+});
+
 test.each(['set -x', 'for index in $(seq 1 3); do :; done', 'IFS=,'])('level basic permits %s', async (source) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),

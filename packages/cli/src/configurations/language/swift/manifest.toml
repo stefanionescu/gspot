@@ -83,11 +83,6 @@ per_scope = true
 target = "periphery.yml"
 tool = "periphery"
 
-[[config_file]]
-per_scope = true
-target = "semgrep.yml"
-tool = "semgrep"
-
 [[check]]
 command = ["swiftlint", "lint", "--strict", "--quiet", "--no-cache", "--reporter", "json", "{files}"]
 cwd = "scope"
@@ -169,6 +164,15 @@ name = "skip-reasons"
 stage = "commit"
 summary = "Checks that skip calls and disabled traits name a nonempty reason, and unavailable tests carry an explanation."
 why = "A skipped test with no reason stays off, because nobody can tell when to restore it."
+
+[[check]]
+example = "`UserDefaults.standard.set(value, forKey: \"accessToken\")` reports `secret-in-userdefaults`. Store the token in the Keychain."
+files = { extensions = [".swift"] }
+help = "Change the code the way the message says."
+name = "security"
+stage = "commit"
+summary = "Finds always-accessible Keychain items, MD5 and SHA-1 hashes, and each secret in UserDefaults, a plist read, or a log."
+why = "A secret in plain storage or a log outlives the app that wrote it, and a broken hash protects nothing."
 
 [[check]]
 example = "A Swift target reports 85% line coverage against a 90% minimum. Add a test that exercises its uncovered lines, then rerun the target."

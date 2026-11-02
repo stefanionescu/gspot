@@ -28,6 +28,7 @@ import { checkAnsibleLint } from '#cli/configurations/infrastructure/ansible/che
 import { checkPeriphery } from '#cli/configurations/language/swift/checks/periphery.ts';
 import { checkShellcheck } from '#cli/configurations/language/bash/checks/shellcheck.ts';
 import { checkCompose } from '#cli/configurations/infrastructure/docker/checks/compose.ts';
+import { checkSwiftSecurity } from '#cli/configurations/language/swift/checks/security.ts';
 import { checkIdentifiers } from '#cli/configurations/general/naming/checks/identifiers.ts';
 import { checkLoneFiles } from '#cli/configurations/general/structure/checks/lone-files.ts';
 import { checkLongFiles } from '#cli/configurations/general/structure/checks/long-files.ts';
@@ -214,6 +215,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'swift/tests': { check: checkCoverage },
     'swift/doc-comments': { check: checkSwiftDocComments },
     'swift/periphery': { check: checkPeriphery },
+    'swift/security': { check: checkSwiftSecurity },
     'swift/skip-reasons': { check: checkSkipReasons },
     'swift/swiftlint-analyze': { check: checkSwiftlintAnalyze },
     'translations/messages': { check: checkMessages },

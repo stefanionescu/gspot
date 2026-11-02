@@ -60,7 +60,8 @@ export type BashForm =
     | 'combined-pipe'
     | 'brace-for'
     | 'seq-loop'
-    | 'script-ifs';
+    | 'script-ifs'
+    | 'curl-pipe-shell';
 
 export type Removal = { line: number; paths: TemporaryPath[] };
 

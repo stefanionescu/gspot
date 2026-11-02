@@ -185,10 +185,6 @@ export const LOCKED_INSTALLS: Readonly<Record<string, { verbs: string[]; flags: 
     uv: { verbs: ['sync'], flags: ['--frozen', '--locked'] },
 };
 
-export const DOWNLOAD_COMMANDS: ReadonlySet<string> = new Set(['curl', 'wget']);
-
-export const INTERPRETER_COMMANDS: ReadonlySet<string> = new Set(['sh', 'bash', 'dash', 'ash', 'zsh']);
-
 export const NGINX_IMAGE = /(?:^|\/)nginx$/u;
 
 export const PATCH_LEVEL_VERSION = /^\d+\.\d+\.\d+/u;

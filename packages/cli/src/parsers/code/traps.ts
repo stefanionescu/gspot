@@ -7,11 +7,14 @@ import {
     IFS_VARIABLE,
     TRAP_COMMAND,
     END_OF_OPTIONS,
+    ELEVATE_COMMAND,
     BASH_TOKEN_FORMS,
     SEQUENCE_COMMAND,
     TRAP_SOURCE_ROWS,
+    DOWNLOAD_COMMANDS,
     FORWARDED_ARGUMENTS,
     TRAP_STRING_ESCAPES,
+    INTERPRETER_COMMANDS,
     TRAP_EXPANSION_NODES,
     INLINE_ASSIGNMENT_NODES,
 } from '#cli/config/parsers.ts';
@@ -198,6 +201,31 @@ function listSequenceLoops(syntaxRoot: Node): Node[] {
     );
 }
 
+function isInterpreterRun(command: Node): boolean {
+    const name = command.childForFieldName('name')?.text ?? '';
+    const program = name === ELEVATE_COMMAND ? (command.childrenForFieldName('argument')[0]?.text ?? '') : name;
+    return INTERPRETER_COMMANDS.has(program);
+}
+
+function listDownloadRuns(syntaxRoot: Node): Node[] {
+    const piped = syntaxRoot.descendantsOfType('pipeline').filter((pipeline) => {
+        const commands = pipeline.namedChildren.filter((node) => node.type === 'command');
+        const download = commands.findIndex((command) =>
+            DOWNLOAD_COMMANDS.has(command.childForFieldName('name')?.text ?? ''),
+        );
+        return download !== -1 && commands.slice(download).some((command) => isInterpreterRun(command));
+    });
+    const fed = syntaxRoot.descendantsOfType('command').filter(
+        (command) =>
+            isInterpreterRun(command) &&
+            command
+                .childrenForFieldName('argument')
+                .flatMap((argument) => argument.descendantsOfType('command'))
+                .some((inner) => DOWNLOAD_COMMANDS.has(inner.childForFieldName('name')?.text ?? '')),
+    );
+    return [...piped, ...fed];
+}
+
 /**
 List the syntax forms that the Bash rules forbid.
 
@@ -220,6 +248,10 @@ export function listScriptForms(syntaxRoot: Node): ScriptSyntax['forms'] {
         ...listIfsWrites(syntaxRoot).map((write) => ({
             form: 'script-ifs' as const,
             line: write.startPosition.row + 1,
+        })),
+        ...listDownloadRuns(syntaxRoot).map((run) => ({
+            form: 'curl-pipe-shell' as const,
+            line: run.startPosition.row + 1,
         })),
     ];
 }

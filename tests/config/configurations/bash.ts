@@ -143,6 +143,7 @@ export const COMMAND_SAFETY_CASES = [
     { source: 'killall node', rule: 'broad-kill' },
     { source: 'false || :', rule: 'ignored-failure' },
     { source: String.raw`printf '%s\n' 'rm -rf /etc'`, rule: undefined },
+    { source: 'eval "$1"', rule: 'eval' },
     { source: 'function greet { :; }', rule: 'function-keyword' },
     { source: 'greet() { :; }', rule: undefined },
     { source: 'typeset value=1', rule: 'typeset' },
