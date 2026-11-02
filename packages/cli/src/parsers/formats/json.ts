@@ -20,7 +20,7 @@ Read a JSON object, and validate it against the schema, if any.
 */
 export function parseJsonFile(path: string, text: string, schema?: z.ZodType): unknown {
     const errors: ParseError[] = [];
-    const offset = text.startsWith('\uFEFF') ? 1 : 0;
+    const offset = text.startsWith('\u{FEFF}') ? 1 : 0;
     const value: unknown = parse(text.slice(offset), errors, JSONC_OPTIONS);
     const error = errors[0];
     if (error !== undefined) {
@@ -47,7 +47,7 @@ export function openJsonFile(path: string, text: string): EditableFile {
         getValue: (keys) => normalizeTables(findValueAt(document, keys)),
         set(keys, value) {
             if (isDeepStrictEqual(normalizeTables(findValueAt(document, keys)), normalizeTables(value))) return;
-            const offset = editedText.startsWith('\uFEFF') ? 1 : 0;
+            const offset = editedText.startsWith('\u{FEFF}') ? 1 : 0;
             const source = editedText.slice(offset);
             const next = editedText.slice(0, offset) + applyEdits(source, modify(source, [...keys], value, {}));
             document = parseJsonFile(path, next);

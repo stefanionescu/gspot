@@ -29,11 +29,13 @@ function readReferencedProjects(root: string, path: string, cache: RunCache): Ma
     for (let projectPath = pending.shift(); projectPath !== undefined; projectPath = pending.shift()) {
         if (projects.has(projectPath)) continue;
         const parsed = readTsconfig(root, projectPath, cache);
-        if (parsed === undefined)
+        if (parsed === undefined) {
+            const owner = owners.get(projectPath) ?? path;
             throw new GspotError(
                 'configuration',
-                `${convertToPosixPath(relative(root, owners.get(projectPath) ?? path))} references ${convertToPosixPath(relative(root, projectPath))}, which has no tsconfig.json. Fix the reference.`,
+                `${convertToPosixPath(relative(root, owner))} references ${convertToPosixPath(relative(root, projectPath))}, which has no tsconfig.json. Fix the reference.`,
             );
+        }
         projects.set(projectPath, parsed);
         pending.push(
             ...(parsed.projectReferences ?? []).map((reference) => {
@@ -94,14 +96,14 @@ function buildCompilerHost(
     const libraries = new Set([dirname(dirname(libraryFile))]);
     const readCanonicalPath = host.realpath?.bind(host);
     const getSourceFile = host.getSourceFile.bind(host);
-    host.getSourceFile = (path, languageVersion, _onError, createSource) =>
+    host.getSourceFile = (path, languageVersion, _onError, isRecreated) =>
         getSourceFile(
             path,
             languageVersion,
             (message) => {
                 throw new Error(message);
             },
-            createSource,
+            isRecreated,
         );
     host.getCurrentDirectory = () => join(root, scopePath);
     host.realpath = (path) => {
@@ -144,9 +146,9 @@ function buildTsconfigError(path: string, error: unknown): GspotError {
     const detail = error instanceof Error ? error.message : String(error);
     const missing = MISSING_EXTENDED_CONFIG.exec(detail)?.[1];
     const message =
-        missing !== undefined && !missing.startsWith('.') && !isAbsolute(missing)
-            ? `${path} extends ${missing}, which is not installed. Install the project dependencies, then run the command again.`
-            : `Cannot read the compiler settings in ${path}: ${detail}`;
+        missing === undefined || missing.startsWith('.') || isAbsolute(missing)
+            ? `Cannot read the compiler settings in ${path}: ${detail}`
+            : `${path} extends ${missing}, which is not installed. Install the project dependencies, then run the command again.`;
     return new GspotError('configuration', message, { cause: error });
 }
 

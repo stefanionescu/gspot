@@ -33,8 +33,7 @@ Read both encoded and decoded passwords from a registry or proxy URL.
 export function extractUrlPasswords(url: string): string[] {
     if (!URL.canParse(url)) return [];
     const password = new URL(url).password;
-    if (password.length === 0) return [];
-    return [password, unescape(password)];
+    return password.length === 0 ? [] : [password, unescape(password)];
 }
 
 /**
@@ -50,8 +49,8 @@ export function redactInstallOutput(result: Pick<SpawnResult, 'stdout' | 'stderr
         .flatMap((value) => [value, encodeURIComponent(value), Buffer.from(value).toString('base64')])
         .toSorted((left, right) => right.length - left.length);
     let output = `${result.stdout}\n${result.stderr}`;
-    for (const secret of secrets) output = output.replaceAll(secret, REDACTED);
-    output = output.replace(URL_CREDENTIALS, `$1${REDACTED}@`).trim();
+    for (const secret of secrets) output = output.replaceAll(secret, () => REDACTED);
+    output = output.replace(URL_CREDENTIALS, (_url, scheme: string) => `${scheme}${REDACTED}@`).trim();
     if (output === '') return EMPTY_OUTPUT_MESSAGE;
     return output.length > INSTALL_OUTPUT_LIMIT
         ? `[Earlier output omitted]\n${output.slice(-INSTALL_OUTPUT_LIMIT)}`

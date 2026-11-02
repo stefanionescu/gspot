@@ -1,5 +1,4 @@
 import { getRequired } from '#cli/system/tables.ts';
-import type { KeyPath } from '#cli/types/parsers.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import { joinSettingPaths } from '#cli/settings/paths.ts';
@@ -82,11 +81,11 @@ function listUnsettledConflicts(
 ): SettingsError[] {
     const errors: SettingsError[] = [];
     const availableByScope = [
-        { selected: availableSettings, scope: '', path: ['configurations'] as KeyPath },
+        { selected: availableSettings, scope: '', path: ['configurations'] },
         ...[...scopeAvailable].map(([scope, selected], index) => ({
             selected,
             scope,
-            path: ['scope', index, 'configurations'] as KeyPath,
+            path: ['scope', index, 'configurations'],
         })),
     ];
     for (const { selected, scope, path } of availableByScope) {
@@ -140,8 +139,9 @@ export function formatUnknownSetting(key: string, availableKeys: string[]): stri
     const descendants = availableKeys.filter((name) => name.startsWith(`${key}.`));
     if (descendants.length > 0)
         return `${key} is a table. Name one of its settings, such as ${descendants[0] as string}. The settings are ${formatCodeList(descendants)}.`;
-    if (key.startsWith('limits.')) return formatUnknownLimitSetting(key, availableKeys);
-    return formatUnknownField(key, availableKeys);
+    return key.startsWith('limits.')
+        ? formatUnknownLimitSetting(key, availableKeys)
+        : formatUnknownField(key, availableKeys);
 }
 
 /**

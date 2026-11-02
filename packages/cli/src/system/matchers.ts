@@ -49,9 +49,9 @@ Build a matcher for literal filenames and globs that tests both the filename and
 */
 export function buildFilenameMatcher(names: string[]): (path: string) => boolean {
     const literals = new Set(names.filter((name) => !picomatch.scan(name).isGlob));
-    const globs = buildPathMatcher(names.filter((name) => picomatch.scan(name).isGlob));
+    const isGlobMatch = buildPathMatcher(names.filter((name) => picomatch.scan(name).isGlob));
     return (path) => {
         const base = posix.basename(path);
-        return literals.has(base) || literals.has(path) || globs(base) || globs(path);
+        return literals.has(base) || literals.has(path) || isGlobMatch(base) || isGlobMatch(path);
     };
 }

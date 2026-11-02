@@ -32,9 +32,9 @@ function isWanted(check: Check, options: PlanOptions): boolean {
     if (options.only !== undefined && !options.only.includes(check.id)) return false;
     if (options.stage === 'any') return true;
     if (check.stage === 'message') return options.stage === 'message';
-    if (options.stage === 'all')
-        return options.only !== undefined || check.stage === 'commit' || check.stage === 'push';
-    return options.stage === check.stage;
+    return options.stage === 'all'
+        ? options.only !== undefined || check.stage === 'commit' || check.stage === 'push'
+        : options.stage === check.stage;
 }
 
 function planCheck(planned: PlannedScope, scopeCheck: ScopeCheck): PlannedCheck {
@@ -75,8 +75,9 @@ function skipReplacedChecks(planned: PlannedCheck[]): PlannedCheck[] {
     );
     return planned.map((check) => {
         const replacer = replacers.get(check.check.id);
-        if (replacer === undefined || check.skip) return check;
-        return { ...check, skip: { cause: 'replaced', note: `${replacer} runs it here` } };
+        return replacer === undefined || check.skip
+            ? check
+            : { ...check, skip: { cause: 'replaced', note: `${replacer} runs it here` } };
     });
 }
 
@@ -87,15 +88,14 @@ function listKeptScopeChecks(
 ): ScopeCheck[] {
     const root = getRootScope(scopes);
     const repositoryRuns = new Set<string>();
-    return scopes.flatMap((scope) =>
-        listScopeChecks(settings, scope, root).filter(({ check }) => {
-            if (!isKept(scope, check)) return false;
+    return scopes
+        .flatMap((scope) => listScopeChecks(settings, scope, root).filter(({ check }) => isKept(scope, check)))
+        .filter(({ check }) => {
             if (!isRepositoryRun(check)) return true;
             if (repositoryRuns.has(check.id)) return false;
             repositoryRuns.add(check.id);
             return true;
-        }),
-    );
+        });
 }
 
 function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {

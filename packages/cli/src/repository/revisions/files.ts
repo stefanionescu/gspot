@@ -50,15 +50,15 @@ export async function listRevisionFiles(
     cancelSignal?: AbortSignal,
     unreadablePaths: string[] = [],
 ): Promise<GitFile[]> {
-    if (source.kind === 'index')
+    if (source.kind === 'index') {
+        const listed = await readGitListing(root, GIT_INDEX_FILES_ARGUMENTS, cancelSignal, unreadablePaths);
         return stripIndexStages(
-            await readGitListing(root, GIT_INDEX_FILES_ARGUMENTS, cancelSignal, unreadablePaths).then((listed) =>
-                listed
-                    .split('\0')
-                    .filter(Boolean)
-                    .map((line) => parseListingLine(INDEX_LINE.exec(line), gitIndexFileSchema)),
-            ),
+            listed
+                .split('\0')
+                .filter(Boolean)
+                .map((line) => parseListingLine(INDEX_LINE.exec(line), gitIndexFileSchema)),
         );
+    }
     const read = await runGitBytes(root, [...GIT_LS_TREE_ARGUMENTS, source.hash], { cancelSignal });
     if (read.code !== 0)
         throw new GspotError(

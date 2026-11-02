@@ -20,8 +20,8 @@ export function formatExplainCommand(finding: Pick<Finding, 'check' | 'rule'>): 
     const argumentsList = [finding.check];
     const found = listChecksById(readConfigurations().values()).get(finding.check);
     if (
-        finding.rule !== undefined &&
         found !== undefined &&
+        finding.rule !== undefined &&
         OUTPUT_FORMATS[found.check.output.format].namesRules(found.check.output) &&
         findToolName(found.check) !== undefined
     )
@@ -124,9 +124,10 @@ Replace temporary revision paths with the repository path in reported commands a
 export function normalizeResultPaths(session: Session, result: CheckResult): CheckResult {
     if (session.root === session.toolsRoot) return result;
     let { command, note } = result;
-    for (const root of new Set([session.root, realpathSync(session.root)])) {
-        command = command?.map((argument) => argument.replaceAll(root, session.toolsRoot));
-        note = note?.replaceAll(root, session.toolsRoot);
+    const roots = new Set([session.root, realpathSync(session.root)]);
+    for (const root of roots) {
+        command = command?.map((argument) => argument.replaceAll(root, () => session.toolsRoot));
+        note = note?.replaceAll(root, () => session.toolsRoot);
     }
     return { ...result, ...(command !== undefined && { command }), ...(note !== undefined && { note }) };
 }

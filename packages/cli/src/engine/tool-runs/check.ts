@@ -26,8 +26,8 @@ import {
     expandCommand,
     listCopyFiles,
     listCommandConfigs,
+    isPackageFolderRun,
     replacePlaceholders,
-    runsInPackageFolder,
     buildFileCommandLines,
 } from '#cli/engine/tool-runs/placeholders.ts';
 
@@ -91,8 +91,9 @@ function findMissingConfig(
     const missing = listCommandConfigs(session, planned, command).find(
         (path) => (isGspotPath(path) ? files.read(path) : findText(session.cache, path)) === undefined,
     );
-    if (missing === undefined) return undefined;
-    return { ...base, status: 'error', note: `The generated file ${missing} is missing. Run gspot apply.` };
+    return missing === undefined
+        ? undefined
+        : { ...base, status: 'error', note: `The generated file ${missing} is missing. Run gspot apply.` };
 }
 
 async function runInFolder(run: FolderRun): Promise<CheckResult> {
@@ -168,9 +169,9 @@ Select the folder that a command of a check runs in.
 */
 export function selectCommandFolder(root: string, planned: PlannedCheck): string {
     const { check, scope } = planned;
-    const usesScopeFolder =
-        check.cwd === 'scope' || (check.runs === 'scope' && check.cwd !== 'root') || runsInPackageFolder(root, planned);
-    return usesScopeFolder ? join(root, scope.path) : root;
+    const isInScopeFolder =
+        check.cwd === 'scope' || (check.runs === 'scope' && check.cwd !== 'root') || isPackageFolderRun(root, planned);
+    return isInScopeFolder ? join(root, scope.path) : root;
 }
 
 /**

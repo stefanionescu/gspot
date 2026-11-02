@@ -66,14 +66,12 @@ export function splitFileArguments(files: string[], fixed: string[], platform: N
     const measured = files.map((file) => ({ file, size: measure(file) }));
     for (const { file, size } of measured) {
         if (size > budget) throw new CheckStop('error', `${file} is too long for one command line. Shorten its path.`);
-        const last = batches.at(-1) as string[];
         if (used + size > budget) {
-            batches.push([file]);
-            used = size;
-        } else {
-            last.push(file);
-            used += size;
+            batches.push([]);
+            used = 0;
         }
+        (batches.at(-1) as string[]).push(file);
+        used += size;
     }
     return batches;
 }

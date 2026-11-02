@@ -23,8 +23,8 @@ export function buildFrozenInstallArguments(
     version: string | undefined,
 ): readonly string[] {
     const command = FROZEN_INSTALLS[lockfile];
-    const usesBerry = command[0] === 'yarn' && version !== undefined && semver.major(version) >= YARN_BERRY_MAJOR;
-    return (usesBerry ? YARN_BERRY_INSTALL : command).slice(1);
+    const isYarnBerry = command[0] === 'yarn' && version !== undefined && semver.major(version) >= YARN_BERRY_MAJOR;
+    return (isYarnBerry ? YARN_BERRY_INSTALL : command).slice(1);
 }
 
 /**

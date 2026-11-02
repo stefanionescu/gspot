@@ -11,7 +11,7 @@ function buildCoverageMatcher(
     table: Configuration['files'],
     { configurations, scopePath: scope, settings }: CoveredFilesOptions,
 ): (file: Pick<TrackedFile, 'path' | 'tags'>) => boolean {
-    const tests = buildPathMatcher(table.test_files ? settings.test_files : []);
+    const isTestFile = buildPathMatcher(table.test_files ? settings.test_files : []);
     const defaults: Array<Configuration['files']> = [];
     const settingPatterns = table.paths.flatMap((path) => {
         const name = path.matchAll(SETTING_PLACEHOLDER).toArray()[0]?.groups?.['name'];
@@ -25,7 +25,7 @@ function buildCoverageMatcher(
         );
         return [];
     });
-    const settingMatches = buildPathMatcher(settingPatterns);
+    const isSettingPath = buildPathMatcher(settingPatterns);
     const owners = addPluginExtensions(
         {
             ...table,
@@ -40,7 +40,7 @@ function buildCoverageMatcher(
     ].map((files) => buildFileMatcher(files));
     return (file) => {
         const scopeFile = { ...file, path: scope === '' ? file.path : file.path.slice(scope.length + 1) };
-        return tests(file.path) || settingMatches(file.path) || matches.some((match) => match(scopeFile));
+        return isTestFile(file.path) || isSettingPath(file.path) || matches.some((match) => match(scopeFile));
     };
 }
 
@@ -70,13 +70,13 @@ Build one matcher for the extensions, filenames, tags, and paths of a files tabl
 @param table the file patterns.
 */
 export function buildFileMatcher(table: Configuration['files']): (file: Pick<TrackedFile, 'path' | 'tags'>) => boolean {
-    const filenames = buildFilenameMatcher(table.filenames);
-    const paths = buildPathMatcher(table.paths);
+    const isListedFilename = buildFilenameMatcher(table.filenames);
+    const isListedPath = buildPathMatcher(table.paths);
     return (file) =>
         table.extensions.includes(extractExtension(file.path)) ||
-        filenames(file.path) ||
+        isListedFilename(file.path) ||
         table.tags.some((tag) => file.tags.includes(tag)) ||
-        paths(file.path);
+        isListedPath(file.path);
 }
 
 /**

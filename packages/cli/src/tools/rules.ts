@@ -80,7 +80,7 @@ function assertInstalledPath(root: string, specifier: string, path: string): voi
 
 async function importInstalledTool(root: string, specifier: string): Promise<unknown> {
     const path = findInstalledToolPath(root, specifier);
-    if (path === undefined) return undefined;
+    if (path === undefined) throw new GspotError('tool', INSTALL_FOR_RULES_MESSAGE);
     return import(pathToFileURL(path).href);
 }
 
@@ -101,13 +101,12 @@ async function readSwiftlintRule(
 ): Promise<LintRuleDocs | undefined> {
     if (!SWIFTLINT_RULE_IDENTIFIER.test(identifier)) return undefined;
     const { timeoutSeconds } = options;
-    const {
-        paths: [path],
-    } = await listExecutablePaths(root, 'swiftlint', {
+    const { paths } = await listExecutablePaths(root, 'swiftlint', {
         folders: [],
         timeoutSeconds,
         miseBinPaths: await options.readMiseBinPaths?.(),
     });
+    const [path] = paths;
     if (path === undefined) throw new GspotError('tool', 'SwiftLint is not installed. Run gspot install.');
     const result = await runTool([path, ...SWIFTLINT_RULE_ARGUMENTS, devNull, identifier], {
         cwd: root,
@@ -117,12 +116,12 @@ async function readSwiftlintRule(
         throw new GspotError('tool', `SwiftLint could not read rule ${identifier}. ${result.stderr.trim()}`);
     if (result.code !== 0) return undefined;
     const url = findRulePage('swiftlint', identifier, readConfigurations());
-    return { description: result.stdout.trim(), ...(url === undefined ? {} : { url }) };
+    return { description: result.stdout.trim(), ...(url !== undefined && { url }) };
 }
 
-function findManifestRulePage(tool: string, identifier: string): string | undefined {
-    const configurations = readConfigurations();
+function readManifestRuleDocs(tool: string, identifier: string): LintRuleDocs | undefined {
     if (tool === 'shellcheck' && !SHELLCHECK_RULE_IDENTIFIER.test(identifier)) return undefined;
+    const configurations = readConfigurations();
     if (
         tool === 'biome' &&
         (!identifier.startsWith('lint/') ||
@@ -135,13 +134,8 @@ function findManifestRulePage(tool: string, identifier: string): string | undefi
                 ))
     )
         return undefined;
-    return findRulePage(tool, identifier, configurations);
-}
-
-function readManifestRuleDocs(tool: string, identifier: string): LintRuleDocs | undefined {
-    const page = findManifestRulePage(tool, identifier);
-    if (page === undefined) return undefined;
-    return { url: page };
+    const url = findRulePage(tool, identifier, configurations);
+    return url === undefined ? undefined : { url };
 }
 
 async function readEslintPluginRule(root: string, identifier: string): Promise<unknown> {
@@ -151,7 +145,6 @@ async function readEslintPluginRule(root: string, identifier: string): Promise<u
     const npm = plugin?.installers['npm'];
     if (npm === undefined) return undefined;
     const installed = await importInstalledTool(root, npm.name);
-    if (installed === undefined) throw new GspotError('tool', INSTALL_FOR_RULES_MESSAGE);
     const exported = findValueAt(installed, ['default']) ?? installed;
     const rules = findValueAt(exported, ['rules']) ?? findValueAt(exported, ['plugin', 'rules']);
     return findValueAt(rules, [identifier.slice(prefix.length + 1)]);
@@ -201,10 +194,9 @@ async function readInstalledRule(root: string, tool: string, identifier: string)
     if (tool === ESLINT_MANIFEST_TOOL && identifier.includes('/')) return readEslintPluginRule(root, identifier);
     const specifier = tool === ESLINT_MANIFEST_TOOL ? ESLINT_BUILTIN_RULES : tool;
     const installed = await importInstalledTool(root, specifier);
-    if (installed === undefined) throw new GspotError('tool', INSTALL_FOR_RULES_MESSAGE);
     if (tool === STYLELINT_MANIFEST_TOOL) return readStylelintRule(installed, identifier);
     const rules: unknown = findValueAt(installed, ['builtinRules']);
-    if (!(rules instanceof Map)) throw new Error('The installed ESLint package has no builtinRules map.');
+    if (!(rules instanceof Map)) throw new TypeError('The installed ESLint package has no builtinRules map.');
     return rules.get(identifier);
 }
 
@@ -216,12 +208,12 @@ async function readStylelintRule(installed: unknown, identifier: string): Promis
 
 function getRuleMetadata(rule: unknown, page: string | undefined): LintRuleDocs {
     if (typeof rule !== 'object' && typeof rule !== 'function')
-        throw new Error('The installed rule has no implementation.');
+        throw new TypeError('The installed rule has no implementation.');
     if (rule === null) throw new Error('The installed rule has no implementation.');
     const metadata = ruleDocumentationSchema.default({}).parse(Reflect.get(rule, 'meta'));
     const docs = { ...metadata.docs };
     const url = metadata.url ?? page;
-    if (docs.url === undefined && url !== undefined) docs.url = url;
+    if (url !== undefined && docs.url === undefined) docs.url = url;
     return docs;
 }
 
@@ -249,6 +241,5 @@ export async function readLintRuleDocs(
     if (tool === 'swiftlint') return readSwiftlintRule(root, identifier, { timeoutSeconds, readMiseBinPaths });
     if (![ESLINT_MANIFEST_TOOL, STYLELINT_MANIFEST_TOOL].includes(tool)) return readManifestRuleDocs(tool, identifier);
     const rule = await readInstalledRule(root, tool, identifier);
-    if (rule === undefined) return undefined;
-    return getRuleMetadata(rule, findRulePage(tool, identifier, readConfigurations()));
+    return rule === undefined ? undefined : getRuleMetadata(rule, findRulePage(tool, identifier, readConfigurations()));
 }

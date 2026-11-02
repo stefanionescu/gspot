@@ -63,8 +63,8 @@ function findStalePythonLockfile(
     const path = GSPOT_PATHS.uvLockfile;
     const saved = files.read(path);
     if (saved === undefined) return { path, kind: 'absent' };
-    const matches = isPythonLockfileFresh(buildPythonProjectTable(configurations), saved.bytes.toString('utf8'));
-    return matches ? undefined : { path, kind: 'changed' };
+    const isFresh = isPythonLockfileFresh(buildPythonProjectTable(configurations), saved.bytes.toString('utf8'));
+    return isFresh ? undefined : { path, kind: 'changed' };
 }
 
 async function planLockfiles(
@@ -88,12 +88,6 @@ async function findUvPath(install: ToolInstall, miseBinPaths: string[]): Promise
     return paths[0] ?? UV_TOOL;
 }
 
-async function buildNpmInstall(install: ToolInstall): Promise<NpmToolInstall | undefined> {
-    const { session, packageManager } = install;
-    if (packageManager === undefined) return undefined;
-    return { ...install, packageManager, registryEnvironment: await readRegistryEnvironment(session.root) };
-}
-
 /**
 List the state of each tool project lockfile: whether it exists and names every pin at its version. It resolves and
 writes nothing, and it reads no package manager settings.
@@ -110,7 +104,7 @@ export function listStaleLockfiles(
     const files = openFiles(root);
     const lockfiles: Array<StaleLockfile | undefined> = [];
     if (projects.has(GSPOT_PATHS.miseProject)) lockfiles.push(findStaleMiseLockfile(files, toolConfigurations));
-    if (projects.has(GSPOT_PATHS.npmProject) && toolPackageManager !== undefined)
+    if (toolPackageManager !== undefined && projects.has(GSPOT_PATHS.npmProject))
         lockfiles.push(findStaleNpmLockfile(files, toolPackageManager, session));
     if (projects.has(GSPOT_PATHS.pythonProject)) lockfiles.push(findStalePythonLockfile(files, toolConfigurations));
     return lockfiles.filter((lockfile): lockfile is StaleLockfile => lockfile !== undefined);
@@ -123,10 +117,13 @@ Resolve the owned lockfiles, then install the frozen npm and Python tool project
 @param miseBinPaths the program folders that mise installed, where uv may sit.
 */
 export async function installToolProjects(install: ToolInstall, miseBinPaths: string[]): Promise<ToolProjectsInstall> {
-    const { session, writer, tools } = install;
+    const { session, writer, tools, packageManager } = install;
     const installed: string[] = [];
     const uvPath = await findUvPath(install, miseBinPaths);
-    const npm = await buildNpmInstall(install);
+    const npm =
+        packageManager === undefined
+            ? undefined
+            : { ...install, packageManager, registryEnvironment: await readRegistryEnvironment(session.root) };
     const lockfiles = await planLockfiles(install, { npm, uvPath });
     writePlans(writer, planReplacements(writer, lockfiles));
     if (npm !== undefined) installed.push(await installNpmTools(npm));
@@ -148,10 +145,14 @@ tools with uv's reinstall.
 */
 export async function repairToolProjects(install: ToolInstall, miseBinPaths: string[], tools: Tool[]): Promise<void> {
     const kinds = new Set(tools.map((tool) => findPackagePin(tool)?.kind));
-    const npm = kinds.has('npm') ? await buildNpmInstall(install) : undefined;
-    if (npm !== undefined) {
+    const { session, packageManager } = install;
+    if (packageManager !== undefined && kinds.has('npm')) {
         install.writer.deleteTree(GSPOT_PATHS.nodeModules);
-        await installNpmTools(npm);
+        await installNpmTools({
+            ...install,
+            packageManager,
+            registryEnvironment: await readRegistryEnvironment(session.root),
+        });
     }
     const uvPath = kinds.has('python') ? await findUvPath(install, miseBinPaths) : undefined;
     if (uvPath !== undefined) await installPythonTools(install, uvPath, [UV_REINSTALL_FLAG]);

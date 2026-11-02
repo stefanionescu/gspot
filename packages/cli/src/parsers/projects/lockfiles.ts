@@ -108,14 +108,12 @@ function parseLockfileDocument(path: string, text: string): unknown {
     const name = posix.basename(path);
     if (name === 'yarn.lock') return parseYarnLockfile(path, text);
     if (name.endsWith('.yaml')) return parseYamlFile(path, text);
-    if (name === 'uv.lock') return parseTomlFile(path, text);
-    return parseJsonFile(path, text);
+    return name === 'uv.lock' ? parseTomlFile(path, text) : parseJsonFile(path, text);
 }
 
 function listUrlChildren(value: unknown): Array<[string, unknown]> {
     if (Array.isArray(value)) return (value as unknown[]).map((field) => ['', field]);
-    if (isTable(value)) return Object.entries(value);
-    return [];
+    return isTable(value) ? Object.entries(value) : [];
 }
 
 function listBunUrls(document: unknown): string[] {
@@ -143,6 +141,12 @@ function listDownloadFields(value: unknown) {
     return { urls, children };
 }
 
+function parseSpecifier([name, value]: [string, unknown]): Array<[string, string]> {
+    if (typeof value === 'string') return [[name, value]];
+    const specifier = isTable(value) ? value['specifier'] : undefined;
+    return typeof specifier === 'string' ? [[name, specifier]] : [];
+}
+
 /**
 Normalize a Python package name: lower case, with one dash for each run of separators.
 
@@ -168,12 +172,9 @@ export function listSpecifiers(
     return new Map(
         sections.flatMap((section) => {
             const dependencies = parsed.data[section];
-            if (dependencies === undefined) return [];
-            return Object.entries(dependencies).flatMap(([name, value]): Array<[string, string]> => {
-                if (typeof value === 'string') return [[name, value]];
-                const specifier = isTable(value) ? value['specifier'] : undefined;
-                return typeof specifier === 'string' ? [[name, specifier]] : [];
-            });
+            return dependencies === undefined
+                ? []
+                : Object.entries(dependencies).flatMap((dependency) => parseSpecifier(dependency));
         }),
     );
 }

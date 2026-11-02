@@ -105,6 +105,20 @@ function formatUnreadablePath(record: string): string {
     return `"${quoted}"`;
 }
 
+function buildAttributePattern(match: RegExpExecArray, line: string, folder: string): AttributePattern[] {
+    const quoted = match[1] as string;
+    const pattern = quoted.startsWith('"') ? decodeQuotedPattern(quoted) : quoted;
+    if (pattern === undefined || IGNORED_ATTRIBUTE_PATTERN.test(pattern)) return [];
+    const bare = pattern.replace(LEADING_SLASH, '');
+    const local = LEADING_SLASH.test(pattern) || bare.includes('/') ? bare : `${ANY_FOLDER_PREFIX}${bare}`;
+    return [
+        {
+            pattern: posix.join(folder, local),
+            attributes: line.slice(match[0].length).split(WHITESPACE_RUN).filter(Boolean),
+        },
+    ];
+}
+
 /**
 Validate the fields of an index or tree entry.
 
@@ -129,18 +143,7 @@ export function parseAttributePatterns(text: string, folder: string): AttributeP
         const trimmed = line.trim();
         if (IGNORED_ATTRIBUTE_LINE.test(trimmed)) return [];
         const match = ATTRIBUTE_LINE.exec(trimmed);
-        if (match === null) return [];
-        const quoted = match[1] as string;
-        const pattern = quoted.startsWith('"') ? decodeQuotedPattern(quoted) : quoted;
-        if (pattern === undefined || IGNORED_ATTRIBUTE_PATTERN.test(pattern)) return [];
-        const bare = pattern.replace(LEADING_SLASH, '');
-        const local = LEADING_SLASH.test(pattern) || bare.includes('/') ? bare : `${ANY_FOLDER_PREFIX}${bare}`;
-        return [
-            {
-                pattern: posix.join(folder, local),
-                attributes: trimmed.slice(match[0].length).split(WHITESPACE_RUN).filter(Boolean),
-            },
-        ];
+        return match === null ? [] : buildAttributePattern(match, trimmed, folder);
     });
 }
 

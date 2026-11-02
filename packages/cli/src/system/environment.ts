@@ -8,8 +8,7 @@ Read the cache folder of this system: LOCALAPPDATA on Windows, ~/Library/Caches 
 */
 function readSystemCacheFolder(): string | undefined {
     if (process.platform === 'win32') return readEnvironmentVariable('LOCALAPPDATA');
-    if (process.platform === 'darwin') return join(homedir(), 'Library', 'Caches');
-    return join(homedir(), '.cache');
+    return process.platform === 'darwin' ? join(homedir(), 'Library', 'Caches') : join(homedir(), '.cache');
 }
 
 /**

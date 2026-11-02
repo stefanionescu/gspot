@@ -48,8 +48,8 @@ async function createNpmLockfile(
     install: NpmToolInstall,
     { toolProjectFile, lockfileName }: { toolProjectFile: GeneratedFile; lockfileName: string },
 ): Promise<string> {
-    const packageManager = install.packageManager;
     if (findProgram(NODE_TOOL) === undefined) throw new GspotError('install', NODE_MISSING_MESSAGE);
+    const packageManager = install.packageManager;
     using scratch = createTemporaryFolder();
     const runFolder = scratch.path;
     writeFileSync(join(runFolder, PACKAGE_JSON), toolProjectFile.content);

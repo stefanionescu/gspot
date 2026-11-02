@@ -91,11 +91,13 @@ function findCommentAnchor(syntax: TomlSyntax, comment: TomlCommentNode): TomlPa
         .at(-1);
     if (inline !== undefined) return inline;
     const next = syntax.pathNodes.find(({ node }) => getTomlRange(node)[0] > getTomlRange(comment)[1]);
+    const commentLines = new Set(
+        syntax.comments
+            .filter(({ loc }) => loc.start.column === comment.loc.start.column)
+            .map(({ loc }) => loc.start.line),
+    );
     let end = comment.loc.end.line;
-    while (
-        syntax.comments.some(({ loc }) => loc.start.line === end + 1 && loc.start.column === comment.loc.start.column)
-    )
-        end++;
+    while (commentLines.has(end + 1)) end++;
     return next?.node.loc.start.line === end + 1 ? next : undefined;
 }
 
@@ -127,6 +129,26 @@ function pairChangedComments(previous: TomlSyntax, reparsed: TomlSyntax): TomlCo
             return { source, found };
         })
         .filter(({ source, found }) => found?.identity !== source.identity);
+}
+
+function setTomlValue({
+    document,
+    path,
+    keys,
+    value,
+}: {
+    document: Record<string, unknown>;
+    path: string;
+    keys: KeyPath;
+    value: unknown;
+}): void {
+    if (keys.some((key) => typeof key !== 'string')) throw new Error(`${path} requires TOML table keys.`);
+    const key = keys.at(-1);
+    if (key === undefined) throw new Error(`${path} has an empty key path.`);
+    const table = findTomlTable(document, { filePath: path, keys: keys.slice(0, -1), create: value !== undefined });
+    if (table === undefined) return;
+    if (value === undefined) Reflect.deleteProperty(table, key);
+    else Object.defineProperty(table, key, { value: normalizeTables(value), ...TABLE_PROPERTY_FLAGS });
 }
 
 /**
@@ -217,22 +239,8 @@ export function openTomlFile(path: string, text: string): EditableFile {
     const previous = parseTomlSyntax(text, document);
     return {
         getValue: (keys) => findValueAt(document, keys),
-        set(keys, value) {
-            if (keys.some((key) => typeof key !== 'string')) throw new Error(`${path} requires TOML table keys.`);
-            const key = keys.at(-1);
-            if (key === undefined) throw new Error(`${path} has an empty key path.`);
-            const table = findTomlTable(document, {
-                filePath: path,
-                keys: keys.slice(0, -1),
-                create: value !== undefined,
-            });
-            if (table === undefined) return;
-            if (value === undefined) Reflect.deleteProperty(table, key);
-            else
-                Object.defineProperty(table, key, {
-                    value: normalizeTables(value),
-                    ...TABLE_PROPERTY_FLAGS,
-                });
+        set: (keys, value) => {
+            setTomlValue({ document, path, keys, value });
         },
 
         getText: () => buildPatchedToml(previous, document, PATCH_FORMAT),

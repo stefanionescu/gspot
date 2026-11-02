@@ -64,6 +64,12 @@ export const OUTPUT_FORMATS = {
     },
 } satisfies Record<CheckOutput['format'], OutputParser>;
 
+function buildRootRelativePath(path: string, cwd: string, posixRoot: string): string {
+    const file = convertToPosixPath(path);
+    const absolute = isAbsolute(file) || DRIVE_LETTER.test(file) ? file : posix.join(convertToPosixPath(cwd), file);
+    return stripRoot(posixRoot, absolute);
+}
+
 /**
 Read the findings in the tool output, with every path relative to the root.
 
@@ -93,9 +99,7 @@ export function parseOutput(check: ParsingCheck, stdout: string, stderr: string,
         for (const prefix of prefixes) message = message.replaceAll(prefix, '');
         const formatted = { ...finding, message, fixable: check.fix !== undefined && finding.fixable };
         if (check.runs === 'history' || finding.file === '') return formatted;
-        const file = convertToPosixPath(finding.file);
-        const absolute = isAbsolute(file) || DRIVE_LETTER.test(file) ? file : posix.join(convertToPosixPath(cwd), file);
-        formatted.file = stripRoot(posixRoot, absolute);
+        formatted.file = buildRootRelativePath(finding.file, cwd, posixRoot);
         return formatted;
     });
 }

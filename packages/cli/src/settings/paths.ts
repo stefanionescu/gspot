@@ -70,12 +70,13 @@ export function mapSettingPaths(
     visit: PathVisitor,
     location: SettingLocation,
 ): unknown {
-    if (schema instanceof z.ZodPipe) return mapSettingPaths(schema.in as z.ZodType, value, visit, location);
-    const role = schema.meta()?.path_role;
+    let input = schema;
+    while (input instanceof z.ZodPipe) input = input.in as z.ZodType;
+    const role = input.meta()?.path_role;
     if (typeof value === 'string' && role !== undefined) return visit(value, location, role);
-    return schema instanceof z.ZodOptional || schema instanceof z.ZodDefault || schema instanceof z.ZodPrefault
-        ? mapSettingPaths(schema.unwrap() as z.ZodType, value, visit, location)
-        : mapNestedPaths(schema, value, visit, location);
+    return input instanceof z.ZodOptional || input instanceof z.ZodDefault || input instanceof z.ZodPrefault
+        ? mapSettingPaths(input.unwrap() as z.ZodType, value, visit, location)
+        : mapNestedPaths(input, value, visit, location);
 }
 
 /**
@@ -121,10 +122,10 @@ Resolve command selectors relative to the calling folder.
 */
 export function buildArgumentPaths(root: string, cwd: string, paths: string[] | undefined): string[] | undefined {
     return paths?.map((path) => {
-        const negative = path.startsWith('!');
+        const isNegative = path.startsWith('!');
         try {
-            const selector = escapeLiteralPath(root, buildArgumentPath(root, cwd, negative ? path.slice(1) : path));
-            return negative ? `!${selector}` : selector;
+            const selector = escapeLiteralPath(root, buildArgumentPath(root, cwd, isNegative ? path.slice(1) : path));
+            return isNegative ? `!${selector}` : selector;
         } catch (error) {
             throw new GspotError('arguments', `--paths ${path} is outside this repository. Name a path inside it.`, {
                 cause: error,

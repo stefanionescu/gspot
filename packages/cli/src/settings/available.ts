@@ -35,6 +35,22 @@ function addDefault(availableSettings: AvailableSettings, configuration: Configu
     });
 }
 
+function addLanguageDefaults(
+    availableSettings: AvailableSettings,
+    configuration: Configuration,
+    settings: Setting[],
+): void {
+    for (const setting of settings) {
+        if (setting.language_defaults === undefined) continue;
+        const [table, field] = setting.name.split('.', TABLE_KEY_SEGMENTS);
+        for (const [language, value] of Object.entries(setting.language_defaults))
+            availableSettings.defaults.set(`${table as string}.${language}.${field as string}`, {
+                value,
+                configuration: configuration.name,
+            });
+    }
+}
+
 function addConfigurationSettings(
     availableSettings: AvailableSettings,
     configuration: Configuration,
@@ -44,20 +60,11 @@ function addConfigurationSettings(
     const settings = (SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? []).map((listed) =>
         isAll && listed.default_all !== undefined ? { ...listed, default: listed.default_all } : listed,
     );
-    for (const setting of settings)
+    for (const setting of settings) {
         if (!availableSettings.settings.has(setting.name)) availableSettings.settings.set(setting.name, setting);
-    for (const setting of settings.filter((each) => each.default !== undefined))
-        addDefault(availableSettings, configuration, setting);
-    const languageSettings = settings.filter((setting) => setting.language_defaults !== undefined);
-    for (const setting of languageSettings) {
-        const [table, field] = setting.name.split('.', TABLE_KEY_SEGMENTS);
-        const languageDefaults = setting.language_defaults as NonNullable<Setting['language_defaults']>;
-        for (const [language, value] of Object.entries(languageDefaults))
-            availableSettings.defaults.set(`${table as string}.${language}.${field as string}`, {
-                value,
-                configuration: configuration.name,
-            });
+        if (setting.default !== undefined) addDefault(availableSettings, configuration, setting);
     }
+    addLanguageDefaults(availableSettings, configuration, settings);
     const overrides = Object.entries(configuration.defaults)
         .map(([name, value]) => ({ setting: availableSettings.settings.get(name), value }))
         .filter((override): override is typeof override & { setting: Setting } => override.setting !== undefined);

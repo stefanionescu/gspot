@@ -116,10 +116,13 @@ export async function explainReleaseAgeHold(
     const named = releases.filter((release) => output.includes(release.label));
     if (named.length === 0 || install.releaseAgeDays === 0) return '';
     const releaseStates = await Promise.all(
-        named.map(async (release) => ({
-            label: release.label,
-            state: await readReleaseState(install, release).catch(() => undefined),
-        })),
+        named.map(async (release) => {
+            try {
+                return { label: release.label, state: await readReleaseState(install, release) };
+            } catch {
+                return { label: release.label, state: undefined };
+            }
+        }),
     );
     const absent = releaseStates.filter(({ state }) => state === 'absent').map(({ label }) => label);
     const held = releaseStates.filter(({ state }) => state === 'held').map(({ label }) => label);

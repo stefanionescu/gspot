@@ -49,17 +49,17 @@ function listConfigurationConflicts(
         })),
     ]);
     return replacements.flatMap((replacement) => {
-        const matches = buildPathMatcher([replacement.path, `**/${replacement.path}`]);
+        const isReplacedPath = buildPathMatcher([replacement.path, `**/${replacement.path}`]);
         // A manifest names a config that cascades below the project roots with a leading dot.
-        const cascading = posix.basename(replacement.path).startsWith('.');
+        const isCascading = posix.basename(replacement.path).startsWith('.');
         const paths = [...files.inventory].filter(
-            (path) => matches(path) && (cascading || files.projectFolders.has(posix.dirname(path))),
+            (path) => isReplacedPath(path) && (isCascading || files.projectFolders.has(posix.dirname(path))),
         );
-        const rootOnly =
+        const isRootOnly =
             !picomatch.scan(replacement.path).isGlob &&
             !files.inventory.has(replacement.path) &&
             findText(root, replacement.path) !== undefined;
-        return listReplacementConflicts(root, [...paths, ...(rootOnly ? [replacement.path] : [])], replacement);
+        return listReplacementConflicts(root, [...paths, ...(isRootOnly ? [replacement.path] : [])], replacement);
     });
 }
 

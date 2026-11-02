@@ -45,7 +45,7 @@ function parsePushLine(line: string): PushLine {
         !hasRefs ||
         localHash === undefined ||
         remoteHash === undefined ||
-        ![localHash, remoteHash].every((hash) => HASH_PATTERN.test(hash)) ||
+        [localHash, remoteHash].some((hash) => !HASH_PATTERN.test(hash)) ||
         localHash.length !== remoteHash.length
     )
         throw new GspotError('git', INVALID_PUSH_INPUT_MESSAGE);

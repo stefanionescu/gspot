@@ -50,11 +50,13 @@ function listDependencyFolders(installed: Files, projects: string[]): string[] {
 
 function assertDependencyReady(copyRoot: string, folder: string): void {
     if (
-        !LOCKFILES.some(
+        LOCKFILES.every(
             (lockfile) =>
-                'copied' in lockfile &&
-                (statSync(join(copyRoot, folder, lockfile.file), { throwIfNoEntry: false }) !== undefined ||
-                    statSync(join(copyRoot, lockfile.file), { throwIfNoEntry: false }) !== undefined),
+                !(
+                    'copied' in lockfile &&
+                    (statSync(join(copyRoot, folder, lockfile.file), { throwIfNoEntry: false }) !== undefined ||
+                        statSync(join(copyRoot, lockfile.file), { throwIfNoEntry: false }) !== undefined)
+                ),
         )
     )
         throw new GspotError(
@@ -93,12 +95,6 @@ function listInstalledDependencies(copyRoot: string, folders: string[]): string[
             throw new GspotError('copy', INSTALLED_DEPENDENCIES_MESSAGE);
         return path;
     });
-}
-
-function needsDependencyNote(selection: { isMismatched: boolean; isInstalled: boolean; changed: GitFile[] }): boolean {
-    const { isMismatched, isInstalled, changed } = selection;
-    if (isMismatched) return true;
-    return isInstalled && changed.length > 0;
 }
 
 async function selectRevisionDependencies(
@@ -142,12 +138,10 @@ async function selectRevisionDependencies(
     const tracked = new Set(indexFiles.map(({ path }) => path));
     const untrackedArtifacts = artifacts.filter((path) => !tracked.has(path));
     const copied = [...folders, ...declarations.copies, ...untrackedArtifacts];
-    const needsNote = needsDependencyNote({
-        isMismatched: declarations.mismatched,
-        isInstalled: copied.length + environments.length > 0,
-        changed: dependencyFiles.filter(({ path }) => !unchangedPaths.has(path)),
-    });
-    const note = needsNote ? { dependencyNote: DEPENDENCY_REVISION_NOTE } : {};
+    const requiresNote =
+        declarations.mismatched ||
+        (copied.length + environments.length > 0 && dependencyFiles.some(({ path }) => !unchangedPaths.has(path)));
+    const note = requiresNote ? { dependencyNote: DEPENDENCY_REVISION_NOTE } : {};
     if (copied.length === 0) return { dependencies: [], ...note };
     for (const folder of folders) assertDependencyReady(copyRoot, folder);
     const dependencies: string[] = [
@@ -179,6 +173,16 @@ async function listWorkingTreeMatches(
     );
 }
 
+async function* listBlobFiles(
+    blobs: AsyncIterable<readonly [string, Buffer]>,
+    filesByHash: Map<string, CopyIndexFile[]>,
+): AsyncGenerator<CopyFile> {
+    for await (const [hash, bytes] of blobs) {
+        const files = filesByHash.get(hash) ?? [];
+        for (const indexFile of files) yield { indexFile, bytes };
+    }
+}
+
 async function writeRevisionFiles(
     root: string,
     copyRoot: string,
@@ -200,12 +204,12 @@ async function writeRevisionFiles(
     }
     const clonedPaths = [...cloned].map(({ path }) => path);
     await writeCopyFiles({ root, target: copyRoot, files: clonedPaths, dependencies: [], cancelSignal });
-    for (const linked of [false, true]) {
+    for (const isLinked of [false, true]) {
         const selected = Map.groupBy(
             indexFiles.filter(
                 (indexFile): indexFile is CopyIndexFile =>
                     indexFile.mode !== GITLINK_MODE &&
-                    (indexFile.mode === SYMLINK_MODE) === linked &&
+                    (indexFile.mode === SYMLINK_MODE) === isLinked &&
                     !cloned.has(indexFile),
             ),
             (indexFile) => indexFile.hash,
@@ -214,16 +218,10 @@ async function writeRevisionFiles(
             copyRoot,
             selected.keys().toArray(),
             async (blobs) => {
-                async function* listBlobFiles(): AsyncGenerator<CopyFile> {
-                    for await (const [hash, bytes] of blobs) {
-                        const files = selected.get(hash) ?? [];
-                        for (const indexFile of files) yield { indexFile, bytes };
-                    }
-                }
                 await writeCopyFiles({
                     root,
                     target: copyRoot,
-                    files: listBlobFiles(),
+                    files: listBlobFiles(blobs, selected),
                     dependencies: [],
                     cancelSignal,
                 });

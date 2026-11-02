@@ -131,9 +131,9 @@ reports its paths from there.
 @param root the repository, or the copy of it that the tool runs in.
 @param planned the check and its scope.
 */
-export function runsInPackageFolder(root: string, planned: PlannedCheck): boolean {
+export function isPackageFolderRun(root: string, planned: PlannedCheck): boolean {
     const scopePath = planned.scope.path;
-    if (scopePath === '' || !(planned.check.command ?? []).some((argument) => WORKSPACE_PLACEHOLDER.test(argument)))
+    if (scopePath === '' || (planned.check.command ?? []).every((argument) => !WORKSPACE_PLACEHOLDER.test(argument)))
         return false;
     return (
         statSync(join(root, scopePath, PACKAGE_JSON), { throwIfNoEntry: false }) !== undefined &&
@@ -245,7 +245,7 @@ export function replacePlaceholders(
     const readers = buildPlaceholderReaders(session, planned, substitutions);
     return argument.replaceAll(
         COMMAND_PLACEHOLDER,
-        (placeholder, name: string, value: string | undefined) => readers[name]?.(value ?? '') ?? placeholder,
+        (placeholder, name: string, value: string = '') => readers[name]?.(value) ?? placeholder,
     );
 }
 

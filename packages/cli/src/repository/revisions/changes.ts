@@ -50,10 +50,10 @@ export async function listRemoteHeads(root: string, cancelSignal?: AbortSignal):
     const lines = await readGitLines(root, GIT_REMOTE_HEADS_ARGUMENTS, {
         cancelSignal,
     });
-    return lines.flatMap((line) => {
+    return lines.flatMap((line): Array<[string, string]> => {
         const [name, target] = line.split('\t', REMOTE_HEAD_FIELD_COUNT);
         const isHead = name !== undefined && name.endsWith(HEAD_SUFFIX) && target !== undefined && target !== '';
-        return isHead ? [[name, target] as [string, string]] : [];
+        return isHead ? [[name, target]] : [];
     });
 }
 
@@ -140,13 +140,12 @@ export async function readChangedPaths(
     reference: string | undefined,
     cancelSignal?: AbortSignal,
 ): Promise<ChangedPaths> {
-    const compared = reference === undefined ? await readDefaultRef(root, cancelSignal) : reference;
+    const compared = reference ?? (await readDefaultRef(root, cancelSignal));
     if (reference === undefined && compared === '') {
         throw new GspotError('git', NO_UPSTREAM_MESSAGE);
     }
     const base = await readMergeBase(root, compared, cancelSignal);
-    if (base.hash === undefined)
-        return { reference: compared, ...(base.note === undefined ? {} : { note: base.note }) };
+    if (base.hash === undefined) return { reference: compared, ...(base.note !== undefined && { note: base.note }) };
     const merged = base.hash;
     const committed = await readGitPaths(root, [...GIT_DIFF_NAMES_ARGUMENTS, merged, '--'], { cancelSignal });
     const working = await readGitPaths(root, GIT_DIFF_NAMES_ARGUMENTS, { cancelSignal });

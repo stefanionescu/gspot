@@ -17,7 +17,7 @@ import type {
     CanceledCommandJson,
 } from '#cli/types/system.ts';
 
-let options: OutputState = { isJson: false, notes: [] };
+const options: OutputState = { isJson: false, notes: [] };
 
 /**
 Remove terminal escape sequences, control characters except tabs and line feeds, and format characters such as
@@ -44,7 +44,7 @@ Set the output mode for the process.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Output options stay private to this module.
 export function setOutputOptions(next: OutputOptions): void {
-    options = { ...next, notes: [] };
+    Object.assign(options, next, { notes: [] });
 }
 
 /**
@@ -81,12 +81,12 @@ export function formatUnexpectedError(subject: string): string {
 Print an unexpected command failure, retaining its stack only for verbose output.
 
 @param error the unexpected thrown value.
-@param verbose whether to include its message and stack.
+@param isVerbose whether to include its message and stack.
 */
-export function printUnexpectedError(error: unknown, verbose: boolean): void {
+export function printUnexpectedError(error: unknown, isVerbose: boolean): void {
     const stackText = error instanceof Error ? (error.stack ?? error.message) : String(error);
     const message = formatUnexpectedError('gspot');
-    printError({ error: 'unexpected', message, ...(verbose && { stack: stackText }) });
+    printError({ error: 'unexpected', message, ...(isVerbose && { stack: stackText }) });
 }
 
 /**

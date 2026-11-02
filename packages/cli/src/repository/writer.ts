@@ -28,6 +28,7 @@ import {
     TEMPORARY_FILE_NAME,
     VALE_TEMPORARY_NAME,
     TRAILING_BLANK_LINE,
+    LEADING_PATH_SEGMENTS,
     INSTALLED_TOOL_FOLDERS,
 } from '#cli/config/repository/setup.ts';
 
@@ -76,8 +77,10 @@ function isOwned(path: string, files: Files, generatedPatterns: string[], ownabl
     if (isGspotPath(path)) return true;
     if (!ownablePaths.has(path)) return false;
     const file = files.readKeepingLinks(path);
-    if (file !== undefined && file.isSymlink !== true && hasGeneratedHeader(file.bytes.toString('utf8'))) return true;
-    return generatedPatterns.some((pattern) => buildPathMatcher([pattern])(path));
+    return (
+        (file !== undefined && file.isSymlink !== true && hasGeneratedHeader(file.bytes.toString('utf8'))) ||
+        generatedPatterns.some((pattern) => buildPathMatcher([pattern])(path))
+    );
 }
 
 function writeBatch(writer: Files, plans: WritePlan[]): void {
@@ -91,7 +94,7 @@ function writeBatch(writer: Files, plans: WritePlan[]): void {
 
 function isTemporaryPath(path: string): boolean {
     if (TEMPORARY_FILE_NAME.test(basename(path))) return true;
-    const [folder, name] = path.split('/');
+    const [folder, name] = path.split('/', LEADING_PATH_SEGMENTS);
     return folder === GSPOT_FOLDER && name !== undefined && VALE_TEMPORARY_NAME.test(name);
 }
 
@@ -148,8 +151,11 @@ export function listStrayPaths(
     const ownPaths: string[] = [];
     if (ownFolder !== undefined) {
         walkFiles(disk, GSPOT_FOLDER, (path) => {
-            if (isTemporaryPath(path)) return false;
-            if (installations.some((folder) => path === folder || path.startsWith(`${folder}/`))) return false;
+            if (
+                isTemporaryPath(path) ||
+                installations.some((folder) => path === folder || path.startsWith(`${folder}/`))
+            )
+                return false;
             if (lstatSync(join(session.root, path)).isDirectory()) return true;
             ownPaths.push(path);
             return false;
@@ -162,9 +168,12 @@ export function listStrayPaths(
         ...blockPaths,
     ]);
     return [...writtenPaths].filter((path) => {
-        if (isTemporaryPath(path)) return false;
-        if (installations.some((folder) => path === folder || path.startsWith(`${folder}/`))) return false;
-        if (expected.has(path)) return false;
+        if (
+            isTemporaryPath(path) ||
+            installations.some((folder) => path === folder || path.startsWith(`${folder}/`)) ||
+            expected.has(path)
+        )
+            return false;
         if (isOwned(path, disk, generatedPatterns, ownablePaths)) return true;
         if (!blockPaths.has(path)) return false;
         const text = disk.read(path)?.bytes.toString('utf8');
@@ -230,7 +239,7 @@ export function planRemovals(writer: Files, paths: string[]): WritePlan[] {
         const next = removeBlock(path, onDisk);
         return {
             path,
-            ...(next === undefined ? {} : { after: next }),
+            ...(next !== undefined && { after: next }),
             status: isSameContents(onDisk, next) ? 'unchanged' : 'changed',
         };
     });

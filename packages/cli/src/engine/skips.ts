@@ -27,11 +27,11 @@ function findDependencySkip(
 
 function findTagSkip(tags: string[] | undefined, scopePath: string, files: Repository['files']): Skip | undefined {
     if (tags === undefined) return undefined;
-    const marked = files.some(
+    const isMarked = files.some(
         (file) =>
             file.kind === 'source' && isInScope(file.path, scopePath) && file.tags.some((tag) => tags.includes(tag)),
     );
-    return marked
+    return isMarked
         ? undefined
         : { cause: 'condition', note: `Needs files marked ${formatNameList(tags, 'disjunction')} in this scope.` };
 }
@@ -55,8 +55,9 @@ function findIgnoreSkip(scope: Scope, check: Check): SettingsSkip | undefined {
         (ignore) =>
             ignore.rule === undefined && (ignore.paths === undefined || isScopeCovered(ignore.paths, scope.path)),
     );
-    if (ignored === undefined) return undefined;
-    return { cause: 'ignore', note: `turned off by an ignore in gspot.toml: ${ignored.reason}` };
+    return ignored === undefined
+        ? undefined
+        : { cause: 'ignore', note: `turned off by an ignore in gspot.toml: ${ignored.reason}` };
 }
 
 function findEmptySetting(settings: Settings, scope: Scope, check: Check): string | undefined {
@@ -71,7 +72,7 @@ function findEmptySetting(settings: Settings, scope: Scope, check: Check): strin
 function findConfigSkip(settings: Settings, scope: Scope, check: Check): SettingsSkip | undefined {
     const tool = check.when?.config_file;
     if (tool === undefined) return undefined;
-    const selected = scope.configurations.some((configuration) =>
+    const isSelected = scope.configurations.some((configuration) =>
         configuration.configs.some(
             (file) =>
                 file.tool.includes(tool) &&
@@ -79,8 +80,9 @@ function findConfigSkip(settings: Settings, scope: Scope, check: Check): Setting
                 (file.level !== 'all' || settings.level === 'all'),
         ),
     );
-    if (selected || !isSettingEmpty(scope.settings.valuesByKey[LOCAL_RULES_SETTING])) return undefined;
-    return { cause: 'setting', note: `No selected configuration or ${LOCAL_RULES_SETTING} supplies local rules.` };
+    return isSelected || !isSettingEmpty(scope.settings.valuesByKey[LOCAL_RULES_SETTING])
+        ? undefined
+        : { cause: 'setting', note: `No selected configuration or ${LOCAL_RULES_SETTING} supplies local rules.` };
 }
 
 /**
@@ -110,8 +112,7 @@ export function findSystemSkip(check: Check, tool: Tool | undefined, host: Host)
         };
     if (tool === undefined) return undefined;
     const missing = findMissingBuild(tool, host);
-    if (missing !== undefined) return { cause: 'system', note: `${tool.name} has no ${missing} build` };
-    return undefined;
+    return missing === undefined ? undefined : { cause: 'system', note: `${tool.name} has no ${missing} build` };
 }
 
 /**
@@ -146,11 +147,11 @@ export function findFirstSkip(check: PlannedCheck, planned: PlannedScope): Skip 
         planned.options.only?.includes(check.check.id) === true
             ? { ...check.check, level: 'basic' as const }
             : check.check;
-    const selected = findSettingsSkip(settings, check.scope, selectedCheck);
-    if (selected !== undefined) return selected;
-    const condition = findConditionSkip(check, session.repository);
-    if (condition !== undefined) return condition;
-    return findSystemSkip(check.check, check.tool, host);
+    return (
+        findSettingsSkip(settings, check.scope, selectedCheck) ??
+        findConditionSkip(check, session.repository) ??
+        findSystemSkip(check.check, check.tool, host)
+    );
 }
 
 /**

@@ -39,6 +39,22 @@ function getTrapBody(body: Node): { text: string; sourceRows: TrapScript['source
     return { text: text + quoted.slice(end), sourceRows };
 }
 
+function readLiteralArgument(argument: Node): string | undefined {
+    if (argument.type === 'word' || argument.type === 'number') return argument.text;
+    const isLiteralString =
+        argument.type === 'raw_string' ||
+        (argument.type === 'string' &&
+            argument.descendantsOfType(['expansion', 'simple_expansion', 'command_substitution']).length === 0);
+    return isLiteralString ? argument.text.slice(1, -1) : undefined;
+}
+
+function findSwallowingCommand(list: Node): Node | undefined {
+    const tail = list.namedChildren.at(-1);
+    if (tail?.type !== 'command' || list.children.every((child) => child.type !== '||')) return undefined;
+    const name = tail.childForFieldName('name')?.text;
+    return (name === 'true' || name === ':') && tail.childrenForFieldName('argument').length === 0 ? tail : undefined;
+}
+
 function isScriptLevel(node: Node): boolean {
     for (let parent = node.parent; parent !== null; parent = parent.parent)
         if (parent.type === 'function_definition' || parent.type === 'subshell') return false;
@@ -136,24 +152,23 @@ export function buildCommandCalls(commands: Node[], sourceRows?: TrapScript['sou
         if (name === undefined) return [];
         const commandArguments =
             node.type === 'declaration_command' ? node.namedChildren : node.childrenForFieldName('argument');
-        const calls: ScriptSyntax['calls'] = [
+        const words = commandArguments.filter(
+            (argument) => argument.type === 'word' || argument.type === 'variable_name',
+        );
+        return [
             {
                 name,
                 count: commandArguments.length,
                 line: findSourceLine(node, sourceRows),
                 forwards: commandArguments.some((argument) => FORWARDED_ARGUMENTS.has(argument.text)),
             },
-        ];
-        for (const argument of commandArguments.filter(
-            (argument) => argument.type === 'word' || argument.type === 'variable_name',
-        ))
-            calls.push({
+            ...words.map((argument) => ({
                 name: argument.text,
                 count: 0,
                 line: findSourceLine(argument, sourceRows),
                 forwards: false,
-            });
-        return calls;
+            })),
+        ];
     });
 }
 
@@ -176,17 +191,7 @@ export function listScriptCommands(commands: Node[], traps: TrapScript[]): Scrip
             {
                 name,
                 line: findSourceLine(node, sourceRows),
-                arguments: node.childrenForFieldName('argument').map((argument) => {
-                    if (argument.type === 'word' || argument.type === 'number') return argument.text;
-                    if (argument.type === 'raw_string') return argument.text.slice(1, -1);
-                    if (
-                        argument.type === 'string' &&
-                        argument.descendantsOfType(['expansion', 'simple_expansion', 'command_substitution']).length ===
-                            0
-                    )
-                        return argument.text.slice(1, -1);
-                    return undefined;
-                }),
+                arguments: node.childrenForFieldName('argument').map((argument) => readLiteralArgument(argument)),
             },
         ];
     });
@@ -204,12 +209,8 @@ export function listSwallowedLines(syntaxRoot: Node, traps: TrapScript[]): numbe
         ...traps.map((trap) => ({ node: trap.syntaxRoot, sourceRows: trap.sourceRows })),
     ].flatMap(({ node: root, sourceRows }) =>
         root.descendantsOfType('list').flatMap((node) => {
-            const tail = node.namedChildren.at(-1);
-            if (tail?.type !== 'command' || !node.children.some((child) => child.type === '||')) return [];
-            const name = tail.childForFieldName('name')?.text;
-            return (name === 'true' || name === ':') && tail.childrenForFieldName('argument').length === 0
-                ? [findSourceLine(tail, sourceRows)]
-                : [];
+            const swallowing = findSwallowingCommand(node);
+            return swallowing === undefined ? [] : [findSourceLine(swallowing, sourceRows)];
         }),
     );
 }

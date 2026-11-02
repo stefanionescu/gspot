@@ -26,6 +26,7 @@ import {
     PYTHON_STRING_ESCAPE,
     PYTHON_STRING_ESCAPES,
     OS_ENVIRONMENT_MEMBERS,
+    PYTHON_DECLARATION_NODES,
     JAVASCRIPT_LITERAL_NODES,
     JAVASCRIPT_PROPERTY_NODES,
     JAVASCRIPT_DEFAULT_OPERATORS,
@@ -108,13 +109,7 @@ function listPythonNames(syntaxRoot: Node): EnvironmentNames {
     const scopeNames: EnvironmentNames = new Map();
     const nodes = [
         ...syntaxRoot.descendantsOfType([...PYTHON_IMPORT_NODES]),
-        ...syntaxRoot.descendantsOfType([
-            'assignment',
-            'for_statement',
-            'function_definition',
-            'class_definition',
-            'parameters',
-        ]),
+        ...syntaxRoot.descendantsOfType([...PYTHON_DECLARATION_NODES]),
     ];
     for (const node of nodes) {
         const scope = findDeclarationScope(node).id;
@@ -184,14 +179,12 @@ function decodePythonKey(literal: Node): string | undefined {
             unicode: string | undefined,
             longUnicode: string | undefined,
             octal: string | undefined,
-            character: string | undefined,
+            character: string = '',
         ) => {
             const digits = [hexadecimal, unicode, longUnicode, octal].find((value) => value !== undefined);
-            if (digits !== undefined) {
-                const point = Number.parseInt(digits, octal === undefined ? HEXADECIMAL_RADIX : OCTAL_RADIX);
-                return point <= MAXIMUM_CODE_POINT ? String.fromCodePoint(point) : escape;
-            }
-            return PYTHON_STRING_ESCAPES[character ?? ''] ?? escape;
+            if (digits === undefined) return PYTHON_STRING_ESCAPES[character] ?? escape;
+            const point = Number.parseInt(digits, octal === undefined ? HEXADECIMAL_RADIX : OCTAL_RADIX);
+            return point <= MAXIMUM_CODE_POINT ? String.fromCodePoint(point) : escape;
         },
     );
 }
@@ -209,13 +202,14 @@ function getPropertyKey(property: Node | null): string | undefined {
 function listDeclarationReads(node: Node): EnvironmentRead[] {
     const pattern = node.childForFieldName('name');
     const value = node.childForFieldName('value')?.text.replaceAll(WHITESPACE_RUN, '');
-    if (pattern?.type !== 'object_pattern' || value === undefined || !JAVASCRIPT_ENVIRONMENT_FIELDS.has(value))
+    if (value === undefined || pattern?.type !== 'object_pattern' || !JAVASCRIPT_ENVIRONMENT_FIELDS.has(value))
         return [];
     return pattern.namedChildren.flatMap((element) => {
         const property = findBoundProperty(element);
         const key = getPropertyKey(property);
-        if (property === null || key === undefined || !VARIABLE_NAME.test(key)) return [];
-        return [{ key, line: property.startPosition.row + 1, column: property.startPosition.column + 1 }];
+        return property === null || key === undefined || !VARIABLE_NAME.test(key)
+            ? []
+            : [{ key, line: property.startPosition.row + 1, column: property.startPosition.column + 1 }];
     });
 }
 
@@ -310,7 +304,8 @@ export async function listJavascriptEnvironmentReads(
 ): Promise<EnvironmentRead[]> {
     const getters = new Set([...JAVASCRIPT_ENVIRONMENT_GETTERS, ...environmentFunctions]);
     const reads: EnvironmentRead[] = [];
-    for (const { grammar, source } of await listJavascriptSources(path, text)) {
+    const sources = await listJavascriptSources(path, text);
+    for (const { grammar, source } of sources) {
         using tree = await parseSource(grammar, source, cache);
         reads.push(...listTreeReads(tree.rootNode, getters));
     }

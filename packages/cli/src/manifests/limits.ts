@@ -1,7 +1,10 @@
 import type { LimitCheck } from '#cli/types/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 
-const checks = [...readConfigurations().values()].flatMap((configuration) => configuration.checks);
+const checks = readConfigurations()
+    .values()
+    .flatMap((configuration) => configuration.checks)
+    .toArray();
 
 export const LIMIT_READERS: readonly LimitCheck[] = checks.flatMap((check) => {
     if (check.limits === undefined) return [];

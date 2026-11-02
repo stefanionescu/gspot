@@ -29,7 +29,8 @@ export function listMisePins(configurations: Configuration[]): MiseToolPin[] {
     const tools = listDistinctTools(configurations);
     const pins = tools.flatMap((tool) => findMisePin(tool) ?? []);
     if (tools.some((tool) => findPackagePin(tool)?.kind === 'python') && tools.every((tool) => tool.name !== UV_TOOL)) {
-        pins.push(findMisePin(getTool(readConfigurations().values(), UV_TOOL)) as MiseToolPin);
+        const uv = getTool(readConfigurations().values(), UV_TOOL);
+        pins.push(findMisePin(uv) as MiseToolPin);
     }
     return pins;
 }
@@ -107,7 +108,8 @@ export function listNpmProjectPins(session: Pick<Session, 'scopes' | 'toolConfig
     const pluginPins = plugins.flatMap(({ package: name, version }) =>
         name === undefined ? [] : [[name, version as string] as const],
     );
-    for (const [name, pins] of Map.groupBy(pluginPins, ([name]) => name))
+    const pinsByName = Map.groupBy(pluginPins, ([name]) => name);
+    for (const [name, pins] of pinsByName)
         if (new Set(pins.map(([, version]) => version)).size > 1)
             throw new GspotError('settings', `The plugin records name ${name} at two versions. Use one version.`);
     return { ...Object.fromEntries(pluginPins), ...listPackagePins(session.toolConfigurations).npm };
@@ -196,7 +198,7 @@ Find the npm or Python package that installs a tool.
 */
 export function findPackagePin(tool: Tool): PackagePin | undefined {
     const python = tool.installers['pypi'];
-    if (tool.system !== true && python !== undefined)
+    if (python !== undefined && tool.system !== true)
         return { kind: 'python', name: python.name, version: python.version };
     const npm = tool.installers['npm'];
     if (npm?.version === undefined) return undefined;
@@ -219,6 +221,7 @@ export function findMissingBuild(tool: Tool, host: Host): string | undefined {
     if (tool.builds === undefined) return undefined;
     const { platform } = host;
     const named: readonly string[] = tool.builds;
-    if (named.includes(platform)) return undefined;
-    return OPERATING_SYSTEMS.find((system) => system.name === platform)?.label ?? platform;
+    return named.includes(platform)
+        ? undefined
+        : (OPERATING_SYSTEMS.find((system) => system.name === platform)?.label ?? platform);
 }

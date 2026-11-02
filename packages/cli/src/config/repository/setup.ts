@@ -178,6 +178,8 @@ export const TEMPORARY_FILE_NAME = /^\.gspot-(?:(?<pid>[1-9]\d{0,8})-)?[\da-f-]{
 
 export const VALE_TEMPORARY_NAME = /^vale-(?:(?<pid>[1-9]\d{0,8})-)?[a-zA-Z0-9]{6}$/u;
 
+export const LEADING_PATH_SEGMENTS = 2;
+
 export const PRETTIER_ROOT_FILES = [
     '.prettierrc',
     '.prettierrc.json',

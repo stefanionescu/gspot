@@ -20,8 +20,7 @@ import {
 function isStaleTemporaryPath(path: string, pid: string | undefined): boolean {
     if (pid !== undefined) return !isProcessRunning(Number(pid));
     const stat = lstatSync(path, { throwIfNoEntry: false });
-    if (stat === undefined) return false;
-    return Date.now() - stat.mtimeMs > TEMPORARY_STALE_MILLISECONDS;
+    return stat !== undefined && Date.now() - stat.mtimeMs > TEMPORARY_STALE_MILLISECONDS;
 }
 
 function hasSymlinkPrefix(folder: string, pattern: string): boolean {
@@ -36,8 +35,8 @@ function hasSymlinkPrefix(folder: string, pattern: string): boolean {
 
 function assertInsideFolder(pattern: string): void {
     const bare = pattern.startsWith(GLOB_EXCLUDE) ? pattern.slice(1) : pattern;
-    const climbs = bare.startsWith('/') || DRIVE_LETTER.test(bare) || PARENT_SEGMENT.test(bare);
-    if (climbs) throw new GspotError('filesystem', `A path pattern cannot leave its folder: ${pattern}`);
+    if (bare.startsWith('/') || DRIVE_LETTER.test(bare) || PARENT_SEGMENT.test(bare))
+        throw new GspotError('filesystem', `A path pattern cannot leave its folder: ${pattern}`);
 }
 
 /**

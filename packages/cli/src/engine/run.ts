@@ -15,11 +15,9 @@ import { findMissingEnvironment } from '#cli/tools/uv.ts';
 import { subtractBaseline } from '#cli/engine/baseline.ts';
 import { isActive, planChecks } from '#cli/engine/plan.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import type { IgnoreRecord } from '#cli/types/settings.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { CheckStop, GspotError } from '#cli/system/errors.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { holdCopyFolder } from '#cli/engine/copies/folders.ts';
 import { formatUnexpectedError } from '#cli/system/terminal.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
@@ -51,12 +49,6 @@ import {
     DOCKER_MISSING_MESSAGE,
 } from '#cli/config/engine.ts';
 
-function isIgnoreMatch(record: IgnoreRecord, finding: Finding): boolean {
-    if ((['check', 'rule'] as const).some((key) => record[key] !== undefined && record[key] !== finding[key]))
-        return false;
-    return record.paths === undefined || buildPathMatcher(record.paths)(finding.file);
-}
-
 const DOCKER_AVAILABILITY = Symbol('docker availability');
 
 async function findUnrunnableResult(
@@ -83,7 +75,7 @@ async function findUnrunnableResult(
 function classifyCheckError(
     name: string,
     error: unknown,
-    verbose: boolean,
+    isVerbose: boolean,
 ): Pick<CheckResult, 'status' | 'note' | 'cause' | 'stack'> {
     if (error instanceof CheckStop)
         return { status: error.status, ...(error.status === 'skipped' && { cause: 'condition' }), note: error.message };
@@ -91,7 +83,7 @@ function classifyCheckError(
     return {
         status: 'error',
         note: formatUnexpectedError(name),
-        ...(verbose && { stack: error instanceof Error ? (error.stack ?? error.message) : String(error) }),
+        ...(isVerbose && { stack: error instanceof Error ? (error.stack ?? error.message) : String(error) }),
     };
 }
 
@@ -119,7 +111,14 @@ async function runPlannedCheck(run: Run, planned: PlannedCheck): Promise<CheckRe
 
 function removeAcceptedFindings(run: Run, result: CheckResult): CheckResult {
     const { ignore } = run.session.settings;
-    const kept = result.findings.filter((finding) => ignore.every((record) => !isIgnoreMatch(record, finding)));
+    const kept = result.findings.filter((finding) =>
+        ignore.every((record) => {
+            const isOtherFinding = (['check', 'rule'] as const).some(
+                (key) => record[key] !== undefined && record[key] !== finding[key],
+            );
+            return isOtherFinding || (record.paths !== undefined && !buildPathMatcher(record.paths)(finding.file));
+        }),
+    );
     const { findings } = subtractBaseline({ ...result, findings: kept }, run);
     if (result.status !== 'passed' && result.status !== 'failed') return { ...result, findings };
     return { ...result, findings, status: findings.length > 0 ? 'failed' : 'passed' };

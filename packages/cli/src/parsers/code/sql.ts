@@ -139,6 +139,24 @@ function replacePsqlSyntax(text: string): BlankedSql {
     return { text: pieces.join(''), variables };
 }
 
+function listSqlStatements(source: string, statements: NonNullable<ParseResult['stmts']>): SqlStatement[] {
+    const bytes = Buffer.from(source, 'utf8');
+    const sorted = statements.toSorted((left, right) => (left.stmt_location ?? 0) - (right.stmt_location ?? 0));
+    let byteOffset = 0;
+    let offset = 0;
+    const built: SqlStatement[] = [];
+    for (const statement of sorted) {
+        const location = statement.stmt_location ?? 0;
+        offset += bytes.subarray(byteOffset, location).toString('utf8').length;
+        byteOffset = location;
+        if (statement.stmt === undefined) continue;
+        const start = offset;
+        const nodes = Object.entries(statement.stmt).map(([kind, fields]) => ({ kind, fields, start }));
+        built.push(...(nodes as SqlStatement[]));
+    }
+    return built;
+}
+
 /**
 Select migration paths at or below the written version.
 
@@ -235,7 +253,6 @@ export function parseSqlFile(text: string, cache: RunCache): Promise<SqlFile> {
         const { text: source, variables } = replacePsqlSyntax(text);
         if (source.trim() === '') return { source, variables, statements: [], error: undefined };
         const parsed = await parsePostgres(source);
-        const bytes = Buffer.from(source, 'utf8');
         if ('error' in parsed) {
             const offset = [...source].slice(0, parsed.error.offset).join('').length;
             return {
@@ -245,24 +262,10 @@ export function parseSqlFile(text: string, cache: RunCache): Promise<SqlFile> {
                 error: { text: parsed.error.text, ...getPosition(text, offset) },
             };
         }
-        const statements = parsed.value.stmts ?? [];
-        let byteOffset = 0;
-        let offset = 0;
-        const built: SqlStatement[] = [];
-        for (const statement of statements.toSorted(
-            (left, right) => (left.stmt_location ?? 0) - (right.stmt_location ?? 0),
-        )) {
-            const location = statement.stmt_location ?? 0;
-            offset += bytes.subarray(byteOffset, location).toString('utf8').length;
-            byteOffset = location;
-            if (statement.stmt === undefined) continue;
-            for (const [kind, fields] of Object.entries(statement.stmt))
-                built.push({ kind, fields, start: offset } as SqlStatement);
-        }
         return {
             source,
             variables,
-            statements: built,
+            statements: listSqlStatements(source, parsed.value.stmts ?? []),
             error: undefined,
         };
     });

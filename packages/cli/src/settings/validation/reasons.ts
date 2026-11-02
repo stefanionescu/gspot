@@ -27,11 +27,29 @@ function validateReasonValue(reason: unknown, where: KeyPath, path: KeyPath, sug
 }
 
 function validateReasonTable(table: unknown, keys: KeyPath): SettingsError[] {
-    const suggestion = keys.at(-1) === REMOVED_CONFIGURATIONS ? REMOVAL_REASON_SUGGESTION : undefined;
     if (!isTable(table)) return [];
+    const suggestion = keys.at(-1) === REMOVED_CONFIGURATIONS ? REMOVAL_REASON_SUGGESTION : undefined;
     return Object.entries(table).flatMap(([name, reason]) =>
         validateReasonValue(reason, [...keys, name], [...keys, name], suggestion),
     );
+}
+
+function validateFieldReasons({
+    field,
+    key,
+    child,
+    keys,
+}: {
+    field: z.ZodType | undefined;
+    key: string;
+    child: unknown;
+    keys: KeyPath;
+}): SettingsError[] {
+    if (field === undefined || (key === 'rules' && keys.includes('tools'))) return [];
+    if (key === 'reason') return validateReasonValue(child, keys, [...keys, key]);
+    return key === REMOVED_CONFIGURATIONS || field.meta()?.['reason_values'] === true
+        ? validateReasonTable(child, [...keys, key])
+        : validateSettingReasons(field, child, [...keys, key]);
 }
 
 /**
@@ -48,14 +66,9 @@ export function validateSettingReasons(schema: z.ZodType | undefined, value: unk
             validateSettingReasons(findChildSchema(schema, index), element, [...keys, index]),
         );
     if (!isTable(value)) return [];
-    return Object.entries(value).flatMap(([key, child]) => {
-        const field = findChildSchema(schema, key);
-        if (field === undefined || (key === 'rules' && keys.includes('tools'))) return [];
-        if (key === 'reason') return validateReasonValue(child, keys, [...keys, key]);
-        return field.meta()?.['reason_values'] === true || key === REMOVED_CONFIGURATIONS
-            ? validateReasonTable(child, [...keys, key])
-            : validateSettingReasons(field, child, [...keys, key]);
-    });
+    return Object.entries(value).flatMap(([key, child]) =>
+        validateFieldReasons({ field: findChildSchema(schema, key), key, child, keys }),
+    );
 }
 
 /**

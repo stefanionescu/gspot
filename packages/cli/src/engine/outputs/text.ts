@@ -33,7 +33,7 @@ export function parseRegexFindings(output: ToolOutput): Finding[] {
         };
         return [setMatchedFields(finding, groups)];
     });
-    return [...new Map(findings.map((finding) => [JSON.stringify(finding), finding])).values()];
+    return new Map(findings.map((finding) => [JSON.stringify(finding), finding])).values().toArray();
 }
 
 /**

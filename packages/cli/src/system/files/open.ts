@@ -38,6 +38,18 @@ function deleteBoundedFile(bounds: FileBounds, path: string): void {
     }
 }
 
+function listBoundedFolder(bounds: FileBounds, path: string): string[] {
+    try {
+        const target = path === '' ? bounds.root : buildContainedPath(bounds, path);
+        if (!lstatSync(target).isDirectory())
+            throw new GspotError('filesystem', `${path || '.'} is not a folder. Choose a folder.`);
+        return readdirSync(target).toSorted((left, right) => compareText(left, right));
+    } catch (error) {
+        if (hasErrorCode(error, 'ENOENT')) return [];
+        throw error;
+    }
+}
+
 /**
 Open a reader and writer confined to one root, with paths checked for this system.
 
@@ -65,17 +77,7 @@ export function openFiles(root: string): Files {
             }
         },
         readCanonicalPath: (path) => (path === '' ? bounds.root : readContainedPath(bounds.root, path)),
-        list(path) {
-            try {
-                const target = path === '' ? bounds.root : buildContainedPath(bounds, path);
-                if (!lstatSync(target).isDirectory())
-                    throw new GspotError('filesystem', `${path || '.'} is not a folder. Choose a folder.`);
-                return readdirSync(target).toSorted((left, right) => compareText(left, right));
-            } catch (error) {
-                if (hasErrorCode(error, 'ENOENT')) return [];
-                throw error;
-            }
-        },
+        list: (path) => listBoundedFolder(bounds, path),
         findStats(path) {
             try {
                 return lstatSync(buildContainedPath(bounds, path));
@@ -112,13 +114,13 @@ Visit every entry under a folder, and walk into each one that the visitor picks.
 
 @param files the root.
 @param start the folder, with forward slashes, or '' for the root itself.
-@param visit called with the path of each entry; returns whether to walk into it.
+@param canEnter called with the path of each entry; returns whether to walk into it.
 */
-export function walkFiles(files: Files, start: string, visit: (path: string) => boolean): void {
+export function walkFiles(files: Files, start: string, canEnter: (path: string) => boolean): void {
     const pending = [start];
     for (let folder = pending.pop(); folder !== undefined; folder = pending.pop()) {
         const names = files.list(folder);
         const paths = folder === '' ? names : names.map((name) => `${folder}/${name}`);
-        pending.push(...paths.filter((path) => visit(path)));
+        pending.push(...paths.filter((path) => canEnter(path)));
     }
 }

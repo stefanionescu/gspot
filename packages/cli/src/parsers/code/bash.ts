@@ -123,6 +123,11 @@ function buildVariableKey(functionId: number | undefined, name: string): string 
     return `${String(functionId ?? 'top')}:${name}`;
 }
 
+function findVariableName(child: Node): string | undefined {
+    if (child.type === 'variable_assignment') return child.childForFieldName('name')?.text;
+    return child.type === 'variable_name' ? child.text : undefined;
+}
+
 function listLocalNames(syntaxRoot: Node): Set<string> {
     const declarations = syntaxRoot.descendantsOfType('declaration_command').filter((declaration) => {
         const isGlobalDeclaration = declaration.namedChildren.some((child) => GLOBAL_DECLARATION_FLAG.test(child.text));
@@ -133,9 +138,7 @@ function listLocalNames(syntaxRoot: Node): Set<string> {
             const owner = findFunctionNode(declaration)?.id;
             if (owner === undefined) return [];
             return declaration.namedChildren.flatMap((child) => {
-                let name: string | undefined;
-                if (child.type === 'variable_assignment') name = child.childForFieldName('name')?.text;
-                else if (child.type === 'variable_name') name = child.text;
+                const name = findVariableName(child);
                 return name === undefined ? [] : [buildVariableKey(owner, name)];
             });
         }),
@@ -177,8 +180,7 @@ function findTemporaryPath(
     const reference = references.find((node) => EXPANSION_NODES.includes(node.type));
     if (reference === undefined) return undefined;
     const name = reference.namedChildren[0]?.text;
-    if (name === undefined) return undefined;
-    if (![`$${name}`, `\${${name}}`].includes(reference.text)) return undefined;
+    if (name === undefined || ![`$${name}`, `\${${name}}`].includes(reference.text)) return undefined;
     const key = buildVariableKey(owner, name);
     const target = temporaryPaths.assigned.has(key) ? key : buildVariableKey(undefined, name);
     return temporaryPaths.variables.get(target);

@@ -78,18 +78,18 @@ Take paths out of the records of a list, and drop a record that loses its last p
 
 @param records the records of the list.
 @param paths the paths to take out.
-@param matches compares the path of a record with one of the paths.
+@param isMatch compares the path of a record with one of the paths.
 @returns the records that remain, in order.
 */
 export function removeRecordPaths(
     records: readonly unknown[],
     paths: readonly string[],
-    matches: (recordPath: string, path: string) => boolean,
+    isMatch: (recordPath: string, path: string) => boolean,
 ): unknown[] {
     return records.flatMap((record) => {
         if (!isTable(record) || !Array.isArray(record['paths'])) return [record];
         const written = record['paths'] as string[];
-        const kept = written.filter((recordPath) => !paths.some((path) => matches(recordPath, path)));
+        const kept = written.filter((recordPath) => paths.every((path) => !isMatch(recordPath, path)));
         if (kept.length === written.length) return [record];
         return kept.length === 0 ? [] : [{ ...record, paths: kept }];
     });

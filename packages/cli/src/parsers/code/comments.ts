@@ -132,8 +132,8 @@ async function maskGrammarComments(grammar: GrammarName | 'sql', text: string, c
         );
     } else {
         using tree = await parseSource(grammar, text, cache);
-        for (const node of tree.rootNode.descendantsOfType([...COMMENT_NODES]))
-            ranges.push({ start: node.startIndex, end: node.endIndex });
+        const comments = tree.rootNode.descendantsOfType([...COMMENT_NODES]);
+        for (const node of comments) ranges.push({ start: node.startIndex, end: node.endIndex });
     }
     return maskCommentRanges(text, ranges);
 }
@@ -150,11 +150,14 @@ async function parseMdxComments(text: string): Promise<SourceComment[]> {
     masked = replaceRanges(masked, blank, ranges).replaceAll(MDX_ESM, (segment) =>
         segment.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length)),
     );
-    const expressions = [...masked.matchAll(MDX_COMMENT)].map((match) => {
-        const start = match.index;
-        const comment = buildComment(text, start, start + match[0].length, getPosition(text, start).line);
-        return { ...comment, text: match[0].slice(1, -1) };
-    });
+    const expressions = masked
+        .matchAll(MDX_COMMENT)
+        .map((match) => {
+            const start = match.index;
+            const comment = buildComment(text, start, start + match[0].length, getPosition(text, start).line);
+            return { ...comment, text: match[0].slice(1, -1) };
+        })
+        .toArray();
     const markup = await parseGrammarComments('html', text, { source: extractMarkdownHtml(text) });
     return [...expressions, ...markup].toSorted((left, right) => left.line - right.line);
 }
@@ -162,7 +165,8 @@ async function parseMdxComments(text: string): Promise<SourceComment[]> {
 function maskCommentRanges(text: string, ranges: TextRange[]): string {
     let position = 0;
     const pieces: string[] = [];
-    for (const { start, end } of ranges.toSorted((left, right) => left.start - right.start)) {
+    const sorted = ranges.toSorted((left, right) => left.start - right.start);
+    for (const { start, end } of sorted) {
         if (start < position) continue;
         pieces.push(
             text.slice(position, start),

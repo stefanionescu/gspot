@@ -29,12 +29,12 @@ export const RECORD_FIELDS: Readonly<Record<string, readonly string[]>> = Object
     }).map(([name, fields]) => [name, Object.keys(fields)]),
 );
 
-function getSettingValueType(schema: z.ZodType, path: boolean): Setting['type'] {
+function getSettingValueType(schema: z.ZodType, isPath: boolean): Setting['type'] {
     if (schema instanceof z.ZodArray) return 'list';
     if (schema instanceof z.ZodNumber) return 'number';
     if (schema instanceof z.ZodBoolean) return 'boolean';
     if (schema instanceof z.ZodObject || schema instanceof z.ZodRecord) return 'table';
-    return path ? 'path' : 'string';
+    return isPath ? 'path' : 'string';
 }
 
 function unwrapSettingInput(schema: z.ZodType): z.ZodType {
@@ -104,6 +104,6 @@ export function getSettingType(schema: z.ZodType): Pick<Setting, 'type' | 'path_
     const pathRole = PATH_ROLES.find((allowed) => allowed === role);
     return {
         type: getSettingValueType(inner, pathRole !== undefined),
-        ...(pathRole === undefined ? {} : { path_role: pathRole }),
+        ...(pathRole !== undefined && { path_role: pathRole }),
     };
 }

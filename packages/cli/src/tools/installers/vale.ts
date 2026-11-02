@@ -112,8 +112,8 @@ export async function installValePackages(install: ToolInstall, miseBinPaths: st
     const { root } = session;
     const files = openFiles(root);
     deleteStaleTemporaryPaths(files, GSPOT_FOLDER, VALE_TEMPORARY_NAME);
-    const usesVale = session.toolConfigurations.some(({ tools }) => tools.some((tool) => tool.name === VALE_TOOL));
-    if (session.settings.level === 'basic' || !usesVale) return '';
+    const hasVale = session.toolConfigurations.some(({ tools }) => tools.some((tool) => tool.name === VALE_TOOL));
+    if (!hasVale || session.settings.level === 'basic') return '';
     const releases = `${JSON.stringify(VALE_PACKAGE_RELEASES, null, JSON_INDENT)}\n`;
     if (files.read(GSPOT_PATHS.valeReleases)?.bytes.toString('utf8') === releases && hasValePackages(root)) return '';
     const tool = getTool(session.toolConfigurations, VALE_TOOL);

@@ -83,13 +83,13 @@ export async function readHookStatus(session: Session, repository: Pick<Reposito
     const { hooksPath, hooks: foreign } = await readHooks(repository);
     if (hooksPath === GSPOT_PATHS.hooks) return { ready: true, text: 'installed', tool: 'gspot' };
     if (foreign.length > 0) {
-        const ready = listHookNames(session.configuredChecks).every((name) =>
+        const isReady = listHookNames(session.configuredChecks).every((name) =>
             foreign.some((hook) => hasHookCommand(repository.root, hook, name)),
         );
         const tool = foreign.map((hook) => hook.kind).join(', ');
-        if (ready) return { ready, tool, text: `run from ${foreign.map((hook) => hook.path).join(', ')}` };
+        if (isReady) return { ready: isReady, tool, text: `run from ${foreign.map((hook) => hook.path).join(', ')}` };
         const { lines, text } = describeForeignHooks(foreign, session);
-        return { ready, tool, lines, text: `not installed; ${text}` };
+        return { ready: isReady, tool, lines, text: `not installed; ${text}` };
     }
     return { ready: false, text: NOT_INSTALLED_STATUS };
 }

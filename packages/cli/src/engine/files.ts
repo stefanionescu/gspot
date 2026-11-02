@@ -79,9 +79,8 @@ function stripIgnoredFiles<File extends Pick<TrackedFile, 'path'>>(
     const selected = files.filter((file) => !isIgnored(file.path));
     return {
         files: selected,
-        ...(files.length > 0 && selected.length === 0
-            ? { skip: { cause: 'ignore' as const, note: IGNORED_PATHS_MESSAGE } }
-            : {}),
+        ...(files.length > 0 &&
+            selected.length === 0 && { skip: { cause: 'ignore' as const, note: IGNORED_PATHS_MESSAGE } }),
     };
 }
 
@@ -143,7 +142,7 @@ function addNarrowedLinks(
     check: Check,
     selection: Pick<PlannedCheck, 'files' | 'triggerPaths' | 'skip'>,
 ): Pick<PlannedCheck, 'files' | 'triggerPaths' | 'skip' | 'narrowedLinks'> {
-    if (check.symlink_files !== true || narrowedPaths === undefined) return selection;
+    if (narrowedPaths === undefined || check.symlink_files !== true) return selection;
     const narrowedLinks = session.repository.index
         .filter(({ path, mode }) => mode === SYMLINK_MODE && narrowedPaths.has(path))
         .map(({ path }) => path);
@@ -222,11 +221,13 @@ export function isRootOnlyCheck(configuration: Configuration | undefined, check:
     if (configuration === undefined) return true;
     if (configuration.group !== 'general' || configuration.files.languages || check.runs === 'scope') return false;
     const command = [...(check.command ?? []), ...(check.env === undefined ? [] : Object.values(check.env))];
-    return !configuration.configs.some(
+    return configuration.configs.every(
         (config) =>
-            config.per_scope &&
-            (config.check.includes(check.id) ||
-                command.some((argument) => argument.includes(`{config_file:${extractConfigName(config.file)}}`))),
+            !(
+                config.per_scope &&
+                (config.check.includes(check.id) ||
+                    command.some((argument) => argument.includes(`{config_file:${extractConfigName(config.file)}}`)))
+            ),
     );
 }
 
@@ -244,13 +245,13 @@ export function selectCheckFiles(
     const { check, configuration } = scopeCheck;
     const scopePath = isRepositoryRun(check) ? '' : scope.path;
     const triggerPaths = listDeletedTriggers(planned, scopeCheck, scopePath);
-    const keepsChildScopes = check.runs !== 'files' || isRootOnlyCheck(configuration, check);
+    const areChildScopesKept = check.runs !== 'files' || isRootOnlyCheck(configuration, check);
     let files =
         triggerPaths.length === 0
             ? listRunFiles(planned, scopeCheck, scopePath)
             : listScopeFiles(planned, scopePath, check.runs);
     files = listToolFiles(planned, scopeCheck, files);
-    if (!keepsChildScopes) files = files.filter((file) => isOutsideChildScopes(file.path, children));
+    if (!areChildScopesKept) files = files.filter((file) => isOutsideChildScopes(file.path, children));
     const unreadablePaths = check.binary_files === true ? planned.session.repository.unreadablePaths : [];
     return addNarrowedLinks(planned, check, {
         ...stripIgnoredFiles(files, check, scope),

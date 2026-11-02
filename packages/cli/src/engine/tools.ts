@@ -10,20 +10,30 @@ import { ESLINT_MANIFEST_TOOL } from '#cli/config/repository/setup.ts';
 import { isCoverageOff, hasCoverageArguments } from '#cli/engine/plan.ts';
 import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
 
-function isToolConditionMet(scope: Scope, conditions: Tool['when']): boolean {
+function isToolUsed(scopes: Scope[], conditions: Tool['when']): boolean {
     return (
         conditions === undefined ||
-        conditions.some((condition) => {
-            if (condition.level !== undefined && condition.level !== scope.settings.valuesByKey['level']) return false;
-            if (condition.setting === undefined) return true;
-            return !isSettingEmpty(scope.settings.valuesByKey[condition.setting]);
+        scopes.some((scope) => {
+            const values = scope.settings.valuesByKey;
+            return conditions.some(
+                (condition) =>
+                    (condition.level === undefined || condition.level === values['level']) &&
+                    (condition.setting === undefined || !isSettingEmpty(values[condition.setting])),
+            );
         })
     );
 }
 
 function addPeerPackages(names: Set<string>, configurations: readonly Configuration[]): void {
-    for (const name of names)
-        for (const required of findPackagePin(getTool(configurations, name))?.requires ?? []) names.add(required);
+    const pending = [...names];
+    for (let name = pending.pop(); name !== undefined; name = pending.pop()) {
+        const peers = findPackagePin(getTool(configurations, name))?.requires ?? [];
+        for (const peer of peers) {
+            if (names.has(peer)) continue;
+            names.add(peer);
+            pending.push(peer);
+        }
+    }
 }
 
 /**
@@ -35,11 +45,11 @@ List the secondary tools that the command and the configuration of a check use.
 @returns each secondary tool once.
 */
 export function listSecondaryTools(scope: Scope, check: Check, command?: string[]): string[] {
-    const withoutCoverage =
+    const isCoverageDropped =
         hasCoverageArguments(check.command, check.coverage_arguments) &&
         isCoverageOff(scope) &&
         !hasCoverageArguments(command, check.coverage_arguments);
-    const secondaryTools = withoutCoverage ? [] : (check.secondary_tools ?? []);
+    const secondaryTools = isCoverageDropped ? [] : (check.secondary_tools ?? []);
     const tools = [
         check.tool,
         ...[check.command, check.fix].flatMap((commandArguments) =>
@@ -50,10 +60,9 @@ export function listSecondaryTools(scope: Scope, check: Check, command?: string[
     const plugins = tools.includes(ESLINT_MANIFEST_TOOL)
         ? scope.configurations.flatMap((configuration) => configuration.eslint.required_tools)
         : [];
-    return [...new Set([...secondaryTools, ...plugins])].filter((name) => {
-        const pin = getTool(scope.configurations, name);
-        return isToolConditionMet(scope, pin.when);
-    });
+    return [...new Set([...secondaryTools, ...plugins])].filter((name) =>
+        isToolUsed([scope], getTool(scope.configurations, name).when),
+    );
 }
 
 /**
@@ -93,25 +102,24 @@ output does not depend on this machine.
 */
 export function selectToolConfigurations(session: SessionBase, checks: ScopeCheck[]): Configuration[] {
     const toolNames = new Set(checks.flatMap((check) => listCheckTools(check)));
-    for (const { name } of listPrettierPlugins(session.scopes.flatMap(({ configurations }) => configurations)).keys())
-        toolNames.add(name);
+    const prettierPlugins = listPrettierPlugins(session.scopes.flatMap(({ configurations }) => configurations));
+    for (const { name } of prettierPlugins.keys()) toolNames.add(name);
     const configurations = listSelectedConfigurations(session.scopes);
     const selectedTools = new Set(
         configurations.flatMap((configuration) => configuration.tools.map(({ name }) => name)),
     );
-    addPeerPackages(toolNames, [...readConfigurations().values()]);
+    const shipped = readConfigurations().values().toArray();
+    addPeerPackages(toolNames, shipped);
     const unselected = [...toolNames].flatMap((name) =>
         selectedTools.has(name)
             ? []
-            : ([...readConfigurations().values()].find((configuration) =>
-                  configuration.tools.some((tool) => tool.name === name),
-              ) ?? []),
+            : (shipped.find((configuration) => configuration.tools.some((tool) => tool.name === name)) ?? []),
     );
     const owners = new Set([...configurations, ...unselected]);
     return [...owners].map((configuration) => ({
         ...configuration,
         tools: configuration.tools
-            .filter(({ when: conditions }) => session.scopes.some((scope) => isToolConditionMet(scope, conditions)))
+            .filter(({ when: conditions }) => isToolUsed(session.scopes, conditions))
             .filter((tool) => toolNames.has(tool.name)),
     }));
 }
@@ -126,7 +134,7 @@ export function listPrettierPlugins(configurations: Iterable<Configuration>): Ma
         [...configurations].flatMap(({ tools }) =>
             tools.flatMap((tool): Array<[Tool, PrettierPlugin]> => {
                 const name = tool.installers['npm']?.name;
-                return tool.prettier === undefined || name === undefined
+                return name === undefined || tool.prettier === undefined
                     ? []
                     : [[tool, { name, module: tool.prettier.module, overrides: tool.prettier.overrides }]];
             }),

@@ -152,8 +152,9 @@ function readOverlappingToolRows({ root, files, tools }: LintCommandSearch): Lin
             .map((file) => ({ ...settings, file, line: 1, command: file, tool: name })),
         ...sections.flatMap(([file, table]) => {
             const text = tracked.has(file) ? findText(root, file) : undefined;
-            if (text === undefined || !hasToolSection(text, file, { table })) return [];
-            return [{ ...settings, file, line: findLine(text, `[${table}`), command: `[${table}]`, tool: name }];
+            return text === undefined || !hasToolSection(text, file, { table })
+                ? []
+                : [{ ...settings, file, line: findLine(text, `[${table}`), command: `[${table}]`, tool: name }];
         }),
     ]);
 }

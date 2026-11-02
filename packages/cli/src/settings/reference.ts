@@ -16,8 +16,8 @@ function unwrapSchemaPipes(schema: z.ZodType): z.ZodType {
 
 function buildAcceptedAlternatives(schema: z.ZodUnion): AcceptedSettingValues {
     const alternatives = schema.options.map((option) => buildAcceptedValues(option as z.ZodType));
-    const choicesOnly = alternatives.every((option) => option.choices.length > 0);
-    return choicesOnly
+    const isChoicesOnly = alternatives.every((option) => option.choices.length > 0);
+    return isChoicesOnly
         ? { types: [], choices: alternatives.flatMap((option) => option.choices), alternatives: [] }
         : { types: [], choices: [], alternatives };
 }
@@ -42,9 +42,9 @@ function childSchemas(schema: z.ZodType): Array<[string, z.ZodType]> {
     let inner = unwrapSchemaPipes(schema);
     if (inner instanceof z.ZodArray) inner = unwrapSchemaPipes(inner.element as z.ZodType);
     if (inner instanceof z.ZodObject) return Object.entries<z.ZodType>(inner.shape);
-    if (inner instanceof z.ZodRecord && unwrapSchemaPipes(inner.valueType as z.ZodType) instanceof z.ZodObject)
-        return [[SETTING_NAME_PLACEHOLDER, inner.valueType as z.ZodType]];
-    return [];
+    return inner instanceof z.ZodRecord && unwrapSchemaPipes(inner.valueType as z.ZodType) instanceof z.ZodObject
+        ? [[SETTING_NAME_PLACEHOLDER, inner.valueType as z.ZodType]]
+        : [];
 }
 
 function listSettingVariants(configurations: Configuration[]): SettingVariant[] {
@@ -78,8 +78,8 @@ function listSettingVariants(configurations: Configuration[]): SettingVariant[] 
 function buildSettingNode(key: string, schema: z.ZodType, variants: SettingVariant[]): SettingReference {
     const inner = unwrapSchemaPipes(schema);
     const metadata = { ...inner.meta(), ...schema.meta() };
-    const reasoned = metadata['reasoned'] === true;
-    const children = reasoned
+    const isReasoned = metadata['reasoned'] === true;
+    const children = isReasoned
         ? []
         : childSchemas(schema).map(([name, child]) => buildSettingNode(`${key}.${name}`, child, variants));
     const scope = findSettingSchema(key, scopeSchema);
@@ -93,7 +93,7 @@ function buildSettingNode(key: string, schema: z.ZodType, variants: SettingVaria
         required: !defaultValue.success,
         description: schema.description ?? inner.description,
         default: defaultValue.success ? defaultValue.data : undefined,
-        reasoned,
+        reasoned: isReasoned,
         variantOf: typeof metadata['variantOf'] === 'string' ? metadata['variantOf'] : undefined,
         rootOnly: scope === undefined,
         scopeKeys: scope === undefined ? [] : childSchemas(scope).map(([name]) => name),

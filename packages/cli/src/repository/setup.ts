@@ -134,8 +134,8 @@ export async function readHooks(repository: Pick<Repository, 'root'>): Promise<R
     const { root } = repository;
     const written = await readGitSetting(root, HOOKS_PATH_SETTING);
     const hooksPath = convertToPosixPath(relative(root, resolve(root, written ?? '')));
-    const own = hooksPath === GSPOT_PATHS.hooks || hooksPath === HUSKY_PATH || hooksPath.startsWith(`${HUSKY_PATH}/`);
-    const hooks = await listHookSetups(root, own ? '' : hooksPath);
+    const isOwn = hooksPath === GSPOT_PATHS.hooks || hooksPath === HUSKY_PATH || hooksPath.startsWith(`${HUSKY_PATH}/`);
+    const hooks = await listHookSetups(root, isOwn ? '' : hooksPath);
     if (written === undefined) hooks.push(...(await listGitFolderHooks(root)));
     return { hooksPath, hooks };
 }

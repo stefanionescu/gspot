@@ -41,10 +41,9 @@ function findVersionAbove(files: Files | undefined, root: string, start: string,
 
 function readPackageVersion(root: string, path: string, name: string | undefined): string | undefined {
     if (name === undefined) return undefined;
-    const files = convertToPosixPath(relative(root, path)).startsWith(`${GSPOT_FOLDER}/`) ? openFiles(root) : undefined;
-    const folder = dirname(
-        files === undefined ? realpathSync(path) : files.readCanonicalPath(convertToPosixPath(relative(root, path))),
-    );
+    const relativePath = convertToPosixPath(relative(root, path));
+    const files = relativePath.startsWith(`${GSPOT_FOLDER}/`) ? openFiles(root) : undefined;
+    const folder = dirname(files === undefined ? realpathSync(path) : files.readCanonicalPath(relativePath));
     const start = basename(folder) === basename(NPM_BIN_FOLDER) ? join(dirname(folder), name) : folder;
     return findVersionAbove(files, root, start, name);
 }

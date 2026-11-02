@@ -83,11 +83,12 @@ function mergeTable(
     const origin = table.scope === '' ? 'root' : 'scope';
     const originScope = table.scope === '' ? {} : { originScope: table.scope };
     for (const { writtenKey, found } of written) {
+        const value = findValueAt(table.table, writtenKey.split('.'));
         result = {
             value: mergeValue(
                 setting,
                 result.origin === 'configuration' ? undefined : result.value,
-                joinSettingPaths(writtenKey, findValueAt(table.table, writtenKey.split('.')), table.scope),
+                joinSettingPaths(writtenKey, value, table.scope),
             ),
             source: writtenKey === key ? owner : `${owner} (${writtenKey})`,
             origin,

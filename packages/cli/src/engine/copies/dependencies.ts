@@ -46,21 +46,24 @@ function linkInstalledDependency(plan: Pick<CopyPlan, 'root' | 'target'>, child:
     if (!existsSync(installed)) return;
     const destination = findDependencyTarget(plan, installed);
     if (!existsSync(destination)) return;
-    const folder = statSync(destination).isDirectory();
+    const isFolder = statSync(destination).isDirectory();
     const output = join(plan.target, child);
-    if (process.platform === 'win32' && !folder) copyFileSync(destination, output, constants.COPYFILE_FICLONE);
-    else symlinkSync(destination, output, folder ? 'junction' : 'file');
+    if (!isFolder && process.platform === 'win32') copyFileSync(destination, output, constants.COPYFILE_FICLONE);
+    else symlinkSync(destination, output, isFolder ? 'junction' : 'file');
 }
 
 function linkInstalledPackages(plan: Pick<CopyPlan, 'root' | 'target' | 'cancelSignal'>, path: string): void {
     const source = join(plan.root, path);
     mkdirSync(join(plan.target, path), { recursive: true });
-    for (const dependency of readdirSync(source, { withFileTypes: true })) {
+    const dependencies = readdirSync(source, { withFileTypes: true }).filter(
+        (dependency) => dependency.name === '.bin' || !dependency.name.startsWith('.'),
+    );
+    for (const dependency of dependencies) {
         plan.cancelSignal?.throwIfAborted();
-        if (dependency.name.startsWith('.') && dependency.name !== '.bin') continue;
         const child = join(path, dependency.name);
-        if (dependency.isDirectory() && (dependency.name.startsWith('@') || dependency.name === '.bin'))
-            linkInstalledPackages(plan, child);
+        const isPackageGroup =
+            dependency.isDirectory() && (dependency.name === '.bin' || dependency.name.startsWith('@'));
+        if (isPackageGroup) linkInstalledPackages(plan, child);
         else linkInstalledDependency(plan, child);
     }
 }
@@ -163,13 +166,13 @@ export async function readDeclarationDependencies(
     const tracked = new Set(indexFiles.map(({ path }) => path));
     const cache = createRunCache(root);
     let paths = new Set<string>();
-    let mismatched = false;
+    let isMismatched = false;
     for (const indexFile of indexFiles) {
         const name = basename(indexFile.path);
         if (name !== TSCONFIG_FILE && name !== JSCONFIG_FILE) continue;
         const tsconfig = readMatchingTsconfig(cache, indexFile.path, unchangedPaths);
         if (tsconfig === undefined) {
-            mismatched = true;
+            isMismatched = true;
             continue;
         }
         const declarations = listUntrackedDeclarations(root, tracked, tsconfig.fileNames);
@@ -188,5 +191,5 @@ export async function readDeclarationDependencies(
         paths = paths.union(new Set(selected));
     }
     const selected = await readIgnoredPaths(root, [...paths], cancelSignal);
-    return { copies: selected, mismatched };
+    return { copies: selected, mismatched: isMismatched };
 }

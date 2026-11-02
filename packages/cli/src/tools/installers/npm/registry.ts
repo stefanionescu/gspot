@@ -48,15 +48,15 @@ async function readRegistrySettings(root: string): Promise<Record<string, unknow
             cause: error,
         });
     }
-    let valid: boolean;
+    let isValid: boolean;
     try {
-        valid = config.validate();
+        isValid = config.validate();
     } catch (error) {
         if (error instanceof URIError || hasErrorCode(error, 'ERR_INVALID_URL'))
             throw new GspotError('install', REGISTRY_URL_MESSAGE, { cause: error });
         throw error;
     }
-    if (!valid) throw new GspotError('install', NPMRC_SETTINGS_MESSAGE);
+    if (!isValid) throw new GspotError('install', NPMRC_SETTINGS_MESSAGE);
     const merged: Record<string, unknown> = {};
     for (const layer of config.list.toReversed()) Object.assign(merged, layer);
     return merged;
@@ -82,6 +82,15 @@ function readNpmPath(): string {
     return process.platform === 'win32'
         ? join(dirname(npm), 'node_modules', 'npm')
         : dirname(dirname(realpathSync(npm)));
+}
+
+function buildSettingVariable(root: string, [key, value]: [string, unknown]): Array<[string, string]> {
+    if (value === undefined || value === null) return [];
+    let text: string;
+    if (Array.isArray(value)) text = value.join('\n\n');
+    else text = typeof value === 'string' ? value : JSON.stringify(value);
+    if (CERTIFICATE_KEYS.some((suffix) => key.endsWith(suffix))) text = resolve(root, text);
+    return [[`${NPM_SETTING_PREFIX}${key}`, text]];
 }
 
 /**
@@ -134,14 +143,7 @@ export async function readRegistryEnvironment(root: string): Promise<Record<stri
             .filter(
                 ([key]) => CONNECTION_KEYS.has(key) || NPM_SCOPE_REGISTRY_KEY.test(key) || REGISTRY_AUTH_KEY.test(key),
             )
-            .flatMap(([key, value]): Array<[string, string]> => {
-                if (value === undefined || value === null) return [];
-                let text: string;
-                if (Array.isArray(value)) text = value.join('\n\n');
-                else text = typeof value === 'string' ? value : JSON.stringify(value);
-                if (CERTIFICATE_KEYS.some((suffix) => key.endsWith(suffix))) text = resolve(root, text);
-                return [[`${NPM_SETTING_PREFIX}${key}`, text]];
-            }),
+            .flatMap((setting) => buildSettingVariable(root, setting)),
     );
     const registry = env[`${NPM_SETTING_PREFIX}registry`];
     if (registry !== undefined) env['BUN_CONFIG_REGISTRY'] = registry;

@@ -82,11 +82,12 @@ function parseRootDependencies(
 ): Dependencies | undefined {
     const workspaces = document[LOCKFILE_WORKSPACE_KEYS[packageManager]];
     if (!isTable(workspaces)) return undefined;
+    const rootKey = packageManager === 'pnpm' ? PNPM_ROOT_IMPORTER : '';
     let root: Dependencies = {};
     for (const [key, workspace] of Object.entries(workspaces)) {
         const dependencies = parseDevelopmentDependencies(packageManager, workspace);
         if (dependencies === undefined) return undefined;
-        if (key === (packageManager === 'pnpm' ? PNPM_ROOT_IMPORTER : '')) root = dependencies;
+        if (key === rootKey) root = dependencies;
     }
     return root;
 }
@@ -198,8 +199,10 @@ export function isLockfileFresh(
             npm: hasStandardNpmPackages,
             pnpm: hasStandardPnpmPackages,
         };
-        if (environment !== undefined && !validatePackages[packageManager](document, environment)) return false;
-        return Object.entries(dependencies).every((pin) => isPinLocked(packageManager, document, pin));
+        return (
+            (environment === undefined || validatePackages[packageManager](document, environment)) &&
+            Object.entries(dependencies).every((pin) => isPinLocked(packageManager, document, pin))
+        );
     } catch (error) {
         if (isInvalidLockfile(error)) return false;
         throw error;

@@ -26,7 +26,7 @@ import {
 
 function formatEmptyIgnorePaths(issue: z.core.$ZodIssue, path: KeyPath, syntax: TomlSyntax): SettingsError | undefined {
     const [record, index, field] = path;
-    if (issue.code !== 'too_small' || record !== 'ignore' || field !== 'paths' || index === undefined) return undefined;
+    if (record !== 'ignore' || field !== 'paths' || index === undefined || issue.code !== 'too_small') return undefined;
     const check = findValueAt(syntax.value, [record, index, 'check']);
     const message =
         typeof check === 'string'
@@ -71,6 +71,29 @@ function listRemovedSelections(settings: Settings): SettingsError[] {
     return errors;
 }
 
+function validateCheckIds(settings: Settings): SettingsError[] {
+    const bundledChecks = listCheckIds([]);
+    const checks = listCheckIds(Object.values(settings.commandChecks));
+    return [
+        ...Object.values(settings.commandChecks).flatMap((commandCheck, index) =>
+            bundledChecks.includes(commandCheck.id)
+                ? {
+                      path: ['command_check', index, 'id'],
+                      message: `The command check ${commandCheck.id} has the same ID as a configuration check. Give it another ID.`,
+                  }
+                : [],
+        ),
+        ...settings.ignore.flatMap((ignore, index) =>
+            ignore.check === undefined || checks.includes(ignore.check)
+                ? []
+                : {
+                      path: ['ignore', index, 'check'],
+                      message: `There is no check called ${ignore.check}.${formatSimilarNames(ignore.check, checks)}`,
+                  },
+        ),
+    ];
+}
+
 /**
 Name the invalid setting, and keep the message of the validator.
 
@@ -111,19 +134,25 @@ export function validateSettings(settings: Settings, root: string): SettingsErro
     const configurationsByName = readConfigurations();
     const written: WrittenConfiguration[] = [
         ...settings.configurations.map((name, index) => ({ name, path: ['configurations', index] })),
-        ...[...settings.scopes.values()].flatMap((scope, scopeIndex) =>
-            scope.configurations.map((name, index) => ({ name, path: ['scope', scopeIndex, 'configurations', index] })),
+        ...settings.scopes.values().flatMap((scope, scopeIndex) =>
+            scope.configurations.map((name, index) => ({
+                name,
+                path: ['scope', scopeIndex, 'configurations', index],
+            })),
         ),
     ];
     const unknown = listUnknownConfigurations(written, configurationsByName);
     if (unknown.length > 0) return unknown;
-    const bundledChecks = listCheckIds([]);
-    const checks = listCheckIds(Object.values(settings.commandChecks));
     const scopes = new Map(
-        [...settings.scopes.keys()].map((scope) => [
-            scope,
-            buildAvailableSettings(selectConfigurationsForScope(settings, scope, configurationsByName), settings.level),
-        ]),
+        settings.scopes
+            .keys()
+            .map((scope) => [
+                scope,
+                buildAvailableSettings(
+                    selectConfigurationsForScope(settings, scope, configurationsByName),
+                    settings.level,
+                ),
+            ]),
     );
     const rootKeys = buildAvailableSettings(
         selectConfigurationsForScope(settings, '', configurationsByName),
@@ -138,22 +167,7 @@ export function validateSettings(settings: Settings, root: string): SettingsErro
         ...validateSettingReasons(settingsSchema, settings.written, []),
         ...validateSettingRules(settings),
         ...validateSwiftTargets(settings, rootKeys),
-        ...Object.values(settings.commandChecks).flatMap((commandCheck, index) =>
-            bundledChecks.includes(commandCheck.id)
-                ? {
-                      path: ['command_check', index, 'id'],
-                      message: `The command check ${commandCheck.id} has the same ID as a configuration check. Give it another ID.`,
-                  }
-                : [],
-        ),
-        ...settings.ignore.flatMap((ignore, index) =>
-            ignore.check === undefined || checks.includes(ignore.check)
-                ? []
-                : {
-                      path: ['ignore', index, 'check'],
-                      message: `There is no check called ${ignore.check}.${formatSimilarNames(ignore.check, checks)}`,
-                  },
-        ),
+        ...validateCheckIds(settings),
         ...validateRuleExcludes(settings.rule_files.exclude, configurationsByName),
         ...validateScopePaths(root, settings),
         ...validateRuleFilePaths(root, settings),

@@ -127,6 +127,26 @@ function listChangedPaths(before: PathBytes, after: PathBytes): string[] {
         .toArray();
 }
 
+function listPendingFixes({
+    checks,
+    results,
+    fixedContents,
+    after,
+}: {
+    checks: PlannedCheck[];
+    results: Map<number, FixResult>;
+    fixedContents: Map<number, PathBytes>;
+    after: PathBytes;
+}): Array<{ check: PlannedCheck; index: number }> {
+    return checks.flatMap((check, index) => {
+        const status = results.get(index)?.status;
+        if (status === 'failed' || status === 'canceled') return [];
+        const changed = new Set(listChangedPaths(getRequired(fixedContents, index, 'fixed contents'), after));
+        const files = check.files.filter((file) => changed.has(file.path) && after.get(file.path) !== undefined);
+        return files.length === 0 ? [] : [{ check: { ...check, files, triggerPaths: [] }, index }];
+    });
+}
+
 async function runFixerRounds(session: CheckSession, checks: PlannedCheck[], paths: string[]): Promise<FixRounds> {
     const results = new Map<number, FixResult>();
     let firstBefore: PathBytes | undefined;
@@ -141,34 +161,26 @@ async function runFixerRounds(session: CheckSession, checks: PlannedCheck[], pat
             fixedContents.set(index, readContents(session.root, listPlannedPaths(checks[index] as PlannedCheck)));
         }
         after = readContents(session.root, paths);
-        pending = checks.flatMap((check, index) => {
-            const changed = new Set(listChangedPaths(getRequired(fixedContents, index, 'fixed contents'), after));
-            const files = check.files.filter((file) => changed.has(file.path) && after.get(file.path) !== undefined);
-            return files.length === 0 ||
-                results.get(index)?.status === 'failed' ||
-                results.get(index)?.status === 'canceled'
-                ? []
-                : { check: { ...check, files, triggerPaths: [] }, index };
-        });
+        pending = listPendingFixes({ checks, results, fixedContents, after });
     }
     return { results: results.values().toArray(), before: firstBefore ?? after, after };
 }
 
+async function isBrokenByFix(path: string, before: PathBytes, after: PathBytes): Promise<boolean> {
+    const grammar = findGrammarByExtension(path);
+    if (grammar === undefined) return false;
+    const previous = before.get(path);
+    const fixed = after.get(path);
+    if (previous === undefined || fixed === undefined) return false;
+    using previousTree = await parseSource(grammar, previous.toString('utf8'));
+    if (previousTree.rootNode.hasError) return false;
+    using fixedTree = await parseSource(grammar, fixed.toString('utf8'));
+    return fixedTree.rootNode.hasError;
+}
+
 async function listBrokenFiles(changed: string[], before: PathBytes, after: PathBytes): Promise<string[]> {
-    const checked = await Promise.all(
-        changed.map(async (path) => {
-            const grammar = findGrammarByExtension(path);
-            if (grammar === undefined) return [];
-            const was = before.get(path);
-            const now = after.get(path);
-            if (was === undefined || now === undefined) return [];
-            using wasTree = await parseSource(grammar, was.toString('utf8'));
-            if (wasTree.rootNode.hasError) return [];
-            using nowTree = await parseSource(grammar, now.toString('utf8'));
-            return nowTree.rootNode.hasError ? [path] : [];
-        }),
-    );
-    return checked.flat();
+    const broken = await Promise.all(changed.map((path) => isBrokenByFix(path, before, after)));
+    return changed.filter((_, index) => broken[index] === true);
 }
 
 function restoreBrokenFiles(root: string, broken: string[], rounds: FixRounds): void {

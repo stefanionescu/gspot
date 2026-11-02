@@ -11,7 +11,7 @@ import type { Configuration } from '#cli/types/manifests.ts';
 import { LIMIT_SETTING_RULES } from '#cli/manifests/limits.ts';
 import { formatCodeList, formatSimilarNames } from '#cli/system/text.ts';
 import { getSettingValue, listSettingsTables } from '#cli/settings/inherit.ts';
-import type { Settings, SettingsError, AvailableSettings } from '#cli/types/settings.ts';
+import type { Settings, SettingsError, AvailableSettings, WrittenScopeTable } from '#cli/types/settings.ts';
 
 import {
     FIRST_READ,
@@ -30,6 +30,24 @@ function readPathStats(files: Files, path: string): ReturnType<Files['findStats'
     }
 }
 
+function listRuleTables({ table, path }: WrittenScopeTable) {
+    const eslint = table.tools?.['eslint'];
+    const overrides = eslint !== undefined && 'override' in eslint ? eslint.override : undefined;
+    return [
+        { tool: 'eslint', rules: eslint?.['rules'], path: [...path, 'tools', 'eslint', 'rules'] },
+        {
+            tool: 'markdownlint',
+            rules: table.tools?.['markdownlint']?.['rules'],
+            path: [...path, 'tools', 'markdownlint', 'rules'],
+        },
+        ...(overrides ?? []).map((override, index) => ({
+            tool: 'eslint',
+            rules: override.rules,
+            path: [...path, 'tools', 'eslint', 'override', index, 'rules'],
+        })),
+    ];
+}
+
 /**
 Refuse scope paths that name a file, and keep written scopes whose folder does not exist yet.
 
@@ -37,7 +55,10 @@ Refuse scope paths that name a file, and keep written scopes whose folder does n
 @param settings the normalized gspot.toml.
 */
 export function validateScopePaths(root: string, settings: Settings): SettingsError[] {
-    const paths = [...settings.scopes.values()].map((table) => table.written['path'] as string);
+    const paths = settings.scopes
+        .values()
+        .map((table) => table.written['path'] as string)
+        .toArray();
     const files = openFiles(root);
     return paths.flatMap((path, index) => {
         const location: KeyPath = ['scope', index, 'path'];
@@ -157,38 +178,20 @@ export function validateSettingRules(settings: Settings): SettingsError[] {
             new Map(Object.entries({ ...LIMIT_SETTING_RULES[tool], ...SETTING_RULES[tool] })),
         ]),
     );
-    return listSettingsTables(settings).flatMap(({ table, path }) => {
-        const eslint = table.tools?.['eslint'];
-        const overrides = eslint !== undefined && 'override' in eslint ? eslint.override : undefined;
-        const tables = [
-            { tool: 'eslint', rules: eslint?.['rules'], path: [...path, 'tools', 'eslint', 'rules'] },
-            {
-                tool: 'markdownlint',
-                rules: table.tools?.['markdownlint']?.['rules'],
-                path: [...path, 'tools', 'markdownlint', 'rules'],
-            },
-            ...(overrides ?? []).map((override, index) => ({
-                tool: 'eslint',
-                rules: override.rules,
-                path: [...path, 'tools', 'eslint', 'override', index, 'rules'],
-            })),
-        ];
-        return tables.flatMap(({ tool, rules, path }) => {
+    return listSettingsTables(settings)
+        .flatMap((written) => listRuleTables(written))
+        .flatMap(({ tool, rules, path }) => {
             if (rules === undefined) return [];
             return Object.keys(rules).flatMap((rule) => {
                 const setting = owned.get(tool)?.get(rule);
-                return setting === undefined
-                    ? []
-                    : {
-                          path: [...path, rule],
-                          message:
-                              setting === '[[import_rule]]'
-                                  ? `gspot writes the options of ${rule} from the [[import_rule]] records. Change those records instead.`
-                                  : `gspot writes the options of ${rule} from ${setting}. Change that setting instead: gspot set ${setting} <value>, with --reason when you raise it.`,
-                      };
+                if (setting === undefined) return [];
+                const message =
+                    setting === '[[import_rule]]'
+                        ? `gspot writes the options of ${rule} from the [[import_rule]] records. Change those records instead.`
+                        : `gspot writes the options of ${rule} from ${setting}. Change that setting instead: gspot set ${setting} <value>, with --reason when you raise it.`;
+                return [{ path: [...path, rule], message }];
             });
         });
-    });
 }
 
 /**

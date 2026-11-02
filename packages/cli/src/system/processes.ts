@@ -62,19 +62,19 @@ function buildSpawnResult(result: SpawnCompletion, started: number): SpawnResult
         result.code !== undefined,
         result.cause !== undefined,
     ].includes(true);
-    const errored = result.failed && isUnfinishedResult;
+    const isErrored = result.failed && isUnfinishedResult;
     const code = isMissing ? MISSING_CODE : (result.exitCode ?? FAILED_CODE);
     const messages: Array<string | undefined> = [result.stderr];
     if (isUnfinishedResult) messages.push(result.shortMessage);
     return {
-        code: errored && code === 0 ? FAILED_CODE : code,
+        code: isErrored && code === 0 ? FAILED_CODE : code,
         stdout: result.stdout ?? '',
         stderr: messages.filter(Boolean).join('\n'),
         missing: isMissing,
         duration: Math.round(performance.now() - started),
         timedOut: result.timedOut,
         canceled: result.isCanceled,
-        errored,
+        errored: isErrored,
     };
 }
 

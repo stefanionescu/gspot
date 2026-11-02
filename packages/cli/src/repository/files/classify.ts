@@ -85,7 +85,7 @@ function isLicenseFile(path: string): boolean {
 
 function findGeneratedKind(path: string, prefix: Buffer): FileClassification | undefined {
     if (path.startsWith(`${GSPOT_PATHS.valePackages}/`)) return { kind: 'vendored', origin: KIND_ORIGINS.gspot };
-    if (isGspotPath(path) || path === BASELINE_FILE) return { kind: 'generated', origin: KIND_ORIGINS.gspot };
+    if (path === BASELINE_FILE || isGspotPath(path)) return { kind: 'generated', origin: KIND_ORIGINS.gspot };
     if (BUILD_LAUNCHERS.has(posix.basename(path))) return { kind: 'generated', origin: KIND_ORIGINS.buildLauncher };
     const start = prefix.subarray(0, BANNER_BYTES).toString('utf8');
     return hasGeneratedHeader(start) || GENERATOR_OUTPUT_BANNERS.some(({ pattern }) => pattern.test(start))

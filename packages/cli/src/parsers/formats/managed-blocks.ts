@@ -51,7 +51,7 @@ export function replaceBlock(text: string, block: string, file: { path: string }
     const span = findBlockSpan(text, file);
     const authored = span === undefined ? text : text.slice(0, span.start) + text.slice(span.end);
     const newline = authored.includes('\r\n') && !authored.replaceAll('\r\n', '').includes('\n') ? '\r\n' : '\n';
-    const body = `${start}${gap}${block.trim()}${gap}${end}\n`.replaceAll('\r\n', '\n').replaceAll('\n', newline);
+    const body = `${start}${gap}${block.trim()}${gap}${end}\n`.replaceAll('\r\n', '\n').replaceAll('\n', () => newline);
     if (span !== undefined) return text.slice(0, span.start) + body + text.slice(span.end);
     if (text === '') return body;
     const separator = text.endsWith('\n') ? newline : newline + newline;

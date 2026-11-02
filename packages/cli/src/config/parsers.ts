@@ -127,6 +127,14 @@ export const OS_ENVIRONMENT_MEMBERS = { environ: 'environ', getenv: 'getenv' } a
 
 export const PYTHON_IMPORT_NODES = new Set(['import_statement', 'import_from_statement', 'future_import_statement']);
 
+export const PYTHON_DECLARATION_NODES = [
+    'assignment',
+    'for_statement',
+    'function_definition',
+    'class_definition',
+    'parameters',
+] as const;
+
 export const PYTHON_SCOPE_NODES: ReadonlySet<string> = new Set(['function_definition', 'class_definition', 'lambda']);
 
 export const OS_MODULE = 'os';

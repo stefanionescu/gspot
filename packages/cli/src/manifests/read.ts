@@ -18,7 +18,7 @@ import type {
     ConfigurationCheck,
 } from '#cli/types/manifests.ts';
 
-let shippedConfigurations: Map<string, Configuration> | undefined;
+const shipped: { configurations?: Map<string, Configuration> } = {};
 
 function buildConfigurations(manifests: ParsedManifest[]): Map<string, Configuration> {
     const toolsByName = listManifestTools(manifests);
@@ -106,8 +106,8 @@ export function parseConfigurations(manifests: readonly ManifestSource[]): Map<s
 Read every configuration once per process.
 */
 export function readConfigurations(): ReadonlyMap<string, Configuration> {
-    if (shippedConfigurations !== undefined) return shippedConfigurations;
-    shippedConfigurations = parseConfigurations(
+    if (shipped.configurations !== undefined) return shipped.configurations;
+    const configurations = parseConfigurations(
         listAssets(`${CONFIGURATIONS_FOLDER}/`)
             .filter((path) => path.endsWith(`/${MANIFEST_FILE}`))
             .map((path) => ({
@@ -115,13 +115,14 @@ export function readConfigurations(): ReadonlyMap<string, Configuration> {
                 text: readFileSync(buildAssetPath(path), 'utf8'),
             })),
     );
-    const ruleNames = shippedConfigurations
+    const ruleNames = configurations
         .values()
         .flatMap((configuration) => listRuleFiles(configuration).map(({ path }) => path))
         .toArray();
     const repeated = ruleNames.find((name, index) => ruleNames.indexOf(name) !== index);
     if (repeated !== undefined) throw new Error(`Two configurations ship a rule file named ${repeated}.`);
-    return shippedConfigurations;
+    shipped.configurations = configurations;
+    return configurations;
 }
 
 /**

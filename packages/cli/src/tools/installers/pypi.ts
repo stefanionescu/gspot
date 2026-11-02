@@ -114,9 +114,10 @@ function parsePythonToolLockfile(lockfile: string, minimumReleaseAge?: number): 
         return undefined;
     }
     if (parsed.version !== 1) return undefined;
-    if (minimumReleaseAge !== undefined && parsed.options?.['exclude-newer-span'] !== `P${String(minimumReleaseAge)}D`)
-        return undefined;
-    return parsed;
+    return minimumReleaseAge === undefined ||
+        parsed.options?.['exclude-newer-span'] === `P${String(minimumReleaseAge)}D`
+        ? parsed
+        : undefined;
 }
 
 function hasAllowedPythonOrigins(lockfile: UvLockfile, indexes: PythonIndexSettings['settings']): boolean {
@@ -149,11 +150,6 @@ function hasAllowedPythonOrigins(lockfile: UvLockfile, indexes: PythonIndexSetti
 function writeUvSettings(folder: string, indexes: PythonIndexSettings['settings'], days: number): void {
     const settings = stringify({ ...indexes, 'exclude-newer': `${String(days)} days` });
     writeFileSync(join(folder, UV_SETTINGS_FILE), settings, { mode: PRIVATE_FILE });
-}
-
-function normalizeIndexLocation(root: string, location: string): string {
-    if (URL_SCHEME.test(location)) return location;
-    return resolve(root, location);
 }
 
 /**
@@ -305,10 +301,12 @@ export function readPythonSettings(root: string): PythonIndexSettings {
             : parseTomlFile(UV_SETTINGS_FILE, uv, uvSettingsSchema);
     const selected = Object.fromEntries(Object.entries(table).filter(([key]) => INDEX_SETTINGS.has(key)));
     if (table['find-links'] !== undefined)
-        selected['find-links'] = table['find-links'].map((value) => normalizeIndexLocation(root, value));
+        selected['find-links'] = table['find-links'].map((value) =>
+            URL_SCHEME.test(value) ? value : resolve(root, value),
+        );
     const indexes = (table.index ?? []).map((index) => ({
         ...index,
-        url: normalizeIndexLocation(root, index.url),
+        url: URL_SCHEME.test(index.url) ? index.url : resolve(root, index.url),
     }));
     if (table.index !== undefined) selected['index'] = indexes;
     const credentials = Object.entries(selected).flatMap(([key, value]) => {

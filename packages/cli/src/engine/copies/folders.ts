@@ -42,8 +42,8 @@ function createOwnedCopy(files: Files): string {
     for (;;) {
         try {
             files.createPrivateFolder(COPIES_FOLDER);
-            const parent = files.readCanonicalPath(COPIES_FOLDER);
-            return realpathSync.native(mkdtempSync(join(parent, `${String(process.pid)}-`)));
+            const created = mkdtempSync(join(files.readCanonicalPath(COPIES_FOLDER), `${String(process.pid)}-`));
+            return realpathSync.native(created);
         } catch (error) {
             if (!hasErrorCode(error, 'ENOENT')) throw error;
         }

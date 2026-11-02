@@ -17,11 +17,12 @@ import {
 } from '#cli/parsers/formats/toml.ts';
 
 function sortTable(table: TomlTable): TomlTable {
+    const placed = new Set<string>([...ROOT_KEYS, ...FIRST_TABLES, ...LAST_TABLES]);
     const order = [
         ...ROOT_KEYS,
         ...FIRST_TABLES,
         ...Object.keys(table)
-            .filter((key) => !([...ROOT_KEYS, ...FIRST_TABLES, ...LAST_TABLES] as readonly string[]).includes(key))
+            .filter((key) => !placed.has(key))
             .toSorted((left, right) => compareText(left, right)),
         ...LAST_TABLES,
     ];

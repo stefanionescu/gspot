@@ -91,8 +91,8 @@ function findConfigurationEvidence(
 }
 
 function findFilenameEvidence(detect: Configuration['detect'], contents: ScopeContents): DetectionEvidence | undefined {
-    const matches = buildFilenameMatcher(detect.filenames);
-    const file = contents.files.find((each) => matches(each.path));
+    const isMatch = buildFilenameMatcher(detect.filenames);
+    const file = contents.files.find((each) => isMatch(each.path));
     return file === undefined ? undefined : { evidence: file.path };
 }
 
@@ -109,8 +109,8 @@ function findDependencyEvidence(
     contents: ScopeContents,
 ): DetectionEvidence | undefined {
     for (const pattern of detect.dependencies) {
-        const matches = buildPathMatcher([pattern]);
-        const dependency = [...contents.dependencies].find(([name]) => matches(name));
+        const isMatch = buildPathMatcher([pattern]);
+        const dependency = [...contents.dependencies].find(([name]) => isMatch(name));
         if (dependency !== undefined) return { evidence: `${dependency[0]} in ${dependency[1]}` };
     }
     return undefined;
@@ -126,8 +126,8 @@ function findRuntimeEvidence(detect: Configuration['detect'], contents: ScopeCon
 
 function findPathEvidence(detect: Configuration['detect'], contents: ScopeContents): DetectionEvidence | undefined {
     if (detect.paths.length === 0) return undefined;
-    const matcher = buildPathMatcher(detect.paths);
-    const file = contents.files.find((each) => matcher(each.path));
+    const isMatch = buildPathMatcher(detect.paths);
+    const file = contents.files.find((each) => isMatch(each.path));
     return file === undefined ? undefined : { evidence: file.path };
 }
 

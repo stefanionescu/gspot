@@ -92,10 +92,10 @@ function writeChecksums(lockfile: string, pins: MiseToolPin[]): string {
     const document = parseMiseLockfile(lockfile);
     if (document === undefined)
         throw new GspotError('install', 'mise lock produced no tool records. Run gspot install again.');
-    for (const pin of pins)
-        for (const version of document.tools[pin.name] ?? []) {
-            if (version.version === pin.version) fillVersionChecksums(version, pin);
-        }
+    for (const pin of pins) {
+        const versions = document.tools[pin.name] ?? [];
+        for (const version of versions) if (version.version === pin.version) fillVersionChecksums(version, pin);
+    }
     return stringify(document);
 }
 
@@ -155,13 +155,18 @@ async function writeMiseLockfile(install: ToolInstall, project: GeneratedFile): 
 
 function fillVersionChecksums(version: Record<string, unknown>, pin: MiseToolPin): void {
     for (const [name, platform] of Object.entries(version)) {
-        if (!name.startsWith(MISE_PLATFORM_PREFIX) || !isTable(platform)) continue;
-        if (typeof platform['checksum'] === 'string' && MISE_CHECKSUM_PATTERN.test(platform['checksum'])) continue;
-        const checksum = pin.checksums[name.slice(MISE_PLATFORM_PREFIX.length)];
+        if (
+            !name.startsWith(MISE_PLATFORM_PREFIX) ||
+            !isTable(platform) ||
+            (typeof platform['checksum'] === 'string' && MISE_CHECKSUM_PATTERN.test(platform['checksum']))
+        )
+            continue;
+        const system = name.slice(MISE_PLATFORM_PREFIX.length);
+        const checksum = pin.checksums[system];
         if (checksum === undefined)
             throw new GspotError(
                 'install',
-                `mise lock omitted a checksum for ${pin.name} on ${name.slice(MISE_PLATFORM_PREFIX.length)}. Add an audited installer checksum before retrying.`,
+                `mise lock omitted a checksum for ${pin.name} on ${system}. Add an audited installer checksum before retrying.`,
             );
         platform['checksum'] = checksum;
     }

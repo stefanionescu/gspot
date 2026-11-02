@@ -17,8 +17,8 @@ function readSymlinkFile(root: string, path: string, isTracked: boolean): Listed
     try {
         target = findContainedPath(root, path);
     } catch (error) {
-        if (hasErrorCode(error, 'ENOENT') || hasErrorCode(error, 'ELOOP')) return isTracked ? link : undefined;
-        throw error;
+        if (!hasErrorCode(error, 'ENOENT') && !hasErrorCode(error, 'ELOOP')) throw error;
+        return isTracked ? link : undefined;
     }
     if (target === undefined) return undefined;
     const stat = statSync(target);

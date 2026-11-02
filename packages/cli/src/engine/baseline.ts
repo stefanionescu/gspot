@@ -57,10 +57,13 @@ export function countFindings(checks: readonly CheckResult[]): BaselineCount[] {
         .flatMap((result) => result.findings)
         .filter(({ check }) => !BASELINE_EXEMPT_CHECK.test(check));
     const groups = Map.groupBy(findings, ({ file, check, rule = check }) => JSON.stringify([file, check, rule]));
-    return [...groups.values()].map((same) => {
-        const [{ file, check, rule = check }] = same as [(typeof findings)[number]];
-        return { file, check, rule, count: same.length };
-    });
+    return groups
+        .values()
+        .map((same) => {
+            const [{ file, check, rule = check }] = same as [(typeof findings)[number]];
+            return { file, check, rule, count: same.length };
+        })
+        .toArray();
 }
 
 /**

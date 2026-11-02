@@ -151,8 +151,9 @@ export async function readMiseBinPaths(
         timeoutSeconds: options.timeoutSeconds,
         env: { ...TOOL_ENVIRONMENT, ...trust.variables },
     });
-    if (result.code !== 0) return { folders: [], failure: formatMiseFailure(command, result) };
-    return { folders: result.stdout.trim().split(LINE_BREAK).filter(Boolean) };
+    return result.code === 0
+        ? { folders: result.stdout.trim().split(LINE_BREAK).filter(Boolean) }
+        : { folders: [], failure: formatMiseFailure(command, result) };
 }
 
 /**
