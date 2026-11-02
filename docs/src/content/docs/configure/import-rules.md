@@ -31,8 +31,9 @@ Code may import its own files and the files of every rule above it, never below.
 Import rule "core" may import only its own files, not ../features/cart.ts from import-rule:features. Move the code, move that rule above this one, or list the rules it may import in can_import.
 ```
 
-Each file belongs to one rule: the first rule whose paths match it. gspot refuses a path that excludes files with a
-leading `!`, so put a narrower rule first, and list what it may import in `can_import`.
+Each file belongs to one rule: the first rule whose paths match it. gspot refuses a path with a leading `!`, except an
+extglob such as `!(generated)/**`. To exclude files, put a narrower rule first, and list what it may import in
+`can_import`.
 
 ## Allow a rule listed below
 

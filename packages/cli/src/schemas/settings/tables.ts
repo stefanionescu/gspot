@@ -91,7 +91,7 @@ const importRuleSchema = z.strictObject({
     }),
     paths: nonemptyPathsSchema.meta({
         description:
-            'The files of the import rule. A file belongs to the first rule that matches it, and a path cannot exclude files with a leading !.',
+            'The files of the import rule. A file belongs to the first rule that matches it. A path cannot start with !, except an extglob such as !(generated)/**.',
     }),
     can_import: z.string().array().optional().meta({
         description:
