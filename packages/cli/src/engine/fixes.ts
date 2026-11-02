@@ -15,8 +15,8 @@ import { listCopyFiles } from '#cli/engine/tool-runs/placeholders.ts';
 import type { SpawnResult, FileContents } from '#cli/types/system.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 import { buildCommandLaunch, selectCommandFolder } from '#cli/engine/tool-runs/check.ts';
-import type { FixReport, FixResult, FixRounds, PathBytes, CheckSession, CommandLaunch } from '#cli/types/engine/run.ts';
 import { FIX_ROUNDS, CONFLICT_MARKER_LINE, FIX_CANCELED_MESSAGE } from '#cli/config/engine.ts';
+import type { FixReport, FixResult, FixRounds, PathBytes, CheckSession, CommandLaunch } from '#cli/types/engine/run.ts';
 
 function findFixFailure(planned: PlannedCheck, result: SpawnResult): string | undefined {
     const { check } = planned;
