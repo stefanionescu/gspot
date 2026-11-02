@@ -3,8 +3,8 @@ import { isDeepStrictEqual } from 'node:util';
 import { getPosition } from '#cli/system/text.ts';
 import { JSONC_OPTIONS } from '#cli/config/parsers.ts';
 import type { EditableFile } from '#cli/types/parsers.ts';
-import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import { isTable, findValueAt, normalizeTables } from '#cli/system/tables.ts';
+import { CheckStop, GspotError, parseFileFields } from '#cli/system/errors.ts';
 import { parse, modify, applyEdits, type ParseError, printParseErrorCode } from 'jsonc-parser/lib/esm/main.js';
 
 export function parseJsonFile(path: string, text: string): Record<string, unknown>;
@@ -74,6 +74,6 @@ export function parseToolOutput(tool: string, text: string, schema?: z.ZodType):
         return schema === undefined ? parsed : schema.parse(parsed);
     } catch (error) {
         if (!(error instanceof SyntaxError) && !(error instanceof z.ZodError)) throw error;
-        throw new GspotError('output', `${tool} printed output that gspot cannot read.`, { cause: error });
+        throw new CheckStop('error', `${tool} printed output that gspot cannot read.`, { cause: error });
     }
 }

@@ -1,4 +1,4 @@
-import { GspotError } from '#cli/system/errors.ts';
+import { CheckStop } from '#cli/system/errors.ts';
 import { LINE_BREAK } from '#cli/config/parsers.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
@@ -12,20 +12,20 @@ import {
     INVALID_FINDING_MESSAGE,
 } from '#cli/config/engine.ts';
 
-function buildJsonSyntaxError(stdout: string, cause?: unknown): GspotError {
+function buildJsonSyntaxError(stdout: string, cause?: unknown): CheckStop {
     const first = stdout
         .split(LINE_BREAK)
         .find((line) => line.trim() !== '')
         ?.trim()
         .slice(0, JSON_PREVIEW_LENGTH);
     const message = first === undefined ? NO_OUTPUT_MESSAGE : `The output is not JSON. It starts with: ${first}`;
-    return new GspotError('output', message, { cause });
+    return new CheckStop('error', message, { cause });
 }
 
 function listAt(value: unknown, path: string | undefined): unknown[] {
     const found = path === undefined || path === '' ? value : findValueAt(value, path.split('.'));
     if (!Array.isArray(found))
-        throw new GspotError('output', `Required JSON report array ${path ?? '<root>'} is missing or invalid.`);
+        throw new CheckStop('error', `Required JSON report array ${path ?? '<root>'} is missing or invalid.`);
     return found;
 }
 
@@ -44,7 +44,7 @@ function setPosition(finding: Finding, base: number, line: string | undefined, c
 function buildJsonFinding(output: ToolOutput, sources: unknown[]): Finding {
     const { check, help, output: format } = output;
     if (sources.some((source) => source === null || typeof source !== 'object' || Array.isArray(source)))
-        throw new GspotError('output', INVALID_FINDING_MESSAGE);
+        throw new CheckStop('error', INVALID_FINDING_MESSAGE);
     const fields: Record<string, string | string[] | undefined> | undefined = format.fields;
     const getFieldValues = (name: string) =>
         [fields?.[name] ?? []].flat().map((path) => sources.map((source) => findValueAt(source, path.split('.'))));
@@ -63,7 +63,7 @@ function buildJsonFinding(output: ToolOutput, sources: unknown[]): Finding {
         return joined === '' ? undefined : joined;
     };
     const message = getField('message');
-    if (message === undefined) throw new GspotError('output', EMPTY_FINDING_MESSAGE);
+    if (message === undefined) throw new CheckStop('error', EMPTY_FINDING_MESSAGE);
     const file = getField('file') ?? '';
     const finding: Finding = {
         check,
@@ -94,7 +94,7 @@ export function parseJsonFindings(output: ToolOutput): Finding[] {
     try {
         parsed = parseToolOutput('JSON', stdout.slice(start));
     } catch (error) {
-        if (!(error instanceof GspotError)) throw error;
+        if (!(error instanceof CheckStop)) throw error;
         throw buildJsonSyntaxError(stdout, error);
     }
     return listAt(parsed, format.list).flatMap((element) =>

@@ -41,8 +41,7 @@ export type ErrorCode =
     | 'copy'
     | 'writing'
     | 'install'
-    | 'tool'
-    | 'output';
+    | 'tool';
 
 export type SpawnResult = {
     code: number;

@@ -1,11 +1,11 @@
 import { statSync } from 'node:fs';
+import { CheckStop } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { join, relative, isAbsolute } from 'node:path';
 import type { SpawnResult } from '#cli/types/system.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { Tool, Check } from '#cli/types/manifests.ts';
 import type { CheckResult } from '#cli/types/engine/run.ts';
-import { CheckStop, GspotError } from '#cli/system/errors.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { STACK_FRAME_LINE } from '#cli/config/tools/programs.ts';
 import { parseOutput, OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
@@ -141,8 +141,7 @@ export function parseCommandFindings(
             ? { note: formatCrash(planned, result, options) }
             : { findings: parsed };
     } catch (error) {
-        if (error instanceof GspotError && error.code === 'output')
-            return { note: formatReportRefusal(planned, result, error.message, options) };
+        if (error instanceof CheckStop) return { note: formatReportRefusal(planned, result, error.message, options) };
         throw error;
     }
 }

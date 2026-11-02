@@ -1,4 +1,4 @@
-import { GspotError } from '#cli/system/errors.ts';
+import { CheckStop } from '#cli/system/errors.ts';
 import { semgrepOutputSchema } from '#cli/schemas/engine.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import type { Finding, ToolOutput } from '#cli/types/engine/tool-runs.ts';
@@ -26,7 +26,7 @@ export function parseSemgrepFindings(output: ToolOutput): Finding[] {
         const type = typeof error.type === 'string' ? error.type : error.type[0];
         const span = error.spans?.find((each) => each.file === error.path);
         if (span === undefined || error.code !== SEMGREP_PARSE_EXIT || !SEMGREP_PARSE_ERRORS.has(type))
-            throw new GspotError('output', `Semgrep could not complete the scan: ${error.message}`);
+            throw new CheckStop('error', `Semgrep could not complete the scan: ${error.message}`);
         findings.push({
             check,
             help,

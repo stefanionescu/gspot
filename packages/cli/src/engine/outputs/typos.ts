@@ -1,5 +1,5 @@
 import { resolve, relative } from 'node:path';
-import { GspotError } from '#cli/system/errors.ts';
+import { CheckStop } from '#cli/system/errors.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { TYPOS_CODE_HELP } from '#cli/config/engine.ts';
 import { LINE_FEED } from '#cli/config/repository/git.ts';
@@ -15,7 +15,7 @@ function readSourceLines(root: string, path: string, cache: Map<string, Buffer[]
     try {
         source = readBytes(root, path);
     } catch (error) {
-        throw new GspotError('output', `Cannot read reported source file ${path}.`, { cause: error });
+        throw new CheckStop('error', `Cannot read reported source file ${path}.`, { cause: error });
     }
     const lines: Buffer[] = [];
     let start = 0;
@@ -38,7 +38,7 @@ function findTypoPosition(
     if (typo.line_num === undefined) return {};
     const sourceLine = readSourceLines(root, path, cache)[typo.line_num - 1];
     if (sourceLine === undefined || typo.byte_offset > sourceLine.length)
-        throw new GspotError('output', `typos reported a position outside the file: ${path}`);
+        throw new CheckStop('error', `typos reported a position outside the file: ${path}`);
     return {
         line: typo.line_num,
 
