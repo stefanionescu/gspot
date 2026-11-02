@@ -71,6 +71,12 @@ export const PUBLISHED_SCHEMA_CASES = [
 
 export const INVALID_SETTING_MESSAGES = [
     {
+        name: 'a plugin version with a v prefix',
+        text: 'configurations = ["css"]\n[[tools.stylelint.plugins]]\npackage = "stylelint-acme"\nversion = "v1.2.3"\nrules = {}\n',
+        message:
+            'gspot.toml:4: tools.stylelint.plugins.0.version: The value "v1.2.3" is not valid for tools.stylelint.plugins.0.version. Use an exact version, such as 1.2.3.',
+    },
+    {
         name: 'an unknown root key',
         text: '# The repository settings.\nnope = true\n',
         message:

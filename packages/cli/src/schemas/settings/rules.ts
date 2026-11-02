@@ -131,7 +131,7 @@ const pluginSourceFields = {
     }),
     version: z
         .string()
-        .refine((version) => semver.valid(version) !== null, 'Use an exact version, such as 1.2.3.')
+        .refine((version) => semver.valid(version) === version, 'Use an exact version, such as 1.2.3.')
         .optional()
         .meta({
             description: 'The exact version of the package.',
