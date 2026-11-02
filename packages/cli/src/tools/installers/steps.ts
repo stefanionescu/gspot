@@ -66,7 +66,7 @@ export async function runRequiredInstallStep(
     return result;
 }
 
-async function readPublishedTime(install: ToolInstall, release: ToolRelease): Promise<Date | 'absent' | undefined> {
+async function readReleaseState(install: ToolInstall, release: ToolRelease): Promise<'absent' | 'held' | undefined> {
     const response = await fetch(release.url, {
         signal: AbortSignal.timeout(install.session.settings.tool_timeout_seconds * MILLISECONDS_PER_SECOND),
     });
@@ -77,7 +77,9 @@ async function readPublishedTime(install: ToolInstall, release: ToolRelease): Pr
         release.kind === 'npm'
             ? npmReleaseSchema.parse(body).time[release.version]
             : pypiReleaseSchema.parse(body).urls[0]?.upload_time_iso_8601;
-    return published === undefined ? 'absent' : new Date(published);
+    if (published === undefined) return 'absent';
+    const oldest = Date.now() - install.releaseAgeDays * MILLISECONDS_PER_DAY;
+    return new Date(published).getTime() > oldest ? 'held' : undefined;
 }
 
 /**
@@ -113,17 +115,14 @@ export async function explainReleaseAgeHold(
 ): Promise<string> {
     const named = releases.filter((release) => output.includes(release.label));
     if (named.length === 0 || install.releaseAgeDays === 0) return '';
-    const published = await Promise.all(
+    const releaseStates = await Promise.all(
         named.map(async (release) => ({
             label: release.label,
-            time: await readPublishedTime(install, release).catch(() => undefined),
+            state: await readReleaseState(install, release).catch(() => undefined),
         })),
     );
-    const oldest = Date.now() - install.releaseAgeDays * MILLISECONDS_PER_DAY;
-    const absent = published.filter(({ time }) => time === 'absent').map(({ label }) => label);
-    const held = published
-        .filter(({ time }) => time instanceof Date && time.getTime() > oldest)
-        .map(({ label }) => label);
+    const absent = releaseStates.filter(({ state }) => state === 'absent').map(({ label }) => label);
+    const held = releaseStates.filter(({ state }) => state === 'held').map(({ label }) => label);
     const days = String(install.releaseAgeDays);
     return [
         ...(absent.length === 0 ? [] : [`The registry has no release ${absent.join(', ')}.\n`]),
