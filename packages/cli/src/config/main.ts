@@ -1,4 +1,4 @@
-export const PIN_COMMANDS: ReadonlySet<string> = new Set(['check', 'apply', 'install']);
+export const PIN_COMMANDS: ReadonlySet<string> = new Set(['check', 'apply', 'install', 'baseline']);
 
 export const PROCESS_ARGUMENTS_START = 2;
 

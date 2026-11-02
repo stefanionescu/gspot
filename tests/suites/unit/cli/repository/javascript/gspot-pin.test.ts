@@ -53,7 +53,9 @@ test('another pinned version stops the commands that run tools, and names the in
     expect(error.message).toBe(
         `This repository pins gspot 0.0.1; this is gspot ${cliPackage.version}. Run mise use --pin --tool-option allow_low_downloads=true npm:@gspothq/cli@0.0.1.`,
     );
-    const result = await runGspot(sandbox.path, ['check', '--json']);
-    expect(result.code).toBe(2);
-    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments', message: error.message });
+    for (const command of ['check', 'baseline']) {
+        const result = await runGspot(sandbox.path, [command, '--json']);
+        expect(result.code).toBe(2);
+        expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments', message: error.message });
+    }
 });
