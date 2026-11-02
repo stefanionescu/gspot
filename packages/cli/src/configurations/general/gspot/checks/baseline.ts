@@ -15,7 +15,7 @@ check outside the settings, stays stale in every run.
 @param _planned the configured check.
 @param options the state of the baseline in this run.
 */
-export function checkBaseline(session: Session, _planned: PlannedCheck, options: CheckRunOptions = {}): CheckFinding[] {
+export function checkBaseline(session: Session, _planned: PlannedCheck, options: CheckRunOptions): CheckFinding[] {
     const { unused, finished, paths } = options.baselineRun as BaselineRun;
     const tracked = new Set(session.repository.files.map(({ path }) => path));
     const configured = new Set(session.configuredChecks.map(({ check }) => check.id));

@@ -120,7 +120,7 @@ export type BuiltInCheckResult = { findings: CheckFinding[]; files: string[]; no
 export type BuiltInCheck = (
     session: CheckSession,
     planned: PlannedCheck,
-    options?: CheckRunOptions,
+    options: CheckRunOptions,
 ) => CheckFinding[] | BuiltInCheckResult | Promise<CheckFinding[] | BuiltInCheckResult>;
 
 export type CheckResult = {

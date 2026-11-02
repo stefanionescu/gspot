@@ -132,7 +132,7 @@ function listBaselineGrowth(text: string | undefined, head: BaselineCount[]): We
     return head.flatMap(({ file, check, rule, count }) => {
         const held = base.find((each) => each.file === file && each.check === check && each.rule === rule);
         const previous = held?.count ?? 0;
-        if (text === undefined || count <= previous) return [];
+        if (count <= previous) return [];
         return [
             {
                 rule: WEAKENING_RULES.baseline,
