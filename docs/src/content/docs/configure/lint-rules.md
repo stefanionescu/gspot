@@ -14,7 +14,8 @@ n/no-process-exit runs only at level all. gspot sets options only for the rules 
 gspot runs id-length at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.
 ```
 
-None of these settings turns a lint rule on or off, and none takes a severity; the level decides which rules run.
+None of these settings turns a lint rule on or off, and none takes a severity; the level decides which rules run. The
+one exception, `tools.ruff.rules`, adds Ruff rules to the rules of the level.
 
 | Tool                  | Setting                                              | Takes                                 |
 | --------------------- | ---------------------------------------------------- | ------------------------------------- |
@@ -22,6 +23,7 @@ None of these settings turns a lint rule on or off, and none takes a severity; t
 | ESLint for some files | `[[tools.eslint.override]]` with `paths` and `rules` | The same, for the files of `paths`    |
 | Stylelint             | `tools.stylelint.rules`                              | The options of each rule              |
 | markdownlint          | `tools.markdownlint.rules`                           | An option table for each rule ID      |
+| Ruff                  | `tools.ruff.rules`                                   | Rule codes or prefixes to add         |
 | commitlint            | `tools.commitlint.rules`, `types`, and `scopes`      | Rule options, and the accepted values |
 
 ## Settings that set rule options
