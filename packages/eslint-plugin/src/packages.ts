@@ -119,8 +119,11 @@ export function usesModule(
 }
 
 function compareVersions(left: readonly number[], right: readonly number[]): number {
-    const index = left.findIndex((value, position) => value !== (right[position] ?? 0));
-    return index === -1 ? 0 : (left[index] ?? 0) - (right[index] ?? 0);
+    const differences = Array.from(
+        { length: Math.max(left.length, right.length) },
+        (_, position) => (left[position] ?? 0) - (right[position] ?? 0),
+    );
+    return differences.find((difference) => difference !== 0) ?? 0;
 }
 
 function bumpVersion(numbers: number[], kind: string): number[] {

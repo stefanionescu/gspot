@@ -6,6 +6,7 @@ const root = writePackageFolders({
     cypress: { devDependencies: { cypress: '15.0.0' } },
     jasmine: { devDependencies: { 'jasmine-core': '^5.1.0' } },
     early: { devDependencies: { 'jasmine-core': '~3.5.0' } },
+    major: { devDependencies: { 'jasmine-core': '^3' } },
 });
 
 const matcherCases = [
@@ -82,6 +83,7 @@ buildRuleTester({ root }).run('prefer-matcher-assertions', plugin.rules['prefer-
         'import assert from "node:assert";\nassert.strictEqual(value, null);',
         { code: 'expect(value).toBe(NaN);', filename: join(root, 'jasmine/a.spec.ts') },
         { code: 'expect(items.length).toBe(2);', filename: join(root, 'early/a.spec.ts') },
+        { code: 'expect(items.length).toBe(2);', filename: join(root, 'major/a.spec.ts') },
         { code: 'cy.wrap(value).should("equal", 1);', filename: join(root, 'cypress/a.cy.ts') },
     ],
     invalid: [
