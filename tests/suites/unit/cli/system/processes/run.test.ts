@@ -95,6 +95,16 @@ test.skipIf(isWindows)('a program without permission to run is not a missing pro
     expect(result.stderr.split('\n', 1)[0]).toBe(`Command failed with EACCES: ${executable}`);
 });
 
+test.skipIf(isWindows)('a program that the system cannot execute fails without stopping gspot', async () => {
+    await using sandbox = await testdir({ 'empty-program': '' });
+
+    const executable = join(sandbox.path, 'empty-program');
+    await chmod(executable, 0o755);
+    const result = await spawnProcess([executable], { cwd: sandbox.path });
+    expect(result.code).not.toBe(0);
+    expect(result).toMatchObject({ missing: false, errored: true });
+});
+
 test('a timeout stops the process and reports it', async () => {
     await using sandbox = await testdir();
     const result = await spawnProcess(buildProgramCommand('fakes/tool', '--wait'), {

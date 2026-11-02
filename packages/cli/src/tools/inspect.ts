@@ -206,6 +206,7 @@ export async function inspectTool(search: ToolSearch, tool: Tool): Promise<ToolI
         timeoutSeconds: search.settings.tool_timeout_seconds,
         want,
         miseBinPaths: search.miseBinPaths,
+        runsVersionCommand: search.runsVersionCommand,
     };
     const inspection = await (tool.kind === 'package' ? inspectPackage(inspected) : inspectExecutable(inspected));
     if (inspection.state === 'ok') delete inspection.help;

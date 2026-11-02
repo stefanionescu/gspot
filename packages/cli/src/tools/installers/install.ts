@@ -44,7 +44,10 @@ async function listBrokenTools(install: ToolInstall, tools: Tool[], miseBinPaths
     const inspected = await Promise.all(
         tools
             .filter((tool) => findMissingBuild(tool, host) === undefined)
-            .map(async (tool) => ({ tool, inspection: await inspectTool({ ...session, miseBinPaths }, tool) })),
+            .map(async (tool) => ({
+                tool,
+                inspection: await inspectTool({ ...session, miseBinPaths, runsVersionCommand: true }, tool),
+            })),
     );
     return inspected.filter(({ tool, inspection }) => 'status' in buildToolAvailability(tool, inspection));
 }

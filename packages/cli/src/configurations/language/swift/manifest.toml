@@ -50,6 +50,7 @@ name = "periphery"
 replace = [".periphery.yml", ".periphery.yaml"]
 suppression = { marker = "\\bperiphery:ignore\\b", reason = " - (?<reason>\\S.*)", example = "// periphery:ignore - reason: the runtime calls it by name" }
 version = "3.8.0"
+version_command = ["version"]
 
 [[tool]]
 name = "swift"

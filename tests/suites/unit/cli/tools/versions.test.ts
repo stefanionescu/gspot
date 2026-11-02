@@ -30,6 +30,22 @@ test.each([
     expect(onPath).toMatchObject({ state, found: version });
     const search = buildToolSearch(sandbox.path, { miseBinPaths: [join(sandbox.path, 'bin')] });
     expect(await inspectTool(search, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });
+    expect(await inspectTool({ ...search, runsVersionCommand: true }, tool)).toMatchObject({ state, found: version });
+});
+
+test('a run keeps the version of an npm package, and reports a package that cannot start', async () => {
+    await using sandbox = await testdir();
+    const search = buildToolSearch(sandbox.path, { runsVersionCommand: true });
+    await fakeNpmPackage(sandbox.path, { name: 'teller', version: '5.0.1', toolArguments: ['--line', '4.4.2'] });
+    expect(await inspectTool(search, buildProgramPin('teller', '5.0.1', 'teller'))).toMatchObject({
+        state: 'ok',
+        found: '5.0.1',
+    });
+    await fakeNpmPackage(sandbox.path, { name: 'broken', version: '5.0.1', toolArguments: ['--exit', '3'] });
+    expect(await inspectTool(search, buildProgramPin('broken', '5.0.1', 'broken'))).toMatchObject({
+        state: 'error',
+        note: 'The version command of broken exited 3.',
+    });
 });
 
 test('a shim that no configuration gives a version is missing, not broken', async () => {

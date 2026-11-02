@@ -194,8 +194,24 @@ export async function spawnProcess(command: readonly string[], options: AsyncSpa
     const started = performance.now();
     const unstarted = findUnstartedProcess(command, options, started);
     if (unstarted !== undefined) return unstarted;
-    const { child, supervision } = launchProcess(command, options, {});
-    return finishProcess(child, supervision, started, child);
+    let launched;
+    try {
+        launched = launchProcess(command, options, {});
+    } catch (error) {
+        return buildSpawnResult(
+            {
+                code: undefined,
+                failed: true,
+                shortMessage: `The program cannot start: ${String(error)}`,
+                stdout: '',
+                stderr: '',
+                timedOut: false,
+                isCanceled: false,
+            } satisfies SpawnCompletion,
+            started,
+        );
+    }
+    return finishProcess(launched.child, launched.supervision, started, launched.child);
 }
 
 /**

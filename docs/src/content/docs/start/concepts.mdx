@@ -73,7 +73,8 @@ untrusted branch:
   plugins, Xcode run scripts, and ansible-lint plugins can also execute code.
 - **Runner files and installed programs.** The root `mise.toml` and `package.json` scripts control the commands you
   use to start gspot. `gspot check` and `gspot doctor` can run programs from the repository's `node_modules/.bin` or
-  `.venv/bin`.
+  `.venv/bin`. `gspot check`, `gspot doctor`, and `gspot install` also run the programs in `.gspot/node_modules/.bin`
+  and `.gspot/.venv/bin`.
 - **Install settings and lockfiles.** `gspot install` runs mise and package managers to install pinned tools. Review
   lockfiles under `.gspot/`, the repository's `.npmrc` and `uv.toml`, and the `[tool.uv]` table of `pyproject.toml`.
 - **Git hooks.** After `gspot install`, tracked hooks in `.gspot/hooks/` run on Git events, including checkout, like

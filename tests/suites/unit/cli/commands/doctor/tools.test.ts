@@ -17,7 +17,7 @@ import { join, dirname, extname, basename, delimiter } from 'node:path';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { getTool, findPackagePin, listDistinctTools } from '#cli/tools/pins.ts';
-import { fakeToolExecutables, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { fakeCommands, fakeToolExecutables, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 
 test('doctor reports no unowned gspot files in a fresh clone', async () => {
     await using sandbox = await testdir();
@@ -75,6 +75,23 @@ test.each(['ok', 'newer', 'outdated'] as const)(
         expect(result.code).toBe(state === 'outdated' ? 1 : 0);
     },
 );
+
+test.each([
+    { result: { code: 134, stderr: 'dyld: Library not loaded' }, state: 'error', row: 'dyld: Library not loaded' },
+    { result: { stdout: 'taplo 0.0.1' }, state: 'outdated', row: 'taplo 0.0.1 (below' },
+    { result: { stdout: 'taplo 99.0.0' }, state: 'newer', row: 'taplo 99.0.0 (pinned' },
+])('doctor runs a program in its mise folder and reports $state', async ({ result, state, row }) => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const session = await openSession(sandbox.path);
+    using resources = new DisposableStack();
+    resources.use(fakeToolExecutables(listDistinctTools(session.toolConfigurations)));
+    using _taplo = fakeCommands('taplo', () => Promise.resolve(buildProcessResult(result)));
+    const report = await runGspot(sandbox.path, ['doctor', '--json']);
+    const tools = (JSON.parse(report.stdout) as DoctorReport).tools;
+    expect(tools.find(({ name }) => name === 'taplo')).toMatchObject({ state });
+    const printed = await runGspot(sandbox.path, ['doctor']);
+    expect(printed.stdout).toContain(row);
+});
 
 test('doctor lists a tool once when two scopes find the same install', async () => {
     await using sandbox = await createGitSandbox({

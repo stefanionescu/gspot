@@ -102,6 +102,7 @@ export type InspectedTool = {
     help: string;
     want: string | undefined;
     miseBinPaths: string[] | undefined;
+    runsVersionCommand: boolean | undefined;
 };
 
 export type ToolInspection = {
@@ -122,6 +123,7 @@ export type ToolSearch = {
     cwd?: string;
     miseBinPaths?: string[];
     miseFailure?: string | undefined;
+    runsVersionCommand?: boolean;
 };
 
 export type ToolFolders = { root: string; cwd: string };
@@ -251,6 +253,7 @@ export type RuleDocsOptions = {
 export type ToolLookupSession = Pick<
     Session,
     'root' | 'scopes' | 'toolCache' | 'toolsRoot' | 'settings' | 'toolConfigurations'
->;
+> &
+    Pick<ToolSearch, 'runsVersionCommand'>;
 
 export type RuleToolSearch = RuleDocsOptions & { timeoutSeconds: number };

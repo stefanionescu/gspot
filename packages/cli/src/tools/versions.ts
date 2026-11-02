@@ -87,9 +87,9 @@ function isBelowMinimum(found: string | undefined, minimum: string | undefined):
     return version !== null && lowest !== null && semver.lt(version, lowest);
 }
 
-function parseVersionOutput(tool: Tool, result: SpawnResult): ParsedToolVersion {
+function parseVersionOutput(tool: Tool, result: SpawnResult, metadataVersion: string | undefined): ParsedToolVersion {
     const text = stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim();
-    const version = extractVersion(text, tool);
+    const version = metadataVersion ?? extractVersion(text, tool);
     const failure = findVersionFailure(result, tool, text, version);
     if (failure !== undefined) return failure;
     return version === undefined || semver.coerce(version) === null
@@ -149,17 +149,24 @@ export function classifyToolVersion(
 Read the version of a tool. A package.json or a Python dist-info folder gives it for a tool that gspot installs. The
 pin gives it for a program in a mise folder of that pin. Every other tool runs its version command.
 
+With runsVersionCommand, every program runs it. A package keeps its package version, because some npm tools print
+another one. A program in a mise folder reports what it prints, because the pin does not prove what the folder holds.
+
 @param inspected the tool and where to run its version query.
 @param path the resolved executable.
 */
 export async function readToolVersion(inspected: InspectedTool, path: string): Promise<ParsedToolVersion> {
-    const { root, cwd, tool, timeoutSeconds } = inspected;
+    const { root, cwd, tool, timeoutSeconds, miseBinPaths, runsVersionCommand } = inspected;
     const metadataVersion = readMetadataVersion(inspected, path);
-    if (metadataVersion !== undefined) return { version: metadataVersion };
+    if (metadataVersion !== undefined && runsVersionCommand !== true) return { version: metadataVersion };
     const result = await spawnProcess([path, ...(tool.version_command ?? [VERSION_FLAG])], {
         cwd: convertToPosixPath(relative(root, path)).startsWith(`${GSPOT_FOLDER}/`) ? join(root, GSPOT_FOLDER) : cwd,
         timeoutSeconds,
         env: TOOL_ENVIRONMENT,
     });
-    return parseVersionOutput(tool, result);
+    return parseVersionOutput(
+        tool,
+        result,
+        miseBinPaths?.includes(dirname(path)) === true ? undefined : metadataVersion,
+    );
 }

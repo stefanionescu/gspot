@@ -76,20 +76,22 @@ function formatSuggestions(suggestions: Suggestions): string[] {
 
 async function inspectScopeTools(session: Session): Promise<DoctorTool[]> {
     const platform = getOperatingSystem();
-    const inspections = new Map<string, DoctorTool>();
     const pins = listDistinctTools(session.toolConfigurations).filter(
         (tool) => findMissingBuild(tool, { platform, arch: process.arch }) === undefined,
     );
-    for (const { path: scopePath, configurations } of session.scopes) {
+    const lookups = session.scopes.flatMap(({ path: scopePath, configurations }) => {
         const toolNames = new Set(
             configurations.flatMap((configuration) => configuration.tools).map((tool) => tool.name),
         );
-        for (const tool of pins) {
-            if (!toolNames.has(tool.name)) continue;
-            const inspection = await lookUpTool(session, tool, join(session.root, scopePath));
-            inspections.set(JSON.stringify(inspection), { ...inspection, kind: tool.kind });
-        }
-    }
+        return pins
+            .filter((tool) => toolNames.has(tool.name))
+            .map(async (tool): Promise<[string, DoctorTool]> => {
+                const search = { ...session, runsVersionCommand: true };
+                const inspection = await lookUpTool(search, tool, join(session.root, scopePath));
+                return [JSON.stringify(inspection), { ...inspection, kind: tool.kind }];
+            });
+    });
+    const inspections = new Map(await Promise.all(lookups));
     return inspections
         .values()
         .toArray()
@@ -146,10 +148,11 @@ function listMissingEnvironments(session: Session): string[] {
 
 function formatDoctorReport(report: DoctorReport, states: { hooks: string; ci: string; broken: DoctorTool[] }): string {
     const programs = states.broken.filter((tool) => tool.kind === 'program');
+    const aheadOfPin = report.tools.filter((tool) => tool.kind === 'program' && tool.state === 'newer');
     const packages = states.broken.length - programs.length;
     const ready = report.tools.filter((tool) => tool.kind === 'program').length - programs.length;
     const lines = [
-        ...formatTools(programs),
+        ...formatTools([...programs, ...aheadOfPin]),
         ...(programs.length === 0 ? [] : ['Run gspot install to install the missing or outdated tools.']),
         ...(packages === 0 ? [] : [`missing npm packages: ${String(packages)} (run gspot install)`]),
         `tools: ${String(ready)} ready`,
