@@ -13,7 +13,7 @@ main() {
     } >dist/gspot.js
     chmod +x dist/gspot.js
     bun build src/configurations/framework/site/checks/purgecss-process.ts --outdir dist --target node --format esm \
-        --packages external --minify-whitespace --minify-syntax
+        --minify-whitespace --minify-syntax
 }
 
 main "$@"
