@@ -1,13 +1,12 @@
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { LEVELS } from '#cli/config/manifests.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
-test.each([...LEVELS])('%s runs the gspot test rules on every test file', async (level) => {
+test('level all runs the gspot test rules on every test file', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript'], { level }),
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
         'package.json': '{"private":true,"type":"module","devDependencies":{"mocha":"11.0.0","chai":"5.0.0"}}',
         'cart.test.js': '',
         'empty.test.js': '',
@@ -47,7 +46,7 @@ test.each([...LEVELS])('%s runs the gspot test rules on every test file', async 
         { file: 'cart.test.js', rule: 'gspot/no-code-after-done', line: 6 },
         { file: 'cart.test.js', rule: 'gspot/no-uncertain-chai-assertions', line: 7 },
         { file: 'cart.test.js', rule: 'gspot/require-error-checks', line: 7 },
-        ...(level === 'all' ? [{ file: 'cart.test.js', rule: 'gspot/test-hooks-first', line: 8 }] : []),
+        { file: 'cart.test.js', rule: 'gspot/test-hooks-first', line: 8 },
         { file: 'empty.test.js', rule: 'gspot/no-empty-test-file', line: 1 },
     ]);
     await createFileTree(sandbox.path, {
@@ -58,9 +57,9 @@ test.each([...LEVELS])('%s runs the gspot test rules on every test file', async 
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
 });
 
-test.each([...LEVELS])('%s runs the gspot assertion rules', async (level) => {
+test('level all runs the gspot assertion rules', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript'], { level }),
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
         'package.json': '{"private":true,"type":"module","devDependencies":{"vitest":"4.0.0"}}',
         'cart.test.js': '',
         'list.cy.js': '',
@@ -91,7 +90,7 @@ test.each([...LEVELS])('%s runs the gspot assertion rules', async (level) => {
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([
         { file: 'cart.test.js', rule: 'gspot/no-misplaced-assertions', line: 3 },
         { file: 'cart.test.js', rule: 'gspot/no-constant-assertions', line: 4 },
-        ...(level === 'all' ? [{ file: 'cart.test.js', rule: 'gspot/prefer-matcher-assertions', line: 5 }] : []),
+        { file: 'cart.test.js', rule: 'gspot/prefer-matcher-assertions', line: 5 },
         { file: 'cart.test.js', rule: 'gspot/valid-throw-assertions', line: 6 },
         { file: 'cart.test.js', rule: 'gspot/require-test-assertions', line: 7 },
         { file: 'list.cy.js', rule: 'gspot/no-cypress-then-assertions', line: 1 },

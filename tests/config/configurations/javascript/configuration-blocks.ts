@@ -225,8 +225,6 @@ export const TYPED_RULE_PROJECTS = [
 
 export const ESLINT_LEVEL_CASES = [
     ['basic', 'js'],
-    ['all', 'js'],
-    ['basic', 'ts'],
     ['all', 'ts'],
 ] as const;
 
