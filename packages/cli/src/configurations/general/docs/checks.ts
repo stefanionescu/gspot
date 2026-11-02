@@ -290,9 +290,8 @@ export function checkRequiredFiles(session: Session, planned: PlannedCheck): Che
 
 function listScopeVersions(session: Session, scopePath: string): string[] {
     return session.repository.files
-        .map((file) => file.path)
-        .filter((path) => selectScopePath(path, session.scopes) === scopePath)
-        .flatMap((path) => {
+        .filter(({ kind, path }) => kind === 'source' && selectScopePath(path, session.scopes) === scopePath)
+        .flatMap(({ path }) => {
             const name = posix.basename(path);
             if (name === PACKAGE_JSON) return [readPackageJson(session.cache, path)?.['version']];
             return name === PYPROJECT_TOML
@@ -317,6 +316,7 @@ export function checkVersionStrings(session: Session, planned: PlannedCheck): Ch
     );
     const isTest = buildPathMatcher(planned.scope.settings.test_files);
     return planned.files
+        .filter(({ kind }) => kind === 'source')
         .filter(({ path, tags }) => (tags.includes('markdown') || isTest(path)) && !CHANGELOG_FILE.test(path))
         .flatMap(({ path }) =>
             read(session.cache, path)
