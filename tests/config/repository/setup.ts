@@ -38,10 +38,7 @@ export const PROJECT_FILE_FOLDERS = [
     ['services/billing/requirements-dev.txt', 'requirements*.txt', 'services/billing'],
     ['ios/App.xcodeproj/project.pbxproj', '*.xcodeproj', 'ios'],
     ['apps/web/supabase/config.toml', 'supabase/config.toml', 'apps/web'],
-    ['supabase/config.toml', 'supabase/config.toml', ''],
     ['api/package-lock.json', 'package.json', undefined],
-    ['docs/supabase.md', 'supabase/config.toml', undefined],
-    ['ios/App.xcworkspace/contents.xcworkspacedata', '*.xcodeproj', undefined],
     ['requirements.txt.bak', 'requirements*.txt', undefined],
 ] as const;
 
