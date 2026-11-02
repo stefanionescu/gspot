@@ -18,7 +18,7 @@ import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { join, resolve, relative, basename, isAbsolute } from 'node:path';
 import { runSwiftBuild } from '#cli/configurations/language/swift/checks/build.ts';
 import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
-import type { CoverageOutput, SwiftBuildPlan } from '#cli/types/configurations/language.ts';
+import type { CoverageRun, CoverageOutput, SwiftBuildPlan } from '#cli/types/configurations/language.ts';
 import { xccovSchema, swiftCoverageSchema, packageDescriptionSchema } from '#cli/schemas/configurations.ts';
 
 import {
@@ -83,11 +83,11 @@ async function measurePackageCoverage(
     plan: Extract<SwiftBuildPlan, { kind: 'package' }>,
     files: Files,
     cwd: string,
-): Promise<CoverageOutput | CheckFinding[]> {
+): Promise<CoverageRun> {
     const tested = await runCheckTool(session, planned, plan.testArguments, { cwd });
     if (tested.code !== 0) {
-        const findings = parseFailedTests(planned, `${tested.stdout}\n${tested.stderr}`, cwd);
-        if (findings.length > 0) return findings;
+        const failures = parseFailedTests(planned, `${tested.stdout}\n${tested.stderr}`, cwd);
+        if (failures.length > 0) return { targets: [], failures };
         throw new CheckStop('error', formatOutputTail(tested, SWIFT_TESTS_MESSAGE));
     }
     const reported = await runCheckTool(session, planned, [...SWIFT_CODECOV_COMMAND, SCRATCH_PATH_FLAG, plan.scratch], {
@@ -100,7 +100,7 @@ async function measurePackageCoverage(
     const coverage = files.read(convertToPosixPath(relative(plan.folder, reportPath)));
     const text = coverage === undefined ? undefined : decodeUtf8(coverage.bytes);
     if (text === undefined) throw new CheckStop('error', MISSING_COVERAGE_MESSAGE);
-    return parseSwiftCoverage(text, described.stdout, cwd);
+    return { ...parseSwiftCoverage(text, described.stdout, cwd), failures: [] };
 }
 
 async function measureXcodeCoverage(
@@ -108,14 +108,14 @@ async function measureXcodeCoverage(
     planned: PlannedCheck,
     plan: SwiftBuildPlan,
     cwd: string,
-): Promise<CoverageOutput | CheckFinding[]> {
+): Promise<CoverageRun> {
     const bundle = join(plan.folder, COVERAGE_BUNDLE);
     const tested = await runCheckTool(session, planned, [...plan.testArguments, ...XCODE_COVERAGE_FLAGS, bundle], {
         cwd,
     });
     if (tested.code !== 0) {
-        const findings = parseFailedTests(planned, `${tested.stdout}\n${tested.stderr}`, cwd);
-        if (findings.length > 0) return findings;
+        const failures = parseFailedTests(planned, `${tested.stdout}\n${tested.stderr}`, cwd);
+        if (failures.length > 0) return { targets: [], failures };
         throw new CheckStop(
             'error',
             `Cannot measure coverage because the test run exited ${String(tested.code)}: ${formatOutputTail(tested, TEST_RUNNER_MESSAGE)}`,
@@ -127,10 +127,10 @@ async function measureXcodeCoverage(
             'error',
             `The test run wrote no coverage report: ${formatOutputTail(viewed, COVERAGE_VIEWER_MESSAGE)}`,
         );
-    return parseToolOutput('xccov', viewed.stdout, xccovSchema);
+    return { ...parseToolOutput('xccov', viewed.stdout, xccovSchema), failures: [] };
 }
 
-async function measureCoverage(session: CheckSession, planned: PlannedCheck): Promise<CoverageOutput | CheckFinding[]> {
+async function measureCoverage(session: CheckSession, planned: PlannedCheck): Promise<CoverageRun> {
     const plan = planSwiftBuild(session, planned);
     const { code, files, source } = await runSwiftBuild(session, planned, plan, { clean: false });
     if (code !== 0) throw new CheckStop('skipped', FAILED_BUILD_NOTE);
@@ -208,7 +208,7 @@ Runs the tests with coverage and compares each target with the line limit or its
 export async function checkCoverage(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const settings = getTable(planned.scope.settings, COVERAGE_RULE);
     const report = await measureCoverage(session, planned);
-    if (Array.isArray(report)) return report;
+    if (report.failures.length > 0) return report.failures;
     return listCoverageShortfalls(report, settings).map((text) => ({
         file: getTable(planned.scope.settings, 'swift').xcode_project ?? joinScope(planned.scope.path, PACKAGE_SWIFT),
         line: 1,

@@ -76,6 +76,8 @@ export type SwiftBuildSetup = { files: Files; source: string };
 
 export type CoverageOutput = z.infer<typeof xccovSchema>;
 
+export type CoverageRun = CoverageOutput & { failures: CheckFinding[] };
+
 export type MessageFiles = { folder: string; base: string; paths: ReadonlySet<string> };
 
 export type ParsedMessage = { line: number; elements: MessageFormatElement[] | undefined; error: string | undefined };
