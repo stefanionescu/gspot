@@ -11,7 +11,7 @@ lists which ones gspot always selects. It selects `docker` and `github-actions` 
 | ---------------- | ------------------------------------------------------------------------------------------------------------- |
 | `secrets`        | Gitleaks scans staged changes and pushed commits.                                                             |
 | `dependencies`   | OSV-Scanner checks lockfiles for known vulnerable packages at push.                                           |
-| `security`       | Semgrep runs shipped and local rules at push, including the rules of the Next.js and Swift configurations.    |
+| `security`       | Semgrep runs the FastAPI rules and your rule files at push.                                                   |
 | `docker`         | Trivy checks container settings and a selected image. See [Docker checks](/reference/configurations/docker/). |
 | `github-actions` | zizmor finds unsafe workflows and unpinned actions at commit.                                                 |
 
@@ -20,7 +20,7 @@ the line leaves the secret in Git history.
 
 ## Semgrep
 
-Run the shipped Semgrep rules and your own:
+Run the FastAPI rules and your own:
 
 ```shell
 gspot check --only security/semgrep

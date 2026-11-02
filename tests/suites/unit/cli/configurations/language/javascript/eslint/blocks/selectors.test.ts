@@ -8,6 +8,20 @@ import {
     SELECTOR_LIBRARY_FILES,
     FRAMEWORK_SELECTOR_CASES,
 } from '#tests/config/configurations/javascript/blocks.ts';
+import {
+    EXPRESS_SOURCES,
+    JWT_SCOPE_FILES,
+    PLATFORM_SOURCES,
+    NEXT_CONFIG_CASES,
+    PLATFORM_FINDINGS,
+    EXPRESS_SCOPE_FILES,
+    SUPABASE_FOLDER_FILES,
+    EXPRESS_SCOPE_SETTINGS,
+    EXPRESS_SOURCE_FINDINGS,
+    SUPABASE_FOLDER_SETTINGS,
+    JAVASCRIPT_SELECTOR_FILES,
+    JAVASCRIPT_SELECTOR_FINDINGS,
+} from '#tests/config/configurations/javascript/selectors.ts';
 
 test('a template message to a logger method, including log, is reported, and console.log is not', async () => {
     await using sandbox = await testdir({
@@ -164,4 +178,114 @@ test('the next-intl import bans apply only in a project that declares next-intl'
         { file: 'page.js', rule: 'gspot/restricted-syntax', line: 2 },
     ]);
     expect(await listFindings({})).toStrictEqual([]);
+});
+
+test('the JavaScript security selectors report unsafe sinks and pass fixed forms', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript']),
+        'package.json': '{"private":true,"type":"module"}\n',
+        ...JAVASCRIPT_SELECTOR_FILES,
+    });
+    const eslint = await buildEslint(sandbox.path);
+    expect(
+        await listLintFindings(eslint, sandbox.path, Object.keys(JAVASCRIPT_SELECTOR_FILES), [
+            'gspot/restricted-syntax',
+        ]),
+    ).toStrictEqual(
+        Object.entries(JAVASCRIPT_SELECTOR_FINDINGS).flatMap(([file, lines]) =>
+            lines.map((line) => ({ file, line, rule: 'gspot/restricted-syntax' })),
+        ),
+    );
+});
+
+test('the JWT selectors run only where the nearest package.json names jsonwebtoken', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            scopes: [{ path: 'jwt' }, { path: 'jwt/child' }, { path: 'other' }],
+        }),
+        ...JWT_SCOPE_FILES,
+    });
+    const eslint = await buildEslint(sandbox.path);
+    expect(
+        await listLintFindings(
+            eslint,
+            sandbox.path,
+            Object.keys(JWT_SCOPE_FILES).filter((path) => path.endsWith('.js')),
+            ['gspot/restricted-syntax'],
+        ),
+    ).toStrictEqual([
+        { file: 'jwt/child/source.js', line: 1, rule: 'gspot/restricted-syntax' },
+        ...[1, 3, 4].map((line) => ({ file: 'jwt/source.js', line, rule: 'gspot/restricted-syntax' })),
+    ]);
+});
+
+test('the Express selectors report request data in sinks and accept parameters and JSON', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['express']),
+        'package.json': '{"private":true,"type":"module","dependencies":{"express":"0.0.0-test"}}\n',
+        ...EXPRESS_SOURCES,
+    });
+    const eslint = await buildEslint(sandbox.path);
+    expect(
+        await listLintFindings(eslint, sandbox.path, Object.keys(EXPRESS_SOURCES), ['gspot/restricted-syntax']),
+    ).toStrictEqual(EXPRESS_SOURCE_FINDINGS.map((row) => ({ ...row, rule: 'gspot/restricted-syntax' })));
+});
+
+test('the Express selectors stay within the scopes that inherit Express', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], { tables: EXPRESS_SCOPE_SETTINGS }),
+        ...EXPRESS_SCOPE_FILES,
+    });
+    const eslint = await buildEslint(sandbox.path);
+    expect(
+        await listLintFindings(
+            eslint,
+            sandbox.path,
+            Object.keys(EXPRESS_SCOPE_FILES).filter((path) => path.endsWith('.js')),
+            ['gspot/restricted-syntax'],
+        ),
+    ).toStrictEqual([
+        { file: 'app/child/source.js', line: 1, rule: 'gspot/restricted-syntax' },
+        { file: 'app/source.js', line: 1, rule: 'gspot/restricted-syntax' },
+    ]);
+});
+
+test.each([...NEXT_CONFIG_CASES])('the Next.js selectors read next.config: $name', async ({ source, expected }) => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['nextjs']),
+        'tsconfig.json': '{"include":["*.ts"]}\n',
+        'next.config.ts': source,
+        'settings.ts': 'export const settings = { env: { API_TOKEN: "text" } };\n',
+    });
+    const eslint = await buildEslint(sandbox.path);
+    expect(
+        await listLintFindings(eslint, sandbox.path, ['next.config.ts', 'settings.ts'], ['gspot/restricted-syntax']),
+    ).toStrictEqual(expected.map((line) => ({ file: 'next.config.ts', line, rule: 'gspot/restricted-syntax' })));
+});
+
+test('the Cloudflare and Supabase selectors report wildcard origins and raw filters', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'typescript', 'supabase', 'cloudflare'], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'tsconfig.json': '{"include":["supabase"]}\n',
+        'wrangler.toml': 'name = "example"\ncompatibility_date = "2026-01-01"\n',
+        'supabase/config.toml': 'project_id = "example"\n',
+        ...PLATFORM_SOURCES,
+    });
+    const eslint = await buildEslint(sandbox.path);
+    expect(
+        await listLintFindings(eslint, sandbox.path, Object.keys(PLATFORM_SOURCES), ['gspot/restricted-syntax']),
+    ).toStrictEqual(PLATFORM_FINDINGS.map((row) => ({ ...row, rule: 'gspot/restricted-syntax' })));
+});
+
+test('a selector that a folder setting limits reads the folder of its scope', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], { tables: SUPABASE_FOLDER_SETTINGS }),
+        'api/supabase/config.toml': 'project_id = "example"\n',
+        ...SUPABASE_FOLDER_FILES,
+    });
+    const eslint = await buildEslint(sandbox.path);
+    expect(
+        await listLintFindings(eslint, sandbox.path, Object.keys(SUPABASE_FOLDER_FILES), ['gspot/restricted-syntax']),
+    ).toStrictEqual([{ file: 'api/edge/cors.js', line: 1, rule: 'gspot/restricted-syntax' }]);
 });

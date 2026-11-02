@@ -64,6 +64,7 @@ const selectorSchema = z.strictObject({
     level: levelSchema.default('basic'),
     selector: z.string().min(1),
     message: z.string().min(1),
+    files: z.string().min(1).array().min(1).optional(),
     paths_setting: z.string().min(1).optional(),
     dependencies: stringsSchema,
 });
@@ -92,8 +93,6 @@ const configSchema = z
         check: consumerNamesSchema,
         pointer: pointerSchema.optional(),
         per_scope: z.boolean().default(false),
-        rule_dependencies: z.record(z.string().min(1), z.string().min(1).array().min(1)).optional(),
-        paths_setting: z.string().min(1).optional(),
     })
     .transform((config) => {
         if (config.pointer?.folders !== undefined)

@@ -113,9 +113,9 @@ allowed_names = ["reason_when"]
 reason = "gspot list settings --json and the shipped setting definitions name this field reason_when."
 
 [[naming.override]]
-paths = ["packages/cli/src/configurations/general/data-files/**", "packages/cli/src/configurations/general/data-files/checks.ts", "packages/cli/src/types/configurations/general.ts", "packages/cli/src/configurations/general/data-files/generate.ts", "tests/suites/unit/cli/configurations/general/data-files.test.ts", "tests/config/integration/general.ts", "tests/suites/integration/configurations/general/data-files.test.ts", "tests/config/integration/security/sensitive-data.ts", "tests/suites/integration/configurations/general/security/sensitive-data.test.ts"]
-allowed_names = ["data-files", "data-files.test", "sensitive-data", "sensitive-data.test"]
-reason = "These files and folders take the names of the data-files configuration and the security/sensitive-data check."
+paths = ["packages/cli/src/configurations/general/data-files/**", "packages/cli/src/configurations/general/data-files/checks.ts", "packages/cli/src/types/configurations/general.ts", "packages/cli/src/configurations/general/data-files/generate.ts", "tests/suites/unit/cli/configurations/general/data-files.test.ts", "tests/config/integration/general.ts", "tests/suites/integration/configurations/general/data-files.test.ts"]
+allowed_names = ["data-files", "data-files.test"]
+reason = "These files and folders take the name of the data-files configuration."
 
 [structure]
 environment_readers = ["packages/cli/src/system/environment.ts", "tests/setup/system/environment.ts", "tests/setup/runner/unit.ts"]
@@ -396,7 +396,7 @@ reason = "AGENTS.md keeps every schema in a schemas folder, and the docs site de
 [[ignore]]
 check = "structure/lone-files"
 rule = "lone-file"
-paths = ["packages/cli/src/configurations/framework/site/files/purgecss.ts", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts"]
+paths = ["packages/cli/src/configurations/framework/site/files/purgecss.ts", "packages/cli/src/configurations/language/javascript/files/eslint-functions.ts", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts"]
 reason = "The manifest loader discovers config files in files/ and names each of these modules as the source of its config file target."
 
 [[ignore]]

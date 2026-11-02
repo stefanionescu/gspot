@@ -1,3 +1,4 @@
+import { escapeGlob } from '#cli/system/paths.ts';
 import type { Session } from '#cli/types/tools.ts';
 import type { Level, Scope } from '#cli/types/settings.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
@@ -41,15 +42,16 @@ export function buildSelectorBlocks(
             );
         const applied = new Map(declarations.map((declaration) => [declaration.selector, declaration]))
             .values()
-            .map(
-                (declaration): SelectorPaths => ({
-                    selector: declaration.selector,
-                    message: declaration.message,
-                    ...(declaration.paths_setting !== undefined && {
-                        files: (scope.settings.valuesByKey[declaration.paths_setting] as string[] | undefined) ?? [],
-                    }),
-                }),
-            )
+            .map((declaration): SelectorPaths => {
+                const { selector, message, files, paths_setting: setting } = declaration;
+                if (setting === undefined) return { selector, message, ...(files !== undefined && { files }) };
+                const value = scope.settings.valuesByKey[setting] as string | string[] | undefined;
+                return {
+                    selector,
+                    message,
+                    files: typeof value === 'string' ? [`${escapeGlob(value)}/**`] : (value ?? []),
+                };
+            })
             .filter(({ files }) => files === undefined || files.length > 0)
             .toArray();
         return {

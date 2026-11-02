@@ -43,19 +43,6 @@ test('a child project receives Python configuration only after its first Python 
     );
 });
 
-test('a scope that selects Express gets its Semgrep rules when only the root selects Semgrep', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript', 'security'], {
-            scopes: [{ path: 'app', configurations: ['express'] }, { path: 'app/child' }],
-        }),
-        'app/package.json': '{"private":true,"dependencies":{"express":"0.0.0-test"}}',
-        'app/source.js': 'res.send(req.body.message);\n',
-        'app/child/source.js': 'res.send(req.body.message);\n',
-    });
-    const paths = buildGeneratedFiles(await openSession(sandbox.path)).files.map(({ path }) => path);
-    expect(paths).toContain(getManifestTarget('express', 'semgrep.yml'));
-});
-
 test('a Ruff-only Python scope gets no type checker file or link file', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], NESTED_PYTHON_SETTINGS),

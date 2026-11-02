@@ -153,10 +153,6 @@ export type FindingPlace = Pick<Finding, 'file' | 'line' | 'column'>;
 
 export type Weakening = { rule: string; file: string; change: string; reason?: string | undefined };
 
-type SemgrepRule = Record<string, unknown> & { id: string; paths?: { include: string[] } };
-
-export type SemgrepDocument = { rules: SemgrepRule[] };
-
 export type RuleOptionsRun = {
     configured: string[];
     running: ReadonlySet<string>;

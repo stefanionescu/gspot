@@ -34,11 +34,22 @@ npm = "supabase"
 system = true
 version_command = ["--version"]
 
-[[config_file]]
-per_scope = true
+[[eslint.selectors]]
+message = "An interpolated value enters raw PostgREST filter syntax. Escape it for the operator, or use a typed filter."
+selector = 'CallExpression[callee.property.name="or"] > TemplateLiteral.arguments:first-child[expressions.length>0]'
+
+[[eslint.selectors]]
+message = "An interpolated value enters raw PostgREST filter syntax. Escape it for the operator, or use a typed filter."
+selector = 'CallExpression[callee.property.name="filter"][arguments.1.value="in"] > TemplateLiteral.arguments:nth-child(3)[expressions.length>0]'
+
+[[eslint.selectors]]
+message = "An interpolated value enters raw PostgREST filter syntax. Escape it for the operator, or use a typed filter."
+selector = 'CallExpression[callee.property.name="textSearch"]:not(:has(ObjectExpression > Property[key.name="type"][value.value=/^(?:plain|phrase|websearch)$/])) > TemplateLiteral.arguments:nth-child(2)[expressions.length>0]'
+
+[[eslint.selectors]]
+message = "Browsers refuse a wildcard origin on a request with credentials. List the allowed origins."
 paths_setting = "supabase.functions_folder"
-target = "semgrep.yml"
-tool = "semgrep"
+selector = 'ObjectExpression:has(> Property[key.value="Access-Control-Allow-Origin"][value.value="*"]):has(> Property[key.value="Access-Control-Allow-Credentials"][value.value="true"])'
 
 [[check]]
 example = "A storage bucket with no policy on `storage.objects` reports a finding. Add a migration that defines access for that bucket."

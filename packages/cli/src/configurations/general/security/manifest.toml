@@ -24,6 +24,6 @@ help = "Change the code the way the message says."
 name = "semgrep"
 output = { format = "semgrep" }
 stage = "push"
-summary = "Runs the Semgrep rules that each configuration ships, and the files in security.rule_files, over the files of the run."
+summary = "Runs the Semgrep rules of the FastAPI configuration and the files in security.rule_files over the files of the run."
 when = { config_file = "semgrep" }
 why = "An injection or a logged secret reads like ordinary code, and a pattern rule finds it before a reviewer has to."

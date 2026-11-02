@@ -86,10 +86,15 @@ names = ["register", "onRequestError"]
 files = ["**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"]
 reason = "Next.js discovers route files by name, so each file can hold one export in its own folder."
 
-[[config_file]]
-per_scope = true
-target = "semgrep.yml"
-tool = "semgrep"
+[[eslint.selectors]]
+files = ["**/next.config.*"]
+message = "This option lets next build pass with errors. Remove it."
+selector = 'Property:matches([key.name=/^(?:ignoreBuildErrors|ignoreDuringBuilds)$/], [key.value=/^(?:ignoreBuildErrors|ignoreDuringBuilds)$/]):matches([value.value=true], [value.expression.value=true])'
+
+[[eslint.selectors]]
+files = ["**/next.config.*"]
+message = "A key under env is written into the client bundle. Read this secret on the server."
+selector = 'Property[key.name="env"] > ObjectExpression.value > Property:matches([key.name=/^(?=[A-Z\d_]*(?:SECRET|TOKEN|PASSWORD|PRIVATE_KEY|API_KEY))[A-Z][A-Z\d_]*$/], [key.value=/^(?=[A-Z\d_]*(?:SECRET|TOKEN|PASSWORD|PRIVATE_KEY|API_KEY))[A-Z][A-Z\d_]*$/])'
 
 [[check]]
 cwd = "scope"

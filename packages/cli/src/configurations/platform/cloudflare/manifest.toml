@@ -24,11 +24,10 @@ npm = "wrangler"
 system = true
 version_command = ["--version"]
 
-[[config_file]]
+[[eslint.selectors]]
 level = "all"
-per_scope = true
-target = "semgrep.yml"
-tool = "semgrep"
+message = "A wildcard CORS origin lets every site read the response. List the allowed origins."
+selector = ':matches(Property[key.value="Access-Control-Allow-Origin"][value.value="*"], CallExpression[callee.property.name=/^(?:set|append)$/][arguments.0.value="Access-Control-Allow-Origin"][arguments.1.value="*"])'
 
 [[check]]
 example = "An indented `X-Frame-Options: DENY` at the top of `_headers` reports a header with no path. Put a path such as `/*` on an unindented line above it."

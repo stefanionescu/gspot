@@ -22,7 +22,6 @@ import { buildBiomeFile } from '#cli/configurations/language/javascript/biome.ts
 import { buildJscpdFile } from '#cli/configurations/general/structure/generate.ts';
 import { buildCoverageFile } from '#cli/configurations/testing/pytest/generate.ts';
 import { buildSquawkFile } from '#cli/configurations/database/postgres/generate.ts';
-import { buildSemgrepFile } from '#cli/configurations/general/security/generate.ts';
 import { buildShellcheckFile } from '#cli/configurations/language/bash/generate.ts';
 import { buildGixyFile } from '#cli/configurations/infrastructure/nginx/generate.ts';
 import { buildPeripheryFile } from '#cli/configurations/language/swift/periphery.ts';
@@ -40,16 +39,11 @@ import { buildSpectralFile } from '#cli/configurations/infrastructure/openapi/ge
 import { buildEslintFile } from '#cli/configurations/language/javascript/eslint/config.ts';
 import { buildAnsibleLintFile } from '#cli/configurations/infrastructure/ansible/generate.ts';
 import type { BuiltConfig, OwnedSourceFile, ConfigBuildState } from '#cli/types/generation.ts';
+import { TS_EXTENSION, CONFIG_REFERENCE, CONFIG_SCOPES_FOLDER } from '#cli/config/generation.ts';
 import { buildV8rFile, buildTaploFile } from '#cli/configurations/general/data-files/generate.ts';
 import { buildRuffFile, buildBasedpyrightFile } from '#cli/configurations/language/python/generate.ts';
 import { buildTrivyFile, buildHadolintFile } from '#cli/configurations/infrastructure/docker/generate.ts';
 
-import {
-    TS_EXTENSION,
-    CONFIG_REFERENCE,
-    CONFIG_SCOPES_FOLDER,
-    SEMGREP_RULE_PACK_FILE,
-} from '#cli/config/generation.ts';
 import {
     buildPrettierFile,
     buildEditorconfigFile,
@@ -133,10 +127,7 @@ export function buildConfigFile(
         ignoreSections: generated.ignoreSections,
         level: owner.session.settings.level,
     };
-    const builder =
-        config.file === SEMGREP_RULE_PACK_FILE
-            ? buildSemgrepFile
-            : CONFIG_BUILDERS[`${planned.configuration.name}/${config.file}`];
+    const builder = CONFIG_BUILDERS[`${planned.configuration.name}/${config.file}`];
     let built: ReturnType<ConfigBuilder>;
     if (builder === undefined) {
         const source = config.source;

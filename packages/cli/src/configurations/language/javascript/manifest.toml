@@ -250,12 +250,6 @@ target = "knip.json"
 tool = "knip"
 
 [[config_file]]
-per_scope = true
-rule_dependencies = { "gspot.javascript.jwt-" = ["jsonwebtoken"] }
-target = "semgrep.yml"
-tool = "semgrep"
-
-[[config_file]]
 source = "eslint-functions.ts"
 target = "eslint/functions.mjs"
 tool = "eslint"
@@ -428,3 +422,33 @@ selector = "CallExpression[callee.property.name='waitForLoadState'] > Literal:fi
 [[eslint.selectors]]
 message = "Pass the locator to expect, so that the assertion retries, such as await expect(locator).toHaveText(text)."
 selector = "Program:has(ImportDeclaration[source.value='@playwright/test']) CallExpression[callee.name='expect'] > AwaitExpression:first-child"
+
+[[eslint.selectors]]
+message = "Writing HTML into the page allows XSS. Set textContent, create the nodes, or write fixed markup."
+selector = 'AssignmentExpression[left.property.name=/^(?:innerHTML|outerHTML)$/]:not([right.type="Literal"])'
+
+[[eslint.selectors]]
+message = "Writing HTML into the page allows XSS. Set textContent, create the nodes, or write fixed markup."
+selector = 'CallExpression:matches([callee.property.name="insertAdjacentHTML"][arguments.1.type!="Literal"], [callee.object.name="document"][callee.property.name="write"][arguments.0.type!="Literal"])'
+
+[[eslint.selectors]]
+message = "fetch() takes its URL from the request, which allows server-side request forgery. Allow only known hosts."
+selector = 'CallExpression[callee.name="fetch"]:matches([arguments.0.object.object.name="req"], [arguments.0.callee.object.property.name="searchParams"][arguments.0.callee.property.name="get"])'
+
+[[eslint.selectors]]
+message = "The log writes a secret from the environment. Remove the value, or mask it."
+selector = 'CallExpression[callee.property.name=/^(?:log|trace|debug|info|warn|error|fatal)$/][arguments.length=1]:matches([arguments.0.object.object.name="process"][arguments.0.object.property.name="env"][arguments.0.property.name=/KEY|SECRET|PASSWORD|TOKEN|CREDENTIAL/], [arguments.0.callee.object.object.name="Deno"][arguments.0.callee.object.property.name="env"][arguments.0.callee.property.name="get"][arguments.0.arguments.0.value=/KEY|SECRET|PASSWORD|TOKEN|CREDENTIAL/])'
+
+[[eslint.selectors]]
+dependencies = ["jsonwebtoken"]
+message = "Require the expected JWT signing algorithms. Pass an algorithms option that matches the signing contract."
+selector = 'CallExpression[callee.object.name="jwt"][callee.property.name="verify"]:not(:has(ObjectExpression > Property[key.name="algorithms"]))'
+
+[[eslint.selectors]]
+dependencies = ["jsonwebtoken"]
+message = "jwt.decode() does not verify signatures. Use jwt.verify() instead."
+selector = 'CallExpression[callee.object.name="jwt"][callee.property.name="decode"]'
+
+[[eslint.selectors]]
+message = "Interpolation in execSync() or exec() allows command injection. Use execFileSync() or execFile() with an argument array."
+selector = 'CallExpression[callee.name=/^(?:execSync|exec)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]'

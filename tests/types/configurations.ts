@@ -24,5 +24,3 @@ export type RuffConfig = {
 };
 
 export type KnipConfig = { ignore: string[]; workspaces: Record<string, { entry: string[] }> };
-
-export type SemgrepRuleFile = { rules: { id: string; paths?: { include?: string[]; exclude?: string[] } }[] };

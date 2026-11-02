@@ -115,13 +115,25 @@ test.each([false, true])('Semgrep tools follow local rules at plan time (custom 
 test('shipped Semgrep rules select its tool', async () => {
     using _platform = fakePlatform('linux');
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript']),
-        'package.json': '{"name":"example","version":"1.0.0"}',
-        'index.js': 'export const port = 8080;\n',
+        'gspot.toml': buildSandboxSettings(['fastapi']),
+        'pyproject.toml': '[project]\nname = "example"\nversion = "1.0.0"\ndependencies = ["fastapi"]\n',
+        'source.py': 'PORT = 8080\n',
     });
     const session = await openSession(sandbox.path);
     expect(planChecks(session, { stage: 'push', only: ['security/semgrep'] })[0]?.skip).toBeUndefined();
     expect(listPackagePins(session.toolConfigurations).python.some((pin) => pin.startsWith('semgrep=='))).toBe(true);
+});
+
+test('a JavaScript repository installs no Python tool', async () => {
+    using _platform = fakePlatform('linux');
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript', 'github-actions']),
+        'package.json': '{"name":"example","version":"1.0.0"}',
+        'index.js': 'export const port = 8080;\n',
+        '.github/workflows/ci.yml': 'on: push\n',
+    });
+    const session = await openSession(sandbox.path);
+    expect(listPackagePins(session.toolConfigurations).python).toStrictEqual([]);
 });
 
 test('generated and vendored test files do not satisfy a source-tag condition', async () => {
