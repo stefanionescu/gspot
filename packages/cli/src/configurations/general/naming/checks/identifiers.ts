@@ -1,5 +1,5 @@
-import { read } from '#cli/system/files/reads.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { SYNTAX_RULE } from '#cli/config/configurations/infrastructure.ts';
@@ -17,7 +17,7 @@ export async function checkIdentifiers(session: Session, planned: PlannedCheck):
     const settings = readNamingSettings(session.settings, planned.scope);
     const findings: CheckFinding[] = [];
     for (const { file, language } of listNamedFiles(planned)) {
-        const text = read(session.cache, file.path);
+        const text = readText(session.cache, file.path);
         const { identifiers, error } = await parseIdentifiers(file.path, text, language, session);
         if (error !== undefined) {
             findings.push({

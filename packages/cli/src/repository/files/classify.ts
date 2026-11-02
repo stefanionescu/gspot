@@ -1,5 +1,5 @@
 import { posix } from 'node:path';
-import { read } from '#cli/system/files/reads.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
@@ -96,7 +96,7 @@ function findGeneratedKind(path: string, prefix: Buffer): FileClassification | u
 function classifyManagedDocument(root: string, file: ListedFile, prefix: Buffer): FileClassification {
     if (file.isSymlink || !file.path.endsWith(MARKDOWN_EXTENSION) || !prefix.includes(MARKERS.markdown.start))
         return SOURCE_KIND;
-    const text = read(root, file.path);
+    const text = readText(root, file.path);
     const authored = stripBlock(text, { path: file.path });
     return authored === text || authored.trim() !== ''
         ? SOURCE_KIND
@@ -149,7 +149,7 @@ function tagTextFile(tags: Set<string>, firstLine: string): FileTags {
     return { tags: [...tags], isBinary: false };
 }
 
-function listLinkFiles(path: string, files: Config[]): string[] {
+function listPointerFiles(path: string, files: Config[]): string[] {
     return files.flatMap((file) => {
         const pointer = file.pointer;
         if (pointer === undefined) return [];
@@ -264,7 +264,7 @@ export function listConfigurationGeneratedPaths(selected: Map<string, Configurat
         .entries()
         .flatMap(([path, configurations]) =>
             configurations.flatMap(({ generated, name, configs }) => {
-                const paths = [...generated.map((file) => posix.join(path, file)), ...listLinkFiles(path, configs)];
+                const paths = [...generated.map((file) => posix.join(path, file)), ...listPointerFiles(path, configs)];
                 return paths.length === 0
                     ? []
                     : {

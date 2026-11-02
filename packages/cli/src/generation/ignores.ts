@@ -3,9 +3,9 @@ import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { listLinkFilePaths } from '#cli/generation/links.ts';
 import { GITLINK_MODE } from '#cli/config/repository/files.ts';
 import { convertToGlob } from '#cli/configurations/ignores.ts';
+import { listPointerPaths } from '#cli/generation/pointers.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
 import { listOwnedConfigs } from '#cli/generation/selection.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
@@ -36,7 +36,7 @@ export function isPointerInherited(owned: OwnedConfig, generated: Pick<ConfigTar
 }
 
 /**
-List the paths outside .gspot/ that a run writes: the root targets and link file paths of the config files it writes, and the CI workflow when CI runs.
+List the paths outside .gspot/ that a run writes: the root targets and pointer file paths of the config files it writes, and the CI workflow when CI runs.
 
 @param session the scopes and the settings.
 @param generated the file of each config in each scope.
@@ -49,7 +49,7 @@ export function listWrittenPaths(session: Session, generated: Pick<ConfigTargets
             config.source === undefined || isGspotPath(config.target)
                 ? []
                 : [config.per_scope ? joinScope(owner.scope.path, config.target) : config.target];
-        return [...sourceTargets, ...(isPointerInherited(owned, generated) ? [] : listLinkFilePaths(owner, config))];
+        return [...sourceTargets, ...(isPointerInherited(owned, generated) ? [] : listPointerPaths(owner, config))];
     });
     if (session.settings.ci?.enabled === true)
         paths.push(session.settings.ci.provider === 'github' ? GITHUB_WORKFLOW : GITLAB_WORKFLOW);

@@ -1,5 +1,5 @@
 import { posix } from 'node:path';
-import { read } from '#cli/system/files/reads.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
@@ -151,7 +151,7 @@ Report YAML syntax, ambiguous values, unused anchors, and the file conventions f
 */
 export function checkYaml(session: CheckSession, planned: PlannedCheck): CheckFinding[] {
     return planned.files.flatMap(({ path: file }) => {
-        const text = read(session.cache, file);
+        const text = readText(session.cache, file);
         const lines = new LineCounter();
         const documents = parseAllDocuments(text, { lineCounter: lines, keepSourceTokens: true, prettyErrors: false });
         const findings = documents.flatMap((document) => listDocumentFindings(text, document));

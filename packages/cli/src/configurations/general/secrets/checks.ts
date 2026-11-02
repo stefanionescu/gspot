@@ -1,9 +1,9 @@
 import { posix } from 'node:path';
 import { CheckStop } from '#cli/system/errors.ts';
-import { read } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { buildBaseResult } from '#cli/engine/results.ts';
 import { PYTHON_EXTENSION } from '#cli/config/parsers.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
@@ -32,7 +32,7 @@ async function readEnvironmentReferences(
     path: string,
     environmentFunctions: string[],
 ): Promise<EnvironmentRead[]> {
-    const text = read(session.cache, path);
+    const text = readText(session.cache, path);
     if (!path.endsWith(PYTHON_EXTENSION))
         return await listJavascriptEnvironmentReads(path, text, environmentFunctions, session);
     using tree = await parseSource('python', text, session);
@@ -102,7 +102,7 @@ export async function checkEnvExamples(session: Session, planned: PlannedCheck):
         );
     const exampleKeys = new Set(
         examples.flatMap((file) => {
-            const lines = read(session.cache, file.path).split('\n');
+            const lines = readText(session.cache, file.path).split('\n');
             return lines.flatMap((line) => {
                 const key = ENV_KEY_LINE.exec(line.trim())?.groups?.['key'];
                 return key === undefined ? [] : [key];

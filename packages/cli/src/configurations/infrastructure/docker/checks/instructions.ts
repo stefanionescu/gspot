@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
 import type { Node } from 'web-tree-sitter';
-import { read } from '#cli/system/files/reads.ts';
 import { getPosition } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
@@ -92,7 +92,7 @@ wraps the entry point in a shell.
 */
 export async function checkInstructions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const instructions = planned.files.flatMap(({ path }) =>
-        listDockerInstructions(read(session.cache, path)).map((instruction) => ({ ...instruction, path })),
+        listDockerInstructions(readText(session.cache, path)).map((instruction) => ({ ...instruction, path })),
     );
     const findings = await Promise.all(
         instructions.map(async (instruction) => {

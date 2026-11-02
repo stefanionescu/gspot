@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { relative } from 'node:path/posix';
-import { find } from '#cli/system/files/reads.ts';
 import { stringify } from '@decimalturn/toml-patch';
+import { findText } from '#cli/system/files/reads.ts';
 import { UV_LOCKFILE } from '#cli/config/manifests.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { pyprojectSchema } from '#cli/schemas/parsers.ts';
@@ -73,7 +73,7 @@ export function buildBasedpyrightFile(planned: PlannedConfig): string {
 
 function listConsoleModules(planned: PlannedConfig): string[] {
     const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
-    const text = find(planned.session.cache, pyproject);
+    const text = findText(planned.session.cache, pyproject);
     if (text === undefined) return [];
     const scripts = parseTomlFile(pyproject, text, pyprojectSchema).project?.scripts;
     if (scripts === undefined) return [];

@@ -8,11 +8,11 @@ import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import { read, readBytes } from '#cli/system/files/reads.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { join, extname, relative, isAbsolute } from 'node:path';
+import { readText, readBytes } from '#cli/system/files/reads.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
@@ -62,7 +62,7 @@ async function readScopeStyles(session: CheckSession, planned: PlannedCheck): Pr
     );
     const styles: string[] = [];
     for (const file of files) {
-        const text = read(session.cache, file.path);
+        const text = readText(session.cache, file.path);
         if (STYLE_EXTENSIONS.has(extname(file.path))) {
             styles.push(text);
             continue;

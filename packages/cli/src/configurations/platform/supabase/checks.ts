@@ -7,13 +7,13 @@ import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { find, read } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { findText, readText } from '#cli/system/files/reads.ts';
 import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { Parsed, SqlNodeFields } from '#cli/types/parsers.ts';
@@ -115,7 +115,7 @@ function readSupabaseProjectFile(
     planned: PlannedCheck,
 ): Parsed<SupabaseProjectFile, CheckFinding> | undefined {
     const local = joinScope(planned.scope.path, SUPABASE_PROJECT_FILE);
-    const text = find(session.cache, local);
+    const text = findText(session.cache, local);
     return text === undefined
         ? undefined
         : parseCheckedFile(local, () => parseTomlFile(local, text, supabaseProjectFileSchema));
@@ -289,7 +289,7 @@ export function checkServiceRoleKey(session: Session, planned: PlannedCheck): Ch
             extensions.some((extension) => file.path.endsWith(extension)),
     );
     return files.flatMap((file) =>
-        read(session.cache, file.path)
+        readText(session.cache, file.path)
             .split('\n')
             .flatMap((text, index): CheckFinding[] => {
                 if (!SERVICE_ROLE_KEY_NAMES.some((name) => text.includes(name))) return [];
@@ -313,7 +313,7 @@ Reports each `verify_jwt = false` line of the project file with no comment that 
 */
 export function checkVerifyJwt(session: Session, planned: PlannedCheck): CheckFinding[] {
     const file = joinScope(planned.scope.path, SUPABASE_PROJECT_FILE);
-    return (find(session.cache, file) ?? '')
+    return (findText(session.cache, file) ?? '')
         .split('\n')
         .flatMap((text, index): CheckFinding[] =>
             VERIFY_JWT_OFF.test(text)

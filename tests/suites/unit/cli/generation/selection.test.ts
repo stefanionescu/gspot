@@ -43,7 +43,7 @@ test('a child project receives Python configuration only after its first Python 
     );
 });
 
-test('a Ruff-only Python scope gets no type checker file or link file', async () => {
+test('a Ruff-only Python scope gets no type checker file or pointer file', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], NESTED_PYTHON_SETTINGS),
         'linted/source.py': 'value = 1\n',

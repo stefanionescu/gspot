@@ -1,6 +1,6 @@
 import { type Node } from 'web-tree-sitter';
 import { remember } from '#cli/system/cache.ts';
-import { read } from '#cli/system/files/reads.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { PYTHON_EXTENSION, DOCSTRING_PREFIXES, PYTHON_FUNCTION_NODES } from '#cli/config/parsers.ts';
 import type { ParseCache, SourceFiles, PythonFiles, PythonModule, PythonFunction } from '#cli/types/parsers.ts';
@@ -49,7 +49,7 @@ export function readPythonFiles(sources: SourceFiles): Promise<PythonFiles> {
         const modules: PythonModule[] = [];
         for (const file of sources.files) {
             if (file.kind !== 'source' || !file.path.endsWith(PYTHON_EXTENSION)) continue;
-            const module = await parsePythonModule(file.path, read(sources.cache, file.path), sources);
+            const module = await parsePythonModule(file.path, readText(sources.cache, file.path), sources);
             sources.resources.push(module.tree);
             modules.push(module);
         }

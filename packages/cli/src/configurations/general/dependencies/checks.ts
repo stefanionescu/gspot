@@ -3,10 +3,10 @@ import { isTable } from '#cli/system/tables.ts';
 import { getPosition } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/tools.ts';
-import { read, find } from '#cli/system/files/reads.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { readText, findText } from '#cli/system/files/reads.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import { miseToolsSchema } from '#cli/schemas/configurations.ts';
@@ -40,7 +40,7 @@ function validateUrl(url: URL, hosts: Set<string>): string | undefined {
 }
 
 function validateLockfileHosts(session: Session, path: string, hosts: Set<string>): CheckFinding[] {
-    const text = read(session.cache, path);
+    const text = readText(session.cache, path);
     let nextOffset = 0;
     return listLockfileUrls(path, text).flatMap((url) => {
         let offset = text.indexOf(url, nextOffset);
@@ -104,7 +104,7 @@ function findMiseFilePin(
     let pin: { path: string; version: string } | undefined;
     const paths = listEnclosingFolders(folder).flatMap((base) => MISE_FILES.map((file) => posix.join(base, file)));
     for (const path of paths) {
-        const text = find(session.cache, path);
+        const text = findText(session.cache, path);
         if (text === undefined) continue;
         const parsed = parseCheckedFile(path, () => parseTomlFile(path, text, miseToolsSchema));
         if ('error' in parsed) {
@@ -170,8 +170,8 @@ function listMissingPins(session: Session, folder: string): CheckFinding[] {
     return LOCKFILES.filter(
         ({ file, packageManager }) =>
             UNBUNDLED_PACKAGE_MANAGERS.includes(packageManager) &&
-            find(session.cache, posix.join(folder, file)) !== undefined &&
-            find(session.cache, packageJsonPath) !== undefined,
+            findText(session.cache, posix.join(folder, file)) !== undefined &&
+            findText(session.cache, packageJsonPath) !== undefined,
     ).map(({ packageManager }) => {
         const { pin } = findMiseFilePin(session, folder, packageManager);
         return {

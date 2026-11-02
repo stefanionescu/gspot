@@ -9,10 +9,10 @@ import { detectSwiftTags } from '#cli/parsers/code/swift.ts';
 import { detectScopeFolders } from '#cli/repository/scopes.ts';
 import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
-import { read, find, readBytes } from '#cli/system/files/reads.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { runGit, isNotRepository } from '#cli/repository/git/run.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
+import { readText, findText, readBytes } from '#cli/system/files/reads.ts';
 import { listGitFiles, listTrackedFiles } from '#cli/repository/files/tracked.ts';
 import { INDEX_LINE, GIT_LOCALE, TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/repository/git.ts';
 
@@ -104,7 +104,7 @@ export async function readRepository(
     for (const listedFile of listing.files) {
         const file = classifyFile(root, listedFile, listedFile.prefix, { generatedPaths, attributes });
         if (!listedFile.isSymlink && file.kind === 'source' && file.path.endsWith(SWIFT_EXTENSION)) {
-            const tags = await detectSwiftTags(file.path, read(cache, file.path));
+            const tags = await detectSwiftTags(file.path, readText(cache, file.path));
             file.tags.push(...tags);
         }
         tracked.push(file);
@@ -149,7 +149,7 @@ export function readLinguistPatterns(cache: RunCache, paths: string[]): string[]
             paths
                 .filter((path) => posix.basename(path) === GITATTRIBUTES_FILE)
                 .flatMap((path) => {
-                    const authored = stripBlock(find(cache, path) ?? '', { path });
+                    const authored = stripBlock(findText(cache, path) ?? '', { path });
                     return parseAttributePatterns(authored, posix.dirname(path))
                         .filter((rule) =>
                             Object.entries(mergeAttributes(rule.attributes)).some(

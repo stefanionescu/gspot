@@ -1,7 +1,7 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { listOffRules, refuseIdleRuleOptions } from '#cli/configurations/rule-options.ts';
+import { listOffRules, assertRunningRuleOptions } from '#cli/configurations/rule-options.ts';
 
 import {
     PRETTIER_STYLE,
@@ -29,7 +29,7 @@ export function buildMarkdownlintFile(planned: PlannedConfig): string {
             (rule) => document[rule] !== false && !(MARKDOWNLINT_PRETTIER_DISABLED as readonly string[]).includes(rule),
         ),
     );
-    refuseIdleRuleOptions({
+    assertRunningRuleOptions({
         configured: Object.keys(options),
         running,
         allLevelRules: new Set(MARKDOWNLINT_ALL_RULES),

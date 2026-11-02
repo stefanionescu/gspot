@@ -1,9 +1,9 @@
 import semver from 'semver';
-import { find } from '#cli/system/files/reads.ts';
 import type { Files } from '#cli/types/system.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { createRunCache } from '#cli/system/cache.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { parse, patch } from '@decimalturn/toml-patch';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
@@ -23,7 +23,7 @@ import {
 } from '#cli/config/repository/javascript.ts';
 
 function readMisePin(root: string): string | undefined {
-    const text = find(root, MISE_CONFIG_FILE);
+    const text = findText(root, MISE_CONFIG_FILE);
     if (text === undefined) return undefined;
     const pin = findValueAt(parseTomlFile(MISE_CONFIG_FILE, text), ['tools', GSPOT_MISE_TOOL]);
     const version = isTable(pin) ? pin['version'] : pin;

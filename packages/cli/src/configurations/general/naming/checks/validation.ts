@@ -1,8 +1,8 @@
-import { formatNameList } from '#cli/system/text.ts';
+import { NUMERIC_WORDS } from '#cli/config/system.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { splitWords, formatNameList } from '#cli/system/text.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { SQL_EXTENSION } from '#cli/config/configurations/infrastructure.ts';
-import { splitWords } from '#cli/configurations/general/naming/checks/settings.ts';
 
 import type {
     BannedWord,
@@ -27,7 +27,6 @@ import {
     DIGITS_ONLY,
     PASCAL_WORD,
     VOWEL_SUFFIX,
-    NUMERIC_WORDS,
     LAST_EXTENSION,
     TEST_WORD_LIST,
     RUFF_CATEGORIES,

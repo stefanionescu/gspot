@@ -1,4 +1,4 @@
-import { splitByCase } from 'scule';
+import { splitWords } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { readNamingDefaults } from '#cli/manifests/read.ts';
@@ -7,7 +7,6 @@ import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { CATEGORY_PARENTS } from '#cli/config/settings/validation.ts';
 import { NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';
 import type { Scope, Settings, ScopeSettings } from '#cli/types/settings.ts';
-import { SEPARATORS, NUMERIC_WORDS, DIGIT_BOUNDARY } from '#cli/config/configurations/naming.ts';
 
 import type {
     NamingCase,
@@ -111,19 +110,4 @@ export function readNamingSettings(settings: Settings, scope: Scope): NamingSett
         overrides,
         limitLookup: buildLimitLookup(scopeSettings),
     };
-}
-
-/**
-Splits a name into lowercase parts: `HTMLParser` gives `html`, `parser`; `user_id` gives `user`, `id`; `v2` gives `v`, `2`; `base64` stays one word.
-
-@param name the identifier.
-*/
-export function splitWords(name: string): string[] {
-    return name
-        .split(SEPARATORS)
-        .filter((segment) => segment !== '')
-        .flatMap((segment) => splitByCase(segment))
-        .flatMap((word) => (NUMERIC_WORDS.has(word.toLowerCase()) ? [word] : word.split(DIGIT_BOUNDARY)))
-        .map((word) => word.toLowerCase())
-        .filter((word) => word !== '');
 }

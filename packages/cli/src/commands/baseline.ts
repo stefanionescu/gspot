@@ -1,7 +1,7 @@
-import { find } from '#cli/system/files/reads.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { runEveryCheck } from '#cli/generation/checks.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { INCOMPLETE_STATUSES } from '#cli/config/engine.ts';
@@ -32,8 +32,8 @@ async function runBaselineCommand(
     { prune = false }: BaselineFlags,
     cancelSignal: AbortSignal,
 ): Promise<CommandResult<BaselineJson>> {
-    if (prune && find(root, BASELINE_FILE) === undefined) throw new GspotError('arguments', NO_BASELINE_MESSAGE);
-    const previous = parseBaseline(find(root, BASELINE_FILE));
+    if (prune && findText(root, BASELINE_FILE) === undefined) throw new GspotError('arguments', NO_BASELINE_MESSAGE);
+    const previous = parseBaseline(findText(root, BASELINE_FILE));
     const { report } = await runEveryCheck(await openSession(root, { cancelSignal }));
     const stopped = report.checks.filter(({ status }) => INCOMPLETE_STATUSES.has(status)).map(({ check }) => check);
     if (stopped.length > 0)

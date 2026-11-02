@@ -1,5 +1,5 @@
-import { read } from '#cli/system/files/reads.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import type { NumberedLine } from '#cli/types/parsers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -107,7 +107,7 @@ Reports syntax errors in each _redirects file.
 */
 export function checkRedirects(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [REDIRECTS_FILE]).flatMap((path) =>
-        validateRedirects(read(session.cache, path)).map((invalidLine) => ({
+        validateRedirects(readText(session.cache, path)).map((invalidLine) => ({
             file: path,
             line: invalidLine.number,
             rule: SYNTAX_RULE,
@@ -124,7 +124,7 @@ Reports syntax errors in each _headers file, and each security header that the b
 */
 export function checkHeaders(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [HEADERS_FILE]).flatMap((path) => {
-        const { blocks, errors } = parseHeadersFile(read(session.cache, path));
+        const { blocks, errors } = parseHeadersFile(readText(session.cache, path));
         return [
             ...errors.map((error) => ({
                 file: path,

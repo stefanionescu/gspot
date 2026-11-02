@@ -4,7 +4,6 @@ import { isTable } from '#cli/system/tables.ts';
 import { statSync, readdirSync } from 'node:fs';
 import type { Session } from '#cli/types/tools.ts';
 import { TRAILING_SLASH } from '#cli/config/system.ts';
-import { find, read } from '#cli/system/files/reads.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
 import { pyprojectSchema } from '#cli/schemas/parsers.ts';
@@ -14,6 +13,7 @@ import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
 import { parseMiseTasks } from '#cli/parsers/projects/mise.ts';
+import { findText, readText } from '#cli/system/files/reads.ts';
 import { formatScope, escapeRegExp } from '#cli/system/text.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
@@ -166,7 +166,7 @@ function readTaskNames(session: Session, scopePath: string): TaskNames {
     return {
         mise: new Set([
             ...files.flatMap((file) => {
-                const text = find(session.cache, file);
+                const text = findText(session.cache, file);
                 return text === undefined ? [] : parseMiseTasks(text, file);
             }),
             ...ancestors.flatMap(({ path }) =>
@@ -254,7 +254,7 @@ export function checkMissingPaths(session: Session, planned: PlannedCheck): Chec
     return [...projects].flatMap(([scope, sources]) => {
         const index: PathIndex = { paths: repositoryPaths, isIgnored, tasks: readTaskNames(session, scope) };
         return sources.flatMap((file) => {
-            const text = read(session.cache, file.path);
+            const text = readText(session.cache, file.path);
             return extractProseLines(text).flatMap((prose) => validateProseLine(file.path, prose, index));
         });
     });
@@ -295,7 +295,7 @@ function listScopeVersions(session: Session, scopePath: string): string[] {
             const name = posix.basename(path);
             if (name === PACKAGE_JSON) return [readPackageJson(session.cache, path)?.['version']];
             return name === PYPROJECT_TOML
-                ? [parseTomlFile(path, read(session.cache, path), pyprojectSchema).project?.version]
+                ? [parseTomlFile(path, readText(session.cache, path), pyprojectSchema).project?.version]
                 : [];
         })
         .filter((version): version is string => typeof version === 'string');
@@ -319,7 +319,7 @@ export function checkVersionStrings(session: Session, planned: PlannedCheck): Ch
         .filter(({ kind }) => kind === 'source')
         .filter(({ path, tags }) => (tags.includes('markdown') || isTest(path)) && !CHANGELOG_FILE.test(path))
         .flatMap(({ path }) =>
-            read(session.cache, path)
+            readText(session.cache, path)
                 .split('\n')
                 .flatMap((text, index) => (copied.test(text) ? [index + 1] : []))
                 .map((line) => ({ file: path, line, rule: DOCS_RULES.versionString, message: VERSION_STRING_MESSAGE })),

@@ -3,7 +3,7 @@ import { isInScope } from '#cli/repository/scopes.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import { listOffRules, readToolOffRules, refuseIdleRuleOptions } from '#cli/configurations/rule-options.ts';
+import { listOffRules, readToolOffRules, assertRunningRuleOptions } from '#cli/configurations/rule-options.ts';
 
 import {
     TAILWIND_AT_RULES,
@@ -76,7 +76,7 @@ export function buildStylelintFile(planned: PlannedConfig): string {
     const { levelOff } = readToolOffRules(planned);
     const off = listOffRules({ ...planned, level: 'all' });
     const configured = Object.keys(options.rules);
-    refuseIdleRuleOptions({
+    assertRunningRuleOptions({
         configured,
         running: new Set(configured.filter((rule) => isAll || !levelOff.includes(rule))),
         allLevelRules: new Set(levelOff),

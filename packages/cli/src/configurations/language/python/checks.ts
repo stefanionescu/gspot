@@ -1,23 +1,22 @@
 import { sep, join, posix } from 'node:path';
 import { CheckStop } from '#cli/system/errors.ts';
-import { escapeRegExp } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
 import type { Level } from '#cli/types/settings.ts';
 import { buildUvRunCommand } from '#cli/tools/uv.ts';
-import { find, read } from '#cli/system/files/reads.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { getTable, getLimit } from '#cli/settings/scopes.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { countCodeLines } from '#cli/parsers/code/comments.ts';
+import { splitWords, escapeRegExp } from '#cli/system/text.ts';
+import { findText, readText } from '#cli/system/files/reads.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { REQUIREMENTS_FILE } from '#cli/config/repository/files.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import { PATH_SEPARATOR_PATTERN } from '#cli/config/configurations/blocks.ts';
 import { PYTHON_PACKAGE_FILE } from '#cli/config/configurations/structure.ts';
-import { splitWords } from '#cli/configurations/general/naming/checks/settings.ts';
 import { runCommandCheck, runCommandBatches } from '#cli/engine/tool-runs/check.ts';
 import { deptrySchema, docstringStyleSchema } from '#cli/schemas/configurations.ts';
 import { GSPOT_FOLDER, PYPROJECT_TOML, PYTHON_EXTENSION } from '#cli/config/parsers.ts';
@@ -111,7 +110,7 @@ async function listLongFunctions(
 }
 
 async function detectDocstringStyle(session: Session, path: string): Promise<PythonDocstringStyle | undefined> {
-    const module = await parsePythonModule(path, read(session.cache, path), session);
+    const module = await parsePythonModule(path, readText(session.cache, path), session);
     using tree = module.tree;
     for (const node of tree.rootNode.descendantsOfType(['function_definition', 'class_definition'])) {
         const docstring = findDocstring(node);
@@ -177,7 +176,7 @@ Runs deptry on the scope. Passes the project's extend_exclude list again with .g
 */
 export async function checkDeptry(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
-    const text = find(session.cache, pyproject);
+    const text = findText(session.cache, pyproject);
     if (text === undefined) throw new CheckStop('skipped', NO_PYPROJECT_NOTE);
     const project = parseTomlFile(pyproject, text, deptrySchema);
     return await runCommandCheck(session, planned, {
@@ -244,7 +243,7 @@ export function checkPipInstalls(session: Session, planned: PlannedCheck): Check
     const installs = files
         .filter((file) => INSTALL_FILE_SUFFIXES.some((ending) => file.path.endsWith(ending)))
         .flatMap((file) =>
-            read(session.cache, file.path)
+            readText(session.cache, file.path)
                 .split('\n')
                 .flatMap((text, index): CheckFinding[] =>
                     PIP_INSTALL.test(text) && !text.trimStart().startsWith('#')
@@ -312,7 +311,7 @@ export async function checkPydoclint(session: CheckSession, planned: PlannedChec
     const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
     const configured = parsePydoclintOptions(
         pyproject,
-        find(session.cache, pyproject) ?? '',
+        findText(session.cache, pyproject) ?? '',
         planned.scope.settings.tables.python?.docstring_convention,
         session.settings.level,
     );

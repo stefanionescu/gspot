@@ -3,11 +3,11 @@ import type { Session } from '#cli/types/tools.ts';
 import type { Scope } from '#cli/types/settings.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
-import { find, read } from '#cli/system/files/reads.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { findText, readText } from '#cli/system/files/reads.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { DockerIgnoredSource } from '#cli/types/configurations/infrastructure.ts';
 import { readComposeDocuments } from '#cli/configurations/infrastructure/docker/checks/compose.ts';
@@ -104,7 +104,7 @@ export function checkDockerignore(session: Session, planned: PlannedCheck): Chec
                 ];
                 const ignore = paths
                     .values()
-                    .map((path) => ({ path, text: find(session.cache, path) }))
+                    .map((path) => ({ path, text: findText(session.cache, path) }))
                     .find((file): file is typeof file & { text: string } => file.text !== undefined);
                 if (ignore === undefined)
                     return [
@@ -127,7 +127,7 @@ export function checkDockerignore(session: Session, planned: PlannedCheck): Chec
                                   message: `Add these entries to ${ignore.path}: ${missing.join(', ')}.`,
                               },
                           ]),
-                    ...listIgnoredSources(read(session.cache, dockerfile), ignore.text).map(({ line, source }) => ({
+                    ...listIgnoredSources(readText(session.cache, dockerfile), ignore.text).map(({ line, source }) => ({
                         file: dockerfile,
                         line,
                         rule: DOCKER_RULES.ignoredSource,

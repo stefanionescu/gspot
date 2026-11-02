@@ -1,8 +1,8 @@
 import { runChecks } from '#cli/engine/run.ts';
-import { find } from '#cli/system/files/reads.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { printWarning } from '#cli/system/terminal.ts';
 import { parseBaseline } from '#cli/engine/baseline.ts';
 import { findSettingsSkip } from '#cli/engine/skips.ts';
@@ -177,7 +177,7 @@ export async function runTreeCheck(
         await warnMissingHooks(session, revision);
         const result = await runChecks(session, {
             ...buildRunOptions(options, filters, revision),
-            baseline: parseBaseline(find(treeFolder, BASELINE_FILE)),
+            baseline: parseBaseline(findText(treeFolder, BASELINE_FILE)),
         });
         if (result.fixes !== undefined) printFailedFixers(result.fixes, { verbose: options.verbose });
         addRevisionNotes(result.report, revision);

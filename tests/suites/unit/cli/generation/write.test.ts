@@ -125,7 +125,7 @@ test('at level basic, gspot removes the Vale configuration and the installed sty
     expect(existsSync(join(sandbox.path, '.gspot/configurations/general/prose/vale.ini'))).toBe(false);
 });
 
-test('apply preserves a copied header example and removes an obsolete scoped link file', async () => {
+test('apply preserves a copied header example and removes an obsolete scoped pointer file', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['markdown'], { scopes: [{ path: 'docs', configurations: [] }] }),
         'examples/.editorconfig': `${formatHeader('.editorconfig')}root = true\n`,

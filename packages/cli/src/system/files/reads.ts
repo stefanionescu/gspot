@@ -63,7 +63,7 @@ Read UTF-8 text, or return undefined for a missing file.
 @param source the folder of the relative path, or the run cache of that folder.
 @param path the root-relative file.
 */
-export function find(source: string | RunCache, path: string): string | undefined {
+export function findText(source: string | RunCache, path: string): string | undefined {
     try {
         return decodeHeldText(source, path);
     } catch (error) {
@@ -82,8 +82,8 @@ Read tracked UTF-8 text and refuse a missing file.
 @param source the folder of the relative path, or the run cache of that folder.
 @param path the tracked file path.
 */
-export function read(source: string | RunCache, path: string): string {
-    const text = find(source, path);
+export function readText(source: string | RunCache, path: string): string {
+    const text = findText(source, path);
     if (text === undefined)
         throw new GspotError(
             'filesystem',

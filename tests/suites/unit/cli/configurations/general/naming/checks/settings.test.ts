@@ -1,8 +1,7 @@
 import { test, expect } from 'bun:test';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildScopeNamingSettings } from '#tests/setup/cli/checks.ts';
-import { splitWords } from '#cli/configurations/general/naming/checks/settings.ts';
-import { NAME_WORD_CASES, SWIFT_NAMING_LIMITS } from '#tests/config/configurations/naming/allowed-names.ts';
+import { SWIFT_NAMING_LIMITS } from '#tests/config/configurations/naming/allowed-names.ts';
 
 test('category limits inherit root and scope language settings while explicit categories take precedence', async () => {
     const text = buildSandboxSettings(['naming'], {
@@ -27,10 +26,3 @@ test('category limits inherit root and scope language settings while explicit ca
         });
     }
 });
-
-test.each([...NAME_WORD_CASES])(
-    'splitWords splits %s at case changes, separators, and digit runs, and keeps an acronym or a number word as one word',
-    (name, words) => {
-        expect(splitWords(name)).toStrictEqual([...words]);
-    },
-);

@@ -69,7 +69,7 @@ test("markdownlint at level all adds MD041 only at level all and applies each sc
     );
 });
 
-test("markdownlint run by an editor reads the link files with each scope's options", async () => {
+test("markdownlint run by an editor reads the pointer files with each scope's options", async () => {
     const { root } = installedSandbox();
     await using _change = await writeSandboxChanges(installedSandbox(), {
         files: {

@@ -1,18 +1,18 @@
 import { basename } from 'node:path/posix';
-import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
 import { getSettingValue } from '#cli/settings/inherit.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { listWrittenPaths } from '#cli/generation/ignores.ts';
-import { buildLinkFieldEdits } from '#cli/generation/links.ts';
 import { listHookNames } from '#cli/tools/installers/hooks.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
+import { buildPointerFieldEdits } from '#cli/generation/pointers.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { FROZEN_INSTALLS } from '#cli/config/repository/javascript.ts';
 import { parseAttributePatterns } from '#cli/repository/git/output.ts';
@@ -105,11 +105,11 @@ function buildAttributesBlock(outsidePaths: string[], authored: string): string 
 function addManagedBlocks(session: Session, rules: RuleFile[], generated: Generation): void {
     const { settings, cache } = session;
     const outsidePaths = listWrittenPaths(session, buildConfigs(session)).map((path) => path.slice(1));
-    const text = find(cache, GITATTRIBUTES_FILE) ?? '';
+    const text = findText(cache, GITATTRIBUTES_FILE) ?? '';
     const authored = stripBlock(text, { path: GITATTRIBUTES_FILE });
     generated.blocks.push({ path: GITATTRIBUTES_FILE, body: buildAttributesBlock(outsidePaths, authored) });
     if (!settings.rule_files.enabled) return;
-    const agents = find(cache, AGENTS_FILE) ?? '';
+    const agents = findText(cache, AGENTS_FILE) ?? '';
     const agentsText = stripBlock(agents, { path: AGENTS_FILE });
     const block = buildAgentsBlock({
         hasOwnTitle: hasTopHeading(agentsText),
@@ -170,7 +170,7 @@ export function buildGeneratedFiles(session: Session): Generation {
     generated.files.push(...configs.files);
     generated.managedKeys.push(
         ...buildBunScannerEdits(session),
-        ...buildLinkFieldEdits(session, generated.files, configs),
+        ...buildPointerFieldEdits(session, generated.files, configs),
     );
     generated.files.push(
         ...(settings.hooks.enabled

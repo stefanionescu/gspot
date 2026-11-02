@@ -1,10 +1,10 @@
 import { join, relative } from 'node:path';
 import { getTool } from '#cli/tools/pins.ts';
-import { find } from '#cli/system/files/reads.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import { findToolPath } from '#cli/tools/inspect.ts';
 import { listOtherTools } from '#cli/engine/tools.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { listToolStart } from '#cli/tools/packages.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
@@ -89,7 +89,7 @@ function findMissingConfig(
 ): CheckResult | undefined {
     const files = openFiles(session.root);
     const missing = listCommandConfigs(session, planned, command).find(
-        (path) => (isGspotPath(path) ? files.read(path) : find(session.cache, path)) === undefined,
+        (path) => (isGspotPath(path) ? files.read(path) : findText(session.cache, path)) === undefined,
     );
     if (missing === undefined) return undefined;
     return { ...base, status: 'error', note: `The generated file ${missing} is missing. Run gspot apply.` };

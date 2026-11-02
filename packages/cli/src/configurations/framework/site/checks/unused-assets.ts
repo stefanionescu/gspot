@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
 import type { Node } from 'web-tree-sitter';
-import { find } from '#cli/system/files/reads.ts';
 import { escapeRegExp } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
@@ -87,7 +87,7 @@ export async function checkSiteUnusedAssets(session: Session, planned: PlannedCh
     ]);
     const texts: AssetSource[] = [];
     for (const path of paths) {
-        const text = TEXT_EXTENSIONS.has(posix.extname(path)) ? find(session.cache, path) : undefined;
+        const text = TEXT_EXTENSIONS.has(posix.extname(path)) ? findText(session.cache, path) : undefined;
         if (text !== undefined) texts.push(await readAssetSource(path, text, session, planned.scope.path));
     }
     return planned.files

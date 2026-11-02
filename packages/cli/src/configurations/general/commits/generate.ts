@@ -1,7 +1,7 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { listOffRules, refuseIdleRuleOptions } from '#cli/configurations/rule-options.ts';
+import { listOffRules, assertRunningRuleOptions } from '#cli/configurations/rule-options.ts';
 import { COMMITLINT_PARSER_PRESET, COMMITLINT_ERROR_SEVERITY } from '#cli/config/configurations/general.ts';
 
 /**
@@ -32,7 +32,7 @@ export function buildCommitlintFile(planned: PlannedConfig): string {
             .filter(([, value]) => value[0] !== 0)
             .map(([name]) => name),
     );
-    refuseIdleRuleOptions({
+    assertRunningRuleOptions({
         configured: Object.keys(options),
         running,
         allLevelRules: new Set<string>(),

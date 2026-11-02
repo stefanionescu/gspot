@@ -36,7 +36,7 @@ test.each([...EDITORCONFIG_SELECTOR_ERRORS])(
     },
 );
 
-test('Prettier loads the selected plugin through the root link file', async () => {
+test('Prettier loads the selected plugin through the root pointer file', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['svelte']),
         'source.svelte': '<h1>Example</h1>\n',
@@ -103,7 +103,7 @@ test('Prettier reads the bracket, arrow, and prose settings, in the table and in
     });
 });
 
-test('Prettier overrides agree in the root link file and editor lookup', async () => {
+test('Prettier overrides agree in the root pointer file and editor lookup', async () => {
     await using sandbox = await createGitSandbox({});
     const root = sandbox.path;
     await createFileTree(root, {

@@ -1,7 +1,7 @@
 import { join, posix } from 'node:path';
-import { read } from '#cli/system/files/reads.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { PRIVATE_FILE } from '#cli/config/system.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
 import { restoreCommandPaths } from '#cli/engine/results.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -107,7 +107,7 @@ export async function checkActionlint(session: CheckSession, planned: PlannedChe
         ].map((file) => [file.path, file]),
     );
     for (const file of actionFiles.values()) {
-        const source = read(session.cache, file.path);
+        const source = readText(session.cache, file.path);
         const replaced = replaceSelfReferences(source);
         if (replaced !== source) replacements.set(file.path, replaced);
     }
@@ -196,7 +196,7 @@ Reports each workflow that breaks the shape rules of GITHUB-ACTIONS.md: job limi
 */
 export function checkWorkflowShape(session: Session, planned: PlannedCheck): CheckFinding[] {
     return planned.files.flatMap(({ path }) => {
-        const text = read(session.cache, path);
+        const text = readText(session.cache, path);
         const lines = new LineCounter();
         const document = parseDocument(text, { lineCounter: lines });
         if (document.errors.length > 0 || !isMap(document.contents)) return [];

@@ -3,7 +3,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { readSettingsFile } from '#cli/settings/file.ts';
-import { setKey, removeKey, getScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
+import { setKey, removeKey, openScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
 import { SEMGREP_IGNORE, INITIAL_SETTINGS, SCOPE_SETTING_WRITES } from '#tests/config/settings/text.ts';
 
 test('an edit writes the new ignore as a table and keeps the authored comment', async () => {
@@ -44,7 +44,7 @@ test.each([...SCOPE_SETTING_WRITES])(
         await using sandbox = await testdir();
         await writeFile(join(sandbox.path, 'gspot.toml'), `${INITIAL_SETTINGS}[[scope]]\npath = "api"\n${scope}\n`);
         const edit = readSettingsFile(sandbox.path);
-        setKey(getScopeTable(edit.table, 'api'), 'limits.max_function_lines', 20);
+        setKey(openScopeTable(edit.table, 'api'), 'limits.max_function_lines', 20);
         const result = buildEditedSettings(sandbox.path, edit);
         expect(result.settings.scopes.get('api')?.limits).toMatchObject({
             max_file_lines: 100,

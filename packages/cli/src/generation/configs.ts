@@ -12,7 +12,6 @@ import type { ConfigGeneration } from '#cli/types/engine/tool-runs.ts';
 import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import { IMPORT_CYCLES_CONFIG } from '#cli/config/configurations/eslint.ts';
-import { buildLinkFiles, listLinkFilePaths } from '#cli/generation/links.ts';
 import { TS_EXTENSION, CONFIG_SCOPES_FOLDER } from '#cli/config/generation.ts';
 import { buildLycheeFile } from '#cli/configurations/general/docs/generate.ts';
 import { buildKnipFile } from '#cli/configurations/language/javascript/knip.ts';
@@ -20,6 +19,7 @@ import { buildSqlfluffFile } from '#cli/configurations/language/sql/generate.ts'
 import { buildTyposFile } from '#cli/configurations/general/spelling/generate.ts';
 import { buildStylelintFile } from '#cli/configurations/language/css/generate.ts';
 import { buildBiomeFile } from '#cli/configurations/language/javascript/biome.ts';
+import { listPointerPaths, buildPointerFiles } from '#cli/generation/pointers.ts';
 import { buildJscpdFile } from '#cli/configurations/general/structure/generate.ts';
 import { buildCoverageFile } from '#cli/configurations/testing/pytest/generate.ts';
 import { buildSquawkFile } from '#cli/configurations/database/postgres/generate.ts';
@@ -220,7 +220,7 @@ function addSourceFiles(configs: OwnedConfig[], generated: ConfigBuildState): vo
     }
 }
 
-function listTargetLinkFiles(configs: OwnedConfig[], selected: OwnedConfig): Set<string> {
+function listTargetPointers(configs: OwnedConfig[], selected: OwnedConfig): Set<string> {
     return new Set(
         configs
             .filter(
@@ -229,11 +229,11 @@ function listTargetLinkFiles(configs: OwnedConfig[], selected: OwnedConfig): Set
                     each.config.source === undefined &&
                     each.config.target === selected.config.target,
             )
-            .flatMap((each) => listLinkFilePaths(each.owner, each.config)),
+            .flatMap((each) => listPointerPaths(each.owner, each.config)),
     );
 }
 
-function listLinkFileTargets(
+function listPointerTargets(
     selected: OwnedConfig,
     configs: OwnedConfig[],
     generated: ConfigBuildState,
@@ -252,13 +252,13 @@ function listLinkFileTargets(
     );
 }
 
-function addLinkFiles(selected: OwnedConfig, configs: OwnedConfig[], generated: ConfigBuildState): void {
+function addPointerFiles(selected: OwnedConfig, configs: OwnedConfig[], generated: ConfigBuildState): void {
     const { config, owner } = selected;
     if (isPointerInherited(selected, generated)) return;
-    const targetLinkFiles = listTargetLinkFiles(configs, selected);
-    for (const linkFile of buildLinkFiles(owner, config, listLinkFileTargets(selected, configs, generated))) {
-        if (config.source === undefined || config.pointer?.folders !== undefined || !targetLinkFiles.has(linkFile.path))
-            generated.files.set(linkFile.path, linkFile);
+    const targetPointers = listTargetPointers(configs, selected);
+    for (const pointer of buildPointerFiles(owner, config, listPointerTargets(selected, configs, generated))) {
+        if (config.source === undefined || config.pointer?.folders !== undefined || !targetPointers.has(pointer.path))
+            generated.files.set(pointer.path, pointer);
     }
 }
 
@@ -277,7 +277,7 @@ function buildScopeConfigs(session: Session): ConfigGeneration {
     );
     for (const config of configs)
         if (state.failures.get(config.owner.scope.path)?.has(config.config.target) !== true)
-            addLinkFiles(config, configs, state);
+            addPointerFiles(config, configs, state);
     return { files: state.files.values().toArray(), targets: state.targets, failures: state.failures };
 }
 

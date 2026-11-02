@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { remember } from '#cli/system/cache.ts';
-import { read } from '#cli/system/files/reads.ts';
 import { setImmediate } from 'node:timers/promises';
+import { readText } from '#cli/system/files/reads.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
 import { Parser, Language, type Tree } from 'web-tree-sitter';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
@@ -120,7 +120,7 @@ export async function visitParsedSources(
     visit: (source: SourceTree) => void,
 ): Promise<void> {
     for (const file of sources.files) {
-        const text = read(sources.cache, file.path);
+        const text = readText(sources.cache, file.path);
         using tree = await parseSource(file.grammar, text, sources);
         visit({ path: file.path, text, rootNode: tree.rootNode });
     }

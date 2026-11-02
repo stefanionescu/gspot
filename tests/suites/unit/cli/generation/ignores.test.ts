@@ -86,7 +86,7 @@ test.each([true, false])('generated file lists include the CI workflow only when
     }
 });
 
-test('shared Markdown settings leave inherited link files out of generated path ignores', async () => {
+test('shared Markdown settings leave inherited pointer files out of generated path ignores', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['markdown'], {
             scopes: [
@@ -103,7 +103,7 @@ test('shared Markdown settings leave inherited link files out of generated path 
     expect(ignored.filter((path) => path.endsWith('.markdownlint.jsonc'))).toStrictEqual(['/.markdownlint.jsonc']);
 });
 
-test('a Markdown scope with no root config keeps its link file', async () => {
+test('a Markdown scope with no root config keeps its pointer file', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { scopes: [{ path: 'app', configurations: ['markdown'] }] }),
         'app/README.md': '# App\n',

@@ -238,11 +238,3 @@ max_characters = 35
 [[scope]]
 path = "sibling"
 `;
-
-export const NAME_WORD_CASES = [
-    ['HTMLParser', ['html', 'parser']],
-    ['user_id', ['user', 'id']],
-    ['handlerV2', ['handler', 'v', '2']],
-    ['decodeBase64', ['decode', 'base64']],
-    ['I18N', ['i18n']],
-] as const;

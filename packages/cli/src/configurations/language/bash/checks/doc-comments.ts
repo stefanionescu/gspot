@@ -1,9 +1,9 @@
+import { splitWords } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
 import type { ScriptFunction } from '#cli/types/parsers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
-import { splitWords } from '#cli/configurations/general/naming/checks/settings.ts';
 
 import {
     WORD,

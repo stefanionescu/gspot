@@ -22,7 +22,7 @@ import {
     FILES_PLACEHOLDER,
     CONFIG_PLACEHOLDER,
     COMMAND_PLACEHOLDER,
-    LINK_FILE_PLACEHOLDER,
+    POINTER_PLACEHOLDER,
     WORKSPACE_PLACEHOLDER,
     SETTING_ONLY_PLACEHOLDER,
 } from '#cli/config/engine.ts';
@@ -33,7 +33,7 @@ Find the repository-relative path of the config file for a scope.
 @param scopePath the folder, empty for the root.
 @param config the config file from the manifest.
 @param configs the generated paths by scope and file name, and the scopes whose file failed to build.
-@returns the file of the scope, or the root file as a fallback.
+@returns the file of the scope, or the root file when the scope has no file of its own.
 @throws the build failure of the file in this scope.
 */
 export function getConfigTarget(scopePath: string, config: Config, configs: ConfigTargets): string {
@@ -68,7 +68,7 @@ function listConfigs(planned: PlannedCheck): Config[] {
     return [...own, ...every];
 }
 
-function selectLinkFilePath(session: CheckSession, scopePath: string, name: string): string {
+function selectPointerPath(session: CheckSession, scopePath: string, name: string): string {
     const path = joinScope(scopePath, name);
     const generated = listGeneratedPaths(session.repository.files);
     return !generated.has(path) && generated.has(name) ? name : path;
@@ -149,10 +149,10 @@ export function listCommandConfigs(session: CheckSession, planned: PlannedCheck,
                     .map((name) => getConfigPath(session, planned, name))
                     .toArray();
                 const pointed = segment
-                    .matchAll(LINK_FILE_PLACEHOLDER)
+                    .matchAll(POINTER_PLACEHOLDER)
                     .map((match) => match.groups?.['name'])
                     .filter((name) => name !== undefined)
-                    .map((name) => selectLinkFilePath(session, scope, name))
+                    .map((name) => selectPointerPath(session, scope, name))
                     .toArray();
                 return [...configured, ...pointed];
             }),
@@ -215,7 +215,7 @@ function buildPlaceholderReaders(
             join(substitutions.root, getConfigPath(session, planned, name))
                 .split('/')
                 .join(sep),
-        pointer: (name) => selectLinkFilePath(session, substitutions.scope, name).split('/').join(sep),
+        pointer: (name) => selectPointerPath(session, substitutions.scope, name).split('/').join(sep),
         formatted_extensions: () => buildFormattedExtensions(planned),
         scope: () => (substitutions.scope === '' ? '.' : substitutions.scope),
         root: () => substitutions.root,

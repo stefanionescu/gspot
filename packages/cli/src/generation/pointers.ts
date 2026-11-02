@@ -26,8 +26,8 @@ import {
     TARGET_MODULE_PLACEHOLDER,
 } from '#cli/config/generation.ts';
 
-function fillTarget(body: string, linkFilePath: string, targetPath: string): string {
-    const target = buildModuleSpecifier(linkFilePath, targetPath);
+function fillTarget(body: string, pointerPath: string, targetPath: string): string {
+    const target = buildModuleSpecifier(pointerPath, targetPath);
     return body.replaceAll(TARGET_PLACEHOLDER, (placeholder) => {
         if (placeholder === TARGET_MODULE_PLACEHOLDER) {
             return JSON.stringify(
@@ -54,7 +54,7 @@ function listLinkFieldTargets({ scope, configuration, tool, consumed, paths, con
                 .map(({ file, target }) => {
                     const scopePath = file.per_scope ? scope.path : '';
                     const children = file.per_scope ? listNestedScopes(scopePaths, scopePath) : [];
-                    const linkFilePath =
+                    const pointerPath =
                         file.pointer === undefined || (file.pointer.overrides === true && scopePath !== '')
                             ? target
                             : joinScope(scopePath, file.pointer.path);
@@ -62,7 +62,7 @@ function listLinkFieldTargets({ scope, configuration, tool, consumed, paths, con
                         key: replacement.key,
                         scope: scopePath,
                         children,
-                        target: linkFilePath,
+                        target: pointerPath,
                     };
                 }),
         );
@@ -85,14 +85,14 @@ function listLinkFieldTools(session: Session) {
 }
 
 /**
-List the paths where a config file puts its link file. Every scope shares one link file with overrides, at the root.
-Another link file sits at one path, or in each folder that holds files of the configuration and matches pointer.folders.
+List the paths where a config file puts its pointer file. Every scope shares one pointer file with overrides, at the root.
+Another pointer file sits at one path, or in each folder that holds files of the configuration and matches pointer.folders.
 
 @param owner the repository and the scope.
 @param config the config file from the manifest.
-@returns each path where the link file goes, from the repository root.
+@returns each path where the pointer file goes, from the repository root.
 */
-export function listLinkFilePaths(owner: ConfigOwner, config: Config): string[] {
+export function listPointerPaths(owner: ConfigOwner, config: Config): string[] {
     const { scope, configuration } = owner;
     const { scopes, repository } = owner.session;
     const { pointer } = config;
@@ -121,7 +121,7 @@ export function listLinkFilePaths(owner: ConfigOwner, config: Config): string[] 
 }
 
 /**
-List every path outside .gspot/ that gspot can write. Include manifest targets and link files at each scope root and link file folder, and both CI workflow paths.
+List every path outside .gspot/ that gspot can write. Include manifest targets and pointer files at each scope root and pointer file folder, and both CI workflow paths.
 
 @param session the scopes and the configurations.
 @returns the paths, from the repository root.
@@ -142,7 +142,7 @@ export function listOwnablePaths(session: Session): Set<string> {
         ...(config.source === undefined || isGspotPath(config.target)
             ? []
             : [config.per_scope ? joinScope(owner.scope.path, config.target) : config.target]),
-        ...listLinkFilePaths(owner, config),
+        ...listPointerPaths(owner, config),
     ]);
     return new Set([GITHUB_WORKFLOW, GITLAB_WORKFLOW, ...paths]);
 }
@@ -154,7 +154,7 @@ Point the package fields that manifests declare at the generated config files.
 @param generated the config files that this run generates.
 @param configs the config file path for each scope and config file.
 */
-export function buildLinkFieldEdits(
+export function buildPointerFieldEdits(
     session: Session,
     generated: GeneratedFile[],
     configs: PlannedLinkField['configs'],
@@ -163,13 +163,11 @@ export function buildLinkFieldEdits(
     const paths = new Set(generated.map(({ path }) => path));
     const scopePaths = scopes.map(({ path }) => path);
     const tools = listLinkFieldTools(session);
-    const linkFileTargets = tools.flatMap((selected) =>
+    const pointerTargets = tools.flatMap((selected) =>
         listLinkFieldTargets({ ...selected, paths, configs, scopePaths }),
     );
-    const linkFileFields = new Map(
-        linkFileTargets.map((row) => [JSON.stringify([row.key, row.scope, row.target]), row]),
-    );
-    if (linkFileFields.size === 0) return [];
+    const pointerFields = new Map(pointerTargets.map((row) => [JSON.stringify([row.key, row.scope, row.target]), row]));
+    if (pointerFields.size === 0) return [];
     const packages = new Set([
         PACKAGE_JSON,
         ...repository.files
@@ -182,7 +180,7 @@ export function buildLinkFieldEdits(
         const source = files.read(path);
         if (source === undefined) continue;
         const document = parseJsonFile(path, source.bytes.toString('utf8'));
-        const keys = linkFileFields
+        const keys = pointerFields
             .values()
             .map((row) => ({ ...row, extends: buildModuleSpecifier(path, row.target) }))
             .filter(
@@ -203,21 +201,21 @@ export function buildLinkFieldEdits(
 }
 
 /**
-Build the link files of one generated config file. A link file with overrides sits at the root. For the files of each scope,
+Build the pointer files of one generated config file. A pointer file with overrides sits at the root. For the files of each scope,
 it extends the config file of that scope. Parents come first, so the config of a nested scope wins.
 
 @param owner the repository and the scope.
 @param config the shipped config file.
-@param targets the config file path of each scope that writes it; other link files read the path of the owner's scope.
+@param targets the config file path of each scope that writes it; other pointer files read the path of the owner's scope.
 */
-export function buildLinkFiles(
+export function buildPointerFiles(
     owner: ConfigOwner,
     config: Config,
     targets: ReadonlyMap<string, string>,
 ): GeneratedFile[] {
     const { pointer } = config;
     if (pointer === undefined) return [];
-    return listLinkFilePaths(owner, config).map((path) => {
+    return listPointerPaths(owner, config).map((path) => {
         const body = fillTarget(pointer.body, path, targets.get(owner.scope.path) as string).replace(
             OVERRIDES_PLACEHOLDER,
             () =>

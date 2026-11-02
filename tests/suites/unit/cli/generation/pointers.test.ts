@@ -4,10 +4,10 @@ import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
-import { buildLinkFiles } from '#cli/generation/links.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { buildPointerFiles } from '#cli/generation/pointers.ts';
 import { XCTEST_SOURCE } from '#tests/config/setup/languages.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -23,8 +23,8 @@ import {
 } from '#tests/config/generation/generate.ts';
 
 test.each([...XCTEST_LINK_FILE_CASES])(
-    'XCTest folder link files keep their SwiftLint overrides in scope "$scope"',
-    async ({ scope, linkFiles }) => {
+    'XCTest folder pointer files keep their SwiftLint overrides in scope "$scope"',
+    async ({ scope, pointers }) => {
         await using sandbox = await createGitSandbox({});
         const prefix = scope === '' ? '' : `${scope}/`;
         const folder = scope.startsWith('AppTests') ? scope : `${prefix}AppTests`;
@@ -36,7 +36,7 @@ test.each([...XCTEST_LINK_FILE_CASES])(
                     ...(scope === '' ? [] : [{ path: scope, configurations: ['swift'] }]),
                     { path: child, configurations: ['swift'] },
                 ],
-                tables: '[[scope]]\npath = "omitted"\nremoved_configurations = { swift = "This scope does not use Swift or its generated link files." }\n',
+                tables: '[[scope]]\npath = "omitted"\nremoved_configurations = { swift = "This scope does not use Swift or its generated pointer files." }\n',
             }),
             [`${folder}/Value.swift`]: XCTEST_SOURCE,
             [`${folder}/Deep/Value.swift`]: XCTEST_SOURCE,
@@ -47,14 +47,14 @@ test.each([...XCTEST_LINK_FILE_CASES])(
             path.endsWith('.swiftlint.yml'),
         );
         const parsed = written.map(({ path, content }) => {
-            const linkFile = parse(content) as Record<string, unknown>;
-            return [path, { parent: linkFile['parent_config'], overrides: 'disabled_rules' in linkFile }];
+            const pointer = parse(content) as Record<string, unknown>;
+            return [path, { parent: pointer['parent_config'], overrides: 'disabled_rules' in pointer }];
         });
-        expect(Object.fromEntries(parsed)).toStrictEqual(linkFiles);
+        expect(Object.fromEntries(parsed)).toStrictEqual(pointers);
     },
 );
 
-test('JavaScript link files import modules from folders with URI characters and Unicode', async () => {
+test('JavaScript pointer files import modules from folders with URI characters and Unicode', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['javascript']) });
 
     const session = await openSession(sandbox.path);
@@ -68,7 +68,7 @@ test('JavaScript link files import modules from folders with URI characters and 
     const paths = [];
     for (const [index, component] of components.entries()) {
         const target = `generated/${component}/owner.mjs`;
-        const [output] = buildLinkFiles(
+        const [output] = buildPointerFiles(
             {
                 session,
                 configuration,
@@ -90,7 +90,7 @@ test('JavaScript link files import modules from folders with URI characters and 
     expect(JSON.parse(toolResult.stdout)).toStrictEqual(components.map(() => DEFAULT_EXPORT));
 });
 
-test('a scope gets its own markdownlint link file only when its rules differ from the root', async () => {
+test('a scope gets its own markdownlint pointer file only when its rules differ from the root', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['markdown'], { tables: MARKDOWNLINT_SCOPE_TABLES }),
         'README.md': '# Root\n',
@@ -123,7 +123,7 @@ test('every generated file outside .gspot starts with the gspot header', async (
         );
 });
 
-test('one root Stylelint link file extends the config of each scope for its files, parents first', async () => {
+test('one root Stylelint pointer file extends the config of each scope for its files, parents first', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             scopes: [
@@ -141,10 +141,10 @@ test('one root Stylelint link file extends the config of each scope for its file
         ({ path }) => !path.startsWith('.gspot/'),
     );
 
-    const linkFiles = outside.filter(({ path }) => path.endsWith('.stylelintrc.yml'));
-    expect(linkFiles.map(({ path }) => path)).toStrictEqual(['.stylelintrc.yml']);
+    const pointers = outside.filter(({ path }) => path.endsWith('.stylelintrc.yml'));
+    expect(pointers.map(({ path }) => path)).toStrictEqual(['.stylelintrc.yml']);
     const target = `./${getManifestTarget('css', 'stylelint.json')}`;
-    expect(parse(linkFiles[0]?.content ?? '')).toStrictEqual({
+    expect(parse(pointers[0]?.content ?? '')).toStrictEqual({
         rules: {},
         overrides: [
             { files: ['app/**'], extends: target },

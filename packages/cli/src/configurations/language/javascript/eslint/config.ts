@@ -5,7 +5,7 @@ import type { GeneratedFile } from '#cli/types/tools.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { join, dirname, basename, relative } from 'node:path/posix';
-import { refuseIdleRuleOptions } from '#cli/configurations/rule-options.ts';
+import { assertRunningRuleOptions } from '#cli/configurations/rule-options.ts';
 import { ESLINT_CHECK, ESLINT_INDENT } from '#cli/config/configurations/blocks.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
 import { buildPlannedEslintFile } from '#cli/configurations/language/javascript/eslint/plan.ts';
@@ -84,7 +84,7 @@ function buildConfigurationFiles(
 
 function serializeExport(blockTexts: string[], blockWriter: EslintFileWriter): string {
     const configured = blockWriter.ruleOptions.flatMap((options) => Object.keys(options.rules));
-    refuseIdleRuleOptions({
+    assertRunningRuleOptions({
         configured,
         running: new Set(
             configured.filter((rule) => blockWriter.level === 'all' || !blockWriter.allLevelRules.has(rule)),

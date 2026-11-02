@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
 import { parseSyml } from '@yarnpkg/parsers';
 import { isTable } from '#cli/system/tables.ts';
-import { find } from '#cli/system/files/reads.ts';
 import type { RunCache } from '#cli/types/system.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import type { LockfileName } from '#cli/types/parsers.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
@@ -217,7 +217,7 @@ export function findNearestLockfile<Name extends string>(
     for (const base of listEnclosingFolders(folder)) {
         for (const lockfile of lockfiles) {
             const path = posix.join(base, lockfile);
-            const text = find(cache, path);
+            const text = findText(cache, path);
             if (text !== undefined) return { lockfile, path, base, text };
         }
     }
@@ -239,7 +239,7 @@ export function readLockedVersions(cache: RunCache, folder: string): Map<string,
         'pnpm-lock.yaml': parsePnpmVersions,
         'yarn.lock': (path, text) => {
             const manifest = posix.join(folder, PACKAGE_JSON);
-            const content = find(cache, manifest);
+            const content = findText(cache, manifest);
             const specifiers =
                 content === undefined
                     ? new Map<string, string>()

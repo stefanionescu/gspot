@@ -11,7 +11,7 @@ import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { MANAGED_KEYS_NOTE } from '#cli/config/generation.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { removeKey, getScopeTable } from '#cli/settings/edit.ts';
+import { removeKey, openScopeTable } from '#cli/settings/edit.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
@@ -62,7 +62,7 @@ function removeUnusedSettings(
         const keys = listWrittenKeys(written.table, available).filter(
             (key) => findSetting(available, key) === undefined,
         );
-        for (const key of keys) removeKey(getScopeTable(table, written.scope), key);
+        for (const key of keys) removeKey(openScopeTable(table, written.scope), key);
         removed.push(...keys.map((key) => (written.scope === '' ? key : `${key} (scope ${written.scope})`)));
     }
     return removed.length === 0 ? '' : ` Removed settings ${removed.join(', ')}.`;

@@ -6,7 +6,7 @@ import { readFileSync, realpathSync } from 'node:fs';
 import { tsconfigSchema } from '#cli/schemas/parsers.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import { find, readContainedPath } from '#cli/system/files/reads.ts';
+import { findText, readContainedPath } from '#cli/system/files/reads.ts';
 import { join, dirname, resolve, relative, isAbsolute } from 'node:path';
 import type { ParsedTsconfig, TypeScriptProject } from '#cli/types/parsers.ts';
 import { isInside, convertToPosixPath, listEnclosingFolders } from '#cli/system/paths.ts';
@@ -133,7 +133,7 @@ function readCompilerFile(root: string, path: string, cache: RunCache): string |
                 readContainedPath(realpathSync(root), segments.slice(0, dependency).join('/'));
             return readFileSync(path, 'utf8');
         }
-        return find(cache, local);
+        return findText(cache, local);
     } catch (error) {
         if (hasErrorCode(error, 'ENOENT')) return undefined;
         throw error;

@@ -7,7 +7,7 @@ import { SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { removeKey, removeFromList } from '#cli/settings/edit.ts';
-import { readSetting, writeSettingsEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
+import { findEditedSetting, writeSettingsEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
 import type { ScopeFlags, UnsetOptions, CommandDefinition, SettingsEditOptions } from '#cli/types/commands/edits.ts';
 
 function removeTableKeys(scopeTable: TomlTable, key: string, names: string[]): void {
@@ -38,7 +38,7 @@ async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
 
     const edit = await readSettingsEditContext(options.root, options.scope);
     const { root, edit: input, scopeTable, scope } = edit;
-    const { match } = readSetting(edit, key);
+    const { match } = findEditedSetting(edit, key);
 
     if (keys.length > 0 && !['list', 'table'].includes(match.setting.type))
         throw new GspotError(

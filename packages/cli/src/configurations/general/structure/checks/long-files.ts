@@ -1,6 +1,6 @@
-import { read } from '#cli/system/files/reads.ts';
 import { getLimit } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { GRAMMAR_NAMES } from '#cli/config/parsers.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import type { GrammarName } from '#cli/types/parsers.ts';
@@ -27,7 +27,7 @@ export async function checkLongFiles(session: Session, planned: PlannedCheck): P
     });
     const findings = await Promise.all(
         sources.map(async ({ file, language, limit }) => {
-            const text = read(session.cache, file.path);
+            const text = readText(session.cache, file.path);
             const count = await countCodeLines(text, language, session);
             return count <= limit
                 ? []

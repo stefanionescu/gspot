@@ -1,10 +1,10 @@
 import { posix } from 'node:path';
 import { remember } from '#cli/system/cache.ts';
 import { CheckStop } from '#cli/system/errors.ts';
-import { read } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { listCheckFiles } from '#cli/engine/files.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { readHead, readCommittedTexts } from '#cli/repository/revisions/files.ts';
 import type { Migration, MigrationRead } from '#cli/types/configurations/infrastructure.ts';
@@ -29,7 +29,7 @@ const MIGRATIONS = Symbol('migrations');
 async function parseMigrations(session: Session, paths: Pick<Migration, 'path' | 'version'>[]): Promise<Migration[]> {
     const migrations: Migration[] = [];
     for (const { path, version } of paths) {
-        const text = extractForwardText(read(session.cache, path));
+        const text = extractForwardText(readText(session.cache, path));
         const name = posix.basename(path);
         const parsed = await parseSqlFile(text, session.cache);
         migrations.push({

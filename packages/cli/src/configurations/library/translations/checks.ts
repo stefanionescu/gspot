@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
-import { read } from '#cli/system/files/reads.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { getPosition, compareText } from '#cli/system/text.ts';
@@ -176,7 +176,7 @@ function readMessageFiles(
     const paths = new Set([...files, ...files.map((file) => selectBaseFile(file, messageFiles))]);
     for (const path of paths) {
         if (!messageFiles.paths.has(path)) continue;
-        const text = read(session.cache, path);
+        const text = readText(session.cache, path);
         const tree = parseTree(text);
         const messages = parseCheckedFile(path, () => flattenMessages(parseJsonFile(path, text, messagesSchema)));
         if ('error' in messages) findings.push(messages.error);

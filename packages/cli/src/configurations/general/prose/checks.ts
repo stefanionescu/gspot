@@ -1,6 +1,6 @@
 import { CheckStop } from '#cli/system/errors.ts';
-import { read } from '#cli/system/files/reads.ts';
 import { SCRIPT_TAG } from '#cli/config/parsers.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import type { ProseRoute } from '#cli/types/tools.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
@@ -87,7 +87,7 @@ async function runValeOnStdin(
     command: string[],
     folder: string,
 ): Promise<ValeAlert[]> {
-    const text = read(session.cache, route.path);
+    const text = readText(session.cache, route.path);
     const result = await runCheckTool(
         session,
         planned,
@@ -184,7 +184,7 @@ export async function checkCommitMessage(session: CheckSession, planned: Planned
 }
 
 async function listFileDates(session: CheckSession, file: TrackedFile): Promise<CheckFinding[]> {
-    const source = read(session.cache, file.path);
+    const source = readText(session.cache, file.path);
     const texts = file.tags.includes('markdown')
         ? listMarkdownTexts(source)
         : await parseComments(file.path, source, file.tags, session);

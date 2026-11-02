@@ -1,9 +1,9 @@
 import { LEVELS } from '#cli/config/manifests.ts';
-import { find } from '#cli/system/files/reads.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { EVERY_CHECK } from '#cli/config/engine.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { buildSettings } from '#cli/settings/read.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { parseBaseline } from '#cli/engine/baseline.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
@@ -159,7 +159,7 @@ export async function checkWeakenings(session: Session, planned: PlannedCheck): 
     const tracked = repository.files.map(({ path }) => path);
     const weakenings = [
         ...(settingsText === undefined ? [] : listSettingsWeakenings(settingsText, settings, tracked)),
-        ...listBaselineGrowth(texts.get(BASELINE_FILE), parseBaseline(find(root, BASELINE_FILE))),
+        ...listBaselineGrowth(texts.get(BASELINE_FILE), parseBaseline(findText(root, BASELINE_FILE))),
     ];
     return {
         files: paths.filter((path) => tracked.includes(path)),

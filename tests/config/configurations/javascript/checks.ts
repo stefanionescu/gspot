@@ -65,7 +65,7 @@ export const KNIP_UNUSED_FILES = [
 export const KNIP_LINK_FILES = {
     'package.json': '{"name":"pointer-project","private":true,"type":"module","workspaces":["child"]}',
     'README.md': '# Link file project\n',
-    'child/README.md': '# Child link file project\n',
+    'child/README.md': '# Child pointer file project\n',
     'main.js': 'export const root = 1;\n',
     'eslint.config.js': 'export default {};\n',
     'child/package.json': '{"name":"child-pointer-project","private":true,"type":"module"}',

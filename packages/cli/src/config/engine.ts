@@ -199,7 +199,7 @@ export const WORKSPACE_PLACEHOLDER = /^\{workspace:(?<name>[^}]+)\}$/u;
 
 export const CONFIG_PLACEHOLDER = /\{config_file:(?<name>[a-z0-9-]+)\}/gu;
 
-export const LINK_FILE_PLACEHOLDER = /\{pointer:(?<name>[^}]+)\}/gu;
+export const POINTER_PLACEHOLDER = /\{pointer:(?<name>[^}]+)\}/gu;
 
 export const FORMATTER_CHECKS: ReadonlySet<string> = new Set([
     'format/prettier',

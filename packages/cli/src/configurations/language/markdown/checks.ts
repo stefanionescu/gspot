@@ -1,7 +1,7 @@
 import { parseAllDocuments } from 'yaml';
-import { read } from '#cli/system/files/reads.ts';
 import { getPosition } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -116,7 +116,7 @@ Reports invalid code fences at their error lines.
 export async function checkFences(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const findings: CheckFinding[] = [];
     for (const file of planned.files) {
-        const text = read(session.cache, file.path);
+        const text = readText(session.cache, file.path);
         const errors = await validateCodeFences(text, session);
         findings.push(
             ...errors.map((error) => ({

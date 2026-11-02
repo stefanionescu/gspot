@@ -102,7 +102,7 @@ test('Knip reports each unused dependency that you declare, also when it names a
     ).toStrictEqual([]);
 });
 
-test('Knip treats script configuration files as entries and ignores link files', async () => {
+test('Knip treats script configuration files as entries and ignores pointer files', async () => {
     await using sandbox = await createGitSandbox({
         ...KNIP_LINK_FILES,
         'gspot.toml': buildSandboxSettings(['javascript', 'markdown'], {
@@ -113,13 +113,13 @@ test('Knip treats script configuration files as entries and ignores link files',
 
     const session = await openSession(sandbox.path);
     const generated = buildGeneratedFiles(session).files;
-    const linkFiles = generated.filter(({ path }) =>
+    const pointers = generated.filter(({ path }) =>
         ['eslint.config.mjs', 'prettier.config.mjs', '.markdownlint.jsonc'].includes(basename(path)),
     );
     const configuration = generated.find(({ path }) => path === getManifestTarget('javascript', 'knip.json'))!;
     await createFileTree(
         sandbox.path,
-        Object.fromEntries([configuration, ...linkFiles].map(({ path, content }) => [path, content])),
+        Object.fromEntries([configuration, ...pointers].map(({ path, content }) => [path, content])),
     );
     await linkInstalledModules(join(sandbox.path, GSPOT_PATHS.nodeModules));
     await writeFile(join(sandbox.path, 'unused.js'), 'export const unused = 1;\n');

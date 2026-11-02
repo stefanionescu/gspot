@@ -3,7 +3,7 @@ import { createFileTree } from 'testdirs';
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { setKey, getScopeTable } from '#cli/settings/edit.ts';
+import { setKey, openScopeTable } from '#cli/settings/edit.ts';
 import type { Scope, TomlTable } from '#cli/types/settings.ts';
 import { TWO_WORDS } from '#tests/config/setup/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -37,7 +37,7 @@ test('a scope keeps a written site build command including empty and spaced argu
     const table = parseToml(
         buildSandboxSettings([], { scopes: [{ path: 'app', configurations: ['site'] }] }),
     ) as TomlTable;
-    setKey(getScopeTable(table, 'app'), 'site.build_command', ['custom-builder', '', TWO_WORDS]);
+    setKey(openScopeTable(table, 'app'), 'site.build_command', ['custom-builder', '', TWO_WORDS]);
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify(table),
         'app/index.html': '<!doctype html><title>Site</title>',

@@ -15,7 +15,7 @@ import type { TomlTable, InheritedSetting } from '#cli/types/settings.ts';
 import { SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
 import { getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 import { formatSettingValueError } from '#cli/settings/validation/messages.ts';
-import { readSetting, writeSettingsEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
+import { findEditedSetting, writeSettingsEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
 import { TOML_QUOTES, NUMBER_TEXT, BOOLEAN_WORDS, TOML_COMPOUND_START } from '#cli/config/commands/edits.ts';
 
 import type {
@@ -134,12 +134,12 @@ function formatSettingChange(
     return `Set ${displayKey} to ${JSON.stringify(change.value)}${where}.${reason}${was}`;
 }
 
-function readSettingChange(
+function buildSettingChange(
     edit: SettingsEditContext,
     options: SetOptions,
 ): { setting: Setting; change: ParsedSettingValue; summary: string; notes: string[] } {
     const { settings } = edit;
-    const { availableSettings, match, scope } = readSetting(edit, options.key);
+    const { availableSettings, match, scope } = findEditedSetting(edit, options.key);
     const setting = match.setting;
     const change: ParsedSettingValue =
         setting.reason_values === true
@@ -164,7 +164,7 @@ function readSettingChange(
 async function runSetCommand(options: SetOptions): Promise<CommandResult> {
     const edit = await readSettingsEditContext(options.root, options.scope);
     const { root, edit: input, scopeTable } = edit;
-    const { setting, change, summary, notes } = readSettingChange(edit, options);
+    const { setting, change, summary, notes } = buildSettingChange(edit, options);
     setSetting(scopeTable, change, setting, options);
     return await writeSettingsEdit(root, { edit: input, summary, notes, cache: edit.cache, listing: edit.listing });
 }

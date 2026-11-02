@@ -1,9 +1,9 @@
 import type ts from 'typescript';
 import { join, posix } from 'node:path';
 import { setKey } from '#cli/settings/edit.ts';
-import { find } from '#cli/system/files/reads.ts';
 import type { RunCache } from '#cli/types/system.ts';
 import { createRunCache } from '#cli/system/cache.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import type { Repository } from '#cli/types/repository.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import { buildFilenameMatcher } from '#cli/system/matchers.ts';
@@ -48,7 +48,7 @@ function buildSwiftTable(selection: ScopeConfigurations, { repository, scopes }:
         ({ path }) => path.endsWith(PBXPROJ_SUFFIX) && selectScopePath(path, scopes) === selection.scope,
     )?.path;
     if (file === undefined) return {};
-    const text = find(repository.root, file);
+    const text = findText(repository.root, file);
     const sdkRoot = text === undefined ? undefined : parseBuildSettings(text, file).sdkRoot;
     const destination = XCODE_DESTINATIONS.get(sdkRoot);
     return {

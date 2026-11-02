@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
-import { read } from '#cli/system/files/reads.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { listCheckFiles } from '#cli/engine/files.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { FILE_PLACEHOLDER } from '#cli/config/engine.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
@@ -75,7 +75,9 @@ export function readComposeDocuments(session: Session, planned: PlannedCheck): C
     const groups = listComposeFiles(listCheckFiles(planned, COMPOSE_CHECK));
     for (const group of groups) {
         const declarations = [...group.before, group.last].flatMap(({ path }) => {
-            const parsed = parseCheckedFile(path, () => parseYamlFile(path, read(session.cache, path), composeSchema));
+            const parsed = parseCheckedFile(path, () =>
+                parseYamlFile(path, readText(session.cache, path), composeSchema),
+            );
             if ('error' in parsed) {
                 documents.findings.push(parsed.error);
                 return [];

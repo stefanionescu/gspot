@@ -1,7 +1,7 @@
 import { print } from '#cli/system/terminal.ts';
 import { LEVELS } from '#cli/config/manifests.ts';
-import { find } from '#cli/system/files/reads.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import type { InitOptions } from '#cli/types/generation.ts';
 import { readTemplate } from '#cli/commands/init/template.ts';
@@ -28,7 +28,7 @@ import {
 } from '#cli/config/commands/edits.ts';
 
 async function runInitCommand(root: string, options: InitOptions): Promise<CommandResult<InitJson>> {
-    if (find(root, SETTINGS_FILE) !== undefined) throw new GspotError('arguments', SETTINGS_EXIST_MESSAGE);
+    if (findText(root, SETTINGS_FILE) !== undefined) throw new GspotError('arguments', SETTINGS_EXIST_MESSAGE);
     const initPlan = await planInit(root, options);
     const { plan, settingsText, pinPath, session } = initPlan;
     await assertFilesCommitted(root, initPlan.replaced);

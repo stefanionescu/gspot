@@ -2,12 +2,12 @@ import { getPosition } from '#cli/system/text.ts';
 import { findToolName } from '#cli/tools/pins.ts';
 import type { Session } from '#cli/types/tools.ts';
 import type { Scope } from '#cli/types/settings.ts';
-import { find, read } from '#cli/system/files/reads.ts';
 import type { SourceComment } from '#cli/types/parsers.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { findText, readText } from '#cli/system/files/reads.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';
@@ -135,7 +135,7 @@ export async function checkSuppressions(session: Session, planned: PlannedCheck)
         const syntaxes = listSuppressionSyntaxes(scope, files);
         for (const file of files) {
             const forms = syntaxes.filter((form) => form.covered.has(file.path));
-            const source = read(session.cache, file.path);
+            const source = readText(session.cache, file.path);
             const comments = await parseComments(file.path, source, file.tags, session);
             found.push(
                 ...comments.flatMap((comment, index) => {
@@ -147,7 +147,7 @@ export async function checkSuppressions(session: Session, planned: PlannedCheck)
             );
         }
     }
-    const settings = find(session.cache, SETTINGS_FILE) ?? '';
+    const settings = findText(session.cache, SETTINGS_FILE) ?? '';
     const settingsReasons = [...settings.matchAll(SETTINGS_REASON)].flatMap((match) =>
         listReasonReferences(match.groups?.['reason'], {
             file: SETTINGS_FILE,

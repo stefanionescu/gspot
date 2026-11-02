@@ -1,8 +1,8 @@
 import picomatch from 'picomatch';
 import { posix, extname } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
-import { find } from '#cli/system/files/reads.ts';
 import { escapeRegExp } from '#cli/system/text.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
@@ -16,7 +16,7 @@ import { TOML_EXTENSION, JSON_EXTENSION, INI_EXTENSIONS, YAML_EXTENSIONS } from 
 function listReplacementConflicts(root: string, paths: string[], replacement: ConflictingConfig): ConflictingConfig[] {
     return paths
         .filter((path) => {
-            const source = find(root, path);
+            const source = findText(root, path);
             if (source === undefined) return false;
             return (
                 (replacement.table === undefined && replacement.key === undefined) ||
@@ -57,7 +57,7 @@ function listConfigurationConflicts(
         const rootOnly =
             !picomatch.scan(replacement.path).isGlob &&
             !files.inventory.has(replacement.path) &&
-            find(root, replacement.path) !== undefined;
+            findText(root, replacement.path) !== undefined;
         return listReplacementConflicts(root, [...paths, ...(rootOnly ? [replacement.path] : [])], replacement);
     });
 }

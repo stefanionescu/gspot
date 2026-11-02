@@ -27,11 +27,11 @@ test.each([
     ['Bun.env.DELTA', 'DELTA'],
     ['import.meta.env.ECHO', 'ECHO'],
     ["Deno.env.get('FOXTROT')", 'FOXTROT'],
-    ["readSetting('GOLF')", 'GOLF'],
+    ["findEditedSetting('GOLF')", 'GOLF'],
     ['const { HOTEL = 1 } = process.env', 'HOTEL'],
     ["const { 'INDIA': india } = process.env", 'INDIA'],
 ])('%s reads %s', async (source, key) => {
-    const reads = await listJavascriptEnvironmentReads('app.ts', source, ['readSetting']);
+    const reads = await listJavascriptEnvironmentReads('app.ts', source, ['findEditedSetting']);
     expect(reads.map((read) => read.key)).toStrictEqual([key]);
 });
 

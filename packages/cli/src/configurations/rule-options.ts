@@ -14,7 +14,7 @@ Refuse options for rules that do not run at the selected level.
 @param options.allLevelRules the rules reserved for level all.
 @param options.level the selected checking level.
 */
-export function refuseIdleRuleOptions({ configured, running, allLevelRules, level }: RuleOptionsRun): void {
+export function assertRunningRuleOptions({ configured, running, allLevelRules, level }: RuleOptionsRun): void {
     const refused = configured.filter((rule) => !running.has(rule));
     if (refused.length === 0) return;
     throw new GspotError(

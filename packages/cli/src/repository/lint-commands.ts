@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
-import { find } from '#cli/system/files/reads.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { LINE_BREAK, PACKAGE_JSON } from '#cli/config/parsers.ts';
@@ -108,7 +108,7 @@ function readLineRows(place: LintCommandPlace, search: CommandSearch): LintComma
 }
 
 function readDependencyRows({ root, pins }: LintCommandSearch): LintCommand[] {
-    const text = find(root, PACKAGE_JSON);
+    const text = findText(root, PACKAGE_JSON);
     if (text === undefined) return [];
     const { devDependencies } = parseJsonFile(PACKAGE_JSON, text, lintCommandPackageSchema);
     return Object.entries(devDependencies).flatMap(([name, version]) => {
@@ -135,7 +135,7 @@ function readSecondToolRows({ root, files, tools }: LintCommandSearch): LintComm
             .filter((file) => tracked.has(file))
             .map((file) => ({ ...settings, file, line: 1, command: file, tool: name })),
         ...sections.flatMap(([file, table]) => {
-            const text = tracked.has(file) ? find(root, file) : undefined;
+            const text = tracked.has(file) ? findText(root, file) : undefined;
             if (text === undefined || !hasToolSection(text, file, { table })) return [];
             return [{ ...settings, file, line: findLine(text, `[${table}`), command: `[${table}]`, tool: name }];
         }),
@@ -146,7 +146,7 @@ function readPlaces({ root, files }: LintCommandSearch): LintCommandPlace[] {
     const paths = files.filter((file) => file.kind === 'source' && !isGspotPath(file.path));
     return paths.flatMap(({ path: file }) => {
         const source = COMMAND_FILES.find(({ path }) => path.test(file))?.source;
-        const text = source === undefined ? undefined : find(root, file);
+        const text = source === undefined ? undefined : findText(root, file);
         return source === undefined || text === undefined ? [] : [{ file, text, source }];
     });
 }

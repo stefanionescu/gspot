@@ -1,9 +1,13 @@
+import { splitByCase } from 'scule';
 import type { TextRange, TextPosition } from '#cli/types/system.ts';
 
 import {
     TYPO_MIN,
     LIST_LIMIT,
+    NUMERIC_WORDS,
     TYPO_FRACTION,
+    DIGIT_BOUNDARY,
+    WORD_SEPARATORS,
     ROOT_SCOPE_MARK,
     UNQUOTED_ARGUMENT,
     SIMILAR_NAME_LIMIT,
@@ -185,4 +189,19 @@ Escape text so that a regular expression matches it literally.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Six call sites in five files share this one escaping rule.
 export function escapeRegExp(text: string): string {
     return text.replaceAll(REGEXP_SYNTAX_CHARACTERS, String.raw`\$&`);
+}
+
+/**
+Splits a name into lowercase parts: `HTMLParser` gives `html`, `parser`; `user_id` gives `user`, `id`; `v2` gives `v`, `2`; `base64` stays one word.
+
+@param name the identifier.
+*/
+export function splitWords(name: string): string[] {
+    return name
+        .split(WORD_SEPARATORS)
+        .filter((segment) => segment !== '')
+        .flatMap((segment) => splitByCase(segment))
+        .flatMap((word) => (NUMERIC_WORDS.has(word.toLowerCase()) ? [word] : word.split(DIGIT_BOUNDARY)))
+        .map((word) => word.toLowerCase())
+        .filter((word) => word !== '');
 }

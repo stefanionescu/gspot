@@ -124,7 +124,7 @@ that has none.
 @param table the parsed document.
 @param scopePath the folder of a nested table, if any.
 */
-export function getScopeTable(table: TomlTable, scopePath: string): TomlTable {
+export function openScopeTable(table: TomlTable, scopePath: string): TomlTable {
     if (scopePath === '') return table;
     const scopes = table['scope'];
     const scopeTable: unknown = Array.isArray(scopes)

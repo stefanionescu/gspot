@@ -1,12 +1,12 @@
 import { posix } from 'node:path';
 import type { RunCache } from '#cli/types/system.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { find, read } from '#cli/system/files/reads.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { findText, readText } from '#cli/system/files/reads.ts';
 import type { PackageJson, DependencyFile } from '#cli/types/parsers.ts';
 import { isInInstalledFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 import { HOOK_PACKAGES, REQUIREMENTS_FILE } from '#cli/config/repository/files.ts';
@@ -33,7 +33,7 @@ async function readDependencyFile(cache: RunCache, file: TrackedFile): Promise<D
         ? parseRequirements
         : DEPENDENCY_FILE_PARSERS.get(posix.basename(file.path));
     if (parse === undefined) return undefined;
-    const text = read(cache, file.path);
+    const text = readText(cache, file.path);
     return await parse(file.path, text);
 }
 
@@ -62,7 +62,7 @@ Read and validate the package.json fields that gspot uses.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Commands, generation, checks, and repository reads validate package.json through it.
 export function readPackageJson(source: string | RunCache, path: string): PackageJson | undefined {
-    const text = find(source, path);
+    const text = findText(source, path);
     return text === undefined ? undefined : parseJsonFile(path, text, packageJsonSchema);
 }
 

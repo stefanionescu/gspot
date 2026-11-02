@@ -1,7 +1,7 @@
-import { find } from '#cli/system/files/reads.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { formatSimilarNames } from '#cli/system/text.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { explainPath } from '#cli/commands/explain/path.ts';
@@ -35,7 +35,7 @@ async function runExplainCommand(
 ): Promise<CommandResult> {
     const { root, cwd } = location;
 
-    const session = find(root, SETTINGS_FILE) === undefined ? undefined : await openSession(root);
+    const session = findText(root, SETTINGS_FILE) === undefined ? undefined : await openSession(root);
 
     const result =
         rule === undefined

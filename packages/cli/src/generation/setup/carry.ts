@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
-import { find } from '#cli/system/files/reads.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { TRAILING_SLASH } from '#cli/config/system.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
@@ -59,7 +59,7 @@ function readIgnoreFiles({ repository, tools }: CarryInput): CarrySection {
     const owned = IGNORE_FILES.filter(({ tool }) => tools.has(tool)).flatMap(({ file, tool, check }) =>
         tracked
             .filter((path) => posix.basename(path) === file)
-            .map((path) => ({ path, tool, check, text: find(repository.root, path) ?? '' })),
+            .map((path) => ({ path, tool, check, text: findText(repository.root, path) ?? '' })),
     );
     const converted = owned.map((each) => ({ ...each, ...convertIgnoreFile(each.path, each.text, tracked) }));
     return {
@@ -97,7 +97,7 @@ function readRuffCarry(input: CarryInput): CarrySection {
 
 function readMarkdownlintFile(root: string): { path: string; rules: Record<string, unknown> } | undefined {
     for (const path of MARKDOWNLINT_CONFIG_FILES) {
-        const text = find(root, path);
+        const text = findText(root, path);
         if (text === undefined) continue;
         const table = (path.includes('.json') ? parseJsonFile(path, text) : parseYamlFile(path, text)) as Record<
             string,

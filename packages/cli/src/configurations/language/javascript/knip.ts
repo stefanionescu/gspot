@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
-import { read } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { listDistinctTools } from '#cli/tools/pins.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
@@ -99,7 +99,7 @@ function listFileTaskPackages(planned: PlannedConfig, dependencyNames: Set<strin
     const isFileTask = buildPathMatcher([...MISE_FILE_TASK_GLOBS]);
     const names = files
         .filter((file) => file.kind === 'source' && isFileTask(file.path))
-        .flatMap((file) => listRunPackages(read(planned.session.cache, file.path)));
+        .flatMap((file) => listRunPackages(readText(planned.session.cache, file.path)));
     return [...new Set(names)]
         .filter((name) => dependencyNames.has(name))
         .toSorted((left, right) => compareText(left, right));

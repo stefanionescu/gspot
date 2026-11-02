@@ -2,7 +2,7 @@ import { join, posix } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { getTool } from '#cli/tools/pins.ts';
 import { isTable } from '#cli/system/tables.ts';
-import { find } from '#cli/system/files/reads.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
@@ -119,7 +119,7 @@ function parseEditorconfigSections(text: string): EditorconfigSection[] {
 }
 
 function readEditorconfig(folder: string): PrettierOptions | null {
-    const text = find(folder, EDITORCONFIG_FILE);
+    const text = findText(folder, EDITORCONFIG_FILE);
     if (text === undefined) return null;
     const sections = parseEditorconfigSections(text);
     const project = Object.fromEntries(
@@ -145,11 +145,11 @@ function readFormatOptions(
     const folder = posix.join(root, scopePath);
     const editorconfig = readEditorconfig(folder);
     const packagePath = posix.join(scopePath, PACKAGE_JSON);
-    const packageJson = find(folder, PACKAGE_JSON);
+    const packageJson = findText(folder, PACKAGE_JSON);
     const packageOptions = packageJson === undefined ? undefined : parseJsonFile(packagePath, packageJson)['prettier'];
     const prettierFile = prettierFiles
         .filter((path) => path !== '.prettierignore')
-        .map((path) => ({ path, text: find(folder, path) }))
+        .map((path) => ({ path, text: findText(folder, path) }))
         .find((read): read is { path: string; text: string } => read.text !== undefined);
     const usesPrettier =
         prettierFile !== undefined || packageOptions !== undefined || dependencies['prettier'] !== undefined;
@@ -170,7 +170,7 @@ Read the first Ruff settings of the repository.
 */
 export function readRuffOptions(root: string): { path: string; options: RuffOptions } | undefined {
     for (const path of RUFF_SETTINGS_FILES) {
-        const text = find(root, path);
+        const text = findText(root, path);
         if (text === undefined) continue;
         const options =
             path === PYPROJECT_TOML
@@ -193,7 +193,7 @@ export function readPrettierOptions(
     scripts: PrettierScripts,
 ): { path: string; options: PrettierOptions }[] {
     return PRETTIER_ROOT_FILES.flatMap((path) => {
-        const text = find(root, path);
+        const text = findText(root, path);
         const options = text === undefined ? undefined : parsePrettierFile(path, text, scripts);
         return options === undefined ? [] : [{ path, options }];
     });

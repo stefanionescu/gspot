@@ -1,8 +1,8 @@
 import { remember } from '#cli/system/cache.ts';
-import { read } from '#cli/system/files/reads.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { Query, type Node } from 'web-tree-sitter';
 import { SCRIPT_TAG } from '#cli/config/parsers.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -47,7 +47,7 @@ export function readParsedSources(
             if (file.kind !== 'source') continue;
             const language = detectLanguage(file);
             if (language === undefined || !planned.scope.settings.configurations.includes(language)) continue;
-            const tree = await parseSource(language, read(session.cache, file.path), session);
+            const tree = await parseSource(language, readText(session.cache, file.path), session);
             session.resources.push(tree);
             const source = { path: file.path, language, tree, captures: new Map<string, Node[]>() };
             sources.push(source);
