@@ -63,6 +63,12 @@ function listCalleeSteps(callee: TSESTree.Node): { steps: string[]; base: TSESTr
     return { steps, base: node };
 }
 
+function isTableTest(call: TestCall | undefined, context: FileContext): call is TestCall {
+    const isRunning = call?.modifiers.slice(0, -1).every((modifier) => RUNNING_TEST_MODIFIERS.has(modifier)) === true;
+    const isTable = isRunning && TABLE_TEST_NAMES.has(call.name);
+    return isTable && (TABLE_ORIGINS.has(call.module) || isModuleUsed(context, TABLE_MODULES, TABLE_DEPENDENCIES));
+}
+
 /**
 Get the name at the base of a callee, its module when a test framework exports it, and the member names after it.
 A call of `each` without its table call counts as no callee.
@@ -145,12 +151,6 @@ export function listBodyNodes(root: TSESTree.Node, source: TSESLint.SourceCode):
         node = pending.pop();
     }
     return nodes;
-}
-
-function isTableTest(call: TestCall | undefined, context: FileContext): call is TestCall {
-    const isRunning = call?.modifiers.slice(0, -1).every((modifier) => RUNNING_TEST_MODIFIERS.has(modifier)) === true;
-    const isTable = isRunning && TABLE_TEST_NAMES.has(call.name);
-    return isTable && (TABLE_ORIGINS.has(call.module) || isModuleUsed(context, TABLE_MODULES, TABLE_DEPENDENCIES));
 }
 
 /**

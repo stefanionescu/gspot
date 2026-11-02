@@ -40,35 +40,6 @@ function getDestructuredName(identifier: TSESTree.Node, module: string): string 
     return property === 'default' ? module : `${module}.${property}`;
 }
 
-/**
-Find where a path sits inside a folder. Both take either separator and any drive letter case.
-The folder `.` holds every relative path that does not climb out of it.
-
-@param folder the folder, absolute or relative
-@param path the file or folder to place
-@returns the POSIX path below the folder, empty for the folder itself, or undefined outside it
-*/
-export function findPathInFolder(folder: string, path: string): string | undefined {
-    const root = folder
-        .replaceAll('\\', '/')
-        .replace(DRIVE_LETTER, (drive) => drive.toUpperCase())
-        .replace(TRAILING_SLASH, '');
-    const file = path.replaceAll('\\', '/').replace(DRIVE_LETTER, (drive) => drive.toUpperCase());
-    if (file === root) return '';
-    if (root === '.') return file === '..' || file.startsWith('../') ? undefined : file;
-    return file.startsWith(`${root}/`) ? file.slice(root.length + 1) : undefined;
-}
-
-/**
-Resolve a binding only when one write supplies its value.
-
-@param variable the binding whose initializer or assignment to follow.
-*/
-export function getAssignedValue(variable: TSESLint.Scope.Variable): TSESTree.Node | undefined {
-    const writes = variable.references.filter((reference) => reference.isWrite());
-    return writes.length === 1 ? (writes[0]?.writeExpr ?? undefined) : undefined;
-}
-
 function getBoundModule(
     node: TSESTree.Identifier,
     source: TSESLint.SourceCode,
@@ -118,6 +89,35 @@ function getInnerModule(
     if (value.type === AST_NODE_TYPES.TSExternalModuleReference) return value.expression.value;
     if (value.type === AST_NODE_TYPES.TaggedTemplateExpression) return getModuleName(value.tag, source, seen);
     return value.type === AST_NODE_TYPES.NewExpression ? getModuleName(value.callee, source, seen) : undefined;
+}
+
+/**
+Find where a path sits inside a folder. Both take either separator and any drive letter case.
+The folder `.` holds every relative path that does not climb out of it.
+
+@param folder the folder, absolute or relative
+@param path the file or folder to place
+@returns the POSIX path below the folder, empty for the folder itself, or undefined outside it
+*/
+export function findPathInFolder(folder: string, path: string): string | undefined {
+    const root = folder
+        .replaceAll('\\', '/')
+        .replace(DRIVE_LETTER, (drive) => drive.toUpperCase())
+        .replace(TRAILING_SLASH, '');
+    const file = path.replaceAll('\\', '/').replace(DRIVE_LETTER, (drive) => drive.toUpperCase());
+    if (file === root) return '';
+    if (root === '.') return file === '..' || file.startsWith('../') ? undefined : file;
+    return file.startsWith(`${root}/`) ? file.slice(root.length + 1) : undefined;
+}
+
+/**
+Resolve a binding only when one write supplies its value.
+
+@param variable the binding whose initializer or assignment to follow.
+*/
+export function getAssignedValue(variable: TSESLint.Scope.Variable): TSESTree.Node | undefined {
+    const writes = variable.references.filter((reference) => reference.isWrite());
+    return writes.length === 1 ? (writes[0]?.writeExpr ?? undefined) : undefined;
 }
 
 /**

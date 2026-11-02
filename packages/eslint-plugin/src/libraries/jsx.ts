@@ -12,19 +12,6 @@ import {
     MAXIMUM_COLUMN_SPAN,
 } from '../config/accessibility.ts';
 
-/**
-Name the element of a JSX tag as written: `table`, `Layout.Table`, or `svg:rect`.
-
-@param name the tag name node of an opening tag.
-@returns the name with its member path or namespace.
-*/
-export function getElementName(name: TSESTree.JSXTagNameExpression): string {
-    if (name.type === AST_NODE_TYPES.JSXIdentifier) return name.name;
-    return name.type === AST_NODE_TYPES.JSXNamespacedName
-        ? `${name.namespace.name}:${name.name.name}`
-        : `${getElementName(name.object)}.${name.property.name}`;
-}
-
 function normalizeLiteral(value: unknown): unknown {
     if (typeof value !== 'string') return value;
     const text = value.toLowerCase();
@@ -42,23 +29,6 @@ function getAttributeValue(value: TSESTree.JSXAttribute['value']): unknown {
     if (value === null) return true;
     const expression = value.type === AST_NODE_TYPES.JSXExpressionContainer ? value.expression : value;
     return getExpressionValue(expression);
-}
-
-/**
-Get an attribute of a JSX opening tag by its name, in any letter case. The code may write its value as a string,
-as a literal in braces, or leave it out for `true`. The strings `"true"` and `"false"` read as booleans.
-
-@param element the opening tag that holds the attributes.
-@param name the attribute name to look for.
-@returns the attribute and its value, null for a value that only the run time knows, or undefined for no attribute.
-*/
-export function getAttribute(element: TSESTree.JSXOpeningElement, name: string): JsxAttributeValue | undefined {
-    const attribute = element.attributes.find(
-        (child): child is TSESTree.JSXAttribute =>
-            child.type === AST_NODE_TYPES.JSXAttribute &&
-            getElementName(child.name).toLowerCase() === name.toLowerCase(),
-    );
-    return attribute === undefined ? undefined : { node: attribute, value: getAttributeValue(attribute.value) };
 }
 
 function getSpan(cell: TSESTree.JSXElement, name: string, maximum: number): number {
@@ -180,6 +150,36 @@ function placeRows(rows: ReadonlyArray<readonly TableCell[]>): TableCell[][] {
         }
     }
     return grid;
+}
+
+/**
+Name the element of a JSX tag as written: `table`, `Layout.Table`, or `svg:rect`.
+
+@param name the tag name node of an opening tag.
+@returns the name with its member path or namespace.
+*/
+export function getElementName(name: TSESTree.JSXTagNameExpression): string {
+    if (name.type === AST_NODE_TYPES.JSXIdentifier) return name.name;
+    return name.type === AST_NODE_TYPES.JSXNamespacedName
+        ? `${name.namespace.name}:${name.name.name}`
+        : `${getElementName(name.object)}.${name.property.name}`;
+}
+
+/**
+Get an attribute of a JSX opening tag by its name, in any letter case. The code may write its value as a string,
+as a literal in braces, or leave it out for `true`. The strings `"true"` and `"false"` read as booleans.
+
+@param element the opening tag that holds the attributes.
+@param name the attribute name to look for.
+@returns the attribute and its value, null for a value that only the run time knows, or undefined for no attribute.
+*/
+export function getAttribute(element: TSESTree.JSXOpeningElement, name: string): JsxAttributeValue | undefined {
+    const attribute = element.attributes.find(
+        (child): child is TSESTree.JSXAttribute =>
+            child.type === AST_NODE_TYPES.JSXAttribute &&
+            getElementName(child.name).toLowerCase() === name.toLowerCase(),
+    );
+    return attribute === undefined ? undefined : { node: attribute, value: getAttributeValue(attribute.value) };
 }
 
 /**

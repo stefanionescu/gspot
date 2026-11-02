@@ -50,6 +50,40 @@ function listManifestFolders(context: FileContext): string[] {
     return folders;
 }
 
+function compareVersions(left: readonly number[], right: readonly number[]): number {
+    const differences = right.map((value, position) => (left[position] ?? 0) - value);
+    return differences.find((difference) => difference !== 0) ?? 0;
+}
+
+function bumpVersion(numbers: number[], kind: string): number[] {
+    let position = numbers.length - 1;
+    if (kind === 'caret')
+        position = Math.max(
+            numbers.findIndex((value) => value > 0),
+            0,
+        );
+    else if (kind === 'tilde') position = Math.min(1, position);
+    return numbers.slice(0, position + 1).map((value, index) => (index === position ? value + 1 : value));
+}
+
+function buildCeiling(numbers: number[], kind: string | undefined): VersionCeiling | null {
+    if (kind === 'unbounded' || kind === undefined || numbers.length === 0) return null;
+    if (kind === 'upto' || kind === 'below') return { version: numbers, isInclusive: kind === 'upto' };
+    const isExact = kind === 'exact' && numbers.length === VERSION_SIZE;
+    return isExact
+        ? { version: numbers, isInclusive: true }
+        : { version: bumpVersion(numbers, kind), isInclusive: false };
+}
+
+function getCeiling(comparator: string): VersionCeiling | null | undefined {
+    const groups = VERSION_PATTERN.exec(comparator)?.groups;
+    const fields = (groups?.['number'] ?? '').split('.');
+    const isVersion = fields.length <= VERSION_SIZE && fields.every((field) => VERSION_NUMBER.test(field));
+    if (groups === undefined || !isVersion) return undefined;
+    const numbers = fields.flatMap((field) => (VERSION_WILDCARD.test(field) ? [] : [Number(field)]));
+    return buildCeiling(numbers, VERSION_OPERATORS.get(groups['operator'] ?? ''));
+}
+
 /**
 Read the package.json files from the folder of the file up to the repository root. Count them, and map each package
 name they list to its version range, which the nearest file sets.
@@ -122,40 +156,6 @@ export function isModuleUsed(
     if (modules.some((module) => imported.has(module))) return true;
     const listed = readPackageFacts(context).dependencies;
     return dependencies.some((dependency) => listed.has(dependency));
-}
-
-function compareVersions(left: readonly number[], right: readonly number[]): number {
-    const differences = right.map((value, position) => (left[position] ?? 0) - value);
-    return differences.find((difference) => difference !== 0) ?? 0;
-}
-
-function bumpVersion(numbers: number[], kind: string): number[] {
-    let position = numbers.length - 1;
-    if (kind === 'caret')
-        position = Math.max(
-            numbers.findIndex((value) => value > 0),
-            0,
-        );
-    else if (kind === 'tilde') position = Math.min(1, position);
-    return numbers.slice(0, position + 1).map((value, index) => (index === position ? value + 1 : value));
-}
-
-function buildCeiling(numbers: number[], kind: string | undefined): VersionCeiling | null {
-    if (kind === 'unbounded' || kind === undefined || numbers.length === 0) return null;
-    if (kind === 'upto' || kind === 'below') return { version: numbers, isInclusive: kind === 'upto' };
-    const isExact = kind === 'exact' && numbers.length === VERSION_SIZE;
-    return isExact
-        ? { version: numbers, isInclusive: true }
-        : { version: bumpVersion(numbers, kind), isInclusive: false };
-}
-
-function getCeiling(comparator: string): VersionCeiling | null | undefined {
-    const groups = VERSION_PATTERN.exec(comparator)?.groups;
-    const fields = (groups?.['number'] ?? '').split('.');
-    const isVersion = fields.length <= VERSION_SIZE && fields.every((field) => VERSION_NUMBER.test(field));
-    if (groups === undefined || !isVersion) return undefined;
-    const numbers = fields.flatMap((field) => (VERSION_WILDCARD.test(field) ? [] : [Number(field)]));
-    return buildCeiling(numbers, VERSION_OPERATORS.get(groups['operator'] ?? ''));
 }
 
 /**

@@ -25,20 +25,6 @@ import {
 } from '../config/aws.ts';
 
 /**
-Name the value of the cloud development kit that an expression reads, as `getQualifiedName` does. Each hyphen
-becomes an underscore, so `aws-cdk-lib/aws-s3` and `aws_cdk_lib.aws_s3` read alike.
-
-@param source the source code of the file.
-@param node the expression to name.
-@returns the dotted name, or undefined when the value has none.
-*/
-export function getCdkName(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): string | undefined {
-    const name = node && getQualifiedName(node, source);
-    if (name === undefined) return undefined;
-    return name.replaceAll('-', '_');
-}
-
-/**
 Tell whether nothing in the file gives an expression a value. The expression, or the start of its member chain, names
 an undeclared variable, or a variable without an import or a write, such as a parameter.
 
@@ -124,6 +110,36 @@ function checkCdkValue(source: Readonly<TSESLint.SourceCode>, target: CdkTarget,
     if (isEmptyValue(value)) return check.required ? [{ node: target.report, kind: 'omitted' }] : [];
     const isInvalid = isInvalidLiteral(value, check) || isInvalidName(source, value, check);
     return isInvalid ? [{ node: target.report, kind: 'invalid' }] : [];
+}
+
+function listDocumentStatements(source: Readonly<TSESLint.SourceCode>, document: TSESTree.Node): PolicyStatement[] {
+    const statements = getCdkProperty(source, getCdkResult(source, document), POLICY_STATEMENTS_KEY);
+    return listArgumentValues([statements.node], source).map((statement) => ({
+        statement: getCdkResult(source, statement),
+        keys: POLICY_JSON_KEYS,
+    }));
+}
+
+function isAllowed(source: Readonly<TSESLint.SourceCode>, policy: PolicyStatement): boolean {
+    const effect = getCdkProperty(source, policy.statement, policy.keys.effect);
+    if (effect.status === 'missing') return true;
+    const { node } = effect;
+    const value = policy.keys.isJson ? node.type === AST_NODE_TYPES.Literal && node.value : getCdkName(source, node);
+    return effect.status === 'found' && value === policy.keys.allow;
+}
+
+/**
+Name the value of the cloud development kit that an expression reads, as `getQualifiedName` does. Each hyphen
+becomes an underscore, so `aws-cdk-lib/aws-s3` and `aws_cdk_lib.aws_s3` read alike.
+
+@param source the source code of the file.
+@param node the expression to name.
+@returns the dotted name, or undefined when the value has none.
+*/
+export function getCdkName(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): string | undefined {
+    const name = node && getQualifiedName(node, source);
+    if (name === undefined) return undefined;
+    return name.replaceAll('-', '_');
 }
 
 /**
@@ -293,22 +309,6 @@ export function listCdkStrings(source: Readonly<TSESLint.SourceCode>, result: Cd
         (value): value is TSESTree.StringLiteral =>
             value.type === AST_NODE_TYPES.Literal && typeof value.value === 'string',
     );
-}
-
-function listDocumentStatements(source: Readonly<TSESLint.SourceCode>, document: TSESTree.Node): PolicyStatement[] {
-    const statements = getCdkProperty(source, getCdkResult(source, document), POLICY_STATEMENTS_KEY);
-    return listArgumentValues([statements.node], source).map((statement) => ({
-        statement: getCdkResult(source, statement),
-        keys: POLICY_JSON_KEYS,
-    }));
-}
-
-function isAllowed(source: Readonly<TSESLint.SourceCode>, policy: PolicyStatement): boolean {
-    const effect = getCdkProperty(source, policy.statement, policy.keys.effect);
-    if (effect.status === 'missing') return true;
-    const { node } = effect;
-    const value = policy.keys.isJson ? node.type === AST_NODE_TYPES.Literal && node.value : getCdkName(source, node);
-    return effect.status === 'found' && value === policy.keys.allow;
 }
 
 /**

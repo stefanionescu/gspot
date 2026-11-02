@@ -190,29 +190,6 @@ function getAssertChecks(name: string, styles: AssertionStyles): AssertionChecks
     return chai ?? nodeAssert;
 }
 
-/**
-Read an assertion of Jest, Vitest, Bun, Jasmine, Playwright, chai, Cypress, or node:assert that the file can use. It reads a
-predicate on one value or a comparison of two values.
-
-@param node the call or member to read.
-@param context the rule context of the file.
-*/
-export function readAssertion(
-    node: TSESTree.CallExpression | TSESTree.MemberExpression,
-    context: FileContext,
-): Assertion | undefined {
-    const styles = readAssertionStyles(context);
-    if (node.type === AST_NODE_TYPES.MemberExpression) return styles.chai ? getChaiPredicate(node) : undefined;
-    const source = context.sourceCode;
-    const checks = getAssertChecks(getModuleName(node.callee, source) ?? source.getText(node.callee), styles);
-    return (
-        getExpectAssertion(node, styles.expect) ??
-        getChaiCall(node, styles) ??
-        getCypressCall(node, styles) ??
-        getCheckedCall(node, checks, node.callee, node.arguments)
-    );
-}
-
 function getExpectRoot(node: TSESTree.CallExpression): TSESTree.Node | undefined {
     let value: TSESTree.Node = node.callee;
     while (value.type === AST_NODE_TYPES.MemberExpression) value = value.object;
@@ -263,6 +240,36 @@ function isRunnerAssertion(
     return isRunner || isCypress || (styles.globalExpect && isGlobalExpect(node, source));
 }
 
+function getChainEnd(node: TSESTree.MemberExpression): TSESTree.MemberExpression | undefined {
+    let top = node;
+    while (top.parent.type === AST_NODE_TYPES.MemberExpression && top.parent.object === top && !top.parent.computed)
+        top = top.parent;
+    return top === node ? undefined : top;
+}
+
+/**
+Read an assertion of Jest, Vitest, Bun, Jasmine, Playwright, chai, Cypress, or node:assert that the file can use. It reads a
+predicate on one value or a comparison of two values.
+
+@param node the call or member to read.
+@param context the rule context of the file.
+*/
+export function readAssertion(
+    node: TSESTree.CallExpression | TSESTree.MemberExpression,
+    context: FileContext,
+): Assertion | undefined {
+    const styles = readAssertionStyles(context);
+    if (node.type === AST_NODE_TYPES.MemberExpression) return styles.chai ? getChaiPredicate(node) : undefined;
+    const source = context.sourceCode;
+    const checks = getAssertChecks(getModuleName(node.callee, source) ?? source.getText(node.callee), styles);
+    return (
+        getExpectAssertion(node, styles.expect) ??
+        getChaiCall(node, styles) ??
+        getCypressCall(node, styles) ??
+        getCheckedCall(node, checks, node.callee, node.arguments)
+    );
+}
+
 /**
 Classify a call that asserts with a test library the file can use. Chai, sinon, supertest, node:assert, node:test, uvu,
 and the aws-cdk assertions also assert outside a test runner, so they return `script`. Vitest, Bun, Cypress, and the
@@ -282,13 +289,6 @@ export function readAssertionKind(node: TSESTree.CallExpression, context: FileCo
     if (TYPE_ASSERTION.test(name)) return 'type';
     if (isScript) return 'script';
     return isRunnerAssertion(node, name, styles, source) ? 'runner' : undefined;
-}
-
-function getChainEnd(node: TSESTree.MemberExpression): TSESTree.MemberExpression | undefined {
-    let top = node;
-    while (top.parent.type === AST_NODE_TYPES.MemberExpression && top.parent.object === top && !top.parent.computed)
-        top = top.parent;
-    return top === node ? undefined : top;
 }
 
 /**

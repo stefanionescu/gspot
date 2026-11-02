@@ -13,6 +13,23 @@ const isModuleDeclaration = ASTUtils.isNodeOfTypes(MODULE_DECLARATION_NODES.map(
 
 const isUnwrappable = ASTUtils.isNodeOfTypes(UNWRAPPABLE_NODES.map((type) => AST_NODE_TYPES[type]));
 
+function getOutermostMember(node: TSESTree.Node): TSESTree.Node {
+    let outer = node;
+    while (outer.parent?.type === AST_NODE_TYPES.MemberExpression && outer.parent.object === outer)
+        outer = outer.parent;
+    return outer;
+}
+
+function isMemberWrite(member: TSESTree.Node): boolean {
+    const { parent } = member;
+    if (parent === undefined || member.type !== AST_NODE_TYPES.MemberExpression) return false;
+    return (
+        (parent.type === AST_NODE_TYPES.AssignmentExpression && parent.left === member) ||
+        parent.type === AST_NODE_TYPES.UpdateExpression ||
+        (parent.type === AST_NODE_TYPES.UnaryExpression && parent.operator === 'delete')
+    );
+}
+
 /**
 Get the statement after a declaration in its block, module, or switch case.
 
@@ -38,23 +55,6 @@ export function unwrapExpression(node: TSESTree.Node): TSESTree.Node {
     let value = node;
     while (isUnwrappable(value)) value = value.expression;
     return value;
-}
-
-function getOutermostMember(node: TSESTree.Node): TSESTree.Node {
-    let outer = node;
-    while (outer.parent?.type === AST_NODE_TYPES.MemberExpression && outer.parent.object === outer)
-        outer = outer.parent;
-    return outer;
-}
-
-function isMemberWrite(member: TSESTree.Node): boolean {
-    const { parent } = member;
-    if (parent === undefined || member.type !== AST_NODE_TYPES.MemberExpression) return false;
-    return (
-        (parent.type === AST_NODE_TYPES.AssignmentExpression && parent.left === member) ||
-        parent.type === AST_NODE_TYPES.UpdateExpression ||
-        (parent.type === AST_NODE_TYPES.UnaryExpression && parent.operator === 'delete')
-    );
 }
 
 /**
