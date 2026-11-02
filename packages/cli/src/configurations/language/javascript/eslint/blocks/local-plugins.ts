@@ -36,25 +36,27 @@ export function listLocalPlugins(
     targetPath: string,
     shipped: ReadonlySet<string | undefined>,
 ): EslintPlugins {
-    const records = listPluginRecords(scopes);
-    const paths = new Map<string, string>();
-    for (const { name, path } of records) {
-        const previous = paths.get(name);
-        if (previous !== undefined && previous !== path)
+    const sources = new Map<string, string>();
+    for (const plugin of listPluginRecords(scopes)) {
+        const source: string = plugin.package ?? (plugin.path as string);
+        const previous = sources.get(plugin.name);
+        if (previous !== undefined && previous !== source)
             throw new GspotError(
                 'settings',
-                `tools.eslint.plugins: ${name} names two modules, ${previous} and ${path}. Give each its own prefix.`,
+                `tools.eslint.plugins: ${plugin.name} names two modules, ${previous} and ${source}. Give each its own prefix.`,
             );
-        paths.set(name, path);
+        sources.set(plugin.name, source);
     }
+    const packages = new Set(listPluginRecords(scopes).map((plugin) => plugin.package));
     return Object.fromEntries(
-        [...paths].map(([name, path], index) => {
+        [...sources].map(([name, source], index) => {
             if (shipped.has(name))
                 throw new GspotError(
                     'settings',
                     `tools.eslint.plugins: ${name} is the rule prefix of a plugin that gspot loads. Choose another name.`,
                 );
-            return [name, [`localPlugin${String(index)}`, buildModuleSpecifier(targetPath, path)] as const];
+            const module = packages.has(source) ? source : buildModuleSpecifier(targetPath, source);
+            return [name, [`localPlugin${String(index)}`, module] as const];
         }),
     );
 }

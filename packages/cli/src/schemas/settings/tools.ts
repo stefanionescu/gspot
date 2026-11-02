@@ -8,6 +8,7 @@ import {
     eslintPluginsSchema,
     buildRuleTableSchema,
     stylelintRulesSchema,
+    stylelintPluginsSchema,
 } from '#cli/schemas/settings/rules.ts';
 import {
     RUFF_SELECTOR,
@@ -242,6 +243,7 @@ export const toolsSchema = z.strictObject({
                 description:
                     'Options for Stylelint rules, which stay errors. gspot refuses options for a rule of level all at a lower level, and Stylelint reports a rule that it does not know. Accept a finding with `gspot ignore css/stylelint --rule <rule> --reason "<why>"`.',
             }),
+            plugins: stylelintPluginsSchema,
         })
         .optional(),
 });

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import semver from 'semver';
 import { isTable } from '#cli/system/tables.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
@@ -7,9 +8,11 @@ import { allowReasonedValue, relativePathSchema, nonemptyStringsSchema } from '#
 
 import {
     RULE_CONDITIONS,
+    NPM_PACKAGE_NAME,
     ESLINT_SEVERITIES,
     ESLINT_PLUGIN_NAME,
     ESLINT_PLUGIN_MODULE,
+    PLUGIN_SOURCE_REFUSAL,
 } from '#cli/config/settings/schema.ts';
 
 const commitlintValuesSchema = z.record(
@@ -116,24 +119,48 @@ const eslintOptionsSchema = z.union([z.never().array().max(0), z.tuple([firstEsl
 
 export const eslintRulesSchema = buildRuleTableSchema(z.record(z.string(), eslintOptionsSchema), 'javascript/eslint');
 
+const pluginSourceFields = {
+    path: relativePathSchema
+        .refine((path) => ESLINT_PLUGIN_MODULE.test(path), 'Name a .js or .mjs module.')
+        .optional()
+        .meta({
+            description: 'A tracked plugin module, relative to the table that sets it. Leave it out with package.',
+        }),
+    package: z.string().regex(NPM_PACKAGE_NAME, 'Use an npm package name.').optional().meta({
+        description: 'An npm package that gspot install puts in .gspot/node_modules. Leave it out with path.',
+    }),
+    version: z
+        .string()
+        .refine((version) => semver.valid(version) !== null, 'Use an exact version, such as 1.2.3.')
+        .optional()
+        .meta({
+            description: 'The exact version of the package.',
+        }),
+};
+
 export const eslintPluginsSchema = z
     .strictObject({
         name: z.string().regex(ESLINT_PLUGIN_NAME, 'Use a lowercase rule prefix, such as local.').meta({
             description: 'The rule prefix, such as local in local/no-legacy-api.',
         }),
-        path: relativePathSchema.regex(ESLINT_PLUGIN_MODULE, 'Name a .js or .mjs module.').meta({
-            description: 'The plugin module, relative to the table that sets it.',
-        }),
+        ...pluginSourceFields,
         rules: eslintRulesSchema.meta({
             description: 'The rules of the plugin to turn on, with their options.',
         }),
     })
+    .refine(
+        (plugin) =>
+            plugin.path === undefined
+                ? plugin.package !== undefined && plugin.version !== undefined
+                : plugin.package === undefined && plugin.version === undefined,
+        PLUGIN_SOURCE_REFUSAL,
+    )
     .array()
     .default([] as [])
     .meta({
         configurations: ['javascript'],
         description:
-            'Your own ESLint plugins: a rule prefix as name, a tracked .js or .mjs module as path, and the rules that turn on as errors.',
+            'ESLint plugins of your own: a rule prefix as name, a tracked .js or .mjs module as path or a pinned npm package as package and version, and the rules that turn on as errors.',
     });
 
 const stylelintOptionsSchema = z
@@ -153,3 +180,25 @@ export const stylelintRulesSchema = buildRuleTableSchema(
     z.record(nonemptyStringSchema, z.union([stylelintValueSchema, stylelintTupleSchema])),
     'css/stylelint',
 );
+
+export const stylelintPluginsSchema = z
+    .strictObject({
+        ...pluginSourceFields,
+        rules: stylelintRulesSchema.meta({
+            description: 'The rules of the plugin to turn on, with their options.',
+        }),
+    })
+    .refine(
+        (plugin) =>
+            plugin.path === undefined
+                ? plugin.package !== undefined && plugin.version !== undefined
+                : plugin.package === undefined && plugin.version === undefined,
+        PLUGIN_SOURCE_REFUSAL,
+    )
+    .array()
+    .default([] as [])
+    .meta({
+        configurations: ['css'],
+        description:
+            'Stylelint plugins of your own: a tracked .js or .mjs module as path or a pinned npm package as package and version, and the rules that turn on as errors.',
+    });

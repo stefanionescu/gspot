@@ -77,10 +77,11 @@ options or ignore it. Before `gspot install`, explain asks you to run it. Stylel
 
 For a Ruff rule, `gspot explain python/ruff E501` prints its summary. Add `--verbose` for its full explanation.
 
-## Your own ESLint rules
+## Plugins
 
-A plugin module in the repository adds your own rules. Each `[[tools.eslint.plugins]]` record names the rule prefix,
-the module, and the rules to turn on as errors for the code files of its scope:
+A plugin adds rules that gspot does not ship. Name it as a module in the repository, or as an npm package at an exact
+version. Each `[[tools.eslint.plugins]]` record names the rule prefix, the plugin, and the rules to turn on as errors
+for the code files of its scope:
 
 ```javascript title="tools/lint/plugin.mjs"
 export default {
@@ -108,6 +109,32 @@ rules = { "no-legacy-api" = [] }
 
 Name a tracked `.js` or `.mjs` file as the module. The name cannot take the prefix of a plugin that gspot loads.
 ESLint then reports `local/no-legacy-api`.
+
+For an npm package, set `package` and `version` in place of `path`:
+
+```toml
+[[tools.eslint.plugins]]
+name = "acme"
+package = "eslint-plugin-acme"
+version = "1.2.3"
+rules = { "no-legacy-api" = [] }
+```
+
+`gspot install` puts the package in `.gspot/node_modules`, beside the ESLint that gspot pins, so the plugin loads that
+ESLint and no package of your repository. Run `gspot install` after you change a record.
+
+`[[tools.stylelint.plugins]]` takes `path`, or `package` and `version`, and `rules`. It has no `name`, because a Stylelint
+plugin names its own rules:
+
+```toml
+[[tools.stylelint.plugins]]
+package = "stylelint-acme"
+version = "1.2.3"
+rules = { "acme/no-red" = true }
+```
+
+The table holds no severity, so gspot reports every rule of a record as an error. A rule that warned in your old config
+now fails the check.
 
 ## Ruff
 

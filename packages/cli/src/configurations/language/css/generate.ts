@@ -1,5 +1,6 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
+import { buildModuleSpecifier } from '#cli/system/paths.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
@@ -101,14 +102,20 @@ export function buildStylelintFile(planned: PlannedConfig): string {
               ],
           }
         : {};
+    const plugins = options.plugins.map(
+        (plugin) => plugin.package ?? buildModuleSpecifier(planned.targetPath, plugin.path as string),
+    );
     const document = {
         extends: 'stylelint-config-standard',
-        rules: Object.assign(
-            { ...STYLELINT_BASE_RULES, ...syntaxRules },
-            Object.fromEntries((isAll ? [] : levelOff).map((rule) => [rule, null])),
-            picked,
-            Object.fromEntries(off.map((rule) => [rule, null])),
-        ),
+        ...(plugins.length > 0 && { plugins }),
+        rules: {
+            ...STYLELINT_BASE_RULES,
+            ...syntaxRules,
+            ...Object.fromEntries((isAll ? [] : levelOff).map((rule) => [rule, null])),
+            ...picked,
+            ...Object.fromEntries(options.plugins.flatMap(({ rules }) => Object.entries(rules))),
+            ...Object.fromEntries(off.map((rule) => [rule, null])),
+        },
         ...(overrides.length > 0 && { overrides }),
     };
 

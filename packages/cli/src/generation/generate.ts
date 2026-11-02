@@ -21,8 +21,8 @@ import { JSON_INDENT, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts
 import { AGENTS_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/repository/setup.ts';
 import { buildBunScannerEdits } from '#cli/configurations/general/dependencies/generate.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
-import { listPackagePins, buildMiseInstall, buildPythonProjectTable } from '#cli/tools/pins.ts';
 import { LFS_FILTER, FILTER_ATTRIBUTE, GITATTRIBUTES_FILE } from '#cli/config/repository/files.ts';
+import { buildMiseInstall, listNpmProjectPins, buildPythonProjectTable } from '#cli/tools/pins.ts';
 import type { Pipeline, RuleFile, FrozenLockfile, CiPackageManager } from '#cli/types/generation.ts';
 
 import {
@@ -130,9 +130,11 @@ Build the project files that the tool installers read: the npm, Python, and mise
 
 @param session the package manager and the configurations in use.
 */
-export function buildToolProjects(session: Pick<Session, 'packageManager' | 'toolConfigurations'>): GeneratedFile[] {
+export function buildToolProjects(
+    session: Pick<Session, 'packageManager' | 'scopes' | 'toolConfigurations'>,
+): GeneratedFile[] {
     const { packageManager, toolConfigurations } = session;
-    const project = { ...NPM_TOOL_PROJECT, devDependencies: listPackagePins(toolConfigurations).npm };
+    const project = { ...NPM_TOOL_PROJECT, devDependencies: listNpmProjectPins(session) };
     const npmProject = { path: GSPOT_PATHS.npmProject, content: `${JSON.stringify(project, null, JSON_INDENT)}\n` };
     const python = buildPythonProjectTable(toolConfigurations);
     const pythonContent = stringify({ project: python }, CONFIG_TOML_FORMAT);

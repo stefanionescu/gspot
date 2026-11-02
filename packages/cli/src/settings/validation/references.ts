@@ -66,11 +66,11 @@ export function validateRuleFilePaths(root: string, settings: Settings): Setting
         const plugins = table.tools?.['eslint']?.['plugins'];
         const ruleFiles = table.security?.rule_files;
         const paths = [
-            ...(plugins ?? []).map((plugin, index) => ({
-                value: plugin.path,
-                key: 'path',
-                path: [...path, 'tools', 'eslint', 'plugins', index, 'path'],
-            })),
+            ...(plugins ?? []).flatMap(({ path: value }, index) =>
+                value === undefined
+                    ? []
+                    : [{ value, key: 'path', path: [...path, 'tools', 'eslint', 'plugins', index, 'path'] }],
+            ),
             ...(ruleFiles ?? []).map((value, index) => ({
                 value,
                 key: 'rule_files',

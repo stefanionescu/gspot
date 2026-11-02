@@ -12,8 +12,14 @@ import { UV_TOOL, UV_REINSTALL_FLAG } from '#cli/config/tools/installers.ts';
 import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
 import { installNpmTools, planNpmLockfile } from '#cli/tools/installers/npm/project.ts';
 import { isLockfileFresh, selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
-import { listMisePins, findPackagePin, listPackagePins, buildPythonProjectTable } from '#cli/tools/pins.ts';
 
+import {
+    listMisePins,
+    findPackagePin,
+    listPackagePins,
+    listNpmProjectPins,
+    buildPythonProjectTable,
+} from '#cli/tools/pins.ts';
 import {
     installPythonTools,
     planPythonLockfile,
@@ -40,13 +46,12 @@ function readMiseLockfileState(files: Files, configurations: Session['toolConfig
 function readNpmLockfileState(
     files: Files,
     packageManager: ToolPackageManagerName,
-    configurations: Session['toolConfigurations'],
+    session: Pick<Session, 'scopes' | 'toolConfigurations'>,
 ): StaleLockfile | undefined {
     const path = `${GSPOT_FOLDER}/${selectLockfileName(packageManager)}`;
     const saved = files.read(path);
     if (saved === undefined) return { path, kind: 'absent' };
-    const dependencies = listPackagePins(configurations).npm;
-    return isLockfileFresh(packageManager, saved.bytes.toString('utf8'), dependencies)
+    return isLockfileFresh(packageManager, saved.bytes.toString('utf8'), listNpmProjectPins(session))
         ? undefined
         : { path, kind: 'changed' };
 }
@@ -83,7 +88,7 @@ writes nothing, and it reads no package manager settings.
 @param generated the tool project files that apply writes.
 */
 export function listStaleLockfiles(
-    session: Pick<Session, 'root' | 'toolPackageManager' | 'toolConfigurations'>,
+    session: Pick<Session, 'root' | 'scopes' | 'toolPackageManager' | 'toolConfigurations'>,
     generated: GeneratedFile[],
 ): StaleLockfile[] {
     const { root, toolPackageManager, toolConfigurations } = session;
@@ -92,7 +97,7 @@ export function listStaleLockfiles(
     const lockfiles: (StaleLockfile | undefined)[] = [];
     if (projects.has(GSPOT_PATHS.miseProject)) lockfiles.push(readMiseLockfileState(files, toolConfigurations));
     if (projects.has(GSPOT_PATHS.npmProject) && toolPackageManager !== undefined)
-        lockfiles.push(readNpmLockfileState(files, toolPackageManager, toolConfigurations));
+        lockfiles.push(readNpmLockfileState(files, toolPackageManager, session));
     if (projects.has(GSPOT_PATHS.pythonProject)) lockfiles.push(readPythonLockfileState(files, toolConfigurations));
     return lockfiles.filter((lockfile): lockfile is StaleLockfile => lockfile !== undefined);
 }

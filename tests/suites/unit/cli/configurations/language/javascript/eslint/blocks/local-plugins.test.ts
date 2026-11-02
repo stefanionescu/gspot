@@ -37,6 +37,41 @@ test('a scope plugin reaches its scope and an inherited root plugin reaches nest
     ).toStrictEqual(SCOPE_PLUGIN_FINDINGS);
 });
 
+test('a plugin package loads from .gspot/node_modules and reports with its rule prefix', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            tables: LOCAL_PLUGIN_TABLES.replace(
+                'path = "tools/lint/plugin.mjs"',
+                'package = "eslint-plugin-acme"\nversion = "1.2.3"',
+            ).replace('"local"', '"acme"'),
+        }),
+        '.gitignore': 'node_modules/\n',
+        'package.json': '{"private":true,"type":"module"}\n',
+        '.gspot/node_modules/eslint-plugin-acme/package.json':
+            '{"name":"eslint-plugin-acme","version":"1.2.3","type":"module","main":"plugin.mjs"}\n',
+        '.gspot/node_modules/eslint-plugin-acme/plugin.mjs': LOCAL_PLUGIN,
+        'source.js': 'export const forbidden = 1;\n',
+    });
+
+    commitAll(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
+    expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['acme/no-forbidden'])).toStrictEqual([
+        { file: 'source.js', rule: 'acme/no-forbidden', line: 1 },
+    ]);
+});
+
+test('a plugin record with a package and no version is a settings error', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            tables: '[[tools.eslint.plugins]]\nname = "acme"\npackage = "eslint-plugin-acme"\nrules = {}\n',
+        }),
+        'package.json': '{"private":true,"type":"module"}\n',
+    });
+    const refused = await runGspot(sandbox.path, ['apply']);
+    expect(refused.code).toBe(2);
+    expect(refused.stderr).toContain('Name a tracked module with path, or an npm package with package and version.');
+});
+
 test('one plugin name with two modules is a settings error that names both paths', async () => {
     const error = await captureRejection(
         buildGeneratedFile(

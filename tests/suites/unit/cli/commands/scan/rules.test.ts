@@ -47,7 +47,8 @@ test('scan sorts the ESLint rules of the repository by what gspot runs', async (
                 'gspot ignore javascript/eslint --rule curly --reason "<why>"',
                 'gspot ignore javascript/eslint --rule max-depth --reason "<why>"',
             ],
-            commandChecks: ['acme/no-legacy'],
+            plugins: ['acme/no-legacy []'],
+            commandChecks: [],
             dropped: [],
         },
     ]);

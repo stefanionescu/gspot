@@ -61,6 +61,7 @@ export async function compareInstalledRules(root: string, reads: RuleRead[]): Pr
             if (user === undefined || shipped === undefined)
                 return { ...CARRY_ROW_START, path, tool, dropped: [NOT_COMPARED_MESSAGE] };
             const compared = compareRules({ check, user, lookup: (rule) => shipped.get(rule) });
+            const added = Map.groupBy(compared.added, (rule) => rule.includes('/'));
             return {
                 ...CARRY_ROW_START,
                 path,
@@ -68,7 +69,8 @@ export async function compareInstalledRules(root: string, reads: RuleRead[]): Pr
                 covered: compared.covered,
                 differing: [...compared.options].map(([rule, options]) => `${rule} ${JSON.stringify(options)}`),
                 reasons: compared.reasons,
-                commandChecks: compared.added,
+                plugins: (added.get(true) ?? []).map((rule) => `${rule} ${JSON.stringify(user.get(rule)?.options)}`),
+                commandChecks: added.get(false) ?? [],
             };
         }),
     );

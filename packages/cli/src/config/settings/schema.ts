@@ -238,9 +238,13 @@ export const ALL_LEVEL_SUMMARY = 'Level all adds rules with known false positive
 
 export const ESLINT_SEVERITIES = ['off', 'warn', 'error'] as const;
 
-export const ESLINT_PLUGIN_NAME = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
+export const ESLINT_PLUGIN_NAME = /^@?[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
+
+export const NPM_PACKAGE_NAME = /^(?:@[a-z0-9~-][a-z0-9._~-]*\/)?[a-z0-9~-][a-z0-9._~-]*$/u;
 
 export const ESLINT_PLUGIN_MODULE = /\.m?js$/u;
+
+export const PLUGIN_SOURCE_REFUSAL = 'Name a tracked module with path, or an npm package with package and version.';
 
 export const MARKDOWNLINT_RULE_ID_REFUSAL =
     'Name a rule by its ID, such as MD010 = { spaces_per_tab = 4 }. This table holds rule options only.';

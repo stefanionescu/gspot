@@ -138,6 +138,7 @@ export type CarryRow = {
     carried: readonly string[];
     differing: readonly string[];
     reasons: readonly string[];
+    plugins: readonly string[];
     commandChecks: readonly string[];
     dropped: readonly string[];
 };

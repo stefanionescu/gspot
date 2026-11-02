@@ -26,6 +26,22 @@ test.each([...STYLESHEET_CASES])('$name installs postcss-html when Stylelint is 
     ).toBe(row.needsHtmlParser);
 });
 
+test('a plugin package joins the tool project at its pin, and a tracked plugin module does not', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['css', 'javascript'], {
+            tables: '[[tools.eslint.plugins]]\nname = "acme"\npackage = "eslint-plugin-acme"\nversion = "1.2.3"\nrules = { no-legacy = [] }\n[[tools.eslint.plugins]]\nname = "local"\npath = "plugin.mjs"\nrules = {}\n[[tools.stylelint.plugins]]\npackage = "stylelint-acme"\nversion = "4.5.6"\nrules = { "acme/no-red" = true }\n',
+        }),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'plugin.mjs': 'export default { rules: {} };\n',
+        'a.css': 'a { color: blue; }\n',
+    });
+    const session = await openSession(sandbox.path);
+    const project = buildGeneratedFiles(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject)!;
+    const { devDependencies } = JSON.parse(project.content) as ToolPackageJson;
+    expect(devDependencies).toMatchObject({ 'eslint-plugin-acme': '1.2.3', 'stylelint-acme': '4.5.6' });
+    expect(Object.keys(devDependencies)).not.toContain('plugin.mjs');
+});
+
 test.each([...LICENSE_TOOL_CASES])(
     'a root allowed package installs the license tool for a child scope with root configurations $configurations',
     async ({ configurations }) => {

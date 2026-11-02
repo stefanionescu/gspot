@@ -14,6 +14,22 @@ const { default: stylelint } = (await import(Bun.resolveSync('stylelint', toolMo
     default: typeof stylelintModule;
 };
 
+test('a Stylelint plugin record names its module and turns its rule on', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['css'], {
+            tables: '[[tools.stylelint.plugins]]\npath = "tools/plugin.mjs"\nrules = { "acme/no-red" = true }\n',
+        }),
+        'tools/plugin.mjs': 'export default {};\n',
+        'a.css': 'a { color: red; }\n',
+    });
+    const session = await openSession(sandbox.path);
+    const target = getConfigPath(session, 'stylelint', '');
+    const generated = buildGeneratedFiles(session).files.find(({ path }) => path === target)!;
+    const config = JSON.parse(generated.content) as Config;
+    expect(config.plugins).toStrictEqual(['../../../../tools/plugin.mjs']);
+    expect(config.rules?.['acme/no-red']).toBe(true);
+});
+
 test.each(['vue'])('a CSS-only scope checks properties inside a %s component style', async (extension) => {
     const path = `Card.${extension}`;
     const code = '<style>p { nonexistent-property: red; }</style>\n';

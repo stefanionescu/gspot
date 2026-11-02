@@ -337,6 +337,7 @@ export const CARRY_HEADING = 'what init carries from the configs it replaces';
 export const CARRY_GROUPS = {
     carried: 'carried over',
     differing: 'other options, to set after init',
+    plugins: 'keep with a plugin record',
     commandChecks: 'keep with a command check of your own',
     dropped: 'dropped',
 } as const;
@@ -346,6 +347,7 @@ export const CARRY_ROW_START = {
     carried: [],
     differing: [],
     reasons: [],
+    plugins: [],
     commandChecks: [],
     dropped: [],
 } as const;

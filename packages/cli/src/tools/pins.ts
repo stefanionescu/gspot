@@ -7,7 +7,16 @@ import type { LintCommandSearch } from '#cli/types/repository.ts';
 import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
 import { LINT_PACKAGE, SECOND_TOOLS } from '#cli/config/repository/setup.ts';
 import { UV_TOOL, NODE_TOOL, CONFIG_TOML_FORMAT, PYTHON_TOOL_PROJECT } from '#cli/config/tools/installers.ts';
-import type { Host, PackagePin, MiseToolPin, PackagePins, GeneratedFile, PythonToolProject } from '#cli/types/tools.ts';
+
+import type {
+    Host,
+    Session,
+    PackagePin,
+    MiseToolPin,
+    PackagePins,
+    GeneratedFile,
+    PythonToolProject,
+} from '#cli/types/tools.ts';
 
 /**
 List the tools that mise installs, apart from those in the npm and Python tool projects, and add uv when a Python
@@ -81,6 +90,23 @@ export function listPackagePins(configurations: Configuration[]): PackagePins {
         npm: Object.fromEntries(npm.toSorted(([first], [second]) => compareText(first, second))),
         python,
     };
+}
+
+/**
+List the npm pins of the tool project: the shipped tools, and the plugin packages that the settings name. A shipped pin
+wins over a plugin record that names the same package.
+
+@param session the configurations in use, and the settings of each scope.
+*/
+export function listNpmProjectPins(session: Pick<Session, 'scopes' | 'toolConfigurations'>): PackagePins['npm'] {
+    const plugins = session.scopes.flatMap(({ settings }) => [
+        ...(settings.tables['tools.eslint']?.plugins ?? []),
+        ...(settings.tables['tools.stylelint']?.plugins ?? []),
+    ]);
+    const pluginPins = plugins.flatMap(({ package: name, version }) =>
+        name === undefined ? [] : [[name, version as string] as const],
+    );
+    return { ...Object.fromEntries(pluginPins), ...listPackagePins(session.toolConfigurations).npm };
 }
 
 /**
