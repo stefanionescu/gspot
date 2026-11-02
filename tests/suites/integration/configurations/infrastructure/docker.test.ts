@@ -156,7 +156,7 @@ test('every rule code of the pinned hadolint has a level', async () => {
         cwd: installedSandbox().root,
     });
     expect(located.code, located.stderr).toBe(0);
-    const binary = await readFile(join(located.stdout.trim(), 'hadolint'), 'latin1');
+    const binary = await readFile(Bun.which('hadolint', { PATH: located.stdout.trim() })!, 'latin1');
     const levelled = new Set<string>([
         ...(getTool(readConfigurations().values(), 'hadolint').off?.basic ?? []),
         ...HADOLINT_BOTH_LEVEL_CODES,
