@@ -35,13 +35,11 @@ function listHeaderIssues(grid: readonly (readonly TableCell[])[]): HeaderIssue[
         );
         return (cell.headers ?? [])
             .filter((id) => !near.has(id))
-            .map(
-                (id): HeaderIssue => ({
-                    node: cell.node,
-                    messageId: allHeaders.has(id) ? 'otherHeader' : 'unknownHeader',
-                    data: { id },
-                }),
-            );
+            .map((id) => ({
+                node: cell.node,
+                messageId: allHeaders.has(id) ? 'otherHeader' : 'unknownHeader',
+                data: { id },
+            }));
     });
 }
 

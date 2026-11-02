@@ -42,10 +42,7 @@ export type MemberAssignment = { variable: TSESLint.Scope.Variable; property: st
 
 export type RuleContext = Readonly<TSESLint.RuleContext<string, unknown[]>>;
 
-export type FunctionNode =
-    | TSESTree.FunctionDeclaration
-    | TSESTree.FunctionExpression
-    | TSESTree.ArrowFunctionExpression;
+export type FunctionNode = Exclude<LocalFunction, TSESTree.TSDeclareFunction>;
 
 export type FileContext = Pick<RuleContext, 'filename' | 'settings' | 'sourceCode'>;
 
