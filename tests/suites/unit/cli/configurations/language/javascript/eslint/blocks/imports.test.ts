@@ -77,7 +77,8 @@ test('the import-cycles config runs import-x/no-cycle alone', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript']),
         'package.json': '{"private":true,"type":"module"}',
-        'first.js': "import { second } from './second.js';\nexport const first = second;\nconst unused = 1;\n",
+        'first.js':
+            "import { second } from './second.js';\nexport const first = second;\n// eslint-disable-next-line no-unused-vars\nconst unused = 1;\n",
         'second.js': "import { first } from './first.js';\nexport const second = first;\n",
     });
     await buildEslint(sandbox.path);

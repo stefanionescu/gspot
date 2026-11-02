@@ -192,7 +192,10 @@ export const IMPORT_CYCLES_CONFIG = `import config from './eslint.mjs';
 
 export default [
     ...config.map(({ rules: _rules, ...block }) => block),
-    { rules: { 'import-x/no-cycle': ['error', { ignoreExternal: true }] } },
+    {
+        linterOptions: { reportUnusedDisableDirectives: 'off' },
+        rules: { 'import-x/no-cycle': ['error', { ignoreExternal: true }] },
+    },
 ];
 `;
 
