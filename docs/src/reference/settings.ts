@@ -36,7 +36,7 @@ function formatAcceptedValue(accepted: AcceptedSettingValues): string {
         if (choices.every(({ description }) => description !== undefined))
             return `One of these values:\n\n${formatTable(
                 ['Value', 'Meaning'],
-                choices.map(({ value, description }) => [`\`${JSON.stringify(value)}\``, description ?? '']),
+                choices.map(({ value, description = '' }) => [`\`${JSON.stringify(value)}\``, description]),
             )}\n\n`;
         return choices.map(({ value }) => `\`${JSON.stringify(value)}\``).join(', ');
     }

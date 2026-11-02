@@ -26,6 +26,8 @@ export const THEME_SWITCH_LABELS = { dark: 'Switch to light theme', light: 'Swit
 
 export const NPM_URL = `https://www.npmjs.com/package/${cliPackage.name}`;
 
+export const README_OPENING_BLOCKS = 2;
+
 export const SIDEBAR = [
     {
         label: 'Basics',

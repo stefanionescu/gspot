@@ -17,11 +17,12 @@ import {
     APPLE_TOUCH_ICON,
     SOCIAL_IMAGE_ALT,
     SOCIAL_IMAGE_SIZE,
+    README_OPENING_BLOCKS,
 } from '#docs/config/site.ts';
 
 function readReadmeSentence(): string {
     const readme = readFileSync(new URL('../packages/cli/README.md', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
-    const [, paragraph] = readme.split('\n\n');
+    const [, paragraph] = readme.split('\n\n', README_OPENING_BLOCKS);
     if (paragraph === undefined || paragraph === '')
         throw new Error('README.md in packages/cli must open with a paragraph after its title.');
     const [first] = new Intl.Segmenter('en', { granularity: 'sentence' }).segment(
