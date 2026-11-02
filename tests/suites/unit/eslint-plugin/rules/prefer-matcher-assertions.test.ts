@@ -80,6 +80,7 @@ buildRuleTester({ root }).run('prefer-matcher-assertions', plugin.rules['prefer-
         'import { expect } from "@playwright/test";\nexpect(value).toBe(1);',
         'import { assert } from "chai";\nassert.equal(value, null);',
         'import { assert } from "chai";\nassert.notStrictEqual(items.length, 3);',
+        'import { assert } from "chai";\nconst { strictEqual } = assert;\nstrictEqual(value.length, 1);',
         'import assert from "node:assert";\nassert.strictEqual(value, null);',
         { code: 'expect(value).toBe(NaN);', filename: join(root, 'jasmine/a.spec.ts') },
         { code: 'expect(items.length).toBe(2);', filename: join(root, 'early/a.spec.ts') },

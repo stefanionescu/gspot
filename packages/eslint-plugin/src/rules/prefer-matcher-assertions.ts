@@ -109,8 +109,9 @@ function readFamily(assertion: ComparisonAssertion): string | undefined {
     const parent = assertion.received.parent;
     const usesProperty = parent.type === AST_NODE_TYPES.MemberExpression && parent.object === assertion.received;
     if (assertion.style === 'chai-bdd') return usesProperty ? 'chai-should' : 'chai-expect';
-    const isLoose = assertion.style === 'chai-assert' && assertion.comparison !== 'strict';
-    return isLoose ? undefined : MATCHER_FAMILIES.get(assertion.style);
+    const isBare = assertion.node.callee.type !== AST_NODE_TYPES.MemberExpression;
+    const isSkipped = assertion.style === 'chai-assert' && (isBare || assertion.comparison !== 'strict');
+    return isSkipped ? undefined : MATCHER_FAMILIES.get(assertion.style);
 }
 
 function readTemplateKey(assertion: ComparisonAssertion, kind: string, family: string, allowsSize: boolean): string {
