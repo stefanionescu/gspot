@@ -109,7 +109,7 @@ export function buildPluginPage(): ReferencePage {
     const readme = readFileSync(new URL('../../../packages/eslint-plugin/README.md', import.meta.url), 'utf8');
     const requirements = `Requires Node.js \`${pluginPackage.engines.node}\` and ESLint \`${pluginPackage.peerDependencies.eslint}\`. The optional magic-numbers rule needs \`@typescript-eslint/eslint-plugin\` \`${pluginPackage.peerDependencies['@typescript-eslint/eslint-plugin']}\`.`;
     const introduction = readme
-        .slice(readme.indexOf('\n'))
+        .slice(readme.indexOf('\n'), readme.indexOf('## Rule reference'))
         .trim()
         .replace('## Install\n', `## Install\n\n${requirements}\n`)
         .replace('## Use\n', `## Use\n\n${formatPluginPresets()}\n`);
