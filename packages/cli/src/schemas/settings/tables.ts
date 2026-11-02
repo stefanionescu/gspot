@@ -2,6 +2,7 @@ import { z } from 'zod';
 import semver from 'semver';
 import { isTable } from '#cli/system/tables.ts';
 import parseExpression from 'spdx-expression-parse';
+import { GLOB_EXCLUSION } from '#cli/config/system.ts';
 import { SETTING_LANGUAGES } from '#cli/config/manifests.ts';
 import { commandSchema } from '#cli/schemas/manifests/checks.ts';
 import type { ImportRule, SettingsError, NamingCategory, SettingLanguage } from '#cli/types/settings.ts';
@@ -16,7 +17,6 @@ import {
 import {
     CI_PINS,
     CI_PROVIDERS,
-    NEGATED_IMPORT_PATH,
     GITHUB_ONLY_CI_KEYS,
     DOCSTRING_CONVENTIONS,
     NAMING_TABLE_CATEGORIES,
@@ -108,7 +108,7 @@ function validateImportRules(rules: ImportRule[]): SettingsError[] {
                 : { path: [index, 'can_import', edge], message: `There is no import rule called ${name}.` },
         ),
         ...rule.paths.flatMap((path, position) =>
-            NEGATED_IMPORT_PATH.test(path)
+            GLOB_EXCLUSION.test(path)
                 ? {
                       path: [index, 'paths', position],
                       message: `The import rule ${rule.name} cannot exclude ${path}. Put a narrower rule for those files first, and list what it may import in can_import.`,

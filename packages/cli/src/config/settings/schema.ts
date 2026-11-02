@@ -180,8 +180,6 @@ export const NO_CHECK_RULE_MESSAGE = 'An ignore without check cannot name a rule
 
 export const COMMAND_CHECK_ID = /^[^\s,]+$/u;
 
-export const NEGATED_IMPORT_PATH = /^!(?!\()/u;
-
 export const LANGUAGE_GROUP_TABLES = new Set(['limits', 'naming']);
 
 export const TABLE_DESCRIPTIONS: Readonly<Record<string, string>> = {
