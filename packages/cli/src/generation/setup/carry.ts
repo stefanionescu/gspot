@@ -9,6 +9,7 @@ import { configTableSchema } from '#cli/schemas/parsers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools.ts';
+import { EDITORCONFIG_FILE } from '#cli/config/generation.ts';
 import { LINE_BREAK, GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { MARKDOWNLINT_RULE_ID } from '#cli/config/settings/schema.ts';
@@ -219,20 +220,30 @@ function listUncomparedRows({ conflictingConfigs, tools }: CarryInput): CarryRow
 
 function listPrettierRows({ repository, session, prettierScripts, tools }: CarryInput): CarryRow[] {
     if (!tools.has('prettier')) return [];
-    return session.scopes.flatMap(({ path: scope }) =>
-        readPrettierOptions(repository.root, scope, prettierScripts).map(({ path, options }) => {
-            const { dropped, overrides, ...carried } = options;
+    return session.scopes.flatMap(({ path: scope }) => {
+        const sources = readPrettierOptions(repository.root, scope, prettierScripts);
+        const readPath = sources[0]?.path;
+        const readKeys = new Set(sources.slice(0, 1).flatMap(({ options }) => Object.keys(options)));
+        return sources.map(({ path, options }) => {
+            const { dropped, overrides, ...style } = options;
             const inOverrides = (overrides ?? []).flatMap((override) => override.options.dropped);
-            const isOverridden = buildPrettierOverrides(options, scope, repository).length > 0;
+            const keys = Object.keys(style);
+            const held = new Set(
+                [...keys, PRETTIER_OVERRIDES_KEY].filter(
+                    (key) => path === readPath || (posix.basename(path) === EDITORCONFIG_FILE && !readKeys.has(key)),
+                ),
+            );
+            const isOverridden =
+                held.has(PRETTIER_OVERRIDES_KEY) && buildPrettierOverrides(options, scope, repository).length > 0;
             return {
                 ...CARRY_ROW_START,
                 path,
                 tool: 'prettier',
-                carried: [...Object.keys(carried), ...(isOverridden ? [PRETTIER_OVERRIDES_KEY] : [])],
-                dropped: [...new Set([...dropped, ...inOverrides])],
+                carried: [...keys.filter((key) => held.has(key)), ...(isOverridden ? [PRETTIER_OVERRIDES_KEY] : [])],
+                dropped: [...new Set([...dropped, ...inOverrides, ...keys.filter((key) => !held.has(key))])],
             };
-        }),
-    );
+        });
+    });
 }
 
 /**

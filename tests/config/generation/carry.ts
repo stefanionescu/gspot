@@ -123,6 +123,36 @@ export const CARRY_ROW_CASES = [
         row: { tool: 'gspot', dropped: ['the whole file, which gspot could not read'] },
     },
     {
+        name: 'a package.json key under a Prettier file',
+        files: {
+            '.prettierrc.json': '{"tabWidth":4}',
+            'package.json': '{"private":true,"prettier":{"printWidth":100}}',
+            'source.js': 'export const value = 1;\n',
+        },
+        path: 'package.json',
+        row: { carried: [], dropped: ['printWidth'] },
+    },
+    {
+        name: 'a second Prettier file',
+        files: {
+            '.prettierrc.json': '{"tabWidth":3}',
+            '.prettierrc.yaml': 'printWidth: 110\n',
+            'source.js': 'export const value = 1;\n',
+        },
+        path: '.prettierrc.yaml',
+        row: { carried: [], dropped: ['printWidth'] },
+    },
+    {
+        name: 'an EditorConfig width under a Prettier file',
+        files: {
+            '.prettierrc.json': '{"tabWidth":2}',
+            '.editorconfig': '[*]\nindent_size = 8\nmax_line_length = 100\n',
+            'source.js': 'export const value = 1;\n',
+        },
+        path: '.editorconfig',
+        row: { carried: ['printWidth'], dropped: ['tabWidth'] },
+    },
+    {
         name: 'an EditorConfig width that gspot.toml cannot hold',
         files: { '.editorconfig': '[*]\nmax_line_length = 9999\n', 'source.js': 'export const value = 1;\n' },
         path: '.editorconfig',

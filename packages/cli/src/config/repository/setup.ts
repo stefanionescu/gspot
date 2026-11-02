@@ -183,7 +183,6 @@ export const PRETTIER_ROOT_FILES = [
     '.prettierrc.json',
     '.prettierrc.yml',
     '.prettierrc.yaml',
-    '.prettierrc.toml',
     '.prettierrc.js',
     '.prettierrc.cjs',
     '.prettierrc.mjs',
@@ -192,6 +191,7 @@ export const PRETTIER_ROOT_FILES = [
     'prettier.config.cjs',
     'prettier.config.mjs',
     'prettier.config.ts',
+    '.prettierrc.toml',
 ] as const;
 
 export const IGNORE_FILES = [
