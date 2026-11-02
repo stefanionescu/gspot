@@ -12,8 +12,9 @@ if (call[0] === values.operation) {
     await Bun.write(counter, String(count));
     if (count === Number(values['pause-on-call'])) {
         const marker = values.marker ?? '';
-        await Bun.write(`${marker}.partial`, JSON.stringify({ pid: process.pid, checkout: checkouts[call[0] ?? ''] }));
-        renameSync(`${marker}.partial`, marker);
+        const partial = `${marker}.${String(process.pid)}.partial`;
+        await Bun.write(partial, JSON.stringify({ pid: process.pid, checkout: checkouts[call[0] ?? ''] }));
+        renameSync(partial, marker);
         await Bun.sleep(WAIT_INTERVAL_MILLISECONDS);
     }
 }

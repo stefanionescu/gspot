@@ -38,7 +38,7 @@ test('staged error notes and command arguments name the working root instead of 
     );
 });
 
-test('a staged check with nothing staged skips every check without copying the index', async () => {
+test('a staged check with nothing staged prints that and exits 0 without copying the index', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'source.sh': CLEAN_BASH_SCRIPT,
@@ -51,9 +51,8 @@ test('a staged check with nothing staged skips every check without copying the i
     using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporaryFile);
     const checked = parseCheckReport(await runGspot(sandbox.path, ['check', '--staged', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    expect(checked.report.checks.filter(({ status }) => status !== 'skipped')).toStrictEqual([]);
-    expect(checked.report.comparison).toStrictEqual({
-        content: 'index',
-        reference: runGitStep(sandbox.path, ['rev-parse', 'HEAD^{tree}']),
-    });
+    expect(checked.report.checks).toStrictEqual([]);
+    expect(checked.report.notes).toStrictEqual(['Nothing is staged.']);
+    const printed = await runGspot(sandbox.path, ['check', '--staged']);
+    expect({ code: printed.code, stdout: printed.stdout }).toStrictEqual({ code: 0, stdout: 'Nothing is staged.\n' });
 });

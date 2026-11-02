@@ -1,11 +1,13 @@
 import { join, resolve } from 'node:path';
 import { addAbortSignal } from 'node:stream';
 import { GspotError } from '#cli/system/errors.ts';
+import { readSettings } from '#cli/settings/read.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import { printProgress } from '#cli/engine/report.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { runPushCheck } from '#cli/commands/check/push.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { constants, accessSync, existsSync } from 'node:fs';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
@@ -15,9 +17,9 @@ import { InvalidArgumentError } from '@commander-js/extra-typings';
 import { readGitText, readGitPaths } from '#cli/repository/git/run.ts';
 import { writeProgress, runCancelableCommand } from '#cli/system/terminal.ts';
 import type { CommandLocation, CommandDefinition } from '#cli/types/commands/edits.ts';
-import { readStagedPaths, isWorkingTreeClean } from '#cli/repository/revisions/changes.ts';
 import type { CheckFlags, CheckOptions, CheckCommandJson } from '#cli/types/commands/reports.ts';
-import { BASE_FLAG, STAGED_FLAG, PROGRESS_CLEAR, GIT_WRITE_TREE_ARGUMENTS } from '#cli/config/engine.ts';
+import { readStagedPaths, hasStagedChanges, isWorkingTreeClean } from '#cli/repository/revisions/changes.ts';
+import { BASE_FLAG, STAGED_FLAG, REPORT_STAGES, PROGRESS_CLEAR, GIT_WRITE_TREE_ARGUMENTS } from '#cli/config/engine.ts';
 
 import {
     FIX_FLAG,
@@ -39,7 +41,9 @@ import {
     CHECK_LIST_SEPARATOR,
     EMPTY_CHECKS_MESSAGE,
     CHECK_STOPPED_MESSAGE,
+    NOTHING_STAGED_MESSAGE,
     GIT_SETUP_FILES_ARGUMENTS,
+    GIT_STAGED_SETTINGS_ARGUMENTS,
 } from '#cli/config/commands/reports.ts';
 
 async function readPushInput(cancelSignal: AbortSignal): Promise<string> {
@@ -179,6 +183,23 @@ async function runStagedCheck(
     const started = new Date();
     await assertSetupStaged(root, cancelSignal);
     const staged = await readStagedPaths(root, cancelSignal);
+    if (staged.staged.length === 0 && !(await hasStagedChanges(root, cancelSignal))) {
+        const json = {
+            version: cliPackage.version,
+            notes: [NOTHING_STAGED_MESSAGE],
+            stages: REPORT_STAGES[options.stage ?? 'all'],
+            started: started.toISOString(),
+            duration: Date.now() - started.getTime(),
+            checks: [],
+            ignores: [],
+            baselined: {},
+            unstagedChanges: 0,
+            partial: true,
+            failed: [],
+            exitCode: 0,
+        };
+        return { text: `${NOTHING_STAGED_MESSAGE}\n`, json, exitCode: 0 };
+    }
     const revision = {
         content: 'index',
         cwd: options.cwd,
@@ -215,6 +236,11 @@ async function runCheckSelection(
         const input = await readPushInput(cancelSignal);
         const push = { stdin: input, ...(options.paths[0] !== undefined && { remote: options.paths[0] }) };
         return await runPushCheck(root, { ...options, paths: [], push }, cancelSignal);
+    }
+    if (options.hook === 'commit-msg') {
+        const text = await readGitText(root, GIT_STAGED_SETTINGS_ARGUMENTS, { cancelSignal });
+        const listing = { root, index: [], attributes: new Map(), files: [], unreadablePaths: [] };
+        return await runTreeCheck(root, { ...options, settings: readSettings(text, root), listing }, cancelSignal);
     }
     return await (options.staged
         ? runStagedCheck(root, options, cancelSignal)

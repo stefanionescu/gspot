@@ -93,6 +93,8 @@ export const GIT_STAGED_DIFF_ARGUMENTS = [
 
 export const GIT_CHANGED_COMMITS_ARGUMENTS = ['rev-list', '--reverse'] as const;
 
+export const GIT_STAGED_QUIET_ARGUMENTS = ['diff', '--cached', '--quiet'] as const;
+
 export const GIT_DIFF_NAMES_ARGUMENTS = ['diff', '--relative', '--name-only', '--no-renames', '-z'] as const;
 
 export const GIT_SHALLOW_ARGUMENTS = ['rev-parse', '--is-shallow-repository'] as const;

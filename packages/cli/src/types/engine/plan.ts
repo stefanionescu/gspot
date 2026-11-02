@@ -72,7 +72,7 @@ export type SessionOptions = {
     cache?: RunCache | undefined;
     toolCache?: RunCache | undefined;
     listing?: RepositoryListing | undefined;
-    settings?: Settings;
+    settings?: Settings | undefined;
     unreadablePaths?: string[] | undefined;
     resources?: Disposable[];
     cancelSignal?: AbortSignal | undefined;

@@ -39,7 +39,11 @@ export const GIT_SETUP_FILES_ARGUMENTS = ['ls-files', '--cached', '-z', '--', SE
 
 export const SETUP_PATHS = [SETTINGS_FILE, `${GSPOT_FOLDER}/`] as const;
 
+export const GIT_STAGED_SETTINGS_ARGUMENTS = ['show', `:${SETTINGS_FILE}`] as const;
+
 export const STAGE_SETUP_MESSAGE = `Stage ${SETTINGS_FILE} and ${GSPOT_FOLDER}/.`;
+
+export const NOTHING_STAGED_MESSAGE = 'Nothing is staged.';
 
 export const CHANGED_FLAG = '--changed';
 

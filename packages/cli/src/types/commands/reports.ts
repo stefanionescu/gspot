@@ -4,10 +4,10 @@ import type { Session, HookStatus, ToolInspection } from '#cli/types/tools.ts';
 import type { CarryRow, InitPlan, InitPlanning } from '#cli/types/generation.ts';
 import type { Tool, Check, Setting, Configuration } from '#cli/types/manifests.ts';
 import type { RunReport, PushInput, CheckProgress } from '#cli/types/engine/run.ts';
-import type { InheritedSetting, RemovedConfiguration } from '#cli/types/settings.ts';
 import type { RunCache, CommandResult, CanceledCommandJson } from '#cli/types/system.ts';
+import type { Settings, InheritedSetting, RemovedConfiguration } from '#cli/types/settings.ts';
 import type { CI_FILES, CHECK_STAGES, CHECK_INPUT_HOOKS } from '#cli/config/commands/reports.ts';
-import type { FileKind, StagedPaths, ChangedPaths, PushedRevisions } from '#cli/types/repository.ts';
+import type { FileKind, StagedPaths, ChangedPaths, PushedRevisions, RepositoryListing } from '#cli/types/repository.ts';
 
 type CheckedRevision = { hash: string; refs: string[]; commits: string[]; shallow: boolean; report: RunReport };
 
@@ -43,6 +43,8 @@ export type CheckOptions = {
     messageFile?: string | undefined;
     verbose: boolean;
     toolCache?: RunCache | undefined;
+    settings?: Settings | undefined;
+    listing?: RepositoryListing | undefined;
 };
 
 export type RevisionSource = (

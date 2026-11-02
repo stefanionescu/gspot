@@ -167,6 +167,8 @@ export async function runTreeCheck(
             toolsRoot: treeFolder,
             ...revision,
             toolCache: options.toolCache,
+            settings: options.settings,
+            listing: options.listing,
             resources,
             cancelSignal,
         });

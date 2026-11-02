@@ -2,7 +2,7 @@ import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { GIT_UNTRACKED_FILES_ARGUMENTS } from '#cli/config/repository/files.ts';
 import type { MergeBase, StagedPaths, ChangedPaths } from '#cli/types/repository.ts';
-import { runGit, readGitText, readGitLines, readGitPaths } from '#cli/repository/git/run.ts';
+import { runGit, readGitText, readGitLines, readGitPaths, buildGitError } from '#cli/repository/git/run.ts';
 
 import {
     ORIGIN_HEAD,
@@ -20,6 +20,7 @@ import {
     GIT_MERGE_BASE_ARGUMENTS,
     GIT_STAGED_DIFF_ARGUMENTS,
     GIT_HASH_EXISTS_ARGUMENTS,
+    GIT_STAGED_QUIET_ARGUMENTS,
     GIT_REMOTE_HEADS_ARGUMENTS,
     GIT_VERIFY_COMMIT_ARGUMENTS,
     GIT_LOCAL_BRANCHES_ARGUMENTS,
@@ -115,6 +116,18 @@ export async function readStagedPaths(root: string, cancelSignal?: AbortSignal):
     const staged = cached.toSorted((a, b) => compareText(a, b));
     const dirty = new Set(changed);
     return { staged, unstaged: staged.filter((path) => dirty.has(path)).length };
+}
+
+/**
+Check whether the index differs from `HEAD`. A staged name outside UTF-8 counts, though readStagedPaths leaves it out.
+
+@param root the folder where Git runs.
+@param cancelSignal stops the Git command.
+*/
+export async function hasStagedChanges(root: string, cancelSignal?: AbortSignal): Promise<boolean> {
+    const result = await runGit(root, GIT_STAGED_QUIET_ARGUMENTS, { cancelSignal });
+    if (result.code > 1) throw buildGitError(root, GIT_STAGED_QUIET_ARGUMENTS, result);
+    return result.code === 1;
 }
 
 /**
