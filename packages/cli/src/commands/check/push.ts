@@ -44,7 +44,7 @@ async function runRevisionCheck(
     cancelSignal: AbortSignal,
     revision: PushRevision,
 ): Promise<RevisionCheckResult | undefined> {
-    if (revision.paths?.length === 0) return { skipped: 'no changed paths' };
+    if (revision.paths?.length === 0 && revision.commits.length === 0) return { skipped: 'no changed paths' };
     try {
         const settings = await readGitLines(root, ['ls-tree', '--name-only', revision.hash, '--', SETTINGS_FILE], {
             cancelSignal,
