@@ -61,6 +61,8 @@ export type ComposeDeclaration = {
     service: NonNullable<z.infer<typeof composeSchema>['services']>[string];
 };
 
+export type DockerIgnoredSource = { line: number; source: string };
+
 export type ComposeFiles = { last: TrackedFile; before: TrackedFile[] };
 
 export type ComposeDocuments = {

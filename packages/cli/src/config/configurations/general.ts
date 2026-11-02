@@ -180,11 +180,16 @@ export const RUN_COMMAND = new RegExp(
 export const MISSING_LICENSE_MESSAGE = 'The root has no LICENSE file.';
 
 export const DOCS_RULES = {
+    versionString: 'version-string',
     missingTask: 'missing-task',
     missingReadme: 'missing-readme',
     missingLicense: 'missing-license',
     missingPath: 'missing-path',
 } as const;
+
+export const CHANGELOG_FILE = /(?:^|\/)CHANGELOG[^/]*$/u;
+
+export const VERSION_STRING_MESSAGE = 'This copy of the package version goes stale. Read it from the manifest.';
 
 export const JSCPD_TOOL = 'jscpd';
 

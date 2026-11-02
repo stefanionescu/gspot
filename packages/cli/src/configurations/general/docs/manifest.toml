@@ -55,3 +55,14 @@ stage = "commit"
 summary = "Checks that every scope has a README.md and the root has a LICENSE."
 why = "A scope with no README leaves readers to guess what it does."
 runs = "scope"
+
+[[check]]
+example = "`npm install example@1.2.3` in a README of a package at version 1.2.3 reports `version-string`. Write `npm install example`."
+files = { paths = ["**"] }
+help = "Delete the version, or read it from the package manifest."
+level = "all"
+name = "version-strings"
+runs = "scope"
+stage = "commit"
+summary = "Reports the version of a package manifest of the scope in Markdown and test files, except changelogs."
+why = "A copied version goes stale at the next release."

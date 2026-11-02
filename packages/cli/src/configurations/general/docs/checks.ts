@@ -1,26 +1,28 @@
 import { join, posix } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
 import { statSync, readdirSync } from 'node:fs';
-import { formatScope } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { TRAILING_SLASH } from '#cli/config/system.ts';
 import { find, read } from '#cli/system/files/reads.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
+import { pyprojectSchema } from '#cli/schemas/parsers.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
 import { parseMiseTasks } from '#cli/parsers/projects/mise.ts';
+import { formatScope, escapeRegExp } from '#cli/system/text.ts';
 import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { PACKAGE_JSON, WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { joinScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { readScalarSetting } from '#cli/engine/tool-runs/placeholders.ts';
 import { buildGitignoreMatcher } from '#cli/repository/files/gitignore.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import { LICENSE_FILE, SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
+import { PACKAGE_JSON, PYPROJECT_TOML, WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import type { PathIndex, TaskNames, ProseLine } from '#cli/types/configurations/general.ts';
 import { listExecutableNames, includeParentFolders, listEnclosingFolders } from '#cli/system/paths.ts';
 
@@ -32,6 +34,7 @@ import {
     README_FILE,
     RUN_COMMAND,
     LICENSE_PATH,
+    CHANGELOG_FILE,
     COMMAND_FENCES,
     FILE_EXTENSION,
     PATH_CHARACTERS,
@@ -46,6 +49,7 @@ import {
     INLINE_LINK_TARGET,
     MARKDOWN_EXTENSIONS,
     TRAILING_PUNCTUATION,
+    VERSION_STRING_MESSAGE,
     RELATIVE_PATH_PREFIXES,
     MISSING_LICENSE_MESSAGE,
 } from '#cli/config/configurations/general.ts';
@@ -283,4 +287,42 @@ export function checkRequiredFiles(session: Session, planned: PlannedCheck): Che
             message: MISSING_LICENSE_MESSAGE,
         });
     return findings;
+}
+
+function listScopeVersions(session: Session, scopePath: string): string[] {
+    return session.repository.files
+        .map((file) => file.path)
+        .filter((path) => selectScopePath(path, session.scopes) === scopePath)
+        .flatMap((path) => {
+            const name = posix.basename(path);
+            if (name === PACKAGE_JSON) return [readCachedPackageJson(session.cache, path)?.['version']];
+            return name === PYPROJECT_TOML
+                ? [parseTomlFile(path, read(session.cache, path), pyprojectSchema).project?.version]
+                : [];
+        })
+        .filter((version): version is string => typeof version === 'string');
+}
+
+/**
+Reports the version of a package manifest of the scope in Markdown and test files, except changelogs.
+
+@param session the repository and its tools.
+@param planned the scope files to read.
+*/
+export function checkVersionStrings(session: Session, planned: PlannedCheck): CheckFinding[] {
+    const versions = listScopeVersions(session, planned.scope.path);
+    if (versions.length === 0) return [];
+    const copied = new RegExp(
+        String.raw`(?<![\w.])(?:${versions.map((version) => escapeRegExp(version)).join('|')})(?![\w.])`,
+        'u',
+    );
+    const isTest = buildPathMatcher(planned.scope.settings.test_files);
+    return planned.files
+        .filter(({ path, tags }) => (tags.includes('markdown') || isTest(path)) && !CHANGELOG_FILE.test(path))
+        .flatMap(({ path }) =>
+            read(session.cache, path)
+                .split('\n')
+                .flatMap((text, index) => (copied.test(text) ? [index + 1] : []))
+                .map((line) => ({ file: path, line, rule: DOCS_RULES.versionString, message: VERSION_STRING_MESSAGE })),
+        );
 }

@@ -43,7 +43,6 @@ import { checkTrivyImage } from '#cli/configurations/infrastructure/docker/check
 import { checkBashFunctionSize } from '#cli/configurations/language/bash/checks/function-size.ts';
 import { checkSwiftDocComments } from '#cli/configurations/language/swift/checks/doc-comments.ts';
 import { checkSiteUnusedAssets } from '#cli/configurations/framework/site/checks/unused-assets.ts';
-import { checkMissingPaths, checkRequiredFiles } from '#cli/configurations/general/docs/checks.ts';
 import { checkFunctionOrder } from '#cli/configurations/general/structure/checks/function-order.ts';
 import { checkBashInlineScripts } from '#cli/configurations/language/bash/checks/inline-scripts.ts';
 import { checkUnreadArguments } from '#cli/configurations/language/bash/checks/unread-arguments.ts';
@@ -63,6 +62,7 @@ import { checkJavascriptTsc, checkJavascriptBiome } from '#cli/configurations/la
 import { checkEnvironmentReaders } from '#cli/configurations/general/structure/checks/environment-readers.ts';
 import { checkPassThroughFolders } from '#cli/configurations/general/structure/checks/pass-through-folders.ts';
 import { checkActionlint, checkWorkflowShape } from '#cli/configurations/infrastructure/github-actions/checks.ts';
+import { checkMissingPaths, checkRequiredFiles, checkVersionStrings } from '#cli/configurations/general/docs/checks.ts';
 import { checkEnvExamples, checkEnvDefaults, checkGitleaksPushed } from '#cli/configurations/general/secrets/checks.ts';
 
 import {
@@ -139,6 +139,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'docker/trivy-image': { check: checkTrivyImage },
     'docs/missing-paths': { check: checkMissingPaths },
     'docs/required-files': { check: checkRequiredFiles },
+    'docs/version-strings': { check: checkVersionStrings },
     'duplication/jscpd': { check: checkJscpd },
     'expo/expo-doctor': { check: checkExpoDoctor },
     'github-actions/actionlint': { run: checkActionlint },

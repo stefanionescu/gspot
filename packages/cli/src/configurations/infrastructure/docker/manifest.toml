@@ -83,7 +83,7 @@ help = "Add a .dockerignore beside the Dockerfile with the paths the message nam
 name = "dockerignore"
 runs = "once"
 stage = "commit"
-summary = "Checks that an ignore file sits beside every Dockerfile and keeps the `.git` folder, installed dependencies, and environment files out of the build."
+summary = "Checks that an ignore file sits beside every Dockerfile and keeps the `.git` folder, installed dependencies, and environment files out of the build, and that no `COPY` source sits in that file."
 why = "Without it, the daemon receives the whole folder, and a `COPY` of it puts the history and secrets into the image."
 
 [[check]]

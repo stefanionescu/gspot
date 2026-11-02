@@ -1,7 +1,7 @@
-import { read } from '#cli/system/files/reads.ts';
-import { formatCount } from '#cli/system/text.ts';
+import { formatCount, getPosition } from '#cli/system/text.ts';
 import { findToolName } from '#cli/tools/pins.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { find, read } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { SourceComment } from '#cli/types/parsers.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
@@ -18,6 +18,7 @@ import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';
+import { MESSAGE_REFERENCES } from '#cli/config/configurations/general.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import { mapSettingPaths, joinScopeSelector } from '#cli/settings/paths.ts';
 import { BASELINE_FILE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
@@ -31,6 +32,7 @@ import {
     BRACKET_HELP,
     REASON_ABOVE,
     TOOL_LOCKFILES,
+    SETTINGS_REASON,
     NEGATED_PATTERN,
     UNESCAPED_BRACKET,
     GENERATED_FILE_FINDINGS,
@@ -104,6 +106,14 @@ function classifySuppression(
     return isReasonAccepted(syntax.extractReason(text) ?? preceding) ? undefined : 'no-reason';
 }
 
+function listReasonReferences(reason: string | undefined, place: FindingPlace): CheckFinding[] {
+    return MESSAGE_REFERENCES.filter(({ pattern }) => pattern.test(reason ?? '')).map(({ rule, message }) => ({
+        ...place,
+        rule,
+        message: `This reason ${message}`,
+    }));
+}
+
 function validateSuppressionComment(
     syntax: SuppressionSyntax,
     comment: SourceComment & FindingPlace,
@@ -122,7 +132,7 @@ function validateSuppressionComment(
             },
         ];
     const kind = classifySuppression(syntax, text, preceding);
-    if (kind === undefined) return [];
+    if (kind === undefined) return listReasonReferences(syntax.extractReason(text) ?? preceding, at);
     const message =
         kind === 'no-reason'
             ? `This ${syntax.tool} suppression has no reason of two or more words.`
@@ -238,7 +248,14 @@ export async function checkSuppressions(session: Session, planned: PlannedCheck)
             );
         }
     }
-    return found;
+    const settings = find(session.cache, SETTINGS_FILE) ?? '';
+    const settingsReasons = [...settings.matchAll(SETTINGS_REASON)].flatMap((match) =>
+        listReasonReferences(match.groups?.['reason'], {
+            file: SETTINGS_FILE,
+            line: getPosition(settings, match.index).line,
+        }),
+    );
+    return [...found, ...settingsReasons];
 }
 
 /**

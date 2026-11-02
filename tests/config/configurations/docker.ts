@@ -3,16 +3,19 @@ export const COMPOSE_PAIRING_CASES = [
     { base: 'docker-compose.yml', override: 'docker-compose.production.yml' },
 ] as const;
 
-const REQUIRED_DOCKERIGNORE = '.git\n.env\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n';
+const REQUIRED_DOCKERIGNORE = '.git\n.env\n**/coverage/**\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n';
 
 export const DOCKERIGNORE_ALLOWLISTS = [
     { text: `${REQUIRED_DOCKERIGNORE}!.env\n`, missing: ['.env'] },
     { text: `${REQUIRED_DOCKERIGNORE}!**/.env\n`, missing: ['.env', '**/.env'] },
     { text: '*\n', missing: [] },
-    { text: '*\n!src\n', missing: ['**/.env', '**/.env.*', '**/.dev.vars', '**/.dev.vars.*'] },
-    { text: '*\n!src\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n', missing: [] },
+    { text: '*\n!src\n', missing: ['**/coverage/**', '**/.env', '**/.env.*', '**/.dev.vars', '**/.dev.vars.*'] },
+    { text: '*\n!src\n**/coverage/**\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n', missing: [] },
     { text: '!src\n*\n', missing: [] },
-    { text: '*\n!.env\n', missing: ['.env', '**/.env', '**/.env.*', '**/.dev.vars', '**/.dev.vars.*'] },
+    {
+        text: '*\n!.env\n',
+        missing: ['.env', '**/coverage/**', '**/.env', '**/.env.*', '**/.dev.vars', '**/.dev.vars.*'],
+    },
 ] as const;
 
 export const DOCKERIGNORE_CASES = [
@@ -29,13 +32,13 @@ export const DOCKERIGNORE_CASES = [
                 file: 'Dockerfile',
                 rule: 'missing-file',
                 message:
-                    'Add an ignore file at Dockerfile.dockerignore or .dockerignore that lists .git, .env, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*.',
+                    'Add an ignore file at Dockerfile.dockerignore or .dockerignore that lists .git, .env, **/coverage/**, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*.',
             },
             {
                 file: 'app/Dockerfile',
                 rule: 'missing-file',
                 message:
-                    'Add an ignore file at app/Dockerfile.dockerignore or app/.dockerignore that lists .git, .env, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*, **/.venv/**, **/venv/**, **/__pycache__/**, **/.pytest_cache/**, **/.ruff_cache/**, **/.mypy_cache/**.',
+                    'Add an ignore file at app/Dockerfile.dockerignore or app/.dockerignore that lists .git, .env, **/coverage/**, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*, **/.venv/**, **/venv/**, **/__pycache__/**, **/.pytest_cache/**, **/.ruff_cache/**, **/.mypy_cache/**.',
             },
         ],
     },
@@ -98,7 +101,7 @@ export const DOCKERIGNORE_CASES = [
                 file: 'affected/Dockerfile',
                 rule: 'missing-file',
                 message:
-                    'Add an ignore file at affected/Dockerfile.dockerignore or affected/.dockerignore that lists .git, .env, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*.',
+                    'Add an ignore file at affected/Dockerfile.dockerignore or affected/.dockerignore that lists .git, .env, **/coverage/**, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*.',
             },
         ],
     },
@@ -116,7 +119,7 @@ export const DOCKERIGNORE_CASES = [
                 file: 'Dockerfile.dockerignore',
                 rule: 'missing-entry',
                 message:
-                    'Add these entries to Dockerfile.dockerignore: .env, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*.',
+                    'Add these entries to Dockerfile.dockerignore: .env, **/coverage/**, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*.',
             },
         ],
     },
@@ -128,6 +131,7 @@ export const DOCKERIGNORE_CASES = [
             Dockerfile: 'FROM scratch\n',
             '.dockerignore': `**/.git
 **/.env*
+**/coverage/**
 **/.env
 **/.env.*
 **/.dev.vars

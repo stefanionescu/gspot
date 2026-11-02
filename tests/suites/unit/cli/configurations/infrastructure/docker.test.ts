@@ -207,3 +207,19 @@ test.each([
     });
     expect(await runSandboxCheck(sandbox.path, 'docker/instructions')).toStrictEqual([]);
 });
+
+test('docker/dockerignore reports a COPY source that the ignore file excludes', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['docker']),
+        Dockerfile: 'FROM scratch\nCOPY ./private/ /app/\nCOPY src /app/src\nCOPY --from=build private /app/\n',
+        '.dockerignore': '.git\nprivate/\n',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'docker/dockerignore');
+    expect(
+        findings
+            .filter(({ rule }) => rule === 'ignored-source')
+            .map(({ file, line, message }) => ({ file, line, message })),
+    ).toStrictEqual([
+        { file: 'Dockerfile', line: 2, message: '.dockerignore excludes private, so this COPY finds nothing.' },
+    ]);
+});

@@ -222,7 +222,14 @@ export const LINE_CONTINUATION = /\\\n/gu;
 
 export const EXEC_FORM_START = /^\[\s*"(?<program>[^"]+)"/u;
 
-export const DOCKER_RULES = { missingFile: 'missing-file', missingEntry: 'missing-entry', secret: 'secret' } as const;
+export const DOCKER_RULES = {
+    missingFile: 'missing-file',
+    missingEntry: 'missing-entry',
+    ignoredSource: 'ignored-source',
+    secret: 'secret',
+} as const;
+
+export const COPY_FROM_FLAG = '--from=';
 
 export const SELF_REPOSITORY_MARKER = /^(\s*["']?)(\$|\\x24|\\u0024|\\U00000024)/u;
 

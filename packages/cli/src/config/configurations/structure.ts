@@ -22,6 +22,8 @@ export const SUPPRESSION_KIND_MESSAGES = {
     limit: 'Split the code by its steps, or ask the user to raise the limit in gspot.toml.',
 } as const;
 
+export const SETTINGS_REASON = /\breason\s*=\s*"(?<reason>(?:[^"\\]|\\.)*)"/gu;
+
 export const NEGATED_PATTERN = /^!/u;
 
 export const UNESCAPED_BRACKET = /(?<!\\)[()[\]]/u;

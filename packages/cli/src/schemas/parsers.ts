@@ -43,6 +43,7 @@ const groupIncludeSchema = z.object({
 const dependencyGroupSchema = z.union([z.string(), groupIncludeSchema]).array();
 
 const projectTableSchema = z.object({
+    version: z.string().optional(),
     dependencies: stringsSchema.optional(),
     'optional-dependencies': dependencyGroupsSchema.optional(),
     scripts: z.record(z.string(), z.string()).optional(),

@@ -29,6 +29,7 @@ export const STYLELINT_BASE_RULES = {
         float: ['left', 'right'],
         clear: ['left', 'right'],
         'text-align': ['left', 'right'],
+        outline: ['none', '0'],
     },
     'declaration-property-unit-allowed-list': { 'font-size': ['rem', 'em', '%'] },
     'selector-max-id': 0,
