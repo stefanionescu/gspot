@@ -10,8 +10,8 @@ import type { CommandResult } from '#cli/types/system.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { buildToolProjects } from '#cli/generation/generate.ts';
 import { installTools } from '#cli/tools/installers/install.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { findText, measureFolder } from '#cli/system/files/reads.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
 import { planInit, writeInitFiles } from '#cli/generation/setup/planner.ts';
@@ -37,11 +37,14 @@ async function runScanCommand(
     await readGitText(copy.root, GIT_UNBORN_HEAD_ARGUMENTS, { cancelSignal });
     const planning = await planInit(copy.root, { cwd: copy.root });
     const userRules = await readUserRules(planning);
-    await writeInitFiles(copy.root, planning);
-    const session = await openSession(copy.root, { cancelSignal });
+    await writeInitFiles(copy.root, { ...planning, pinPath: undefined });
+    const session = {
+        ...(await openSession(copy.root, { cancelSignal })),
+        startRunner: planning.session.startRunner,
+    };
     await installTools(session, {
         writer: openFiles(copy.root),
-        generated: buildGeneratedFiles(session),
+        generated: { files: buildToolProjects(session) },
         checkTools: listHostCheckTools(session.configuredChecks),
     });
     const { report } = await runEveryCheck(session);

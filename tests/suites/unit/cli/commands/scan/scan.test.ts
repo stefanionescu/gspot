@@ -17,6 +17,7 @@ async function runScan(root: string): Promise<ScanReport> {
     const result = await runGspot(root, ['scan', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(install).toHaveBeenCalledTimes(1);
+    expect(install.mock.calls[0]?.[1].generated.files.map(({ path }) => path)).not.toContain('.gspot/hooks/pre-commit');
     return JSON.parse(result.stdout) as ScanReport;
 }
 
@@ -74,6 +75,19 @@ test('scan runs the commit checks of the setup, and lists each command that woul
         { path: '.prettierrc.json', carried: ['semi'], dropped: ['quoteProps'] },
         { path: '.prettierignore', carried: ['src/made'] },
     ]);
+});
+
+test('scan leaves the pin out of its copy, so the lockfile of the repository stays current', async () => {
+    await using sandbox = await createGitSandbox({
+        'package.json': '{"name":"example","private":true,"type":"module"}\n',
+        'package-lock.json': '{"name":"example","lockfileVersion":3,"packages":{"":{"name":"example"}}}\n',
+        'src/a.js': 'export const value = 1;\n',
+    });
+    commitAll(sandbox.path);
+    const { checks } = await runScan(sandbox.path);
+    expect(checks.find(({ check }) => check === 'dependencies/stale-lockfile')?.findings).toStrictEqual([]);
+    const generated = checks.find(({ check }) => check === 'gspot/generated-files')?.findings ?? [];
+    expect(generated.filter(({ rule }) => rule === 'changed')).toStrictEqual([]);
 });
 
 test('scan reads the staged files, so a file that Git does not track stays out of the report', async () => {

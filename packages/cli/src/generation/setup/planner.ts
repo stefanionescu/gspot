@@ -143,7 +143,7 @@ export async function writeInitFiles(root: string, initPlan: InitPlanning): Prom
     const writer = openFiles(root);
     const { session, generated } = initPlan;
     writeSettings(writer, initPlan.settingsText, initPlan.reviewed.get(SETTINGS_FILE));
-    if (readGspotPin(root) === undefined) writeGspotPin(writer);
+    if (initPlan.pinPath !== undefined) writeGspotPin(writer);
     const applied = await writeGeneratedFiles(session, generated, writer, { reviewed: initPlan.reviewed });
     const kept = deleteConflictingConfigs(writer, initPlan.plan.delete, initPlan.reviewed);
     applied.notes.push(...kept.map((path) => `kept ${path}: it changed after init read it`));
