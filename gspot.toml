@@ -117,6 +117,11 @@ paths = ["packages/cli/src/configurations/general/data-files/**", "packages/cli/
 allowed_names = ["data-files", "data-files.test"]
 reason = "These files and folders take the name of the data-files configuration."
 
+[[naming.override]]
+paths = ["tests/types/setup.ts"]
+allowed_names = ["rootDir"]
+reason = "The Next.js ESLint plugin names this setting rootDir."
+
 [structure]
 environment_readers = ["packages/cli/src/system/environment.ts", "tests/setup/system/environment.ts", "tests/setup/runner/unit.ts"]
 
