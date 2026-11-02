@@ -16,18 +16,20 @@ function isBranchBody(node: TSESTree.BlockStatement | TSESTree.ExpressionStateme
     return keys.some((key) => Object.is(parent[key as keyof TSESTree.Node], node));
 }
 
-function readEnclosingStatement(identifier: TSESTree.Node): TSESTree.ExpressionStatement | undefined {
+function readEnclosingAction(identifier: TSESTree.Node): TSESTree.Expression | undefined {
     let node: TSESTree.Node | undefined = identifier;
     while (node !== undefined && node.type !== AST_NODE_TYPES.ExpressionStatement && !ASTUtils.isFunction(node))
         node = node.parent;
-    return node?.type === AST_NODE_TYPES.ExpressionStatement ? node : undefined;
+    if (node?.type !== AST_NODE_TYPES.ExpressionStatement) return undefined;
+    const { expression } = node;
+    return expression.type === AST_NODE_TYPES.AwaitExpression ? expression.argument : expression;
 }
 
 function isChangedLater(reference: TSESLint.Scope.Reference): boolean {
-    const expression = readEnclosingStatement(reference.identifier)?.expression;
-    if (reference.isWrite() || expression?.type === AST_NODE_TYPES.CallExpression) return true;
-    if (expression?.type !== AST_NODE_TYPES.AssignmentExpression) return false;
-    let target: TSESTree.Node = expression.left;
+    const action = readEnclosingAction(reference.identifier);
+    if (reference.isWrite() || action?.type === AST_NODE_TYPES.CallExpression) return true;
+    if (action?.type !== AST_NODE_TYPES.AssignmentExpression) return false;
+    let target: TSESTree.Node = action.left;
     while (target.type === AST_NODE_TYPES.MemberExpression) target = target.object;
     return Object.is(target, reference.identifier);
 }
@@ -140,8 +142,7 @@ export const noInvariantReturns = createRule<[], 'invariant'>({
             'BlockStatement:exit': leaveBranch,
             SwitchCase: openBranch,
             'SwitchCase:exit': leaveBranch,
-            'ExpressionStatement[expression.type="CallExpression"]': recordEffect,
-            'ExpressionStatement[expression.type="AssignmentExpression"]': recordEffect,
+            'ExpressionStatement[expression.type=/^(?:Assignment|Await|Call|Update)Expression$/]': recordEffect,
             ':function:exit'(node: TSESTree.Node) {
                 const scope = scopes.at(-1);
                 if (scope === undefined || !isInvariant(scope, context.sourceCode)) return;
