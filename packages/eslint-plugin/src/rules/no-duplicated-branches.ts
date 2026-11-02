@@ -43,7 +43,7 @@ function isUniform(branches: readonly Branch[], source: TSESLint.SourceCode): bo
     return rest.length > 0 && rest.every(({ body }) => haveSameTokens(body, first.body, source));
 }
 
-function findRepeats(
+function listRepeats(
     { branches, isChain }: { branches: readonly Branch[]; isChain: boolean },
     source: TSESLint.SourceCode,
 ): { branch: Branch; first: Branch }[] {
@@ -88,7 +88,7 @@ export const noDuplicatedBranches = createRule<[], 'branch' | 'all' | 'ternary'>
                 context.report({ node: owner, messageId: 'all', data: { kind } });
                 return;
             }
-            for (const { branch, first } of findRepeats({ branches, isChain: isSame && closing === 'none' }, source)) {
+            for (const { branch, first } of listRepeats({ branches, isChain: isSame && closing === 'none' }, source)) {
                 context.report({
                     node: branch.node,
                     messageId: 'branch',

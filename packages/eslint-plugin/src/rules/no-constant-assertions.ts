@@ -11,7 +11,7 @@ function readValue(node: TSESTree.Node, source: TSESLint.SourceCode): AssertedVa
     return { isFresh, isConstant: !isFresh && evaluated !== null && Object(value) !== value, value };
 }
 
-function holds(assertion: Assertion & { kind: 'predicate' }, value: unknown): boolean {
+function isPredicateMet(assertion: Assertion & { kind: 'predicate' }, value: unknown): boolean {
     const isTruthy = Boolean(value);
     const isNullish = value === null || value === undefined;
     const results = {
@@ -34,7 +34,9 @@ function readPredicateFinding(
     const { isFresh, isConstant, value } = readValue(assertion.received, source);
     if (isFresh && FRESH_PREDICATES.has(assertion.predicate) !== assertion.negated)
         return { node: assertion.received, messageId: 'fresh' };
-    return isConstant && holds(assertion, value) ? { node: assertion.received, messageId: 'constant' } : undefined;
+    return isConstant && isPredicateMet(assertion, value)
+        ? { node: assertion.received, messageId: 'constant' }
+        : undefined;
 }
 
 function areEqual(left: unknown, right: unknown, assertion: Assertion & { kind: 'comparison' }): boolean {

@@ -49,7 +49,7 @@ function isAssertionChain(node: TSESTree.Node, roots: ReadonlySet<string>): bool
     return false;
 }
 
-function readIncomplete(node: TSESTree.Node): AssertionFinding | undefined {
+function readIncompleteAssertion(node: TSESTree.Node): AssertionFinding | undefined {
     if (node.type !== AST_NODE_TYPES.MemberExpression || !isAssertionChain(node, ASSERTION_ROOTS)) return undefined;
     const name = ASTUtils.getPropertyName(node);
     const isRejects = name === 'rejects' && isAssertionChain(node.object, EXPECT_ROOTS);
@@ -57,12 +57,12 @@ function readIncomplete(node: TSESTree.Node): AssertionFinding | undefined {
     return ASSERTION_WORDS.has(name) ? [node.property, 'complete'] : undefined;
 }
 
-function listIncomplete(node: TSESTree.Node): AssertionFinding[] {
+function listIncompleteAssertions(node: TSESTree.Node): AssertionFinding[] {
     const callee = node.type === AST_NODE_TYPES.CallExpression ? node.callee : node;
     const property = callee.type === AST_NODE_TYPES.MemberExpression ? callee.property : undefined;
     if (isExpectCall(node)) return [[callee, 'complete']];
     if (property !== undefined && isExpectStatic(callee)) return [[property, 'complete']];
-    const incomplete = node === callee ? readIncomplete(node) : undefined;
+    const incomplete = node === callee ? readIncompleteAssertion(node) : undefined;
     return incomplete === undefined ? [] : [incomplete];
 }
 
@@ -89,7 +89,7 @@ export const noIncompleteAssertions = createRule<[], 'complete' | 'call'>({
         return {
             ExpressionStatement({ expression }) {
                 const node = expression.type === AST_NODE_TYPES.AwaitExpression ? expression.argument : expression;
-                for (const [reported, messageId] of listIncomplete(node)) {
+                for (const [reported, messageId] of listIncompleteAssertions(node)) {
                     context.report({ node: reported, messageId, data: { name: context.sourceCode.getText(reported) } });
                 }
             },

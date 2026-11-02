@@ -34,14 +34,14 @@ function readTestedValue(node: TSESTree.Expression | null): TSESTree.Node | unde
     }
 }
 
-function readOnlyReturn(statements: readonly TSESTree.Statement[]): TSESTree.Expression | null {
+function getSoleReturn(statements: readonly TSESTree.Statement[]): TSESTree.Expression | null {
     const [statement, ...rest] = statements;
     if (statement?.type !== AST_NODE_TYPES.ReturnStatement || rest.length > 0) return null;
     return statement.argument;
 }
 
 function readCast(node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression) {
-    const tested = readTestedValue(readOnlyReturn(node.body.body));
+    const tested = readTestedValue(getSoleReturn(node.body.body));
     if (tested?.type !== AST_NODE_TYPES.MemberExpression) return undefined;
     const { object } = tested;
     const isCast = object.type === AST_NODE_TYPES.TSAsExpression || object.type === AST_NODE_TYPES.TSTypeAssertion;

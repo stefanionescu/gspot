@@ -40,7 +40,7 @@ function isCryptoRotation({ callee, arguments: values }: CallNode, parameters: P
     return shifts.some((shift) => state.every((value, index) => value === names[(index + shift) % CRYPTO_STATE_SIZE]));
 }
 
-function readSwapped(
+function readSwappedName(
     call: CallNode,
     names: ParameterNames,
     parameters: ParameterNames,
@@ -126,7 +126,7 @@ function findSwap(call: CallNode, source: TSESLint.SourceCode, types: TypeReader
     const parameters = readParameterNames(call, source, types);
     if (parameters === undefined || isCryptoRotation(call, parameters)) return undefined;
     const pairs = names.flatMap((name, index) => {
-        const swapped = readSwapped(call, names, parameters, index, types);
+        const swapped = readSwappedName(call, names, parameters, index, types);
         return name === undefined || swapped === undefined ? [] : [[name, swapped] as const];
     });
     return pairs.find((pair) => !isExcused(call, pair, source));

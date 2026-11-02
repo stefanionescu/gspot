@@ -11,13 +11,13 @@ import {
     INTERFACE_DECLARATION,
 } from '../config/builtins.ts';
 
-function isWithoutMembers(type: CheckedType, types: TypeReader): boolean {
-    if (EMPTY_TYPE_NAMES.has(types.checker.typeToString(type))) return true;
-    if (type.getProperties().length > 0 || types.checker.getIndexInfosOfType(type).length > 0) return false;
+function hasMembers(type: CheckedType, types: TypeReader): boolean {
+    if (EMPTY_TYPE_NAMES.has(types.checker.typeToString(type))) return false;
+    if (type.getProperties().length > 0 || types.checker.getIndexInfosOfType(type).length > 0) return true;
     const symbol = type.getSymbol();
     const declarations = symbol?.declarations ?? [];
     return (
-        symbol !== undefined && declarations.every((declaration) => INTERFACE_DECLARATION.test(declaration.getText()))
+        symbol === undefined || declarations.some((declaration) => !INTERFACE_DECLARATION.test(declaration.getText()))
     );
 }
 
@@ -71,7 +71,7 @@ export const noUselessIntersection = createRule<[], 'empty' | 'absorbing'>({
                     return;
                 }
                 for (const member of node.types) {
-                    if (!isWithoutMembers(types.read(member), types) || isLiteralUnion(node)) continue;
+                    if (hasMembers(types.read(member), types) || isLiteralUnion(node)) continue;
                     if (
                         !isNormalizing(
                             node.types.filter((sibling) => sibling !== member),

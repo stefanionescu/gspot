@@ -7,7 +7,7 @@ import type { TestCall, TitleScan, FunctionNode } from '../types/rules.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { TEST_FRAMEWORK_MODULES, RUNNING_TEST_MODIFIERS } from '../config/testing.ts';
 
-function readRunning(call: TestCall | undefined, kind: TestCall['kind']): TestCall | undefined {
+function readRunningCall(call: TestCall | undefined, kind: TestCall['kind']): TestCall | undefined {
     if (call?.kind !== kind) return undefined;
     const isRunning = call.modifiers.every((modifier) => RUNNING_TEST_MODIFIERS.has(modifier));
     return isRunning && (kind === 'suite' || call.callback !== undefined) ? call : undefined;
@@ -32,17 +32,17 @@ function scanFunctionBody(node: TSESTree.Node, titles: Map<string, TSESTree.Node
 
 function scanCall(node: TSESTree.CallExpression, titles: Map<string, TSESTree.Node>, scan: TitleScan): void {
     const call = readTestCall(node, scan.source);
-    const body = readRunning(call, 'suite')?.callback?.body;
+    const body = readRunningCall(call, 'suite')?.callback?.body;
     if (body !== undefined) scanFunctionBody(body, new Map(), scan);
     if (call?.kind === 'suite') return;
     checkCall(node, titles, scan);
-    if (readRunning(call, 'test') !== undefined) return;
+    if (readRunningCall(call, 'test') !== undefined) return;
     const children = listChildNodes(node, scan.source).filter((child) => !FUNCTION_NODES.has(child.type));
     for (const child of children) scanFunctionBody(child, titles, scan);
 }
 
 function checkCall(node: TSESTree.CallExpression, titles: Map<string, TSESTree.Node>, scan: TitleScan): void {
-    if (readRunning(readTestCall(node, scan.source), 'test') !== undefined) {
+    if (readRunningCall(readTestCall(node, scan.source), 'test') !== undefined) {
         checkTitle(node, titles, scan);
         return;
     }
@@ -87,8 +87,8 @@ export const noDuplicateTestTitles = createRule<[], 'duplicate'>({
                 const isSuiteLevel = functions.every(
                     (callback) =>
                         callback.parent.type === AST_NODE_TYPES.CallExpression &&
-                        readRunning(readTestCall(callback.parent, context.sourceCode), 'suite')?.callback?.range[0] ===
-                            callback.range[0],
+                        readRunningCall(readTestCall(callback.parent, context.sourceCode), 'suite')?.callback
+                            ?.range[0] === callback.range[0],
                 );
                 if (!isSuiteLevel) return;
                 const suite = functions.at(-1) ?? context.sourceCode.ast;

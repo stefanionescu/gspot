@@ -59,7 +59,7 @@ function isInsideWaitFor(node: TSESTree.Node, source: TSESLint.SourceCode): bool
     );
 }
 
-function readMismatch(node: MemberCall, source: TSESLint.SourceCode): QueryUse | undefined {
+function readQueryMismatch(node: MemberCall, source: TSESLint.SourceCode): QueryUse | undefined {
     const subject = readExpectSubject(node.callee.object);
     const method = subject && readScreenQuery(readQueryTarget(subject.value), source);
     const isPresence = PRESENCE_MATCHERS.has(ASTUtils.getPropertyName(node.callee)) !== subject?.isNegated;
@@ -97,7 +97,7 @@ export const testingLibraryQueries = createRule<[], 'presence' | 'absence' | 'th
         const source = context.sourceCode;
         return {
             [QUERY_ASSERTION](node: MemberCall) {
-                const mismatch = readMismatch(node, source);
+                const mismatch = readQueryMismatch(node, source);
                 if (mismatch === undefined) return;
                 const { method, isPresence } = mismatch;
                 const name = isPresence ? method.name.replace('query', 'get') : method.name.replace('get', 'query');

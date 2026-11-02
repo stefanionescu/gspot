@@ -16,16 +16,16 @@ function listConjuncts(test: TSESTree.Expression): TSESTree.Expression[] {
     return [...conjuncts, operand];
 }
 
-function readTested(node: TSESTree.Expression): TestedName | undefined {
+function readTestedName(node: TSESTree.Expression): TestedName | undefined {
     if (ASTUtils.isIdentifier(node)) return { identifier: node, value: 'truthy' };
     if (!isNegation(node)) return undefined;
     const { argument } = node;
     return ASTUtils.isIdentifier(argument) ? { identifier: argument, value: 'falsy' } : undefined;
 }
 
-function listTested(node: TSESTree.Node, statement: TSESTree.IfStatement): TestedName[] {
+function listTestedNames(node: TSESTree.Node, statement: TSESTree.IfStatement): TestedName[] {
     const { test } = statement;
-    if (Object.is(statement.consequent, node)) return listConjuncts(test).flatMap((each) => readTested(each) ?? []);
+    if (Object.is(statement.consequent, node)) return listConjuncts(test).flatMap((each) => readTestedName(each) ?? []);
     const isElse = Object.is(statement.alternate, node) && ASTUtils.isIdentifier(test);
     return isElse ? [{ identifier: test, value: 'falsy' }] : [];
 }
@@ -46,7 +46,7 @@ function isWrittenAround(variable: TSESLint.Scope.Variable, scope: TSESLint.Scop
     );
 }
 
-function listDecided(
+function listDecidedVariables(
     tested: readonly TestedName[],
     scope: TSESLint.Scope.Scope,
     source: TSESLint.SourceCode,
@@ -102,7 +102,10 @@ export const noGratuitousExpressions = createRule<[], 'decided'>({
             ':statement'(node: TSESTree.Node) {
                 const { parent } = node;
                 if (parent?.type === AST_NODE_TYPES.IfStatement)
-                    decided.set(node, listDecided(listTested(node, parent), source.getScope(node), source));
+                    decided.set(
+                        node,
+                        listDecidedVariables(listTestedNames(node, parent), source.getScope(node), source),
+                    );
             },
             ':statement:exit': (node: TSESTree.Node) => decided.delete(node),
             Identifier(node) {

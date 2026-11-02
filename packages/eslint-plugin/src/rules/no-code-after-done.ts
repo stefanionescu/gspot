@@ -5,7 +5,7 @@ import { readTestCall, listBodyNodes } from '../testing.ts';
 import { DONE_STOP_STATEMENTS, MARKED_TEST_MODIFIERS } from '../config/testing.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function listFollowing(statement: TSESTree.Node): TSESTree.Node[] {
+function listFollowingStatements(statement: TSESTree.Node): TSESTree.Node[] {
     const { parent } = statement;
     const isBlock = parent?.type === AST_NODE_TYPES.BlockStatement || parent?.type === AST_NODE_TYPES.Program;
     const siblings: TSESTree.Node[] = isBlock ? parent.body : [];
@@ -19,7 +19,7 @@ function findCodeAfter(call: TSESTree.Node, source: TSESLint.SourceCode): TSESTr
         .slice(boundary + 1)
         .filter((node) => node.type.endsWith('Statement') && node.type !== AST_NODE_TYPES.BlockStatement)
         .toReversed();
-    for (const next of statements.flatMap((statement) => listFollowing(statement))) {
+    for (const next of statements.flatMap((statement) => listFollowingStatements(statement))) {
         if (DONE_STOP_STATEMENTS.has(next.type)) return undefined;
         const found = listBodyNodes(next, source).find((node) => node.type === AST_NODE_TYPES.ExpressionStatement);
         if (found !== undefined) return found;

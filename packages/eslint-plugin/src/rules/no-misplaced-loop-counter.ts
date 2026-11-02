@@ -2,18 +2,18 @@ import { createRule } from '../rule.ts';
 import { haveSameTokens, listDescendants } from '../syntax.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function listAssigned(node: TSESTree.Node): TSESTree.Node[] {
+function listAssignedNodes(node: TSESTree.Node): TSESTree.Node[] {
     if (node.type === AST_NODE_TYPES.ObjectPattern)
         return node.properties.flatMap((property) =>
-            listAssigned(property.type === AST_NODE_TYPES.Property ? property.value : property.argument),
+            listAssignedNodes(property.type === AST_NODE_TYPES.Property ? property.value : property.argument),
         );
     if (node.type !== AST_NODE_TYPES.ArrayPattern) return [node];
-    return node.elements.filter((element) => element !== null).flatMap((element) => listAssigned(element));
+    return node.elements.filter((element) => element !== null).flatMap((element) => listAssignedNodes(element));
 }
 
-function listUpdated(update: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node[] {
+function listUpdatedNodes(update: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node[] {
     return listDescendants(update, source.visitorKeys).flatMap((node): TSESTree.Node[] => {
-        if (node.type === AST_NODE_TYPES.AssignmentExpression) return listAssigned(node.left);
+        if (node.type === AST_NODE_TYPES.AssignmentExpression) return listAssignedNodes(node.left);
         if (node.type === AST_NODE_TYPES.UpdateExpression) return [node.argument];
         if (node.type !== AST_NODE_TYPES.CallExpression || node.callee.type !== AST_NODE_TYPES.MemberExpression)
             return [];
@@ -23,7 +23,7 @@ function listUpdated(update: TSESTree.Node, source: TSESLint.SourceCode): TSESTr
     });
 }
 
-function listTested(test: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node[] {
+function listTestedNodes(test: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node[] {
     return listDescendants(test, source.visitorKeys).filter((node) => {
         if (node.type === AST_NODE_TYPES.Identifier) {
             const { parent } = node;
@@ -58,9 +58,9 @@ export const noMisplacedLoopCounter = createRule<[], 'misplaced'>({
         return {
             ForStatement({ test, update, body }) {
                 if (test === null || update === null) return;
-                const updated = listUpdated(update, source);
-                const tested = listTested(test, source);
-                const changed = [...updated, ...listUpdated(body, source)];
+                const updated = listUpdatedNodes(update, source);
+                const tested = listTestedNodes(test, source);
+                const changed = [...updated, ...listUpdatedNodes(body, source)];
                 if (
                     updated.length === 0 ||
                     tested.length === 0 ||

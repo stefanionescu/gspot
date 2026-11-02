@@ -2,7 +2,7 @@ import { createRule } from '../rule.ts';
 import { PROMISE_NAME, SETTLE_ACTIONS } from '../config/builtins.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function readOnlyExpression(body: TSESTree.Node): TSESTree.Node | undefined {
+function getSoleExpression(body: TSESTree.Node): TSESTree.Node | undefined {
     if (body.type !== AST_NODE_TYPES.BlockStatement) return body;
     const [statement] = body.body;
     return body.body.length === 1 && statement?.type === AST_NODE_TYPES.ExpressionStatement
@@ -25,7 +25,7 @@ function readExecutor(
 function readSettleAction(node: TSESTree.NewExpression): string | undefined {
     const executor = readExecutor(node);
     if (executor === undefined) return undefined;
-    const call = readOnlyExpression(executor.body);
+    const call = getSoleExpression(executor.body);
     if (call?.type !== AST_NODE_TYPES.CallExpression || call.arguments.length !== 1) return undefined;
     const { callee } = call;
     if (!ASTUtils.isIdentifier(callee)) return undefined;

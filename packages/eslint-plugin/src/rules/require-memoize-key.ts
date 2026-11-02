@@ -14,7 +14,7 @@ function isMissingKey(keyFunction: TSESTree.CallExpressionArgument | undefined):
     return isVoid || isEmpty;
 }
 
-function readMemoized(node: TSESTree.CallExpression, source: TSESLint.SourceCode): LocalFunction | undefined {
+function readMemoizedFunction(node: TSESTree.CallExpression, source: TSESLint.SourceCode): LocalFunction | undefined {
     const [target, keyFunction] = node.arguments;
     const name = (readModuleName(node.callee, source) ?? '').replaceAll('/', '.');
     const isUnkeyed = MEMOIZE_FUNCTIONS.has(name) && isMissingKey(keyFunction);
@@ -42,7 +42,7 @@ export const requireMemoizeKey = createRule<[], 'keyFunction'>({
         const source = context.sourceCode;
         return {
             CallExpression(node) {
-                const parameters = (readMemoized(node, source)?.params ?? []).filter(
+                const parameters = (readMemoizedFunction(node, source)?.params ?? []).filter(
                     (parameter) => !(parameter.type === AST_NODE_TYPES.Identifier && parameter.name === 'this'),
                 );
                 const needsKey =
