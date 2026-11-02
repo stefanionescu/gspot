@@ -1,7 +1,6 @@
 import { createRule } from '../../rule.ts';
-import { EQUALITY_OPERATORS } from '../../config/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { STEP_OPERATORS, INCREMENT_OPERATORS, INEQUALITY_OPERATORS } from '../../config/operators.ts';
+import { STEP_OPERATORS, EQUALITY_OPERATORS, INCREMENT_OPERATORS, INEQUALITY_OPERATORS } from '../../config/logic.ts';
 
 function listCounters(update: TSESTree.Expression | null): TSESTree.Node[] {
     if (update?.type === AST_NODE_TYPES.SequenceExpression)

@@ -1,7 +1,7 @@
 import { createRule } from '../../rule.ts';
 import { getTypes } from '../../language/checker.ts';
+import { EMPTY_TYPE_NAMES } from '../../config/types.ts';
 import type { FunctionNode } from '../../types/rules.ts';
-import { EMPTY_TYPE_NAMES } from '../../config/builtins.ts';
 import type { TypeReader, CheckedType, CheckedSignature } from '../../types/plugin.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

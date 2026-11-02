@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import { TRANSPOSED_UNARY_OPERATORS } from '../../config/rules.ts';
+import { TRANSPOSED_UNARY_OPERATORS } from '../../config/variables.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isAssignmentValue(node: TSESTree.UnaryExpression): boolean {

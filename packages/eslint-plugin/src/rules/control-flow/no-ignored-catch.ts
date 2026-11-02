@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import { COMPLEX_TRY_STATEMENTS } from '../../config/rules.ts';
+import { COMPLEX_TRY_STATEMENTS } from '../../config/logic.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function hasComplexTryBody(node: TSESTree.CatchClause): boolean {

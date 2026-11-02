@@ -7,9 +7,9 @@ import {
     ABSORBING_TYPES,
     EMPTY_TYPE_NAMES,
     LITERAL_UNION_SIZE,
-    LITERAL_UNION_MEMBERS,
     INTERFACE_DECLARATION,
-} from '../../config/builtins.ts';
+    LITERAL_UNION_MEMBERS,
+} from '../../config/types.ts';
 
 function hasMembers(type: CheckedType, types: TypeReader): boolean {
     if (EMPTY_TYPE_NAMES.has(types.checker.typeToString(type))) return false;

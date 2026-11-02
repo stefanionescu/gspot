@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import { SPLICE_METHOD } from '../../config/builtins.ts';
+import { SPLICE_METHOD } from '../../config/logic.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function listCounters(update: TSESTree.Node): TSESTree.Identifier[] {

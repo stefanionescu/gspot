@@ -1,7 +1,7 @@
 import { createRule } from '../../rule.ts';
 import { getTypes } from '../../language/checker.ts';
 import type { TypeReader } from '../../types/plugin.ts';
-import { LIBRARY_PATH, UNDEFINED_TYPE } from '../../config/builtins.ts';
+import { LIBRARY_PATH, UNDEFINED_TYPE } from '../../config/types.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function hasWrittenUndefined(node: TSESTree.TypeNode): boolean {

@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import { LOOSE_EQUALITY_OPERATORS } from '../../config/rules.ts';
+import { LOOSE_EQUALITY_OPERATORS } from '../../config/logic.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isRedundantLogicalBoolean(node: TSESTree.Node, expression: TSESTree.LogicalExpression): boolean {

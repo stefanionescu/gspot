@@ -1,6 +1,6 @@
 import { createRule } from '../../rule.ts';
 import { isTypeAlias } from '../../language/syntax.ts';
-import { REDUNDANT_TYPE_KEYWORDS } from '../../config/rules.ts';
+import { REDUNDANT_TYPE_KEYWORDS } from '../../config/types.ts';
 
 export const redundantTypeAliases = createRule<[], 'redundant'>({
     name: 'redundant-type-aliases',

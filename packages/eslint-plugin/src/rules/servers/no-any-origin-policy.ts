@@ -1,5 +1,6 @@
 import { createRule } from '../../rule.ts';
 import type { FunctionNode } from '../../types/rules.ts';
+import { EQUALITY_OPERATORS } from '../../config/logic.ts';
 import { findFunction } from '../../language/functions.ts';
 import { getQualifiedName } from '../../language/modules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
@@ -9,7 +10,6 @@ import {
     EXPRESS_MODULE,
     SERVER_FUNCTION,
     MIDDLEWARE_METHOD,
-    EQUALITY_OPERATORS,
     ALLOW_ORIGIN_HEADER,
     CROSS_ORIGIN_MODULE,
     EXPRESS_ROUTE_METHODS,

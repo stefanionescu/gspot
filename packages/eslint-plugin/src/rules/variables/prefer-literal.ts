@@ -1,6 +1,6 @@
 import { createRule } from '../../rule.ts';
 import { getNextStatement } from '../../language/syntax.ts';
-import { EMPTY_LITERAL_DECLARATION } from '../../config/rules.ts';
+import { EMPTY_LITERAL_DECLARATION } from '../../config/variables.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getAssignedProperty(node: TSESTree.VariableDeclaration): TSESTree.MemberExpression | undefined {

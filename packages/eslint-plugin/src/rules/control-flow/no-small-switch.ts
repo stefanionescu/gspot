@@ -1,9 +1,8 @@
 import { createRule } from '../../rule.ts';
 import { getTypes } from '../../language/checker.ts';
-import { NEVER_TYPE } from '../../config/builtins.ts';
 import type { TypeReader } from '../../types/plugin.ts';
 import { haveSameTokens } from '../../language/syntax.ts';
-import { SMALL_SWITCH_CASES } from '../../config/rules.ts';
+import { NEVER_TYPE, SMALL_SWITCH_CASES } from '../../config/logic.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getStatementCall(statement: TSESTree.Statement): TSESTree.CallExpression | undefined {

@@ -1,6 +1,5 @@
 import { createRule } from '../../rule.ts';
 import { haveSameTokens } from '../../language/syntax.ts';
-import { EQUALITY_OPERATORS } from '../../config/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -11,8 +10,9 @@ import {
     DECIMAL_LITERAL,
     FRACTION_MARKER,
     RANGE_OPERATORS,
+    EQUALITY_OPERATORS,
     FLOAT_ARITHMETIC_OPERATORS,
-} from '../../config/operators.ts';
+} from '../../config/logic.ts';
 
 function isInexactLiteral(text: string): boolean {
     const digits = text.replaceAll('_', '').toLowerCase();

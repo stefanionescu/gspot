@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import { RESERVED_DECLARATION_NAMES } from '../../config/rules.ts';
+import { RESERVED_DECLARATION_NAMES } from '../../config/variables.ts';
 
 export const noKeywordDeclarations = createRule<[], 'keyword'>({
     name: 'no-keyword-declarations',

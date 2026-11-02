@@ -48,8 +48,6 @@ export const EXPRESS_ROUTE_METHODS: ReadonlySet<string | undefined> = new Set([
 
 export const RESPONSE_CALL_ARGUMENTS = 2;
 
-export const EQUALITY_OPERATORS: ReadonlySet<string> = new Set(['==', '!=', '===', '!==']);
-
 export const SESSION_MIDDLEWARES: ReadonlySet<string | undefined> = new Set(['express-session', 'cookie-session']);
 
 export const STATIC_MIDDLEWARE = 'express.static';

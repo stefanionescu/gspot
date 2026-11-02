@@ -1,7 +1,3 @@
-export const NEVER_TYPE = 'never';
-
-export const SPLICE_METHOD = 'splice';
-
 const TEST_SUITE_CALLS = ['describe', 'context', 'it', 'test'];
 
 const SKIPPED_TEST_PREFIX = 'x';
@@ -20,87 +16,7 @@ export const TEST_STRUCTURE_CALLS: ReadonlySet<string> = new Set([
     'afterAll',
 ]);
 
-export const ARGUMENTS_NAME = 'arguments';
-
 export const UNDEFINED_NAME = 'undefined';
-
-export const SHADOWING_EXCEPTIONS: ReadonlySet<string> = new Set([
-    'constructor',
-    'hasOwnProperty',
-    'isPrototypeOf',
-    'propertyIsEnumerable',
-    'toLocaleString',
-    'toString',
-    'valueOf',
-    'escape',
-    'unescape',
-]);
-
-export const BUILTIN_GLOBALS: ReadonlySet<string> = new Set([
-    'AggregateError',
-    'Array',
-    'ArrayBuffer',
-    'AsyncDisposableStack',
-    'Atomics',
-    'BigInt',
-    'BigInt64Array',
-    'BigUint64Array',
-    'Boolean',
-    'DataView',
-    'Date',
-    'decodeURI',
-    'decodeURIComponent',
-    'DisposableStack',
-    'encodeURI',
-    'encodeURIComponent',
-    'Error',
-    'eval',
-    'EvalError',
-    'FinalizationRegistry',
-    'Float16Array',
-    'Float32Array',
-    'Float64Array',
-    'Function',
-    'globalThis',
-    'Infinity',
-    'Int16Array',
-    'Int32Array',
-    'Int8Array',
-    'Intl',
-    'isFinite',
-    'isNaN',
-    'Iterator',
-    'JSON',
-    'Map',
-    'Math',
-    'NaN',
-    'Number',
-    'Object',
-    'parseFloat',
-    'parseInt',
-    'Promise',
-    'Proxy',
-    'RangeError',
-    'ReferenceError',
-    'Reflect',
-    'RegExp',
-    'Set',
-    'SharedArrayBuffer',
-    'String',
-    'SuppressedError',
-    'Symbol',
-    'SyntaxError',
-    'TypeError',
-    'Uint16Array',
-    'Uint32Array',
-    'Uint8Array',
-    'Uint8ClampedArray',
-    'undefined',
-    'URIError',
-    'WeakMap',
-    'WeakRef',
-    'WeakSet',
-]);
 
 export const PURE_RECEIVER_SYMBOLS: ReadonlySet<string> = new Set(['Array', 'Date', 'Math', 'RegExp']);
 
@@ -260,36 +176,4 @@ export const CHAINED_USES: ReadonlyMap<string | null, 'handled' | 'caught'> = ne
     ['catch', 'caught'],
 ]);
 
-export const BOOLEAN_NAME = 'Boolean';
-
 export const SETTLE_ACTIONS = ['resolve', 'reject'] as const;
-
-export const UNDEFINED_TYPE = 'undefined';
-
-export const LIBRARY_PATH = /[\\/]node_modules[\\/]/u;
-
-export const ABSORBING_TYPES: ReadonlyMap<string, string> = new Map([
-    ['TSAnyKeyword', 'any'],
-    ['TSNeverKeyword', 'never'],
-]);
-
-export const EMPTY_TYPE_NAMES: ReadonlySet<string> = new Set(['null', 'undefined', 'void']);
-
-export const LITERAL_UNION_MEMBERS: ReadonlySet<string> = new Set([
-    'TSStringKeyword',
-    'TSNumberKeyword',
-    'TSTypeReference',
-]);
-
-export const INTERFACE_DECLARATION = /^(?:export\s+)?(?:declare\s+)?interface\s+[\w$]+\s*(?:(?:<[^{]*>)\s*)?\{/u;
-
-export const LITERAL_UNION_SIZE = 2;
-
-export const LOOP_STATEMENTS: ReadonlySet<string> = new Set(['WhileStatement', 'DoWhileStatement']);
-
-export const LOOP_BODY_PARENTS: ReadonlySet<string> = new Set([
-    ...LOOP_STATEMENTS,
-    'ForStatement',
-    'ForInStatement',
-    'ForOfStatement',
-]);

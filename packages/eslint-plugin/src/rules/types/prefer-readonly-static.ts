@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import { READONLY_STATIC_FILES } from '../../config/rules.ts';
+import { READONLY_STATIC_FILES } from '../../config/types.ts';
 
 export const preferReadonlyStatic = createRule<[], 'readonly'>({
     name: 'prefer-readonly-static',

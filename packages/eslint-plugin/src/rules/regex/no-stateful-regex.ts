@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import { LOOP_STATEMENTS } from '../../config/builtins.ts';
+import { LOOP_STATEMENTS } from '../../config/logic.ts';
 import { getAssignedValue } from '../../language/modules.ts';
 import { getRegex, buildRegexVisitors } from '../../language/regex.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
