@@ -15,11 +15,6 @@ import {
     NAMED_ARGUMENT_MINIMUM,
 } from '../config/calls.ts';
 
-const isFunctionExpression = ASTUtils.isNodeOfTypes([
-    AST_NODE_TYPES.ArrowFunctionExpression,
-    AST_NODE_TYPES.FunctionExpression,
-]);
-
 function readParameterNames(
     call: CallNode,
     source: TSESLint.SourceCode,
@@ -67,8 +62,11 @@ function readSwapped(
 }
 
 function readIfCondition(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Expression | undefined {
-    const statement = source.getAncestors(node).findLast(({ type }) => type === AST_NODE_TYPES.IfStatement);
-    if (statement?.type !== AST_NODE_TYPES.IfStatement) return undefined;
+    const statement = source
+        .getAncestors(node)
+        .findLast(({ type }) => type === AST_NODE_TYPES.IfStatement || type === AST_NODE_TYPES.ConditionalExpression);
+    if (statement?.type !== AST_NODE_TYPES.IfStatement && statement?.type !== AST_NODE_TYPES.ConditionalExpression)
+        return undefined;
     const { test } = statement;
     return test.type === AST_NODE_TYPES.UnaryExpression && test.operator === '!' ? test.argument : test;
 }
@@ -102,39 +100,13 @@ function isCompared(call: CallNode, [first, second]: SwappedPair, source: TSESLi
 }
 
 function isComparatorReversal(call: CallNode, pair: SwappedPair, source: TSESLint.SourceCode): boolean {
-    const enclosing = source.getAncestors(call).findLast((ancestor) => isFunctionExpression(ancestor));
+    const enclosing = source.getAncestors(call).findLast((ancestor) => ASTUtils.isFunction(ancestor));
     const names = (enclosing?.params ?? []).map((parameter) =>
         ASTUtils.isIdentifier(parameter) && parameter.name.length <= 1 ? parameter.name : '',
     );
     if (enclosing === undefined || names.length !== COMPARATOR_ARITY || names.includes('')) return false;
     const isReturned = call.parent.type === AST_NODE_TYPES.ReturnStatement || Object.is(enclosing.body, call);
     return isReturned && pair.every((name) => names.includes(name));
-}
-
-function readMirrorCall(call: CallNode, source: TSESLint.SourceCode): TSESTree.CallExpression | undefined {
-    const { parent } = call;
-    if (parent.type !== AST_NODE_TYPES.ConditionalExpression || Object.is(parent.test, call)) return undefined;
-    const other = Object.is(parent.consequent, call) ? parent.alternate : parent.consequent;
-    const isMirror = other.type === AST_NODE_TYPES.CallExpression;
-    return isMirror && source.getText(other.callee) === source.getText(call.callee) ? other : undefined;
-}
-
-function isTernarySwap(call: CallNode, pair: SwappedPair, source: TSESLint.SourceCode): boolean {
-    const mirror = readMirrorCall(call, source);
-    const positions = pair.map((name) =>
-        call.arguments.findIndex((value) => ASTUtils.isIdentifier(value) && value.name === name),
-    );
-    const isMirrored = positions.every((position, index) => {
-        const value = mirror?.arguments[position];
-        return position >= 0 && ASTUtils.isIdentifier(value) && value.name === pair[1 - index];
-    });
-    const test = mirror?.parent.type === AST_NODE_TYPES.ConditionalExpression ? mirror.parent.test : undefined;
-    if (!isMirrored || test?.type !== AST_NODE_TYPES.BinaryExpression || !COMPARISON_OPERATORS.has(test.operator))
-        return false;
-    const names = new Set(
-        [test.left, test.right].filter((side) => ASTUtils.isIdentifier(side)).map(({ name }) => name),
-    );
-    return pair.every((name) => names.has(name));
 }
 
 function isExcused(call: CallNode, pair: SwappedPair, source: TSESLint.SourceCode): boolean {
@@ -145,9 +117,7 @@ function isExcused(call: CallNode, pair: SwappedPair, source: TSESLint.SourceCod
                 ancestor.type === AST_NODE_TYPES.Property &&
                 DIRECTIONAL_KEY.test(String(ASTUtils.getPropertyName(ancestor))),
         );
-    if (isCompared(call, pair, source) || isDirectional) return true;
-    const isReversal = isComparatorReversal(call, pair, source);
-    return isReversal || isTernarySwap(call, pair, source);
+    return isCompared(call, pair, source) || isDirectional || isComparatorReversal(call, pair, source);
 }
 
 function findSwap(call: CallNode, source: TSESLint.SourceCode, types: TypeReader | undefined): SwappedPair | undefined {
@@ -170,7 +140,7 @@ export const noSwappedArguments = createRule<[], 'swapped'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a call that passes two variables named like two parameters of the called function, each at the position of the other parameter. With type information, the rule reads the parameters from the resolved signature and the two arguments need the same type. Without it, the rule reads local functions only. A call inside an `if` that compares the two names, a comparator that reverses its two parameters, a call under a key such as `reverse` or `rtl`, and a ternary that swaps the names on a comparison do not count.',
+                'Reports a call that passes two variables named like two parameters of the called function, each at the position of the other parameter. With type information, the rule reads the parameters from the resolved signature and the two arguments need the same type. Without it, the rule reads local functions only. A call inside an `if` or a ternary that compares the two names, a comparator that reverses its two parameters, and a call under a key such as `reverse` or `rtl` do not count.',
             why: 'Arguments with the names of the parameters in another order usually mean that the caller swapped them by mistake.',
             fix: 'Pass the arguments in the order of the parameters, or rename the variables when the swap is deliberate.',
             example: '`function divide(dividend, divisor) {} divide(divisor, dividend);` reports `swapped`.',

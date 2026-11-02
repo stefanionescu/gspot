@@ -10,6 +10,7 @@ buildRuleTester().run('no-swapped-arguments', rule, {
         'function compare(a, b) {} list.sort((a, b) => compare(b, a));',
         'function compare(a, b) {} const order = { reverse: compare(b, a) };',
         'function compare(a, b) {} const result = a < b ? compare(b, a) : compare(a, b);',
+        'function compare(a, b) {} const result = a < b ? compare(b, a) : 0;',
         'function ff(a, b, c, d) {} ff(d, a, b, c);',
         'divide(divisor, dividend);',
         'function compare(left, right, order) { return order(right, left); }',
@@ -41,7 +42,6 @@ buildRuleTester().run('no-swapped-arguments', rule, {
             'function divide(dividend, divisor) {} if (0 < divisor) divide(divisor, dividend);',
             'function divide(dividend, divisor) {} if (dividend + divisor) divide(divisor, dividend);',
             'function compare(left, right) {} list.sort((left, right) => compare(right, left));',
-            'function compare(a, b) {} const result = a < b ? compare(b, a) : 0;',
         ].map((code) => ({ code, errors: [{ messageId: 'swapped' as const }] })),
     ],
 });
