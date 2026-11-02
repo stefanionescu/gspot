@@ -210,7 +210,6 @@ export const TABLE_DESCRIPTIONS: Readonly<Record<string, string>> = {
     swift: 'How the Swift checks build and read your project.',
     repository: 'What Git may track.',
     prose: 'What the prose check accepts.',
-    duplication: 'What the duplication check reports.',
     xcode: 'What an Xcode project may request.',
     tools: 'Options for single tools.',
     ignore: 'Checks and lint rules turned off, each with a reason.',

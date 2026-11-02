@@ -20,6 +20,18 @@ export const generalTableSchemas = {
                 description: 'Where re-exports may go: none, or an index file that re-exports other files.',
                 default: 'none',
             }),
+            min_duplicate_lines: allowReasonedValue(z.number().int().positive(), {
+                configurations: ['structure'],
+                description: 'The fewest lines a copied block has before it counts.',
+                reason_when: 'raising',
+                default: 8,
+            }),
+            min_duplicate_tokens: allowReasonedValue(z.number().int().positive(), {
+                configurations: ['structure'],
+                description: 'The fewest tokens a copied block has before it counts.',
+                reason_when: 'raising',
+                default: 40,
+            }),
             environment_readers: relativePathSchema
                 .array()
                 .default([] as [])
@@ -194,22 +206,6 @@ export const generalTableSchemas = {
                 configurations: ['prose'],
                 description: 'The most sentences one paragraph may have.',
                 default: 6,
-            }),
-        })
-        .optional(),
-    duplication: z
-        .strictObject({
-            min_lines: allowReasonedValue(z.number().int().positive(), {
-                configurations: ['duplication'],
-                description: 'The fewest lines a copied block has before it counts.',
-                reason_when: 'raising',
-                default: 8,
-            }),
-            min_tokens: allowReasonedValue(z.number().int().positive(), {
-                configurations: ['duplication'],
-                description: 'The fewest tokens a copied block has before it counts.',
-                reason_when: 'raising',
-                default: 40,
             }),
         })
         .optional(),

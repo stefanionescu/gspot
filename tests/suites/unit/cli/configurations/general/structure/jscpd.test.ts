@@ -17,7 +17,7 @@ async function prepareDuplicationSandbox(resources: AsyncDisposableStack): Promi
     const folder = resources.use(await createGitSandbox({}));
     await fakeNpmTool(folder.path, 'jscpd');
     await createFileTree(folder.path, {
-        'gspot.toml': buildSandboxSettings(['bash', 'duplication'], { level: 'all' }),
+        'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
         'sample.sh': 'echo example\n',
     });
     await applyGeneratedFiles(folder.path);
@@ -35,9 +35,9 @@ test.each([1, 0])(
             folders.push(command[command.indexOf('--output') + 1]!);
             return Promise.resolve(buildProcessResult({ code, stdout: 'The scanner could not write its report.\n' }));
         });
-        const failed = await runChecks(session, buildRunOptions({ only: ['duplication/jscpd'] }));
+        const failed = await runChecks(session, buildRunOptions({ only: ['structure/jscpd'] }));
         expect(folders, JSON.stringify(failed.report)).toHaveLength(1);
-        expect(failed.report.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'error', findings: [] }]);
+        expect(failed.report.checks).toMatchObject([{ check: 'structure/jscpd', status: 'error', findings: [] }]);
         expect(failed.report.checks[0]!.note).toBe(
             `The jscpd command ${code === 0 ? 'wrote no report' : 'failed'}: The scanner could not write its report.`,
         );
@@ -74,7 +74,7 @@ test.each(['relative', 'absolute', 'namespaced'])(
             await writeFile(join(work, 'jscpd-report.json'), JSON.stringify(report));
             return buildProcessResult();
         });
-        const result = await runChecks(session, buildRunOptions({ only: ['duplication/jscpd'] }));
+        const result = await runChecks(session, buildRunOptions({ only: ['structure/jscpd'] }));
         expect(
             result.report.checks[0]!.findings.map(({ file, line, rule, message }) => ({ file, line, rule, message })),
             JSON.stringify(result.report),

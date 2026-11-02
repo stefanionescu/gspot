@@ -49,8 +49,8 @@ export const PATH_IGNORE_CASES = [
         nativePath: ['files', 'extend-exclude'],
     },
     {
-        configuration: 'duplication',
-        check: 'duplication/jscpd',
+        configuration: 'structure',
+        check: 'structure/jscpd',
         file: 'jscpd.json',
         nativePath: ['ignore'],
     },

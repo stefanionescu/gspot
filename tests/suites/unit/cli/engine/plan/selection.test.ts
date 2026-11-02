@@ -110,7 +110,7 @@ test.each(['all'] as const)(
         expect([...selected].toSorted(compareText)).toStrictEqual(listAlwaysSelected().toSorted(compareText));
         const checks = planChecks(session, {
             stage: 'all',
-            only: ['security/semgrep', 'prose/vale', 'duplication/jscpd'],
+            only: ['security/semgrep', 'prose/vale', 'structure/jscpd'],
         });
         expect(checks.find((check) => check.check.id === 'prose/vale')?.files.map((file) => file.path)).toStrictEqual([
             'app/source.js',

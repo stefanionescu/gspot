@@ -228,7 +228,6 @@ export const configurationTableSchemas = {
         .optional(),
     repository: generalTableSchemas.repository,
     prose: generalTableSchemas.prose,
-    duplication: generalTableSchemas.duplication,
     xcode: z
         .strictObject({
             allowed_entitlements: z

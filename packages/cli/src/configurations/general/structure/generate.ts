@@ -10,11 +10,11 @@ Build jscpd.json: the duplicate size limits, the skipped import lines, and the i
 @param planned the config file to build.
 */
 export function buildJscpdFile(planned: PlannedConfig): string {
-    const limits = getTable(planned.scope.settings, 'duplication');
+    const limits = getTable(planned.scope.settings, 'structure');
     const settings = {
         mode: 'strict',
-        minLines: limits.min_lines,
-        minTokens: limits.min_tokens,
+        minLines: limits.min_duplicate_lines,
+        minTokens: limits.min_duplicate_tokens,
         absolute: true,
         gitignore: true,
         ignorePattern: JSCPD_IMPORT_PATTERNS,

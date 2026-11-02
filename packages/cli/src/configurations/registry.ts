@@ -7,7 +7,7 @@ import { checkAllowed } from '#cli/configurations/general/licenses/checks.ts';
 import { checkSemgrep } from '#cli/configurations/general/security/checks.ts';
 import { checkFences } from '#cli/configurations/language/markdown/checks.ts';
 import { checkExpoDoctor } from '#cli/configurations/framework/expo/checks.ts';
-import { checkJscpd } from '#cli/configurations/general/duplication/checks.ts';
+import { checkJscpd } from '#cli/configurations/general/structure/checks/jscpd.ts';
 import { checkNextjsTsc } from '#cli/configurations/framework/nextjs/checks.ts';
 import { checkPaths } from '#cli/configurations/general/naming/checks/paths.ts';
 import { checkGeneratorOutputs } from '#cli/configurations/generator-outputs.ts';
@@ -143,7 +143,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'docs/required-files': { check: checkRequiredFiles },
     'docs/version-strings': { check: checkVersionStrings },
     'engineering/agents-files': { check: checkAgentsFiles },
-    'duplication/jscpd': { check: checkJscpd },
+    'structure/jscpd': { check: checkJscpd },
     'expo/expo-doctor': { check: checkExpoDoctor },
     'github-actions/actionlint': { run: checkActionlint },
     'gspot/baseline': { check: checkBaseline, runsLast: true },

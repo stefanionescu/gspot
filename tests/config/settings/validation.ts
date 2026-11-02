@@ -74,7 +74,7 @@ export const INVALID_SETTING_MESSAGES = [
         name: 'an unknown root key',
         text: '# The repository settings.\nnope = true\n',
         message:
-            'gspot.toml:2: nope: There is no setting called nope. The settings that exist at the top level are level, tool_timeout_seconds, test_files, configurations, removed_configurations, format, limits, naming and 33 more. Run gspot list settings to see every one.',
+            'gspot.toml:2: nope: There is no setting called nope. The settings that exist at the top level are level, tool_timeout_seconds, test_files, configurations, removed_configurations, format, limits, naming and 32 more. Run gspot list settings to see every one.',
     },
     {
         name: 'a wrong root enum type',
@@ -143,7 +143,7 @@ export const SETTING_RULE_OPTIONS = [
         path: 'scope.0.tools.eslint.rules.gspot/no-identical-functions',
         line: 5,
         rule: 'gspot/no-identical-functions',
-        setting: 'duplication.min_lines',
+        setting: 'structure.min_duplicate_lines',
     },
 ] as const;
 

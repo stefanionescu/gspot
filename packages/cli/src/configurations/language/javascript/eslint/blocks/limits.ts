@@ -32,7 +32,10 @@ export function buildScopeLimitRules(settings: ScopeSettings): EslintLevelRules 
     return {
         code: {
             ...buildLimitRules(settings, 'typescript'),
-            'gspot/no-identical-functions': ['error', { minLines: getTable(settings, 'duplication').min_lines }],
+            'gspot/no-identical-functions': [
+                'error',
+                { minLines: getTable(settings, 'structure').min_duplicate_lines },
+            ],
         },
         javascript: buildLimitRules(settings, 'javascript'),
     };

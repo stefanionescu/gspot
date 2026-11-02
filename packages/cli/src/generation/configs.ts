@@ -23,7 +23,7 @@ import { buildCoverageFile } from '#cli/configurations/testing/pytest/generate.t
 import { buildSquawkFile } from '#cli/configurations/database/postgres/generate.ts';
 import { buildSemgrepFile } from '#cli/configurations/general/security/generate.ts';
 import { buildShellcheckFile } from '#cli/configurations/language/bash/generate.ts';
-import { buildJscpdFile } from '#cli/configurations/general/duplication/generate.ts';
+import { buildJscpdFile } from '#cli/configurations/general/structure/generate.ts';
 import { buildGixyFile } from '#cli/configurations/infrastructure/nginx/generate.ts';
 import { buildPeripheryFile } from '#cli/configurations/language/swift/periphery.ts';
 import { buildSwiftlintFile } from '#cli/configurations/language/swift/swiftlint.ts';
@@ -75,7 +75,7 @@ const CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder | undefined>> = {
     'bash/shellcheckrc': buildShellcheckFile,
     'commits/commitlint.json': buildCommitlintFile,
     'markdown/markdownlint.jsonc': buildMarkdownlintFile,
-    'duplication/jscpd.json': buildJscpdFile,
+    'structure/jscpd.json': buildJscpdFile,
     'data-files/taplo.toml': buildTaploFile,
     'docs/lychee.toml': buildLycheeFile,
     'docker/hadolint.yml': buildHadolintFile,

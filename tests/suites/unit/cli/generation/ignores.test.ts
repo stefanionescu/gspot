@@ -28,7 +28,7 @@ import {
 
 test('negative ignores follow positives for ordered tools and stay out of tools without negation', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript', 'typescript', 'format', 'spelling', 'duplication'], {
+        'gspot.toml': buildSandboxSettings(['javascript', 'typescript', 'format', 'spelling'], {
             level: 'all',
             tables: '[[ignore]]\npaths = ["!src/keep.ts", "src/**"]\nreason = "Keep one authored file among generated sources."\n',
         }),
@@ -244,7 +244,7 @@ test('a second apply writes the same files when .prettierignore covers every sou
 
 test('root paths in the generated-files section are anchored, so an authored tools/eslint.config.mjs stays checked', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['format', 'javascript', 'duplication'], { level: 'all' }),
+        'gspot.toml': buildSandboxSettings(['format', 'javascript'], { level: 'all' }),
         'source.js': 'export const value = 1;\n',
         'tools/eslint.config.mjs': 'export default [];\n',
     });
@@ -263,8 +263,8 @@ test('root paths in the generated-files section are anchored, so an authored too
         resolveConfig: false,
     });
     expect({ root: root.ignored, authored: authored.ignored }).toStrictEqual({ root: true, authored: false });
-    const duplication = output.files.find(({ path }) => path.endsWith('/jscpd.json'))!;
-    const ignored = findValueAt(JSON.parse(duplication.content), ['ignore']);
+    const jscpd = output.files.find(({ path }) => path.endsWith('/jscpd.json'))!;
+    const ignored = findValueAt(JSON.parse(jscpd.content), ['ignore']);
     expect(ignored).toContain('eslint.config.mjs');
     expect(ignored).not.toContain('**/eslint.config.mjs');
 });

@@ -107,7 +107,7 @@ export const RECORD_PATHS_MESSAGE = ' Its paths say where it applies.';
 
 export const SETTING_RULES: Readonly<Record<string, Readonly<Record<string, string>>>> = {
     eslint: {
-        'gspot/no-identical-functions': 'duplication.min_lines',
+        'gspot/no-identical-functions': 'structure.min_duplicate_lines',
         'no-restricted-imports': 'javascript.banned_imports',
         'gspot/import-boundaries': 'javascript.import_boundaries',
         'gspot/no-trivial-files': 'structure.reexports',

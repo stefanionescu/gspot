@@ -309,7 +309,7 @@ export const JSCPD_IMPORT_PATTERNS = [
 
 export const JSCPD_IGNORED = ['**/*.md', '**/*.mdx'] as const;
 
-export const JSCPD_CHECK = 'duplication/jscpd';
+export const JSCPD_CHECK = 'structure/jscpd';
 
 export const EDITORCONFIG_FIXED_SECTIONS = {
     // eslint-disable-next-line unicorn/text-encoding-identifier-case -- reason: EditorConfig defines this charset value as utf-8.

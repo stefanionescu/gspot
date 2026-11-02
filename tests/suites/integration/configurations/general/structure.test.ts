@@ -20,12 +20,12 @@ const COUNT_STEPS = Array.from(
 ).join('\n');
 
 async function runJscpdCheck(root: string, code: number): Promise<RunReport> {
-    const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'duplication/jscpd', '--json']));
+    const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'structure/jscpd', '--json']));
     expect(result.code, result.stdout + result.stderr).toBe(code);
     return result.report;
 }
 
-test('duplication/jscpd reports a copied Bash function on the second file and ignores identical JSON files', async () => {
+test('structure/jscpd reports a copied Bash function on the second file and ignores identical JSON files', async () => {
     const firstScript = `#!/usr/bin/env bash\nset -euo pipefail\n\ncount_first() {\n    local total=0\n${COUNT_STEPS}\n    printf '%s\\n' "$total"\n}\n\ncount_first\n`;
     await using sandbox = await testdir({
         'scripts/first.sh': firstScript,
@@ -40,11 +40,11 @@ test('duplication/jscpd reports a copied Bash function on the second file and ig
     const report = await runJscpdCheck(sandbox.path, 1);
     expect(report.checks).toMatchObject([
         {
-            check: 'duplication/jscpd',
+            check: 'structure/jscpd',
             status: 'failed',
             findings: [
                 {
-                    check: 'duplication/jscpd',
+                    check: 'structure/jscpd',
                     file: 'scripts/second.sh',
                     line: 4,
                     rule: 'clone',
@@ -55,10 +55,10 @@ test('duplication/jscpd reports a copied Bash function on the second file and ig
     ]);
     await writeFile(join(sandbox.path, 'scripts/second.sh'), '#!/usr/bin/env bash\nprintf "Independent task\\n"\n');
     const corrected = await runJscpdCheck(sandbox.path, 0);
-    expect(corrected.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'passed', findings: [] }]);
+    expect(corrected.checks).toMatchObject([{ check: 'structure/jscpd', status: 'passed', findings: [] }]);
 });
 
-test('duplication/jscpd skips an import list that two TypeScript files share and reports a copied function', async () => {
+test('structure/jscpd skips an import list that two TypeScript files share and reports a copied function', async () => {
     await using sandbox = await testdir({
         'first.ts': `${SHARED_IMPORTS}\n\nexport const first = value0 + value1;\n`,
         'second.ts': `${SHARED_IMPORTS}\n\nexport const second = value2 * value3;\n`,
@@ -66,7 +66,7 @@ test('duplication/jscpd skips an import list that two TypeScript files share and
     commitAll(sandbox.path);
     await initSandbox({ root: sandbox.path, run: spawnGspot }, { configurations: ['typescript'], level: 'all' });
     const report = await runJscpdCheck(sandbox.path, 0);
-    expect(report.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'passed', findings: [] }]);
+    expect(report.checks).toMatchObject([{ check: 'structure/jscpd', status: 'passed', findings: [] }]);
     const logic = Array.from(
         { length: 20 },
         (_, index) => `    total += values[${String(index)}] * ${String(index + 2)};`,
@@ -78,11 +78,11 @@ test('duplication/jscpd skips an import list that two TypeScript files share and
         );
     const copied = await runJscpdCheck(sandbox.path, 1);
     expect(copied.checks).toMatchObject([
-        { check: 'duplication/jscpd', status: 'failed', findings: [{ rule: 'clone' }] },
+        { check: 'structure/jscpd', status: 'failed', findings: [{ rule: 'clone' }] },
     ]);
 });
 
-test('duplication/jscpd skips shared Python imports and reports duplicated executable statements', async () => {
+test('structure/jscpd skips shared Python imports and reports duplicated executable statements', async () => {
     await using sandbox = await testdir({
         'first.py': `${SHARED_PYTHON_IMPORTS}\nprint("first")\n`,
         'second.py': `${SHARED_PYTHON_IMPORTS}\nprint("second")\n`,
@@ -90,7 +90,7 @@ test('duplication/jscpd skips shared Python imports and reports duplicated execu
     commitAll(sandbox.path);
     await initSandbox({ root: sandbox.path, run: spawnGspot }, { configurations: ['python'], level: 'all' });
     const imports = await runJscpdCheck(sandbox.path, 0);
-    expect(imports.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'passed', findings: [] }]);
+    expect(imports.checks).toMatchObject([{ check: 'structure/jscpd', status: 'passed', findings: [] }]);
     for (const name of ['first', 'second']) {
         await writeFile(
             join(sandbox.path, `${name}.py`),
@@ -99,6 +99,6 @@ test('duplication/jscpd skips shared Python imports and reports duplicated execu
     }
     const copied = await runJscpdCheck(sandbox.path, 1);
     expect(copied.checks).toMatchObject([
-        { check: 'duplication/jscpd', status: 'failed', findings: [{ rule: 'clone' }] },
+        { check: 'structure/jscpd', status: 'failed', findings: [{ rule: 'clone' }] },
     ]);
 });

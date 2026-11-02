@@ -6,6 +6,28 @@ title = "Structure"
 [files]
 languages = true
 
+[[tool]]
+name = "jscpd"
+npm = "jscpd"
+replace = [".jscpd.json"]
+version = "5.4.1"
+
+[[config_file]]
+target = "jscpd.json"
+tool = "jscpd"
+
+[[check]]
+example = "Two files with the same long block of code report that block. Move it into one function, and call it from both places."
+files = { languages = true }
+help = "Move the shared block into one function both callers use."
+level = "all"
+name = "jscpd"
+runs = "scope"
+stage = "push"
+summary = "Reports every block of code copied between files, naming both places."
+tool = "jscpd"
+why = "A fix in one place leaves the copied block broken in the other."
+
 [[check]]
 example = "With `[[import_rule]]` records, a Python file under `app/` that imports `storage.models` from a rule it may not import reports `refused-import`. A code file that no rule covers reports `uncovered-file`."
 files = { extensions = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs", ".py", ".pyi", ".swift"], kinds = ["source"] }
