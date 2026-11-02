@@ -25,5 +25,13 @@ buildTypedRuleTester().run('no-try-promise', plugin.rules['no-try-promise'], {
             code: 'declare function save(): Promise<void>; try { save().then(close); } catch (error) {}',
             errors: [{ messageId: 'open' }],
         },
+        {
+            code: 'async function run(load: () => Promise<number>) { try { load().finally(stop); } catch {} }',
+            errors: [{ messageId: 'open' }],
+        },
+        {
+            code: 'async function run(load: () => Promise<number>) { try { new Promise(load); } catch {} }',
+            errors: [{ messageId: 'open' }],
+        },
     ],
 });

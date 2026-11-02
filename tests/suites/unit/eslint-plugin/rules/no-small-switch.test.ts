@@ -27,5 +27,9 @@ buildTypedRuleTester().run('no-small-switch with types', plugin.rules['no-small-
             code: 'declare function fail(value: unknown): never; declare const mode: "dark"; switch (mode) { case "dark": paint(); break; default: fail(mode); }',
             errors: [{ messageId: 'small' }],
         },
+        {
+            code: 'declare function fail(value: never): never; declare function run(): void; declare const mode: "dark"; function a() { switch (mode) { case "dark": run(); break; default: mode; } }',
+            errors: [{ messageId: 'small' }],
+        },
     ],
 });

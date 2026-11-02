@@ -112,5 +112,7 @@ buildRuleTester().run('no-client-env regressions', plugin.rules['no-client-env']
             name: 'a private read through an alias of an undeclared process reports',
             errors: [{ messageId: 'private' }],
         },
+        { code: '"use client";\nDeno.env.get();', errors: [{ messageId: 'private' }] },
+        { code: '"use client";\nconst { ...rest } = process.env;\nrun(rest);', errors: [{ messageId: 'private' }] },
     ],
 });

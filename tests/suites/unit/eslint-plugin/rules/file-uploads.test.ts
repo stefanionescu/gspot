@@ -17,5 +17,9 @@ buildRuleTester().run('file-uploads', plugin.rules['file-uploads'], {
                 { messageId: 'extensionAndFolder', line: 12 },
             ],
         },
+        {
+            code: 'import formidable from "formidable";\nconst form = formidable(read());',
+            errors: [{ messageId: 'folder' }],
+        },
     ],
 });

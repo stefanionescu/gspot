@@ -22,5 +22,9 @@ buildRuleTester().run('require-memoize-key', plugin.rules['require-memoize-key']
             code: 'import memoize from "lodash/memoize";\nconst rate = (from, to) => from / to;\nexport const cached = memoize(rate, null);',
             errors: [{ messageId: 'keyFunction', line: 3 }],
         },
+        {
+            code: 'import memoize from "lodash/memoize";\nconst read = memoize((a, b) => a + b, void 0);',
+            errors: [{ messageId: 'keyFunction' }],
+        },
     ],
 });

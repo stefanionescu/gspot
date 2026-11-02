@@ -52,6 +52,7 @@ buildRuleTester().run<keyof (typeof plugin.rules)['no-magic-numbers']['meta']['m
                 code: 'function build() { const SIZES = [16, 32]; return SIZES; }',
                 errors: [{ messageId: 'noMagic' }, { messageId: 'noMagic' }],
             },
+            { code: 'type Size = 12;', errors: [{ messageId: 'noMagic' }] },
         ],
     },
 );

@@ -55,6 +55,19 @@ buildRuleTester().run<keyof (typeof plugin.rules)['restricted-syntax']['meta']['
                     { messageId: 'restricted', data: { message: 'Commit no debugger.' } },
                 ],
             },
+            {
+                code: 'run();',
+                options: [{ selector: 'CallExpression', message: 'x' }],
+                settings: { gspot: {} },
+                errors: [{ messageId: 'restricted' }],
+            },
+            {
+                code: 'run();',
+                filename: 'c:/repo/src/file.ts',
+                options: [{ selector: 'CallExpression', message: 'x', files: ['src/**'] }],
+                settings: { gspot: { root: 'C:/repo' } },
+                errors: [{ messageId: 'restricted' }],
+            },
         ],
     },
 );

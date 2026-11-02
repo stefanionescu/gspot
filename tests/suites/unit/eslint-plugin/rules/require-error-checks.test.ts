@@ -24,5 +24,6 @@ buildRuleTester().run('require-error-checks', plugin.rules['require-error-checks
             code: 'it("fails", (done) => { try { run(); } catch (error) { done(); } });',
             errors: [{ messageId: 'ignoredError', column: 47 }],
         },
+        { code: 'it.only("fails", () => { expect(run).to.throw(); });', errors: [{ messageId: 'errorType' }] },
     ],
 });

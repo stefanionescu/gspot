@@ -37,5 +37,13 @@ buildRuleTester().run('hashing', plugin.rules['hashing'], {
             code: "import crypto from 'crypto';\nconst name = crypto.createHash('md5').algorithm;",
             errors: [{ messageId: 'weak', line: 2 }],
         },
+        {
+            code: 'import { "createHash" as digest } from "node:crypto";\ndigest("md5");',
+            errors: [{ messageId: 'weak' }],
+        },
+        {
+            code: 'import crypto from "node:crypto";\nconst tagged = crypto`x`;\ntagged.createHash("md5");',
+            errors: [{ messageId: 'weak' }],
+        },
     ],
 });

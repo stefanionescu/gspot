@@ -15,5 +15,6 @@ buildRuleTester().run('dynamic-templates', plugin.rules['dynamic-templates'], {
                 { messageId: 'builtTemplate', line: 8 },
             ],
         },
+        { code: 'import { compile } from "pug";\ncompile(value + "b");', errors: [{ messageId: 'builtTemplate' }] },
     ],
 });

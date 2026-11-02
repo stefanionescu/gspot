@@ -78,5 +78,17 @@ buildRuleTester({ root }).run('no-duplicate-test-titles', plugin.rules['no-dupli
             filename: join(root, 'plain/b.test.ts'),
             errors: [{ messageId: 'duplicate', line: 3 }],
         },
+        {
+            code: 'import { "test" as check } from "vitest";\ncheck("a", () => {});\ncheck("a", () => {});',
+            errors: [{ messageId: 'duplicate' }],
+        },
+        {
+            code: 'import { test, describe, beforeEach } from "vitest";\nfunction cases() { describe("x", () => { test("a", () => {}); test("a", () => {}); }); }\ndescribe("y", () => { cases(); });',
+            errors: [{ messageId: 'duplicate' }],
+        },
+        {
+            code: 'import { test, describe, beforeEach } from "vitest";\nfunction cases() { run(test("a", () => {}), test("a", () => {})); }\ndescribe("y", () => { cases(); });',
+            errors: [{ messageId: 'duplicate' }],
+        },
     ],
 });

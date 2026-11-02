@@ -39,5 +39,13 @@ buildRuleTester().run('no-component-debounce', plugin.rules['no-component-deboun
             code: 'import { debounce } from "lodash";\nimport React from "react";\nclass Search extends React.Component { render() { const onChange = debounce(this.search, 300); return null; } }',
             errors: [{ messageId: 'class', data: { kind: 'debounced', purpose: 'debouncing' } }],
         },
+        {
+            code: 'import { debounce } from "lodash";\nfunction Card(ref) { if (ref.current === null) ref.current = debounce(save, 100); return ref; }',
+            errors: [{ messageId: 'function' }],
+        },
+        {
+            code: 'import { debounce } from "lodash";\nimport { Component } from "react";\nconst Card = class extends Component { render() { const run = debounce(save, 100); return run; } };',
+            errors: [{ messageId: 'class' }],
+        },
     ],
 });

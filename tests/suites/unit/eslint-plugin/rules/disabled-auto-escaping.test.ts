@@ -19,5 +19,6 @@ buildRuleTester().run('disabled-auto-escaping', plugin.rules['disabled-auto-esca
                 { messageId: 'unescaped', line: 14 },
             ],
         },
+        { code: 'Mustache.escape = (text) => text;', errors: [{ messageId: 'unescaped' }] },
     ],
 });

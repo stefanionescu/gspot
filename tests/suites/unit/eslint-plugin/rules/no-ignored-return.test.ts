@@ -22,5 +22,9 @@ buildTypedRuleTester().run('no-ignored-return', plugin.rules['no-ignored-return'
         { code: 'Math.max(1, 2);', errors: [{ messageId: 'ignored' }] },
         { code: 'declare const total: number; total.toFixed(2);', errors: [{ messageId: 'ignored' }] },
         { code: 'new Date().getTime();', errors: [{ messageId: 'ignored' }] },
+        {
+            code: 'const list = [1];\nlet total = 0;\nlist.find((item) => { const save = () => { total = item; }; return save(); });',
+            errors: [{ messageId: 'ignored' }],
+        },
     ],
 });

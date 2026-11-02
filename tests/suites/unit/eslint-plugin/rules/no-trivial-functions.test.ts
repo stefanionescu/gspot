@@ -82,6 +82,8 @@ buildRuleTester().run<
             options: [{ trivialFunctionStatements: 3 }],
             errors: [{ messageId: 'trivial' }],
         },
+        { code: 'function a() { return 1; }', settings: { gspot: {} }, errors: [{ messageId: 'trivial' }] },
+        { code: 'function run() { declare const a: number; read(); return a; }', errors: [{ messageId: 'trivial' }] },
     ],
 });
 

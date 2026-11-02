@@ -127,6 +127,13 @@ buildRuleTester().run<
             options: [{ reexports: 'index-only', indexExports: 2 }],
             errors: [{ messageId: 'barrel', data: { count: 3, limit: 2 } }],
         },
+        {
+            code: 'export default value;',
+            filename: 'src/index.ts',
+            options: [{ reexports: 'index-only', indexExports: 0, forwardingFiles: [] }],
+            errors: [{ messageId: 'barrel' }],
+        },
+        { code: 'import fs = require("node:fs");\nexport { fs };', errors: [{ messageId: 'trivial' }] },
     ],
 });
 

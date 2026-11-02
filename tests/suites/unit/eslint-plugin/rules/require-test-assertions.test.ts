@@ -98,5 +98,10 @@ buildRuleTester({
             filename: join(root, 'typed/a.test.ts'),
             errors: [{ messageId: 'missing' }],
         },
+        {
+            code: 'import { test } from "vitest";\ntest("a", () => { console.log(1); });',
+            filename: join(root, 'typed/a.test.ts'),
+            errors: [{ messageId: 'missing' }],
+        },
     ],
 });

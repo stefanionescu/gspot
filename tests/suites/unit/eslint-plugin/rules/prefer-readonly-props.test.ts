@@ -55,6 +55,21 @@ buildTypedRuleTester().run('prefer-readonly-props', rule, {
                 },
             ],
         })),
+        {
+            code: 'function Card(props: Record<"title", string>) { return <div>{props.title}</div>; }',
+            filename: 'react.tsx',
+            errors: [
+                {
+                    messageId: 'mutable',
+                    suggestions: [
+                        {
+                            messageId: 'mark',
+                            output: 'function Card(props: Readonly<Record<"title", string>>) { return <div>{props.title}</div>; }',
+                        },
+                    ],
+                },
+            ],
+        },
     ],
 });
 

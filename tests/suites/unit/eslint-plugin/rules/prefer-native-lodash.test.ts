@@ -99,6 +99,7 @@ buildRuleTester().run('prefer-native-lodash', rule, {
                 },
             ],
         })),
+        { code: 'import _ from "lodash";\n_.includes("text");', errors: [{ messageId: 'cautious' }] },
     ],
 });
 

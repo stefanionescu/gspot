@@ -83,5 +83,11 @@ buildRuleTester().run('no-renamed-exports regressions', plugin.rules['no-renamed
             name: 'control: a member of a constant object that nothing assigns is a rename',
             errors: [{ messageId: 'renamed' }],
         },
+        { code: 'import box from "x";\ntypeof box.a;\nexport const other = box;', errors: [{ messageId: 'renamed' }] },
+        {
+            code: 'import { "value" as other } from "a";\nexport { other as renamed };',
+            errors: [{ messageId: 'renamed' }],
+        },
+        { code: 'const value = 1;\nexport { value as "renamed" };', errors: [{ messageId: 'renamed' }] },
     ],
 });

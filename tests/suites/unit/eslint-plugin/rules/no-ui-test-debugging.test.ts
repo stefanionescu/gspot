@@ -32,5 +32,6 @@ buildRuleTester().run('no-ui-test-debugging', plugin.rules['no-ui-test-debugging
             output: 'import { render } from "@testing-library/react";\nconst { debug } = render(view);\n',
             errors: [{ messageId: 'debug', line: 3 }],
         },
+        { code: 'const paused = await page.pause();', filename: 'file.test.ts', errors: [{ messageId: 'debug' }] },
     ],
 });

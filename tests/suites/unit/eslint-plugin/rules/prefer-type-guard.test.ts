@@ -24,5 +24,11 @@ buildRuleTester().run('prefer-type-guard', plugin.rules['prefer-type-guard'], {
             code: 'class Pet { isFish() { return (this as Fish).swim !== undefined; } }',
             errors: [{ messageId: 'guard', data: { value: 'this', type: 'Fish' } }],
         },
+        {
+            code: 'function isCat(value: unknown): boolean { return (<Cat>value).meow !== undefined; }',
+            filename: 'file.ts',
+            languageOptions: { parserOptions: { ecmaFeatures: { jsx: false } } },
+            errors: [{ messageId: 'guard' }],
+        },
     ],
 });

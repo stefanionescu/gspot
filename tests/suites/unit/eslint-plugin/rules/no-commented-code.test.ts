@@ -36,5 +36,17 @@ buildRuleTester().run('no-commented-code', plugin.rules['no-commented-code'], {
             languageOptions: { parserOptions: { parser: { ts: parser } } },
             errors: [{ messageId: 'code' }],
         },
+        {
+            name: 'parses with a language parser that has only parse',
+            code: '// const a = 1;\nrun();',
+            languageOptions: { parser: { parse: parser.parse } },
+            errors: [{ messageId: 'code' }],
+        },
+        {
+            name: 'parses with a parser module in the parser options',
+            code: '// const a = 1;\nrun();',
+            languageOptions: { parserOptions: { parser } },
+            errors: [{ messageId: 'code' }],
+        },
     ],
 });

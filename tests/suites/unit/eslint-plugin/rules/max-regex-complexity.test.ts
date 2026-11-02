@@ -18,5 +18,6 @@ buildRuleTester().run('max-regex-complexity', plugin.rules['max-regex-complexity
             options: [{ threshold: 0 }],
             errors: [{ messageId: 'complex', data: { score: 5, threshold: 0 } }],
         },
+        { code: '/(?=a+)b/u;', options: [{ threshold: 1 }], errors: [{ messageId: 'complex' }] },
     ],
 });

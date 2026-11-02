@@ -5,6 +5,8 @@ import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-t
 const root = writePackageFolders({
     modern: { dependencies: { lodash: '^4.17.21', rxjs: '~7.8.0', validator: '*', rambda: 'latest' } },
     old: { dependencies: { lodash: '^3.10.0', rxjs: '~7.1.0', validator: 'github:validatorjs/validator.js' } },
+    capped: { dependencies: { lodash: '<=4.0.0' } },
+    major: { dependencies: { lodash: '4.x' } },
 });
 const filename = join(root, 'modern/cart.ts');
 
@@ -25,5 +27,7 @@ buildRuleTester({ root }).run('no-default-utility-imports', plugin.rules['no-def
         { code: 'import rx from "rxjs";', filename, errors: [{ messageId: 'named', data: { library: 'rxjs' } }] },
         { code: 'import validator from "validator";', filename, errors: [{ messageId: 'method' }] },
         { code: 'import R from "rambda";', filename, errors: [{ messageId: 'named' }] },
+        { code: 'import _ from "lodash";', filename: join(root, 'capped/cart.ts'), errors: [{ messageId: 'method' }] },
+        { code: 'import _ from "lodash";', filename: join(root, 'major/cart.ts'), errors: [{ messageId: 'method' }] },
     ],
 });

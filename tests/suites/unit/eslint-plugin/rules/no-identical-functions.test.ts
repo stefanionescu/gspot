@@ -21,5 +21,9 @@ buildRuleTester().run('no-identical-functions', plugin.rules['no-identical-funct
             options: [{ minLines: 2 }],
             errors: [{ messageId: 'identical', data: { line: 1 }, line: 5 }],
         },
+        {
+            code: 'const a = () => run(\n  1,\n  2,\n);\nconst b = () => run(\n  1,\n  2,\n);',
+            errors: [{ messageId: 'identical' }],
+        },
     ],
 });
