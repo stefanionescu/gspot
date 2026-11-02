@@ -12,8 +12,6 @@ export const DECIMAL_FACTOR = 5n;
 
 export const BINARY_FACTOR = 2;
 
-export const ASSERT_OPERANDS = 2;
-
 export const SIGNS = new Set(['-', '+']);
 
 export const RANGE_OPERATORS: ReadonlyMap<string, readonly string[]> = new Map([
@@ -23,27 +21,8 @@ export const RANGE_OPERATORS: ReadonlyMap<string, readonly string[]> = new Map([
 
 export const FLOAT_ARITHMETIC_OPERATORS = new Set(['+', '-', '*', '%', '**']);
 
-export const ASSERTION_MATCHERS: ReadonlySet<string | null> = new Set([
-    'toBe',
-    'toEqual',
-    'toStrictEqual',
-    'equal',
-    'equals',
-    'eq',
-    'eql',
-    'strictEqual',
-    'notEqual',
-    'notStrictEqual',
-    'deepEqual',
-    'deepStrictEqual',
-]);
-
 export const BITWISE_JOINS = new Set(['&', '|']);
 
 export const BITWISE_OPERATORS = new Set(['&', '|', '^', '<<', '>>', '>>>']);
 
 export const BIGINT_ZERO = 0n;
-
-export const ASSERT_NAME = 'assert';
-
-export const EXPECT_NAME = 'expect';

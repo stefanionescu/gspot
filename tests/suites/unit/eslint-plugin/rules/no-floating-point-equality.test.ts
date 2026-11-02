@@ -3,6 +3,8 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-floating-point-equality', plugin.rules['no-floating-point-equality'], {
     valid: [
+        'expect(total).not.toEqual(0.3);',
+        'assert.strictEqual(total, 0.3);',
         'if (total === 0.5) pay();',
         'if (total === 4 / 2) pay();',
         'if (total === 1e3) pay();',
@@ -31,7 +33,5 @@ buildRuleTester().run('no-floating-point-equality', plugin.rules['no-floating-po
         { code: 'if (total <= 0.1 && total >= 0.1) pay();', errors: [{ messageId: 'equality' }] },
         { code: 'switch (total) { case 0.1: pay(); }', errors: [{ messageId: 'equality' }] },
         { code: 'if (total === -1e-3) pay();', errors: [{ messageId: 'equality' }] },
-        { code: 'expect(total).not.toEqual(0.3);', errors: [{ messageId: 'equality' }] },
-        { code: 'assert.strictEqual(total, 0.3);', errors: [{ messageId: 'equality' }] },
     ],
 });

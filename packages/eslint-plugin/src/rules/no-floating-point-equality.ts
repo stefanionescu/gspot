@@ -5,16 +5,12 @@ import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescr
 
 import {
     SIGNS,
-    ASSERT_NAME,
     BIGINT_ZERO,
-    EXPECT_NAME,
     BINARY_FACTOR,
     DECIMAL_FACTOR,
-    ASSERT_OPERANDS,
     DECIMAL_LITERAL,
     FRACTION_MARKER,
     RANGE_OPERATORS,
-    ASSERTION_MATCHERS,
     FLOAT_ARITHMETIC_OPERATORS,
 } from '../config/operators.ts';
 
@@ -83,21 +79,6 @@ function isFloatingPoint(node: TSESTree.Node, source: TSESLint.SourceCode, seen:
     }
 }
 
-function readMatcherRoot({ callee }: TSESTree.CallExpression): TSESTree.Node | undefined {
-    if (callee.type !== AST_NODE_TYPES.MemberExpression) return undefined;
-    let target: TSESTree.Node = callee.object;
-    while (target.type === AST_NODE_TYPES.MemberExpression) target = target.object;
-    return ASSERTION_MATCHERS.has(ASTUtils.getPropertyName(callee)) ? target : undefined;
-}
-
-function readAssertionOperands(node: TSESTree.CallExpression): TSESTree.Node[] {
-    const target = readMatcherRoot(node);
-    if (target?.type === AST_NODE_TYPES.Identifier)
-        return target.name === ASSERT_NAME ? node.arguments.slice(0, ASSERT_OPERANDS) : [];
-    if (target?.type !== AST_NODE_TYPES.CallExpression || target.callee.type !== AST_NODE_TYPES.Identifier) return [];
-    return target.callee.name === EXPECT_NAME ? [...target.arguments.slice(0, 1), ...node.arguments.slice(0, 1)] : [];
-}
-
 function isRangeEquality(node: TSESTree.LogicalExpression, source: TSESLint.SourceCode, seen: Set<unknown>): boolean {
     const operators = RANGE_OPERATORS.get(node.operator) ?? [];
     const [left = [], right = []] = [node.left, node.right].map((side) =>
@@ -127,7 +108,7 @@ export const noFloatingPointEquality = createRule<[], 'equality'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports an exact comparison with a value that binary floating point cannot store exactly: `==`, `===`, `!=`, `!==`, a switch case, a pair of `<=` and `>=` that pins one value, and the equality matchers of `expect` and `assert`. A decimal literal that is a binary fraction, such as `0.5`, and arithmetic that gives a whole number pass.',
+                'Reports an exact comparison with a value that binary floating point cannot store exactly: `==`, `===`, `!=`, `!==`, a switch case, and a pair of `<=` and `>=` that pins one value. A decimal literal that is a binary fraction, such as `0.5`, and arithmetic that gives a whole number pass.',
             why: 'A decimal such as 0.1 has no exact binary form, so `0.1 + 0.2 === 0.3` is false.',
             fix: 'Compare the difference with a tolerance, such as `Math.abs(total - 0.3) < Number.EPSILON`, or compare whole numbers of the smallest unit.',
             example: '`if (total === 0.3)` reports `equality`. Write `if (Math.abs(total - 0.3) < 1e-9)`.',
@@ -145,11 +126,6 @@ export const noFloatingPointEquality = createRule<[], 'equality'>({
             },
             LogicalExpression(node) {
                 if (!isRangeEquality(node, source, new Set())) return;
-                context.report({ node, messageId: 'equality' });
-            },
-            CallExpression(node) {
-                const operands = readAssertionOperands(node);
-                if (!operands.some((operand) => isFloatingPoint(operand, source, new Set()))) return;
                 context.report({ node, messageId: 'equality' });
             },
             SwitchCase(node) {
