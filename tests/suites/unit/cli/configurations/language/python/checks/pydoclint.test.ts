@@ -14,13 +14,13 @@ import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { PYPROJECT } from '#tests/config/setup/languages.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
-import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
 import { CHECK_GENERATION, createRunResources } from '#tests/setup/cli/run.ts';
+import { fakeToolExecutables, buildPythonToolFiles } from '#tests/setup/system/fakes.ts';
 
 import {
     FAILED_STYLE_BATCH,
@@ -84,6 +84,7 @@ async function preparePydoclintCheck(
         ...files,
         'gspot.toml': buildSandboxSettings(['python'], settings),
         [executable]: '',
+        ...buildPythonToolFiles('pydoclint'),
     });
     await chmod(join(root, executable), EXECUTABLE_FILE);
     const session = await openSession(root, { resources: resources.use(createRunResources()) });

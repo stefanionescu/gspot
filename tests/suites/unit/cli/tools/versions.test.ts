@@ -1,7 +1,9 @@
+import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { type Tool } from '#cli/types/manifests.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
 import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
 import { VERSION_OUTPUTS, SYSTEM_BASH_VERSIONS } from '#tests/config/tools/versions.ts';
@@ -13,6 +15,20 @@ test('an npm tool is the version its package holds, whatever it prints', async (
     const inspection = await inspectTool(buildToolSearch(sandbox.path), buildProgramPin('teller', '5.0.1', 'teller'));
     expect(inspection.found).toBe('5.0.1');
     expect(inspection.state).toBe('ok');
+});
+
+test.each([
+    ['1.2.3', 'outdated'],
+    ['9.9.9', 'newer'],
+])('a pinned program on PATH that prints %s is %s, and in a mise folder it is the pin', async (version, state) => {
+    await using sandbox = await testdir();
+    await writeProgramCommand(sandbox.path, 'bin/teller', 'fakes/tool', '--line', version);
+    using _which = fakeExecutableLookup(join(sandbox.path, 'bin', isWindows ? 'teller.cmd' : 'teller'));
+    const tool = { ...buildProgramPin('teller', '5.0.1'), min_version: '5.0.0' };
+    const onPath = await inspectTool(buildToolSearch(sandbox.path), tool);
+    expect(onPath).toMatchObject({ state, found: version });
+    const search = buildToolSearch(sandbox.path, { miseBinPaths: [join(sandbox.path, 'bin')] });
+    expect(await inspectTool(search, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });
 });
 
 test('a shim that no configuration gives a version is missing, not broken', async () => {

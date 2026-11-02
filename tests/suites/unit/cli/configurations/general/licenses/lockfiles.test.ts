@@ -9,7 +9,7 @@ import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeNpmTool, fakeCommands, writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { fakeNpmTool, fakeCommands, writeProgramCommand, buildPythonToolFiles } from '#tests/setup/system/fakes.ts';
 import { SAMPLE_PYPROJECT, LOCKED_PACKAGE_CASES, LICENSE_PACKAGE_JSON } from '#tests/config/configurations/licenses.ts';
 
 test.each([...LOCKED_PACKAGE_CASES])(
@@ -30,6 +30,7 @@ test.each([...LOCKED_PACKAGE_CASES])(
                 join(sandbox.path, GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder, 'pip-licenses'),
             );
             await writeProgramCommand(sandbox.path, path, 'fakes/tool', '--line', `pip-licenses ${tool.version!}`);
+            await createFileTree(sandbox.path, buildPythonToolFiles('pip-licenses'));
         } else await fakeNpmTool(sandbox.path, 'license-checker-rseidelsohn');
         const installed = [...expected, 'unlocked@9.9.9'];
         const stdout = python

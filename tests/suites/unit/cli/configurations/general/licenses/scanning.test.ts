@@ -20,7 +20,7 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
-import { fakeNpmTool, fakeCommands, writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { fakeNpmTool, fakeCommands, writeProgramCommand, buildPythonToolFiles } from '#tests/setup/system/fakes.ts';
 
 import {
     LICENSE_TABLES,
@@ -283,7 +283,11 @@ async function writeLicenseSandbox(
     tables: string,
     files: Record<string, string> = LICENSE_PROJECT_FILES,
 ): Promise<void> {
-    await createFileTree(root, { 'gspot.toml': buildSandboxSettings(['licenses'], { tables: tables }), ...files });
+    await createFileTree(root, {
+        'gspot.toml': buildSandboxSettings(['licenses'], { tables: tables }),
+        ...buildPythonToolFiles('pip-licenses'),
+        ...files,
+    });
     const version = getTool(readConfigurations().values(), 'pip-licenses').version;
     if (version === undefined) throw new Error('The pip-licenses test requires a pinned version.');
     const scannerPath = join(

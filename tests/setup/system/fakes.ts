@@ -1,6 +1,7 @@
 import executables from 'which';
 import { tmpdir } from 'node:os';
 import { getTool } from '#cli/tools/pins.ts';
+import * as locate from '#cli/tools/locate.ts';
 import { mock, spyOn, type Mock } from 'bun:test';
 import { quoteArgument } from '#cli/system/text.ts';
 import { type Tool } from '#cli/types/manifests.ts';
@@ -40,16 +41,18 @@ export function fakeCommands(name?: string, spawn?: typeof spawnProcess): Mock<t
 }
 
 /**
-Fake the lookup and version output of these tools.
+Fake the lookup and version output of these tools, as programs that mise installed.
 */
 export function fakeToolExecutables(tools: Tool[]): DisposableStack {
     const resources = new DisposableStack();
+    const folder = join(tmpdir(), 'test-tools');
     resources.use(
         fakeExecutableLookup((name) => {
             if (name === 'mise') return null;
-            return tools.some((tool) => tool.name === name) ? join(tmpdir(), 'test-tools', name) : undefined;
+            return tools.some((tool) => tool.name === name) ? join(folder, name) : undefined;
         }),
     );
+    resources.use(spyOn(locate, 'readToolBinPaths').mockResolvedValue({ folders: [folder] }));
     const unfaked = processes.spawnProcess;
     const spy = spyOn(processes, 'spawnProcess');
     const run = spy.getMockImplementation() ?? unfaked;
@@ -102,6 +105,17 @@ export async function fakeNpmTool(root: string, tool: string): Promise<Tool> {
         toolArguments: ['--line', declaration.version],
     });
     return declaration;
+}
+
+/**
+List the dist-info file that gives a Python tool its version in the tool environment.
+*/
+export function buildPythonToolFiles(tool: string): Record<string, string> {
+    const declaration = getTool(readConfigurations().values(), tool);
+    const name = declaration.installers['pypi']?.name;
+    if (name === undefined) throw new Error(`The tool ${tool} has no PyPI installer.`);
+    const folder = `${name}-${String(declaration.version)}.dist-info`;
+    return { [`${GSPOT_PATHS.pythonEnvironment}/lib/python3/site-packages/${folder}/METADATA`]: '' };
 }
 
 /**

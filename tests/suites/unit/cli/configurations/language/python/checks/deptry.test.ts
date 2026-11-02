@@ -9,11 +9,11 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { executableLayout } from '#cli/system/paths.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { DEPTRY_SCOPE_PATHS } from '#tests/config/configurations/python.ts';
+import { fakeToolExecutables, buildPythonToolFiles } from '#tests/setup/system/fakes.ts';
 
 test('deptry skips a scope without pyproject.toml', async () => {
     await using sandbox = await createGitSandbox({
@@ -47,6 +47,7 @@ test('deptry excludes nested scopes and keeps your own exclude patterns', async 
             ]),
         ),
         [join(join(GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder), 'deptry')]: 'stub',
+        ...buildPythonToolFiles('deptry'),
     });
     const { checked, commands } = await runFakeDeptry(sandbox.path);
 
@@ -85,6 +86,7 @@ test('deptry counts python.externals as first party beside the known_first_party
         'main.py': 'import folder_paths\n',
         '.venv/pyvenv.cfg': '',
         [join(join(GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder), 'deptry')]: 'stub',
+        ...buildPythonToolFiles('deptry'),
     });
     const { commands } = await runFakeDeptry(sandbox.path);
     const command = commands.find((command) => command.includes('deptry'))!;

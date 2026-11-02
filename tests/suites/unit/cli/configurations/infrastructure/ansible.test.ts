@@ -3,6 +3,7 @@ import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildPythonToolFiles } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { COMMAND_PLAYBOOK } from '#tests/config/setup/configurations.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -21,6 +22,7 @@ test('each Ansible project lints its own files and not those of a nested project
     const session = await openFakeToolSession(sandbox.path, ['ansible-lint'], resources);
     await createFileTree(sandbox.path, {
         [buildVenvExecutablePath(GSPOT_PATHS.pythonEnvironment, 'ansible-lint')]: 'stub',
+        ...buildPythonToolFiles('ansible-lint'),
     });
     const input = planSandboxCheck(session, 'ansible/ansible-lint');
     resources.use(

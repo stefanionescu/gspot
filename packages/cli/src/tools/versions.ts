@@ -116,11 +116,12 @@ function readDistributionVersion(root: string, tool: Tool): string | undefined {
 }
 
 function readMetadataVersion(inspected: InspectedTool, path: string): string | undefined {
-    const { root, tool } = inspected;
+    const { root, tool, miseBinPaths } = inspected;
     const npm = tool.installers['npm'];
     const installed = readPackageVersion(root, path, npm?.name);
     if (installed !== undefined && npm?.version === tool.version) return installed;
-    return tool.system === true ? undefined : (readDistributionVersion(root, tool) ?? tool.version);
+    if (tool.system === true) return undefined;
+    return miseBinPaths?.includes(dirname(path)) === true ? tool.version : readDistributionVersion(root, tool);
 }
 
 /**
@@ -145,8 +146,8 @@ export function classifyToolVersion(
 }
 
 /**
-Read the version of a tool. A package.json, a Python dist-info folder, or the pin gives it for a tool that gspot
-installs. Only a system tool runs its version command.
+Read the version of a tool. A package.json or a Python dist-info folder gives it for a tool that gspot installs. The
+pin gives it for a program in a mise folder of that pin. Every other tool runs its version command.
 
 @param inspected the tool and where to run its version query.
 @param path the resolved executable.
