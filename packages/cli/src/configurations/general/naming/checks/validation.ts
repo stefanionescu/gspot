@@ -20,7 +20,6 @@ import {
     DIGIT,
     SILENT_E,
     TRAILING_Y,
-    DIGIT_RUNS,
     UPPER_WORD,
     CAMEL_WORD,
     LOWER_WORD,
@@ -94,11 +93,10 @@ function stripPrefixes(name: string, overrides: CompiledOverride[]): string {
 function validateCase(checked: CheckedIdentifier, name: string, limits: CategoryLimits) {
     if (limits.cases.length === 0) return undefined;
     const isFileName = checked.identifier.category === 'files';
-    const digitless = name.replaceAll(DIGIT_RUNS, '');
     const isMatched = limits.cases.some((caseName) => {
         if (caseName === 'timestamp-snake') return CASE_TESTS[caseName](name);
-        const subject = isFileName ? digitless.replace(LAST_EXTENSION, '') : digitless;
-        return [subject, checked.identifier.name.replaceAll(DIGIT_RUNS, '')].some((text) =>
+        const subject = isFileName ? name.replace(LAST_EXTENSION, '') : name;
+        return [subject, checked.identifier.name].some((text) =>
             text.split('.').every((segment) => CASE_TESTS[caseName](segment)),
         );
     });

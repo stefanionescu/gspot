@@ -100,6 +100,8 @@ test.each([
     ['isNotable', 'variables'],
     ['userId', 'variables'],
     ['pointA', 'variables'],
+    ['awsS3BucketVersioning', 'variables'],
+    ['S3Bucket', 'classes'],
 ] as const)('%s, a %s, passes', async (name, category) => {
     expect(listRuleMessages(buildIdentifier({ name, category }), await readNaming(''))).toStrictEqual([]);
 });
