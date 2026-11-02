@@ -5,11 +5,13 @@ import { createFileTree } from 'testdirs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import type { GspotProject } from '#tests/types/setup.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { runCommand } from '#tests/setup/system/processes.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import example from '#docs/config/example.json' with { type: 'json' };
-import { createGspotProject } from '#tests/setup/sandboxes/projects/gspot.ts';
+import { OFFLINE_ENVIRONMENT } from '#tests/config/setup/programs.ts';
+import { createGspotProject, isolatedEnvironment } from '#tests/setup/sandboxes/projects/gspot.ts';
 
 async function prepareExample(installation: GspotProject): Promise<string> {
     const root = join(installation.workspace, 'example');
@@ -83,4 +85,30 @@ test('the home example matches staged findings and summaries and passes after it
         expect(text.stdout).toContain(example.checked);
         expect(text.stdout.split('\n').find((line) => /^(?:Failed|Passed):/u.test(line))).toBe(expected.summary);
     }
+});
+
+test('a pre-push check on Node reports a type error in a pushed commit that HEAD no longer holds', async () => {
+    await using installation = await createGspotProject();
+    const root = await prepareExample(installation);
+    const invalid = join(root, 'src/total.ts');
+    writeFileSync(join(root, example.after.path), example.after.content);
+    writeFileSync(invalid, "export const total: number = 'none';\n");
+    runGitStep(root, ['add', '-A']);
+    runGitStep(root, ['commit', '--no-verify', '-qm', 'feat: add the total']);
+    const broken = runGitStep(root, ['rev-parse', 'HEAD']);
+    writeFileSync(invalid, 'export const total: number = 0;\n');
+    runGitStep(root, ['commit', '--no-verify', '-qam', 'fix: type the total']);
+    const corrected = runGitStep(root, ['rev-parse', 'HEAD']);
+    const push = async (hash: string) => {
+        const cli = join(installation.root, 'node_modules', cliPackage.name, cliPackage.bin.gspot);
+        const command = ['node', cli, 'check', '--hook', 'pre-push', '--only', 'typescript/tsc', '--json'];
+        const stdin = `refs/heads/main ${hash} refs/heads/main ${'0'.repeat(hash.length)}\n`;
+        const env = { ...isolatedEnvironment, ...installation.environment, ...OFFLINE_ENVIRONMENT };
+        return await runCommand(command, { cwd: root, env, stdin });
+    };
+    const rejected = await push(broken);
+    expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
+    expect(rejected.stdout).toContain('TS2322');
+    const accepted = await push(corrected);
+    expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
 });
