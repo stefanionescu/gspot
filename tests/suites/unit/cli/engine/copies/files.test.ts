@@ -133,7 +133,7 @@ test.each([false, true])(
         });
 
         const session = await openSession(sandbox.path);
-        const input = planSandboxCheck(session, 'javascript/tsc', { paths: ['selected.js'] });
+        const input = planSandboxCheck(session, 'format/prettier', { paths: ['selected.js'] });
         using copy = await createCheckCopy(session, input, includedPaths ? ['document.json'] : []);
         expect(await readFile(join(copy.path, 'selected.js'), 'utf8')).toBe('export const selected = 1;');
         expect(await readFile(join(copy.path, 'node_modules/tool/value.js'), 'utf8')).toBe(

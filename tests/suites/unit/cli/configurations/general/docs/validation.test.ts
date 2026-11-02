@@ -207,9 +207,12 @@ test('missing-paths: documented tasks are checked against their task tool and th
 });
 
 test('missing-paths: a document in a child scope does not read unrelated or shadowed package scripts', async () => {
+    const document = 'app/nested/guide.md';
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { scopes: DOC_TASK_SCOPES }),
-        ...DOC_TASK_FILES,
+        ...Object.fromEntries(
+            Object.entries(DOC_TASK_FILES).filter(([path]) => !path.endsWith('.md') || path === document),
+        ),
     });
 
     const session = await openSession(sandbox.path);
@@ -217,10 +220,7 @@ test('missing-paths: a document in a child scope does not read unrelated or shad
     session.cache = createRunCache(sandbox.path);
 
     expect(
-        await getBuiltInCheck('docs/missing-paths')(
-            session,
-            planSandboxCheck(session, 'docs/missing-paths', { paths: ['app/nested/guide.md'] }),
-        ),
+        await getBuiltInCheck('docs/missing-paths')(session, planSandboxCheck(session, 'docs/missing-paths')),
     ).toStrictEqual([]);
 });
 

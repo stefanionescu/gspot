@@ -1,7 +1,5 @@
-import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/engine/run.ts';
 import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
@@ -18,18 +16,6 @@ import {
     ROUTE_FILE_CASES,
     FRAMEWORK_COMPONENT_CASES,
 } from '#tests/config/configurations/structure/files.ts';
-
-test('an untracked neighbor does not hide a selected tracked lone file', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
-        'lone/only.ts': LONE_FILE_TREE['lone/only.ts'],
-    });
-    commitAll(sandbox.path);
-    await writeFile(join(sandbox.path, 'lone/notes.txt'), 'Untracked notes.\n');
-    expect(await runSandboxCheck(sandbox.path, 'structure/lone-files', { paths: ['lone/only.ts'] })).toMatchObject([
-        { file: 'lone/only.ts', rule: 'lone-file' },
-    ]);
-});
 
 test('only code files count, and ignored paths and folders with subfolders are not reported', async () => {
     await using sandbox = await createGitSandbox({

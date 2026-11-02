@@ -1,11 +1,11 @@
 import { spyOn } from 'bun:test';
+import { getTool } from '#cli/tools/pins.ts';
+import { planChecks } from '#cli/engine/plan.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { runBuiltInCheck } from '#cli/engine/results.ts';
 import * as environment from '#cli/system/environment.ts';
-import { getTool, findToolName } from '#cli/tools/pins.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { linkGrammars } from '#tests/setup/runner/run-folder.ts';
@@ -33,7 +33,7 @@ export async function redirectCacheFolder(): Promise<AsyncDisposableStack> {
 }
 
 /**
-Plan one sandbox check with its complete repository and selected scope files.
+Plan one sandbox check with the product planner, and select the entry of its scope.
 */
 export function planSandboxCheck(
     session: Session,
@@ -41,28 +41,11 @@ export function planSandboxCheck(
     options: { scope?: string; paths?: string[] } = {},
 ): PlannedCheck {
     const path = options.scope ?? '';
-    const scope = session.scopes.find((each) => each.path === path);
-    if (scope === undefined) throw new Error(`The sandbox has no scope at ${path || ROOT_LABEL}.`);
-    const selected = scope.configurations
-        .flatMap((configuration) => configuration.checks.map((check) => ({ configuration, check })))
-        .find(({ check }) => check.id === checkId);
-    if (selected === undefined) throw new Error(`The sandbox selects no check called ${checkId}.`);
-    const { configuration, check } = selected;
-    const paths = options.paths;
-    const files = session.repository.files.filter(
-        (file) =>
-            (check.runs === 'once' || selectScopePath(file.path, session.repository.scopeFolders) === path) &&
-            (paths === undefined || paths.includes(file.path)),
-    );
-    const tool = findToolName(check);
-    return {
-        scope,
-        configuration,
-        check,
-        files,
-        triggerPaths: [],
-        ...(tool !== undefined && { tool: getTool(readConfigurations().values(), tool) }),
-    };
+    const planned = planChecks(session, { stage: 'any', only: [checkId], paths: options.paths, keepLevelOff: true });
+    const selected = planned.find(({ scope }) => scope.path === path) ?? planned[0];
+    if (selected === undefined)
+        throw new Error(`The sandbox selects no check called ${checkId} at ${path || ROOT_LABEL}.`);
+    return selected;
 }
 
 /**
