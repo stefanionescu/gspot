@@ -67,6 +67,12 @@ export const PACKAGE_STYLE_CASES = [
 
 export const STYLE_CASES = [
     {
+        rule: 'home-paths',
+        path: 'paths.md',
+        source: '# Paths\n\nRun it from /home/dev/app.\n\nRead `./src/components/home/hero/Hero.astro`.\n',
+        findings: [{ line: 3, rule: 'gspot.home-paths' }],
+    },
+    {
         rule: 'em-dashes',
         path: 'directives.md',
         source: '# Guide\n\nA sentence -- with punctuation.\n\nUse `// eslint-disable-next-line no-console -- reason: the command prints its result`.\n\nUse `value -- item`.\n\n```javascript\n// eslint-disable-next-line no-console -- reason: the command prints its result\n```\n',
