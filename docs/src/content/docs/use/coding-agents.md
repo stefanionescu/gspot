@@ -17,7 +17,7 @@ It also names the commands that change settings. The gspot block of `.gitattribu
 
 When `AGENTS.md` already has its own top heading, gspot writes its managed block one heading level lower.
 
-An agent that reads another file needs a link file. For Claude Code, this `CLAUDE.md` passes the gspot checks:
+An agent that reads another file needs a pointer file. For Claude Code, this `CLAUDE.md` passes the gspot checks:
 
 ```markdown title="CLAUDE.md"
 # Claude Code

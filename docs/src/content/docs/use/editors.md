@@ -23,7 +23,7 @@ Check your editor's output to confirm which ESLint and Prettier versions it runs
 
 ## How editors find the config files
 
-| Tool         | Link file                                    |
+| Tool         | Pointer file                                 |
 | ------------ | -------------------------------------------- |
 | ESLint       | `eslint.config.mjs`                          |
 | Prettier     | `prettier.config.mjs`                        |
@@ -33,12 +33,12 @@ Check your editor's output to confirm which ESLint and Prettier versions it runs
 | basedpyright | `pyrightconfig.json`                         |
 | SwiftLint    | `.swiftlint.yml`, also in Swift test folders |
 
-The Stylelint link file sits at the repository root and holds one override for each scope that selects `css`. A
+The Stylelint pointer file sits at the repository root and holds one override for each scope that selects `css`. A
 `package.json` that keeps a `stylelint` field outside the root points at the config file of its scope instead.
 
-`.editorconfig` carries the `[format]` settings to every editor that reads it. Some tools have no link file; gspot passes
-their config file when it runs them, so give your editor the same path. [Generated files](/reference/generated-files/)
-lists every file gspot writes.
+`.editorconfig` carries the `[format]` settings to every editor that reads it. Some tools have no pointer file; gspot
+passes their config file when it runs them, so give your editor the same path.
+[Generated files](/reference/generated-files/) lists every file gspot writes.
 
 ## Validate `gspot.toml`
 
