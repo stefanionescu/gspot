@@ -1,9 +1,11 @@
 import { join, posix } from 'node:path';
+import { visit } from 'unist-util-visit';
 import { isTable } from '#cli/system/tables.ts';
 import { statSync, readdirSync } from 'node:fs';
 import type { Session } from '#cli/types/tools.ts';
 import { TRAILING_SLASH } from '#cli/config/system.ts';
 import { find, read } from '#cli/system/files/reads.ts';
+import { fromMarkdown } from 'mdast-util-from-markdown';
 import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
 import { pyprojectSchema } from '#cli/schemas/parsers.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
@@ -13,7 +15,6 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
 import { parseMiseTasks } from '#cli/parsers/projects/mise.ts';
 import { formatScope, escapeRegExp } from '#cli/system/text.ts';
-import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
@@ -24,7 +25,7 @@ import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import { LICENSE_FILE, SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
 import { PACKAGE_JSON, PYPROJECT_TOML, WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import type { PathIndex, TaskNames, ProseLine } from '#cli/types/configurations/general.ts';
-import { listExecutableNames, includeParentFolders, listEnclosingFolders } from '#cli/system/paths.ts';
+import { escapeGlob, listExecutableNames, includeParentFolders, listEnclosingFolders } from '#cli/system/paths.ts';
 
 import {
     BUN_RUN,
@@ -39,14 +40,11 @@ import {
     FILE_EXTENSION,
     PATH_CHARACTERS,
     MISE_CONF_FILES,
-    CODE_SPAN_START,
     TITLE_ATTRIBUTE,
-    EMPHASIS_MARKERS,
     PATH_TOKEN_SKIPS,
     REMOTE_ARGUMENTS,
     TOKEN_SEPARATORS,
     MISE_TASK_FOLDERS,
-    INLINE_LINK_TARGET,
     MARKDOWN_EXTENSIONS,
     TRAILING_PUNCTUATION,
     VERSION_STRING_MESSAGE,
@@ -152,7 +150,7 @@ function readTaskNames(session: Session, scopePath: string): TaskNames {
                 ...MISE_FILES.map((file) => posix.join(path, file)),
                 ...session.repository.files
                     .map(({ path }) => path)
-                    .filter(buildPathMatcher([posix.join(path, MISE_CONF_FILES)])),
+                    .filter(buildPathMatcher([posix.join(escapeGlob(path), MISE_CONF_FILES)])),
             ]),
         ),
     ];
@@ -176,7 +174,7 @@ function readTaskNames(session: Session, scopePath: string): TaskNames {
                     const folder = posix.join(path, taskFolder);
                     return session.repository.files
                         .map(({ path }) => path)
-                        .filter(buildPathMatcher([`${folder}/**`]))
+                        .filter(buildPathMatcher([`${escapeGlob(folder)}/**`]))
                         .map((file) => {
                             const relative = posix.relative(folder, file);
                             return (
@@ -197,28 +195,30 @@ function readTaskNames(session: Session, scopePath: string): TaskNames {
     };
 }
 
+function isCommandFence(language: string | null | undefined, written: string | null | undefined): boolean {
+    const attributes = (written ?? '').split(WHITESPACE_RUN);
+    return (
+        COMMAND_FENCES.has(language ?? '') && attributes.every((attribute) => !attribute.startsWith(TITLE_ATTRIBUTE))
+    );
+}
+
 function extractProseLines(text: string): ProseLine[] {
-    const ignored = new Set<number>();
-    const commands = new Set<number>();
-    for (const fence of listCodeFences(text)) {
-        const titled = fence.attributes
-            .split(WHITESPACE_RUN)
-            .some((attribute) => attribute.startsWith(TITLE_ATTRIBUTE));
-        for (let line = fence.startLine; line <= fence.endLine; line += 1) {
-            if (titled || [fence.startLine, fence.endLine].includes(line) || !COMMAND_FENCES.has(fence.language))
-                ignored.add(line);
-            else commands.add(line);
-        }
-    }
-    return text
-        .split('\n')
-        .flatMap((line, index) =>
-            ignored.has(index + 1) ? [] : { number: index + 1, text: line, command: commands.has(index + 1) },
-        );
+    const lines: ProseLine[] = [];
+    const addLines = (value: string, first: number, command: boolean): void => {
+        for (const [index, line] of value.split('\n').entries())
+            lines.push({ number: first + index, text: line, command });
+    };
+    visit(fromMarkdown(text), (node) => {
+        const start = node.position?.start.line ?? 1;
+        if (node.type === 'code' && isCommandFence(node.lang, node.meta)) addLines(node.value, start + 1, true);
+        if (node.type === 'definition') addLines(node.url, start, false);
+        if (node.type === 'text' || node.type === 'inlineCode') addLines(node.value, start, false);
+    });
+    return lines;
 }
 
 function extractPathTokens(line: string): string[] {
-    let text = line.replaceAll(INLINE_LINK_TARGET, (match) => (match.startsWith(CODE_SPAN_START) ? match : ''));
+    let text = line;
     for (const pattern of REMOTE_ARGUMENTS) text = text.replaceAll(pattern, '');
     return text
         .split(TOKEN_SEPARATORS)
@@ -226,10 +226,6 @@ function extractPathTokens(line: string): string[] {
             let end = token.length;
             while (end > 0 && TRAILING_PUNCTUATION.includes(token.charAt(end - 1))) end -= 1;
             return token.slice(0, end);
-        })
-        .map((token) => {
-            const marker = EMPHASIS_MARKERS.find((marker) => token.startsWith(marker));
-            return marker !== undefined && token.endsWith(marker) ? token.slice(marker.length, -marker.length) : token;
         })
         .filter(
             (token) =>

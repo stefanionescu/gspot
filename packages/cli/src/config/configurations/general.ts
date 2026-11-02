@@ -162,10 +162,6 @@ export const REMOTE_ARGUMENTS = [
     /\b(?:Accept|Content-Type):\s*[a-z]+\/[a-z0-9!#$&^_.+-]+/giu,
 ] as const;
 
-export const INLINE_LINK_TARGET = /`[^`\n]*`|\]\(<?[^\s()<>]+/gu;
-
-export const CODE_SPAN_START = '`';
-
 export const MISE_RUN = 'mise run ';
 
 export const BUN_RUN = 'bun run ';
@@ -177,8 +173,6 @@ export const README_FILE = 'README.md';
 export const LICENSE_PATH = 'LICENSE';
 
 export const TITLE_ATTRIBUTE = 'title=';
-
-export const EMPHASIS_MARKERS = ['**', '*'] as const;
 
 export const RELATIVE_PATH_PREFIXES = ['./', '../'] as const;
 
