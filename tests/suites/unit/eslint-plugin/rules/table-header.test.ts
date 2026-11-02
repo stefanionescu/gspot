@@ -5,6 +5,14 @@ buildRuleTester().run('table-header', plugin.rules['table-header'], {
     valid: [
         'const table = <table><tr><th>Name</th></tr><tr><td>Ada</td></tr></table>;',
         'const table = <table>{rows}</table>;',
+        'const table = <Layout.Table><tr><td>A</td></tr></Layout.Table>;',
+        'const table = <svg:table><tr><td>A</td></tr></svg:table>;',
+        'const table = <table aria-hidden><tr><td>A</td></tr></table>;',
+        'const table = <table><tr><th rowSpan="0">A</th><td>1</td></tr><tr><td>2</td></tr></table>;',
+        'const table = <table><tr><td rowSpan={span}>A</td></tr></table>;',
+        'const table = <table><tr><Cell /></tr></table>;',
+        'const table = <table><tr>{cells}</tr></table>;',
+        'const table = <table><tr><><td>A</td></></tr></table>;',
     ],
     invalid: [
         {
@@ -13,6 +21,16 @@ buildRuleTester().run('table-header', plugin.rules['table-header'], {
                 { messageId: 'missingHeader', line: 1 },
                 { messageId: 'missingHeader', line: 9 },
             ],
+        },
+        {
+            name: 'reads a table written over several lines, past captions, comments, and fragments',
+            code: 'const table = <table>\n    <caption>Sales</caption>\n    {/* rows */}\n    <>\n        <tr>\n            {/* cells */}\n            <td>A</td>\n        </tr>\n    </>\n</table>;',
+            errors: [{ messageId: 'missingHeader', line: 1 }],
+        },
+        {
+            name: 'stops at a row without cells',
+            code: 'const table = <table><tr></tr></table>;',
+            errors: [{ messageId: 'missingHeader', line: 1 }],
         },
     ],
 });

@@ -1,5 +1,5 @@
+import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { PlacedRow, TableCell, JsxAttributeValue } from './types/plugin.ts';
-import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
     TABLE_CELLS,
@@ -34,7 +34,7 @@ function readExpressionValue(expression: TSESTree.Node): unknown {
     if (expression.type === AST_NODE_TYPES.Literal) return normalizeLiteral(expression.value);
     if (expression.type === AST_NODE_TYPES.TemplateLiteral && expression.expressions.length === 0)
         return expression.quasis[0]?.value.cooked;
-    return ASTUtils.isIdentifier(expression) && expression.name === 'undefined' ? undefined : null;
+    return null;
 }
 
 function readAttributeValue(value: TSESTree.JSXAttribute['value']): unknown {
@@ -165,11 +165,14 @@ function placeRow(row: readonly TableCell[], columns: (TableCell | undefined)[])
 function placeRows(rows: readonly (readonly TableCell[])[]): TableCell[][] {
     const columns: (TableCell | undefined)[] = Array.from({ length: rows[0]?.length ?? 0 });
     const grid: TableCell[][] = [];
-    for (let index = 0; index < rows.length; ) {
-        const placed = placeRow(rows[index] ?? [], columns);
-        if (placed.isOpen) break;
-        grid.push(placed.cells);
-        if (placed.isUsed) index += 1;
+    for (const row of rows) {
+        let isUsed = false;
+        while (!isUsed) {
+            const placed = placeRow(row, columns);
+            if (placed.isOpen) return grid;
+            grid.push(placed.cells);
+            ({ isUsed } = placed);
+        }
     }
     return grid;
 }
