@@ -48,7 +48,6 @@ Turn the value that a tool prints for one rule into its state.
 
 @param value the printed value.
 @param hasSeverity whether the first element of the value holds a severity.
-@returns whether the rule runs, and its options.
 */
 export function convertRule(value: unknown, hasSeverity: boolean): RuleState {
     const [first, ...rest] = [value].flat();
@@ -63,7 +62,6 @@ A rule that gspot runs with other options carries over, unless the options give 
 turned off, or loosened, needs a reason. The caller decides what happens to a rule that gspot does not run.
 
 @param input the check, the rules of the user, and what gspot runs.
-@returns the rules of each group.
 */
 export function compareRules(input: RuleComparison): ComparedRules {
     const groups = Map.groupBy(input.user, ([rule, state]) => classifyRule(rule, state, input.lookup(rule)));
@@ -80,7 +78,6 @@ Compare the selectors of a Ruff config with the selectors that gspot runs. A sel
 of gspot holds it: E5 holds E501, and A holds A001 but no selector of another Ruff plugin.
 
 @param input the Ruff settings, and the selectors that gspot runs.
-@returns the selectors to add, and the row of the table.
 */
 export function compareRuffRules(input: RuffRuleInput): RuffRules {
     const { path, options, shipped } = input;

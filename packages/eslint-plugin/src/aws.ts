@@ -44,7 +44,6 @@ an undeclared variable, or a variable without an import or a write, such as a pa
 
 @param source the source code of the file.
 @param node the expression to check.
-@returns true when the file gives the expression no value.
 */
 function isUnresolved(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): boolean {
     let root = node;

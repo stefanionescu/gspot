@@ -86,7 +86,6 @@ check, and rule. The findings of exempt checks stay, whatever the file says.
 
 @param result the finished check.
 @param run the counts that the checks of this run have not used yet.
-@returns the result with the findings that remain.
 */
 export function subtractBaseline(result: CheckResult, run: Pick<Run, 'baselineRun' | 'baselined'>): CheckResult {
     if (BASELINE_EXEMPT_CHECK.test(result.check)) return result;

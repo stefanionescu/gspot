@@ -168,7 +168,6 @@ export function readLinguistPatterns(cache: RunCache, paths: string[]): string[]
 Read the canonical worktree root from Git.
 
 @param start where the command starts.
-@returns the root of the Git worktree.
 */
 export async function readRepositoryRoot(start: string): Promise<string> {
     const folder = realpathSync(start);

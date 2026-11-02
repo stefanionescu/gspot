@@ -74,7 +74,6 @@ Add the folders of the installed other tools of a check to the process `PATH`, a
 @param session the repository and its configurations.
 @param names the other tools to add.
 @param environment variables for the tool process.
-@returns the environment with their folders on `PATH`.
 */
 export async function buildOtherToolEnvironment(
     session: CheckSession,

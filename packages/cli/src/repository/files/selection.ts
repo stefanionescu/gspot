@@ -12,7 +12,6 @@ Add the extensions that the selected Prettier and ESLint plugins read to a files
 
 @param table the file patterns.
 @param configurations the configurations whose tools can add extensions.
-@returns the table with the extensions of its plugins.
 */
 export function addPluginExtensions(
     table: Configuration['files'],
@@ -84,9 +83,6 @@ List the files that the patterns match in one scope, within its `kinds` and `lan
 @param table the file patterns.
 @param files the tracked inventory.
 @param options the scope to match in.
-@param options.configurations configurations that declare languages and Prettier plugins.
-@param options.scopePath the folder to match in.
-@param options.settings settings and repository-relative test paths for the scope.
 */
 export function listCoveredFiles(
     table: Configuration['files'],

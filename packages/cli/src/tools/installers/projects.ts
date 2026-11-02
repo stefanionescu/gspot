@@ -116,7 +116,6 @@ Resolve the owned lockfiles, then install the frozen npm and Python tool project
 
 @param install what install needs for this step.
 @param miseBinPaths the program folders that mise installed, where uv may sit.
-@returns the lines that report the installs, and the tools that they installed.
 */
 export async function installToolProjects(install: ToolInstall, miseBinPaths: string[]): Promise<ToolProjectsInstall> {
     const { session, writer, tools } = install;

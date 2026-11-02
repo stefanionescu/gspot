@@ -207,7 +207,6 @@ Copies the source files the tool needs into a build folder.
 @param root the repository folder.
 @param files the scope files.
 @param folder the cache path for the tool.
-@returns the source path and the handle of the build folder.
 */
 export function prepareBuild(root: string, files: TrackedFile[], folder: string): SwiftBuildSetup {
     const cache = openBuildCache(folder);

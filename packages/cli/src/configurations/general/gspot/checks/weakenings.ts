@@ -149,7 +149,6 @@ with no reason fails the check, and one with a reason prints as a note.
 
 @param session the settings of the tree that the run checks.
 @param planned the check, with the base revision of the run.
-@returns the findings and the notes.
 */
 export async function checkWeakenings(session: Session, planned: PlannedCheck): Promise<BuiltInCheckResult> {
     const { root, settings, cancelSignal, repository } = session;

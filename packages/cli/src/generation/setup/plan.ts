@@ -148,7 +148,6 @@ function buildGeneratedRows(generated: Generation, conflicts: ConflictingConfigs
 Word the table of what init carries: one line per replaced config, and one per weakening that needs a reason.
 
 @param rows one row per replaced config.
-@returns the lines of the table.
 */
 export function listCarryLines(rows: CarryRow[]): InitFileRow[] {
     return rows.flatMap((row) => {

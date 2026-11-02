@@ -138,7 +138,6 @@ Write gspot.toml and the generated files of a plan, and delete the config files 
 
 @param root the repository root.
 @param initPlan what planInit returned.
-@returns the files that changed, and the notes.
 */
 export async function writeInitFiles(root: string, initPlan: InitPlanning): Promise<ApplyReport> {
     const writer = openFiles(root);

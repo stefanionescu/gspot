@@ -43,7 +43,6 @@ async function renameBuiltStyles(report: ResultPurge[], folder: string): Promise
 Remove unused built styles and update their content hashes. Run it after the build writes every page and script.
 
 @param siteFolder the built site
-@returns a promise that resolves once the styles and their references hold the new hashes
 */
 export async function pruneUnusedStyles(siteFolder: URL): Promise<void> {
     const folder = fileURLToPath(siteFolder);

@@ -57,7 +57,6 @@ export function buildTypedRuleTester(): RuleTester {
 Write package.json files into a new folder of the test run, for the rules that read the dependencies of a project.
 
 @param manifests the package.json content of each folder, by its path in the new folder.
-@returns the new folder.
 */
 export function writePackageFolders(manifests: Record<string, Record<string, unknown>>): string {
     const root = mkdtempSync(join(TEST_RUN_FOLDER, 'rule-tester-'));

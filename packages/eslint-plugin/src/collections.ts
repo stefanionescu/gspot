@@ -5,7 +5,6 @@ import { ASTUtils, TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-e
 List the variables of every scope below the global scope, the scopes whose variables a collection rule inspects.
 
 @param source the source code of the file.
-@returns the variables of the module, function, block, and class scopes.
 */
 export function listLocalVariables(source: TSESLint.SourceCode): TSESLint.Scope.Variable[] {
     const scopes = source.scopeManager?.scopes ?? [];

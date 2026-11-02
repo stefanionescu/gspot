@@ -91,7 +91,6 @@ function getConfigurationOrigin(name: string, sources: ConfigurationChoices): Co
 Select configurations from the files, the named configurations, and the project scopes.
 
 @param request the repository, the shipped configurations, and the flags.
-@returns the scopes and the configurations of each.
 */
 export function selectProposedConfigurations(request: ConfigurationRequest): ProposedConfigurations {
     const { repository, configurationsByName, options } = request;
@@ -155,7 +154,6 @@ export function selectProposedConfigurations(request: ConfigurationRequest): Pro
 Find newly detected configurations in each project scope, respecting removals.
 
 @param session the current repository and authored selections.
-@returns new choices and the evidence for each scope.
 */
 export function listDetectedAdditions(
     session: ConfigurationSelection,

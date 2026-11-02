@@ -41,7 +41,6 @@ Build the tool install for a sandbox.
 
 @param session the open sandbox.
 @param writer holds the repository lock and saves files.
-@returns the session, writer, generated files, and tools that the install steps read.
 */
 export async function buildSandboxToolInstall(session: Session, writer: Files): Promise<ToolInstall> {
     const pin = session.packageManager;
@@ -79,7 +78,6 @@ Build the npm tool install for a sandbox whose package.json names its package pa
 
 @param session the open sandbox.
 @param writer holds the repository lock and saves files.
-@returns the tool install with its package packageManager and registry environment.
 */
 export async function buildNpmToolInstall(session: Session, writer: Files): Promise<NpmToolInstall> {
     const install = await buildSandboxToolInstall(session, writer);

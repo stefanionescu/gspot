@@ -262,7 +262,6 @@ Read the formatting options of one scope that init sets up.
 @param selection.selected the configurations selected in the scope.
 @param draft the configurations and the template.
 @param repository the root and the tracked files.
-@returns the formatting table that this scope's formatter files give.
 */
 export function readScopeFormat(
     { scope, selected }: ScopeConfigurations,

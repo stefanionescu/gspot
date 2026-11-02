@@ -145,7 +145,6 @@ Find config files to replace, hooks, CI, agent files, and lint folders.
 
 @param cache the run cache.
 @param repository the inventory and parsed package declarations.
-@returns what to replace, keep, or report.
 */
 export async function readRepositorySetup(
     cache: RunCache,

@@ -116,7 +116,6 @@ Tell whether the run time builds part of a string expression. A template literal
 a concatenation with an operand other than a literal.
 
 @param node the string expression.
-@returns true when part of the string comes from the run time.
 */
 export function isDynamicString(node: TSESTree.Node): boolean {
     if (node.type === AST_NODE_TYPES.TemplateLiteral) return node.expressions.length > 0;

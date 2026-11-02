@@ -46,7 +46,6 @@ Read sitemap pages and infer the site base path from its nested sitemap URLs.
 @param folder the built site folder.
 @param files the built paths.
 @param planned the check that selects the sitemap.
-@returns URLs, syntax findings, and the base path.
 */
 export function readSitemapUrls(
     folder: string,

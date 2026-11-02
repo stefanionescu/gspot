@@ -42,7 +42,6 @@ const PYTHON_FILES = Symbol('python files');
 Parse the Python sources once for each list of paths, and free their trees with the run.
 
 @param sources the files, the run cache, and the run resources.
-@returns the modules and their functions.
 */
 export function readPythonFiles(sources: SourceFiles): Promise<PythonFiles> {
     return remember(sources.cache, PYTHON_FILES, JSON.stringify(sources.files.map((file) => file.path)), async () => {

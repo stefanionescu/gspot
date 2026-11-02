@@ -186,7 +186,7 @@ Escape text so that a regular expression matches it literally.
 
 @param text the text to match.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Six call sites in five files share this one escaping rule.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Code that builds a regular expression from a name shares this one escaping rule.
 export function escapeRegExp(text: string): string {
     return text.replaceAll(REGEXP_SYNTAX_CHARACTERS, String.raw`\$&`);
 }

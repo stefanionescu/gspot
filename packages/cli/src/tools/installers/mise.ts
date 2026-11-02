@@ -189,7 +189,6 @@ export function isMiseLockfileFresh(pins: MiseToolPin[], lockfile: string | unde
 Install the mise tools, and read their executable folders.
 
 @param install what install needs for this step.
-@returns the line about the tools that mise installed, the note about missing tools, and the folders of the tools.
 */
 export async function installMiseTools(install: ToolInstall): Promise<MiseInstall> {
     const { session, misePath, steps } = install;

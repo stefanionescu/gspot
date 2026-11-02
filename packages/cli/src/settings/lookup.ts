@@ -95,7 +95,6 @@ export function findChildSchema(schema: z.ZodType | undefined, segment: KeyPath[
 Describe the input type and path role of a setting without converting its schema.
 
 @param schema the setting validator.
-@returns its public value type and optional path role.
 */
 export function getSettingType(schema: z.ZodType): Pick<Setting, 'type' | 'path_role'> {
     const inner = settingInputSchema(schema);

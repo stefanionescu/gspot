@@ -90,7 +90,6 @@ Build the scope once for each build folder, and keep the compiler output for the
 @param plan the build folder, the command, and the log path.
 @param options how to run the build.
 @param options.clean whether to compile every file, so the compiler log lists each one.
-@returns the compiler output, its exit code, and the source copy that it built.
 */
 export async function runSwiftBuild(
     session: CheckSession,

@@ -194,7 +194,6 @@ export function buildTableGrid(table: TSESTree.JSXElement): TableCell[][] | null
 Tell whether a `role` of `presentation` or `none` marks a JSX table tag as a layout table.
 
 @param element the opening tag.
-@returns true for a layout table.
 */
 export function isLayoutTable(element: TSESTree.JSXOpeningElement): boolean {
     const role = readAttribute(element, 'role');

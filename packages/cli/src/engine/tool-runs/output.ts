@@ -125,7 +125,6 @@ Parses the command output, or returns why gspot refused it.
 @param paths the repository root and working folder.
 @param options controls crash details.
 @param options.verbose includes stack frames.
-@returns findings or a refusal note.
 */
 export function parseCommandFindings(
     planned: OutputCheck,

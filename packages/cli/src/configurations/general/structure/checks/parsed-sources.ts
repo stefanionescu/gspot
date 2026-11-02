@@ -35,7 +35,6 @@ Parse the scope sources once for each list of paths, and free their trees with t
 
 @param session the run cache and resources.
 @param planned the scope files and the configurations that select their languages.
-@returns the trees and their query captures.
 */
 export function readParsedSources(
     session: Pick<Session, 'cache' | 'resources'>,

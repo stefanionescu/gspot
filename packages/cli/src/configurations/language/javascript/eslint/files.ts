@@ -34,7 +34,6 @@ parent.
 
 @param scopes the projects.
 @param override what a scope holds, and the blocks that its value gives.
-@returns the blocks of the changed scopes.
 */
 export function buildScopeOverrideBlocks<Value, Block>(
     scopes: Scope[],

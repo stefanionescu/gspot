@@ -63,7 +63,6 @@ Change the declared path leaves with the schemas that validation uses.
 @param value the validated written setting.
 @param visit changes one path.
 @param location where the field sits in its table, and the name of its setting or record.
-@returns the setting with only its declared path leaves changed.
 */
 export function mapSettingPaths(
     schema: z.ZodType,

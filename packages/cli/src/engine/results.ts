@@ -73,7 +73,6 @@ Run a built-in check and attach its help and file count to the result.
 @param session the current check session.
 @param planned the configured check and selected files.
 @param options the verbosity of the findings.
-@returns the findings and execution status.
 */
 export async function runBuiltInCheck(
     builtInCheck: BuiltInCheck,
@@ -121,7 +120,6 @@ Replace temporary revision paths with the repository path in reported commands a
 
 @param session the working and temporary repository folders.
 @param result the result to read.
-@returns the result with repository paths.
 */
 export function normalizeResultPaths(session: Session, result: CheckResult): CheckResult {
     if (session.root === session.toolsRoot) return result;

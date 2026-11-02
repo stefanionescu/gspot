@@ -18,7 +18,6 @@ export const CHECK_GENERATION: CheckGeneration = {
 Run the commit and push checks on every file, with no fixes.
 
 @param session the repository and its tools.
-@returns the report and the plan of the run.
 */
 export async function runEveryCheck(session: Session): Promise<RunResult> {
     try {
