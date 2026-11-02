@@ -25,9 +25,11 @@ await runNpmPack(TEST_RUN_FOLDER, [
     { ...cliPackage, source: join(REPOSITORY_ROOT, 'packages/cli') },
 ]);
 
+// The tests run in parallel, and two installs of one tool collide in the mise store, so each tool installs here first.
+const paths = await installTestTools();
+
 if (process.argv[2] !== 'e2e') {
     await writeProgramCommand(TEST_RUN_FOLDER, GSPOT_LAUNCHER_PATH, 'processes/cli');
-    const paths = await installTestTools();
     await writeFile(join(TEST_RUN_FOLDER, TOOL_PATHS_FILE), paths.join('\n') + '\n');
 }
 
