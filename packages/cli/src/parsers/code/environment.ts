@@ -268,7 +268,7 @@ export function listSwiftEnvironmentReads(syntaxRoot: Node): EnvironmentRead[] {
 }
 
 /**
-Read the text of a string or a template without substitutions.
+Get the text of a string or a template without substitutions.
 
 @param node the expression.
 @returns undefined for any other expression.

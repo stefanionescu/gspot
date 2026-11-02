@@ -183,7 +183,7 @@ export function listCopyFiles(session: CheckSession, planned: PlannedCheck, comm
 }
 
 /**
-Read the text of a scalar setting for a placeholder.
+Get the text of a scalar setting for a placeholder.
 
 @param scopeSettings the values of the scope.
 @param name the dotted key.

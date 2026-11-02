@@ -102,7 +102,7 @@ export function formatSettingsIssue(issue: z.core.$ZodIssue, syntax: TomlSyntax)
 }
 
 /**
-Refuse invalid configuration lists, tool options, ignores, and paths.
+Return what makes the configuration lists, tool options, ignores, or paths invalid.
 
 @param settings the parsed gspot.toml.
 @param root the folder for checking declared scope paths.
