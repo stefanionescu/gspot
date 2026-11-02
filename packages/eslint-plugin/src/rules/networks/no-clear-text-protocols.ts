@@ -6,12 +6,6 @@ import { getExpressionValue, getOptionProperties } from '../../language/expressi
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
-    CLEAR_TEXT_MESSAGES,
-    CLEAR_TEXT_LISTENERS,
-    CLEAR_TEXT_CALL_CHECKS,
-    CLEAR_TEXT_CONSTRUCT_CHECKS,
-} from '../../config/networks.ts';
-import {
     FTP_MODULE,
     EXEMPT_HOSTS,
     AUTHORITY_END,
@@ -22,10 +16,14 @@ import {
     NAMESPACE_PATHS,
     SECURE_MAIL_PORT,
     PROTOCOL_SEPARATOR,
+    CLEAR_TEXT_MESSAGES,
     MAIL_SECURE_OPTIONS,
+    CLEAR_TEXT_LISTENERS,
+    CLEAR_TEXT_CALL_CHECKS,
     ADDRESS_LITERAL_SELECTOR,
+    CLEAR_TEXT_CONSTRUCT_CHECKS,
     SECURE_PROTOCOL_ALTERNATIVES,
-} from '../../config/web.ts';
+} from '../../config/networks.ts';
 
 function getHost(url: string): { host: string; path: string | undefined } {
     try {

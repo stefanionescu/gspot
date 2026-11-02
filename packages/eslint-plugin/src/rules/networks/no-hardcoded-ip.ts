@@ -6,12 +6,12 @@ import {
     IPV4_OCTETS,
     OCTAL_OCTET,
     NETMASK_SUFFIX,
-    HEXADECIMAL_RADIX,
     HEXADECIMAL_OCTET,
+    HEXADECIMAL_RADIX,
     MAPPED_IPV4_PREFIX,
     ALLOWED_IP_PREFIXES,
     ALLOWED_IP_ADDRESSES,
-} from '../../config/web.ts';
+} from '../../config/networks.ts';
 
 function isReportedAddress(address: string): boolean {
     const isAllowed =

@@ -1,7 +1,7 @@
 import { createRule } from '../../rule.ts';
 import type { FunctionNode } from '../../types/rules.ts';
 import { findFunction } from '../../language/functions.ts';
-import { TLS_OPTION_ARGUMENTS } from '../../config/security.ts';
+import { TLS_OPTION_ARGUMENTS } from '../../config/networks.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { listOptionLiterals, getOptionProperties } from '../../language/expressions.ts';
 

@@ -4,7 +4,7 @@ import { getQualifiedName } from '../../language/modules.ts';
 import type { FunctionNode, EscapingSetting } from '../../types/rules.ts';
 import { getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { ESCAPING_CALLS, MUSTACHE_GLOBAL, MUSTACHE_ESCAPE, ESCAPING_CONSTRUCTIONS } from '../../config/servers.ts';
+import { ESCAPING_CALLS, MUSTACHE_ESCAPE, MUSTACHE_GLOBAL, ESCAPING_CONSTRUCTIONS } from '../../config/security.ts';
 
 function isEscapingOff(
     source: Readonly<TSESLint.SourceCode>,

@@ -8,7 +8,7 @@ import {
     POWERED_BY_FACTORIES,
     POWERED_BY_MIDDLEWARE,
     POWERED_BY_SET_ARGUMENTS,
-} from '../../config/security.ts';
+} from '../../config/servers.ts';
 
 function protectsHeader(node: TSESTree.CallExpressionArgument, source: TSESLint.SourceCode): boolean {
     const value = node.type === AST_NODE_TYPES.SpreadElement ? node.argument : node;

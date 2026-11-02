@@ -1,18 +1,18 @@
 import { createRule } from '../../rule.ts';
-import { TLS_CHECKS } from '../../config/networks.ts';
 import { listCdkTableIssues } from '../../libraries/aws.ts';
 import { getQualifiedName } from '../../language/modules.ts';
 import { listOptionLiterals, getOptionProperties } from '../../language/expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
+    TLS_CHECKS,
     SECURE_PROTOCOLS,
     WEAK_TLS_VERSIONS,
     REQUIRED_TLS_FLAGS,
     TLS_VERSION_OPTIONS,
     TLS_CONSTANTS_MODULES,
     WEAK_SSL_OPTION_ARGUMENTS,
-} from '../../config/security.ts';
+} from '../../config/networks.ts';
 
 function listFlags(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node): (string | null)[] {
     if (node.type === AST_NODE_TYPES.BinaryExpression)

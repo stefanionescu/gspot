@@ -1,6 +1,6 @@
 import { createRule } from '../../rule.ts';
 import { getModuleName } from '../../language/modules.ts';
-import { COOKIE_SECURITY_FLAGS, COOKIE_SET_OPTIONS_POSITION } from '../../config/security.ts';
+import { COOKIE_SECURITY_FLAGS, COOKIE_SET_OPTIONS_POSITION } from '../../config/servers.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { getLiteralValue, getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
 

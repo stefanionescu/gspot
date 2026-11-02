@@ -204,18 +204,18 @@ export const TRANSPARENT_EXPRESSIONS = ['ConditionalExpression', 'LogicalExpress
 
 export const ONE_STATEMENT = '1 statement';
 
-export const SERVER_DIRECTIVE = 'use server';
-
-export const SERVER_ONLY_MODULE = 'server-only';
-
 export const READONLY_STATIC_FILES = /\.tsx?$/iu;
 
 export const DEFAULT_SWITCH_CASES = 30;
+
 export const SWITCH_CASES_OPTIONS_SCHEMA = { type: 'integer', minimum: 0 } as const;
+
 export const ERROR_CONSTRUCTOR_SUFFIX = /(?:Error|Exception)$/u;
+
 export const TRANSPOSED_UNARY_OPERATORS = new Set(['+', '-', '!']);
 
 export const EMPTY_RETURN_TYPES = new Set(['TSVoidKeyword', 'TSNeverKeyword', 'TSUndefinedKeyword']);
+
 export const UNUSED_CALL_PARENTS = new Set([
     'ExpressionStatement',
     'ArrowFunctionExpression',
@@ -228,7 +228,9 @@ export const UNUSED_CALL_PARENTS = new Set([
 export const SIGNED_NUMBER_OPERATORS = new Set(['+', '-']);
 
 export const EQUALITY_OPERATORS = new Set(['==', '===', '!=', '!==']);
+
 export const REPEATED_OPERATORS = new Set(['&&', '||', '/', '-', '<<', '>>', '<', '<=', '>', '>=']);
+
 export const COMPARISON_OPERATORS = new Set([...EQUALITY_OPERATORS, '<', '<=', '>', '>=']);
 
 export const UNIT_SHIFT_VALUES = new Set<unknown>([1, 1n]);
@@ -264,6 +266,7 @@ export const CONDITION_PARENTS: ReadonlySet<string> = new Set([
     'DoWhileStatement',
     'ConditionalExpression',
 ]);
+
 export const BRANCH_KEYS: ReadonlyMap<string, readonly string[]> = new Map([
     ['IfStatement', ['consequent', 'alternate']],
     ['WhileStatement', ['body']],
@@ -276,6 +279,7 @@ export const BRANCH_KEYS: ReadonlyMap<string, readonly string[]> = new Map([
 export const MINIMUM_RETURNS = 2;
 
 export const DEFAULT_FUNCTION_NESTING = 5;
+
 export const FUNCTION_NESTING_OPTIONS_SCHEMA = {
     type: 'object',
     properties: {
@@ -285,6 +289,7 @@ export const FUNCTION_NESTING_OPTIONS_SCHEMA = {
 } satisfies JSONSchema4;
 
 export const STANDALONE_PARENTS: ReadonlySet<string> = new Set(['ChainExpression', 'LogicalExpression']);
+
 export const RETURNED_PARENTS: ReadonlySet<string> = new Set([
     'ArrayExpression',
     'ObjectExpression',

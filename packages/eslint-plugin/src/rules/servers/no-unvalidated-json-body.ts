@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import { JSON_BODY_READ, SCHEMA_PARSERS, BODY_SCHEMA_PARSERS } from '../../config/security.ts';
+import { JSON_BODY_READ, SCHEMA_PARSERS, BODY_SCHEMA_PARSERS } from '../../config/servers.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isParsedBy(node: TSESTree.Node, parsers: ReadonlySet<string | null>): boolean {

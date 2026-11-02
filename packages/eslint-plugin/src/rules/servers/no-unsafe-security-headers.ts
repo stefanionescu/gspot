@@ -13,7 +13,7 @@ import {
     POWERED_BY_FACTORIES,
     UNSAFE_REFERRER_POLICIES,
     DISABLED_SECURITY_HEADERS,
-} from '../../config/security.ts';
+} from '../../config/servers.ts';
 
 function isApplication(identifier: TSESTree.Identifier, source: TSESLint.SourceCode): boolean {
     const variable = ASTUtils.findVariable(source.getScope(identifier), identifier);

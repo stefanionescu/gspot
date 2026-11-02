@@ -11,7 +11,7 @@ import {
     VITE_ENVIRONMENT_NAMES,
     ALLOWED_ENVIRONMENT_NAMES,
     CLIENT_ENVIRONMENT_OPTIONS_SCHEMA,
-} from '../../config/environment.ts';
+} from '../../config/web.ts';
 
 function listHostEnvironmentReads(host: TSESTree.Identifier, source: TSESLint.SourceCode): TSESTree.Node[] {
     const { parent } = host;
