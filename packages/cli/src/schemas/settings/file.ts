@@ -123,7 +123,7 @@ const scopeBody = {
     licenses: configurationTableSchemas.licenses.unwrap().omit({ allowed_package: true }).optional(),
     naming: namingSchema.omit({ override: true }).optional(),
     structure: rootStructure.unwrap().pick({ environment_readers: true }).optional(),
-    format: formatSchema.omit({ override: true }).optional(),
+    format: formatSchema.optional(),
     tools: publicToolsSchema
         .extend({
             eslint: publicToolsSchema.shape.eslint

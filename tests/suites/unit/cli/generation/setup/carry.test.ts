@@ -168,3 +168,17 @@ test('init names the Prettier options that no setting holds', async () => {
         dropped: ['quoteProps'],
     });
 });
+
+test('init keeps the format overrides of a scope', async () => {
+    await using sandbox = await createGitSandbox({
+        'package.json': '{"private":true,"workspaces":["app"]}',
+        'app/package.json': '{"private":true}',
+        'app/.editorconfig': '[*.md]\nindent_size = 4\n',
+        'app/README.md': '# Example\n',
+        'source.js': 'export const value = 1;\n',
+    });
+    const { settings } = await runInit(sandbox.path);
+    expect(settings['scope']).toMatchObject([
+        { path: 'app', format: { override: [{ paths: ['**/*.md'], indent_width: 4 }] } },
+    ]);
+});
