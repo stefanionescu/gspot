@@ -1,5 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 import { escapeGlob } from '#cli/system/paths.ts';
+import { getRequired } from '#cli/system/tables.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
 import type { DependencyFile } from '#cli/types/parsers.ts';
 import { getLimit, getTable } from '#cli/settings/scopes.ts';
@@ -108,7 +109,7 @@ function buildTrivialRules(
     language: (typeof CODE_LANGUAGES)[number],
     reexports: Settings['structure']['reexports'],
 ): Record<string, unknown> {
-    const limitRules = LIMIT_RULES_BY_CHECK.get(ESLINT_CHECK) as Record<string, string>;
+    const limitRules = getRequired(LIMIT_RULES_BY_CHECK, ESLINT_CHECK, 'limit rules');
     const tables = scope.configurations.map(({ eslint }) => eslint);
     const exportNames = tables.flatMap(({ export_names }) => export_names);
     const forwardingFiles = tables.flatMap(({ forwarding_files }) => forwarding_files.flatMap(({ files }) => files));

@@ -1,3 +1,4 @@
+import { getRequired } from '#cli/system/tables.ts';
 import type { KeyPath } from '#cli/types/parsers.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
@@ -166,7 +167,7 @@ export function validateKeys(
         errors: availableSettings.errors,
     };
     for (const { table, scope, path } of listSettingsTables(settings)) {
-        const active = scope === '' ? everywhere : (scopeAvailable.get(scope) as AvailableSettings);
+        const active = scope === '' ? everywhere : getRequired(scopeAvailable, scope, 'scope settings');
         const selectedAvailable: AvailableSettings = {
             settings: new Map([...general.settings, ...active.settings]),
             defaults: new Map([...general.defaults, ...active.defaults]),

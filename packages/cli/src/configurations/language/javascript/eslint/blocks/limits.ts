@@ -1,3 +1,4 @@
+import { getRequired } from '#cli/system/tables.ts';
 import type { ScopeSettings } from '#cli/types/settings.ts';
 import { getLimit, getTable } from '#cli/settings/scopes.ts';
 import { LIMIT_RULES_BY_CHECK } from '#cli/manifests/limits.ts';
@@ -12,7 +13,7 @@ import {
 } from '#cli/configurations/language/javascript/eslint/files.ts';
 
 function buildLimitRules(scopeSettings: ScopeSettings, language: 'typescript' | 'javascript'): Record<string, unknown> {
-    const limitRules = LIMIT_RULES_BY_CHECK.get(ESLINT_CHECK) as Record<string, string>;
+    const limitRules = getRequired(LIMIT_RULES_BY_CHECK, ESLINT_CHECK, 'limit rules');
     return Object.fromEntries(
         Object.entries(ESLINT_LIMIT_OPTIONS).map(([rule, options]): [string, unknown] => {
             const maximum = getLimit(scopeSettings, limitRules[rule] as string, language);

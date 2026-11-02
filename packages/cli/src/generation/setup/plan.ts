@@ -1,4 +1,5 @@
 import { styleText } from 'node:util';
+import { getRequired } from '#cli/system/tables.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import type { Generation } from '#cli/types/tools.ts';
@@ -90,7 +91,7 @@ function buildConfigurationRows(
         const checks = configuration.checks.filter((check) => level === 'all' || check.level === 'basic').length;
         return {
             configuration: configuration.name,
-            origin: configurations.origins.get(configuration.name) as InitPlan['configurations'][number]['origin'],
+            origin: getRequired(configurations.origins, configuration.name, 'configuration origin'),
             scopes: listOutermostScopes(configuration.name, scopes),
             checks,
             checksOff: configuration.checks.length - checks,

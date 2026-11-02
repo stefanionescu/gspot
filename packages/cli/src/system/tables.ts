@@ -62,3 +62,16 @@ export function addTable(
     }
     return node;
 }
+
+/**
+Read a map entry that the code before this call put there.
+
+@param map the entries.
+@param key the entry to read.
+@param label the kind of entry, for the message of the broken invariant.
+*/
+export function getRequired<Key, Value>(map: ReadonlyMap<Key, Value | undefined>, key: Key, label: string): Value {
+    const value = map.get(key);
+    if (value === undefined) throw new Error(`Missing ${label}: ${String(key)}.`);
+    return value;
+}

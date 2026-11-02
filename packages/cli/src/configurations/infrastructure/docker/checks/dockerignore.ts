@@ -1,11 +1,10 @@
 import { posix } from 'node:path';
 import type { Session } from '#cli/types/tools.ts';
-import type { Scope } from '#cli/types/settings.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
+import { selectScope } from '#cli/repository/scopes.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { findText, readText } from '#cli/system/files/reads.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
@@ -89,8 +88,7 @@ export function checkDockerignore(session: Session, planned: PlannedCheck): Chec
         ...planned.files
             .filter((file) => file.tags.includes('dockerfile') && !file.path.endsWith(DOCKERIGNORE))
             .flatMap(({ path: dockerfile }): CheckFinding[] => {
-                const scopePath = selectScopePath(dockerfile, session.scopes);
-                const scope = session.scopes.find((each) => each.path === scopePath) as Scope;
+                const scope = selectScope(dockerfile, session.scopes);
                 const required = [
                     ...DOCKERIGNORE_PATTERNS,
                     ...scope.configurations.flatMap((configuration) => configuration.ignored_paths),

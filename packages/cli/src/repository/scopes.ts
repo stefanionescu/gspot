@@ -196,3 +196,16 @@ export function selectScopePath(path: string, scopes: readonly { path: string }[
     }
     return findEnclosingFolder(path, folders) ?? '';
 }
+
+/**
+Find the scope that owns a path. Every session holds the root scope, so a scope always owns it.
+
+@param path the file or scope folder to place.
+@param scopes the scopes to search.
+*/
+export function selectScope<Entry extends { path: string }>(path: string, scopes: readonly Entry[]): Entry {
+    const owner = selectScopePath(path, scopes);
+    const scope = scopes.find((each) => each.path === owner);
+    if (scope === undefined) throw new Error(`No scope owns ${path}.`);
+    return scope;
+}

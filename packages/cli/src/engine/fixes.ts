@@ -1,6 +1,7 @@
 import { getTool } from '#cli/tools/pins.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { getRequired } from '#cli/system/tables.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { findToolPath } from '#cli/tools/inspect.ts';
@@ -141,7 +142,7 @@ async function runFixerRounds(session: CheckSession, checks: PlannedCheck[], pat
         }
         after = readContents(session.root, paths);
         pending = checks.flatMap((check, index) => {
-            const changed = new Set(listChangedPaths(fixedContents.get(index) as PathBytes, after));
+            const changed = new Set(listChangedPaths(getRequired(fixedContents, index, 'fixed contents'), after));
             const files = check.files.filter((file) => changed.has(file.path) && after.get(file.path) !== undefined);
             return files.length === 0 ||
                 results.get(index)?.status === 'failed' ||
@@ -174,7 +175,7 @@ function restoreBrokenFiles(root: string, broken: string[], rounds: FixRounds): 
     const files = openFiles(root);
     for (const path of broken) {
         const now = files.read(path) as FileContents;
-        files.write(path, { ...now, bytes: rounds.before.get(path) as Buffer });
+        files.write(path, { ...now, bytes: getRequired(rounds.before, path, 'file contents') });
     }
 }
 

@@ -1,10 +1,10 @@
-import { isTable } from '#cli/system/tables.ts';
 import { overlayTable } from '#cli/settings/edit.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
+import { isTable, getRequired } from '#cli/system/tables.ts';
 import { selectConfigurations } from '#cli/manifests/select.ts';
 import { buildDetectedTables } from '#cli/settings/detected.ts';
 import type { ScopeFlags, CommandDefinition, ConfigurationsOptions } from '#cli/types/commands/edits.ts';
@@ -45,7 +45,7 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
         repository,
         scopes: repository.scopeFolders,
     });
-    overlayTable(scopeTable, detected.get(scope) as TomlTable);
+    overlayTable(scopeTable, getRequired(detected, scope, 'detected table'));
     const where = scope === '' ? '' : ` to scope ${scope}`;
     const unchanged = options.configurations.filter((name) => selected.includes(name));
     const summary = formatConfigurationChange({

@@ -4,7 +4,6 @@ import { buildSettings } from '#cli/settings/read.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
-import { isTable, findValueAt } from '#cli/system/tables.ts';
 import type { WrittenTable } from '#cli/types/generation.ts';
 import { DETECTED_SETTINGS } from '#cli/config/generation.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
@@ -12,6 +11,7 @@ import type { Settings, TomlTable } from '#cli/types/settings.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { findSetting, getSettingValue } from '#cli/settings/inherit.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
+import { isTable, findValueAt, getRequired } from '#cli/system/tables.ts';
 
 function isInheritedValueChanged(
     name: string,
@@ -27,7 +27,7 @@ function isInheritedValueChanged(
     const changed = { ...settings };
     if (writtenTable.scope === '') changed.written = omitted;
     else {
-        const previous = settings.scopes.get(writtenTable.scope) as NonNullable<ReturnType<Settings['scopes']['get']>>;
+        const previous = getRequired(settings.scopes, writtenTable.scope, 'scope settings');
         changed.scopes = new Map(settings.scopes);
         changed.scopes.set(writtenTable.scope, { ...previous, written: omitted });
     }

@@ -1,16 +1,15 @@
 import { isUtf8 } from 'node:buffer';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/tools.ts';
-import type { Scope } from '#cli/types/settings.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { isOverSizeLimit } from '#cli/engine/files.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { lstatSync, realpathSync, readlinkSync } from 'node:fs';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { isInside, extractParentFolder } from '#cli/system/paths.ts';
+import { selectScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { join, posix, dirname, resolve, relative, isAbsolute } from 'node:path';
 import { BYTES_PER_KILOBYTE, CONFLICT_MARKER_LINE } from '#cli/config/engine.ts';
 import { LFS_FILTER, SYMLINK_MODE, FILTER_ATTRIBUTE } from '#cli/config/repository/files.ts';
@@ -63,8 +62,7 @@ Reports each tracked file over `repository.max_file_kilobytes`, except generated
 */
 export function checkLargeFiles(session: Session, planned: PlannedCheck): CheckFinding[] {
     return planned.files.flatMap((file) => {
-        const scopePath = selectScopePath(file.path, session.scopes);
-        const scope = session.scopes.find((scope) => scope.path === scopePath) as Scope;
+        const scope = selectScope(file.path, session.scopes);
         const limitKilobytes = getTable(scope.settings, 'repository').max_file_kilobytes;
         if (
             file.kind === 'generated' ||

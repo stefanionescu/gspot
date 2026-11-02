@@ -1,4 +1,5 @@
 import { GspotError } from '#cli/system/errors.ts';
+import { getRequired } from '#cli/system/tables.ts';
 import { listGitFiles } from '#cli/repository/files/tracked.ts';
 import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
 import type { GitFile, Revision } from '#cli/types/repository.ts';
@@ -95,7 +96,7 @@ async function readBlobs(root: string, requested: string[], cancelSignal?: Abort
         },
         cancelSignal,
     );
-    return requested.map((hash) => blobs.get(hash) as Buffer);
+    return requested.map((hash) => getRequired(blobs, hash, 'blob'));
 }
 
 /**

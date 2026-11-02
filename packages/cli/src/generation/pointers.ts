@@ -1,6 +1,7 @@
 import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { compareText } from '#cli/system/text.ts';
+import { getRequired } from '#cli/system/tables.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { listCheckTools } from '#cli/engine/tools.ts';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -216,7 +217,7 @@ export function buildPointerFiles(
     const { pointer } = config;
     if (pointer === undefined) return [];
     return listPointerPaths(owner, config).map((path) => {
-        const body = fillTarget(pointer.body, path, targets.get(owner.scope.path) as string).replace(
+        const body = fillTarget(pointer.body, path, getRequired(targets, owner.scope.path, 'pointer target')).replace(
             OVERRIDES_PLACEHOLDER,
             () =>
                 JSON.stringify(

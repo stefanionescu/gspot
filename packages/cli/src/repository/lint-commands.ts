@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
-import { isTable } from '#cli/system/tables.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { isTable, getRequired } from '#cli/system/tables.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { LINE_BREAK, PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { parseYamlDocuments } from '#cli/parsers/formats/yaml.ts';
@@ -50,7 +50,7 @@ function findCalledTool(command: string, search: CommandSearch, seen = new Set<s
     });
     const called = tasks.filter((task) => search.scripts.has(task) && !seen.has(task));
     return called
-        .map((task) => findCalledTool(search.scripts.get(task) as string, search, seen.add(task)))
+        .map((task) => findCalledTool(getRequired(search.scripts, task, 'script'), search, seen.add(task)))
         .find((tool) => tool !== undefined);
 }
 

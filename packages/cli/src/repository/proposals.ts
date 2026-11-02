@@ -1,3 +1,4 @@
+import { getRequired } from '#cli/system/tables.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { isInScope, selectScopePath } from '#cli/repository/scopes.ts';
@@ -104,7 +105,7 @@ export function selectProposedConfigurations(request: ConfigurationRequest): Pro
         selectScopeConfigurations(request, { path: '', origin: 'root', configurations: [] }, []),
     );
     const heldAtRoot = proposedRoot.filter((name) => {
-        const configuration = configurationsByName.get(name) as Configuration;
+        const configuration = getRequired(configurationsByName, name, 'configuration');
         return (
             configuration.group === 'general' ||
             !hasScopes ||

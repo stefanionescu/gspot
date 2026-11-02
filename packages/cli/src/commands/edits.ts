@@ -11,7 +11,6 @@ import { buildArgumentPaths } from '#cli/settings/paths.ts';
 import type { ApplyReport } from '#cli/types/generation.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { listRepositoryFiles } from '#cli/repository/read.ts';
-import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import type { Session, Generation } from '#cli/types/tools.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { Files, CommandResult } from '#cli/types/system.ts';
@@ -20,6 +19,7 @@ import { quoteArgument, formatNameList } from '#cli/system/text.ts';
 import { writeSettings, readSettingsFile } from '#cli/settings/file.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
+import { selectScope, buildArgumentPath } from '#cli/repository/scopes.ts';
 import { openScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
 import { formatApplyReport, writeGeneratedFiles } from '#cli/generation/write.ts';
 import { assertConfigurationsExist, assertConfigurationsEditable } from '#cli/manifests/select.ts';
@@ -132,7 +132,7 @@ export async function readConfigurationEditContext(options: ConfigurationsOption
     assertConfigurationsEditable(options.configurations, configurationsByName);
     const scopeSettings =
         scope === '' ? settings : (settings.scopes.get(scope) ?? { configurations: [], removed_configurations: [] });
-    const selected = (context.session.scopes.find((each) => each.path === scope) as Scope).configurations.map(
+    const selected = selectScope(scope, context.session.scopes).configurations.map(
         (configuration) => configuration.name,
     );
     return { root, input, scope, scopeTable, scopeSettings, selected, configurationsByName, context };
@@ -176,7 +176,7 @@ export function findEditedSetting(
         throw new GspotError('arguments', ADD_REMOVE_MESSAGE);
     const { settings } = context;
     const session = context.session;
-    const selected = session.scopes.find((each) => each.path === context.scope) as Scope;
+    const selected = selectScope(context.scope, session.scopes);
     const { availableSettings } = selected;
     const match = findSetting(availableSettings, key);
     if (match === undefined) {

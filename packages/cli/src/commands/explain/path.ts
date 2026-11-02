@@ -2,12 +2,11 @@ import { formatScope } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { EVERY_CHECK } from '#cli/config/engine.ts';
-import type { Scope } from '#cli/types/settings.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import { planChecks, formatCheckState } from '#cli/engine/plan.ts';
-import { selectScopePath, buildArgumentPath } from '#cli/repository/scopes.ts';
+import { selectScope, buildArgumentPath } from '#cli/repository/scopes.ts';
 import type { Explanation, PathExplanation } from '#cli/types/commands/reports.ts';
 
 import {
@@ -26,8 +25,7 @@ function formatUncheckedKind(file: TrackedFile): string | undefined {
 
 function buildPathExplanation(session: Session, file: TrackedFile): PathExplanation {
     const { path } = file;
-    const scopePath = selectScopePath(path, session.scopes);
-    const scope = session.scopes.find((each) => each.path === scopePath) as Scope;
+    const scope = selectScope(path, session.scopes);
     const checks = planChecks(session, { stage: 'any', keepLevelOff: true }).filter((check) =>
         listCheckedFiles(session.scopes, check).some((checkedFile) => checkedFile.path === file.path),
     );
@@ -37,7 +35,7 @@ function buildPathExplanation(session: Session, file: TrackedFile): PathExplanat
     );
     const report: PathExplanation = {
         path,
-        scope: scopePath,
+        scope: scope.path,
         fileKind: file.kind,
         tags: file.tags,
         configurations: scope.configurations.map(({ name }) => name).filter((name) => covering.has(name)),
