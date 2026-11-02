@@ -1,11 +1,11 @@
 import { createRule } from '../rule.ts';
-import { readModuleName } from '../modules.ts';
+import { getModuleName } from '../modules.ts';
 import { isCypressChain, isTestRelatedPath } from '../testing.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { DEBUG_ROOTS, DEBUG_METHODS, TESTING_LIBRARY_MODULES, TESTING_LIBRARY_DEBUGGERS } from '../config/testing.ts';
 
 function isTestingLibraryDebugger(callee: TSESTree.Node, source: TSESLint.SourceCode): boolean {
-    const name = readModuleName(callee, source) ?? '';
+    const name = getModuleName(callee, source) ?? '';
     const module = TESTING_LIBRARY_MODULES.find((each) => name.startsWith(`${each}.`));
     return module !== undefined && TESTING_LIBRARY_DEBUGGERS.some((command) => name.endsWith(`.${command}`));
 }
@@ -21,7 +21,7 @@ function isDebugCommand(callee: TSESTree.Node, source: TSESLint.SourceCode): boo
     return (DEBUG_METHODS.get(ASTUtils.getPropertyName(callee)) ?? []).some((kind) => kinds.has(kind));
 }
 
-function readRemoval(node: TSESTree.CallExpression): [number, number] | undefined {
+function getRemoval(node: TSESTree.CallExpression): [number, number] | undefined {
     const receiver = node.callee.type === AST_NODE_TYPES.MemberExpression ? node.callee.object : undefined;
     const isRoot = receiver === undefined || (ASTUtils.isIdentifier(receiver) && DEBUG_ROOTS.has(receiver.name));
     if (!isRoot) return [receiver.range[1], node.range[1]];
@@ -51,7 +51,7 @@ export const noUiTestDebugging = createRule<[], 'debug'>({
         return {
             CallExpression(node) {
                 if (!isDebugCommand(node.callee, context.sourceCode)) return;
-                const removal = readRemoval(node);
+                const removal = getRemoval(node);
                 const reported =
                     node.callee.type === AST_NODE_TYPES.MemberExpression ? node.callee.property : node.callee;
                 context.report({

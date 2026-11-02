@@ -10,7 +10,7 @@ function getSoleExpression(body: TSESTree.Node): TSESTree.Node | undefined {
         : undefined;
 }
 
-function readExecutor(
+function getExecutor(
     node: TSESTree.NewExpression,
 ): TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression | undefined {
     const [executor] = node.arguments;
@@ -22,8 +22,8 @@ function readExecutor(
     return isExecutor ? executor : undefined;
 }
 
-function readSettleAction(node: TSESTree.NewExpression): string | undefined {
-    const executor = readExecutor(node);
+function getSettleAction(node: TSESTree.NewExpression): string | undefined {
+    const executor = getExecutor(node);
     if (executor === undefined) return undefined;
     const call = getSoleExpression(executor.body);
     if (call?.type !== AST_NODE_TYPES.CallExpression || call.arguments.length !== 1) return undefined;
@@ -54,7 +54,7 @@ export const preferPromiseShorthand = createRule<[], 'shorthand'>({
     create(context) {
         return {
             NewExpression(node) {
-                const action = readSettleAction(node);
+                const action = getSettleAction(node);
                 if (action === undefined) return;
                 context.report({ node: node.callee, messageId: 'shorthand', data: { action } });
             },

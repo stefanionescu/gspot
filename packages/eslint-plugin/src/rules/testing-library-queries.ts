@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
 import { isCallOf } from '../testing.ts';
-import { readModuleName } from '../modules.ts';
+import { getModuleName } from '../modules.ts';
 import { unwrapExpression } from '../syntax.ts';
 import { FUNCTION_NODES } from '../config/rules.ts';
 import type { QueryUse, MemberCall, ExpectSubject } from '../types/rules.ts';
@@ -16,14 +16,14 @@ import {
 } from '../config/testing.ts';
 
 function isLibraryName(node: TSESTree.Node, name: string, source: TSESLint.SourceCode): boolean {
-    const qualified = readModuleName(node, source) ?? '';
+    const qualified = getModuleName(node, source) ?? '';
     return TESTING_LIBRARY_MODULES.some(
         (module) =>
             qualified === `${module}.${name}` || (qualified.startsWith(`${module}/`) && qualified.endsWith(`.${name}`)),
     );
 }
 
-function readScreenQuery(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Identifier | undefined {
+function getScreenQuery(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Identifier | undefined {
     const value = unwrapExpression(node);
     const callee = value.type === AST_NODE_TYPES.CallExpression ? value.callee : undefined;
     if (callee?.type !== AST_NODE_TYPES.MemberExpression || !ASTUtils.isIdentifier(callee.property)) return undefined;
@@ -31,7 +31,7 @@ function readScreenQuery(node: TSESTree.Node, source: TSESLint.SourceCode): TSES
     return isQuery ? callee.property : undefined;
 }
 
-function readQueryTarget(node: TSESTree.Node): TSESTree.Node {
+function getQueryTarget(node: TSESTree.Node): TSESTree.Node {
     const value = unwrapExpression(node);
     if (value.type !== AST_NODE_TYPES.MemberExpression || value.object.type !== AST_NODE_TYPES.CallExpression)
         return value;
@@ -41,7 +41,7 @@ function readQueryTarget(node: TSESTree.Node): TSESTree.Node {
     return isElement && ALL_QUERY_METHOD.test(method ?? '') ? value.object : value;
 }
 
-function readExpectSubject(target: TSESTree.Node): ExpectSubject | undefined {
+function getExpectSubject(target: TSESTree.Node): ExpectSubject | undefined {
     const negation =
         target.type === AST_NODE_TYPES.MemberExpression && ASTUtils.getPropertyName(target) === 'not'
             ? target
@@ -59,9 +59,9 @@ function isInsideWaitFor(node: TSESTree.Node, source: TSESLint.SourceCode): bool
     );
 }
 
-function readQueryMismatch(node: MemberCall, source: TSESLint.SourceCode): QueryUse | undefined {
-    const subject = readExpectSubject(node.callee.object);
-    const method = subject && readScreenQuery(readQueryTarget(subject.value), source);
+function getQueryMismatch(node: MemberCall, source: TSESLint.SourceCode): QueryUse | undefined {
+    const subject = getExpectSubject(node.callee.object);
+    const method = subject && getScreenQuery(getQueryTarget(subject.value), source);
     const isPresence = PRESENCE_MATCHERS.has(ASTUtils.getPropertyName(node.callee)) !== subject?.isNegated;
     const isMismatch =
         method !== undefined && !method.name.startsWith('find') && isPresence !== method.name.startsWith('get');
@@ -97,7 +97,7 @@ export const testingLibraryQueries = createRule<[], 'presence' | 'absence' | 'th
         const source = context.sourceCode;
         return {
             [QUERY_ASSERTION](node: MemberCall) {
-                const mismatch = readQueryMismatch(node, source);
+                const mismatch = getQueryMismatch(node, source);
                 if (mismatch === undefined) return;
                 const { method, isPresence } = mismatch;
                 const name = isPresence ? method.name.replace('query', 'get') : method.name.replace('get', 'query');
@@ -108,7 +108,7 @@ export const testingLibraryQueries = createRule<[], 'presence' | 'absence' | 'th
                 });
             },
             [REMOVAL_CALLBACK](node: TSESTree.Node) {
-                const query = readScreenQuery(node, source);
+                const query = getScreenQuery(node, source);
                 const call = source
                     .getAncestors(node)
                     .findLast((ancestor) => ancestor.type === AST_NODE_TYPES.CallExpression);

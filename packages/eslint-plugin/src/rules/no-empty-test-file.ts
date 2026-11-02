@@ -2,10 +2,10 @@ import { createRule } from '../rule.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { TEST_FILE_PATTERN, TEST_DECLARATIONS, TITLED_TEST_DECLARATIONS } from '../config/testing.ts';
 
-function readChainName(node: TSESTree.Node): string {
+function getChainName(node: TSESTree.Node): string {
     if (node.type === AST_NODE_TYPES.Identifier) return node.name;
     if (node.type !== AST_NODE_TYPES.MemberExpression || node.property.type !== AST_NODE_TYPES.Identifier) return '';
-    return `${readChainName(node.object)}.${node.property.name}`;
+    return `${getChainName(node.object)}.${node.property.name}`;
 }
 
 function isTitledDeclaration(name: string, call: TSESTree.CallExpression): boolean {
@@ -41,7 +41,7 @@ export const noEmptyTestFile = createRule<[], 'empty'>({
                 node: TSESTree.CallExpression | TSESTree.TaggedTemplateExpression,
             ) {
                 const isCall = node.type === AST_NODE_TYPES.CallExpression;
-                const name = readChainName(isCall ? node.callee : node.tag);
+                const name = getChainName(isCall ? node.callee : node.tag);
                 hasTest ||= TEST_DECLARATIONS.has(name) || (isCall && isTitledDeclaration(name, node));
             },
             'Program:exit'() {

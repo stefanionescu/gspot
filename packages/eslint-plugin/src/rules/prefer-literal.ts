@@ -1,10 +1,10 @@
 import { createRule } from '../rule.ts';
-import { readNextStatement } from '../syntax.ts';
+import { getNextStatement } from '../syntax.ts';
 import { EMPTY_LITERAL_DECLARATION } from '../config/rules.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function readAssignedProperty(node: TSESTree.VariableDeclaration): TSESTree.MemberExpression | undefined {
-    const next = readNextStatement(node);
+function getAssignedProperty(node: TSESTree.VariableDeclaration): TSESTree.MemberExpression | undefined {
+    const next = getNextStatement(node);
     if (next?.type !== AST_NODE_TYPES.ExpressionStatement) return undefined;
     const assignment = next.expression;
     if (assignment.type !== AST_NODE_TYPES.AssignmentExpression) return undefined;
@@ -34,7 +34,7 @@ export const preferLiteral = createRule<[], 'literal'>({
         return {
             [EMPTY_LITERAL_DECLARATION](declaration: TSESTree.VariableDeclarator) {
                 const node = declaration.parent;
-                const member = readAssignedProperty(node);
+                const member = getAssignedProperty(node);
                 if (member === undefined) return;
                 const references = context.sourceCode
                     .getDeclaredVariables(node)

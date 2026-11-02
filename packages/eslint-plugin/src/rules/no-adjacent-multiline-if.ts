@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function readPrecedingIf(node: TSESTree.IfStatement): TSESTree.IfStatement | undefined {
+function getPrecedingIf(node: TSESTree.IfStatement): TSESTree.IfStatement | undefined {
     const { parent } = node;
     if (
         parent.type !== AST_NODE_TYPES.Program &&
@@ -32,7 +32,7 @@ export const noAdjacentMultilineIf = createRule<[], 'line'>({
     create(context) {
         return {
             IfStatement: (node) => {
-                const previous = readPrecedingIf(node);
+                const previous = getPrecedingIf(node);
                 if (previous?.loc.end.line === node.loc.start.line && previous.loc.start.line !== node.loc.end.line)
                     context.report({ node, messageId: 'line' });
             },

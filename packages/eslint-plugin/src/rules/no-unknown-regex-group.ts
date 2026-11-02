@@ -6,21 +6,21 @@ import { type AST, visitRegExpAST } from '@eslint-community/regexpp';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { EXEC_METHOD, MATCH_METHODS, GROUPS_PROPERTY, INDICES_PROPERTY } from '../config/regex.ts';
 
-function readCalledMethod(value: TSESTree.Node | null) {
+function getCalledMethod(value: TSESTree.Node | null) {
     const call = value === null ? undefined : unwrapExpression(value);
     if (call?.type !== AST_NODE_TYPES.CallExpression || call.callee.type !== AST_NODE_TYPES.MemberExpression)
         return undefined;
     return { call, receiver: call.callee.object, method: ASTUtils.getPropertyName(call.callee) };
 }
 
-function readMatchedRegex(value: TSESTree.Node | null, source: TSESLint.SourceCode): AST.RegExpLiteral | undefined {
-    const called = readCalledMethod(value);
+function getMatchedRegex(value: TSESTree.Node | null, source: TSESLint.SourceCode): AST.RegExpLiteral | undefined {
+    const called = getCalledMethod(value);
     if (called?.method === EXEC_METHOD) return traceRegex(called.receiver, source);
     const [pattern] = called !== undefined && MATCH_METHODS.has(called.method) ? called.call.arguments : [];
     return pattern === undefined ? undefined : traceRegex(pattern, source);
 }
 
-function readGroupNames(regex: AST.RegExpLiteral): Set<string> {
+function getGroupNames(regex: AST.RegExpLiteral): Set<string> {
     const names = new Set<string>();
     visitRegExpAST(regex, {
         onCapturingGroupEnter: (group) => {
@@ -30,14 +30,14 @@ function readGroupNames(regex: AST.RegExpLiteral): Set<string> {
     return names;
 }
 
-function readTarget(reader: TSESTree.Node): TSESTree.Node | undefined {
+function getTarget(reader: TSESTree.Node): TSESTree.Node | undefined {
     const { parent } = reader;
     if (parent?.type === AST_NODE_TYPES.VariableDeclarator) return parent.id;
     return parent?.type === AST_NODE_TYPES.AssignmentExpression ? parent.left : undefined;
 }
 
 function listDestructuredNames(reader: TSESTree.Node): GroupRead[] {
-    const target = readTarget(reader);
+    const target = getTarget(reader);
     if (target?.type !== AST_NODE_TYPES.ObjectPattern) return [];
     return target.properties.flatMap((property) => {
         const name = property.type === AST_NODE_TYPES.Property ? ASTUtils.getPropertyName(property) : null;
@@ -55,7 +55,7 @@ function listReadNames(groups: TSESTree.MemberExpression): GroupRead[] {
     return name === null ? [] : [{ node: parent.property, name }];
 }
 
-function readOwner(groups: TSESTree.MemberExpression): TSESTree.Node {
+function getOwner(groups: TSESTree.MemberExpression): TSESTree.Node {
     const owner = unwrapExpression(groups.object);
     const isIndices =
         owner.type === AST_NODE_TYPES.MemberExpression && ASTUtils.getPropertyName(owner) === INDICES_PROPERTY;
@@ -82,11 +82,11 @@ export const noUnknownRegexGroup = createRule<[], 'unknown'>({
         const source = context.sourceCode;
         const matches = new Map<TSESLint.Scope.Variable, Set<string>>();
         const record = (target: TSESTree.Node, value: TSESTree.Node | null) => {
-            const regex = readMatchedRegex(value, source);
+            const regex = getMatchedRegex(value, source);
             const variable = ASTUtils.isIdentifier(target)
                 ? ASTUtils.findVariable(source.getScope(target), target)
                 : null;
-            if (regex !== undefined && variable !== null) matches.set(variable, readGroupNames(regex));
+            if (regex !== undefined && variable !== null) matches.set(variable, getGroupNames(regex));
         };
         return {
             VariableDeclarator: (node) => {
@@ -96,7 +96,7 @@ export const noUnknownRegexGroup = createRule<[], 'unknown'>({
                 record(node.left, node.right);
             },
             MemberExpression(node) {
-                const owner = ASTUtils.getPropertyName(node) === GROUPS_PROPERTY ? readOwner(node) : undefined;
+                const owner = ASTUtils.getPropertyName(node) === GROUPS_PROPERTY ? getOwner(node) : undefined;
                 const variable = ASTUtils.isIdentifier(owner)
                     ? ASTUtils.findVariable(source.getScope(owner), owner)
                     : null;

@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
 import type { TableCell } from '../types/plugin.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { readAttribute, isLayoutTable, buildTableGrid, getElementName } from '../jsx.ts';
+import { getAttribute, isLayoutTable, buildTableGrid, getElementName } from '../jsx.ts';
 
 function hasHeaderLine(grid: readonly (readonly TableCell[])[] | null): boolean {
     if (grid === null) return true;
@@ -18,7 +18,7 @@ function isSkippedTable(table: TSESTree.JSXElement): boolean {
     const isPassThrough =
         table.children.length === 0 &&
         element.attributes.some(({ type }) => type === AST_NODE_TYPES.JSXSpreadAttribute);
-    return isPassThrough || isLayoutTable(element) || readAttribute(element, 'aria-hidden')?.value === true;
+    return isPassThrough || isLayoutTable(element) || getAttribute(element, 'aria-hidden')?.value === true;
 }
 
 export const tableHeader = createRule<[], 'missingHeader'>({

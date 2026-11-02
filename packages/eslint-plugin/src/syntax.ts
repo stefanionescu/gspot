@@ -14,11 +14,11 @@ const isModuleDeclaration = ASTUtils.isNodeOfTypes(MODULE_DECLARATION_NODES.map(
 const isUnwrappable = ASTUtils.isNodeOfTypes(UNWRAPPABLE_NODES.map((type) => AST_NODE_TYPES[type]));
 
 /**
-Read the statement after a declaration in its block, module, or switch case.
+Get the statement after a declaration in its block, module, or switch case.
 
 @param node the declaration to locate.
 */
-export function readNextStatement(node: TSESTree.VariableDeclaration): TSESTree.Statement | undefined {
+export function getNextStatement(node: TSESTree.VariableDeclaration): TSESTree.Statement | undefined {
     const { parent } = node;
     if (parent.type === AST_NODE_TYPES.SwitchCase) return parent.consequent[parent.consequent.indexOf(node) + 1];
     if (parent.type !== AST_NODE_TYPES.BlockStatement && parent.type !== AST_NODE_TYPES.Program) return undefined;

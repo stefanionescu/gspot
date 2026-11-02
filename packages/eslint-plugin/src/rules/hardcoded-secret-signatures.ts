@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
-import { readQualifiedName } from '../modules.ts';
-import { readExpressionValue, readOptionProperties } from '../expressions.ts';
+import { getQualifiedName } from '../modules.ts';
+import { getExpressionValue, getOptionProperties } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -39,16 +39,16 @@ export const hardcodedSecretSignatures = createRule<[], 'hardcoded'>({
     create(context) {
         const source = context.sourceCode;
         const listSecretValues = (node: TSESTree.CallExpression, name: string): TSESTree.Node[] => {
-            const options = readExpressionValue(node.arguments[0], source);
+            const options = getExpressionValue(node.arguments[0], source);
             if (!Object.hasOwn(SECRET_PROPERTIES, name) || options?.type !== AST_NODE_TYPES.ObjectExpression) return [];
-            const property = readOptionProperties(options, source).get(SECRET_PROPERTIES[name] ?? '');
+            const property = getOptionProperties(options, source).get(SECRET_PROPERTIES[name] ?? '');
             return property?.value.type === AST_NODE_TYPES.ArrayExpression
                 ? property.value.elements.filter((element) => element !== null)
                 : [property?.value].filter((value) => value !== undefined);
         };
         return {
             CallExpression(node) {
-                const name = readQualifiedName(node, source) ?? '';
+                const name = getQualifiedName(node, source) ?? '';
                 const positions = Object.hasOwn(SECRET_ARGUMENTS, name) ? SECRET_ARGUMENTS[name] : undefined;
                 const secrets = [
                     ...(positions ?? []).map((index) => node.arguments[index]),

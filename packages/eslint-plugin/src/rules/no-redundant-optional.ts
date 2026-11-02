@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readTypes } from '../checker.ts';
+import { getTypes } from '../checker.ts';
 import type { TypeReader } from '../types/plugin.ts';
 import { LIBRARY_PATH, UNDEFINED_TYPE } from '../config/builtins.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
@@ -39,7 +39,7 @@ export const noRedundantOptional = createRule<[], 'optional'>({
         messages: { optional: 'This property is optional and also allows undefined. Remove one of the two.' },
     },
     create(context) {
-        const types = readTypes(context);
+        const types = getTypes(context);
         if (types?.program.getCompilerOptions().exactOptionalPropertyTypes === true) return {};
         const inspect = (node: TSESTree.PropertyDefinition | TSESTree.TSPropertySignature) => {
             const type = node.typeAnnotation?.typeAnnotation;

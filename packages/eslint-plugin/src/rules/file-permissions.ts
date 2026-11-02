@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
-import { readQualifiedName } from '../modules.ts';
-import { readExpressionValue } from '../expressions.ts';
+import { getQualifiedName } from '../modules.ts';
+import { getExpressionValue } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -12,31 +12,28 @@ import {
     FILE_MODE_CONSTANTS,
 } from '../config/security.ts';
 
-function readLiteralMode(literal: TSESTree.Literal): number | undefined {
+function getLiteralMode(literal: TSESTree.Literal): number | undefined {
     if (typeof literal.value === 'string') return Number.parseInt(literal.value, OCTAL_RADIX);
     return typeof literal.value === 'number' ? literal.value : undefined;
 }
 
-function readConstantMode(
-    source: Readonly<TSESLint.SourceCode>,
-    member: TSESTree.MemberExpression,
-): number | undefined {
-    const isConstants = readQualifiedName(member.object, source) === FILE_MODE_MODULE;
+function getConstantMode(source: Readonly<TSESLint.SourceCode>, member: TSESTree.MemberExpression): number | undefined {
+    const isConstants = getQualifiedName(member.object, source) === FILE_MODE_MODULE;
     const name = ASTUtils.getPropertyName(member) ?? '';
     return isConstants && Object.hasOwn(FILE_MODE_CONSTANTS, name) ? FILE_MODE_CONSTANTS[name] : undefined;
 }
 
-function readMode(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): number | undefined {
-    const value = readExpressionValue(node, source);
+function getMode(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): number | undefined {
+    const value = getExpressionValue(node, source);
     switch (value?.type) {
         case AST_NODE_TYPES.Literal: {
-            return readLiteralMode(value);
+            return getLiteralMode(value);
         }
         case AST_NODE_TYPES.MemberExpression: {
-            return readConstantMode(source, value);
+            return getConstantMode(source, value);
         }
         case AST_NODE_TYPES.BinaryExpression: {
-            const [left, right] = [readMode(source, value.left), readMode(source, value.right)];
+            const [left, right] = [getMode(source, value.left), getMode(source, value.right)];
             return value.operator === '|' && left !== undefined && right !== undefined ? left | right : undefined;
         }
         default: {
@@ -65,7 +62,7 @@ export const filePermissions = createRule<[], 'permissive'>({
     create(context) {
         const source = context.sourceCode;
         const checkMode = (node: TSESTree.Node | undefined, allowed: number): void => {
-            const mode = readMode(source, node);
+            const mode = getMode(source, node);
             const isPermissive = mode !== undefined && !Number.isNaN(mode) && mode % OCTAL_RADIX !== allowed;
             if (node && isPermissive) context.report({ node, messageId: 'permissive' });
         };
@@ -75,8 +72,7 @@ export const filePermissions = createRule<[], 'permissive'>({
                 if (method?.type === AST_NODE_TYPES.Identifier && CHMOD_METHODS.has(method.name)) {
                     const [first, second = first] = node.arguments;
                     checkMode(second, 0);
-                } else if (readQualifiedName(node, source) === UMASK_FUNCTION)
-                    checkMode(node.arguments[0], OTHERS_MASK);
+                } else if (getQualifiedName(node, source) === UMASK_FUNCTION) checkMode(node.arguments[0], OTHERS_MASK);
             },
         };
     },

@@ -12,13 +12,13 @@ export function listLocalVariables(source: TSESLint.SourceCode): TSESLint.Scope.
 }
 
 /**
-Read the value that a write reference stores, when a declaration or an assignment statement makes the write.
+Get the value that a write reference stores, when a declaration or an assignment statement makes the write.
 
 @param reference a write reference of a variable.
 @param source the source code of the file.
 @returns the initializer or the assigned value, or undefined for any other write.
 */
-export function readStoredValue(
+export function getStoredValue(
     reference: TSESLint.Scope.Reference,
     source: TSESLint.SourceCode,
 ): TSESTree.Node | undefined {

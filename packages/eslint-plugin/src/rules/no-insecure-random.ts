@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readModuleName } from '../modules.ts';
+import { getModuleName } from '../modules.ts';
 import { INSECURE_RANDOM_GENERATOR } from '../config/security.ts';
 
 export const noInsecureRandom = createRule<[], 'random'>({
@@ -20,7 +20,7 @@ export const noInsecureRandom = createRule<[], 'random'>({
     create(context) {
         return {
             CallExpression: (node) => {
-                if (readModuleName(node.callee, context.sourceCode) === INSECURE_RANDOM_GENERATOR)
+                if (getModuleName(node.callee, context.sourceCode) === INSECURE_RANDOM_GENERATOR)
                     context.report({ node, messageId: 'random' });
             },
         };

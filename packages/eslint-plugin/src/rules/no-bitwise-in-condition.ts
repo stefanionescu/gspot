@@ -1,15 +1,15 @@
 import { createRule } from '../rule.ts';
 import type { TypeReader } from '../types/plugin.ts';
-import { readTypes, readTypeCategory } from '../checker.ts';
+import { getTypes, getTypeCategory } from '../checker.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { BITWISE_JOINS, BITWISE_OPERATORS } from '../config/operators.ts';
 import { CONDITION_PARENTS, NUMERIC_VALUE_TYPES } from '../config/rules.ts';
 
 function isNumeric(node: TSESTree.Node, types: TypeReader | undefined): boolean {
     if (types === undefined) return node.type === AST_NODE_TYPES.Literal && NUMERIC_VALUE_TYPES.has(typeof node.value);
-    const type = types.read(node);
+    const type = types.get(node);
     const members = type.isUnion() ? type.types : [type];
-    return members.some((member) => readTypeCategory(types, member) === 'number');
+    return members.some((member) => getTypeCategory(types, member) === 'number');
 }
 
 function isConditionTest(node: TSESTree.Node, ancestors: readonly TSESTree.Node[]): boolean {
@@ -38,7 +38,7 @@ export const noBitwiseInCondition = createRule<[], 'bitwise'>({
         },
     },
     create(context) {
-        const types = readTypes(context);
+        const types = getTypes(context);
         let lone: { node: TSESTree.BinaryExpression; ancestors: readonly TSESTree.Node[] } | undefined;
         let hasBitwise = false;
         return {

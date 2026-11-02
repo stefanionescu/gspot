@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readModuleName } from '../modules.ts';
+import { getModuleName } from '../modules.ts';
 import { listArgumentValues } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
@@ -14,7 +14,7 @@ function protectsHeader(node: TSESTree.CallExpressionArgument, source: TSESLint.
     const value = node.type === AST_NODE_TYPES.SpreadElement ? node.argument : node;
     return listArgumentValues([value], source).some((middleware) => {
         const name =
-            middleware.type === AST_NODE_TYPES.CallExpression ? readModuleName(middleware.callee, source) : undefined;
+            middleware.type === AST_NODE_TYPES.CallExpression ? getModuleName(middleware.callee, source) : undefined;
         return name !== undefined && POWERED_BY_MIDDLEWARE.has(name);
     });
 }
@@ -68,7 +68,7 @@ export const noPoweredByHeader = createRule<[], 'header'>({
             VariableDeclarator(node) {
                 if (node.id.type !== AST_NODE_TYPES.Identifier || node.init?.type !== AST_NODE_TYPES.CallExpression)
                     return;
-                const name = readModuleName(node.init.callee, context.sourceCode);
+                const name = getModuleName(node.init.callee, context.sourceCode);
                 if (name !== undefined && POWERED_BY_FACTORIES.has(name)) applications.push(node);
             },
             'Program:exit'() {

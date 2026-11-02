@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
-import { readAssignedValue } from '../modules.ts';
+import { getAssignedValue } from '../modules.ts';
 import { REDUCE_METHOD } from '../config/builtins.ts';
-import { readTypes, readTypeCategory } from '../checker.ts';
+import { getTypes, getTypeCategory } from '../checker.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 export const reduceInitialValue = createRule<[], 'initial'>({
@@ -22,13 +22,13 @@ export const reduceInitialValue = createRule<[], 'initial'>({
         messages: { initial: 'Pass an initial value to reduce. Without it, an empty array throws.' },
     },
     create(context) {
-        const types = readTypes(context);
+        const types = getTypes(context);
         const isArray = (node: TSESTree.Node) => {
-            if (types !== undefined) return readTypeCategory(types, types.read(node)) === 'array';
+            if (types !== undefined) return getTypeCategory(types, types.get(node)) === 'array';
             const variable = ASTUtils.isIdentifier(node)
                 ? ASTUtils.findVariable(context.sourceCode.getScope(node), node)
                 : null;
-            const value = variable === null ? node : readAssignedValue(variable);
+            const value = variable === null ? node : getAssignedValue(variable);
             return value?.type === AST_NODE_TYPES.ArrayExpression;
         };
         return {

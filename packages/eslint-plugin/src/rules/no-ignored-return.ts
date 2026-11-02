@@ -1,12 +1,12 @@
 import { createRule } from '../rule.ts';
-import { readTypes } from '../checker.ts';
+import { getTypes } from '../checker.ts';
 import { listChildren } from '../syntax.ts';
 import type { TypeReader } from '../types/plugin.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { PURE_METHODS, REPLACE_METHOD, EARLY_EXIT_METHODS, PURE_RECEIVER_SYMBOLS } from '../config/builtins.ts';
 
-function readReceiver(node: TSESTree.Node, types: TypeReader): string | undefined {
-    const type = types.read(node);
+function getReceiver(node: TSESTree.Node, types: TypeReader): string | undefined {
+    const type = types.get(node);
     const base = types.checker.typeToString(types.checker.getBaseTypeOfLiteralType(type));
     if (base === 'number' || base === 'string') return base;
     const name = type.getSymbol()?.getName();
@@ -19,15 +19,15 @@ function hasAssignment(node: TSESTree.Node, source: TSESLint.SourceCode): boolea
     return listChildren(node, source.visitorKeys).some((child) => hasAssignment(child, source));
 }
 
-function readPureMethod(callee: TSESTree.MemberExpression, types: TypeReader, source: TSESLint.SourceCode) {
+function getPureMethod(callee: TSESTree.MemberExpression, types: TypeReader, source: TSESLint.SourceCode) {
     const method = source.getText(callee.property);
-    const receiver = readReceiver(callee.object, types);
+    const receiver = getReceiver(callee.object, types);
     return receiver !== undefined && PURE_METHODS[receiver]?.has(method) === true ? method : undefined;
 }
 
 function isIntended(method: string, node: TSESTree.CallExpression, types: TypeReader, source: TSESLint.SourceCode) {
     const [first, second] = node.arguments;
-    if (method === REPLACE_METHOD && second !== undefined) return types.read(second).getCallSignatures().length > 0;
+    if (method === REPLACE_METHOD && second !== undefined) return types.get(second).getCallSignatures().length > 0;
     const isInline =
         first?.type === AST_NODE_TYPES.ArrowFunctionExpression || first?.type === AST_NODE_TYPES.FunctionExpression;
     return EARLY_EXIT_METHODS.has(method) && isInline && hasAssignment(first.body, source);
@@ -53,13 +53,13 @@ export const noIgnoredReturn = createRule<[], 'ignored' | 'map'>({
         },
     },
     create(context) {
-        const types = readTypes(context);
+        const types = getTypes(context);
         if (types === undefined) return {};
         return {
             'ExpressionStatement > CallExpression'(node: TSESTree.CallExpression) {
                 const { callee } = node;
                 if (callee.type !== AST_NODE_TYPES.MemberExpression) return;
-                const method = readPureMethod(callee, types, context.sourceCode);
+                const method = getPureMethod(callee, types, context.sourceCode);
                 if (method === undefined || isIntended(method, node, types, context.sourceCode)) return;
                 context.report({ node, messageId: method === 'map' ? 'map' : 'ignored', data: { method } });
             },

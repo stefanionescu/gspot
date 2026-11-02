@@ -1,11 +1,11 @@
 import { createRule } from '../rule.ts';
-import { readExpressionValue } from '../expressions.ts';
+import { getExpressionValue } from '../expressions.ts';
 import { SIGNED_NUMBER_OPERATORS } from '../config/rules.ts';
 import { isCypressChain, isTestRelatedPath } from '../testing.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isNumericDelay(node: TSESTree.Node | undefined, source: TSESLint.SourceCode): boolean {
-    let value = readExpressionValue(node, source);
+    let value = getExpressionValue(node, source);
     if (value?.type === AST_NODE_TYPES.UnaryExpression) {
         if (!SIGNED_NUMBER_OPERATORS.has(value.operator)) return false;
         value = value.argument;

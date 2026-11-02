@@ -30,46 +30,46 @@ function normalizeLiteral(value: unknown): unknown {
     return BOOLEAN_TEXTS.has(text) ? text === 'true' : value;
 }
 
-function readExpressionValue(expression: TSESTree.Node): unknown {
+function getExpressionValue(expression: TSESTree.Node): unknown {
     if (expression.type === AST_NODE_TYPES.Literal) return normalizeLiteral(expression.value);
     if (expression.type === AST_NODE_TYPES.TemplateLiteral && expression.expressions.length === 0)
         return expression.quasis[0]?.value.cooked;
     return null;
 }
 
-function readAttributeValue(value: TSESTree.JSXAttribute['value']): unknown {
+function getAttributeValue(value: TSESTree.JSXAttribute['value']): unknown {
     if (value === null) return true;
     const expression = value.type === AST_NODE_TYPES.JSXExpressionContainer ? value.expression : value;
-    return readExpressionValue(expression);
+    return getExpressionValue(expression);
 }
 
 /**
-Read an attribute of a JSX opening tag by its name, in any letter case. The code may write its value as a string,
+Get an attribute of a JSX opening tag by its name, in any letter case. The code may write its value as a string,
 as a literal in braces, or leave it out for `true`. The strings `"true"` and `"false"` read as booleans.
 
 @param element the opening tag that holds the attributes.
 @param name the attribute name to look for.
 @returns the attribute and its value, null for a value that only the run time knows, or undefined for no attribute.
 */
-export function readAttribute(element: TSESTree.JSXOpeningElement, name: string): JsxAttributeValue | undefined {
+export function getAttribute(element: TSESTree.JSXOpeningElement, name: string): JsxAttributeValue | undefined {
     const attribute = element.attributes.find(
         (child): child is TSESTree.JSXAttribute =>
             child.type === AST_NODE_TYPES.JSXAttribute &&
             getElementName(child.name).toLowerCase() === name.toLowerCase(),
     );
     if (attribute === undefined) return undefined;
-    return { node: attribute, value: readAttributeValue(attribute.value) };
+    return { node: attribute, value: getAttributeValue(attribute.value) };
 }
 
-function readSpan(cell: TSESTree.JSXElement, name: string, maximum: number): number {
-    const attribute = readAttribute(cell.openingElement, name);
+function getSpan(cell: TSESTree.JSXElement, name: string, maximum: number): number {
+    const attribute = getAttribute(cell.openingElement, name);
     const span = attribute ? Number.parseInt(String(attribute.value)) : 1;
     return name === 'rowspan' && span === 0 ? 0 : Math.min(Math.max(span, 1), maximum);
 }
 
 function buildCell(cell: TSESTree.JSXElement, block: number, rowSpan: number): TableCell {
-    const headers = readAttribute(cell.openingElement, 'headers')?.value;
-    const id = readAttribute(cell.openingElement, 'id');
+    const headers = getAttribute(cell.openingElement, 'headers')?.value;
+    const id = getAttribute(cell.openingElement, 'id');
     return {
         isHeader:
             cell.openingElement.name.type === AST_NODE_TYPES.JSXIdentifier && cell.openingElement.name.name === 'th',
@@ -82,7 +82,7 @@ function buildCell(cell: TSESTree.JSXElement, block: number, rowSpan: number): T
     };
 }
 
-function readCellName(child: TSESTree.JSXChild): string | undefined {
+function getCellName(child: TSESTree.JSXChild): string | undefined {
     if (child.type === AST_NODE_TYPES.JSXText) return '';
     if (child.type === AST_NODE_TYPES.JSXExpressionContainer)
         return child.expression.type === AST_NODE_TYPES.JSXEmptyExpression ? '' : undefined;
@@ -93,12 +93,12 @@ function readCellName(child: TSESTree.JSXChild): string | undefined {
 function listRowCells(row: TSESTree.JSXElement, block: { next: number }): TableCell[] | null {
     const cells: TableCell[] = [];
     for (const child of row.children) {
-        const name = readCellName(child);
+        const name = getCellName(child);
         if (name === undefined) return null;
         if (name === '' || child.type !== AST_NODE_TYPES.JSXElement) continue;
         const [columns, rows] = [
-            readSpan(child, 'colspan', MAXIMUM_COLUMN_SPAN),
-            readSpan(child, 'rowspan', MAXIMUM_ROW_SPAN),
+            getSpan(child, 'colspan', MAXIMUM_COLUMN_SPAN),
+            getSpan(child, 'rowspan', MAXIMUM_ROW_SPAN),
         ];
         if (Number.isNaN(columns) || Number.isNaN(rows)) return null;
         cells.push(...Array.from({ length: columns }, () => buildCell(child, block.next, rows)));
@@ -107,7 +107,7 @@ function listRowCells(row: TSESTree.JSXElement, block: { next: number }): TableC
     return cells;
 }
 
-function readTableElement(child: TSESTree.JSXElement, block: { next: number }): TableCell[][] | null {
+function getTableElement(child: TSESTree.JSXElement, block: { next: number }): TableCell[][] | null {
     const tag = child.openingElement.name;
     const name = getElementName(tag).toLowerCase();
     if (TABLE_SECTIONS.has(name)) return listTableRows(child, block);
@@ -119,11 +119,11 @@ function readTableElement(child: TSESTree.JSXElement, block: { next: number }): 
     return cells === null ? null : [cells];
 }
 
-function readTableChild(child: TSESTree.JSXChild, block: { next: number }): TableCell[][] | null {
+function getTableChild(child: TSESTree.JSXChild, block: { next: number }): TableCell[][] | null {
     if (child.type === AST_NODE_TYPES.JSXFragment) return listTableRows(child, block);
     if (child.type === AST_NODE_TYPES.JSXExpressionContainer)
         return child.expression.type === AST_NODE_TYPES.JSXEmptyExpression ? [] : null;
-    return child.type === AST_NODE_TYPES.JSXElement ? readTableElement(child, block) : [];
+    return child.type === AST_NODE_TYPES.JSXElement ? getTableElement(child, block) : [];
 }
 
 function listTableRows(
@@ -132,7 +132,7 @@ function listTableRows(
 ): TableCell[][] | null {
     const rows: TableCell[][] = [];
     for (const child of container.children) {
-        const found = readTableChild(child, block);
+        const found = getTableChild(child, block);
         if (found === null) return null;
         rows.push(...found);
     }
@@ -196,7 +196,7 @@ Tell whether a `role` of `presentation` or `none` marks a JSX table tag as a lay
 @param element the opening tag.
 */
 export function isLayoutTable(element: TSESTree.JSXOpeningElement): boolean {
-    const role = readAttribute(element, 'role');
+    const role = getAttribute(element, 'role');
     const isTable = getElementName(element.name).toLowerCase() === 'table';
     return isTable && role !== undefined && LAYOUT_ROLES.has(String(role.value).toLowerCase());
 }

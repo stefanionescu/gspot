@@ -1,6 +1,6 @@
 import { unwrapExpression } from './syntax.ts';
 import type { MemberAssignment } from './types/plugin.ts';
-import { readAssignedValue, readQualifiedName } from './modules.ts';
+import { getAssignedValue, getQualifiedName } from './modules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 /**
@@ -10,7 +10,7 @@ Follow single assignments while retaining the expression that supplies the value
 @param source the current file and scopes.
 @param seen bindings already followed along this path.
 */
-export function readExpressionValue(
+export function getExpressionValue(
     node: TSESTree.Node | undefined,
     source: TSESLint.SourceCode,
     seen = new Set<TSESTree.Node>(),
@@ -21,28 +21,28 @@ export function readExpressionValue(
     if (value.type !== AST_NODE_TYPES.Identifier) return value;
     const variable = ASTUtils.findVariable(source.getScope(value), value);
     if (variable === null) return undefined;
-    return readExpressionValue(readAssignedValue(variable), source, seen);
+    return getExpressionValue(getAssignedValue(variable), source, seen);
 }
 
 /**
-Read statically known object properties. Later properties and known spreads replace earlier values.
+Get statically known object properties. Later properties and known spreads replace earlier values.
 
 @param node the object or binding to inspect.
 @param source the current file and scopes.
 @param seen objects already expanded along this path.
 */
-export function readOptionProperties(
+export function getOptionProperties(
     node: TSESTree.Node | undefined,
     source: TSESLint.SourceCode,
     seen = new Set<TSESTree.Node>(),
 ): Map<string, TSESTree.Property> {
     let properties = new Map<string, TSESTree.Property>();
-    const value = readExpressionValue(node, source);
+    const value = getExpressionValue(node, source);
     if (value?.type !== AST_NODE_TYPES.ObjectExpression || seen.has(value)) return properties;
     seen.add(value);
     for (const property of value.properties) {
         if (property.type === AST_NODE_TYPES.SpreadElement) {
-            properties = new Map([...properties, ...readOptionProperties(property.argument, source, new Set(seen))]);
+            properties = new Map([...properties, ...getOptionProperties(property.argument, source, new Set(seen))]);
             continue;
         }
         const name = ASTUtils.getPropertyName(property, source.getScope(property));
@@ -57,11 +57,11 @@ Resolve an explicit literal without evaluating calls or other runtime expression
 @param node the value to resolve.
 @param source the current file and scopes.
 */
-export function readLiteralValue(
+export function getLiteralValue(
     node: TSESTree.Node | undefined,
     source: TSESLint.SourceCode,
 ): TSESTree.Literal['value'] | undefined {
-    const value = readExpressionValue(node, source);
+    const value = getExpressionValue(node, source);
     if (value?.type !== AST_NODE_TYPES.Literal) return undefined;
     return value.value;
 }
@@ -80,7 +80,7 @@ export function listArgumentValues(
     seen: ReadonlySet<TSESTree.Node> = new Set(),
 ): TSESTree.Node[] {
     return values.flatMap((value) => {
-        const written = readExpressionValue(value, source) ?? value;
+        const written = getExpressionValue(value, source) ?? value;
         if (written.type !== AST_NODE_TYPES.ArrayExpression) return [written];
         if (seen.has(written)) return [];
         return listArgumentValues(
@@ -103,10 +103,10 @@ export function listOptionLiterals(
     source: TSESLint.SourceCode,
     positions: Readonly<Record<string, readonly number[]>>,
 ): TSESTree.ObjectExpression[] {
-    const name = readQualifiedName(node, source);
+    const name = getQualifiedName(node, source);
     const indexes = name !== undefined && Object.hasOwn(positions, name) ? positions[name] : undefined;
     return (indexes ?? []).flatMap((index) => {
-        const value = readExpressionValue(node.arguments[index], source);
+        const value = getExpressionValue(node.arguments[index], source);
         return value?.type === AST_NODE_TYPES.ObjectExpression ? [value] : [];
     });
 }

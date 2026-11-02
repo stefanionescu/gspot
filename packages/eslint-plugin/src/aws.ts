@@ -1,5 +1,5 @@
-import { readQualifiedName } from './modules.ts';
-import { listArgumentValues, readExpressionValue, readOptionProperties } from './expressions.ts';
+import { getQualifiedName } from './modules.ts';
+import { listArgumentValues, getExpressionValue, getOptionProperties } from './expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import type {
@@ -33,7 +33,7 @@ becomes an underscore, so `aws-cdk-lib/aws-s3` and `aws_cdk_lib.aws_s3` read ali
 @returns the dotted name, or undefined when the value has none.
 */
 export function getCdkName(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): string | undefined {
-    const name = node && readQualifiedName(node, source);
+    const name = node && getQualifiedName(node, source);
     if (name === undefined) return undefined;
     return name.replaceAll('-', '_');
 }
@@ -52,7 +52,7 @@ function isUnresolved(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node
     const variable = ASTUtils.findVariable(source.getScope(root), root);
     if (variable === null) return true;
     return (
-        readQualifiedName(root, source) === undefined && !variable.references.some((reference) => reference.isWrite())
+        getQualifiedName(root, source) === undefined && !variable.references.some((reference) => reference.isWrite())
     );
 }
 
@@ -63,7 +63,7 @@ function isEmptyValue(node: TSESTree.Node): boolean {
 }
 
 function listLiteralTargets(source: Readonly<TSESLint.SourceCode>, target: CdkTarget): CdkLiteralTarget[] {
-    const value = readExpressionValue(target.value, source);
+    const value = getExpressionValue(target.value, source);
     if (value?.type === AST_NODE_TYPES.ObjectExpression) return [{ literal: value, report: target.report }];
     if (value?.type !== AST_NODE_TYPES.ArrayExpression) return [];
     return value.elements
@@ -71,14 +71,14 @@ function listLiteralTargets(source: Readonly<TSESLint.SourceCode>, target: CdkTa
         .flatMap((element) => listLiteralTargets(source, { value: element, report: element }));
 }
 
-function readPathStep(
+function getPathStep(
     source: Readonly<TSESLint.SourceCode>,
     child: CdkLiteralTarget,
     path: readonly string[],
     check: { required: boolean; report: TSESTree.Node },
 ): CdkPathResult {
     const [key = '', ...rest] = path;
-    const property = readOptionProperties(child.literal, source).get(key);
+    const property = getOptionProperties(child.literal, source).get(key);
     if (property === undefined && check.required)
         return { targets: [], issues: [{ node: check.report, kind: 'omitted' }] };
     if (!property) return { targets: [], issues: [] };
@@ -94,7 +94,7 @@ function listPathTargets(
     required: boolean,
 ): CdkPathResult {
     const literals = isUnresolved(source, target.value) ? [] : listLiteralTargets(source, target);
-    const results = literals.map((child) => readPathStep(source, child, path, { required, report: target.report }));
+    const results = literals.map((child) => getPathStep(source, child, path, { required, report: target.report }));
     return {
         targets: results.flatMap(({ targets }) => targets),
         issues: results.flatMap(({ issues }) => issues),
@@ -117,7 +117,7 @@ function isInvalidName(source: Readonly<TSESLint.SourceCode>, value: TSESTree.No
 }
 
 function checkCdkValue(source: Readonly<TSESLint.SourceCode>, target: CdkTarget, check: CdkPropertyCheck): CdkIssue[] {
-    const value = readExpressionValue(target.value, source) ?? target.value;
+    const value = getExpressionValue(target.value, source) ?? target.value;
     if (isUnresolved(source, value)) return [];
     if (isEmptyValue(value)) return check.required ? [{ node: target.report, kind: 'omitted' }] : [];
     const isInvalid = isInvalidLiteral(value, check) || isInvalidName(source, value, check);
@@ -187,7 +187,7 @@ export function findBucketOption(
     node: TSESTree.NewExpression,
     key: string,
 ): TSESTree.Property | null {
-    const options = readExpressionValue(node.arguments[CDK_PROPS_POSITION], source);
+    const options = getExpressionValue(node.arguments[CDK_PROPS_POSITION], source);
     if (options?.type !== AST_NODE_TYPES.ObjectExpression) return null;
     const property = options.properties.find(
         (child): child is TSESTree.Property =>
@@ -213,43 +213,43 @@ export function findDisabledBucketOption(
     if (getCdkName(source, node) !== S3_BUCKET) return undefined;
     const option = findBucketOption(source, node, key);
     if (option === null) return { node: node.callee, kind: 'omitted' };
-    const value = readExpressionValue(option.value, source);
+    const value = getExpressionValue(option.value, source);
     return value?.type === AST_NODE_TYPES.Literal && value.value === false
         ? { node: option, kind: 'invalid' }
         : undefined;
 }
 
 /**
-Read the value of an expression, after following identifiers to their written values.
+Get the value of an expression, after following identifiers to their written values.
 
 @param source the source code of the file.
 @param node the expression.
 @returns the value, `missing` for `undefined`.
 */
-export function readCdkResult(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node): CdkResult {
-    const value = readExpressionValue(node, source) ?? node;
+export function getCdkResult(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node): CdkResult {
+    const value = getExpressionValue(node, source) ?? node;
     const isUndefined = ASTUtils.isIdentifier(value) && value.name === UNDEFINED_NAME;
     return { status: isUndefined ? 'missing' : 'found', node: value };
 }
 
 /**
-Read an argument of the call or the construction that a result holds.
+Get an argument of the call or the construction that a result holds.
 
 @param source the source code of the file.
 @param result the call or the construction.
 @param position the index of the argument.
 @returns the argument value, `missing` when the call has no such argument, or `unknown` when the result holds no call.
 */
-export function readCdkArgument(source: Readonly<TSESLint.SourceCode>, result: CdkResult, position: number): CdkResult {
+export function getCdkArgument(source: Readonly<TSESLint.SourceCode>, result: CdkResult, position: number): CdkResult {
     const { node } = result;
     if (node.type !== AST_NODE_TYPES.CallExpression && node.type !== AST_NODE_TYPES.NewExpression)
         return { status: 'unknown', node };
     const argument = node.arguments[position];
-    return argument === undefined ? { status: 'missing', node } : readCdkResult(source, argument);
+    return argument === undefined ? { status: 'missing', node } : getCdkResult(source, argument);
 }
 
 /**
-Read a property of the object literal that a result holds.
+Get a property of the object literal that a result holds.
 
 @param source the source code of the file.
 @param result the object.
@@ -257,21 +257,21 @@ Read a property of the object literal that a result holds.
 @returns the property value, `missing` when the object lacks the key, or `unknown` when the result holds no object
 literal.
 */
-export function readCdkProperty(source: Readonly<TSESLint.SourceCode>, result: CdkResult, key: string): CdkResult {
+export function getCdkProperty(source: Readonly<TSESLint.SourceCode>, result: CdkResult, key: string): CdkResult {
     const { node, status } = result;
     if (status !== 'found') return result;
     if (node.type !== AST_NODE_TYPES.ObjectExpression) return { status: 'unknown', node };
-    const property = readOptionProperties(node, source).get(key);
-    return property === undefined ? { status: 'missing', node } : readCdkResult(source, property.value);
+    const property = getOptionProperties(node, source).get(key);
+    return property === undefined ? { status: 'missing', node } : getCdkResult(source, property.value);
 }
 
 /**
-Read the literal value that a result holds.
+Get the literal value that a result holds.
 
 @param result the value.
 @returns the value of the literal, or undefined when the result holds no literal.
 */
-export function readCdkLiteral(result: CdkResult): unknown {
+export function getCdkLiteral(result: CdkResult): unknown {
     const { node, status } = result;
     if (status !== 'found' || node.type !== AST_NODE_TYPES.Literal) return undefined;
     return node.value;
@@ -294,15 +294,15 @@ export function listCdkStrings(source: Readonly<TSESLint.SourceCode>, result: Cd
 }
 
 function listDocumentStatements(source: Readonly<TSESLint.SourceCode>, document: TSESTree.Node): PolicyStatement[] {
-    const statements = readCdkProperty(source, readCdkResult(source, document), POLICY_STATEMENTS_KEY);
+    const statements = getCdkProperty(source, getCdkResult(source, document), POLICY_STATEMENTS_KEY);
     return listArgumentValues([statements.node], source).map((statement) => ({
-        statement: readCdkResult(source, statement),
+        statement: getCdkResult(source, statement),
         keys: POLICY_JSON_KEYS,
     }));
 }
 
 function isAllowed(source: Readonly<TSESLint.SourceCode>, policy: PolicyStatement): boolean {
-    const effect = readCdkProperty(source, policy.statement, policy.keys.effect);
+    const effect = getCdkProperty(source, policy.statement, policy.keys.effect);
     if (effect.status === 'missing') return true;
     const { node } = effect;
     const value = policy.keys.isJson ? node.type === AST_NODE_TYPES.Literal && node.value : getCdkName(source, node);
@@ -325,7 +325,7 @@ export function listAllowStatements(
     const name = getCdkName(source, node.callee);
     const [argument] = node.arguments;
     if (argument === undefined || node.arguments.some(({ type }) => type === AST_NODE_TYPES.SpreadElement)) return [];
-    const statement = readCdkResult(source, argument);
+    const statement = getCdkResult(source, argument);
     let statements: PolicyStatement[] = [];
     if (node.type === AST_NODE_TYPES.NewExpression)
         statements = name === POLICY_STATEMENT ? [{ statement, keys: POLICY_CONSTRUCT_KEYS }] : [];

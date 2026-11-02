@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readTypes, readTypeCategory } from '../checker.ts';
+import { getTypes, getTypeCategory } from '../checker.ts';
 import { STRING_PATTERN_METHODS } from '../config/regex.ts';
 import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
@@ -20,7 +20,7 @@ export const noStringRegexPattern = createRule<[], 'pattern'>({
         messages: { pattern: '{{method}} compiles this string as a regular expression. Pass a RegExp instead.' },
     },
     create(context) {
-        const types = readTypes(context);
+        const types = getTypes(context);
         if (types === undefined) return {};
         return {
             CallExpression(node) {
@@ -29,8 +29,8 @@ export const noStringRegexPattern = createRule<[], 'pattern'>({
                 if (callee.type !== AST_NODE_TYPES.MemberExpression || pattern === undefined) return;
                 const method = ASTUtils.getPropertyName(callee);
                 if (!STRING_PATTERN_METHODS.has(method)) return;
-                const isString = readTypeCategory(types, types.read(callee.object)) === 'string';
-                if (!isString || readTypeCategory(types, types.read(pattern)) !== 'string') return;
+                const isString = getTypeCategory(types, types.get(callee.object)) === 'string';
+                if (!isString || getTypeCategory(types, types.get(pattern)) !== 'string') return;
                 context.report({ node: pattern, messageId: 'pattern', data: { method } });
             },
         };

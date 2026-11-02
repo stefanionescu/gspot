@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readQualifiedName } from '../modules.ts';
+import { getQualifiedName } from '../modules.ts';
 import { isDynamicString } from '../expressions.ts';
 import { SQL_FUNCTIONS, SQL_BUILDING_METHODS } from '../config/servers.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
@@ -32,7 +32,7 @@ export const sqlQueries = createRule<[], 'builtQuery'>({
                         ? ASTUtils.getPropertyName(query.callee)
                         : null;
                 const isBuilt = query !== undefined && (isDynamicString(query) || SQL_BUILDING_METHODS.has(method));
-                if (isBuilt && SQL_FUNCTIONS.has(readQualifiedName(node.callee, source)))
+                if (isBuilt && SQL_FUNCTIONS.has(getQualifiedName(node.callee, source)))
                     context.report({ node: node.callee, messageId: 'builtQuery' });
             },
         };

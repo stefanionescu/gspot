@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readExpressionValue } from '../expressions.ts';
+import { getExpressionValue } from '../expressions.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { WEB_URL, NO_OPENER_FEATURE, WINDOW_OPEN_SELECTOR, WINDOW_FEATURES_ARGUMENT } from '../config/web.ts';
 
@@ -24,8 +24,8 @@ export const requireNoopener = createRule<[], 'opener'>({
     },
     create(context) {
         const source = context.sourceCode;
-        const readText = (node: TSESTree.Node | undefined): string => {
-            const value = readExpressionValue(node, source);
+        const getText = (node: TSESTree.Node | undefined): string => {
+            const value = getExpressionValue(node, source);
             const text = value?.type === AST_NODE_TYPES.Literal ? value.value : undefined;
             return typeof text === 'string' ? text : '';
         };
@@ -37,8 +37,8 @@ export const requireNoopener = createRule<[], 'opener'>({
                     (object.type === AST_NODE_TYPES.MemberExpression &&
                         object.object.type === AST_NODE_TYPES.ThisExpression &&
                         ASTUtils.getPropertyName(object) === 'window');
-                const features = readText(node.arguments[WINDOW_FEATURES_ARGUMENT]);
-                if (isWindow && WEB_URL.test(readText(node.arguments[0])) && !features.includes(NO_OPENER_FEATURE))
+                const features = getText(node.arguments[WINDOW_FEATURES_ARGUMENT]);
+                if (isWindow && WEB_URL.test(getText(node.arguments[0])) && !features.includes(NO_OPENER_FEATURE))
                     context.report({ node: property, messageId: 'opener' });
             },
         };

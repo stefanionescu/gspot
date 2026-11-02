@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
 import type { TypeReader } from '../types/plugin.ts';
-import { readTypes, readTypeCategory } from '../checker.ts';
+import { getTypes, getTypeCategory } from '../checker.ts';
 import { RETURNED_PARENTS, STANDALONE_PARENTS } from '../config/rules.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { MUTABLE_TARGETS, GETTER_DECLARATION, MUTATING_ORDER_METHODS } from '../config/builtins.ts';
@@ -18,14 +18,14 @@ function isGetter(node: TSESTree.Node, types: TypeReader): boolean {
     return declarations.length === 1 && declaration !== undefined && GETTER_DECLARATION.test(declaration.getText());
 }
 
-function readMutation(node: TSESTree.CallExpression, types: TypeReader) {
+function getMutation(node: TSESTree.CallExpression, types: TypeReader) {
     const { callee } = node;
     if (callee.type !== AST_NODE_TYPES.MemberExpression) return undefined;
     const method = ASTUtils.getPropertyName(callee) ?? '';
     const replacement = MUTATING_ORDER_METHODS.get(method);
     const target = callee.object;
     if (replacement === undefined || !MUTABLE_TARGETS.has(target.type) || isGetter(target, types)) return undefined;
-    return readTypeCategory(types, types.read(target)) === 'array' ? { method, replacement, target } : undefined;
+    return getTypeCategory(types, types.get(target)) === 'array' ? { method, replacement, target } : undefined;
 }
 
 function isKept(node: TSESTree.CallExpression, target: TSESTree.Node): boolean {
@@ -61,11 +61,11 @@ export const noMisleadingArrayReverse = createRule<[], 'mutation'>({
         },
     },
     create(context) {
-        const types = readTypes(context);
+        const types = getTypes(context);
         if (types === undefined) return {};
         return {
             CallExpression(node) {
-                const mutation = readMutation(node, types);
+                const mutation = getMutation(node, types);
                 if (mutation === undefined || isKept(node, mutation.target)) return;
                 context.report({ node, messageId: 'mutation', data: mutation });
             },

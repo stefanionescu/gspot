@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readLocalFunction } from '../functions.ts';
+import { getLocalFunction } from '../functions.ts';
 import type { LocalFunction } from '../types/plugin.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { FUNCTION_NODES, EMPTY_RETURN_TYPES, UNUSED_CALL_PARENTS } from '../config/rules.ts';
@@ -55,7 +55,7 @@ export const noEmptyReturnValue = createRule<[], 'return'>({
         return {
             CallExpression(node) {
                 if (node.callee.type !== AST_NODE_TYPES.Identifier || !usesCallValue(node)) return;
-                const declaration = readLocalFunction(node.callee, context.sourceCode);
+                const declaration = getLocalFunction(node.callee, context.sourceCode);
                 if (declaration !== undefined) calls.set(node, declaration);
             },
             ReturnStatement(node) {

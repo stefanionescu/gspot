@@ -3,26 +3,26 @@ import { INEQUALITY_OPERATORS } from '../config/operators.ts';
 import { BOOLEAN_NAME, UNDEFINED_NAME } from '../config/builtins.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function readComparedValue(node: TSESTree.BinaryExpression): TSESTree.Node | undefined {
+function getComparedValue(node: TSESTree.BinaryExpression): TSESTree.Node | undefined {
     if (!INEQUALITY_OPERATORS.has(node.operator)) return undefined;
     const sides = [node.left, node.right];
     const index = sides.findIndex((side) => ASTUtils.isIdentifier(side) && side.name === UNDEFINED_NAME);
     return index === -1 ? undefined : sides[1 - index];
 }
 
-function readNegatedValue(node: TSESTree.UnaryExpression): TSESTree.Expression | undefined {
+function getNegatedValue(node: TSESTree.UnaryExpression): TSESTree.Expression | undefined {
     const { argument, operator } = node;
     const isDouble = operator === '!' && argument.type === AST_NODE_TYPES.UnaryExpression;
     return isDouble && argument.operator === '!' ? argument.argument : undefined;
 }
 
-function readTestedValue(node: TSESTree.Expression | null): TSESTree.Node | undefined {
+function getTestedValue(node: TSESTree.Expression | null): TSESTree.Node | undefined {
     switch (node?.type) {
         case AST_NODE_TYPES.BinaryExpression: {
-            return readComparedValue(node);
+            return getComparedValue(node);
         }
         case AST_NODE_TYPES.UnaryExpression: {
-            return readNegatedValue(node);
+            return getNegatedValue(node);
         }
         case AST_NODE_TYPES.CallExpression: {
             const isBoolean = ASTUtils.isIdentifier(node.callee) && node.callee.name === BOOLEAN_NAME;
@@ -40,8 +40,8 @@ function getSoleReturn(statements: readonly TSESTree.Statement[]): TSESTree.Expr
     return statement.argument;
 }
 
-function readCast(node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression) {
-    const tested = readTestedValue(getSoleReturn(node.body.body));
+function getCast(node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression) {
+    const tested = getTestedValue(getSoleReturn(node.body.body));
     if (tested?.type !== AST_NODE_TYPES.MemberExpression) return undefined;
     const { object } = tested;
     const isCast = object.type === AST_NODE_TYPES.TSAsExpression || object.type === AST_NODE_TYPES.TSTypeAssertion;
@@ -68,7 +68,7 @@ export const preferTypeGuard = createRule<[], 'guard'>({
     create(context) {
         const inspect = (node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression) => {
             if (node.returnType?.typeAnnotation.type === AST_NODE_TYPES.TSTypePredicate) return;
-            const cast = readCast(node);
+            const cast = getCast(node);
             const isSubject = node.params.length === 1 || cast?.expression.type === AST_NODE_TYPES.ThisExpression;
             if (cast === undefined || node.params.length > 1 || !isSubject) return;
             const value = context.sourceCode.getText(cast.expression);

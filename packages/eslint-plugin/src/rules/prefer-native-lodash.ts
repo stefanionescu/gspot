@@ -1,10 +1,10 @@
 import { createRule } from '../rule.ts';
 import { isCallOf } from '../testing.ts';
-import { readModuleName } from '../modules.ts';
+import { getModuleName } from '../modules.ts';
 import { unwrapExpression } from '../syntax.ts';
 import type { TypeReader } from '../types/plugin.ts';
-import { readExpressionValue } from '../expressions.ts';
-import { readTypes, readTypeCategory } from '../checker.ts';
+import { getExpressionValue } from '../expressions.ts';
+import { getTypes, getTypeCategory } from '../checker.ts';
 import type { LibraryCall, NativeReplacement } from '../types/rules.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
@@ -26,8 +26,8 @@ function isDirectMember(callee: TSESTree.Node): boolean {
     return member === undefined || (!member.computed && !isChained);
 }
 
-function readLibraryCall(node: TSESTree.CallExpression, source: TSESLint.SourceCode): LibraryCall | undefined {
-    const name = (readModuleName(node.callee, source) ?? '').replaceAll('/', '.');
+function getLibraryCall(node: TSESTree.CallExpression, source: TSESLint.SourceCode): LibraryCall | undefined {
+    const name = (getModuleName(node.callee, source) ?? '').replaceAll('/', '.');
     const separator = name.indexOf('.');
     const library = LIBRARY_NAMES.get(name.slice(0, separator));
     const method = methodNames.get(name.slice(separator + 1).toLowerCase());
@@ -35,7 +35,7 @@ function readLibraryCall(node: TSESTree.CallExpression, source: TSESLint.SourceC
     return isDirect ? { method, library } : undefined;
 }
 
-function readSyntaxShape(node: TSESTree.Node): string | undefined {
+function getSyntaxShape(node: TSESTree.Node): string | undefined {
     const value = unwrapExpression(node);
     const isText =
         value.type === AST_NODE_TYPES.TemplateLiteral ||
@@ -44,53 +44,53 @@ function readSyntaxShape(node: TSESTree.Node): string | undefined {
     return value.type === AST_NODE_TYPES.ArrayExpression ? 'array' : undefined;
 }
 
-function readTypeShape(node: TSESTree.Node, types: TypeReader | undefined): string | undefined {
-    const type = types?.read(node);
+function getTypeShape(node: TSESTree.Node, types: TypeReader | undefined): string | undefined {
+    const type = types?.get(node);
     const members = type?.isUnion() === true ? type.types : [type];
     const shapes = members.flatMap((member) => {
         if (member === undefined || types === undefined) return [];
-        const shape = types.checker.isTupleType(member) ? 'array' : readTypeCategory(types, member);
+        const shape = types.checker.isTupleType(member) ? 'array' : getTypeCategory(types, member);
         return shape === 'array' || shape === 'string' ? [shape] : [];
     });
     return new Set(shapes).size === 1 ? shapes[0] : undefined;
 }
 
 function hasCallback(argument: TSESTree.CallExpressionArgument | undefined, source: TSESLint.SourceCode): boolean {
-    const value = readExpressionValue(argument, source) ?? argument;
+    const value = getExpressionValue(argument, source) ?? argument;
     const isShorthand = value !== undefined && SHORTHAND_ITERATEES.has(value.type);
     return value !== undefined && value.type !== AST_NODE_TYPES.SpreadElement && !isShorthand;
 }
 
 function isPatternSearch(argument: TSESTree.CallExpressionArgument | undefined, source: TSESLint.SourceCode): boolean {
-    const value = readExpressionValue(argument, source) ?? argument;
+    const value = getExpressionValue(argument, source) ?? argument;
     const text = value === undefined ? '' : source.getText(value);
     return value?.type === AST_NODE_TYPES.SpreadElement || PATTERN_TEXT.test(text);
 }
 
-function readCollectionShape(
+function getCollectionShape(
     collection: TSESTree.CallExpressionArgument | undefined,
     types: TypeReader | undefined,
 ): string | undefined {
     const isSpread = collection === undefined || collection.type === AST_NODE_TYPES.SpreadElement;
-    const shape = isSpread ? undefined : readSyntaxShape(collection);
-    return isSpread ? undefined : (shape ?? readTypeShape(collection, types));
+    const shape = isSpread ? undefined : getSyntaxShape(collection);
+    return isSpread ? undefined : (shape ?? getTypeShape(collection, types));
 }
 
-function readShapedReplacement(
+function getShapedReplacement(
     method: string,
     node: TSESTree.CallExpression,
     source: TSESLint.SourceCode,
     types: TypeReader | undefined,
 ): NativeReplacement | undefined {
     const [collection, argument] = node.arguments;
-    const shape = readCollectionShape(collection, types);
+    const shape = getCollectionShape(collection, types);
     const isSearch = SEARCH_METHODS.has(method);
     if (!isSearch && !hasCallback(argument, source)) return undefined;
     if (shape === 'array') return NATIVE_REPLACEMENTS.get(method);
     return shape === 'string' && isSearch && !isPatternSearch(argument, source) ? STRING_INCLUDES : undefined;
 }
 
-function readMessageId(replacement: NativeReplacement): 'direct' | 'cautious' | 'example' {
+function getMessageId(replacement: NativeReplacement): 'direct' | 'cautious' | 'example' {
     const isCautious = replacement.reason !== undefined;
     if (!isCautious) return 'direct';
     return replacement.example === undefined ? 'cautious' : 'example';
@@ -120,23 +120,23 @@ export const preferNativeLodash = createRule<[], 'direct' | 'cautious' | 'exampl
     },
     create(context) {
         const source = context.sourceCode;
-        const types = readTypes(context);
+        const types = getTypes(context);
         const year = context.languageOptions.ecmaVersion as number;
         return {
             CallExpression(node) {
-                const call = readLibraryCall(node, source);
+                const call = getLibraryCall(node, source);
                 if (call === undefined) return;
                 const { method } = call;
                 const isShaped = SEARCH_METHODS.has(method) || CALLBACK_METHODS.has(method);
                 const replacement = isShaped
-                    ? readShapedReplacement(method, node, source, types)
+                    ? getShapedReplacement(method, node, source, types)
                     : NATIVE_REPLACEMENTS.get(method);
                 if (replacement === undefined || year < replacement.year) return;
                 const report =
                     node.callee.type === AST_NODE_TYPES.MemberExpression ? node.callee.property : node.callee;
                 context.report({
                     node: report,
-                    messageId: readMessageId(replacement),
+                    messageId: getMessageId(replacement),
                     data: { ...replacement, ...call },
                 });
             },

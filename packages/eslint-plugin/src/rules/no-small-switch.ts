@@ -1,12 +1,12 @@
 import { createRule } from '../rule.ts';
-import { readTypes } from '../checker.ts';
+import { getTypes } from '../checker.ts';
 import { haveSameTokens } from '../syntax.ts';
 import { NEVER_TYPE } from '../config/builtins.ts';
 import type { TypeReader } from '../types/plugin.ts';
 import { SMALL_SWITCH_CASES } from '../config/rules.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function readStatementCall(statement: TSESTree.Statement): TSESTree.CallExpression | undefined {
+function getStatementCall(statement: TSESTree.Statement): TSESTree.CallExpression | undefined {
     let value: TSESTree.Node | null = null;
     if (statement.type === AST_NODE_TYPES.ExpressionStatement) value = statement.expression;
     if (statement.type === AST_NODE_TYPES.ReturnStatement || statement.type === AST_NODE_TYPES.ThrowStatement)
@@ -20,16 +20,16 @@ function isNeverCall(
     source: TSESLint.SourceCode,
     types: TypeReader,
 ): boolean {
-    const call = readStatementCall(statement);
+    const call = getStatementCall(statement);
     const { checker } = types;
-    if (call === undefined || checker.typeToString(types.read(call)) !== NEVER_TYPE) return false;
+    if (call === undefined || checker.typeToString(types.get(call)) !== NEVER_TYPE) return false;
     const parameters = checker.getResolvedSignature(types.map.get(call))?.getParameters() ?? [];
     return call.arguments.some((argument, index) => {
         const parameter = parameters[index];
         return (
             parameter !== undefined &&
             haveSameTokens(argument, discriminant, source) &&
-            checker.typeToString(types.read(argument)) === NEVER_TYPE &&
+            checker.typeToString(types.get(argument)) === NEVER_TYPE &&
             checker.typeToString(checker.getTypeOfSymbol(parameter)) === NEVER_TYPE
         );
     });
@@ -53,7 +53,7 @@ export const noSmallSwitch = createRule<[], 'small'>({
         messages: { small: 'This switch has fewer than three branches. Replace it with if statements.' },
     },
     create(context) {
-        const types = readTypes(context);
+        const types = getTypes(context);
         const source = context.sourceCode;
         return {
             SwitchStatement(node) {

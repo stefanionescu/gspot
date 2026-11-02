@@ -3,15 +3,8 @@ import type { CdkResult } from '../types/plugin.ts';
 import { listArgumentValues } from '../expressions.ts';
 import { CDK_PROPS_POSITION } from '../config/plugin.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { getCdkName, getCdkResult, getCdkLiteral, getCdkArgument, getCdkProperty, listCdkTableIssues } from '../aws.ts';
 
-import {
-    getCdkName,
-    readCdkResult,
-    readCdkLiteral,
-    readCdkArgument,
-    readCdkProperty,
-    listCdkTableIssues,
-} from '../aws.ts';
 import {
     RDS_INSTANCE,
     PUBLIC_SUBNET,
@@ -22,9 +15,9 @@ import {
 } from '../config/networks.ts';
 
 function findSubnetSelection(source: Readonly<TSESLint.SourceCode>, networkInterface: CdkResult): CdkResult {
-    let subnet = readCdkProperty(source, networkInterface, 'subnetId');
+    let subnet = getCdkProperty(source, networkInterface, 'subnetId');
     while (subnet.status === 'found' && subnet.node.type === AST_NODE_TYPES.MemberExpression)
-        subnet = readCdkResult(source, subnet.node.object);
+        subnet = getCdkResult(source, subnet.node.object);
     return subnet;
 }
 
@@ -36,32 +29,32 @@ function isPrivateInterface(source: Readonly<TSESLint.SourceCode>, networkInterf
         node.arguments.length === 1 &&
         node.callee.type === AST_NODE_TYPES.MemberExpression &&
         ASTUtils.getPropertyName(node.callee) === SUBNET_SELECTION_METHOD;
-    const type = isSelection ? readCdkProperty(source, readCdkArgument(source, subnet, 0), 'subnetType') : undefined;
+    const type = isSelection ? getCdkProperty(source, getCdkArgument(source, subnet, 0), 'subnetType') : undefined;
     return type?.status === 'found' && PRIVATE_SUBNETS.has(getCdkName(source, type.node));
 }
 
 function findPublicInterface(source: Readonly<TSESLint.SourceCode>, options: CdkResult): TSESTree.Node | undefined {
-    const interfaces = readCdkProperty(source, options, 'networkInterfaces');
+    const interfaces = getCdkProperty(source, options, 'networkInterfaces');
     const elements = interfaces.status === 'found' ? listArgumentValues([interfaces.node], source) : [];
     for (const element of elements) {
-        const networkInterface = readCdkResult(source, element);
-        const address = readCdkProperty(source, networkInterface, 'associatePublicIpAddress');
-        if (readCdkLiteral(address) === true && !isPrivateInterface(source, networkInterface)) return address.node;
+        const networkInterface = getCdkResult(source, element);
+        const address = getCdkProperty(source, networkInterface, 'associatePublicIpAddress');
+        if (getCdkLiteral(address) === true && !isPrivateInterface(source, networkInterface)) return address.node;
     }
     return undefined;
 }
 
 function findPublicDatabase(source: Readonly<TSESLint.SourceCode>, options: CdkResult): TSESTree.Node | undefined {
-    const subnet = readCdkProperty(source, readCdkProperty(source, options, 'vpcSubnets'), 'subnetType');
-    const access = readCdkProperty(source, options, 'publiclyAccessible');
+    const subnet = getCdkProperty(source, getCdkProperty(source, options, 'vpcSubnets'), 'subnetType');
+    const access = getCdkProperty(source, options, 'publiclyAccessible');
     if (getCdkName(source, subnet.node) !== PUBLIC_SUBNET) return undefined;
-    if (readCdkLiteral(access) === true) return access.node;
+    if (getCdkLiteral(access) === true) return access.node;
     return access.status === 'found' ? undefined : subnet.node;
 }
 
 function listPublicNodes(source: Readonly<TSESLint.SourceCode>, node: TSESTree.NewExpression): TSESTree.Node[] {
     const name = getCdkName(source, node.callee);
-    const options = readCdkArgument(source, readCdkResult(source, node), CDK_PROPS_POSITION);
+    const options = getCdkArgument(source, getCdkResult(source, node), CDK_PROPS_POSITION);
     const issues = listCdkTableIssues(source, node, PUBLIC_NETWORK_CHECKS).map(({ node: target }) => target);
     const isSpread = node.arguments.some(({ type }) => type === AST_NODE_TYPES.SpreadElement);
     let instanceNode: TSESTree.Node | undefined;

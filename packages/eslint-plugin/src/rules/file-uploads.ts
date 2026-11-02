@@ -1,20 +1,14 @@
 import { createRule } from '../rule.ts';
-import { readQualifiedName } from '../modules.ts';
+import { getQualifiedName } from '../modules.ts';
 import type { UploadForm } from '../types/rules.ts';
 import { MULTER_MODULE, UPLOAD_MESSAGES, FORMIDABLE_MODULE } from '../config/servers.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { getExpressionValue, getOptionProperties, findAssignedVariable, findMemberAssignment } from '../expressions.ts';
 
-import {
-    readExpressionValue,
-    readOptionProperties,
-    findAssignedVariable,
-    findMemberAssignment,
-} from '../expressions.ts';
-
-function readOption(source: Readonly<TSESLint.SourceCode>, options: TSESTree.Node | undefined, key: string) {
-    const literal = readExpressionValue(options, source);
+function getOption(source: Readonly<TSESLint.SourceCode>, options: TSESTree.Node | undefined, key: string) {
+    const literal = getExpressionValue(options, source);
     if (literal?.type !== AST_NODE_TYPES.ObjectExpression) return undefined;
-    return readOptionProperties(literal, source).get(key);
+    return getOptionProperties(literal, source).get(key);
 }
 
 export const fileUploads = createRule<[], 'folder' | 'extension' | 'extensionAndFolder'>({
@@ -50,8 +44,8 @@ export const fileUploads = createRule<[], 'folder' | 'extension' | 'extensionAnd
             const variable = node.arguments.length === 0 ? findAssignedVariable(node, source) : null;
             if (variable) forms.set(variable, { node: node.callee, hasFolder: false, keepsExtensions: false });
             if (node.arguments.length === 0) return;
-            const extensions = readOption(source, node.arguments[0], 'keepExtensions');
-            const hasFolder = Boolean(readOption(source, node.arguments[0], 'uploadDir'));
+            const extensions = getOption(source, node.arguments[0], 'keepExtensions');
+            const hasFolder = Boolean(getOption(source, node.arguments[0], 'uploadDir'));
             report(
                 node.callee,
                 hasFolder,
@@ -59,19 +53,19 @@ export const fileUploads = createRule<[], 'folder' | 'extension' | 'extensionAnd
             );
         };
         const checkMulter = (node: TSESTree.CallExpression | TSESTree.NewExpression): void => {
-            const storage = readExpressionValue(readOption(source, node.arguments[0], 'storage')?.value, source);
+            const storage = getExpressionValue(getOption(source, node.arguments[0], 'storage')?.value, source);
             const isDisk =
                 storage?.type === AST_NODE_TYPES.CallExpression &&
                 storage.arguments.length > 0 &&
                 storage.callee.type === AST_NODE_TYPES.MemberExpression &&
                 ASTUtils.getPropertyName(storage.callee) === 'diskStorage';
-            if (isDisk && !readOption(source, storage.arguments[0], 'destination')) report(node.callee, false, false);
+            if (isDisk && !getOption(source, storage.arguments[0], 'destination')) report(node.callee, false, false);
         };
         return {
             'CallExpression, NewExpression'(node: TSESTree.CallExpression | TSESTree.NewExpression) {
                 const [module] =
                     node.callee.type === AST_NODE_TYPES.Identifier
-                        ? (readQualifiedName(node.callee, source) ?? '').split('.')
+                        ? (getQualifiedName(node.callee, source) ?? '').split('.')
                         : [];
                 if (module === FORMIDABLE_MODULE) checkFormidable(node);
                 else if (module === MULTER_MODULE) checkMulter(node);

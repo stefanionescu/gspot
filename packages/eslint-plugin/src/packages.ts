@@ -68,11 +68,11 @@ export function readPackageFacts(context: FileContext): PackageFacts {
 }
 
 /**
-Read the module that a `require` call names, through the members read from its result.
+Get the module that a `require` call names, through the members read from its result.
 
 @param node the call or a member of its result.
 */
-export function readRequiredModule(node: TSESTree.Node): string | undefined {
+export function getRequiredModule(node: TSESTree.Node): string | undefined {
     let value = node;
     while (value.type === AST_NODE_TYPES.MemberExpression) value = value.object;
     const call = value.type === AST_NODE_TYPES.CallExpression ? value : undefined;
@@ -99,7 +99,7 @@ export function listImportedModules(source: TSESLint.SourceCode): ReadonlySet<st
         ...statements.flatMap((statement) =>
             statement.type === AST_NODE_TYPES.ImportDeclaration ? [statement.source.value] : [],
         ),
-        ...references.flatMap((reference) => readRequiredModule(reference.identifier.parent) ?? []),
+        ...references.flatMap((reference) => getRequiredModule(reference.identifier.parent) ?? []),
     ]);
     importCache.set(source, modules);
     return modules;
@@ -148,7 +148,7 @@ function buildCeiling(numbers: number[], kind: string | undefined): VersionCeili
         : { version: bumpVersion(numbers, kind), isInclusive: false };
 }
 
-function readCeiling(comparator: string): VersionCeiling | null | undefined {
+function getCeiling(comparator: string): VersionCeiling | null | undefined {
     const groups = VERSION_PATTERN.exec(comparator)?.groups;
     const fields = (groups?.['number'] ?? '').split('.');
     const isVersion = fields.length <= VERSION_SIZE && fields.every((field) => VERSION_NUMBER.test(field));
@@ -169,7 +169,7 @@ export function allowsVersion(range: string, minimum: readonly number[]): boolea
         .split(VERSION_ALTERNATIVES)
         .map((alternative) => alternative.trim().split(VERSION_SPACES));
     const ceilings = alternatives.map((comparators) =>
-        comparators.map((comparator) => (UNBOUNDED_VERSIONS.has(comparator) ? null : readCeiling(comparator))),
+        comparators.map((comparator) => (UNBOUNDED_VERSIONS.has(comparator) ? null : getCeiling(comparator))),
     );
     if (ceilings.flat().includes(undefined)) return undefined;
     return ceilings.some((comparators) =>

@@ -4,36 +4,36 @@ import { DRIVE_LETTER, TRAILING_SLASH } from './config/rules.ts';
 import { NODE_PREFIX, MODULE_SEPARATOR } from './config/plugin.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function readImportSpecifier(node: TSESTree.ImportSpecifier, module: string): string | undefined {
+function getImportSpecifier(node: TSESTree.ImportSpecifier, module: string): string | undefined {
     if (node.importKind === 'type') return undefined;
     const name = node.imported.type === AST_NODE_TYPES.Identifier ? node.imported.name : node.imported.value;
     return name === 'default' ? module : `${module}.${name}`;
 }
 
-function readImportedName(
+function getImportedName(
     node: TSESTree.Node,
     source: TSESLint.SourceCode,
     seen: Set<TSESTree.Node>,
 ): string | undefined {
     if (node.type === AST_NODE_TYPES.TSImportEqualsDeclaration)
-        return readModuleName(node.moduleReference, source, seen);
+        return getModuleName(node.moduleReference, source, seen);
     if (node.parent?.type !== AST_NODE_TYPES.ImportDeclaration || node.parent.importKind === 'type') return undefined;
     const module = node.parent.source.value;
-    return node.type === AST_NODE_TYPES.ImportSpecifier ? readImportSpecifier(node, module) : module;
+    return node.type === AST_NODE_TYPES.ImportSpecifier ? getImportSpecifier(node, module) : module;
 }
 
-function readCalledModule(
+function getCalledModule(
     node: TSESTree.CallExpression,
     source: TSESLint.SourceCode,
     seen: Set<TSESTree.Node>,
 ): string | undefined {
     const argument = node.arguments[0];
     if (node.callee.type !== AST_NODE_TYPES.Identifier || node.callee.name !== 'require')
-        return readModuleName(node.callee, source, seen);
+        return getModuleName(node.callee, source, seen);
     return argument?.type === AST_NODE_TYPES.Literal && typeof argument.value === 'string' ? argument.value : undefined;
 }
 
-function readDestructuredName(identifier: TSESTree.Node, module: string): string | undefined {
+function getDestructuredName(identifier: TSESTree.Node, module: string): string | undefined {
     const { parent } = identifier;
     const isValue = parent?.type === AST_NODE_TYPES.Property && parent.value === identifier;
     const property = isValue ? ASTUtils.getPropertyName(parent) : null;
@@ -65,13 +65,13 @@ Resolve a binding only when one write supplies its value.
 
 @param variable the binding whose initializer or assignment to follow.
 */
-export function readAssignedValue(variable: TSESLint.Scope.Variable): TSESTree.Node | undefined {
+export function getAssignedValue(variable: TSESLint.Scope.Variable): TSESTree.Node | undefined {
     const writes = variable.references.filter((reference) => reference.isWrite());
     if (writes.length !== 1) return undefined;
     return writes[0]?.writeExpr ?? undefined;
 }
 
-function readBoundModule(
+function getBoundModule(
     node: TSESTree.Identifier,
     source: TSESLint.SourceCode,
     seen: Set<TSESTree.Node>,
@@ -80,17 +80,17 @@ function readBoundModule(
     if (variable === null) return undefined;
     const definition = variable.defs[0];
     if (definition === undefined) return node.name;
-    const imported = readImportedName(definition.node, source, seen);
+    const imported = getImportedName(definition.node, source, seen);
     if (imported !== undefined) return imported;
     if (definition.node.type !== AST_NODE_TYPES.VariableDeclarator) return undefined;
-    const value = readAssignedValue(variable);
+    const value = getAssignedValue(variable);
     if (value === undefined) return undefined;
-    const module = readModuleName(value, source, seen);
+    const module = getModuleName(value, source, seen);
     if (module === undefined || definition.node.id.type === AST_NODE_TYPES.Identifier) return module;
-    return readDestructuredName(definition.name, module);
+    return getDestructuredName(definition.name, module);
 }
 
-function readMemberProperty(
+function getMemberProperty(
     node: TSESTree.MemberExpression | TSESTree.TSQualifiedName,
     source: TSESLint.SourceCode,
 ): string | null {
@@ -100,25 +100,25 @@ function readMemberProperty(
     return node.property.type === AST_NODE_TYPES.Identifier ? node.property.name : null;
 }
 
-function readMemberModule(
+function getMemberModule(
     node: TSESTree.MemberExpression | TSESTree.TSQualifiedName,
     source: TSESLint.SourceCode,
     seen: Set<TSESTree.Node>,
 ): string | undefined {
     const receiver = node.type === AST_NODE_TYPES.MemberExpression ? node.object : node.left;
-    const module = readModuleName(receiver, source, seen);
-    const property = readMemberProperty(node, source);
+    const module = getModuleName(receiver, source, seen);
+    const property = getMemberProperty(node, source);
     return module === undefined || property === null ? undefined : `${module}.${property}`;
 }
 
-function readInnerModule(
+function getInnerModule(
     value: TSESTree.Node,
     source: TSESLint.SourceCode,
     seen: Set<TSESTree.Node>,
 ): string | undefined {
     if (value.type === AST_NODE_TYPES.TSExternalModuleReference) return value.expression.value;
-    if (value.type === AST_NODE_TYPES.TaggedTemplateExpression) return readModuleName(value.tag, source, seen);
-    return value.type === AST_NODE_TYPES.NewExpression ? readModuleName(value.callee, source, seen) : undefined;
+    if (value.type === AST_NODE_TYPES.TaggedTemplateExpression) return getModuleName(value.tag, source, seen);
+    return value.type === AST_NODE_TYPES.NewExpression ? getModuleName(value.callee, source, seen) : undefined;
 }
 
 /**
@@ -129,7 +129,7 @@ tagged template read the name of their callee.
 @param source the current file and its scopes.
 @param seen expressions already followed in this resolution.
 */
-export function readModuleName(
+export function getModuleName(
     node: TSESTree.Node,
     source: TSESLint.SourceCode,
     seen = new Set<TSESTree.Node>(),
@@ -139,17 +139,17 @@ export function readModuleName(
     seen.add(value);
     switch (value.type) {
         case AST_NODE_TYPES.Identifier: {
-            return readBoundModule(value, source, seen);
+            return getBoundModule(value, source, seen);
         }
         case AST_NODE_TYPES.CallExpression: {
-            return readCalledModule(value, source, seen);
+            return getCalledModule(value, source, seen);
         }
         case AST_NODE_TYPES.TSQualifiedName:
         case AST_NODE_TYPES.MemberExpression: {
-            return readMemberModule(value, source, seen);
+            return getMemberModule(value, source, seen);
         }
         default: {
-            return readInnerModule(value, source, seen);
+            return getInnerModule(value, source, seen);
         }
     }
 }
@@ -163,27 +163,27 @@ slashes written as dots, then the members. After `import * as s3 from 'aws-cdk-l
 @param source the current file and its scopes.
 @returns the dotted name, or undefined for a value that no import or global names.
 */
-export function readQualifiedName(node: TSESTree.Node, source: TSESLint.SourceCode): string | undefined {
-    const name = readModuleName(node, source);
+export function getQualifiedName(node: TSESTree.Node, source: TSESLint.SourceCode): string | undefined {
+    const name = getModuleName(node, source);
     if (name === undefined) return undefined;
     return name.replace(NODE_PREFIX, '').replaceAll('/', MODULE_SEPARATOR);
 }
 
 /**
-Read the first argument of a call to a module function as text, such as the algorithm of `crypto.createCipheriv`.
+Get the first argument of a call to a module function as text, such as the algorithm of `crypto.createCipheriv`.
 
 @param node a call such as `crypto.createCipheriv(algorithm, key, iv)`.
 @param source the source code of the file.
-@param name the qualified name of the function, as `readQualifiedName` writes it.
+@param name the qualified name of the function, as `getQualifiedName` writes it.
 @returns the argument and its string value, or undefined for another function or an argument without a fixed string.
 */
-export function readCallText(
+export function getCallText(
     node: TSESTree.CallExpression,
     source: TSESLint.SourceCode,
     name: string,
 ): CallText | undefined {
     const [argument] = node.arguments;
-    if (argument === undefined || readQualifiedName(node, source) !== name) return undefined;
+    if (argument === undefined || getQualifiedName(node, source) !== name) return undefined;
     const value = ASTUtils.getStaticValue(argument, source.getScope(argument))?.value;
     return typeof value === 'string' ? { argument, text: value } : undefined;
 }

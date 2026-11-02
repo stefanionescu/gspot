@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
+import { getModuleName } from '../modules.ts';
 import { listBodyNodes } from '../testing.ts';
-import { readModuleName } from '../modules.ts';
-import { readExpressionValue } from '../expressions.ts';
+import { getExpressionValue } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -15,10 +15,10 @@ import {
     TERMINATING_STATEMENTS,
 } from '../config/frameworks.ts';
 
-function readHookBody(node: TSESTree.Node | undefined, source: TSESLint.SourceCode): TSESTree.Node | undefined {
+function getHookBody(node: TSESTree.Node | undefined, source: TSESLint.SourceCode): TSESTree.Node | undefined {
     const variable =
         node?.type === AST_NODE_TYPES.Identifier ? ASTUtils.findVariable(source.getScope(node), node) : null;
-    const owner = [readExpressionValue(node, source), variable?.defs.at(0)?.node].find(
+    const owner = [getExpressionValue(node, source), variable?.defs.at(0)?.node].find(
         (value) => value !== undefined && ASTUtils.isFunction(value),
     );
     return owner !== undefined && ASTUtils.isFunction(owner) ? owner.body : undefined;
@@ -28,14 +28,14 @@ function isUpdatedOption(node: TSESTree.Property, source: TSESLint.SourceCode): 
     const owner = node.parent.parent;
     const isComponent =
         owner.type === AST_NODE_TYPES.ExportDefaultDeclaration ||
-        (owner.type === AST_NODE_TYPES.CallExpression && readModuleName(owner.callee, source) === VUE_DEFINE_COMPONENT);
+        (owner.type === AST_NODE_TYPES.CallExpression && getModuleName(owner.callee, source) === VUE_DEFINE_COMPONENT);
     return isComponent && ASTUtils.getPropertyName(node) === 'updated';
 }
 
-function readTarget(node: TSESTree.Node, source: TSESLint.SourceCode): string | undefined {
+function getTarget(node: TSESTree.Node, source: TSESLint.SourceCode): string | undefined {
     const isMember = node.type === AST_NODE_TYPES.MemberExpression && !node.computed;
-    const state = isMember ? readExpressionValue(node.object, source) : undefined;
-    const kind = state?.type === AST_NODE_TYPES.CallExpression ? readModuleName(state.callee, source) : undefined;
+    const state = isMember ? getExpressionValue(node.object, source) : undefined;
+    const kind = state?.type === AST_NODE_TYPES.CallExpression ? getModuleName(state.callee, source) : undefined;
     const text = source.getText(node);
     return kind === VUE_REACTIVE || (kind === VUE_REF && text.endsWith('.value')) ? text : undefined;
 }
@@ -84,7 +84,7 @@ function changesEachRun(
 function isLoopingWrite(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     if (node.type !== AST_NODE_TYPES.AssignmentExpression && node.type !== AST_NODE_TYPES.UpdateExpression)
         return false;
-    const target = readTarget(node.type === AST_NODE_TYPES.UpdateExpression ? node.argument : node.left, source);
+    const target = getTarget(node.type === AST_NODE_TYPES.UpdateExpression ? node.argument : node.left, source);
     return target !== undefined && !isGuarded(node, source) && changesEachRun(node, target, source);
 }
 
@@ -112,12 +112,12 @@ export const noVueUpdatedWrites = createRule<[], 'loop'>({
         const bodies = new Set<TSESTree.Node>();
         return {
             CallExpression(node) {
-                const isHook = readModuleName(node.callee, source) === VUE_ON_UPDATED;
-                const body = isHook ? readHookBody(node.arguments[0], source) : undefined;
+                const isHook = getModuleName(node.callee, source) === VUE_ON_UPDATED;
+                const body = isHook ? getHookBody(node.arguments[0], source) : undefined;
                 if (body !== undefined) bodies.add(body);
             },
             [VUE_OPTION_PROPERTIES]: (node: TSESTree.Property) => {
-                const body = isUpdatedOption(node, source) ? readHookBody(node.value, source) : undefined;
+                const body = isUpdatedOption(node, source) ? getHookBody(node.value, source) : undefined;
                 if (body !== undefined) bodies.add(body);
             },
             'Program:exit': () => {

@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
-import { readQualifiedName } from '../modules.ts';
+import { getQualifiedName } from '../modules.ts';
 import { listImportedModules } from '../packages.ts';
-import { listArgumentValues, readOptionProperties } from '../expressions.ts';
+import { listArgumentValues, getOptionProperties } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { CSRF_MODULE, MIDDLEWARE_METHOD, CSRF_SAFE_METHODS, CSRF_CHANGING_METHODS } from '../config/servers.ts';
 
@@ -12,7 +12,7 @@ function findIgnoredMethod(
     const [options] = node.arguments;
     const methods =
         options?.type === AST_NODE_TYPES.ObjectExpression
-            ? readOptionProperties(options, source).get('ignoreMethods')
+            ? getOptionProperties(options, source).get('ignoreMethods')
             : null;
     const elements = methods?.value.type === AST_NODE_TYPES.ArrayExpression ? methods.value.elements : [];
     return (
@@ -51,7 +51,7 @@ export const csrf = createRule<[], 'ignoredMethod' | 'unprotectedRoute'>({
         let isAppProtected = false;
         const checkRoute = (node: TSESTree.CallExpression, method: string | null): void => {
             const values = method === MIDDLEWARE_METHOD ? listArgumentValues(node.arguments, source) : node.arguments;
-            const isProtected = values.some((value) => readQualifiedName(value, source) === CSRF_MODULE);
+            const isProtected = values.some((value) => getQualifiedName(value, source) === CSRF_MODULE);
             if (method === MIDDLEWARE_METHOD) isAppProtected ||= isProtected;
             else if (CSRF_CHANGING_METHODS.has(method) && isImported && !isAppProtected && !isProtected)
                 context.report({ node: node.callee, messageId: 'unprotectedRoute' });
@@ -59,9 +59,7 @@ export const csrf = createRule<[], 'ignoredMethod' | 'unprotectedRoute'>({
         return {
             CallExpression(node) {
                 const ignored =
-                    readQualifiedName(node.callee, source) === CSRF_MODULE
-                        ? findIgnoredMethod(source, node)
-                        : undefined;
+                    getQualifiedName(node.callee, source) === CSRF_MODULE ? findIgnoredMethod(source, node) : undefined;
                 if (ignored) context.report({ node: ignored, messageId: 'ignoredMethod' });
                 checkRoute(
                     node,

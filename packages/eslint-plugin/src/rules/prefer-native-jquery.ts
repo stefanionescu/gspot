@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readModuleName } from '../modules.ts';
+import { getModuleName } from '../modules.ts';
 import type { MemberCall } from '../types/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 import { JQUERY_GLOBALS, JQUERY_METHODS, JQUERY_ORIGINS } from '../config/frameworks.ts';
@@ -7,7 +7,7 @@ import { JQUERY_GLOBALS, JQUERY_METHODS, JQUERY_ORIGINS } from '../config/framew
 function isJquery(receiver: TSESTree.Identifier, source: TSESLint.SourceCode): boolean {
     const variable = ASTUtils.findVariable(source.getScope(receiver), receiver);
     if ((variable?.defs.length ?? 0) === 0) return JQUERY_GLOBALS.has(receiver.name);
-    const origin = (readModuleName(receiver, source) ?? '').replaceAll('/', '.');
+    const origin = (getModuleName(receiver, source) ?? '').replaceAll('/', '.');
     return JQUERY_ORIGINS.has(origin);
 }
 

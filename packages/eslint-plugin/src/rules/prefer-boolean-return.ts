@@ -1,20 +1,20 @@
 import { createRule } from '../rule.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function readBooleanLiteral(statement: TSESTree.Statement | undefined): boolean | undefined {
+function getBooleanLiteral(statement: TSESTree.Statement | undefined): boolean | undefined {
     if (statement?.type !== AST_NODE_TYPES.ReturnStatement) return undefined;
     const value = statement.argument;
     return value?.type === AST_NODE_TYPES.Literal && typeof value.value === 'boolean' ? value.value : undefined;
 }
 
-function readBooleanReturn(statement: TSESTree.Statement | undefined): boolean | undefined {
-    if (statement?.type !== AST_NODE_TYPES.BlockStatement) return readBooleanLiteral(statement);
+function getBooleanReturn(statement: TSESTree.Statement | undefined): boolean | undefined {
+    if (statement?.type !== AST_NODE_TYPES.BlockStatement) return getBooleanLiteral(statement);
     if (statement.body.length !== 1) return undefined;
-    return readBooleanLiteral(statement.body[0]);
+    return getBooleanLiteral(statement.body[0]);
 }
 
 function hasBooleanAlternative(node: TSESTree.IfStatement): boolean {
-    if (node.alternate !== null) return readBooleanReturn(node.alternate) !== undefined;
+    if (node.alternate !== null) return getBooleanReturn(node.alternate) !== undefined;
     const { parent } = node;
     if (parent.type !== AST_NODE_TYPES.BlockStatement) return false;
     const index = parent.body.indexOf(node);
@@ -24,12 +24,12 @@ function hasBooleanAlternative(node: TSESTree.IfStatement): boolean {
             .some(
                 (statement) =>
                     statement.type === AST_NODE_TYPES.IfStatement &&
-                    readBooleanReturn(statement.consequent) !== undefined,
+                    getBooleanReturn(statement.consequent) !== undefined,
             )
     )
         return false;
     const following = parent.body[index + 1];
-    return following?.type === AST_NODE_TYPES.ReturnStatement && readBooleanReturn(following) !== undefined;
+    return following?.type === AST_NODE_TYPES.ReturnStatement && getBooleanReturn(following) !== undefined;
 }
 
 export const preferBooleanReturn = createRule<[], 'return'>({
@@ -50,7 +50,7 @@ export const preferBooleanReturn = createRule<[], 'return'>({
     create(context) {
         return {
             IfStatement(node) {
-                if (node.parent.type === AST_NODE_TYPES.IfStatement || readBooleanReturn(node.consequent) === undefined)
+                if (node.parent.type === AST_NODE_TYPES.IfStatement || getBooleanReturn(node.consequent) === undefined)
                     return;
                 const returnsBoolean = hasBooleanAlternative(node);
                 if (returnsBoolean) context.report({ node, messageId: 'return' });

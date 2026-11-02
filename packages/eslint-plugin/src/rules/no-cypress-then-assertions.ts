@@ -13,31 +13,29 @@ import {
     ASSERTION_DEPTHS,
 } from '../config/cypress.ts';
 
-function readCallKind(node: TSESTree.CallExpression, kinds: ReadonlyMap<string, string>): string | undefined {
+function getCallKind(node: TSESTree.CallExpression, kinds: ReadonlyMap<string, string>): string | undefined {
     const { callee } = node;
     if (callee.type !== AST_NODE_TYPES.MemberExpression || node.arguments.length > 0) return undefined;
-    const name = [readSafeKind(callee.object, kinds), ASTUtils.getPropertyName(callee)].join('.');
+    const name = [getSafeKind(callee.object, kinds), ASTUtils.getPropertyName(callee)].join('.');
     return STRING_CALLS.has(name) ? 'string' : undefined;
 }
 
-function readLeafKind(node: TSESTree.Node, kinds: ReadonlyMap<string, string>): string | undefined {
+function getLeafKind(node: TSESTree.Node, kinds: ReadonlyMap<string, string>): string | undefined {
     if (node.type === AST_NODE_TYPES.Identifier) return kinds.get(node.name);
-    if (node.type === AST_NODE_TYPES.CallExpression) return readCallKind(node, kinds);
+    if (node.type === AST_NODE_TYPES.CallExpression) return getCallKind(node, kinds);
     const isRecordMember =
-        node.type === AST_NODE_TYPES.MemberExpression &&
-        !node.computed &&
-        readSafeKind(node.object, kinds) === 'record';
+        node.type === AST_NODE_TYPES.MemberExpression && !node.computed && getSafeKind(node.object, kinds) === 'record';
     if (isRecordMember) return 'value';
     return node.type === AST_NODE_TYPES.Literal ? LITERAL_KINDS.get(typeof node.value) : undefined;
 }
 
-function readSafeKind(node: TSESTree.Node, kinds: ReadonlyMap<string, string>): string | undefined {
+function getSafeKind(node: TSESTree.Node, kinds: ReadonlyMap<string, string>): string | undefined {
     const [kind, ...fields] = SAFE_OPERANDS.get(node.type) ?? [];
-    if (kind === undefined) return readLeafKind(node, kinds);
+    if (kind === undefined) return getLeafKind(node, kinds);
     const operands = fields
         .flatMap((field): unknown => node[field as keyof TSESTree.Node])
         .filter((value): value is TSESTree.Node => value !== null && typeof value === 'object');
-    return operands.every((operand) => readSafeKind(operand, kinds) !== undefined) ? kind : undefined;
+    return operands.every((operand) => getSafeKind(operand, kinds) !== undefined) ? kind : undefined;
 }
 
 function listChain(node: TSESTree.Node): TSESTree.Node[] {
@@ -63,7 +61,7 @@ function isSafeArgument(
 ): boolean {
     const isText = argument.type === AST_NODE_TYPES.Literal || argument.type === AST_NODE_TYPES.TemplateLiteral;
     const isSelectorText = isText && SELECTOR_TEXT.test(source.getText(argument));
-    return isSelector ? isSelectorText : readSafeKind(argument, new Map()) !== undefined;
+    return isSelector ? isSelectorText : getSafeKind(argument, new Map()) !== undefined;
 }
 
 function isRetriedQuery(node: TSESTree.CallExpression, source: TSESLint.SourceCode): boolean {
@@ -105,7 +103,7 @@ function acceptDeclaration(
 ): boolean {
     const declarations = statement.kind === 'const' ? statement.declarations : [];
     for (const { id, init } of declarations) {
-        const kind = init && readSafeKind(init, scope.kinds);
+        const kind = init && getSafeKind(init, scope.kinds);
         if (init === null || typeof kind !== 'string' || id.type !== AST_NODE_TYPES.Identifier) return false;
         scope.kinds.set(id.name, kind);
         if (usesYielded(init, scope.yielded, source)) scope.yielded.add(id.name);
@@ -113,7 +111,7 @@ function acceptDeclaration(
     return declarations.length > 0;
 }
 
-function readAssertionUse(expression: TSESTree.Expression, scope: CallbackScope, source: TSESLint.SourceCode): string {
+function getAssertionUse(expression: TSESTree.Expression, scope: CallbackScope, source: TSESLint.SourceCode): string {
     const chain = listChain(expression);
     const calls = chain.filter(
         (value): value is TSESTree.CallExpression => value.type === AST_NODE_TYPES.CallExpression,
@@ -123,7 +121,7 @@ function readAssertionUse(expression: TSESTree.Expression, scope: CallbackScope,
         ([name, depth]) => chain.length >= depth && isGlobalName(chain.at(-1), name, source),
     );
     const isSafe = values.every(
-        (value) => value.type !== AST_NODE_TYPES.SpreadElement && readSafeKind(value, scope.kinds) !== undefined,
+        (value) => value.type !== AST_NODE_TYPES.SpreadElement && getSafeKind(value, scope.kinds) !== undefined,
     );
     if (!isAssertion || !isSafe) return 'unsafe';
     return values.some((value) => usesYielded(value, scope.yielded, source)) ? 'yielded' : 'assertion';
@@ -136,14 +134,14 @@ function isAssertionBody(body: TSESTree.BlockStatement, parameter: string, sourc
             if (statement.type === AST_NODE_TYPES.VariableDeclaration)
                 return acceptDeclaration(statement, scope, source) ? 'declaration' : 'unsafe';
             return statement.type === AST_NODE_TYPES.ExpressionStatement
-                ? readAssertionUse(statement.expression, scope, source)
+                ? getAssertionUse(statement.expression, scope, source)
                 : 'unsafe';
         }),
     );
     return !uses.has('unsafe') && uses.has('yielded');
 }
 
-function readThenCall(body: TSESTree.BlockStatement): ThenCall | undefined {
+function getThenCall(body: TSESTree.BlockStatement): ThenCall | undefined {
     const callback = body.parent as FunctionNode;
     const { callee } = callback.parent as MemberCall;
     const [parameter] = callback.params;
@@ -178,7 +176,7 @@ export const noCypressThenAssertions = createRule<[], 'retry' | 'should'>({
         if (!isTestRelatedPath(context.filename, context.settings['testFileExtensions'])) return {};
         return {
             [THEN_CALLBACK](body: TSESTree.BlockStatement) {
-                const then = readThenCall(body);
+                const then = getThenCall(body);
                 const isRetried =
                     then !== undefined &&
                     isQueryChain(then.receiver, source) &&

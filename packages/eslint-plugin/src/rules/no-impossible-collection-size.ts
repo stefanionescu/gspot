@@ -2,7 +2,7 @@ import { createRule } from '../rule.ts';
 import { ESLintUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { COLLECTION_TYPE_NAMES, COLLECTION_SIZE_MEMBERS } from '../config/collections.ts';
 
-function readCollectionSize(node: TSESTree.BinaryExpression): TSESTree.MemberExpression | undefined {
+function getCollectionSize(node: TSESTree.BinaryExpression): TSESTree.MemberExpression | undefined {
     if (node.operator !== '<' && node.operator !== '>=') return undefined;
     if (node.right.type !== AST_NODE_TYPES.Literal || node.right.value !== 0) return undefined;
     if (node.left.type !== AST_NODE_TYPES.MemberExpression) return undefined;
@@ -32,7 +32,7 @@ export const noImpossibleCollectionSize = createRule<[], 'comparison'>({
             : undefined;
         return {
             BinaryExpression(node) {
-                const size = readCollectionSize(node);
+                const size = getCollectionSize(node);
                 if (size === undefined) return;
                 if (services !== undefined) {
                     const symbol = services.getTypeAtLocation(size.object).getSymbol();

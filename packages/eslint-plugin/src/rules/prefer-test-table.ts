@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readTestCall, listChildNodes } from '../testing.ts';
+import { getTestCall, listChildNodes } from '../testing.ts';
 import type { TestCall, SimilarTest } from '../types/rules.ts';
 import { usesModule, listImportedModules } from '../packages.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
@@ -64,7 +64,7 @@ function listSimilarGroups(tests: SimilarTest[], source: TSESLint.SourceCode): {
     return groups;
 }
 
-function readComparableTest(
+function getComparableTest(
     node: TSESTree.CallExpression,
     call: TestCall,
     source: TSESLint.SourceCode,
@@ -79,12 +79,12 @@ function readComparableTest(
     return { title, body, literals };
 }
 
-function readSimilarCall(
+function getSimilarCall(
     node: TSESTree.CallExpression,
     source: TSESLint.SourceCode,
     origins: ReadonlySet<string | undefined>,
 ): TestCall | undefined {
-    const call = readTestCall(node, source);
+    const call = getTestCall(node, source);
     const isTest = call?.kind === 'test' && SIMILAR_TEST_NAMES.has(call.name) && origins.has(call.module);
     return isTest ? call : undefined;
 }
@@ -119,7 +119,7 @@ export const preferTestTable = createRule<[], 'table'>({
         const frames = new Map<TSESTree.Node | undefined, SimilarTest[]>();
         return {
             CallExpression(node) {
-                const call = readSimilarCall(node, source, origins);
+                const call = getSimilarCall(node, source, origins);
                 if (call?.callback === undefined) return;
                 const frame = source
                     .getAncestors(node)
@@ -127,7 +127,7 @@ export const preferTestTable = createRule<[], 'table'>({
                         (ancestor) =>
                             ancestor.type === AST_NODE_TYPES.BlockStatement || ancestor.type === AST_NODE_TYPES.Program,
                     );
-                const test = readComparableTest(node, call, source);
+                const test = getComparableTest(node, call, source);
                 if (test !== undefined) frames.set(frame, [...(frames.get(frame) ?? []), test]);
             },
             'Program:exit'() {

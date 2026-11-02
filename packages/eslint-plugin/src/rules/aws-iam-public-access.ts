@@ -2,20 +2,20 @@ import { createRule } from '../rule.ts';
 import { listArgumentValues } from '../expressions.ts';
 import type { PolicyStatement } from '../types/plugin.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { getCdkName, listCdkStrings, readCdkProperty, listAllowStatements } from '../aws.ts';
+import { getCdkName, listCdkStrings, getCdkProperty, listAllowStatements } from '../aws.ts';
 import { ANY_PRINCIPAL, ARN_PRINCIPAL, ANY_PRINCIPALS, JSON_PRINCIPAL_KEY } from '../config/aws.ts';
 
 function findPublicPrincipal(
     source: Readonly<TSESLint.SourceCode>,
     policy: PolicyStatement,
 ): TSESTree.Node | undefined {
-    const principals = readCdkProperty(source, policy.statement, policy.keys.principals);
+    const principals = getCdkProperty(source, policy.statement, policy.keys.principals);
     if (policy.keys.isJson)
         return listCdkStrings(
             source,
             principals.node.type === AST_NODE_TYPES.Literal
                 ? principals
-                : readCdkProperty(source, principals, JSON_PRINCIPAL_KEY),
+                : getCdkProperty(source, principals, JSON_PRINCIPAL_KEY),
         ).find(({ value }) => value === ANY_PRINCIPAL);
     return listArgumentValues([principals.node], source).find((element) => {
         if (element.type !== AST_NODE_TYPES.NewExpression) return false;

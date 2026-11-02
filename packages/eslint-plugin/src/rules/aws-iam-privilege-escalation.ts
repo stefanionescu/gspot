@@ -2,19 +2,19 @@ import { createRule } from '../rule.ts';
 import type { PolicyStatement } from '../types/plugin.ts';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 import { ESCALATION_ACTIONS, ESCALATION_RESOURCE } from '../config/aws.ts';
-import { listCdkStrings, readCdkProperty, listAllowStatements } from '../aws.ts';
+import { listCdkStrings, getCdkProperty, listAllowStatements } from '../aws.ts';
 
 function findEscalation(
     source: Readonly<TSESLint.SourceCode>,
     { statement, keys }: PolicyStatement,
 ): TSESLint.ReportDescriptor<'escalation'> | undefined {
     const isLimited = [keys.principals, keys.conditions].some(
-        (key) => readCdkProperty(source, statement, key).status !== 'missing',
+        (key) => getCdkProperty(source, statement, key).status !== 'missing',
     );
-    const resource = listCdkStrings(source, readCdkProperty(source, statement, keys.resources)).find(({ value }) =>
+    const resource = listCdkStrings(source, getCdkProperty(source, statement, keys.resources)).find(({ value }) =>
         ESCALATION_RESOURCE.test(value),
     );
-    const action = listCdkStrings(source, readCdkProperty(source, statement, keys.actions)).find(({ value }) =>
+    const action = listCdkStrings(source, getCdkProperty(source, statement, keys.actions)).find(({ value }) =>
         ESCALATION_ACTIONS.has(value),
     );
     return !isLimited && resource && action

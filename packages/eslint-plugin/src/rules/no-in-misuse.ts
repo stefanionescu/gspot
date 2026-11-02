@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
+import { getTypes, getTypeCategory } from '../checker.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { readTypes, readTypeCategory } from '../checker.ts';
 import { ARRAY_PROTOTYPE_NAMES } from '../config/builtins.ts';
 
 export const noInMisuse = createRule<[], 'misuse'>({
@@ -20,14 +20,14 @@ export const noInMisuse = createRule<[], 'misuse'>({
         messages: { misuse: '`in` tests array indexes, not values. Use includes instead.' },
     },
     create(context) {
-        const types = readTypes(context);
+        const types = getTypes(context);
         if (types === undefined) return {};
         return {
             BinaryExpression(node) {
                 const { left, right, operator } = node;
-                if (operator !== 'in' || readTypeCategory(types, types.read(right)) !== 'array') return;
+                if (operator !== 'in' || getTypeCategory(types, types.get(right)) !== 'array') return;
                 if (left.type === AST_NODE_TYPES.Literal && ARRAY_PROTOTYPE_NAMES.has(String(left.value))) return;
-                if (readTypeCategory(types, types.read(left)) === 'number') return;
+                if (getTypeCategory(types, types.get(left)) === 'number') return;
                 context.report({ node, messageId: 'misuse' });
             },
         };

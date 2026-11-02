@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
 import { usesModule } from '../packages.ts';
-import { readCalleeName } from '../testing.ts';
+import { getCalleeName } from '../testing.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -17,7 +17,7 @@ function isExpectChain(node: TSESTree.Node, source: TSESLint.SourceCode): boolea
         INLINE_EXPECT_MODIFIERS.has(ASTUtils.getPropertyName(value))
     )
         value = value.object;
-    const expect = value.type === AST_NODE_TYPES.CallExpression ? readCalleeName(value.callee, source) : undefined;
+    const expect = value.type === AST_NODE_TYPES.CallExpression ? getCalleeName(value.callee, source) : undefined;
     return expect?.name === 'expect' && expect.modifiers.length === 0 && INLINE_EXPECT_ORIGINS.has(expect.module);
 }
 

@@ -1,22 +1,22 @@
+import { getExpressionValue } from './expressions.ts';
 import { REGEXP_CONSTRUCTOR } from './config/regex.ts';
-import { readExpressionValue } from './expressions.ts';
 import { type AST, parseRegExpLiteral } from '@eslint-community/regexpp';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function readStaticString(node: TSESTree.Node | undefined, source: TSESLint.SourceCode): string | undefined {
+function getStaticString(node: TSESTree.Node | undefined, source: TSESLint.SourceCode): string | undefined {
     const evaluated = node && ASTUtils.getStaticValue(node, source.getScope(node));
     if (typeof evaluated?.value !== 'string') return undefined;
     return evaluated.value;
 }
 
-function readConstructorSource(
+function getConstructorSource(
     node: TSESTree.CallExpression | TSESTree.NewExpression,
     source: TSESLint.SourceCode,
 ): { pattern: string; flags: string } | undefined {
     if (!ASTUtils.isIdentifier(node.callee) || node.callee.name !== REGEXP_CONSTRUCTOR) return undefined;
     const [patternNode, flagsNode] = node.arguments;
-    const pattern = readStaticString(patternNode, source);
-    const flags = flagsNode === undefined ? '' : readStaticString(flagsNode, source);
+    const pattern = getStaticString(patternNode, source);
+    const flags = flagsNode === undefined ? '' : getStaticString(flagsNode, source);
     return pattern === undefined || flags === undefined ? undefined : { pattern, flags };
 }
 
@@ -27,11 +27,11 @@ does not compile returns nothing, because `no-invalid-regexp` reports it.
 @param node the literal or call to read.
 @param source the file that holds the node.
 */
-export function readRegex(node: TSESTree.Node, source: TSESLint.SourceCode): AST.RegExpLiteral | undefined {
+export function getRegex(node: TSESTree.Node, source: TSESLint.SourceCode): AST.RegExpLiteral | undefined {
     let text: { pattern: string; flags: string } | undefined;
     if (node.type === AST_NODE_TYPES.Literal && 'regex' in node) text = node.regex;
     else if (node.type === AST_NODE_TYPES.NewExpression || node.type === AST_NODE_TYPES.CallExpression)
-        text = readConstructorSource(node, source);
+        text = getConstructorSource(node, source);
     if (text === undefined) return undefined;
     try {
         return parseRegExpLiteral(new RegExp(text.pattern, text.flags));
@@ -52,7 +52,7 @@ export function buildRegexVisitors(
     source: TSESLint.SourceCode,
 ): TSESLint.RuleListener {
     const inspect = (node: TSESTree.Node) => {
-        const regex = readRegex(node, source);
+        const regex = getRegex(node, source);
         if (regex !== undefined) check(node, regex);
     };
     return { 'Literal[regex]': inspect, NewExpression: inspect, CallExpression: inspect };
@@ -65,7 +65,7 @@ Read the regular expression that a node holds, following a variable that gets on
 @param source the file that holds the node.
 */
 export function traceRegex(node: TSESTree.Node, source: TSESLint.SourceCode): AST.RegExpLiteral | undefined {
-    const value = readExpressionValue(node, source);
+    const value = getExpressionValue(node, source);
     if (value === undefined) return undefined;
-    return readRegex(value, source);
+    return getRegex(value, source);
 }

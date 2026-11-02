@@ -1,14 +1,9 @@
 import { createRule } from '../rule.ts';
-import { readQualifiedName } from '../modules.ts';
+import { getQualifiedName } from '../modules.ts';
 import type { SizedForm, UploadCall } from '../types/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { getExpressionValue, getOptionProperties, findAssignedVariable, findMemberAssignment } from '../expressions.ts';
 
-import {
-    readExpressionValue,
-    readOptionProperties,
-    findAssignedVariable,
-    findMemberAssignment,
-} from '../expressions.ts';
 import {
     SIZE_TEXT,
     SIZE_UNITS,
@@ -27,7 +22,7 @@ function parseSize(text: string): number | undefined {
     return Math.floor(Number(match.groups?.['amount']) * (SIZE_UNITS[unit] ?? 1));
 }
 
-function readSize(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node): number | undefined {
+function getSize(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node): number | undefined {
     const value = ASTUtils.getStaticValue(node, source.getScope(node))?.value;
     if (typeof value === 'string') return parseSize(value);
     return typeof value === 'number' ? value : undefined;
@@ -39,23 +34,23 @@ function isTooLarge(
     defaultSize: number | undefined,
     limit: number,
 ): boolean {
-    const size = property ? readSize(source, property.value) : defaultSize;
+    const size = property ? getSize(source, property.value) : defaultSize;
     if (property) return size !== undefined && size > limit;
     return size === undefined || size > limit;
 }
 
-function readOptions(
+function getOptions(
     source: Readonly<TSESLint.SourceCode>,
     node: TSESTree.CallExpression | TSESTree.NewExpression,
 ): TSESTree.ObjectExpression | undefined {
     const [argument] = node.arguments;
-    const options = readExpressionValue(argument, source);
+    const options = getExpressionValue(argument, source);
     return options?.type === AST_NODE_TYPES.ObjectExpression ? options : undefined;
 }
 
 function listOversizedForms(source: Readonly<TSESLint.SourceCode>, node: UploadCall): TSESTree.Node[] {
-    const options = readOptions(source, node);
-    const maximum = options && readOptionProperties(options, source).get('maxFileSize');
+    const options = getOptions(source, node);
+    const maximum = options && getOptionProperties(options, source).get('maxFileSize');
     return options && isTooLarge(source, maximum, SIZE_DEFAULTS.formidable, SIZE_LIMITS.upload)
         ? [maximum ?? node]
         : [];
@@ -67,34 +62,34 @@ function listOversizedFiles(
     limits: TSESTree.Property,
 ): TSESTree.Node[] {
     if (limits.value.type !== AST_NODE_TYPES.ObjectExpression) return [];
-    const fileSize = readOptionProperties(limits.value, source).get('fileSize');
+    const fileSize = getOptionProperties(limits.value, source).get('fileSize');
     return isTooLarge(source, fileSize, undefined, SIZE_LIMITS.upload) ? [fileSize ?? node] : [];
 }
 
 function listOversizedUploads(source: Readonly<TSESLint.SourceCode>, node: UploadCall): TSESTree.Node[] {
-    const options = readOptions(source, node);
-    const limits = options && readOptionProperties(options, source).get('limits');
+    const options = getOptions(source, node);
+    const limits = options && getOptionProperties(options, source).get('limits');
     if (node.arguments.length === 0 || (options && !limits)) return [node.callee];
     return limits ? listOversizedFiles(source, node, limits) : [];
 }
 
 function listOversizedBodies(source: Readonly<TSESLint.SourceCode>, node: UploadCall): TSESTree.Node[] {
-    const options = readOptions(source, node);
+    const options = getOptions(source, node);
     const limit =
-        options && BODY_LIMIT_OPTIONS.map((key) => readOptionProperties(options, source).get(key)).find(Boolean);
+        options && BODY_LIMIT_OPTIONS.map((key) => getOptionProperties(options, source).get(key)).find(Boolean);
     return limit && isTooLarge(source, limit, undefined, SIZE_LIMITS.standard) ? [limit] : [];
 }
 
-function readUploadModule(source: Readonly<TSESLint.SourceCode>, node: UploadCall): string | undefined {
+function getUploadModule(source: Readonly<TSESLint.SourceCode>, node: UploadCall): string | undefined {
     const { callee } = node;
     const origin = callee.type === AST_NODE_TYPES.MemberExpression ? callee.object : callee;
-    const name = readQualifiedName(origin, source);
+    const name = getQualifiedName(origin, source);
     const [module] = (name ?? '').split('.');
     return module !== MULTER_MODULE || (name === MULTER_MODULE && callee === origin) ? module : undefined;
 }
 
 function listOversizedNodes(source: Readonly<TSESLint.SourceCode>, node: UploadCall): TSESTree.Node[] {
-    const module = readUploadModule(source, node);
+    const module = getUploadModule(source, node);
     if (module === FORMIDABLE_MODULE) return listOversizedForms(source, node);
     if (module === BODY_PARSER_MODULE) return listOversizedBodies(source, node);
     return module === MULTER_MODULE ? listOversizedUploads(source, node) : [];
@@ -124,7 +119,7 @@ export const contentLength = createRule<[], 'unlimited'>({
             'CallExpression, NewExpression'(node: UploadCall) {
                 for (const oversized of listOversizedNodes(source, node))
                     context.report({ node: oversized, messageId: 'unlimited' });
-                const isForm = node.arguments.length === 0 && readUploadModule(source, node) === FORMIDABLE_MODULE;
+                const isForm = node.arguments.length === 0 && getUploadModule(source, node) === FORMIDABLE_MODULE;
                 const variable = isForm ? findAssignedVariable(node, source) : null;
                 if (variable) forms.set(variable, { node, size: SIZE_DEFAULTS.formidable });
             },
@@ -132,7 +127,7 @@ export const contentLength = createRule<[], 'unlimited'>({
                 const assignment = findMemberAssignment(node, source);
                 const form = assignment?.property === 'maxFileSize' ? forms.get(assignment.variable) : undefined;
                 if (assignment === undefined || form === undefined) return;
-                const size = readSize(source, node.right);
+                const size = getSize(source, node.right);
                 if (size === undefined || size === 0) forms.delete(assignment.variable);
                 else Object.assign(form, { node, size });
             },

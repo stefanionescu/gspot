@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
 import { usesModule } from '../packages.ts';
-import { readTestCall } from '../testing.ts';
+import { getTestCall } from '../testing.ts';
 import { readAssertionKind } from '../assertions.ts';
 import type { FileContext, PlacementState } from '../types/rules.ts';
 import { STATEMENT_LINKS, EVIDENCE_IMPORTS, EVIDENCE_DEPENDENCIES } from '../config/evidence.ts';
@@ -12,7 +12,7 @@ function isStatementLink(parent: TSESTree.Node, child: TSESTree.Node): boolean {
     return STATEMENT_LINKS.has(parent.type) || isReceiver || isCallee;
 }
 
-function readStatement(node: TSESTree.CallExpression): TSESTree.ExpressionStatement | undefined {
+function getStatement(node: TSESTree.CallExpression): TSESTree.ExpressionStatement | undefined {
     let child: TSESTree.Node = node;
     let parent: TSESTree.Node | undefined = node.parent;
     while (parent !== undefined && isStatementLink(parent, child)) {
@@ -22,19 +22,19 @@ function readStatement(node: TSESTree.CallExpression): TSESTree.ExpressionStatem
     return parent?.type === AST_NODE_TYPES.ExpressionStatement ? parent : undefined;
 }
 
-function readPlacement(node: TSESTree.Node, source: TSESLint.SourceCode): 'top' | 'suite' | 'function' {
+function getPlacement(node: TSESTree.Node, source: TSESLint.SourceCode): 'top' | 'suite' | 'function' {
     const callback = source.getAncestors(node).findLast((ancestor) => ASTUtils.isFunction(ancestor));
     const owner =
-        callback?.parent.type === AST_NODE_TYPES.CallExpression ? readTestCall(callback.parent, source) : undefined;
+        callback?.parent.type === AST_NODE_TYPES.CallExpression ? getTestCall(callback.parent, source) : undefined;
     if (callback === undefined) return 'top';
     return owner?.kind === 'suite' ? 'suite' : 'function';
 }
 
 function trackAssertion(node: TSESTree.CallExpression, context: FileContext, state: PlacementState): void {
     const kind = readAssertionKind(node, context);
-    const statement = kind === undefined || kind === 'type' ? undefined : readStatement(node);
+    const statement = kind === undefined || kind === 'type' ? undefined : getStatement(node);
     if (statement === undefined) return;
-    const placement = readPlacement(node, context.sourceCode);
+    const placement = getPlacement(node, context.sourceCode);
     if (placement === 'suite') state.reported.add(statement);
     if (placement === 'top') state.topLevel.set(statement, state.topLevel.get(statement) === true || kind === 'script');
 }
@@ -62,7 +62,7 @@ export const noMisplacedAssertions = createRule<[], 'misplaced'>({
         if (!usesModule(context, EVIDENCE_IMPORTS, EVIDENCE_DEPENDENCIES)) return {};
         return {
             CallExpression(node) {
-                const test = readTestCall(node, source);
+                const test = getTestCall(node, source);
                 state.hasTests ||= test !== undefined && test.kind !== 'hook';
                 trackAssertion(node, context, state);
             },

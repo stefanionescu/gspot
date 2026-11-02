@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readQualifiedName } from '../modules.ts';
+import { getQualifiedName } from '../modules.ts';
 import { isDynamicString } from '../expressions.ts';
 import { TEMPLATE_FUNCTIONS } from '../config/servers.ts';
 import { ASTUtils, TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
@@ -45,7 +45,7 @@ export const dynamicTemplates = createRule<[], 'builtTemplate'>({
                 node: TSESTree.CallExpression & { arguments: [TSESTree.CallExpressionArgument] },
             ) {
                 const [template] = node.arguments;
-                const name = readQualifiedName(node, source);
+                const name = getQualifiedName(node, source);
                 if (isBuiltTemplate(template) && TEMPLATE_FUNCTIONS.has(name) && !isCompiledTemplateCall(source, node))
                     context.report({ node: node.callee, messageId: 'builtTemplate' });
             },

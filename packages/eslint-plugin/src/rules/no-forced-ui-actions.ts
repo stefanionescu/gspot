@@ -2,7 +2,7 @@ import { createRule } from '../rule.ts';
 import { usesModule, readPackageFacts } from '../packages.ts';
 import { listBodyNodes, isCypressChain } from '../testing.ts';
 import type { MemberCall, UiFrameworks } from '../types/rules.ts';
-import { readLiteralValue, readExpressionValue, readOptionProperties } from '../expressions.ts';
+import { getLiteralValue, getExpressionValue, getOptionProperties } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -13,7 +13,7 @@ import {
 } from '../config/testing.ts';
 
 function isLocator(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
-    const value = readExpressionValue(node, source);
+    const value = getExpressionValue(node, source);
     if (value === undefined) return false;
     const names = listBodyNodes(value, source).flatMap((each) =>
         each.type === AST_NODE_TYPES.CallExpression && each.callee.type === AST_NODE_TYPES.MemberExpression
@@ -23,7 +23,7 @@ function isLocator(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     return names.some((name) => PLAYWRIGHT_LOCATORS.has(name) || name.startsWith(PLAYWRIGHT_QUERY_PREFIX));
 }
 
-function readActionPosition(
+function getActionPosition(
     node: MemberCall,
     source: TSESLint.SourceCode,
     frameworks: UiFrameworks,
@@ -61,11 +61,11 @@ export const noForcedUiActions = createRule<[], 'force'>({
         const source = context.sourceCode;
         return {
             'CallExpression[callee.type="MemberExpression"]'(node: MemberCall) {
-                const position = readActionPosition(node, source, frameworks);
+                const position = getActionPosition(node, source, frameworks);
                 const options =
                     position !== undefined && node.arguments.length > position ? node.arguments.at(-1) : undefined;
-                const force = readOptionProperties(options, source).get('force');
-                if (force !== undefined && readLiteralValue(force.value, source) === true)
+                const force = getOptionProperties(options, source).get('force');
+                if (force !== undefined && getLiteralValue(force.value, source) === true)
                     context.report({ node: force, messageId: 'force' });
             },
         };

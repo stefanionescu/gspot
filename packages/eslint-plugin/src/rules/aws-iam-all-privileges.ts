@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
 import { ANY_PRINCIPAL } from '../config/aws.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
-import { listCdkStrings, readCdkProperty, listAllowStatements } from '../aws.ts';
+import { listCdkStrings, getCdkProperty, listAllowStatements } from '../aws.ts';
 
 export const awsIamAllPrivileges = createRule<[], 'allActions'>({
     name: 'aws-iam-all-privileges',
@@ -25,7 +25,7 @@ export const awsIamAllPrivileges = createRule<[], 'allActions'>({
         return {
             'NewExpression, CallExpression'(node: TSESTree.NewExpression | TSESTree.CallExpression) {
                 for (const { statement, keys } of listAllowStatements(source, node)) {
-                    const actions = readCdkProperty(source, statement, keys.actions);
+                    const actions = getCdkProperty(source, statement, keys.actions);
                     const action = listCdkStrings(source, actions).find(({ value }) => value === ANY_PRINCIPAL);
                     if (action) context.report({ node: action, messageId: 'allActions' });
                 }

@@ -1,8 +1,8 @@
 import { createRule } from '../rule.ts';
 import { findFunction } from '../functions.ts';
-import { readQualifiedName } from '../modules.ts';
+import { getQualifiedName } from '../modules.ts';
 import type { FunctionNode } from '../types/rules.ts';
-import { listArgumentValues, readExpressionValue, readOptionProperties } from '../expressions.ts';
+import { listArgumentValues, getExpressionValue, getOptionProperties } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -37,7 +37,7 @@ function listResponseCalls(
     });
 }
 
-function readText(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): string | undefined {
+function getText(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): string | undefined {
     const evaluated = node && ASTUtils.getStaticValue(node, source.getScope(node));
     if (typeof evaluated?.value !== 'string') return undefined;
     return evaluated.value;
@@ -74,12 +74,12 @@ function isCopiedOrigin(
     request: string,
 ): boolean {
     const [name, header] = call.arguments;
-    const value = readExpressionValue(header, source);
-    if (readText(source, name)?.toLowerCase() !== ALLOW_ORIGIN_HEADER || value === undefined) return false;
+    const value = getExpressionValue(header, source);
+    if (getText(source, name)?.toLowerCase() !== ALLOW_ORIGIN_HEADER || value === undefined) return false;
     if (value.type === AST_NODE_TYPES.CallExpression)
         return (
             source.getText(value.callee) === `${request}.header` &&
-            readText(source, value.arguments[0])?.toLowerCase() === 'origin'
+            getText(source, value.arguments[0])?.toLowerCase() === 'origin'
         );
     return value.type === AST_NODE_TYPES.MemberExpression && source.getText(value) === `${request}.headers.origin`;
 }
@@ -89,14 +89,14 @@ function listPermissiveServers(source: Readonly<TSESLint.SourceCode>, node: TSES
     const calls = callback ? listResponseCalls(source, callback, 'writeHead') : [];
     return calls
         .filter((call) => {
-            const origin = readOptionProperties(call.arguments[1], source).get('Access-Control-Allow-Origin');
-            return readText(source, origin?.value) === '*';
+            const origin = getOptionProperties(call.arguments[1], source).get('Access-Control-Allow-Origin');
+            return getText(source, origin?.value) === '*';
         })
         .map(({ callee }) => callee);
 }
 
 function hasOpenOrigin(source: Readonly<TSESLint.SourceCode>, options: TSESTree.Node): boolean {
-    const origin = readOptionProperties(options, source).get('origin');
+    const origin = getOptionProperties(options, source).get('origin');
     if (origin === undefined) return true;
     const value = ASTUtils.getStaticValue(origin.value, source.getScope(origin.value))?.value;
     return value === '*' || value === true;
@@ -108,10 +108,10 @@ function listPermissiveMiddlewares(
 ): TSESTree.Node[] {
     const middleware = listArgumentValues(node.arguments, source).find(
         (value): value is TSESTree.CallExpression =>
-            value.type === AST_NODE_TYPES.CallExpression && readQualifiedName(value, source) === CROSS_ORIGIN_MODULE,
+            value.type === AST_NODE_TYPES.CallExpression && getQualifiedName(value, source) === CROSS_ORIGIN_MODULE,
     );
     if (middleware?.arguments.length === 0) return [node];
-    const options = readExpressionValue(middleware?.arguments[0], source);
+    const options = getExpressionValue(middleware?.arguments[0], source);
     if (options?.type !== AST_NODE_TYPES.ObjectExpression) return [];
     return hasOpenOrigin(source, options) ? [node.callee] : [];
 }
@@ -126,7 +126,7 @@ function listCopiedOrigins(source: Readonly<TSESLint.SourceCode>, node: TSESTree
 }
 
 function listPermissiveNodes(source: Readonly<TSESLint.SourceCode>, node: TSESTree.CallExpression): TSESTree.Node[] {
-    const name = (readQualifiedName(node.callee, source) ?? '').replace('.Router.', '.');
+    const name = (getQualifiedName(node.callee, source) ?? '').replace('.Router.', '.');
     const [module, method, ...members] = name.split('.');
     if (name === SERVER_FUNCTION) return listPermissiveServers(source, node);
     if (module !== EXPRESS_MODULE || members.length > 0) return [];

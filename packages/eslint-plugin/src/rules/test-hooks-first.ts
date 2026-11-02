@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readTestCall } from '../testing.ts';
+import { getTestCall } from '../testing.ts';
 import type { SuiteMember } from '../types/rules.ts';
 import { TEST_AFTER_HOOK_NAMES, MARKED_TEST_MODIFIERS } from '../config/testing.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
@@ -12,15 +12,15 @@ function listMembers(body: TSESTree.Statement[], source: TSESLint.SourceCode): S
             : [],
     );
     return calls.flatMap(({ call, index }) => {
-        const test = readTestCall(call, source);
+        const test = getTestCall(call, source);
         const isMarked = test?.modifiers.every((modifier) => MARKED_TEST_MODIFIERS.has(modifier)) === true;
         if (test === undefined || !isMarked) return [];
         return [{ call, index, kind: test.kind, isAfter: TEST_AFTER_HOOK_NAMES.has(test.name) }];
     });
 }
 
-function readSuiteBody(node: TSESTree.CallExpression, source: TSESLint.SourceCode): TSESTree.Statement[] {
-    const suite = readTestCall(node, source);
+function getSuiteBody(node: TSESTree.CallExpression, source: TSESLint.SourceCode): TSESTree.Statement[] {
+    const suite = getTestCall(node, source);
     const isMarked = suite?.modifiers.every((modifier) => MARKED_TEST_MODIFIERS.has(modifier)) === true;
     const body = isMarked && suite.kind === 'suite' ? suite.callback?.body : undefined;
     return body?.type === AST_NODE_TYPES.BlockStatement ? body.body : [];
@@ -68,7 +68,7 @@ export const testHooksFirst = createRule<[], 'before' | 'after' | 'group'>({
     create(context) {
         return {
             CallExpression(node) {
-                const members = listMembers(readSuiteBody(node, context.sourceCode), context.sourceCode);
+                const members = listMembers(getSuiteBody(node, context.sourceCode), context.sourceCode);
                 if (members.every(({ kind }) => kind === 'hook')) return;
                 for (const [{ callee }, messageId] of listMisplacedHooks(members)) {
                     const node = callee.type === AST_NODE_TYPES.MemberExpression ? callee.object : callee;

@@ -1,12 +1,12 @@
 import { createRule } from '../rule.ts';
 import { unwrapExpression } from '../syntax.ts';
+import { getTypes, isThenable } from '../checker.ts';
 import type { TypeReader } from '../types/plugin.ts';
-import { readTypes, isThenable } from '../checker.ts';
 import { CONSTRUCTOR_BODY_DEPTH } from '../config/rules.ts';
 import { PROMISE_NAME, SETTLE_METHOD } from '../config/builtins.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function readConstructorStatement(ancestors: readonly TSESTree.Node[]): TSESTree.Node | undefined {
+function getConstructorStatement(ancestors: readonly TSESTree.Node[]): TSESTree.Node | undefined {
     const start = ancestors.findLastIndex(
         (ancestor) => ancestor.type === AST_NODE_TYPES.MethodDefinition && ancestor.kind === 'constructor',
     );
@@ -63,13 +63,13 @@ export const noAsyncConstructor = createRule<[], 'async'>({
         messages: { async: 'Move this asynchronous call out of the constructor, into an async factory or method.' },
     },
     create(context) {
-        const types = readTypes(context);
+        const types = getTypes(context);
         if (types === undefined) return {};
         const reported = new Set<TSESTree.Node>();
         return {
             CallExpression(node) {
                 if (!isThenable(types, node)) return;
-                const statement = readConstructorStatement(context.sourceCode.getAncestors(node));
+                const statement = getConstructorStatement(context.sourceCode.getAncestors(node));
                 if (statement === undefined || reported.has(statement)) return;
                 if (isAssignedToThis(node, statement) && isLibraryPromiseSettle(node, types)) return;
                 reported.add(statement);

@@ -2,13 +2,13 @@ import { getCdkName } from '../aws.ts';
 import { createRule } from '../rule.ts';
 import type { StorageIssue } from '../types/rules.ts';
 import { CDK_PROPS_POSITION } from '../config/plugin.ts';
+import { getExpressionValue, getOptionProperties } from '../expressions.ts';
 import { KMS_KEYS, RDS_STORAGES, RDS_KEYED_STORAGES } from '../config/aws.ts';
-import { readExpressionValue, readOptionProperties } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function hasKmsKey(source: Readonly<TSESLint.SourceCode>, options: TSESTree.ObjectExpression): boolean {
-    const key = readOptionProperties(options, source).get('storageEncryptionKey');
-    const value = key ? readExpressionValue(key.value, source) : undefined;
+    const key = getOptionProperties(options, source).get('storageEncryptionKey');
+    const value = key ? getExpressionValue(key.value, source) : undefined;
     return value?.type === AST_NODE_TYPES.NewExpression && KMS_KEYS.has(getCdkName(source, value.callee));
 }
 
@@ -16,21 +16,21 @@ function findUnencryptedStorage(
     source: Readonly<TSESLint.SourceCode>,
     options: TSESTree.ObjectExpression,
 ): StorageIssue | undefined {
-    const encrypted = readOptionProperties(options, source).get('storageEncrypted');
+    const encrypted = getOptionProperties(options, source).get('storageEncrypted');
     if (encrypted === undefined) return { node: options, messageId: 'omitted' };
-    const value = readExpressionValue(encrypted.value, source);
+    const value = getExpressionValue(encrypted.value, source);
     return value?.type === AST_NODE_TYPES.Literal && value.value === false
         ? { node: value, messageId: 'unencrypted' }
         : undefined;
 }
 
-function readStorageOptions(
+function getStorageOptions(
     source: Readonly<TSESLint.SourceCode>,
     node: TSESTree.NewExpression,
 ): TSESTree.Node | undefined {
     const argument = node.arguments[CDK_PROPS_POSITION];
     if (argument === undefined) return undefined;
-    return readExpressionValue(argument, source) ?? argument;
+    return getExpressionValue(argument, source) ?? argument;
 }
 
 function findStorageIssue(
@@ -38,7 +38,7 @@ function findStorageIssue(
     node: TSESTree.NewExpression,
 ): StorageIssue | undefined {
     const name = getCdkName(source, node.callee);
-    const options = readStorageOptions(source, node);
+    const options = getStorageOptions(source, node);
     if (!RDS_STORAGES.has(name) || (ASTUtils.isIdentifier(options) && options.name !== 'undefined')) return undefined;
     if (options?.type !== AST_NODE_TYPES.ObjectExpression) return { node: node.callee, messageId: 'omitted' };
     return RDS_KEYED_STORAGES.has(name) && hasKmsKey(source, options)

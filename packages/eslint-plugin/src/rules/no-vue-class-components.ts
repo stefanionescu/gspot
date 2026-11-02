@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
+import { getModuleName } from '../modules.ts';
 import { usesVueThree } from '../packages.ts';
-import { readModuleName } from '../modules.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { VUE_CLASS_BASE, VUE_CLASS_DECORATORS, VUE_PROPERTY_DECORATORS } from '../config/frameworks.ts';
 
@@ -11,7 +11,7 @@ function hasDecorator(
 ): boolean {
     return decorators.some(({ expression }) => {
         const target = expression.type === AST_NODE_TYPES.CallExpression ? expression.callee : expression;
-        return target.type === AST_NODE_TYPES.Identifier && names.has(readModuleName(target, source));
+        return target.type === AST_NODE_TYPES.Identifier && names.has(getModuleName(target, source));
     });
 }
 
@@ -21,7 +21,7 @@ function isClassComponent(
 ): boolean {
     const isVueClass =
         node.superClass?.type === AST_NODE_TYPES.Identifier &&
-        readModuleName(node.superClass, source) === VUE_CLASS_BASE;
+        getModuleName(node.superClass, source) === VUE_CLASS_BASE;
     const decorators = 'decorators' in node ? node.decorators : [];
     const members = node.body.body.flatMap((member) => ('decorators' in member ? member.decorators : []));
     return (

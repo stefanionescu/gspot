@@ -12,7 +12,7 @@ function listCounters(update: TSESTree.Expression | null): TSESTree.Node[] {
         : [];
 }
 
-function readStep(update: TSESTree.Expression): { counter: TSESTree.Node; direction: number } | undefined {
+function getStep(update: TSESTree.Expression): { counter: TSESTree.Node; direction: number } | undefined {
     if (update.type === AST_NODE_TYPES.UpdateExpression)
         return { counter: update.argument, direction: update.operator === '++' ? 1 : -1 };
     if (update.type !== AST_NODE_TYPES.AssignmentExpression || !STEP_OPERATORS.has(update.operator)) return undefined;
@@ -20,15 +20,15 @@ function readStep(update: TSESTree.Expression): { counter: TSESTree.Node; direct
     return { counter: update.left, direction: INCREMENT_OPERATORS.has(update.operator) ? 1 : -1 };
 }
 
-function readLiteralNumber(node: TSESTree.Node | null | undefined): number | undefined {
+function getLiteralNumber(node: TSESTree.Node | null | undefined): number | undefined {
     if (node?.type !== AST_NODE_TYPES.Literal || typeof node.value !== 'number') return undefined;
     return node.value;
 }
 
-function readStart(init: TSESTree.ForStatement['init']): number | undefined {
-    if (init?.type === AST_NODE_TYPES.AssignmentExpression) return readLiteralNumber(init.right);
+function getStart(init: TSESTree.ForStatement['init']): number | undefined {
+    if (init?.type === AST_NODE_TYPES.AssignmentExpression) return getLiteralNumber(init.right);
     if (init?.type !== AST_NODE_TYPES.VariableDeclaration || init.declarations.length !== 1) return undefined;
-    return readLiteralNumber(init.declarations[0]?.init);
+    return getLiteralNumber(init.declarations[0]?.init);
 }
 
 function isReadInBody(node: TSESTree.ForStatement, counter: TSESTree.Identifier, source: TSESLint.SourceCode) {
@@ -40,14 +40,14 @@ function isReadInBody(node: TSESTree.ForStatement, counter: TSESTree.Identifier,
 }
 
 function isSimpleCount(node: TSESTree.ForStatement, test: TSESTree.BinaryExpression, source: TSESLint.SourceCode) {
-    const step = node.update && readStep(node.update);
+    const step = node.update && getStep(node.update);
     if (step?.counter.type !== AST_NODE_TYPES.Identifier || !INEQUALITY_OPERATORS.has(test.operator)) return false;
-    const [start, end] = [readStart(node.init), readLiteralNumber(test.right)];
+    const [start, end] = [getStart(node.init), getLiteralNumber(test.right)];
     if (start === undefined || end === undefined || isReadInBody(node, step.counter, source)) return false;
     return step.direction === Math.sign(end - start);
 }
 
-function readCounterTest(node: TSESTree.ForStatement): TSESTree.BinaryExpression | undefined {
+function getCounterTest(node: TSESTree.ForStatement): TSESTree.BinaryExpression | undefined {
     const { test } = node;
     if (test?.type !== AST_NODE_TYPES.BinaryExpression || !EQUALITY_OPERATORS.has(test.operator)) return undefined;
     const { left } = test;
@@ -79,7 +79,7 @@ export const noEqualLoopCondition = createRule<[], 'equality'>({
     create(context) {
         return {
             ForStatement(node) {
-                const test = readCounterTest(node);
+                const test = getCounterTest(node);
                 if (test === undefined || isSimpleCount(node, test, context.sourceCode)) return;
                 context.report({ node: test, messageId: 'equality', data: { operator: test.operator } });
             },

@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
 import { S3_BUCKET } from '../config/plugin.ts';
 import { getCdkName, findBucketOption } from '../aws.ts';
-import { readExpressionValue, readOptionProperties } from '../expressions.ts';
+import { getExpressionValue, getOptionProperties } from '../expressions.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { BLOCK_ACLS_ONLY, BLOCK_PUBLIC_ACCESS, BLOCK_PUBLIC_ACCESS_KEYS } from '../config/aws.ts';
 
@@ -13,9 +13,9 @@ function listUnblockedSettings(
         value?.type === AST_NODE_TYPES.NewExpression &&
         value.callee.type === AST_NODE_TYPES.MemberExpression &&
         getCdkName(source, value.callee) === BLOCK_PUBLIC_ACCESS;
-    const settings = readOptionProperties(isBlockConstruction ? value.arguments[0] : undefined, source);
+    const settings = getOptionProperties(isBlockConstruction ? value.arguments[0] : undefined, source);
     return [...settings].flatMap(([key, property]) => {
-        const setting = readExpressionValue(property.value, source);
+        const setting = getExpressionValue(property.value, source);
         const isOff = BLOCK_PUBLIC_ACCESS_KEYS.has(key) && setting?.type === AST_NODE_TYPES.Literal;
         return isOff && setting.value === false ? [property] : [];
     });
@@ -47,7 +47,7 @@ export const awsUnblockedPublicBuckets = createRule<[], 'aclsOnly' | 'public'>({
             NewExpression(node) {
                 const option =
                     getCdkName(source, node) === S3_BUCKET ? findBucketOption(source, node, 'blockPublicAccess') : null;
-                const value = option ? readExpressionValue(option.value, source) : undefined;
+                const value = option ? getExpressionValue(option.value, source) : undefined;
                 if (
                     option &&
                     value?.type === AST_NODE_TYPES.MemberExpression &&

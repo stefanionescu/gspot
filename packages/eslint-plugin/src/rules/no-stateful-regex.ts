@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
-import { readAssignedValue } from '../modules.ts';
+import { getAssignedValue } from '../modules.ts';
 import { LOOP_STATEMENTS } from '../config/builtins.ts';
-import { readRegex, buildRegexVisitors } from '../regex.ts';
+import { getRegex, buildRegexVisitors } from '../regex.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { EXEC_METHOD, DISTINCT_SUBJECTS, EMPTY_STRING_TEXTS, STATEFUL_REGEX_METHODS } from '../config/regex.ts';
 
@@ -23,18 +23,18 @@ function isLoopExec(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     return isExec && isLoopCondition(node, source.getAncestors(node));
 }
 
-function readCalledRegex(node: TSESTree.CallExpression): TSESTree.Identifier | undefined {
+function getCalledRegex(node: TSESTree.CallExpression): TSESTree.Identifier | undefined {
     const { callee } = node;
     if (callee.type !== AST_NODE_TYPES.MemberExpression || node.arguments.length !== 1) return undefined;
     const isStateful = STATEFUL_REGEX_METHODS.has(ASTUtils.getPropertyName(callee));
     return isStateful && ASTUtils.isIdentifier(callee.object) ? callee.object : undefined;
 }
 
-function readGlobalVariable(node: TSESTree.CallExpression, source: TSESLint.SourceCode) {
-    const name = readCalledRegex(node);
+function getGlobalVariable(node: TSESTree.CallExpression, source: TSESLint.SourceCode) {
+    const name = getCalledRegex(node);
     const variable = name === undefined ? null : ASTUtils.findVariable(source.getScope(node), name);
-    const value = variable === null ? undefined : readAssignedValue(variable);
-    const regex = value === undefined ? undefined : readRegex(value, source);
+    const value = variable === null ? undefined : getAssignedValue(variable);
+    const regex = value === undefined ? undefined : getRegex(value, source);
     return regex?.flags.global === true && variable !== null ? variable : undefined;
 }
 
@@ -72,7 +72,7 @@ export const noStatefulRegex = createRule<[], 'loop' | 'subjects'>({
                 if (flags.global && isLoopExec(node, source)) context.report({ node, messageId: 'loop' });
             }, source),
             'CallExpression:exit'(node: TSESTree.CallExpression) {
-                const variable = readGlobalVariable(node, source);
+                const variable = getGlobalVariable(node, source);
                 if (variable === undefined) return;
                 calls.set(variable, [...(calls.get(variable) ?? []), node]);
             },

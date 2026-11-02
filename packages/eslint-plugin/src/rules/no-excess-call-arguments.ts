@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readLocalFunction } from '../functions.ts';
+import { getLocalFunction } from '../functions.ts';
 import type { LocalFunction } from '../types/plugin.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
@@ -27,7 +27,7 @@ export const noExcessCallArguments = createRule<[], 'arguments'>({
         const variadic = new Set<TSESTree.Node>();
         return {
             CallExpression(node) {
-                const declaration = readLocalFunction(node.callee, context.sourceCode);
+                const declaration = getLocalFunction(node.callee, context.sourceCode);
                 if (declaration === undefined || node.arguments.length <= declaration.params.length) return;
                 if (declaration.params.some((parameter) => parameter.type === AST_NODE_TYPES.RestElement)) return;
                 calls.set(node, declaration);

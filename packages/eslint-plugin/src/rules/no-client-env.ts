@@ -51,7 +51,7 @@ function listGlobalEnvironmentReads(source: TSESLint.SourceCode): TSESTree.Node[
     return reads;
 }
 
-function readMemberName(member: TSESTree.MemberExpression): string | null {
+function getMemberName(member: TSESTree.MemberExpression): string | null {
     const name = ASTUtils.getPropertyName(member);
     const call = member.parent;
     if (name !== ENVIRONMENT_GETTER || call.type !== AST_NODE_TYPES.CallExpression || call.callee !== member)
@@ -62,7 +62,7 @@ function readMemberName(member: TSESTree.MemberExpression): string | null {
 
 function listEnvironmentNames(node: TSESTree.Node): (string | null)[] {
     const { parent } = node;
-    if (parent?.type === AST_NODE_TYPES.MemberExpression && parent.object === node) return [readMemberName(parent)];
+    if (parent?.type === AST_NODE_TYPES.MemberExpression && parent.object === node) return [getMemberName(parent)];
     if (parent?.type === AST_NODE_TYPES.VariableDeclarator && parent.id.type === AST_NODE_TYPES.ObjectPattern)
         return parent.id.properties.map((property) =>
             property.type === AST_NODE_TYPES.RestElement ? null : ASTUtils.getPropertyName(property),

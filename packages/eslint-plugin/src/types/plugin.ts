@@ -30,7 +30,7 @@ export type CheckedSignature = NonNullable<ReturnType<TypeChecker['getSignatureF
 export type TypeReader = {
     program: ParserServicesWithTypeInformation['program'];
     checker: TypeChecker;
-    read: (node: TSESTree.Node) => CheckedType;
+    get: (node: TSESTree.Node) => CheckedType;
     map: ParserServicesWithTypeInformation['esTreeNodeToTSNodeMap'];
 };
 

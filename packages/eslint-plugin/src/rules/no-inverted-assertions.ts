@@ -1,11 +1,11 @@
 import { createRule } from '../rule.ts';
-import { isCallOf, readTestCall } from '../testing.ts';
+import { isCallOf, getTestCall } from '../testing.ts';
 import type { OrderedArguments } from '../types/rules.ts';
 import { MARKED_TEST_MODIFIERS } from '../config/testing.ts';
 import { ORDERED_ASSERTIONS, ORDERED_EXPECT_METHODS } from '../config/assertions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function readAssertArguments(node: TSESTree.CallExpression): OrderedArguments | undefined {
+function getAssertArguments(node: TSESTree.CallExpression): OrderedArguments | undefined {
     const { callee } = node;
     const [first, second] = node.arguments;
     if (
@@ -19,7 +19,7 @@ function readAssertArguments(node: TSESTree.CallExpression): OrderedArguments | 
     return isOrdered ? { first, second, format: `${format}(actual, expected)` } : undefined;
 }
 
-function readExpectArguments(node: TSESTree.CallExpression): OrderedArguments | undefined {
+function getExpectArguments(node: TSESTree.CallExpression): OrderedArguments | undefined {
     if (node.callee.type !== AST_NODE_TYPES.MemberExpression) return undefined;
     const method = ASTUtils.getPropertyName(node.callee) ?? '';
     let value: TSESTree.Node = node.callee.object;
@@ -32,7 +32,7 @@ function readExpectArguments(node: TSESTree.CallExpression): OrderedArguments | 
 
 function isInsideTest(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     return source.getAncestors(node).some((ancestor) => {
-        const call = ancestor.type === AST_NODE_TYPES.CallExpression ? readTestCall(ancestor, source) : undefined;
+        const call = ancestor.type === AST_NODE_TYPES.CallExpression ? getTestCall(ancestor, source) : undefined;
         return call?.kind === 'test' && call.modifiers.every((modifier) => MARKED_TEST_MODIFIERS.has(modifier));
     });
 }
@@ -61,7 +61,7 @@ export const noInvertedAssertions = createRule<[], 'swap' | 'swapArguments'>({
         const source = context.sourceCode;
         return {
             CallExpression(node) {
-                const ordered = readAssertArguments(node) ?? readExpectArguments(node);
+                const ordered = getAssertArguments(node) ?? getExpectArguments(node);
                 const isInverted =
                     ordered?.first.type === AST_NODE_TYPES.Literal && ordered.second.type !== AST_NODE_TYPES.Literal;
                 if (!isInverted || !isInsideTest(node, source)) return;

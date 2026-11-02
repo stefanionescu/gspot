@@ -23,7 +23,7 @@ function isInexactLiteral(text: string): boolean {
     return scale > 0 && BigInt(`${integer}${fraction}`) % DECIMAL_FACTOR ** BigInt(scale) !== BIGINT_ZERO;
 }
 
-function readNumber(node: TSESTree.Node): number | undefined {
+function getNumber(node: TSESTree.Node): number | undefined {
     const evaluated = ASTUtils.getStaticValue(node);
     if (typeof evaluated?.value !== 'number') return undefined;
     return evaluated.value;
@@ -36,7 +36,7 @@ function stripFactorsOfTwo(value: number): number {
 }
 
 function isFractionDivision(node: TSESTree.BinaryExpression): boolean {
-    const [left, right] = [readNumber(node.left), readNumber(node.right)];
+    const [left, right] = [getNumber(node.left), getNumber(node.right)];
     if (left === undefined || right === undefined || right === 0) return false;
     if (!Number.isInteger(left) || Number.isInteger(left / right)) return false;
     return !Number.isSafeInteger(left) || !Number.isSafeInteger(right) || left % stripFactorsOfTwo(right) !== 0;
@@ -52,7 +52,7 @@ function isFloatingConstant(node: TSESTree.Identifier, source: TSESLint.SourceCo
 }
 
 function isFloatingArithmetic(node: TSESTree.BinaryExpression, source: TSESLint.SourceCode, seen: Set<unknown>) {
-    const value = readNumber(node);
+    const value = getNumber(node);
     if (value !== undefined && Number.isSafeInteger(value)) return false;
     const isOperand = [node.left, node.right].some((operand) => isFloatingPoint(operand, source, seen));
     if (node.operator === '/') return isOperand || isFractionDivision(node);

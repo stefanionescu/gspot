@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readTypes } from '../checker.ts';
+import { getTypes } from '../checker.ts';
 import type { ScriptSettings, IntegrityMessage } from '../types/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { SCRIPT_TYPE, ALIASED_PATH, VERSIONED_PATH, REMOTE_PREFIXES, CREATE_SCRIPT_SELECTOR } from '../config/web.ts';
@@ -10,7 +10,7 @@ function isVersionedRemoteUrl(value: TSESTree.Node): boolean {
     return isRemote && (VERSIONED_PATH.test(url) || ALIASED_PATH.test(url));
 }
 
-function readScriptSettings(variable: TSESLint.Scope.Variable): ScriptSettings {
+function getScriptSettings(variable: TSESLint.Scope.Variable): ScriptSettings {
     const members = variable.references.flatMap(({ identifier }) => {
         const member = identifier.parent;
         return member.type === AST_NODE_TYPES.MemberExpression && Object.is(member.object, identifier) ? [member] : [];
@@ -62,13 +62,13 @@ export const disabledResourceIntegrity = createRule<[], 'missingBoth' | 'missing
     },
     create(context) {
         const source = context.sourceCode;
-        const types = readTypes(context);
+        const types = getTypes(context);
         if (types === undefined) return {};
         return {
             [CREATE_SCRIPT_SELECTOR](node: TSESTree.VariableDeclarator) {
-                const isScript = types.checker.typeToString(types.read(node.id)) === SCRIPT_TYPE;
+                const isScript = types.checker.typeToString(types.get(node.id)) === SCRIPT_TYPE;
                 const [variable] = isScript ? source.getDeclaredVariables(node) : [];
-                const messageId = variable && selectIntegrityMessage(readScriptSettings(variable));
+                const messageId = variable && selectIntegrityMessage(getScriptSettings(variable));
                 if (messageId) context.report({ node, messageId });
             },
         };

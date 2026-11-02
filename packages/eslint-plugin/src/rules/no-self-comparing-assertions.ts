@@ -4,7 +4,7 @@ import { listImportedModules } from '../packages.ts';
 import type { AssertionChain } from '../types/rules.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function readChain(node: TSESTree.Node): AssertionChain {
+function getChain(node: TSESTree.Node): AssertionChain {
     const values: TSESTree.Node[] = [];
     let root = node;
     let hasAssertionProperty = false;
@@ -21,7 +21,7 @@ function readChain(node: TSESTree.Node): AssertionChain {
 }
 
 function listChainArguments(node: TSESTree.Node): TSESTree.Node[] | undefined {
-    const { values, hasAssertionProperty, root } = readChain(node);
+    const { values, hasAssertionProperty, root } = getChain(node);
     const name = ASTUtils.isIdentifier(root) ? root.name : '';
     if (name === 'expect' || name === 'should') return values;
     return hasAssertionProperty ? [root, ...values] : undefined;

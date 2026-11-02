@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function readLastBody(statement: TSESTree.ProgramStatement): TSESTree.Statement | undefined {
+function getLastBody(statement: TSESTree.ProgramStatement): TSESTree.Statement | undefined {
     switch (statement.type) {
         case AST_NODE_TYPES.IfStatement: {
             return statement.alternate ?? statement.consequent;
@@ -48,7 +48,7 @@ export const noUnenclosedMultilineBlock = createRule<[], 'unenclosed'>({
         const inspect = (statements: readonly TSESTree.ProgramStatement[]) => {
             for (const [index, owner] of statements.entries()) {
                 const next = statements[index + 1];
-                const body = readLastBody(owner);
+                const body = getLastBody(owner);
                 if (next === undefined || body === undefined || body.type === AST_NODE_TYPES.BlockStatement) continue;
                 if (!isMisleading(owner, body, next)) continue;
                 const runs = owner.type === AST_NODE_TYPES.IfStatement ? 'unconditionally' : 'only once';

@@ -2,12 +2,12 @@ import { createRule } from '../rule.ts';
 import { usesModule } from '../packages.ts';
 import { findFunction } from '../functions.ts';
 import type { FunctionNode } from '../types/rules.ts';
-import { readTestCall, listBodyNodes } from '../testing.ts';
+import { getTestCall, listBodyNodes } from '../testing.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { ASYNC_SUITE_MODULES, ASYNC_SUITE_ORIGINS, ASYNC_SUITE_MODIFIERS } from '../config/testing.ts';
 
-function readSuiteCallback(node: TSESTree.CallExpression, source: TSESLint.SourceCode): FunctionNode | undefined {
-    const call = readTestCall(node, source);
+function getSuiteCallback(node: TSESTree.CallExpression, source: TSESLint.SourceCode): FunctionNode | undefined {
+    const call = getTestCall(node, source);
     const isSuite =
         call?.kind === 'suite' &&
         ASYNC_SUITE_ORIGINS.has(call.module) &&
@@ -35,7 +35,7 @@ function registersAfter(callback: FunctionNode, wait: TSESTree.Node, source: TSE
             : [],
     );
     return calls.some((call) => {
-        const kind = readTestCall(call, source)?.kind;
+        const kind = getTestCall(call, source)?.kind;
         return kind === 'test' || kind === 'suite';
     });
 }
@@ -47,7 +47,7 @@ function isDroppingFunction(call: TSESTree.CallExpression, source: TSESLint.Sour
     return wait !== undefined && registersAfter(dropping, wait, source);
 }
 
-function readDroppingAwait(wait: TSESTree.Node | undefined, source: TSESLint.SourceCode): TSESTree.Node | undefined {
+function getDroppingAwait(wait: TSESTree.Node | undefined, source: TSESLint.SourceCode): TSESTree.Node | undefined {
     const argument = wait?.type === AST_NODE_TYPES.AwaitExpression ? wait.argument : undefined;
     const isCall = argument?.type === AST_NODE_TYPES.CallExpression;
     return isCall && isDroppingFunction(argument, source) ? argument : undefined;
@@ -114,7 +114,7 @@ export const noAsyncSuiteCallbacks = createRule<
         };
         const reportAsync = (callback: FunctionNode): TSESTree.Node | undefined => {
             const wait = findFirstAwait(callback, source);
-            const dropping = readDroppingAwait(wait, source);
+            const dropping = getDroppingAwait(wait, source);
             if (wait === undefined) reportKeyword(callback);
             else
                 context.report({
@@ -125,7 +125,7 @@ export const noAsyncSuiteCallbacks = createRule<
         };
         return {
             CallExpression(node) {
-                const callback = readSuiteCallback(node, source);
+                const callback = getSuiteCallback(node, source);
                 if (callback === undefined) return;
                 const reported = callback.async ? reportAsync(callback) : undefined;
                 for (const call of listDroppingCalls(callback, source))

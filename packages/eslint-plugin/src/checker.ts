@@ -2,17 +2,17 @@ import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 import type { TypeReader, CheckedType, TypeCategory } from './types/plugin.ts';
 
 /**
-Read the TypeScript types of a file that the parser checked with a program. Files without type information get none.
+Get the TypeScript types of a file that the parser checked with a program. Files without type information get none.
 
 @param context the rule context of the file.
 */
-export function readTypes(context: Readonly<TSESLint.RuleContext<string, readonly unknown[]>>): TypeReader | undefined {
+export function getTypes(context: Readonly<TSESLint.RuleContext<string, readonly unknown[]>>): TypeReader | undefined {
     const services = context.sourceCode.parserServices;
     const program = services?.program;
     const map = services?.esTreeNodeToTSNodeMap;
     if (program === undefined || program === null || map === undefined) return undefined;
     const checker = program.getTypeChecker();
-    return { program, checker, map, read: (node) => checker.getTypeAtLocation(map.get(node)) };
+    return { program, checker, map, get: (node) => checker.getTypeAtLocation(map.get(node)) };
 }
 
 /**
@@ -22,7 +22,7 @@ Identify a value whose type has a callable `then`, such as a promise.
 @param node the expression to test.
 */
 export function isThenable(types: TypeReader, node: TSESTree.Node): boolean {
-    const type = types.read(node);
+    const type = types.get(node);
     const then = type.getProperty('then');
     return then !== undefined && types.checker.getTypeOfSymbol(then).getCallSignatures().length > 0;
 }
@@ -34,7 +34,7 @@ Sort a type into the category that a rule tests. Literal types and their unions 
 @param types the type checker of the file.
 @param type the type to sort.
 */
-export function readTypeCategory(types: TypeReader, type: CheckedType): TypeCategory {
+export function getTypeCategory(types: TypeReader, type: CheckedType): TypeCategory {
     const { checker } = types;
     if (checker.isArrayType(type)) return 'array';
     const isString = checker.isTypeAssignableTo(type, checker.getStringType());

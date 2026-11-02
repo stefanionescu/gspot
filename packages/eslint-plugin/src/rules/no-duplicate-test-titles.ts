@@ -1,13 +1,13 @@
 import { createRule } from '../rule.ts';
 import { usesModule } from '../packages.ts';
+import { getLocalFunction } from '../functions.ts';
 import { FUNCTION_NODES } from '../config/rules.ts';
-import { readLocalFunction } from '../functions.ts';
-import { readTestCall, listChildNodes } from '../testing.ts';
+import { getTestCall, listChildNodes } from '../testing.ts';
 import type { TestCall, TitleScan, FunctionNode } from '../types/rules.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { TEST_FRAMEWORK_MODULES, RUNNING_TEST_MODIFIERS } from '../config/testing.ts';
 
-function readRunningCall(call: TestCall | undefined, kind: TestCall['kind']): TestCall | undefined {
+function getRunningCall(call: TestCall | undefined, kind: TestCall['kind']): TestCall | undefined {
     if (call?.kind !== kind) return undefined;
     const isRunning = call.modifiers.every((modifier) => RUNNING_TEST_MODIFIERS.has(modifier));
     return isRunning && (kind === 'suite' || call.callback !== undefined) ? call : undefined;
@@ -31,22 +31,22 @@ function scanFunctionBody(node: TSESTree.Node, titles: Map<string, TSESTree.Node
 }
 
 function scanCall(node: TSESTree.CallExpression, titles: Map<string, TSESTree.Node>, scan: TitleScan): void {
-    const call = readTestCall(node, scan.source);
-    const body = readRunningCall(call, 'suite')?.callback?.body;
+    const call = getTestCall(node, scan.source);
+    const body = getRunningCall(call, 'suite')?.callback?.body;
     if (body !== undefined) scanFunctionBody(body, new Map(), scan);
     if (call?.kind === 'suite') return;
     checkCall(node, titles, scan);
-    if (readRunningCall(call, 'test') !== undefined) return;
+    if (getRunningCall(call, 'test') !== undefined) return;
     const children = listChildNodes(node, scan.source).filter((child) => !FUNCTION_NODES.has(child.type));
     for (const child of children) scanFunctionBody(child, titles, scan);
 }
 
 function checkCall(node: TSESTree.CallExpression, titles: Map<string, TSESTree.Node>, scan: TitleScan): void {
-    if (readRunningCall(readTestCall(node, scan.source), 'test') !== undefined) {
+    if (getRunningCall(getTestCall(node, scan.source), 'test') !== undefined) {
         checkTitle(node, titles, scan);
         return;
     }
-    const body = readLocalFunction(node.callee, scan.source)?.body;
+    const body = getLocalFunction(node.callee, scan.source)?.body;
     if (body === undefined || scan.path.has(body)) return;
     scan.path.add(body);
     scanFunctionBody(body, titles, scan);
@@ -87,7 +87,7 @@ export const noDuplicateTestTitles = createRule<[], 'duplicate'>({
                 const isSuiteLevel = functions.every(
                     (callback) =>
                         callback.parent.type === AST_NODE_TYPES.CallExpression &&
-                        readRunningCall(readTestCall(callback.parent, context.sourceCode), 'suite')?.callback
+                        getRunningCall(getTestCall(callback.parent, context.sourceCode), 'suite')?.callback
                             ?.range[0] === callback.range[0],
                 );
                 if (!isSuiteLevel) return;

@@ -1,33 +1,33 @@
 import { createRule } from '../rule.ts';
-import { readAssignedValue } from '../modules.ts';
-import { readOptionProperties } from '../expressions.ts';
+import { getAssignedValue } from '../modules.ts';
+import { getOptionProperties } from '../expressions.ts';
 import { SANITIZER_BYPASS_METHODS } from '../config/security.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function readSanitizerSource(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node {
+function getSanitizerSource(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node {
     const seen = new Set<TSESTree.Node>();
     let value = node;
     while (value.type === AST_NODE_TYPES.Identifier && !seen.has(value)) {
         seen.add(value);
         const variable = ASTUtils.findVariable(source.getScope(value), value);
         if (variable === null) break;
-        const assigned = readAssignedValue(variable);
+        const assigned = getAssignedValue(variable);
         if (assigned === undefined) break;
         value = assigned;
     }
     return value;
 }
 
-function readSanitizerProperty(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node | undefined {
+function getSanitizerProperty(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node | undefined {
     if (
         node.type !== AST_NODE_TYPES.MemberExpression ||
         node.computed ||
         node.property.type !== AST_NODE_TYPES.Identifier
     )
         return undefined;
-    const receiver = readSanitizerSource(node.object, source);
+    const receiver = getSanitizerSource(node.object, source);
     if (receiver.type !== AST_NODE_TYPES.ObjectExpression) return undefined;
-    return readOptionProperties(receiver, source).get(node.property.name)?.value;
+    return getOptionProperties(receiver, source).get(node.property.name)?.value;
 }
 
 function isLiteralSanitizerValue(
@@ -35,12 +35,12 @@ function isLiteralSanitizerValue(
     source: TSESLint.SourceCode,
     seen = new Set<TSESTree.Node>(),
 ): boolean {
-    const value = readSanitizerSource(node, source);
+    const value = getSanitizerSource(node, source);
     if (seen.has(value)) return false;
     seen.add(value);
     if (value.type === AST_NODE_TYPES.Literal) return true;
     if (value.type === AST_NODE_TYPES.TemplateLiteral) return value.expressions.length === 0;
-    const property = readSanitizerProperty(value, source);
+    const property = getSanitizerProperty(value, source);
     return property !== undefined && isLiteralSanitizerValue(property, source, seen);
 }
 

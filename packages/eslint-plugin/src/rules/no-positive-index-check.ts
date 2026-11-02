@@ -1,9 +1,9 @@
 import { createRule } from '../rule.ts';
 import { INDEX_OF_METHOD } from '../config/builtins.ts';
-import { readTypes, readTypeCategory } from '../checker.ts';
+import { getTypes, getTypeCategory } from '../checker.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function readSearchedArray({ left, right, operator }: TSESTree.BinaryExpression): TSESTree.Node | undefined {
+function getSearchedArray({ left, right, operator }: TSESTree.BinaryExpression): TSESTree.Node | undefined {
     if (operator !== '>' || right.type !== AST_NODE_TYPES.Literal || right.value !== 0) return undefined;
     if (left.type !== AST_NODE_TYPES.CallExpression || left.arguments.length !== 1) return undefined;
     const { callee } = left;
@@ -29,12 +29,12 @@ export const noPositiveIndexCheck = createRule<[], 'positive'>({
         messages: { positive: 'This check misses index 0. Use includes, or compare with >= 0.' },
     },
     create(context) {
-        const types = readTypes(context);
+        const types = getTypes(context);
         if (types === undefined) return {};
         return {
             BinaryExpression(node) {
-                const searched = readSearchedArray(node);
-                if (searched === undefined || readTypeCategory(types, types.read(searched)) !== 'array') return;
+                const searched = getSearchedArray(node);
+                if (searched === undefined || getTypeCategory(types, types.get(searched)) !== 'array') return;
                 context.report({ node, messageId: 'positive' });
             },
         };

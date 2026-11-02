@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readCallText } from '../modules.ts';
+import { getCallText } from '../modules.ts';
 import { CIPHER_FUNCTION, WEAK_CIPHER_PREFIXES } from '../config/security.ts';
 
 export const noWeakCipher = createRule<[], 'weak'>({
@@ -22,7 +22,7 @@ export const noWeakCipher = createRule<[], 'weak'>({
     create(context) {
         return {
             CallExpression(node) {
-                const cipher = readCallText(node, context.sourceCode, CIPHER_FUNCTION);
+                const cipher = getCallText(node, context.sourceCode, CIPHER_FUNCTION);
                 const text = cipher?.text.toLowerCase() ?? '';
                 if (cipher && WEAK_CIPHER_PREFIXES.some((prefix) => text.startsWith(prefix)))
                     context.report({ node: cipher.argument, messageId: 'weak' });

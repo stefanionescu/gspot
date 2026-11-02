@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readTypes } from '../checker.ts';
+import { getTypes } from '../checker.ts';
 import type { FunctionNode } from '../types/rules.ts';
 import { EMPTY_TYPE_NAMES } from '../config/builtins.ts';
 import type { TypeReader, CheckedType, CheckedSignature } from '../types/plugin.ts';
@@ -15,7 +15,7 @@ import {
     UNKNOWN_TYPE_NAMES,
 } from '../config/checker.ts';
 
-function readTypeLabel(returned: CheckedType, types: TypeReader): string {
+function getTypeLabel(returned: CheckedType, types: TypeReader): string {
     const { checker } = types;
     const type = checker.getBaseConstraintOfType(returned) ?? returned;
     const text = checker.typeToString(type);
@@ -34,7 +34,7 @@ function hasMixedReturnType(signature: CheckedSignature, returned: CheckedType, 
     const widened = checker.getBaseTypeOfLiteralType(returned);
     const members = widened.isUnion() ? widened.types : [];
     const filled = members.filter((member) => !EMPTY_TYPE_NAMES.has(checker.typeToString(member)));
-    const labels = new Set(filled.map((member) => readTypeLabel(member, types)));
+    const labels = new Set(filled.map((member) => getTypeLabel(member, types)));
     const isDocumented = signature.getJsDocTags().some(({ name }) => RETURN_DOC_TAGS.has(name));
     return labels.size > 1 && !isDocumented;
 }
@@ -58,26 +58,26 @@ function isMixedFunction(node: FunctionNode, values: readonly TSESTree.Expressio
     const returned = (node.async ? types.checker.getAwaitedType(resultType) : resultType) ?? resultType;
     if (!hasMixedReturnType(signature, returned, types) || isSanitation(returned, types)) return false;
     const labels = values.flatMap((value) => {
-        const type = types.read(value);
+        const type = types.get(value);
         const text = types.checker.typeToString(type);
-        return EMPTY_TYPE_NAMES.has(text) || text === ANY_TYPE ? [] : [readTypeLabel(type, types)];
+        return EMPTY_TYPE_NAMES.has(text) || text === ANY_TYPE ? [] : [getTypeLabel(type, types)];
     });
     return new Set(labels).size > 1;
 }
 
-function readNamedLocation(node: FunctionNode): TSESTree.SourceLocation | undefined {
+function getNamedLocation(node: FunctionNode): TSESTree.SourceLocation | undefined {
     const { parent } = node;
     if (node.type === AST_NODE_TYPES.FunctionDeclaration) return node.id?.loc;
     const isMember = parent.type === AST_NODE_TYPES.MethodDefinition || parent.type === AST_NODE_TYPES.Property;
     return node.type === AST_NODE_TYPES.FunctionExpression && isMember ? parent.key.loc : undefined;
 }
 
-function readFunctionLocation(node: FunctionNode, source: TSESLint.SourceCode): TSESTree.SourceLocation {
+function getFunctionLocation(node: FunctionNode, source: TSESLint.SourceCode): TSESTree.SourceLocation {
     const token =
         node.type === AST_NODE_TYPES.ArrowFunctionExpression
             ? source.getTokenBefore(node.body, { filter: ({ value }) => value === '=>' })
             : source.getFirstToken(node, { filter: ({ value }) => value === 'function' });
-    return readNamedLocation(node) ?? token?.loc ?? node.loc;
+    return getNamedLocation(node) ?? token?.loc ?? node.loc;
 }
 
 export const noMixedReturnTypes = createRule<[], 'mixed'>({
@@ -98,7 +98,7 @@ export const noMixedReturnTypes = createRule<[], 'mixed'>({
     },
     create(context) {
         const source = context.sourceCode;
-        const types = readTypes(context);
+        const types = getTypes(context);
         if (types === undefined) return {};
         const frames: TSESTree.Expression[][] = [];
         return {
@@ -109,7 +109,7 @@ export const noMixedReturnTypes = createRule<[], 'mixed'>({
             ':function:exit': (node: FunctionNode) => {
                 const values = frames.pop();
                 if (values !== undefined && isMixedFunction(node, values, types))
-                    context.report({ loc: readFunctionLocation(node, source), messageId: 'mixed' });
+                    context.report({ loc: getFunctionLocation(node, source), messageId: 'mixed' });
             },
         };
     },

@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
-import { readTypes } from '../checker.ts';
-import { readLocalFunction } from '../functions.ts';
+import { getTypes } from '../checker.ts';
+import { getLocalFunction } from '../functions.ts';
 import type { TypeReader } from '../types/plugin.ts';
 import { COMPARISON_OPERATORS } from '../config/rules.ts';
 import type { CallNode, SwappedPair, ParameterNames } from '../types/rules.ts';
@@ -15,7 +15,7 @@ import {
     NAMED_ARGUMENT_MINIMUM,
 } from '../config/calls.ts';
 
-function readParameterNames(
+function getParameterNames(
     call: CallNode,
     source: TSESLint.SourceCode,
     types: TypeReader | undefined,
@@ -25,7 +25,7 @@ function readParameterNames(
             .getResolvedSignature(types.map.get(call))
             ?.getParameters()
             .map(({ name }) => name);
-    return readLocalFunction(call.callee, source)?.params.map((parameter) => {
+    return getLocalFunction(call.callee, source)?.params.map((parameter) => {
         const target = parameter.type === AST_NODE_TYPES.AssignmentPattern ? parameter.left : parameter;
         return ASTUtils.isIdentifier(target) ? target.name : undefined;
     });
@@ -40,7 +40,7 @@ function isCryptoRotation({ callee, arguments: values }: CallNode, parameters: P
     return shifts.some((shift) => state.every((value, index) => value === names[(index + shift) % CRYPTO_STATE_SIZE]));
 }
 
-function readSwappedName(
+function getSwappedName(
     call: CallNode,
     names: ParameterNames,
     parameters: ParameterNames,
@@ -54,14 +54,14 @@ function readSwappedName(
     const values = call.arguments.filter((_, at) => at === index || at === position);
     const typeNames = new Set(
         values.map((value) => {
-            const name = types.checker.typeToString(types.checker.getBaseTypeOfLiteralType(types.read(value)));
+            const name = types.checker.typeToString(types.checker.getBaseTypeOfLiteralType(types.get(value)));
             return BOXED_TYPE_NAMES.get(name) ?? name;
         }),
     );
     return typeNames.size === 1 ? swapped : undefined;
 }
 
-function readIfCondition(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Expression | undefined {
+function getIfCondition(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Expression | undefined {
     const statement = source
         .getAncestors(node)
         .findLast(({ type }) => type === AST_NODE_TYPES.IfStatement || type === AST_NODE_TYPES.ConditionalExpression);
@@ -81,7 +81,7 @@ function listComparedSides(condition: TSESTree.Expression): TSESTree.Node[] {
         : [];
 }
 
-function readOperand(node: TSESTree.Node, source: TSESLint.SourceCode): TSESLint.Scope.Variable | string | undefined {
+function getOperand(node: TSESTree.Node, source: TSESLint.SourceCode): TSESLint.Scope.Variable | string | undefined {
     let operand = node;
     while (operand.type === AST_NODE_TYPES.CallExpression || operand.type === AST_NODE_TYPES.MemberExpression)
         operand = operand.type === AST_NODE_TYPES.CallExpression ? operand.callee : operand.object;
@@ -90,9 +90,9 @@ function readOperand(node: TSESTree.Node, source: TSESLint.SourceCode): TSESLint
 }
 
 function isCompared(call: CallNode, [first, second]: SwappedPair, source: TSESLint.SourceCode): boolean {
-    const condition = readIfCondition(call, source);
+    const condition = getIfCondition(call, source);
     const sides = condition === undefined ? [] : listComparedSides(condition);
-    const [left, right] = sides.map((side) => readOperand(side, source));
+    const [left, right] = sides.map((side) => getOperand(side, source));
     if (left === undefined || right === undefined) return false;
     const scope = source.getScope(call);
     const [one, two] = [first, second].map((name) => ASTUtils.findVariable(scope, name) ?? name);
@@ -123,10 +123,10 @@ function isExcused(call: CallNode, pair: SwappedPair, source: TSESLint.SourceCod
 function findSwap(call: CallNode, source: TSESLint.SourceCode, types: TypeReader | undefined): SwappedPair | undefined {
     const names = call.arguments.map((value) => (ASTUtils.isIdentifier(value) ? value.name : undefined));
     if (names.filter((name) => name !== undefined).length < NAMED_ARGUMENT_MINIMUM) return undefined;
-    const parameters = readParameterNames(call, source, types);
+    const parameters = getParameterNames(call, source, types);
     if (parameters === undefined || isCryptoRotation(call, parameters)) return undefined;
     const pairs = names.flatMap((name, index) => {
-        const swapped = readSwappedName(call, names, parameters, index, types);
+        const swapped = getSwappedName(call, names, parameters, index, types);
         return name === undefined || swapped === undefined ? [] : [[name, swapped] as const];
     });
     return pairs.find((pair) => !isExcused(call, pair, source));
@@ -152,7 +152,7 @@ export const noSwappedArguments = createRule<[], 'swapped'>({
     },
     create(context) {
         const source = context.sourceCode;
-        const types = readTypes(context);
+        const types = getTypes(context);
         const inspect = (call: CallNode) => {
             const pair = findSwap(call, source, types);
             const [first] = call.arguments;

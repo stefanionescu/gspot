@@ -1,8 +1,8 @@
 import { createRule } from '../rule.ts';
 import { listCdkTableIssues } from '../aws.ts';
-import { readQualifiedName } from '../modules.ts';
+import { getQualifiedName } from '../modules.ts';
 import { TLS_CHECKS } from '../config/networks.ts';
-import { listOptionLiterals, readOptionProperties } from '../expressions.ts';
+import { listOptionLiterals, getOptionProperties } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -19,7 +19,7 @@ function listFlags(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node): 
         return [...listFlags(source, node.left), ...listFlags(source, node.right)];
     const isConstant =
         node.type === AST_NODE_TYPES.MemberExpression &&
-        TLS_CONSTANTS_MODULES.has(readQualifiedName(node.object, source));
+        TLS_CONSTANTS_MODULES.has(getQualifiedName(node.object, source));
     return [isConstant ? ASTUtils.getPropertyName(node) : null];
 }
 
@@ -47,18 +47,18 @@ export const weakSsl = createRule<[], 'oldVersion' | 'oldProtocols' | 'omittedPo
     },
     create(context) {
         const source = context.sourceCode;
-        const readOption = (options: TSESTree.ObjectExpression, option: string) => {
-            const property = readOptionProperties(options, source).get(option);
+        const getOption = (options: TSESTree.ObjectExpression, option: string) => {
+            const property = getOptionProperties(options, source).get(option);
             const value = property ? ASTUtils.getStaticValue(property.value, source.getScope(property)) : null;
             return { property, value: value?.value, isKnown: value !== null };
         };
         const checkVersions = (options: TSESTree.ObjectExpression): void => {
             for (const option of TLS_VERSION_OPTIONS) {
-                const { property, value } = readOption(options, option);
+                const { property, value } = getOption(options, option);
                 if (property && WEAK_TLS_VERSIONS.has(value))
                     context.report({ node: property, messageId: 'oldVersion', data: { option } });
             }
-            const protocol = readOption(options, 'secureProtocol');
+            const protocol = getOption(options, 'secureProtocol');
             if (protocol.property && protocol.isKnown && !SECURE_PROTOCOLS.has(protocol.value))
                 context.report({
                     node: protocol.property,
@@ -67,7 +67,7 @@ export const weakSsl = createRule<[], 'oldVersion' | 'oldProtocols' | 'omittedPo
                 });
         };
         const checkFlags = (options: TSESTree.ObjectExpression): void => {
-            const flags = readOptionProperties(options, source).get('secureOptions');
+            const flags = getOptionProperties(options, source).get('secureOptions');
             const names = flags ? listFlags(source, flags.value) : [];
             if (flags && !names.includes(null) && REQUIRED_TLS_FLAGS.some((flag) => !names.includes(flag)))
                 context.report({ node: flags, messageId: 'oldProtocols', data: { option: 'secureOptions' } });

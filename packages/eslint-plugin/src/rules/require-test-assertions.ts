@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readTypes } from '../checker.ts';
+import { getTypes } from '../checker.ts';
 import { usesModule } from '../packages.ts';
 import { listChildNodes } from '../testing.ts';
 import type { TypeReader } from '../types/plugin.ts';
@@ -19,7 +19,7 @@ import {
     TEST_FRAMEWORK_DEPENDENCIES,
 } from '../config/evidence.ts';
 
-function readTestCallback(node: TSESTree.CallExpression, source: TSESLint.SourceCode): TSESTree.Node | undefined {
+function getTestCallback(node: TSESTree.CallExpression, source: TSESLint.SourceCode): TSESTree.Node | undefined {
     const callback = node.arguments.at(1);
     const isTest = CHECKED_TEST_CALLEE.test(source.getText(node.callee));
     return isTest && callback !== undefined && ASTUtils.isFunction(callback) ? callback : undefined;
@@ -31,7 +31,7 @@ function usesDone(callback: TSESTree.Node, source: TSESLint.SourceCode, doneUses
     return isFirst && done?.references.some((reference) => doneUses.has(reference.identifier)) === true;
 }
 
-function readLocalBody(node: TSESTree.Node | undefined): TSESTree.Node | undefined {
+function getLocalBody(node: TSESTree.Node | undefined): TSESTree.Node | undefined {
     const value = node?.type === AST_NODE_TYPES.VariableDeclarator ? node.init : node;
     const isFunction = value !== null && value !== undefined && ASTUtils.isFunction(value);
     return isFunction ? value.body : undefined;
@@ -40,13 +40,13 @@ function readLocalBody(node: TSESTree.Node | undefined): TSESTree.Node | undefin
 function isHttpExpectation(node: TSESTree.CallExpression, types: TypeReader | undefined): boolean {
     const { callee } = node;
     const method = callee.type === AST_NODE_TYPES.MemberExpression ? ASTUtils.getPropertyName(callee) : null;
-    const declaration = types?.read(callee).getCallSignatures().at(0)?.getDeclaration();
+    const declaration = types?.get(callee).getCallSignatures().at(0)?.getDeclaration();
     const file = declaration?.getSourceFile().fileName ?? '';
     return HTTP_EXPECTATIONS.has(method) && file.includes(HTTP_TESTING_MODULE);
 }
 
-function readImportedText(callee: TSESTree.Node, types: TypeReader): string {
-    const declaration = types.read(callee).getCallSignatures().at(0)?.getDeclaration();
+function getImportedText(callee: TSESTree.Node, types: TypeReader): string {
+    const declaration = types.get(callee).getCallSignatures().at(0)?.getDeclaration();
     const isOwn = declaration !== undefined && !types.program.isSourceFileDefaultLibrary(declaration.getSourceFile());
     return isOwn ? declaration.getText() : '';
 }
@@ -57,8 +57,8 @@ function hasCalleeAssertion(node: TSESTree.CallExpression, search: AssertionSear
         callee.type === AST_NODE_TYPES.Identifier
             ? ASTUtils.findVariable(search.source.getScope(callee), callee)
             : null;
-    const body = readLocalBody(variable?.defs.at(0)?.node);
-    const text = search.types === undefined || body !== undefined ? '' : readImportedText(callee, search.types);
+    const body = getLocalBody(variable?.defs.at(0)?.node);
+    const text = search.types === undefined || body !== undefined ? '' : getImportedText(callee, search.types);
     return body === undefined ? ASSERTION_TEXT.test(text) : hasAssertion(body, search);
 }
 
@@ -99,12 +99,12 @@ export const requireTestAssertions = createRule<[], 'missing'>({
         const source = context.sourceCode;
         const doneUses = new Set<TSESTree.Node>();
         const hasTests = usesModule(context, TEST_FRAMEWORK_IMPORTS, TEST_FRAMEWORK_DEPENDENCIES);
-        const search = { context, source, types: readTypes(context), visited: new Map<TSESTree.Node, boolean>() };
+        const search = { context, source, types: getTypes(context), visited: new Map<TSESTree.Node, boolean>() };
         if (!hasTests || !usesModule(context, EVIDENCE_IMPORTS, EVIDENCE_DEPENDENCIES)) return {};
         return {
             [DONE_CALLBACKS]: (node: TSESTree.Identifier) => doneUses.add(node),
             'CallExpression:exit'(node: TSESTree.CallExpression) {
-                const callback = readTestCallback(node, source);
+                const callback = getTestCallback(node, source);
                 const isChecked =
                     callback === undefined || usesDone(callback, source, doneUses) || hasAssertion(callback, search);
                 if (!isChecked) context.report({ node: node.callee, messageId: 'missing' });

@@ -1,13 +1,13 @@
 import { createRule } from '../rule.ts';
-import { readTestCall } from '../testing.ts';
-import { readModuleName } from '../modules.ts';
+import { getTestCall } from '../testing.ts';
+import { getModuleName } from '../modules.ts';
+import { getTypes, isThenable } from '../checker.ts';
 import type { TypeReader } from '../types/plugin.ts';
-import { readTypes, isThenable } from '../checker.ts';
 import type { ThrowAssertion } from '../types/rules.ts';
 import { THROW_EXPECTS, UNCERTAIN_TYPES } from '../config/matchers.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function readThrowExpect(
+function getThrowExpect(
     callee: TSESTree.MemberExpression,
     source: TSESLint.SourceCode,
 ): TSESTree.CallExpression | undefined {
@@ -17,16 +17,16 @@ function readThrowExpect(
             ? object.object
             : object;
     const isExpect =
-        expect.type === AST_NODE_TYPES.CallExpression && THROW_EXPECTS.has(readModuleName(expect.callee, source));
+        expect.type === AST_NODE_TYPES.CallExpression && THROW_EXPECTS.has(getModuleName(expect.callee, source));
     return isExpect ? expect : undefined;
 }
 
-function readThrowAssertion(
+function getThrowAssertion(
     node: TSESTree.CallExpression & { callee: TSESTree.MemberExpression },
     source: TSESLint.SourceCode,
 ): ThrowAssertion | undefined {
     const { callee, parent } = node;
-    const expect = readThrowExpect(callee, source);
+    const expect = getThrowExpect(callee, source);
     const received = expect?.arguments
         .slice(0, 1)
         .find((argument): argument is TSESTree.Expression => argument.type !== AST_NODE_TYPES.SpreadElement);
@@ -37,7 +37,7 @@ function readThrowAssertion(
 }
 
 function isNonCallable(types: TypeReader, node: TSESTree.Node): boolean {
-    const type = types.read(node);
+    const type = types.get(node);
     const members = type.isUnion() ? type.types : [type];
     return members.every(
         (member) =>
@@ -51,12 +51,12 @@ function isNonCallable(types: TypeReader, node: TSESTree.Node): boolean {
 function isAsyncTest(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     const callback = source.getAncestors(node).findLast((ancestor) => ASTUtils.isFunction(ancestor));
     const test =
-        callback?.parent.type === AST_NODE_TYPES.CallExpression ? readTestCall(callback.parent, source) : undefined;
+        callback?.parent.type === AST_NODE_TYPES.CallExpression ? getTestCall(callback.parent, source) : undefined;
     const tested = test?.callback;
     return tested !== undefined && tested === callback && tested.async && tested.params.length === 0;
 }
 
-function readRejectionFix(
+function getRejectionFix(
     assertion: ThrowAssertion,
     node: TSESTree.CallExpression,
     source: TSESLint.SourceCode,
@@ -76,7 +76,7 @@ function readRejectionFix(
     ];
 }
 
-function readWrapFix(
+function getWrapFix(
     assertion: ThrowAssertion,
     types: TypeReader,
     source: TSESLint.SourceCode,
@@ -111,12 +111,12 @@ export const validThrowAssertions = createRule<[], 'async' | 'value' | 'rejectio
     },
     create(context) {
         const source = context.sourceCode;
-        const types = readTypes(context);
+        const types = getTypes(context);
         return {
             'CallExpression[callee.type="MemberExpression"][callee.property.name=/^toThrow(?:Error)?$/]'(
                 node: TSESTree.CallExpression & { callee: TSESTree.MemberExpression },
             ) {
-                const assertion = readThrowAssertion(node, source);
+                const assertion = getThrowAssertion(node, source);
                 if (assertion === undefined) return;
                 const { received } = assertion;
                 const isAsync =
@@ -128,7 +128,7 @@ export const validThrowAssertions = createRule<[], 'async' | 'value' | 'rejectio
                     context.report({
                         node: received,
                         messageId: 'async',
-                        suggest: readRejectionFix(assertion, node, source),
+                        suggest: getRejectionFix(assertion, node, source),
                     });
                     return;
                 }
@@ -137,7 +137,7 @@ export const validThrowAssertions = createRule<[], 'async' | 'value' | 'rejectio
                         node: received,
                         messageId: 'value',
                         data: { matcher: assertion.matcher },
-                        suggest: readWrapFix(assertion, types, source),
+                        suggest: getWrapFix(assertion, types, source),
                     });
             },
         };

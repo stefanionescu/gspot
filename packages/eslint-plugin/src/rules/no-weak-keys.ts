@@ -1,9 +1,9 @@
 import { createRule } from '../rule.ts';
-import { readExpressionValue, readOptionProperties } from '../expressions.ts';
+import { getExpressionValue, getOptionProperties } from '../expressions.ts';
 import { WEAK_CURVES, KEY_PAIR_SELECTOR, MINIMUM_KEY_LENGTHS } from '../config/security.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function readStaticValue(
+function getStaticValue(
     source: Readonly<TSESLint.SourceCode>,
     property: TSESTree.Property | null | undefined,
 ): unknown {
@@ -36,8 +36,8 @@ export const noWeakKeys = createRule<[], 'shortKey' | 'weakCurve'>({
         const source = context.sourceCode;
         const checkLengths = (algorithm: string, options: TSESTree.ObjectExpression): void => {
             for (const [option, minimum] of Object.entries(MINIMUM_KEY_LENGTHS)) {
-                const property = readOptionProperties(options, source).get(option);
-                const length = readStaticValue(source, property);
+                const property = getOptionProperties(options, source).get(option);
+                const length = getStaticValue(source, property);
                 if (property && typeof length === 'number' && length > 0 && length < minimum)
                     context.report({
                         node: property,
@@ -47,15 +47,15 @@ export const noWeakKeys = createRule<[], 'shortKey' | 'weakCurve'>({
             }
         };
         const checkCurve = (options: TSESTree.ObjectExpression): void => {
-            const curve = readOptionProperties(options, source).get('namedCurve');
-            const name = readStaticValue(source, curve);
+            const curve = getOptionProperties(options, source).get('namedCurve');
+            const name = getStaticValue(source, curve);
             if (curve && typeof name === 'string' && WEAK_CURVES.has(name))
                 context.report({ node: curve, messageId: 'weakCurve', data: { curve: name } });
         };
         return {
             [KEY_PAIR_SELECTOR](node: TSESTree.CallExpression) {
                 const [algorithmArgument, optionsArgument] = node.arguments;
-                const options = readExpressionValue(optionsArgument, source);
+                const options = getExpressionValue(optionsArgument, source);
                 if (algorithmArgument === undefined || options?.type !== AST_NODE_TYPES.ObjectExpression) return;
                 const algorithm = ASTUtils.getStaticValue(algorithmArgument, source.getScope(node))?.value;
                 if (algorithm === 'ec') checkCurve(options);

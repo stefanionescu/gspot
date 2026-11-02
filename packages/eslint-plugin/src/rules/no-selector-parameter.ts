@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readTypes } from '../checker.ts';
+import { getTypes } from '../checker.ts';
 import { listChildren } from '../syntax.ts';
 import type { TypeReader } from '../types/plugin.ts';
 import type { FunctionNode } from '../types/rules.ts';
@@ -18,11 +18,11 @@ function hasSideEffects(node: TSESTree.Node): boolean {
     return listChildren(node, EFFECT_CHILD_KEYS).some((child) => hasSideEffects(child));
 }
 
-function readSelector(node: TSESTree.Identifier, source: TSESLint.SourceCode, types: TypeReader): string | undefined {
+function getSelector(node: TSESTree.Identifier, source: TSESLint.SourceCode, types: TypeReader): string | undefined {
     const definition = ASTUtils.findVariable(source.getScope(node), node)?.defs.at(-1);
     const parameter = definition?.type === TSESLint.Scope.DefinitionType.Parameter ? definition.name : undefined;
     if (!ASTUtils.isIdentifier(parameter) || parameter.parent.type === AST_NODE_TYPES.Property) return undefined;
-    const type = types.checker.getBaseTypeOfLiteralType(types.read(parameter));
+    const type = types.checker.getBaseTypeOfLiteralType(types.get(parameter));
     return type === types.checker.getBooleanType() ? parameter.name : undefined;
 }
 
@@ -45,7 +45,7 @@ export const noSelectorParameter = createRule<[], 'selector'>({
     },
     create(context) {
         const source = context.sourceCode;
-        const types = readTypes(context);
+        const types = getTypes(context);
         if (types === undefined) return {};
         const bodies = new Set<TSESTree.Node>();
         const tests: TSESTree.Node[] = [];
@@ -73,7 +73,7 @@ export const noSelectorParameter = createRule<[], 'selector'>({
                 if (tests.length === 0) return;
                 const ancestors = new Set(source.getAncestors(node));
                 if (!tests.some((test) => Object.is(test, node) || ancestors.has(test))) return;
-                const name = readSelector(node, source, types);
+                const name = getSelector(node, source, types);
                 if (name !== undefined) context.report({ node, messageId: 'selector', data: { name } });
             },
         };

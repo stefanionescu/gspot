@@ -2,7 +2,7 @@ import { createRule } from '../rule.ts';
 import type { StateHook } from '../types/rules.ts';
 import { FUNCTION_NODES } from '../config/rules.ts';
 import { COMPONENT_NAME } from '../config/frameworks.ts';
-import { readStateHook, isNamedFunction } from '../react.ts';
+import { getStateHook, isNamedFunction } from '../react.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isComponentBody(hook: StateHook, ancestors: TSESTree.Node[], source: TSESLint.SourceCode): boolean {
@@ -40,7 +40,7 @@ export const noSetterInComponent = createRule<[], 'setter'>({
             'CallExpression[callee.type="Identifier"][arguments.length=1]'(
                 node: TSESTree.CallExpression & { callee: TSESTree.Identifier },
             ) {
-                const hook = readStateHook(node.callee, source);
+                const hook = getStateHook(node.callee, source);
                 const isSetter = hook !== undefined && hook.name === hook.setter;
                 if (isSetter && isComponentBody(hook, source.getAncestors(node), source))
                     context.report({ node: node.callee, messageId: 'setter' });

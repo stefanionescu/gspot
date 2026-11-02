@@ -1,12 +1,12 @@
 import { createRule } from '../rule.ts';
-import { readNextStatement } from '../syntax.ts';
+import { getNextStatement } from '../syntax.ts';
 import { IMMEDIATE_RETURN_DECLARATION } from '../config/rules.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function readExitStatement(
+function getExitStatement(
     node: TSESTree.VariableDeclaration,
 ): TSESTree.ReturnStatement | TSESTree.ThrowStatement | undefined {
-    const next = readNextStatement(node);
+    const next = getNextStatement(node);
     if (next?.type === AST_NODE_TYPES.ReturnStatement) return next;
     if (next?.type === AST_NODE_TYPES.ThrowStatement) return next;
     return undefined;
@@ -31,7 +31,7 @@ export const preferImmediateReturn = createRule<[], 'immediate'>({
         return {
             [IMMEDIATE_RETURN_DECLARATION](declaration: TSESTree.VariableDeclarator) {
                 const node = declaration.parent;
-                const next = readExitStatement(node);
+                const next = getExitStatement(node);
                 if (next?.argument?.type !== AST_NODE_TYPES.Identifier) return;
                 const argument = next.argument;
                 const references = context.sourceCode

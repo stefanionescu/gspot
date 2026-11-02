@@ -1,11 +1,11 @@
 import { createRule } from '../rule.ts';
-import { readTestCall, listBodyNodes } from '../testing.ts';
+import { getTestCall, listBodyNodes } from '../testing.ts';
 import { MOCHA_CONSTRUCTS, MARKED_TEST_MODIFIERS } from '../config/testing.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isInsideTest(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     return source.getAncestors(node).some((ancestor) => {
-        const call = ancestor.type === AST_NODE_TYPES.CallExpression ? readTestCall(ancestor, source) : undefined;
+        const call = ancestor.type === AST_NODE_TYPES.CallExpression ? getTestCall(ancestor, source) : undefined;
         const isMarked = call?.modifiers.every((modifier) => MARKED_TEST_MODIFIERS.has(modifier)) === true;
         return isMarked && MOCHA_CONSTRUCTS.has(call.name);
     });

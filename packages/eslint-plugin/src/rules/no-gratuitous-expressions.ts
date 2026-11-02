@@ -16,7 +16,7 @@ function listConjuncts(test: TSESTree.Expression): TSESTree.Expression[] {
     return [...conjuncts, operand];
 }
 
-function readTestedName(node: TSESTree.Expression): TestedName | undefined {
+function getTestedName(node: TSESTree.Expression): TestedName | undefined {
     if (ASTUtils.isIdentifier(node)) return { identifier: node, value: 'truthy' };
     if (!isNegation(node)) return undefined;
     const { argument } = node;
@@ -25,24 +25,24 @@ function readTestedName(node: TSESTree.Expression): TestedName | undefined {
 
 function listTestedNames(node: TSESTree.Node, statement: TSESTree.IfStatement): TestedName[] {
     const { test } = statement;
-    if (Object.is(statement.consequent, node)) return listConjuncts(test).flatMap((each) => readTestedName(each) ?? []);
+    if (Object.is(statement.consequent, node)) return listConjuncts(test).flatMap((each) => getTestedName(each) ?? []);
     const isElse = Object.is(statement.alternate, node) && ASTUtils.isIdentifier(test);
     return isElse ? [{ identifier: test, value: 'falsy' }] : [];
 }
 
-function readFunctionScope(scope: TSESLint.Scope.Scope | null): TSESLint.Scope.Scope | null {
+function getFunctionScope(scope: TSESLint.Scope.Scope | null): TSESLint.Scope.Scope | null {
     let enclosing = scope;
     while (enclosing !== null && enclosing.type !== TSESLint.Scope.ScopeType.function) enclosing = enclosing.upper;
     return enclosing;
 }
 
 function isWrittenAround(variable: TSESLint.Scope.Variable, scope: TSESLint.Scope.Scope): boolean {
-    const functionScope = readFunctionScope(scope);
+    const functionScope = getFunctionScope(scope);
     return variable.references.some(
         (reference) =>
             reference.isWrite() &&
             (reference.identifier.range[0] > scope.block.range[0] ||
-                !Object.is(readFunctionScope(reference.from), functionScope)),
+                !Object.is(getFunctionScope(reference.from), functionScope)),
     );
 }
 

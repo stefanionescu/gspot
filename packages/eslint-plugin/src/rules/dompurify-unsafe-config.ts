@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readQualifiedName } from '../modules.ts';
+import { getQualifiedName } from '../modules.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -74,7 +74,7 @@ export const dompurifyUnsafeConfig = createRule<[], 'unsafe'>({
                 const config = node.arguments[SANITIZE_CONFIG_ARGUMENT];
                 if (
                     config?.type !== AST_NODE_TYPES.ObjectExpression ||
-                    !SANITIZE_FUNCTIONS.has(readQualifiedName(node, source))
+                    !SANITIZE_FUNCTIONS.has(getQualifiedName(node, source))
                 )
                     return;
                 const actions = config.properties.flatMap((property) => {

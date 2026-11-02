@@ -16,7 +16,7 @@ function isBranchBody(node: TSESTree.BlockStatement | TSESTree.ExpressionStateme
     return keys.some((key) => Object.is(parent[key as keyof TSESTree.Node], node));
 }
 
-function readEnclosingAction(identifier: TSESTree.Node): TSESTree.Expression | undefined {
+function getEnclosingAction(identifier: TSESTree.Node): TSESTree.Expression | undefined {
     let node: TSESTree.Node | undefined = identifier;
     while (node !== undefined && node.type !== AST_NODE_TYPES.ExpressionStatement && !ASTUtils.isFunction(node))
         node = node.parent;
@@ -26,7 +26,7 @@ function readEnclosingAction(identifier: TSESTree.Node): TSESTree.Expression | u
 }
 
 function isChangedLater(reference: TSESLint.Scope.Reference): boolean {
-    const action = readEnclosingAction(reference.identifier);
+    const action = getEnclosingAction(reference.identifier);
     if (reference.isWrite() || action?.type === AST_NODE_TYPES.CallExpression) return true;
     if (action?.type !== AST_NODE_TYPES.AssignmentExpression) return false;
     let target: TSESTree.Node = action.left;
@@ -34,35 +34,35 @@ function isChangedLater(reference: TSESLint.Scope.Reference): boolean {
     return Object.is(target, reference.identifier);
 }
 
-function readStableVariable(node: TSESTree.Identifier, source: TSESLint.SourceCode) {
+function getStableVariable(node: TSESTree.Identifier, source: TSESLint.SourceCode) {
     const variable = ASTUtils.findVariable(source.getScope(node), node);
     if (variable?.scope !== source.getScope(node).variableScope) return undefined;
     return variable.references.slice(1).some((reference) => isChangedLater(reference)) ? undefined : variable;
 }
 
-function readVariableLiteral(node: TSESTree.Identifier, source: TSESLint.SourceCode): { value: unknown } | undefined {
-    const definitions = readStableVariable(node, source)?.defs ?? [];
+function getVariableLiteral(node: TSESTree.Identifier, source: TSESLint.SourceCode): { value: unknown } | undefined {
+    const definitions = getStableVariable(node, source)?.defs ?? [];
     const [definition] = definitions;
     const declarator = definitions.length === 1 ? definition?.node : undefined;
     if (declarator?.type !== AST_NODE_TYPES.VariableDeclarator || declarator.init === null) return undefined;
-    return readLiteral(declarator.init, source);
+    return getLiteral(declarator.init, source);
 }
 
-function readLiteral(node: TSESTree.Node, source: TSESLint.SourceCode): { value: unknown } | undefined {
-    if (node.type === AST_NODE_TYPES.Identifier) return readVariableLiteral(node, source);
+function getLiteral(node: TSESTree.Node, source: TSESLint.SourceCode): { value: unknown } | undefined {
+    if (node.type === AST_NODE_TYPES.Identifier) return getVariableLiteral(node, source);
     return ASTUtils.getStaticValue(node, source.getScope(node)) ?? undefined;
 }
 
 function isSameVariable(values: readonly TSESTree.Node[], source: TSESLint.SourceCode): boolean {
     const [first] = values;
     if (first?.type !== AST_NODE_TYPES.Identifier) return false;
-    const references = readStableVariable(first, source)?.references ?? [];
+    const references = getStableVariable(first, source)?.references ?? [];
     const reads = new Set<TSESTree.Node>(references.slice(1).map(({ identifier }) => identifier));
     return values.every((value) => reads.has(value));
 }
 
 function isSameLiteral(values: readonly TSESTree.Node[], source: TSESLint.SourceCode): boolean {
-    const literals = values.map((value) => readLiteral(value, source));
+    const literals = values.map((value) => getLiteral(value, source));
     const [first] = literals;
     if (first === undefined) return false;
     return literals.every((literal) => literal !== undefined && Object.is(literal.value, first.value));

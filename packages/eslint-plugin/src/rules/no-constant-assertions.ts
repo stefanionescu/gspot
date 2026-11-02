@@ -4,7 +4,7 @@ import { ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils
 import type { Assertion, AssertedValue, ConstantFinding } from '../types/rules.ts';
 import { FRESH_VALUES, DEEP_MATCHERS, IDENTITY_STYLES, FRESH_PREDICATES } from '../config/assertions.ts';
 
-function readValue(node: TSESTree.Node, source: TSESLint.SourceCode): AssertedValue {
+function getValue(node: TSESTree.Node, source: TSESLint.SourceCode): AssertedValue {
     const evaluated = ASTUtils.getStaticValue(node, source.getScope(node));
     const value: unknown = evaluated?.value;
     const isFresh = FRESH_VALUES.has(node.type) || value instanceof RegExp;
@@ -27,11 +27,11 @@ function isPredicateMet(assertion: Assertion & { kind: 'predicate' }, value: unk
     return results[assertion.predicate] !== assertion.negated;
 }
 
-function readPredicateFinding(
+function getPredicateFinding(
     assertion: Assertion & { kind: 'predicate' },
     source: TSESLint.SourceCode,
 ): ConstantFinding | undefined {
-    const { isFresh, isConstant, value } = readValue(assertion.received, source);
+    const { isFresh, isConstant, value } = getValue(assertion.received, source);
     if (isFresh && FRESH_PREDICATES.has(assertion.predicate) !== assertion.negated)
         return { node: assertion.received, messageId: 'fresh' };
     return isConstant && isPredicateMet(assertion, value)
@@ -45,24 +45,24 @@ function areEqual(left: unknown, right: unknown, assertion: Assertion & { kind: 
     return usesIdentity ? Object.is(left, right) : left === right || areNullish;
 }
 
-function readIdentityFinding(
+function getIdentityFinding(
     assertion: Assertion & { kind: 'comparison' },
     source: TSESLint.SourceCode,
 ): ConstantFinding | undefined {
-    const fresh = [assertion.received, assertion.expected].find((value) => readValue(value, source).isFresh);
+    const fresh = [assertion.received, assertion.expected].find((value) => getValue(value, source).isFresh);
     const [positive, negative] = DEEP_MATCHERS[assertion.style];
     if (assertion.comparison !== 'strict' || fresh === undefined) return undefined;
     return { node: fresh, messageId: 'identity', matcher: assertion.negated ? negative : positive };
 }
 
-function readComparisonFinding(
+function getComparisonFinding(
     assertion: Assertion & { kind: 'comparison' },
     source: TSESLint.SourceCode,
 ): ConstantFinding | undefined {
-    const identity = readIdentityFinding(assertion, source);
+    const identity = getIdentityFinding(assertion, source);
     if (identity !== undefined || assertion.comparison === 'deep') return identity;
-    const left = readValue(assertion.received, source);
-    const right = readValue(assertion.expected, source);
+    const left = getValue(assertion.received, source);
+    const right = getValue(assertion.expected, source);
     const isAlways =
         left.isConstant && right.isConstant && areEqual(left.value, right.value, assertion) !== assertion.negated;
     return isAlways ? { node: assertion.received, messageId: 'constant' } : undefined;
@@ -96,8 +96,8 @@ export const noConstantAssertions = createRule<[], 'constant' | 'fresh' | 'ident
                 if (assertion === undefined) return;
                 const finding =
                     assertion.kind === 'predicate'
-                        ? readPredicateFinding(assertion, source)
-                        : readComparisonFinding(assertion, source);
+                        ? getPredicateFinding(assertion, source)
+                        : getComparisonFinding(assertion, source);
                 if (finding !== undefined)
                     context.report({
                         node: finding.node,

@@ -1,8 +1,8 @@
 import { createRule } from '../rule.ts';
 import { findFunction } from '../functions.ts';
-import { readQualifiedName } from '../modules.ts';
+import { getQualifiedName } from '../modules.ts';
 import type { FunctionNode, EscapingSetting } from '../types/rules.ts';
-import { readExpressionValue, readOptionProperties } from '../expressions.ts';
+import { getExpressionValue, getOptionProperties } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { ESCAPING_CALLS, MUSTACHE_GLOBAL, MUSTACHE_ESCAPE, ESCAPING_CONSTRUCTIONS } from '../config/servers.ts';
 
@@ -11,13 +11,13 @@ function isEscapingOff(
     node: TSESTree.CallExpression | TSESTree.NewExpression,
     settings: Readonly<Record<string, EscapingSetting>>,
 ): boolean {
-    const name = readQualifiedName(node, source) ?? '';
+    const name = getQualifiedName(node, source) ?? '';
     const setting = Object.hasOwn(settings, name) ? settings[name] : undefined;
     if (setting === undefined) return false;
-    const options = readExpressionValue(node.arguments[setting.argument], source);
+    const options = getExpressionValue(node.arguments[setting.argument], source);
     const property =
         options?.type === AST_NODE_TYPES.ObjectExpression
-            ? readOptionProperties(options, source).get(setting.property)
+            ? getOptionProperties(options, source).get(setting.property)
             : null;
     return property ? ASTUtils.getStaticValue(property.value, source.getScope(node))?.value === setting.value : false;
 }
@@ -67,7 +67,7 @@ export const disabledAutoEscaping = createRule<[], 'unescaped'>({
             'AssignmentExpression[left.type="MemberExpression"]'(node: TSESTree.AssignmentExpression) {
                 const target = node.left as TSESTree.MemberExpression;
                 const isMustache =
-                    readQualifiedName(target, source) === MUSTACHE_ESCAPE ||
+                    getQualifiedName(target, source) === MUSTACHE_ESCAPE ||
                     (ASTUtils.isIdentifier(target.object) &&
                         target.object.name === MUSTACHE_GLOBAL &&
                         ASTUtils.getPropertyName(target) === 'escape');

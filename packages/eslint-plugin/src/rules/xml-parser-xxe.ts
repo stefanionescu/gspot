@@ -1,8 +1,8 @@
 import { createRule } from '../rule.ts';
-import { readQualifiedName } from '../modules.ts';
+import { getQualifiedName } from '../modules.ts';
 import { XML_PARSERS } from '../config/servers.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { readExpressionValue, readOptionProperties } from '../expressions.ts';
+import { getExpressionValue, getOptionProperties } from '../expressions.ts';
 
 export const xmlParserXxe = createRule<[], 'entities'>({
     name: 'xml-parser-xxe',
@@ -25,13 +25,13 @@ export const xmlParserXxe = createRule<[], 'entities'>({
         const source = context.sourceCode;
         return {
             CallExpression(node) {
-                const options = readExpressionValue(node.arguments[1], source);
+                const options = getExpressionValue(node.arguments[1], source);
                 if (
                     options?.type !== AST_NODE_TYPES.ObjectExpression ||
-                    !XML_PARSERS.has(readQualifiedName(node, source))
+                    !XML_PARSERS.has(getQualifiedName(node, source))
                 )
                     return;
-                const entities = readOptionProperties(options, source).get('noent');
+                const entities = getOptionProperties(options, source).get('noent');
                 if (entities?.value.type === AST_NODE_TYPES.Literal && entities.value.value === true)
                     context.report({ node: entities, messageId: 'entities' });
             },

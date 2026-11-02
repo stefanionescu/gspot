@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function readDetachedCallToken(
+function getDetachedCallToken(
     node: TSESTree.CallExpression,
     first: TSESTree.CallExpressionArgument,
     source: TSESLint.SourceCode,
@@ -39,7 +39,7 @@ export const noDetachedCall = createRule<[], 'call' | 'template'>({
                 const [first, ...others] = node.arguments;
                 if (node.callee.type === AST_NODE_TYPES.CallExpression || first === undefined || others.length > 0)
                     return;
-                const delimiter = readDetachedCallToken(node, first, context.sourceCode);
+                const delimiter = getDetachedCallToken(node, first, context.sourceCode);
                 if (delimiter !== undefined) context.report({ node, loc: delimiter.loc, messageId: 'call' });
             },
             TaggedTemplateExpression: (node) => {

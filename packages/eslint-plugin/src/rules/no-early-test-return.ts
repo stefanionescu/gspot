@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readTestCall } from '../testing.ts';
+import { getTestCall } from '../testing.ts';
 import { usesModule, listImportedModules } from '../packages.ts';
 import type { TestCall, FileContext, EarlyReturnFramework } from '../types/rules.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
@@ -20,12 +20,12 @@ function selectFramework(context: FileContext): EarlyReturnFramework | undefined
         ?.framework;
 }
 
-function readRunningTest(
+function getRunningTest(
     node: TSESTree.CallExpression,
     source: TSESLint.SourceCode,
     framework: EarlyReturnFramework,
 ): TestCall | undefined {
-    const call = readTestCall(node, source);
+    const call = getTestCall(node, source);
     if (call?.kind !== 'test' || (framework === 'playwright' && call.module !== PLAYWRIGHT_MODULE)) return undefined;
     const isRunning = call.modifiers.every((modifier) => EARLY_RETURN_MODIFIERS[framework].has(modifier));
     return isRunning && call.callback === node.arguments.at(-1) ? call : undefined;
@@ -62,7 +62,7 @@ export const noEarlyTestReturn = createRule<[], EarlyReturnFramework>({
                 const callback = guard.parent.parent;
                 const call = callback?.parent;
                 if (call?.type !== AST_NODE_TYPES.CallExpression) return;
-                if (readRunningTest(call, context.sourceCode, framework)?.callback !== callback) return;
+                if (getRunningTest(call, context.sourceCode, framework)?.callback !== callback) return;
                 const { consequent } = guard;
                 const early = consequent.type === AST_NODE_TYPES.BlockStatement ? consequent.body[0] : consequent;
                 context.report({ node: early ?? guard, messageId: framework });

@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
-import { readModuleName } from '../modules.ts';
+import { getModuleName } from '../modules.ts';
 import { ASTUtils, TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { readLiteralValue, listArgumentValues, readExpressionValue, readOptionProperties } from '../expressions.ts';
+import { getLiteralValue, listArgumentValues, getExpressionValue, getOptionProperties } from '../expressions.ts';
 
 import {
     MINIMUM_HSTS_AGE,
@@ -17,7 +17,7 @@ function isApplication(identifier: TSESTree.Identifier, source: TSESLint.SourceC
             if (definition.type === TSESLint.Scope.DefinitionType.Parameter) return identifier.name === 'app';
             const init = definition.node.type === AST_NODE_TYPES.VariableDeclarator ? definition.node.init : null;
             if (init?.type !== AST_NODE_TYPES.CallExpression) return false;
-            const name = readModuleName(init.callee, source);
+            const name = getModuleName(init.callee, source);
             return name !== undefined && POWERED_BY_FACTORIES.has(name);
         }) === true
     );
@@ -28,7 +28,7 @@ function listMiddleware(
     source: TSESLint.SourceCode,
     seen = new Set<TSESTree.Node>(),
 ): TSESTree.CallExpression[] {
-    const value = readExpressionValue(node, source);
+    const value = getExpressionValue(node, source);
     if (value === undefined || seen.has(value)) return [];
     seen.add(value);
     if (value.type === AST_NODE_TYPES.CallExpression) return [value];
@@ -41,20 +41,20 @@ function listMiddleware(
 
 function hasUnsafeReferrerPolicy(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     return listArgumentValues([node], source).some((policy) => {
-        const literal = readLiteralValue(policy, source);
+        const literal = getLiteralValue(policy, source);
         return typeof literal === 'string' && UNSAFE_REFERRER_POLICIES.has(literal);
     });
 }
 
 function listUnsafeOptions(call: TSESTree.CallExpression, source: TSESLint.SourceCode): TSESTree.Property[] {
     if (call.arguments.length !== 1) return [];
-    const name = readModuleName(call.callee, source);
-    const properties = readOptionProperties(call.arguments[0], source);
+    const name = getModuleName(call.callee, source);
+    const properties = getOptionProperties(call.arguments[0], source);
     if (name === 'helmet')
         return [...properties.values()].filter((property) => {
             const key = ASTUtils.getPropertyName(property, source.getScope(property));
             return (
-                key !== null && DISABLED_SECURITY_HEADERS.has(key) && readLiteralValue(property.value, source) === false
+                key !== null && DISABLED_SECURITY_HEADERS.has(key) && getLiteralValue(property.value, source) === false
             );
         });
     if (name === 'helmet.referrerPolicy') {
@@ -64,7 +64,7 @@ function listUnsafeOptions(call: TSESTree.CallExpression, source: TSESLint.Sourc
     if (name !== 'helmet.hsts' && name !== 'hsts') return [];
     return [...properties.values()].filter((property) => {
         const key = ASTUtils.getPropertyName(property, source.getScope(property));
-        const value = readLiteralValue(property.value, source);
+        const value = getLiteralValue(property.value, source);
         return (
             (key === 'includeSubDomains' && value === false) ||
             (key === 'maxAge' && typeof value === 'number' && value < MINIMUM_HSTS_AGE)

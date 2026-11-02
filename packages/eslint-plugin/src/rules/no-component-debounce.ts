@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
+import { getModuleName } from '../modules.ts';
 import { isNamedFunction } from '../react.ts';
-import { readModuleName } from '../modules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -17,11 +17,11 @@ import {
 
 function isRefCall(node: TSESTree.Node | null | undefined, source: TSESLint.SourceCode): boolean {
     const callee = node?.type === AST_NODE_TYPES.CallExpression ? node.callee : undefined;
-    const name = callee === undefined ? undefined : readModuleName(callee, source);
+    const name = callee === undefined ? undefined : getModuleName(callee, source);
     return name === REACT_REF_HOOK;
 }
 
-function readRefTarget(call: TSESTree.CallExpression): TSESTree.Identifier | undefined {
+function getRefTarget(call: TSESTree.CallExpression): TSESTree.Identifier | undefined {
     const { parent } = call;
     const left =
         parent.type === AST_NODE_TYPES.AssignmentExpression && parent.operator === '=' ? parent.left : undefined;
@@ -29,7 +29,7 @@ function readRefTarget(call: TSESTree.CallExpression): TSESTree.Identifier | und
     return isRefValue && left.object.type === AST_NODE_TYPES.Identifier ? left.object : undefined;
 }
 
-function readGuard(statement: TSESTree.Node | undefined): TSESTree.Expression | undefined {
+function getGuard(statement: TSESTree.Node | undefined): TSESTree.Expression | undefined {
     const parent = statement?.parent;
     const branch = parent?.type === AST_NODE_TYPES.BlockStatement ? parent : statement;
     const owner = branch?.parent;
@@ -43,8 +43,8 @@ function isRefVariable(ref: TSESTree.Identifier, source: TSESLint.SourceCode): b
 }
 
 function isLazyRef(call: TSESTree.CallExpression, source: TSESLint.SourceCode): boolean {
-    const ref = readRefTarget(call);
-    const test = readGuard(call.parent.parent);
+    const ref = getRefTarget(call);
+    const test = getGuard(call.parent.parent);
     const guard =
         test === undefined || ref === undefined
             ? ''
@@ -58,7 +58,7 @@ function isExempt(call: TSESTree.CallExpression, callback: TSESTree.Node, source
     const isMemoized = inner.some(
         (ancestor) =>
             ancestor.type === AST_NODE_TYPES.CallExpression &&
-            CACHING_HOOK.test(readModuleName(ancestor.callee, source) ?? source.getText(ancestor.callee)),
+            CACHING_HOOK.test(getModuleName(ancestor.callee, source) ?? source.getText(ancestor.callee)),
     );
     const isRefArgument = call.parent.type === AST_NODE_TYPES.CallExpression && call.parent.arguments[0] === call;
     return isMemoized || (isRefArgument && isRefCall(call.parent, source)) || isLazyRef(call, source);
@@ -67,10 +67,10 @@ function isExempt(call: TSESTree.CallExpression, callback: TSESTree.Node, source
 function isReactClass(node: TSESTree.Node | undefined, source: TSESLint.SourceCode): boolean {
     const isClass = node?.type === AST_NODE_TYPES.ClassDeclaration || node?.type === AST_NODE_TYPES.ClassExpression;
     const base = isClass ? node.superClass : null;
-    return base !== null && REACT_CLASS.test(readModuleName(base, source) ?? source.getText(base));
+    return base !== null && REACT_CLASS.test(getModuleName(base, source) ?? source.getText(base));
 }
 
-function readComponentKind(
+function getComponentKind(
     callback: TSESTree.Node,
     outputMethods: ReadonlySet<TSESTree.Node>,
 ): 'function' | 'class' | undefined {
@@ -107,12 +107,12 @@ export const noComponentDebounce = createRule<[], 'function' | 'class'>({
                 if (isReactClass(node.parent.parent?.parent, source)) outputMethods.add(node);
             },
             CallExpression(node) {
-                const method = TIMER_FUNCTION.exec(readModuleName(node.callee, source) ?? '')?.[1];
+                const method = TIMER_FUNCTION.exec(getModuleName(node.callee, source) ?? '')?.[1];
                 const words = TIMER_WORDS.get(method);
                 if (words === undefined) return;
                 const callback = source.getAncestors(node).findLast((ancestor) => ASTUtils.isFunction(ancestor));
                 if (callback === undefined) return;
-                const kind = readComponentKind(callback, outputMethods);
+                const kind = getComponentKind(callback, outputMethods);
                 if (kind === undefined || isExempt(node, callback, source)) return;
                 const report =
                     node.callee.type === AST_NODE_TYPES.MemberExpression ? node.callee.property : node.callee;

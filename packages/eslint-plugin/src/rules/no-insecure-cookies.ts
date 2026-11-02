@@ -1,23 +1,23 @@
 import { createRule } from '../rule.ts';
-import { readModuleName } from '../modules.ts';
+import { getModuleName } from '../modules.ts';
 import { COOKIE_SECURITY_FLAGS, COOKIE_SET_OPTIONS_POSITION } from '../config/security.ts';
-import { readLiteralValue, readExpressionValue, readOptionProperties } from '../expressions.ts';
+import { getLiteralValue, getExpressionValue, getOptionProperties } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function readCookiesOptions(call: TSESTree.CallExpression, source: TSESLint.SourceCode): TSESTree.Node | undefined {
+function getCookiesOptions(call: TSESTree.CallExpression, source: TSESLint.SourceCode): TSESTree.Node | undefined {
     if (call.callee.type !== AST_NODE_TYPES.MemberExpression || ASTUtils.getPropertyName(call.callee) !== 'set')
         return undefined;
-    const instance = readExpressionValue(call.callee.object, source);
-    if (instance?.type !== AST_NODE_TYPES.NewExpression || readModuleName(instance.callee, source) !== 'cookies')
+    const instance = getExpressionValue(call.callee.object, source);
+    if (instance?.type !== AST_NODE_TYPES.NewExpression || getModuleName(instance.callee, source) !== 'cookies')
         return undefined;
     return call.arguments[COOKIE_SET_OPTIONS_POSITION];
 }
 
-function readCookieOptions(call: TSESTree.CallExpression, source: TSESLint.SourceCode): TSESTree.Node | undefined {
-    const name = readModuleName(call.callee, source);
+function getCookieOptions(call: TSESTree.CallExpression, source: TSESLint.SourceCode): TSESTree.Node | undefined {
+    const name = getModuleName(call.callee, source);
     if (name === 'cookie-session') return call.arguments[0];
-    if (name !== 'express-session' && name !== 'csurf') return readCookiesOptions(call, source);
-    return readOptionProperties(call.arguments[0], source).get('cookie')?.value;
+    if (name !== 'express-session' && name !== 'csurf') return getCookiesOptions(call, source);
+    return getOptionProperties(call.arguments[0], source).get('cookie')?.value;
 }
 
 export const noInsecureCookies = createRule<[], 'flag'>({
@@ -39,14 +39,14 @@ export const noInsecureCookies = createRule<[], 'flag'>({
     create(context) {
         return {
             CallExpression(node) {
-                const options = readCookieOptions(node, context.sourceCode);
+                const options = getCookieOptions(node, context.sourceCode);
                 const implicit =
-                    readModuleName(node.callee, context.sourceCode) === 'csurf' &&
-                    readLiteralValue(options, context.sourceCode) === true;
-                const properties = readOptionProperties(options, context.sourceCode);
+                    getModuleName(node.callee, context.sourceCode) === 'csurf' &&
+                    getLiteralValue(options, context.sourceCode) === true;
+                const properties = getOptionProperties(options, context.sourceCode);
                 for (const flag of COOKIE_SECURITY_FLAGS) {
                     const property = properties.get(flag);
-                    if (implicit || readLiteralValue(property?.value, context.sourceCode) === false)
+                    if (implicit || getLiteralValue(property?.value, context.sourceCode) === false)
                         context.report({ node: property ?? node.callee, messageId: 'flag', data: { flag } });
                 }
             },

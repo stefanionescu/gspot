@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
 import { usesVueThree } from '../packages.ts';
-import { readExpressionValue } from '../expressions.ts';
+import { getExpressionValue } from '../expressions.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 export const noVueMixins = createRule<[], 'mixin'>({
@@ -25,7 +25,7 @@ export const noVueMixins = createRule<[], 'mixin'>({
             'ObjectExpression > Property'(node: TSESTree.Property) {
                 const source = context.sourceCode;
                 const value =
-                    ASTUtils.getPropertyName(node) === 'mixins' ? readExpressionValue(node.value, source) : undefined;
+                    ASTUtils.getPropertyName(node) === 'mixins' ? getExpressionValue(node.value, source) : undefined;
                 if (value?.type === AST_NODE_TYPES.ArrayExpression) context.report({ node, messageId: 'mixin' });
             },
         };

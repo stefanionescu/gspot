@@ -1,13 +1,13 @@
 import { createRule } from '../rule.ts';
 import { S3_BUCKET } from '../config/plugin.ts';
 import type { PublicGrant } from '../types/rules.ts';
-import { readExpressionValue } from '../expressions.ts';
+import { getExpressionValue } from '../expressions.ts';
 import { getCdkName, findBucketOption } from '../aws.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { S3_DEPLOYMENT, GRANT_PUBLIC_ACCESS, ACCESS_CONTROL_PREFIX, PUBLIC_ACCESS_CONTROLS } from '../config/aws.ts';
 
-function readAccessLevel(source: Readonly<TSESLint.SourceCode>, option: TSESTree.Property | null): string | undefined {
-    const value = option ? readExpressionValue(option.value, source) : undefined;
+function getAccessLevel(source: Readonly<TSESLint.SourceCode>, option: TSESTree.Property | null): string | undefined {
+    const value = option ? getExpressionValue(option.value, source) : undefined;
     const name = value?.type === AST_NODE_TYPES.MemberExpression ? getCdkName(source, value) : undefined;
     const level = name?.startsWith(ACCESS_CONTROL_PREFIX) === true ? name.slice(ACCESS_CONTROL_PREFIX.length) : '';
     return PUBLIC_ACCESS_CONTROLS.has(level) ? level : undefined;
@@ -20,7 +20,7 @@ function listAccessGrants(
 ): PublicGrant[] {
     const control =
         name === S3_BUCKET || name === S3_DEPLOYMENT ? findBucketOption(source, node, 'accessControl') : null;
-    const level = readAccessLevel(source, control);
+    const level = getAccessLevel(source, control);
     return control && level !== undefined ? [{ node: control, messageId: 'accessLevel', data: { level } }] : [];
 }
 
@@ -30,7 +30,7 @@ function listReadGrants(
     name: string | undefined,
 ): PublicGrant[] {
     const read = name === S3_BUCKET ? findBucketOption(source, node, 'publicReadAccess') : null;
-    const value = read ? readExpressionValue(read.value, source) : undefined;
+    const value = read ? getExpressionValue(read.value, source) : undefined;
     return read && value?.type === AST_NODE_TYPES.Literal && value.value === true
         ? [{ node: read, messageId: 'unrestricted' }]
         : [];
@@ -67,7 +67,7 @@ export const awsPublicBucketGrants = createRule<[], 'accessLevel' | 'unrestricte
             [`CallExpression > MemberExpression.callee[computed=false][property.name="${GRANT_PUBLIC_ACCESS}"]`](
                 node: TSESTree.MemberExpression,
             ) {
-                const owner = readExpressionValue(node.object, source);
+                const owner = getExpressionValue(node.object, source);
                 const isBucket =
                     owner?.type === AST_NODE_TYPES.NewExpression && getCdkName(source, owner) === S3_BUCKET;
                 if (isBucket) context.report({ node: node.property, messageId: 'unrestricted' });

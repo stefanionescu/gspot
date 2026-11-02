@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
 import { WRITING_COLLECTION_METHODS } from '../config/collections.ts';
-import { readStoredValue, listLocalVariables, listInitialElements } from '../collections.ts';
+import { getStoredValue, listLocalVariables, listInitialElements } from '../collections.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isWriteStatement(expression: TSESTree.Expression, identifier: TSESTree.Node): boolean {
@@ -29,7 +29,7 @@ function isWriteOnlyCollection(variable: TSESLint.Scope.Variable, source: TSESLi
     const others = variable.references.filter((reference) => !reference.isWriteOnly());
     const isFilled =
         writes.length > 0 &&
-        writes.every((reference) => listInitialElements(readStoredValue(reference, source)) !== undefined);
+        writes.every((reference) => listInitialElements(getStoredValue(reference, source)) !== undefined);
     const isRead = others.some((reference) => isContentRead(reference, source));
     return !isExported && variable.references.length > 1 && isFilled && !isRead;
 }

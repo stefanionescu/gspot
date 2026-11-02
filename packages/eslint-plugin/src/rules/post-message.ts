@@ -1,9 +1,9 @@
 import { createRule } from '../rule.ts';
-import { readTypes } from '../checker.ts';
+import { getTypes } from '../checker.ts';
 import { findFunction } from '../functions.ts';
 import type { TypeReader } from '../types/plugin.ts';
 import type { FunctionNode } from '../types/rules.ts';
-import { readExpressionValue, findAssignedVariable } from '../expressions.ts';
+import { getExpressionValue, findAssignedVariable } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES, AST_TOKEN_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -122,7 +122,7 @@ function isOriginVerified(
 }
 
 function isWindow(source: Readonly<TSESLint.SourceCode>, types: TypeReader, node: TSESTree.Node): boolean {
-    const type = types.read(node);
+    const type = types.get(node);
     const members = type.isUnionOrIntersection() ? type.types : [type];
     if (!UNTYPED_TYPES.has(types.checker.typeToString(type)))
         return members.some((member) => WINDOW_MEMBERS.every((name) => member.getProperty(name) !== undefined));
@@ -132,10 +132,10 @@ function isWindow(source: Readonly<TSESLint.SourceCode>, types: TypeReader, node
 }
 
 function isDomReceiver(source: Readonly<TSESLint.SourceCode>, types: TypeReader, node: TSESTree.Node): boolean {
-    const receiver = readExpressionValue(node, source) ?? node;
+    const receiver = getExpressionValue(node, source) ?? node;
     const messageProperty =
         ASTUtils.isIdentifier(receiver) && WINDOW_RECEIVERS.has(receiver.name)
-            ? types.read(receiver).getProperty(MESSAGE_LISTENER_PROPERTY)
+            ? types.get(receiver).getProperty(MESSAGE_LISTENER_PROPERTY)
             : undefined;
     return (
         messageProperty?.declarations?.some((declaration) =>
@@ -175,7 +175,7 @@ export const postMessage = createRule<[], 'anyTarget' | 'unverifiedOrigin'>({
     },
     create(context) {
         const source = context.sourceCode;
-        const types = readTypes(context);
+        const types = getTypes(context);
         if (types === undefined) return {};
         const checkListener = (node: TSESTree.Node | undefined, report: TSESTree.Node): void => {
             const listener = findMessageListener(source, node);
@@ -185,7 +185,7 @@ export const postMessage = createRule<[], 'anyTarget' | 'unverifiedOrigin'>({
         };
         return {
             [POST_MESSAGE_SELECTOR](node: TSESTree.CallExpression) {
-                const target = readExpressionValue(node.arguments[1], source);
+                const target = getExpressionValue(node.arguments[1], source);
                 const isAny = target?.type === AST_NODE_TYPES.Literal && target.value === ANY_TARGET_ORIGIN;
                 const { callee } = node;
                 if (
@@ -198,7 +198,7 @@ export const postMessage = createRule<[], 'anyTarget' | 'unverifiedOrigin'>({
             [ADD_LISTENER_SELECTOR](node: TSESTree.CallExpression) {
                 const callee = node.callee as TSESTree.MemberExpression;
                 const [type, listener] = node.arguments;
-                const event = readExpressionValue(type, source);
+                const event = getExpressionValue(type, source);
                 const isMessage =
                     event?.type === AST_NODE_TYPES.Literal &&
                     typeof event.value === 'string' &&

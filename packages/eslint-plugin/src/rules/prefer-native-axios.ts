@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readModuleName } from '../modules.ts';
+import { getModuleName } from '../modules.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { AXIOS_DEPRECATIONS, AXIOS_CANCEL_TOKEN, AXIOS_CONFIG_POSITIONS } from '../config/frameworks.ts';
 
@@ -27,7 +27,7 @@ export const preferNativeAxios = createRule<[], 'helper' | 'cancelToken'>({
         const source = context.sourceCode;
         return {
             CallExpression(node) {
-                const name = readModuleName(node.callee, source) ?? '';
+                const name = getModuleName(node.callee, source) ?? '';
                 const deprecation = AXIOS_DEPRECATIONS.get(name);
                 if (deprecation !== undefined) context.report({ node, messageId: 'helper', data: deprecation });
                 const configs = (AXIOS_CONFIG_POSITIONS.get(name) ?? []).map((position) => node.arguments[position]);
@@ -40,7 +40,7 @@ export const preferNativeAxios = createRule<[], 'helper' | 'cancelToken'>({
                     context.report({ node: option, messageId: 'cancelToken' });
             },
             'MemberExpression[property.name="CancelToken"]'(node: TSESTree.MemberExpression) {
-                const name = readModuleName(node, source);
+                const name = getModuleName(node, source);
                 const isCancelToken = name === AXIOS_CANCEL_TOKEN;
                 if (isCancelToken) context.report({ node, messageId: 'cancelToken' });
             },

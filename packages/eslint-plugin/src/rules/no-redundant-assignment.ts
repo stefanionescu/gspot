@@ -3,7 +3,7 @@ import { LOOP_BODY_PARENTS } from '../config/builtins.ts';
 import { ASTUtils, TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { PathFrame, ValueState, SegmentFlow, AssignedValues, AssignmentFrame } from '../types/rules.ts';
 
-function readAssignedValues(
+function getAssignedValues(
     value: TSESTree.Node | null | undefined,
     state: ValueState,
     scope: TSESLint.Scope.Scope,
@@ -41,7 +41,7 @@ function propagate(flow: SegmentFlow, flows: ReadonlyMap<string, SegmentFlow>): 
     for (const reference of flow.references) {
         const { resolved, writeExpr, from } = reference;
         if (resolved !== null && reference.isWrite())
-            outgoing.set(resolved, readAssignedValues(writeExpr, outgoing, from));
+            outgoing.set(resolved, getAssignedValues(writeExpr, outgoing, from));
     }
     flow.incoming = incoming;
     const isChanged = !haveSameValues(flow.outgoing, outgoing);
@@ -125,7 +125,7 @@ function listRedundantWrites(
     for (const reference of flow.references) {
         const { resolved: variable, writeExpr, from } = reference;
         if (variable === null || !reference.isWrite() || !isReportable(reference, usages, source)) continue;
-        const assigned = readAssignedValues(writeExpr, state, from);
+        const assigned = getAssignedValues(writeExpr, state, from);
         const writes = variable.references.filter((each) => each.isWrite()).length;
         if (writeExpr && writes > 1 && isRepeatedValue(state.get(variable), assigned))
             redundant.push({ node: writeExpr, messageId: 'redundant', data: { name: variable.name } });

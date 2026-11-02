@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readCallText } from '../modules.ts';
+import { getCallText } from '../modules.ts';
 import { INSECURE_MODES, CIPHER_FUNCTION, MODELESS_CIPHERS } from '../config/security.ts';
 
 export const encryptionSecureMode = createRule<[], 'insecure'>({
@@ -22,7 +22,7 @@ export const encryptionSecureMode = createRule<[], 'insecure'>({
     create(context) {
         return {
             CallExpression(node) {
-                const cipher = readCallText(node, context.sourceCode, CIPHER_FUNCTION);
+                const cipher = getCallText(node, context.sourceCode, CIPHER_FUNCTION);
                 const text = cipher?.text ?? '';
                 if (cipher && (INSECURE_MODES.test(text) || MODELESS_CIPHERS.has(text.toLowerCase())))
                     context.report({ node: cipher.argument, messageId: 'insecure' });

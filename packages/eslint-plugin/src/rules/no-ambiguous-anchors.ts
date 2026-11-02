@@ -3,7 +3,7 @@ import { buildRegexVisitors } from '../regex.ts';
 import type { AST } from '@eslint-community/regexpp';
 import { ANCHOR_PAIR, ANCHOR_KINDS } from '../config/regex.ts';
 
-function readAnchors({ elements }: AST.Alternative): { start: boolean; end: boolean } {
+function getAnchors({ elements }: AST.Alternative): { start: boolean; end: boolean } {
     const [first] = elements;
     const last = elements.at(-1);
     return {
@@ -20,7 +20,7 @@ function isOuterAnchorOnly(anchors: readonly { start: boolean; end: boolean }[])
 }
 
 function isAmbiguous({ alternatives }: AST.Pattern): boolean {
-    const anchors = alternatives.map((alternative) => readAnchors(alternative));
+    const anchors = alternatives.map((alternative) => getAnchors(alternative));
     const isTrimPair = anchors.length === ANCHOR_PAIR && anchors[0]?.start === true && anchors[1]?.end === true;
     return anchors.length >= ANCHOR_PAIR && !isTrimPair && isOuterAnchorOnly(anchors);
 }

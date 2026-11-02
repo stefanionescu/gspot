@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
 import { TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { readStoredValue, listLocalVariables, listInitialElements } from '../collections.ts';
+import { getStoredValue, listLocalVariables, listInitialElements } from '../collections.ts';
 import { ELEMENT_WRITE_OPERATORS, READING_COLLECTION_METHODS } from '../config/collections.ts';
 
 function isElementWrite(member: TSESTree.MemberExpression, source: TSESLint.SourceCode): boolean {
@@ -36,7 +36,7 @@ function listEmptyReads(variable: TSESLint.Scope.Variable, source: TSESLint.Sour
     const reads = variable.references.filter((reference) => !reference.isWriteOnly());
     const isEmptied =
         writes.length > 0 &&
-        writes.every((reference) => listInitialElements(readStoredValue(reference, source))?.length === 0);
+        writes.every((reference) => listInitialElements(getStoredValue(reference, source))?.length === 0);
     const isOnlyRead = reads.every((reference) => isCollectionRead(reference, source));
     return variable.references.length > 1 && !isPassedIn && isEmptied && isOnlyRead ? reads : [];
 }

@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
-import { readModuleName } from '../modules.ts';
-import { readLiteralValue } from '../expressions.ts';
+import { getModuleName } from '../modules.ts';
+import { getLiteralValue } from '../expressions.ts';
 import { PATH_COMMAND_METHODS, EXPLICIT_COMMAND_PREFIXES } from '../config/security.ts';
 
 export const noPathCommand = createRule<[], 'path'>({
@@ -23,7 +23,7 @@ export const noPathCommand = createRule<[], 'path'>({
     create(context) {
         return {
             CallExpression: (node) => {
-                const name = readModuleName(node.callee, context.sourceCode)?.replace(/^node:/u, '');
+                const name = getModuleName(node.callee, context.sourceCode)?.replace(/^node:/u, '');
                 if (
                     name === undefined ||
                     !name.startsWith('child_process.') ||
@@ -31,7 +31,7 @@ export const noPathCommand = createRule<[], 'path'>({
                 )
                     return;
                 const argument = node.arguments[0];
-                const command = readLiteralValue(argument, context.sourceCode);
+                const command = getLiteralValue(argument, context.sourceCode);
                 if (
                     argument !== undefined &&
                     typeof command === 'string' &&

@@ -1,14 +1,14 @@
 import { createRule } from '../rule.ts';
 import { findFunction } from '../functions.ts';
-import { readQualifiedName } from '../modules.ts';
+import { getQualifiedName } from '../modules.ts';
 import type { FunctionNode } from '../types/rules.ts';
-import { readOptionProperties } from '../expressions.ts';
+import { getOptionProperties } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { REGENERATE_METHOD, AUTHENTICATE_FUNCTION, ROUTE_CALLBACK_POSITION } from '../config/servers.ts';
 
 function isStateless(source: Readonly<TSESLint.SourceCode>, options: TSESTree.Node | undefined): boolean {
     if (options?.type !== AST_NODE_TYPES.ObjectExpression) return false;
-    const session = readOptionProperties(options, source).get('session');
+    const session = getOptionProperties(options, source).get('session');
     return session ? ASTUtils.getStaticValue(session.value, source.getScope(options))?.value === false : false;
 }
 
@@ -17,7 +17,7 @@ function findAuthenticatedCallback(
     node: TSESTree.CallExpression,
 ): FunctionNode | undefined {
     const route = node.parent.type === AST_NODE_TYPES.CallExpression ? node.parent : undefined;
-    if (route === undefined || readQualifiedName(node, source) !== AUTHENTICATE_FUNCTION) return undefined;
+    if (route === undefined || getQualifiedName(node, source) !== AUTHENTICATE_FUNCTION) return undefined;
     return isStateless(source, node.arguments[1])
         ? undefined
         : findFunction(route.arguments[ROUTE_CALLBACK_POSITION], source);

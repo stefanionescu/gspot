@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readQualifiedName } from '../modules.ts';
+import { getQualifiedName } from '../modules.ts';
 import { listArgumentValues } from '../expressions.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { DEBUG_MIDDLEWARE, MIDDLEWARE_SELECTOR } from '../config/servers.ts';
@@ -30,7 +30,7 @@ export const productionDebug = createRule<[], 'debugMiddleware'>({
                 for (const middleware of listArgumentValues(node.arguments, source))
                     if (
                         middleware.type === AST_NODE_TYPES.CallExpression &&
-                        readQualifiedName(middleware, source) === DEBUG_MIDDLEWARE
+                        getQualifiedName(middleware, source) === DEBUG_MIDDLEWARE
                     )
                         context.report({ node: middleware, messageId: 'debugMiddleware' });
             },

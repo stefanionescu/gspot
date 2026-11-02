@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
 import { readPackageFacts } from '../packages.ts';
-import { readTestCall, isPlaywrightSuite } from '../testing.ts';
-import { readLiteralValue, readOptionProperties } from '../expressions.ts';
+import { getTestCall, isPlaywrightSuite } from '../testing.ts';
+import { getLiteralValue, getOptionProperties } from '../expressions.ts';
 import type { TestCall, FileContext, FunctionNode, SkipFramework } from '../types/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { SKIP_FRAMEWORKS, NODE_TEST_MODULES, EXPLANATION_LETTER, SKIPPED_TEST_CALLS } from '../config/testing.ts';
@@ -26,8 +26,8 @@ function isSkippedCall(call: TSESTree.CallExpression, framework: SkipFramework):
     return typeof title[0] === 'string' && (name === 'test' || isPlaywrightSuite(callee.object));
 }
 
-function readNodeTest(node: TSESTree.CallExpression, source: TSESLint.SourceCode): TestCall | undefined {
-    const call = readTestCall(node, source);
+function getNodeTest(node: TSESTree.CallExpression, source: TSESLint.SourceCode): TestCall | undefined {
+    const call = getTestCall(node, source);
     const isCalledByName =
         node.callee.type === AST_NODE_TYPES.Identifier && call?.name === 'test' && NODE_TEST_MODULES.has(call.module);
     return isCalledByName ? call : undefined;
@@ -75,15 +75,15 @@ export const noUnexplainedTestSkips = createRule<[], 'skipped'>({
         if (framework === 'node')
             return {
                 'CallExpression[arguments.length=2]'(node: TSESTree.CallExpression) {
-                    const callback = readNodeTest(node, source)?.callback;
+                    const callback = getNodeTest(node, source)?.callback;
                     const isLast = callback !== undefined && callback === node.arguments[1];
                     const skip = isLast ? findSilentSkip(callback, source) : undefined;
                     if (skip !== undefined) context.report({ node: skip, messageId: 'skipped' });
                 },
                 'CallExpression[arguments.length=3]'(node: TSESTree.CallExpression) {
-                    const options = readNodeTest(node, source) && node.arguments[1];
-                    const skip = readOptionProperties(options, source).get('skip');
-                    const value = readLiteralValue(skip?.value, source);
+                    const options = getNodeTest(node, source) && node.arguments[1];
+                    const skip = getOptionProperties(options, source).get('skip');
+                    const value = getLiteralValue(skip?.value, source);
                     if (skip !== undefined && (value === true || value === ''))
                         context.report({ node: skip, messageId: 'skipped' });
                 },

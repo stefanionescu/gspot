@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readTypes } from '../checker.ts';
+import { getTypes } from '../checker.ts';
 import type { TypeReader } from '../types/plugin.ts';
 import { UNDEFINED_NAME } from '../config/builtins.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
@@ -30,7 +30,7 @@ export const noUndefinedArgument = createRule<[], 'undefined'>({
         messages: { undefined: 'Remove this undefined argument. The parameter is optional.' },
     },
     create(context) {
-        const types = readTypes(context);
+        const types = getTypes(context);
         if (types === undefined) return {};
         return {
             CallExpression(node) {

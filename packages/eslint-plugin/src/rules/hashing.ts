@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
-import { readQualifiedName } from '../modules.ts';
+import { getQualifiedName } from '../modules.ts';
 import type { MethodCall } from '../types/rules.ts';
-import { readExpressionValue } from '../expressions.ts';
+import { getExpressionValue } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { DIGEST_METHOD, SUBTLE_DIGEST, HASH_FUNCTIONS, TRUNCATION_METHODS } from '../config/security.ts';
 
@@ -69,8 +69,8 @@ function isPromiseTruncated(source: Readonly<TSESLint.SourceCode>, digest: TSEST
     return value?.type === AST_NODE_TYPES.Identifier && hasOnlyTruncatedReads(source, value);
 }
 
-function readAlgorithm(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): string {
-    const algorithm = readExpressionValue(node, source);
+function getAlgorithm(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): string {
+    const algorithm = getExpressionValue(node, source);
     const isText = algorithm?.type === AST_NODE_TYPES.Literal && typeof algorithm.value === 'string';
     return isText ? algorithm.value.toLowerCase() : '';
 }
@@ -101,9 +101,9 @@ export const hashing = createRule<[], 'weak'>({
         };
         return {
             'CallExpression[arguments.length>0]'(node: TSESTree.CallExpression) {
-                const name = readQualifiedName(node, source) ?? '';
+                const name = getQualifiedName(node, source) ?? '';
                 const weak = Object.hasOwn(HASH_FUNCTIONS, name) ? HASH_FUNCTIONS[name] : undefined;
-                if (weak?.has(readAlgorithm(source, node.arguments[0])) !== true) return;
+                if (weak?.has(getAlgorithm(source, node.arguments[0])) !== true) return;
                 const isTruncated = name === SUBTLE_DIGEST ? isTruncatedSubtle(node) : isDigestTruncated(source, node);
                 if (!isTruncated) context.report({ node: node.callee, messageId: 'weak' });
             },

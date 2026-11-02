@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
-import { readQualifiedName } from '../modules.ts';
-import { readExpressionValue, readOptionProperties } from '../expressions.ts';
+import { getQualifiedName } from '../modules.ts';
+import { getExpressionValue, getOptionProperties } from '../expressions.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { NO_ALGORITHM, JWT_FUNCTIONS, JWT_OPTIONS_ARGUMENT } from '../config/security.ts';
 
@@ -27,8 +27,8 @@ export const insecureJwtToken = createRule<[], 'unsignedSign' | 'unsignedVerify'
     create(context) {
         const source = context.sourceCode;
         const checkVerify = (node: TSESTree.CallExpression, options: TSESTree.ObjectExpression): void => {
-            const algorithms = readOptionProperties(options, source).get('algorithms');
-            const list = algorithms ? readExpressionValue(algorithms.value, source) : undefined;
+            const algorithms = getOptionProperties(options, source).get('algorithms');
+            const list = algorithms ? getExpressionValue(algorithms.value, source) : undefined;
             const [, key] = node.arguments;
             const isUnsigned =
                 list?.type === AST_NODE_TYPES.ArrayExpression
@@ -42,11 +42,11 @@ export const insecureJwtToken = createRule<[], 'unsignedSign' | 'unsignedVerify'
         };
         return {
             CallExpression(node) {
-                const name = readQualifiedName(node, source);
-                const options = readExpressionValue(node.arguments[JWT_OPTIONS_ARGUMENT], source);
+                const name = getQualifiedName(node, source);
+                const options = getExpressionValue(node.arguments[JWT_OPTIONS_ARGUMENT], source);
                 if (options?.type !== AST_NODE_TYPES.ObjectExpression) return;
                 const algorithm =
-                    name === JWT_FUNCTIONS.sign ? readOptionProperties(options, source).get('algorithm') : null;
+                    name === JWT_FUNCTIONS.sign ? getOptionProperties(options, source).get('algorithm') : null;
                 if (
                     algorithm &&
                     ASTUtils.getStaticValue(algorithm.value, source.getScope(node))?.value === NO_ALGORITHM

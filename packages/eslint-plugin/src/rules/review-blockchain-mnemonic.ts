@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
 import { listImportedModules } from '../packages.ts';
-import { readExpressionValue } from '../expressions.ts';
+import { getExpressionValue } from '../expressions.ts';
 import { WALLET_MODULES, MNEMONIC_FUNCTIONS } from '../config/security.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
@@ -10,7 +10,7 @@ function findHardcodedPhrase(
 ): TSESTree.Node | undefined {
     const callee = node.callee.type === AST_NODE_TYPES.MemberExpression ? node.callee.property : node.callee;
     if (!ASTUtils.isIdentifier(callee) || !MNEMONIC_FUNCTIONS.has(callee.name)) return undefined;
-    const phrase = readExpressionValue(node.arguments[0], source);
+    const phrase = getExpressionValue(node.arguments[0], source);
     return phrase && ASTUtils.getStringIfConstant(phrase) !== null ? phrase : undefined;
 }
 

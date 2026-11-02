@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readTypes } from '../checker.ts';
+import { getTypes } from '../checker.ts';
 import type { TypeReader, CheckedType } from '../types/plugin.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
@@ -33,7 +33,7 @@ function isNormalizing(siblings: readonly TSESTree.TypeNode[], types: TypeReader
     return siblings.some((sibling) => {
         if (sibling.type === AST_NODE_TYPES.TSMappedType) return true;
         if (sibling.type !== AST_NODE_TYPES.TSTypeReference) return false;
-        return sibling.typeArguments !== undefined || types.read(sibling).isTypeParameter();
+        return sibling.typeArguments !== undefined || types.get(sibling).isTypeParameter();
     });
 }
 
@@ -57,7 +57,7 @@ export const noUselessIntersection = createRule<[], 'empty' | 'absorbing'>({
         },
     },
     create(context) {
-        const types = readTypes(context);
+        const types = getTypes(context);
         if (types === undefined) return {};
         return {
             TSIntersectionType(node) {
@@ -71,7 +71,7 @@ export const noUselessIntersection = createRule<[], 'empty' | 'absorbing'>({
                     return;
                 }
                 for (const member of node.types) {
-                    if (hasMembers(types.read(member), types) || isLiteralUnion(node)) continue;
+                    if (hasMembers(types.get(member), types) || isLiteralUnion(node)) continue;
                     if (
                         !isNormalizing(
                             node.types.filter((sibling) => sibling !== member),

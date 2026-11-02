@@ -1,6 +1,6 @@
 import { findFunction } from './functions.ts';
 import { FUNCTION_NODES } from './config/rules.ts';
-import { usesModule, readRequiredModule } from './packages.ts';
+import { usesModule, getRequiredModule } from './packages.ts';
 import type { TestCall, TableCall, TestOrigin, TestCallee, FileContext } from './types/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
@@ -19,7 +19,7 @@ import {
     TEST_FRAMEWORK_MODULES,
 } from './config/testing.ts';
 
-function readImportedName(definition: TSESLint.Scope.Definition): TestOrigin | undefined {
+function getImportedName(definition: TSESLint.Scope.Definition): TestOrigin | undefined {
     const { node, parent } = definition;
     const module = parent?.type === AST_NODE_TYPES.ImportDeclaration ? parent.source.value : '';
     if (!TEST_FRAMEWORK_MODULES.has(module)) return undefined;
@@ -29,31 +29,31 @@ function readImportedName(definition: TSESLint.Scope.Definition): TestOrigin | u
     return { name: imported.type === AST_NODE_TYPES.Identifier ? imported.name : imported.value, module };
 }
 
-function readRequiredName(definition: TSESLint.Scope.Definition): TestOrigin | undefined {
+function getRequiredName(definition: TSESLint.Scope.Definition): TestOrigin | undefined {
     const { node, name } = definition;
     if (node.type !== AST_NODE_TYPES.VariableDeclarator || node.init === null) return undefined;
-    const module = readRequiredModule(node.init) ?? '';
+    const module = getRequiredModule(node.init) ?? '';
     if (!TEST_FRAMEWORK_MODULES.has(module)) return undefined;
     const member = node.init.type === AST_NODE_TYPES.MemberExpression ? ASTUtils.getPropertyName(node.init) : 'test';
     const key = name.parent.type === AST_NODE_TYPES.Property ? ASTUtils.getPropertyName(name.parent) : member;
     return key === null ? undefined : { name: key, module };
 }
 
-function readOrigin(base: TSESTree.Identifier, source: TSESLint.SourceCode): TestOrigin | undefined {
+function getOrigin(base: TSESTree.Identifier, source: TSESLint.SourceCode): TestOrigin | undefined {
     const variable = ASTUtils.findVariable(source.getScope(base), base);
     const [definition] = variable?.defs ?? [];
     if (definition === undefined) return { name: base.name, module: undefined };
-    return readImportedName(definition) ?? readRequiredName(definition);
+    return getImportedName(definition) ?? getRequiredName(definition);
 }
 
 /**
-Read the name at the base of a callee, its module when a test framework exports it, and the member names after it.
+Get the name at the base of a callee, its module when a test framework exports it, and the member names after it.
 A call of `each` without its table call counts as no callee.
 
 @param callee the callee to read.
 @param source the file and its scopes.
 */
-export function readCalleeName(callee: TSESTree.Node, source: TSESLint.SourceCode): TestCallee | undefined {
+export function getCalleeName(callee: TSESTree.Node, source: TSESLint.SourceCode): TestCallee | undefined {
     const steps: string[] = [];
     let node = callee;
     while (node.type === AST_NODE_TYPES.CallExpression || node.type === AST_NODE_TYPES.MemberExpression) {
@@ -67,21 +67,21 @@ export function readCalleeName(callee: TSESTree.Node, source: TSESLint.SourceCod
     }
     const isFactory = steps.some((step, index) => step === 'each' && steps[index - 1] !== CALL_STEP);
     if (node.type !== AST_NODE_TYPES.Identifier || isFactory) return undefined;
-    const origin = readOrigin(node, source);
+    const origin = getOrigin(node, source);
     const modifiers = steps.filter((step) => step !== CALL_STEP).toReversed();
     return origin && { ...origin, base: node, modifiers };
 }
 
 /**
-Read a call of a test runner: a test case, a suite, or a hook, with its first function argument. The callee names a
+Get a call of a test runner: a test case, a suite, or a hook, with its first function argument. The callee names a
 global or an export of a test framework. In `test.describe` and in the `test.it` of node:test, the name after `test`
 names the construct.
 
 @param node the call to read.
 @param source the file and its scopes.
 */
-export function readTestCall(node: TSESTree.CallExpression, source: TSESLint.SourceCode): TestCall | undefined {
-    const callee = readCalleeName(node.callee, source);
+export function getTestCall(node: TSESTree.CallExpression, source: TSESLint.SourceCode): TestCall | undefined {
+    const callee = getCalleeName(node.callee, source);
     if (callee === undefined) return undefined;
     const first = callee.modifiers[0] ?? '';
     const isNested = callee.name === 'test' && TEST_KINDS.has(first);
@@ -154,7 +154,7 @@ Read the table of a parameterized test or suite of Bun, Jest, or Vitest: `test.e
 export function readTestTable(node: TableCall, context: FileContext): TSESTree.Node | undefined {
     const [table] = node.callee.arguments;
     const callback = findFunction(node.arguments[1], context.sourceCode);
-    const isTable = isTableTest(readTestCall(node, context.sourceCode), context);
+    const isTable = isTableTest(getTestCall(node, context.sourceCode), context);
     return isTable && callback !== undefined && table?.type !== AST_NODE_TYPES.SpreadElement ? table : undefined;
 }
 

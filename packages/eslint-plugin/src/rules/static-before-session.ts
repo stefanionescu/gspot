@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readQualifiedName } from '../modules.ts';
+import { getQualifiedName } from '../modules.ts';
 import type { FunctionNode } from '../types/rules.ts';
 import { listArgumentValues } from '../expressions.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
@@ -71,7 +71,7 @@ export const staticBeforeSession = createRule<[], 'staticAfterSession'>({
             VariableDeclarator(node) {
                 const isApplication =
                     node.init?.type === AST_NODE_TYPES.CallExpression &&
-                    readQualifiedName(node.init, source) === EXPRESS_MODULE;
+                    getQualifiedName(node.init, source) === EXPRESS_MODULE;
                 if (!isApplication || node.id.type !== AST_NODE_TYPES.Identifier) return;
                 application = node.id;
                 session = undefined;
@@ -82,7 +82,7 @@ export const staticBeforeSession = createRule<[], 'staticAfterSession'>({
                     return;
                 const names = listArgumentValues(node.arguments, source).map((middleware) =>
                     middleware.type === AST_NODE_TYPES.CallExpression
-                        ? readQualifiedName(middleware, source)
+                        ? getQualifiedName(middleware, source)
                         : undefined,
                 );
                 for (const name of names) {

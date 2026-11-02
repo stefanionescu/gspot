@@ -1,14 +1,14 @@
 import { createRule } from '../rule.ts';
-import { readAttribute, getElementName } from '../jsx.ts';
+import { getAttribute, getElementName } from '../jsx.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isHiddenElement(element: TSESTree.JSXOpeningElement): boolean {
-    const type = readAttribute(element, 'type')?.value;
+    const type = getAttribute(element, 'type')?.value;
     const isHiddenInput =
         getElementName(element.name).toUpperCase() === 'INPUT' &&
         typeof type === 'string' &&
         type.toUpperCase() === 'HIDDEN';
-    return isHiddenInput || readAttribute(element, 'aria-hidden')?.value === true;
+    return isHiddenInput || getAttribute(element, 'aria-hidden')?.value === true;
 }
 
 function hasVisibleChildren(children: readonly TSESTree.JSXChild[]): boolean {

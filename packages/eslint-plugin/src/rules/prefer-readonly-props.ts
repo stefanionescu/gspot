@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
-import { readTypes } from '../checker.ts';
+import { getTypes } from '../checker.ts';
 import { listBodyNodes } from '../testing.ts';
-import { readAssignedValue } from '../modules.ts';
+import { getAssignedValue } from '../modules.ts';
 import type { TypeReader, CheckedType } from '../types/plugin.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
@@ -13,10 +13,10 @@ import {
     COMPONENT_DECLARATION,
 } from '../config/frameworks.ts';
 
-function readReturnedValue(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node {
+function traceReturnedValue(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node {
     const variable =
         node.type === AST_NODE_TYPES.Identifier ? ASTUtils.findVariable(source.getScope(node), node) : null;
-    const value = variable === null ? undefined : readAssignedValue(variable);
+    const value = variable === null ? undefined : getAssignedValue(variable);
     return value ?? node;
 }
 
@@ -25,7 +25,7 @@ function returnsMarkup(node: TSESTree.FunctionDeclaration, source: TSESLint.Sour
     const returned = statements.flatMap((statement) =>
         statement.type === AST_NODE_TYPES.ReturnStatement && statement.argument !== null ? [statement.argument] : [],
     );
-    return returned.some((value) => readReturnedValue(value, source).type.startsWith(JSX_NODE_PREFIX));
+    return returned.some((value) => traceReturnedValue(value, source).type.startsWith(JSX_NODE_PREFIX));
 }
 
 function isMarkedReadonly(type: CheckedType): boolean {
@@ -66,7 +66,7 @@ export const preferReadonlyProps = createRule<[], 'mutable' | 'mark'>({
     },
     create(context) {
         const source = context.sourceCode;
-        const types = readTypes(context);
+        const types = getTypes(context);
         if (types === undefined) return {};
         return {
             [COMPONENT_DECLARATION](node: TSESTree.FunctionDeclaration) {
@@ -74,7 +74,7 @@ export const preferReadonlyProps = createRule<[], 'mutable' | 'mark'>({
                 const annotation =
                     props !== undefined && 'typeAnnotation' in props ? props.typeAnnotation?.typeAnnotation : undefined;
                 if (props === undefined || annotation === undefined || !returnsMarkup(node, source)) return;
-                if (isReadonlyType(types.read(props), types)) return;
+                if (isReadonlyType(types.get(props), types)) return;
                 context.report({
                     node: props,
                     messageId: 'mutable',

@@ -1,10 +1,10 @@
 import { createRule } from '../rule.ts';
 import { usesModule } from '../packages.ts';
-import { readTestCall } from '../testing.ts';
+import { getTestCall } from '../testing.ts';
 import { RETRY_MODULES, MARKED_TEST_MODIFIERS } from '../config/testing.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function readJestOrigin(node: TSESTree.Node, source: TSESLint.SourceCode): string | undefined {
+function getJestOrigin(node: TSESTree.Node, source: TSESLint.SourceCode): string | undefined {
     if (node.type !== AST_NODE_TYPES.Identifier || node.name !== 'jest') return undefined;
     const variable = ASTUtils.findVariable(source.getScope(node), node);
     const [definition] = variable?.defs ?? [];
@@ -35,7 +35,7 @@ export const noTestRetries = createRule<[], 'retry'>({
             'CallExpression[callee.type="MemberExpression"][callee.property.name="retryTimes"]'(
                 node: TSESTree.CallExpression & { callee: TSESTree.MemberExpression },
             ) {
-                const origin = readJestOrigin(node.callee.object, source);
+                const origin = getJestOrigin(node.callee.object, source);
                 const isJest = origin === '@jest/globals' || (origin === 'global' && usesJest);
                 if (isJest) context.report({ node, messageId: 'retry' });
             },
@@ -44,7 +44,7 @@ export const noTestRetries = createRule<[], 'retry'>({
             ) {
                 const isInSuite = source.getAncestors(node).some((ancestor) => {
                     const call =
-                        ancestor.type === AST_NODE_TYPES.CallExpression ? readTestCall(ancestor, source) : undefined;
+                        ancestor.type === AST_NODE_TYPES.CallExpression ? getTestCall(ancestor, source) : undefined;
                     const isMarked = call?.modifiers.every((modifier) => MARKED_TEST_MODIFIERS.has(modifier)) === true;
                     return isMarked && (call.name === 'describe' || call.name === 'context');
                 });

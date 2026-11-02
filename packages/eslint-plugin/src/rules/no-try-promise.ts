@@ -1,8 +1,8 @@
 import { createRule } from '../rule.ts';
 import { listChildren } from '../syntax.ts';
 import type { PromiseUse } from '../types/rules.ts';
+import { getTypes, isThenable } from '../checker.ts';
 import type { TypeReader } from '../types/plugin.ts';
-import { readTypes, isThenable } from '../checker.ts';
 import { CALL_NODES, CHAINED_USES, CATCH_METHOD, HANDLING_PARENTS } from '../config/builtins.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
@@ -13,7 +13,7 @@ function listCalls(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.N
     return isCall ? [node, ...calls] : calls;
 }
 
-function readChainedUse(node: TSESTree.Node): PromiseUse {
+function getChainedUse(node: TSESTree.Node): PromiseUse {
     const { parent } = node;
     if (parent?.type !== AST_NODE_TYPES.MemberExpression || parent.object !== node) return 'open';
     return CHAINED_USES.get(ASTUtils.getPropertyName(parent)) ?? 'open';
@@ -29,7 +29,7 @@ function classifyCall(call: TSESTree.Node, types: TypeReader): PromiseUse {
     if (call.type === AST_NODE_TYPES.AwaitExpression || !isThenable(types, call)) return 'blocking';
     const parentType = call.parent?.type;
     if (isCatchCall(call) || (parentType !== undefined && HANDLING_PARENTS.has(parentType))) return 'handled';
-    return readChainedUse(call);
+    return getChainedUse(call);
 }
 
 export const noTryPromise = createRule<[], 'open' | 'caught'>({
@@ -53,7 +53,7 @@ export const noTryPromise = createRule<[], 'open' | 'caught'>({
         },
     },
     create(context) {
-        const types = readTypes(context);
+        const types = getTypes(context);
         if (types === undefined) return {};
         return {
             TryStatement(node) {

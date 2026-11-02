@@ -98,7 +98,7 @@ function isOverloadedFunction(node: FunctionNode): boolean {
     });
 }
 
-function readExportName(node: FunctionNode): string | undefined {
+function getExportName(node: FunctionNode): string | undefined {
     const { parent } = node.type === AST_NODE_TYPES.FunctionDeclaration ? node : getOutermostValue(node);
     if (parent.type === AST_NODE_TYPES.ExportDefaultDeclaration) return 'default';
     if (parent.type === AST_NODE_TYPES.ExportNamedDeclaration) return node.id?.name;
@@ -110,7 +110,7 @@ function readExportName(node: FunctionNode): string | undefined {
 
 function isRequired(node: FunctionNode, exportNames: ReadonlySet<string>): boolean {
     if (isFrameworkMember(node) || isOverloadedMethod(node) || isOverloadedFunction(node)) return true;
-    const name = readExportName(node);
+    const name = getExportName(node);
     return name !== undefined && exportNames.has(name);
 }
 

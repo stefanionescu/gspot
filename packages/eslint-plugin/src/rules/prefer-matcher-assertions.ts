@@ -28,7 +28,7 @@ import {
     ASSERT_MESSAGE_INDEX,
 } from '../config/matchers.ts';
 
-function readOperand(node: TSESTree.Node, source: TSESLint.SourceCode): string {
+function getOperand(node: TSESTree.Node, source: TSESLint.SourceCode): string {
     const text = source.getText(node);
     const isLength =
         node.type === AST_NODE_TYPES.MemberExpression && !node.computed && ASTUtils.getPropertyName(node) === 'length';
@@ -42,7 +42,7 @@ function isNumeric(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     return isNumber || NUMERIC_NAME.test(source.getText(value));
 }
 
-function readEqualitySuggestion(
+function getEqualitySuggestion(
     left: TSESTree.Node,
     right: TSESTree.Node,
     negated: boolean,
@@ -52,22 +52,22 @@ function readEqualitySuggestion(
         { received: left, expected: right },
         { received: right, expected: left },
     ];
-    const nullish = sides.find(({ expected }) => NULLISH_KINDS.has(readOperand(expected, source)));
-    const length = sides.find(({ received }) => readOperand(received, source) === 'length');
+    const nullish = sides.find(({ expected }) => NULLISH_KINDS.has(getOperand(expected, source)));
+    const length = sides.find(({ received }) => getOperand(received, source) === 'length');
     if (nullish !== undefined)
-        return { kind: readOperand(nullish.expected, source), received: nullish.received, negated };
+        return { kind: getOperand(nullish.expected, source), received: nullish.received, negated };
     if (length?.received.type === AST_NODE_TYPES.MemberExpression)
         return { kind: 'length', received: length.received.object, expected: length.expected, negated };
     return { kind: 'equal', received: left, expected: right, negated };
 }
 
-function readBinarySuggestion(
+function getBinarySuggestion(
     node: TSESTree.BinaryExpression,
     positive: boolean,
     source: TSESLint.SourceCode,
 ): MatcherSuggestion | undefined {
     const negated = (node.operator === '===') !== positive;
-    if (EQUALITY_OPERATORS.has(node.operator)) return readEqualitySuggestion(node.left, node.right, negated, source);
+    if (EQUALITY_OPERATORS.has(node.operator)) return getEqualitySuggestion(node.left, node.right, negated, source);
     if (node.operator === 'instanceof')
         return { kind: 'instance', received: node.left, expected: node.right, negated: !positive };
     const kind = NUMERIC_MATCHERS.get(positive ? node.operator : INVERTED_OPERATORS.get(node.operator));
@@ -77,7 +77,7 @@ function readBinarySuggestion(
         : undefined;
 }
 
-function readIncludesSuggestion(
+function getIncludesSuggestion(
     node: TSESTree.Node,
     positive: boolean,
     source: TSESLint.SourceCode,
@@ -92,20 +92,20 @@ function readIncludesSuggestion(
         : undefined;
 }
 
-function readSuggestion(assertion: ComparisonAssertion, source: TSESLint.SourceCode): MatcherSuggestion | undefined {
+function getSuggestion(assertion: ComparisonAssertion, source: TSESLint.SourceCode): MatcherSuggestion | undefined {
     const { received, expected, negated } = assertion;
-    const kind = readOperand(expected, source);
+    const kind = getOperand(expected, source);
     if (VALUE_KINDS.has(kind)) return { kind, received, negated };
-    if (received.type === AST_NODE_TYPES.MemberExpression && readOperand(received, source) === 'length')
+    if (received.type === AST_NODE_TYPES.MemberExpression && getOperand(received, source) === 'length')
         return { kind: 'length', received: received.object, expected, negated };
     if (!BOOLEAN_KINDS.has(kind)) return undefined;
     const positive = (kind === 'true') !== negated;
     return received.type === AST_NODE_TYPES.BinaryExpression
-        ? readBinarySuggestion(received, positive, source)
-        : readIncludesSuggestion(received, positive, source);
+        ? getBinarySuggestion(received, positive, source)
+        : getIncludesSuggestion(received, positive, source);
 }
 
-function readFamily(assertion: ComparisonAssertion): string | undefined {
+function getFamily(assertion: ComparisonAssertion): string | undefined {
     const parent = assertion.received.parent;
     const usesProperty = parent.type === AST_NODE_TYPES.MemberExpression && parent.object === assertion.received;
     if (assertion.style === 'chai-bdd') return usesProperty ? 'chai-should' : 'chai-expect';
@@ -114,7 +114,7 @@ function readFamily(assertion: ComparisonAssertion): string | undefined {
     return isSkipped ? undefined : MATCHER_FAMILIES.get(assertion.style);
 }
 
-function readTemplateKey(assertion: ComparisonAssertion, kind: string, family: string, allowsSize: boolean): string {
+function getTemplateKey(assertion: ComparisonAssertion, kind: string, family: string, allowsSize: boolean): string {
     const isJasmine = assertion.style === 'jasmine';
     const isStrictNaN = kind === 'nan' && assertion.comparison === 'strict';
     const skips = isJasmine && (isStrictNaN || (kind === 'length' && !allowsSize));
@@ -122,7 +122,7 @@ function readTemplateKey(assertion: ComparisonAssertion, kind: string, family: s
     return skips ? '' : `${family}.${name}`;
 }
 
-function readMessage(assertion: ComparisonAssertion, family: string, source: TSESLint.SourceCode): string {
+function getMessage(assertion: ComparisonAssertion, family: string, source: TSESLint.SourceCode): string {
     const { node, received } = assertion;
     const [, ...expectValues] = received.parent.type === AST_NODE_TYPES.CallExpression ? received.parent.arguments : [];
     const assertValues = node.arguments.slice(ASSERT_MESSAGE_INDEX);
@@ -130,7 +130,7 @@ function readMessage(assertion: ComparisonAssertion, family: string, source: TSE
     return messages.map((message) => `, ${source.getText(message)}`).join('');
 }
 
-function readFields(
+function getFields(
     assertion: ComparisonAssertion,
     suggestion: MatcherSuggestion,
     family: string,
@@ -142,7 +142,7 @@ function readFields(
     return new Map([
         ['received', needsParentheses ? `(${text})` : text],
         ['expected', suggestion.expected === undefined ? '' : source.getText(suggestion.expected)],
-        ['message', readMessage(assertion, family, source)],
+        ['message', getMessage(assertion, family, source)],
         ['assert', callee.type === AST_NODE_TYPES.MemberExpression ? source.getText(callee.object) : ''],
         ['method', source.getText(assertion.report)],
     ]);
@@ -165,7 +165,7 @@ function isLocator(node: TSESTree.Node, source: TSESLint.SourceCode, seen: Set<T
     return isFactory && (isPage || isLocator(receiver, source, seen));
 }
 
-function readLocatorGetter(
+function getLocatorGetter(
     assertion: ComparisonAssertion,
     source: TSESLint.SourceCode,
 ): TSESTree.MemberExpression | undefined {
@@ -176,12 +176,12 @@ function readLocatorGetter(
     return isGetter ? callee : undefined;
 }
 
-function readLocatorMatcher(
+function getLocatorMatcher(
     name: string | null,
     assertion: ComparisonAssertion,
     source: TSESLint.SourceCode,
 ): string | undefined {
-    const operand = readOperand(assertion.expected, source);
+    const operand = getOperand(assertion.expected, source);
     const isFalsy = (operand === 'true') === assertion.negated;
     const state = BOOLEAN_KINDS.has(operand) ? LOCATOR_STATES.get(name)?.[Number(isFalsy)] : undefined;
     const value = LOCATOR_VALUES.get(name);
@@ -190,10 +190,10 @@ function readLocatorMatcher(
     return value === undefined ? undefined : `${negation}${value}(${source.getText(assertion.expected)})`;
 }
 
-function readLocatorSuggestion(assertion: ComparisonAssertion, source: TSESLint.SourceCode): string | undefined {
-    const getter = assertion.style === 'playwright' ? readLocatorGetter(assertion, source) : undefined;
+function getLocatorSuggestion(assertion: ComparisonAssertion, source: TSESLint.SourceCode): string | undefined {
+    const getter = assertion.style === 'playwright' ? getLocatorGetter(assertion, source) : undefined;
     if (getter === undefined) return undefined;
-    const matcher = readLocatorMatcher(ASTUtils.getPropertyName(getter), assertion, source);
+    const matcher = getLocatorMatcher(ASTUtils.getPropertyName(getter), assertion, source);
     return matcher === undefined ? undefined : `await expect(${source.getText(getter.object)}).${matcher}`;
 }
 
@@ -203,17 +203,17 @@ function allowsJasmineSize(context: FileContext): boolean {
     return range !== undefined && requiresVersion(range, JASMINE_SIZE_VERSION);
 }
 
-function readMatcherText(
+function getMatcherText(
     assertion: ComparisonAssertion,
     suggestion: MatcherSuggestion | undefined,
     source: TSESLint.SourceCode,
     allowsSize: boolean,
 ): string | undefined {
-    const family = readFamily(assertion);
+    const family = getFamily(assertion);
     if (family === undefined || suggestion === undefined) return undefined;
-    const key = readTemplateKey(assertion, suggestion.kind, family, allowsSize);
+    const key = getTemplateKey(assertion, suggestion.kind, family, allowsSize);
     const template = MATCHER_TEMPLATES.get(key)?.[Number(suggestion.negated)];
-    const fields = readFields(assertion, suggestion, family, source);
+    const fields = getFields(assertion, suggestion, family, source);
     return template?.replaceAll(TEMPLATE_FIELD, (_field, name: string) => String(fields.get(name)));
 }
 
@@ -245,9 +245,9 @@ export const preferMatcherAssertions = createRule<[], 'matcher' | 'length' | 're
             CallExpression(node) {
                 const assertion = readAssertion(node, context);
                 if (assertion?.kind !== 'comparison') return;
-                const locator = readLocatorSuggestion(assertion, source);
-                const suggestion = readSuggestion(assertion, source);
-                const text = readMatcherText(assertion, suggestion, source, allowsSize);
+                const locator = getLocatorSuggestion(assertion, source);
+                const suggestion = getSuggestion(assertion, source);
+                const text = getMatcherText(assertion, suggestion, source, allowsSize);
                 const report = { node: assertion.report, messageId: 'matcher' as const };
                 if (locator !== undefined) {
                     context.report({ ...report, data: { assertion: locator } });

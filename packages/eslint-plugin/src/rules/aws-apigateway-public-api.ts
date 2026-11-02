@@ -1,8 +1,8 @@
 import { createRule } from '../rule.ts';
-import { readExpressionValue } from '../expressions.ts';
+import { getExpressionValue } from '../expressions.ts';
 import { CDK_PROPS_POSITION } from '../config/plugin.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { getCdkName, readCdkResult, readCdkArgument, readCdkProperty, listCdkTableIssues } from '../aws.ts';
+import { getCdkName, getCdkResult, getCdkArgument, getCdkProperty, listCdkTableIssues } from '../aws.ts';
 
 import {
     REST_API,
@@ -20,10 +20,10 @@ function findDefaultAuthorization(
     node: TSESTree.CallExpression | TSESTree.NewExpression,
     position: number,
 ): TSESTree.Node | undefined {
-    const options = readCdkArgument(source, readCdkResult(source, node), position);
-    const authorization = readCdkProperty(
+    const options = getCdkArgument(source, getCdkResult(source, node), position);
+    const authorization = getCdkProperty(
         source,
-        readCdkProperty(source, options, 'defaultMethodOptions'),
+        getCdkProperty(source, options, 'defaultMethodOptions'),
         'authorizationType',
     );
     return authorization.status === 'found' ? authorization.node : undefined;
@@ -37,7 +37,7 @@ function stepResource(resource: TSESTree.Node): TSESTree.Node | undefined {
         : undefined;
 }
 
-function readResourceMethod(name: string | undefined): string | undefined {
+function getResourceMethod(name: string | undefined): string | undefined {
     if (name?.startsWith(ROOT_RESOURCE) !== true) return undefined;
     const methods = name.slice(ROOT_RESOURCE.length).split('.');
     return methods.every((method) => RESOURCE_METHODS.has(method)) ? methods.at(-1) : undefined;
@@ -67,17 +67,17 @@ export const awsApigatewayPublicApi = createRule<[], 'omitted' | 'invalid'>({
         const source = context.sourceCode;
         const defaults = new Map<TSESTree.Node, TSESTree.Node>();
         const findDefault = (callee: TSESTree.Node): TSESTree.Node | undefined => {
-            let resource = readExpressionValue(callee, source);
+            let resource = getExpressionValue(callee, source);
             while (resource !== undefined && !defaults.has(resource)) {
                 const next = stepResource(resource);
-                resource = next && readExpressionValue(next, source);
+                resource = next && getExpressionValue(next, source);
             }
             return resource && defaults.get(resource);
         };
         const checkMethod = (node: TSESTree.CallExpression): void => {
-            const authorization = readCdkProperty(
+            const authorization = getCdkProperty(
                 source,
-                readCdkArgument(source, readCdkResult(source, node), CDK_PROPS_POSITION),
+                getCdkArgument(source, getCdkResult(source, node), CDK_PROPS_POSITION),
                 'authorizationType',
             );
             const inherited = authorization.status === 'missing' ? findDefault(node.callee) : undefined;
@@ -99,7 +99,7 @@ export const awsApigatewayPublicApi = createRule<[], 'omitted' | 'invalid'>({
                     context.report({ node: target, messageId: kind });
             },
             'CallExpression:exit'(node: TSESTree.CallExpression) {
-                const method = readResourceMethod(getCdkName(source, node.callee));
+                const method = getResourceMethod(getCdkName(source, node.callee));
                 const authorization = method === ADD_RESOURCE ? findDefaultAuthorization(source, node, 1) : undefined;
                 if (authorization) defaults.set(node, authorization);
                 if (method === ADD_METHOD && node.arguments.every(({ type }) => type !== AST_NODE_TYPES.SpreadElement))

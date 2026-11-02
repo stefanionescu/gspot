@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
-import { readModuleName } from '../modules.ts';
-import { readLocalFunction } from '../functions.ts';
+import { getModuleName } from '../modules.ts';
+import { getLocalFunction } from '../functions.ts';
 import type { LocalFunction } from '../types/plugin.ts';
 import { MEMOIZE_FUNCTIONS } from '../config/frameworks.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
@@ -14,11 +14,11 @@ function isMissingKey(keyFunction: TSESTree.CallExpressionArgument | undefined):
     return isVoid || isEmpty;
 }
 
-function readMemoizedFunction(node: TSESTree.CallExpression, source: TSESLint.SourceCode): LocalFunction | undefined {
+function getMemoizedFunction(node: TSESTree.CallExpression, source: TSESLint.SourceCode): LocalFunction | undefined {
     const [target, keyFunction] = node.arguments;
-    const name = (readModuleName(node.callee, source) ?? '').replaceAll('/', '.');
+    const name = (getModuleName(node.callee, source) ?? '').replaceAll('/', '.');
     const isUnkeyed = MEMOIZE_FUNCTIONS.has(name) && isMissingKey(keyFunction);
-    return isUnkeyed && target !== undefined ? readLocalFunction(target, source) : undefined;
+    return isUnkeyed && target !== undefined ? getLocalFunction(target, source) : undefined;
 }
 
 export const requireMemoizeKey = createRule<[], 'keyFunction'>({
@@ -42,7 +42,7 @@ export const requireMemoizeKey = createRule<[], 'keyFunction'>({
         const source = context.sourceCode;
         return {
             CallExpression(node) {
-                const parameters = (readMemoizedFunction(node, source)?.params ?? []).filter(
+                const parameters = (getMemoizedFunction(node, source)?.params ?? []).filter(
                     (parameter) => !(parameter.type === AST_NODE_TYPES.Identifier && parameter.name === 'this'),
                 );
                 const needsKey =

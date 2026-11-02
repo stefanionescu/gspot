@@ -1,8 +1,8 @@
 import { createRule } from '../rule.ts';
-import { readQualifiedName } from '../modules.ts';
+import { getQualifiedName } from '../modules.ts';
 import { getCdkName, listCdkIssues, listCdkTableIssues } from '../aws.ts';
+import { getExpressionValue, getOptionProperties } from '../expressions.ts';
 import type { ClearTextReport, ClearTextListener } from '../types/rules.ts';
-import { readExpressionValue, readOptionProperties } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -27,7 +27,7 @@ import {
     SECURE_PROTOCOL_ALTERNATIVES,
 } from '../config/web.ts';
 
-function readHost(url: string): { host: string; path: string | undefined } {
+function getHost(url: string): { host: string; path: string | undefined } {
     try {
         const parsed = new URL(url);
         return { host: parsed.hostname, path: parsed.pathname };
@@ -41,14 +41,14 @@ function readHost(url: string): { host: string; path: string | undefined } {
 }
 
 function isExemptUrl(url: string): boolean {
-    const { host, path } = readHost(url);
+    const { host, path } = getHost(url);
     const paths = Object.hasOwn(NAMESPACE_PATHS, host) ? NAMESPACE_PATHS[host] : undefined;
     const isNamespace =
         NAMESPACE_HOSTS.has(host) || paths?.some((prefix) => path?.startsWith(prefix) === true) === true;
     return host !== '' && (isNamespace || EXEMPT_HOSTS.some((pattern) => pattern.test(host)));
 }
 
-function readClearTextProtocol(node: TSESTree.Literal): string | undefined {
+function getClearTextProtocol(node: TSESTree.Literal): string | undefined {
     const url = typeof node.value === 'string' ? node.value.trim().toLowerCase() : '';
     const protocol = url.slice(0, Math.max(url.indexOf(PROTOCOL_SEPARATOR), 0));
     if (!Object.hasOwn(SECURE_PROTOCOL_ALTERNATIVES, protocol)) return undefined;
@@ -67,7 +67,7 @@ function isSecureOption(
     options: TSESTree.ObjectExpression,
     key: string,
 ): boolean {
-    const option = readOptionProperties(options, source).get(key);
+    const option = getOptionProperties(options, source).get(key);
     if (!option) return false;
     const { value } = option;
     if (value.type !== AST_NODE_TYPES.Literal) return true;
@@ -75,7 +75,7 @@ function isSecureOption(
 }
 
 function isClearTextMail(source: Readonly<TSESLint.SourceCode>, node: TSESTree.CallExpression): boolean {
-    const options = readExpressionValue(node.arguments[0], source);
+    const options = getExpressionValue(node.arguments[0], source);
     if (options?.type !== AST_NODE_TYPES.ObjectExpression) return false;
     return !MAIL_SECURE_OPTIONS.some((key) => isSecureOption(source, options, key));
 }
@@ -83,10 +83,10 @@ function isClearTextMail(source: Readonly<TSESLint.SourceCode>, node: TSESTree.C
 function isClearTextFtp(source: Readonly<TSESLint.SourceCode>, node: TSESTree.CallExpression): boolean {
     const { callee } = node;
     const isConnect = callee.type === AST_NODE_TYPES.MemberExpression && ASTUtils.getPropertyName(callee) === 'connect';
-    const client = isConnect ? readExpressionValue(callee.object, source) : undefined;
+    const client = isConnect ? getExpressionValue(callee.object, source) : undefined;
     const isFtp =
-        client?.type === AST_NODE_TYPES.NewExpression && readQualifiedName(client.callee, source) === FTP_MODULE;
-    const option = readOptionProperties(node.arguments[0], source).get('secure');
+        client?.type === AST_NODE_TYPES.NewExpression && getQualifiedName(client.callee, source) === FTP_MODULE;
+    const option = getOptionProperties(node.arguments[0], source).get('secure');
     return isFtp && option?.value.type === AST_NODE_TYPES.Literal && option.value.value === false;
 }
 
@@ -121,7 +121,7 @@ function findListener(
 }
 
 function listCallIssues(source: Readonly<TSESLint.SourceCode>, node: TSESTree.CallExpression): ClearTextReport[] {
-    const isMail = readQualifiedName(node, source) === MAIL_TRANSPORT && isClearTextMail(source, node);
+    const isMail = getQualifiedName(node, source) === MAIL_TRANSPORT && isClearTextMail(source, node);
     const listener = findListener(source, node);
     const issues = listCdkTableIssues(source, node, CLEAR_TEXT_CALL_CHECKS).map(({ node: target }) => target);
     const targets = listener === undefined ? issues : [...issues, listener];
@@ -167,7 +167,7 @@ export const noClearTextProtocols = createRule<[], 'clearText' | 'transitEncrypt
         const source = context.sourceCode;
         return {
             [ADDRESS_LITERAL_SELECTOR](node: TSESTree.Literal) {
-                const found = describeProtocol(node, readClearTextProtocol(node));
+                const found = describeProtocol(node, getClearTextProtocol(node));
                 for (const report of found) context.report(report);
             },
             [TELNET_IMPORT](node: TSESTree.ImportDeclaration) {

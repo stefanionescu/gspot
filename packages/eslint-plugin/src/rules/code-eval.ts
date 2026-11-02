@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readQualifiedName } from '../modules.ts';
+import { getQualifiedName } from '../modules.ts';
 import { isDynamicString } from '../expressions.ts';
 import { SCRIPT_URL, EVAL_FUNCTIONS } from '../config/servers.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
@@ -39,7 +39,7 @@ export const codeEval = createRule<[], 'dynamicCode' | 'scriptUrl'>({
                     (argument.type !== AST_NODE_TYPES.TemplateLiteral || argument.expressions.length > 0),
             );
             const isNamed = ['Identifier', 'MemberExpression'].includes(node.callee.type);
-            if (isNamed && isDynamic && EVAL_FUNCTIONS.has(readQualifiedName(node, source)))
+            if (isNamed && isDynamic && EVAL_FUNCTIONS.has(getQualifiedName(node, source)))
                 context.report({ node: node.callee, messageId: 'dynamicCode' });
         };
         return {

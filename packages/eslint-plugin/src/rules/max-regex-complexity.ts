@@ -9,22 +9,22 @@ import {
     REGEX_COMPLEXITY_OPTIONS_SCHEMA,
 } from '../config/regex.ts';
 
-function readDeepening(node: AST.Node): number {
+function getDeepening(node: AST.Node): number {
     const choices = 'alternatives' in node && node.alternatives.length > 1 ? 1 : 0;
     if (node.type === 'Quantifier' || node.type === 'CharacterClass') return 1;
     return node.type === 'Assertion' && LOOKAROUND_KINDS.has(node.kind) ? 1 + choices : choices;
 }
 
-function readDepth(node: AST.Node): number {
+function getDepth(node: AST.Node): number {
     let depth = 1;
-    for (let ancestor = node.parent; ancestor !== null; ancestor = ancestor.parent) depth += readDeepening(ancestor);
+    for (let ancestor = node.parent; ancestor !== null; ancestor = ancestor.parent) depth += getDeepening(ancestor);
     return depth;
 }
 
 function scoreChoice(node: AST.Pattern | AST.Group | AST.CapturingGroup | AST.LookaroundAssertion, offset = 0) {
     const count = node.alternatives.length;
     if (count < CHOICE_BASE) return 0;
-    return readDepth(node) + offset + count - CHOICE_BASE;
+    return getDepth(node) + offset + count - CHOICE_BASE;
 }
 
 function scoreRegex(regex: AST.RegExpLiteral): number {
@@ -35,11 +35,11 @@ function scoreRegex(regex: AST.RegExpLiteral): number {
         onCapturingGroupEnter: (node) => (score += scoreChoice(node)),
         onAssertionEnter: (node) => {
             if (!LOOKAROUND_KINDS.has(node.kind) || !('alternatives' in node)) return;
-            score += readDepth(node) + scoreChoice(node, 1);
+            score += getDepth(node) + scoreChoice(node, 1);
         },
         onBackreferenceEnter: () => (score += 1),
         onCharacterClassEnter: () => (score += 1),
-        onQuantifierEnter: (node) => (score += readDepth(node)),
+        onQuantifierEnter: (node) => (score += getDepth(node)),
     });
     return score;
 }

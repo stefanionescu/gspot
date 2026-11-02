@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
 import type { TestCall } from '../types/rules.ts';
 import { FUNCTION_NODES } from '../config/rules.ts';
-import { readTestCall, listBodyNodes } from '../testing.ts';
+import { getTestCall, listBodyNodes } from '../testing.ts';
 import { DONE_STOP_STATEMENTS, MARKED_TEST_MODIFIERS } from '../config/testing.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
@@ -57,7 +57,7 @@ export const noCodeAfterDone = createRule<[], 'afterDone'>({
         const source = context.sourceCode;
         return {
             CallExpression(node) {
-                const call = readTestCall(node, source);
+                const call = getTestCall(node, source);
                 const isTest =
                     call?.kind === 'test' && call.modifiers.every((modifier) => MARKED_TEST_MODIFIERS.has(modifier));
                 const calls = isTest && call.callback === node.arguments[1] ? listDoneCalls(call.callback, source) : [];

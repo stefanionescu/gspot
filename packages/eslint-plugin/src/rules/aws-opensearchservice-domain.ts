@@ -1,10 +1,10 @@
 import { createRule } from '../rule.ts';
-import { readQualifiedName } from '../modules.ts';
+import { getQualifiedName } from '../modules.ts';
 import type { CdkResult } from '../types/plugin.ts';
 import { CDK_PROPS_POSITION } from '../config/plugin.ts';
 import { SEARCH_DOMAINS, SEARCH_ENGINES } from '../config/aws.ts';
 import { type TSESLint, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { getCdkName, readCdkResult, readCdkArgument, readCdkProperty } from '../aws.ts';
+import { getCdkName, getCdkResult, getCdkArgument, getCdkProperty } from '../aws.ts';
 
 function detectEngine(
     source: Readonly<TSESLint.SourceCode>,
@@ -13,7 +13,7 @@ function detectEngine(
 ): string {
     const { node } = version;
     const isText = domain.isText && node.type === AST_NODE_TYPES.Literal && typeof node.value === 'string';
-    const name = isText ? `${domain.version}.${node.value}` : readQualifiedName(node, source);
+    const name = isText ? `${domain.version}.${node.value}` : getQualifiedName(node, source);
     const segments = (name ?? '').toLowerCase().split('.').toReversed();
     const segment = segments.find((label) => SEARCH_ENGINES.some(([key]) => label.includes(key)));
     return SEARCH_ENGINES.find(([key]) => segment?.includes(key) === true)?.[1] ?? domain.engine;
@@ -46,9 +46,9 @@ export const awsOpensearchserviceDomain = createRule<[], 'omitted' | 'unencrypte
                 const domain = SEARCH_DOMAINS.get(getCdkName(source, node.callee));
                 const isSpread = node.arguments.some(({ type }) => type === AST_NODE_TYPES.SpreadElement);
                 if (domain === undefined || isSpread) return;
-                const options = readCdkArgument(source, readCdkResult(source, node), CDK_PROPS_POSITION);
-                const enabled = readCdkProperty(source, readCdkProperty(source, options, domain.encryption), 'enabled');
-                const engine = detectEngine(source, readCdkProperty(source, options, domain.version), domain);
+                const options = getCdkArgument(source, getCdkResult(source, node), CDK_PROPS_POSITION);
+                const enabled = getCdkProperty(source, getCdkProperty(source, options, domain.encryption), 'enabled');
+                const engine = detectEngine(source, getCdkProperty(source, options, domain.version), domain);
                 const isOff =
                     enabled.status === 'found' &&
                     enabled.node.type === AST_NODE_TYPES.Literal &&

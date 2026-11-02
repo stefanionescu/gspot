@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readTypes } from '../checker.ts';
+import { getTypes } from '../checker.ts';
 import type { TypeReader } from '../types/plugin.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { VOID_TYPE, ARRAY_NAME, ARRAY_TYPE_NAMES, ARRAY_FROM_METHOD, ARRAY_CALLBACK_METHODS } from '../config/calls.ts';
@@ -10,25 +10,25 @@ function isArrayFrom(callee: TSESTree.MemberExpression): boolean {
     return isArray && ASTUtils.isIdentifier(property) && property.name === ARRAY_FROM_METHOD;
 }
 
-function readCallback(call: TSESTree.CallExpression, types: TypeReader): TSESTree.CallExpressionArgument | undefined {
+function getCallback(call: TSESTree.CallExpression, types: TypeReader): TSESTree.CallExpressionArgument | undefined {
     const { callee, arguments: values } = call;
     if (callee.type !== AST_NODE_TYPES.MemberExpression) return undefined;
     const isMethod = ARRAY_CALLBACK_METHODS.has(ASTUtils.getPropertyName(callee));
-    if (isMethod && ARRAY_TYPE_NAMES.has(types.read(callee.object).getSymbol()?.name)) return values[0];
+    if (isMethod && ARRAY_TYPE_NAMES.has(types.get(callee.object).getSymbol()?.name)) return values[0];
     return isArrayFrom(callee) ? values[1] : undefined;
 }
 
 function returnsVoid(callback: TSESTree.CallExpressionArgument, types: TypeReader): boolean {
     const isBlockFunction = ASTUtils.isFunction(callback) && callback.body.type === AST_NODE_TYPES.BlockStatement;
     if (isBlockFunction || callback.type === AST_NODE_TYPES.SpreadElement) return false;
-    const signatures = types.read(callback).getCallSignatures();
+    const signatures = types.get(callback).getCallSignatures();
     return (
         signatures.length > 0 &&
         signatures.every((signature) => types.checker.typeToString(signature.getReturnType()) === VOID_TYPE)
     );
 }
 
-function readCallbackLocation(callback: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.SourceLocation {
+function getCallbackLocation(callback: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.SourceLocation {
     if (callback.type !== AST_NODE_TYPES.ArrowFunctionExpression) return callback.loc;
     const arrow = source.getTokenBefore(callback.body, { filter: ({ value }) => value === '=>' });
     return arrow?.loc ?? callback.loc;
@@ -52,14 +52,14 @@ export const noVoidArrayCallback = createRule<[], 'void'>({
     },
     create(context) {
         const source = context.sourceCode;
-        const types = readTypes(context);
+        const types = getTypes(context);
         if (types === undefined) return {};
         return {
             CallExpression(call) {
-                const callback = readCallback(call, types);
+                const callback = getCallback(call, types);
                 if (callback === undefined || !returnsVoid(callback, types)) return;
                 const method = source.getText(call.callee);
-                context.report({ loc: readCallbackLocation(callback, source), messageId: 'void', data: { method } });
+                context.report({ loc: getCallbackLocation(callback, source), messageId: 'void', data: { method } });
             },
         };
     },

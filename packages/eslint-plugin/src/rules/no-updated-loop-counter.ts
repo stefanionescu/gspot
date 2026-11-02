@@ -18,7 +18,7 @@ function isInLoopUpdate(identifier: TSESTree.Node, ancestors: readonly TSESTree.
     );
 }
 
-function readStatementCall(statement: TSESTree.Statement): TSESTree.Node | null | undefined {
+function getStatementCall(statement: TSESTree.Statement): TSESTree.Node | null | undefined {
     if (statement.type === AST_NODE_TYPES.VariableDeclaration) return statement.declarations.at(0)?.init;
     if (statement.type !== AST_NODE_TYPES.ExpressionStatement) return undefined;
     const { expression } = statement;
@@ -42,7 +42,7 @@ function isSkipAhead(identifier: TSESTree.Identifier, ancestors: readonly TSESTr
     const block = ancestors.findLast((ancestor) => ancestor.type === AST_NODE_TYPES.BlockStatement);
     return (
         parent.operator !== '=' ||
-        block?.body.some((statement) => isSpliceOf(readStatementCall(statement), identifier.name)) === true
+        block?.body.some((statement) => isSpliceOf(getStatementCall(statement), identifier.name)) === true
     );
 }
 
