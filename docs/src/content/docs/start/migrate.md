@@ -48,7 +48,7 @@ init reads the options of your formatters and writes them into `[format]`, so co
 - Prettier: the indent style, indent width, line width, quotes, semicolons, trailing commas, `bracketSpacing`,
   `arrowParens`, and `proseWrap`, from a JSON, YAML, or TOML file, the `prettier` key of `package.json`, or a JavaScript
   or TypeScript config. Each `overrides` entry becomes a `[[format.override]]` record.
-- `.editorconfig`: the indent style, indent width, and line width.
+- `.editorconfig`: the indent style, indent width, line width, and quote type. A value of `unset` leaves the option out.
 - Ruff: `line-length`, `indent-width`, `format.indent-style`, and `format.quote-style`, in a `[[format.override]]` record
   for the Python files.
 

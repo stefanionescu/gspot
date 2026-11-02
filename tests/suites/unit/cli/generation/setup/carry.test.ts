@@ -191,3 +191,13 @@ test('init leaves out an EditorConfig indent style of unset', async () => {
     const { settings } = await runInit(sandbox.path);
     expect((settings['format'] as TomlTable)['override']).toStrictEqual([{ paths: ['vendor/**'], indent_width: 3 }]);
 });
+
+test('init reads the EditorConfig quote type, as Prettier does', async () => {
+    await using sandbox = await createGitSandbox({
+        '.editorconfig': '[*]\nquote_type = single\n',
+        'source.js': 'export const value = 1;\n',
+    });
+    const { plan, settings } = await runInit(sandbox.path);
+    expect((settings['format'] as TomlTable)['quotes']).toBe('single');
+    expect(plan.carry.find(({ path }) => path === '.editorconfig')?.carried).toContain('singleQuote');
+});

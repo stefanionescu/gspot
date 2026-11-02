@@ -119,13 +119,20 @@ export function buildPrettierOverrides(
         );
 }
 
-function parseEditorWidths(fields: Record<string, string>): PrettierOptions {
-    const { indent_style: style, max_line_length: lineWidth } = fields;
+function parseEditorWidths(fields: Record<string, string>): Record<string, number> {
+    const { max_line_length: lineWidth } = fields;
     const width = fields['indent_size'] === 'tab' ? fields['tab_width'] : fields['indent_size'];
-    const options: Record<string, number | boolean> = {};
-    if (width !== undefined && DIGITS_ONLY.test(width)) options['tabWidth'] = Number(width);
-    if (lineWidth !== undefined && DIGITS_ONLY.test(lineWidth)) options['printWidth'] = Number(lineWidth);
+    const widths: Record<string, number> = {};
+    if (width !== undefined && DIGITS_ONLY.test(width)) widths['tabWidth'] = Number(width);
+    if (lineWidth !== undefined && DIGITS_ONLY.test(lineWidth)) widths['printWidth'] = Number(lineWidth);
+    return widths;
+}
+
+function parseEditorSection(fields: Record<string, string>): PrettierOptions {
+    const { indent_style: style, quote_type: quotes } = fields;
+    const options: Record<string, number | boolean> = parseEditorWidths(fields);
     if (style === 'tab' || style === 'space') options['useTabs'] = style === 'tab';
+    if (quotes === 'single' || quotes === 'double') options['singleQuote'] = quotes === 'single';
     return prettierOptionsSchema.parse(options);
 }
 
@@ -155,10 +162,10 @@ function readEditorconfig(folder: string): PrettierOptions | null {
         sections.filter(({ files }) => files === '*').flatMap(({ fields }) => Object.entries(fields)),
     );
     return {
-        ...parseEditorWidths(project),
+        ...parseEditorSection(project),
         overrides: sections
             .filter(({ files }) => files !== '*')
-            .map(({ files, fields }) => ({ files, options: parseEditorWidths(fields) })),
+            .map(({ files, fields }) => ({ files, options: parseEditorSection(fields) })),
     };
 }
 
