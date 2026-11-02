@@ -86,6 +86,7 @@ test('the home example matches staged findings and summaries and passes after it
         expect(text.stdout).toContain(example.checked);
         const summary = text.stdout.split('\n').find((line) => /^(?:Failed|Passed):/u.test(line));
         expect(summary?.replaceAll(otherCounts, 'N')).toBe(expected.summary.replaceAll(otherCounts, 'N'));
+        expect(summary).toMatch(/Passed: [1-9]/u);
     }
 });
 
