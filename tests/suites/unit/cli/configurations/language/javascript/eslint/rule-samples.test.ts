@@ -42,3 +42,18 @@ test.each(ESLINT_LEVEL_CASES)('%s reports label targets and while-loop candidate
     });
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
 });
+
+test('level all keeps an if-else helper, whose ternary form gspot/no-trivial-functions reports', async () => {
+    const rules = ['gspot/no-trivial-functions', 'unicorn/prefer-ternary'];
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module"}',
+        'branch.js':
+            "export function countLabel(count) {\n    if (count === 1) return 'one item';\n    else return 'many items';\n}\n",
+        'ternary.js': "export function countLabel(count) {\n    return count === 1 ? 'one item' : 'many items';\n}\n",
+    });
+    const eslint = await buildEslint(sandbox.path);
+    expect(await listLintFindings(eslint, sandbox.path, ['branch.js', 'ternary.js'], rules)).toStrictEqual([
+        { file: 'ternary.js', rule: 'gspot/no-trivial-functions', line: 1 },
+    ]);
+});

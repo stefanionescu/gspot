@@ -92,7 +92,7 @@ const UNICORN_RULES = {
     'unicorn/no-unnecessary-array-flat-map': 'off',
     'unicorn/no-abusive-eslint-disable': 'off',
 
-    'unicorn/prefer-ternary': ['error', 'only-single-line'],
+    'unicorn/prefer-ternary': 'off',
     'unicorn/expiring-todo-comments': 'off',
     'unicorn/consistent-boolean-name': [
         'error',
