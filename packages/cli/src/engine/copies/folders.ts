@@ -9,6 +9,27 @@ import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { rmSync, rmdirSync, readdirSync, mkdtempSync, realpathSync } from 'node:fs';
 import { COPIES_FOLDER, COPY_FOLDER_NAME, COPY_IGNORE_FILE, COPY_IGNORE_TEXT } from '#cli/config/engine.ts';
 
+const heldRoots = new Set<string>();
+
+function removeCopiesFolder(root: string): void {
+    const parent = join(root, COPIES_FOLDER);
+    try {
+        if (readdirSync(parent).some((name) => name !== COPY_IGNORE_FILE)) return;
+        rmSync(join(parent, COPY_IGNORE_FILE), { force: true });
+        rmdirSync(parent);
+    } catch (error) {
+        if (hasErrorCode(error, 'ENOENT')) return;
+        if (hasErrorCode(error, 'ENOTEMPTY')) {
+            openFiles(root).write(`${COPIES_FOLDER}/${COPY_IGNORE_FILE}`, {
+                bytes: Buffer.from(COPY_IGNORE_TEXT),
+                mode: OWNER_WRITABLE_FILE,
+            });
+            return;
+        }
+        printWarning(`Could not remove check copy folder ${parent}: ${String(error)}`);
+    }
+}
+
 function deleteCopyFolder(path: string): void {
     try {
         rmSync(path, TEMPORARY_REMOVAL_OPTIONS);
@@ -30,6 +51,22 @@ function createOwnedCopy(files: Files): string {
 }
 
 /**
+Keep the ignore file of the copies until a run ends, because tools that walk the repository read it.
+
+@param root the repository that owns the copies.
+@returns the hold, which removes the empty copies folder on disposal.
+*/
+export function holdCopyFolder(root: string): Disposable {
+    heldRoots.add(root);
+    return {
+        [Symbol.dispose]: () => {
+            heldRoots.delete(root);
+            removeCopiesFolder(root);
+        },
+    };
+}
+
+/**
 Keep copies inside the repository so linked packages share its root. Reclaim only copies whose owner has exited.
 
 @param root the repository that owns the copies.
@@ -43,21 +80,7 @@ export function createCopyFolder(root: string): TemporaryFolder {
         path,
         [Symbol.dispose]: () => {
             deleteCopyFolder(path);
-            try {
-                if (readdirSync(parent).some((name) => name !== COPY_IGNORE_FILE)) return;
-                rmSync(join(parent, COPY_IGNORE_FILE), { force: true });
-                rmdirSync(parent);
-            } catch (error) {
-                if (hasErrorCode(error, 'ENOENT')) return;
-                if (hasErrorCode(error, 'ENOTEMPTY')) {
-                    files.write(`${COPIES_FOLDER}/${COPY_IGNORE_FILE}`, {
-                        bytes: Buffer.from(COPY_IGNORE_TEXT),
-                        mode: OWNER_WRITABLE_FILE,
-                    });
-                    return;
-                }
-                printWarning(`Could not remove check copy folder ${parent}: ${String(error)}`);
-            }
+            if (!heldRoots.has(root)) removeCopiesFolder(root);
         },
     };
     try {

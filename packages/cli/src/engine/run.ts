@@ -20,8 +20,8 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { CheckStop, GspotError } from '#cli/system/errors.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
+import { holdCopyFolder } from '#cli/engine/copies/folders.ts';
 import { formatUnexpectedError } from '#cli/system/terminal.ts';
-import { createCopyFolder } from '#cli/engine/copies/folders.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { buildBaseResult, runBuiltInCheck, normalizeResultPaths } from '#cli/engine/results.ts';
 
@@ -233,8 +233,7 @@ report.
 @returns the report, the plan, and the fix report when --fix ran.
 */
 export async function runChecks(session: Session, options: RunOptions): Promise<RunResult> {
-    // A tool that walks the repository reads the ignore file of the copies, so it stays until every check ends.
-    using _copies = createCopyFolder(session.root);
+    using _copies = holdCopyFolder(session.root);
     const started = options.started ?? new Date();
     const {
         session: checked,

@@ -37,6 +37,23 @@ test('the ignore file of the copies stays until every check of a run ends', asyn
     expect(existsSync(ignoreFile)).toBe(false);
 });
 
+test('a run with no check copy writes nothing to the repository', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash']),
+        'run.sh': '#!/usr/bin/env bash\n',
+    });
+    const session = await openSession(sandbox.path);
+    using refused = spyOn(fs, 'mkdirSync').mockImplementation(() => {
+        throw Object.assign(new Error('Read-only file system'), { code: 'EROFS' });
+    });
+    const { report } = await runChecks(
+        session,
+        buildRunOptions({ only: ['bash/safety'], selectCheckCode: () => ({ check: () => [] }) }),
+    );
+    expect(refused).not.toHaveBeenCalled();
+    expect(report.exitCode).toBe(0);
+});
+
 test('copies stay ignored until the last copy removes their shared folder', async () => {
     await using sandbox = await testdir({ 'source.txt': 'authored\n' });
     commitAll(sandbox.path);
