@@ -13,7 +13,7 @@ import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { listMisePins, listPackagePins } from '#cli/tools/pins.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { CARRY_GROUPS, CARRY_HEADING } from '#cli/config/repository/setup.ts';
-import type { InitPlan, InitScan, CarryRow, InitFileRow, ConflictingConfigs } from '#cli/types/generation.ts';
+import type { InitPlan, InitScan, InitFileRow, CarryoverRow, ConflictingConfigs } from '#cli/types/generation.ts';
 
 import {
     COLUMN_GAP,
@@ -149,7 +149,7 @@ Word the table of what init carries: one line per replaced config, and one per w
 
 @param rows one row per replaced config.
 */
-export function listCarryLines(rows: CarryRow[]): InitFileRow[] {
+export function listCarryLines(rows: CarryoverRow[]): InitFileRow[] {
     return rows.flatMap((row) => {
         const groups = Object.entries(CARRY_GROUPS)
             .filter(([key]) => row[key as keyof typeof CARRY_GROUPS].length > 0)
@@ -222,7 +222,7 @@ export function planInitFiles(
             note: LINT_FOLDER_MESSAGE,
         })),
         lintCommands: scan.lintCommands,
-        carry: scan.carry,
+        carryover: scan.carryover,
     };
 }
 
@@ -246,7 +246,7 @@ export function formatInitPlan(plan: InitPlan, settingsText: string): string {
         ...formatFileSection('keep', plan.keep),
         ...formatFileSection('change', plan.change),
         ...formatFileSection(LINT_FOLDERS_HEADING, plan.lintFolders),
-        ...formatFileSection(CARRY_HEADING, listCarryLines(plan.carry)),
+        ...formatFileSection(CARRY_HEADING, listCarryLines(plan.carryover)),
         ...formatFileSection(
             LINT_COMMANDS_HEADING,
             plan.lintCommands.map(({ file, line, command, fix }) => ({

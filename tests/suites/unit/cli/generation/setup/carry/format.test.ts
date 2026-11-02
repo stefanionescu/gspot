@@ -9,7 +9,7 @@ test('init names the Prettier options that no setting holds', async () => {
         'source.ts': 'export {};\n',
     });
     const { plan } = await runInit(sandbox.path);
-    expect(plan.carry.find(({ path }) => path === '.prettierrc.json')).toMatchObject({
+    expect(plan.carryover.find(({ path }) => path === '.prettierrc.json')).toMatchObject({
         carried: ['semi'],
         dropped: ['quoteProps'],
     });
@@ -45,7 +45,7 @@ test('init reads the EditorConfig quote type, as Prettier does', async () => {
     });
     const { plan, settings } = await runInit(sandbox.path);
     expect((settings['format'] as TomlTable)['quotes']).toBe('single');
-    expect(plan.carry.find(({ path }) => path === '.editorconfig')?.carried).toContain('singleQuote');
+    expect(plan.carryover.find(({ path }) => path === '.editorconfig')?.carried).toContain('singleQuote');
 });
 
 test('init names an EditorConfig line width of off, which gspot.toml cannot hold', async () => {
@@ -55,7 +55,7 @@ test('init names an EditorConfig line width of off, which gspot.toml cannot hold
         'source.js': 'export const value = 1;\n',
     });
     const { plan } = await runInit(sandbox.path);
-    expect(plan.carry.find(({ path }) => path === '.editorconfig')?.dropped).toStrictEqual(['printWidth']);
+    expect(plan.carryover.find(({ path }) => path === '.editorconfig')?.dropped).toStrictEqual(['printWidth']);
 });
 
 test('init names an EditorConfig line setting that differs from what gspot writes', async () => {
@@ -64,7 +64,7 @@ test('init names an EditorConfig line setting that differs from what gspot write
         'run.bat': 'echo done\n',
     });
     const { plan } = await runInit(sandbox.path);
-    expect(plan.carry.find(({ path }) => path === '.editorconfig')?.dropped).toStrictEqual(['end_of_line']);
+    expect(plan.carryover.find(({ path }) => path === '.editorconfig')?.dropped).toStrictEqual(['end_of_line']);
 });
 
 test('init keeps the EditorConfig overrides beside the overrides of a Prettier config', async () => {
@@ -97,5 +97,5 @@ test('init names the excludeFiles of a Prettier override', async () => {
         'source.js': 'export const value = 1;\n',
     });
     const { plan } = await runInit(sandbox.path);
-    expect(plan.carry.find(({ path }) => path === '.prettierrc')?.dropped).toStrictEqual(['excludeFiles']);
+    expect(plan.carryover.find(({ path }) => path === '.prettierrc')?.dropped).toStrictEqual(['excludeFiles']);
 });

@@ -1,5 +1,5 @@
-import type { CarryRow, RuleRead, InitPlanning } from '#cli/types/generation.ts';
 import { compareRules, readPrintedRules } from '#cli/generation/setup/lint-rules.ts';
+import type { RuleRead, CarryoverRow, InitPlanning } from '#cli/types/generation.ts';
 
 import {
     CARRY_ROW_START,
@@ -47,9 +47,9 @@ Compare the rules of each replaced config with the rules that the installed tool
 @param reads what readUserRules returned.
 @returns one row per replaced config.
 */
-export async function compareInstalledRules(root: string, reads: RuleRead[]): Promise<CarryRow[]> {
+export async function compareInstalledRules(root: string, reads: RuleRead[]): Promise<CarryoverRow[]> {
     return await Promise.all(
-        reads.map(async ({ definition, path, sample, user }): Promise<CarryRow> => {
+        reads.map(async ({ definition, path, sample, user }): Promise<CarryoverRow> => {
             const { tool, check, hasSeverity, gspotArguments } = definition;
             const shipped = await readPrintedRules({
                 root,

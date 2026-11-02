@@ -51,7 +51,7 @@ async function planSettings(plan: SettingsPlan): Promise<PlannedSettings> {
     const first = readSettings(buildInitSettings(draft, repository, configurationsByName), root);
     const session = await openSession(root, { settings: first, ...sessionOptions });
     const configurations = session.toolConfigurations;
-    const carry = await readCarry({
+    const carryover = await readCarry({
         repository,
         conflictingConfigs,
         session,
@@ -61,9 +61,9 @@ async function planSettings(plan: SettingsPlan): Promise<PlannedSettings> {
         prettierScripts: draft.prettierScripts,
         templateIgnore: (draft.template?.table['ignore'] ?? []) as TomlTable[],
     });
-    const settingsText = buildInitSettings({ ...draft, carried: carry.settings }, repository, configurationsByName);
+    const settingsText = buildInitSettings({ ...draft, carried: carryover.settings }, repository, configurationsByName);
     const settings = readSettings(settingsText, root);
-    return { carry, settingsText, settings, planned: await openSession(root, { settings, ...sessionOptions }) };
+    return { carryover, settingsText, settings, planned: await openSession(root, { settings, ...sessionOptions }) };
 }
 
 /**
@@ -81,7 +81,7 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
     const proposed = selectProposedConfigurations({ repository, configurationsByName, options });
     const repositorySetup = await readRepositorySetup(cache, repository);
     const prettierScripts = await readPrettierScripts(root, repository.files, proposed.scopes);
-    const { carry, settingsText, settings, planned } = await planSettings({
+    const { carryover, settingsText, settings, planned } = await planSettings({
         root,
         draft: buildSettingsDraft(proposed, options, prettierScripts),
         repository,
@@ -110,7 +110,7 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
         template: options.template,
         pinPath,
         lintCommands: listLintCommands({ root, files: repository.files, ...listReplacedTools(applicable) }),
-        carry: carry.rows,
+        carryover: carryover.rows,
     };
     const plan = planInitFiles(planning, { settings, requirements: applicable, generated });
     return {

@@ -73,7 +73,7 @@ test('scan runs the commit checks of the setup, and lists each command that woul
         results.find(({ check }) => check === 'gspot/conflicting-configs')?.findings.map(({ rule }) => rule),
     ).toStrictEqual(['lint-command']);
     expect(report.plan.lintCommands).toMatchObject([{ file: 'package.json', command: 'eslint .', tool: 'eslint' }]);
-    expect(report.plan.carry).toMatchObject([
+    expect(report.plan.carryover).toMatchObject([
         { path: '.prettierrc.json', carried: ['semi'], dropped: ['quoteProps'] },
         { path: '.prettierignore', carried: ['src/made'] },
     ]);

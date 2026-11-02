@@ -8,10 +8,10 @@ import { printedRulesSchema } from '#cli/schemas/generation.ts';
 import { listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
 
 import type {
-    CarryRow,
     RuffRules,
     RuleState,
     RuleTable,
+    CarryoverRow,
     PrintedRules,
     ComparedRules,
     RuffRuleInput,
@@ -100,7 +100,7 @@ export function compareRuffRules(input: RuffRuleInput): RuffRules {
         ...[...(lint.ignore ?? []), ...(lint['extend-ignore'] ?? [])].map((rule) => ({ rule, file: undefined })),
         ...perFile.flatMap(([file, ignored]) => ignored.map((rule) => ({ rule, file }))),
     ];
-    const row: CarryRow = {
+    const row: CarryoverRow = {
         ...CARRY_ROW_START,
         path,
         tool: 'ruff',

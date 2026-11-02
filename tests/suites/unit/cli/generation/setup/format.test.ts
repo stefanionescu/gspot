@@ -34,7 +34,7 @@ test.each(INVALID_PRETTIER_OPTIONS)(
         const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
-        expect(plan.carry.find(({ path }) => path === file)?.dropped).toStrictEqual([field]);
+        expect(plan.carryover.find(({ path }) => path === file)?.dropped).toStrictEqual([field]);
     },
 );
 

@@ -1,9 +1,9 @@
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import type { StageFilter, CheckDescription } from '#cli/types/engine/plan.ts';
 import type { Session, HookStatus, ToolInspection } from '#cli/types/tools.ts';
-import type { CarryRow, InitPlan, InitPlanning } from '#cli/types/generation.ts';
 import type { Tool, Check, Setting, Configuration } from '#cli/types/manifests.ts';
 import type { RunReport, PushInput, CheckProgress } from '#cli/types/engine/run.ts';
+import type { InitPlan, CarryoverRow, InitPlanning } from '#cli/types/generation.ts';
 import type { RunCache, CommandResult, CanceledCommandJson } from '#cli/types/system.ts';
 import type { Settings, InheritedSetting, RemovedConfiguration } from '#cli/types/settings.ts';
 import type { CI_FILES, CHECK_STAGES, CHECK_INPUT_HOOKS } from '#cli/config/commands/reports.ts';
@@ -258,7 +258,7 @@ export type ScanInput = {
     session: Session;
     report: RunReport;
     toolBytes: number;
-    ruleRows: CarryRow[];
+    ruleRows: CarryoverRow[];
 };
 
 export type ScanSection = { title: string; rows: string[]; preformatted?: boolean };

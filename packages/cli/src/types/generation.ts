@@ -109,7 +109,7 @@ export type InitScan = {
     conflicts: ConflictingConfigs;
     pinPath?: string | undefined;
     lintCommands: LintCommand[];
-    carry: CarryRow[];
+    carryover: CarryoverRow[];
 };
 
 export type InitPlan = {
@@ -128,10 +128,10 @@ export type InitPlan = {
     change: InitFileRow[];
     lintFolders: InitFileRow[];
     lintCommands: LintCommand[];
-    carry: CarryRow[];
+    carryover: CarryoverRow[];
 };
 
-export type CarryRow = {
+export type CarryoverRow = {
     path: string;
     tool: string;
     covered: number;
@@ -150,11 +150,11 @@ export type RuleRead = {
     user: RuleTable | undefined;
 };
 
-export type Carry = { settings: TomlTable; rows: CarryRow[] };
+export type Carryover = { settings: TomlTable; rows: CarryoverRow[] };
 
-export type CarrySection = { tools: TomlTable; ignore: readonly TomlTable[]; rows: readonly CarryRow[] };
+export type CarryoverSection = { tools: TomlTable; ignore: readonly TomlTable[]; rows: readonly CarryoverRow[] };
 
-export type ToolCarryInput = {
+export type ToolCarryoverInput = {
     setting: 'markdownlint' | 'commitlint';
     tool: string;
     path: string;
@@ -165,7 +165,7 @@ export type ToolCarryInput = {
 
 export type MarkdownlintConfig = { path: string; rules: Record<string, unknown>; dropped: readonly string[] };
 
-export type CarryInput = {
+export type CarryoverInput = {
     repository: Repository;
     conflictingConfigs: ConflictingConfig[];
     session: Session;
@@ -185,7 +185,7 @@ export type SettingsPlan = {
     sessionOptions: Pick<SessionOptions, 'cache' | 'listing'>;
 };
 
-export type PlannedSettings = { carry: Carry; settingsText: string; settings: Settings; planned: Session };
+export type PlannedSettings = { carryover: Carryover; settingsText: string; settings: Settings; planned: Session };
 
 export type RuleState = { on: boolean; options: unknown[] };
 
@@ -206,7 +206,7 @@ export type ComparedRules = {
 
 export type RuffRuleInput = { path: string; options: RuffOptions; shipped: string[] };
 
-export type RuffRules = { rules: string[]; row: CarryRow };
+export type RuffRules = { rules: string[]; row: CarryoverRow };
 
 export type PrintedRules = {
     root: string;

@@ -89,8 +89,8 @@ The object of `gspot init --json` also has the [generated-file fields](#generate
 | `settingsText` | The text of the new `gspot.toml`. |
 
 `plan` holds `level`, `configurations`, the file lists `write`, `delete`, `keep`, `change`, and `lintFolders`, and the
-lists `lintCommands` and `carry`. Each row of `lintCommands` has `file`, `line`, `source`, `command`, `tool`, and `fix`.
-Each row of `carry` has `path`, `tool`, `covered`, `carried`, `differing`, `reasons`, `commandChecks`, and `dropped`. Each
+lists `lintCommands` and `carryover`. Each row of `lintCommands` has `file`, `line`, `source`, `command`, `tool`, and `fix`.
+Each row of `carryover` has `path`, `tool`, `covered`, `carried`, `differing`, `reasons`, `commandChecks`, and `dropped`. Each
 item of `configurations` has `configuration`, `origin`, `scopes`, `checks`, and `checksOff`. Each file row has `path` and `note`. With `--from`, `plan`
 also has `from`, with the `file` that `--from` names and the `leftOut` settings.
 

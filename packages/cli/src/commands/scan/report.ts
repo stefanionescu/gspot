@@ -106,8 +106,8 @@ export function buildScanReport(input: ScanInput): ScanReport {
         cost: buildCost(input),
         plan: {
             ...planning.plan,
-            carry: [
-                ...planning.plan.carry.filter(({ path }) => input.ruleRows.every((row) => row.path !== path)),
+            carryover: [
+                ...planning.plan.carryover.filter(({ path }) => input.ruleRows.every((row) => row.path !== path)),
                 ...input.ruleRows,
             ],
         },
@@ -154,17 +154,17 @@ function listSections(report: ScanReport): ScanSection[] {
                       ),
                   },
               ]),
-        ...(plan.carry.length === 0
+        ...(plan.carryover.length === 0
             ? []
             : [
                   {
                       title: SCAN_CARRY_TITLE,
-                      rows: listCarryLines(plan.carry).map(({ path, note }) => `${path}  ${note}`),
+                      rows: listCarryLines(plan.carryover).map(({ path, note }) => `${path}  ${note}`),
                   },
               ]),
         {
             title: SCAN_PLAN_TITLE,
-            rows: formatInitPlan({ ...plan, lintCommands: [], carry: [] }, settingsText)
+            rows: formatInitPlan({ ...plan, lintCommands: [], carryover: [] }, settingsText)
                 .trimEnd()
                 .split('\n'),
             preformatted: true,

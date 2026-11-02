@@ -17,7 +17,7 @@ test('init adds the Ruff rules that gspot does not run, and names each rule that
         { check: 'python/ruff', paths: ['**/vendor/**'], reason: 'Carried over from ruff.toml.' },
         { check: 'python/ruff-format', paths: ['**/vendor/**'], reason: 'Carried over from ruff.toml.' },
     ]);
-    expect(plan.carry.find(({ path }) => path === 'ruff.toml')).toMatchObject({
+    expect(plan.carryover.find(({ path }) => path === 'ruff.toml')).toMatchObject({
         covered: 1,
         carried: ['AIR', '**/vendor/**'],
         reasons: [
@@ -33,7 +33,7 @@ test('init lists the Ruff format options it carries in the Ruff row', async () =
         'main.py': 'VALUE = 1\n',
     });
     const { plan } = await runInit(sandbox.path, ['--configurations', 'python']);
-    expect(plan.carry.find(({ path }) => path === 'ruff.toml')?.carried).toStrictEqual([
+    expect(plan.carryover.find(({ path }) => path === 'ruff.toml')?.carried).toStrictEqual([
         'line-length',
         'format.quote-style',
     ]);
@@ -45,7 +45,7 @@ test('init anchors a Ruff per-file key without a slash at every folder', async (
         'pkg/__init__.py': 'VALUE = 1\n',
     });
     const { plan } = await runInit(sandbox.path, ['--configurations', 'python']);
-    expect(plan.carry.find(({ path }) => path === 'ruff.toml')?.reasons).toStrictEqual([
+    expect(plan.carryover.find(({ path }) => path === 'ruff.toml')?.reasons).toStrictEqual([
         'gspot ignore python/ruff --rule F401 --paths \'**/__init__.py\' --reason "<why>"',
     ]);
 });
@@ -56,7 +56,7 @@ test('init reads the Ruff extend-per-file-ignores table', async () => {
         'tests/main.py': 'VALUE = 1\n',
     });
     const { plan } = await runInit(sandbox.path, ['--configurations', 'python']);
-    expect(plan.carry.find(({ path }) => path === 'ruff.toml')).toMatchObject({
+    expect(plan.carryover.find(({ path }) => path === 'ruff.toml')).toMatchObject({
         reasons: ['gspot ignore python/ruff --rule F811 --paths \'tests/*\' --reason "<why>"'],
         dropped: [],
     });
@@ -68,7 +68,7 @@ test('init names a Ruff rule name in lint.ignore, which it cannot compare', asyn
         'main.py': 'VALUE = 1\n',
     });
     const { plan } = await runInit(sandbox.path, ['--configurations', 'python']);
-    expect(plan.carry.find(({ path }) => path === 'ruff.toml')?.dropped).toStrictEqual(['line-too-long']);
+    expect(plan.carryover.find(({ path }) => path === 'ruff.toml')?.dropped).toStrictEqual(['line-too-long']);
 });
 
 test('init compares the markdownlint table with what gspot runs', async () => {
@@ -78,7 +78,7 @@ test('init compares the markdownlint table with what gspot runs', async () => {
     });
     const { plan, settings } = await runInit(sandbox.path);
     expect(settings['tools']).toStrictEqual({ markdownlint: { rules: { MD024: { siblings_only: false } } } });
-    expect(plan.carry.find(({ path }) => path === '.markdownlint.json')).toMatchObject({
+    expect(plan.carryover.find(({ path }) => path === '.markdownlint.json')).toMatchObject({
         covered: 1,
         carried: ['MD024'],
         reasons: ['gspot ignore markdown/markdownlint --rule MD001 --reason "<why>"'],
@@ -91,7 +91,7 @@ test('init compares a markdownlint alias under its rule ID', async () => {
         'README.md': '# Example\n',
     });
     const { plan } = await runInit(sandbox.path);
-    expect(plan.carry.find(({ path }) => path === '.markdownlint.json')).toMatchObject({
+    expect(plan.carryover.find(({ path }) => path === '.markdownlint.json')).toMatchObject({
         reasons: ['gspot ignore markdown/markdownlint --rule MD001 --reason "<why>"'],
         dropped: [],
     });
@@ -103,7 +103,7 @@ test('init asks for no reason for a markdownlint rule that markdownlint retired'
         'README.md': '# Example\n',
     });
     const { plan } = await runInit(sandbox.path);
-    expect(plan.carry.find(({ path }) => path === '.markdownlint.json')).toMatchObject({ covered: 1, reasons: [] });
+    expect(plan.carryover.find(({ path }) => path === '.markdownlint.json')).toMatchObject({ covered: 1, reasons: [] });
 });
 
 test('init compares the rules that the commitlint of the repository prints', async () => {
@@ -129,7 +129,7 @@ test('init compares the rules that the commitlint of the repository prints', asy
     expect(settings['tools']).toStrictEqual({
         commitlint: { rules: { 'subject-case': ['always', 'lower-case'] } },
     });
-    expect(plan.carry.find(({ path }) => path === '.commitlintrc.json')).toMatchObject({
+    expect(plan.carryover.find(({ path }) => path === '.commitlintrc.json')).toMatchObject({
         covered: 1,
         carried: ['subject-case'],
         reasons: [
@@ -152,5 +152,5 @@ test('init keeps commitlint options out of a rule that the generated config turn
     await writeFile(program, `#!/bin/sh\necho '{"rules":{"scope-case":[2,"always","lower-case"]}}'\n`);
     await chmod(program, 0o755);
     const { plan } = await runInit(sandbox.path, ['--level', 'all']);
-    expect(plan.carry.find(({ path }) => path === '.commitlintrc.json')).toMatchObject({ dropped: ['scope-case'] });
+    expect(plan.carryover.find(({ path }) => path === '.commitlintrc.json')).toMatchObject({ dropped: ['scope-case'] });
 });

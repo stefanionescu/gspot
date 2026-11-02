@@ -17,7 +17,7 @@ test('init turns the ignore files into ignore records, and keeps what matches a 
             reason: 'Carried over from .prettierignore.',
         },
     ]);
-    expect(plan.carry.find(({ path }) => path === '.prettierignore')).toMatchObject({
+    expect(plan.carryover.find(({ path }) => path === '.prettierignore')).toMatchObject({
         carried: ['**/dist/**', '**/*.min.js'],
         dropped: ['!dist/keep.js'],
     });
@@ -26,7 +26,7 @@ test('init turns the ignore files into ignore records, and keeps what matches a 
 test.each([...CARRY_ROW_CASES])('init goes on past $name, and the table names it', async ({ files, path, row }) => {
     await using sandbox = await createGitSandbox(files);
     const { plan } = await runInit(sandbox.path);
-    expect(plan.carry.find((each) => each.path === path)).toMatchObject(row);
+    expect(plan.carryover.find((each) => each.path === path)).toMatchObject(row);
 });
 
 test('init goes on past a nested package.json that does not parse, and it marks no scope', async () => {
@@ -48,7 +48,7 @@ test('init sends the rules of an ESLint config to gspot scan, which can compare 
         'src/a.js': 'export const a = 1;\n',
     });
     const { plan } = await runInit(sandbox.path);
-    expect(plan.carry.find(({ path }) => path === 'eslint.config.mjs')).toMatchObject({
+    expect(plan.carryover.find(({ path }) => path === 'eslint.config.mjs')).toMatchObject({
         tool: 'eslint',
         dropped: ['its rules; gspot scan compares them before init'],
     });
@@ -63,7 +63,7 @@ test('init names each replaced config that it does not read', async () => {
         'sample/source.js': 'export const value = 1;\n',
     });
     const { plan } = await runInit(sandbox.path);
-    expect(plan.carry.filter(({ path }) => path !== 'ruff.toml')).toMatchObject([
+    expect(plan.carryover.filter(({ path }) => path !== 'ruff.toml')).toMatchObject([
         { path: 'sample/.prettierrc', dropped: [expect.stringContaining('at the root and at a scope')] },
         { path: 'tools/.ruff.toml', dropped: [expect.stringContaining('at the root and at a scope')] },
     ]);
