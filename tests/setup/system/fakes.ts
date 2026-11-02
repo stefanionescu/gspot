@@ -144,16 +144,18 @@ export function fakeExecutableLookup(
     path: string | null | ((name: string) => string | null | undefined),
 ): Mock<typeof executables.sync> {
     const locate = executables.sync;
-    return spyOn(executables, 'sync').mockImplementation(((
-        name: string,
-        options?: executables.Options,
-        // eslint-disable-next-line sonarjs/function-return-type -- reason: which.sync returns one path, all paths, or null.
-    ): string | string[] | null => {
+    /**
+    Stand in for which.sync.
+
+    @returns one path, all paths, or null, as which.sync does.
+    */
+    const lookUp = (name: string, options?: executables.Options): string | string[] | null => {
         const found = typeof path === 'function' ? path(name) : path;
         if (found === undefined || name === GIT_PROGRAM) return locate(name, options);
         if (options?.all === true) return found === null ? [] : [found];
         return found;
-    }) as typeof executables.sync);
+    };
+    return spyOn(executables, 'sync').mockImplementation(lookUp as typeof executables.sync);
 }
 
 /**
