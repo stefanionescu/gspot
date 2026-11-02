@@ -56,6 +56,18 @@ test('ignore merges matching paths, keeps different reasons apart, and a record 
     ]);
 });
 
+test('ignore gives a weakening its reason through a rule, and refuses the whole check', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const reason = ['--reason', 'The team moves to level all after the release.'];
+    const named = await runGspot(sandbox.path, ['ignore', 'gspot/weakenings', '--rule', 'level', ...reason]);
+    expect(named.code, named.stdout + named.stderr).toBe(0);
+    const refused = await runGspot(sandbox.path, ['ignore', 'gspot/weakenings', ...reason]);
+    expect(refused.code).toBe(2);
+    expect(refused.stderr).toContain('names one rule');
+    const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
+    expect(written['ignore']).toMatchObject([{ check: 'gspot/weakenings', rule: 'level' }]);
+});
+
 test('ignore rejects unknown rules and checks without rule output before writing settings', async () => {
     const settings = buildSandboxSettings(['javascript', 'bash']);
     await using sandbox = await createGitSandbox({

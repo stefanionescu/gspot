@@ -71,7 +71,7 @@ export function buildRunReport(run: FinishedRun): RunReport {
         stages: REPORT_STAGES[options.stage],
         started: started.toISOString(),
         duration: Date.now() - started.getTime(),
-        checks,
+        checks: checks.map(({ reportNotes: _notes, ...check }) => check),
         ignores: session.settings.ignore,
         baselined,
         unstagedChanges: options.unstagedChanges ?? 0,
