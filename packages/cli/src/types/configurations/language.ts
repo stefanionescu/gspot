@@ -233,7 +233,7 @@ type EslintPresetSource = EslintReference & { merge: 'fields' | 'rules' };
 
 export type ListedPlugins = { plugins: ReadonlyArray<string | EslintReference>; local: EslintPlugins };
 
-export type EslintCallArgument = EslintReference | { value: unknown } | ListedPlugins | Pick<ListedPlugins, 'plugins'>;
+export type EslintCallArgument = EslintReference | ListedPlugins | Pick<ListedPlugins, 'plugins'> | { value: unknown };
 
 type EslintCall = { name: string; args: readonly EslintCallArgument[] };
 

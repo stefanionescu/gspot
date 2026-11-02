@@ -36,13 +36,9 @@ export const ciFields = {
         leftOut: 'code',
         description: 'A command CI runs before `gspot install`, in place of the frozen install of each lockfile.',
     }),
-    operating_systems: operatingSystemSchema
-        .array()
-        .min(1)
-        .default(['linux'] as ['linux'])
-        .meta({
-            description: 'The operating systems of the CI jobs. GitHub only; refused with provider = "gitlab".',
-        }),
+    operating_systems: operatingSystemSchema.array().min(1).default(['linux']).meta({
+        description: 'The operating systems of the CI jobs. GitHub only; refused with provider = "gitlab".',
+    }),
     linux_runner: z.string().min(1).default(CI_PINS.githubRunners.linux.label).meta({
         description:
             'The GitHub runner label of the Linux job, such as a larger or self-hosted runner. GitHub only; refused with provider = "gitlab".',
@@ -124,7 +120,7 @@ export const importRulesSchema = importRuleSchema
         for (const { path, message } of validateImportRules(rules))
             context.addIssue({ code: 'custom', path: [...path], message });
     })
-    .default([] as [])
+    .default([])
     .meta({
         configurations: ['structure'],
         description:
@@ -139,7 +135,7 @@ export const pythonSchema = z
             configurations: ['python'],
             description:
                 'Modules that the host application provides at run time, such as folder_paths. A name covers its submodules.',
-            default: [] as [],
+            default: [],
         }),
         docstring_convention: z
             .enum(DOCSTRING_CONVENTIONS)
@@ -150,7 +146,7 @@ export const pythonSchema = z
             }),
         import_folders: relativePathSchema
             .array()
-            .default([] as [])
+            .default([])
             .meta({
                 configurations: ['python'],
                 description: 'Folders that Python imports resolve from, for basedpyright and the import rules check.',
@@ -189,14 +185,14 @@ export const licensesSchema = z.strictObject({
             }
         }, 'Use one SPDX license ID, such as MIT or Apache-2.0, not an AND or OR expression.')
         .array()
-        .default([] as [])
+        .default([])
         .meta({
             configurations: ['licenses'],
             description: 'The SPDX license IDs a dependency may report.',
         }),
     allowed_package: allowedPackageSchema
         .array()
-        .default([] as [])
+        .default([])
         .meta({
             leftOut: 'repository',
             configurations: ['licenses'],
@@ -204,17 +200,19 @@ export const licensesSchema = z.strictObject({
         }),
 });
 
-const languageSchema = namingCategorySchema.extend(
-    Object.fromEntries(
-        NAMING_TABLE_CATEGORIES.map((category) => [
-            category,
-            namingCategorySchema
-                .optional()
-                .describe(`Naming rules for ${category}.`)
-                .meta({ variantOf: 'naming.<language>' }),
-        ]),
-    ) as Record<NamingCategory, z.ZodOptional<typeof namingCategorySchema>>,
-);
+const languageSchema = namingCategorySchema
+    .extend(
+        Object.fromEntries(
+            NAMING_TABLE_CATEGORIES.map((category) => [
+                category,
+                namingCategorySchema
+                    .optional()
+                    .describe(`Naming rules for ${category}.`)
+                    .meta({ variantOf: 'naming.<language>' }),
+            ]),
+        ) as Record<NamingCategory, z.ZodOptional<typeof namingCategorySchema>>,
+    )
+    .register(z.globalRegistry, { id: 'namingLanguage' });
 
 const languageSchemas = Object.fromEntries(
     Object.entries(NAMING_LANGUAGE_CATEGORIES).map(([language, categories]) => [
@@ -230,22 +228,18 @@ const languageSchemas = Object.fromEntries(
     ]),
 ) as Record<SettingLanguage, typeof languageSchema>;
 
-languageSchema.register(z.globalRegistry, { id: 'namingLanguage' });
-
 const lists = {
     banned_words: z
         .string()
         .array()
-        .default([] as [])
+        .default([])
         .meta({
             configurations: ['naming'],
             description: 'Words this repository bans in identifiers, beyond the shipped groups.',
         }),
     override: namingOverrideSchema
         .extend({
-            paths: nonemptyPathsSchema
-                .default(['**'] as ['**'])
-                .describe(namingOverrideSchema.shape.paths.description as string),
+            paths: nonemptyPathsSchema.default(['**']).describe(namingOverrideSchema.shape.paths.description as string),
             languages: z
                 .enum(SETTING_LANGUAGES)
                 .array()
@@ -256,7 +250,7 @@ const lists = {
             reason: z.string().describe(namingOverrideSchema.shape.reason.description as string),
         })
         .array()
-        .default([] as [])
+        .default([])
         .meta({
             configurations: ['naming'],
             description: 'Naming rules for repository-relative paths, in order; each record has its reason.',
@@ -280,11 +274,7 @@ export const ruleFilesSchema = z.strictObject({
     enabled: z.boolean().default(true).meta({
         description: 'Write the rules and the AGENTS.md block.',
     }),
-    exclude: z
-        .string()
-        .array()
-        .default([] as [])
-        .meta({
-            description: 'Rule files under .gspot/rules/ to leave out, such as .gspot/rules/PLANNING.md.',
-        }),
+    exclude: z.string().array().default([]).meta({
+        description: 'Rule files under .gspot/rules/ to leave out, such as .gspot/rules/PLANNING.md.',
+    }),
 });

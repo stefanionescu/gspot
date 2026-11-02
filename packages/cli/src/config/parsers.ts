@@ -144,7 +144,7 @@ export const PYTHON_STRING_ESCAPES: Readonly<Record<string, string>> = {
     b: '\b',
     f: '\f',
     v: '\v',
-    a: '\u0007',
+    a: '\u{7}',
     '\\': '\\',
     "'": "'",
     '"': '"',
@@ -345,7 +345,7 @@ export const PYPROJECT_TOML = 'pyproject.toml';
 
 export const PACKAGE_SWIFT = 'Package.swift';
 
-export const REQUIREMENT_NAME = /^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$/u;
+export const REQUIREMENT_NAME = /^[A-Za-z0-9](?:[\w.-]*[A-Za-z0-9])?$/u;
 
 export const LINE_CONTINUATION = /\\\r?\n/gu;
 

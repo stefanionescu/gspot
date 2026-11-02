@@ -239,7 +239,7 @@ export type ToolRunOptions = Pick<CancelableSpawnOptions, 'cwd' | 'env' | 'stdin
     cancelSignal?: AbortSignal | undefined;
 };
 
-export type ToolAvailability = { path: string } | ProcessFailure;
+export type ToolAvailability = ProcessFailure | { path: string };
 
 export type ProcessFailure = { status: 'error' | 'missing'; note: string };
 

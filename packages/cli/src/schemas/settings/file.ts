@@ -32,6 +32,7 @@ import {
     TABLE_DESCRIPTIONS,
     SCOPE_PATH_MESSAGES,
     NO_CHECK_RULE_MESSAGE,
+    TOOL_TIMEOUT_SECONDS_DEFAULT,
 } from '#cli/config/settings/schema.ts';
 
 export const ignoreSchema = z
@@ -159,14 +160,9 @@ export const scopeSchema = z.strictObject({
         .meta({
             description: 'The folder of the scope; no two records may name the same folder.',
         }),
-    configurations: z
-        .string()
-        .array()
-        .default([] as [])
-        .meta({
-            description:
-                'Configurations for this folder, on top of the root ones; `gspot add --scope` writes this list.',
-        }),
+    configurations: z.string().array().default([]).meta({
+        description: 'Configurations for this folder, on top of the root ones; `gspot add --scope` writes this list.',
+    }),
     removed_configurations: removedConfigurationsSchema.prefault({}).meta({
         reason_when: 'adding',
         description:
@@ -182,24 +178,13 @@ export const rootSettingSchemas = {
     level: levelSchema.default('basic').meta({
         description: `${LEVEL_SUMMARY} ${ALL_LEVEL_SUMMARY} Ruff PLW1514 is the one preview lint rule that a level turns on.`,
     }),
-    tool_timeout_seconds: z.number().int().positive().default(600).meta({
+    tool_timeout_seconds: z.int().positive().default(TOOL_TIMEOUT_SECONDS_DEFAULT).meta({
         description:
             'The time limit in seconds for every tool command, including installation and version reads. Root only.',
     }),
     test_files: relativePathSchema
         .array()
         .default([
-            '**/test/**',
-            '**/tests/**',
-            '**/__tests__/**',
-            '**/*.test.*',
-            '**/*.spec.*',
-            '**/test_*.py',
-            '**/*_test.py',
-            '**/conftest.py',
-            '**/Tests/**',
-            '**/*Tests.swift',
-        ] as [
             '**/test/**',
             '**/tests/**',
             '**/__tests__/**',
@@ -219,14 +204,10 @@ export const rootSettingSchemas = {
 export const settingsSchema = z
     .strictObject({
         ...rootSettingSchemas,
-        configurations: z
-            .string()
-            .array()
-            .default([] as [])
-            .meta({
-                description:
-                    'The configurations this repository uses besides the always-selected ones. `gspot init` writes the detected ones here; `gspot add` and `gspot remove` change the list.',
-            }),
+        configurations: z.string().array().default([]).meta({
+            description:
+                'The configurations this repository uses besides the always-selected ones. `gspot init` writes the detected ones here; `gspot add` and `gspot remove` change the list.',
+        }),
         removed_configurations: removedConfigurationsSchema.prefault({}).meta({
             reason_when: 'adding',
             description:

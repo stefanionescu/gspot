@@ -10,14 +10,14 @@ hold, goes to `dropped`, so a config of the user reaches the table and stops not
 @returns a schema that accepts any table, and gives the options that gspot carries and the names of the others.
 */
 function buildCarriedSchema<Shape extends z.ZodRawShape>(shape: Shape) {
-    const carried = z.object(shape).partial();
+    const carriedSchema = z.object(shape).partial();
     return configTableSchema.transform((table) => {
         const groups = Map.groupBy(
             Object.entries(table),
             ([key, value]) => Object.hasOwn(shape, key) && (shape[key] as z.ZodType).safeParse(value).success,
         );
         return {
-            ...carried.parse(Object.fromEntries(groups.get(true) ?? [])),
+            ...carriedSchema.parse(Object.fromEntries(groups.get(true) ?? [])),
             dropped: (groups.get(false) ?? []).map(([key]) => key),
         };
     });

@@ -25,7 +25,7 @@ export const CACHED_PATHS = {
         uv: ['~/.cache/uv'],
     },
     windows: {
-        mise: ['${{ runner.temp }}/mise/downloads-cas'],
+        mise: [`\${{ runner.temp }}/mise/downloads-cas`],
         npm: ['~/AppData/Local/npm-cache/_cacache'],
         pnpm: ['~/AppData/Local/pnpm/store'],
         yarn: ['~/AppData/Local/Yarn/Cache', '~/AppData/Local/Yarn/Berry/cache'],
@@ -40,7 +40,7 @@ export const GITLAB_WORKFLOW = '.gitlab/ci/gspot.yml';
 
 export const CI_TIMEOUT_MINUTES = 60;
 
-export const MISE_TOKEN_ENVIRONMENT = { MISE_GITHUB_TOKEN: '${{ github.token }}' } as const;
+export const MISE_TOKEN_ENVIRONMENT = { MISE_GITHUB_TOKEN: `\${{ github.token }}` } as const;
 
 export const CI_BASE_VARIABLE = 'GSPOT_CI_BASE';
 
@@ -57,7 +57,7 @@ export const CI_TESTS_JOB_NAME = 'tests';
 
 export const CI_CACHE_STEP = 'cache';
 
-export const CI_CACHE_PREFIX = 'gspot-${{ runner.os }}-${{ runner.arch }}-';
+export const CI_CACHE_PREFIX = `gspot-\${{ runner.os }}-\${{ runner.arch }}-`;
 
 export const CI_CACHE_MISS_CONDITION = `steps.${CI_CACHE_STEP}.outputs.cache-hit != 'true'`;
 
@@ -65,8 +65,7 @@ export const CI_CACHE_SAVED_KEY = `\${{ steps.${CI_CACHE_STEP}.outputs.cache-pri
 
 export const CHECKOUT_OPTIONS = { 'fetch-depth': 0, 'persist-credentials': false } as const;
 
-export const GITHUB_BASE_EXPRESSION =
-    "${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.before }}";
+export const GITHUB_BASE_EXPRESSION = `\${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.before }}`;
 
 export const GITHUB_PUSH_CONDITION =
     "github.event_name != 'push' || github.ref_name == github.event.repository.default_branch";
@@ -74,8 +73,8 @@ export const GITHUB_PUSH_CONDITION =
 export const GITHUB_EVENTS = { push: { branches: ['**'] }, pull_request: {}, merge_group: {} } as const;
 
 export const GITHUB_CONCURRENCY = {
-    group: "${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}",
-    'cancel-in-progress': "${{ github.event_name == 'pull_request' }}",
+    group: `\${{ github.workflow }}-\${{ github.event_name == 'pull_request' && github.ref || github.run_id }}`,
+    'cancel-in-progress': `\${{ github.event_name == 'pull_request' }}`,
 } as const;
 
 export const GITLAB_BASE_LINE = `${CI_BASE_VARIABLE}="\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-\${CI_COMMIT_BEFORE_SHA:-}}"`;

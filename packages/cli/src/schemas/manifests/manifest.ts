@@ -129,7 +129,7 @@ const checkFieldsSchema = z.strictObject({
     runs: z.enum(CHECK_RUNS).default('files'),
     generator_outputs: generatorOutputSchema.array().min(1).optional(),
     coverage_arguments: z.string().min(1).array().optional(),
-    limits: z.union([z.string().min(1).array(), z.record(z.string().min(1), z.string().min(1))]).optional(),
+    limits: z.union([nonemptyStringSchema.array(), z.record(nonemptyStringSchema, nonemptyStringSchema)]).optional(),
     limit_languages: z.enum(SETTING_LANGUAGES).array().optional(),
     run_in_copy: z.boolean().optional(),
     binary_files: z.boolean().optional(),
@@ -210,11 +210,25 @@ const exportNamesSchema = z.strictObject({
     names: z.string().min(1).array().min(1),
 });
 
+const commitlintTableSchema = z.strictObject({ rules: z.record(z.string(), z.json().array()).default({}) });
+
+const namingTableSchema = z.strictObject({
+    path_containers: pathContainerSchema.array().default([]),
+    lists: z
+        .object({ folders: wordListSchema })
+        .catchall(wordListSchema)
+        .default({ folders: { words: [] } }),
+    allowed_names: z.string().array().default([]),
+    allowed_phrases: z.string().array().default([]),
+    languages: z.record(z.string(), languageSchema).default({}),
+    override: writtenNamingOverrideSchema.array().default([]),
+});
+
 export const manifestSchema = z
     .strictObject({
         folder: z.string(),
         defaults: z.record(z.string().min(1), z.json()).default({}),
-        commitlint: z.strictObject({ rules: z.record(z.string(), z.json().array()).default({}) }).prefault({}),
+        commitlint: commitlintTableSchema.prefault({}),
         eslint: z
             .strictObject({
                 all_level_rules: allLevelRulesSchema.prefault([]),
@@ -246,19 +260,7 @@ export const manifestSchema = z
         tool: manifestToolSchema.array().default([]),
         config_file: configSchema.array().default([]),
         check: checkSchema.array().default([]),
-        naming: z
-            .strictObject({
-                path_containers: pathContainerSchema.array().default([]),
-                lists: z
-                    .object({ folders: wordListSchema })
-                    .catchall(wordListSchema)
-                    .default({ folders: { words: [] } }),
-                allowed_names: z.string().array().default([]),
-                allowed_phrases: z.string().array().default([]),
-                languages: z.record(z.string(), languageSchema).default({}),
-                override: writtenNamingOverrideSchema.array().default([]),
-            })
-            .optional(),
+        naming: namingTableSchema.optional(),
         rules: z
             .record(
                 z.string().regex(RULE_FILE_PATTERN),

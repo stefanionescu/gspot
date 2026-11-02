@@ -44,7 +44,7 @@ export const configurationTableSchemas = {
     docs: generalTableSchemas.docs,
     drizzle: z
         .strictObject({
-            client_names: nonemptyStringsSchema.default(['db'] as ['db']).meta({
+            client_names: nonemptyStringsSchema.default(['db']).meta({
                 leftOut: 'repository',
                 configurations: ['drizzle'],
                 description:
@@ -58,18 +58,14 @@ export const configurationTableSchemas = {
         .strictObject({
             router_files: relativePathSchema
                 .array()
-                .default(['**/routers/**', '**/*router*.ts', '**/trpc/**'] as [
-                    '**/routers/**',
-                    '**/*router*.ts',
-                    '**/trpc/**',
-                ])
+                .default(['**/routers/**', '**/*router*.ts', '**/trpc/**'])
                 .meta({
                     configurations: ['trpc'],
                     description: 'The files that declare tRPC procedures.',
                 }),
             server_files: relativePathSchema
                 .array()
-                .default([] as [])
+                .default([])
                 .meta({
                     configurations: ['trpc'],
                     description:
@@ -83,12 +79,7 @@ export const configurationTableSchemas = {
                 reason_when: 'adding',
                 configurations: ['zustand'],
                 description: 'The files that may create a store.',
-                default: ['**/store.*', '**/stores/*', '**/store/*', '**/*.store.*'] as [
-                    '**/store.*',
-                    '**/stores/*',
-                    '**/store/*',
-                    '**/*.store.*',
-                ],
+                default: ['**/store.*', '**/stores/*', '**/store/*', '**/*.store.*'],
             }),
         })
         .optional(),
@@ -110,7 +101,7 @@ export const configurationTableSchemas = {
         .optional(),
     postgres: z
         .strictObject({
-            client_schemas: nonemptyStringsSchema.default([] as []).meta({
+            client_schemas: nonemptyStringsSchema.default([]).meta({
                 leftOut: 'repository',
                 configurations: ['postgres'],
                 description: 'The schemas clients reach, where every table needs row level security.',
@@ -142,7 +133,7 @@ export const configurationTableSchemas = {
     secrets: generalTableSchemas.secrets,
     site: z
         .strictObject({
-            build_command: commandSchema.default(['npm', ...BUILD_SCRIPT] as string[]).meta({
+            build_command: commandSchema.default(['npm', ...BUILD_SCRIPT]).meta({
                 leftOut: 'code',
                 configurations: ['site'],
                 description:
@@ -157,13 +148,13 @@ export const configurationTableSchemas = {
                 configurations: ['site'],
                 description: 'Class names a script adds at run time: the names and the reason.',
                 reason_when: 'adding',
-                default: [] as [],
+                default: [],
             }),
             allowed_unlisted_pages: allowReasonedValue(relativePathSchema.meta({ path_role: 'build' }).array(), {
                 configurations: ['site'],
                 description: 'Built pages the sitemap leaves out on purpose.',
                 reason_when: 'adding',
-                default: ['404.html'] as ['404.html'],
+                default: ['404.html'],
             }),
         })
         .optional(),
@@ -174,7 +165,7 @@ export const configurationTableSchemas = {
                 configurations: ['supabase'],
                 description: 'The folder with one folder for each edge function.',
             }),
-            schemas: nonemptyStringsSchema.default(['public'] as ['public']).meta({
+            schemas: nonemptyStringsSchema.default(['public']).meta({
                 leftOut: 'repository',
                 configurations: ['supabase'],
                 description: 'The database schemas to include in generated types.',
@@ -213,7 +204,7 @@ export const configurationTableSchemas = {
             allowed_unused_imports: z
                 .string()
                 .array()
-                .default([] as [])
+                .default([])
                 .meta({
                     leftOut: 'repository',
                     configurations: ['swift'],
@@ -233,7 +224,7 @@ export const configurationTableSchemas = {
             allowed_entitlements: z
                 .string()
                 .array()
-                .default([] as [])
+                .default([])
                 .meta({
                     leftOut: 'repository',
                     configurations: ['xcode'],
@@ -258,7 +249,7 @@ for (const [name, schema] of Object.entries(configurationTableSchemas)) {
     if (description !== undefined)
         z.globalRegistry.add(schema, {
             ...schema.meta(),
-            ...(schema.unwrap().meta()?.id === undefined ? { id: name } : {}),
+            ...(schema.unwrap().meta()?.id === undefined && { id: name }),
             description,
         });
 }

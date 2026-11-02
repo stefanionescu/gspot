@@ -20,13 +20,13 @@ export const generalTableSchemas = {
                 description: 'Where re-exports may go: none, or an index file that re-exports other files.',
                 default: 'none',
             }),
-            min_duplicate_lines: allowReasonedValue(z.number().int().positive(), {
+            min_duplicate_lines: allowReasonedValue(z.int().positive(), {
                 configurations: ['structure'],
                 description: 'The fewest lines a copied block has before it counts.',
                 reason_when: 'raising',
                 default: 8,
             }),
-            min_duplicate_tokens: allowReasonedValue(z.number().int().positive(), {
+            min_duplicate_tokens: allowReasonedValue(z.int().positive(), {
                 configurations: ['structure'],
                 description: 'The fewest tokens a copied block has before it counts.',
                 reason_when: 'raising',
@@ -34,7 +34,7 @@ export const generalTableSchemas = {
             }),
             environment_readers: relativePathSchema
                 .array()
-                .default([] as [])
+                .default([])
                 .meta({
                     configurations: ['structure'],
                     description:
@@ -82,7 +82,7 @@ export const generalTableSchemas = {
                     }),
                 })
                 .array()
-                .default([] as [])
+                .default([])
                 .meta({
                     leftOut: 'repository',
                     configurations: ['swift'],
@@ -102,10 +102,7 @@ export const generalTableSchemas = {
                 configurations: ['dependencies'],
                 description: 'The hosts a lockfile may resolve packages from.',
                 reason_when: 'adding',
-                default: ['registry.npmjs.org', 'registry.yarnpkg.com'] as [
-                    'registry.npmjs.org',
-                    'registry.yarnpkg.com',
-                ],
+                default: ['registry.npmjs.org', 'registry.yarnpkg.com'],
             }),
             bun_scanner: nonemptyStringSchema.optional().meta({
                 leftOut: 'code',
@@ -121,7 +118,7 @@ export const generalTableSchemas = {
                 configurations: ['docs'],
                 description: 'Allowed URL patterns; additions need a reason for the whole list.',
                 reason_when: 'adding',
-                default: [] as [],
+                default: [],
             }),
         })
         .optional(),
@@ -129,18 +126,13 @@ export const generalTableSchemas = {
     secrets: z
         .strictObject({
             environment_examples: nonemptyStringsSchema
-                .default(['.env.example', '.env.template', '.env.sample', '.dev.vars.example'] as [
-                    '.env.example',
-                    '.env.template',
-                    '.env.sample',
-                    '.dev.vars.example',
-                ])
+                .default(['.env.example', '.env.template', '.env.sample', '.dev.vars.example'])
                 .meta({
                     configurations: ['secrets'],
                     description:
                         'The example environment files to search for environment keys; a key may appear in any one of them.',
                 }),
-            environment_functions: nonemptyStringsSchema.default([] as []).meta({
+            environment_functions: nonemptyStringsSchema.default([]).meta({
                 leftOut: 'repository',
                 configurations: ['secrets'],
                 description:
@@ -187,7 +179,7 @@ export const generalTableSchemas = {
             banned_headings: z
                 .string()
                 .array()
-                .default([] as [])
+                .default([])
                 .meta({
                     configurations: ['prose'],
                     description: 'Headings this repository bans beyond the shipped list.',

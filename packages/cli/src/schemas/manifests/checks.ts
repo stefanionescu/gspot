@@ -9,7 +9,7 @@ import {
     DEFAULT_GROUPED_PATTERN,
 } from '#cli/config/manifests.ts';
 
-const findingExitCodesSchema = z.number().int().min(1).max(MAX_EXIT_CODE).array();
+const findingExitCodesSchema = z.int().min(1).max(MAX_EXIT_CODE).array();
 
 export const checkStageSchema = z.enum(STAGES);
 
@@ -17,8 +17,23 @@ export const commandSchema = z
     .string()
     .array()
     .min(1)
-    .refine((command) => command[0] !== '', { message: 'The executable cannot be empty.', path: [0] })
+    .refine((command) => command[0] !== '', { error: 'The executable cannot be empty.', path: [0] })
     .meta({ prefixItems: [{ type: 'string', minLength: 1 }] });
+
+const outputFieldsSchema = z.strictObject({
+    file: z.string().describe('For json: the field that holds the file.').optional(),
+    line: z.string().describe('For json: the field that holds the line.').optional(),
+    column: z.string().describe('For json: the field that holds the column.').optional(),
+    rule: z.string().describe('For json: the field that holds the lint rule.').optional(),
+    message: z
+        .union([z.string(), z.string().array()])
+        .describe('For json: the field that holds the message, or the fields that join into it.')
+        .optional(),
+    fixable: z
+        .string()
+        .describe('For json: the field that is set, and not null, when the tool can fix the finding.')
+        .optional(),
+});
 
 export const outputSchema = z
     .strictObject({
@@ -58,21 +73,7 @@ export const outputSchema = z
             .union([z.literal(0), z.literal(1)])
             .describe('Whether the tool counts lines from 0 or 1.')
             .optional(),
-        fields: z
-            .strictObject({
-                file: z.string().describe('For json: the field that holds the file.').optional(),
-                line: z.string().describe('For json: the field that holds the line.').optional(),
-                column: z.string().describe('For json: the field that holds the column.').optional(),
-                rule: z.string().describe('For json: the field that holds the lint rule.').optional(),
-                message: z
-                    .union([z.string(), z.string().array()])
-                    .describe('For json: the field that holds the message, or the fields that join into it.')
-                    .optional(),
-                fixable: z
-                    .string()
-                    .describe('For json: the field that is set, and not null, when the tool can fix the finding.')
-                    .optional(),
-            })
+        fields: outputFieldsSchema
             .optional()
             .describe('For json: the report fields that supply each finding property.'),
         pattern: z

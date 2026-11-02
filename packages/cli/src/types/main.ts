@@ -25,8 +25,6 @@ export type CommandReference = {
 export type CheckReference = ConfigurationCheck &
     CheckDescription & { ruleDocs: Readonly<Record<string, LintRuleDocs>> | undefined };
 
-type ReferenceSchema = z.core.JSONSchema.JSONSchema;
-
 export type CliReference = {
     package: typeof cliPackage;
     docs: typeof DOCS_PATHS;
@@ -37,7 +35,7 @@ export type CliReference = {
     configurations: ConfigurationReference[];
     checks: CheckReference[];
     settings: SettingReference[];
-    schema: ReferenceSchema;
+    schema: z.core.JSONSchema.JSONSchema;
     setup: SetupReference[];
     runners: typeof START_RUNNERS;
     runtimeMinimums: { node: string; bun: string };

@@ -3,8 +3,8 @@ import { z } from 'zod';
 const knipSymbolSchema = z.object({
     name: z.string().min(1),
     namespace: z.string().optional(),
-    line: z.number().int().positive().optional(),
-    col: z.number().int().positive().optional(),
+    line: z.int().positive().optional(),
+    col: z.int().positive().optional(),
 });
 
 const ownersSchema = z.object({ name: z.string() });
@@ -36,8 +36,8 @@ export const knipOutputSchema = z.strictObject({
 });
 
 const positionSchema = z.object({
-    line: z.number().int().positive(),
-    col: z.number().int().positive(),
+    line: z.int().positive(),
+    col: z.int().positive(),
 });
 
 const messageSchema = z.object({ message: z.string().min(1) });
@@ -47,7 +47,7 @@ const spanSchema = z.object({ file: z.string().min(1), start: positionSchema });
 const errorTypeSchema = z.union([z.string(), z.tuple([z.string(), z.unknown()])]);
 
 const errorSchema = z.object({
-    code: z.number().int(),
+    code: z.int(),
     type: errorTypeSchema,
     message: z.string().min(1),
     path: z.string().min(1).optional(),
@@ -69,13 +69,12 @@ export const semgrepOutputSchema = z.object({
 export const reportedTypoSchema = z.object({
     type: z.literal('typo'),
     path: z.string().min(1),
-    line_num: z.number().int().positive().optional(),
-    byte_offset: z.number().int().nonnegative(),
+    line_num: z.int().positive().optional(),
+    byte_offset: z.int().nonnegative(),
     typo: z.string().min(1),
     corrections: z.string().array().nullable(),
 });
 
-export const baselineSchema = z.record(
-    z.string(),
-    z.record(z.string(), z.record(z.string(), z.number().int().positive())),
-);
+const ruleCountsSchema = z.record(z.string(), z.int().positive());
+
+export const baselineSchema = z.record(z.string(), z.record(z.string(), ruleCountsSchema));

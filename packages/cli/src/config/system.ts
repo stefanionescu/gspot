@@ -133,8 +133,10 @@ export const SIGNAL_EXIT_CODES = { SIGHUP: 129, SIGINT: 130, SIGTERM: 143 } as c
 
 export const TERMINAL_CONTROL_CHARACTERS = /[^\P{Cc}\t\n]|\p{Cf}/gu;
 
+const ESCAPE_CODE_POINT = 0x1b;
+
 export const TERMINAL_COLOR_SEQUENCE = new RegExp(
-    String.raw`(${String.fromCodePoint(0x1b)}\[(?:2|22|3[1236]|39)m)`,
+    String.raw`(${String.fromCodePoint(ESCAPE_CODE_POINT)}\[(?:2|22|3[1236]|39)m)`,
     'u',
 );
 

@@ -158,7 +158,7 @@ export const PATH_TOKEN_SKIPS = [/^\.\.?\/?$/u, /^\d+\/\d+$/u, /^\//u] as const;
 
 export const REMOTE_ARGUMENTS = [
     /\bgh\s+api\s+(?:"[^"\n]*"|'[^'\n]*'|[^\s`]+)/gu,
-    /\b(?:Accept|Content-Type):\s*[a-z]+\/[a-z0-9!#$&^_.+-]+/giu,
+    /\b(?:Accept|Content-Type):\s*[a-z]+\/[\w!#$&^.+-]+/giu,
 ] as const;
 
 export const MISE_RUN = 'mise run ';

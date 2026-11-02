@@ -234,7 +234,7 @@ export const ELLIPSIS_LINE = /^[\s#/]*\.\.\.\s*$/u;
 
 export const ELLIPSIS_ARGUMENTS = '(...)';
 
-export const ANGLE_PLACEHOLDER = /<[A-Za-z][A-Za-z0-9_-]*>/gu;
+export const ANGLE_PLACEHOLDER = /<[A-Za-z][\w-]*>/gu;
 
 export const FENCE_PARSERS: ReadonlyMap<string, FenceParser> = new Map([
     ['json', 'json'],

@@ -4,8 +4,8 @@ import { DOCSTRING_STYLES } from '#cli/config/configurations/registry.ts';
 export const svelteFindingSchema = z.object({
     filename: z.string().min(1),
     start: z.object({
-        line: z.number().int().nonnegative(),
-        character: z.number().int().nonnegative(),
+        line: z.int().nonnegative(),
+        character: z.int().nonnegative(),
     }),
     message: z.string(),
     code: z.union([z.string(), z.number()]).optional(),
@@ -21,38 +21,36 @@ export const miseToolsSchema = z.looseObject({
 
 const cloneLocationSchema = z.object({
     name: z.string().min(1),
-    start: z.number().int().positive(),
+    start: z.int().positive(),
 });
 
 export const jscpdOutputSchema = z.object({
     duplicates: z
         .object({
-            lines: z.number().int().positive(),
+            lines: z.int().positive(),
             firstFile: cloneLocationSchema,
             secondFile: cloneLocationSchema,
         })
         .array(),
 });
 
+const osvPackageSchema = z.object({
+    package: z.object({ name: z.string(), version: z.string(), ecosystem: z.string() }),
+    license_violations: z.string().array().default([]),
+});
+
+const osvResultSchema = z.object({
+    source: z.object({ path: z.string() }),
+    packages: osvPackageSchema.array().default([]),
+});
+
 export const osvLicenseReportSchema = z.object({
-    results: z
-        .object({
-            source: z.object({ path: z.string() }),
-            packages: z
-                .object({
-                    package: z.object({ name: z.string(), version: z.string(), ecosystem: z.string() }),
-                    license_violations: z.string().array().default([]),
-                })
-                .array()
-                .default([]),
-        })
-        .array()
-        .default([]),
+    results: osvResultSchema.array().default([]),
 });
 
 const alertSchema = z.object({
-    Line: z.number().int().positive(),
-    Span: z.tuple([z.number().int().positive(), z.number().int().positive()]),
+    Line: z.int().positive(),
+    Span: z.tuple([z.int().positive(), z.int().positive()]),
     Check: z.string().min(1),
     Message: z.string().min(1),
 });
@@ -152,8 +150,8 @@ export const packageDescriptionSchema = z.object({
 });
 
 const linesSchema = z.object({
-    count: z.number().int().nonnegative(),
-    covered: z.number().int().nonnegative(),
+    count: z.int().nonnegative(),
+    covered: z.int().nonnegative(),
 });
 
 const summarySchema = z.object({
@@ -181,14 +179,14 @@ export const messagesSchema = z.record(z.string(), z.unknown());
 
 const storageSchema = z.object({ buckets: z.record(z.string(), z.unknown()).optional() });
 
+const edgeFunctionSchema = z.object({ entrypoint: z.string().optional(), import_map: z.string().optional() });
+
 export const supabaseProjectFileSchema = z.object({
     storage: storageSchema.optional(),
-    functions: z
-        .record(z.string(), z.object({ entrypoint: z.string().optional(), import_map: z.string().optional() }))
-        .optional(),
+    functions: z.record(z.string(), edgeFunctionSchema).optional(),
 });
 
-const startSchema = z.object({ line: z.number().int().positive() });
+const startSchema = z.object({ line: z.int().positive() });
 
 export const denoLintOutputSchema = z.object({
     diagnostics: z

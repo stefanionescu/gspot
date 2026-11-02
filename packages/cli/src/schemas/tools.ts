@@ -66,6 +66,8 @@ export const ruffRuleSchema = z.object({
     explanation: z.string(),
 });
 
+const installedRuleSchema = z.object({ description: z.string().optional() });
+
 export const installedRulesSchema = z.object({
-    properties: z.record(z.string(), z.object({ description: z.string().optional() })),
+    properties: z.record(z.string(), installedRuleSchema),
 });

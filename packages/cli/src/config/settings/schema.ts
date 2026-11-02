@@ -41,11 +41,19 @@ export const CI_PINS = {
 
 export const FROZEN_VERSION = /^V?\d+$/u;
 
+export const INDENT_DEFAULT = 4;
+
 export const INDENT_MAX = 8;
 
 export const PRINT_WIDTH_MIN = 40;
 
 export const PRINT_WIDTH_MAX = 400;
+
+export const PRINT_WIDTH_DEFAULT = 120;
+
+export const TOOL_TIMEOUT_SECONDS_DEFAULT = 600;
+
+export const BIOME_COMPLEXITY_MAX = 255;
 
 export const FORMAT_OVERRIDE_MIN_FIELDS = 2;
 

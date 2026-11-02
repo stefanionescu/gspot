@@ -51,15 +51,13 @@ export function buildRuleTableSchema<Schema extends z.ZodType>(
     return z.preprocess((table: z.input<Schema>, context) => {
         if (!isTable(table)) return table;
         for (const [rule, value] of Object.entries(table)) {
-            const parsed = schema.safeParse({ [rule]: value });
-            if (parsed.success) continue;
-            for (const issue of parsed.error.issues.slice(0, 1)) {
-                context.addIssue({
-                    code: 'custom',
-                    path: [rule],
-                    message: formatRuleHelp({ ...issue, path: ['rules', rule] }, checkId),
-                });
-            }
+            const issue = schema.safeParse({ [rule]: value }).error?.issues[0];
+            if (issue === undefined) continue;
+            context.addIssue({
+                code: 'custom',
+                path: [rule],
+                message: formatRuleHelp({ ...issue, path: ['rules', rule] }, checkId),
+            });
         }
         return table;
     }, schema);
@@ -73,21 +71,9 @@ export const commitsSchema = z
             reason_when: 'adding',
             configurations: ['commits'],
             description: 'The commit types the type-enum rule allows.',
-            default: ['feat', 'fix', 'refactor', 'perf', 'docs', 'test', 'build', 'ci', 'chore', 'style', 'revert'] as [
-                'feat',
-                'fix',
-                'refactor',
-                'perf',
-                'docs',
-                'test',
-                'build',
-                'ci',
-                'chore',
-                'style',
-                'revert',
-            ],
+            default: ['feat', 'fix', 'refactor', 'perf', 'docs', 'test', 'build', 'ci', 'chore', 'style', 'revert'],
         }),
-        scopes: nonemptyStringsSchema.default([] as []).meta({
+        scopes: nonemptyStringsSchema.default([]).meta({
             leftOut: 'repository',
             configurations: ['commits'],
             description:
@@ -107,7 +93,12 @@ export const commitlintSchema = z
     .optional();
 
 const firstEslintOptionSchema = z.union([
-    z.string().refine((value) => !(ESLINT_SEVERITIES as readonly string[]).includes(value)),
+    z
+        .string()
+        .refine(
+            (value) => !(ESLINT_SEVERITIES as readonly string[]).includes(value),
+            'Leave out the severity; the level decides which rules run.',
+        ),
     z.number(),
     z.boolean(),
     z.null(),
@@ -119,46 +110,44 @@ const eslintOptionsSchema = z.union([z.never().array().max(0), z.tuple([firstEsl
 
 export const eslintRulesSchema = buildRuleTableSchema(z.record(z.string(), eslintOptionsSchema), 'javascript/eslint');
 
-const pluginSourceFields = {
-    path: relativePathSchema
-        .refine((path) => ESLINT_PLUGIN_MODULE.test(path), 'Name a .js or .mjs module.')
-        .optional()
-        .meta({
-            description: 'A tracked plugin module, relative to the table that sets it. Leave it out with package.',
-        }),
-    package: z.string().regex(NPM_PACKAGE_NAME, 'Use an npm package name.').optional().meta({
-        description: 'An npm package that gspot install puts in .gspot/node_modules. Leave it out with path.',
-    }),
-    version: z
-        .string()
-        .refine((version) => semver.valid(version) === version, 'Use an exact version, such as 1.2.3.')
-        .optional()
-        .meta({
-            description: 'The exact version of the package.',
-        }),
-};
-
-const pluginSourceRefinement = [
-    (plugin: Partial<Record<'path' | 'package' | 'version', string | undefined>>) =>
-        plugin.path === undefined
-            ? plugin.package !== undefined && plugin.version !== undefined
-            : plugin.package === undefined && plugin.version === undefined,
-    PLUGIN_SOURCE_REFUSAL,
-] as const;
-
-export const eslintPluginsSchema = z
+const pluginSourceSchema = z
     .strictObject({
+        path: relativePathSchema
+            .refine((path) => ESLINT_PLUGIN_MODULE.test(path), 'Name a .js or .mjs module.')
+            .optional()
+            .meta({
+                description: 'A tracked plugin module, relative to the table that sets it. Leave it out with package.',
+            }),
+        package: z.string().regex(NPM_PACKAGE_NAME, 'Use an npm package name.').optional().meta({
+            description: 'An npm package that gspot install puts in .gspot/node_modules. Leave it out with path.',
+        }),
+        version: z
+            .string()
+            .refine((version) => semver.valid(version) === version, 'Use an exact version, such as 1.2.3.')
+            .optional()
+            .meta({
+                description: 'The exact version of the package.',
+            }),
+    })
+    .refine(
+        (plugin) =>
+            plugin.path === undefined
+                ? plugin.package !== undefined && plugin.version !== undefined
+                : plugin.package === undefined && plugin.version === undefined,
+        PLUGIN_SOURCE_REFUSAL,
+    );
+
+export const eslintPluginsSchema = pluginSourceSchema
+    .safeExtend({
         name: z.string().regex(ESLINT_PLUGIN_NAME, 'Use a lowercase rule prefix, such as local.').meta({
             description: 'The rule prefix, such as local in local/no-legacy-api.',
         }),
-        ...pluginSourceFields,
         rules: eslintRulesSchema.meta({
             description: 'The rules of the plugin to turn on, with their options.',
         }),
     })
-    .refine(...pluginSourceRefinement)
     .array()
-    .default([] as [])
+    .default([])
     .meta({
         configurations: ['javascript'],
         description:
@@ -183,16 +172,14 @@ export const stylelintRulesSchema = buildRuleTableSchema(
     'css/stylelint',
 );
 
-export const stylelintPluginsSchema = z
-    .strictObject({
-        ...pluginSourceFields,
+export const stylelintPluginsSchema = pluginSourceSchema
+    .safeExtend({
         rules: stylelintRulesSchema.meta({
             description: 'The rules of the plugin to turn on, with their options.',
         }),
     })
-    .refine(...pluginSourceRefinement)
     .array()
-    .default([] as [])
+    .default([])
     .meta({
         configurations: ['css'],
         description:

@@ -26,11 +26,11 @@ export const javascriptSchema = z
             reason_when: 'adding',
             configurations: ['javascript'],
             description: 'Script files, which may print to the console and call process.exit.',
-            default: ['scripts/**', '**/*.config.{js,mjs,cjs,ts}'] as ['scripts/**', '**/*.config.{js,mjs,cjs,ts}'],
+            default: ['scripts/**', '**/*.config.{js,mjs,cjs,ts}'],
         }),
         import_boundaries: relativePathSchema
             .array()
-            .default([] as [])
+            .default([])
             .meta({
                 configurations: ['javascript'],
                 description:
@@ -42,7 +42,7 @@ export const javascriptSchema = z
             configurations: ['javascript'],
             description:
                 'Import specifiers that the runtime provides, such as ../../scripts/app.js in a host application. Globs match several.',
-            default: [] as [],
+            default: [],
         }),
         import_extension: z
             .enum(IMPORT_EXTENSION_STYLES)
@@ -63,14 +63,14 @@ export const javascriptSchema = z
                 }),
             })
             .array()
-            .default([] as [])
+            .default([])
             .meta({
                 configurations: ['javascript'],
                 description: 'Imports that this repository refuses, each with a name and a message.',
             }),
         entry_files: relativePathSchema
             .array()
-            .default([] as [])
+            .default([])
             .meta({
                 configurations: ['javascript'],
                 description: 'Entry points knip starts from beyond the ones the framework configuration declares.',
@@ -87,7 +87,7 @@ export const javascriptSchema = z
                 description:
                     'Exact package names that knip does not report as unused; new names need a reason, and a scope list applies to that project only.',
                 reason_when: 'adding',
-                default: [] as [],
+                default: [],
             },
         ),
     })
@@ -113,7 +113,7 @@ const eslintTableSchema = z.strictObject({
             }),
         })
         .array()
-        .default([] as [])
+        .default([])
         .meta({
             configurations: ['javascript'],
             description: 'Lint rule options for repository-relative paths, in order, with ignores applied last.',
@@ -153,7 +153,7 @@ export const toolConfigurationSchemas = {
         .strictObject({
             schemas: validationTargetSchema
                 .array()
-                .default([] as [])
+                .default([])
                 .meta({
                     configurations: ['data-files'],
                     description:
@@ -166,7 +166,7 @@ export const toolConfigurationSchemas = {
             allowed_registries: z
                 .string()
                 .array()
-                .default([] as [])
+                .default([])
                 .meta({
                     configurations: ['docker'],
                     description: 'The registries a base image may come from; empty allows any.',
@@ -174,7 +174,7 @@ export const toolConfigurationSchemas = {
             severity: z
                 .enum(TRIVY_SEVERITIES)
                 .array()
-                .default(['HIGH', 'CRITICAL'] as ['HIGH', 'CRITICAL'])
+                .default(['HIGH', 'CRITICAL'])
                 .meta({
                     configurations: ['docker'],
                     description: 'The severities Trivy reports.',
@@ -196,7 +196,7 @@ export const toolConfigurationSchemas = {
         .strictObject({
             rule_files: relativePathSchema
                 .array()
-                .default([] as [])
+                .default([])
                 .meta({
                     configurations: ['security'],
                     description: 'Rule files or folders of the repository that Semgrep runs beside the shipped packs.',
@@ -223,7 +223,7 @@ const ruffSchema = z.strictObject({
         .string()
         .regex(RUFF_SELECTOR, 'Use a Ruff rule code or prefix, such as ANN or E501.')
         .array()
-        .default([] as [])
+        .default([])
         .meta({
             configurations: ['python'],
             description:

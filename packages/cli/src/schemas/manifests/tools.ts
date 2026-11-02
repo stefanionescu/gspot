@@ -22,13 +22,13 @@ import {
 
 export const nonemptyStringSchema = z.string().min(1);
 
-export const regexSchema = z.string().superRefine((pattern, context) => {
+export const regexSchema = z.string().refine((pattern) => {
     try {
-        new RegExp(pattern, 'u');
+        return new RegExp(pattern, 'u').unicode;
     } catch {
-        context.addIssue({ code: 'custom', message: VALID_UNICODE_MESSAGE });
+        return false;
     }
-});
+}, VALID_UNICODE_MESSAGE);
 
 export const levelSchema = z.enum(LEVELS);
 
@@ -152,7 +152,7 @@ const toolSchema = z
                 example: z.string().optional(),
             })
             .refine((form) => form.forbidden === true || form.example !== undefined, {
-                message: 'A suppression that gspot accepts shows an example with a reason.',
+                error: 'A suppression that gspot accepts shows an example with a reason.',
                 path: ['example'],
             })
             .optional(),
@@ -209,7 +209,7 @@ export const manifestToolSchema = z.union([
         .looseObject({ name: z.string() })
         .refine((reference) => Object.keys(reference).length === 1, {
             abort: true,
-            message: 'A tool reference contains only its name.',
+            error: 'A tool reference contains only its name.',
         })
         .transform(({ name }) => name),
     toolSchema,
