@@ -1,13 +1,13 @@
 import { posix } from 'node:path';
 import picomatch from 'picomatch';
-import { GLOB_EXCLUDE, TRAILING_SLASH, FOLDER_CONTENTS } from '#cli/config/system.ts';
+import { GLOB_EXCLUDE, GLOB_EXCLUSION, TRAILING_SLASH, FOLDER_CONTENTS } from '#cli/config/system.ts';
 
 const matcherCache = new Map<string, (path: string) => boolean>();
 
 /**
 Build a picomatch matcher for root-relative POSIX paths, cached by pattern list.
 
-@param patterns the globs; a leading `!` excludes.
+@param patterns the globs; a leading `!` excludes, and `!(` opens an extglob.
 @returns a function that accepts a path that some glob matches and no `!` glob excludes.
 */
 export function buildPathMatcher(patterns: string[]): (path: string) => boolean {
@@ -16,10 +16,10 @@ export function buildPathMatcher(patterns: string[]): (path: string) => boolean 
     if (cached) return cached;
     const included = includeFolderContents(patterns);
     const includes = included
-        .filter((pattern) => !pattern.startsWith(GLOB_EXCLUDE))
+        .filter((pattern) => !GLOB_EXCLUSION.test(pattern))
         .map((pattern) => new RegExp(picomatch.makeRe(pattern, { dot: true }).source, 's'));
     const excludes = included
-        .filter((pattern) => pattern.startsWith(GLOB_EXCLUDE))
+        .filter((pattern) => GLOB_EXCLUSION.test(pattern))
         .map((pattern) => new RegExp(picomatch.makeRe(pattern.slice(1), { dot: true }).source, 's'));
     const isMatch = (path: string): boolean =>
         includes.some((pattern) => pattern.test(path)) && excludes.every((pattern) => !pattern.test(path));

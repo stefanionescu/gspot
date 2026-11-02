@@ -8,3 +8,9 @@ test('a path selector crosses folders with ** and negates with !', () => {
     expect(isSelected('scripts/line\nbreak.sh')).toBe(true);
     expect(isSelected('scripts/vendor/line\nbreak.sh')).toBe(false);
 });
+
+test('a path selector reads a leading !( as an extglob, not as an exclusion', () => {
+    const isSelected = buildPathMatcher(['!(generated)/**']);
+    expect(isSelected('source/a.ts')).toBe(true);
+    expect(isSelected('generated/a.ts')).toBe(false);
+});

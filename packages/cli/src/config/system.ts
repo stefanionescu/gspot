@@ -12,6 +12,8 @@ export const NODE_MODULES = 'node_modules';
 
 export const GLOB_EXCLUDE = '!';
 
+export const GLOB_EXCLUSION = /^!(?!\()/u;
+
 export const FOLDER_CONTENTS = '/**';
 
 export const DRIVE_LETTER = /^[a-z]:/iu;
