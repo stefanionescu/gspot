@@ -21,12 +21,12 @@ function isDebugCommand(callee: TSESTree.Node, source: TSESLint.SourceCode): boo
     return (DEBUG_METHODS.get(ASTUtils.getPropertyName(callee)) ?? []).some((kind) => kinds.has(kind));
 }
 
-function readRemoval(node: TSESTree.CallExpression): TSESTree.Node | [number, number] | undefined {
+function readRemoval(node: TSESTree.CallExpression): [number, number] | undefined {
     const receiver = node.callee.type === AST_NODE_TYPES.MemberExpression ? node.callee.object : undefined;
     const isRoot = receiver === undefined || (ASTUtils.isIdentifier(receiver) && DEBUG_ROOTS.has(receiver.name));
     if (!isRoot) return [receiver.range[1], node.range[1]];
     const statement = node.parent.type === AST_NODE_TYPES.AwaitExpression ? node.parent.parent : node.parent;
-    return statement.type === AST_NODE_TYPES.ExpressionStatement ? statement : undefined;
+    return statement.type === AST_NODE_TYPES.ExpressionStatement ? statement.range : undefined;
 }
 
 export const noUiTestDebugging = createRule<[], 'debug'>({
@@ -57,10 +57,7 @@ export const noUiTestDebugging = createRule<[], 'debug'>({
                 context.report({
                     node: reported,
                     messageId: 'debug',
-                    fix: (fixer) => {
-                        if (removal === undefined) return null;
-                        return Array.isArray(removal) ? fixer.removeRange(removal) : fixer.remove(removal);
-                    },
+                    fix: (fixer) => (removal === undefined ? null : fixer.removeRange(removal)),
                 });
             },
         };
