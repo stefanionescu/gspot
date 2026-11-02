@@ -180,6 +180,7 @@ export const BASELINE_SANDBOX = {
             'docs/lychee',
             'format/editorconfig-checker',
             'format/prettier',
+            'gspot/detected-configurations',
             'gspot/generated-files',
             'javascript/eslint',
             'javascript/knip',
