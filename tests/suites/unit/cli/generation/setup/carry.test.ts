@@ -201,3 +201,46 @@ test('init reads the EditorConfig quote type, as Prettier does', async () => {
     expect((settings['format'] as TomlTable)['quotes']).toBe('single');
     expect(plan.carry.find(({ path }) => path === '.editorconfig')?.carried).toContain('singleQuote');
 });
+
+test('init names an EditorConfig line width of off, which gspot.toml cannot hold', async () => {
+    await using sandbox = await createGitSandbox({
+        '.editorconfig': '[*]\nmax_line_length = 100\n[*.md]\nmax_line_length = off\n',
+        'README.md': '# Example\n',
+        'source.js': 'export const value = 1;\n',
+    });
+    const { plan } = await runInit(sandbox.path);
+    expect(plan.carry.find(({ path }) => path === '.editorconfig')?.dropped).toStrictEqual(['printWidth']);
+});
+
+test('init names an EditorConfig line setting that differs from what gspot writes', async () => {
+    await using sandbox = await createGitSandbox({
+        '.editorconfig': '[*]\nend_of_line = lf\n[*.bat]\nend_of_line = crlf\n',
+        'run.bat': 'echo done\n',
+    });
+    const { plan } = await runInit(sandbox.path);
+    expect(plan.carry.find(({ path }) => path === '.editorconfig')?.dropped).toStrictEqual(['end_of_line']);
+});
+
+test('init keeps the EditorConfig overrides beside the overrides of a Prettier config', async () => {
+    await using sandbox = await createGitSandbox({
+        '.editorconfig': '[*.md]\nmax_line_length = 100\n',
+        '.prettierrc': '{"overrides":[{"files":"*.md","options":{"proseWrap":"always"}}]}\n',
+        'README.md': '# Example\n',
+        'source.js': 'export const value = 1;\n',
+    });
+    const { settings } = await runInit(sandbox.path);
+    expect((settings['format'] as TomlTable)['override']).toStrictEqual([
+        { paths: ['**/*.md'], print_width: 100 },
+        { paths: ['**/*.md'], prose_wrap: 'always' },
+    ]);
+});
+
+test('init keeps the EditorConfig line width for Python files without Ruff settings', async () => {
+    await using sandbox = await createGitSandbox({
+        '.editorconfig': '[*]\nmax_line_length = 117\n',
+        'main.py': 'VALUE = 1\n',
+    });
+    const { settings } = await runInit(sandbox.path, ['--configurations', 'python']);
+    const { override = [] } = settings['format'] as { override?: TomlTable[] };
+    expect(override.filter(({ print_width }) => print_width !== undefined)).toStrictEqual([]);
+});

@@ -15,6 +15,7 @@ import { tryParseFile, parseFileFields } from '#cli/system/errors.ts';
 import { joinScope, selectScopePath } from '#cli/repository/scopes.ts';
 import type { TomlTable, ScopeConfigurations } from '#cli/types/settings.ts';
 import { LINE_BREAK, PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers.ts';
+import { EDITORCONFIG_FIXED_SECTIONS } from '#cli/config/configurations/general.ts';
 import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository.ts';
 import { PRETTIER_ROOT_FILES, UNREADABLE_CONFIG_MESSAGE } from '#cli/config/repository/setup.ts';
 
@@ -83,9 +84,13 @@ function convertPrettierFormat(options: PrettierStyle): TomlTable {
 function buildFormatterOverrides(fields: TomlTable, repository: Repository): TomlTable[] {
     const tags = new Set(repository.files.filter((file) => file.kind === 'source').flatMap((file) => file.tags));
     const ruff = readRuffOptions(repository.root)?.options;
+    const printWidth = readEditorconfig(repository.root)?.printWidth;
+    const written = printWidth === undefined ? {} : { print_width: printWidth };
     return FORMATTER_DEFAULTS.filter(({ tag }) => tags.has(tag)).flatMap(({ tag, paths, format }) => {
         const carried = tag === PYTHON_TAG && ruff !== undefined ? convertRuffFormat(ruff) : {};
-        const differing = Object.entries({ ...format, ...carried }).filter(([key, value]) => fields[key] !== value);
+        const differing = Object.entries({ ...format, ...written, ...carried }).filter(
+            ([key, value]) => fields[key] !== value,
+        );
         return differing.length === 0 ? [] : [{ paths: [...paths], ...Object.fromEntries(differing) }];
     });
 }
@@ -119,21 +124,30 @@ export function buildPrettierOverrides(
         );
 }
 
-function parseEditorWidths(fields: Record<string, string>): Record<string, number> {
+function listLineSettings(files: string, fields: Record<string, string>): string[] {
+    const sections: Readonly<Record<string, object>> = EDITORCONFIG_FIXED_SECTIONS;
+    return Object.entries({ ...sections['*'], ...sections[files] })
+        .filter(([key, value]) => fields[key] !== undefined && fields[key] !== String(value))
+        .map(([key]) => key);
+}
+
+function parseEditorWidths(fields: Record<string, string>): Record<string, unknown> {
     const { max_line_length: lineWidth } = fields;
     const width = fields['indent_size'] === 'tab' ? fields['tab_width'] : fields['indent_size'];
-    const widths: Record<string, number> = {};
+    const widths: Record<string, unknown> = {};
     if (width !== undefined && DIGITS_ONLY.test(width)) widths['tabWidth'] = Number(width);
+    if (lineWidth === 'off') widths['printWidth'] = lineWidth;
     if (lineWidth !== undefined && DIGITS_ONLY.test(lineWidth)) widths['printWidth'] = Number(lineWidth);
     return widths;
 }
 
-function parseEditorSection(fields: Record<string, string>): PrettierOptions {
+function parseEditorSection(files: string, fields: Record<string, string>): PrettierOptions {
     const { indent_style: style, quote_type: quotes } = fields;
-    const options: Record<string, number | boolean> = parseEditorWidths(fields);
+    const options = parseEditorWidths(fields);
     if (style === 'tab' || style === 'space') options['useTabs'] = style === 'tab';
     if (quotes === 'single' || quotes === 'double') options['singleQuote'] = quotes === 'single';
-    return prettierOptionsSchema.parse(options);
+    const parsed = prettierOptionsSchema.parse(options);
+    return { ...parsed, dropped: [...parsed.dropped, ...listLineSettings(files, fields)] };
 }
 
 function parseEditorconfigSections(text: string): EditorconfigSection[] {
@@ -162,10 +176,10 @@ function readEditorconfig(folder: string): PrettierOptions | null {
         sections.filter(({ files }) => files === '*').flatMap(({ fields }) => Object.entries(fields)),
     );
     return {
-        ...parseEditorSection(project),
+        ...parseEditorSection('*', project),
         overrides: sections
             .filter(({ files }) => files !== '*')
-            .map(({ files, fields }) => ({ files, options: parseEditorSection(fields) })),
+            .map(({ files, fields }) => ({ files, options: parseEditorSection(files, fields) })),
     };
 }
 
@@ -199,7 +213,8 @@ function readFormatOptions(
         prettierFile === undefined
             ? parseFileFields(packagePath, packageFields, prettierSettingsSchema)
             : parsePrettierFile(posix.join(scopePath, prettierFile.path), prettierFile.text, scripts);
-    return { ...PRETTIER_DEFAULTS, ...editorconfig, ...options };
+    const overrides = [editorconfig, options].flatMap((source) => source?.overrides ?? []);
+    return { ...PRETTIER_DEFAULTS, ...editorconfig, ...options, overrides };
 }
 
 /**
