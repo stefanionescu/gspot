@@ -70,7 +70,7 @@ function formatSelection(configuration: CliReference['configurations'][number]):
     );
 }
 
-function listInstalledSections(configuration: CliReference['configurations'][number]): [string, string][] {
+function listInstalledSections(configuration: CliReference['configurations'][number]): Array<[string, string]> {
     const tools = configuration.installedTools.map((tool) => [
         tool.name,
         (tool.version === undefined ? 'Any' : `\`${tool.version}\``) +
@@ -103,7 +103,7 @@ function buildConfigurationPage(
     ]);
     const settings = configuration.settings.map((setting) => [formatSettingLink(setting.name), setting.description]);
 
-    const sections: [string, string][] = [
+    const sections: Array<[string, string]> = [
         [
             'Checks',
             CLI_REFERENCE.checks

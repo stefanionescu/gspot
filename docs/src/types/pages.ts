@@ -5,7 +5,7 @@ export type ReferencePage = {
         title: string;
         description: string;
         editUrl: false;
-        tableOfContents?: { maxHeadingLevel: number } | false;
+        tableOfContents?: false | { maxHeadingLevel: number };
     };
     body: string;
     headings?: MarkdownHeading[];

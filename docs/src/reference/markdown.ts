@@ -123,7 +123,7 @@ Format a Markdown table.
 @param rows the cells of each line, in Markdown; the table escapes them
 @returns the table, or nothing without rows
 */
-export function formatTable(header: readonly string[], rows: readonly (readonly string[])[]): string {
+export function formatTable(header: readonly string[], rows: ReadonlyArray<readonly string[]>): string {
     if (rows.length === 0) return '';
     const cells = rows.map((row) => row.map((cell) => formatText(cell).replaceAll('\n', ' ')));
     return [header, header.map(() => '---'), ...cells].map((line) => `| ${line.join(' | ')} |`).join('\n');

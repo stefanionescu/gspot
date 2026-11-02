@@ -55,7 +55,7 @@ export const LANGUAGE_PLACEHOLDER = '<language>';
 
 export const CATEGORY_PLACEHOLDER = '<category>';
 
-export const ENVIRONMENT_VARIABLES: readonly [name: string, meaning: string][] = [
+export const ENVIRONMENT_VARIABLES: ReadonlyArray<[name: string, meaning: string]> = [
     ['`NO_COLOR`', 'Any nonempty value turns color off.'],
     ['`XDG_CACHE_HOME`, `LOCALAPPDATA`', 'The cache folder; it must be an absolute path.'],
 ];
