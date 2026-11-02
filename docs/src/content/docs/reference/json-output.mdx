@@ -131,7 +131,6 @@ gspot neither computes nor includes those diffs.
 | `partial`         | Whether the run selected only staged files, changed files, or named paths.                                                      |
 | `fixes`           | When present, the changed files, files restored after broken fixes, files skipped for merge-conflict markers, and fixer errors. |
 | `failed`          | Check IDs that failed or stopped with an error, and the checks whose fixer failed.                                              |
-| `notChecked`      | When present, detected configurations that `gspot.toml` neither selects nor removes.                                            |
 
 Each `checks` item has `check`, `scope`, `status`, `fileCount`, `duration`, and `findings`. It can also have `help`,
 which says how to fix its findings, `files`,
@@ -144,9 +143,6 @@ Each finding has `check`, `file`, `message`, `fixable`, and `explain`. The `expl
 explains its check or lint rule.
 It can also have `line`, `column`, `rule`, and `help`, which appears only where it differs from the `help` of its check.
 Lines and columns start at `1`. A finding without a source location can have an empty `file`.
-
-Each `notChecked` item has `configuration` and `evidence`. Run `gspot add <name>` to select one, or
-`gspot remove <name> --reason "<why>"` to decline one. The list does not change `exitCode`.
 
 `gspot check --hook pre-push --json` checks each pushed tree. It returns `revisions`, one item per tree with `hash`,
 `refs`, `commits`, `shallow`, and its `report`; `skipped`, the pushed refs that gspot did not check, with `ref`,
@@ -280,7 +276,6 @@ your action.
 | `tools`        | Each tool with `name`, `kind`, and `state`, and `want`, `found`, `path`, and `help` when known. |
 | `environments` | Project environments that a check needs and that are missing.                                   |
 | `suggestions`  | Configurations to add, and files that no configuration checks.                                  |
-| `addCommands`  | The `gspot add` commands for the detected configurations.                                       |
 | `hooks`        | The state of the Git hooks.                                                                     |
 | `ci`           | The state of the CI workflow.                                                                   |
 | `ruleFiles`    | The number of rule files for coding agents.                                                     |

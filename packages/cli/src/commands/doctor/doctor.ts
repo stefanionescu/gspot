@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { styleText } from 'node:util';
+import { compareText } from '#cli/system/text.ts';
 import { lookUpTool } from '#cli/tools/inspect.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { EXIT_FINDINGS } from '#cli/config/engine.ts';
@@ -12,10 +13,8 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { readGitSetting } from '#cli/repository/git/run.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { readHookStatus } from '#cli/tools/installers/hooks.ts';
-import { compareText, quoteArgument } from '#cli/system/text.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { VERSION_FLAG } from '#cli/config/repository/javascript.ts';
-import { listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
@@ -160,9 +159,6 @@ function formatDoctorReport(report: DoctorReport, states: { hooks: string; ci: s
         ),
         '',
         ...formatSuggestions(report.suggestions),
-        ...(report.addCommands.length === 0
-            ? []
-            : [`Run ${report.addCommands.join(', then ')} to add the detected configurations.`, '']),
         `hooks: ${states.hooks}`,
         ...report.submodules.map((path) => `submodule  ${path} (contents are not read)`),
         `ci: ${states.ci}`,
@@ -181,9 +177,6 @@ async function runDoctorCommand(root: string): Promise<CommandResult> {
         tools: await inspectScopeTools(session),
         environments: listMissingEnvironments(session),
         suggestions: await listSuggestions(session),
-        addCommands: listDetectedAdditions(session).map(({ scope, configurations }) =>
-            ['gspot add', ...configurations, ...(scope === '' ? [] : ['--scope', quoteArgument(scope)])].join(' '),
-        ),
         hooks,
         ci,
         ruleFiles: selectRuleFiles(session).length,

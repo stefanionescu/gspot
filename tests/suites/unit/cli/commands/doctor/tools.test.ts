@@ -223,8 +223,7 @@ test('doctor --json reports every field when the required tools are missing', as
     expect(report).toMatchObject({
         submodules: [],
         environments: [],
-        suggestions: { detected: [], suggested: [], undetected: [], unowned: [], lintJobs: [] },
-        addCommands: [],
+        suggestions: { suggested: [], undetected: [], unowned: [], lintJobs: [] },
         hooks: { ready: true },
         ci: { enabled: false },
         ruleFiles: 0,

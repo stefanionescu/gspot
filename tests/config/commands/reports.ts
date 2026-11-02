@@ -41,44 +41,6 @@ export const OFF_BY_IGNORE = 'off (ignore)';
 
 export const ROOT_EDITORCONFIG = 'root = true\n';
 
-export const REMOVED_CONFIGURATION_CASES = [
-    {
-        name: 'removed at the root',
-        options: {
-            tables: 'removed_configurations = { bash = "Bash is deliberately excluded from this selection." }\n',
-        },
-        files: {
-            'entry.sh': 'echo ready\n',
-            'source.py': 'print("ready")\n',
-        },
-        expected: [],
-    },
-    {
-        name: 'all Bash evidence is in a scope that removed Bash',
-        options: {
-            scopes: [{ path: 'api' }],
-            tables: 'removed_configurations = { bash = "Bash is deliberately excluded from this selection." }\n',
-        },
-        files: {
-            'api/entry.sh': 'echo ready\n',
-            'source.py': 'print("ready")\n',
-        },
-        expected: [],
-    },
-    {
-        name: 'an unaffected sibling supplies Bash evidence',
-        options: {
-            tables: '[[scope]]\npath = "api"\nremoved_configurations = { bash = "Bash is deliberately excluded from this selection." }\n[[scope]]\npath = "worker"\n',
-        },
-        files: {
-            'api/entry.sh': 'echo ready\n',
-            'worker/entry.sh': 'echo ready\n',
-            'source.py': 'print("ready")\n',
-        },
-        expected: [{ configuration: 'bash', evidence: '1 .sh file', command: 'gspot add bash' }],
-    },
-] as const;
-
 export const REMOVE_SUGGESTIONS = [
     {
         configuration: 'bash',

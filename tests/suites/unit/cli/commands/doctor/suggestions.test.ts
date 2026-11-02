@@ -5,17 +5,18 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import type { DoctorReport } from '#cli/types/commands/reports.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { REMOVE_SUGGESTIONS, CI_PREFERENCE_CASES } from '#tests/config/commands/reports.ts';
 import { STYLELINT_FILES, COMMITLINT_PACKAGE } from '#tests/config/setup/configurations.ts';
 
-import {
-    REMOVE_SUGGESTIONS,
-    CI_PREFERENCE_CASES,
-    REMOVED_CONFIGURATION_CASES,
-} from '#tests/config/commands/reports.ts';
+async function listDetectedNames(root: string): Promise<(string | undefined)[]> {
+    const findings = await runSandboxCheck(root, 'gspot/detected-configurations');
+    return findings.map(({ message }) => /Run gspot add (\S+?)[,\s]/u.exec(message)?.[1]);
+}
 
 test.each([
     {
@@ -93,17 +94,9 @@ test('doctor leaves the tool projects in .gspot out of detection, detects python
         [GSPOT_PATHS.pythonProject]: python,
         [GSPOT_PATHS.npmProject]: '{"dependencies":{"react":"19.1.1"}}',
     });
-    const privateOnly = await runGspot(sandbox.path, ['doctor', '--json']);
-    const detected = (JSON.parse(privateOnly.stdout) as DoctorReport).suggestions.detected.map(
-        ({ configuration }) => configuration,
-    );
-    expect(detected).toStrictEqual([]);
+    expect(await listDetectedNames(sandbox.path)).toStrictEqual([]);
     await writeFile(join(sandbox.path, 'pyproject.toml'), python);
-    const authored = await runGspot(sandbox.path, ['doctor', '--json']);
-    expect((JSON.parse(authored.stdout) as DoctorReport).suggestions.detected).toStrictEqual([
-        { configuration: 'pytest', evidence: 'pytest in pyproject.toml', command: 'gspot add pytest' },
-        { configuration: 'python', evidence: 'pyproject.toml', command: 'gspot add python' },
-    ]);
+    expect(await listDetectedNames(sandbox.path)).toStrictEqual(['pytest', 'python']);
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.pythonProject), 'utf8')).toBe(python);
     runGitStep(sandbox.path, ['add', '.']);
     runGitStep(sandbox.path, ['commit', '-qm', 'Source']);
@@ -125,20 +118,13 @@ test('doctor detects installed test frameworks and suggests no other runner', as
     });
     const afterResult = await runGspot(sandbox.path, ['doctor', '--json']);
     const after = JSON.parse(afterResult.stdout) as DoctorReport;
-    expect({ suggested: after.suggestions.suggested, detected: after.suggestions.detected }).toStrictEqual({
-        suggested: [],
-        detected: [{ configuration: 'jest', evidence: 'jest in package.json', command: 'gspot add jest' }],
-    });
+    expect(after.suggestions.suggested).toStrictEqual([]);
+    expect(await listDetectedNames(sandbox.path)).toStrictEqual(['jest']);
     await writeFile(
         join(sandbox.path, 'package.json'),
         JSON.stringify({ name: 'service', private: true, dependencies: { ...dependencies, vitest: '4.1.11' } }),
     );
-    const changedResult = await runGspot(sandbox.path, ['doctor', '--json']);
-    const changed = JSON.parse(changedResult.stdout) as DoctorReport;
-    expect(changed.suggestions.detected).toStrictEqual([
-        { configuration: 'jest', evidence: 'jest in package.json', command: 'gspot add jest' },
-        { configuration: 'vitest', evidence: 'vitest in package.json', command: 'gspot add vitest' },
-    ]);
+    expect(await listDetectedNames(sandbox.path)).toStrictEqual(['jest', 'vitest']);
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
 
@@ -177,21 +163,6 @@ test('doctor suggests a remove command per scope after detection evidence goes, 
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
 });
 
-test.each([...REMOVED_CONFIGURATION_CASES])(
-    'doctor skips removed configurations and keeps detection evidence outside their scopes: $name',
-    async ({ options, files, expected }) => {
-        const settings = buildSandboxSettings([], { rules: true, ...options });
-        await using sandbox = await createGitSandbox({ ...files, 'gspot.toml': settings });
-        const result = await runGspot(sandbox.path, ['doctor', '--json']);
-        const { suggestions } = JSON.parse(result.stdout) as DoctorReport;
-        expect(suggestions.detected.filter(({ configuration }) => configuration === 'bash')).toStrictEqual([
-            ...expected,
-        ]);
-        expect(suggestions.detected.map(({ configuration }) => configuration)).toContain('python');
-        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
-    },
-);
-
 test.each([...CI_PREFERENCE_CASES])(
     'with CI off, doctor names the commands for the CI of $name',
     async ({ tracked, remote, ci }) => {
@@ -203,32 +174,5 @@ test.each([...CI_PREFERENCE_CASES])(
         runGitStep(sandbox.path, ['config', 'remote.origin.url', remote]);
         const result = await runGspot(sandbox.path, ['doctor']);
         expect(result.stdout).toContain(`ci: ${ci}\n`);
-    },
-);
-
-test.each([
-    {
-        name: 'names the scope of a project folder',
-        settings: buildSandboxSettings(['markdown']),
-        addCommands: ['gspot add fastapi python --scope py'],
-    },
-    {
-        name: 'leaves out a removed configuration',
-        settings: buildSandboxSettings(['markdown'], {
-            tables: '[removed_configurations]\npython = "External tooling checks Python."\nfastapi = "External tooling checks FastAPI."\n',
-        }),
-        addCommands: [],
-    },
-])(
-    'doctor lists the gspot add command for the detected configurations and $name',
-    async ({ settings, addCommands }) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': settings,
-            'py/pyproject.toml': '[project]\nname = "api"\nversion = "1.0.0"\ndependencies = ["fastapi"]\n',
-            'py/main.py': 'PORT = 8080\n',
-        });
-        const structured = await runGspot(sandbox.path, ['doctor', '--json']);
-        expect((JSON.parse(structured.stdout) as DoctorReport).addCommands).toStrictEqual([...addCommands]);
-        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
     },
 );

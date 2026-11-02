@@ -1,4 +1,3 @@
-import { formatCount, getPosition } from '#cli/system/text.ts';
 import { findToolName } from '#cli/tools/pins.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { find, read } from '#cli/system/files/reads.ts';
@@ -12,8 +11,10 @@ import { INSTALL_HELP } from '#cli/config/tools/programs.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { formatCount, getPosition, quoteArgument } from '#cli/system/text.ts';
 import type { Scope, PathVisitor } from '#cli/types/settings.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
@@ -256,6 +257,24 @@ export async function checkSuppressions(session: Session, planned: PlannedCheck)
         }),
     );
     return [...found, ...settingsReasons];
+}
+
+/**
+Reports each configuration that the files of a scope suggest and that gspot.toml neither selects nor removes.
+
+@param session the repository and its settings.
+@param _planned the configured check and selected scope files.
+*/
+export function checkDetectedConfigurations(session: Session, _planned: PlannedCheck): CheckFinding[] {
+    return listDetectedAdditions(session).flatMap(({ scope, evidence }) => {
+        const scopeArgument = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
+        return evidence.map(({ configuration, evidence: found }) => ({
+            file: SETTINGS_FILE,
+            line: 1,
+            rule: GSPOT_RULES.detectedConfiguration,
+            message: `No check reads ${configuration} (${found}). Run gspot add ${configuration}${scopeArgument}, or gspot remove ${configuration}${scopeArgument} --reason "<why>".`,
+        }));
+    });
 }
 
 /**

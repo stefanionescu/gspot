@@ -34,6 +34,7 @@ export const GSPOT_RULES = {
     unmatchedPath: 'unmatched-path',
     conflictingConfig: 'conflicting-config',
     staleBaseline: 'stale-baseline',
+    detectedConfiguration: 'detected-configuration',
 } as const;
 
 export const REPOSITORY_RULES = {

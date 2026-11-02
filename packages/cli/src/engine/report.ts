@@ -2,7 +2,6 @@ import { formatScope } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { writeProgress } from '#cli/system/terminal.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { EXIT_ERROR, MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { buildBaseResult, formatExplainCommand } from '#cli/engine/results.ts';
 import type { FixReport, RunReport, CheckResult, FinishedRun, CheckProgress } from '#cli/types/engine/run.ts';
@@ -32,21 +31,6 @@ function isIncomplete(session: Session, results: CheckResult[], fixes: FixReport
         (fixes !== undefined && fixes.broken.length > 0) ||
         fixes?.results.some((result) => result.status === 'failed') === true
     );
-}
-
-function buildNotCheckedReport(session: Session): Pick<RunReport, 'notChecked'> {
-    const notChecked = [
-        ...new Map(
-            listDetectedAdditions(session).flatMap(({ evidence }) =>
-                evidence.map(
-                    ({ configuration, evidence: found }) =>
-                        [configuration, { configuration, evidence: found }] as const,
-                ),
-            ),
-        ).values(),
-    ];
-    if (notChecked.length === 0) return {};
-    return { notChecked };
 }
 
 function finishResult(result: CheckResult, help: string): CheckResult {
@@ -82,7 +66,6 @@ export function buildRunReport(run: FinishedRun): RunReport {
     if (isIncomplete(session, ran, fixes)) code = EXIT_ERROR;
     return {
         ...(options.comparison !== undefined && { comparison: options.comparison }),
-        ...buildNotCheckedReport(session),
         version: cliPackage.version,
         notes: [],
         stages: REPORT_STAGES[options.stage],

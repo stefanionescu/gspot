@@ -57,3 +57,12 @@ runs = "once"
 stage = "commit"
 summary = "Reports suppressions with no reason, any that lift a size or complexity limit, and Semgrep or Vale suppressions."
 why = "A suppression with no reason hides a finding nobody reviewed."
+
+[[check]]
+example = "A `main.py` in a repository that selects only `markdown` reports `detected-configuration`. Run `gspot add python`, or `gspot remove python --reason \"<why>\"`."
+help = "Add the configuration, or remove it with a reason."
+name = "detected-configurations"
+runs = "once"
+stage = "commit"
+summary = "Reports each configuration that the files of a scope suggest and that gspot.toml neither selects nor removes."
+why = "A language that no configuration selects passes every check, because no check reads it."

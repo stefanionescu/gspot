@@ -1,4 +1,3 @@
-import { isInScope } from '#cli/repository/scopes.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
@@ -8,38 +7,19 @@ import type { Session, Generation } from '#cli/types/tools.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import { formatScope, quoteArgument } from '#cli/system/text.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
 import { readLintJobs, readRepositorySetup } from '#cli/repository/setup.ts';
 import { LEVEL_COMMAND, LINT_JOB_NOTE } from '#cli/config/commands/reports.ts';
 import type { Suggestions, SuggestionRow } from '#cli/types/commands/reports.ts';
+import type { RepositorySetup, ConflictingConfig } from '#cli/types/repository.ts';
 import { expandSuggestions, listSelectedConfigurations } from '#cli/manifests/select.ts';
-import type { RepositorySetup, ConflictingConfig, ConfigurationEvidence } from '#cli/types/repository.ts';
 
-function listDetectedConfigurations(session: Session): ConfigurationEvidence[] {
-    const { root, repository, settings } = session;
-    const { dependencyFiles } = repository;
-    const configurationsByName = readConfigurations();
-    return detectConfigurations(repository, configurationsByName).flatMap((detection) => {
-        if (settings.removed_configurations.includes(detection.configuration)) return [];
-        const removedScopes = [...settings.scopes]
-            .filter(([, table]) => table.removed_configurations.includes(detection.configuration))
-            .map(([path]) => path);
-        if (removedScopes.length === 0) return [detection];
-        const files = repository.files.filter((file) => removedScopes.every((path) => !isInScope(file.path, path)));
-        const paths = new Set(files.map((file) => file.path));
-        return detectConfigurations(
-            { root, files, dependencyFiles: dependencyFiles.filter((file) => paths.has(file.path)) },
-            new Map([...configurationsByName].filter(([name]) => name === detection.configuration)),
-        );
-    });
-}
-
-function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'detected' | 'suggested' | 'undetected'> {
+function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'suggested' | 'undetected'> {
     const { repository, settings } = session;
     const configurationsByName = readConfigurations();
     const selectedConfigurations = listSelectedConfigurations(session.scopes);
     const selected = new Set(selectedConfigurations.map((configuration) => configuration.name));
-    const detected = listDetectedConfigurations(session);
     const choices = [
         { path: '', configurations: settings.configurations },
         ...[...settings.scopes].map(([path, table]) => ({ path, configurations: table.configurations })),
@@ -47,7 +27,7 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'dete
     const undetected = choices
         .filter(({ configurations: names }) => names.length > 0)
         .flatMap(({ path, configurations: names }) => {
-            const evidence = path === '' ? detected : detectConfigurations(repository, configurationsByName, path);
+            const evidence = detectConfigurations(repository, configurationsByName, path);
             const found = new Set(evidence.map((detection) => detection.configuration));
             const scopeArgument = path === '' ? '' : ` --scope ${quoteArgument(path)}`;
             return names.flatMap((name) => {
@@ -68,7 +48,7 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'dete
                 ];
             });
         });
-    const detectedNames = new Set(detected.map((detection) => detection.configuration));
+    const detectedNames = new Set(listDetectedAdditions(session).flatMap(({ configurations }) => configurations));
     const rows = new Map<string, Suggestions['suggested'][number]>();
     for (const configuration of selectedConfigurations) {
         const suggested = expandSuggestions([configuration.name], configurationsByName, detectedNames);
@@ -81,9 +61,6 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'dete
                 });
     }
     return {
-        detected: detected
-            .filter((detection) => !selected.has(detection.configuration))
-            .map(({ configuration, evidence }) => ({ configuration, evidence, command: `gspot add ${configuration}` })),
         suggested: rows.values().toArray(),
         undetected,
     };

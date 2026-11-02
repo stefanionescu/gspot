@@ -84,19 +84,20 @@ import {
     checkConflictMarkers,
 } from '#cli/configurations/general/repository/checks.ts';
 import {
-    checkBaseline,
-    checkSuppressions,
-    checkGeneratedFiles,
-    checkUnmatchedPaths,
-    checkConflictingConfigs,
-} from '#cli/configurations/general/gspot/checks.ts';
-import {
     checkDenoLint,
     checkDenoCheck,
     checkVerifyJwt,
     checkServiceRoleKey,
     checkStoragePolicies,
 } from '#cli/configurations/platform/supabase/checks.ts';
+import {
+    checkBaseline,
+    checkSuppressions,
+    checkGeneratedFiles,
+    checkUnmatchedPaths,
+    checkConflictingConfigs,
+    checkDetectedConfigurations,
+} from '#cli/configurations/general/gspot/checks.ts';
 import {
     checkDeptry,
     checkVulture,
@@ -147,6 +148,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'github-actions/actionlint': { run: checkActionlint },
     'gspot/baseline': { check: checkBaseline, runsLast: true },
     'github-actions/workflow-shape': { check: checkWorkflowShape },
+    'gspot/detected-configurations': { check: checkDetectedConfigurations },
     'gspot/generated-files': { check: checkGeneratedFiles },
     'gspot/conflicting-configs': { check: checkConflictingConfigs },
     'gspot/suppressions': { check: checkSuppressions },

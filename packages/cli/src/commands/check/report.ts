@@ -187,12 +187,6 @@ function formatMissingChecks(checks: readonly CheckResult[]): string[] {
     return lines.length === 0 ? [] : [...lines, ''];
 }
 
-function formatNotChecked(notChecked: RunReport['notChecked']): string[] {
-    if (notChecked === undefined) return [];
-    const choices = notChecked.map(({ configuration, evidence }) => `${configuration} (${evidence})`).join(', ');
-    return [`note     Not checked: ${choices}. Run gspot add <name>, or gspot remove <name> --reason "<why>".`];
-}
-
 /**
 Print failed fixer warnings, with the full diagnostics when requested.
 
@@ -246,7 +240,6 @@ export function formatRunReport(
     const ending = canceled ? CANCELED_RUN_MESSAGE : `Exit code ${String(report.exitCode)}.`;
     lines.push(
         ...formatMissingChecks(checks),
-        ...formatNotChecked(report.notChecked),
         ...report.notes.map((note) => `note     ${note}`),
         ...formatIgnores(report, { verbose }),
         ...formatBaselined(report),

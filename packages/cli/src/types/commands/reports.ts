@@ -109,7 +109,6 @@ type ConfigurationSuggestion = { configuration: string; evidence: string; comman
 export type SuggestionRow = { path: string; note: string; command?: string };
 
 export type Suggestions = {
-    detected: ConfigurationSuggestion[];
     suggested: ConfigurationSuggestion[];
     undetected: ConfigurationSuggestion[];
     unowned: SuggestionRow[];
@@ -123,7 +122,6 @@ export type DoctorReport = {
     tools: DoctorTool[];
     environments: string[];
     suggestions: Suggestions;
-    addCommands: string[];
     hooks: Omit<HookStatus, 'text'>;
     ci: CiState;
     ruleFiles: number;

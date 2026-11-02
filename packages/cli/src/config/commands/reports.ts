@@ -109,7 +109,6 @@ export const TOOL_STATE_COLORS = {
 export const COLUMN_WIDTHS = { label: 9, name: 34, note: 30 } as const;
 
 export const SUGGESTION_SECTIONS = [
-    { key: 'detected', title: 'detected, not selected' },
     { key: 'suggested', title: 'suggested, not selected' },
     { key: 'undetected', title: 'selected, but no files yet' },
     { key: 'unowned', title: 'your tool configs that gspot does not replace' },

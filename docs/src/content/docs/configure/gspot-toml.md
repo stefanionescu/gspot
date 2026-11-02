@@ -246,9 +246,9 @@ gspot install
 
 ## When files of a language appear or go
 
-When files of a language or framework appear, run `gspot doctor`. It prints a `gspot add <names>` line for each
-scope and leaves out configurations in `removed_configurations`. Run that line, then `gspot install`. Name a removed
-configuration explicitly to select it again.
+When files of a language or framework appear, `gspot/detected-configurations` fails and prints a `gspot add <name>` line
+for each scope. It leaves out configurations in `removed_configurations`. Run that line, then `gspot install`. Name a
+removed configuration explicitly to select it again.
 
 When the files go away, its checks become inactive. Its configurations, settings, ignores, and command checks stay in
 gspot.toml. `gspot apply` writes generated files from your saved settings and does not change `configurations` or
