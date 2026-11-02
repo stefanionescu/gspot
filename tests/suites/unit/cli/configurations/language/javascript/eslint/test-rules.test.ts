@@ -109,3 +109,19 @@ test('level all runs the gspot assertion rules', async () => {
     });
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
 });
+
+test('a test file may hold template text, and a function named for its action returns a boolean', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module"}',
+        'steps.test.js': 'export const step = "run: echo ${{ github.sha }}";\n',
+        'steps.js':
+            'export const step = "run: echo ${{ github.sha }}";\nexport function kill() { return true; }\nexport const ready = true;\n',
+    });
+    const eslint = await buildEslint(sandbox.path);
+    const rules = ['no-template-curly-in-string', 'unicorn/consistent-boolean-name'];
+    expect(await listLintFindings(eslint, sandbox.path, ['steps.test.js', 'steps.js'], rules)).toStrictEqual([
+        { file: 'steps.js', rule: 'no-template-curly-in-string', line: 1 },
+        { file: 'steps.js', rule: 'unicorn/consistent-boolean-name', line: 3 },
+    ]);
+});

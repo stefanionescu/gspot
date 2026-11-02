@@ -94,7 +94,10 @@ const UNICORN_RULES = {
 
     'unicorn/prefer-ternary': ['error', 'only-single-line'],
     'unicorn/expiring-todo-comments': 'off',
-    'unicorn/consistent-boolean-name': ['error', { ignore: ['^(?:enabled|active|retryable)$'] }],
+    'unicorn/consistent-boolean-name': [
+        'error',
+        { checkFunctions: 'never', ignore: ['^_', '^(?:enabled|active|retryable)$'] },
+    ],
 } as const;
 
 const SECURITY_RULES = {

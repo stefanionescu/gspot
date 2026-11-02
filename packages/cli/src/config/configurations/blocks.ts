@@ -18,6 +18,8 @@ export const TEST_RULES = {
     'jsdoc/require-param-description': 'off',
     'n/no-unpublished-import': 'off',
     'n/no-unpublished-require': 'off',
+    'no-template-curly-in-string': 'off',
+    'unicorn/no-incorrect-template-string-interpolation': 'off',
 } as const;
 
 export const ROOT_PACKAGE_JSON_RULES = { 'package-json/require-packageManager': 'error' } as const;
