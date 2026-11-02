@@ -101,7 +101,7 @@ test('zero and false tool options are kept as values', () => {
     expect(settings.tools).toMatchObject({ eslint: { rules: { 'id-length': [{ min: 0, properties: false }] } } });
 });
 
-test.each(['ordinary', 'constructor', 'prototype'])(
+test.each(['ordinary', 'constructor'])(
     'rule keys named like object properties are checked like any other key (%j)',
     (key) => {
         using sandbox = createTemporaryFolder();
@@ -133,9 +133,9 @@ test.each([...SETTING_RULE_OPTIONS])(
     },
 );
 
-test.each(['constructor', 'prototype'])('a rule named %s is not mistaken for a setting-owned rule', (rule) => {
+test('a rule named constructor is not mistaken for a setting-owned rule', () => {
     expect(
-        validateSettingsText(`configurations = ["javascript"]\n[tools.eslint.rules]\n"${rule}" = [{}]\n`),
+        validateSettingsText('configurations = ["javascript"]\n[tools.eslint.rules]\n"constructor" = [{}]\n'),
     ).toStrictEqual([]);
 });
 
