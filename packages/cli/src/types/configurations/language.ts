@@ -303,3 +303,9 @@ export type FormatSettings = Required<Defined<Omit<NonNullable<ParsedSettings['f
 export type MarkdownlintFormatterInput = { results: unknown; logMessage: (message: string) => void };
 
 export type WrittenSettings = z.input<typeof settingsSchema>;
+
+export type ScopeOverride<Value, Block> = {
+    base?: Scope;
+    read: (scope: Scope) => Value;
+    build: (change: { scope: Scope; parent: Scope | undefined; value: Value; ignores: string[] }) => Block[];
+};

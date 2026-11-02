@@ -1,8 +1,9 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import type { Scope } from '#cli/types/settings.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { listCodeTestFiles, buildScopeOverrideBlocks } from '#cli/configurations/language/javascript/eslint/files.ts';
 
 import {
     NESTED_ESLINT_FILES,
@@ -64,4 +65,30 @@ test('ESLint test patterns omit foreign extensions and retain components and sha
         '**/tests/**',
         '**/*.{js,ts}',
     ]);
+});
+
+test('a scope override keeps the changed scopes, deepest last, and leaves nested changes out of its parent', () => {
+    const value: Record<string, string> = { '': 'root', app: 'app', 'app/same': 'app', 'app/deep': 'deep' };
+    const scopes = Object.keys(value)
+        .toReversed()
+        .map((path) => ({ path }) as Scope);
+    const blocks = buildScopeOverrideBlocks(scopes, {
+        read: ({ path }) => value[path],
+        build: ({ scope, parent, ignores }) => [{ path: scope.path, parent: parent?.path, ignores }],
+    });
+    expect(blocks).toStrictEqual([
+        { path: '', parent: undefined, ignores: ['app/**', 'app/deep/**'] },
+        { path: 'app', parent: '', ignores: ['app/deep/**'] },
+        { path: 'app/deep', parent: 'app', ignores: [] },
+    ]);
+});
+
+test('a scope override compares the root with the scope that owns the file', () => {
+    const root = { path: '' } as Scope;
+    const blocks = buildScopeOverrideBlocks([root], {
+        base: root,
+        read: () => 'same',
+        build: ({ scope }) => [scope.path],
+    });
+    expect(blocks).toStrictEqual([]);
 });

@@ -2,12 +2,15 @@ import picomatch from 'picomatch';
 import { escapeGlob } from '#cli/system/paths.ts';
 import type { Scope } from '#cli/types/settings.ts';
 import { FOLDER_CONTENTS } from '#cli/config/system.ts';
-import { findParentScope } from '#cli/settings/scopes.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { readScopeAliases, readPackageAliases } from '#cli/repository/javascript/aliases.ts';
-import { buildNodePatterns, buildExtensionGlob } from '#cli/configurations/language/javascript/eslint/files.ts';
 import type { EslintBlock, PlannedEslintFile, EslintImportBoundaryRule } from '#cli/types/configurations/language.ts';
 
+import {
+    buildNodePatterns,
+    buildExtensionGlob,
+    buildScopeOverrideBlocks,
+} from '#cli/configurations/language/javascript/eslint/files.ts';
 import {
     REGEX_SYMBOLS,
     CODE_LANGUAGES,
@@ -31,42 +34,32 @@ Build the n/file-extension-in-import blocks for each project and path style.
 @param denoFolders the folders that hold a Deno config file, whose code imports the real `.ts` extension.
 */
 export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[], denoFolders: Set<string>): EslintBlock[] {
-    const styles = new Map(
-        scopes.map(({ path, settings }) => [
-            path,
+    return buildScopeOverrideBlocks(scopes, {
+        read: ({ path, settings }) =>
             denoFolders.has(path) ? DENO_IMPORT_EXTENSION : settings.tables.javascript?.import_extension,
-        ]),
-    );
-    const changed = scopes.filter(({ path }) => {
-        const parent = findParentScope(scopes, path);
-        return styles.get(path) !== (parent === undefined ? undefined : styles.get(parent.path));
-    });
-    return changed.flatMap((scope) => {
-        const path = scope.path;
-        const importExtension = styles.get(path);
-        return importExtension === undefined
-            ? []
-            : {
-                  files: [buildExtensionGlob(...CODE_LANGUAGES), ...buildNodePatterns(nodeFiles, path)].map(
-                      (pattern) => [joinScope(escapeGlob(path), '**/*'), pattern],
-                  ),
-                  ignores: listNestedScopes(
-                      changed.map(({ path }) => path),
-                      path,
-                  ).map((path) => joinScope(escapeGlob(path), '**')),
-                  settings: {
-                      n: {
-                          tryExtensions: IMPORT_EXTENSIONS,
-                          typescriptExtensionMap: importExtension === 'js' ? TYPESCRIPT_EXTENSION_MAP : [],
+        build: ({ scope: { path }, value, ignores }) =>
+            value === undefined
+                ? []
+                : [
+                      {
+                          files: [buildExtensionGlob(...CODE_LANGUAGES), ...buildNodePatterns(nodeFiles, path)].map(
+                              (pattern) => [joinScope(escapeGlob(path), '**/*'), pattern],
+                          ),
+                          ignores,
+                          settings: {
+                              n: {
+                                  tryExtensions: IMPORT_EXTENSIONS,
+                                  typescriptExtensionMap: value === 'js' ? TYPESCRIPT_EXTENSION_MAP : [],
+                              },
+                          },
+                          rules: {
+                              [FILE_EXTENSION_RULE]:
+                                  value === 'extensionless'
+                                      ? ['error', 'always', EXTENSIONLESS_CODE]
+                                      : ['error', 'always'],
+                          },
                       },
-                  },
-                  rules: {
-                      [FILE_EXTENSION_RULE]:
-                          importExtension === 'extensionless'
-                              ? ['error', 'always', EXTENSIONLESS_CODE]
-                              : ['error', 'always'],
-                  },
-              };
+                  ],
     });
 }
 

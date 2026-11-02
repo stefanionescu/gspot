@@ -1,13 +1,17 @@
+import { isDeepStrictEqual } from 'node:util';
+import type { Scope } from '#cli/types/settings.ts';
+import { findParentScope } from '#cli/settings/scopes.ts';
 import { EXTENSION_PATTERN } from '#cli/config/manifests.ts';
-import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { escapeGlob, extractExtension } from '#cli/system/paths.ts';
 import { CODE_LANGUAGES } from '#cli/config/configurations/blocks.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { buildPathMatcher, includeFolderContents } from '#cli/system/matchers.ts';
 import { COMPONENT_CONFIGURATIONS } from '#cli/config/configurations/javascript.ts';
+import { isInScope, joinScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
 
 import type {
     EslintFiles,
+    ScopeOverride,
     PathExpressions,
     EslintFileGroups,
     EslintBlockFields,
@@ -22,6 +26,39 @@ Build the glob of the files of these languages.
 export function buildExtensionGlob(...languages: string[]): string {
     const extensions = listTaggedExtensions(...languages).map((extension) => extension.slice(1));
     return extensions.length === 1 ? `**/*.${String(extensions[0])}` : `**/*.{${extensions.join(',')}}`;
+}
+
+/**
+Build the blocks of each scope whose value differs from its parent, deepest last, so a nested scope overrides its
+parent.
+
+@param scopes the projects.
+@param override what a scope holds, and the blocks that its value gives.
+@returns the blocks of the changed scopes.
+*/
+export function buildScopeOverrideBlocks<Value, Block>(
+    scopes: Scope[],
+    override: ScopeOverride<Value, Block>,
+): Block[] {
+    const { read, build, base } = override;
+    const changes = scopes
+        .toSorted((left, right) => compareScopeDepth(left.path, right.path))
+        .map((scope) => ({ scope, parent: findParentScope(scopes, scope.path), value: read(scope) }))
+        .filter(({ parent, value }) => {
+            const inherited = parent ?? base;
+            return !isDeepStrictEqual(value, inherited && read(inherited));
+        });
+    return changes.flatMap(({ scope, parent, value }) =>
+        build({
+            scope,
+            parent,
+            value,
+            ignores: listNestedScopes(
+                changes.map((change) => change.scope.path),
+                scope.path,
+            ).map((path) => joinScope(escapeGlob(path), '**')),
+        }),
+    );
 }
 
 /**

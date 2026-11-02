@@ -1,8 +1,6 @@
-import { isDeepStrictEqual } from 'node:util';
 import type { ScopeSettings } from '#cli/types/settings.ts';
-import { compareScopeDepth } from '#cli/repository/scopes.ts';
+import { getLimit, getTable } from '#cli/settings/scopes.ts';
 import { LIMIT_RULES_BY_CHECK } from '#cli/manifests/limits.ts';
-import { getLimit, getTable, findParentScope } from '#cli/settings/scopes.ts';
 import { ESLINT_CHECK, ESLINT_LIMIT_OPTIONS } from '#cli/config/configurations/blocks.ts';
 import type { EslintRuleBlock, EslintLevelRules, PlannedEslintFile } from '#cli/types/configurations/language.ts';
 
@@ -10,6 +8,7 @@ import {
     splitGlobs,
     buildNodePatterns,
     buildExtensionGlob,
+    buildScopeOverrideBlocks,
 } from '#cli/configurations/language/javascript/eslint/files.ts';
 
 function buildLimitRules(scopeSettings: ScopeSettings, language: 'typescript' | 'javascript'): Record<string, unknown> {
@@ -54,20 +53,15 @@ export function buildLimitRuleBlocks(
     const { session, nodeFiles } = planned;
     const repositorySettings = session.settings;
     if (repositorySettings.level !== 'all') return [];
-    const { scopes } = session;
-    const limitsByScope = new Map(
-        scopes.map(({ settings }): [ScopeSettings, EslintLevelRules] => [settings, buildScopeLimitRules(settings)]),
-    );
-    return scopes
-        .toSorted((left, right) => compareScopeDepth(left.path, right.path))
-        .flatMap((scope) => {
-            const limits = limitsByScope.get(scope.settings) as EslintLevelRules;
-            const parent = findParentScope(scopes, scope.path) ?? planned.scope;
-            if (isDeepStrictEqual(limits, limitsByScope.get(parent.settings))) return [];
+    return buildScopeOverrideBlocks(session.scopes, {
+        base: planned.scope,
+        read: ({ settings }) => buildScopeLimitRules(settings),
+        build: ({ scope, value }) => {
             const javascriptFiles = [buildExtensionGlob('javascript'), ...buildNodePatterns(nodeFiles, scope.path)];
             return [
-                { scope: scope.path, ...splitGlobs(['**/*']), rules: limits.code },
-                { scope: scope.path, ...splitGlobs(javascriptFiles), rules: limits.javascript },
+                { scope: scope.path, ...splitGlobs(['**/*']), rules: value.code },
+                { scope: scope.path, ...splitGlobs(javascriptFiles), rules: value.javascript },
             ];
-        });
+        },
+    });
 }

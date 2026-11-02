@@ -2,20 +2,14 @@ import { isDeepStrictEqual } from 'node:util';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
 import type { DependencyFile } from '#cli/types/parsers.ts';
+import { getLimit, getTable } from '#cli/settings/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import { LIMIT_RULES_BY_CHECK } from '#cli/manifests/limits.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import { getLimit, getTable, findParentScope } from '#cli/settings/scopes.ts';
 import { joinScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { buildLimitRuleBlocks } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
 
-import {
-    splitGlobs,
-    buildScopeFiles,
-    buildNodePatterns,
-    buildExtensionGlob,
-} from '#cli/configurations/language/javascript/eslint/files.ts';
 import type {
     EslintRuleBlock,
     EslintBlockFields,
@@ -23,6 +17,13 @@ import type {
     PlannedEslintFile,
     ScopeEslintSettings,
 } from '#cli/types/configurations/language.ts';
+import {
+    splitGlobs,
+    buildScopeFiles,
+    buildNodePatterns,
+    buildExtensionGlob,
+    buildScopeOverrideBlocks,
+} from '#cli/configurations/language/javascript/eslint/files.ts';
 import {
     ESLINT_CHECK,
     CODE_LANGUAGES,
@@ -83,36 +84,22 @@ function buildManifestRuleBlocks(scopes: Scope[], dependencyFiles: DependencyFil
 function buildEnvironmentRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintRuleBlock[] {
     const { session, nodeFiles } = planned;
     if (session.settings.level !== 'all') return [];
-    const { scopes } = session;
-    const environmentScopes = scopes.filter((scope) => {
-        const parent = findParentScope(scopes, scope.path);
-        return (
-            parent === undefined ||
-            !isDeepStrictEqual(
-                scope.settings.tables.structure?.environment_readers,
-                parent.settings.tables.structure?.environment_readers,
-            )
-        );
-    });
-    return environmentScopes.flatMap((scope) => {
-        const owners = scope.settings.tables.structure?.environment_readers ?? [];
-        return owners.length === 0
-            ? []
-            : {
-                  scope: scope.path,
-                  ...splitGlobs([
-                      buildExtensionGlob(...ENVIRONMENT_LANGUAGES),
-                      ...buildNodePatterns(nodeFiles, scope.path),
-                      ...owners.map((path) => `!${path}`),
-                      ...listNestedScopes(
-                          environmentScopes.map(({ path }) => path),
-                          scope.path,
-                      )
-                          .map((path) => joinScope(escapeGlob(path), '**'))
-                          .map((path) => `!${path}`),
-                  ]),
-                  rules: ENVIRONMENT_RULES,
-              };
+    return buildScopeOverrideBlocks(session.scopes, {
+        read: (scope) => scope.settings.tables.structure?.environment_readers ?? [],
+        build: ({ scope, value, ignores }) =>
+            value.length === 0
+                ? []
+                : [
+                      {
+                          scope: scope.path,
+                          ...splitGlobs([
+                              buildExtensionGlob(...ENVIRONMENT_LANGUAGES),
+                              ...buildNodePatterns(nodeFiles, scope.path),
+                              ...[...value, ...ignores].map((path) => `!${path}`),
+                          ]),
+                          rules: ENVIRONMENT_RULES,
+                      },
+                  ],
     });
 }
 
@@ -166,20 +153,22 @@ function groupTrivialRules(
 function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintRuleBlock[] {
     const { session, nodeFiles } = planned;
     if (session.settings.level !== 'all') return [];
-    const { scopes } = session;
-    const blocks: EslintRuleBlock[] = [];
-    for (const scope of scopes.toSorted((a, b) => compareScopeDepth(a.path, b.path))) {
-        const parent = findParentScope(scopes, scope.path);
-        for (const { rules, languages } of groupTrivialRules(scope, parent, session.settings.structure.reexports)) {
-            const patterns = languages.flatMap((language) =>
-                language === 'javascript'
-                    ? [buildExtensionGlob('javascript'), ...buildNodePatterns(nodeFiles, scope.path)]
-                    : buildExtensionGlob(...TYPED_LANGUAGES),
-            );
-            blocks.push({ scope: scope.path, ...splitGlobs(patterns), rules });
-        }
-    }
-    return blocks;
+    const { reexports } = session.settings.structure;
+    return buildScopeOverrideBlocks(session.scopes, {
+        read: (scope) => CODE_LANGUAGES.map((language) => buildTrivialRules(scope, language, reexports)),
+        build: ({ scope, parent }) =>
+            groupTrivialRules(scope, parent, reexports).map(({ rules, languages }) => ({
+                scope: scope.path,
+                ...splitGlobs(
+                    languages.flatMap((language) =>
+                        language === 'javascript'
+                            ? [buildExtensionGlob('javascript'), ...buildNodePatterns(nodeFiles, scope.path)]
+                            : buildExtensionGlob(...TYPED_LANGUAGES),
+                    ),
+                ),
+                rules,
+            })),
+    });
 }
 
 function buildSettingsBlocks(planned: Pick<PlannedEslintFile, 'session' | 'scope' | 'nodeFiles'>): EslintRuleBlock[] {
@@ -259,23 +248,19 @@ export function buildRestrictedImportBlocks(
     const scopes = planned.session.scopes.filter(({ settings }) =>
         settings.configurations.includes(JAVASCRIPT_CONFIGURATION),
     );
-    const restrictedScopes = scopes.filter((scope) => {
-        const parent = findParentScope(scopes, scope.path);
-        return !isDeepStrictEqual(
-            getTable(scope.settings, 'javascript').banned_imports,
-            parent === undefined ? [] : getTable(parent.settings, 'javascript').banned_imports,
-        );
+    return buildScopeOverrideBlocks(scopes, {
+        read: ({ settings }) => getTable(settings, 'javascript').banned_imports,
+        build: ({ scope, parent, value, ignores }) =>
+            parent === undefined && value.length === 0
+                ? []
+                : [
+                      {
+                          files: buildScopeFiles(planned.eslintFiles.code, scope.path, ['**/*']),
+                          ignores,
+                          rules: { 'no-restricted-imports': ['error', { paths: value }] },
+                      },
+                  ],
     });
-    return restrictedScopes.map((scope) => ({
-        files: buildScopeFiles(planned.eslintFiles.code, scope.path, ['**/*']),
-        ignores: listNestedScopes(
-            restrictedScopes.map(({ path }) => path),
-            scope.path,
-        ).map((path) => joinScope(escapeGlob(path), '**')),
-        rules: {
-            'no-restricted-imports': ['error', { paths: getTable(scope.settings, 'javascript').banned_imports }],
-        },
-    }));
 }
 
 /**

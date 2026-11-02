@@ -1,23 +1,27 @@
 import { isDeepStrictEqual } from 'node:util';
+import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Scope } from '#cli/types/settings.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { getTable, findParentScope } from '#cli/settings/scopes.ts';
 import { escapeGlob, buildModuleSpecifier } from '#cli/system/paths.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/blocks.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/javascript.ts';
 import type { EslintPlugins, EslintBlockFields } from '#cli/types/configurations/language.ts';
+import { buildScopeOverrideBlocks } from '#cli/configurations/language/javascript/eslint/files.ts';
 
 function listPluginRecords(scopes: Scope[]) {
-    return scopes
-        .filter(({ settings }) => settings.configurations.includes(JAVASCRIPT_CONFIGURATION))
-        .flatMap((scope) => {
-            const parent = findParentScope(scopes, scope.path);
-            const inherited = parent?.settings.tables[ESLINT_SETTINGS_TABLE]?.plugins ?? [];
-            return getTable(scope.settings, ESLINT_SETTINGS_TABLE)
-                .plugins.filter((plugin) => inherited.every((record) => !isDeepStrictEqual(record, plugin)))
-                .map((plugin) => ({ ...plugin, scope: scope.path }));
-        });
+    return buildScopeOverrideBlocks(
+        scopes.filter(({ settings }) => settings.configurations.includes(JAVASCRIPT_CONFIGURATION)),
+        {
+            read: ({ settings }) => getTable(settings, ESLINT_SETTINGS_TABLE).plugins,
+            build: ({ scope, parent, value }) => {
+                const inherited = parent?.settings.tables[ESLINT_SETTINGS_TABLE]?.plugins ?? [];
+                return value
+                    .filter((plugin) => inherited.every((record) => !isDeepStrictEqual(record, plugin)))
+                    .map((plugin) => ({ ...plugin, scope: scope.path }));
+            },
+        },
+    );
 }
 
 /**
