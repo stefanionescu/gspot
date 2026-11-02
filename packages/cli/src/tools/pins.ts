@@ -1,4 +1,5 @@
 import { compareText } from '#cli/system/text.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
@@ -106,6 +107,9 @@ export function listNpmProjectPins(session: Pick<Session, 'scopes' | 'toolConfig
     const pluginPins = plugins.flatMap(({ package: name, version }) =>
         name === undefined ? [] : [[name, version as string] as const],
     );
+    for (const [name, pins] of Map.groupBy(pluginPins, ([name]) => name))
+        if (new Set(pins.map(([, version]) => version)).size > 1)
+            throw new GspotError('settings', `The plugin records name ${name} at two versions. Use one version.`);
     return { ...Object.fromEntries(pluginPins), ...listPackagePins(session.toolConfigurations).npm };
 }
 
