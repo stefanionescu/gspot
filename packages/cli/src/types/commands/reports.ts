@@ -239,14 +239,12 @@ export type ScanFlags = { markdown?: boolean };
 
 export type ScanCategory = { name: string; count: number; examples: Finding[] };
 
-export type ScanTime = { name: string; seconds: number };
-
 export type ScanReport = {
     totals: { files: number; checks: number; findings: number; filesFlagged: number; seconds: number };
     categories: ScanCategory[];
     filesToFormat: number;
     notRun: string[];
-    cost: { tools: number; megabytes: number; perTool: ScanTime[] };
+    cost: { tools: number; megabytes: number; perTool: { name: string; seconds: number }[] };
     plan: InitPlan;
     settingsText: string;
     nextSteps: string[];
