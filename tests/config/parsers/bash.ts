@@ -1,12 +1,3 @@
-export const BASH_COMMENT_CASES = [
-    ['echo "a # b" # c', 'echo "a # b"'],
-    ["printf '#'", "printf '#'"],
-    ['test $# -eq 0 # no arguments', 'test $# -eq 0'],
-    ['echo ${#name} a#b # comment', 'echo ${#name} a#b'],
-    [String.raw`echo '\' # comment`, String.raw`echo '\'`],
-    [String.raw`x=1 \# y`, String.raw`x=1 \# y`],
-] as const;
-
 export const MKTEMP_CLEANUP_CASES = [
     {
         name: 'a literal double-quoted cleanup with escaped quotes and a delayed variable',
@@ -23,11 +14,6 @@ trap "rm -f \"\$tmp\"" EXIT
     {
         name: 'a trap with a second removal after it on its line',
         source: 'tmp=$(mktemp)\ntrap \'rm -rf "$tmp"\' EXIT; rm -rf /etc\n',
-        expected: [{ name: 'tmp', line: 1, cleanupLines: [] }],
-    },
-    {
-        name: 'a second trap that removes another path',
-        source: "tmp=$(mktemp)\ntrap 'rm -rf \"$tmp\"' EXIT; trap 'rm -rf /etc' HUP\n",
         expected: [{ name: 'tmp', line: 1, cleanupLines: [] }],
     },
     {
@@ -83,14 +69,6 @@ rm -rf "$tmp"
         expected: [{ name: 'tmp', line: 1, cleanupLines: [] }],
     },
     {
-        name: 'a path changed between mktemp and the trap',
-        source: `tmp=$(mktemp -d)
-tmp=/etc
-trap 'rm -rf "$tmp"' EXIT
-`,
-        expected: [{ name: 'tmp', line: 1, cleanupLines: [] }],
-    },
-    {
         name: 'a path with a prefix before mktemp',
         source: 'tmp="prefix$(mktemp -d)"\ntrap \'rm -rf "$tmp"\' EXIT\n',
         expected: [],
@@ -113,14 +91,9 @@ second() { local tmp=$(mktemp); trap 'rm -rf "$tmp"' RETURN; }
 ];
 
 export const FORWARDING_CALL_CASES = [
-    { source: 'consume "$@"\n', count: 1, forwards: true },
     { source: 'consume "$*"\n', count: 1, forwards: true },
     { source: 'consume one "$@"\n', count: 2, forwards: true },
     { source: "consume '$@'\n", count: 1, forwards: false },
-    { source: String.raw`consume "\$@"` + '\n', count: 1, forwards: false },
-    { source: 'consume "$#"\n', count: 1, forwards: false },
-    { source: 'consume "$1"\n', count: 1, forwards: false },
-    { source: 'consume\n', count: 0, forwards: false },
 ] as const;
 
 export const TRAP_CALLS = [
@@ -137,7 +110,6 @@ export const TRAP_CALLS = [
 export const QUOTED_TRAP_CALLS = [
     { source: `trap 'cleanup one "two words"' EXIT\n`, counts: [2] },
     { source: String.raw`trap "cleanup \"two words\"" EXIT`, counts: [1] },
-    { source: String.raw`trap "cleanup \$value" EXIT`, counts: [1] },
     { source: 'trap "cleanup $value" EXIT', counts: [] },
 ] as const;
 

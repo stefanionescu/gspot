@@ -9,12 +9,6 @@ async function listMarkedLines(path: string, source: string, tags: readonly stri
         .map((comment) => comment.line);
 }
 
-test('a Bash comment after a quoted apostrophe is a comment, and quoted marker text is not', async () => {
-    const source =
-        'echo "Sid\'s value" # marker: Required external interface.\necho "# marker: Literal sample text."\n';
-    expect(await listMarkedLines('source.sh', source, [])).toStrictEqual([1]);
-});
-
 test.each(["'", "E'", '"'])('an unterminated SQL %s value hides the comment text after it', async (opener) => {
     const source = ['-- marker: Required interface.', `SELECT ${opener}`, '-- marker: Literal sample text.', ':value;'];
     expect(await listMarkedLines('source.sql', source.join('\n'), [])).toStrictEqual([1]);

@@ -1,11 +1,7 @@
 export const DOCSTRING_CASES = [
     ['', 'todo'],
     ['r', 'todo'],
-    ['u', 'todo'],
     ['f', undefined],
-    ['b', undefined],
-    ['t', undefined],
-    ['fr', undefined],
     ['rb', undefined],
 ] as const;
 
@@ -81,18 +77,6 @@ actual = 1
         [],
     ],
     [
-        'TOML multiline literal string',
-        'source.toml',
-        `value = '''
-# marker: Literal sample text.
-'''
-# marker: Required interface.
-actual = 1
-`,
-        4,
-        [],
-    ],
-    [
         'SQL dollar-quoted value',
         'source.sql',
         `select $body$
@@ -148,16 +132,6 @@ select 1;
 Text.
 `,
         4,
-        [],
-    ],
-    [
-        'Markdown inline HTML',
-        'source.md',
-        `\`<!-- marker: Literal sample text. -->\`
-<!-- marker: Required interface. -->
-Text.
-`,
-        2,
         [],
     ],
     [

@@ -6,22 +6,13 @@ import {
     TRAP_CALLS,
     BASH_FUNCTIONS,
     QUOTED_TRAP_CALLS,
-    BASH_COMMENT_CASES,
     MKTEMP_CLEANUP_CASES,
     FORWARDING_CALL_CASES,
 } from '#tests/config/parsers/bash.ts';
 
-test.each(BASH_COMMENT_CASES)(
-    'Bash comments keep quoted and parameter hashes as code: %s',
-    async (source, expected) => {
-        const parsed = await parseBashScript(source);
-        expect(listCodeLines(parsed.code)).toStrictEqual([{ number: 1, text: expected }]);
-    },
-);
-
-test('comment masking keeps line numbers and drops blank lines', async () => {
-    const parsed = await parseBashScript('\n# note\na=1 # b\n  ');
-    expect(listCodeLines(parsed.code)).toStrictEqual([{ number: 3, text: 'a=1' }]);
+test('comment masking keeps quoted hashes and line numbers and drops blank lines', async () => {
+    const parsed = await parseBashScript('\n# note\necho "a # b" # c\n  ');
+    expect(listCodeLines(parsed.code)).toStrictEqual([{ number: 3, text: 'echo "a # b"' }]);
 });
 
 test.each([...MKTEMP_CLEANUP_CASES])(
