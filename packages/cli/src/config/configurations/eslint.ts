@@ -93,6 +93,7 @@ const UNICORN_RULES = {
     'unicorn/no-abusive-eslint-disable': 'off',
 
     'unicorn/prefer-ternary': 'off',
+    'unicorn/prefer-await': 'off',
     'unicorn/expiring-todo-comments': 'off',
     'unicorn/consistent-boolean-name': [
         'error',

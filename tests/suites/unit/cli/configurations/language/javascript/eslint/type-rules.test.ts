@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { LEVELS } from '#cli/config/manifests.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
@@ -46,3 +47,31 @@ test('level all runs the typed gspot test and React rules', async () => {
     });
     expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
 });
+
+test.each([...LEVELS])(
+    'at level %s, a listener that hands its promise to then passes the promise rules',
+    async (level) => {
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings(['typescript'], { level }),
+            'tsconfig.json':
+                '{"compilerOptions":{"strict":true,"target":"esnext","lib":["esnext"]},"include":["*.ts"]}',
+            'package.json': '{"private":true,"type":"module"}',
+            'signal.ts': [
+                'declare function onSignal(listener: () => void): void;',
+                'declare function closeResources(): Promise<void>;',
+                'declare function exit(): void;',
+                'onSignal(() => {',
+                '    closeResources().then(exit, exit);',
+                '});',
+            ].join('\n'),
+        });
+        const eslint = await buildEslint(sandbox.path);
+        const rules = [
+            'unicorn/prefer-await',
+            '@typescript-eslint/no-floating-promises',
+            '@typescript-eslint/no-misused-promises',
+            'no-void',
+        ];
+        expect(await listLintFindings(eslint, sandbox.path, ['signal.ts'], rules)).toStrictEqual([]);
+    },
+);
