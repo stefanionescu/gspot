@@ -268,3 +268,47 @@ test('init names the excludeFiles of a Prettier override', async () => {
     const { plan } = await runInit(sandbox.path);
     expect(plan.carry.find(({ path }) => path === '.prettierrc')?.dropped).toStrictEqual(['excludeFiles']);
 });
+
+test('init lists the Ruff format options it carries in the Ruff row', async () => {
+    await using sandbox = await createGitSandbox({
+        'ruff.toml': 'line-length = 79\n[format]\nquote-style = "single"\n',
+        'main.py': 'VALUE = 1\n',
+    });
+    const { plan } = await runInit(sandbox.path, ['--configurations', 'python']);
+    expect(plan.carry.find(({ path }) => path === 'ruff.toml')?.carried).toStrictEqual([
+        'line-length',
+        'format.quote-style',
+    ]);
+});
+
+test('init anchors a Ruff per-file key without a slash at every folder', async () => {
+    await using sandbox = await createGitSandbox({
+        'ruff.toml': '[lint]\nselect = ["F"]\n[lint.per-file-ignores]\n"__init__.py" = ["F401"]\n',
+        'pkg/__init__.py': 'VALUE = 1\n',
+    });
+    const { plan } = await runInit(sandbox.path, ['--configurations', 'python']);
+    expect(plan.carry.find(({ path }) => path === 'ruff.toml')?.reasons).toStrictEqual([
+        'gspot ignore python/ruff --rule F401 --paths \'**/__init__.py\' --reason "<why>"',
+    ]);
+});
+
+test('init reads the Ruff extend-per-file-ignores table', async () => {
+    await using sandbox = await createGitSandbox({
+        'ruff.toml': '[lint]\nselect = ["F"]\n[lint.extend-per-file-ignores]\n"tests/*" = ["F811"]\n',
+        'tests/main.py': 'VALUE = 1\n',
+    });
+    const { plan } = await runInit(sandbox.path, ['--configurations', 'python']);
+    expect(plan.carry.find(({ path }) => path === 'ruff.toml')).toMatchObject({
+        reasons: ['gspot ignore python/ruff --rule F811 --paths \'tests/*\' --reason "<why>"'],
+        dropped: [],
+    });
+});
+
+test('init names a Ruff rule name in lint.ignore, which it cannot compare', async () => {
+    await using sandbox = await createGitSandbox({
+        'ruff.toml': '[lint]\nselect = ["F"]\nignore = ["line-too-long"]\n',
+        'main.py': 'VALUE = 1\n',
+    });
+    const { plan } = await runInit(sandbox.path, ['--configurations', 'python']);
+    expect(plan.carry.find(({ path }) => path === 'ruff.toml')?.dropped).toStrictEqual(['line-too-long']);
+});

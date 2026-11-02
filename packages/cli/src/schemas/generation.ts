@@ -53,6 +53,7 @@ const ruffRuleFields = {
     ignore: z.string().array(),
     'extend-ignore': z.string().array(),
     'per-file-ignores': z.record(z.string(), z.string().array()),
+    'extend-per-file-ignores': z.record(z.string(), z.string().array()),
 };
 
 export const ruffOptionsSchema = buildCarriedSchema({

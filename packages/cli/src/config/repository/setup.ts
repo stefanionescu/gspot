@@ -203,6 +203,10 @@ export const RUFF_CHECK_ID = 'python/ruff';
 
 export const RUFF_CHECK_IDS = [RUFF_CHECK_ID, 'python/ruff-format'] as const;
 
+export const RUFF_FORMAT_KEYS = ['line-length', 'indent-width'] as const;
+
+export const RUFF_STYLE_KEYS = ['indent-style', 'quote-style'] as const;
+
 export const COMMITLINT_CHECK_ID = 'commits/commitlint';
 
 export const MARKDOWNLINT_CHECK_ID = 'markdown/markdownlint';

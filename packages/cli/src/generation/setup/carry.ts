@@ -34,8 +34,10 @@ import {
     CARRIED_TOOLS,
     LEADING_SLASH,
     RUFF_CHECK_IDS,
+    RUFF_STYLE_KEYS,
     COMMENT_PATTERN,
     CARRY_ROW_START,
+    RUFF_FORMAT_KEYS,
     COMMITLINT_TARGET,
     PRINTED_RULE_TOOLS,
     SCAN_FIRST_MESSAGE,
@@ -108,10 +110,14 @@ function readRuffCarry(input: CarryInput): CarrySection {
     const excludes = [...(options.exclude ?? []), ...(options['extend-exclude'] ?? [])];
     const paths = excludes.flatMap((pattern) => convertIgnorePattern(pattern, '', tracked) ?? []);
     const reason = `${IGNORE_REASON_START} ${path}.`;
+    const format = [
+        ...RUFF_FORMAT_KEYS.filter((key) => options[key] !== undefined),
+        ...RUFF_STYLE_KEYS.filter((key) => options.format?.[key] !== undefined).map((key) => `format.${key}`),
+    ];
     return {
         tools: rules.length === 0 ? {} : { ruff: { rules } },
         ignore: paths.length === 0 ? [] : RUFF_CHECK_IDS.map((check) => ({ check, paths, reason })),
-        rows: [{ ...row, carried: [...row.carried, ...paths] }],
+        rows: [{ ...row, carried: [...row.carried, ...format, ...paths] }],
     };
 }
 

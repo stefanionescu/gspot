@@ -1,15 +1,18 @@
+import { findToolName } from '#cli/tools/pins.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { EVERY_CHECK } from '#cli/config/engine.ts';
 import { mergeIgnore } from '#cli/settings/text.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { formatNameList } from '#cli/system/text.ts';
+import type { Check } from '#cli/types/manifests.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { ignoreSchema } from '#cli/schemas/settings/file.ts';
 import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { readCheckRuleDocs } from '#cli/configurations/rules.ts';
+import { RUFF_RULE_PREFIX } from '#cli/config/settings/schema.ts';
 import { IGNORE_CHECK_MESSAGE } from '#cli/config/commands/edits.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { RULE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
@@ -24,11 +27,7 @@ function formatIgnoreSummary(options: IgnoreOptions, paths: string[] | undefined
     return `Ignored ${target}${suffix}.`;
 }
 
-async function assertDocumentedRule(
-    session: Session,
-    { checkId, rule }: { checkId: string; rule: string },
-): Promise<void> {
-    const { root, settings } = session;
+function findRuleCheck({ settings }: Session, checkId: string): Check {
     const shippedCheck = listChecksById(readConfigurations().values()).get(checkId)?.check;
     const check = settings.commandChecks[checkId] ?? shippedCheck;
     if (
@@ -36,7 +35,16 @@ async function assertDocumentedRule(
         (!OUTPUT_FORMATS[check.output.format].namesRules(check.output) && CHECK_CODE[checkId]?.ruleDocs === undefined)
     )
         throw new GspotError('arguments', `${checkId} does not report lint rules. Omit --rule.`);
-    const docs = await readCheckRuleDocs(root, check, rule, session);
+    return check;
+}
+
+async function assertDocumentedRule(
+    session: Session,
+    { checkId, rule }: { checkId: string; rule: string },
+): Promise<void> {
+    const check = findRuleCheck(session, checkId);
+    if (findToolName(check) === 'ruff' && RUFF_RULE_PREFIX.test(rule)) return;
+    const docs = await readCheckRuleDocs(session.root, check, rule, session);
     if (docs === undefined) throw new GspotError('arguments', `gspot does not know rule ${rule} of ${checkId}.`);
 }
 

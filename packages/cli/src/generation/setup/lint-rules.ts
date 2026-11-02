@@ -35,7 +35,8 @@ function isLooser(rule: string, user: unknown[], shipped: unknown[]): boolean {
 }
 
 function formatIgnoreLine(check: string, rule: string, file?: string): string {
-    const paths = file === undefined ? '' : ` --paths ${quoteArgument(file)}`;
+    const anchored = file?.includes('/') === false ? `**/${file}` : file;
+    const paths = anchored === undefined ? '' : ` --paths ${quoteArgument(anchored)}`;
     const name = quoteArgument(rule);
     return `gspot ignore ${check} --rule ${name}${paths} --reason ${REASON_PLACEHOLDER}`;
 }
@@ -92,7 +93,9 @@ export function compareRuffRules(input: RuffRuleInput): RuffRules {
     const rules = added.filter((rule) => RUFF_SELECTOR.test(rule));
     const held = [...shipped, ...rules].join('|').replace(RUFF_ALL_SELECTOR, RUFF_ANY_PREFIX);
     const runsAfterInit = new RegExp(String.raw`^(?:${held})(?:\d|$)`, 'u');
-    const perFile = lint['per-file-ignores'] === undefined ? [] : Object.entries(lint['per-file-ignores']);
+    const perFile = [lint['per-file-ignores'], lint['extend-per-file-ignores']].flatMap((table) =>
+        table === undefined ? [] : Object.entries(table),
+    );
     const turnedOff = [
         ...[...(lint.ignore ?? []), ...(lint['extend-ignore'] ?? [])].map((rule) => ({ rule, file: undefined })),
         ...perFile.flatMap(([file, ignored]) => ignored.map((rule) => ({ rule, file }))),
@@ -111,6 +114,7 @@ export function compareRuffRules(input: RuffRuleInput): RuffRules {
                 ([prefix, table]) => (table?.dropped ?? []).map((key) => `${prefix}${key}`),
             ),
             ...added.filter((rule) => !RUFF_SELECTOR.test(rule)),
+            ...turnedOff.map(({ rule }) => rule).filter((rule) => !RUFF_SELECTOR.test(rule)),
         ],
     };
     return { rules, row };

@@ -253,6 +253,8 @@ export const RULE_CONDITIONS = ['always', 'never'] as const;
 
 export const RUFF_SELECTOR = /^[A-Z]+\d*$/u;
 
+export const RUFF_RULE_PREFIX = /^[A-Z]+\d{0,2}$/u;
+
 export const IMPORT_EXTENSION_STYLES = ['js', 'ts', 'extensionless'] as const;
 
 export const TRIVY_SEVERITIES = ['UNKNOWN', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const;
