@@ -91,7 +91,7 @@ export async function startNpmRegistry(
         hostname: REGISTRY_HOST,
         port: 0,
         fetch: (request) => {
-            registry.requests++;
+            registry.requests.push(`${request.method} ${new URL(request.url).pathname}`);
             return answerRegistryRequest(request, { packages, token: options.token });
         },
     });
@@ -101,7 +101,7 @@ export async function startNpmRegistry(
     const registry: NpmRegistry = {
         url,
         npmrc,
-        requests: 0,
+        requests: [],
         [Symbol.dispose]: server[Symbol.dispose].bind(server),
     };
     return registry;

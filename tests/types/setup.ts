@@ -53,7 +53,7 @@ export type RegistryPackage = {
 
 export type PackedPackage = Omit<RegistryPackage, 'source'> & { filename: string; integrity: string };
 
-export type NpmRegistry = Disposable & { url: string; npmrc: string; requests: number };
+export type NpmRegistry = Disposable & { url: string; npmrc: string; requests: string[] };
 
 export type NpmProject = {
     root: string;
