@@ -14,10 +14,16 @@ import { VALE_TEMPORARY_NAME } from '#cli/config/repository/setup.ts';
 import { runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
 import type { ToolInstall, ArchiveDownload } from '#cli/types/tools.ts';
 import { deleteStaleTemporaryPaths } from '#cli/system/files/folders.ts';
-import { JSON_INDENT, CONFIG_FLAG } from '#cli/config/tools/installers.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { rmSync, mkdirSync, renameSync, mkdtempSync, writeFileSync } from 'node:fs';
 
+import {
+    JSON_INDENT,
+    CONFIG_FLAG,
+    NETWORK_ADVICE,
+    PROXY_VARIABLES,
+    NODE_PROXY_ADVICE,
+} from '#cli/config/tools/installers.ts';
 import {
     VALE_TOOL,
     VOCAB_LINE,
@@ -26,14 +32,11 @@ import {
     VALE_PACKAGES,
     BLOCK_IGNORES,
     TOKEN_IGNORES,
-    NETWORK_ADVICE,
     PROSE_GRAMMARS,
     MIN_ALERT_LINE,
     NO_STYLES_LINE,
     VALE_OFF_RULES,
-    PROXY_VARIABLES,
     VALE_STYLES_PATH,
-    NODE_PROXY_ADVICE,
     VALE_PACKAGE_URLS,
     VALE_INSTALL_STEP,
     ALL_FILES_SECTION,

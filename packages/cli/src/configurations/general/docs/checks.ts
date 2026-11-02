@@ -295,7 +295,7 @@ function listScopeVersions(session: Session, scopePath: string): string[] {
         .filter((path) => selectScopePath(path, session.scopes) === scopePath)
         .flatMap((path) => {
             const name = posix.basename(path);
-            if (name === PACKAGE_JSON) return [readCachedPackageJson(session.cache, path)?.['version']];
+            if (name === PACKAGE_JSON) return [readPackageJson(session.cache, path)?.['version']];
             return name === PYPROJECT_TOML
                 ? [parseTomlFile(path, read(session.cache, path), pyprojectSchema).project?.version]
                 : [];
