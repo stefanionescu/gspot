@@ -19,7 +19,7 @@ import {
     INLINE_ASSIGNMENT_NODES,
 } from '#cli/config/parsers.ts';
 
-function readTrapBody(body: Node): { text: string; sourceRows: TrapScript['sourceRows'] } {
+function getTrapBody(body: Node): { text: string; sourceRows: TrapScript['sourceRows'] } {
     const quoted = body.text.slice(1, -1);
     const pattern = body.type === 'string' ? TRAP_STRING_ESCAPES : TRAP_SOURCE_ROWS;
     let text = '';
@@ -65,7 +65,7 @@ export async function parseTrapScripts(
         });
     const scripts: TrapScript[] = [];
     for (const { trap, body } of bodies) {
-        const { text, sourceRows } = readTrapBody(body);
+        const { text, sourceRows } = getTrapBody(body);
         const tree = await parseSource('bash', text, cache);
         resources.push(tree);
         scripts.push({ trap, body, syntaxRoot: tree.rootNode, sourceRows });

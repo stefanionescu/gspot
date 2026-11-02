@@ -93,7 +93,7 @@ function parseCommandDocuments({ file, text }: LintCommandPlace): unknown[] | un
     );
 }
 
-function readDocumentRows(place: LintCommandPlace, search: CommandSearch): LintCommand[] {
+function parseDocumentRows(place: LintCommandPlace, search: CommandSearch): LintCommand[] {
     const documents = parseCommandDocuments(place);
     return listDocumentCommands(documents, COMMAND_KEYS).flatMap((command) =>
         command.split(LINE_BREAK).flatMap((line) => buildRow(place, line, search)),
@@ -115,7 +115,7 @@ function readPreCommitRows(place: LintCommandPlace, search: CommandSearch): Lint
         });
 }
 
-function readLineRows(place: LintCommandPlace, search: CommandSearch): LintCommand[] {
+function parseLineRows(place: LintCommandPlace, search: CommandSearch): LintCommand[] {
     return place.text
         .split(LINE_BREAK)
         .filter((line) => !COMMENT_LINE.test(line))
@@ -167,7 +167,7 @@ function readPlaces({ root, files }: Pick<LintCommandSearch, 'root' | 'files'>):
     });
 }
 
-function readPackageRows({ place, manifest }: LintCommandPackage, search: CommandSearch): LintCommand[] {
+function listPackageRows({ place, manifest }: LintCommandPackage, search: CommandSearch): LintCommand[] {
     const hook = { ...place, source: 'hook' } as const;
     return [
         ...Object.values(manifest.scripts).flatMap((command) => buildRow(place, command, search)),
@@ -212,7 +212,7 @@ export function listLintCommands(input: LintCommandSearch): LintCommand[] {
                 buildRow({ ...place, source: 'lint-staged' }, command, search),
             ),
         ),
-        ...places.filter(({ source }) => source === 'lint-staged').flatMap((place) => readLineRows(place, search)),
+        ...places.filter(({ source }) => source === 'lint-staged').flatMap((place) => parseLineRows(place, search)),
     ];
     const preCommit = places
         .filter(({ source }) => source === 'pre-commit')
@@ -226,13 +226,13 @@ export function listLintCommands(input: LintCommandSearch): LintCommand[] {
         ]),
     };
     return [
-        ...packages.flatMap((each) => readPackageRows(each, wide)),
+        ...packages.flatMap((each) => listPackageRows(each, wide)),
         ...staged,
         ...preCommit,
         ...places
             .filter(({ source }) => source === 'hook' || source === 'ci')
             .flatMap((place) =>
-                HOOK_FOLDER_PATH.test(place.file) ? readLineRows(place, wide) : readDocumentRows(place, wide),
+                HOOK_FOLDER_PATH.test(place.file) ? parseLineRows(place, wide) : parseDocumentRows(place, wide),
             ),
         ...readDependencyRows(input),
         ...readOverlappingToolRows(input),

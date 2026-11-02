@@ -33,18 +33,18 @@ import {
     JAVASCRIPT_ENVIRONMENT_GETTERS,
 } from '#cli/config/parsers.ts';
 
-function readCallKey(node: Node, getters: Set<string>): string | undefined {
+function getCallKey(node: Node, getters: Set<string>): string | undefined {
     const name = node.childForFieldName('function')?.text.replaceAll(WHITESPACE_RUN, '');
     if (name === undefined || !getters.has(name)) return undefined;
-    return readStringLiteral(node.childForFieldName('arguments')?.namedChild(0));
+    return getStringLiteral(node.childForFieldName('arguments')?.namedChild(0));
 }
 
-function readMemberKey(node: Node): string | undefined {
+function getMemberKey(node: Node): string | undefined {
     const receiver = node.childForFieldName('object')?.text.replaceAll(WHITESPACE_RUN, '');
     if (receiver === undefined || !JAVASCRIPT_ENVIRONMENT_FIELDS.has(receiver)) return undefined;
     return node.type === 'member_expression'
         ? node.childForFieldName('property')?.text
-        : readStringLiteral(node.childForFieldName('index'));
+        : getStringLiteral(node.childForFieldName('index'));
 }
 
 function hasPythonDefault(keyNode: Node | null | undefined): boolean {
@@ -60,7 +60,7 @@ function hasLiteralDefault(node: Node): boolean {
     return (
         left.id === node.id &&
         JAVASCRIPT_DEFAULT_OPERATORS.has(operator.type) &&
-        (JAVASCRIPT_LITERAL_NODES.has(right.type) || readStringLiteral(right) !== undefined)
+        (JAVASCRIPT_LITERAL_NODES.has(right.type) || getStringLiteral(right) !== undefined)
     );
 }
 
@@ -201,8 +201,8 @@ function findBoundProperty(element: Node): Node | null {
     return element.type === 'object_assignment_pattern' ? element.childForFieldName('left') : element;
 }
 
-function readPropertyName(property: Node | null): string | undefined {
-    if (property?.type === 'string') return readStringLiteral(property);
+function getPropertyKey(property: Node | null): string | undefined {
+    if (property?.type === 'string') return getStringLiteral(property);
     return property !== null && JAVASCRIPT_PROPERTY_NODES.has(property.type) ? property.text : undefined;
 }
 
@@ -213,7 +213,7 @@ function listDeclarationReads(node: Node): EnvironmentRead[] {
         return [];
     return pattern.namedChildren.flatMap((element) => {
         const property = findBoundProperty(element);
-        const key = readPropertyName(property);
+        const key = getPropertyKey(property);
         if (property === null || key === undefined || !VARIABLE_NAME.test(key)) return [];
         return [{ key, line: property.startPosition.row + 1, column: property.startPosition.column + 1 }];
     });
@@ -224,7 +224,7 @@ function listTreeReads(syntaxRoot: Node, getters: Set<string>): EnvironmentRead[
         .descendantsOfType(['variable_declarator', 'call_expression', 'member_expression', 'subscript_expression'])
         .flatMap((node) => {
             if (node.type === 'variable_declarator') return listDeclarationReads(node);
-            const key = node.type === 'call_expression' ? readCallKey(node, getters) : readMemberKey(node);
+            const key = node.type === 'call_expression' ? getCallKey(node, getters) : getMemberKey(node);
             if (key === undefined || !VARIABLE_NAME.test(key)) return [];
             return [
                 {
@@ -273,7 +273,7 @@ Read the text of a string or a template without substitutions.
 @param node the expression.
 @returns undefined for any other expression.
 */
-export function readStringLiteral(node: Node | null | undefined): string | undefined {
+export function getStringLiteral(node: Node | null | undefined): string | undefined {
     if (node?.type === 'string') return node.text.slice(1, -1);
     const isStaticTemplate =
         node?.type === 'template_string' && node.namedChildren.every(({ type }) => type !== 'template_substitution');

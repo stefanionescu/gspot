@@ -11,7 +11,7 @@ import type { ComponentScript } from '#cli/types/parsers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { AssetSource, AssetGlobImport } from '#cli/types/configurations/language.ts';
-import { readStringLiteral, listJavascriptSources } from '#cli/parsers/code/environment.ts';
+import { getStringLiteral, listJavascriptSources } from '#cli/parsers/code/environment.ts';
 import { SYMLINK_MODE, FILENAME_TAGS, GIT_FILE_MODES } from '#cli/config/repository/files.ts';
 
 import {
@@ -25,13 +25,13 @@ import {
     ASSET_REFERENCE_SUFFIX,
 } from '#cli/config/configurations/framework.ts';
 
-function readGlobPatterns(node: Node): string[] | undefined {
+function getGlobPatterns(node: Node): string[] | undefined {
     const argument = node.childForFieldName('arguments')?.namedChild(0);
     if (argument?.type !== 'array') {
-        const pattern = readStringLiteral(argument);
+        const pattern = getStringLiteral(argument);
         return pattern === undefined ? undefined : [pattern];
     }
-    const patterns = argument.namedChildren.map((element) => readStringLiteral(element));
+    const patterns = argument.namedChildren.map((element) => getStringLiteral(element));
     return patterns.includes(undefined) ? undefined : (patterns as string[]);
 }
 
@@ -39,7 +39,7 @@ async function readGlobImports(source: ComponentScript, session: Session): Promi
     using tree = await parseSource(source.grammar, source.source, session);
     return tree.rootNode.descendantsOfType('call_expression').flatMap((node) => {
         const name = node.childForFieldName('function')?.text.replaceAll(WHITESPACE_RUN, '');
-        const patterns = name === ASSET_GLOB_CALL ? readGlobPatterns(node) : undefined;
+        const patterns = name === ASSET_GLOB_CALL ? getGlobPatterns(node) : undefined;
         return patterns === undefined ? [] : [{ patterns, text: node.text }];
     });
 }

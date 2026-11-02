@@ -26,7 +26,7 @@ function listCallValues(call: Node): Node[] {
     return (argumentsNode?.namedChildren ?? []).flatMap((node) => node.childForFieldName('value') ?? []);
 }
 
-function readMethod(call: Node): { receiver: string; name: string } | undefined {
+function getMethodCall(call: Node): { receiver: string; name: string } | undefined {
     const callee = call.firstNamedChild;
     if (callee?.type !== 'navigation_expression') return undefined;
     return { receiver: callee.firstNamedChild?.text ?? '', name: callee.lastNamedChild?.lastNamedChild?.text ?? '' };
@@ -43,7 +43,7 @@ function isExposed(interpolation: Node): boolean {
 
 function isSecretLog(call: Node): boolean {
     const callee = call.firstNamedChild?.text ?? '';
-    if (!LOG_FUNCTIONS.has(callee) && !LOG_METHODS.has(readMethod(call)?.name ?? '')) return false;
+    if (!LOG_FUNCTIONS.has(callee) && !LOG_METHODS.has(getMethodCall(call)?.name ?? '')) return false;
     return listCallValues(call).some((value) =>
         value.type.endsWith('string_literal')
             ? value.namedChildren.some((child) => child.type === 'interpolated_expression' && isExposed(child))
@@ -52,7 +52,7 @@ function isSecretLog(call: Node): boolean {
 }
 
 function isSecretDefault(call: Node, defaults: Set<string>): boolean {
-    const method = readMethod(call);
+    const method = getMethodCall(call);
     if (method?.name !== 'set' || !(USER_DEFAULTS_RECEIVER.test(method.receiver) || defaults.has(method.receiver)))
         return false;
     return listCallValues(call).some(

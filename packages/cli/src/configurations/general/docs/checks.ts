@@ -20,7 +20,7 @@ import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { joinScope, selectScopePath } from '#cli/repository/scopes.ts';
-import { readScalarSetting } from '#cli/engine/tool-runs/placeholders.ts';
+import { getScalarSetting } from '#cli/engine/tool-runs/placeholders.ts';
 import { buildGitignoreMatcher } from '#cli/repository/files/gitignore.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import { LICENSE_FILE, SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
@@ -61,7 +61,7 @@ function listGeneratorPaths(planned: PlannedCheck): string[] {
     for (const output of generatorOutputs) {
         if (output.kind === 'pattern') continue;
         const path = output.path.replaceAll(SETTING_PLACEHOLDER, (_placeholder, name: string) =>
-            readScalarSetting(planned.scope.settings, name),
+            getScalarSetting(planned.scope.settings, name),
         );
         if (path !== '') paths.push(path);
     }

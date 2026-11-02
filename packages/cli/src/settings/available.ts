@@ -100,7 +100,7 @@ function addToolSettings(availableSettings: AvailableSettings, configurations: C
     }
 }
 
-function readBoundReason(name: string, definition: z.GlobalMeta | undefined): Pick<Setting, 'reason_when'> | undefined {
+function getBoundReason(name: string, definition: z.GlobalMeta | undefined): Pick<Setting, 'reason_when'> | undefined {
     if (definition?.['reasoned'] !== true) return undefined;
     const field = name.slice(name.lastIndexOf('.') + 1);
     const direction = Object.entries(BOUND_PREFIXES).find(([prefix]) => field.startsWith(prefix))?.[1];
@@ -115,7 +115,7 @@ function addSchemaSettings(settingsByConfiguration: Map<string, Setting[]>, sche
         name,
         ...getSettingType(schema),
         default: schema.parse(undefined),
-        ...readBoundReason(name, definition),
+        ...getBoundReason(name, definition),
         ...definition,
         description: schema.description ?? '',
     };

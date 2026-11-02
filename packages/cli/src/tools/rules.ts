@@ -214,7 +214,7 @@ async function readStylelintRule(installed: unknown, identifier: string): Promis
     return await findValueAt(rules, [identifier]);
 }
 
-function readRuleMetadata(rule: unknown, page: string | undefined): LintRuleDocs {
+function getRuleMetadata(rule: unknown, page: string | undefined): LintRuleDocs {
     if (typeof rule !== 'object' && typeof rule !== 'function')
         throw new Error('The installed rule has no implementation.');
     if (rule === null) throw new Error('The installed rule has no implementation.');
@@ -250,5 +250,5 @@ export async function readLintRuleDocs(
     if (![ESLINT_MANIFEST_TOOL, STYLELINT_MANIFEST_TOOL].includes(tool)) return readManifestRuleDocs(tool, identifier);
     const rule = await readInstalledRule(root, tool, identifier);
     if (rule === undefined) return undefined;
-    return readRuleMetadata(rule, findRulePage(tool, identifier, readConfigurations()));
+    return getRuleMetadata(rule, findRulePage(tool, identifier, readConfigurations()));
 }

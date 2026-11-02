@@ -28,7 +28,7 @@ function sortTable(table: TomlTable): TomlTable {
     return Object.fromEntries(order.filter((key) => Object.hasOwn(table, key)).map((key) => [key, table[key]]));
 }
 
-function readTaploLayout(written: TomlTable): TaploLayout {
+function getTaploLayout(written: TomlTable): TaploLayout {
     const schema = settingsSchema.shape.format;
     const format = schema.safeParse(written['format']).data ?? schema.parse({});
     return {
@@ -205,5 +205,5 @@ export function buildSettingsText(template: string, written: TomlTable): string 
     const kept = Object.fromEntries(Object.entries(sorted).filter(([key]) => !added.includes(key)));
     let text = buildPatchedToml(syntax, kept, TOML_FORMAT);
     for (const key of added) text = insertTopLevelSetting(text, { key, value: sorted[key] }, order);
-    return formatTaploValues(text, syntax.value, readTaploLayout(written));
+    return formatTaploValues(text, syntax.value, getTaploLayout(written));
 }

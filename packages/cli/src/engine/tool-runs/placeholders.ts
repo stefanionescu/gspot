@@ -188,7 +188,7 @@ Read the text of a scalar setting for a placeholder.
 @param scopeSettings the values of the scope.
 @param name the dotted key.
 */
-export function readScalarSetting(scopeSettings: ScopeSettings, name: string): string {
+export function getScalarSetting(scopeSettings: ScopeSettings, name: string): string {
     const found = scopeSettings.valuesByKey[name];
     if (Array.isArray(found))
         throw new GspotError('settings', `List setting ${name} must occupy a whole command argument.`);
@@ -210,7 +210,7 @@ function buildPlaceholderReaders(
     substitutions: Substitutions,
 ): Record<string, (value: string) => string> {
     return {
-        setting: (name) => readScalarSetting(planned.scope.settings, name),
+        setting: (name) => getScalarSetting(planned.scope.settings, name),
         config_file: (name) =>
             join(substitutions.root, getConfigPath(session, planned, name))
                 .split('/')

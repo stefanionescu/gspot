@@ -25,7 +25,7 @@ function isPublicDeclaration(declaration: Node): boolean {
     );
 }
 
-function readDocComment(declaration: Node): string {
+function getDocComment(declaration: Node): string {
     const lines: string[] = [];
     let row = declaration.startPosition.row;
     for (let comment = declaration.previousNamedSibling; comment !== null; comment = comment.previousNamedSibling) {
@@ -39,7 +39,7 @@ function readDocComment(declaration: Node): string {
 
 function listMissingParameters(declaration: Node): string[] {
     const documented = new Set(
-        readDocComment(declaration)
+        getDocComment(declaration)
             .matchAll(DOCUMENTED_PARAMETER)
             .map((match) => match.groups?.['name']),
     );

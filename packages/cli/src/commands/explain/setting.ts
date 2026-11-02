@@ -71,7 +71,7 @@ function readShippedSetting(key: string): ExplainedSetting | undefined {
     };
 }
 
-function readSessionSetting(session: Session, key: string): ExplainedSetting | undefined {
+function findSessionSetting(session: Session, key: string): ExplainedSetting | undefined {
     const { settings } = session;
     const isScopeKey = findSettingSchema(key, scopeSchema) !== undefined;
     const scopes = session.scopes.flatMap((scope) => {
@@ -120,7 +120,7 @@ Describe a setting's defaults, effective values, and edit commands.
 @returns undefined when no selected configuration declares the setting.
 */
 export function explainSetting(session: Session | undefined, key: string): Explanation | undefined {
-    const explained = session === undefined ? readShippedSetting(key) : readSessionSetting(session, key);
+    const explained = session === undefined ? readShippedSetting(key) : findSessionSetting(session, key);
     if (explained === undefined) return undefined;
     const { setting, text: explanation, scopes } = explained;
     return {

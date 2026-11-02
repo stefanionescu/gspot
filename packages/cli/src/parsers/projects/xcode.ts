@@ -80,7 +80,7 @@ function parseProjectValue(tokens: ProjectTokens): unknown {
     return text === '(' ? parseProjectArray(tokens) : parseProjectString(text);
 }
 
-function readProjectToken(text: string, offset: number): RegExpExecArray | undefined {
+function matchProjectToken(text: string, offset: number): RegExpExecArray | undefined {
     for (const matcher of PROJECT_TOKENS) {
         matcher.lastIndex = offset;
         const matched = matcher.exec(text);
@@ -92,7 +92,7 @@ function readProjectToken(text: string, offset: number): RegExpExecArray | undef
 function parseProjectDocument(text: string): unknown {
     const tokens: string[] = [];
     for (let offset = 0; offset < text.length; ) {
-        const match = readProjectToken(text, offset);
+        const match = matchProjectToken(text, offset);
         if (match === undefined) throw new Error(`The Xcode project has invalid syntax at offset ${String(offset)}.`);
         offset += match[0].length;
         const token = match[0];
