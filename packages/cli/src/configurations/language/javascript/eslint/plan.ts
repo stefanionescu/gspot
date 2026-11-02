@@ -28,7 +28,7 @@ function listDefaultProjectFiles(session: Session, projects: string[]): string[]
         projects.flatMap((path) => {
             const project = readTsconfigProject(session.root, extractParentFolder(path), [], session.cache);
             return [...(project?.projects.values() ?? [])].flatMap(({ fileNames }) =>
-                fileNames.map((file) => convertToPosixPath(relative(session.root, file))),
+                fileNames.map((file) => relative(convertToPosixPath(session.root), file)),
             );
         }),
     );
