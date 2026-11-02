@@ -207,7 +207,10 @@ function buildPlaceholderReaders(
         pointer: (name) => selectLinkFilePath(session, substitutions.scope, name).split('/').join(sep),
         scope: () => (substitutions.scope === '' ? '.' : substitutions.scope),
         root: () => substitutions.root,
-        indent: () => String(substitutions.indent),
+        indent: () => {
+            const { indent_style: style, indent_width: width } = planned.scope.settings.tables.format;
+            return String(style === 'space' ? width : 0);
+        },
         message_file: () => substitutions.messageFile ?? '',
     };
 }

@@ -14,9 +14,9 @@ import { stripCoverageArguments } from '#cli/engine/plan.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { buildCommandLines } from '#cli/engine/tool-runs/batches.ts';
+import { RAN_STATUSES, FILES_PLACEHOLDER } from '#cli/config/engine.ts';
 import { listCopyPythonArguments, buildCopyPythonEnvironment } from '#cli/tools/uv.ts';
 import { runToolProcess, buildOtherToolEnvironment } from '#cli/engine/tool-runs/tool.ts';
-import { RAN_STATUSES, FILES_PLACEHOLDER, PYTHON_CONFIGURATION } from '#cli/config/engine.ts';
 import { buildBaseResult, mergeCheckResults, restoreCommandPaths } from '#cli/engine/results.ts';
 import { addCommandLine, buildCheckResult, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import type { CheckResult, CheckSession, CommandLaunch, CheckRunOptions } from '#cli/types/engine/run.ts';
@@ -167,7 +167,7 @@ function buildCommandSetup(session: CheckSession, planned: PlannedCheck, root: s
                   ]),
               );
     const python =
-        planned.configuration?.name === PYTHON_CONFIGURATION
+        planned.check.needs?.includes('python-environment') === true
             ? buildCopyPythonEnvironment({ root, toolsRoot: session.toolsRoot }, scope.path)
             : {};
     return { root, cwd, files, substitutions, env: { ...env, ...python } };
@@ -188,10 +188,6 @@ export function buildCommandSubstitutions(root: string, planned: PlannedCheck, c
             .map((path) => (path.startsWith('-') ? `./${path}` : path)),
         scope: planned.scope.path,
         root,
-        indent:
-            planned.scope.settings.tables.format.indent_style === 'space'
-                ? planned.scope.settings.tables.format.indent_width
-                : 0,
     };
     if (planned.messageFile !== undefined) substitutions.messageFile = planned.messageFile;
     return substitutions;

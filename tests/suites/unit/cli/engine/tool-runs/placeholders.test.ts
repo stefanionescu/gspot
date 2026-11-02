@@ -91,7 +91,6 @@ test.each([...WORKSPACE_SCOPE_CASES])(
                 files: [],
                 scope,
                 root: sandbox.path,
-                indent: 4,
             }),
         ).toStrictEqual(['before', ...expected, 'after']);
     },
@@ -209,7 +208,7 @@ test('scalar placeholders select generated link files, scope, and boolean settin
     let planned = planChecks(session, { stage: 'all', only: ['swift/swiftlint'] }).find(
         ({ scope }) => scope.path === 'app',
     )!;
-    const substitutions = { scope: 'app', files: [], root: sandbox.path, indent: 4 };
+    const substitutions = { scope: 'app', files: [], root: sandbox.path };
     expect(replacePlaceholders(session, planned, '{pointer:prettier.config.mjs}', substitutions)).toBe(
         'prettier.config.mjs',
     );
@@ -236,7 +235,7 @@ test('a setting value that holds a placeholder stays literal', async () => {
     const session = buildCheckSession(await openSession(sandbox.path), CHECK_GENERATION);
     const planned = planChecks(session, { stage: 'all', only: ['bash/shellcheck'] })[0]!;
     planned.scope.settings.valuesByKey['example'] = '{root}/{scope}/{config_file:shellcheckrc}';
-    const substitutions = { scope: 'app', files: [], root: sandbox.path, indent: 4 };
+    const substitutions = { scope: 'app', files: [], root: sandbox.path };
     expect(replacePlaceholders(session, planned, '{root}:{setting:example}', substitutions)).toBe(
         `${sandbox.path}:{root}/{scope}/{config_file:shellcheckrc}`,
     );

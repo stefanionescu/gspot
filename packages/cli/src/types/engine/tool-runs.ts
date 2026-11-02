@@ -93,7 +93,6 @@ export type Substitutions = {
     scope: string;
     root: string;
     messageFile?: string;
-    indent: number;
 };
 
 export type CommandLine = { commandArguments: string[]; file?: string };

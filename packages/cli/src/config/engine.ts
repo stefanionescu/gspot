@@ -214,8 +214,6 @@ export const LICENSE_CHECKER_COMMAND = [
     '--start',
 ] as const;
 
-export const PYTHON_CONFIGURATION = 'python';
-
 export const LICENSES_CONFIGURATION = 'licenses';
 
 export const FILE_PLACEHOLDER = '{file}';
