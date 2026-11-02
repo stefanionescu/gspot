@@ -43,7 +43,7 @@ function isReusedOnSubjects(uses: readonly TSESTree.CallExpression[], source: TS
     return subjects.size >= DISTINCT_SUBJECTS && [...subjects].every((input) => !EMPTY_STRING_TEXTS.has(input));
 }
 
-export const noStatefulRegex = createRule<[], 'sticky' | 'loop' | 'subjects'>({
+export const noStatefulRegex = createRule<[], 'loop' | 'subjects'>({
     name: 'no-stateful-regex',
     meta: {
         defaultOptions: [],
@@ -51,14 +51,13 @@ export const noStatefulRegex = createRule<[], 'sticky' | 'loop' | 'subjects'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a regular expression with both the `g` and `y` flags, `exec` on a new global regular expression in the condition of a loop, and a global regular expression variable whose `test` or `exec` runs on different subjects without a reset of `lastIndex`.',
+                'Reports `exec` on a new global regular expression in the condition of a loop, and a global regular expression variable whose `test` or `exec` runs on different subjects without a reset of `lastIndex`.',
             why: 'A global regular expression remembers where its last match ended, so the next call on another input starts in the middle and can miss the match.',
             fix: 'Remove the `g` flag when the expression only tests, reset `lastIndex` before each new input, or create the expression once outside the loop.',
             example: '`const word = /a/g; word.test(first); word.test(second);` reports `subjects`.',
         },
         schema: [],
         messages: {
-            sticky: 'The y flag already anchors each match. Remove the g flag.',
             loop: 'This creates a new regular expression on each check, so the loop never ends. Create it once outside the loop.',
             subjects:
                 'This global regular expression runs on different subjects and keeps its lastIndex. Remove the g flag.',
@@ -70,7 +69,6 @@ export const noStatefulRegex = createRule<[], 'sticky' | 'loop' | 'subjects'>({
         const resets = new Set<TSESLint.Scope.Variable>();
         return {
             ...buildRegexVisitors((node, { flags }) => {
-                if (flags.global && flags.sticky) context.report({ node, messageId: 'sticky' });
                 if (flags.global && isLoopExec(node, source)) context.report({ node, messageId: 'loop' });
             }, source),
             'CallExpression:exit'(node: TSESTree.CallExpression) {

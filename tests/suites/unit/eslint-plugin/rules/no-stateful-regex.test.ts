@@ -9,7 +9,6 @@ buildRuleTester().run('no-stateful-regex', plugin.rules['no-stateful-regex'], {
         'const word = /a/gu; while (word.exec(text)) {}',
     ],
     invalid: [
-        { code: 'const word = /a/gy;', errors: [{ messageId: 'sticky' }] },
         { code: 'while (/a/gu.exec(text)) {}', errors: [{ messageId: 'loop' }] },
         { code: 'do {} while (new RegExp("a", "g").exec(text));', errors: [{ messageId: 'loop' }] },
         {
