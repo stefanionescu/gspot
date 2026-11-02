@@ -50,7 +50,9 @@ jobs:
                   ln -s "$(brew --prefix)/lib/docker/cli-plugins/docker-compose" "$HOME/.docker/cli-plugins/docker-compose"
                   docker compose version
             - run: mise run setup
-            - run: mise run test "${SUITE}"
+            - run: |
+                  read -ra suite <<<"${SUITE}"
+                  mise run test "${suite[@]}"
               env:
                   SUITE: ${{ matrix.suite }}
                   GITHUB_TOKEN: ${{ github.token }}
