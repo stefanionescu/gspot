@@ -1,8 +1,8 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { runChecks } from '#cli/engine/run.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import * as environment from '#cli/system/environment.ts';
 import type { RunResult } from '#cli/types/engine/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
@@ -48,7 +48,7 @@ test.each([...XCTEST_FAILURES])(
             expect(result.report.checks[0]!.findings).toMatchObject([
                 { rule: 'failed-test', file: 'ExampleTests.swift', line: 3, message: 'Expected true.' },
             ]);
-        expect(await isOnDisk(join(sandbox.path, 'viewed.txt'))).toBe(false);
+        expect(existsSync(join(sandbox.path, 'viewed.txt'))).toBe(false);
         await writeFile(
             join(sandbox.path, 'gspot.toml'),
             buildSandboxSettings(['swift', 'xcode'], { tables: XCTEST_TABLES }),
@@ -58,9 +58,7 @@ test.each([...XCTEST_FAILURES])(
             planSwiftBuild(session, planSandboxCheck(session, 'swift/tests')).folder,
             'source/viewed.txt',
         );
-        expect((await isOnDisk(viewed)) ? await readFile(viewed, 'utf8') : undefined).toBe(
-            produced ? 'viewed' : undefined,
-        );
+        expect(existsSync(viewed) ? await readFile(viewed, 'utf8') : undefined).toBe(produced ? 'viewed' : undefined);
         const corrected = await runXcodeCoverage(sandbox, {
             tables: XCTEST_TABLES,
             xcodebuild: [],
@@ -112,13 +110,13 @@ test('swift/tests: XCTest coverage refuses an external result link and removes a
     expect(refused.report.exitCode).toBe(2);
     expect(refused.report.checks[0]?.note).toBe('coverage.xcresult is a link. gspot does not write through links.');
     expect(await readFile(join(outside.path, 'authored.txt'), 'utf8')).toBe('preserved');
-    expect(await isOnDisk(join(cache, 'source/tested.txt'))).toBe(false);
+    expect(existsSync(join(cache, 'source/tested.txt'))).toBe(false);
     await rm(bundle);
     await mkdir(join(bundle, 'data'), { recursive: true });
     await writeFile(join(bundle, 'data/previous'), 'old result', { mode: 0o444 });
     const corrected = await runXcodeCoverage(sandbox, files);
     expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
-    expect(await isOnDisk(bundle)).toBe(false);
+    expect(existsSync(bundle)).toBe(false);
     expect(await readFile(join(cache, 'source/tested.txt'), 'utf8')).toBe('tested');
     expect(await readFile(join(outside.path, 'authored.txt'), 'utf8')).toBe('preserved');
 });

@@ -1,8 +1,8 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { compareText, quoteArgument } from '#cli/system/text.ts';
 import { runChecks, buildCheckSession } from '#cli/engine/run.ts';
@@ -78,7 +78,7 @@ test('build: a build that reads an untracked file fails until the file is in the
         planSandboxCheck(checkedSession, 'site/build', { paths: ['local-input.txt'] }),
     );
     expect(corrected.built).toBe(true);
-    expect(await isOnDisk(join(sandbox.path, 'dist'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'dist'))).toBe(false);
 });
 
 test.each([0, 7])("build: a run deletes the build's copy after exit %i", async (code) => {
@@ -107,7 +107,7 @@ test.each([0, 7])("build: a run deletes the build's copy after exit %i", async (
     runResources[Symbol.dispose]();
     expect(cwd).not.toBe(sandbox.path);
     expect(cwd).not.toBe('');
-    expect(await isOnDisk(cwd)).toBe(false);
+    expect(existsSync(cwd)).toBe(false);
     expect(await readFile(join(sandbox.path, 'dist/index.html'), 'utf8')).toBe('authored output');
 });
 
@@ -143,8 +143,8 @@ test("build: a scope's site build copies only the workspace packages it depends 
     const built = await readSuccessfulBuild(buildCheckSession(session, CHECK_GENERATION), input);
     expect(built.built, built.failure).toBe(true);
     expect(await readFile(join(built.folder, 'index.html'), 'utf8')).toBe('<h1>Workspace site</h1>');
-    expect(await isOnDisk(join(built.cwd, '../packages/unused/private.txt'))).toBe(false);
-    expect(await isOnDisk(join(sandbox.path, 'web/dist'))).toBe(false);
+    expect(existsSync(join(built.cwd, '../packages/unused/private.txt'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'web/dist'))).toBe(false);
     expect(await readFile(join(sandbox.path, 'packages/core/value.js'), 'utf8')).toBe(
         'export const value = "<h1>Workspace site</h1>";',
     );

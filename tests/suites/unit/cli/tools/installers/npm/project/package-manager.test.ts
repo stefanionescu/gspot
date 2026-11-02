@@ -4,8 +4,8 @@ import { openFiles } from '#cli/system/files/open.ts';
 import * as processes from '#cli/system/processes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
-import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { PACKAGE_MANAGER_AGE_CASES } from '#tests/config/tools/npm.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -23,7 +23,7 @@ test('npm in place of Yarn 1 refuses to run without the minimum release age', as
     using _npm = fakeCommands('npm', () => Promise.resolve(buildProcessResult({ stdout: '11.18.0\n' })));
     const session = await openSession(sandbox.path);
     const owner = openFiles(sandbox.path);
-    const versionError = await captureRejection(assertPackageManagerVersion(buildToolInstall(session, owner)));
+    const versionError = await captureRejection(assertPackageManagerVersion(buildSandboxToolInstall(session, owner)));
     expect(versionError.message).toBe(
         'gspot install needs npm 11.19.0 or later, which holds back new releases for dependencies.min_release_age_days. Found 11.18.0.',
     );
@@ -39,7 +39,7 @@ test.each(PACKAGE_MANAGER_AGE_CASES)(
         using _manager = fakeCommands('mise', () => Promise.resolve(buildProcessResult({ stdout: `${version}\n` })));
         const session = await openSession(sandbox.path);
         const owner = openFiles(sandbox.path);
-        const context = buildToolInstall(session, owner);
+        const context = buildSandboxToolInstall(session, owner);
         const checked = assertPackageManagerVersion(context);
         if (accepted) await checked;
         else {
@@ -65,6 +65,6 @@ test('a pinned pnpm runs through mise instead of the older PATH executable', asy
     });
     const session = await openSession(sandbox.path);
     const writer = openFiles(sandbox.path);
-    const install = buildToolInstall(session, writer);
+    const install = buildSandboxToolInstall(session, writer);
     await assertPackageManagerVersion(install);
 });

@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { symlink } from 'node:fs/promises';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { copyValePackages } from '#cli/engine/copies/vale.ts';
 
 test('a revision copy whose .gspot is a link gets no Vale package link outside the copy', async () => {
@@ -11,5 +11,5 @@ test('a revision copy whose .gspot is a link gets no Vale package link outside t
     expect(() => {
         copyValePackages(join(sandbox.path, 'work'), join(sandbox.path, 'copy'), []);
     }).toThrow('A parent of .gspot/vale is a link or is not a folder. Choose a folder without links.');
-    expect(await isOnDisk(join(sandbox.path, 'outside/vale'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'outside/vale'))).toBe(false);
 });

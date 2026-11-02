@@ -1,12 +1,13 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { readTree } from '#tests/setup/system/files.ts';
 import type { ApplyReport } from '#cli/types/generation.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { NPM_CHECK_IGNORES } from '#tests/config/setup/configurations.ts';
@@ -83,7 +84,7 @@ test('generated-files adds repeatable diffs only under verbose and never execute
     expect(human.stdout).toContain(`    --- a/${path}\ton disk`);
     expect(human.stdout).toContain(`    -${authored.trimEnd()}`);
     expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(authored);
-    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.nodeModules))).toBe(false);
+    expect(existsSync(join(sandbox.path, GSPOT_PATHS.nodeModules))).toBe(false);
 });
 
 test('turning rules off reports exactly the stray rule files that apply removes', async () => {
@@ -103,11 +104,11 @@ test('turning rules off reports exactly the stray rule files that apply removes'
         .map(({ file }) => file)
         .toSorted(compareText);
     expect(strays).toStrictEqual([...ownedPaths, 'AGENTS.md'].toSorted(compareText));
-    for (const path of ownedPaths) expect(await isOnDisk(join(sandbox.path, path))).toBe(true);
+    for (const path of ownedPaths) expect(existsSync(join(sandbox.path, path))).toBe(true);
     const written = await runGspot(sandbox.path, ['apply', '--json']);
     expect(written.code).toBe(0);
     expect((JSON.parse(written.stdout) as ApplyReport).removed.toSorted(compareText)).toStrictEqual(strays);
-    for (const path of ownedPaths) expect(await isOnDisk(join(sandbox.path, path))).toBe(false);
+    for (const path of ownedPaths) expect(existsSync(join(sandbox.path, path))).toBe(false);
 });
 
 test('generated-files reports absent files and tool lockfiles without writing them', async () => {

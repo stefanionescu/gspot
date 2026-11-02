@@ -1,10 +1,10 @@
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { readGitSetting } from '#cli/repository/git/run.ts';
 import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
@@ -114,7 +114,7 @@ test('turning hooks off removes .gspot/hooks and leaves unsetting core.hooksPath
     await writeFile(join(root, 'gspot.toml'), settings.replace('enabled = true', 'enabled = false'));
     const removed = await runGspot(root, ['apply']);
     expect(removed.code).toBe(0);
-    expect(await isOnDisk(hook)).toBe(false);
+    expect(existsSync(hook)).toBe(false);
     expect(await readGitSetting(root, 'core.hooksPath')).toBe(ownPath);
     const removedSteps: (readonly string[])[] = [];
     const session = await openSession(root);

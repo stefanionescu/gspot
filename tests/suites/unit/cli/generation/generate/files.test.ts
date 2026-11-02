@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import * as prettier from 'prettier';
 import { type Options } from 'prettier';
 import { test, spyOn, expect } from 'bun:test';
@@ -7,7 +8,6 @@ import { openSession } from '#cli/engine/session.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { readConfigurations } from '#cli/manifests/read.ts';
@@ -88,13 +88,13 @@ test.each([true, false])(
         const refused = await runGspot(sandbox.path, ['apply']);
         expect(refused.code).toBe(2);
         const path = join(sandbox.path, '.gitignore');
-        expect((await isOnDisk(path)) ? await readFile(path, 'utf8') : undefined).toBe(authored ? previous : undefined);
+        expect(existsSync(path) ? await readFile(path, 'utf8') : undefined).toBe(authored ? previous : undefined);
         const initialized = runCommandBlocking(['git', 'init', '--quiet'], { cwd: sandbox.path, env: {} });
         expect(initialized.code, initialized.stderr).toBe(0);
         await applyGeneratedFiles(sandbox.path);
         const ignorePath = join(sandbox.path, GSPOT_PATHS.gitignore);
         const installed = await readFile(ignorePath, 'utf8');
-        expect((await isOnDisk(path)) ? await readFile(path, 'utf8') : undefined).toBe(authored ? previous : undefined);
+        expect(existsSync(path) ? await readFile(path, 'utf8') : undefined).toBe(authored ? previous : undefined);
         await applyGeneratedFiles(sandbox.path);
         expect(await readFile(ignorePath, 'utf8')).toBe(installed);
     },

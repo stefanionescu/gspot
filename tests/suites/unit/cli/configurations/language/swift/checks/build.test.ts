@@ -1,9 +1,9 @@
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { join, relative } from 'node:path';
 import { runChecks } from '#cli/engine/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
@@ -135,7 +135,7 @@ test('compiler: swift/build refuses a response file outside the compiler cache a
     expect(buildError.message).toBe(
         `"${convertToPosixPath(relative(plan.folder, join(sandbox.path, 'external-response')))}" is not a safe repository-relative path. Choose a path inside the repository.`,
     );
-    expect(await isOnDisk(plan.log)).toBe(false);
+    expect(existsSync(plan.log)).toBe(false);
     const response = join(plan.folder, 'sources');
     await writeFile(response, 'Sources/Main.swift\nSources/Owner.swift\n');
     run.mockResolvedValue(buildProcessResult({ stdout: `swiftc @${response}` }));

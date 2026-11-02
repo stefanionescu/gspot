@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { runChecks } from '#cli/engine/run.ts';
@@ -6,7 +7,6 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { openSession } from '#cli/engine/session.ts';
 import type { CheckStop } from '#cli/system/errors.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
@@ -93,7 +93,7 @@ test('Swift skips without swift.xcode_project or Package.swift, then builds the 
             note: 'Set swift.xcode_project or add Package.swift in this scope.',
         },
     ]);
-    expect(await isOnDisk(join(readRepositoryCacheFolder(session.toolsRoot), 'swift', 'root'))).toBe(false);
+    expect(existsSync(join(readRepositoryCacheFolder(session.toolsRoot), 'swift', 'root'))).toBe(false);
     await createFileTree(sandbox.path, {
         'Package.swift': SWIFT_PACKAGE_HEADER,
     });

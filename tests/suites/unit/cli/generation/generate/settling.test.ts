@@ -1,10 +1,11 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { readTree } from '#tests/setup/system/files.ts';
 import { GROUPS, LEVELS } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import type { ApplyReport } from '#cli/types/generation.ts';
-import { readTree, isOnDisk } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { TOOL_LOCKFILES } from '#cli/config/configurations/structure.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -58,7 +59,7 @@ test.each(SWITCH_CASES)('turning $name on and off settles in one apply', async (
         );
         const applied = await runGspot(sandbox.path, ['apply', '--json']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        expect(await isOnDisk(join(sandbox.path, path))).toBe(enabled);
+        expect(existsSync(join(sandbox.path, path))).toBe(enabled);
         await expectSettled(sandbox.path);
     }
 });

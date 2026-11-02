@@ -1,14 +1,13 @@
-import { realpathSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { createFileTree } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
 import { listMisePins } from '#cli/tools/pins.ts';
+import { existsSync, realpathSync } from 'node:fs';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { MiseToolPin } from '#cli/types/tools.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { MiseProject } from '#tests/types/setup.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { captureRejection } from '#tests/setup/matchers.ts';
@@ -18,7 +17,7 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { MISE_PROJECT_MESSAGE } from '#cli/config/tools/installers.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildToolInstall, buildToolLockfiles } from '#tests/setup/cli/tools.ts';
+import { buildToolLockfiles, buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
 import { installMiseTools, reinstallMiseTools, isMiseLockfileFresh } from '#cli/tools/installers/mise.ts';
 
 test('mise lock freshness needs the tool, its version, a URL and a sha256 checksum', () => {
@@ -69,7 +68,7 @@ test.each(['manual'] as const)(
             check: { ...planned.check, stage },
         }));
         const writer = openFiles(sandbox.path);
-        const install = buildToolInstall(session, writer);
+        const install = buildSandboxToolInstall(session, writer);
         install.misePath = 'mise';
         const project = install.generated.files.find(({ path }) => path === GSPOT_PATHS.miseProject)!;
         await createFileTree(sandbox.path, { [project.path]: project.content });
@@ -119,7 +118,7 @@ test('mise fills missing release checksums from the audited pins without fetchin
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['spelling']) });
     const session = await openSession(sandbox.path);
     const writer = openFiles(sandbox.path);
-    const install = buildToolInstall(session, writer);
+    const install = buildSandboxToolInstall(session, writer);
     install.misePath = 'mise';
     const project = install.generated.files.find(({ path }) => path === GSPOT_PATHS.miseProject)!;
     await createFileTree(sandbox.path, { [project.path]: project.content });
@@ -150,7 +149,7 @@ test('mise lock that leaves a platform without a download URL is refused and wri
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['spelling']) });
     const session = await openSession(sandbox.path);
     const writer = openFiles(sandbox.path);
-    const install = buildToolInstall(session, writer);
+    const install = buildSandboxToolInstall(session, writer);
     install.misePath = 'mise';
     using _commands = fakeCommands('mise', async (command, options) => {
         if (command[1] === 'lock') {
@@ -169,7 +168,7 @@ test('mise lock that leaves a platform without a download URL is refused and wri
         .join(', ');
     expect(error.message).toBe(`mise lock did not lock ${pins}.\nlocked`);
     expect(install.steps.filter((command) => command[1] === 'install')).toStrictEqual([]);
-    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.miseLockfile))).toBe(false);
+    expect(existsSync(join(sandbox.path, GSPOT_PATHS.miseLockfile))).toBe(false);
 });
 
 test.each(['pin', 'checksum'])('mise refuses a lock that omits a %s and keeps the previous lock', async (omitted) => {
@@ -179,7 +178,7 @@ test.each(['pin', 'checksum'])('mise refuses a lock that omits a %s and keeps th
     });
     const session = await openSession(sandbox.path);
     const writer = openFiles(sandbox.path);
-    const install = buildToolInstall(session, writer);
+    const install = buildSandboxToolInstall(session, writer);
     install.misePath = 'mise';
     const [pin] = listMisePins(session.toolConfigurations) as [MiseToolPin];
     const lockfile =
@@ -222,7 +221,7 @@ test.each(['tools = [', '<<<<<<< HEAD\n[tools]\n=======\n[tools]\n>>>>>>> branch
             [GSPOT_PATHS.miseLockfile]: broken,
         });
         const session = await openSession(sandbox.path);
-        const install = buildToolInstall(session, openFiles(sandbox.path));
+        const install = buildSandboxToolInstall(session, openFiles(sandbox.path));
         install.misePath = 'mise';
         const project = install.generated.files.find(({ path }) => path === GSPOT_PATHS.miseProject)!;
         await createFileTree(sandbox.path, { [project.path]: project.content });
@@ -230,7 +229,7 @@ test.each(['tools = [', '<<<<<<< HEAD\n[tools]\n=======\n[tools]\n>>>>>>> branch
         const copied: boolean[] = [];
         using _commands = fakeCommands('mise', async (command, options) => {
             if (command[1] === 'lock') {
-                copied.push(await isOnDisk(join(options.cwd, 'mise.lock')));
+                copied.push(existsSync(join(options.cwd, 'mise.lock')));
                 await writeFile(join(options.cwd, 'mise.lock'), lockfiles[GSPOT_PATHS.miseLockfile]!);
             }
             return buildProcessResult();
@@ -245,7 +244,7 @@ test.each(['tools = [', '<<<<<<< HEAD\n[tools]\n=======\n[tools]\n>>>>>>> branch
 test('a failed mise tool installs again at its pin with the force flag', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['spelling']) });
     const session = await openSession(sandbox.path);
-    const install = buildToolInstall(session, openFiles(sandbox.path));
+    const install = buildSandboxToolInstall(session, openFiles(sandbox.path));
     const project = install.generated.files.find(({ path }) => path === GSPOT_PATHS.miseProject)!;
     await createFileTree(sandbox.path, { [project.path]: project.content });
     const [pin] = listMisePins(session.toolConfigurations) as [MiseToolPin];

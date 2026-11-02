@@ -1,11 +1,11 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { getTool } from '#cli/tools/pins.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
 import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { buildToolProjects } from '#cli/generation/generate.ts';
@@ -48,7 +48,7 @@ test('a tool that fails its inspection installs again in a fresh node_modules fo
     const stale = join(sandbox.path, GSPOT_PATHS.nodeModules, 'stale.txt');
     const seen: boolean[] = [];
     const { result, installs } = await runBunInstall(sandbox.path, async () => {
-        seen.push(await isOnDisk(stale));
+        seen.push(existsSync(stale));
         await fakeNpmTool(sandbox.path, 'prettier');
     });
     expect(installs).toBe(2);

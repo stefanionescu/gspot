@@ -1,10 +1,10 @@
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/engine/run.ts';
 import { join, toNamespacedPath } from 'node:path';
 import { openSession } from '#cli/engine/session.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -41,7 +41,7 @@ test.each([1, 0])(
         expect(failed.report.checks[0]!.note).toBe(
             `The jscpd command ${code === 0 ? 'wrote no report' : 'failed'}: The scanner could not write its report.`,
         );
-        expect(await isOnDisk(folders[0]!)).toBe(false);
+        expect(existsSync(folders[0]!)).toBe(false);
     },
 );
 

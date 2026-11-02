@@ -1,18 +1,17 @@
 import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
+import { existsSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import type { PythonToolProject } from '#cli/types/tools.ts';
-import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -51,7 +50,10 @@ test('a failed uv sync keeps the tool project files and hides index passwords', 
         );
     });
     const writer = openFiles(sandbox.path);
-    const install = installPythonTools(buildToolInstall(await openSession(sandbox.path), writer), 'unavailable-uv');
+    const install = installPythonTools(
+        buildSandboxToolInstall(await openSession(sandbox.path), writer),
+        'unavailable-uv',
+    );
     const installationError = await captureRejection(install);
     expect(installationError).toMatchObject({
         name: 'GspotError',
@@ -60,7 +62,7 @@ test('a failed uv sync keeps the tool project files and hides index passwords', 
     });
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.uvLockfile), 'utf8')).toBe(PYTHON_TOOL_LOCKFILE);
     expect(await readFile(join(sandbox.path, 'uv.toml'), 'utf8')).toBe(UV_TOML);
-    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.pythonEnvironment))).toBe(false);
+    expect(existsSync(join(sandbox.path, GSPOT_PATHS.pythonEnvironment))).toBe(false);
 });
 
 test('a successful uv run refuses a password in its new lockfile and keeps the tool project files', async () => {
@@ -78,7 +80,7 @@ test('a successful uv run refuses a password in its new lockfile and keeps the t
     );
     const lockfileError = await captureRejection(
         planPythonLockfile(
-            buildToolInstall(session, writer),
+            buildSandboxToolInstall(session, writer),
             { path: GSPOT_PATHS.pythonProject, content: PYTHON_TOOL_PROJECT },
             'synthetic-uv',
         ),
@@ -86,7 +88,7 @@ test('a successful uv run refuses a password in its new lockfile and keeps the t
     expect(lockfileError).toMatchObject(LOCKFILE_PASSWORD_ERROR);
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.uvLockfile), 'utf8')).toBe(PYTHON_TOOL_LOCKFILE);
     expect(await readFile(join(sandbox.path, 'uv.toml'), 'utf8')).toBe(UV_TOML);
-    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.pythonEnvironment))).toBe(false);
+    expect(existsSync(join(sandbox.path, GSPOT_PATHS.pythonEnvironment))).toBe(false);
 });
 
 test('uv installs the tool project with its own Python, whatever UV_PYTHON and .python-version the repository sets', async () => {
@@ -101,7 +103,7 @@ test('uv installs the tool project with its own Python, whatever UV_PYTHON and .
         return Promise.resolve(buildProcessResult());
     });
     const writer = openFiles(sandbox.path);
-    await installPythonTools(buildToolInstall(await openSession(sandbox.path), writer), 'pinned-uv');
+    await installPythonTools(buildSandboxToolInstall(await openSession(sandbox.path), writer), 'pinned-uv');
     for (const { command, env } of runs) {
         const flag = command.indexOf('--python');
         expect(command.slice(flag, flag + 2)).toStrictEqual(['--python', pythonProject['requires-python'].slice(2)]);
@@ -159,7 +161,10 @@ async function readInstalledSettings(root: string, releaseAgeDays: number): Prom
         return Promise.resolve(buildProcessResult());
     });
     const writer = openFiles(root);
-    await installPythonTools({ ...buildToolInstall(await openSession(root), writer), releaseAgeDays }, 'settings-uv');
+    await installPythonTools(
+        { ...buildSandboxToolInstall(await openSession(root), writer), releaseAgeDays },
+        'settings-uv',
+    );
     expect(settings).toHaveLength(1);
     return settings[0];
 }
@@ -218,7 +223,7 @@ test('install syncs each project that has a uv lockfile, and only those', async 
         'uv.lock': 'version = 1\n',
     });
     using _boundary = fakeCommands('project-uv', () => Promise.resolve(buildProcessResult()));
-    const install = buildToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const install = buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
     const lines = await installPythonProjects(install, 'project-uv');
     expect(install.steps).toStrictEqual([['project-uv', 'sync', '--locked']]);
     expect(lines).toStrictEqual(['installed the Python environment of the repository root']);

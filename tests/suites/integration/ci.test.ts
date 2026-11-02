@@ -1,9 +1,9 @@
+import { existsSync } from 'node:fs';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { join, dirname, delimiter } from 'node:path';
 import { readFile, writeFile } from 'node:fs/promises';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { LINE_BREAK } from '#tests/config/setup/sandboxes.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
@@ -165,7 +165,7 @@ describe.each(['gitlab', 'github'] as const)('%s CI', (provider) => {
         const malformed = await runCiJob(sandbox.path, generated, executables.path, '$(touch injected)');
         expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
         expect(malformed.stderr).toStartWith('Git merge-base failed for $(touch injected): ');
-        expect(await isOnDisk(join(sandbox.path, 'injected'))).toBe(false);
+        expect(existsSync(join(sandbox.path, 'injected'))).toBe(false);
         await writeFile(failurePath, '');
         const refused = await runCiJob(sandbox.path, generated, executables.path, base);
         expect(refused.code, refused.stdout + refused.stderr).toBe(1);

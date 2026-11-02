@@ -1,10 +1,10 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { symlink, readFile } from 'node:fs/promises';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { ROOT_EDITORCONFIG } from '#tests/config/commands/reports.ts';
@@ -28,7 +28,7 @@ Unclosed instructions.
         'AGENTS.md has incomplete or repeated gspot block markers. Fix the markers, then run gspot apply.\n',
     );
     expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).toBe(authored);
-    const exists = await isOnDisk(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')));
+    const exists = existsSync(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')));
     expect(exists).toBe(false);
 });
 
@@ -57,7 +57,7 @@ test('a malformed reason reports a settings error and apply preserves the author
     expect(applied.code, applied.stdout + applied.stderr).toBe(2);
     expect(applied.stdout + applied.stderr).toStartWith('gspot.toml:3: limits.max_file_lines.reason:');
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(source);
-    expect(await isOnDisk(join(sandbox.path, GSPOT_FOLDER))).toBe(false);
+    expect(existsSync(join(sandbox.path, GSPOT_FOLDER))).toBe(false);
 });
 
 test('apply refuses a gspot.toml that links outside the repository and writes nothing', async () => {

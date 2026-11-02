@@ -1,9 +1,9 @@
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
@@ -11,7 +11,7 @@ import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
-import { buildProgramArguments } from '#tests/setup/system/programs.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { cp, mkdir, lstat, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 import { TEST_WORKSPACE_FILES, WORKSPACE_SOURCE_FILES } from '#tests/config/engine/files.ts';
@@ -27,7 +27,7 @@ test('a copy isolates workspace sources and links external dependencies and exec
         'node_modules/tool/package.json': '{"name":"tool"}',
         'node_modules/tool/lib/value.txt': 'tool works',
     });
-    const [program = ''] = buildProgramArguments('fakes/package-bin');
+    const [, program = ''] = buildProgramCommand('fakes/package-bin');
     await cp(program, join(sandbox.path, 'node_modules/tool/bin/tool.js'));
     await createFileTree(external.path, { 'value.js': 'external original' });
     await mkdir(join(sandbox.path, 'node_modules/.bin'));
@@ -81,7 +81,7 @@ test('a link into another linked tree points at the copy of that tree, whatever 
     const copied = await realpath(join(scratch, 'node_modules/a-next'));
     const exists = copied.startsWith(await realpath(join(scratch, 'node_modules/z-store')));
     expect(exists).toBe(true);
-    expect(await isOnDisk(join(copied, '../helpers/package.json'))).toBe(true);
+    expect(existsSync(join(copied, '../helpers/package.json'))).toBe(true);
 });
 
 test('a copy sits inside the repository, so linked store packages share its root', async () => {
@@ -139,8 +139,8 @@ test.each([false, true])(
         expect(await readFile(join(copy.path, 'node_modules/tool/value.js'), 'utf8')).toBe(
             'export const dependency = 4;',
         );
-        expect(await isOnDisk(join(copy.path, 'unselected.js'))).toBe(false);
-        expect(await isOnDisk(join(copy.path, 'document.json'))).toBe(includedPaths);
+        expect(existsSync(join(copy.path, 'unselected.js'))).toBe(false);
+        expect(existsSync(join(copy.path, 'document.json'))).toBe(includedPaths);
         if (includedPaths) expect(await readFile(join(copy.path, 'document.json'), 'utf8')).toBe('{"value":3}');
         await writeFile(join(copy.path, 'selected.js'), 'changed in private copy');
         expect(await readFile(join(sandbox.path, 'selected.js'), 'utf8')).toBe('export const selected = 1;');
@@ -180,8 +180,8 @@ test.each([false, true])(
             expect(await readFile(join(copy.path, 'packages/aliased/value.js'), 'utf8')).toBe(
                 WORKSPACE_SOURCE_FILES['packages/aliased/value.js'],
             );
-            expect(await isOnDisk(join(copy.path, 'packages/unused/private.txt'))).toBe(false);
-            expect(await isOnDisk(join(copy.path, 'packages/core/untracked.js'))).toBe(false);
+            expect(existsSync(join(copy.path, 'packages/unused/private.txt'))).toBe(false);
+            expect(existsSync(join(copy.path, 'packages/core/untracked.js'))).toBe(false);
             await writeFile(join(copy.path, 'packages/core/value.js'), 'private copy change');
         };
         if (revision) {

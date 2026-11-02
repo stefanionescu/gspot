@@ -1,9 +1,9 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { readGitSetting } from '#cli/repository/git/run.ts';
 import { runtimePinsSchema } from '#tests/schemas/setup.ts';
@@ -203,7 +203,7 @@ test('a hook ignores a nested gspot.toml and checks the index at the Git root', 
 });
 
 async function writeRuntimePins(root: string): Promise<void> {
-    if (!(await isOnDisk(join(root, TOOL_PINS_FILE)))) {
+    if (!existsSync(join(root, TOOL_PINS_FILE))) {
         const tools = runtimePinsSchema.parse(
             parse(await readFile(join(REPOSITORY_ROOT, TOOL_PINS_FILE), 'utf8')),
         ).tools;

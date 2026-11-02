@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { readPushedCommits } from '#cli/repository/revisions/push.ts';
@@ -64,7 +64,7 @@ test('a branch comparison refuses invalid references without reading them as opt
     expect(mergeBaseError.message).toContain(
         '--output=outside.txt is not a branch, tag, or commit in this repository.',
     );
-    expect(await isOnDisk(join(sandbox.path, 'outside.txt'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'outside.txt'))).toBe(false);
     const blob = runGitStep(sandbox.path, ['rev-parse', 'HEAD:source.ts']);
     const blobError = await captureRejection(readChangedPaths(sandbox.path, blob));
     expect(blobError.message).toContain(`${blob} is not a branch, tag, or commit in this repository.`);

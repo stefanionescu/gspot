@@ -1,11 +1,11 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { compareText } from '#cli/system/text.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { CheckResult } from '#cli/types/engine/run.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
@@ -143,7 +143,7 @@ export const total = accepted;
     expect(await readFile(join(sandbox.path, generated.path), 'utf8')).toBe(generated.content);
     const { mode } = await stat(join(sandbox.path, generated.path));
     expect(mode & 0o777).toBe(normalizeFileMode({ mode: 0o444 }));
-    expect(await isOnDisk(join(sandbox.path, 'jsconfig.json'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'jsconfig.json'))).toBe(false);
 });
 
 test("javascript/tsc reads each scope's own jsconfig options, and a broken one fails only its scope", async () => {

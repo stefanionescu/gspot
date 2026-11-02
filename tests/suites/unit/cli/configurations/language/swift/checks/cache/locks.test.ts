@@ -1,7 +1,7 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -21,7 +21,7 @@ test('a build lock holds this process ID until disposal', async () => {
     const lock = await acquireBuildLock(folder, undefined);
     expect(await readFile(join(folder, 'build.lock'), 'utf8')).toBe(String(process.pid));
     lock[Symbol.dispose]();
-    expect(await isOnDisk(join(folder, 'build.lock'))).toBe(false);
+    expect(existsSync(join(folder, 'build.lock'))).toBe(false);
 });
 
 test('a build replaces the lock of a stopped process', async () => {

@@ -1,9 +1,9 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { compareText } from '#cli/system/text.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
@@ -106,8 +106,8 @@ test('check --staged formats with the staged Prettier config file after a later 
     });
     const rootConfig = getManifestTarget('format', 'prettier.json');
 
-    expect(await isOnDisk(join(root, rootConfig))).toBe(true);
-    expect(await isOnDisk(join(root, STAGED_FORMAT_PATHS.scopeConfig))).toBe(false);
+    expect(existsSync(join(root, rootConfig))).toBe(true);
+    expect(existsSync(join(root, STAGED_FORMAT_PATHS.scopeConfig))).toBe(false);
     await writeFile(join(root, STAGED_FORMAT_PATHS.source), STAGED_FORMAT_SOURCE.staged);
     runGitStep(root, ['add', '-A']);
     const index = runGitStep(root, ['write-tree']);
@@ -116,7 +116,7 @@ test('check --staged formats with the staged Prettier config file after a later 
     const applied = await spawnGspot(root, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     await writeFile(join(root, STAGED_FORMAT_PATHS.source), STAGED_FORMAT_SOURCE.working);
-    expect(await isOnDisk(join(root, STAGED_FORMAT_PATHS.scopeConfig))).toBe(false);
+    expect(existsSync(join(root, STAGED_FORMAT_PATHS.scopeConfig))).toBe(false);
     const files = new Map<string, string>();
     for (const path of [STAGED_FORMAT_PATHS.source, rootConfig, 'gspot.toml']) {
         files.set(path, await readFile(join(root, path), 'utf8'));

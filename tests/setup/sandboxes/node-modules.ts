@@ -1,5 +1,5 @@
+import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { PackageJson } from '#cli/types/parsers.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
@@ -42,7 +42,7 @@ export async function linkInstalledModules(modulesFolder: string): Promise<void>
     const links = [[workspaceModules, '.bun'] as const, [toolModules, '.bin'] as const, ...packages.flat()];
     for (const [store, name] of links) {
         const destination = join(modulesFolder, name);
-        if (await isOnDisk(destination)) continue;
+        if (existsSync(destination)) continue;
         await mkdir(dirname(destination), { recursive: true });
         await symlink(await realpath(join(store, name)), destination, FOLDER_LINK_TYPE);
     }
@@ -54,17 +54,14 @@ Link declared packages and the installed packages they depend on, so a copy of n
 package wins over a test or workspace package of the same name, as in linkInstalledModules.
 */
 export async function linkPackages(modulesFolder: string, names: readonly string[]): Promise<void> {
-    const pending = await Promise.all(
-        names.map(async (name) => {
-            const stores = [toolModules, testModules];
-            const found = await Promise.all(stores.map((store) => isOnDisk(join(store, name))));
-            return [name, join(stores[found.indexOf(true)] ?? workspaceModules, name)] as const;
-        }),
-    );
+    const pending = names.map((name) => {
+        const store = [toolModules, testModules].find((modules) => existsSync(join(modules, name)));
+        return [name, join(store ?? workspaceModules, name)] as const;
+    });
     const found = new Map<string, string>();
     for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
         const [name, path] = next;
-        if (found.has(name) || !(await isOnDisk(path))) continue;
+        if (found.has(name) || !existsSync(path)) continue;
         const canonical = await realpath(path);
         found.set(name, canonical);
         const packageJson = JSON.parse(await readFile(join(canonical, 'package.json'), 'utf8')) as PackageJson;

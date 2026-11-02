@@ -1,5 +1,6 @@
 import { createFileTree } from 'testdirs';
 import { GspotError } from '#cli/system/errors.ts';
+import { stringify } from '@decimalturn/toml-patch';
 import type { Level } from '#cli/types/settings.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
@@ -22,31 +23,20 @@ export function buildSandboxSettings(
         ignore?: { checks: readonly string[]; reason: string };
     } = {},
 ): string {
-    const selected = configurations.map((configuration) => JSON.stringify(configuration)).join(', ');
-    const levelLine = options.level === undefined ? '' : `level = "${options.level}"\n`;
-    const ignore = options.ignore;
-    const ignored =
-        ignore === undefined
-            ? ''
-            : ignore.checks
-                  .map(
-                      (check) =>
-                          `[[ignore]]\ncheck = ${JSON.stringify(check)}\nreason = ${JSON.stringify(ignore.reason)}\n`,
-                  )
-                  .join('');
-    const scopes = (options.scopes ?? [])
-        .map(({ path, configurations: scopeConfigurations }) => {
-            const scopeLine =
-                scopeConfigurations === undefined ? '' : `configurations = ${JSON.stringify(scopeConfigurations)}\n`;
-            return `[[scope]]\npath = ${JSON.stringify(path)}\n${scopeLine}`;
-        })
-        .join('');
-    const tables = options.tables ?? '';
-    const offTables = (options.rules === true ? ['hooks'] : ['rule_files', 'hooks'])
-        .filter((table) => !tables.includes(`[${table}]`))
-        .map((table) => `\n[${table}]\nenabled = false\n`)
-        .join('');
-    return `${levelLine}configurations = [${selected}]\n${scopes}${tables}${ignored}${offTables}`;
+    const { level, tables = '', scopes, rules, ignore } = options;
+    const offTables = (rules === true ? ['hooks'] : ['rule_files', 'hooks']).filter(
+        (table) => !tables.includes(`[${table}]`),
+    );
+    const selection = stringify({
+        ...(level !== undefined && { level }),
+        configurations,
+        ...(scopes !== undefined && { scope: scopes }),
+    });
+    const closing = stringify({
+        ...(ignore !== undefined && { ignore: ignore.checks.map((check) => ({ check, reason: ignore.reason })) }),
+        ...Object.fromEntries(offTables.map((table) => [table, { enabled: false }])),
+    });
+    return `${selection}${tables}\n${closing}`;
 }
 
 /**

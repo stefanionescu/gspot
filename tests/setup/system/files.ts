@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { open, lstat, access, readdir, readlink } from 'node:fs/promises';
+import { open, lstat, readdir, readlink } from 'node:fs/promises';
 
 /**
 Read every path in a repository with its mode and contents, to check that a write kept them.
@@ -21,16 +21,4 @@ export async function readTree(root: string): Promise<Record<string, string>> {
             }),
         ),
     );
-}
-
-/**
-Check whether a filesystem path exists, following symbolic links; false when access fails.
-*/
-export async function isOnDisk(path: string): Promise<boolean> {
-    try {
-        await access(path);
-        return true;
-    } catch {
-        return false;
-    }
 }

@@ -1,11 +1,11 @@
 import { parse } from 'yaml';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { join, delimiter } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import type { Pipeline } from '#cli/types/generation.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
@@ -188,7 +188,7 @@ test.each([...SETUP_CASES])(
         const gspotCalls = setupExit === 0 ? [['install'], ['check', '--base', '']] : [];
         const calls = await readCallRecords(commands);
         expect(calls.map((call) => call.arguments)).toStrictEqual([[...SETUP_ARGUMENTS], ...gspotCalls]);
-        expect(await isOnDisk(join(sandbox.path, 'unexpected'))).toBe(false);
+        expect(existsSync(join(sandbox.path, 'unexpected'))).toBe(false);
     },
 );
 

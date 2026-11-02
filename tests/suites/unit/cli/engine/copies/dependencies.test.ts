@@ -1,9 +1,9 @@
+import { existsSync } from 'node:fs';
 import * as filesystem from 'node:fs';
 import { join, dirname } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
@@ -56,7 +56,7 @@ test('a workspace bin into untracked build output is left out of the copy', asyn
     runGitStep(sandbox.path, ['add', '.']);
     using copy = await copyRevision(sandbox.path, { kind: 'index' });
     const bin = await captureRejection(lstat(join(copy.root, 'node_modules/.bin/cli')));
-    const copied = { package: await isOnDisk(join(copy.root, 'node_modules/cli/package.json')), bin };
+    const copied = { package: existsSync(join(copy.root, 'node_modules/cli/package.json')), bin };
     expect(copied).toMatchObject({ package: true, bin: { code: 'ENOENT' } });
 });
 
@@ -76,7 +76,7 @@ test('an installed package links to the working tree and a dot folder stays out'
         text: await readFile(join(location, 'private.txt'), 'utf8'),
     };
 
-    expect(await isOnDisk(join(copy.root, 'node_modules/.hidden'))).toBe(false);
+    expect(existsSync(join(copy.root, 'node_modules/.hidden'))).toBe(false);
     expect(copied.path).toBe(await realpath(external.path));
     expect(copied.text).toBe('outside bytes');
     await unlink(join(sandbox.path, 'node_modules/external'));
@@ -169,7 +169,7 @@ test('a copy leaves the virtual environment in the working tree and still checks
     runGitStep(root, ['add', '.']);
     using copy = await copyRevision(root, { kind: 'index' });
     const copied = {
-        environment: await isOnDisk(join(copy.root, '.venv')),
+        environment: existsSync(join(copy.root, '.venv')),
         source: await readFile(join(copy.root, 'source.py'), 'utf8'),
     };
     expect(copied).toStrictEqual({ environment: false, source: 'selected = True\n' });
@@ -195,7 +195,7 @@ test('cancellation waits for the dependency copies to finish before removing the
 
     const cancelError = await captureRejection(copyRevision(sandbox.path, { kind: 'index' }, controller.signal));
     expect(cancelError.message).toBe('Canceled dependency copy');
-    expect(await isOnDisk(destination!)).toBe(false);
+    expect(existsSync(destination!)).toBe(false);
     expect(await readFile(join(sandbox.path, 'node_modules/item-0/value.js'), 'utf8')).toBe(
         'export const value = 2;\n',
     );
@@ -227,12 +227,12 @@ test('changed compiler settings omit declaration copies and leave a dependency n
     runGitStep(sandbox.path, ['add', '.']);
     await writeFile(join(sandbox.path, 'tsconfig.json'), '{broken');
     using broken = await copyRevision(sandbox.path, { kind: 'index' });
-    expect(await isOnDisk(join(broken.root, 'types/generated.d.ts'))).toBe(false);
+    expect(existsSync(join(broken.root, 'types/generated.d.ts'))).toBe(false);
     expect(broken.dependencyNote).toBe(DEPENDENCY_FILES_MESSAGE);
     runGitStep(sandbox.path, ['checkout', '--', 'tsconfig.json']);
     await writeFile(join(sandbox.path, 'compiler.json'), '{"compilerOptions":{"strict":false}}');
     using changed = await copyRevision(sandbox.path, { kind: 'index' });
-    expect(await isOnDisk(join(changed.root, 'types/generated.d.ts'))).toBe(false);
+    expect(existsSync(join(changed.root, 'types/generated.d.ts'))).toBe(false);
     expect(changed.dependencyNote).toBe(DEPENDENCY_FILES_MESSAGE);
 });
 
@@ -244,7 +244,7 @@ test('an index copy clones an ignored declaration file that a tsconfig includes,
     using copy = await copyRevision(root, { kind: 'index' });
     expect(await readFile(join(copy.root, 'types/generated.d.ts'), 'utf8')).toBe('declare const generated: string;\n');
     expect(await readFile(join(copy.root, 'types/kept.d.ts'), 'utf8')).toBe('declare const kept: number;\n');
-    expect(await isOnDisk(join(copy.root, 'outside.d.ts'))).toBe(false);
+    expect(existsSync(join(copy.root, 'outside.d.ts'))).toBe(false);
 });
 
 test('an index copy clones the ignored build output that a package.json names in files', async () => {
@@ -259,7 +259,7 @@ test('an index copy clones the ignored build output that a package.json names in
     await writeFile(join(sandbox.path, 'package.json'), '{"name":"lib"}');
     runGitStep(sandbox.path, ['add', 'package.json']);
     using withoutFiles = await copyRevision(sandbox.path, { kind: 'index' });
-    expect(await isOnDisk(join(withoutFiles.root, 'dist/index.js'))).toBe(false);
+    expect(existsSync(join(withoutFiles.root, 'dist/index.js'))).toBe(false);
 });
 
 test('a revision refuses installed dependencies without a committed lockfile', async () => {

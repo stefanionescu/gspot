@@ -1,10 +1,10 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { STARTING_FILES } from '#tests/config/e2e.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { InitJson } from '#cli/types/commands/edits.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -21,7 +21,7 @@ async function assertConflictingConfigs(root: string, output: string): Promise<v
             note: 'replaces your file; read the old one with git show HEAD:prettier.config.mjs; gspot cannot read this Prettier config, so set format.indent_width and format.print_width by hand',
         },
     ]);
-    expect(await isOnDisk(join(root, 'gspot.toml'))).toBe(true);
+    expect(existsSync(join(root, 'gspot.toml'))).toBe(true);
     expect(await readFile(join(root, 'CLAUDE.md'), 'utf8')).toBe(STARTING_FILES['CLAUDE.md']);
     const agents = await readFile(join(root, 'AGENTS.md'), 'utf8');
     expect(agents).toStartWith('# Team notes\n');

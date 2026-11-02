@@ -1,7 +1,7 @@
+import { existsSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { stringify } from '@decimalturn/toml-patch';
 import { readFile, writeFile } from 'node:fs/promises';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { PushReport } from '#cli/types/commands/reports.ts';
@@ -190,7 +190,7 @@ test.each(['', 'app'])(
             );
             expect(JSON.parse(packageText)).toStrictEqual(expected);
             const generatedConfig = join(sandbox.path, getManifestTarget('commits', 'commitlint.json'));
-            expect(await isOnDisk(generatedConfig)).toBe(level === 'all');
+            expect(existsSync(generatedConfig)).toBe(level === 'all');
             if (level !== 'all') continue;
             const native = await runCommand([...command, '--config', generatedConfig], execution);
             expect(native.code, native.stdout + native.stderr).toBe(1);

@@ -4,19 +4,11 @@ import { executableLayout } from '#cli/system/paths.ts';
 import type { CallRecord, ProgramName } from '#tests/types/setup.ts';
 
 /**
-Build the arguments that run one of the test programs in tests/setup/programs, after the Bun executable.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its ProgramName parameter checks that the test program exists.
-export function buildProgramArguments(program: ProgramName, ...programArguments: string[]): string[] {
-    return [join(import.meta.dir, '..', 'programs', `${program}.ts`), ...programArguments];
-}
-
-/**
 Build the command that runs one of the test programs in tests/setup/programs with the running Bun executable.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Its ProgramName parameter checks that the test program exists.
 export function buildProgramCommand(program: ProgramName, ...programArguments: string[]): string[] {
-    return [process.execPath, ...buildProgramArguments(program, ...programArguments)];
+    return [process.execPath, join(import.meta.dir, '..', 'programs', `${program}.ts`), ...programArguments];
 }
 
 /**

@@ -1,11 +1,11 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -26,7 +26,7 @@ test('init keeps the old config file when the generated one cannot be written', 
     expect(refused.code).toBe(2);
     expect(refused.stderr).toBe(STOPPED_ERROR_MESSAGE);
     expect(await readFile(join(sandbox.path, 'typos.toml'), 'utf8')).toBe(authored);
-    const exists = await isOnDisk(join(sandbox.path, getManifestTarget('spelling', 'typos.toml')));
+    const exists = existsSync(join(sandbox.path, getManifestTarget('spelling', 'typos.toml')));
     expect(exists).toBe(false);
 });
 
@@ -68,7 +68,7 @@ ignore = E501
     const written = await runGspot(sandbox.path, ['init', '--configurations', 'sql']);
     expect(written.code, written.stdout + written.stderr).toBe(0);
     expect(await readFile(join(sandbox.path, 'setup.cfg'), 'utf8')).toBe(edited);
-    const exists = await isOnDisk(join(sandbox.path, getManifestTarget('sql', 'sqlfluff.cfg')));
+    const exists = existsSync(join(sandbox.path, getManifestTarget('sql', 'sqlfluff.cfg')));
     expect(exists).toBe(true);
 });
 

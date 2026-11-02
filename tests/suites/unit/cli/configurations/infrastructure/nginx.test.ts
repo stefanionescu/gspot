@@ -1,10 +1,10 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { getTool } from '#cli/tools/pins.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
@@ -96,7 +96,7 @@ test('a failed certificate step reports its error text, removes the scratch file
     expect(_spawn).toHaveBeenCalledTimes(1);
     for (const folder of folders) {
         expect(folder).not.toBe(sandbox.path);
-        expect(await isOnDisk(folder)).toBe(false);
+        expect(existsSync(folder)).toBe(false);
     }
     expect(await readFile(join(sandbox.path, 'nginx.conf'), 'utf8')).toBe(NGINX_UPSTREAM_CONF);
 });

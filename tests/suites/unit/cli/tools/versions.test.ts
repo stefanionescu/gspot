@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { type Tool } from '#cli/types/manifests.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { buildProgramArguments } from '#tests/setup/system/programs.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
 import { VERSION_OUTPUTS, SYSTEM_BASH_VERSIONS } from '#tests/config/tools/versions.ts';
 import { fakeNpmPackage, writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
@@ -57,7 +57,7 @@ test.each([...VERSION_OUTPUTS])(
             kind: 'program',
             system: true,
             installers: {},
-            version_command: buildProgramArguments('fakes/tool', ...toolArguments),
+            version_command: buildProgramCommand('fakes/tool', ...toolArguments).slice(1),
         };
         const inspection = await inspectTool(buildToolSearch(sandbox.path), tool);
         expect({ state: inspection.state, found: inspection.found, note: inspection.note }).toStrictEqual({
@@ -79,7 +79,11 @@ test.each([...SYSTEM_BASH_VERSIONS])(
             system: true,
             min_version: '4.4',
             installers: {},
-            version_command: buildProgramArguments('fakes/tool', '--line', `GNU bash, version ${version}(1)-release`),
+            version_command: buildProgramCommand(
+                'fakes/tool',
+                '--line',
+                `GNU bash, version ${version}(1)-release`,
+            ).slice(1),
             version_pattern: String.raw`version (\d+\.\d+(?:\.\d+)?)`,
         };
         const inspection = await inspectTool(buildToolSearch(sandbox.path), tool);

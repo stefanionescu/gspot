@@ -1,7 +1,7 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
@@ -29,7 +29,7 @@ test('Swift build side effects stay in the source copy and do not reach later ru
         fakeCommands().mockImplementation(async (_argv, options) => {
             const cwd = options.cwd;
             sources.push(await readFile(join(cwd, 'Sources/Value.swift'), 'utf8'));
-            artifacts.push([await isOnDisk(join(cwd, 'Generated')), await isOnDisk(join(cwd, 'Package.resolved'))]);
+            artifacts.push([existsSync(join(cwd, 'Generated')), existsSync(join(cwd, 'Package.resolved'))]);
             await mkdir(join(cwd, 'Generated'));
             await symlink('Generated', join(cwd, 'generated-link'), 'dir');
             await writeFile(join(cwd, 'Generated/side-effect'), 'generated');
@@ -50,8 +50,8 @@ test('Swift build side effects stay in the source copy and do not reach later ru
     expect(await originalFile.readFile('utf8')).toBe(SWIFT_VALUE_SOURCE);
     const afterStats = await originalFile.stat();
     expect(afterStats.mode).toBe(mode);
-    expect(await isOnDisk(join(sandbox.path, 'Package.resolved'))).toBe(false);
-    expect(await isOnDisk(join(sandbox.path, 'Generated'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'Package.resolved'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'Generated'))).toBe(false);
 });
 
 test('Periphery build side effects stay in its source copy and findings name the repository source paths', async () => {
@@ -80,7 +80,7 @@ test('Periphery build side effects stay in its source copy and findings name the
     ]);
     expect(sources).toStrictEqual(['let unused = 1\n', 'let unused = 1\n']);
     expect(run.mock.calls[0]?.[1].cwd).not.toBe(sandbox.path);
-    expect(await isOnDisk(join(sandbox.path, 'Package.resolved'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'Package.resolved'))).toBe(false);
 });
 
 test('two runs of one scope build in turn under its lock', async () => {

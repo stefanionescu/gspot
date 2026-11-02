@@ -1,8 +1,8 @@
 import { test, spyOn, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
 import { explainReleaseAgeHold } from '#cli/tools/installers/steps.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -34,7 +34,7 @@ test.each([
     },
 ])('$name gives its explanation', async ({ status, published, expected }) => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const install = buildToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const install = buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
     using _registry = spyOn(globalThis, 'fetch').mockImplementation(
         Object.assign(() => Promise.resolve(Response.json({ time: published }, { status })), {
             preconnect: fetch.preconnect,

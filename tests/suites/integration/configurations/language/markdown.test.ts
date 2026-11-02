@@ -1,10 +1,10 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -116,7 +116,7 @@ test('markdownlint reports line, column, and fixable for findings in files whose
         },
     });
     const configuration = getManifestTarget('markdown', 'markdownlint-cli2.mjs');
-    expect(await isOnDisk(join(root, configuration))).toBe(true);
+    expect(existsSync(join(root, configuration))).toBe(true);
     const command = ['check', ...paths, '--only', 'markdown/markdownlint', '--json'];
     const failed = parseCheckReport(await spawnGspot(root, command));
     expect(failed.code, failed.stderr).toBe(1);

@@ -1,11 +1,11 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import type { ApplyReport } from '#cli/types/generation.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
@@ -46,7 +46,7 @@ test('writeGeneratedFiles deletes the npm tool folder when no configuration need
     const session = await openSession(sandbox.path);
     const writer = openFiles(sandbox.path);
     await writeGeneratedFiles(session, { files: [], blocks: [], managedKeys: [] }, writer);
-    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.nodeModules))).toBe(false);
+    expect(existsSync(join(sandbox.path, GSPOT_PATHS.nodeModules))).toBe(false);
 });
 
 test('removing css drops its managed stylelint field and keeps authored fields byte for byte', async () => {
@@ -121,8 +121,8 @@ test('at level basic, gspot removes the Vale configuration and the installed sty
     const session = await openSession(sandbox.path);
     const writer = openFiles(sandbox.path);
     await writeGeneratedFiles(session, buildGeneratedFiles(session), writer);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/vale'))).toBe(false);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/general/prose/vale.ini'))).toBe(false);
+    expect(existsSync(join(sandbox.path, '.gspot/vale'))).toBe(false);
+    expect(existsSync(join(sandbox.path, '.gspot/configurations/general/prose/vale.ini'))).toBe(false);
 });
 
 test('apply preserves a copied header example and removes an obsolete scoped link file', async () => {
@@ -140,7 +140,7 @@ test('apply preserves a copied header example and removes an obsolete scoped lin
     const report = await writeGeneratedFiles(session, buildGeneratedFiles(session), writer);
     expect(await readFile(join(sandbox.path, 'examples/.editorconfig'))).toStrictEqual(before);
     expect(report.removed).toContain('docs/.markdownlint.jsonc');
-    expect(await isOnDisk(join(sandbox.path, 'docs/.markdownlint.jsonc'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'docs/.markdownlint.jsonc'))).toBe(false);
 });
 
 test('apply prints no managed-key warning while it still manages the Bun scanner', async () => {

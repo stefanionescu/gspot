@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { runFixers } from '#cli/engine/fixes.ts';
 import { compareText } from '#cli/system/text.ts';
@@ -6,7 +7,6 @@ import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
 import type { Check } from '#cli/types/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { isActive, planChecks } from '#cli/engine/plan.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { BASE_CHECK } from '#tests/config/engine/tool-runs.ts';
@@ -29,7 +29,7 @@ import {
 } from '#tests/config/engine/files.ts';
 
 async function replaceChildScopeChecks(session: Session): Promise<void> {
-    if (await isOnDisk(join(session.root, '.git/info/exclude')))
+    if (existsSync(join(session.root, '.git/info/exclude')))
         await appendFile(join(session.root, '.git/info/exclude'), '\n.gspot/mock-tsc*\n');
     await writeProgramCommand(
         session.root,

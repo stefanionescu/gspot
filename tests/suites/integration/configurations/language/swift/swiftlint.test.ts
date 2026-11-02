@@ -1,8 +1,8 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { readFile, writeFile } from 'node:fs/promises';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { CLEAN_SWIFT } from '#tests/config/setup/languages.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
@@ -61,7 +61,7 @@ async function prepareSwiftScope(scopePath: string) {
     });
     const applied = await spawnGspot(root, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(await isOnDisk(join(root, `${prefix}AppTests/.swiftlint.yml`))).toBe(true);
+    expect(existsSync(join(root, `${prefix}AppTests/.swiftlint.yml`))).toBe(true);
     const lifetime = resources.move();
     return { root, prefix, [Symbol.asyncDispose]: lifetime[Symbol.asyncDispose].bind(lifetime) };
 }
@@ -97,7 +97,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each(['AppTests', 'AppTests/Helpers'])(
 
         const applied = await spawnGspot(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        expect(await isOnDisk(join(sandbox.path, `${scope}/.swiftlint.yml`))).toBe(true);
+        expect(existsSync(join(sandbox.path, `${scope}/.swiftlint.yml`))).toBe(true);
         const toolResult = await runCommand(
             ['swiftlint', 'lint', '--strict', '--quiet', '--no-cache', '--reporter', 'json', 'Value.swift'],
             { cwd: join(sandbox.path, scope) },

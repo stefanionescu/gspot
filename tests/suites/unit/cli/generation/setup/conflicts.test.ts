@@ -1,11 +1,10 @@
-import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { readSettings } from '#cli/settings/read.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { InitJson } from '#cli/types/commands/edits.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { LEVELS, GSPOT_PATHS } from '#cli/config/manifests.ts';
@@ -78,10 +77,10 @@ test('the init plan deletes the conflicting config files and lists the lint fold
             note: 'a folder of lint scripts; check remaining references before deleting it',
         },
     ]);
-    for (const { path } of REPLACED_CONFIG_DELETIONS) expect(await isOnDisk(join(sandbox.path, path))).toBe(false);
+    for (const { path } of REPLACED_CONFIG_DELETIONS) expect(existsSync(join(sandbox.path, path))).toBe(false);
     const settings = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
     for (const carried of ['udid', 'SC2086', 'MD013']) expect(settings).not.toContain(carried);
-    expect(await isOnDisk(join(sandbox.path, 'quality/lint.sh'))).toBe(true);
+    expect(existsSync(join(sandbox.path, 'quality/lint.sh'))).toBe(true);
 });
 
 test.each(['setup.cfg'])('init leaves a shared %p in place and names its SQLFluff section', async (path) => {
@@ -115,7 +114,7 @@ test('init deletes the .sqlfluffignore of the db package, and project/read-sql t
     await writeFile(join(sandbox.path, 'gspot.toml'), settings + stringify({ command_check: [sqlCheck] }));
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, 'db/.sqlfluffignore'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'db/.sqlfluffignore'))).toBe(false);
     const levelSet = await runGspot(sandbox.path, ['set', 'level', 'all']);
     expect(levelSet.code, levelSet.stdout + levelSet.stderr).toBe(0);
     const dialect = await runGspot(sandbox.path, ['set', 'sql.dialect', 'postgres', '--scope', 'db']);
@@ -142,7 +141,7 @@ test('init keeps a linked shared file and the bytes and mode of the file it link
     expect(await readFile(target, 'utf8')).toBe(LINKED_SETUP_CONFIG);
     const attributes = await stat(target);
     expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
-    expect(await isOnDisk(join(sandbox.path, getManifestTarget('sql', 'sqlfluff.cfg')))).toBe(true);
+    expect(existsSync(join(sandbox.path, getManifestTarget('sql', 'sqlfluff.cfg')))).toBe(true);
 });
 
 test.each([...REPLACED_PYPROJECT_TABLES])(
@@ -161,7 +160,7 @@ test.each([...REPLACED_PYPROJECT_TABLES])(
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         expect((JSON.parse(initialized.stdout) as InitJson).plan.keep).toStrictEqual([{ path, note: note }]);
         await assertFileKept(sandbox.path, path, previous);
-        expect(await isOnDisk(join(sandbox.path, generated))).toBe(true);
+        expect(existsSync(join(sandbox.path, generated))).toBe(true);
     },
 );
 
@@ -211,7 +210,7 @@ test.each([...STYLELINT_REPLACEMENT_CASES])(
         expect(plan.change.filter(({ path, note }) => path === packagePath && !note.startsWith('pins'))).toStrictEqual(
             changed.map((path) => ({ path, note: 'managed stylelint fields; other content stays' })),
         );
-        expect(await isOnDisk(join(sandbox.path, authoredConfiguration))).toBe(false);
+        expect(existsSync(join(sandbox.path, authoredConfiguration))).toBe(false);
         for (const { path, text } of unchangedFiles)
             expect(JSON.parse(await readFile(join(sandbox.path, path), 'utf8'))).toMatchObject(
                 JSON.parse(text) as object,
@@ -241,7 +240,7 @@ test('init replaces an authored Syncpack file and keeps syncpack.config.cts and 
     commitAll(sandbox.path);
     const initialized = await runGspot(sandbox.path, ['init', '--no-configurations', '--level', 'all']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, SYNCPACK_FILE.file))).toBe(false);
+    expect(existsSync(join(sandbox.path, SYNCPACK_FILE.file))).toBe(false);
     expect(await readFile(join(sandbox.path, 'syncpack.config.cts'), 'utf8')).toBe('module.exports = {};\n');
     expect(await readFile(join(sandbox.path, 'syncpack.config.mts'), 'utf8')).toBe(EMPTY_DEFAULT_SOURCE);
 });

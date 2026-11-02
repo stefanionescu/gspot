@@ -8,12 +8,12 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { NPM_INSTALL_FLAGS } from '#tests/config/setup/sandboxes.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
-import { buildProgramArguments } from '#tests/setup/system/programs.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { isolatedEnvironment } from '#tests/setup/sandboxes/projects/gspot.ts';
 
 async function assertPluginExports(consumer: string): Promise<void> {
-    const [program = ''] = buildProgramArguments('processes/eslint-plugin');
+    const [, program = ''] = buildProgramCommand('processes/eslint-plugin');
     await cp(program, join(consumer, 'consumer.ts'));
     await writeFile(join(consumer, 'consumer.mts'), PLUGIN_TYPES_SOURCE);
     const options = { cwd: consumer, env: isolatedEnvironment };

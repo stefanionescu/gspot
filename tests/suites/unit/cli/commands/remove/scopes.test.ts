@@ -1,15 +1,15 @@
 import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { parse } from '@decimalturn/toml-patch';
+import { existsSync, readFileSync } from 'node:fs';
 import { readSettings } from '#cli/settings/read.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { readTree } from '#tests/setup/system/files.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { API_SCOPE_FILES } from '#tests/config/commands/reports.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
@@ -73,11 +73,11 @@ test('remove --scope writes removed_configurations with its reason and applies t
     commitAll(sandbox.path);
     const initial = await runGspot(sandbox.path, ['apply']);
     expect(initial.code, initial.stdout + initial.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')))).toBe(true);
+    expect(existsSync(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')))).toBe(true);
     const reason = 'The API scope no longer uses Bash.';
     const result = await runGspot(sandbox.path, ['remove', 'bash', '--scope', 'api', '--reason', reason, '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.pythonProject))).toBe(false);
+    expect(existsSync(join(sandbox.path, GSPOT_PATHS.pythonProject))).toBe(false);
     const saved = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
     expect(saved.scopes.get('api')!.configurations).toStrictEqual([]);
     expect(saved.configurations).toStrictEqual(['markdown']);
@@ -85,7 +85,7 @@ test('remove --scope writes removed_configurations with its reason and applies t
     expect(contents).toStrictEqual([{ path: 'api', configurations: [], removed_configurations: { bash: reason } }]);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')))).toBe(false);
+    expect(existsSync(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')))).toBe(false);
 });
 
 test('remove reports no change for a configuration the root does not list', async () => {

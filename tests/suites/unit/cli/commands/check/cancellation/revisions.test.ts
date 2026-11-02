@@ -1,8 +1,8 @@
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import type { PausedGit } from '#tests/types/setup.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { readdir, readFile, writeFile } from 'node:fs/promises';
@@ -136,7 +136,7 @@ test.skipIf(isWindows)(
             canceled: { pendingRefs: ['refs/heads/second'] },
             exitCode: 130,
         });
-        expect(await isOnDisk(started.checkout)).toBe(false);
+        expect(existsSync(started.checkout)).toBe(false);
         await waitForExit(started.pid);
         expect(runGitStep(sandbox.path, ['rev-parse', 'HEAD'])).toBe(second);
     },

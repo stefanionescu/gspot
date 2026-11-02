@@ -1,10 +1,10 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -86,8 +86,8 @@ test('a solution builds referenced projects in a copy and leaves each scope its 
             findings: findings.map(({ file, rule }) => ({ file, rule })),
         })),
     ).toStrictEqual([...REFERENCE_BUILD_RESULTS]);
-    expect(await isOnDisk(join(sandbox.path, 'app/src/main.js'))).toBe(false);
-    expect(await isOnDisk(join(sandbox.path, 'app/tsconfig.tsbuildinfo'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'app/src/main.js'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'app/tsconfig.tsbuildinfo'))).toBe(false);
     expect(await readFile(join(sandbox.path, 'app/tsconfig.json'), 'utf8')).toBe(authored);
     const attributes = await stat(join(sandbox.path, 'app/tsconfig.json'));
     expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));

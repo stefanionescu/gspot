@@ -1,8 +1,7 @@
-import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { existsSync, readFileSync } from 'node:fs';
 import { openSession } from '#cli/engine/session.ts';
 import { dirname, resolve, relative } from 'node:path';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { tsconfigSchema } from '#tests/schemas/setup.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
@@ -70,7 +69,7 @@ test.each([...SVELTE_PROJECTS])(
                 include,
             },
         ]);
-        expect(await isOnDisk(runtimePath)).toBe(false);
+        expect(existsSync(runtimePath)).toBe(false);
     },
 );
 

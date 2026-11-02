@@ -1,8 +1,9 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
+import { readTree } from '#tests/setup/system/files.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
@@ -54,7 +55,7 @@ test('init without a terminal writes the plan and preserves authored files', asy
     const accepted = await runGspot(sandbox.path, ['init']);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     expect(accepted.stderr).toBe('');
-    expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(true);
+    expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(true);
     expect(await readFile(join(sandbox.path, 'control.txt'), 'utf8')).toBe(PRESERVE_SOURCE);
 });
 

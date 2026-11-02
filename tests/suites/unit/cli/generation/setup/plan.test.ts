@@ -1,10 +1,10 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
 import { symlink, readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import type { InitJson } from '#cli/types/commands/edits.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -135,9 +135,9 @@ test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that ap
     expect(initialized.stderr).toBe('');
     const report = JSON.parse(initialized.stdout) as Required<Pick<InitJson, 'plan' | 'settingsText'>>;
     expect(report.plan.change.map((file) => file.path)).toStrictEqual([...changes, 'mise.toml']);
-    expect(await isOnDisk(join(sandbox.path, '.gitignore'))).toBe(false);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/.gitignore'))).toBe(true);
-    expect(await isOnDisk(join(sandbox.path, '.gitattributes'))).toBe(true);
+    expect(existsSync(join(sandbox.path, '.gitignore'))).toBe(false);
+    expect(existsSync(join(sandbox.path, '.gspot/.gitignore'))).toBe(true);
+    expect(existsSync(join(sandbox.path, '.gitattributes'))).toBe(true);
     expect(await readFile(join(sandbox.path, 'control.txt'), 'utf8')).toBe(PRESERVE_SOURCE);
 });
 

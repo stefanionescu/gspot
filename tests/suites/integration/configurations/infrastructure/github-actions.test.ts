@@ -1,9 +1,9 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GITHUB_WORKFLOW } from '#cli/config/generation.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -46,7 +46,7 @@ test('the generated GitHub workflow passes actionlint', async () => {
     const ci = await spawnGspot(sandbox.path, ['set', 'ci.enabled', 'true']);
     expect(ci.code, ci.stdout + ci.stderr).toBe(0);
     const workflow = join(sandbox.path, GITHUB_WORKFLOW);
-    expect(await isOnDisk(workflow)).toBe(true);
+    expect(existsSync(workflow)).toBe(true);
     const generated = await readFile(workflow);
     const headerEnd = generated.indexOf('\n');
     const body = generated.subarray(headerEnd + 1);

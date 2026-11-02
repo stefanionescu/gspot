@@ -1,20 +1,20 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { getTool } from '#cli/tools/pins.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { PREVIOUS_BYTES } from '#tests/config/setup/programs.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { rm, chmod, readFile, writeFile } from 'node:fs/promises';
 import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { VALE_PACKAGES_INI } from '#tests/config/setup/configurations.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -57,8 +57,8 @@ test('a Vale reinstall for new package releases deletes a package gspot no longe
     await createFileTree(sandbox.root, { [`${GSPOT_PATHS.valePackages}/Retired/terms.yml`]: 'old rule\n' });
     const installed = await spawnGspot(sandbox.root, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.root, `${GSPOT_PATHS.valePackages}/Retired`))).toBe(false);
-    expect(await isOnDisk(join(sandbox.root, GOOGLE_RULE_PATH))).toBe(true);
+    expect(existsSync(join(sandbox.root, `${GSPOT_PATHS.valePackages}/Retired`))).toBe(false);
+    expect(existsSync(join(sandbox.root, GOOGLE_RULE_PATH))).toBe(true);
     await assertAuthoredFiles(sandbox.root);
 });
 
@@ -98,7 +98,7 @@ test.each([...VALE_INSTALL_FAILURES])(
             ...fakeArguments,
         );
         const writer = openFiles(sandbox.path);
-        const request = buildToolInstall(session, writer);
+        const request = buildSandboxToolInstall(session, writer);
         const failure = await captureRejection(installValePackages(request, [miseBin]));
         expect(failure.message).toEndWith(message);
         expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.valePackages}/Google/terms.yml`), 'utf8')).toBe(
@@ -106,7 +106,7 @@ test.each([...VALE_INSTALL_FAILURES])(
         );
         await writeProgramCommand(sandbox.path, 'mise/bin/vale', 'fakes/vale', '../../../vale', version);
         await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['prose'], { level: 'all' }));
-        const fixed = buildToolInstall(await openSession(sandbox.path), writer);
+        const fixed = buildSandboxToolInstall(await openSession(sandbox.path), writer);
         await installValePackages(fixed, [miseBin]);
         expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.valePackages}/Google/terms.yml`), 'utf8')).toBe(
             'corrected bytes\n',

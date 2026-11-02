@@ -1,9 +1,9 @@
 import { zipSync } from 'fflate';
 import { testdir } from 'testdirs';
+import { existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, basename, delimiter } from 'node:path';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
@@ -71,7 +71,7 @@ test.each([...PYTHON_PROJECTS])(
         const clone = join(artifacts.path, 'clone');
         commitAll(sandbox.path);
         runGitStep(sandbox.path, ['clone', '--quiet', '--no-local', sandbox.path, clone]);
-        expect(await isOnDisk(join(clone, GSPOT_PATHS.pythonEnvironment))).toBe(false);
+        expect(existsSync(join(clone, GSPOT_PATHS.pythonEnvironment))).toBe(false);
         for (let round = 0; round < 2; round++) {
             const installed = await spawnGspot(clone, ['install']);
             expect(installed.code, installed.stdout + installed.stderr).toBe(0);
@@ -82,7 +82,7 @@ test.each([...PYTHON_PROJECTS])(
                 configuration: await readFile(join(clone, configuration)),
             }).toStrictEqual({ projectFile, lockfile, configuration: rootConfiguration });
         }
-        expect(await isOnDisk(join(clone, GSPOT_PATHS.pythonEnvironment, 'pyvenv.cfg'))).toBe(true);
+        expect(existsSync(join(clone, GSPOT_PATHS.pythonEnvironment, 'pyvenv.cfg'))).toBe(true);
         const python = await runCommand(
             [buildVenvExecutablePath(join(clone, GSPOT_PATHS.pythonEnvironment), 'python'), '--version'],
             { cwd: clone },

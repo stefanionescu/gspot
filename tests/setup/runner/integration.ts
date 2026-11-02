@@ -1,7 +1,7 @@
 import { testdir } from 'testdirs';
+import { existsSync } from 'node:fs';
 import { join, dirname, delimiter } from 'node:path';
 import { afterAll, setDefaultTimeout } from 'bun:test';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { rm, mkdtemp, readFile } from 'node:fs/promises';
 import { SIGNAL_EXIT_CODES } from '#cli/config/system.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
@@ -49,7 +49,7 @@ resources.defer(() => rm(cache, { recursive: true, force: true }));
 resources.defer(() => rm(temporary, { recursive: true, force: true }));
 resources.use(overrideEnvironment({ ...GIT_ISOLATION_ENVIRONMENT, XDG_CACHE_HOME: cache, TMPDIR: temporary }));
 
-if (!(await isOnDisk(join(TEST_RUN_FOLDER, PACKED_PACKAGES_FILE))))
+if (!existsSync(join(TEST_RUN_FOLDER, PACKED_PACKAGES_FILE)))
     throw new Error('Run mise run test integration or mise run test e2e first.');
 
 const toolPaths = await readFile(join(TEST_RUN_FOLDER, TOOL_PATHS_FILE), 'utf8');

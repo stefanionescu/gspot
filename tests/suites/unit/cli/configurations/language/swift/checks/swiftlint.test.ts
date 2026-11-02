@@ -1,7 +1,7 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -48,6 +48,6 @@ test('analyzer: swift/swiftlint-analyze removes the old compiler files, so its c
     );
 
     expect(await getBuiltInCheck('swift/swiftlint-analyze')(prepared.session, input)).toStrictEqual([]);
-    expect(await isOnDisk(compilerState)).toBe(false);
+    expect(existsSync(compilerState)).toBe(false);
     expect(await readFile(plan.log, 'utf8')).toBe('complete compiler log\n');
 });

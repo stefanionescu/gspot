@@ -8,14 +8,13 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { PREVIOUS_BYTES } from '#tests/config/setup/programs.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { VALE_PACKAGES_INI } from '#tests/config/setup/configurations.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -50,9 +49,9 @@ test('at level basic install installs no Vale packages', async () => {
 
     const session = await openSession(sandbox.path);
     const writer = openFiles(sandbox.path);
-    const context = buildToolInstall(session, writer);
+    const context = buildSandboxToolInstall(session, writer);
     expect(await installValePackages(context, [])).toBe('');
-    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.valePackages))).toBe(false);
+    expect(existsSync(join(sandbox.path, GSPOT_PATHS.valePackages))).toBe(false);
 });
 
 test('install reclaims interrupted Vale downloads while preserving live downloads', async () => {
@@ -72,7 +71,7 @@ test('install reclaims interrupted Vale downloads while preserving live download
         return true;
     });
     const session = await openSession(sandbox.path);
-    await installValePackages(buildToolInstall(session, openFiles(sandbox.path)), []);
+    await installValePackages(buildSandboxToolInstall(session, openFiles(sandbox.path)), []);
     expect(existsSync(join(sandbox.path, stale))).toBe(false);
     expect(existsSync(join(sandbox.path, '.gspot/vale-ABCDEF'))).toBe(false);
     expect(existsSync(join(sandbox.path, `${active}/archive.zip`))).toBe(true);
@@ -96,7 +95,7 @@ test('a changed Vale archive is refused before sync and preserves installed pack
     );
     using _request = spyOn(globalThis, 'fetch').mockResolvedValue(new Response('replaced archive'));
     const writer = openFiles(sandbox.path);
-    const install = buildToolInstall(session, writer);
+    const install = buildSandboxToolInstall(session, writer);
     const error = await captureRejection(installValePackages(install, [miseBin]));
     expect(error.message).toBe(
         'The Vale package Google failed SHA-256 verification. gspot kept the installed packages.',
@@ -125,7 +124,7 @@ test.each(['the pinned releases', 'a deleted folder', 'other releases'] as const
         });
         const writer = openFiles(sandbox.path);
         using request = spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected download'));
-        const install = buildToolInstall(await openSession(sandbox.path), writer);
+        const install = buildSandboxToolInstall(await openSession(sandbox.path), writer);
         if (state !== 'the pinned releases') {
             const failure = await captureRejection(installValePackages(install, []));
             expect(failure.message).toContain('vale');
@@ -141,7 +140,7 @@ test('an oversized archive cancels its response stream before reporting the size
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     const session = await openSession(sandbox.path);
     const writer = openFiles(sandbox.path);
-    const install = buildToolInstall(session, writer);
+    const install = buildSandboxToolInstall(session, writer);
     let canceled = false;
     const stream = new ReadableStream<Uint8Array>({
         start: (controller) => {
@@ -171,7 +170,7 @@ test('an oversized archive cancels its response stream before reporting the size
 
 test('a failed download behind a proxy says how to turn the proxy on', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const install = buildToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const install = buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
     using _environment = overrideEnvironment({ HTTPS_PROXY: 'https://proxy.example.com:8080' });
     const refuse = Object.assign(() => Promise.reject(new Error('The proxy refused the connection.')), {
         preconnect: fetch.preconnect,

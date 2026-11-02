@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
@@ -8,11 +9,11 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { readTree } from '#tests/setup/system/files.ts';
 import type { InitJson } from '#cli/types/commands/edits.ts';
 import type { ToolPackageJson } from '#tests/types/setup.ts';
 import { LEVELS, GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { listAlwaysSelected } from '#tests/setup/cli/manifests.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -113,7 +114,7 @@ test('the JavaScript tools and the ESLint config file appear only after gspot ad
         expect(
             ['eslint', 'knip', 'typescript', '@gspothq/eslint-plugin'].filter((name) => dependencies.includes(name)),
         ).toStrictEqual([]);
-        const exists = await isOnDisk(join(sandbox.path, getManifestTarget('javascript', 'eslint/eslint.mjs')));
+        const exists = existsSync(join(sandbox.path, getManifestTarget('javascript', 'eslint/eslint.mjs')));
         expect(exists).toBe(false);
     }
     await writeFile(join(sandbox.path, 'run'), NODE_SCRIPT);
@@ -129,7 +130,7 @@ test('the JavaScript tools and the ESLint config file appear only after gspot ad
         expect(
             ['eslint', 'knip', 'typescript', '@gspothq/eslint-plugin'].filter((name) => dependencies.includes(name)),
         ).toStrictEqual(['eslint', 'knip', 'typescript', '@gspothq/eslint-plugin']);
-        const exists = await isOnDisk(join(sandbox.path, getManifestTarget('javascript', 'eslint/eslint.mjs')));
+        const exists = existsSync(join(sandbox.path, getManifestTarget('javascript', 'eslint/eslint.mjs')));
         expect(exists).toBe(true);
     }
 });

@@ -1,9 +1,9 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { commitAll } from '#tests/setup/system/git.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { rm, unlink, readFile, writeFile } from 'node:fs/promises';
@@ -49,8 +49,8 @@ test('an ignore without paths stops a command check and its fixer until unignore
         { check: 'project/quality', status: 'skipped', cause: 'ignore', findings: [] },
     ]);
     expect(skipped.report.ignores).toStrictEqual([{ check: 'project/quality', reason }]);
-    expect(await isOnDisk(join(sandbox.path, 'read.txt'))).toBe(false);
-    expect(await isOnDisk(join(sandbox.path, 'corrected.txt'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'read.txt'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'corrected.txt'))).toBe(false);
     const removed = await runGspot(sandbox.path, ['unignore', 'project/quality']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     const restored = await runGspot(sandbox.path, commandArguments);

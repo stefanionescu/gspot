@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { runTool } from '#cli/tools/run.ts';
 import { getTool } from '#cli/tools/pins.ts';
@@ -6,7 +7,6 @@ import { testdir, createFileTree } from 'testdirs';
 import type { Tool } from '#cli/types/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { listExecutablePaths } from '#cli/tools/locate.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers.ts';
@@ -92,8 +92,8 @@ test('a mise-pinned program in the repository node_modules or .venv is missing a
     const inspection = await inspectTool(buildToolSearch(sandbox.path), tool);
     expect(inspection.state).toBe('missing');
     expect(inspection.path).toBeUndefined();
-    expect(await isOnDisk(join(sandbox.path, 'npm-ran'))).toBe(false);
-    expect(await isOnDisk(join(sandbox.path, 'venv-ran'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'npm-ran'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'venv-ran'))).toBe(false);
 });
 
 test('a program on PATH wins over an unrelated mise shim', async () => {
@@ -198,7 +198,7 @@ test('a tool project program linked outside the repository is refused before it 
     ).toMatchObject({
         message: `${GSPOT_PATHS.nodeModules}/.bin/teller links to a file outside the repository. Replace the link with the file.`,
     });
-    expect(await isOnDisk(ranMarker)).toBe(false);
+    expect(existsSync(ranMarker)).toBe(false);
     await unlink(binary);
     await symlink('../teller/run.sh', binary);
     expect(await inspectTool(buildToolSearch(root), buildProgramPin('teller', '1.2.3'))).toMatchObject({ state: 'ok' });
@@ -222,13 +222,13 @@ test('a missing npm tool does not fall back to the program in the repository nod
     const missing = await inspectTool(buildToolSearch(sandbox.path), tool);
     expect(missing.state).toBe('missing');
     expect(missing.path).toBeUndefined();
-    expect(await isOnDisk(join(sandbox.path, 'fallback-ran'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'fallback-ran'))).toBe(false);
     await fakeNpmPackage(sandbox.path, { name: 'teller', version: '5.0.1', toolArguments: ['--line', '5.0.1'] });
     expect(await inspectTool(buildToolSearch(sandbox.path), tool)).toMatchObject({
         state: 'ok',
         found: '5.0.1',
     });
-    expect(await isOnDisk(join(sandbox.path, 'fallback-ran'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'fallback-ran'))).toBe(false);
 });
 
 test('a Python tool uses the tool project environment, not the repository .venv', async () => {
@@ -256,7 +256,7 @@ test('a Python tool uses the tool project environment, not the repository .venv'
         state: 'ok',
         found: '1.2.3',
     });
-    expect(await isOnDisk(join(sandbox.path, 'fallback-ran'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'fallback-ran'))).toBe(false);
 });
 
 test('a missing managed program names mise being absent from PATH instead of claiming the tool is uninstalled', async () => {

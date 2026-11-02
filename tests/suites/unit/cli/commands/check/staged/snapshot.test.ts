@@ -4,7 +4,6 @@ import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { createFileTree, type TestdirResult } from 'testdirs';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
@@ -93,7 +92,7 @@ test('a staged check reads index bytes and file modes, converts no line endings,
     expect(await readFile(join(sandbox.path, 'payload.dat'))).toStrictEqual(Buffer.from([0, 1, 2]));
     const attributes = await stat(join(sandbox.path, 'task.sh'));
     expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o644 }));
-    expect(await isOnDisk(join(sandbox.path, 'created.txt'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'created.txt'))).toBe(false);
 });
 
 test('a staged check with unstaged work reuses the locked dependencies and isolates source edits', async () => {
@@ -258,7 +257,7 @@ test('staged checks read an indexed file when its working file is missing', asyn
     const ran = parseCheckReport(await runGspot(sandbox.path, commandArguments));
     expect(ran.code, ran.stdout + ran.stderr).toBe(0);
     expect(ran.report.checks[0]).toMatchObject({ status: 'passed', fileCount: 1 });
-    expect(await isOnDisk(join(sandbox.path, SCRIPT_SPACES))).toBe(false);
+    expect(existsSync(join(sandbox.path, SCRIPT_SPACES))).toBe(false);
 });
 
 test('a staged check reads the pushed commits of the repository, not of the index copy', async () => {

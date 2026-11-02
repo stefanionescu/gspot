@@ -1,10 +1,10 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import type { Sandbox } from '#tests/types/setup.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { tsconfigSchema } from '#tests/schemas/setup.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
@@ -72,6 +72,6 @@ test('nextjs/tsc generates types and checks a referenced project without writing
     expect(await readFile(join(root, 'compiler-ref/tsconfig.json'), 'utf8')).toBe(
         REFERENCE_PROJECT_FILES['compiler-ref/tsconfig.json'],
     );
-    expect(await isOnDisk(join(root, 'compiler-ref/dist/source.js'))).toBe(false);
-    expect(await isOnDisk(join(root, 'compiler-ref/tsconfig.tsbuildinfo'))).toBe(false);
+    expect(existsSync(join(root, 'compiler-ref/dist/source.js'))).toBe(false);
+    expect(existsSync(join(root, 'compiler-ref/tsconfig.tsbuildinfo'))).toBe(false);
 });

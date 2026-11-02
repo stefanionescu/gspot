@@ -11,8 +11,8 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 import { XCTEST_SOURCE } from '#tests/config/setup/languages.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { buildProgramArguments } from '#tests/setup/system/programs.ts';
 import type { SourcedConfig } from '#cli/types/configurations/general.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -83,7 +83,7 @@ test('JavaScript link files import modules from folders with URI characters and 
         });
         paths.push(pathToFileURL(join(sandbox.path, output!.path)).href);
     }
-    const toolResult = await runCommand(['node', ...buildProgramArguments('processes/modules', ...paths)], {
+    const toolResult = await runCommand(['node', ...buildProgramCommand('processes/modules', ...paths).slice(1)], {
         cwd: sandbox.path,
     });
     expect(toolResult.code, toolResult.stderr).toBe(0);

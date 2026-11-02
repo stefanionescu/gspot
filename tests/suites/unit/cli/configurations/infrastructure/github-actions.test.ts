@@ -1,11 +1,11 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { createFileTree } from 'testdirs';
 import { getTool } from '#cli/tools/pins.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
@@ -126,7 +126,7 @@ test.each([...ACTIONLINT_EXITS])(
         const [call] = await readCallRecords(record);
         const workspace = call?.cwd ?? '';
         expect(workspace).not.toBe(sandbox.path);
-        expect(await isOnDisk(workspace)).toBe(false);
+        expect(existsSync(workspace)).toBe(false);
         expect(await readFile(join(sandbox.path, '.github/workflows/caller.yml'), 'utf8')).toBe(workflow);
         const attributes = await stat(join(sandbox.path, '.github/workflows/caller.yml'));
         expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o444 }));

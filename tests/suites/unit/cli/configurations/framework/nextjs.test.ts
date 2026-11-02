@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { createFileTree } from 'testdirs';
 import { join, basename } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
@@ -6,7 +7,6 @@ import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
@@ -111,7 +111,7 @@ test('nextjs/tsc in a child scope reports its finding, passes after the fix, and
     });
     expect(routesSeen).toStrictEqual([GENERATED_ROUTES, GENERATED_ROUTES]);
     expect(folders).not.toContain(join(sandbox.path, scope));
-    expect(await Promise.all(folders.map((cwd) => isOnDisk(cwd)))).toStrictEqual(folders.map(() => false));
+    expect(folders.map((cwd) => existsSync(cwd))).toStrictEqual(folders.map(() => false));
     await using currentFile = await open(config, 'r');
     expect(await currentFile.readFile()).toStrictEqual(previous);
     const afterStats = await currentFile.stat();
@@ -147,9 +147,9 @@ test('nextjs/tsc removes its copy after a failed type generation and keeps a con
     );
     expect(error.message).toBe(`The next typegen command failed: Error: ${message}`);
     expect(scratch).not.toBe('');
-    expect(await isOnDisk(scratch)).toBe(false);
+    expect(existsSync(scratch)).toBe(false);
     expect(await readFile(join(sandbox.path, 'tsconfig.json'), 'utf8')).toBe('Concurrent developer edit\n');
-    expect(await isOnDisk(join(sandbox.path, 'next-env.d.ts'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'next-env.d.ts'))).toBe(false);
 });
 
 async function fakeNextjsBuild(

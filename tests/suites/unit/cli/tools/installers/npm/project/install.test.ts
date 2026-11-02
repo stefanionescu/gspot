@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
@@ -7,7 +8,6 @@ import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { NPM_TOOL_PROJECT } from '#cli/config/generation.ts';
@@ -147,7 +147,7 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
     const lockfileError = await captureRejection(planNpmLockfile(install, projectFile));
     const message = lockfileError.message;
     expect(message).toBe('The npm tool project needs Node.js to create its lockfile. Install Node.js.');
-    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.npmProject))).toBe(false);
+    expect(existsSync(join(sandbox.path, GSPOT_PATHS.npmProject))).toBe(false);
     await createFileTree(sandbox.path, {
         [GSPOT_PATHS.npmProject]: packageJson,
         [`${GSPOT_FOLDER}/bun.lock`]: lockfile,

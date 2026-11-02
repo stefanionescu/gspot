@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { INIT_FILES } from '#tests/config/setup/sandboxes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
@@ -38,7 +38,7 @@ test.each([true, false])(
         const head = runCommandBlocking(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: sandbox.path, env: {} });
         const initialized = await spawnGspot(sandbox.path, ['init', '--json', '--no-configurations']);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-        expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(true);
+        expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(true);
         await applyThenInstall(sandbox.path);
         const checked = await spawnGspot(sandbox.path, ['check', '--json']);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);

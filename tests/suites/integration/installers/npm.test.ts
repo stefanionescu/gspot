@@ -1,9 +1,9 @@
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
 import { runTool } from '#cli/tools/run.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { ApplyReport } from '#cli/types/generation.ts';
 import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
@@ -119,8 +119,8 @@ test.each([...PACKAGE_MANAGER_CASES])(
         const attributes = await stat(lockfilePath);
         expect({
             authored: await readFile(join(root, projectPath), 'utf8'),
-            workspace: (await isOnDisk(workspace)) ? await readFile(workspace, 'utf8') : undefined,
-            yarnrc: (await isOnDisk(yarnrc)) ? await readFile(yarnrc, 'utf8') : undefined,
+            workspace: existsSync(workspace) ? await readFile(workspace, 'utf8') : undefined,
+            yarnrc: existsSync(yarnrc) ? await readFile(yarnrc, 'utf8') : undefined,
             dependencies: await readFile(join(root, 'node_modules/authored.txt'), 'utf8'),
             lockfile: await readFile(lockfilePath),
             mode: attributes.mode,
@@ -170,7 +170,7 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
         await appendFile(join(root, '.gitattributes'), '\n.gspot/* -text\n');
         commitAll(root);
         runGitStep(root, ['clone', '--quiet', '--no-local', root, clone]);
-        expect(await isOnDisk(join(clone, GSPOT_PATHS.nodeModules))).toBe(false);
+        expect(existsSync(join(clone, GSPOT_PATHS.nodeModules))).toBe(false);
         for (let round = 0; round < 2; round++) {
             const cloneInstall = await spawnGspot(clone, ['install']);
             expect(cloneInstall.code, cloneInstall.stdout + cloneInstall.stderr).toBe(0);

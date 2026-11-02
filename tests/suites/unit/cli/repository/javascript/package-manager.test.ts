@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
@@ -7,7 +8,6 @@ import { createRunCache } from '#cli/system/cache.ts';
 import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
@@ -96,8 +96,8 @@ test('a refused pinned package manager keeps project files and gives no install 
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(content);
     expect(await readFile(join(sandbox.path, 'source'), 'utf8')).toBe('kept\n');
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(previous);
-    expect(await isOnDisk(join(sandbox.path, `${GSPOT_FOLDER}/bun.lock`))).toBe(false);
-    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.nodeModules))).toBe(false);
+    expect(existsSync(join(sandbox.path, `${GSPOT_FOLDER}/bun.lock`))).toBe(false);
+    expect(existsSync(join(sandbox.path, GSPOT_PATHS.nodeModules))).toBe(false);
 });
 
 test.each([...UNSUPPORTED_PACKAGE_MANAGERS])(

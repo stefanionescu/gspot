@@ -1,10 +1,10 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { ApplyReport } from '#cli/types/generation.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -25,9 +25,9 @@ test('apply leaves generated files writable, keeps their bytes, and deletes a st
     const applied = await runGspot(sandbox.path, ['apply', '--json']);
     expect(applied.code).toBe(0);
     expect((JSON.parse(applied.stdout) as ApplyReport).removed).toContain(`${GSPOT_FOLDER}/obsolete/old.txt`);
-    expect(await isOnDisk(join(sandbox.path, `${GSPOT_FOLDER}/obsolete/old.txt`))).toBe(false);
-    expect(await isOnDisk(join(sandbox.path, `${GSPOT_FOLDER}/obsolete`))).toBe(false);
-    expect(await isOnDisk(join(sandbox.path, '.gitattributes'))).toBe(true);
+    expect(existsSync(join(sandbox.path, `${GSPOT_FOLDER}/obsolete/old.txt`))).toBe(false);
+    expect(existsSync(join(sandbox.path, `${GSPOT_FOLDER}/obsolete`))).toBe(false);
+    expect(existsSync(join(sandbox.path, '.gitattributes'))).toBe(true);
     const rulePath = getRuleFilePath('engineering', 'WORKING.md');
     const bytes = await readFile(join(sandbox.path, rulePath), 'utf8');
     const attributes = await stat(join(sandbox.path, rulePath));
@@ -43,7 +43,7 @@ test('apply leaves generated files writable, keeps their bytes, and deletes a st
     expect(pruned.code).toBe(0);
     expect(pruned.stdout).toMatch(/removed\s+\d+ generated files in \.gspot\//u);
     expect(pruned.stdout).not.toContain(rulePath);
-    expect(await isOnDisk(join(sandbox.path, rulePath))).toBe(false);
+    expect(existsSync(join(sandbox.path, rulePath))).toBe(false);
 });
 
 test('apply removes a stray link to a folder without following it', async () => {
@@ -58,7 +58,7 @@ test('apply removes a stray link to a folder without following it', async () => 
     await rm(join(root, `${GSPOT_FOLDER}/obsolete`), { recursive: true });
     await symlink('../../outside', join(root, `${GSPOT_FOLDER}/obsolete`));
     expect(await runGspot(root, ['apply'])).toHaveProperty('code', 0);
-    expect(await isOnDisk(join(root, `${GSPOT_FOLDER}/obsolete`))).toBe(false);
+    expect(existsSync(join(root, `${GSPOT_FOLDER}/obsolete`))).toBe(false);
     expect(await readFile(join(sandbox.path, 'outside/old.txt'), 'utf8')).toBe('outside bytes\n');
 });
 
@@ -145,8 +145,8 @@ test('an ignore of every path skips the check and keeps its configured tool and 
     expect(await readFile(join(sandbox.path, '.prettierignore'), 'utf8')).toContain('**/*.json');
     expect(report.removed).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toContain('prettier');
-    expect(await isOnDisk(join(sandbox.path, getManifestTarget('format', 'prettier.json')))).toBe(true);
-    expect(await isOnDisk(join(sandbox.path, 'prettier.config.mjs'))).toBe(true);
+    expect(existsSync(join(sandbox.path, getManifestTarget('format', 'prettier.json')))).toBe(true);
+    expect(existsSync(join(sandbox.path, 'prettier.config.mjs'))).toBe(true);
     const checked = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'format/prettier', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     expect(checked.report.checks).toMatchObject([{ check: 'format/prettier', status: 'skipped', cause: 'ignore' }]);

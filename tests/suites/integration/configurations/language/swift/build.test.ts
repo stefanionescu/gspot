@@ -1,6 +1,6 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect, describe } from 'bun:test';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
@@ -86,7 +86,7 @@ xcode_destination = "platform=macOS"
             XCODE_TOOL_PROJECT,
         );
         expect(await readFile(join(sandbox.path, 'untracked.txt'), 'utf8')).toBe('authored content\n');
-        expect(await isOnDisk(join(sandbox.path, 'build'))).toBe(false);
+        expect(existsSync(join(sandbox.path, 'build'))).toBe(false);
         await writeFile(join(sandbox.path, 'main.swift'), 'let value: Int = "wrong"\nprint(value)\n');
         const changedBuild = parseCheckReport(await runGspot(sandbox.path, command));
         expect(changedBuild.code, changedBuild.stdout + changedBuild.stderr).toBe(1);

@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { createFileTree } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
 import { runFixers } from '#cli/engine/fixes.ts';
@@ -7,7 +8,6 @@ import * as manifests from '#cli/manifests/read.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { formatFixes } from '#cli/commands/check/report.ts';
 import { FIXER_RESULTS } from '#tests/config/engine/run.ts';
 import { buildProgramPin } from '#tests/setup/cli/tools.ts';
@@ -15,8 +15,8 @@ import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { runChecks, buildCheckSession } from '#cli/engine/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildProgramCommand, buildProgramArguments } from '#tests/setup/system/programs.ts';
 import { planFixer, buildRunOptions, CHECK_GENERATION, buildFixerSettings } from '#tests/setup/cli/run.ts';
 
 test.each([0])('the fixer tool owns crash detection when exit is %p', async (code) => {
@@ -96,7 +96,7 @@ test('a fixer that deletes an empty file reports it as changed', async () => {
     const resultRun = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned]);
     const result = resultRun.results[0];
     expect(result).toMatchObject({ status: 'changed', changed: ['source.txt'] });
-    expect(await isOnDisk(join(sandbox.path, 'source.txt'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'source.txt'))).toBe(false);
 });
 
 test('a skipped fixer reports skipped, and a fixer whose program is missing fails', async () => {
@@ -152,7 +152,7 @@ test('a failed version check blocks a check and its fix without changing source 
     planned.tool = {
         ...buildProgramPin('version-teller', '3.8.1'),
         system: true,
-        version_command: buildProgramArguments('fakes/tool', '--line', '3.8.1', '--exit', '7'),
+        version_command: buildProgramCommand('fakes/tool', '--line', '3.8.1', '--exit', '7').slice(1),
     };
     planned.check.fix![0] = 'version-teller';
     using _which = fakeExecutableLookup(process.execPath);

@@ -1,13 +1,13 @@
 import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { getTable } from '#cli/settings/scopes.ts';
+import { existsSync, readFileSync } from 'node:fs';
 import { openSession } from '#cli/engine/session.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
+import { readTree } from '#tests/setup/system/files.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { API_SCOPE_FILES } from '#tests/config/commands/reports.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
@@ -29,7 +29,7 @@ test('add --scope writes the scope list and applies the generated files', async 
     commitAll(sandbox.path);
     const initial = await runGspot(sandbox.path, ['apply']);
     expect(initial.code, initial.stdout + initial.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')))).toBe(false);
+    expect(existsSync(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')))).toBe(false);
     const result = await runGspot(sandbox.path, ['add', 'bash', '--scope', 'api', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const saved = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
@@ -37,7 +37,7 @@ test('add --scope writes the scope list and applies the generated files', async 
     expect(saved.configurations).toStrictEqual(['markdown']);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')))).toBe(true);
+    expect(existsSync(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')))).toBe(true);
 });
 
 test('add security exits 2, names gspot set level, and writes nothing', async () => {

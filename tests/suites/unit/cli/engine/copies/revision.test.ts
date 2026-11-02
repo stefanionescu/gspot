@@ -1,10 +1,10 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { CHANGED_CONTEXT } from '#tests/config/setup/sandboxes.ts';
@@ -126,7 +126,7 @@ test('a revision copy keeps its source available until disposal and removes the 
     expect(await readFile(copiedPath, 'utf8')).toBe(SELECTED_SOURCE);
     expect(runGitStep(copy.root, ['write-tree'])).toBe(copy.tree);
     copy[Symbol.dispose]();
-    expect(await isOnDisk(copiedPath)).toBe(false);
+    expect(existsSync(copiedPath)).toBe(false);
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe(SELECTED_SOURCE);
 });
 

@@ -1,12 +1,12 @@
 import executables from 'which';
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/engine/run.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -82,7 +82,7 @@ test('Supabase passes every configured schema as its own --schema in a scope', a
     expect(await supabase.runCheck()).toMatchObject({ status: 'passed', findings: [] });
     const request = supabase.requests[0]!;
     expect(request.cwd).not.toBe(join(sandbox.path, scope));
-    expect(await isOnDisk(request.cwd)).toBe(false);
+    expect(existsSync(request.cwd)).toBe(false);
     expect(supabase.requests).toStrictEqual([
         {
             commandArguments: [
