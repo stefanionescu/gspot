@@ -188,13 +188,6 @@ curl -o setup.sh https://example.com/setup.sh
 `;
 
 export const PLATFORM_SOURCES = {
-    'supabase/functions/body/index.ts': `schema.parse(await req.json());
-schema.safeParse(await req.json());
-const body = await req.json();
-const second = await req.json();
-schema.parseAsync(await req.json());
-schema.safeParseAsync(await req.json());
-`,
     'src/html.js': `list.innerHTML = "";
 list.innerHTML = "<li>None</li>";
 list.innerHTML = name;
@@ -220,8 +213,6 @@ list.outerHTML = markup;
 } as const;
 
 export const PLATFORM_SOURCE_FINDINGS = [
-    { file: 'supabase/functions/body/index.ts', rule: 'gspot.supabase.edge-unvalidated-json-body', line: 3 },
-    { file: 'supabase/functions/body/index.ts', rule: 'gspot.supabase.edge-unvalidated-json-body', line: 4 },
     { file: 'src/html.js', rule: 'gspot.javascript.dom-html-sink', line: 3 },
     { file: 'src/html.js', rule: 'gspot.javascript.dom-html-sink', line: 4 },
     { file: 'functions/input.js', rule: 'gspot.javascript.ssrf-web-request-user-input', line: 1 },
@@ -234,13 +225,6 @@ export const PLATFORM_SOURCE_FINDINGS = [
 ] as const;
 
 export const PLATFORM_SOURCE_FIXES = {
-    'supabase/functions/body/index.ts': `schema.parse(await req.json());
-schema.safeParse(await req.json());
-const body = schema.parse(await req.json());
-const second = schema.safeParse(await req.json());
-schema.parseAsync(await req.json());
-schema.safeParseAsync(await req.json());
-`,
     'src/html.js': `list.innerHTML = "";
 list.innerHTML = "<li>None</li>";
 list.textContent = name;

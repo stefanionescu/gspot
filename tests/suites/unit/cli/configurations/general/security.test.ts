@@ -45,11 +45,9 @@ test('Supabase rules use the configured functions folder', async () => {
     const { rules: supabaseRules } = parseDocument(supabase.content).toJS() as SemgrepRuleFile;
     expect(
         supabaseRules.filter(({ id }) => id.startsWith('gspot.supabase.edge-')).map(({ id, paths }) => ({ id, paths })),
-    ).toStrictEqual(
-        ['gspot.supabase.edge-cors-wildcard-with-credentials', 'gspot.supabase.edge-unvalidated-json-body'].map(
-            (id) => ({ id, paths: { include: ['/api/edge/**'] } }),
-        ),
-    );
+    ).toStrictEqual([
+        { id: 'gspot.supabase.edge-cors-wildcard-with-credentials', paths: { include: ['/api/edge/**'] } },
+    ]);
 });
 
 test('JWT rules are written only where the nearest package.json has jsonwebtoken', async () => {
