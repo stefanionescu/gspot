@@ -64,8 +64,12 @@ function isMemberVerified(
         jqueryEvents.has(member) &&
         outer.type === AST_NODE_TYPES.MemberExpression &&
         ASTUtils.getPropertyName(outer) === ORIGIN_MEMBER;
-    if ((ASTUtils.getPropertyName(member) === ORIGIN_MEMBER || isJqueryOrigin) && isInIfStatement(member)) return true;
-    return isUnionVerified(source, member, jqueryEvents);
+    const isOrigin = ASTUtils.getPropertyName(member) === ORIGIN_MEMBER;
+    if ((isOrigin || isJqueryOrigin) && isInIfStatement(member)) return true;
+    return (
+        (isOrigin && isNameCompared(source, member, COMPARED_ORIGIN_DEPTH)) ||
+        isUnionVerified(source, member, jqueryEvents)
+    );
 }
 
 function isEventVerified(
@@ -74,10 +78,28 @@ function isEventVerified(
     jqueryEvents: ReadonlySet<TSESTree.Node>,
 ): boolean {
     const { parent } = identifier;
-    if (parent?.type === AST_NODE_TYPES.MemberExpression) return isMemberVerified(source, parent, jqueryEvents);
-    if (parent?.type !== AST_NODE_TYPES.LogicalExpression) return false;
-    const other = parent.left === identifier ? parent.right : parent.left;
-    return jqueryEvents.has(other) && isNameCompared(source, parent, COMPARED_EVENT_DEPTH);
+    switch (parent?.type) {
+        case AST_NODE_TYPES.MemberExpression: {
+            return isMemberVerified(source, parent, jqueryEvents);
+        }
+        case AST_NODE_TYPES.VariableDeclarator: {
+            return source
+                .getDeclaredVariables(parent)
+                .filter(({ defs }) => {
+                    const property = defs[0]?.name.parent;
+                    const isProperty = property?.type === AST_NODE_TYPES.Property;
+                    return isProperty && ASTUtils.getPropertyName(property) === ORIGIN_MEMBER;
+                })
+                .some(({ references }) => references.some(({ identifier: read }) => isInIfStatement(read)));
+        }
+        case AST_NODE_TYPES.LogicalExpression: {
+            const other = parent.left === identifier ? parent.right : parent.left;
+            return jqueryEvents.has(other) && isNameCompared(source, parent, COMPARED_EVENT_DEPTH);
+        }
+        default: {
+            return false;
+        }
+    }
 }
 
 function isOriginVerified(
