@@ -45,7 +45,7 @@ test('scan reports its run and the plan of init, and leaves the repository as it
     expect(report.plan.delete.map(({ path }) => path)).toContain('.eslintrc.json');
     expect(report.settingsText).toContain('configurations = ');
     expect(report.categories.find(({ name }) => name === 'Secrets')?.examples).toMatchObject([
-        { check: 'secrets/env-examples', file: 'src/a.js', line: 1 },
+        { check: 'secrets/environment-examples', file: 'src/a.js', line: 1 },
     ]);
     expect(report.notRun.length).toBeGreaterThan(0);
     expect(report.nextSteps).toStrictEqual([

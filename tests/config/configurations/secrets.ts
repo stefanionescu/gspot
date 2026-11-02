@@ -125,13 +125,13 @@ environment_functions = ["root_env"]
 path = "app"
 
 [scope.secrets]
-env_examples = ["project.env"]
+environment_examples = ["project.env"]
 environment_functions = ["config.$env", "$readEnv"]
 [[scope]]
 path = "sibling"
 
 [scope.secrets]
-env_examples = [".env.example"]
+environment_examples = [".env.example"]
 `;
 
 export const ENVIRONMENT_TEXT_CASES = [

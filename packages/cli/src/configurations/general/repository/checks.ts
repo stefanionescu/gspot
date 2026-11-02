@@ -94,7 +94,7 @@ export function checkLocalFiles(session: Session, planned: PlannedCheck): CheckF
     const matchers = new Map(
         session.scopes.map(({ path: scopePath, configurations, settings }): [string, (path: string) => boolean] => {
             const matches = buildPathMatcher(configurations.flatMap((configuration) => configuration.ignored_paths));
-            const examples = new Set(getTable(settings, 'secrets').env_examples);
+            const examples = new Set(getTable(settings, 'secrets').environment_examples);
             return [
                 scopePath,
                 (path) => {

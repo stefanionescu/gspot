@@ -93,18 +93,18 @@ test('a secret never enters the baseline, and check reports a count that someone
     });
     const written = await runGspot(sandbox.path, ['baseline', '--json']);
     expect(written.code, written.stdout + written.stderr).toBe(0);
-    expect(JSON.parse(written.stdout)).toMatchObject({ findings: 0, leftOut: ['secrets/env-examples'] });
+    expect(JSON.parse(written.stdout)).toMatchObject({ findings: 0, leftOut: ['secrets/environment-examples'] });
     expect(JSON.parse(await readFile(join(sandbox.path, 'gspot.baseline.json'), 'utf8'))).toStrictEqual({});
     await writeFile(
         join(sandbox.path, 'gspot.baseline.json'),
-        '{"source.js":{"secrets/env-examples":{"secrets/env-examples":1}}}\n',
+        '{"source.js":{"secrets/environment-examples":{"secrets/environment-examples":1}}}\n',
     );
     const { report, code } = parseCheckReport(await runGspot(sandbox.path, ['check', '--json']));
     expect(code).toBe(1);
     expect(report.baselined).toStrictEqual({});
     expect(
         report.checks.flatMap(({ findings }) => findings.map(({ check }) => check)).toSorted(compareText),
-    ).toStrictEqual(['gspot/baseline', 'secrets/env-examples']);
+    ).toStrictEqual(['gspot/baseline', 'secrets/environment-examples']);
 });
 
 test('baseline leaves the file alone when a check cannot run', async () => {

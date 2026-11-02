@@ -88,7 +88,7 @@ the scope has no example environment file.
 @param planned the configured check and selected scope files.
 */
 export async function checkEnvExamples(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
-    const { env_examples: names, environment_functions: environmentFunctions } = getTable(
+    const { environment_examples: names, environment_functions: environmentFunctions } = getTable(
         planned.scope.settings,
         'secrets',
     );
@@ -96,7 +96,7 @@ export async function checkEnvExamples(session: Session, planned: PlannedCheck):
     if (examples.length === 0)
         throw new CheckStop(
             'skipped',
-            `No example environment file exists in ${planned.scope.path === '' ? 'the repository root' : planned.scope.path}. List the example environment files in secrets.env_examples.`,
+            `No example environment file exists in ${planned.scope.path === '' ? 'the repository root' : planned.scope.path}. List the example environment files in secrets.environment_examples.`,
         );
     const exampleKeys = new Set(
         examples.flatMap((file) => {

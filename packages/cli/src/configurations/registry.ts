@@ -185,7 +185,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'react-dom/react-versions': { check: checkReactVersions },
     'repository/large-files': { check: checkLargeFiles },
     'repository/local-files': { check: checkLocalFiles },
-    'secrets/env-examples': { check: checkEnvExamples },
+    'secrets/environment-examples': { check: checkEnvExamples },
     'secrets/environment-defaults': { check: checkEnvDefaults },
     'secrets/gitleaks-pushed': { run: checkGitleaksPushed },
     'security/semgrep': { run: checkSemgrep },

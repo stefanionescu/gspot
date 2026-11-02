@@ -262,7 +262,14 @@ export const SCAN_RUN_REPORT: RunReport = {
                 },
             ],
         },
-        { check: 'secrets/env-examples', scope: '', status: 'passed', fileCount: 2, duration: 900, findings: [] },
+        {
+            check: 'secrets/environment-examples',
+            scope: '',
+            status: 'passed',
+            fileCount: 2,
+            duration: 900,
+            findings: [],
+        },
         {
             check: 'python/ruff',
             scope: '',

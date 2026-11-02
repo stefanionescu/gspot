@@ -128,7 +128,7 @@ export const generalTableSchemas = {
     licenses: licensesSchema.optional(),
     secrets: z
         .strictObject({
-            env_examples: nonemptyStringsSchema
+            environment_examples: nonemptyStringsSchema
                 .default(['.env.example', '.env.template', '.env.sample', '.dev.vars.example'] as [
                     '.env.example',
                     '.env.template',
@@ -144,7 +144,7 @@ export const generalTableSchemas = {
                 leftOut: 'repository',
                 configurations: ['secrets'],
                 description:
-                    'Functions of this project that read environment variables, such as read_env. secrets/env-examples reads the keys they take.',
+                    'Functions of this project that read environment variables, such as read_env. secrets/environment-examples reads the keys they take.',
             }),
         })
         .optional(),

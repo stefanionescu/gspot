@@ -30,7 +30,7 @@ test('a nested scope uses the default example environment file names', async () 
             scopes: [{ path: 'app', configurations: ['secrets'] }],
         }),
     });
-    expect(await runSandboxCheck(sandbox.path, 'secrets/env-examples', { scope: 'app' })).toMatchObject([
+    expect(await runSandboxCheck(sandbox.path, 'secrets/environment-examples', { scope: 'app' })).toMatchObject([
         {
             file: 'app/source.ts',
             rule: 'missing-key',
@@ -38,16 +38,16 @@ test('a nested scope uses the default example environment file names', async () 
         },
     ]);
     await createFileTree(sandbox.path, { 'app/.env.example': 'KNOWN=example\nMISSING=example\n' });
-    expect(await runSandboxCheck(sandbox.path, 'secrets/env-examples', { scope: 'app' })).toStrictEqual([]);
+    expect(await runSandboxCheck(sandbox.path, 'secrets/environment-examples', { scope: 'app' })).toStrictEqual([]);
 });
 
 test('keys read through Bun.env and environment functions are reported until the example file lists them', async () => {
-    const options = buildRunOptions({ only: ['secrets/env-examples'] });
+    const options = buildRunOptions({ only: ['secrets/environment-examples'] });
     await using sandbox = await createGitSandbox({
         ...READER_PROJECT_FILES,
         'gspot.toml': buildSandboxSettings([], {
             tables: `[secrets]
-env_examples = ["example.env"]
+environment_examples = ["example.env"]
 environment_functions = ["config.$env", "$readEnv", "read_env"]
 `,
         }),
@@ -56,16 +56,18 @@ environment_functions = ["config.$env", "$readEnv", "read_env"]
     const failed = await runChecks(await openSession(sandbox.path), options);
 
     expect(failed.report.checks).toMatchObject([
-        { check: 'secrets/env-examples', status: 'failed', findings: ENVIRONMENT_FUNCTION_FINDINGS },
+        { check: 'secrets/environment-examples', status: 'failed', findings: ENVIRONMENT_FUNCTION_FINDINGS },
     ]);
     await createFileTree(sandbox.path, { 'config/example.env': ENVIRONMENT_FUNCTION_EXAMPLE });
     const corrected = await runChecks(await openSession(sandbox.path), options);
 
-    expect(corrected.report.checks).toMatchObject([{ check: 'secrets/env-examples', status: 'passed', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([
+        { check: 'secrets/environment-examples', status: 'passed', findings: [] },
+    ]);
 });
 
 test('each scope checks its own example env files and environment functions', async () => {
-    const options = buildRunOptions({ only: ['secrets/env-examples'] });
+    const options = buildRunOptions({ only: ['secrets/environment-examples'] });
     await using sandbox = await createGitSandbox({
         ...SCOPE_READER_PROJECT_FILES,
         'gspot.toml': buildSandboxSettings([], { tables: SCOPE_READER_PROJECT_TABLES }),
@@ -91,17 +93,23 @@ test('a scope with env reads and no example env file is skipped with a note', as
     });
     const checked = await runChecks(
         await openSession(sandbox.path),
-        buildRunOptions({ only: ['secrets/env-examples'], paths: ['app/source.ts'] }),
+        buildRunOptions({ only: ['secrets/environment-examples'], paths: ['app/source.ts'] }),
     );
 
     expect(checked.report.checks).toMatchObject([
-        { check: 'secrets/env-examples', scope: '', status: 'skipped', findings: [], note: 'No matching files.' },
         {
-            check: 'secrets/env-examples',
+            check: 'secrets/environment-examples',
+            scope: '',
+            status: 'skipped',
+            findings: [],
+            note: 'No matching files.',
+        },
+        {
+            check: 'secrets/environment-examples',
             scope: 'app',
             status: 'skipped',
             findings: [],
-            note: 'No example environment file exists in app. List the example environment files in secrets.env_examples.',
+            note: 'No example environment file exists in app. List the example environment files in secrets.environment_examples.',
         },
     ]);
 });
@@ -113,12 +121,12 @@ test('import.meta.env and Deno.env reads in component and module files need exam
         '.env.example': 'KNOWN=example\n',
         ...ENV_ACCESSOR_FILES,
     });
-    const rejected = await runSandboxCheck(sandbox.path, 'secrets/env-examples');
+    const rejected = await runSandboxCheck(sandbox.path, 'secrets/environment-examples');
     expect(rejected.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
         ...COMPONENT_ENVIRONMENT_FINDINGS,
     ]);
     await createFileTree(sandbox.path, { '.env.example': ENV_ACCESSOR_EXAMPLE });
-    expect(await runSandboxCheck(sandbox.path, 'secrets/env-examples')).toStrictEqual([]);
+    expect(await runSandboxCheck(sandbox.path, 'secrets/environment-examples')).toStrictEqual([]);
 });
 
 test.each([...ENVIRONMENT_TEXT_CASES])('$name', async ({ files, changed, findings: expected }) => {
@@ -126,9 +134,9 @@ test.each([...ENVIRONMENT_TEXT_CASES])('$name', async ({ files, changed, finding
         'gspot.toml': buildSandboxSettings(['secrets']),
         ...files,
     });
-    expect(await runSandboxCheck(sandbox.path, 'secrets/env-examples')).toStrictEqual([]);
+    expect(await runSandboxCheck(sandbox.path, 'secrets/environment-examples')).toStrictEqual([]);
     await createFileTree(sandbox.path, changed);
-    const findings = await runSandboxCheck(sandbox.path, 'secrets/env-examples');
+    const findings = await runSandboxCheck(sandbox.path, 'secrets/environment-examples');
     expect(findings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([...expected]);
 });
 
