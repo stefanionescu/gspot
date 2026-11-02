@@ -239,6 +239,10 @@ export const SECRET_KEY_NAME = /(?:TOKEN|SECRET|KEY|PASSWORD)/u;
 
 export const ENV_DEFAULT_RULE = 'env-fallback';
 
+export const NESTED_AGENTS_RULE = 'nested-agents-file';
+
+export const NESTED_AGENTS_MESSAGE = 'Move these rules into the AGENTS.md at the root of the repository.';
+
 export const ENV_KEY_LINE = /^(?:#\s*)?(?:export )?(?<key>[A-Z][A-Z0-9_]*)=/u;
 
 export const GITLEAKS_LOG_FLAG = '--log-opts';

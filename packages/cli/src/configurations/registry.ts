@@ -19,6 +19,7 @@ import { checkMessages } from '#cli/configurations/library/translations/checks.t
 import { checkPytestCoverage } from '#cli/configurations/testing/pytest/checks.ts';
 import { checkSiteBuild } from '#cli/configurations/framework/site/checks/build.ts';
 import { checkGrants } from '#cli/configurations/database/postgres/checks/grants.ts';
+import { checkAgentsFiles } from '#cli/configurations/general/engineering/checks.ts';
 import { checkHtmlInlineScripts } from '#cli/configurations/language/html/checks.ts';
 import { checkSwiftBuild } from '#cli/configurations/language/swift/checks/build.ts';
 import { checkCoverage } from '#cli/configurations/language/swift/checks/coverage.ts';
@@ -140,6 +141,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'docs/missing-paths': { check: checkMissingPaths },
     'docs/required-files': { check: checkRequiredFiles },
     'docs/version-strings': { check: checkVersionStrings },
+    'engineering/agents-files': { check: checkAgentsFiles },
     'duplication/jscpd': { check: checkJscpd },
     'expo/expo-doctor': { check: checkExpoDoctor },
     'github-actions/actionlint': { run: checkActionlint },
