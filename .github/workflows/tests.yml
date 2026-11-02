@@ -30,7 +30,7 @@ jobs:
             - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
               with:
                   version: '2026.10.7'
-                  install_args: bun node
+                  install_args: bun node npm@11.19.0
             - if: matrix.node == 'minimum'
               run: mise exec -- npm install --global npm@11.19.0
             - if: runner.os == 'Windows'
