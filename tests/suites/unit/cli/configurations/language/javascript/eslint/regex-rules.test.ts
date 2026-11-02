@@ -19,9 +19,7 @@ test.each(ESLINT_LEVEL_CASES)('%s reports each regular expression sample in %s',
     const rules = [...new Set(REGEX_SAMPLES.map((sample) => sample.rule))];
     const findings = await listLintFindings(eslint, sandbox.path, files, rules);
     const reported = findings.map(({ file, rule }) => `${file} ${String(rule)}`);
-    const expected = REGEX_SAMPLES.filter((sample) => level === 'all' || sample.level === 'basic').map(
-        (sample) => `${sample.name}.${extension} ${sample.rule}`,
-    );
+    const expected = REGEX_SAMPLES.map((sample) => `${sample.name}.${extension} ${sample.rule}`);
     expect([...new Set(reported)].toSorted(compareText)).toStrictEqual(expected.toSorted(compareText));
     await createFileTree(
         sandbox.path,

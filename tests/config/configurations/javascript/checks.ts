@@ -21,14 +21,12 @@ export const IMPORTED_AMBIENT_FILES = {
 export const REGEX_SAMPLES = [
     {
         name: 'move',
-        level: 'basic',
         rule: 'regexp/no-super-linear-move',
         bad: 'export const found = /a+b/.test(text);',
         good: 'export const found = /^a+b/.test(text);',
     },
     {
         name: 'dot',
-        level: 'basic',
         rule: 'gspot/restricted-syntax',
         bad: String.raw`export const found = /a[\s\S]b/s.test(text);`,
         good: 'export const found = /a.b/s.test(text);',
