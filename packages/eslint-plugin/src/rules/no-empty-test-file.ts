@@ -8,6 +8,14 @@ function readChainName(node: TSESTree.Node): string {
     return `${readChainName(node.object)}.${node.property.name}`;
 }
 
+function isTitledDeclaration(name: string, call: TSESTree.CallExpression): boolean {
+    const [title, , cases] = call.arguments;
+    if (title?.type !== AST_NODE_TYPES.Literal || typeof title.value !== 'string') return false;
+    return (
+        TITLED_TEST_DECLARATIONS.has(name) || (name.endsWith('.run') && cases?.type === AST_NODE_TYPES.ObjectExpression)
+    );
+}
+
 export const noEmptyTestFile = createRule<[], 'empty'>({
     name: 'no-empty-test-file',
     meta: {
@@ -16,7 +24,7 @@ export const noEmptyTestFile = createRule<[], 'empty'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a file named `*.test.*`, `*.spec.*`, or `*.cy.*` that declares no test: no `it`, `test`, `specify`, or `Deno.test` call in any of their forms, no titled Playwright `test.skip`, `test.fail`, or `test.fixme`, and no `ruleTester.run`.',
+                'Reports a file named `*.test.*`, `*.spec.*`, or `*.cy.*` that declares no test: no `it`, `test`, `specify`, or `Deno.test` call in any of their forms, no titled Playwright `test.skip`, `test.fail`, or `test.fixme`, no `ruleTester.run`, and no other `.run` call with a title and an object of cases.',
             why: 'A test file without tests passes and checks nothing, so it hides that the tests it should hold are gone.',
             fix: 'Add the tests that the file is named for, or delete the file.',
             example:
@@ -34,9 +42,7 @@ export const noEmptyTestFile = createRule<[], 'empty'>({
             ) {
                 const isCall = node.type === AST_NODE_TYPES.CallExpression;
                 const name = readChainName(isCall ? node.callee : node.tag);
-                const title = isCall ? node.arguments[0] : undefined;
-                const isTitled = title?.type === AST_NODE_TYPES.Literal && typeof title.value === 'string';
-                hasTest ||= TEST_DECLARATIONS.has(name) || (isTitled && TITLED_TEST_DECLARATIONS.has(name));
+                hasTest ||= TEST_DECLARATIONS.has(name) || (isCall && isTitledDeclaration(name, node));
             },
             'Program:exit'() {
                 const isEmpty = !hasTest;
