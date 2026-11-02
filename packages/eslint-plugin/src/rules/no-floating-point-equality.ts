@@ -16,7 +16,6 @@ import {
     RANGE_OPERATORS,
     ASSERTION_MATCHERS,
     FLOAT_ARITHMETIC_OPERATORS,
-    CONSTANT_ARITHMETIC_OPERATORS,
 } from '../config/operators.ts';
 
 function isInexactLiteral(text: string): boolean {
@@ -28,33 +27,10 @@ function isInexactLiteral(text: string): boolean {
     return scale > 0 && BigInt(`${integer}${fraction}`) % DECIMAL_FACTOR ** BigInt(scale) !== BIGINT_ZERO;
 }
 
-function readSigned(node: TSESTree.UnaryExpression): number | undefined {
-    const sign = SIGNS.get(node.operator);
-    const value = readNumber(node.argument);
-    return sign === undefined || value === undefined ? undefined : sign * value;
-}
-
-function readArithmetic(node: TSESTree.BinaryExpression): number | undefined {
-    const operation = CONSTANT_ARITHMETIC_OPERATORS.get(node.operator);
-    const [left, right] = [readNumber(node.left), readNumber(node.right)];
-    return left === undefined || right === undefined ? undefined : operation?.(left, right);
-}
-
 function readNumber(node: TSESTree.Node): number | undefined {
-    switch (node.type) {
-        case AST_NODE_TYPES.Literal: {
-            return typeof node.value === 'number' ? node.value : undefined;
-        }
-        case AST_NODE_TYPES.UnaryExpression: {
-            return readSigned(node);
-        }
-        case AST_NODE_TYPES.BinaryExpression: {
-            return readArithmetic(node);
-        }
-        default: {
-            return undefined;
-        }
-    }
+    const evaluated = ASTUtils.getStaticValue(node);
+    if (typeof evaluated?.value !== 'number') return undefined;
+    return evaluated.value;
 }
 
 function stripFactorsOfTwo(value: number): number {
@@ -70,18 +46,13 @@ function isFractionDivision(node: TSESTree.BinaryExpression): boolean {
     return !Number.isSafeInteger(left) || !Number.isSafeInteger(right) || left % stripFactorsOfTwo(right) !== 0;
 }
 
-function readConstantValue(variable: TSESLint.Scope.Variable): TSESTree.Expression | undefined {
-    const declarator = variable.defs[0]?.node;
-    if (declarator?.type !== AST_NODE_TYPES.VariableDeclarator || declarator.parent.kind !== 'const') return undefined;
-    return declarator.id.type === AST_NODE_TYPES.Identifier && declarator.init !== null ? declarator.init : undefined;
-}
-
 function isFloatingConstant(node: TSESTree.Identifier, source: TSESLint.SourceCode, seen: Set<unknown>): boolean {
     const variable = ASTUtils.findVariable(source.getScope(node), node);
     if (variable === null || seen.has(variable)) return false;
     seen.add(variable);
-    const value = readConstantValue(variable);
-    return value !== undefined && isFloatingPoint(value, source, seen);
+    const declarator = variable.defs[0]?.node;
+    const isConstant = declarator?.type === AST_NODE_TYPES.VariableDeclarator && declarator.parent.kind === 'const';
+    return isConstant && declarator.init !== null && isFloatingPoint(declarator.init, source, seen);
 }
 
 function isFloatingArithmetic(node: TSESTree.BinaryExpression, source: TSESLint.SourceCode, seen: Set<unknown>) {
@@ -116,7 +87,7 @@ function readMatcherRoot({ callee }: TSESTree.CallExpression): TSESTree.Node | u
     if (callee.type !== AST_NODE_TYPES.MemberExpression) return undefined;
     let target: TSESTree.Node = callee.object;
     while (target.type === AST_NODE_TYPES.MemberExpression) target = target.object;
-    return ASSERTION_MATCHERS.has(ASTUtils.getPropertyName(callee) ?? '') ? target : undefined;
+    return ASSERTION_MATCHERS.has(ASTUtils.getPropertyName(callee)) ? target : undefined;
 }
 
 function readAssertionOperands(node: TSESTree.CallExpression): TSESTree.Node[] {

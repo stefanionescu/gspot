@@ -1,6 +1,5 @@
 import { createRule } from '../rule.ts';
 import type { ReturnScope } from '../types/rules.ts';
-import { UNARY_EVALUATORS } from '../config/operators.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -11,10 +10,10 @@ import {
     EFFECT_RETURN_BRANCH,
 } from '../config/rules.ts';
 
-function isBranchBody(node: TSESTree.Node): boolean {
+function isBranchBody(node: TSESTree.BlockStatement | TSESTree.ExpressionStatement): boolean {
     const { parent } = node;
-    const keys = BRANCH_KEYS.get(parent?.type ?? '') ?? [];
-    return keys.some((key) => Object.is(parent?.[key as keyof TSESTree.Node], node));
+    const keys = BRANCH_KEYS.get(parent.type) ?? [];
+    return keys.some((key) => Object.is(parent[key as keyof TSESTree.Node], node));
 }
 
 function readEnclosingStatement(identifier: TSESTree.Node): TSESTree.ExpressionStatement | undefined {
@@ -48,12 +47,8 @@ function readVariableLiteral(node: TSESTree.Identifier, source: TSESLint.SourceC
 }
 
 function readLiteral(node: TSESTree.Node, source: TSESLint.SourceCode): { value: unknown } | undefined {
-    if (node.type === AST_NODE_TYPES.Literal) return { value: node.value };
     if (node.type === AST_NODE_TYPES.Identifier) return readVariableLiteral(node, source);
-    if (node.type !== AST_NODE_TYPES.UnaryExpression) return undefined;
-    const inner = readLiteral(node.argument, source);
-    const evaluate = UNARY_EVALUATORS.get(node.operator);
-    return inner === undefined || evaluate === undefined ? undefined : { value: evaluate(inner.value) };
+    return ASTUtils.getStaticValue(node, source.getScope(node)) ?? undefined;
 }
 
 function isSameVariable(values: readonly TSESTree.Node[], source: TSESLint.SourceCode): boolean {
@@ -81,12 +76,6 @@ function isInvariant(scope: ReturnScope, source: TSESLint.SourceCode): boolean {
     return isSameVariable(values, source) && !scope.kinds.has(EFFECT_ONLY_BRANCH);
 }
 
-function closeBranch(scope: ReturnScope | undefined): void {
-    const frame = scope?.frames.pop();
-    if (frame === undefined) return;
-    scope?.kinds.add(`${String(frame.effect)},${String(frame.returns)}`);
-}
-
 export const noInvariantReturns = createRule<[], 'invariant'>({
     name: 'no-invariant-returns',
     meta: {
@@ -107,21 +96,23 @@ export const noInvariantReturns = createRule<[], 'invariant'>({
     },
     create(context) {
         const scopes: ReturnScope[] = [];
-        const openBranch = (node: TSESTree.Node) => {
+        const openBranch = (node: TSESTree.BlockStatement | TSESTree.SwitchCase) => {
             const isBranch = node.type === AST_NODE_TYPES.SwitchCase || isBranchBody(node);
             if (!isBranch) return;
             scopes.at(-1)?.frames.push({ effect: false, returns: false });
         };
-        const leaveBranch = (node: TSESTree.Node) => {
+        const leaveBranch = (node: TSESTree.BlockStatement | TSESTree.SwitchCase) => {
             const isBranch = node.type === AST_NODE_TYPES.SwitchCase || isBranchBody(node);
             if (!isBranch) return;
-            closeBranch(scopes.at(-1));
+            const scope = scopes.at(-1);
+            const frame = scope?.frames.pop();
+            scope?.kinds.add(`${String(frame?.effect)},${String(frame?.returns)}`);
         };
-        const recordEffect = (node: TSESTree.Node) => {
+        const recordEffect = (node: TSESTree.ExpressionStatement) => {
             const scope = scopes.at(-1);
             const frame = scope?.frames.at(-1);
             if (frame !== undefined) frame.effect = true;
-            if (node.parent !== undefined && isBranchBody(node.parent)) scope?.kinds.add(EFFECT_ONLY_BRANCH);
+            if (isBranchBody(node)) scope?.kinds.add(EFFECT_ONLY_BRANCH);
         };
         const trackSegment = (segment: TSESLint.CodePathSegment) => {
             const segments = scopes.at(-1)?.segments;
@@ -149,8 +140,8 @@ export const noInvariantReturns = createRule<[], 'invariant'>({
             'BlockStatement:exit': leaveBranch,
             SwitchCase: openBranch,
             'SwitchCase:exit': leaveBranch,
-            'ExpressionStatement > CallExpression': recordEffect,
-            'ExpressionStatement > AssignmentExpression': recordEffect,
+            'ExpressionStatement[expression.type="CallExpression"]': recordEffect,
+            'ExpressionStatement[expression.type="AssignmentExpression"]': recordEffect,
             ':function:exit'(node: TSESTree.Node) {
                 const scope = scopes.at(-1);
                 if (scope === undefined || !isInvariant(scope, context.sourceCode)) return;
