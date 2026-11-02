@@ -13,15 +13,15 @@ import {
     FUNCTION_TYPE_TEXT,
     SANITATION_MEMBERS,
     UNKNOWN_TYPE_NAMES,
-    READONLY_TYPE_PREFIX,
 } from '../config/checker.ts';
 
-function readTypeLabel(type: CheckedType, types: TypeReader): string {
+function readTypeLabel(returned: CheckedType, types: TypeReader): string {
     const { checker } = types;
+    const type = checker.getBaseConstraintOfType(returned) ?? returned;
     const text = checker.typeToString(type);
-    if (type.isUnionOrIntersection()) return text;
+    if (type.isUnion()) return text;
+    if (checker.isArrayLikeType(type)) return 'array';
     if (FUNCTION_TYPE_TEXT.test(text)) return 'function';
-    if (checker.isArrayType(type) && !text.startsWith(READONLY_TYPE_PREFIX)) return 'array';
     const isNonPrimitive =
         !type.isTypeParameter() &&
         !UNKNOWN_TYPE_NAMES.has(text) &&
@@ -29,18 +29,17 @@ function readTypeLabel(type: CheckedType, types: TypeReader): string {
     return isNonPrimitive ? 'object' : checker.typeToString(checker.getBaseTypeOfLiteralType(type));
 }
 
-function hasMixedReturnType(signature: CheckedSignature, types: TypeReader): boolean {
+function hasMixedReturnType(signature: CheckedSignature, returned: CheckedType, types: TypeReader): boolean {
     const { checker } = types;
-    const returned = checker.getBaseTypeOfLiteralType(checker.getReturnTypeOfSignature(signature));
-    const members = returned.isUnion() ? returned.types : [];
+    const widened = checker.getBaseTypeOfLiteralType(returned);
+    const members = widened.isUnion() ? widened.types : [];
     const filled = members.filter((member) => !EMPTY_TYPE_NAMES.has(checker.typeToString(member)));
     const labels = new Set(filled.map((member) => readTypeLabel(member, types)));
     const isDocumented = signature.getJsDocTags().some(({ name }) => RETURN_DOC_TAGS.has(name));
     return labels.size > 1 && !isDocumented;
 }
 
-function isSanitation(signature: CheckedSignature, { checker }: TypeReader): boolean {
-    const returned = signature.getReturnType();
+function isSanitation(returned: CheckedType, { checker }: TypeReader): boolean {
     const members = returned.isUnionOrIntersection() ? returned.types : [];
     const hasString = members.some(
         (member) =>
@@ -54,8 +53,10 @@ function isSanitation(signature: CheckedSignature, { checker }: TypeReader): boo
 function isMixedFunction(node: FunctionNode, values: readonly TSESTree.Expression[], types: TypeReader): boolean {
     if (values.some(({ type }) => type === AST_NODE_TYPES.ThisExpression)) return false;
     const signature = types.checker.getSignatureFromDeclaration(types.map.get(node));
-    if (signature === undefined || !hasMixedReturnType(signature, types) || isSanitation(signature, types))
-        return false;
+    if (signature === undefined) return false;
+    const resultType = types.checker.getReturnTypeOfSignature(signature);
+    const returned = (node.async ? types.checker.getAwaitedType(resultType) : resultType) ?? resultType;
+    if (!hasMixedReturnType(signature, returned, types) || isSanitation(returned, types)) return false;
     const labels = values.flatMap((value) => {
         const type = types.read(value);
         const text = types.checker.typeToString(type);

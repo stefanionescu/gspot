@@ -1,7 +1,5 @@
 export const FUNCTION_TYPE_TEXT = /^[(<]/u;
 
-export const READONLY_TYPE_PREFIX = 'readonly ';
-
 export const RETURN_DOC_TAGS: ReadonlySet<string> = new Set(['return', 'returns']);
 
 export const UNKNOWN_TYPE_NAMES: ReadonlySet<string> = new Set(['any', 'unknown', 'never']);
