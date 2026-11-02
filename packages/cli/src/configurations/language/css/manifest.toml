@@ -45,11 +45,11 @@ target = "stylelint.json"
 tool = "stylelint"
 
 [[check]]
-command = ["stylelint", "--config", "{config_file:stylelint}", "--config-basedir", "{root}/.gspot", "--formatter", "unix", "--allow-empty-input", "{files}"]
+command = ["stylelint", "--config", "{config_file:stylelint}", "--formatter", "unix", "--allow-empty-input", "{files}"]
 example = "The declaration `color: #ggg` holds an invalid hex value and reports a finding. Replace it with a valid one such as `#abc`."
 exit_codes = [2]
 files = { extensions = [".css", ".vue", ".svelte", ".astro"] }
-fix = ["stylelint", "--config", "{config_file:stylelint}", "--config-basedir", "{root}/.gspot", "--fix", "--allow-empty-input", "{files}"]
+fix = ["stylelint", "--config", "{config_file:stylelint}", "--fix", "--allow-empty-input", "{files}"]
 help = "Run the `fix:` command that the report prints for the rules that fix themselves."
 name = "stylelint"
 output = { format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?<message>.*) \\((?<rule>[\\w/@-]+)\\) \\[\\w+\\]$" }

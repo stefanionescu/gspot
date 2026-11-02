@@ -3,6 +3,7 @@ import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
@@ -86,6 +87,37 @@ test("Stylelint run by an editor finds the scope's config file and checks the bu
         });
         expect(native.code, native.stdout + native.stderr).toBe(0);
     }
+});
+
+test('Stylelint loads a plugin module in a full run and in a staged run', async () => {
+    const root = installedSandbox().root;
+    await using _change = await writeSandboxChanges(installedSandbox(), {
+        files: {
+            'gspot.toml': buildSandboxSettings(['css'], {
+                tables: '[[tools.stylelint.plugins]]\npath = "tools/lint/plugin.mjs"\nrules = { "acme/no-red" = true }\n',
+            }),
+            'tools/lint/plugin.mjs': `const ruleName = 'acme/no-red';
+const rule = () => (root, result) => {
+    root.walkDecls('color', (node) => {
+        if (node.value === 'red') result.warn(\`Do not use red. (\${ruleName})\`, { node, rule: ruleName });
+    });
+};
+rule.ruleName = ruleName;
+rule.messages = {};
+export default { ruleName, rule };
+`,
+            'a.css': 'a {\n    color: red;\n}\n',
+        },
+        removed: Object.keys(STYLESHEETS),
+    });
+    const rows = [{ file: 'a.css', line: 2, rule: 'acme/no-red' }];
+    const failed = parseCheckReport(await spawnGspot(root, [...STYLELINT_COMMAND]));
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    expect(listFindingRows(failed.report)).toStrictEqual(rows);
+    runGitStep(root, ['add', '-A']);
+    const staged = parseCheckReport(await spawnGspot(root, [...STYLELINT_COMMAND, '--staged']));
+    expect(staged.code, staged.stdout + staged.stderr).toBe(1);
+    expect(listFindingRows(staged.report)).toStrictEqual(rows);
 });
 
 test('Stylelint accepts Tailwind syntax only in the scope that declares Tailwind', async () => {

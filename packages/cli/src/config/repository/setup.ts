@@ -371,6 +371,6 @@ export const PRINTED_RULE_TOOLS = [
         check: 'css/stylelint',
         sample: /\.css$/u,
         hasSeverity: false,
-        gspotArguments: ['--config', '.gspot/configurations/language/css/stylelint.json', '--config-basedir', '.gspot'],
+        gspotArguments: ['--config', '.gspot/configurations/language/css/stylelint.json'],
     },
 ] as const;
