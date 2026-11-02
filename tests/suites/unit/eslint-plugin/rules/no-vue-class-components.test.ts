@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { writeFileSync } from 'node:fs';
 import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 
@@ -6,7 +7,11 @@ const root = writePackageFolders({
     three: { dependencies: { vue: '^3.4.0' } },
     two: { dependencies: { vue: '^2.7.0' } },
     plain: {},
+    template: {},
+    empty: {},
 });
+writeFileSync(join(root, 'template/package.json'), '{ "name": <%= name %> }');
+writeFileSync(join(root, 'empty/package.json'), 'null');
 const filename = join(root, 'three/cart.ts');
 
 buildRuleTester({ root }).run('no-vue-class-components', plugin.rules['no-vue-class-components'], {
@@ -21,6 +26,8 @@ buildRuleTester({ root }).run('no-vue-class-components', plugin.rules['no-vue-cl
         },
         { code: 'import { Vue } from "./vue";\nexport class Cart extends Vue {}', filename },
         { code: 'function Prop() {}\nexport class Cart { @Prop() total = 0; }', filename },
+        { code: 'export {};', filename: join(root, 'template/cart.ts') },
+        { code: 'export {};', filename: join(root, 'empty/cart.ts') },
     ],
     invalid: [
         {

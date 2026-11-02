@@ -13,6 +13,8 @@ buildRuleTester().run('no-invariant-returns', plugin.rules['no-invariant-returns
         'const LIMIT = 3; function read(item) { if (item) return LIMIT; return LIMIT; }',
         'function read(item) { const result = {}; if (item) { result.size = 1; return result; } return result; }',
         'function read(item) { const result = {}; if (item) store(item); if (other) return result; return result; }',
+        'async function save(draft) { if (draft) { await store(); return true; } await publish(); return true; }',
+        'async function load(p, langs) { const h = await p; if (!langs) { return h; } for (const l of langs) { await h.load(l); } return h; }',
     ],
     invalid: [
         {

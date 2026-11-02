@@ -22,6 +22,7 @@ buildRuleTester().run('no-floating-point-equality', plugin.rules['no-floating-po
         'const rate = total ?? 0.1;',
         'if (total <= 0.1 && ready) pay();',
         'switch (total) { case 1: pay(); break; default: stop(); }',
+        "expect(parse('3.14')).toEqual(3.14);",
     ],
     invalid: [
         { code: 'if (total === 0.1) pay();', errors: [{ messageId: 'equality' }] },

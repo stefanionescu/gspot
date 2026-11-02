@@ -13,6 +13,7 @@ buildRuleTester().run('cross-origin-policy', plugin.rules['cross-origin-policy']
             "app.get('/', (req) => { read(req); });",
             "app.get('/', (req, res) => { res.setHeader('X-Frame-Options', 'DENY'); });",
             'http.createServer(app);',
+            "app.get('/x', (req, res) => { const origin = req.headers.origin; if (ALLOWED.includes(origin)) res.setHeader('Access-Control-Allow-Origin', origin); res.end(); });",
         ].map((code) => `import express from 'express';\nimport http from 'http';\nconst app = express();\n${code}`),
     ],
     invalid: [
@@ -26,5 +27,13 @@ buildRuleTester().run('cross-origin-policy', plugin.rules['cross-origin-policy']
                 { messageId: 'permissive', line: 13 },
             ],
         },
+        ...[
+            "app.use('/api', cors());",
+            'app.use(cors({ origin: true }));',
+            'const router = express.Router(); router.use(cors());',
+        ].map((code) => ({
+            code: `import cors from 'cors';\nimport express from 'express';\nconst app = express();\n${code}`,
+            errors: [{ messageId: 'permissive' as const }],
+        })),
     ],
 });

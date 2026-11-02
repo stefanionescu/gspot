@@ -9,6 +9,7 @@ buildRuleTester().run('file-permissions', plugin.rules['file-permissions'], {
 
         "import fs from 'fs';\nfs.chmodSync('/tmp/report', 0o750);\nprocess.umask(0o027);",
         "import fs from 'fs';\nfs.chmodSync('/tmp/report', mode);",
+        "import fs from 'fs';\nfs.chmodSync('7za', 0o700);",
     ],
     invalid: [
         { code: "import process from 'process';\nprocess.umask(0o000);", errors: [{ messageId: 'permissive' }] },

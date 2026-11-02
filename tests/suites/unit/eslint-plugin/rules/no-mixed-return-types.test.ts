@@ -15,6 +15,9 @@ buildTypedRuleTester().run('no-mixed-return-types', rule, {
         'function check(raw: boolean) { if (raw) return "invalid"; return true; }',
         '/** @returns the value */\nfunction read(raw: boolean) { if (raw) return "1"; return 1; }',
         'class Builder { add(raw: boolean) { if (raw) return this; return 1; } }',
+        "type Result = { id: string } & ({ kind: 'a' } | { kind: 'b'; note: string }); declare const made: Result; function read(raw: boolean): Result { if (raw) return { id: '1', kind: 'a' }; return made; }",
+        "function pick(raw: boolean) { if (raw) return ['a', 1] as const; return ['b']; }",
+        "function pick<T extends string>(raw: boolean, name: T) { if (raw) return name; return 'x'; }",
     ],
     invalid: [
         {
@@ -36,6 +39,10 @@ buildTypedRuleTester().run('no-mixed-return-types', rule, {
         {
             code: 'function read(raw: boolean, ready: boolean) { if (raw) return "1"; if (ready) return 1; return null; }',
             errors: [{ messageId: 'mixed', column: 10 }],
+        },
+        {
+            code: 'async function read(raw: boolean) { if (raw) return "1"; return 1; }',
+            errors: [{ messageId: 'mixed' }],
         },
     ],
 });

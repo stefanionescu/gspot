@@ -7,6 +7,7 @@ buildRuleTester().run('no-stateful-regex', plugin.rules['no-stateful-regex'], {
         'const word = /a/gu; word.test(first); word.test("");',
         'const word = /a/u; word.test(first); word.test(second);',
         'const word = /a/gu; while (word.exec(text)) {}',
+        "const out = text.replaceAll(/a/gy, 'b');",
     ],
     invalid: [
         { code: 'while (/a/gu.exec(text)) {}', errors: [{ messageId: 'loop' }] },

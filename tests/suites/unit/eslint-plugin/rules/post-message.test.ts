@@ -18,6 +18,8 @@ buildTypedRuleTester().run('post-message', plugin.rules['post-message'], {
         "declare const handler: (event: MessageEvent) => void;\nwindow.addEventListener('message', handler);",
         "window.addEventListener('message', (event) => console.log(event.data));",
         'declare const port: MessagePort;\nport.onmessage = (event) => console.log(event.data);',
+        "window.addEventListener('message', (event) => { const { origin, data } = event; if (origin !== 'https://app.example.com') return; console.log(data); });",
+        "window.addEventListener('message', (event) => { const origin = event.origin; if (origin !== 'https://app.example.com') return; console.log(event.data); });",
     ],
     invalid: [
         {

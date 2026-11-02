@@ -8,6 +8,8 @@ buildRuleTester().run('no-clear-text-protocols', plugin.rules['no-clear-text-pro
         "const nodemailer = require('nodemailer');\nnodemailer.createTransport({ secure: useTls });",
         "const nodemailer = require('nodemailer');\nnodemailer.createTransport({ SES: { ses, aws } });",
         "const nodemailer = require('nodemailer');\nnodemailer.createTransport(buildOptions());",
+        "const url = new URL(path, 'http://base');",
+        "import nodemailer from 'nodemailer'; nodemailer.createTransport({ service: 'gmail', auth });",
     ],
     invalid: [
         {

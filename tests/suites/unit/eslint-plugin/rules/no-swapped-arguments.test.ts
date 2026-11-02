@@ -19,6 +19,8 @@ buildRuleTester().run('no-swapped-arguments', rule, {
         'function range(start, end) {} if (!start.isBefore(end)) range(end, start);',
         'function merge(first, second) {} if (first.length > second.length) merge(second, first);',
         'function split({ head }, tail) {} split(tail, head);',
+        'function asc(a, b) {} function desc(a, b) { return asc(b, a); }',
+        'function mid(lo, hi) { return lo > hi ? mid(hi, lo) : 0; }',
     ],
     invalid: [
         {
