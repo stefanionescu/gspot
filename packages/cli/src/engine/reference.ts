@@ -24,7 +24,7 @@ Collect tool requirements, supported systems, suppression syntax, and ignore com
 export function describeCheck(check: Check, configurations: Configuration[]): CheckDescription {
     const toolName = findToolName(check);
     const tool = toolName === undefined ? undefined : getTool(configurations, toolName);
-    const tools = [toolName, ...(check.other_tools ?? [])].filter((name): name is string => name !== undefined);
+    const tools = [toolName, ...(check.secondary_tools ?? [])].filter((name): name is string => name !== undefined);
     return {
         toolName,
         tools,

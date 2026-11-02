@@ -4,14 +4,14 @@ import { printProgress } from '#cli/engine/report.ts';
 import { PROGRESS_CLEAR } from '#cli/config/engine.ts';
 import { writeProgress } from '#cli/system/terminal.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
-import { listOutdatedFiles } from '#cli/generation/outdated.ts';
+import { listStaleFiles } from '#cli/generation/stale.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import type { RunResult, CheckGeneration } from '#cli/types/engine/run.ts';
 
 export const CHECK_GENERATION: CheckGeneration = {
     buildConfigs,
-    listOutdatedFiles: (session, flags) => listOutdatedFiles(session, buildGeneratedFiles(session), flags),
+    listStaleFiles: (session, flags) => listStaleFiles(session, buildGeneratedFiles(session), flags),
 };
 
 /**

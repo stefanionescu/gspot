@@ -10,7 +10,7 @@ import type { CommandResult } from '#cli/types/system.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
-import { isLoosening } from '#cli/settings/validation/reasons.ts';
+import { isWeakening } from '#cli/settings/validation/reasons.ts';
 import type { TomlTable, InheritedSetting } from '#cli/types/settings.ts';
 import { SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
 import { getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
@@ -98,16 +98,16 @@ function setSetting(scopeTable: TomlTable, change: ParsedSettingValue, setting: 
 
 function assertReason({ options, setting, change, joined, previous, shippedDefault }: SettingReasonContext): void {
     if (setting.reason_values === true) return;
-    const loosens = isLoosening(setting, joined, shippedDefault);
+    const weakens = isWeakening(setting, joined, shippedDefault);
     if (options.reason === undefined) {
-        if (change.type === 'list' && previous?.reason !== undefined && loosens)
+        if (change.type === 'list' && previous?.reason !== undefined && weakens)
             throw new GspotError(
                 'arguments',
                 `${options.key} already has the reason ${JSON.stringify(previous.reason)}. Pass --reason with a reason that covers every item.`,
             );
         return;
     }
-    if (!loosens)
+    if (!weakens)
         throw new GspotError(
             'arguments',
             `${options.key} takes no reason here: the value does not loosen the shipped default. Run the command without --reason.`,

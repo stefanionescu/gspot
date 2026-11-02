@@ -100,7 +100,7 @@ export const LINT_COMMAND_FIXES = {
     settings: 'Delete these settings: gspot runs a tool that covers this one.',
 } as const;
 
-export const SECOND_TOOLS = [
+export const OVERLAPPING_TOOLS = [
     { name: 'black', owner: 'ruff', files: [], sections: [['pyproject.toml', 'tool.black']] },
     {
         name: 'flake8',

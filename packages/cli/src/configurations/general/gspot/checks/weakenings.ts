@@ -9,7 +9,7 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { isLoosening } from '#cli/settings/validation/reasons.ts';
+import { isWeakening } from '#cli/settings/validation/reasons.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import type { Settings, IgnoreRecord } from '#cli/types/settings.ts';
 import type { Weakening } from '#cli/types/configurations/general.ts';
@@ -101,7 +101,7 @@ function listSettingMoves(base: Settings, head: Settings): Weakening[] {
         return [...keys].flatMap((key) => {
             const moved = getSettingValue(available, head, key, scope);
             const before = getSettingValue(available, base, key, scope);
-            if (moved === undefined || !isLoosening(moved.setting, moved.value, before?.value)) return [];
+            if (moved === undefined || !isWeakening(moved.setting, moved.value, before?.value)) return [];
             const values = `from ${JSON.stringify(before?.value)} to ${JSON.stringify(moved.value)}`;
             return [
                 {

@@ -11,8 +11,8 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
-import type { PlannedLinkField } from '#cli/types/generation.ts';
 import type { Session, GeneratedFile } from '#cli/types/tools.ts';
+import type { PlannedPointerField } from '#cli/types/generation.ts';
 import type { Config, ManagedKeys } from '#cli/types/repository.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
@@ -43,7 +43,15 @@ function fillTarget(body: string, pointerPath: string, targetPath: string): stri
     });
 }
 
-function listLinkFieldTargets({ scope, configuration, tool, consumed, paths, configs, scopePaths }: PlannedLinkField) {
+function listPointerFieldTargets({
+    scope,
+    configuration,
+    tool,
+    consumed,
+    paths,
+    configs,
+    scopePaths,
+}: PlannedPointerField) {
     return (tool.replace_key ?? [])
         .filter((replacement) => replacement.pointer === true)
         .flatMap((replacement) =>
@@ -70,7 +78,7 @@ function listLinkFieldTargets({ scope, configuration, tool, consumed, paths, con
         );
 }
 
-function listLinkFieldTools(session: Session) {
+function listPointerFieldTools(session: Session) {
     return session.scopes.flatMap((scope) => {
         const required = new Set(
             session.configuredChecks
@@ -159,14 +167,14 @@ Point the package fields that manifests declare at the generated config files.
 export function buildPointerFieldEdits(
     session: Session,
     generated: GeneratedFile[],
-    configs: PlannedLinkField['configs'],
+    configs: PlannedPointerField['configs'],
 ): ManagedKeys[] {
     const { root, repository, scopes } = session;
     const paths = new Set(generated.map(({ path }) => path));
     const scopePaths = scopes.map(({ path }) => path);
-    const tools = listLinkFieldTools(session);
+    const tools = listPointerFieldTools(session);
     const pointerTargets = tools.flatMap((selected) =>
-        listLinkFieldTargets({ ...selected, paths, configs, scopePaths }),
+        listPointerFieldTargets({ ...selected, paths, configs, scopePaths }),
     );
     const pointerFields = new Map(pointerTargets.map((row) => [JSON.stringify([row.key, row.scope, row.target]), row]));
     if (pointerFields.size === 0) return [];

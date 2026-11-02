@@ -7,8 +7,8 @@ import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { listOtherTools, listCheckTools } from '#cli/engine/tools.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
+import { listCheckTools, listSecondaryTools } from '#cli/engine/tools.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { NODE_REQUIREMENTS, COVERAGE_PROVIDERS } from '#tests/config/engine/run.ts';
 
@@ -65,11 +65,11 @@ describe.each(COVERAGE_PROVIDERS.flatMap((row) => [0, 80].map((lines) => ({ ...r
         });
         afterAll(() => resources.disposeAsync());
         test.each(['', 'app'])(
-            'scope %p needs the coverage provider only above a zero limit and always lists it among the other tools',
+            'scope %p needs the coverage provider only above a zero limit and always lists it among the secondary tools',
             (scope) => {
                 const check = checks.find((planned) => planned.scope.path === scope)!;
                 expect(listCheckTools(check)).toStrictEqual([configuration, ...(lines === 0 ? [] : [provider])]);
-                expect(listOtherTools(check.scope, check.check, check.check.command)).toStrictEqual([provider]);
+                expect(listSecondaryTools(check.scope, check.check, check.check.command)).toStrictEqual([provider]);
             },
         );
     },

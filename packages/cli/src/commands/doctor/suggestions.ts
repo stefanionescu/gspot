@@ -73,7 +73,7 @@ function buildInactiveFileRow(
 ): SuggestionRow {
     const checks = configuration.checks.filter(
         (check) =>
-            [check.tool, ...(check.other_tools ?? [])].includes(config.tool) || check.command?.[0] === config.tool,
+            [check.tool, ...(check.secondary_tools ?? [])].includes(config.tool) || check.command?.[0] === config.tool,
     );
     const note = `no applicable ${config.tool} check at level ${session.settings.level}`;
     if (session.settings.level === 'basic' && checks.length > 0 && checks.every((check) => check.level === 'all'))

@@ -15,7 +15,7 @@ import {
     REMOVAL_REASON_SUGGESTION,
 } from '#cli/config/settings/validation.ts';
 
-function isLimitLoosening(direction: Exclude<ReasonRequirement, 'adding'>, value: unknown, shipped: unknown): boolean {
+function isLimitWeakening(direction: Exclude<ReasonRequirement, 'adding'>, value: unknown, shipped: unknown): boolean {
     if (typeof value !== 'number' || typeof shipped !== 'number') return false;
     return direction === 'raising' ? value > shipped : value < shipped;
 }
@@ -89,13 +89,13 @@ export function isReasonAccepted(reason: string | undefined): boolean {
 }
 
 /**
-Check whether a value loosens the shipped default, so it needs a reason.
+Check whether a value weakens the shipped default, so it needs a reason.
 
 @param setting the setting whose reason rule applies.
 @param value what gspot.toml sets.
 @param shipped the default of the configuration.
 */
-export function isLoosening(setting: Setting, value: unknown, shipped: unknown): boolean {
+export function isWeakening(setting: Setting, value: unknown, shipped: unknown): boolean {
     if (setting.reason_when === 'adding') {
         if (Array.isArray(value))
             return value.some(
@@ -111,6 +111,6 @@ export function isLoosening(setting: Setting, value: unknown, shipped: unknown):
     }
     return (
         (setting.reason_when === 'raising' || setting.reason_when === 'lowering') &&
-        isLimitLoosening(setting.reason_when, value, shipped)
+        isLimitWeakening(setting.reason_when, value, shipped)
     );
 }

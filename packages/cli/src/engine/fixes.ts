@@ -52,7 +52,7 @@ async function runFixCommands(session: Session, planned: PlannedCheck, setup: Co
     return buildFixResult(check, changed, note, session.cancelSignal);
 }
 
-function mergeResults(first: FixResult | undefined, next: FixResult): FixResult {
+function mergeFixResults(first: FixResult | undefined, next: FixResult): FixResult {
     if (first === undefined) return next;
     const changed = [...new Set([...first.changed, ...next.changed])];
     if (next.status === 'failed' || next.status === 'canceled') return { ...next, changed };
@@ -137,7 +137,7 @@ async function runFixerRounds(session: CheckSession, checks: PlannedCheck[], pat
         const before = readContents(session.root, paths);
         firstBefore ??= before;
         for (const { check, index } of pending) {
-            results.set(index, mergeResults(results.get(index), await runFixer(session, check)));
+            results.set(index, mergeFixResults(results.get(index), await runFixer(session, check)));
             fixedContents.set(index, readContents(session.root, listPlannedPaths(checks[index] as PlannedCheck)));
         }
         after = readContents(session.root, paths);

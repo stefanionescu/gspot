@@ -18,7 +18,7 @@ import type { SettingsListJson } from '#cli/types/commands/reports.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
-    LOOSENED_SETTINGS,
+    WEAKENED_SETTINGS,
     STOPPED_APPLY_FILES,
     KEPT_SETTING_CHANGES,
     STRING_SETTING_VALUES,
@@ -137,7 +137,7 @@ test('set level all writes the level in a fresh clone', async () => {
     expect(settings).toBe('all');
 });
 
-test.each([...LOOSENED_SETTINGS])(
+test.each([...WEAKENED_SETTINGS])(
     'set refuses $key without --reason, and set and unset keep its reason through list edits',
     async ({ key, value, second }) => {
         await using sandbox = await createGitSandbox({
@@ -164,7 +164,7 @@ test.each([...LOOSENED_SETTINGS])(
     },
 );
 
-test.each([...LOOSENED_SETTINGS])(
+test.each([...WEAKENED_SETTINGS])(
     '$key set in one scope keeps the root value, and unset gives the scope the inherited value again',
     async ({ key, value, second }) => {
         await using sandbox = await createGitSandbox({

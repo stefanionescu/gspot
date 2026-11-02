@@ -165,7 +165,7 @@ export const checkSchema = checkFieldsSchema.transform(({ tool, ...check }) => {
     return {
         ...check,
         ...(executable !== undefined && { tool: executable }),
-        ...(others.length > 0 && { other_tools: others }),
+        ...(others.length > 0 && { secondary_tools: others }),
     };
 });
 

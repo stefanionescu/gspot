@@ -47,12 +47,12 @@ export function readBytes(source: string | RunCache, path: string, options?: { l
     return bytes;
 }
 
-function decodeHeldText(source: string | RunCache, path: string): string {
+function decodeCachedText(source: string | RunCache, path: string): string {
     const bytes = readBytes(source, path);
-    if (typeof source === 'string') return decodeUtf8Text(path, bytes);
+    if (typeof source === 'string') return decodeUtf8File(path, bytes);
     const held = source.texts.get(bytes);
     if (held !== undefined) return held;
-    const text = decodeUtf8Text(path, bytes);
+    const text = decodeUtf8File(path, bytes);
     source.texts.set(bytes, text);
     return text;
 }
@@ -65,7 +65,7 @@ Read UTF-8 text, or return undefined for a missing file.
 */
 export function findText(source: string | RunCache, path: string): string | undefined {
     try {
-        return decodeHeldText(source, path);
+        return decodeCachedText(source, path);
     } catch (error) {
         if (hasErrorCode(error, 'ENOENT')) return undefined;
         if (hasErrorCode(error, 'EACCES') || hasErrorCode(error, 'EPERM') || hasErrorCode(error, 'EISDIR'))
@@ -139,7 +139,7 @@ Decode a user file, or tell the user how to fix its encoding.
 @param path the file to name in an encoding error.
 @param bytes the file contents to decode.
 */
-export function decodeUtf8Text(path: string, bytes: Buffer): string {
+export function decodeUtf8File(path: string, bytes: Buffer): string {
     const text = decodeUtf8(bytes);
     if (text === undefined)
         throw new GspotError('filesystem', `${path} is not UTF-8 text. Save it as UTF-8, then run the command again.`);

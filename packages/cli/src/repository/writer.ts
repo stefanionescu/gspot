@@ -8,7 +8,7 @@ import type { EditableFile } from '#cli/types/parsers.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { openJsonFile } from '#cli/parsers/formats/json.ts';
 import { openTomlFile } from '#cli/parsers/formats/toml.ts';
-import { decodeUtf8Text } from '#cli/system/files/reads.ts';
+import { decodeUtf8File } from '#cli/system/files/reads.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
 import type { Files, FileContents } from '#cli/types/system.ts';
 import { GSPOT_FOLDER, LEADING_NEWLINE } from '#cli/config/parsers.ts';
@@ -32,7 +32,7 @@ import {
 } from '#cli/config/repository/setup.ts';
 
 function openManagedKeysFile(path: string, onDisk: FileContents | undefined, keys: ManagedKeys['keys']): EditableFile {
-    const text = onDisk === undefined ? undefined : decodeUtf8Text(path, onDisk.bytes);
+    const text = onDisk === undefined ? undefined : decodeUtf8File(path, onDisk.bytes);
     if (path.endsWith(TOML_EXTENSION)) {
         const headers = new Set(
             keys
@@ -53,7 +53,7 @@ function openManagedKeysFile(path: string, onDisk: FileContents | undefined, key
 }
 
 function removeBlock(path: string, onDisk: FileContents): FileContents | undefined {
-    const text = decodeUtf8Text(path, onDisk.bytes);
+    const text = decodeUtf8File(path, onDisk.bytes);
     const span = findBlockSpan(text, { path });
     if (span === undefined) return onDisk;
     const before = text.slice(0, span.start).replace(TRAILING_BLANK_LINE, '$1');
@@ -204,7 +204,7 @@ Keep the text outside the marked block.
 */
 export function planBlock(writer: Files, path: string, body: string): WritePlan {
     const onDisk = writer.read(path);
-    const text = onDisk === undefined ? '' : decodeUtf8Text(path, onDisk.bytes);
+    const text = onDisk === undefined ? '' : decodeUtf8File(path, onDisk.bytes);
     const nextText = replaceBlock(text, body, { path });
     const next = {
         bytes: Buffer.from(nextText),

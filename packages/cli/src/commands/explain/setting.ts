@@ -3,7 +3,7 @@ import { buildSettings } from '#cli/settings/read.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import { listSettingReaders } from '#cli/engine/skips.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { isLoosening } from '#cli/settings/validation/reasons.ts';
+import { isWeakening } from '#cli/settings/validation/reasons.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { RECORD_FIELDS, findSettingSchema } from '#cli/settings/lookup.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
@@ -28,7 +28,7 @@ function formatSettingScope(key: string, setting: Setting, scopeSetting: Setting
 
 function formatReasonLines(setting: Setting, { shipped, inherited }: SettingScope): string[] {
     const value = inherited?.value;
-    const isLoose = value !== undefined && isLoosening(setting, value, shipped);
+    const isLoose = value !== undefined && isWeakening(setting, value, shipped);
     return [
         ...(isLoose ? [REASON_HELP] : []),
         ...(inherited?.reason === undefined ? [] : [`Reason on record: ${inherited.reason}`]),

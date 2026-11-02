@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { listExpectedPaths, listOutdatedFiles } from '#cli/generation/outdated.ts';
+import { listStaleFiles, listExpectedPaths } from '#cli/generation/stale.ts';
 
 test('changed managed keys are reported without a whole-file replacement', async () => {
     await using sandbox = await createGitSandbox({
@@ -15,7 +15,7 @@ test('changed managed keys are reported without a whole-file replacement', async
         blocks: [],
         managedKeys: [{ path: 'package.json', keys: [{ key: ['stylelint'], value: 'managed' }] }],
     };
-    expect(listOutdatedFiles(session, output)).toStrictEqual([{ path: 'package.json', kind: 'changed' }]);
+    expect(listStaleFiles(session, output)).toStrictEqual([{ path: 'package.json', kind: 'changed' }]);
 });
 
 test('the expected paths keep the lockfile of the generated mise project', async () => {

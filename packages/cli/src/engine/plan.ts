@@ -79,7 +79,7 @@ function skipReplacedChecks(planned: PlannedCheck[]): PlannedCheck[] {
     });
 }
 
-function enumerateScopeChecks(
+function listKeptScopeChecks(
     settings: Settings,
     scopes: Scope[],
     isKept: (scope: Scope, check: Check) => boolean,
@@ -103,7 +103,7 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
     const narrowedPaths = buildNarrowedPaths(options);
     const scopePaths = scopes.map(({ path }) => path);
     const enumerated = Map.groupBy(
-        enumerateScopeChecks(settings, scopes, (_scope, check) => isWanted(check, options)),
+        listKeptScopeChecks(settings, scopes, (_scope, check) => isWanted(check, options)),
         ({ scope }) => scope.path,
     );
     return scopes.map((scope) => {
@@ -235,7 +235,7 @@ List each check that a scope runs at some stage, with no files.
 export function listEnabledChecks(scopes: Scope[], settings: Settings): ScopeCheck[] {
     const root = getRootScope(scopes);
     const configurations = scopes.flatMap((each) => each.configurations);
-    return enumerateScopeChecks(
+    return listKeptScopeChecks(
         settings,
         scopes,
         (scope, check) => isWanted(check, { stage: 'any' }) && findSettingsSkip(settings, scope, check) === undefined,

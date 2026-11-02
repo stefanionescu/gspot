@@ -113,7 +113,7 @@ test('the config files, requirements, and checks of each configuration name decl
             ...configuration.tools.flatMap((tool) => tool.requires ?? []),
             ...configuration.checks.flatMap((check) => [
                 ...(check.tool === undefined ? [] : [check.tool]),
-                ...(check.other_tools ?? []),
+                ...(check.secondary_tools ?? []),
             ]),
         ]
             .filter((name) => !tools.has(name))

@@ -2,8 +2,8 @@ import { runTool } from '#cli/tools/run.ts';
 import { getTool } from '#cli/tools/pins.ts';
 import { dirname, delimiter } from 'node:path';
 import { CheckStop } from '#cli/system/errors.ts';
-import { listOtherTools } from '#cli/engine/tools.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
+import { listSecondaryTools } from '#cli/engine/tools.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -69,13 +69,13 @@ export async function runToolProcess(
 }
 
 /**
-Add the folders of the installed other tools of a check to the process `PATH`, also in a copy.
+Add the folders of the installed secondary tools of a check to the process `PATH`, also in a copy.
 
 @param session the repository and its configurations.
-@param names the other tools to add.
+@param names the secondary tools to add.
 @param environment variables for the tool process.
 */
-export async function buildOtherToolEnvironment(
+export async function buildSecondaryToolEnvironment(
     session: CheckSession,
     names: string[],
     environment: Record<string, string>,
@@ -116,8 +116,8 @@ export async function runCheckTool(
     );
     const commandArguments =
         'tool' in command ? [process.execPath, command.modulePath, path] : [...start, ...command.slice(1)];
-    const otherTools = listOtherTools(planned.scope, planned.check);
-    const toolEnvironment = await buildOtherToolEnvironment(session, otherTools, env);
+    const secondaryTools = listSecondaryTools(planned.scope, planned.check);
+    const toolEnvironment = await buildSecondaryToolEnvironment(session, secondaryTools, env);
     const { result, failure } = await session.limitProcess(() =>
         runToolProcess(commandArguments, {
             ...options,

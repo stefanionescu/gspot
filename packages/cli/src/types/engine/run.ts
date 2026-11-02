@@ -149,7 +149,7 @@ export type CommandLaunch = {
     env: Record<string, string>;
 };
 
-export type OutdatedFile = {
+export type StaleFile = {
     diff?: string;
     path: string;
     kind: 'changed' | 'absent' | 'stray';
@@ -157,7 +157,7 @@ export type OutdatedFile = {
 
 export type CheckGeneration = {
     buildConfigs: (session: Session) => ConfigTargets;
-    listOutdatedFiles: (session: Session, options: Pick<CheckRunOptions, 'verbose'>) => OutdatedFile[];
+    listStaleFiles: (session: Session, options: Pick<CheckRunOptions, 'verbose'>) => StaleFile[];
 };
 
 export type CheckSession = Session & {

@@ -9,7 +9,7 @@ import { LINE_BREAK, GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { findToolName, listDistinctTools } from '#cli/tools/pins.ts';
 import type { RunReport, CheckResult } from '#cli/types/engine/run.ts';
 import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
-import { formatInitPlan, listCarryLines } from '#cli/generation/setup/plan.ts';
+import { formatInitPlan, listCarryLines } from '#cli/generation/setup/file-plan.ts';
 import type { ScanTime, ScanInput, ScanReport, ScanSection, ScanCategory } from '#cli/types/commands/reports.ts';
 
 import {

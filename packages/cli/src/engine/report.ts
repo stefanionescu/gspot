@@ -34,7 +34,7 @@ function isIncomplete(session: Session, results: CheckResult[], fixes: FixReport
     );
 }
 
-function finishResult(result: CheckResult, help: string): CheckResult {
+function addFindingExplanations(result: CheckResult, help: string): CheckResult {
     const findings = result.findings.map(({ help: own, ...finding }) => ({
         ...finding,
         explain: formatExplainCommand(finding),
@@ -52,7 +52,7 @@ export function buildRunReport(run: FinishedRun): RunReport {
     const { session, options, started, planned, results: ran, fixes, baselined } = run;
     const results = new Map(run.active.map((check, index) => [check, ran[index] as CheckResult]));
     const checks = planned.map((check) =>
-        finishResult(
+        addFindingExplanations(
             results.get(check) ?? {
                 ...buildBaseResult(check, session),
                 status: 'skipped',

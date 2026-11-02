@@ -151,7 +151,7 @@ path = "api"
 configurations = ["bash"]
 `;
 
-export const LOOSENED_SETTINGS = [
+export const WEAKENED_SETTINGS = [
     {
         key: 'site.allowed_unlisted_pages',
         value: 'account/index.html',

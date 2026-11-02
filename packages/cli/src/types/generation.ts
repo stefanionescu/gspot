@@ -25,7 +25,7 @@ import type {
     ProposedConfigurations,
 } from '#cli/types/repository.ts';
 
-export type PlannedLinkField = {
+export type PlannedPointerField = {
     scope: Scope;
     configuration: Configuration;
     tool: Tool;

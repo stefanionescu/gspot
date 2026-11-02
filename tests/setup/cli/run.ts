@@ -1,8 +1,8 @@
 import { planChecks } from '#cli/engine/plan.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
+import { listStaleFiles } from '#cli/generation/stale.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { listOutdatedFiles } from '#cli/generation/outdated.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
@@ -53,7 +53,7 @@ The production generators, called only when a check needs their output.
 */
 export const CHECK_GENERATION: CheckGeneration = {
     buildConfigs,
-    listOutdatedFiles: (session, options) => listOutdatedFiles(session, buildGeneratedFiles(session), options),
+    listStaleFiles: (session, options) => listStaleFiles(session, buildGeneratedFiles(session), options),
 };
 
 /**

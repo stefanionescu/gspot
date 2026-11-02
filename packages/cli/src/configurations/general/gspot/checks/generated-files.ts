@@ -16,16 +16,14 @@ export function checkGeneratedFiles(
     _planned: PlannedCheck,
     options: CheckRunOptions = {},
 ): CheckFinding[] {
-    const outdated = session.generation.listOutdatedFiles(session, options);
-    return outdated.map((outdatedFile) => {
-        const { diff } = outdatedFile;
+    const stale = session.generation.listStaleFiles(session, options);
+    return stale.map((staleFile) => {
+        const { diff } = staleFile;
         return {
-            file: outdatedFile.path,
-            rule: outdatedFile.kind,
-            message: GENERATED_FILE_FINDINGS[outdatedFile.kind].message,
-            help: TOOL_LOCKFILES.has(outdatedFile.path)
-                ? INSTALL_HELP
-                : GENERATED_FILE_FINDINGS[outdatedFile.kind].help,
+            file: staleFile.path,
+            rule: staleFile.kind,
+            message: GENERATED_FILE_FINDINGS[staleFile.kind].message,
+            help: TOOL_LOCKFILES.has(staleFile.path) ? INSTALL_HELP : GENERATED_FILE_FINDINGS[staleFile.kind].help,
             ...(diff === undefined ? {} : { diff }),
         };
     });

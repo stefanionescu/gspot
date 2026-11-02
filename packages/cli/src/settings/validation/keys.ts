@@ -3,7 +3,7 @@ import type { KeyPath } from '#cli/types/parsers.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import { joinSettingPaths } from '#cli/settings/paths.ts';
-import { isLoosening } from '#cli/settings/validation/reasons.ts';
+import { isWeakening } from '#cli/settings/validation/reasons.ts';
 import { TABLE_KEY_SEGMENTS } from '#cli/config/settings/schema.ts';
 import { UNDER_TABLE, AT_TOP_LEVEL } from '#cli/config/settings/validation.ts';
 import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
@@ -18,7 +18,7 @@ import {
     listApplicableTables,
 } from '#cli/settings/inherit.ts';
 
-function formatLooseningError(key: string, written: WrittenSetting, shipped: unknown, scopePath: string): string {
+function formatWeakeningError(key: string, written: WrittenSetting, shipped: unknown, scopePath: string): string {
     const shown = shipped === undefined ? 'default' : `default ${JSON.stringify(shipped)}`;
     const scopeFlag = scopePath === '' ? '' : ` --scope ${quoteArgument(scopePath)}`;
     const value = JSON.stringify(written.value);
@@ -34,7 +34,7 @@ function validateWrittenReason(
     shipped: unknown,
 ): SettingsError[] {
     const joined = joinSettingPaths(key, written.value, scopePath);
-    const isLoose = isLoosening(setting, joined, shipped);
+    const isLoose = isWeakening(setting, joined, shipped);
     if (written.reason !== undefined)
         return isLoose
             ? []
@@ -46,7 +46,7 @@ function validateWrittenReason(
               ];
     if (!isLoose) return [];
     if (setting.type !== 'list')
-        return [{ path: key.split('.'), message: formatLooseningError(key, written, shipped, scopePath) }];
+        return [{ path: key.split('.'), message: formatWeakeningError(key, written, shipped, scopePath) }];
     return Array.isArray(written.value)
         ? [
               {
@@ -145,7 +145,7 @@ export function formatUnknownSetting(key: string, availableKeys: string[]): stri
 }
 
 /**
-Validate every written key against the known settings and the loosening rule.
+Validate every written key against the known settings and the weakening rule.
 
 @param availableSettings the settings and defaults of the selected configurations.
 @param settings the parsed gspot.toml.

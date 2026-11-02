@@ -62,7 +62,7 @@ export const KNIP_UNUSED_FILES = [
     'unused.vue',
 ] as const;
 
-export const KNIP_LINK_FILES = {
+export const KNIP_POINTER_FILES = {
     'package.json': '{"name":"pointer-project","private":true,"type":"module","workspaces":["child"]}',
     'README.md': '# Link file project\n',
     'child/README.md': '# Child pointer file project\n',

@@ -7,9 +7,9 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { formatHeader } from '#cli/generation/header.ts';
+import { listStaleFiles } from '#cli/generation/stale.ts';
 import type { ApplyReport } from '#cli/types/generation.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
-import { listOutdatedFiles } from '#cli/generation/outdated.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import type { PackageFieldScenario } from '#tests/types/setup.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -81,7 +81,7 @@ test('removing css drops its managed stylelint field and keeps authored fields b
     }
     const settled = await openSession(sandbox.path);
     const output = buildGeneratedFiles(settled);
-    expect(listOutdatedFiles(settled, output)).toStrictEqual(listStaleLockfiles(settled, output.files));
+    expect(listStaleFiles(settled, output)).toStrictEqual(listStaleLockfiles(settled, output.files));
     expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).not.toContain('`stylelint`');
 });
 

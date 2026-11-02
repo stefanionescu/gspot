@@ -3,7 +3,7 @@ import { compareText } from '#cli/system/text.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { OutdatedFile } from '#cli/types/engine/run.ts';
+import type { StaleFile } from '#cli/types/engine/run.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
 import { listOwnablePaths } from '#cli/generation/pointers.ts';
 import type { Files, FileContents } from '#cli/types/system.ts';
@@ -17,8 +17,8 @@ import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
 import type { Session, Generation, GeneratedFile } from '#cli/types/tools.ts';
 import { ON_DISK_LABEL, DIFF_CONTEXT_LINES, BLOCK_ON_DISK_LABEL } from '#cli/config/generation.ts';
 
-function listOutdatedOutputs(files: Files, generated: Generation): OutdatedFile[] {
-    return generated.files.flatMap((file): OutdatedFile[] => {
+function listStaleOutputs(files: Files, generated: Generation): StaleFile[] {
+    return generated.files.flatMap((file): StaleFile[] => {
         const onDisk = files.read(file.path);
         if (onDisk === undefined) return [{ path: file.path, kind: 'absent' }];
         const mode = file.executable === true ? EXECUTABLE_FILE : OWNER_WRITABLE_FILE;
@@ -27,20 +27,20 @@ function listOutdatedOutputs(files: Files, generated: Generation): OutdatedFile[
     });
 }
 
-function listOutdatedBlocks(files: Files, generated: Generation): OutdatedFile[] {
-    const outdated: OutdatedFile[] = [];
+function listStaleBlocks(files: Files, generated: Generation): StaleFile[] {
+    const stale: StaleFile[] = [];
     for (const block of generated.blocks) {
         const text = files.read(block.path)?.bytes.toString('utf8') ?? '';
         const onDisk = findBlockBody(text, { path: block.path });
         const wanted = block.body.trim();
-        if (onDisk === undefined) outdated.push({ path: block.path, kind: 'absent' });
-        else if (onDisk !== wanted) outdated.push({ path: block.path, kind: 'changed' });
+        if (onDisk === undefined) stale.push({ path: block.path, kind: 'absent' });
+        else if (onDisk !== wanted) stale.push({ path: block.path, kind: 'changed' });
     }
-    return outdated;
+    return stale;
 }
 
-function listOutdatedManagedKeys(files: Files, generated: Generation): OutdatedFile[] {
-    return generated.managedKeys.flatMap((output): OutdatedFile[] => {
+function listStaleManagedKeys(files: Files, generated: Generation): StaleFile[] {
+    return generated.managedKeys.flatMap((output): StaleFile[] => {
         const onDisk = files.read(output.path);
         if (onDisk === undefined) return [{ path: output.path, kind: 'absent' }];
         return hasManagedKeys(output, onDisk) ? [] : [{ path: output.path, kind: 'changed' }];
@@ -98,27 +98,27 @@ Find changed, absent, or stray generated files. Managed blocks and file edits co
 @param generated the files that this run generates.
 @param options controls optional differences.
 @param options.verbose includes text and mode differences for changed files.
-@returns the outdated files in path order.
+@returns the stale files in path order.
 */
-export function listOutdatedFiles(
+export function listStaleFiles(
     session: Session,
     generated: Generation,
     options: { verbose?: boolean | undefined } = {},
-): OutdatedFile[] {
+): StaleFile[] {
     const files = openFiles(session.root);
     const expected = listExpectedPaths(session, generated);
     const lockfiles = listStaleLockfiles(session, generated.files);
     const strays = listStrayPaths(session, expected, listOwnablePaths(session)).map(
-        (path): OutdatedFile => ({
+        (path): StaleFile => ({
             path,
             kind: 'stray',
         }),
     );
     return [
         ...lockfiles.map(({ path, kind }) => ({ path, kind })),
-        ...listOutdatedOutputs(files, generated),
-        ...listOutdatedBlocks(files, generated),
-        ...listOutdatedManagedKeys(files, generated),
+        ...listStaleOutputs(files, generated),
+        ...listStaleBlocks(files, generated),
+        ...listStaleManagedKeys(files, generated),
         ...strays,
     ]
         .map((file) => {

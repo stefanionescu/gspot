@@ -107,7 +107,7 @@ export function readRepositoryCacheFolder(root: string): string {
     return join(readCacheFolder(), digest);
 }
 
-function takeBuildLock(path: string): Disposable | undefined {
+function createBuildLock(path: string): Disposable | undefined {
     try {
         writeFileSync(path, String(process.pid), { flag: 'wx', mode: PRIVATE_FILE });
         return {
@@ -132,13 +132,13 @@ process stopped.
 export async function acquireBuildLock(folder: string, cancelSignal: AbortSignal | undefined): Promise<Disposable> {
     const files = openBuildCache(folder);
     const path = join(folder, BUILD_LOCK);
-    let lock = takeBuildLock(path);
+    let lock = createBuildLock(path);
     while (lock === undefined) {
         const owner = files.read(BUILD_LOCK);
         if (owner !== undefined && isProcessRunning(Number(owner.bytes.toString('utf8'))))
             await delay(BUILD_LOCK_WAIT_MILLISECONDS, undefined, { signal: cancelSignal });
         else rmSync(path, { force: true });
-        lock = takeBuildLock(path);
+        lock = createBuildLock(path);
     }
     return lock;
 }

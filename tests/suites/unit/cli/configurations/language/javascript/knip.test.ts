@@ -18,8 +18,8 @@ import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generate
 
 import {
     KNIP_ARGUMENTS,
-    KNIP_LINK_FILES,
     KNIP_UNUSED_FILES,
+    KNIP_POINTER_FILES,
     KNIP_WORKSPACE_FILES,
     KNIP_COMPONENT_FILES,
 } from '#tests/config/configurations/javascript/checks.ts';
@@ -104,7 +104,7 @@ test('Knip reports each unused dependency that you declare, also when it names a
 
 test('Knip treats script configuration files as entries and ignores pointer files', async () => {
     await using sandbox = await createGitSandbox({
-        ...KNIP_LINK_FILES,
+        ...KNIP_POINTER_FILES,
         'gspot.toml': buildSandboxSettings(['javascript', 'markdown'], {
             level: 'all',
             tables: `\n[javascript]\nentry_files = ["main.js"]\n[[scope]]\npath = "child"\n\nconfigurations = ["javascript", "markdown"]\n[scope.javascript]\nentry_files = ["main.js"]\n`,

@@ -28,7 +28,7 @@ import {
     PRINT_TIMEOUT_SECONDS,
 } from '#cli/config/repository/setup.ts';
 
-function isLooser(rule: string, user: unknown[], shipped: unknown[]): boolean {
+function isWeakerRule(rule: string, user: unknown[], shipped: unknown[]): boolean {
     const value = FIRST_NUMBER.exec(JSON.stringify(user))?.[0];
     const limit = FIRST_NUMBER.exec(JSON.stringify(shipped))?.[0];
     return LIMIT_RULE.test(rule) && value !== undefined && limit !== undefined && Number(value) > Number(limit);
@@ -43,7 +43,7 @@ function formatIgnoreLine(check: string, rule: string, file?: string): string {
 
 function classifyRule(rule: string, state: RuleState, shipped: RuleState | undefined): keyof ComparedRules {
     if (shipped?.on !== true) return state.on ? 'added' : 'covered';
-    if (!state.on || isLooser(rule, state.options, shipped.options)) return 'reasons';
+    if (!state.on || isWeakerRule(rule, state.options, shipped.options)) return 'reasons';
     return isDeepStrictEqual(state.options, shipped.options) ? 'covered' : 'options';
 }
 
@@ -62,8 +62,8 @@ export function convertRule(value: unknown, hasSeverity: boolean): RuleState {
 
 /**
 Compare the names and options of the rules of a replaced config with what gspot runs. The same rule counts as covered.
-A rule that gspot runs with other options carries over, unless the options give a looser limit. A rule that the user
-turned off, or loosened, needs a reason. The caller decides what happens to a rule that gspot does not run.
+A rule that gspot runs with other options carries over, unless the options give a weaker limit. A rule that the user
+turned off, or weakened, needs a reason. The caller decides what happens to a rule that gspot does not run.
 
 @param input the check, the rules of the user, and what gspot runs.
 */

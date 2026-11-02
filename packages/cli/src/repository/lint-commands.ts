@@ -22,7 +22,6 @@ import {
     COMMENT_LINE,
     COMMAND_KEYS,
     RUNNER_NAMES,
-    SECOND_TOOLS,
     COMMAND_FILES,
     TASK_AFTER_RUN,
     PYGREP_LANGUAGE,
@@ -30,6 +29,7 @@ import {
     LINT_STAGED_KEY,
     YAML_EXTENSIONS,
     HOOK_FOLDER_PATH,
+    OVERLAPPING_TOOLS,
     HOOK_ID_SEPARATOR,
     BIN_FOLDER_PREFIX,
     LINT_COMMAND_FIXES,
@@ -143,10 +143,10 @@ function readDependencyRows({ root, pins }: LintCommandSearch): LintCommand[] {
     });
 }
 
-function readSecondToolRows({ root, files, tools }: LintCommandSearch): LintCommand[] {
+function readOverlappingToolRows({ root, files, tools }: LintCommandSearch): LintCommand[] {
     const settings = { source: 'settings', fix: LINT_COMMAND_FIXES.settings } as const;
     const tracked = new Set(files.map(({ path }) => path));
-    return SECOND_TOOLS.filter(({ owner }) => tools.has(owner)).flatMap(({ name, files: own, sections }) => [
+    return OVERLAPPING_TOOLS.filter(({ owner }) => tools.has(owner)).flatMap(({ name, files: own, sections }) => [
         ...own
             .filter((file) => tracked.has(file))
             .map((file) => ({ ...settings, file, line: 1, command: file, tool: name })),
@@ -235,6 +235,6 @@ export function listLintCommands(input: LintCommandSearch): LintCommand[] {
                 HOOK_FOLDER_PATH.test(place.file) ? readLineRows(place, wide) : readDocumentRows(place, wide),
             ),
         ...readDependencyRows(input),
-        ...readSecondToolRows(input),
+        ...readOverlappingToolRows(input),
     ];
 }

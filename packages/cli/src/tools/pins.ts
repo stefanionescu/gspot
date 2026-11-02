@@ -5,7 +5,7 @@ import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import type { LintCommandSearch } from '#cli/types/repository.ts';
 import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
-import { LINT_PACKAGE, SECOND_TOOLS } from '#cli/config/repository/setup.ts';
+import { LINT_PACKAGE, OVERLAPPING_TOOLS } from '#cli/config/repository/setup.ts';
 import { UV_TOOL, NODE_TOOL, CONFIG_TOML_FORMAT, PYTHON_TOOL_PROJECT } from '#cli/config/tools/installers.ts';
 
 import type {
@@ -120,7 +120,7 @@ export function listReplacedTools(configurations: Configuration[]): Pick<LintCom
         ({ replace, replace_key }) => replace !== undefined || replace_key !== undefined,
     );
     const names = new Set(replaced.map(({ name }) => name));
-    const covered = SECOND_TOOLS.filter(({ owner }) => names.has(owner)).map(({ name }) => name);
+    const covered = OVERLAPPING_TOOLS.filter(({ owner }) => names.has(owner)).map(({ name }) => name);
     const stack = configurations.map((configuration) => ({
         ...configuration,
         tools: configuration.tools.filter(

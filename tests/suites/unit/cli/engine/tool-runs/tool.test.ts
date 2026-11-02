@@ -8,7 +8,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runToolProcess, buildOtherToolEnvironment } from '#cli/engine/tool-runs/tool.ts';
+import { runToolProcess, buildSecondaryToolEnvironment } from '#cli/engine/tool-runs/tool.ts';
 
 test('a timed-out tool carries the configured time limit in its failure', async () => {
     await using sandbox = await testdir();
@@ -38,7 +38,7 @@ test('companion tool folders precede the existing PATH in declared order', async
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     const session = buildCheckSession(await openSession(sandbox.path), CHECK_GENERATION);
     using _executables = fakeExecutableLookup((name) => (name === 'mise' ? null : join(sandbox.path, name, name)));
-    const environment = await buildOtherToolEnvironment(session, ['first-companion', 'second-companion'], {
+    const environment = await buildSecondaryToolEnvironment(session, ['first-companion', 'second-companion'], {
         PATH: 'original-search-path',
     });
     expect(environment['PATH']).toBe(

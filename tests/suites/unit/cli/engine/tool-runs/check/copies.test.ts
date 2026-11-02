@@ -55,7 +55,7 @@ test('a Python check that runs in a copy uses the environment that the working t
     ]);
 });
 
-test('a command run in a copy finds the other tools beside its program before a PATH folder', async () => {
+test('a command run in a copy finds the secondary tools beside its program before a PATH folder', async () => {
     await using sandbox = await createGitSandbox({});
     const files = {
         'gspot.toml': buildSandboxSettings([], {

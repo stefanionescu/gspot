@@ -29,7 +29,7 @@ test.each(COVERAGE_PROJECT_FILES)(
         const session = await openSession(sandbox.path);
         const planned = planChecks(session, { only: ['pytest/tests'], stage: 'push' })[0]!;
         planned.tool = { name: process.execPath, kind: 'program', installers: {} };
-        planned.check = { ...planned.check, tool: process.execPath, other_tools: [] };
+        planned.check = { ...planned.check, tool: process.execPath, secondary_tools: [] };
         const commands: string[][] = [];
         using _spawn = fakeCommands(process.execPath, (command) => {
             commands.push([...command]);

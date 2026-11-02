@@ -2,10 +2,10 @@ import { join, relative } from 'node:path';
 import { getTool } from '#cli/tools/pins.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import { findToolPath } from '#cli/tools/inspect.ts';
-import { listOtherTools } from '#cli/engine/tools.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
+import { listSecondaryTools } from '#cli/engine/tools.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { ProcessFailure } from '#cli/types/tools.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
@@ -16,7 +16,7 @@ import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { buildCommandLines } from '#cli/engine/tool-runs/batches.ts';
 import { RAN_STATUSES, FILES_PLACEHOLDER } from '#cli/config/engine.ts';
 import { listCopyPythonArguments, buildCopyPythonEnvironment } from '#cli/tools/uv.ts';
-import { runToolProcess, buildOtherToolEnvironment } from '#cli/engine/tool-runs/tool.ts';
+import { runToolProcess, buildSecondaryToolEnvironment } from '#cli/engine/tool-runs/tool.ts';
 import { buildBaseResult, mergeCheckResults, restoreCommandPaths } from '#cli/engine/results.ts';
 import { addCommandLine, buildCheckResult, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import type { CheckResult, CheckSession, CommandLaunch, CheckRunOptions } from '#cli/types/engine/run.ts';
@@ -103,9 +103,9 @@ async function runInFolder(run: FolderRun): Promise<CheckResult> {
             : undefined;
     const root = copy?.path ?? session.root;
     const commandSetup = buildCommandLaunch(planned, { session, command, root, toolPath });
-    commandSetup.env = await buildOtherToolEnvironment(
+    commandSetup.env = await buildSecondaryToolEnvironment(
         session,
-        listOtherTools(planned.scope, planned.check, command),
+        listSecondaryTools(planned.scope, planned.check, command),
         commandSetup.env,
     );
     const result = await runCommands(planned, {
@@ -118,13 +118,13 @@ async function runInFolder(run: FolderRun): Promise<CheckResult> {
     return restoreCommandPaths(result, root, session.root);
 }
 
-async function findMissingOtherTool(
+async function findMissingSecondaryTool(
     session: CheckSession,
     planned: PlannedCheck,
     command: string[],
     cwd: string,
 ): Promise<ProcessFailure | undefined> {
-    for (const name of listOtherTools(planned.scope, planned.check, command)) {
+    for (const name of listSecondaryTools(planned.scope, planned.check, command)) {
         const required = getTool(readConfigurations().values(), name);
         const availability = await findToolPath(session, required, cwd);
         if ('status' in availability) return availability;
@@ -250,8 +250,8 @@ export async function runCommandCheck(
     if (missing !== undefined) return missing;
     const availability = await findToolPath(session, tool, cwd);
     if ('status' in availability) return { ...base, ...availability };
-    const otherToolFailure = await findMissingOtherTool(session, planned, command, cwd);
-    return otherToolFailure === undefined
+    const secondaryToolFailure = await findMissingSecondaryTool(session, planned, command, cwd);
+    return secondaryToolFailure === undefined
         ? await runInFolder({
               session,
               planned,
@@ -261,7 +261,7 @@ export async function runCommandCheck(
               base,
               options,
           })
-        : { ...base, ...otherToolFailure };
+        : { ...base, ...secondaryToolFailure };
 }
 
 /**

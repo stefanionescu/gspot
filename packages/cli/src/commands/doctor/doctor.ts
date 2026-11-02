@@ -124,7 +124,7 @@ async function readCiState(session: Session): Promise<CiState & { text: string }
         : { enabled: false, provider, text: CI_OFF_NOTES[provider] };
 }
 
-async function readHookState(session: Session): Promise<HookStatus> {
+async function readHookRunnerStatus(session: Session): Promise<HookStatus> {
     const hooks = await readHookStatus(session, session.repository);
     if (!hooks.ready || !session.settings.hooks.enabled) return hooks;
     const { command, installCommand } = session.startRunner;
@@ -173,7 +173,7 @@ function formatDoctorReport(report: DoctorReport, states: { hooks: string; ci: s
 
 async function runDoctorCommand(root: string): Promise<CommandResult> {
     const session = await openSession(root);
-    const { text: hooksText, ...hooks } = await readHookState(session);
+    const { text: hooksText, ...hooks } = await readHookRunnerStatus(session);
     const { text: ciText, ...ci } = await readCiState(session);
     const report: DoctorReport = {
         submodules: listSubmodulePaths(session.repository.index),

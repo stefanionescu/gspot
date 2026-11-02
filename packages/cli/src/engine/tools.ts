@@ -27,43 +27,43 @@ function addPeerPackages(names: Set<string>, configurations: readonly Configurat
 }
 
 /**
-List the extra tools that the command and the configuration of a check use.
+List the secondary tools that the command and the configuration of a check use.
 
 @param scope where the check runs.
 @param check the check to read.
 @param command the arguments that run, if known.
-@returns each extra tool once.
+@returns each secondary tool once.
 */
-export function listOtherTools(scope: Scope, check: Check, command?: string[]): string[] {
+export function listSecondaryTools(scope: Scope, check: Check, command?: string[]): string[] {
     const withoutCoverage =
         hasCoverageArguments(check.command, check.coverage_arguments) &&
         isCoverageOff(scope) &&
         !hasCoverageArguments(command, check.coverage_arguments);
-    const otherTools = withoutCoverage ? [] : (check.other_tools ?? []);
+    const secondaryTools = withoutCoverage ? [] : (check.secondary_tools ?? []);
     const tools = [
         check.tool,
         ...[check.command, check.fix].flatMap((commandArguments) =>
             commandArguments === undefined ? [] : [commandArguments[0]],
         ),
-        ...otherTools,
+        ...secondaryTools,
     ];
     const plugins = tools.includes(ESLINT_MANIFEST_TOOL)
         ? scope.configurations.flatMap((configuration) => configuration.eslint.required_tools)
         : [];
-    return [...new Set([...otherTools, ...plugins])].filter((name) => {
+    return [...new Set([...secondaryTools, ...plugins])].filter((name) => {
         const pin = getTool(scope.configurations, name);
         return isToolConditionMet(scope, pin.when);
     });
 }
 
 /**
-List the tool that a check runs, its fixer, its extra tools, and the packages they require.
+List the tool that a check runs, its fixer, its secondary tools, and the packages they require.
 
 @param planned the plan with resolved conditions, scopes, and exclusions.
 */
 export function listCheckTools(planned: ScopeCheck): string[] {
     const names = new Set(
-        [planned.tool?.name, ...listOtherTools(planned.scope, planned.check), planned.check.fix?.[0]].filter(
+        [planned.tool?.name, ...listSecondaryTools(planned.scope, planned.check), planned.check.fix?.[0]].filter(
             (name) => name !== undefined,
         ),
     );
