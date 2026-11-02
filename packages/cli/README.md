@@ -64,7 +64,7 @@ npx @gspothq/cli scan
 ```
 
 The scan works on a copy, so your repository does not change. It reports the findings, the files that differ from your
-style, the cost in tools and seconds, and the plan of `gspot init`.
+style, how long each tool took on this scan, and the plan of `gspot init`.
 
 ## Documentation
 
