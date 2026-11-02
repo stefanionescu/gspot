@@ -7,6 +7,7 @@ import type { SpawnResult } from '#cli/types/system.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
+import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { hasValePackages } from '#cli/tools/installers/vale.ts';
@@ -15,8 +16,9 @@ import { valeOutputSchema } from '#cli/schemas/configurations.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { splitFileArguments } from '#cli/engine/tool-runs/batches.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
+import { readCommitMessage } from '#cli/configurations/general/commits/checks.ts';
 import type { ValeAlert, ProseRouteBatch } from '#cli/types/configurations/general.ts';
-import { VALE_TOOL, CONFIG_FLAG, PROSE_GRAMMARS } from '#cli/config/tools/installers.ts';
+import { VALE_TOOL, PROSE_GRAMMARS, VALE_MESSAGE_RULES } from '#cli/config/tools/vale.ts';
 
 import {
     VALE_NAME,
@@ -148,4 +150,37 @@ export async function checkVale(session: CheckSession, planned: PlannedCheck): P
             message: alert.message,
         })),
     );
+}
+
+/**
+Runs the word rules on a new commit message, with the comment lines that Git adds blanked out.
+
+@param session the repository and its tools.
+@param planned the check and the commit message file.
+*/
+export async function checkCommitMessage(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+    if (planned.messageFile === undefined) return [];
+    if (!hasValePackages(session.toolsRoot, session.settings.level))
+        throw new CheckStop('missing', VALE_PACKAGES_MESSAGE);
+    const { text, prefix } = await readCommitMessage(session, planned.messageFile);
+    const lines = text.split('\n').map((line) => (line.startsWith(prefix) ? '' : line));
+    const result = await runCheckTool(
+        session,
+        planned,
+        [
+            VALE_TOOL,
+            CONFIG_FLAG,
+            join(session.root, GSPOT_PATHS.valeConfig),
+            ...VALE_ARGUMENTS,
+            '--ext=.md',
+            `--filter=.Name in ${JSON.stringify(VALE_MESSAGE_RULES)}`,
+        ],
+        { cwd: dirname(join(session.root, GSPOT_PATHS.valeConfig)), stdin: lines.join('\n') },
+    );
+    assertValeRan(result);
+    return parseValeAlerts(result.stdout).map((alert) => ({
+        file: '',
+        rule: alert.check,
+        message: `Line ${String(alert.line)}: ${alert.message}`,
+    }));
 }

@@ -33,7 +33,7 @@ relying on an ambiguous pronoun.
 Avoid idioms, unexplained abbreviations, and decorative wording. Use literal terms that survive translation. Keep one
 term for each concept. Dates shown to people include their time zone; machine values retain their required format.
 
-## Words that the prose check reports
+## Words to leave out
 
 <!-- level: all -->
 

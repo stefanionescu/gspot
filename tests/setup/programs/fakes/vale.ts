@@ -1,4 +1,5 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 
 const [styles = '', version = ''] = process.argv.slice(2);

@@ -14,14 +14,13 @@ import { VALE_TEMPORARY_NAME } from '#cli/config/repository/setup.ts';
 import { runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
 import type { ToolInstall, ArchiveDownload } from '#cli/types/tools.ts';
 import { deleteStaleTemporaryPaths } from '#cli/system/files/folders.ts';
+import { JSON_INDENT, CONFIG_FLAG } from '#cli/config/tools/installers.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { rmSync, mkdirSync, renameSync, mkdtempSync, writeFileSync } from 'node:fs';
 
 import {
     VALE_TOOL,
     VOCAB_LINE,
-    JSON_INDENT,
-    CONFIG_FLAG,
     ALT_TEXT_ON,
     ALT_TEXT_OFF,
     VALE_PACKAGES,
@@ -50,7 +49,7 @@ import {
     VALE_PACKAGE_FOLDERS,
     VALE_PACKAGE_RELEASES,
     VALE_INSTALL_ARGUMENTS,
-} from '#cli/config/tools/installers.ts';
+} from '#cli/config/tools/vale.ts';
 
 function selectProxyAdvice(): string {
     if (PROXY_VARIABLES.every((name) => readEnvironmentVariable(name) === undefined)) return NETWORK_ADVICE;

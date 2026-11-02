@@ -6,7 +6,7 @@ import { dirname, relative } from 'node:path/posix';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { buildValeIni } from '#cli/tools/installers/vale.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { VALE_PACKAGES, VALE_STYLES_PATH, VALE_PACKAGE_URLS } from '#cli/config/tools/installers.ts';
+import { VALE_PACKAGES, VALE_STYLES_PATH, VALE_PACKAGE_URLS } from '#cli/config/tools/vale.ts';
 
 import {
     ACRONYMS,

@@ -2,7 +2,6 @@ import type { Check } from '#cli/types/manifests.ts';
 import type { CheckCode } from '#cli/types/engine/run.ts';
 import { checkTsc } from '#cli/configurations/tsc/check.ts';
 import { YAML_RULE_DOCS } from '#cli/config/configurations/registry.ts';
-import { checkVale } from '#cli/configurations/general/prose/checks.ts';
 import { checkYaml } from '#cli/configurations/general/data-files/checks.ts';
 import { checkAllowed } from '#cli/configurations/general/licenses/checks.ts';
 import { checkSemgrep } from '#cli/configurations/general/security/checks.ts';
@@ -29,6 +28,7 @@ import { checkPeriphery } from '#cli/configurations/language/swift/checks/periph
 import { checkShellcheck } from '#cli/configurations/language/bash/checks/shellcheck.ts';
 import { checkCompose } from '#cli/configurations/infrastructure/docker/checks/compose.ts';
 import { checkIdentifiers } from '#cli/configurations/general/naming/checks/identifiers.ts';
+import { checkVale, checkCommitMessage } from '#cli/configurations/general/prose/checks.ts';
 import { checkLoneFiles } from '#cli/configurations/general/structure/checks/lone-files.ts';
 import { checkLongFiles } from '#cli/configurations/general/structure/checks/long-files.ts';
 import { checkSkipReasons } from '#cli/configurations/language/swift/checks/skip-reasons.ts';
@@ -163,6 +163,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'postgres/grants': { check: checkGrants },
     'postgres/migration-order': { check: checkMigrationOrder },
     'postgres/row-level-security': { check: checkRowLevelSecurity },
+    'prose/commit-message': { check: checkCommitMessage },
     'prose/vale': { check: checkVale },
     'python/deptry': { run: checkDeptry },
     'python/function-size': { check: checkPythonFunctionSize },

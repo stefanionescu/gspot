@@ -75,6 +75,14 @@ test('a marker that stops CI is reported', async () => {
     expect(findings.map(({ rule }) => rule)).toStrictEqual(['ci-skip']);
 });
 
+test.each(['/Users/ada/project', '/home/ada/project', String.raw`C:\Users\ada\project`])(
+    'a home folder in a message is reported: %s',
+    async (path) => {
+        const findings = await checkMessage(`fix(cli): retain the message\n\nRead ${path}.\n`);
+        expect(findings.map(({ rule }) => rule)).toStrictEqual(['home-path']);
+    },
+);
+
 test.each([';', 'auto', undefined])(
     'the scissors marker selects the comment character over core.commentChar %p',
     async (commentChar) => {

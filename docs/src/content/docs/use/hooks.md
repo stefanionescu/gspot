@@ -10,7 +10,7 @@ one check, and `gspot install` turns them on.
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `pre-commit` | The commit-stage checks, on the staged files.                                                                                                                                        |
 | `pre-push`   | The commit- and push-stage checks, on the files the push changes, as they are in the pushed tip. At level `all`, `commits/commitlint-pushed` also checks each pushed commit message. |
-| `commit-msg` | The message-stage checks on the new commit message: `commits/references`, and at level `all` also `commits/commitlint`.                                                              |
+| `commit-msg` | The message-stage checks on the new commit message: `commits/references`, and at level `all` also `commits/commitlint` and `prose/commit-message`.                                   |
 
 The commit hook checks the staged files. The push hook checks the tip of each pushed branch; a mistake fixed in a later
 commit of the same push does not fail it.

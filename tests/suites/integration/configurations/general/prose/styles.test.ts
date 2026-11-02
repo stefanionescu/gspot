@@ -64,7 +64,7 @@ test("Vale's version-range rule accepts a minimum version and reports vague rang
         'gspot.toml': buildSandboxSettings(['prose', 'markdown']),
         [GSPOT_PATHS.valeConfig]: VALE_INI,
         [`${EXAMPLE_STYLE_FOLDER}/Versions.yml`]: readFileSync(
-            buildAssetPath('configurations/general/prose/config/styles/gspot/version-range.yml'),
+            buildAssetPath('src/configurations/general/prose/files/styles/gspot/version-range.yml'),
             'utf8',
         ),
         'versions.md': VERSION_RANGE_SOURCE,
@@ -181,4 +181,16 @@ test('Vale accepts passive code comments and reports passive prose in Markdown',
     expect(result.findings.filter(({ rule }) => rule === 'Google.Passive')).toStrictEqual([
         matchFields({ file: 'guide.md', line: 3, rule: 'Google.Passive' }),
     ]);
+});
+
+test('prose/commit-message reports the word rules in a new commit message, and skips the comment lines of Git', async () => {
+    const { root } = installedSandbox();
+    const message = join(root, 'message.txt');
+    await writeFile(message, 'fix(cli): keep the file\n\nWe should simply retry.\n# You should not read this.\n');
+    const { report } = parseCheckReport(
+        await spawnGspot(root, ['check', '--hook', 'commit-msg', '--json', '--', message]),
+    );
+    const findings = report.checks.find(({ check }) => check === 'prose/commit-message')?.findings ?? [];
+    expect(findings.map(({ rule }) => rule)).toStrictEqual(['gspot.modals', 'gspot.marketing']);
+    expect(findings.every(({ message: text }) => text.startsWith('Line 3:'))).toBe(true);
 });

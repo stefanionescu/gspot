@@ -8,6 +8,7 @@ import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { runGit, readGitSetting } from '#cli/repository/git/run.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { listPushedCommits } from '#cli/configurations/pushed-commits.ts';
+import type { CommitMessage } from '#cli/types/configurations/general.ts';
 import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/engine/results.ts';
 
@@ -61,6 +62,21 @@ export async function checkCommitlintPushed(session: CheckSession, planned: Plan
 }
 
 /**
+Read a commit message without the comment lines and the diff that Git adds to the message file.
+
+@param session the repository and its tools.
+@param messageFile the file that Git passes to the commit-msg hook.
+*/
+export async function readCommitMessage(session: CheckSession, messageFile: string): Promise<CommitMessage> {
+    const text = readFileSync(messageFile, 'utf8');
+    const scissors = COMMIT_SCISSORS.exec(text);
+    const comment =
+        scissors === null ? await readGitSetting(session.root, 'core.commentChar') : scissors[0].slice(0, 1);
+    const prefix = comment?.length === 1 ? comment : '#';
+    return { text: text.slice(0, scissors?.index ?? text.length), prefix };
+}
+
+/**
 Report each line of a new commit message that links to an AI session.
 
 @param session the repository and its tools.
@@ -68,12 +84,7 @@ Report each line of a new commit message that links to an AI session.
 */
 export async function checkReferences(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     if (planned.messageFile === undefined) return [];
-    const text = readFileSync(planned.messageFile, 'utf8');
-    const scissors = COMMIT_SCISSORS.exec(text);
-    const comment =
-        scissors === null ? await readGitSetting(session.root, 'core.commentChar') : scissors[0].slice(0, 1);
-    const prefix = comment?.length === 1 ? comment : '#';
-    const message = text.slice(0, scissors?.index ?? text.length);
+    const { text: message, prefix } = await readCommitMessage(session, planned.messageFile);
     return message.split('\n').flatMap((line, index) =>
         line.startsWith(prefix)
             ? []

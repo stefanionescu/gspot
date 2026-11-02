@@ -80,6 +80,11 @@ export const MESSAGE_REFERENCES = [
         message: 'names a step of a plan that a reader of the repository cannot look up. Describe the change itself.',
     },
     {
+        rule: 'home-path',
+        pattern: /(?:\/Users\/|\/home\/|[A-Za-z]:\\Users\\)[\w.-]+/u,
+        message: 'names a home folder. Write a path that every reader has.',
+    },
+    {
         rule: 'issue-footer',
         pattern: /^(?:Refs|Closes):(?!.*#\d)/u,
         message: 'has a Refs: or Closes: footer without an issue number. Write it as `Refs: #123`, or remove it.',

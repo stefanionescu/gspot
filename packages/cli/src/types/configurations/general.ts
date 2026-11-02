@@ -77,6 +77,8 @@ export type ProseRouteBatch = [ProseRoute, ...ProseRoute[]];
 
 export type ValeAlert = { file: string; line: number; column: number; check: string; message: string };
 
+export type CommitMessage = { text: string; prefix: string };
+
 export type BannedWord = {
     word: string;
     words: string[];
