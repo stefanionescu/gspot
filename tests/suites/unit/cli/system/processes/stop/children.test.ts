@@ -131,7 +131,7 @@ test('the stop after a normal exit accepts the macOS refusal to signal an exited
     using resources = new DisposableStack();
 
     await using sandbox = await testdir();
-    const kill = process.kill.bind(process);
+    const kill: typeof process.kill = process.kill.bind(process);
     resources.use(
         spyOn(process, 'kill').mockImplementation((pid, kind) => {
             if (pid < 0) throw Object.assign(new Error('Operation not permitted'), { code: 'EPERM' });
