@@ -218,7 +218,7 @@ test('a file with merge-conflict markers stays out of every fixer, and the fix r
     });
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'conflict.txt=lost\n'));
-    const fixed = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned], selectCheckCode);
+    const fixed = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned]);
     expect(await readFile(join(sandbox.path, 'conflict.txt'), 'utf8')).toBe(conflict);
     expect(formatFixes(fixed)).toStrictEqual([
         'The fixers skipped conflict.txt, because it holds merge-conflict markers.',
