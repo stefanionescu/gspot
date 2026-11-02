@@ -92,10 +92,10 @@ export const LINKED_HOOK_FILES = [{ path: '.lefthook.yml', kind: 'lefthook' }] a
 export const SIMPLE_GIT_HOOKS_PACKAGES = [
     {
         text: '{"simple-git-hooks":{"pre-commit":"echo authored"}}',
-        hooks: [{ kind: 'simple-git-hooks', path: 'package.json', files: [] as string[] }],
+        hooks: [{ kind: 'simple-git-hooks' as const, path: 'package.json', files: [] }],
     },
     { text: '{}', hooks: [] },
-] as const;
+];
 
 export const HOOK_FOLDER_FILES = {
     '.githooks/pre-commit': '#!/bin/sh\nexit 0\n',

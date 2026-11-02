@@ -23,7 +23,7 @@ export async function listLintFindings(
     return results
         .flatMap(({ filePath, messages }) =>
             messages
-                .filter(({ ruleId, fatal }) => fatal || ruleId === null || rules.includes(ruleId))
+                .filter(({ ruleId, fatal }) => fatal === true || ruleId === null || rules.includes(ruleId))
                 .map(({ ruleId, line }) => ({
                     file: convertToPosixPath(relative(root, filePath)),
                     rule: ruleId,

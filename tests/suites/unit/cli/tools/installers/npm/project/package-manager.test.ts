@@ -55,7 +55,7 @@ test('a pinned pnpm runs through mise instead of the older PATH executable', asy
         'package.json': '{"private":true,"packageManager":"pnpm@10.30.0"}',
     });
     const run = processes.runProcess;
-    using _commands = spyOn(processes, 'runProcess').mockImplementation((command, options) => {
+    using commands = spyOn(processes, 'runProcess').mockImplementation((command, options) => {
         if (command[0] === 'pnpm') return Promise.resolve(buildProcessResult({ stdout: '9.9.0\n' }));
         return command[0] === 'mise'
             ? Promise.resolve(buildProcessResult({ stdout: '10.30.0\n' }))
@@ -65,4 +65,7 @@ test('a pinned pnpm runs through mise instead of the older PATH executable', asy
     const writer = openFiles(sandbox.path);
     const install = await buildSandboxToolInstall(session, writer);
     await assertPackageManagerVersion(install);
+    const programs = commands.mock.calls.map(([command]) => command[0]);
+    expect(programs).toContain('mise');
+    expect(programs).not.toContain('pnpm');
 });

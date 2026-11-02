@@ -47,18 +47,17 @@ test.skipIf(!hasToolBuild('swiftformat'))(
 
         const applied = await spawnGspot(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        expect(await readFormatFindings(sandbox.path, 1, '')).toStrictEqual(
+        expect(await readFormatFindings(sandbox.path, 1)).toStrictEqual(
             SPACED_COMMENT_FINDINGS.map(([line, column, rule]) => ['Value.swift', line, column, rule]),
         );
     },
 );
 
-async function readFormatFindings(root: string, code: 0 | 1, scopePath: string) {
+async function readFormatFindings(root: string, code: 0 | 1) {
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'swift/swiftformat', '--json']));
     expect(result.code, result.stdout + result.stderr).toBe(code);
     expect(result.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
-        ...(scopePath === '' ? [] : [{ scope: '', status: 'skipped' as const }]),
-        { scope: scopePath, status: code === 0 ? 'passed' : 'failed' },
+        { scope: '', status: code === 0 ? 'passed' : 'failed' },
     ]);
     return result.report.checks.flatMap(({ findings }) =>
         findings.map(({ file, line, column, rule }) => [file, line, column, rule]),
@@ -75,12 +74,12 @@ test.skipIf(!hasToolBuild('swiftformat'))(
         const root = sandbox.path;
         const applied = await spawnGspot(root, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        expect(await readFormatFindings(root, 1, '')).toStrictEqual(
+        expect(await readFormatFindings(root, 1)).toStrictEqual(
             BLOCK_COMMENT_FINDINGS.map(([line, column, rule]) => ['Value.swift', line, column, rule]),
         );
         const corrected = await spawnGspot(root, ['check', '--only', 'swift/swiftformat', '--json', '--fix']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(await readFormatFindings(root, 0, '')).toStrictEqual([]);
+        expect(await readFormatFindings(root, 0)).toStrictEqual([]);
         expect(await readFile(join(root, 'Value.swift'), 'utf8')).toBe(FORMATTED_DOCS_SOURCE);
     },
 );
@@ -96,14 +95,14 @@ test.skipIf(!hasToolBuild('swiftformat'))(
         const applied = await spawnGspot(root, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         await chmod(join(root, 'Value.swift'), 0o444);
-        const found = await readFormatFindings(root, 1, '');
+        const found = await readFormatFindings(root, 1);
         const { mode } = await stat(join(root, 'Value.swift'));
         expect(mode & 0o777).toBe(normalizeFileMode({ mode: 0o444 }));
         await chmod(join(root, 'Value.swift'), 0o644);
         expect(found).toStrictEqual(INLINE_COMMENT_FINDINGS.map(([line, rule]) => ['Value.swift', line, 1, rule]));
         const corrected = await spawnGspot(root, ['check', '--only', 'swift/swiftformat', '--json', '--fix']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(await readFormatFindings(root, 0, '')).toStrictEqual([]);
+        expect(await readFormatFindings(root, 0)).toStrictEqual([]);
         expect(await readFile(join(root, 'Value.swift'), 'utf8')).toBe(FORMATTED_INLINE_DOCS);
     },
 );

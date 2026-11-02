@@ -1,7 +1,8 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import type { Scope } from '#cli/types/settings.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { listCodeTestFiles, buildScopeOverrideBlocks } from '#cli/configurations/language/javascript/eslint/files.ts';
 
@@ -67,12 +68,17 @@ test('ESLint test patterns omit foreign extensions and retain components and sha
     ]);
 });
 
-test('a scope override keeps the changed scopes, deepest last, and leaves nested changes out of its parent', () => {
+test('a scope override keeps the changed scopes, deepest last, and leaves nested changes out of its parent', async () => {
     const value: Record<string, string> = { '': 'root', app: 'app', 'app/same': 'app', 'app/deep': 'deep' };
-    const scopes = Object.keys(value)
-        .toReversed()
-        .map((path) => ({ path }) as Scope);
-    const blocks = buildScopeOverrideBlocks(scopes, {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], {
+            scopes: [{ path: 'app' }, { path: 'app/same' }, { path: 'app/deep' }],
+        }),
+        'app/same/source.js': '',
+        'app/deep/source.js': '',
+    });
+    const { scopes } = await openSession(sandbox.path);
+    const blocks = buildScopeOverrideBlocks(scopes.toReversed(), {
         read: ({ path }) => value[path],
         build: ({ scope, parent, ignores }) => [{ path: scope.path, parent: parent?.path, ignores }],
     });
@@ -83,8 +89,10 @@ test('a scope override keeps the changed scopes, deepest last, and leaves nested
     ]);
 });
 
-test('a scope override compares the root with the scope that owns the file', () => {
-    const root = { path: '' } as Scope;
+test('a scope override compares the root with the scope that owns the file', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const { scopes } = await openSession(sandbox.path);
+    const root = scopes[0]!;
     const blocks = buildScopeOverrideBlocks([root], {
         base: root,
         read: () => 'same',

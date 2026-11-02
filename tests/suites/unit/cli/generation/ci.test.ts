@@ -163,7 +163,7 @@ test.each([...SETUP_CASES])(
         const script =
             provider === 'github'
                 ? (parse(buildGithubWorkflow(setupPipeline).content) as GithubWorkflow).jobs['lint']!.steps.flatMap(
-                      (step) => (step.run === undefined ? [] : step.run),
+                      (step) => step.run ?? [],
                   )
                 : (parse(buildGitlabWorkflow(setupPipeline).content) as GitlabPipeline).gspot.script;
         const result = await runCommand(['bash', '-e', '-c', script.join('\n')], {

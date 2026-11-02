@@ -73,12 +73,13 @@ function hasEmptyDefault(schema: z.ZodType | undefined, value: unknown): boolean
 function listCommandSettings(check: Check): string[] {
     return [...(check.command ?? []), ...(check.fix ?? [])].flatMap((argument) => {
         const repeated = EACH_PLACEHOLDER.exec(argument)?.groups?.['setting'];
-        return repeated === undefined
-            ? argument
-                  .matchAll(SETTING_PLACEHOLDER)
-                  .map((match) => match.groups?.['name'] ?? '')
-                  .toArray()
-            : repeated;
+        return (
+            repeated ??
+            argument
+                .matchAll(SETTING_PLACEHOLDER)
+                .map((match) => match.groups?.['name'] ?? '')
+                .toArray()
+        );
     });
 }
 

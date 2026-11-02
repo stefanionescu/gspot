@@ -94,7 +94,7 @@ const TEST_VERSION = '0.0.0-test';
 
 export const FAILED_CHECK_REPORT = {
     version: TEST_VERSION,
-    notes: [] as string[],
+    notes: Array.of<string>(),
     stages: ['commit', 'push'] as const,
     started: '2026-09-18T00:00:00.000Z',
     duration: 10,

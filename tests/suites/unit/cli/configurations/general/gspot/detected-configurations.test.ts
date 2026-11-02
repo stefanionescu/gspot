@@ -58,16 +58,16 @@ test.each([
     {
         name: 'names the scope of a project folder',
         settings: buildSandboxSettings(['markdown']),
-        addCommands: ['gspot add fastapi --scope py', 'gspot add python --scope py'],
+        commands: ['gspot add fastapi --scope py', 'gspot add python --scope py'],
     },
     {
         name: 'leaves out a removed configuration',
         settings: buildSandboxSettings(['markdown'], {
             tables: '[removed_configurations]\npython = "External tooling checks Python."\nfastapi = "External tooling checks FastAPI."\n',
         }),
-        addCommands: [],
+        commands: [],
     },
-])('gspot/detected-configurations names the gspot add command and $name', async ({ settings, addCommands }) => {
+])('gspot/detected-configurations names the gspot add command and $name', async ({ settings, commands }) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': settings,
         'py/pyproject.toml': '[project]\nname = "api"\nversion = "1.0.0"\ndependencies = ["fastapi"]\n',
@@ -75,7 +75,7 @@ test.each([
     });
     const findings = await runSandboxCheck(sandbox.path, 'gspot/detected-configurations');
     expect(findings.map(({ message }) => /Run (gspot add \S+(?: --scope [^\s,]+)?)/u.exec(message)?.[1])).toStrictEqual(
-        [...addCommands],
+        [...commands],
     );
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });

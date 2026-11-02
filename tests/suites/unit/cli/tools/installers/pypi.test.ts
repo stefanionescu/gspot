@@ -107,7 +107,8 @@ test('uv installs the tool project with its own Python, whatever UV_PYTHON and .
     for (const { command, env } of runs) {
         const flag = command.indexOf('--python');
         expect(command.slice(flag, flag + 2)).toStrictEqual(['--python', pythonProject['requires-python'].slice(2)]);
-        expect(env).toHaveProperty('UV_PYTHON', undefined);
+        expect(env).toHaveProperty('UV_PYTHON');
+        expect(env?.['UV_PYTHON']).toBeUndefined();
     }
 });
 

@@ -13,8 +13,8 @@ import { ARRAY_COMMENT_CASES, FIELD_COMMENT_CASES, IGNORE_COMMENT_CASES } from '
 
 test.each([...IGNORE_COMMENT_CASES, ...ARRAY_COMMENT_CASES, ...FIELD_COMMENT_CASES])(
     'a template keeps each comment of $name on its key',
-    ({ source, target, expected }) => {
-        const table = parseTomlFile('gspot.toml', target ?? source);
+    ({ source, target = source, expected }) => {
+        const table = parseTomlFile('gspot.toml', target);
         const written = buildSettingsText(source, table);
         expect(written).toBe(expected);
     },

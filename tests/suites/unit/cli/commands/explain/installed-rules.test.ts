@@ -64,9 +64,11 @@ test('SwiftLint validates rules with installed metadata and an empty explicit co
     using _bins = fakeCommands('mise', () => Promise.resolve(buildProcessResult({ stdout: dirname(executable) })));
     using commands = fakeCommands(executable).mockImplementation((command) =>
         Promise.resolve(
-            command.at(-1) === 'force_cast'
-                ? buildProcessResult({ stdout: 'Force Cast (force_cast): Force casts should be avoided\n' })
-                : buildProcessResult({ code: 1, stderr: 'Error: No rule with identifier: force_castt' }),
+            buildProcessResult(
+                command.at(-1) === 'force_cast'
+                    ? { stdout: 'Force Cast (force_cast): Force casts should be avoided\n' }
+                    : { code: 1, stderr: 'Error: No rule with identifier: force_castt' },
+            ),
         ),
     );
     const described = await runGspot(sandbox.path, ['explain', 'swift/swiftlint', 'force_cast', '--json']);
