@@ -74,7 +74,7 @@ key = "eslintConfig"
 [[tool]]
 name = "biome"
 npm = "@biomejs/biome"
-version = "2.6.4"
+version = "2.6.3"
 rule_prefix = "lint/complexity"
 rule_url = "https://biomejs.dev/linter/rules/no-excessive-cognitive-complexity/javascript/#{rule}"
 
