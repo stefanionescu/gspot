@@ -88,7 +88,7 @@ export const TEMPLATE_OPEN_ESCAPED = String.raw`\{{`;
 
 export const TEMPLATE_OPEN = '{{';
 
-export const BOUNDARY_OWNER_TEMPLATE = '{{to.file.categories.[0]}}';
+export const BOUNDARY_OWNER_TEMPLATE = '{{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}';
 
 export const BOUNDARY_SOURCE_TEMPLATE = '{{dependency.source}}';
 

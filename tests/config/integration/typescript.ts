@@ -157,6 +157,22 @@ export const receiptLabel = \`Order: \${receipt}\`;
         expected: { file: 'src/orders/back.ts', rule: 'boundaries/dependencies', line: 2 },
     },
     {
+        check: 'javascript/eslint',
+        apply: true,
+        settings: '[[import_rule]]\nname = "late"\npaths = ["src/orders/late.ts"]\n',
+        files: {
+            'src/orders/late.ts': `// An order module that a later import rule also names.
+import { receipt } from '#entry';
+
+/**
+The entry receipt with the late label.
+*/
+export const lateLabel = \`Late: \${receipt}\`;
+`,
+        },
+        expected: { file: 'src/orders/late.ts', rule: 'boundaries/dependencies', line: 2 },
+    },
+    {
         check: 'javascript/knip',
         files: {
             'src/orders/unused.ts': UNUSED_SOURCE,

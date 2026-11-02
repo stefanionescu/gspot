@@ -3,11 +3,11 @@ import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import type { ToolPackageJson } from '#tests/types/setup.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { APP_SCOPE_SETTINGS } from '#tests/config/setup/languages.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import type { ToolPackageJson, EslintConfiguration } from '#tests/types/setup.ts';
 
 import {
     ENVIRONMENT_CASES,
@@ -232,4 +232,33 @@ test('can_import names exactly the rules a rule may import, and a refused import
             .filter(({ ruleId }) => ruleId === 'boundaries/dependencies')
             .map(({ line, message }) => ({ line, message })),
     ).toStrictEqual([...REFUSED_IMPORT_MESSAGES]);
+});
+
+test('each file holds one import rule, the tRPC category comes first, and a refused import names the rule', async () => {
+    await using sandbox = await testdir({
+        ...IMPORT_RULE_FILES,
+        'gspot.toml': buildSandboxSettings(['trpc', 'typescript'], {
+            level: 'all',
+            tables: `[trpc]\nserver_files = ["storage/**"]\n\n${IMPORT_RULE_TABLES.root}`,
+        }),
+        'app/source.ts': "import type { Value } from '../storage/value.js';\nexport type Result = Value;\n",
+        'storage/value.ts': 'export type Value = number;\n',
+    });
+
+    const eslint = await buildEslint(sandbox.path);
+    const { settings } = (await eslint.calculateConfigForFile('app/source.ts')) as EslintConfiguration;
+    const files = settings['boundaries/files'] as { category: string; stopMatching?: boolean }[];
+    expect(files.map(({ category, stopMatching }) => ({ category, stopMatching }))).toStrictEqual([
+        { category: 'tests', stopMatching: true },
+        { category: 'trpc:server', stopMatching: undefined },
+        { category: 'import-rule:app', stopMatching: true },
+        { category: 'import-rule:storage', stopMatching: true },
+        { category: 'other', stopMatching: undefined },
+    ]);
+    const [result] = await eslint.lintFiles(['app/source.ts']);
+    expect(
+        result?.messages.filter(({ ruleId }) => ruleId === 'boundaries/dependencies').map(({ message }) => message),
+    ).toStrictEqual([
+        'Import rule "app" may import only its own files, not ../storage/value.js from import-rule:storage. Move the code, move that rule above this one, or list the rules it may import in can_import.',
+    ]);
 });

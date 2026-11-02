@@ -91,9 +91,10 @@ function buildBoundarySettings({
         (rule) => ({
             category: `${IMPORT_RULE_CATEGORY}${rule.name}`,
             pattern: rule.paths,
+            stopMatching: true,
         }),
     );
-    if (serverFiles.length > 0) files.push({ category: TRPC_SERVER_CATEGORY, pattern: serverFiles });
+    if (serverFiles.length > 0) files.unshift({ category: TRPC_SERVER_CATEGORY, pattern: serverFiles });
     if (enforceTests) {
         files.unshift({ category: TEST_BOUNDARY_CATEGORY, pattern: tests, stopMatching: true });
         files.push(OTHER_BOUNDARY_FILE);
