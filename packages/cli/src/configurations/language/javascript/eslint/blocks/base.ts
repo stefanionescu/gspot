@@ -193,9 +193,15 @@ export function buildOpeningBlocks(
 ): ConfigurationBlocks['blocks'] {
     const { eslintFiles } = planned;
     return [
-        ...PRESETS_BEFORE_CONFIGURATIONS.map(({ importName, path }) => ({
+        ...PRESETS_BEFORE_CONFIGURATIONS.map((preset) => ({
             fields: { files: eslintFiles.code },
-            presets: [{ importName, path, merge: 'fields' as const }],
+            presets: [
+                {
+                    importName: preset.importName,
+                    path: planned.blockWriter.level === 'all' && 'allPath' in preset ? preset.allPath : preset.path,
+                    merge: 'fields' as const,
+                },
+            ],
         })),
         buildRootBlock(planned, plugins, boundaryBlocks, ignoredGlobs),
         {

@@ -230,7 +230,12 @@ export const PRESETS_AFTER_CONFIGURATIONS = [
 
 export const PRESETS_BEFORE_CONFIGURATIONS = [
     { importName: 'eslint', package: '@eslint/js', path: 'configs.recommended' },
-    { importName: 'unicorn', package: 'eslint-plugin-unicorn', path: 'configs.recommended' },
+    {
+        importName: 'unicorn',
+        package: 'eslint-plugin-unicorn',
+        path: 'configs.unopinionated',
+        allPath: 'configs.recommended',
+    },
 ] as const;
 
 export const ESLINT_CHECK = 'javascript/eslint';

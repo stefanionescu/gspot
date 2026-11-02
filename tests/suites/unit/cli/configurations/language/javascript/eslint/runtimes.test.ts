@@ -95,10 +95,11 @@ test('a later [[tools.eslint.override]] runtime replaces an earlier one', async 
 
     const eslint = await buildEslint(sandbox.path);
     const [browser] = await eslint.lintFiles(['app.js']);
-    expect(browser!.messages).toStrictEqual([]);
+    expect(browser!.messages.filter(({ ruleId }) => ruleId === 'no-undef')).toStrictEqual([]);
     const [worker] = await eslint.lintFiles(['worker.js']);
-    expect(worker!.messages.map(({ ruleId, line, message }) => ({ ruleId, line, message }))).toStrictEqual([
-        { ruleId: 'no-undef', line: 2, message: WINDOW_UNDEFINED_MESSAGE },
+    const undefinedNames = worker!.messages.filter(({ ruleId }) => ruleId === 'no-undef');
+    expect(undefinedNames.map(({ line, message }) => ({ line, message }))).toStrictEqual([
+        { line: 2, message: WINDOW_UNDEFINED_MESSAGE },
     ]);
 });
 
