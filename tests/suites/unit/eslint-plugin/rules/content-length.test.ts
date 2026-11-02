@@ -6,6 +6,14 @@ buildRuleTester().run('content-length', plugin.rules['content-length'], {
         "import multer from 'multer';\nmulter({ limits: { fileSize: 4000000 } });",
         "import formidable from 'formidable';\nformidable({ maxFileSize: 1000000 });",
         "import bodyParser from 'body-parser';\nbodyParser.json({ limit: '1mb' });",
+        "import bodyParser from 'body-parser';\nbodyParser.json({ limit: config.limit });",
+        "import bodyParser from 'body-parser';\nbodyParser.json({ limit: 'unknown' });",
+        "import bodyParser from 'body-parser';\nbodyParser.json({ limit: '1000' });",
+        "import multer from 'multer';\nmulter({ limits: uploadLimits });",
+        "import multer from 'multer';\nmulter(options);",
+        "import multer from 'multer';\nmulter.memoryStorage();",
+        "import formidable from 'formidable';\nconst form = formidable();\nform.maxFileSize = readLimit();",
+        "import formidable from 'formidable';\nconst form = formidable({ maxFileSize: 1000 });\nform.multiples = true;",
     ],
     invalid: [
         {

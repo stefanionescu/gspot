@@ -20,51 +20,17 @@ import {
     BODY_LIMIT_OPTIONS,
 } from '../config/servers.ts';
 
-function combineSizes(operator: string, left: number, right: number): number | undefined {
-    switch (operator) {
-        case '*': {
-            return left * right;
-        }
-        case '+': {
-            return left + right;
-        }
-        case '-': {
-            return left - right;
-        }
-        case '/': {
-            return left / right;
-        }
-        case '**': {
-            return left ** right;
-        }
-        default: {
-            return undefined;
-        }
-    }
-}
-
 function parseSize(text: string): number | undefined {
     const match = SIZE_TEXT.exec(text.trim());
     if (match === null) return undefined;
-    const unit = match.groups?.['unit']?.toLowerCase() ?? 'b';
+    const unit = match.groups?.['unit']?.toLowerCase() ?? '';
     return Math.floor(Number(match.groups?.['amount']) * (SIZE_UNITS[unit] ?? 1));
 }
 
-function readSize(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): number | undefined {
-    const value = readExpressionValue(node, source);
-    if (value?.type === AST_NODE_TYPES.BinaryExpression) return readArithmeticSize(source, value);
-    const literal = value?.type === AST_NODE_TYPES.Literal ? value.value : undefined;
-    if (typeof literal === 'string') return parseSize(literal);
-    return typeof literal === 'number' ? literal : undefined;
-}
-
-function readArithmeticSize(
-    source: Readonly<TSESLint.SourceCode>,
-    value: TSESTree.BinaryExpression,
-): number | undefined {
-    const [left, right] = [readSize(source, value.left), readSize(source, value.right)];
-    const size = left === undefined || right === undefined ? undefined : combineSizes(value.operator, left, right);
-    return size !== undefined && Number.isFinite(size) ? size : undefined;
+function readSize(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node): number | undefined {
+    const value = ASTUtils.getStaticValue(node, source.getScope(node))?.value;
+    if (typeof value === 'string') return parseSize(value);
+    return typeof value === 'number' ? value : undefined;
 }
 
 function isTooLarge(
@@ -116,13 +82,13 @@ function listOversizedBodies(source: Readonly<TSESLint.SourceCode>, node: Upload
     const options = readOptions(source, node);
     const limit =
         options && BODY_LIMIT_OPTIONS.map((key) => readOptionProperties(options, source).get(key)).find(Boolean);
-    return options && isTooLarge(source, limit, SIZE_DEFAULTS.bodyParser, SIZE_LIMITS.standard) ? [limit ?? node] : [];
+    return limit && isTooLarge(source, limit, undefined, SIZE_LIMITS.standard) ? [limit] : [];
 }
 
 function readUploadModule(source: Readonly<TSESLint.SourceCode>, node: UploadCall): string | undefined {
     const { callee } = node;
     const origin = callee.type === AST_NODE_TYPES.MemberExpression ? callee.object : callee;
-    const name = ASTUtils.isIdentifier(origin) ? readQualifiedName(origin, source) : undefined;
+    const name = readQualifiedName(origin, source);
     const [module] = (name ?? '').split('.');
     return module !== MULTER_MODULE || (name === MULTER_MODULE && callee === origin) ? module : undefined;
 }

@@ -3,17 +3,15 @@ import { readTypes } from '../checker.ts';
 import { findFunction } from '../functions.ts';
 import type { TypeReader } from '../types/plugin.ts';
 import type { FunctionNode } from '../types/rules.ts';
-import { readExpressionValue } from '../expressions.ts';
+import { readExpressionValue, findAssignedVariable } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES, AST_TOKEN_TYPES } from '@typescript-eslint/utils';
 
 import {
-    WINDOW_NAME,
     WINDOW_TOKEN,
     MESSAGE_EVENT,
     ORIGIN_MEMBER,
     UNTYPED_TYPES,
     WINDOW_MEMBERS,
-    WORKER_GLOBALS,
     DOM_LIBRARY_FILE,
     WINDOW_RECEIVERS,
     ANY_TARGET_ORIGIN,
@@ -27,37 +25,14 @@ import {
 } from '../config/web.ts';
 
 function isInIfStatement(node: TSESTree.Node): boolean {
-    for (let ancestor = node.parent; ancestor !== undefined; ancestor = ancestor.parent) {
-        if (ancestor.type === AST_NODE_TYPES.IfStatement) return true;
-        if (ASTUtils.isFunction(ancestor)) return false;
-    }
-    return false;
+    let ancestor = node.parent;
+    while (ancestor !== undefined && ancestor.type !== AST_NODE_TYPES.IfStatement && !ASTUtils.isFunction(ancestor))
+        ancestor = ancestor.parent;
+    return ancestor?.type === AST_NODE_TYPES.IfStatement;
 }
 
-function isAliasedToWorker(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node): boolean {
-    const scope = source.getScope(node);
-    const variable = ASTUtils.findVariable(scope, WINDOW_NAME);
-    if (variable !== null && variable.defs.length > 0) return false;
-    const writes = (variable === null ? scope.through : variable.references).filter((reference) => reference.isWrite());
-    return writes.some(
-        ({ identifier, writeExpr }) =>
-            identifier.name === WINDOW_NAME && ASTUtils.isIdentifier(writeExpr) && WORKER_GLOBALS.has(writeExpr.name),
-    );
-}
-
-function findVariableName(logical: TSESTree.Node): TSESTree.Identifier | undefined {
-    const declarator = logical.parent;
-    if (declarator?.type !== AST_NODE_TYPES.VariableDeclarator) return undefined;
-    return ASTUtils.isIdentifier(declarator.id) ? declarator.id : undefined;
-}
-
-function isNameCompared(
-    source: Readonly<TSESLint.SourceCode>,
-    listener: FunctionNode,
-    name: TSESTree.Identifier | undefined,
-    levels: number,
-): boolean {
-    const variable = name && source.scopeManager?.acquire(listener)?.set.get(name.name);
+function isNameCompared(source: TSESLint.SourceCode, logical: TSESTree.Node, levels: number): boolean {
+    const variable = findAssignedVariable(logical, source);
     const targets = (variable?.references ?? []).map(({ identifier }) =>
         levels === COMPARED_ORIGIN_DEPTH ? identifier.parent : identifier.parent.parent,
     );
@@ -66,7 +41,6 @@ function isNameCompared(
 
 function isUnionVerified(
     source: Readonly<TSESLint.SourceCode>,
-    listener: FunctionNode,
     member: TSESTree.MemberExpression,
     jqueryEvents: ReadonlySet<TSESTree.Node>,
 ): boolean {
@@ -77,12 +51,11 @@ function isUnionVerified(
         other.type === AST_NODE_TYPES.MemberExpression &&
         jqueryEvents.has(other.object) &&
         ASTUtils.getPropertyName(other) === ORIGIN_MEMBER;
-    return isJqueryOrigin && isNameCompared(source, listener, findVariableName(logical), COMPARED_ORIGIN_DEPTH);
+    return isJqueryOrigin && isNameCompared(source, logical, COMPARED_ORIGIN_DEPTH);
 }
 
 function isMemberVerified(
     source: Readonly<TSESLint.SourceCode>,
-    listener: FunctionNode,
     member: TSESTree.MemberExpression,
     jqueryEvents: ReadonlySet<TSESTree.Node>,
 ): boolean {
@@ -92,21 +65,19 @@ function isMemberVerified(
         outer.type === AST_NODE_TYPES.MemberExpression &&
         ASTUtils.getPropertyName(outer) === ORIGIN_MEMBER;
     if ((ASTUtils.getPropertyName(member) === ORIGIN_MEMBER || isJqueryOrigin) && isInIfStatement(member)) return true;
-    return isUnionVerified(source, listener, member, jqueryEvents);
+    return isUnionVerified(source, member, jqueryEvents);
 }
 
 function isEventVerified(
     source: Readonly<TSESLint.SourceCode>,
-    listener: FunctionNode,
     identifier: TSESTree.Node,
     jqueryEvents: ReadonlySet<TSESTree.Node>,
 ): boolean {
     const { parent } = identifier;
-    if (parent?.type === AST_NODE_TYPES.MemberExpression)
-        return isMemberVerified(source, listener, parent, jqueryEvents);
+    if (parent?.type === AST_NODE_TYPES.MemberExpression) return isMemberVerified(source, parent, jqueryEvents);
     if (parent?.type !== AST_NODE_TYPES.LogicalExpression) return false;
     const other = parent.left === identifier ? parent.right : parent.left;
-    return jqueryEvents.has(other) && isNameCompared(source, listener, findVariableName(parent), COMPARED_EVENT_DEPTH);
+    return jqueryEvents.has(other) && isNameCompared(source, parent, COMPARED_EVENT_DEPTH);
 }
 
 function isOriginVerified(
@@ -125,7 +96,7 @@ function isOriginVerified(
                 : [],
         ),
     );
-    return identifiers.some((identifier) => isEventVerified(source, listener, identifier, jqueryEvents));
+    return identifiers.some((identifier) => isEventVerified(source, identifier, jqueryEvents));
 }
 
 function isWindow(source: Readonly<TSESLint.SourceCode>, types: TypeReader, node: TSESTree.Node): boolean {
@@ -144,10 +115,11 @@ function isDomReceiver(source: Readonly<TSESLint.SourceCode>, types: TypeReader,
         ASTUtils.isIdentifier(receiver) && WINDOW_RECEIVERS.has(receiver.name)
             ? types.read(receiver).getProperty(MESSAGE_LISTENER_PROPERTY)
             : undefined;
-    const isDom = messageProperty?.declarations?.some((declaration) =>
-        declaration.getSourceFile().fileName.endsWith(DOM_LIBRARY_FILE),
+    return (
+        messageProperty?.declarations?.some((declaration) =>
+            declaration.getSourceFile().fileName.endsWith(DOM_LIBRARY_FILE),
+        ) === true
     );
-    return isDom === true && !isAliasedToWorker(source, node);
 }
 
 function findMessageListener(
@@ -185,7 +157,7 @@ export const postMessage = createRule<[], 'anyTarget' | 'unverifiedOrigin'>({
         if (types === undefined) return {};
         const checkListener = (node: TSESTree.Node | undefined, report: TSESTree.Node): void => {
             const listener = findMessageListener(source, node);
-            const [event] = listener?.params ?? [];
+            const event = listener?.params[0];
             if (listener && ASTUtils.isIdentifier(event) && !isOriginVerified(source, listener, event))
                 context.report({ node: report, messageId: 'unverifiedOrigin' });
         };
@@ -209,8 +181,7 @@ export const postMessage = createRule<[], 'anyTarget' | 'unverifiedOrigin'>({
                     event?.type === AST_NODE_TYPES.Literal &&
                     typeof event.value === 'string' &&
                     event.value.toLowerCase() === MESSAGE_EVENT;
-                if (isMessage && isWindow(source, types, callee.object) && !isAliasedToWorker(source, callee.object))
-                    checkListener(listener, callee);
+                if (isMessage && isWindow(source, types, callee.object)) checkListener(listener, callee);
             },
             [ON_MESSAGE_SELECTOR](node: TSESTree.AssignmentExpression) {
                 const target = node.left as TSESTree.MemberExpression;

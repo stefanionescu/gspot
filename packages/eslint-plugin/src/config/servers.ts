@@ -155,7 +155,7 @@ export const UPLOAD_MESSAGES: Readonly<Record<string, 'folder' | 'extension' | '
 
 export const SIZE_LIMITS = { upload: 8_000_000, standard: 2_000_000 } as const;
 
-export const SIZE_DEFAULTS = { formidable: 200 * 1024 * 1024, bodyParser: 100 * 1024 } as const;
+export const SIZE_DEFAULTS = { formidable: 200 * 1024 * 1024 } as const;
 
 export const SIZE_UNITS: Readonly<Record<string, number>> = {
     b: 1,

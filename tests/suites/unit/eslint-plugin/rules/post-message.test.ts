@@ -9,6 +9,13 @@ buildTypedRuleTester().run('post-message', plugin.rules['post-message'], {
         "declare const worker: Worker;\nworker.addEventListener('message', (event) => console.log(event.data));",
         "function handle(event: any) {\n    const origin = event.origin || event.originalEvent.origin;\n    if (origin === 'https://app.example.com') console.log(event.data);\n}\nwindow.addEventListener('message', handle);",
         "window.onmessage = (event) => {\n    if (event.origin === 'https://app.example.com') console.log(event.data);\n};",
+        "function handle(event: any) {\n    const source = event.originalEvent || event;\n    if (source.origin === 'https://app.example.com') console.log(source.data);\n}\nwindow.addEventListener('message', handle);",
+        "function handle(event: any) {\n    const source = event || event.originalEvent;\n    if (source.origin === 'https://app.example.com') console.log(source.data);\n}\nwindow.addEventListener('message', handle);",
+        "function handle(event: any) {\n    const origin = event.originalEvent.origin || event.origin;\n    if (origin === 'https://app.example.com') console.log(event.data);\n}\nwindow.addEventListener('message', handle);",
+        "function handle(event: any) {\n    if (event.originalEvent.origin === 'https://app.example.com') console.log(event.data);\n}\nwindow.addEventListener('message', handle);",
+        "declare const handler: (event: MessageEvent) => void;\nwindow.addEventListener('message', handler);",
+        "window.addEventListener('message', (event) => console.log(event.data));",
+        'declare const port: MessagePort;\nport.onmessage = (event) => console.log(event.data);',
     ],
     invalid: [
         {
@@ -26,6 +33,14 @@ buildTypedRuleTester().run('post-message', plugin.rules['post-message'], {
         {
             code: "window.addEventListener('message', (event) => {\n    console.log(event.data);\n});",
             errors: [{ messageId: 'unverifiedOrigin', line: 1 }],
+        },
+        {
+            code: "window.addEventListener('message', (event) => {\n    console.log(event);\n});",
+            errors: [{ messageId: 'unverifiedOrigin', line: 1 }],
+        },
+        {
+            code: "function handle(event: any) {\n    console.log(event.origin || event.originalEvent.origin);\n}\nwindow.addEventListener('message', handle);",
+            errors: [{ messageId: 'unverifiedOrigin', line: 4 }],
         },
         {
             code: 'window.onmessage = function (event) {\n    console.log(event.data);\n};',

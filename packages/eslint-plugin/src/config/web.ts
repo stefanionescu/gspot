@@ -164,8 +164,6 @@ export const NAMESPACE_PATHS: Readonly<Record<string, readonly string[]>> = {
 
 export const MAIL_TRANSPORT = 'nodemailer.createTransport';
 
-export const MAIL_CLIENT = '@aws_sdk.client_ses';
-
 export const SECURE_MAIL_PORT = 465;
 
 export const MAIL_SECURE_OPTIONS = ['secure', 'requireTLS', 'port'] as const;
@@ -176,8 +174,6 @@ export const TELNET_IMPORT = 'ImportDeclaration[source.value="telnet-client"]';
 
 export const TELNET_REQUIRE =
     'CallExpression[callee.type="Identifier"][callee.name="require"][arguments.0.value="telnet-client"]';
-
-export const WINDOW_NAME = 'window';
 
 export const WINDOW_TOKEN = /window/iu;
 
@@ -194,8 +190,6 @@ export const COMPARED_EVENT_DEPTH = 2;
 export const UNTYPED_TYPES: ReadonlySet<string> = new Set(['any', 'unknown']);
 
 export const WINDOW_MEMBERS = ['postMessage', 'frames'] as const;
-
-export const WORKER_GLOBALS: ReadonlySet<string> = new Set(['self', 'global']);
 
 export const DOM_LIBRARY_FILE = 'lib.dom.d.ts';
 

@@ -113,11 +113,11 @@ export const CLEAR_TEXT_CALL_CHECKS = {
     ],
 } as const;
 
-export const CLEAR_TEXT_MESSAGES: Readonly<Record<string, 'transitEncryption' | 'streamEncryption'>> = {
-    'aws_cdk_lib.aws_elasticache.CfnReplicationGroup': 'transitEncryption',
-    'aws_cdk_lib.aws_kinesis.Stream': 'streamEncryption',
-    'aws_cdk_lib.aws_kinesis.CfnStream': 'streamEncryption',
-};
+export const CLEAR_TEXT_MESSAGES: ReadonlyMap<string | undefined, 'transitEncryption' | 'streamEncryption'> = new Map([
+    ['aws_cdk_lib.aws_elasticache.CfnReplicationGroup', 'transitEncryption'],
+    ['aws_cdk_lib.aws_kinesis.Stream', 'streamEncryption'],
+    ['aws_cdk_lib.aws_kinesis.CfnStream', 'streamEncryption'],
+]);
 
 const APPLICATION_HTTP = ['aws_cdk_lib.aws_elasticloadbalancingv2.ApplicationProtocol.HTTP'];
 

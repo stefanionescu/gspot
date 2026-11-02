@@ -13,7 +13,6 @@ import {
 } from '../config/networks.ts';
 import {
     FTP_MODULE,
-    MAIL_CLIENT,
     EXEMPT_HOSTS,
     AUTHORITY_END,
     TELNET_IMPORT,
@@ -35,9 +34,8 @@ function readHost(url: string): { host: string; path: string | undefined } {
         const [authority = ''] = url
             .slice(url.indexOf(PROTOCOL_SEPARATOR) + PROTOCOL_SEPARATOR.length)
             .split(AUTHORITY_END);
-        const host = authority.slice(authority.lastIndexOf('@') + 1);
-        const end = host.startsWith('[') ? host.indexOf(']') + 1 : host.indexOf(':');
-        return { host: end > 0 ? host.slice(0, end) : host, path: undefined };
+        const [host = ''] = authority.slice(authority.lastIndexOf('@') + 1).split(':');
+        return { host, path: undefined };
     }
 }
 
@@ -60,18 +58,7 @@ function readClearTextProtocol(node: TSESTree.Literal): string | undefined {
 
 function describeProtocol(node: TSESTree.Node | undefined, protocol: string | undefined): ClearTextReport[] {
     if (node === undefined || protocol === undefined) return [];
-    const alternative = SECURE_PROTOCOL_ALTERNATIVES[protocol] ?? '';
-    return [{ node, messageId: 'clearText', data: { protocol, alternative } }];
-}
-
-function readOptionName(
-    source: Readonly<TSESLint.SourceCode>,
-    options: TSESTree.ObjectExpression,
-    key: string,
-): string | undefined {
-    const property = readOptionProperties(options, source).get(key);
-    const value = property ? readExpressionValue(property.value, source) : undefined;
-    return value === undefined ? undefined : getCdkName(source, value);
+    return [{ node, messageId: 'clearText', data: { protocol, alternative: SECURE_PROTOCOL_ALTERNATIVES[protocol] } }];
 }
 
 function isSecureOption(
@@ -86,30 +73,11 @@ function isSecureOption(
     return key === 'port' ? value.value === SECURE_MAIL_PORT : value.value !== false;
 }
 
-function isSesTransport(
-    source: Readonly<TSESLint.SourceCode>,
-    options: TSESTree.ObjectExpression | undefined,
-): boolean {
-    const service = options && readExpressionValue(readOptionProperties(options, source).get('SES')?.value, source);
-    if (service?.type !== AST_NODE_TYPES.ObjectExpression) return false;
-    return (
-        readOptionName(source, service, 'ses') === `${MAIL_CLIENT}.SES` &&
-        readOptionName(source, service, 'aws') === MAIL_CLIENT
-    );
-}
-
 function isClearTextMail(source: Readonly<TSESLint.SourceCode>, node: TSESTree.CallExpression): boolean {
-    const written = readExpressionValue(node.arguments[0], source);
-    const options = written?.type === AST_NODE_TYPES.ObjectExpression ? written : undefined;
-    const isSecure = options !== undefined && MAIL_SECURE_OPTIONS.some((key) => isSecureOption(source, options, key));
-    return written !== undefined && !isSesTransport(source, options) && !isSecure;
-}
-
-function isFalseOption(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined, key: string): boolean {
-    const options = readExpressionValue(node, source);
-    const option =
-        options?.type === AST_NODE_TYPES.ObjectExpression ? readOptionProperties(options, source).get(key) : null;
-    return option?.value.type === AST_NODE_TYPES.Literal && option.value.value === false;
+    const options = readExpressionValue(node.arguments[0], source);
+    if (options?.type !== AST_NODE_TYPES.ObjectExpression) return false;
+    const isSes = readOptionProperties(options, source).has('SES');
+    return !isSes && !MAIL_SECURE_OPTIONS.some((key) => isSecureOption(source, options, key));
 }
 
 function isClearTextFtp(source: Readonly<TSESLint.SourceCode>, node: TSESTree.CallExpression): boolean {
@@ -118,7 +86,8 @@ function isClearTextFtp(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Ca
     const client = isConnect ? readExpressionValue(callee.object, source) : undefined;
     const isFtp =
         client?.type === AST_NODE_TYPES.NewExpression && readQualifiedName(client.callee, source) === FTP_MODULE;
-    return isFtp && isFalseOption(source, node.arguments[0], 'secure');
+    const option = readOptionProperties(node.arguments[0], source).get('secure');
+    return isFtp && option?.value.type === AST_NODE_TYPES.Literal && option.value.value === false;
 }
 
 function findClearTextListener(
@@ -164,7 +133,7 @@ function listCallIssues(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Ca
 }
 
 function listConstructIssues(source: Readonly<TSESLint.SourceCode>, node: TSESTree.NewExpression): ClearTextReport[] {
-    const messageId = CLEAR_TEXT_MESSAGES[getCdkName(source, node.callee) ?? ''] ?? 'noTls';
+    const messageId = CLEAR_TEXT_MESSAGES.get(getCdkName(source, node.callee)) ?? 'noTls';
     const listener = findListener(source, node);
     const issues = listCdkTableIssues(source, node, CLEAR_TEXT_CONSTRUCT_CHECKS).map(
         ({ node: target }): ClearTextReport => ({ node: target, messageId }),

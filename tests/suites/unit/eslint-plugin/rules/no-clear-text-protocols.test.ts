@@ -5,6 +5,9 @@ buildRuleTester().run('no-clear-text-protocols', plugin.rules['no-clear-text-pro
     valid: [
         // eslint-disable-next-line unicorn/prefer-https -- reason: these clear-text URLs check the hosts that the rule under test exempts.
         "const api = 'https://api.acme.io';\nconst local = 'http://localhost:8080';\nconst sample = 'http://www.example.com';\nconst svg = 'http://www.w3.org/2000/svg';",
+        "const nodemailer = require('nodemailer');\nnodemailer.createTransport({ secure: useTls });",
+        "const nodemailer = require('nodemailer');\nnodemailer.createTransport({ SES: { ses, aws } });",
+        "const nodemailer = require('nodemailer');\nnodemailer.createTransport(buildOptions());",
     ],
     invalid: [
         {
@@ -37,6 +40,10 @@ buildRuleTester().run('no-clear-text-protocols', plugin.rules['no-clear-text-pro
                 { messageId: 'noTls', line: 17 },
                 { messageId: 'noTls', line: 18 },
             ],
+        },
+        {
+            code: "import * as elb from 'aws-cdk-lib/aws-elasticloadbalancing';\nconst balancer = new elb.LoadBalancer(this, 'a', {});\nbalancer.addListener({ externalProtocol: elb.LoadBalancingProtocol.HTTP });",
+            errors: [{ messageId: 'noTls', line: 3 }],
         },
     ],
 });
