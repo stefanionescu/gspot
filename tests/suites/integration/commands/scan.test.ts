@@ -24,6 +24,6 @@ test('scan installs the tools in its copy, reports a committed secret and a file
     ]);
     expect(report.filesToFormat).toBeGreaterThan(0);
     expect(report.cost.megabytes).toBeGreaterThan(0);
-    expect(report.cost.perHook.map(({ name }) => name)).toContain('pre-commit');
+    expect(report.cost.perTool.map(({ name }) => name)).toContain('gitleaks');
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

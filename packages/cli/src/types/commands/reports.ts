@@ -246,7 +246,7 @@ export type ScanReport = {
     categories: ScanCategory[];
     filesToFormat: number;
     notRun: string[];
-    cost: { tools: number; megabytes: number; perTool: ScanTime[]; perHook: ScanTime[] };
+    cost: { tools: number; megabytes: number; perTool: ScanTime[] };
     plan: InitPlan;
     settingsText: string;
     nextSteps: string[];

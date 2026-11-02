@@ -61,7 +61,7 @@ test.each(['data-files/taplo-format', 'bash/shfmt'])('scan counts a file of %s a
     expect(report.categories).toStrictEqual([]);
 });
 
-test('scan sums the seconds of each tool and of each hook, slowest tool first', async () => {
+test('scan sums the seconds of each tool, slowest tool first', async () => {
     const { cost } = await buildSampleReport();
     expect(cost.megabytes).toBe(3);
     expect(cost.perTool).toStrictEqual([
@@ -71,10 +71,6 @@ test('scan sums the seconds of each tool and of each hook, slowest tool first', 
         { name: 'prettier', seconds: 0.5 },
         { name: 'typos', seconds: 0.5 },
     ]);
-    expect(cost.perHook).toStrictEqual([
-        { name: 'pre-commit', seconds: 4 },
-        { name: 'pre-push', seconds: 4.9 },
-    ]);
 });
 
 test('the text report prints each section with its rows', async () => {
@@ -83,7 +79,7 @@ test('the text report prints each section with its rows', async () => {
     expect(text).toContain('  src/key.ts:2  secrets/gitleaks-staged generic-api-key  Detected a key.\n');
     expect(text).toContain('Formatting\n  2 files differ from your style.\n');
     expect(text).toContain('Could not run\n  python/ruff: ruff is not installed.\n');
-    expect(text).toContain('  pre-push  4.9s\n');
+    expect(text).toContain('  eslint  2.0s\n');
     expect(text).toContain('What gspot init would do\n  configurations\n');
     expect(text).toEndWith('  mise exec -- gspot init\n  mise exec -- gspot install\n  mise exec -- gspot baseline\n');
 });

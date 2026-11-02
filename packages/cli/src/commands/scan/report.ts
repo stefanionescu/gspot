@@ -1,16 +1,14 @@
+import type { RunReport } from '#cli/types/engine/run.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { INCOMPLETE_STATUSES } from '#cli/config/engine.ts';
-import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
-import { listHookNames } from '#cli/tools/installers/hooks.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { LINE_BREAK, GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { findToolName, listDistinctTools } from '#cli/tools/pins.ts';
-import type { RunReport, CheckResult } from '#cli/types/engine/run.ts';
 import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
 import { formatInitPlan, listCarryoverLines } from '#cli/generation/setup/file-plan.ts';
-import type { ScanTime, ScanInput, ScanReport, ScanSection, ScanCategory } from '#cli/types/commands/reports.ts';
+import type { ScanInput, ScanReport, ScanSection, ScanCategory } from '#cli/types/commands/reports.ts';
 
 import {
     SCAN_CATEGORIES,
@@ -43,13 +41,6 @@ function buildCategories(findings: Finding[]): ScanCategory[] {
     });
 }
 
-function listTimes(groups: [string, CheckResult[]][]): ScanTime[] {
-    return groups.map(([name, checks]) => {
-        const milliseconds = checks.reduce((total, { duration }) => total + duration, 0);
-        return { name, seconds: milliseconds / MILLISECONDS_PER_SECOND };
-    });
-}
-
 function buildCost({ session, report, toolBytes }: ScanInput): ScanReport['cost'] {
     const shipped = listChecksById(readConfigurations().values());
     const ran = report.checks.filter(({ duration }) => duration > 0);
@@ -57,17 +48,14 @@ function buildCost({ session, report, toolBytes }: ScanInput): ScanReport['cost'
         const found = shipped.get(check);
         return (found === undefined ? undefined : findToolName(found.check)) ?? SCAN_BUILT_IN_TOOL;
     });
-    const hooks = listHookNames(session.configuredChecks).map((name): [string, CheckResult[]] => {
-        const stages: readonly string[] = HOOK_CHECKS[name].stages;
-        return [name, ran.filter(({ check }) => stages.includes(shipped.get(check)?.check.stage ?? ''))];
+    const perTool = [...tools].map(([name, checks]) => {
+        const milliseconds = checks.reduce((total, { duration }) => total + duration, 0);
+        return { name, seconds: milliseconds / MILLISECONDS_PER_SECOND };
     });
     return {
         tools: listDistinctTools(session.toolConfigurations).filter(({ kind }) => kind === 'program').length,
         megabytes: Math.round(toolBytes / BYTES_PER_MEGABYTE),
-        perTool: listTimes([...tools]).toSorted(
-            (left, right) => right.seconds - left.seconds || compareText(left.name, right.name),
-        ),
-        perHook: listTimes(hooks.filter(([, checks]) => checks.length > 0)),
+        perTool: perTool.toSorted((left, right) => right.seconds - left.seconds || compareText(left.name, right.name)),
     };
 }
 
@@ -142,7 +130,7 @@ function listSections(report: ScanReport): ScanSection[] {
         ...(notRun.length === 0 ? [] : [{ title: SCAN_NOT_RUN_TITLE, rows: notRun }]),
         {
             title: `Cost: ${formatCount(cost.tools, 'tool')}, ${String(cost.megabytes)} MB in ${GSPOT_FOLDER}/`,
-            rows: [...cost.perTool, ...cost.perHook].map(({ name, seconds }) => `${name}  ${seconds.toFixed(1)}s`),
+            rows: cost.perTool.map(({ name, seconds }) => `${name}  ${seconds.toFixed(1)}s`),
         },
         ...(plan.lintCommands.length === 0
             ? []
