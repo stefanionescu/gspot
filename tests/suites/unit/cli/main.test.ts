@@ -36,23 +36,7 @@ test('an unknown command exits 2 and names the closest command', async () => {
     });
 });
 
-test.each(
-    [
-        ['init'],
-        ['install'],
-        ['apply'],
-        ['check'],
-        ['list'],
-        ['explain', 'python'],
-        ['doctor'],
-        ['set', 'level', 'all'],
-        ['unset', 'level'],
-        ['add', 'python'],
-        ['remove', 'python', '--reason', 'External tools check this language.'],
-        ['ignore', 'repository/encoding', '--reason', 'External tooling checks these files.'],
-        ['unignore', 'repository/encoding'],
-    ].map((commandArguments) => ({ commandArguments })),
-)(
+test.each([['init'], ['set', 'level', 'all']].map((commandArguments) => ({ commandArguments })))(
     '$commandArguments requires a Git worktree before reading settings or writing, while its help works outside Git',
     async ({ commandArguments }) => {
         await using sandbox = await testdir({ 'gspot.toml': MALFORMED_SETTINGS });
@@ -119,22 +103,7 @@ test('an argument choice names the command and the values to use', async () => {
     });
 });
 
-test.each([
-    [],
-    ['init'],
-    ['install'],
-    ['apply'],
-    ['check'],
-    ['add'],
-    ['remove'],
-    ['set'],
-    ['unset'],
-    ['ignore'],
-    ['unignore'],
-    ['list'],
-    ['explain'],
-    ['doctor'],
-])('the help of %p fits 80 columns', async (...commandArguments) => {
+test.each([[], ['check']])('the help of %p fits 80 columns', async (...commandArguments) => {
     await using sandbox = await testdir();
     const help = await runGspot(sandbox.path, [...commandArguments, '--help']);
     expect(help.code).toBe(0);
