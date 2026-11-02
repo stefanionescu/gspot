@@ -50,12 +50,19 @@ not matter.
 
 ## Vulnerabilities
 
-`dependencies/osv-scanner` reads your lockfiles and reports known vulnerable packages at push. The GitHub workflow that
-gspot writes also runs it every Monday at 06:00 UTC over every lockfile, because a new advisory can name a version that
-no commit changed. Update the package, then check again. An accepted advisory needs an
-[ignore with a reason](/use/ignore/).
+`dependencies/osv-scanner` reads your lockfiles and reports known vulnerable packages at push. Each check sends the locked
+package names and versions to the Open Source Vulnerabilities (OSV) service. Update the package, then check again. An
+accepted advisory needs an [ignore with a reason](/use/ignore/).
 
 The check skips `.gspot/`, because you cannot change the versions that gspot pins for its tools.
+
+A new advisory can name a version that no commit changed. gspot adds no scheduled job to your CI. To scan on a schedule,
+add a workflow of your own beside `.github/workflows/gspot.yml`. Copy its steps through `Install gspot tools`, set
+`on.schedule`, and end with this step, which reads every lockfile:
+
+```yaml
+- run: gspot check --only dependencies/osv-scanner
+```
 
 ## Lockfiles and package managers
 

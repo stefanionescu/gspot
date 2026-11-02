@@ -27,7 +27,6 @@ type WorkflowStep = {
 
 export type GithubWorkflow = {
     name: string;
-    on: Record<string, unknown>;
     permissions: Record<string, string>;
     jobs: Record<string, { name?: string; if?: string; 'runs-on': string; steps: WorkflowStep[] }>;
 };

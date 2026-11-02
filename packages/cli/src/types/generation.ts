@@ -61,8 +61,6 @@ export type ApplyReport = {
 
 export type ActionPin = { name: string; sha: string; version: string };
 
-export type GithubJobPurpose = { condition: string; lastStep: Record<string, unknown> };
-
 export type Pipeline = {
     version: string;
     packageManager?: PackageManagerPin | undefined;
