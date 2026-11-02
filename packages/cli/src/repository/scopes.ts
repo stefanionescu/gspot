@@ -1,15 +1,14 @@
+import { resolve, relative } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { posix, resolve, relative } from 'node:path';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { DependencyFile } from '#cli/types/parsers.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { GLOB_EXCLUDE, FOLDER_CONTENTS } from '#cli/config/system.ts';
-import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
 import type { ScopeFolder, TrackedFile } from '#cli/types/repository.ts';
-import { DEPENDENCY_FILE_PARSERS } from '#cli/parsers/projects/dependencies.ts';
 import { LINT_FOLDERS, EVERY_FILE_GLOBS } from '#cli/config/repository/setup.ts';
+import { listToolOnlyPackages, listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
 
 import {
     isInside,
@@ -115,12 +114,12 @@ export function detectScopeFolders(
 ): ScopeFolder[] {
     const selected = [...configurations];
     const toolOnlyPackages = listToolOnlyPackages(dependencyFiles, selected);
-    const parsed = new Set(dependencyFiles.map(({ path }) => path));
+    const unparsed = new Set(listUnparsedDependencyFiles(files, dependencyFiles));
     const sources = files.filter(
         (file) =>
             file.kind === 'source' &&
             !toolOnlyPackages.has(file.path) &&
-            (parsed.has(file.path) || !DEPENDENCY_FILE_PARSERS.has(posix.basename(file.path))) &&
+            !unparsed.has(file.path) &&
             !(file.path.startsWith(`${GSPOT_FOLDER}/`) || isInInstalledFolder(file.path)) &&
             LINT_FOLDERS.every((folder) => !file.path.startsWith(`${folder}/`)),
     );

@@ -7,6 +7,17 @@ import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
+test('check names a package.json that does not parse, which gives the run no dependencies', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { scopes: [{ path: 'packages/web' }] }),
+        'packages/web/package.json': '{"dependencies":{"react":19}}',
+    });
+    const result = await runGspot(sandbox.path, ['check', '--json']);
+    expect((JSON.parse(result.stdout) as { notes: string[] }).notes).toContain(
+        'packages/web/package.json does not parse, so gspot read no dependencies from it.',
+    );
+});
+
 test('check warns once for missing hooks, skips the warning for pre-push, and stops warning after installation', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),

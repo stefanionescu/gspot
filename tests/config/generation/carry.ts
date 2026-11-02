@@ -107,6 +107,16 @@ export const CARRY_ROW_CASES = [
         row: { dropped: ['tabWidth', 'printWidth'] },
     },
     {
+        name: 'a package of a workspace with a value that does not fit',
+        files: {
+            'package.json': '{"private":true}',
+            'packages/web/package.json': '{"dependencies":{"react":19}}',
+            'packages/web/source.js': 'export const value = 1;\n',
+        },
+        path: 'packages/web/package.json',
+        row: { tool: 'gspot', dropped: ['the whole file, which gspot could not read'] },
+    },
+    {
         name: 'an EditorConfig width that gspot.toml cannot hold',
         files: { '.editorconfig': '[*]\nmax_line_length = 9999\n', 'source.js': 'export const value = 1;\n' },
         path: '.editorconfig',

@@ -3,6 +3,7 @@ import type { Session } from '#cli/types/tools.ts';
 import { writeProgress } from '#cli/system/terminal.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { EXIT_ERROR, MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+import { listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
 import { buildBaseResult, formatExplainCommand } from '#cli/engine/results.ts';
 import type { FixReport, RunReport, CheckResult, FinishedRun, CheckProgress } from '#cli/types/engine/run.ts';
 
@@ -67,7 +68,12 @@ export function buildRunReport(run: FinishedRun): RunReport {
     return {
         ...(options.comparison !== undefined && { comparison: options.comparison }),
         version: cliPackage.version,
-        notes: checks.flatMap(({ reportNotes }) => reportNotes ?? []),
+        notes: [
+            ...listUnparsedDependencyFiles(session.repository.files, session.repository.dependencyFiles).map(
+                (path) => `${path} does not parse, so gspot read no dependencies from it.`,
+            ),
+            ...checks.flatMap(({ reportNotes }) => reportNotes ?? []),
+        ],
         stages: REPORT_STAGES[options.stage],
         started: started.toISOString(),
         duration: Date.now() - started.getTime(),

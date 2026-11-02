@@ -55,6 +55,26 @@ export async function readDependencyFiles(cache: RunCache, files: TrackedFile[])
 }
 
 /**
+List the dependency files that do not parse. They give no dependencies and mark no scope.
+
+@param files the tracked inventory.
+@param dependencyFiles the dependency files that parsed.
+*/
+export function listUnparsedDependencyFiles(files: TrackedFile[], dependencyFiles: DependencyFile[]): string[] {
+    const parsed = new Set(dependencyFiles.map(({ path }) => path));
+    return files
+        .filter(
+            ({ path, kind }) =>
+                kind === 'source' &&
+                DEPENDENCY_FILE_PARSERS.has(posix.basename(path)) &&
+                !parsed.has(path) &&
+                !isGspotPath(path) &&
+                !isInInstalledFolder(path),
+        )
+        .map(({ path }) => path);
+}
+
+/**
 Read and validate the package.json fields that gspot uses.
 
 @param source the base folder of the path, or the run cache of that folder.
