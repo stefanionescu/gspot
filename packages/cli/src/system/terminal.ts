@@ -170,3 +170,19 @@ function stripControlCharacters(text: string): string {
         )
         .join('');
 }
+
+/**
+Drop what this process writes to stdout and stderr, so that code gspot does not own prints nothing.
+
+@returns the handle that restores the output.
+*/
+export function muteOutput(): Disposable {
+    const streams = [process.stdout, process.stderr];
+    const writers = streams.map((stream) => stream.write.bind(stream));
+    for (const stream of streams) stream.write = () => true;
+    return {
+        [Symbol.dispose]: () => {
+            for (const [index, stream] of streams.entries()) stream.write = writers[index] as typeof stream.write;
+        },
+    };
+}

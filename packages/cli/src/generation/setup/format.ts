@@ -3,6 +3,7 @@ import { pathToFileURL } from 'node:url';
 import { getTool } from '#cli/tools/pins.ts';
 import { isTable } from '#cli/system/tables.ts';
 import { findText } from '#cli/system/files/reads.ts';
+import { muteOutput } from '#cli/system/terminal.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
@@ -217,6 +218,7 @@ export async function readPrettierScripts(
     const scripts = files
         .map(({ path }) => path)
         .filter((path) => PRETTIER_SCRIPT_NAME.test(posix.basename(path)) && folders.has(posix.dirname(path)));
+    using _output = muteOutput();
     const results = await Promise.all(
         scripts.map(async (path): Promise<[string, PrettierOptions][]> => {
             try {

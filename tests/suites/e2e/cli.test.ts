@@ -18,7 +18,7 @@ async function assertConflictingConfigs(root: string, output: string): Promise<v
         { path: '.editorconfig', note: 'replaces your file; read the old one with git show HEAD:.editorconfig' },
         {
             path: 'prettier.config.mjs',
-            note: 'replaces your file; read the old one with git show HEAD:prettier.config.mjs; gspot cannot read this Prettier config, so set format.indent_width and format.print_width by hand',
+            note: 'replaces your file; read the old one with git show HEAD:prettier.config.mjs',
         },
     ]);
     expect(existsSync(join(root, 'gspot.toml'))).toBe(true);
