@@ -62,6 +62,18 @@ test('Trivy checks each Dockerfile in its deepest scope and honors an ignore lim
     expect(corrected.exitCode, JSON.stringify(corrected)).toBe(0);
 });
 
+test('Trivy reports a password in ENV, which gitleaks does not report', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['docker']),
+        Dockerfile: `${ROOT_USER_DOCKERFILE}\nENV DB_PASSWORD=hunter2\n`,
+    });
+    commitAll(sandbox.path);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
+    const command = ['check', '--only', 'docker/trivy-config', '--json'];
+    const { report } = parseCheckReport(await spawnGspot(sandbox.path, command));
+    expect(JSON.stringify(report.checks)).toContain('DB_PASSWORD');
+});
+
 test.each([...LEVELS])(
     'Hadolint at level %s checks apt version pins only at level all, and reports a latest tag at both levels, in the root and a scope',
     async (level) => {
