@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { runInit } from '#tests/setup/cli/commands.ts';
-import { CARRY_ROW_CASES } from '#tests/config/generation/carry.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { CARRYOVER_ROW_CASES } from '#tests/config/generation/carryover.ts';
 
 test('init turns the ignore files into ignore records, and keeps what matches a tracked file', async () => {
     await using sandbox = await createGitSandbox({
@@ -23,7 +23,7 @@ test('init turns the ignore files into ignore records, and keeps what matches a 
     });
 });
 
-test.each([...CARRY_ROW_CASES])('init goes on past $name, and the table names it', async ({ files, path, row }) => {
+test.each([...CARRYOVER_ROW_CASES])('init goes on past $name, and the table names it', async ({ files, path, row }) => {
     await using sandbox = await createGitSandbox(files);
     const { plan } = await runInit(sandbox.path);
     expect(plan.carryover.find((each) => each.path === path)).toMatchObject(row);

@@ -8,7 +8,6 @@ import { createRunCache } from '#cli/system/cache.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { listReplacedTools } from '#cli/tools/pins.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
-import { readCarry } from '#cli/generation/setup/carry.ts';
 import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
@@ -16,6 +15,7 @@ import { readRepositorySetup } from '#cli/repository/setup.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { readCarryover } from '#cli/generation/setup/carryover.ts';
 import { planInitFiles } from '#cli/generation/setup/file-plan.ts';
 import { listLintCommands } from '#cli/repository/lint-commands.ts';
 import { readPrettierScripts } from '#cli/generation/setup/format.ts';
@@ -51,7 +51,7 @@ async function planSettings(plan: SettingsPlan): Promise<PlannedSettings> {
     const first = readSettings(buildInitSettings(draft, repository, configurationsByName), root);
     const session = await openSession(root, { settings: first, ...sessionOptions });
     const configurations = session.toolConfigurations;
-    const carryover = await readCarry({
+    const carryover = await readCarryover({
         repository,
         conflictingConfigs,
         session,

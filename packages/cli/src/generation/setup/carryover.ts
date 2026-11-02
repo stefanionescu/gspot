@@ -29,18 +29,18 @@ import type {
     MarkdownlintConfig,
 } from '#cli/types/generation.ts';
 import {
-    EMPTY_CARRY,
     IGNORE_FILES,
     CARRIED_TOOLS,
     LEADING_SLASH,
     RUFF_CHECK_IDS,
+    EMPTY_CARRYOVER,
     RUFF_STYLE_KEYS,
     COMMENT_PATTERN,
-    CARRY_ROW_START,
     RUFF_FORMAT_KEYS,
     COMMITLINT_TARGET,
     PRINTED_RULE_TOOLS,
     SCAN_FIRST_MESSAGE,
+    CARRYOVER_ROW_START,
     COMMITLINT_CHECK_ID,
     IGNORE_REASON_START,
     MARKDOWNLINT_TARGET,
@@ -92,7 +92,7 @@ function readIgnoreFiles({ repository, tools }: CarryoverInput): CarryoverSectio
             .filter(({ paths }) => paths.length > 0)
             .map(({ path, paths, check }) => ({ check, paths, reason: `${IGNORE_REASON_START} ${path}.` })),
         rows: converted.map(({ path, tool, paths, dropped }) => ({
-            ...CARRY_ROW_START,
+            ...CARRYOVER_ROW_START,
             path,
             tool,
             carried: paths,
@@ -101,10 +101,10 @@ function readIgnoreFiles({ repository, tools }: CarryoverInput): CarryoverSectio
     };
 }
 
-function readRuffCarry(input: CarryoverInput): CarryoverSection {
+function readRuffCarryover(input: CarryoverInput): CarryoverSection {
     const { repository, tools, configurations, level } = input;
     const found = tools.has('ruff') ? readRuffOptions(repository.root) : undefined;
-    if (found === undefined) return EMPTY_CARRY;
+    if (found === undefined) return EMPTY_CARRYOVER;
     const { path, options } = found;
     const shipped = configurations.flatMap(({ ruff }) => [...ruff.basic, ...(level === 'all' ? ruff.all : [])]);
     const { rules, row } = compareRuffRules({ path, options, shipped });
@@ -147,14 +147,14 @@ function readGeneratedFile(session: CarryoverInput['session'], target: string): 
     return parseJsonFile(target, generated?.content ?? '{}');
 }
 
-function buildToolCarry({ setting, tool, path, compared, options, dropped }: ToolCarryoverInput): CarryoverSection {
+function buildToolCarryover({ setting, tool, path, compared, options, dropped }: ToolCarryoverInput): CarryoverSection {
     const held = Map.groupBy(
         options,
         ([rule, value]) => toolsSchema.shape[setting].safeParse({ rules: { [rule]: value } }).success,
     );
     const carried = held.get(true) ?? [];
     const row: CarryoverRow = {
-        ...CARRY_ROW_START,
+        ...CARRYOVER_ROW_START,
         path,
         tool,
         covered: compared.covered,
@@ -166,9 +166,9 @@ function buildToolCarry({ setting, tool, path, compared, options, dropped }: Too
     return { tools: carried.length === 0 ? {} : { [setting]: { rules } }, ignore: [], rows: [row] };
 }
 
-function readMarkdownlintCarry({ repository, session, tools }: CarryoverInput): CarryoverSection {
+function readMarkdownlintCarryover({ repository, session, tools }: CarryoverInput): CarryoverSection {
     const found = tools.has('markdownlint-cli2') ? readMarkdownlintFile(repository.root) : undefined;
-    if (found === undefined) return EMPTY_CARRY;
+    if (found === undefined) return EMPTY_CARRYOVER;
     const document = {
         ...Object.fromEntries(MARKDOWNLINT_PRETTIER_DISABLED.map((rule) => [rule, false])),
         ...readGeneratedFile(session, MARKDOWNLINT_TARGET),
@@ -187,7 +187,7 @@ function readMarkdownlintCarry({ repository, session, tools }: CarryoverInput): 
         lookup: (rule) =>
             MARKDOWNLINT_RETIRED_RULES.has(rule) ? undefined : convertRule(document[rule] ?? true, false),
     });
-    return buildToolCarry({
+    return buildToolCarryover({
         setting: 'markdownlint',
         tool: 'markdownlint-cli2',
         path: found.path,
@@ -197,9 +197,9 @@ function readMarkdownlintCarry({ repository, session, tools }: CarryoverInput): 
     });
 }
 
-async function readCommitlintCarry({ repository, session, tools }: CarryoverInput): Promise<CarryoverSection> {
+async function readCommitlintCarryover({ repository, session, tools }: CarryoverInput): Promise<CarryoverSection> {
     const config = repository.files.find(({ path }) => COMMITLINT_CONFIG_PATH.test(path));
-    if (config === undefined || !tools.has('commitlint')) return EMPTY_CARRY;
+    if (config === undefined || !tools.has('commitlint')) return EMPTY_CARRYOVER;
     const user = await readPrintedRules({
         root: repository.root,
         tool: 'commitlint',
@@ -207,14 +207,14 @@ async function readCommitlintCarry({ repository, session, tools }: CarryoverInpu
         commandArguments: ['--print-config', 'json'],
         hasSeverity: true,
     });
-    if (user === undefined) return EMPTY_CARRY;
+    if (user === undefined) return EMPTY_CARRYOVER;
     const shipped = readGeneratedFile(session, COMMITLINT_TARGET)['rules'] as Record<string, readonly unknown[]>;
     const compared = compareRules({
         check: COMMITLINT_CHECK_ID,
         user,
         lookup: (rule) => (shipped[rule] === undefined ? undefined : convertRule(shipped[rule], true)),
     });
-    return buildToolCarry({
+    return buildToolCarryover({
         setting: 'commitlint',
         tool: 'commitlint',
         path: config.path,
@@ -228,7 +228,7 @@ function listUncomparedRows({ conflictingConfigs, tools }: CarryoverInput): Carr
     return PRINTED_RULE_TOOLS.flatMap(({ tool }) =>
         conflictingConfigs
             .filter((config) => config.tool === tool && !config.shared && tools.has(tool))
-            .map(({ path }) => ({ ...CARRY_ROW_START, path, tool, dropped: [SCAN_FIRST_MESSAGE] })),
+            .map(({ path }) => ({ ...CARRYOVER_ROW_START, path, tool, dropped: [SCAN_FIRST_MESSAGE] })),
     );
 }
 
@@ -238,7 +238,7 @@ function listUnreadRows({ conflictingConfigs, tools }: CarryoverInput, rows: Car
         ({ path, tool }) => CARRIED_TOOLS.has(tool) && tools.has(tool) && !read.has(path),
     );
     return [...new Map(unread.map(({ path, tool }) => [path, tool])).entries()].map(([path, tool]) => ({
-        ...CARRY_ROW_START,
+        ...CARRYOVER_ROW_START,
         path,
         tool,
         dropped: [UNREAD_CONFIG_MESSAGE],
@@ -266,7 +266,7 @@ function listPrettierRows({ repository, session, prettierScripts, tools }: Carry
             const isOverridden =
                 held.has(PRETTIER_OVERRIDES_KEY) && buildPrettierOverrides(options, scope, repository).length > 0;
             return {
-                ...CARRY_ROW_START,
+                ...CARRYOVER_ROW_START,
                 path,
                 tool: 'prettier',
                 carried: [...keys.filter((key) => held.has(key)), ...(isOverridden ? [PRETTIER_OVERRIDES_KEY] : [])],
@@ -283,19 +283,19 @@ the options of Prettier, which the format table holds.
 @param input the repository, the tools that run, and the session of the settings so far.
 @returns the part of gspot.toml to add, and one row per replaced config.
 */
-export async function readCarry(input: CarryoverInput): Promise<Carryover> {
+export async function readCarryover(input: CarryoverInput): Promise<Carryover> {
     const sections = [
-        { ...EMPTY_CARRY, rows: [...listPrettierRows(input), ...listUncomparedRows(input)] },
+        { ...EMPTY_CARRYOVER, rows: [...listPrettierRows(input), ...listUncomparedRows(input)] },
         readIgnoreFiles(input),
-        readRuffCarry(input),
-        readMarkdownlintCarry(input),
-        await readCommitlintCarry(input),
+        readRuffCarryover(input),
+        readMarkdownlintCarryover(input),
+        await readCommitlintCarryover(input),
         {
-            ...EMPTY_CARRY,
+            ...EMPTY_CARRYOVER,
             rows: [
                 ...listUnparsedDependencyFiles(input.repository.files, input.repository.dependencyFiles),
                 ...listUnparsedCiFiles(input.repository),
-            ].map((path) => ({ ...CARRY_ROW_START, path, tool: 'gspot', dropped: [UNREADABLE_CONFIG_MESSAGE] })),
+            ].map((path) => ({ ...CARRYOVER_ROW_START, path, tool: 'gspot', dropped: [UNREADABLE_CONFIG_MESSAGE] })),
         },
     ];
     const rows = sections.flatMap((section) => section.rows);

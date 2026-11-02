@@ -3,7 +3,7 @@ export const INVALID_PRETTIER_OPTIONS = [
     { file: 'app/package.json', text: '{"prettier":{"printWidth":"wide"}}', field: 'printWidth' },
 ];
 
-export const CARRY_ROW_CASES = [
+export const CARRYOVER_ROW_CASES = [
     {
         name: 'options for a markdownlint rule that gspot turns off',
         files: { '.markdownlint.jsonc': '{ "MD013": { "line_length": 120 } }', 'README.md': '# Example\n' },

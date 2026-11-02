@@ -9,14 +9,13 @@ import { LINE_BREAK, GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { findToolName, listDistinctTools } from '#cli/tools/pins.ts';
 import type { RunReport, CheckResult } from '#cli/types/engine/run.ts';
 import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
-import { formatInitPlan, listCarryLines } from '#cli/generation/setup/file-plan.ts';
+import { formatInitPlan, listCarryoverLines } from '#cli/generation/setup/file-plan.ts';
 import type { ScanTime, ScanInput, ScanReport, ScanSection, ScanCategory } from '#cli/types/commands/reports.ts';
 
 import {
     SCAN_CATEGORIES,
     SCAN_NEXT_STEPS,
     SCAN_PLAN_TITLE,
-    SCAN_CARRY_TITLE,
     BYTES_PER_MEGABYTE,
     SCAN_BUILT_IN_TOOL,
     SCAN_CODE_CATEGORY,
@@ -24,6 +23,7 @@ import {
     SCAN_NOT_RUN_TITLE,
     SCAN_COMMANDS_TITLE,
     SCAN_EXAMPLES_SHOWN,
+    SCAN_CARRYOVER_TITLE,
     SCAN_FORMATTING_TITLE,
     SCAN_NEXT_STEPS_TITLE,
 } from '#cli/config/commands/reports.ts';
@@ -158,8 +158,8 @@ function listSections(report: ScanReport): ScanSection[] {
             ? []
             : [
                   {
-                      title: SCAN_CARRY_TITLE,
-                      rows: listCarryLines(plan.carryover).map(({ path, note }) => `${path}  ${note}`),
+                      title: SCAN_CARRYOVER_TITLE,
+                      rows: listCarryoverLines(plan.carryover).map(({ path, note }) => `${path}  ${note}`),
                   },
               ]),
         {

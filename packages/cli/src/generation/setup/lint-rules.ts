@@ -22,9 +22,9 @@ import {
     FIRST_NUMBER,
     RUFF_CHECK_ID,
     RUFF_ANY_PREFIX,
-    CARRY_ROW_START,
     RUFF_ALL_SELECTOR,
     REASON_PLACEHOLDER,
+    CARRYOVER_ROW_START,
     PRINT_TIMEOUT_SECONDS,
 } from '#cli/config/repository/setup.ts';
 
@@ -101,7 +101,7 @@ export function compareRuffRules(input: RuffRuleInput): RuffRules {
         ...perFile.flatMap(([file, ignored]) => ignored.map((rule) => ({ rule, file }))),
     ];
     const row: CarryoverRow = {
-        ...CARRY_ROW_START,
+        ...CARRYOVER_ROW_START,
         path,
         tool: 'ruff',
         covered: selected.length - added.length,

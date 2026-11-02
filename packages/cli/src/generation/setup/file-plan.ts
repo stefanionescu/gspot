@@ -12,7 +12,7 @@ import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { listMisePins, listPackagePins } from '#cli/tools/pins.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
-import { CARRY_GROUPS, CARRY_HEADING } from '#cli/config/repository/setup.ts';
+import { CARRYOVER_GROUPS, CARRYOVER_HEADING } from '#cli/config/repository/setup.ts';
 import type { InitPlan, InitScan, InitFileRow, CarryoverRow, ConflictingConfigs } from '#cli/types/generation.ts';
 
 import {
@@ -149,11 +149,11 @@ Word the table of what init carries: one line per replaced config, and one per w
 
 @param rows one row per replaced config.
 */
-export function listCarryLines(rows: CarryoverRow[]): InitFileRow[] {
+export function listCarryoverLines(rows: CarryoverRow[]): InitFileRow[] {
     return rows.flatMap((row) => {
-        const groups = Object.entries(CARRY_GROUPS)
-            .filter(([key]) => row[key as keyof typeof CARRY_GROUPS].length > 0)
-            .map(([key, title]) => `${title}: ${row[key as keyof typeof CARRY_GROUPS].join(', ')}`);
+        const groups = Object.entries(CARRYOVER_GROUPS)
+            .filter(([key]) => row[key as keyof typeof CARRYOVER_GROUPS].length > 0)
+            .map(([key, title]) => `${title}: ${row[key as keyof typeof CARRYOVER_GROUPS].join(', ')}`);
         const note = [...(row.covered > 0 ? [`covered: ${String(row.covered)}`] : []), ...groups].join('; ');
         return [
             ...(note === '' ? [] : [{ path: row.path, note }]),
@@ -246,7 +246,7 @@ export function formatInitPlan(plan: InitPlan, settingsText: string): string {
         ...formatFileSection('keep', plan.keep),
         ...formatFileSection('change', plan.change),
         ...formatFileSection(LINT_FOLDERS_HEADING, plan.lintFolders),
-        ...formatFileSection(CARRY_HEADING, listCarryLines(plan.carryover)),
+        ...formatFileSection(CARRYOVER_HEADING, listCarryoverLines(plan.carryover)),
         ...formatFileSection(
             LINT_COMMANDS_HEADING,
             plan.lintCommands.map(({ file, line, command, fix }) => ({

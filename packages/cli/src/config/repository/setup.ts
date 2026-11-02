@@ -217,7 +217,7 @@ export const LEADING_SLASH = /^\//u;
 
 export const COMMITLINT_CONFIG_PATH = /^(?:\.commitlintrc|commitlint\.config)/u;
 
-export const EMPTY_CARRY = { tools: {}, ignore: [], rows: [] } as const;
+export const EMPTY_CARRYOVER = { tools: {}, ignore: [], rows: [] } as const;
 
 export const IGNORE_REASON_START = 'Carried over from';
 
@@ -332,9 +332,9 @@ export const MARKDOWNLINT_CONFIG_FILES = [
     '.markdownlint-cli2.yaml',
 ] as const;
 
-export const CARRY_HEADING = 'what init carries from the configs it replaces';
+export const CARRYOVER_HEADING = 'what init carries from the configs it replaces';
 
-export const CARRY_GROUPS = {
+export const CARRYOVER_GROUPS = {
     carried: 'carried over',
     differing: 'other options, to set after init',
     plugins: 'keep with a plugin record',
@@ -342,7 +342,7 @@ export const CARRY_GROUPS = {
     dropped: 'dropped',
 } as const;
 
-export const CARRY_ROW_START = {
+export const CARRYOVER_ROW_START = {
     covered: 0,
     carried: [],
     differing: [],

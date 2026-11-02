@@ -2,9 +2,9 @@ import { compareRules, readPrintedRules } from '#cli/generation/setup/lint-rules
 import type { RuleRead, CarryoverRow, InitPlanning } from '#cli/types/generation.ts';
 
 import {
-    CARRY_ROW_START,
     RULE_PRINT_FLAG,
     PRINTED_RULE_TOOLS,
+    CARRYOVER_ROW_START,
     NOT_COMPARED_MESSAGE,
 } from '#cli/config/repository/setup.ts';
 
@@ -59,11 +59,11 @@ export async function compareInstalledRules(root: string, reads: RuleRead[]): Pr
                 hasSeverity,
             });
             if (user === undefined || shipped === undefined)
-                return { ...CARRY_ROW_START, path, tool, dropped: [NOT_COMPARED_MESSAGE] };
+                return { ...CARRYOVER_ROW_START, path, tool, dropped: [NOT_COMPARED_MESSAGE] };
             const compared = compareRules({ check, user, lookup: (rule) => shipped.get(rule) });
             const added = Map.groupBy(compared.added, (rule) => rule.includes('/'));
             return {
-                ...CARRY_ROW_START,
+                ...CARRYOVER_ROW_START,
                 path,
                 tool,
                 covered: compared.covered,

@@ -11,7 +11,7 @@ import type { TomlTable } from '#cli/types/settings.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import type { InitJson } from '#cli/types/commands/edits.ts';
 import type { FormatSettings } from '#cli/types/configurations/language.ts';
-import { INVALID_PRETTIER_OPTIONS, UNREADABLE_PRETTIER_FILES } from '#tests/config/generation/carry.ts';
+import { INVALID_PRETTIER_OPTIONS, UNREADABLE_PRETTIER_FILES } from '#tests/config/generation/carryover.ts';
 
 import {
     FORMAT_FILE_CASES,
