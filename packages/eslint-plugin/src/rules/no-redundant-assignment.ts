@@ -3,21 +3,14 @@ import { LOOP_BODY_PARENTS } from '../config/builtins.ts';
 import { ASTUtils, TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { PathFrame, ValueState, SegmentFlow, AssignedValues, AssignmentFrame } from '../types/rules.ts';
 
-function findNamedVariable(name: string, scope: TSESLint.Scope.Scope): TSESLint.Scope.Variable | undefined {
-    const variables = [...scope.variables, ...(scope.upper?.variables ?? [])];
-    return variables.find((variable) => variable.name === name);
-}
-
 function readAssignedValues(
-    variable: TSESLint.Scope.Variable,
     value: TSESTree.Node | null | undefined,
     state: ValueState,
     scope: TSESLint.Scope.Scope,
 ): AssignedValues {
     if (value?.type === AST_NODE_TYPES.Literal) return new Set([value.raw]);
     if (value?.type !== AST_NODE_TYPES.Identifier) return null;
-    const named = findNamedVariable(value.name, scope);
-    return named === undefined || Object.is(named, variable) ? null : (state.get(named) ?? null);
+    return state.get(ASTUtils.findVariable(scope, value.name)) ?? null;
 }
 
 function joinValues(held: AssignedValues | undefined, values: AssignedValues): AssignedValues {
@@ -42,12 +35,13 @@ function haveSameValues(first: ValueState, second: ValueState): boolean {
 }
 
 function propagate(flow: SegmentFlow, flows: ReadonlyMap<string, SegmentFlow>): boolean {
-    const incoming = joinStates(flow.segment.prevSegments.map(({ id }) => flows.get(id)?.outgoing ?? new Map()));
+    const states = flow.segment.prevSegments.map(({ id }) => flows.get(id)?.outgoing);
+    const incoming = joinStates(states.filter((state) => state !== undefined));
     const outgoing = new Map(incoming);
     for (const reference of flow.references) {
         const { resolved, writeExpr, from } = reference;
         if (resolved !== null && reference.isWrite())
-            outgoing.set(resolved, readAssignedValues(resolved, writeExpr, outgoing, from));
+            outgoing.set(resolved, readAssignedValues(writeExpr, outgoing, from));
     }
     flow.incoming = incoming;
     const isChanged = !haveSameValues(flow.outgoing, outgoing);
@@ -63,13 +57,9 @@ function solveFlows(flows: ReadonlyMap<string, SegmentFlow>): void {
     }
 }
 
-function listLocalPairs(node: TSESTree.Node, source: TSESLint.SourceCode): [TSESTree.Node, TSESTree.Node][] {
+function listLocalChain(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node[] {
     const ancestors = source.getAncestors(node);
-    const chain = [...ancestors.slice(ancestors.findLastIndex((ancestor) => ASTUtils.isFunction(ancestor)) + 1), node];
-    return chain.slice(1).flatMap((child, index): [TSESTree.Node, TSESTree.Node][] => {
-        const parent = chain[index];
-        return parent === undefined ? [] : [[parent, child]];
-    });
+    return [...ancestors.slice(ancestors.findLastIndex((ancestor) => ASTUtils.isFunction(ancestor)) + 1), node];
 }
 
 function isRewrite(value: TSESTree.Node, reference: TSESLint.Scope.Reference): boolean {
@@ -77,13 +67,14 @@ function isRewrite(value: TSESTree.Node, reference: TSESLint.Scope.Reference): b
     const isCompound = parent?.type === AST_NODE_TYPES.AssignmentExpression && parent.operator !== '=';
     return (
         isCompound ||
-        (ASTUtils.isIdentifier(value) && Object.is(findNamedVariable(value.name, reference.from), reference.resolved))
+        (ASTUtils.isIdentifier(value) &&
+            Object.is(ASTUtils.findVariable(reference.from, value.name), reference.resolved))
     );
 }
 
 function isLoopSetup(reference: TSESLint.Scope.Reference, value: TSESTree.Node, source: TSESLint.SourceCode): boolean {
-    const isInit = listLocalPairs(value, source).some(
-        ([parent, child]) => parent.type === AST_NODE_TYPES.ForStatement && Object.is(parent.init, child),
+    const isInit = listLocalChain(value, source).some(
+        (child) => child.parent?.type === AST_NODE_TYPES.ForStatement && Object.is(child.parent.init, child),
     );
     if (isInit) return true;
     const definition = reference.resolved?.defs.find(
@@ -94,9 +85,7 @@ function isLoopSetup(reference: TSESLint.Scope.Reference, value: TSESTree.Node, 
     );
     const declaration = definition?.node.parent;
     if (declaration?.type !== AST_NODE_TYPES.VariableDeclaration) return false;
-    return listLocalPairs(declaration, source).some(
-        ([parent, child]) => LOOP_BODY_PARENTS.has(parent.type) && 'body' in parent && Object.is(parent.body, child),
-    );
+    return listLocalChain(declaration, source).some(({ type }) => LOOP_BODY_PARENTS.has(type));
 }
 
 function isExcludedWrite(reference: TSESLint.Scope.Reference, source: TSESLint.SourceCode): boolean {
@@ -111,7 +100,7 @@ function isReportable(
     source: TSESLint.SourceCode,
 ): boolean {
     const variable = reference.resolved;
-    if (variable === null || variable.name.startsWith('_') || (usages.get(variable)?.size ?? 0) > 1) return false;
+    if (variable === null || variable.name.startsWith('_') || usages.get(variable)?.size !== 1) return false;
     const isUnset = variable.defs.some(
         ({ type, node }) =>
             type === TSESLint.Scope.DefinitionType.Parameter ||
@@ -130,15 +119,16 @@ function listRedundantWrites(
     flow: SegmentFlow,
     usages: ReadonlyMap<TSESLint.Scope.Variable, ReadonlySet<string>>,
     source: TSESLint.SourceCode,
-): TSESLint.Scope.Reference[] {
+): TSESLint.ReportDescriptor<'redundant'>[] {
     const state = new Map(flow.incoming);
-    const redundant: TSESLint.Scope.Reference[] = [];
+    const redundant: TSESLint.ReportDescriptor<'redundant'>[] = [];
     for (const reference of flow.references) {
         const { resolved: variable, writeExpr, from } = reference;
         if (variable === null || !reference.isWrite() || !isReportable(reference, usages, source)) continue;
-        const assigned = readAssignedValues(variable, writeExpr, state, from);
+        const assigned = readAssignedValues(writeExpr, state, from);
         const writes = variable.references.filter((each) => each.isWrite()).length;
-        if (writes > 1 && isRepeatedValue(state.get(variable), assigned)) redundant.push(reference);
+        if (writeExpr && writes > 1 && isRepeatedValue(state.get(variable), assigned))
+            redundant.push({ node: writeExpr, messageId: 'redundant', data: { name: variable.name } });
         state.set(variable, assigned);
     }
     return redundant;
@@ -216,7 +206,6 @@ export const noRedundantAssignment = createRule<[], 'redundant'>({
         const references = new Map<TSESTree.Node, TSESLint.Scope.Reference>();
         const definitions = new Map<TSESTree.Node, TSESLint.Scope.Variable>();
         const frames: PathFrame[] = [];
-        let enumDepth = 0;
         return {
             Program: () => {
                 indexIdentifiers(source, references, definitions);
@@ -228,17 +217,15 @@ export const noRedundantAssignment = createRule<[], 'redundant'>({
                 frames.at(-1)?.segments.push(segment);
             },
             onCodePathSegmentEnd: () => frames.at(-1)?.segments.pop(),
-            TSEnumDeclaration: () => (enumDepth += 1),
-            'TSEnumDeclaration:exit': () => (enumDepth -= 1),
             ':matches(AssignmentExpression, VariableDeclarator[init])': (node: AssignmentFrame['node']) =>
                 frames.at(-1)?.assignments.push({ node, left: new Set(), right: new Set() }),
             ':matches(AssignmentExpression, VariableDeclarator[init]):exit': () => {
                 const assignment = frames.at(-1)?.assignments.pop();
-                for (const reference of [...(assignment?.right ?? []), ...(assignment?.left ?? [])])
+                if (assignment === undefined) return;
+                for (const reference of [...assignment.right, ...assignment.left])
                     addReference(reference, frames.at(-1), flows, source);
             },
             Identifier: (node) => {
-                if (enumDepth > 0) return;
                 const reference = references.get(node);
                 if (reference !== undefined) addReference(reference, frames.at(-1), flows, source);
                 const variable = reference === undefined ? definitions.get(node) : (reference.resolved ?? undefined);
@@ -247,12 +234,7 @@ export const noRedundantAssignment = createRule<[], 'redundant'>({
             'Program:exit': () => {
                 solveFlows(flows);
                 const redundant = [...flows.values()].flatMap((flow) => listRedundantWrites(flow, usages, source));
-                for (const { identifier, writeExpr } of redundant)
-                    context.report({
-                        node: writeExpr ?? identifier,
-                        messageId: 'redundant',
-                        data: { name: identifier.name },
-                    });
+                for (const report of redundant) context.report(report);
             },
         };
     },

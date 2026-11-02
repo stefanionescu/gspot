@@ -198,7 +198,7 @@ export type Isolation = 'deep' | 'shallow' | 'written';
 
 export type AssignedValues = ReadonlySet<string> | null;
 
-export type ValueState = Map<TSESLint.Scope.Variable, AssignedValues>;
+export type ValueState = Map<TSESLint.Scope.Variable | null, AssignedValues>;
 
 export type SegmentFlow = {
     segment: TSESLint.CodePathSegment;
