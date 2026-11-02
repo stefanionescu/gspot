@@ -154,9 +154,7 @@ export type CodeFence = { language: string; attributes: string; body: string; st
 
 export type DirectiveScan = { token: string | undefined; end: number };
 
-type TomlComment = { raw: string; start: number; line: number };
-
-type TomlCommentBlock = { path: KeyPath; owned: TomlComment[]; free: TomlComment[] };
+type TomlComment = { raw: string; start: number };
 
 export type TomlBlock = ReturnType<typeof parseDocument>['cst'][number];
 
@@ -183,7 +181,7 @@ export type TomlSyntax = {
     comments: TomlCommentNode[];
 };
 
-export type TomlComments = Map<string, TomlCommentBlock>;
+export type TomlComments = Map<string, TomlComment[]>;
 
 export type TomlTablePositions = {
     value: Record<string, unknown>;
@@ -194,13 +192,6 @@ export type TomlTablePositions = {
 export type TomlTextChunk = { start: number; end: number; text: string };
 
 export type TomlAnchoredComment = { comment: TomlCommentNode; anchor: TomlPathNode | undefined; identity: string };
-
-export type TomlCommentPlacement = {
-    kind: string;
-    path: KeyPath | undefined;
-    comment: TomlCommentNode;
-    placement: 'owned' | 'free';
-};
 
 export type TomlCommentMove = { source: TomlAnchoredComment; found: TomlAnchoredComment | undefined };
 

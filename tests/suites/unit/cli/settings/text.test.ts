@@ -27,6 +27,14 @@ test('a template keeps authored spelling, record order, comments, and inline tab
     expect(output).toBe(source);
 });
 
+test('a new table goes above the comment of the next table', () => {
+    const source = 'level = "basic"\n\n# Wide screens.\n[format]\nprint_width = 120\n';
+    const written = { ...parseTomlFile('gspot.toml', source), ci: { enabled: true } };
+    expect(buildSettingsText(source, written)).toBe(
+        'level = "basic"\n\n[ci]\nenabled = true\n\n# Wide screens.\n[format]\nprint_width = 120\n',
+    );
+});
+
 test('setting level keeps the opening init comment first', async () => {
     await using sandbox = await createGitSandbox({});
     const cache = createRunCache(sandbox.path);

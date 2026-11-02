@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import { isTable, findValueAt, normalizeTables } from '#cli/system/tables.ts';
-import { patch, stringify, parseDocument, parse as parseToml } from '@decimalturn/toml-patch';
+import { patch, parseDocument, parse as parseToml } from '@decimalturn/toml-patch';
 import { MESSAGE_END, PATCH_FORMAT, TABLE_PROPERTY_FLAGS, MISSING_RANGE_MESSAGE } from '#cli/config/parsers.ts';
 
 import type {
@@ -20,7 +20,6 @@ import type {
     TomlTableOptions,
     TomlTablePositions,
     TomlAnchoredComment,
-    TomlCommentPlacement,
 } from '#cli/types/parsers.ts';
 
 function findTomlTable(
@@ -105,15 +104,10 @@ function insertTomlComments(comments: TomlComments, kind: string, keys: KeyPath)
     const block = comments.get(id);
     if (block === undefined) return '';
     comments.delete(id);
-    const free = block.free
+    return block
         .toSorted((left, right) => left.start - right.start)
-        .map(
-            (comment, index, list) =>
-                (index > 0 && comment.line > (list[index - 1]?.line ?? 0) + 1 ? '\n' : '') + comment.raw,
-        )
+        .map(({ raw }) => raw)
         .join('\n');
-    const owned = block.owned.toSorted((left, right) => left.start - right.start).map(({ raw }) => raw);
-    return [...(free === '' ? [] : [free, ...(owned.length === 0 ? [] : [''])]), ...owned].join('\n');
 }
 
 function listAnchoredComments(syntax: TomlSyntax): TomlAnchoredComment[] {
@@ -122,32 +116,6 @@ function listAnchoredComments(syntax: TomlSyntax): TomlAnchoredComment[] {
         const identity = anchor === undefined ? 'free' : JSON.stringify([anchor.kind, ...anchor.path]);
         return { comment, anchor, identity };
     });
-}
-
-function addTomlComment(comments: TomlComments, commentPlacement: TomlCommentPlacement): void {
-    const { kind, path, comment, placement } = commentPlacement;
-    if (path === undefined) return;
-    const id = JSON.stringify([kind, ...path]);
-    const block = comments.get(id) ?? { path, owned: [], free: [] };
-    block[placement].push({
-        raw: comment.raw,
-        start: getTomlRange(comment)[0],
-        line: comment.loc.start.line,
-    });
-    comments.set(id, block);
-}
-
-function replaceTomlValues(previous: TomlSyntax, values: Record<string, unknown>, format: Parameters<typeof patch>[2]) {
-    const appended: Record<string, unknown> = {};
-    const assigned: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(values)) {
-        if (!Object.hasOwn(previous.value, key) && Array.isArray(value) && value.length > 0 && value.every(isTable))
-            appended[key] = value;
-        else assigned[key] = value;
-    }
-    const patched = patch(previous.document.toTomlString, assigned, format);
-    const suffix = Object.keys(appended).length === 0 ? '' : `\n\n${stringify(appended, format)}`;
-    return { patched, suffix };
 }
 
 function pairChangedComments(previous: TomlSyntax, reparsed: TomlSyntax): TomlCommentMove[] {
@@ -162,7 +130,7 @@ function pairChangedComments(previous: TomlSyntax, reparsed: TomlSyntax): TomlCo
 }
 
 /**
-Write the values over the TOML text, and keep its order, its layout, and its comments. A top-level array of tables that the text lacks goes at its end.
+Write the values over the TOML text, and keep its order, its layout, and its comments.
 
 @param previous the parsed text.
 @param values the table to write.
@@ -173,28 +141,17 @@ export function buildPatchedToml(
     values: Record<string, unknown>,
     format: Parameters<typeof patch>[2],
 ): string {
-    const { patched, suffix } = replaceTomlValues(previous, values, format);
+    const patched = patch(previous.document.toTomlString, values, format);
     const reparsed = parseTomlSyntax(patched, values);
     const kept = new Set(reparsed.pathNodes.map(({ kind, path }) => JSON.stringify([kind, ...path])));
     const comments: TomlComments = new Map();
     const changed = pairChangedComments(previous, reparsed);
-    const chunks = changed.flatMap(({ source: { comment, anchor: authored }, found }): TomlTextChunk[] => {
-        const owner =
-            authored ??
-            previous.pathNodes.find(
-                (pathNode) =>
-                    getTomlRange(pathNode.node)[0] > getTomlRange(comment)[1] &&
-                    kept.has(JSON.stringify([pathNode.kind, ...pathNode.path])),
-            );
-        if (owner === undefined) return [];
-        const key = JSON.stringify([owner.kind, ...owner.path]);
-        if (!kept.has(key)) return [];
-        addTomlComment(comments, {
-            kind: owner.kind,
-            path: owner.path,
-            comment,
-            placement: authored === undefined ? 'free' : 'owned',
-        });
+    const chunks = changed.flatMap(({ source: { comment, anchor, identity }, found }): TomlTextChunk[] => {
+        if (anchor === undefined || !kept.has(identity)) return [];
+        comments.set(identity, [
+            ...(comments.get(identity) ?? []),
+            { raw: comment.raw, start: getTomlRange(comment)[0] },
+        ]);
         if (found === undefined) return [];
         const [start, end] = getTomlRange(found.comment);
         return [{ start, end: end + Number(patched[end] === '\n'), text: '' }];
@@ -216,9 +173,7 @@ export function buildPatchedToml(
                     return piece;
                 })
                 .join('') + patched.slice(position)
-        ).trimEnd() +
-        suffix +
-        '\n'
+        ).trimEnd() + '\n'
     );
 }
 
