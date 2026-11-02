@@ -9,6 +9,8 @@ buildRuleTester().run('no-shallow-clone-mutation', plugin.rules['no-shallow-clon
         'import _ from "lodash"; function save(settings) { const copy = _.clone(settings); copy.theme = structuredClone(settings.theme); copy.theme.font.size = 1; }',
         'import _ from "lodash"; function save(settings, key) { const copy = _.clone(settings); copy[key].color = "red"; }',
         'function save(settings) { const copy = clone(settings); copy.theme.color = "red"; }',
+        'import _ from "lodash"; function save(settings) { const copy = _.clone(settings); copy.theme = _.cloneDeep(settings.theme); copy.theme.font.size = 1; }',
+        'import _ from "lodash"; function save(settings) { const copy = _.clone(settings); copy.theme = _.clone(settings.theme); copy.theme.color = "red"; }',
     ],
     invalid: [
         {
@@ -27,5 +29,11 @@ buildRuleTester().run('no-shallow-clone-mutation', plugin.rules['no-shallow-clon
             code: 'import clone from "lodash/clone"; function save(settings) { const copy = clone(settings); copy.theme = settings.other; copy.theme.color = "red"; }',
             errors: [{ messageId: 'shared' }],
         },
+        ...[
+            'const copy = _.clone(settings); (copy as Settings).theme.color = "red";',
+            'const copy = _.clone(settings); copy["theme"].color = "red";',
+            'const copy = _.clone(settings); copy.theme ??= {}; copy.theme.color = "red";',
+            'const copy = _.clone(settings); copy.theme = build(); copy.theme.color = "red";',
+        ].map((code) => ({ code: `import _ from "lodash"; ${code}`, errors: [{ messageId: 'shared' as const }] })),
     ],
 });

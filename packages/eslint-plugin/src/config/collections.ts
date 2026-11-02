@@ -57,21 +57,17 @@ export const ELEMENT_WRITE_OPERATORS: ReadonlySet<string> = new Set(['=', '||=',
 
 export const NESTED_MEMBER_DEPTH = 2;
 
-export const STATIC_KEY_TYPES: ReadonlySet<string> = new Set(['string', 'number']);
-
 export const STRUCTURED_CLONE_NAME = 'structuredClone';
 
-export const NODE_MODULE_PREFIX = /^node:/u;
-
-export const CLONE_ADVICE: ReadonlyMap<string, string> = new Map([
+export const CLONE_ADVICE: ReadonlyMap<string | undefined, string> = new Map([
     ['lodash.clone', 'structuredClone() or _.cloneDeep()'],
     ['lodash-es.clone', 'structuredClone() or _.cloneDeep()'],
     ['underscore.clone', 'structuredClone()'],
 ]);
 
-export const DEEP_CLONE_NAMES: ReadonlySet<string> = new Set(['lodash.cloneDeep', 'lodash-es.cloneDeep']);
+export const DEEP_CLONE_NAMES: ReadonlySet<string | undefined> = new Set(['lodash.cloneDeep', 'lodash-es.cloneDeep']);
 
-export const SHALLOW_CLONE_NAMES: ReadonlySet<string> = new Set([
+export const SHALLOW_CLONE_NAMES: ReadonlySet<string | undefined> = new Set([
     'lodash.clone',
     'lodash-es.clone',
     'underscore.clone',
