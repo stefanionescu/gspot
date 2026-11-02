@@ -217,7 +217,7 @@ List the fields of the nodes of one kind in a node list.
 export function listNodeFields<Kind extends keyof SqlNodeFields>(
     nodes: Node[] | undefined,
     kind: Kind,
-): SqlNodeFields[Kind][] {
+): Array<SqlNodeFields[Kind]> {
     return (nodes ?? []).flatMap((node) => {
         const fields = findNodeFields(node, kind);
         return fields === undefined ? [] : [fields];

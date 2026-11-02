@@ -53,8 +53,8 @@ export type Tool = Exclude<ParsedManifest['tools'][number], string>;
 
 export type ConfigurationReference = Configuration & {
     selection: { conditions: string[]; exclusions: string[]; requiredBy: string[] };
-    ruleFiles: { path: string; conditions: string[]; exclusions: string[] }[];
-    installedTools: { name: string; version: string | undefined; source: string }[];
+    ruleFiles: Array<{ path: string; conditions: string[]; exclusions: string[] }>;
+    installedTools: Array<{ name: string; version: string | undefined; source: string }>;
     settings: Setting[];
 };
 

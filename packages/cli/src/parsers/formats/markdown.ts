@@ -29,8 +29,8 @@ List the prose of a Markdown file, without code, link targets, or front matter.
 @param text the Markdown source.
 @returns each text node with the line where it starts.
 */
-export function listMarkdownTexts(text: string): Pick<SourceComment, 'line' | 'text'>[] {
-    const texts: Pick<SourceComment, 'line' | 'text'>[] = [];
+export function listMarkdownTexts(text: string): Array<Pick<SourceComment, 'line' | 'text'>> {
+    const texts: Array<Pick<SourceComment, 'line' | 'text'>> = [];
     visit(fromMarkdown(text), 'text', (node) => {
         if (node.position !== undefined) texts.push({ line: node.position.start.line, text: node.value });
     });

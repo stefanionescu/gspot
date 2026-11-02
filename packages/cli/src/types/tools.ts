@@ -158,7 +158,7 @@ export type InstallResult = {
     installed: string[];
     missing: string[];
     notes: string[];
-    steps: readonly (readonly string[])[];
+    steps: ReadonlyArray<readonly string[]>;
 };
 
 export type ToolPackageManagerName = Exclude<PackageManager['name'], 'yarn'>;
@@ -178,7 +178,7 @@ export type ToolInstall = {
     tools: Tool[];
     checkTools: Set<string>;
     misePath: string | undefined;
-    steps: (readonly string[])[];
+    steps: Array<readonly string[]>;
 };
 
 export type ToolRelease = { label: string; kind: 'npm' | 'python'; version: string; url: string };

@@ -80,7 +80,7 @@ export type RunReport = {
     notes: string[];
     comparison?: { content: 'working-tree' | 'index' | 'commit'; reference: string };
     version: string;
-    stages: readonly Check['stage'][];
+    stages: ReadonlyArray<Check['stage']>;
     started: string;
     duration: number;
     checks: readonly CheckResult[];

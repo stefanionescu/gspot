@@ -124,7 +124,7 @@ Map each tool that declares a Prettier plugin to its npm package name, module, a
 export function listPrettierPlugins(configurations: Iterable<Configuration>): Map<Tool, PrettierPlugin> {
     return new Map(
         [...configurations].flatMap(({ tools }) =>
-            tools.flatMap((tool): [Tool, PrettierPlugin][] => {
+            tools.flatMap((tool): Array<[Tool, PrettierPlugin]> => {
                 const name = tool.installers['npm']?.name;
                 return tool.prettier === undefined || name === undefined
                     ? []

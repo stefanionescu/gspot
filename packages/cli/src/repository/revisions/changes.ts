@@ -34,7 +34,7 @@ List the symbolic `HEAD` of each remote.
 @param cancelSignal stops the Git reads.
 @returns each `HEAD` name and the branch that it points to.
 */
-export async function listRemoteHeads(root: string, cancelSignal?: AbortSignal): Promise<[string, string][]> {
+export async function listRemoteHeads(root: string, cancelSignal?: AbortSignal): Promise<Array<[string, string]>> {
     const lines = await readGitLines(root, GIT_REMOTE_HEADS_ARGUMENTS, {
         cancelSignal,
     });

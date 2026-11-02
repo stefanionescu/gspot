@@ -30,7 +30,7 @@ export type CommandHelp = {
     description: string;
     arguments: Readonly<Record<string, string>>;
     options: Readonly<Record<string, string>>;
-    exitCodes: readonly (readonly [string, string])[];
+    exitCodes: ReadonlyArray<readonly [string, string]>;
     example: string;
 };
 
@@ -54,7 +54,7 @@ export type IgnoreOptions = {
 export type InstallCommandJson = {
     summary: string;
     installed: string[];
-    steps: readonly (readonly string[])[];
+    steps: ReadonlyArray<readonly string[]>;
     notes: string[];
     missing: string[];
 };

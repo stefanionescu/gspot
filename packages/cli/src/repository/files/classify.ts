@@ -189,7 +189,7 @@ List the inventory tags that a path alone gives.
 export function listPathTags(path: string): string[] {
     const extension = extractExtension(path);
     const base = posix.basename(path);
-    const flags: [boolean, string][] = [
+    const flags: Array<[boolean, string]> = [
         [LOCKFILES.some((lockfile) => lockfile.file === base), 'lockfile'],
         [base.startsWith(DOCKERFILE_NAME) || extension === DOCKERFILE_EXTENSION, 'dockerfile'],
         [base.startsWith(DOTENV_PREFIX), 'dotenv'],

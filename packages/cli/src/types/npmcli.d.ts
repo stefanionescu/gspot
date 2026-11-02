@@ -3,7 +3,7 @@ declare module '@npmcli/config' {
     export default class Config {
         /** Prepare the reader. */
         constructor(options: Record<string, unknown>);
-        list: Record<string, unknown>[];
+        list: Array<Record<string, unknown>>;
         /** Read each settings layer. */
         load(): Promise<void>;
         /** Test the settings of every layer. */

@@ -36,7 +36,7 @@ function parseNpmVersions(path: string, text: string, folder: string): Map<strin
     const { packages } = parseJsonFile(path, text, npmLockfileSchema);
     const specifiers = listSpecifiers(packages[folder]);
     return new Map(
-        specifiers.keys().flatMap((name): [string, string][] => {
+        specifiers.keys().flatMap((name): Array<[string, string]> => {
             const version = listEnclosingFolders(folder)
                 .map((base) => packages[posix.join(base, NPM_PACKAGE_FOLDER, name)]?.version)
                 .find((lockedVersion) => lockedVersion !== undefined);
@@ -52,7 +52,7 @@ function parseBunVersions(path: string, text: string, folder: string): Map<strin
     return new Map(
         listSpecifiers(workspace)
             .keys()
-            .flatMap((name): [string, string][] => {
+            .flatMap((name): Array<[string, string]> => {
                 const identity = (lockfile.packages[posix.join(importer, name)] ?? lockfile.packages[name])?.[0];
                 const version = typeof identity === 'string' ? splitIdentity(identity)?.[1] : undefined;
                 return version === undefined ? [] : [[name, version]];
@@ -68,7 +68,7 @@ function parsePnpmVersions(path: string, text: string, folder: string): Map<stri
         DEPENDENCY_SECTIONS.flatMap((section) => {
             const dependencies = workspace.data[section];
             if (dependencies === undefined) return [];
-            return Object.entries(dependencies).flatMap(([name, locked]): [string, string][] => {
+            return Object.entries(dependencies).flatMap(([name, locked]): Array<[string, string]> => {
                 const version = isTable(locked) ? locked['version'] : locked;
                 return typeof version === 'string' ? [[name, version.split(PNPM_PEER_START, 1).join('')]] : [];
             });
@@ -78,7 +78,7 @@ function parsePnpmVersions(path: string, text: string, folder: string): Map<stri
 
 function parseYarnVersions(path: string, text: string, specifiers: Map<string, string>): Map<string, string> {
     const packages = Object.entries(parseYarnLockfile(path, text));
-    const versions = [...specifiers].flatMap(([name, specifier]): [string, string][] => {
+    const versions = [...specifiers].flatMap(([name, specifier]): Array<[string, string]> => {
         const descriptors = new Set([`${name}@${specifier}`, `${name}@npm:${specifier}`]);
         const found = packages.find(([keys]) => keys.split(',').some((key) => descriptors.has(key.trim())));
         const parsed = yarnPackageSchema.safeParse(found?.[1]);
@@ -122,7 +122,7 @@ function parseLockfileDocument(path: string, text: string): unknown {
     return parseJsonFile(path, text);
 }
 
-function listUrlChildren(value: unknown): [string, unknown][] {
+function listUrlChildren(value: unknown): Array<[string, unknown]> {
     if (Array.isArray(value)) return (value as unknown[]).map((field) => ['', field]);
     if (isTable(value)) return Object.entries(value);
     return [];
@@ -161,7 +161,7 @@ Read the declared package requirements from the selected dependency tables.
 */
 export function listSpecifiers(
     workspace: unknown,
-    sections: readonly ((typeof DEPENDENCY_SECTIONS)[number] | 'peerDependencies')[] = DEPENDENCY_SECTIONS,
+    sections: ReadonlyArray<(typeof DEPENDENCY_SECTIONS)[number] | 'peerDependencies'> = DEPENDENCY_SECTIONS,
 ): Map<string, string> {
     const parsed = dependencySectionsSchema.safeParse(workspace);
     if (!parsed.success) return new Map();
@@ -169,7 +169,7 @@ export function listSpecifiers(
         sections.flatMap((section) => {
             const dependencies = parsed.data[section];
             if (dependencies === undefined) return [];
-            return Object.entries(dependencies).flatMap(([name, value]): [string, string][] => {
+            return Object.entries(dependencies).flatMap(([name, value]): Array<[string, string]> => {
                 if (typeof value === 'string') return [[name, value]];
                 const specifier = isTable(value) ? value['specifier'] : undefined;
                 return typeof specifier === 'string' ? [[name, specifier]] : [];
@@ -179,7 +179,7 @@ export function listSpecifiers(
 }
 
 export const SPECIFIER_PARSERS: Readonly<
-    Record<(typeof IMPORTER_LOCKFILES)[number], (path: string, text: string) => [string, unknown][]>
+    Record<(typeof IMPORTER_LOCKFILES)[number], (path: string, text: string) => Array<[string, unknown]>>
 > = {
     'package-lock.json': (path, text) =>
         Object.entries(parseJsonFile(path, text, npmLockfileSchema).packages).filter(

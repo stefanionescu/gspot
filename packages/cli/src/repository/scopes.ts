@@ -18,7 +18,7 @@ import {
     isInInstalledFolder,
 } from '#cli/system/paths.ts';
 
-const scopeFolderSets = new WeakMap<readonly { path: string }[], ReadonlySet<string>>();
+const scopeFolderSets = new WeakMap<ReadonlyArray<{ path: string }>, ReadonlySet<string>>();
 
 /**
 Build a command path from its calling folder within the repository.
@@ -191,7 +191,7 @@ Find the scope of a file: the deepest scope that contains it, else the root.
 @param path the file to place.
 @param scopes the scopes to search.
 */
-export function selectScopePath(path: string, scopes: readonly { path: string }[]): string {
+export function selectScopePath(path: string, scopes: ReadonlyArray<{ path: string }>): string {
     let folders = scopeFolderSets.get(scopes);
     if (folders === undefined) {
         folders = new Set(scopes.map((scope) => scope.path));

@@ -16,9 +16,9 @@ export type CommandReference = {
     summary: string;
     description: string;
     usage: string;
-    arguments: { name: string; description: string; required: boolean; choices?: string[]; default?: unknown }[];
-    options: { flags: string; description: string; choices?: string[]; default?: unknown }[];
-    exitCodes: readonly (readonly [codes: string, meaning: string])[];
+    arguments: Array<{ name: string; description: string; required: boolean; choices?: string[]; default?: unknown }>;
+    options: Array<{ flags: string; description: string; choices?: string[]; default?: unknown }>;
+    exitCodes: ReadonlyArray<readonly [codes: string, meaning: string]>;
     example: string;
 };
 
@@ -45,8 +45,8 @@ export type CliReference = {
     levelSummaries: Record<Level, string>;
     allLevelTools: string[];
     yarnClassicInstall: string;
-    cloneInstalls: { lockfile: string; note: string | undefined; command: string }[];
-    suppressions: { name: string; form: NonNullable<Tool['suppression']> }[];
+    cloneInstalls: Array<{ lockfile: string; note: string | undefined; command: string }>;
+    suppressions: Array<{ name: string; form: NonNullable<Tool['suppression']> }>;
 };
 
 export type InvalidValue = { option: string | undefined; value: string; detail: string };

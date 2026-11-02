@@ -94,7 +94,7 @@ export function listStaleLockfiles(
     const { root, toolPackageManager, toolConfigurations } = session;
     const projects = new Set(generated.map((file) => file.path));
     const files = openFiles(root);
-    const lockfiles: (StaleLockfile | undefined)[] = [];
+    const lockfiles: Array<StaleLockfile | undefined> = [];
     if (projects.has(GSPOT_PATHS.miseProject)) lockfiles.push(findStaleMiseLockfile(files, toolConfigurations));
     if (projects.has(GSPOT_PATHS.npmProject) && toolPackageManager !== undefined)
         lockfiles.push(findStaleNpmLockfile(files, toolPackageManager, session));

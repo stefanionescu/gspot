@@ -77,8 +77,8 @@ Parse nginx directives. Quoted whitespace stays, and comments drop out.
 @param text the nginx configuration.
 @returns each directive as its name followed by its arguments.
 */
-export function parseNginxDirectives(text: string): [string, ...string[]][] {
-    const found: [string, ...string[]][] = [];
+export function parseNginxDirectives(text: string): Array<[string, ...string[]]> {
+    const found: Array<[string, ...string[]]> = [];
     let directive: string[] = [];
     for (const token of splitTokens(text)) {
         switch (token) {

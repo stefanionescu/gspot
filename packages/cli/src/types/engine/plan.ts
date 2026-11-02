@@ -53,7 +53,7 @@ export type SettingReader = { check: string; enabled: boolean; note?: string };
 export type PrettierPlugin = {
     name: string;
     module: string;
-    overrides: { files: string; options: Record<string, unknown> }[];
+    overrides: Array<{ files: string; options: Record<string, unknown> }>;
 };
 
 export type CheckDescription = {

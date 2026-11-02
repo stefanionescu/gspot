@@ -27,7 +27,7 @@ export type SiteBuild = {
 };
 
 export type PurgecssConstructor = new () => {
-    purge(options: Record<string, unknown>): Promise<{ file?: string; rejected?: string[] }[]>;
+    purge(options: Record<string, unknown>): Promise<Array<{ file?: string; rejected?: string[] }>>;
 };
 
 export type PurgecssRequest = { config: string; css: string[]; content: string[] };
@@ -98,7 +98,7 @@ export type EslintRuleOptionBlock = { paths: unknown[][]; ignores: string[]; rul
 
 type VueAttribute = { key?: { name?: string }; value?: { value?: string } | null };
 
-type SvelteAttribute = { key?: { name?: string }; value: { value?: string }[] };
+type SvelteAttribute = { key?: { name?: string }; value: Array<{ value?: string }> };
 
 type ComponentElement<Attribute> = { type: string; name?: string; startTag: { attributes: Attribute[] } };
 
@@ -107,8 +107,8 @@ export type ComponentParser = {
         text: string,
         options: object,
     ) => {
-        services?: { getDocumentFragment?: () => { children: ComponentElement<VueAttribute>[] } };
-        ast: { body: ComponentElement<SvelteAttribute>[] };
+        services?: { getDocumentFragment?: () => { children: Array<ComponentElement<VueAttribute>> } };
+        ast: { body: Array<ComponentElement<SvelteAttribute>> };
     };
 };
 
@@ -159,7 +159,7 @@ export type EslintFileWriter = BlockWriter & {
 export type SelectorBlock = { scope: string; ignoredScopes: string[]; selectors: SelectorPaths[] };
 
 export type EslintBlock = {
-    files: (string | string[])[];
+    files: Array<string | string[]>;
     ignores?: string[];
     settings?: Record<string, unknown>;
     rules?: Record<string, unknown>;
@@ -195,21 +195,21 @@ type EslintFileMatcher = string | { component: (typeof COMPONENT_CONFIGURATIONS)
 
 export type EslintBlockFields = {
     [field: string]: unknown;
-    files?: readonly (EslintFileMatcher | EslintFileMatcher[])[];
+    files?: ReadonlyArray<EslintFileMatcher | EslintFileMatcher[]>;
     ignores?: string[];
     rules?: Record<string, unknown>;
 };
 
 export type EslintFileGroups = {
     components: Configuration[];
-    scopes: { scope: string; tests: string[]; scripts: string[] }[];
+    scopes: Array<{ scope: string; tests: string[]; scripts: string[] }>;
     nodeFiles: string[];
 };
 
 export type EslintFiles = {
     code: string[];
     typescript: string[];
-    typed: (EslintFileMatcher | EslintFileMatcher[])[];
+    typed: Array<EslintFileMatcher | EslintFileMatcher[]>;
     javascript: string[];
     tests: string[][];
     scripts: string[][];
@@ -231,7 +231,7 @@ export type EslintReference = { package: string; path?: string };
 
 type EslintPresetSource = EslintReference & { merge: 'fields' | 'rules' };
 
-export type ListedPlugins = { plugins: readonly (string | EslintReference)[]; local: EslintPlugins };
+export type ListedPlugins = { plugins: ReadonlyArray<string | EslintReference>; local: EslintPlugins };
 
 export type EslintCallArgument = EslintReference | { value: unknown } | ListedPlugins | Pick<ListedPlugins, 'plugins'>;
 
@@ -244,7 +244,7 @@ export type EslintLevelRules = {
 
 export type EslintPlugins = Record<string, readonly [string, string]>;
 
-export type ConfigurationBlocks = Omit<PlannedEslintBlock, 'scope' | 'label'>[];
+export type ConfigurationBlocks = Array<Omit<PlannedEslintBlock, 'scope' | 'label'>>;
 
 export type EslintImportBoundaryRule = [
     'error',

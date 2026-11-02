@@ -15,7 +15,7 @@ Get the value at a key path in a parsed object.
 @param keys the property names, outermost first.
 @returns undefined when any key along the path has no value.
 */
-export function findValueAt(value: unknown, keys: readonly (string | number)[]): unknown {
+export function findValueAt(value: unknown, keys: ReadonlyArray<string | number>): unknown {
     let node = value;
     for (const key of keys) {
         if (node === null || typeof node !== 'object' || !Object.hasOwn(node, key)) return undefined;

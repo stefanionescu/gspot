@@ -50,7 +50,7 @@ function buildTablePath(
     node: Exclude<TomlBlock, TomlKeyValue | TomlCommentNode>,
     positions: TomlTablePositions,
 ): KeyPath {
-    const path: KeyPath[number][] = [];
+    const path: Array<KeyPath[number]> = [];
     for (const [index, key] of node.key.item.value.entries()) {
         path.push(key);
         if (!Array.isArray(findValueAt(positions.value, path))) continue;

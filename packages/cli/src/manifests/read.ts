@@ -130,7 +130,7 @@ List the shipped check IDs and the command check IDs of the repository.
 @param checks the [[command_check]] records.
 @returns the shipped IDs, then your command check IDs.
 */
-export function listCheckIds(checks: readonly Pick<Check, 'id'>[]): string[] {
+export function listCheckIds(checks: ReadonlyArray<Pick<Check, 'id'>>): string[] {
     const shipped = listChecksById(readConfigurations().values()).keys().toArray();
     const authored = checks.map((check) => check.id);
     return [...shipped, ...authored];
@@ -172,7 +172,7 @@ Refuse a check ID that no configuration or command check declares.
 @param checkId the requested check ID.
 @param commandChecks the authored command checks.
 */
-export function assertCheckExists(checkId: string, commandChecks: readonly Pick<Check, 'id'>[]): void {
+export function assertCheckExists(checkId: string, commandChecks: ReadonlyArray<Pick<Check, 'id'>>): void {
     const checkIds = listCheckIds(commandChecks);
     if (!checkIds.includes(checkId))
         throw new GspotError(

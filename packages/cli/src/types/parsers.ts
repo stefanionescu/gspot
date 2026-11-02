@@ -18,7 +18,7 @@ export type TrapScript = {
     trap: Node;
     body: Node;
     syntaxRoot: Node;
-    sourceRows: { offset: number; line: number }[];
+    sourceRows: Array<{ offset: number; line: number }>;
 };
 
 type CommandCall = {
@@ -66,10 +66,10 @@ export type BashForm =
 export type Removal = { line: number; paths: TemporaryPath[] };
 
 export type ScriptSyntax = {
-    commands: { name: string; arguments: (string | undefined)[]; line: number }[];
-    forms: { form: BashForm; line: number }[];
+    commands: Array<{ name: string; arguments: Array<string | undefined>; line: number }>;
+    forms: Array<{ form: BashForm; line: number }>;
     swallowedLines: number[];
-    statements: { kind: string; text: string; line: number }[];
+    statements: Array<{ kind: string; text: string; line: number }>;
     code: string[];
     functions: ScriptFunction[];
     calls: CommandCall[];
@@ -104,7 +104,7 @@ export type EnvironmentKind = 'os' | 'environ' | 'getenv' | undefined;
 
 export type EnvironmentScope = Map<string, EnvironmentKind>;
 
-export type EnvironmentNames = Map<number, Map<string, { position: number; kind: EnvironmentKind }[]>>;
+export type EnvironmentNames = Map<number, Map<string, Array<{ position: number; kind: EnvironmentKind }>>>;
 
 export type PythonModule = {
     path: string;
@@ -117,7 +117,7 @@ export type PythonFunction = { path: string; name: string; node: Node; body: Nod
 
 export type PythonFiles = { modules: PythonModule[]; functions: PythonFunction[] };
 
-export type SourceFiles = Required<ParseCache> & { files: { path: string; kind: string }[] };
+export type SourceFiles = Required<ParseCache> & { files: Array<{ path: string; kind: string }> };
 
 export type SqlToken = {
     start: number;
@@ -142,7 +142,7 @@ export type SqlFile = {
 
 export type MatchedToken = Omit<SqlToken, 'start'>;
 
-export type KeyPath = readonly (string | number)[];
+export type KeyPath = ReadonlyArray<string | number>;
 
 export type EditableFile = {
     getValue(keys: KeyPath): unknown;
@@ -246,13 +246,13 @@ export type TargetFolder = { path: string; excluded: Set<string> };
 export type ProjectSources = {
     sources: Set<string>;
     folders: TargetFolder[];
-    targets: { name: string; sources: string[]; folders: TargetFolder[] }[];
+    targets: Array<{ name: string; sources: string[]; folders: TargetFolder[] }>;
 };
 
 export type ProjectBuildTarget = {
     name: string;
     isStrict: boolean;
-    scripts: { name: string; script: string; hasFiles: boolean }[];
+    scripts: Array<{ name: string; script: string; hasFiles: boolean }>;
 };
 
 export type ProjectBuildSettings = { sdkRoot: string | undefined; swiftVersion: string | undefined };

@@ -139,7 +139,7 @@ export type ParsedSource = { path: string; language: ParsedLanguage; tree: Tree;
 
 export type LocatedImport = { module: string; path: string; node: Node };
 
-export type ImportOwners = { node: Node; module: string; owners: (number | undefined)[] };
+export type ImportOwners = { node: Node; module: string; owners: Array<number | undefined> };
 
 export type PythonSearch = { files: ReadonlySet<string>; roots: string[]; externals: ReadonlySet<string> };
 

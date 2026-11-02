@@ -17,13 +17,13 @@ export type ImportExtensionStyle = (typeof IMPORT_EXTENSION_STYLES)[number];
 
 export type ScopeConfigurations = { scope: string; selected: Configuration[] };
 
-export type DetectedScopes = { repository: Repository; scopes: readonly { path: string }[] };
+export type DetectedScopes = { repository: Repository; scopes: ReadonlyArray<{ path: string }> };
 
 export type SettingVariant = { setting: Setting; owners: string[] };
 
 export type AcceptedSettingValues = {
     types: string[];
-    choices: { value: unknown; description: string | undefined }[];
+    choices: Array<{ value: unknown; description: string | undefined }>;
     alternatives: AcceptedSettingValues[];
 };
 
@@ -106,7 +106,7 @@ export type InheritedValue = Pick<InheritedSetting, 'value' | 'source' | 'origin
 export type AvailableSettings = {
     settings: Map<string, Setting>;
     defaults: Map<string, SettingDefault>;
-    errors: { key: string; message: string }[];
+    errors: Array<{ key: string; message: string }>;
 };
 
 export type SettingMatch = { setting: Setting; language?: string; category?: string };

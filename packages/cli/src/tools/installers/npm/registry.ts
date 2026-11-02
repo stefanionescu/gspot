@@ -134,7 +134,7 @@ export async function readRegistryEnvironment(root: string): Promise<Record<stri
             .filter(
                 ([key]) => CONNECTION_KEYS.has(key) || NPM_SCOPE_REGISTRY_KEY.test(key) || REGISTRY_AUTH_KEY.test(key),
             )
-            .flatMap(([key, value]): [string, string][] => {
+            .flatMap(([key, value]): Array<[string, string]> => {
                 if (value === undefined || value === null) return [];
                 let text: string;
                 if (Array.isArray(value)) text = value.join('\n\n');

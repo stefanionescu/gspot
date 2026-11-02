@@ -87,7 +87,7 @@ export type RuleFile = {
 
 export type AgentsBlockContent = {
     files: RuleFile[];
-    managedKeys: { path: string; keys: string[] }[];
+    managedKeys: Array<{ path: string; keys: string[] }>;
     startCommand: string;
     hasOwnTitle: boolean;
 };
@@ -104,7 +104,7 @@ export type InitScan = {
     repository: Repository;
     repositorySetup: RepositorySetup;
     configurations: ProposedConfigurations;
-    scopes: Pick<Scope, 'path' | 'configurations'>[];
+    scopes: Array<Pick<Scope, 'path' | 'configurations'>>;
     everySelected: Configuration[];
     conflicts: ConflictingConfigs;
     pinPath?: string | undefined;
@@ -115,13 +115,13 @@ export type InitScan = {
 export type InitPlan = {
     from?: { file: string; leftOut: LeftOutSetting[] };
     level: Level;
-    configurations: {
+    configurations: Array<{
         configuration: string;
         origin: ConfigurationOrigin;
         scopes: string[];
         checks: number;
         checksOff: number;
-    }[];
+    }>;
     write: InitFileRow[];
     delete: InitFileRow[];
     keep: InitFileRow[];
@@ -221,7 +221,7 @@ export type ConflictSearch = { tools: Set<string>; managedKeys: ManagedKeys[]; p
 export type ConflictingConfigs = {
     changed: InitFileRow[];
     reviewed: Map<string, FileContents | undefined>;
-    deleted: { path: string; tool: string; unreadablePrettier: boolean; dropsLineEndings: boolean }[];
+    deleted: Array<{ path: string; tool: string; unreadablePrettier: boolean; dropsLineEndings: boolean }>;
     kept: InitFileRow[];
 };
 

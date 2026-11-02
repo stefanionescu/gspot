@@ -64,7 +64,7 @@ function buildSpawnResult(result: SpawnCompletion, started: number): SpawnResult
     ].includes(true);
     const errored = result.failed && isUnfinishedResult;
     const code = isMissing ? MISSING_CODE : (result.exitCode ?? FAILED_CODE);
-    const messages: (string | undefined)[] = [result.stderr];
+    const messages: Array<string | undefined> = [result.stderr];
     if (isUnfinishedResult) messages.push(result.shortMessage);
     return {
         code: errored && code === 0 ? FAILED_CODE : code,

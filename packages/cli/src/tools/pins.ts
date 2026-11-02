@@ -79,7 +79,7 @@ List the npm and Python tool project pins of the configurations.
 @param configurations the configurations in use.
 */
 export function listPackagePins(configurations: Configuration[]): PackagePins {
-    const npm: [string, string][] = [];
+    const npm: Array<[string, string]> = [];
     const python: string[] = [];
     for (const tool of listDistinctTools(configurations)) {
         const installation = findPackagePin(tool);

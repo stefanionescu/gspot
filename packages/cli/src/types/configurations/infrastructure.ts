@@ -32,14 +32,14 @@ export type Schema = {
     tables: Map<string, SourceStatement>;
     secured: Set<string>;
     unprotectedViews: Map<string, SourceStatement>;
-    foreignKeys: (SourceStatement & { table: string; columns: string[] })[];
+    foreignKeys: Array<SourceStatement & { table: string; columns: string[] }>;
     indexed: Map<string, string[][]>;
     policies: Map<string, Map<string, SqlNodeFields['CreatePolicyStmt']>>;
     functions: Map<string, FunctionSecurity>;
 };
 
 export type SchemaState = Pick<Schema, 'tables' | 'secured' | 'unprotectedViews' | 'policies' | 'functions'> & {
-    indexes: { schema: string | undefined; table: string; name: string; columns: string[]; constraint: string }[];
+    indexes: Array<{ schema: string | undefined; table: string; name: string; columns: string[]; constraint: string }>;
     constraints: Map<string, Map<string, Schema['foreignKeys'][number]>>;
 };
 
@@ -75,9 +75,9 @@ export type ImageFinding = { rule: string; message: string };
 
 export type Mount = { path: string; source: string; target: string; text: string };
 
-export type NginxMounts = { configs: Pick<Mount, 'source' | 'target'>[]; certificate: string; key: string };
+export type NginxMounts = { configs: Array<Pick<Mount, 'source' | 'target'>>; certificate: string; key: string };
 
-export type HeaderBlock = { path: string; headers: { name: string; value: string }[] };
+export type HeaderBlock = { path: string; headers: Array<{ name: string; value: string }> };
 
 export type ParsedHeadersFile = { blocks: HeaderBlock[]; errors: NumberedLine[] };
 

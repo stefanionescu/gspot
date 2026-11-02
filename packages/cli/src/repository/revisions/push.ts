@@ -79,7 +79,7 @@ async function readPeeledCommits(
     });
     if (responses.length !== hashes.length) throw new GspotError('git', PEEL_FAILURE_MESSAGE);
     return new Map(
-        hashes.flatMap((requested, index): [string, string | undefined][] => {
+        hashes.flatMap((requested, index): Array<[string, string | undefined]> => {
             const [hash, type] = (responses[index] as string).split(' ') as [string, string];
             return type === 'missing' ? [] : [[requested, type === 'commit' ? hash : undefined]];
         }),

@@ -38,7 +38,7 @@ function parseRequirementName(requirement: string): string | undefined {
     return REQUIREMENT_NAME.test(name) ? normalizePythonName(name) : undefined;
 }
 
-function convertPythonDependencies(maps: Record<string, PythonDependency>[]): Dependencies {
+function convertPythonDependencies(maps: Array<Record<string, PythonDependency>>): Dependencies {
     return Object.fromEntries(
         maps
             .flatMap((map) => Object.entries(map))

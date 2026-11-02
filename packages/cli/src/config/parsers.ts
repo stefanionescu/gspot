@@ -163,7 +163,7 @@ export const GRAMMAR_CONFIGURATIONS: ReadonlySet<string> = new Set([
     'python',
     'javascript',
     'typescript',
-] satisfies readonly (typeof GRAMMAR_NAMES)[number][]);
+] satisfies ReadonlyArray<(typeof GRAMMAR_NAMES)[number]>);
 
 export const GRAMMAR_EXTENSIONS: Readonly<Record<string, readonly string[]>> = {
     javascript: ['.js', '.mjs', '.cjs', '.jsx'],
@@ -218,7 +218,7 @@ export const GRAMMAR_ARCHIVE_LIMIT = 32 * 1024 * 1024;
 
 export const FENCE_GRAMMARS = ['bash', 'typescript', 'tsx', 'javascript', 'python'] as const;
 
-export const CONFIGURATION_GRAMMARS: Readonly<Record<string, readonly (typeof GRAMMAR_NAMES)[number][]>> = {
+export const CONFIGURATION_GRAMMARS: Readonly<Record<string, ReadonlyArray<(typeof GRAMMAR_NAMES)[number]>>> = {
     bash: ['bash'],
     css: ['css'],
     html: ['html'],

@@ -118,7 +118,7 @@ async function buildToolInstall(
     input: Pick<ToolInstall, 'writer' | 'generated' | 'checkTools'>,
 ): Promise<ToolInstall> {
     const configurations = session.toolConfigurations;
-    const steps: (readonly string[])[] = [];
+    const steps: Array<readonly string[]> = [];
     const tools = listDistinctTools(configurations);
     const misePath = findProgram(MISE_TOOL);
     return {

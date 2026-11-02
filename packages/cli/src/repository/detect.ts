@@ -180,7 +180,7 @@ Select the conditions that the file and dependency evidence meets.
 @param dependencyFiles the parsed dependency files.
 */
 export function detectConditions(
-    conditions: Configuration['detect'][],
+    conditions: Array<Configuration['detect']>,
     files: TrackedFile[],
     dependencyFiles: DependencyFile[],
 ): Set<Configuration['detect']> {

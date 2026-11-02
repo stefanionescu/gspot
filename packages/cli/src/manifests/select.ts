@@ -54,7 +54,9 @@ List each configuration of the scopes once, in first-seen order.
 
 @param scopes the scopes, which can share configurations.
 */
-export function listSelectedConfigurations(scopes: readonly { configurations: Configuration[] }[]): Configuration[] {
+export function listSelectedConfigurations(
+    scopes: ReadonlyArray<{ configurations: Configuration[] }>,
+): Configuration[] {
     const seen = new Map<string, Configuration>();
     for (const scope of scopes)
         for (const configuration of scope.configurations)
@@ -68,7 +70,10 @@ Check whether any scope selects a configuration.
 @param scopes the validated scopes.
 @param name the configuration to find.
 */
-export function isConfigurationSelected(scopes: readonly { configurations: Configuration[] }[], name: string): boolean {
+export function isConfigurationSelected(
+    scopes: ReadonlyArray<{ configurations: Configuration[] }>,
+    name: string,
+): boolean {
     return scopes.some((scope) => scope.configurations.some((configuration) => configuration.name === name));
 }
 
@@ -81,7 +86,7 @@ Find the unknown configuration names, and keep their order and location.
 export function listUnknownConfigurations<Written extends Pick<WrittenConfiguration, 'name'>>(
     written: readonly Written[],
     configurationsByName: ReadonlyMap<string, Configuration>,
-): (Written & { message: string })[] {
+): Array<Written & { message: string }> {
     const available = configurationsByName.keys().toArray();
     return written
         .filter(({ name }) => !configurationsByName.has(name))

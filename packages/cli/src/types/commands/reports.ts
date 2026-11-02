@@ -99,9 +99,9 @@ type SettingRow = {
 };
 
 export type ConfigurationsListJson = {
-    selected: { name: string; checks: { check: string; scope: string; status: string }[] }[];
+    selected: Array<{ name: string; checks: Array<{ check: string; scope: string; status: string }> }>;
     removed: RemovedConfiguration[];
-    available: { name: string; description: string }[];
+    available: Array<{ name: string; description: string }>;
 };
 
 export type SettingsListJson = { settings: SettingRow[] };
@@ -177,14 +177,14 @@ type SettingExplanation = {
     defaultAll: unknown;
     languageDefaults: Setting['language_defaults'];
     reasonRequirement: Setting['reason_when'];
-    scopes: {
+    scopes: Array<{
         scope: string;
         default: unknown;
         value?: unknown;
         source?: string | undefined;
         readBy?: string[];
         reason?: string | undefined;
-    }[];
+    }>;
 };
 
 export type ExplainedSetting = { setting: Setting; text: string; scopes: SettingExplanation['scopes'] };
@@ -198,8 +198,8 @@ export type PathExplanation = {
     fileKindOrigin?: string;
     tags: string[];
     configurations: string[];
-    checks: { check: string; stage: string; state: string; configuration?: string }[];
-    ignores: { check?: string; rule?: string; reason: string }[];
+    checks: Array<{ check: string; stage: string; state: string; configuration?: string }>;
+    ignores: Array<{ check?: string; rule?: string; reason: string }>;
     unchecked?: string;
     remedy?: string;
 };
@@ -218,11 +218,11 @@ export type ConfigurationExplanation = {
     description: string;
     requires: string[];
     tools: string[];
-    checks: { check: string; stage: string }[];
+    checks: Array<{ check: string; stage: string }>;
     settings: string[];
     ruleFiles: string[];
     alwaysSelected: boolean;
-    removed: { scope: string; reason: string; command: string }[];
+    removed: Array<{ scope: string; reason: string; command: string }>;
 };
 
 export type CheckFacts = {
@@ -244,7 +244,7 @@ export type ScanReport = {
     categories: ScanCategory[];
     filesToFormat: number;
     notRun: string[];
-    cost: { tools: number; megabytes: number; perTool: { name: string; seconds: number }[] };
+    cost: { tools: number; megabytes: number; perTool: Array<{ name: string; seconds: number }> };
     plan: InitPlan;
     settingsText: string;
     nextSteps: string[];

@@ -17,7 +17,7 @@ import type {
 
 function selectRootConfigurations(
     request: ConfigurationRequest,
-    detected: Pick<ConfigurationEvidence, 'configuration'>[],
+    detected: Array<Pick<ConfigurationEvidence, 'configuration'>>,
 ): string[] {
     const named = request.options.configurations;
     if (named !== undefined) return [...new Set(named)];
@@ -157,7 +157,7 @@ Find newly detected configurations in each project scope, respecting removals.
 */
 export function listDetectedAdditions(
     session: ConfigurationSelection,
-): { scope: string; configurations: string[]; evidence: ConfigurationEvidence[] }[] {
+): Array<{ scope: string; configurations: string[]; evidence: ConfigurationEvidence[] }> {
     const proposed = selectProposedConfigurations({
         repository: session.repository,
         configurationsByName: readConfigurations(),

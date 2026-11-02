@@ -144,21 +144,21 @@ export type DetectionEvidence = { evidence: string; count?: number };
 
 export type RepositoryReadOptions = {
     generatedPaths: GeneratedPaths[];
-    scopes: Pick<ScopeFolder, 'path' | 'configurations'>[];
+    scopes: Array<Pick<ScopeFolder, 'path' | 'configurations'>>;
     configurationsByName: ReadonlyMap<string, Configuration>;
 };
 
 export type RepositoryListing = Pick<Repository, 'root' | 'index' | 'attributes' | 'unreadablePaths'> & {
-    files: (ListedFile & { prefix: Buffer })[];
+    files: Array<ListedFile & { prefix: Buffer }>;
 };
 
 export type RepositorySetup = {
     conflictingConfigs: ConflictingConfig[];
-    hooks: {
+    hooks: Array<{
         kind: 'githooks' | 'husky' | 'lefthook' | 'simple-git-hooks' | 'pre-commit' | 'hooksPath';
         path: string;
         files: string[];
-    }[];
+    }>;
     ci: string[];
     agentFiles: string[];
     ruleFolders: string[];
@@ -212,11 +212,11 @@ export type ReplacementRequest = {
     previous?: FileContents | undefined;
 };
 
-export type ManagedKeys = { path: string; keys: { key: KeyPath; value: JsonValue | undefined }[] };
+export type ManagedKeys = { path: string; keys: Array<{ key: KeyPath; value: JsonValue | undefined }> };
 
 export type ConfigurationSelection = {
     repository: Repository;
-    scopes: readonly { path: string; configurations: Configuration[] }[];
+    scopes: ReadonlyArray<{ path: string; configurations: Configuration[] }>;
     settings: {
         removed_configurations: string[];
         scopes: ReadonlyMap<string, { removed_configurations: string[] }>;
@@ -238,11 +238,11 @@ export type PushRevision = {
 
 export type PushedRevisions = {
     revisions: PushRevision[];
-    skipped: {
+    skipped: Array<{
         ref: string;
         hash: string;
         reason: 'deleted ref' | 'non-commit object' | 'the commit has no gspot.toml' | 'no changed paths';
-    }[];
+    }>;
 };
 
 export type PushLine = { localRef: string; localHash: string; remoteRef: string; remoteHash: string };

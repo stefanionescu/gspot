@@ -45,7 +45,7 @@ function buildCoverageMatcher(
     { configurations, scopePath: scope, settings }: CoveredFilesOptions,
 ): (file: Pick<TrackedFile, 'path' | 'tags'>) => boolean {
     const tests = buildPathMatcher(table.test_files ? settings.test_files : []);
-    const defaults: Configuration['files'][] = [];
+    const defaults: Array<Configuration['files']> = [];
     const settingPatterns = table.paths.flatMap((path) => {
         const name = path.matchAll(SETTING_PLACEHOLDER).toArray()[0]?.groups?.['name'];
         if (name === undefined) return [];

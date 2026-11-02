@@ -118,7 +118,7 @@ function listPythonNames(syntaxRoot: Node): EnvironmentNames {
     ];
     for (const node of nodes) {
         const scope = findDeclarationScope(node).id;
-        const names = scopeNames.get(scope) ?? new Map<string, { position: number; kind: EnvironmentKind }[]>();
+        const names = scopeNames.get(scope) ?? new Map<string, Array<{ position: number; kind: EnvironmentKind }>>();
         const bound = PYTHON_IMPORT_NODES.has(node.type)
             ? listEnvironmentImports(node)
             : new Map<string, EnvironmentKind>(listBoundNames(node).map((name) => [name, undefined]));

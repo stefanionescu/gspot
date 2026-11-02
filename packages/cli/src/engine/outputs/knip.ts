@@ -14,7 +14,7 @@ export function parseKnipFindings(output: ToolOutput): Finding[] {
     const report = parseToolOutput('Knip', stdout, knipOutputSchema);
     const findings: Finding[] = [];
     for (const row of report.issues) {
-        for (const category of Object.keys(KNIP_ISSUE_MESSAGES) as (keyof typeof KNIP_ISSUE_MESSAGES)[]) {
+        for (const category of Object.keys(KNIP_ISSUE_MESSAGES) as Array<keyof typeof KNIP_ISSUE_MESSAGES>) {
             findings.push(
                 ...(row[category] ?? []).flatMap((issue) => {
                     const symbols = Array.isArray(issue) ? issue : [issue];

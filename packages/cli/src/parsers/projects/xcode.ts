@@ -63,7 +63,7 @@ function parseProjectArray(tokens: ProjectTokens): unknown[] {
 }
 
 function parseProjectDictionary(tokens: ProjectTokens): Record<string, unknown> {
-    const pairs: [string, unknown][] = [];
+    const pairs: Array<[string, unknown]> = [];
     while (tokens.tokens[tokens.index] !== '}') {
         const key = parseProjectString(tokens.tokens[tokens.index++]);
         expectProjectToken(tokens, '=');

@@ -61,7 +61,7 @@ Set the planned Git setting, or report the instructions for existing hooks.
 @param steps collects each command that install runs.
 @returns the command that install ran, with the line that reports it, or only the instructions for existing hooks.
 */
-export async function installHooks(session: Session, steps: (readonly string[])[]): Promise<HookPlan> {
+export async function installHooks(session: Session, steps: Array<readonly string[]>): Promise<HookPlan> {
     const plan = await planHooks(session);
     if (plan.command !== undefined) {
         steps.push(plan.command);
