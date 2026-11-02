@@ -36,18 +36,18 @@ To turn them off, run `gspot set hooks.enabled false`, then `gspot install`.
 ## Existing hook managers
 
 A repository with Husky, Lefthook, or your own hook folder keeps its hooks. gspot prints one line for each hook instead;
-add each line to the matching hook. For Bun:
+add each line to the matching hook:
 
 ```shell
 # pre-commit
-bunx --no-install gspot check --staged --stage commit
-# pre-push: preserve Git's remote arguments and standard input
-bunx --no-install gspot check --hook pre-push -- "$@"
-# commit-msg: preserve Git's message-file argument
-bunx --no-install gspot check --hook commit-msg -- "$1"
+.gspot/hooks/pre-commit "$@"
+# pre-push
+.gspot/hooks/pre-push "$@"
+# commit-msg
+.gspot/hooks/commit-msg "$@"
 ```
 
-Use the exact lines that gspot prints for your package manager or mise. A hook without its line runs no gspot checks.
+Use the exact lines that gspot prints. A hook without its line runs no gspot checks.
 
 ## Test a hook
 
