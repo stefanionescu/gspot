@@ -7,6 +7,23 @@ export const RULE_OPTION = '--rule <rule>';
 export const PATHS_OPTION = '--paths <path>';
 
 export const COMMAND_HELP = {
+    scan: {
+        summary: 'Try gspot on a copy of this repository, and change nothing',
+        group: 'Set up a repository:',
+        description:
+            'Copy the files that Git tracks, as you staged them, into .gspot-copies/. In the copy, gspot writes what init writes, installs the tools, and runs every check at the default level with no fixes. It deletes the copy at the end.\n\nThe report gives the totals, the findings by category with three examples each, the files that differ from your style, the cost in tools, megabytes, and seconds, the plan of init, and the next steps.\n\nscan keeps no cache of its own. npm, uv, and mise keep their download caches, so a second scan downloads nothing new. mise installs its tools for the whole machine. After init, run gspot check instead.',
+        arguments: {},
+        options: {
+            '--markdown': 'Print the report as Markdown, to paste into a pull request or a chat',
+            '--json': 'Print the report as JSON, with every finding',
+        },
+        exitCodes: [
+            ['0', 'The report was printed, with or without findings.'],
+            ['2', 'scan could not run.'],
+            ['130, 143', 'The scan stopped because of Ctrl-C or SIGTERM.'],
+        ],
+        example: 'gspot scan --markdown',
+    },
     init: {
         summary: 'Find what this repository needs, then write gspot.toml and the generated files',
         group: 'Set up a repository:',

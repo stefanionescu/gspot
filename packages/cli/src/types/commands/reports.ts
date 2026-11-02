@@ -1,5 +1,7 @@
-import type { HookStatus, ToolInspection } from '#cli/types/tools.ts';
+import type { Finding } from '#cli/types/engine/tool-runs.ts';
+import type { InitPlan, InitPlanning } from '#cli/types/generation.ts';
 import type { StageFilter, CheckDescription } from '#cli/types/engine/plan.ts';
+import type { Session, HookStatus, ToolInspection } from '#cli/types/tools.ts';
 import type { Tool, Check, Setting, Configuration } from '#cli/types/manifests.ts';
 import type { RunReport, PushInput, CheckProgress } from '#cli/types/engine/run.ts';
 import type { InheritedSetting, RemovedConfiguration } from '#cli/types/settings.ts';
@@ -232,3 +234,25 @@ export type CheckFacts = {
     ignores: CheckIgnore[];
     minVersions: Record<string, string>;
 };
+
+export type ScanFlags = { markdown?: boolean };
+
+export type ScanCategory = { name: string; count: number; examples: Finding[] };
+
+export type ScanTime = { name: string; seconds: number };
+
+export type ScanReport = {
+    totals: { files: number; checks: number; findings: number; filesFlagged: number; seconds: number };
+    categories: ScanCategory[];
+    filesToFormat: number;
+    notRun: string[];
+    cost: { tools: number; megabytes: number; perTool: ScanTime[]; perHook: ScanTime[] };
+    plan: InitPlan;
+    settingsText: string;
+    nextSteps: readonly string[];
+    checks: RunReport['checks'];
+};
+
+export type ScanInput = { planning: InitPlanning; session: Session; report: RunReport; toolBytes: number };
+
+export type ScanSection = { title: string; rows: string[]; preformatted?: boolean };

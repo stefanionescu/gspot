@@ -56,6 +56,20 @@ holds repository-relative paths.
 | `removed`   | Files that gspot deleted because no setting needs them. |
 | `unchanged` | Files that already matched `gspot.toml`.                |
 
+## `gspot scan`
+
+| Field           | Meaning                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------- |
+| `totals`        | The counts of the run: `files`, `checks`, `findings`, `filesFlagged`, and `seconds`.        |
+| `categories`    | The findings by category, real problems first: `name`, `count`, and three `examples`.       |
+| `filesToFormat` | Number of files that differ from your style.                                                |
+| `notRun`        | One line for each check that could not run.                                                 |
+| `cost`          | The tools, the megabytes in `.gspot/`, and the seconds in `perTool` and `perHook`.          |
+| `plan`          | The plan that `gspot init` prints.                                                          |
+| `settingsText`  | The text of the `gspot.toml` that init would write.                                         |
+| `nextSteps`     | The commands to run next.                                                                   |
+| `checks`        | The result of every planned check, as in [`gspot check`](#gspot-check), with every finding. |
+
 ## `gspot init`
 
 The object of `gspot init --json` also has the [generated-file fields](#generated-files).

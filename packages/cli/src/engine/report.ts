@@ -1,15 +1,21 @@
-import { EXIT_ERROR } from '#cli/config/system.ts';
+import { formatScope } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { writeProgress } from '#cli/system/terminal.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';
+import { EXIT_ERROR, MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { buildBaseResult, formatExplainCommand } from '#cli/engine/results.ts';
-import type { FixReport, RunReport, CheckResult, FinishedRun } from '#cli/types/engine/run.ts';
+import type { FixReport, RunReport, CheckResult, FinishedRun, CheckProgress } from '#cli/types/engine/run.ts';
 
 import {
+    STAGED_FILES,
+    WORKING_TREE,
     EXIT_FINDINGS,
     REPORT_STAGES,
+    PROGRESS_CLEAR,
     FAILED_STATUSES,
     NO_FILES_MESSAGE,
+    SHORT_HASH_LENGTH,
     INCOMPLETE_STATUSES,
 } from '#cli/config/engine.ts';
 
@@ -89,4 +95,34 @@ export function buildRunReport(run: FinishedRun): RunReport {
         failed,
         exitCode: code,
     };
+}
+
+/**
+Name what a run reads.
+
+@param comparison the content that the run selected, if any.
+*/
+export function formatCheckedContent(comparison: CheckProgress['comparison']): string {
+    if (comparison?.content === 'index') return STAGED_FILES;
+    return comparison?.content === 'commit'
+        ? `commit ${comparison.reference.slice(0, SHORT_HASH_LENGTH)}`
+        : WORKING_TREE;
+}
+
+/**
+Rewrite the progress line when stderr points to a terminal, and print one line per finished check otherwise.
+
+@param progress the last finished check and its place in the run.
+*/
+export function printProgress(progress: CheckProgress): void {
+    if (!process.stderr.isTTY) {
+        const scope = progress.scope === '' ? '' : `${formatScope(progress.scope)}  `;
+        const seconds = (progress.duration / MILLISECONDS_PER_SECOND).toFixed(1);
+        writeProgress(`done  ${scope}${progress.check}  ${seconds}s\n`);
+        return;
+    }
+    const subject = formatCheckedContent(progress.comparison);
+    writeProgress(
+        `${PROGRESS_CLEAR}Checking ${subject}: ${String(progress.finished)} of ${String(progress.total)} checks done`,
+    );
 }

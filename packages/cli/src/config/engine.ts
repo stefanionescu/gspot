@@ -231,3 +231,9 @@ export const BYTES_PER_KILOBYTE = 1024;
 export const OFF_BY_LEVEL = 'off (level)';
 
 export const NO_MATCHING_FILES = 'no matching files';
+
+export const PROGRESS_CLEAR = '\r\u{1B}[2K';
+
+export const STAGED_FILES = 'the staged files';
+
+export const WORKING_TREE = 'the working tree';

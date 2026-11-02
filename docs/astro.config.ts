@@ -4,8 +4,8 @@ import starlight from '@astrojs/starlight';
 import starlightLlmsTxt from 'starlight-llms-txt';
 import { pruneUnusedStyles } from '#docs/unused-styles.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { LLMS_PAGES, AGENT_STEPS } from '#docs/reference/setup.ts';
 import { defineConfig, passthroughImageService } from 'astro/config';
+import { LLMS_PAGES, AGENT_STEPS, AGENT_EVALUATION } from '#docs/reference/setup.ts';
 
 import {
     SIDEBAR,
@@ -57,7 +57,7 @@ export default defineConfig({
                 starlightLlmsTxt({
                     projectName: 'gspot',
                     description: cliPackage.description,
-                    details: `${README_OPENING}\n\n${AGENT_STEPS}`,
+                    details: `${README_OPENING}\n\n${AGENT_EVALUATION}\n\n${AGENT_STEPS}`,
                     ...LLMS_PAGES,
                 }),
             ],

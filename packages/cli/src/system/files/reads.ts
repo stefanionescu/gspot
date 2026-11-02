@@ -3,7 +3,7 @@ import { join, relative } from 'node:path';
 import { isInside } from '#cli/system/paths.ts';
 import type { RunCache } from '#cli/types/system.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import { openSync, readSync, closeSync, readFileSync, realpathSync } from 'node:fs';
+import { openSync, readSync, statSync, closeSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
 
 import {
     PATH_SEPARATORS,
@@ -162,4 +162,16 @@ export function splitSystemPath(path: string): string[] {
             UNSAFE_PATH_MESSAGE.replace('{path}', () => JSON.stringify(path)),
         );
     return segments;
+}
+
+/**
+Add up the sizes of the regular files under a folder. A symbolic link counts for nothing.
+
+@param path the absolute folder.
+@returns the bytes.
+*/
+export function measureFolder(path: string): number {
+    const listed = readdirSync(path, { recursive: true, withFileTypes: true });
+    const files = listed.filter((file) => file.isFile());
+    return files.reduce((total, file) => total + statSync(join(file.parentPath, file.name)).size, 0);
 }

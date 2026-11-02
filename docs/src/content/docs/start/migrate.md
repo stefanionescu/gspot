@@ -5,7 +5,8 @@ description: Review what init preserves, replaces, and leaves for you to migrate
 
 ## Read the plan
 
-`gspot init` prints its plan and writes without asking. Commit your current config files before running it.
+`gspot init` prints its plan and writes without asking. To read the plan first, run `gspot scan`: it prints the
+same plan and changes nothing in your repository. Commit your current config files before you run init.
 The level decides which tools run and which config files init replaces. To start at level `all`:
 
 ```shell

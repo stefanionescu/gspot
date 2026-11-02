@@ -4,15 +4,16 @@ import { writeFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import { stripVTControlCharacters } from 'node:util';
+import { printProgress } from '#cli/engine/report.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
 import { fakeTerminals } from '#tests/setup/system/fakes.ts';
+import { formatRunReport } from '#cli/commands/check/report.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { printProgress, formatRunReport } from '#cli/commands/check/report.ts';
 
 import {
     NO_COLOR_SETTINGS,

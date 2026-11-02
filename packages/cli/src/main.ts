@@ -10,6 +10,7 @@ import type { InvalidValue } from '#cli/types/main.ts';
 import { ignoreCommand } from '#cli/commands/ignore.ts';
 import { removeCommand } from '#cli/commands/remove.ts';
 import { initCommand } from '#cli/commands/init/init.ts';
+import { scanCommand } from '#cli/commands/scan/scan.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { checkCommand } from '#cli/commands/check/check.ts';
@@ -203,6 +204,7 @@ export function buildProgram(onResult: CommandCompletion): Command {
         if (PIN_COMMANDS.has(action.name())) assertGspotPin(location.root);
     });
     const definitions: readonly CommandDefinition[] = [
+        scanCommand,
         initCommand,
         installCommand,
         applyCommand,

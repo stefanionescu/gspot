@@ -4,14 +4,12 @@ import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { printWarning } from '#cli/system/terminal.ts';
 import { findSettingsSkip } from '#cli/engine/skips.ts';
-import { buildConfigs } from '#cli/generation/configs.ts';
 import type { CommandResult } from '#cli/types/system.ts';
+import { CHECK_GENERATION } from '#cli/generation/checks.ts';
 import type { StageFilter } from '#cli/types/engine/plan.ts';
 import type { ChangedPaths } from '#cli/types/repository.ts';
-import { listOutdatedFiles } from '#cli/generation/outdated.ts';
 import { readHookStatus } from '#cli/tools/installers/hooks.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import { isInScope, buildArgumentPath } from '#cli/repository/scopes.ts';
 import type { FixReport, RunReport, RunOptions } from '#cli/types/engine/run.ts';
@@ -38,10 +36,7 @@ function buildRunOptions(options: CheckOptions, filters: RunFilters, revision: R
     const comparison = buildComparison(revision, changed);
     return {
         selectCheckCode,
-        generation: {
-            buildConfigs,
-            listOutdatedFiles: (session, flags) => listOutdatedFiles(session, buildGeneratedFiles(session), flags),
-        },
+        generation: CHECK_GENERATION,
         cwd: revision?.content === 'index' ? revision.cwd : options.cwd,
         pathArguments: revision?.content === 'index' ? revision.paths : options.paths,
         started: revision?.content === 'index' ? revision.started : undefined,

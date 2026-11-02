@@ -2,8 +2,6 @@ import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation.ts';
 
-export const PROGRESS_CLEAR = '\r\u{1B}[2K';
-
 export const CHECK_LIST_SEPARATOR = ',';
 
 export const PUSH_STDIN_MESSAGE =
@@ -69,11 +67,7 @@ export const STATUS_LABEL_WIDTH = 7;
 
 export const SENTENCE_END = /\.(?= |$)/u;
 
-export const STAGED_FILES = 'the staged files';
-
 export const UNCHANGED_FIX_MESSAGE = 'No fixer changed anything.';
-
-export const WORKING_TREE = 'the working tree';
 
 export const RERUN_LABEL = 'rerun:';
 
@@ -179,3 +173,47 @@ export const LINT_RULE_LABELS = [
     ['fix', 'What to do'],
     ['example', 'Example'],
 ] as const;
+
+export const MARKDOWN_FLAG = '--markdown';
+
+export const GIT_UNBORN_HEAD_ARGUMENTS = ['symbolic-ref', 'HEAD', 'refs/heads/main'] as const;
+
+export const SCAN_SETTINGS_MESSAGE =
+    'This repository already has a gspot.toml, so gspot scan has nothing to preview. Run gspot check.';
+
+export const SCAN_STOPPED_MESSAGE = 'Scan stopped before it finished. Your repository did not change.';
+
+export const SCAN_EXAMPLES_SHOWN = 3;
+
+export const SCAN_CODE_CATEGORY = 'Code';
+
+export const SCAN_CATEGORIES = [
+    { name: 'Secrets', configurations: ['secrets'] },
+    { name: 'Security', configurations: ['security'] },
+    { name: 'Dependencies', configurations: ['dependencies', 'licenses'] },
+    { name: SCAN_CODE_CATEGORY, configurations: [] },
+    { name: 'Docs and spelling', configurations: ['docs', 'markdown', 'prose', 'spelling'] },
+    { name: 'Layout', configurations: ['data-files', 'duplication', 'naming', 'repository', 'structure'] },
+    { name: 'Setup', configurations: ['commits', 'gspot'] },
+] as const;
+
+export const SCAN_FORMAT_CHECKS: ReadonlySet<string> = new Set([
+    'format/editorconfig-checker',
+    'format/prettier',
+    'python/ruff-format',
+    'swift/swiftformat',
+]);
+
+export const SCAN_BUILT_IN_TOOL = 'gspot';
+
+export const SCAN_FORMATTING_TITLE = 'Formatting';
+
+export const SCAN_NOT_RUN_TITLE = 'Could not run';
+
+export const SCAN_PLAN_TITLE = 'What gspot init would do';
+
+export const SCAN_NEXT_STEPS_TITLE = 'Next steps';
+
+export const SCAN_NEXT_STEPS = ['gspot init', 'gspot install', 'gspot baseline'] as const;
+
+export const BYTES_PER_MEGABYTE = 1_048_576;

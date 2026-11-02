@@ -1,26 +1,23 @@
 import { styleText } from 'node:util';
 import { randomUUID } from 'node:crypto';
 import { LINE_BREAK } from '#cli/config/parsers.ts';
-import { SHORT_HASH_LENGTH } from '#cli/config/engine.ts';
+import { formatCheckedContent } from '#cli/engine/report.ts';
 import { formatExplainCommand } from '#cli/engine/results.ts';
+import { print, printWarning } from '#cli/system/terminal.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { CODE_MARK, EVERY_CHECK } from '#cli/config/commands/help.ts';
 import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
-import { print, printWarning, writeProgress } from '#cli/system/terminal.ts';
 import { formatCount, formatScope, quoteArgument } from '#cli/system/text.ts';
-import type { FixReport, RunReport, CheckResult, CheckProgress, FindingOptions } from '#cli/types/engine/run.ts';
+import type { FixReport, RunReport, CheckResult, FindingOptions } from '#cli/types/engine/run.ts';
 
 import {
     OFF_LABEL,
     OFF_CAUSES,
     RERUN_LABEL,
     SENTENCE_END,
-    STAGED_FILES,
-    WORKING_TREE,
     NOTE_STATUSES,
-    PROGRESS_CLEAR,
     FINDINGS_SHOWN,
     INSTALL_REMINDER,
     FIXER_ERROR_PREFIX,
@@ -30,13 +27,6 @@ import {
     STANDARD_INSTALL_HELP,
     UNCHANGED_FIX_MESSAGE,
 } from '#cli/config/commands/reports.ts';
-
-function formatCheckedContent(comparison: CheckProgress['comparison']): string {
-    if (comparison?.content === 'index') return STAGED_FILES;
-    return comparison?.content === 'commit'
-        ? `commit ${comparison.reference.slice(0, SHORT_HASH_LENGTH)}`
-        : WORKING_TREE;
-}
 
 function formatUnstagedChanges(report: RunReport): string[] {
     if (report.unstagedChanges === 0) return [];
@@ -270,24 +260,6 @@ export function beginCheckReport(): (() => void) | undefined {
     return () => {
         print(`::${token}::`);
     };
-}
-
-/**
-Rewrite the progress line when stderr points to a terminal, and print one line per finished check otherwise.
-
-@param progress the last finished check and its place in the run.
-*/
-export function printProgress(progress: CheckProgress): void {
-    if (!process.stderr.isTTY) {
-        const scope = progress.scope === '' ? '' : `${formatScope(progress.scope)}  `;
-        const seconds = (progress.duration / MILLISECONDS_PER_SECOND).toFixed(1);
-        writeProgress(`done  ${scope}${progress.check}  ${seconds}s\n`);
-        return;
-    }
-    const subject = formatCheckedContent(progress.comparison);
-    writeProgress(
-        `${PROGRESS_CLEAR}Checking ${subject}: ${String(progress.finished)} of ${String(progress.total)} checks done`,
-    );
 }
 
 /**

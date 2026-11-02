@@ -18,7 +18,15 @@ const LLMS_URL = `${CLI_REFERENCE.package.homepage}/llms.txt`;
 
 const LLMS_COMMAND = `${CURL_COMMAND} ${LLMS_URL}`;
 
+const SCAN_COMMAND = `npx ${CLI_REFERENCE.package.name} scan`;
+
 export const AGENT_PROMPT = `Set up gspot in a repository. Run ${LLMS_COMMAND} and follow its steps.`;
+
+export const AGENT_EVALUATION = `## Evaluate gspot on this repository
+
+Run \`${SCAN_COMMAND} --json\` at the root of the repository. It works on a copy, so the repository does not change.
+Sort each finding into real problem, false positive, or style. Quote the numbers: the findings of each kind, the files
+to format, the tools, the megabytes, and the seconds per hook.`;
 
 export const AGENT_STEPS = `## Steps for coding agents
 
@@ -34,17 +42,18 @@ ${setup.map(({ label, add }) => `   - ${label}: \`${add}\``).join('\n')}
 
 ${setup.flatMap(({ label, prerequisites }) => prerequisites.map((command) => `   With ${label}, run \`${command}\` first, so that gspot uses a supported runtime.`)).join('\n')}
    Start the next commands with ${DISJUNCTION_FORMAT.format(setup.map(({ start }) => `\`${start}\``))}.
-2. Ask the user which level, and wait for the answer. ${CLI_REFERENCE.levelSummaries.basic} ${CLI_REFERENCE.levelSummaries.all} Level \`all\` also
+2. Run \`gspot scan\`. It changes nothing in the repository. Show the user its findings and its plan of init.
+3. Ask the user which level, and wait for the answer. ${CLI_REFERENCE.levelSummaries.basic} ${CLI_REFERENCE.levelSummaries.all} Level \`all\` also
    installs a few more tools. Suggest \`basic\`, the default, for an existing codebase, and \`all\` for a new
    repository or one that agents write. The level decides which config files the plan replaces.
-3. Run \`gspot init --level <level>\`. It prints the plan and writes the settings, generated files, and hooks
-   without asking another question. CI stays off; \`gspot doctor\` suggests how to enable it.
+4. Run \`gspot init --level <level>\`. It prints the plan and writes the settings, generated files, and hooks
+   without asking a question. CI stays off; \`gspot doctor\` suggests how to enable it.
    After init, \`gspot add <configuration>\` and \`gspot remove <configuration> --reason "<why>"\` change the selection.
-4. Run \`gspot install\`. It installs the pinned tools and turns on the Git hooks. If it names a program that it
+5. Run \`gspot install\`. It installs the pinned tools and turns on the Git hooks. If it names a program that it
    cannot install, tell the user. \`gspot doctor\` lists what is missing.
-5. Run \`gspot check\`, and show the user its last line. Fix the findings in the files that you changed. Ask the user
+6. Run \`gspot check\`, and show the user its last line. Fix the findings in the files that you changed. Ask the user
    before you fix findings in other files.
-6. Tell the user what gspot wrote, the level, which checks run, and which findings are left.
+7. Tell the user what gspot wrote, the level, which checks run, and which findings are left.
 
 ## Rules for daily work
 

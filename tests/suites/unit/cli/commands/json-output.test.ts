@@ -24,6 +24,7 @@ function readFields(heading: string): { every: string[]; required: string[] } {
 }
 
 test.each([
+    { commandArguments: ['scan', '--json'], headings: ['## `gspot scan`'], settings: false },
     { commandArguments: ['init', '--json'], headings: ['## `gspot init`', '## Generated files'], settings: false },
     { commandArguments: ['apply', '--json'], headings: ['## Generated files'] },
     { commandArguments: ['install', '--json'], headings: ['## `gspot install`'] },

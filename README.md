@@ -2,6 +2,22 @@
 
 gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents.
 
+## Try it
+
+Run this at the root of a Git repository. It works on a copy, so your repository does not change:
+
+```shell
+npx @gspothq/cli scan
+```
+
+`gspot scan` runs the checks on the copy. It reports the findings, the files that differ from your style, the cost in
+tools and seconds, and the plan of `gspot init`. Three findings it catches:
+
+- `secrets/gitleaks-staged`: an API key in a source file.
+- `javascript/eslint`, rule `@typescript-eslint/no-floating-promises`: a promise that nothing waits for, so its error
+  disappears.
+- `gspot/suppressions`: an `eslint-disable` comment with no reason.
+
 ## What it does
 
 - **Picks the checks.** `gspot init` reads your files and turns on the checks for the languages and frameworks it
@@ -13,20 +29,13 @@ gspot is a command-line tool that lints AI-generated code and installs rules for
 - **Writes rules for your agent.** `AGENTS.md` lists rule files for your languages, frameworks, and level. They say
   how to write code that passes the checks.
 
-## What it flags
-
-- Bugs and type errors
-- Security and accessibility problems, and leaked secrets
-- Vulnerable dependencies and licenses that you do not allow
-- Formatting, broken links, and spelling
-- Lint rules turned off without a reason
-- At level `all`: the stricter checks that [Levels](https://generativespotting.com/start/concepts/#levels) lists
+[What it flags](https://generativespotting.com/start/overview/#what-it-flags) lists the problems that gspot finds.
 
 ## Requirements
 
-You need Git and Node.js 22.22.3 or newer. The commands below use Bun 1.4.3 or newer. gspot runs on macOS, Linux,
-and Windows. Some checks need more, such as the Swift toolchain or a running Docker daemon;
-[Installation](https://generativespotting.com/start/install/) lists what each kind of check needs.
+You need Git and Node.js. The commands below use Bun. gspot runs on macOS, Linux, and Windows. Some checks need the
+Swift toolchain or a running Docker daemon. [Installation](https://generativespotting.com/start/install/) lists the
+versions and what each kind of check needs.
 
 ## Set up
 
@@ -51,7 +60,7 @@ bunx --no-install gspot check
 4. `gspot check` runs the checks on every file. From then on, the Git hooks check each commit and push.
 
 gspot starts at level `basic`. To start at level `all`, add `--level all` to the init command. Init writes without
-asking.
+asking, so run `gspot scan` first to read its plan.
 
 Commit `gspot.toml` and the files that `gspot init` and `gspot install` wrote. In each new clone, install the
 dependencies first, then run the install command above.

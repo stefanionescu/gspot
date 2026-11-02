@@ -2,12 +2,12 @@ import { join, resolve } from 'node:path';
 import { addAbortSignal } from 'node:stream';
 import { GspotError } from '#cli/system/errors.ts';
 import { formatNameList } from '#cli/system/text.ts';
+import { printProgress } from '#cli/engine/report.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { runPushCheck } from '#cli/commands/check/push.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { constants, accessSync, existsSync } from 'node:fs';
-import { printProgress } from '#cli/commands/check/report.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { TRAILING_NEWLINE } from '#cli/config/repository/git.ts';
@@ -15,9 +15,9 @@ import { InvalidArgumentError } from '@commander-js/extra-typings';
 import { readGitText, readGitPaths } from '#cli/repository/git/run.ts';
 import { writeProgress, runCancelableCommand } from '#cli/system/terminal.ts';
 import type { CommandLocation, CommandDefinition } from '#cli/types/commands/edits.ts';
-import { BASE_FLAG, STAGED_FLAG, GIT_WRITE_TREE_ARGUMENTS } from '#cli/config/engine.ts';
 import { readStagedPaths, isWorkingTreeClean } from '#cli/repository/revisions/changes.ts';
 import type { CheckFlags, CheckOptions, CheckCommandJson } from '#cli/types/commands/reports.ts';
+import { BASE_FLAG, STAGED_FLAG, PROGRESS_CLEAR, GIT_WRITE_TREE_ARGUMENTS } from '#cli/config/engine.ts';
 
 import {
     FIX_FLAG,
@@ -31,7 +31,6 @@ import {
     VERBOSE_FLAG,
     CHECK_STAGES,
     STAGE_OPTION,
-    PROGRESS_CLEAR,
     CHECK_INPUT_HOOKS,
     PUSH_STDIN_MESSAGE,
     PUSH_INPUT_MESSAGE,

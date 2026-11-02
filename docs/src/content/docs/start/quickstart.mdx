@@ -6,7 +6,24 @@ description: Set up gspot yourself or with your coding agent.
 import { Code, Tabs, TabItem } from '@astrojs/starlight/components';
 import { AGENT_PROMPT, setup, runtimeMinimums } from '#docs/reference/setup.ts';
 
-Set up gspot yourself, or give one prompt to your coding agent.
+Try gspot on a copy of your repository, then set it up yourself or give one prompt to your coding agent.
+
+## Try gspot on a copy
+
+Run this at the root of a Git repository:
+
+```shell
+npx @gspothq/cli scan
+```
+
+`gspot scan` copies the files that Git tracks into `.gspot-copies/`, sets up gspot in the copy, installs the tools
+there, and runs the checks with no fixes. It then deletes the copy, so your repository does not change.
+
+The report gives the findings by category, with three examples each, and the number of files that differ from your
+style. It also gives the cost in tools, megabytes, and seconds, the plan of `gspot init`, and the next steps. Add
+`--markdown` to paste the report into a pull request or a chat, or `--json` to read every finding. A scan exits with
+`0` when it prints its report, whatever it finds. npm, uv, and mise keep their download caches, so a second scan
+downloads nothing new.
 
 ## Set up gspot yourself
 
@@ -23,8 +40,8 @@ You need Git and {`Node.js ${runtimeMinimums.node} or newer`}. Run these command
 1. The `add`, `install`, or `use` command adds gspot to the project, pinned to one version. With mise, the command
    before it pins Node.js in `mise.toml`, so that mise does not run gspot with an older Node.js of your system.
 2. `gspot init` prints its plan and writes `gspot.toml`, the config files, `AGENTS.md` and the
-   rules, and the Git hooks, and deletes the config files it replaces. [Read the plan](/start/migrate/#read-the-plan)
-   before running init.
+   rules, and the Git hooks, and deletes the config files it replaces. Run `gspot scan` to
+   [read the plan](/start/migrate/#read-the-plan) before you run init.
 3. `gspot install` installs the pinned tools and turns on the hooks. From then on, every commit runs the checks.
 
 CI stays off until you enable it. When the repository has GitHub or GitLab CI files, or an `origin` remote on GitHub or
@@ -42,10 +59,10 @@ Paste this prompt into Claude Code, Codex, Cursor, or another coding agent that 
 The agent then:
 
 1. Adds `@gspothq/cli` with the package manager of your repository, or pins it with mise.
-2. Asks which [level](/start/concepts/#levels) you want, runs `gspot init` at that level, and shows you the plan.
-   It writes the plan only after you agree.
-3. Runs `gspot install` and `gspot check`, and shows you the result.
-4. Reads `AGENTS.md` and the agent rules before it writes more code.
+2. Runs `gspot scan`, and shows you the findings and the plan.
+3. Asks which [level](/start/concepts/#levels) you want, and runs `gspot init` at that level only after you agree.
+4. Runs `gspot install` and `gspot check`, and shows you the result.
+5. Reads `AGENTS.md` and the agent rules before it writes more code.
 
 ## After you install
 
