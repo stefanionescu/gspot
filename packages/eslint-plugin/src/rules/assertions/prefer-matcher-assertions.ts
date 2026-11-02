@@ -6,27 +6,27 @@ import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescr
 
 import {
     VALUE_KINDS,
-    NUMERIC_NAME,
     NUMBER_TYPES,
+    NUMERIC_NAME,
     BOOLEAN_KINDS,
-    NUMERIC_SIGNS,
     NULLISH_KINDS,
+    NUMERIC_SIGNS,
     OPERAND_KINDS,
     TEXT_RECEIVER,
-    TEMPLATE_FIELD,
+    BARE_RECEIVERS,
     LOCATOR_STATES,
     LOCATOR_VALUES,
-    BARE_RECEIVERS,
+    TEMPLATE_FIELD,
     JASMINE_PACKAGES,
     MATCHER_FAMILIES,
     NUMERIC_MATCHERS,
-    MATCHER_TEMPLATES,
     LOCATOR_FACTORIES,
+    MATCHER_TEMPLATES,
     EQUALITY_OPERATORS,
     INVERTED_OPERATORS,
-    JASMINE_SIZE_VERSION,
     ASSERT_MESSAGE_INDEX,
-} from '../../config/matchers.ts';
+    JASMINE_SIZE_VERSION,
+} from '../../config/assertions/matchers.ts';
 
 function getOperand(node: TSESTree.Node, source: TSESLint.SourceCode): string {
     const text = source.getText(node);

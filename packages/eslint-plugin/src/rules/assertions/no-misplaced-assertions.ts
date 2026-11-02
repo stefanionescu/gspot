@@ -4,7 +4,7 @@ import { getTestCall } from '../../libraries/testing.ts';
 import { readAssertionKind } from '../../libraries/assertions.ts';
 import type { FileContext, PlacementState } from '../../types/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { STATEMENT_LINKS, EVIDENCE_IMPORTS, EVIDENCE_DEPENDENCIES } from '../../config/evidence.ts';
+import { STATEMENT_LINKS, EVIDENCE_IMPORTS, EVIDENCE_DEPENDENCIES } from '../../config/assertions/evidence.ts';
 
 function isStatementLink(parent: TSESTree.Node, child: TSESTree.Node): boolean {
     const isReceiver = parent.type === AST_NODE_TYPES.MemberExpression && parent.object === child;

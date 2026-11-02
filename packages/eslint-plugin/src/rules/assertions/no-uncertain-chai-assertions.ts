@@ -1,7 +1,7 @@
 import { createRule } from '../../rule.ts';
-import { UNCERTAIN_CHAI_PAIRS } from '../../config/assertions.ts';
 import { listImportedModules } from '../../libraries/packages.ts';
 import type { ChainLink, UncertainPair } from '../../types/rules.ts';
+import { UNCERTAIN_CHAI_PAIRS } from '../../config/assertions/styles.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function listChainLinks(expression: TSESTree.Node): ChainLink[] {

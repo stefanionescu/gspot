@@ -4,7 +4,7 @@ import { getTestCall } from '../../libraries/testing.ts';
 import { getModuleName } from '../../language/modules.ts';
 import type { ThrowAssertion } from '../../types/rules.ts';
 import { getTypes, isThenable } from '../../language/checker.ts';
-import { THROW_EXPECTS, UNCERTAIN_TYPES } from '../../config/matchers.ts';
+import { THROW_EXPECTS, UNCERTAIN_TYPES } from '../../config/assertions/matchers.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getThrowExpect(

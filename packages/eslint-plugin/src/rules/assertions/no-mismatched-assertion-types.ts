@@ -2,7 +2,7 @@ import { createRule } from '../../rule.ts';
 import { getTypes } from '../../language/checker.ts';
 import { readAssertion } from '../../libraries/assertions.ts';
 import type { TypeReader, CheckedType } from '../../types/plugin.ts';
-import { OPEN_CATEGORIES, TYPE_CATEGORIES } from '../../config/matchers.ts';
+import { OPEN_CATEGORIES, TYPE_CATEGORIES } from '../../config/assertions/matchers.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getCategories(types: TypeReader, type: CheckedType): string[] {

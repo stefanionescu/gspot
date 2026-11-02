@@ -8,7 +8,7 @@ import {
     ASSERTION_WORDS,
     ASSERTION_METHODS,
     EXPECT_STATIC_METHODS,
-} from '../../config/assertions.ts';
+} from '../../config/assertions/styles.ts';
 
 function isExpectCall(node: TSESTree.Node): boolean {
     if (node.type !== AST_NODE_TYPES.CallExpression || !ASTUtils.isIdentifier(node.callee)) return false;

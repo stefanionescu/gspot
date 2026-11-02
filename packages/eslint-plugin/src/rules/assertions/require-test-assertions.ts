@@ -8,16 +8,16 @@ import { readAssertionKind, isChaiPropertyAssertion } from '../../libraries/asse
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
-    DONE_CALLBACKS,
     ASSERTION_TEXT,
+    DONE_CALLBACKS,
     EVIDENCE_IMPORTS,
     HTTP_EXPECTATIONS,
-    HTTP_TESTING_MODULE,
     CHECKED_TEST_CALLEE,
+    HTTP_TESTING_MODULE,
     EVIDENCE_DEPENDENCIES,
     TEST_FRAMEWORK_IMPORTS,
     TEST_FRAMEWORK_DEPENDENCIES,
-} from '../../config/evidence.ts';
+} from '../../config/assertions/evidence.ts';
 
 function getTestCallback(node: TSESTree.CallExpression, source: TSESLint.SourceCode): TSESTree.Node | undefined {
     const callback = node.arguments.at(1);

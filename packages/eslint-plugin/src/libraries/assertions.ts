@@ -16,32 +16,32 @@ import type {
 } from '../types/rules.ts';
 import {
     EXPECT_SETUP,
-    TYPE_ASSERTION,
+    CHAI_TERMINALS,
     GLOBAL_EXPECTS,
     NODE_TEST_NAME,
-    CHAI_TERMINALS,
+    TYPE_ASSERTION,
     RUNNER_ASSERTION,
     PLAYWRIGHT_EXPECT,
     SCRIPT_ASSERTIONS,
     GLOBAL_EXPECT_IMPORTS,
     GLOBAL_EXPECT_DEPENDENCIES,
-} from '../config/evidence.ts';
+} from '../config/assertions/evidence.ts';
 import {
     CHAI_MODULES,
     EXPECT_STYLES,
     CHAI_ASSERTION,
     NODE_ASSERTION,
-    CHAI_PREDICATES,
     ASSERT_FUNCTION,
+    CHAI_PREDICATES,
     CYPRESS_MODULES,
     CHAI_COMPARISONS,
     EXPECT_PREDICATES,
-    EXPECT_COMPARISONS,
-    NODE_ASSERT_CHECKS,
     CHAI_ASSERT_CHECKS,
     CYPRESS_ASSERTIONS,
+    EXPECT_COMPARISONS,
+    NODE_ASSERT_CHECKS,
     NODE_ASSERT_MODULES,
-} from '../config/assertions.ts';
+} from '../config/assertions/styles.ts';
 
 const styleCache = new WeakMap<TSESLint.SourceCode, AssertionStyles>();
 const expectPredicates = new Map<string | null, AssertionPredicate>(EXPECT_PREDICATES);

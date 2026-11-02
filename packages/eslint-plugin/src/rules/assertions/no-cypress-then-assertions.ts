@@ -6,12 +6,12 @@ import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescr
 import {
     STRING_CALLS,
     LITERAL_KINDS,
+    SAFE_OPERANDS,
     SELECTOR_TEXT,
     THEN_CALLBACK,
-    SAFE_OPERANDS,
     CYPRESS_QUERIES,
     ASSERTION_DEPTHS,
-} from '../../config/cypress.ts';
+} from '../../config/assertions/evidence.ts';
 
 function getCallKind(node: TSESTree.CallExpression, kinds: ReadonlyMap<string, string>): string | undefined {
     const { callee } = node;
