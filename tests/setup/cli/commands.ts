@@ -2,7 +2,11 @@ import { join } from 'node:path';
 import { expect } from 'bun:test';
 import { Readable } from 'node:stream';
 import { runProgram } from '#cli/main.ts';
+import { parse } from '@decimalturn/toml-patch';
+import { commitAll } from '#tests/setup/system/git.ts';
+import type { TomlTable } from '#cli/types/settings.ts';
 import { readTree } from '#tests/setup/system/files.ts';
+import type { InitJson } from '#cli/types/commands/edits.ts';
 import type { AsyncSpawnOptions } from '#cli/types/system.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { captureTerminal } from '#tests/setup/system/terminal.ts';
@@ -53,6 +57,20 @@ export async function runGspot(
         process.chdir(previousFolder);
         Object.defineProperty(process, 'stdin', stdin);
     }
+}
+
+/**
+Commit a folder and run init on it with --json. The result holds the plan and the settings that init writes.
+*/
+export async function runInit(
+    root: string,
+    commandArguments: readonly string[] = [],
+): Promise<Required<Pick<InitJson, 'plan'>> & { settings: TomlTable }> {
+    commitAll(root);
+    const result = await runGspot(root, ['init', '--json', ...commandArguments]);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const { plan, settingsText } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan' | 'settingsText'>>;
+    return { plan, settings: parse(settingsText) as TomlTable };
 }
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: This reader keeps the parsed report cast at one boundary.
