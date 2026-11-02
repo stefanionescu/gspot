@@ -24,12 +24,8 @@ import { formatOutputTail, assertToolFindings } from '#cli/engine/tool-runs/outp
 import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
 import { denoLintOutputSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
+import type { FunctionEntrypoint, SupabaseProjectFile } from '#cli/types/configurations/infrastructure.ts';
 
-import type {
-    StoragePolicies,
-    FunctionEntrypoint,
-    SupabaseProjectFile,
-} from '#cli/types/configurations/infrastructure.ts';
 import {
     SYNTAX_RULE,
     DENO_LOCATION,

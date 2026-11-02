@@ -24,6 +24,12 @@ import {
     VALE_INSTALLED_FILES,
 } from '#tests/config/configurations/general.ts';
 
+async function openValeSandbox(resources: AsyncDisposableStack) {
+    const settings = buildSandboxSettings(['prose', 'markdown'], { level: 'all' });
+    const sandbox = resources.use(await createGitSandbox({ ...VALE_SANDBOX_FILES, 'gspot.toml': settings }));
+    return await openFakeToolSession(sandbox.path, ['vale'], resources);
+}
+
 test('Vale gets the timeout setting', async () => {
     await using sandbox = await createGitSandbox({});
     const path = 'sample.md';
@@ -82,13 +88,7 @@ test.each([...VALE_OUTPUT_CASES])(
     'Vale alerts with $name become findings at the reported file, line, and column',
     async ({ stdout, findings }) => {
         await using resources = new AsyncDisposableStack();
-        const sandbox = resources.use(
-            await createGitSandbox({
-                ...VALE_SANDBOX_FILES,
-                'gspot.toml': buildSandboxSettings(['prose', 'markdown'], { level: 'all' }),
-            }),
-        );
-        const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
+        const session = await openValeSandbox(resources);
         const parsed = Object.fromEntries(
             Object.entries(JSON.parse(stdout) as Record<string, unknown>).map(([path, alerts]) => [
                 join(session.root, path),
@@ -104,13 +104,7 @@ test.each([...VALE_OUTPUT_CASES])(
 
 test('the Vale check fails with the error line Vale prints when Vale exits non-zero', async () => {
     await using resources = new AsyncDisposableStack();
-    const sandbox = resources.use(
-        await createGitSandbox({
-            ...VALE_SANDBOX_FILES,
-            'gspot.toml': buildSandboxSettings(['prose', 'markdown'], { level: 'all' }),
-        }),
-    );
-    const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
+    const session = await openValeSandbox(resources);
     resources.use(
         fakeCommands().mockResolvedValue(
             buildProcessResult({ code: 2, stderr: 'Loading styles\nE100 [loadStyles] Runtime error\n' }),
@@ -122,14 +116,8 @@ test('the Vale check fails with the error line Vale prints when Vale exits non-z
 
 test('the Vale check fails before running Vale when the Vale packages are not installed', async () => {
     await using resources = new AsyncDisposableStack();
-    const sandbox = resources.use(
-        await createGitSandbox({
-            ...VALE_SANDBOX_FILES,
-            'gspot.toml': buildSandboxSettings(['prose', 'markdown'], { level: 'all' }),
-        }),
-    );
-    const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
-    await rm(join(sandbox.path, GSPOT_PATHS.valeConfig));
+    const session = await openValeSandbox(resources);
+    await rm(join(session.root, GSPOT_PATHS.valeConfig));
     using run = fakeCommands();
     const uninstalledError = await captureRejection(runSandboxCheck(session.root, 'prose/vale'));
     expect(uninstalledError.message).toBe('The Vale packages are not installed. Run gspot install.');

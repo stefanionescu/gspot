@@ -13,7 +13,6 @@ import type {
     Repository,
     ScopeFolder,
     TrackedFile,
-    PackageManager,
     RepositorySetup,
     PackageManagerPin,
     InitConfigurations,

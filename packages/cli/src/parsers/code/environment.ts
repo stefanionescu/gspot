@@ -55,12 +55,12 @@ function hasPythonDefault(keyNode: Node | null | undefined): boolean {
 
 function hasLiteralDefault(node: Node): boolean {
     const { parent } = node;
-    if (parent?.type !== 'binary_expression' || parent.childForFieldName('left')?.id !== node.id) return false;
-    const operator = parent.childForFieldName('operator')?.type ?? '';
-    const right = parent.childForFieldName('right');
+    if (parent?.type !== 'binary_expression') return false;
+    const [left, operator, right] = parent.children as [Node, Node, Node];
     return (
-        JAVASCRIPT_DEFAULT_OPERATORS.has(operator) &&
-        (readStringLiteral(right) !== undefined || JAVASCRIPT_LITERAL_NODES.has(right?.type ?? ''))
+        left.id === node.id &&
+        JAVASCRIPT_DEFAULT_OPERATORS.has(operator.type) &&
+        (JAVASCRIPT_LITERAL_NODES.has(right.type) || readStringLiteral(right) !== undefined)
     );
 }
 

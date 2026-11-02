@@ -4,7 +4,7 @@ import type { Node as SqlNode } from '@pgsql/types';
 import type { Node, Tree, Parser } from 'web-tree-sitter';
 import type { parseDocument } from '@decimalturn/toml-patch';
 import type { RunCache, TextRange } from '#cli/types/system.ts';
-import type { GRAMMAR_NAMES, PYTHON_LOCKFILES, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers.ts';
+import type { GRAMMAR_NAMES, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers.ts';
 
 import type {
     pipfileSchema,
@@ -224,8 +224,6 @@ export type PythonDependency = NonNullable<z.infer<typeof pipfileSchema>['packag
 export type Pyproject = z.infer<typeof pyprojectSchema>;
 
 export type LockfileName = (typeof JAVASCRIPT_LOCKFILES)[number];
-
-export type LockedPackageLockfile = LockfileName | (typeof PYTHON_LOCKFILES)[number];
 
 export type ParsedTsconfig = Omit<ts.ParsedCommandLine, 'raw'> & {
     raw: z.infer<typeof tsconfigSchema>;

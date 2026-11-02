@@ -72,7 +72,7 @@ define the behavior instead of adding speculative protection.
 Keep one implementation of each concept, and one copy of each table of values, in the module that uses it. Extract
 shared code only when two or more callers need the same behavior now.
 
-- Delete each named function of {setting:limits.min_function_statements} statements or fewer, exported or
+- Delete each named function of `{setting:limits.min_function_statements}` statements or fewer, exported or
   not, and inline its body at each call site. Class methods, accessors, constructors, and recursive functions count
   too.
 - Keep a callback written inline and a member of an object literal. Keep the implementation of an overload set, and

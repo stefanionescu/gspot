@@ -76,37 +76,40 @@ async function runFakeDeptry(root: string) {
     return { checked, commands: spawn.mock.calls.map(([command]) => command) };
 }
 
-test('deptry counts python.externals as first party beside the known_first_party of the project', async () => {
+async function readFirstParty(settings: string, pyproject: string, sources: Record<string, string>) {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['python'], {
-            tables: '[python]\nexternals = { value = ["folder_paths", "comfy"], reason = "The host application provides these modules at runtime." }\n',
-        }),
-        'pyproject.toml':
-            '[project]\nname = "example"\nversion = "1.0.0"\n[tool.deptry]\nknown_first_party = ["nodes"]\n',
-        'main.py': 'import folder_paths\n',
+        ...sources,
+        'gspot.toml': settings,
+        'pyproject.toml': pyproject,
         '.venv/pyvenv.cfg': '',
         [join(join(GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder), 'deptry')]: 'stub',
         ...buildPythonToolFiles('deptry'),
     });
     const { commands } = await runFakeDeptry(sandbox.path);
-    const command = commands.find((command) => command.includes('deptry'))!;
-    const firstParty = command.flatMap((value, index) => (value === '--known-first-party' ? command[index + 1]! : []));
+    const command = commands.find((each) => each.includes('deptry'))!;
+    return command.flatMap((value, index) => (value === '--known-first-party' ? command[index + 1]! : []));
+}
+
+test('deptry counts python.externals as first party beside the known_first_party of the project', async () => {
+    const firstParty = await readFirstParty(
+        buildSandboxSettings(['python'], {
+            tables: '[python]\nexternals = { value = ["folder_paths", "comfy"], reason = "The host application provides these modules at run time." }\n',
+        }),
+        '[project]\nname = "example"\nversion = "1.0.0"\n[tool.deptry]\nknown_first_party = ["nodes"]\n',
+        { 'main.py': 'import folder_paths\n' },
+    );
     expect(firstParty).toStrictEqual(['example', 'nodes', 'folder_paths', 'comfy']);
 });
 
 test('deptry counts the project name and each package under src as first party', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['python']),
-        'pyproject.toml': '[project]\nname = "Shop-Core"\nversion = "1.0.0"\n',
-        'src/shop_core/__init__.py': '',
-        'src/shop_tools/__init__.py': '',
-        'src/shop_tools/nested/__init__.py': '',
-        '.venv/pyvenv.cfg': '',
-        [join(join(GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder), 'deptry')]: 'stub',
-        ...buildPythonToolFiles('deptry'),
-    });
-    const { commands } = await runFakeDeptry(sandbox.path);
-    const command = commands.find((command) => command.includes('deptry'))!;
-    const firstParty = command.flatMap((value, index) => (value === '--known-first-party' ? command[index + 1]! : []));
+    const firstParty = await readFirstParty(
+        buildSandboxSettings(['python']),
+        '[project]\nname = "Shop-Core"\nversion = "1.0.0"\n',
+        {
+            'src/shop_core/__init__.py': '',
+            'src/shop_tools/__init__.py': '',
+            'src/shop_tools/nested/__init__.py': '',
+        },
+    );
     expect(firstParty).toStrictEqual(['shop_core', 'shop_tools']);
 });

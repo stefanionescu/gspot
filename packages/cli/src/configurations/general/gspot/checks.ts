@@ -17,15 +17,15 @@ import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';
+import { findSettingLine, readSettingsFile } from '#cli/settings/file.ts';
 import { MESSAGE_REFERENCES } from '#cli/config/configurations/general.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import { mapSettingPaths, joinScopeSelector } from '#cli/settings/paths.ts';
 import { formatCount, getPosition, quoteArgument } from '#cli/system/text.ts';
 import { BASELINE_FILE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { parseComments, stripCommentEnd } from '#cli/parsers/code/comments.ts';
-import { findSettingLine, readSettingsFile } from '#cli/settings/file.ts';
-import type { BaselineRun, CheckSession, CheckRunOptions } from '#cli/types/engine/run.ts';
 import type { Scope, PathVisitor, SettingLocation } from '#cli/types/settings.ts';
+import type { BaselineRun, CheckSession, CheckRunOptions } from '#cli/types/engine/run.ts';
 import type { FindingPlace, SuppressionSyntax } from '#cli/types/configurations/general.ts';
 
 import {

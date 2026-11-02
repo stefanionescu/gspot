@@ -7,16 +7,16 @@ import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { listNodeFields, selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
 
 import {
-    extractForwardText,
-    readParsedMigrations,
-    readCommittedMigrations,
-} from '#cli/configurations/database/postgres/checks/migrations.ts';
-import {
     FROZEN_RULE,
     DRIFT_GUARD_RULE,
     FROZEN_EDIT_MESSAGE,
     DRIFT_GUARD_MESSAGE,
 } from '#cli/config/configurations/infrastructure.ts';
+import {
+    extractForwardText,
+    readParsedMigrations,
+    readCommittedMigrations,
+} from '#cli/configurations/database/postgres/checks/migrations.ts';
 
 function hasDriftGuard(statement: SqlStatement): boolean {
     if (statement.kind === 'IndexStmt')

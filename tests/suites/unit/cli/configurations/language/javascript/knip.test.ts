@@ -30,22 +30,20 @@ const check = readConfigurations()
     .get('javascript')!
     .checks.find(({ id: name }) => name === 'javascript/knip')!;
 
+async function writeKnipProject(root: string, settings: string, files: Record<string, string>): Promise<void> {
+    const target = getManifestTarget('javascript', 'knip.json');
+    const configuration = await buildGeneratedFile(settings, target, files);
+    await createFileTree(root, { ...files, [target]: configuration });
+    await linkInstalledModules(join(root, GSPOT_PATHS.nodeModules));
+}
+
 test('Knip finds unused framework component files and uses the entry points of each scope', async () => {
     await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['javascript'], {
         level: 'all',
         tables: `\ntest_files = ["native-tests/**"]\n[javascript]\nentry_files = ["main.js"]\n[[scope]]\npath = "child"\n\nconfigurations = ["javascript"]\ntest_files = ["verification/**"]\n[scope.javascript]\nentry_files = ["main.js"]\n`,
     });
-    const configuration = await buildGeneratedFile(
-        settings,
-        getManifestTarget('javascript', 'knip.json'),
-        KNIP_COMPONENT_FILES,
-    );
-    await createFileTree(sandbox.path, {
-        ...KNIP_COMPONENT_FILES,
-        [getManifestTarget('javascript', 'knip.json')]: configuration,
-    });
-    await linkInstalledModules(join(sandbox.path, GSPOT_PATHS.nodeModules));
+    await writeKnipProject(sandbox.path, settings, KNIP_COMPONENT_FILES);
     const result = await runCommand([...knipArguments, 'files'], { cwd: sandbox.path });
     expect(result.code, result.stdout + result.stderr).toBe(1);
     const findings = parseOutput(check, result.stdout, result.stderr, { root: sandbox.path, cwd: sandbox.path });
@@ -75,16 +73,7 @@ test('Knip takes its default entry files at the root and under src', async () =>
         'src/main.tsx': 'export const value = 1;\n',
         'src/unused.ts': 'export const value = 1;\n',
     };
-    const configuration = await buildGeneratedFile(
-        buildSandboxSettings(['javascript']),
-        getManifestTarget('javascript', 'knip.json'),
-        files,
-    );
-    await createFileTree(sandbox.path, {
-        ...files,
-        [getManifestTarget('javascript', 'knip.json')]: configuration,
-    });
-    await linkInstalledModules(join(sandbox.path, GSPOT_PATHS.nodeModules));
+    await writeKnipProject(sandbox.path, buildSandboxSettings(['javascript']), files);
     const result = await runCommand([...knipArguments, 'files'], { cwd: sandbox.path });
     expect(result.stderr).toBe('');
     const findings = parseOutput(check, result.stdout, result.stderr, { root: sandbox.path, cwd: sandbox.path });
@@ -98,16 +87,7 @@ test('Knip reports each unused dependency that you declare, also when it names a
             '{"name":"native-project","private":true,"type":"module","dependencies":{"vale":"0.0.0","sample-unused-package":"1.0.0","prettier":"0.0.0-test","eslint-config-prettier":"0.0.0-test","@gspothq/eslint-plugin":"0.0.0"}}',
         'main.js': 'export const value = 1;\n',
     };
-    const configuration = await buildGeneratedFile(
-        buildSandboxSettings(['javascript'], { level: 'all' }),
-        getManifestTarget('javascript', 'knip.json'),
-        files,
-    );
-    await createFileTree(sandbox.path, {
-        ...files,
-        [getManifestTarget('javascript', 'knip.json')]: configuration,
-    });
-    await linkInstalledModules(join(sandbox.path, GSPOT_PATHS.nodeModules));
+    await writeKnipProject(sandbox.path, buildSandboxSettings(['javascript'], { level: 'all' }), files);
     const result = await runCommand([...knipArguments, 'dependencies'], { cwd: sandbox.path });
     expect(result.code, result.stdout + result.stderr).toBe(1);
     const findings = parseOutput(check, result.stdout, result.stderr, { root: sandbox.path, cwd: sandbox.path });

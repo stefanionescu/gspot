@@ -43,8 +43,6 @@ export type SchemaState = Pick<Schema, 'tables' | 'secured' | 'unprotectedViews'
     constraints: Map<string, Map<string, Schema['foreignKeys'][number]>>;
 };
 
-export type StoragePolicies = Map<string, SqlNodeFields['CreatePolicyStmt']>;
-
 export type WorkflowShapeHit = { kind: keyof typeof WORKFLOW_SHAPE_RULES; node: Scalar };
 
 export type DockerInstruction = { name: string; text: string; line: number };

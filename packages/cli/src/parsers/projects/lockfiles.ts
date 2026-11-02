@@ -3,15 +3,14 @@ import { parseSyml } from '@yarnpkg/parsers';
 import { isTable } from '#cli/system/tables.ts';
 import { find } from '#cli/system/files/reads.ts';
 import type { RunCache } from '#cli/types/system.ts';
+import type { LockfileName } from '#cli/types/parsers.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
-import type { LockfileName, LockedPackageLockfile } from '#cli/types/parsers.ts';
 
 import {
-    uvLockfileSchema,
     bunLockfileSchema,
     npmLockfileSchema,
     yarnPackageSchema,
@@ -21,7 +20,6 @@ import {
 } from '#cli/schemas/parsers.ts';
 import {
     PACKAGE_JSON,
-    LEADING_SLASH,
     PNPM_PEER_START,
     NPM_PACKAGE_FOLDER,
     PNPM_ROOT_IMPORTER,
@@ -33,48 +31,6 @@ import {
     PYTHON_NAME_SEPARATORS,
     type IMPORTER_LOCKFILES,
 } from '#cli/config/parsers.ts';
-
-function parseNpmPackages(path: string, text: string): string[] {
-    return Object.entries(parseJsonFile(path, text, npmLockfileSchema).packages).flatMap(([folder, lockedPackage]) => {
-        const index = folder.lastIndexOf(NPM_PACKAGE_FOLDER);
-        return index === -1 || lockedPackage.version === undefined
-            ? []
-            : `${folder.slice(index + NPM_PACKAGE_FOLDER.length)}@${lockedPackage.version}`;
-    });
-}
-
-function parsePnpmPackages(path: string, text: string): string[] {
-    return Object.keys(parseYamlFile(path, text, pnpmLockfileSchema).packages).map((key) => {
-        const name = key.replace(LEADING_SLASH, '');
-        const peers = name.indexOf(PNPM_PEER_START);
-        return peers === -1 ? name : name.slice(0, peers);
-    });
-}
-
-function parseYarnPackages(path: string, text: string): string[] {
-    return Object.entries(parseYarnLockfile(path, text)).flatMap(([descriptors, yarnPackage]) => {
-        const version = yarnPackageSchema.safeParse(yarnPackage);
-        const name = splitIdentity(descriptors.split(',', 1)[0]?.trim() ?? '')?.[0];
-        return name !== undefined && version.success && version.data.version !== undefined
-            ? `${name}@${version.data.version}`
-            : [];
-    });
-}
-
-export const PACKAGE_PARSERS: Readonly<Record<LockedPackageLockfile, (path: string, text: string) => string[]>> = {
-    'package-lock.json': parseNpmPackages,
-    'npm-shrinkwrap.json': parseNpmPackages,
-    'bun.lock': (path, text) =>
-        Object.values(parseJsonFile(path, text, bunLockfileSchema).packages).flatMap(([identity]) =>
-            typeof identity === 'string' && splitIdentity(identity) !== undefined ? [identity] : [],
-        ),
-    'pnpm-lock.yaml': parsePnpmPackages,
-    'yarn.lock': parseYarnPackages,
-    'uv.lock': (path, text) =>
-        parseTomlFile(path, text, uvLockfileSchema).package.flatMap(({ name, version }) =>
-            version === undefined ? [] : `${normalizePythonName(name)}@${version}`,
-        ),
-};
 
 function parseNpmVersions(path: string, text: string, folder: string): Map<string, string> {
     const { packages } = parseJsonFile(path, text, npmLockfileSchema);

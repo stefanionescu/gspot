@@ -2,6 +2,14 @@ import type { Node } from 'web-tree-sitter';
 import { replaceRanges } from '#cli/system/text.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 
+import {
+    findSourceLine,
+    listScriptForms,
+    parseTrapScripts,
+    buildCommandCalls,
+    listScriptCommands,
+    listSwallowedLines,
+} from '#cli/parsers/code/traps.ts';
 import type {
     Removal,
     ParseCache,
@@ -12,14 +20,6 @@ import type {
     TemporaryPath,
     ScriptTemporaryPaths,
 } from '#cli/types/parsers.ts';
-import {
-    findSourceLine,
-    listScriptForms,
-    parseTrapScripts,
-    buildCommandCalls,
-    listScriptCommands,
-    listSwallowedLines,
-} from '#cli/parsers/code/traps.ts';
 import {
     SHIFT_COMMAND,
     NOT_LINE_BREAK,

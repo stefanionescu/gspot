@@ -1,5 +1,5 @@
 import type { Node, Constraint } from '@pgsql/types';
-import type { SqlStatement, SqlNodeFields } from '#cli/types/parsers.ts';
+import type { SqlStatement } from '#cli/types/parsers.ts';
 import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 
 import {
@@ -8,10 +8,14 @@ import {
     readCreateFunction,
 } from '#cli/configurations/database/postgres/checks/functions.ts';
 import {
-    PUBLIC_SCHEMA,
+    dropPolicy,
+    qualifyName,
+    readAlterPolicy,
+    readCreatePolicy,
+} from '#cli/configurations/database/postgres/checks/policies.ts';
+import {
     SCHEMA_NAME_INDEX,
     CONSTRAINT_SUFFIXES,
-    POLICY_SCHEMA_INDEX,
     DISABLED_OPTION_VALUES,
     SECURITY_INVOKER_OPTION,
 } from '#cli/config/configurations/infrastructure.ts';
@@ -25,11 +29,6 @@ import type {
     SchemaAlterations,
     SqlStatementVisitors,
 } from '#cli/types/configurations/infrastructure.ts';
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The statement readers of this file qualify each table and index name with its schema through it.
-function qualifyName(schema: string | undefined, name: string | undefined = ''): string {
-    return `${schema === undefined || schema === '' ? PUBLIC_SCHEMA : schema}.${name}`;
-}
 
 function removeTable(state: SchemaState, table: string): void {
     state.tables.delete(table);
@@ -176,20 +175,25 @@ const readAlterTable: StatementReader<'AlterTableStmt'> = (statement, state, mig
         if (command.subtype !== undefined) ALTERATIONS[command.subtype]?.(state, at, command);
 };
 
+const DROP_READERS: Partial<Record<string, (state: SchemaState, name: string, names: string[]) => void>> = {
+    OBJECT_POLICY: dropPolicy,
+    OBJECT_TABLE: (state, name) => {
+        removeTable(state, name);
+    },
+    OBJECT_VIEW: (state, name) => {
+        state.unprotectedViews.delete(name);
+    },
+    OBJECT_INDEX: (state, name) => {
+        state.indexes = state.indexes.filter((index) => qualifyName(index.schema, index.name) !== name);
+    },
+};
+
 const readDrop: StatementReader<'DropStmt'> = (statement, state) => {
-    if (statement.fields.removeType === 'OBJECT_FUNCTION') dropFunctions(statement, state);
+    const { removeType = '' } = statement.fields;
+    if (removeType === 'OBJECT_FUNCTION') dropFunctions(statement, state);
     for (const nodeField of listNodeFields(statement.fields.objects, 'List')) {
         const names = listNodeFields(nodeField.items, 'String').map((stringNode) => stringNode.sval ?? '');
-        const name = qualifyName(names.at(SCHEMA_NAME_INDEX), names.at(-1));
-        const { removeType } = statement.fields;
-        if (removeType === 'OBJECT_POLICY')
-            state.policies
-                .get(qualifyName(names.at(POLICY_SCHEMA_INDEX), names.at(SCHEMA_NAME_INDEX)))
-                ?.delete(names.at(-1) ?? '');
-        if (removeType === 'OBJECT_TABLE') removeTable(state, name);
-        if (removeType === 'OBJECT_VIEW') state.unprotectedViews.delete(name);
-        if (removeType === 'OBJECT_INDEX')
-            state.indexes = state.indexes.filter((index) => qualifyName(index.schema, index.name) !== name);
+        DROP_READERS[removeType]?.(state, qualifyName(names.at(SCHEMA_NAME_INDEX), names.at(-1)), names);
     }
 };
 
@@ -237,17 +241,8 @@ const STATEMENT_READERS: SqlStatementVisitors<void, [SchemaState, Migration]> = 
     },
     CreateFunctionStmt: readCreateFunction,
     AlterFunctionStmt: readAlterFunction,
-    CreatePolicyStmt: ({ fields }, state) => {
-        const table = qualifyName(fields.table?.schemaname, fields.table?.relname);
-        const policies = state.policies.get(table) ?? new Map<string, SqlNodeFields['CreatePolicyStmt']>();
-        policies.set(fields.policy_name ?? '', fields);
-        state.policies.set(table, policies);
-    },
-    AlterPolicyStmt: ({ fields }, state) => {
-        const policies = state.policies.get(qualifyName(fields.table?.schemaname, fields.table?.relname));
-        const policy = policies?.get(fields.policy_name ?? '');
-        if (policy !== undefined) policies?.set(fields.policy_name ?? '', { ...policy, ...fields });
-    },
+    CreatePolicyStmt: readCreatePolicy,
+    AlterPolicyStmt: readAlterPolicy,
     RenameStmt: ({ fields }, state) => {
         const { relation = {}, newname: name = '', subname: previous = '' } = fields;
         const table = qualifyName(relation.schemaname, relation.relname);

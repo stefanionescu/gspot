@@ -90,7 +90,7 @@ export const GITLAB_BASE_LINE = `${CI_BASE_VARIABLE}="\${CI_MERGE_REQUEST_DIFF_B
 
 export const GITLAB_MISE_IMAGE = 'ghcr.io/jdx/mise';
 
-export const GITLAB_MISE_FOLDER = '.cache/mise';
+const GITLAB_MISE_FOLDER = '.cache/mise';
 
 export const GITLAB_VARIABLES = {
     GIT_DEPTH: '0',
