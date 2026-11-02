@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import { sep, join } from 'node:path';
 import { getTool } from '#cli/tools/pins.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { test, spyOn, expect } from 'bun:test';
@@ -26,7 +26,7 @@ test('vulture reads every Python file of the scope and reports unused definition
     });
     const session = await openSession(sandbox.path);
     using resources = fakeToolExecutables([getTool(readConfigurations().values(), 'vulture')]);
-    const output = [...VULTURE_OUTPUT].join('\n');
+    const output = [...VULTURE_OUTPUT].join('\n').replaceAll('app/', `app${sep}`);
     const spawn = resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout: output, code: 3 })),
     );

@@ -1,4 +1,4 @@
-import { join, posix } from 'node:path';
+import { sep, join, posix } from 'node:path';
 import { CheckStop } from '#cli/system/errors.ts';
 import { escapeRegExp } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
@@ -153,7 +153,7 @@ function parsePydoclintOptions(path: string, text: string, convention: unknown, 
 function parseVultureFinding(line: string, selected: ReadonlySet<string>): CheckFinding[] {
     const groups = VULTURE_FINDING.exec(line)?.groups;
     if (groups === undefined) return [];
-    const file = groups['file'] ?? '';
+    const file = (groups['file'] ?? '').replaceAll(sep, '/');
     if (!selected.has(file)) return [];
     const at = { file, line: Number(groups['line']) };
     const { kind, name, statement } = groups;
