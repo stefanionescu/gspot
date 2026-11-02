@@ -5,10 +5,10 @@ import { readSettingsFile } from '#cli/settings/file.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { setKey, buildEditedSettings } from '#cli/settings/edit.ts';
 import { buildInitSettings } from '#cli/generation/setup/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
+import { setKey, addScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
 import { ARRAY_COMMENT_CASES, FIELD_COMMENT_CASES, IGNORE_COMMENT_CASES } from '#tests/config/settings/text.ts';
 
 test.each([...IGNORE_COMMENT_CASES, ...ARRAY_COMMENT_CASES, ...FIELD_COMMENT_CASES])(
@@ -33,6 +33,22 @@ test('a new table goes above the comment of the next table', () => {
     expect(buildSettingsText(source, written)).toBe(
         'level = "basic"\n\n[ci]\nenabled = true\n\n# Wide screens.\n[format]\nprint_width = 120\n',
     );
+});
+
+test('a key set in a later scope writes a table that an earlier scope extends with a dotted key', () => {
+    const source =
+        '[[scope]]\npath = "a"\njavascript.allowed_unused_dependencies = { value = ["x"], reason = "The loader needs it." }\n\n[[scope]]\npath = "b"\n';
+    const table = parseTomlFile('gspot.toml', source);
+    const value = { value: ['y'], reason: 'The loader needs it too.' };
+    setKey(addScopeTable(table, 'b'), 'javascript.allowed_unused_dependencies', value);
+    const written = buildSettingsText(source, table);
+    expect(written).toBe(
+        `${source}javascript = { allowed_unused_dependencies = { value = ["y"], reason = "The loader needs it too." } }\n`,
+    );
+    expect(parseTomlFile('gspot.toml', written)['scope']).toStrictEqual([
+        { path: 'a', javascript: { allowed_unused_dependencies: { value: ['x'], reason: 'The loader needs it.' } } },
+        { path: 'b', javascript: { allowed_unused_dependencies: value } },
+    ]);
 });
 
 test('setting level keeps the opening init comment first', async () => {

@@ -11,7 +11,7 @@ test('adding a root key keeps the leading comments on their table', () => {
     );
     document.set(['level'], 'all');
     expect(document.getText()).toBe(
-        'level = "all"\n# Authored tool table.\n# Exact dependency choices.\n[install]\nexact = true\n',
+        'level = "all"\n\n# Authored tool table.\n# Exact dependency choices.\n[install]\nexact = true\n',
     );
 });
 

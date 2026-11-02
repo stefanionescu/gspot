@@ -38,7 +38,7 @@
       },
       "devDependencies": {
         "@commander-js/extra-typings": "15.0.0",
-        "@decimalturn/toml-patch": "3.0.5",
+        "@decimalturn/toml-patch": "3.3.2",
         "@formatjs/icu-messageformat-parser": "2.11.4",
         "@manypkg/tools": "2.1.2",
         "@npmcli/config": "10.12.0",
@@ -91,7 +91,7 @@
     "tests": {
       "name": "@gspothq/tests",
       "devDependencies": {
-        "@decimalturn/toml-patch": "3.0.5",
+        "@decimalturn/toml-patch": "3.3.2",
         "@gspothq/cli": "workspace:*",
         "@gspothq/eslint-plugin": "workspace:*",
         "@types/ini": "4.1.1",
@@ -193,7 +193,7 @@
 
     "@ctrl/tinycolor": ["@ctrl/tinycolor@4.2.1", "", {}, "sha512-Vh5uy9Y1JBMId6J1f68TMXnZrTCvNdo9Fu2k0d1YnJngR+sM5kWTKl441c/3TFs+cG0NWOjRWgQ/iaWhbYx+7A=="],
 
-    "@decimalturn/toml-patch": ["@decimalturn/toml-patch@3.0.5", "", {}, "sha512-awLRLA6DfoQFiv8xB6+BZBtTh1DuiUSxxIn26i7v6wnMRj6+fhcEIgAFuKo8PArK7iy882yN+jBdA26fjKOj8A=="],
+    "@decimalturn/toml-patch": ["@decimalturn/toml-patch@3.3.2", "", {}, "sha512-UUsjKkIJWC4JwhAK7IUMZeN4TjjtCWapAkdIuvllT3/fYcNooDQ0HtwgGDV77ew+arh/15hazN9M9/oSNV+PDg=="],
 
     "@emnapi/core": ["@emnapi/core@1.11.1", "", { "dependencies": { "@emnapi/wasi-threads": "1.2.2", "tslib": "^2.4.0" } }, "sha512-RSvbQmHzdKzNsLYa/wHrbc3KN4sYLKAdPZxqiM2HATqv/SBk2/ENSHpvXGaLOMcsAyz0poEGqkmmKYG3OWiJEQ=="],
 

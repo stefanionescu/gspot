@@ -47,7 +47,7 @@
     },
     "devDependencies": {
         "@commander-js/extra-typings": "15.0.0",
-        "@decimalturn/toml-patch": "3.0.5",
+        "@decimalturn/toml-patch": "3.3.2",
         "@formatjs/icu-messageformat-parser": "2.11.4",
         "@manypkg/tools": "2.1.2",
         "@npmcli/config": "10.12.0",

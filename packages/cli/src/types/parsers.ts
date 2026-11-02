@@ -156,7 +156,11 @@ export type DirectiveScan = { token: string | undefined; end: number };
 
 type TomlComment = { raw: string; start: number };
 
-export type TomlBlock = ReturnType<typeof parseDocument>['cst'][number];
+export type TomlDocument = ReturnType<typeof parseDocument>;
+
+export type TomlBlock = TomlDocument['cst'][number];
+
+export type TomlLocation = TomlBlock['loc'];
 
 export type TomlKeyValue = Extract<TomlBlock, { type: 'KeyValue' }>;
 
@@ -175,7 +179,7 @@ export type TomlPathNode = { path: KeyPath } & (
 );
 
 export type TomlSyntax = {
-    document: ReturnType<typeof parseDocument>;
+    document: TomlDocument;
     value: Record<string, unknown>;
     pathNodes: TomlPathNode[];
     comments: TomlCommentNode[];

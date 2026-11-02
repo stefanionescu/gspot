@@ -4,7 +4,7 @@
     "description": "Test suites for gspot.",
     "type": "module",
     "devDependencies": {
-        "@decimalturn/toml-patch": "3.0.5",
+        "@decimalturn/toml-patch": "3.3.2",
         "@gspothq/cli": "workspace:*",
         "@gspothq/eslint-plugin": "workspace:*",
         "@types/ini": "4.1.1",

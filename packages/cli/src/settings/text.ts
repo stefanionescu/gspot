@@ -1,9 +1,9 @@
 import { isDeepStrictEqual } from 'node:util';
 import { compareText } from '#cli/system/text.ts';
+import { stringify } from '@decimalturn/toml-patch';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { TomlBlock, TomlValue } from '#cli/types/parsers.ts';
-import { stringify, parseDocument } from '@decimalturn/toml-patch';
 import { findValueAt, normalizeTables } from '#cli/system/tables.ts';
 import type { TomlTable, TaploLayout } from '#cli/types/settings.ts';
 import { ROOT_KEYS, TOML_FORMAT, LAST_TABLES, FIRST_TABLES } from '#cli/config/settings/validation.ts';
@@ -14,6 +14,7 @@ import {
     parseTomlFile,
     parseTomlSyntax,
     buildPatchedToml,
+    parseTomlDocument,
 } from '#cli/parsers/formats/toml.ts';
 
 function sortTable(table: TomlTable): TomlTable {
@@ -92,14 +93,14 @@ function insertTopLevelSetting(
     order: readonly string[],
 ): string {
     const written = stringify({ [setting.key]: setting.value }, TOML_FORMAT).trimEnd();
-    const blocks = parseDocument(text).cst;
+    const blocks = parseTomlDocument(text).cst;
     const rank = order.indexOf(setting.key);
     const ranked = blocks.flatMap((block) => {
         if (isTomlKind(block, 'Comment')) return [];
         const keys = isTomlKind(block, 'KeyValue') ? block.key.value : block.key.item.value;
         return [{ block, isKey: isTomlKind(block, 'KeyValue'), rank: order.indexOf(String(keys[0])) }];
     });
-    if (!isTomlKind(parseDocument(written).cst[0] as TomlBlock, 'KeyValue'))
+    if (!isTomlKind(parseTomlDocument(written).cst[0] as TomlBlock, 'KeyValue'))
         return insertSection(text, written, {
             blocks,
             next: ranked.find((each) => !each.isKey && each.rank > rank)?.block,

@@ -10,6 +10,8 @@ import type {
     TomlValue,
     TomlSyntax,
     SourceRange,
+    TomlLocation,
+    TomlDocument,
     EditableFile,
     TomlComments,
     TomlKeyValue,
@@ -44,6 +46,18 @@ function findTomlTable(
         table = child;
     }
     return table;
+}
+
+function addTomlRanges(node: unknown, lineStarts: readonly number[]): void {
+    if (Array.isArray(node)) {
+        for (const child of node) addTomlRanges(child, lineStarts);
+        return;
+    }
+    if (!isTable(node) || node['loc'] === undefined) return;
+    const { start, end } = node['loc'] as TomlLocation;
+    const range = [start, end].map(({ line, column }) => (lineStarts[line - 1] ?? 0) + column);
+    Object.defineProperty(node, 'range', { value: range });
+    for (const child of Object.values(node)) addTomlRanges(child, lineStarts);
 }
 
 function buildTablePath(
@@ -263,6 +277,20 @@ export function isTomlKind<Kind extends string>(
 }
 
 /**
+Parse TOML into a syntax tree whose nodes carry their offsets in the source.
+
+@param source TOML text.
+*/
+export function parseTomlDocument(source: string): TomlDocument {
+    const document = parseDocument(source);
+    const lineStarts = [0];
+    for (let index = source.indexOf('\n'); index !== -1; index = source.indexOf('\n', index + 1))
+        lineStarts.push(index + 1);
+    addTomlRanges(document.cst, lineStarts);
+    return document;
+}
+
+/**
 Index concrete keys, headers, and array items without changing layout.
 
 @param source TOML text.
@@ -270,7 +298,7 @@ Index concrete keys, headers, and array items without changing layout.
 @returns syntax entries and source-ordered comments.
 */
 export function parseTomlSyntax(source: string, parsed: Record<string, unknown>): TomlSyntax {
-    const document = parseDocument(source);
+    const document = parseTomlDocument(source);
     const comments: TomlSyntax['comments'] = [];
     const positions = { value: parsed, counts: new Map<string, number>(), active: new Map<string, number>() };
     const pathNodes = document.cst.flatMap((node): TomlSyntax['pathNodes'] => {
