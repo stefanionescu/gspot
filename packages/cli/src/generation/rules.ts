@@ -85,7 +85,7 @@ function formatRulesIndex(files: RuleFile[]): string[] {
     return [
         FIRST_READ_LINE,
         '',
-        ...FIRST_READ.map((path) => `- \`${GSPOT_PATHS.configurations}/${path}\``),
+        ...FIRST_READ.map((path) => `- \`${GSPOT_PATHS.rules}/${path}\``),
         '',
         ...RULE_INDEX_LINES,
         '',

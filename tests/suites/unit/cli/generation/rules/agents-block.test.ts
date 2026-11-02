@@ -40,6 +40,7 @@ test('with no configurations the block still lists the general rules', async () 
     )!.body;
     const paths = listIndexPaths(block);
     expect(paths).toContain('.gspot/rules/TESTING.md');
+    expect(block).toContain('- `.gspot/rules/WORKING.md`');
     expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
 });
 
