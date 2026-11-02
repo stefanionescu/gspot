@@ -105,7 +105,7 @@ test.each([...UNREADABLE_PRETTIER_FILES])(
         expect(result.code, result.stdout + result.stderr).toBe(0);
         const { plan, settingsText } = JSON.parse(result.stdout) as InitJson;
         expect([...plan.delete, ...plan.write].find((file) => file.path === path)?.note).toContain(
-            'gspot cannot read this Prettier config, so set format.indent_width and format.print_width by hand',
+            'gspot could not load this Prettier config, so set format.indent_width and format.print_width by hand',
         );
         expect(parse(settingsText) as TomlTable).toHaveProperty('format', {
             indent_width: 2,
@@ -114,6 +114,45 @@ test.each([...UNREADABLE_PRETTIER_FILES])(
         });
     },
 );
+
+test.each([
+    { path: 'prettier.config.mjs', text: 'export default { printWidth: 100, semi: false };\n' },
+    { path: '.prettierrc.cjs', text: 'module.exports = { printWidth: 100, semi: false };\n' },
+])('init reads the JavaScript Prettier config $path', async ({ path, text }) => {
+    await using sandbox = await testdir({ [path]: text, 'source.js': 'export const count = 1;\n' });
+    commitAll(sandbox.path);
+    const formats = await readInitFormatOptions(sandbox.path, ['init', '--configurations', 'format']);
+    expect(formats[0]).toMatchObject({ print_width: 100, semicolons: false });
+});
+
+test('init carries the bracket, arrow, and prose options of Prettier', async () => {
+    await using sandbox = await testdir({
+        '.prettierrc.json': '{"bracketSpacing":false,"arrowParens":"avoid","proseWrap":"always"}',
+        'source.ts': 'export {};\n',
+    });
+    commitAll(sandbox.path);
+    const formats = await readInitFormatOptions(sandbox.path, ['init', '--configurations', 'format']);
+    expect(formats[0]).toMatchObject({ bracket_spacing: false, arrow_parens: 'avoid', prose_wrap: 'always' });
+});
+
+test('init carries the Ruff line length, indent, and quotes into the Python override', async () => {
+    await using sandbox = await testdir({
+        'pyproject.toml':
+            '[project]\nname = "app"\n\n[tool.ruff]\nline-length = 100\nindent-width = 3\n\n[tool.ruff.format]\nquote-style = "single"\nindent-style = "tab"\n',
+        'main.py': 'value = 1\n',
+    });
+    commitAll(sandbox.path);
+    const formats = await readInitFormatOptions(sandbox.path, ['init', '--configurations', 'format']);
+    expect(formats[0]?.['override']).toStrictEqual([
+        {
+            paths: ['**/*.py'],
+            indent_style: 'tab',
+            indent_width: 3,
+            print_width: 100,
+            quotes: 'single',
+        },
+    ]);
+});
 
 test('init preserves tabs, semicolons and trailing commas from Prettier', async () => {
     await using sandbox = await testdir({

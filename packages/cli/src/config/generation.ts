@@ -277,7 +277,7 @@ export const READ_COMMITTED_MESSAGE =
     'Cannot read your committed tool configs. Run git status, then commit or stash the change.';
 
 export const PRETTIER_SCRIPT_NOTE =
-    'gspot cannot read this Prettier config, so set format.indent_width and format.print_width by hand';
+    'gspot could not load this Prettier config, so set format.indent_width and format.print_width by hand';
 
 export const DROPPED_LINE_SETTINGS =
     /^[ \t]*(?:end_of_line[ \t]*=[ \t]*crlf|insert_final_newline[ \t]*=[ \t]*false)[ \t]*$/imu;
@@ -374,6 +374,10 @@ export const CI_OFF_MESSAGE =
     'CI is off. To turn it on, run gspot set ci.enabled true; for GitLab, also run gspot set ci.provider gitlab.';
 
 export const PRETTIER_SCRIPT_FILE = /\.[cm]?[jt]s$/u;
+
+export const PRETTIER_SCRIPT_NAME = /^(?:\.prettierrc|prettier\.config)\.[cm]?[jt]s$/u;
+
+export const PYTHON_TAG = 'python';
 
 export const HAND_EDIT_RECORDS = '[[scope]], [[command_check]], and [[import_rule]] take a hand edit.';
 

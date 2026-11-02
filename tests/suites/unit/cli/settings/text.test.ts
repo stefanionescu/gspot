@@ -36,7 +36,11 @@ test('setting level keeps the opening init comment first', async () => {
         scopes: [],
         configurationsByName,
     });
-    const text = buildInitSettings({ configurations: [], scopes: [], base: '' }, repository, configurationsByName);
+    const text = buildInitSettings(
+        { configurations: [], scopes: [], base: '', prettierScripts: new Map() },
+        repository,
+        configurationsByName,
+    );
     await createFileTree(sandbox.path, { 'gspot.toml': text });
     const edit = readSettingsFile(sandbox.path);
     setKey(edit.table, 'level', 'all');

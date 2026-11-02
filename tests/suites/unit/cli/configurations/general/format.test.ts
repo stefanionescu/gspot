@@ -90,6 +90,19 @@ test('a YAML indent override gives EditorConfig and Prettier the same width', as
     expect(configuration?.tabWidth).toBe(2);
 });
 
+test('Prettier reads the bracket, arrow, and prose settings, in the table and in an override', async () => {
+    const format = { bracket_spacing: false, arrow_parens: 'avoid', prose_wrap: 'always' };
+    const override = { paths: ['**/*.ts'], bracket_spacing: true };
+    const settings = { configurations: [], format: { ...format, override: [override] } };
+    const text = await buildGeneratedFile(stringify(settings), getManifestTarget('format', 'prettier.json'), {});
+    expect(JSON.parse(text)).toMatchObject({
+        bracketSpacing: false,
+        arrowParens: 'avoid',
+        proseWrap: 'always',
+        overrides: [{}, { files: ['**/*.ts'], options: { bracketSpacing: true } }],
+    });
+});
+
 test('Prettier overrides agree in the root link file and editor lookup', async () => {
     await using sandbox = await createGitSandbox({});
     const root = sandbox.path;

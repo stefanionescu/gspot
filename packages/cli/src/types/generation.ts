@@ -2,15 +2,16 @@ import type { z } from 'zod';
 import type { Tool, Configuration } from '#cli/types/manifests.ts';
 import type { ConfigTargets } from '#cli/types/engine/tool-runs.ts';
 import type { TextRange, FileContents } from '#cli/types/system.ts';
-import type { prettierSettingsSchema } from '#cli/schemas/generation.ts';
 import type { OwnedConfig } from '#cli/types/configurations/language.ts';
 import type { FROZEN_INSTALLS } from '#cli/config/repository/javascript.ts';
 import type { Session, Generation, GeneratedFile } from '#cli/types/tools.ts';
 import type { SourcedConfig, IgnoreSection } from '#cli/types/configurations/general.ts';
+import type { ruffOptionsSchema, prettierSettingsSchema } from '#cli/schemas/generation.ts';
 import type { Level, Scope, Settings, TomlTable, AvailableSettings } from '#cli/types/settings.ts';
 
 import type {
     Repository,
+    ManagedKeys,
     LintCommand,
     ScopeFolder,
     TrackedFile,
@@ -127,6 +128,8 @@ export type InitPlan = {
     lintCommands: LintCommand[];
 };
 
+export type ConflictSearch = { tools: Set<string>; managedKeys: ManagedKeys[]; prettierScripts: PrettierScripts };
+
 export type ConflictingConfigs = {
     changed: InitFileRow[];
     reviewed: Map<string, FileContents | undefined>;
@@ -140,6 +143,7 @@ export type SettingsDraft = {
     level?: Level | undefined;
     configurations: string[];
     scopes: ScopeFolder[];
+    prettierScripts: PrettierScripts;
 };
 
 export type InitPlanning = {
@@ -173,6 +177,12 @@ export type InitOptions = {
 };
 
 export type PrettierOptions = z.infer<typeof prettierSettingsSchema>;
+
+export type PrettierScripts = ReadonlyMap<string, PrettierOptions>;
+
+export type FormatSearch = { root: string; scopePath: string; scripts: PrettierScripts };
+
+export type RuffOptions = z.infer<typeof ruffOptionsSchema>;
 
 export type WrittenTable = { scope: string; table: TomlTable; availableSettings: AvailableSettings };
 

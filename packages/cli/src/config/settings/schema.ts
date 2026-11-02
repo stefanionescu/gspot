@@ -57,6 +57,10 @@ export const QUOTE_STYLES = ['single', 'double'] as const;
 
 export const TRAILING_COMMAS = ['all', 'es5', 'none'] as const;
 
+export const ARROW_PARENS = ['always', 'avoid'] as const;
+
+export const PROSE_WRAPS = ['always', 'never', 'preserve'] as const;
+
 export const RELATIVE_PATH_PATTERN = new RegExp(
     String.raw`^(?:[^\\:\u0000-\u001f\u007f-\u009f]|\\[()\[\]{}*?!+@,])+$`,
     'u',

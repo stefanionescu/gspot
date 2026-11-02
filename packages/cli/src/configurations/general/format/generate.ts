@@ -81,6 +81,9 @@ function listFormatOverrides(settings: Settings): FormatOverride[] {
                 singleQuote: format.quotes === undefined ? undefined : format.quotes === 'single',
                 trailingComma: format.trailing_commas,
                 semi: format.semicolons,
+                bracketSpacing: format.bracket_spacing,
+                arrowParens: format.arrow_parens,
+                proseWrap: format.prose_wrap,
             },
         };
     });
@@ -163,6 +166,9 @@ export function buildPrettierFile(planned: PlannedConfig): string {
         singleQuote: (format.quotes ?? DEFAULT_QUOTES.prettier) === 'single',
         trailingComma: format.trailing_commas,
         semi: format.semicolons,
+        bracketSpacing: format.bracket_spacing,
+        arrowParens: format.arrow_parens,
+        proseWrap: format.prose_wrap,
         ...buildPluginsOption(plugins),
         overrides,
     };

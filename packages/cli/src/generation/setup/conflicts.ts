@@ -6,8 +6,8 @@ import { isSameContents } from '#cli/system/files/bounded.ts';
 import { isEditedInPlace } from '#cli/repository/conflicts.ts';
 import type { Files, FileContents } from '#cli/types/system.ts';
 import { parsePrettierFile } from '#cli/generation/setup/format.ts';
-import type { InitPlan, ConflictingConfigs } from '#cli/types/generation.ts';
-import type { WritePlan, ManagedKeys, RepositorySetup, ConflictingConfig } from '#cli/types/repository.ts';
+import type { WritePlan, RepositorySetup, ConflictingConfig } from '#cli/types/repository.ts';
+import type { InitPlan, ConflictSearch, PrettierScripts, ConflictingConfigs } from '#cli/types/generation.ts';
 import { VERIFY_FLAG, NAME_ONLY_FLAG, DROPPED_LINE_SETTINGS, READ_COMMITTED_MESSAGE } from '#cli/config/generation.ts';
 
 function listCommittedPaths(root: string, paths: string[]): Set<string> {
@@ -20,7 +20,11 @@ function listCommittedPaths(root: string, paths: string[]): Set<string> {
     return new Set(tracked.stdout.split('\0').filter((path) => path !== '' && !modified.has(path)));
 }
 
-function addConflictingConfig(file: ConflictingConfig, conflicts: ConflictingConfigs): void {
+function addConflictingConfig(
+    file: ConflictingConfig,
+    conflicts: ConflictingConfigs,
+    prettierScripts: PrettierScripts,
+): void {
     const { tool, path, shared } = file;
     if (shared) {
         conflicts.kept.push({
@@ -33,7 +37,7 @@ function addConflictingConfig(file: ConflictingConfig, conflicts: ConflictingCon
     conflicts.deleted.push({
         path,
         tool,
-        unreadablePrettier: tool === 'prettier' && parsePrettierFile(path, text) === undefined,
+        unreadablePrettier: tool === 'prettier' && parsePrettierFile(path, text, prettierScripts) === undefined,
         dropsLineEndings: DROPPED_LINE_SETTINGS.test(text),
     });
 }
@@ -43,14 +47,15 @@ Read the config files of the chosen tools, and sort them into the files init del
 
 @param root the folder where init reads the originals before it replaces them.
 @param repositorySetup the config files that init found.
-@param tools what the checks at this level run.
-@param managedKeys the shared config file edits for these configurations.
+@param search what to read.
+@param search.tools what the checks at this level run.
+@param search.managedKeys the shared config file edits for these configurations.
+@param search.prettierScripts the options of the JavaScript Prettier configs.
 */
 export function readConflictingConfigs(
     root: string,
     repositorySetup: RepositorySetup,
-    tools: Set<string>,
-    managedKeys: ManagedKeys[],
+    { tools, managedKeys, prettierScripts }: ConflictSearch,
 ): ConflictingConfigs {
     const conflicts: ConflictingConfigs = { reviewed: new Map(), deleted: [], kept: [], changed: [] };
     const owned = repositorySetup.conflictingConfigs.filter(({ tool }) => tools.has(tool));
@@ -68,7 +73,7 @@ export function readConflictingConfigs(
     }
     for (const file of owned) {
         if (file.shared && isEditedInPlace(file, managedKeys)) continue;
-        addConflictingConfig(file, conflicts);
+        addConflictingConfig(file, conflicts, prettierScripts);
     }
     return conflicts;
 }

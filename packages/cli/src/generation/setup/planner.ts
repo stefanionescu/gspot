@@ -1,4 +1,5 @@
 import { compareText } from '#cli/system/text.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
@@ -13,9 +14,11 @@ import { planInitFiles } from '#cli/generation/setup/plan.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { readRepositorySetup } from '#cli/repository/setup.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import type { RepositorySetup } from '#cli/types/repository.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { listLintCommands } from '#cli/repository/lint-commands.ts';
+import { readPrettierScripts } from '#cli/generation/setup/format.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 import { readGspotPin, writeGspotPin } from '#cli/repository/javascript/gspot-pin.ts';
@@ -23,6 +26,27 @@ import { buildInitSettings, buildSettingsDraft } from '#cli/generation/setup/set
 import { readConflictingConfigs, deleteConflictingConfigs } from '#cli/generation/setup/conflicts.ts';
 import { buildStartRunner, detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
 import type { InitScan, ApplyReport, InitOptions, InitPlanning, DetectionSummary } from '#cli/types/generation.ts';
+
+function sortDetectedTools(
+    { conflictingConfigs }: RepositorySetup,
+    tools: Set<string>,
+): Pick<DetectionSummary, 'owned' | 'unowned'> {
+    const detected = [...new Set(conflictingConfigs.map(({ tool }) => tool))].toSorted((a, b) => compareText(a, b));
+    return {
+        owned: detected.filter((tool) => tools.has(tool)),
+        unowned: detected.filter((tool) => !tools.has(tool)),
+    };
+}
+
+function choosePin(root: string, planned: Session): Pick<InitPlanning, 'session' | 'pinPath'> {
+    if (readGspotPin(root) !== undefined) return { session: planned, pinPath: undefined };
+    const hasManifest = readPackageJson(root, PACKAGE_JSON) !== undefined;
+    const runner = hasManifest ? detectPackageManager(root, []).name : 'mise';
+    return {
+        session: { ...planned, startRunner: buildStartRunner(runner) },
+        pinPath: hasManifest ? PACKAGE_JSON : MISE_CONFIG_FILE,
+    };
+}
 
 /**
 Read the repository and work out what init writes, replaces, and leaves. It changes no file.
@@ -38,33 +62,31 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
     const repository = await readRepository(cache, listing, { generatedPaths: [], scopes: [], configurationsByName });
     const initConfigurations = selectForInit({ repository, configurationsByName, options });
     const repositorySetup = await readRepositorySetup(cache, repository);
-    const draft = buildSettingsDraft(initConfigurations, options);
+    const prettierScripts = await readPrettierScripts(
+        root,
+        repository.files.map(({ path }) => path),
+    );
+    const draft = buildSettingsDraft(initConfigurations, options, prettierScripts);
     const settingsText = buildInitSettings(draft, repository, configurationsByName);
     const settings = readSettings(settingsText, root);
-    const planned = await openSession(root, { settings, cache, listing });
-    const hasPin = readGspotPin(root) !== undefined;
-    const hasManifest = readPackageJson(root, PACKAGE_JSON) !== undefined;
-    const session = hasPin
-        ? planned
-        : { ...planned, startRunner: buildStartRunner(hasManifest ? detectPackageManager(root, []).name : 'mise') };
-    const pinPath = hasManifest ? PACKAGE_JSON : MISE_CONFIG_FILE;
+    const { session, pinPath } = choosePin(root, await openSession(root, { settings, cache, listing }));
     const everySelected = listSelectedConfigurations(session.scopes);
     const applicable = session.toolConfigurations;
     const tools = new Set(applicable.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));
-    const detectedTools = [...new Set(repositorySetup.conflictingConfigs.map((config) => config.tool))].toSorted(
-        (a, b) => compareText(a, b),
-    );
     const detection: DetectionSummary = {
         files: repository.files,
         detected: initConfigurations.detected,
         scopes: initConfigurations.scopes,
         repositorySetup,
-        owned: detectedTools.filter((tool) => tools.has(tool)),
-        unowned: detectedTools.filter((tool) => !tools.has(tool)),
+        ...sortDetectedTools(repositorySetup, tools),
         configurationsByName,
     };
     const generated = buildGeneratedFiles(session);
-    const conflicts = readConflictingConfigs(root, repositorySetup, tools, generated.managedKeys);
+    const conflicts = readConflictingConfigs(root, repositorySetup, {
+        tools,
+        managedKeys: generated.managedKeys,
+        prettierScripts,
+    });
     const planning: InitScan = {
         repository: session.repository,
         repositorySetup,
@@ -73,7 +95,7 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
         everySelected,
         conflicts,
         template: options.template,
-        pinPath: hasPin ? undefined : pinPath,
+        pinPath,
         lintCommands: listLintCommands({ root, files: repository.files, ...listReplacedTools(applicable) }),
     };
     const plan = planInitFiles(planning, { settings, requirements: applicable, generated });
@@ -85,7 +107,7 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
         settingsText,
         reviewed: conflicts.reviewed,
         replaced: conflicts.deleted.map(({ path }) => path),
-        pinPath: planning.pinPath,
+        pinPath,
     };
 }
 

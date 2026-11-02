@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { TRAILING_COMMAS } from '#cli/config/settings/schema.ts';
+import { PROSE_WRAPS, ARROW_PARENS, TRAILING_COMMAS } from '#cli/config/settings/schema.ts';
 
 const prettierOptionsSchema = z.object({
     tabWidth: z.number().optional(),
@@ -8,6 +8,9 @@ const prettierOptionsSchema = z.object({
     useTabs: z.boolean().optional(),
     semi: z.boolean().optional(),
     trailingComma: z.enum(TRAILING_COMMAS).optional(),
+    bracketSpacing: z.boolean().optional(),
+    arrowParens: z.enum(ARROW_PARENS).optional(),
+    proseWrap: z.enum(PROSE_WRAPS).optional(),
 });
 const overridesSchema = z.object({
     files: z.union([z.string(), z.string().array()]),
@@ -18,14 +21,17 @@ export const prettierSettingsSchema = prettierOptionsSchema.extend({
     overrides: overridesSchema.array().optional(),
 });
 
-const ruffQuotesSchema = z.looseObject({ 'quote-style': z.string().optional() });
-const ruffOptionsSchema = z.looseObject({ format: ruffQuotesSchema.optional() });
-
-export const ruffFormatSchema = z.looseObject({
-    format: ruffQuotesSchema.optional(),
-    tool: z
+export const ruffOptionsSchema = z.looseObject({
+    'line-length': z.number().optional(),
+    'indent-width': z.number().optional(),
+    format: z
         .looseObject({
-            ruff: ruffOptionsSchema.optional(),
+            'quote-style': z.string().optional(),
+            'indent-style': z.string().optional(),
         })
         .optional(),
+});
+
+export const ruffProjectSchema = z.looseObject({
+    tool: z.looseObject({ ruff: ruffOptionsSchema.optional() }).optional(),
 });

@@ -1,4 +1,5 @@
-import { posix } from 'node:path';
+import { join, posix } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { getTool } from '#cli/tools/pins.ts';
 import { isTable } from '#cli/system/tables.ts';
 import { find } from '#cli/system/files/reads.ts';
@@ -11,17 +12,26 @@ import { DIGITS_ONLY } from '#cli/config/configurations/naming.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import type { TomlTable, ScopeConfigurations } from '#cli/types/settings.ts';
 import { LINE_BREAK, PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers.ts';
-import { ruffFormatSchema, prettierSettingsSchema } from '#cli/schemas/generation.ts';
-import type { SettingsDraft, PrettierOptions, EditorconfigSection } from '#cli/types/generation.ts';
+import { ruffOptionsSchema, ruffProjectSchema, prettierSettingsSchema } from '#cli/schemas/generation.ts';
 
+import type {
+    RuffOptions,
+    FormatSearch,
+    SettingsDraft,
+    PrettierOptions,
+    PrettierScripts,
+    EditorconfigSection,
+} from '#cli/types/generation.ts';
 import {
     PROSE_TAGS,
+    PYTHON_TAG,
     PRETTIER_DEFAULTS,
     EDITORCONFIG_FILE,
     FORMATTER_DEFAULTS,
     RUFF_SETTINGS_FILES,
     FORMAT_CONFIGURATION,
     PRETTIER_SCRIPT_FILE,
+    PRETTIER_SCRIPT_NAME,
     EDITORCONFIG_SECTION,
     EDITORCONFIG_COMMENT,
     PRETTIER_FILE_FORMATS,
@@ -32,19 +42,27 @@ function convertQuotes(singleQuote: boolean | undefined): 'single' | 'double' | 
     return singleQuote ? 'single' : 'double';
 }
 
-function parseQuoteStyle(file: string, text: string): string | undefined {
-    const parsed = parseTomlFile(file, text, ruffFormatSchema);
-    const format = file === PYPROJECT_TOML ? parsed.tool?.ruff?.format : parsed.format;
-    return format?.['quote-style'];
-}
-
-function readPythonQuotes(root: string): string | undefined {
+function readRuffOptions(root: string): RuffOptions | undefined {
     for (const file of RUFF_SETTINGS_FILES) {
         const text = find(root, file);
-        const quotes = text === undefined ? undefined : parseQuoteStyle(file, text);
-        if (quotes !== undefined) return quotes;
+        if (text === undefined) continue;
+        const options =
+            file === PYPROJECT_TOML
+                ? parseTomlFile(file, text, ruffProjectSchema).tool?.ruff
+                : parseTomlFile(file, text, ruffOptionsSchema);
+        if (options !== undefined) return options;
     }
     return undefined;
+}
+
+function convertRuffFormat(options: RuffOptions): TomlTable {
+    const fields = {
+        indent_style: options.format?.['indent-style'],
+        indent_width: options['indent-width'],
+        print_width: options['line-length'],
+        quotes: options.format?.['quote-style'],
+    };
+    return Object.fromEntries(Object.entries(fields).filter(([, value]) => value !== undefined));
 }
 
 function convertPrettierFormat(options: PrettierOptions): TomlTable {
@@ -57,14 +75,18 @@ function convertPrettierFormat(options: PrettierOptions): TomlTable {
         quotes: convertQuotes(options.singleQuote),
         semicolons: options.semi,
         trailing_commas: options.trailingComma,
+        bracket_spacing: options.bracketSpacing,
+        arrow_parens: options.arrowParens,
+        prose_wrap: options.proseWrap,
     };
 }
 
 function buildFormatterOverrides(fields: TomlTable, repository: Repository): TomlTable[] {
     const tags = new Set(repository.files.filter((file) => file.kind === 'source').flatMap((file) => file.tags));
-    return FORMATTER_DEFAULTS.filter(({ tag }) => tags.has(tag)).flatMap(({ paths, format }) => {
-        const quotes = 'quotes' in format ? { quotes: readPythonQuotes(repository.root) ?? format.quotes } : {};
-        const differing = Object.entries({ ...format, ...quotes }).filter(([key, value]) => fields[key] !== value);
+    const ruff = readRuffOptions(repository.root);
+    return FORMATTER_DEFAULTS.filter(({ tag }) => tags.has(tag)).flatMap(({ tag, paths, format }) => {
+        const carried = tag === PYTHON_TAG && ruff !== undefined ? convertRuffFormat(ruff) : {};
+        const differing = Object.entries({ ...format, ...carried }).filter(([key, value]) => fields[key] !== value);
         return differing.length === 0 ? [] : [{ paths: [...paths], ...Object.fromEntries(differing) }];
     });
 }
@@ -128,8 +150,7 @@ function hasCode(repository: Repository): boolean {
 }
 
 function readFormatOptions(
-    root: string,
-    scopePath: string,
+    { root, scopePath, scripts }: FormatSearch,
     dependencies: Record<string, string>,
     prettierFiles: string[],
 ): PrettierOptions | null {
@@ -149,19 +170,42 @@ function readFormatOptions(
     const options =
         prettierFile === undefined
             ? parseFileFields(packagePath, packageFields, prettierSettingsSchema)
-            : parsePrettierFile(posix.join(scopePath, prettierFile.path), prettierFile.text);
+            : parsePrettierFile(posix.join(scopePath, prettierFile.path), prettierFile.text, scripts);
     return { ...PRETTIER_DEFAULTS, ...editorconfig, ...options };
 }
 
 /**
-Read static Prettier options without running JavaScript.
+Load each JavaScript or TypeScript Prettier config, as Prettier does. This runs the code of the file.
+
+@param root the repository root.
+@param paths the tracked files.
+@returns the options of each config that loads, by path.
+*/
+export async function readPrettierScripts(root: string, paths: string[]): Promise<PrettierScripts> {
+    const scripts = paths.filter((path) => PRETTIER_SCRIPT_NAME.test(posix.basename(path)));
+    const results = await Promise.all(
+        scripts.map(async (path): Promise<[string, PrettierOptions][]> => {
+            try {
+                const module = (await import(pathToFileURL(join(root, path)).href)) as { default?: unknown };
+                return [[path, parseFileFields(path, module.default ?? module, prettierSettingsSchema)]];
+            } catch {
+                return [];
+            }
+        }),
+    );
+    return new Map(results.flat());
+}
+
+/**
+Read the Prettier options of a config file.
 
 @param path the config file.
 @param text its contents.
-@returns the options, or undefined when the file needs another parser.
+@param scripts the options of the JavaScript and TypeScript configs that loaded.
+@returns the options, or undefined when gspot cannot read the file.
 */
-export function parsePrettierFile(path: string, text: string): PrettierOptions | undefined {
-    if (PRETTIER_SCRIPT_FILE.test(path)) return undefined;
+export function parsePrettierFile(path: string, text: string, scripts: PrettierScripts): PrettierOptions | undefined {
+    if (PRETTIER_SCRIPT_FILE.test(path)) return scripts.get(path);
     const format = PRETTIER_FILE_FORMATS[posix.basename(path)];
     const parsers = { yaml: parseYamlFile, json: parseJsonFile, toml: parseTomlFile };
     let options: unknown;
@@ -192,8 +236,7 @@ export function readScopeFormat(
     const format = selected.find((configuration) => configuration.name === FORMAT_CONFIGURATION);
     if (format === undefined) return {};
     const read = readFormatOptions(
-        repository.root,
-        scope,
+        { root: repository.root, scopePath: scope, scripts: draft.prettierScripts },
         Object.fromEntries(
             repository.dependencyFiles
                 .filter((dependencyFile) => selectScopePath(dependencyFile.path, draft.scopes) === scope)

@@ -5,6 +5,8 @@ import { CASE_NAMES, SETTING_LANGUAGES, REASON_DESCRIPTIONS, BOUND_REASON_DESCRI
 
 import {
     INDENT_MAX,
+    PROSE_WRAPS,
+    ARROW_PARENS,
     QUOTE_STYLES,
     MAX_PERCENTAGE,
     PRINT_WIDTH_MIN,
@@ -80,6 +82,30 @@ const formatFieldsSchema = z.strictObject({
         .meta({
             configurations: ['format'],
             description: 'Whether JavaScript and TypeScript statements end with semicolons.',
+        }),
+    bracket_spacing: z
+        .boolean()
+        .optional()
+        .default(true)
+        .meta({
+            configurations: ['format'],
+            description: 'Whether Prettier prints spaces inside the braces of an object.',
+        }),
+    arrow_parens: z
+        .enum(ARROW_PARENS)
+        .optional()
+        .default('always')
+        .meta({
+            configurations: ['format'],
+            description: 'Whether Prettier keeps the parentheses around a single arrow function parameter.',
+        }),
+    prose_wrap: z
+        .enum(PROSE_WRAPS)
+        .optional()
+        .default('preserve')
+        .meta({
+            configurations: ['format'],
+            description: 'How Prettier wraps Markdown prose: always, never, or preserve.',
         }),
 });
 
@@ -181,6 +207,15 @@ const formatOverrideSchema = z
         semicolons: formatFieldsSchema.shape.semicolons
             .unwrap()
             .describe(formatFieldsSchema.shape.semicolons.description as string),
+        bracket_spacing: formatFieldsSchema.shape.bracket_spacing
+            .unwrap()
+            .describe(formatFieldsSchema.shape.bracket_spacing.description as string),
+        arrow_parens: formatFieldsSchema.shape.arrow_parens
+            .unwrap()
+            .describe(formatFieldsSchema.shape.arrow_parens.description as string),
+        prose_wrap: formatFieldsSchema.shape.prose_wrap
+            .unwrap()
+            .describe(formatFieldsSchema.shape.prose_wrap.description as string),
     })
     .refine((override) => Object.keys(override).length > 1, {
         message: 'A format override needs at least one formatting option.',

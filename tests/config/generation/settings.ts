@@ -101,7 +101,7 @@ export const FORMAT_WORKSPACE_FILES = {
 } as const;
 
 export const UNREADABLE_PRETTIER_FILES = [
-    { path: 'prettier.config.mjs', text: 'export default { printWidth: 100 };\n' },
+    { path: 'prettier.config.mjs', text: "import missing from './missing.mjs';\nexport default missing;\n" },
     { path: '.prettierrc.json5', text: '// formatting\n{ tabWidth: 4, }\n' },
 ] as const;
 
