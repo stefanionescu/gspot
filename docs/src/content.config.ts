@@ -21,7 +21,8 @@ import {
 
 async function buildGuideIndex(context: LoaderContext): Promise<Map<string, ConfigurationGuide>> {
     const guides = new Map<string, ConfigurationGuide>();
-    for (const guide of context.store.values()) {
+    const stored = context.store.values();
+    for (const guide of stored) {
         const { title, configurations } = guideSchema.parse(guide.data);
         if (configurations.length === 0) continue;
         for (const name of configurations) guides.set(name, { title, slug: guide.id });
