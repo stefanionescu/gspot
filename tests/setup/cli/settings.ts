@@ -65,7 +65,7 @@ export function buildReportingCheck(
 ): NonNullable<WrittenSettings['command_check']>[number] {
     return {
         id: options.id,
-        command: buildProgramCommand('fakes/tool', '--print-arguments', '--exit', '1', '--', '{files}'),
+        command: buildProgramCommand('fakes/tool', '--line', '{file}', '--exit', '1'),
         paths: options.paths,
         stage: options.stage,
         output: { format: 'regex', pattern: '(?<message>.+)' },

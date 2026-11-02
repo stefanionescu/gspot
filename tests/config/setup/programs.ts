@@ -76,7 +76,6 @@ export const FAKE_TOOL_OPTIONS = {
     stdout: { type: 'string' },
     stderr: { type: 'string' },
     'stdout-hex': { type: 'string' },
-    'print-arguments': { type: 'boolean' },
     'print-pid': { type: 'boolean' },
     mark: { type: 'string' },
     until: { type: 'string' },

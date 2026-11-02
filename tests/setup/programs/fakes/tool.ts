@@ -70,7 +70,6 @@ if (stopCode === undefined) {
     for (const [name, step] of Object.entries(steps))
         for (const value of option[name as keyof typeof FAKE_TOOL_OPTIONS]) await step(value);
     if (values['copy-stdin'] === true) process.stdout.write(await Bun.stdin.bytes());
-    if (values['print-arguments'] === true) process.stdout.write(positionals.map((each) => `${each}\n`).join(''));
     if (values['print-pid'] === true) process.stdout.write(String(process.pid));
     for (const signal of option.signal) process.kill(process.pid, signal);
     for (const awaited of option.until) while (!existsSync(awaited)) await Bun.sleep(POLL_INTERVAL_MILLISECONDS);
