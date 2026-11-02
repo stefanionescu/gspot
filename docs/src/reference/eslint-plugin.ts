@@ -111,8 +111,8 @@ export function buildPluginPage(): ReferencePage {
     const introduction = readme
         .slice(readme.indexOf('\n'), readme.indexOf('## Rule reference'))
         .trim()
-        .replace('## Install\n', `## Install\n\n${requirements}\n`)
-        .replace('## Use\n', `## Use\n\n${formatPluginPresets()}\n`);
+        .replace('## Install\n', () => `## Install\n\n${requirements}\n`)
+        .replace('## Use\n', () => `## Use\n\n${formatPluginPresets()}\n`);
     return buildReferencePage(
         pluginPackage.name,
         pluginPackage.description,
