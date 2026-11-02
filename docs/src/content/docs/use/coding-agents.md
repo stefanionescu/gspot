@@ -3,8 +3,8 @@ title: Coding Agents
 description: What gspot writes for coding agents, and how to change it.
 ---
 
-gspot writes rules: Markdown files for your configurations and level, in the `rules/` folder of each configuration under
-`.gspot/configurations/`. The rules guide agents; the checks still block failing code.
+gspot writes rules: Markdown files for your configurations and level, in the `rules` folder of `.gspot/`. The rules
+guide agents; the checks still block failing code.
 
 ## The `AGENTS.md` managed block
 
@@ -33,8 +33,7 @@ gspot.
 
 ## Leave out some rules
 
-`gspot set rule_files.exclude .gspot/configurations/language/javascript/rules/BUN.md` leaves out one file. A folder, such as
-`.gspot/configurations/language/bash`, leaves out every rule in it.
+`gspot set rule_files.exclude <path>` leaves out one file, such as `BUN.md` in the `rules` folder of `.gspot/`.
 
 ## Turn rules off
 

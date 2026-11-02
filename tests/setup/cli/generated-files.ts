@@ -36,10 +36,9 @@ Find where gspot writes a rule file for coding agents, as the configuration ship
 */
 export function getRuleFilePath(configuration: string, file: string): string {
     const shipped = readConfigurations().get(configuration);
-    const rule =
-        shipped === undefined ? undefined : listRuleFiles(shipped).find(({ path }) => posix.basename(path) === file);
+    const rule = shipped === undefined ? undefined : listRuleFiles(shipped).find(({ path }) => path === file);
     if (rule === undefined) throw new Error(`The ${configuration} configuration ships no rule file ${file}.`);
-    return posix.join(GSPOT_PATHS.configurations, rule.path);
+    return posix.join(GSPOT_PATHS.rules, rule.path);
 }
 
 /**

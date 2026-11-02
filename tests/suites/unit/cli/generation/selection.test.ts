@@ -141,9 +141,7 @@ test.each([...LEVELS])("every configuration's generated config files parse at le
     const session = await openSession(sandbox.path);
     const output = buildGeneratedFiles(session);
     const generated = output.files.filter(
-        (file) =>
-            !file.path.startsWith(`${GSPOT_FOLDER}/`) ||
-            (file.path.startsWith(`${GSPOT_PATHS.configurations}/`) && !file.path.includes('/rules/')),
+        (file) => !file.path.startsWith(`${GSPOT_FOLDER}/`) || file.path.startsWith(`${GSPOT_PATHS.configurations}/`),
     );
     const failures: { path: string; error: string }[] = [];
     for (const file of generated) {

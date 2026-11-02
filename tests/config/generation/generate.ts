@@ -183,7 +183,7 @@ export const COMMANDS_HEADING = '## Commands';
 
 export const SWITCH_CASES = [
     { name: 'hooks', path: '.gspot/hooks/pre-commit' },
-    { name: 'rule_files', path: '.gspot/configurations/general/engineering/rules/WORKING.md' },
+    { name: 'rule_files', path: '.gspot/rules/WORKING.md' },
     { name: 'ci', path: '.github/workflows/gspot.yml' },
 ] as const;
 

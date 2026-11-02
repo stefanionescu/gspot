@@ -117,7 +117,7 @@ export function validateRuleExcludes(
     return exclude.flatMap((excluded, index) => {
         const location: KeyPath = ['rule_files', 'exclude', index];
         const hasFirstRead = FIRST_READ.some((file) =>
-            isInScope(`${GSPOT_PATHS.configurations}/${file}`, stripTrailingSlashes(excluded)),
+            isInScope(`${GSPOT_PATHS.rules}/${file}`, stripTrailingSlashes(excluded)),
         );
         if (hasFirstRead)
             return [
@@ -127,12 +127,12 @@ export function validateRuleExcludes(
                 },
             ];
         const isRuleMatch = paths.some((path) =>
-            isInScope(`${GSPOT_PATHS.configurations}/${path}`, stripTrailingSlashes(excluded)),
+            isInScope(`${GSPOT_PATHS.rules}/${path}`, stripTrailingSlashes(excluded)),
         );
         if (isRuleMatch) return [];
         const suggestion = formatSimilarNames(
             excluded,
-            paths.map((path) => `${GSPOT_PATHS.configurations}/${path}`),
+            paths.map((path) => `${GSPOT_PATHS.rules}/${path}`),
         );
         return [
             {

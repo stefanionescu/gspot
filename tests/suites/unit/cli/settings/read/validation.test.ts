@@ -92,38 +92,33 @@ test.each([...SCOPE_CONFIGURATION_SETTINGS])('$name', ({ text, messages }) => {
     expect(validateSettingsText(text)).toStrictEqual([...messages]);
 });
 
-test('rule_files.exclude accepts a rule file path and a configuration folder', () => {
-    const exclude = [getRuleFilePath('engineering', 'ACCESSIBILITY.md'), `${GSPOT_PATHS.configurations}/library`];
+test('rule_files.exclude accepts a rule file path', () => {
+    const exclude = [getRuleFilePath('engineering', 'ACCESSIBILITY.md')];
     expect(validateSettingsText(stringify({ rule_files: { exclude } }))).toStrictEqual([]);
 });
 
 test('a rule_files.exclude path that matches no rule file names the near match', () => {
     using sandbox = createTemporaryFolder();
     const misspelled = getRuleFilePath('engineering', 'ACCESSIBILITY.md').replace(/\.md$/u, '.txt');
-    const near = ['ACCESSIBILITY.md', 'CLI.md', 'TESTING.md'].map((file) => getRuleFilePath('engineering', file));
+    const near = getRuleFilePath('engineering', 'ACCESSIBILITY.md');
     expect(() => readSettings(stringify({ rule_files: { exclude: [misspelled] } }), sandbox.path)).toThrow(
         matchFields<GspotError>({
             name: 'GspotError',
             code: 'settings',
-            message: `gspot.toml:2: rule_files.exclude.0: [rule_files] exclude names ${misspelled}, which matches no rule. Did you mean ${near.join(', ')}?`,
+            message: `gspot.toml:2: rule_files.exclude.0: [rule_files] exclude names ${misspelled}, which matches no rule. Did you mean ${near}?`,
         }),
     );
 });
 
-test.each([...FIRST_READ.slice(0, 1), 'general/prose'])(
+test.each([`${GSPOT_PATHS.rules}/${FIRST_READ[0] as string}`, GSPOT_PATHS.rules])(
     'rule_files.exclude refuses %s, a rule file that every agent reads first',
     (ruleFile) => {
         using sandbox = createTemporaryFolder();
-        expect(() =>
-            readSettings(
-                stringify({ rule_files: { exclude: [`${GSPOT_PATHS.configurations}/${ruleFile}`] } }),
-                sandbox.path,
-            ),
-        ).toThrow(
+        expect(() => readSettings(stringify({ rule_files: { exclude: [ruleFile] } }), sandbox.path)).toThrow(
             matchFields<GspotError>({
                 name: 'GspotError',
                 code: 'settings',
-                message: `gspot.toml:2: rule_files.exclude.0: [rule_files] exclude names ${GSPOT_PATHS.configurations}/${ruleFile}, which holds a file every agent opens first (general/engineering/rules/WORKING.md, general/prose/rules/WRITING.md, general/engineering/rules/TALKING.md). Remove the entry.`,
+                message: `gspot.toml:2: rule_files.exclude.0: [rule_files] exclude names ${ruleFile}, which holds a file every agent opens first (WORKING.md, WRITING.md, TALKING.md, COMMENTS.md, GIT.md). Remove the entry.`,
             }),
         );
     },

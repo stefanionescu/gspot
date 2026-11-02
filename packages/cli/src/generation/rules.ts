@@ -1,4 +1,3 @@
-import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { visit } from 'unist-util-visit';
 import type { Session } from '#cli/types/tools.ts';
@@ -41,7 +40,7 @@ function listConfigurationRules(configurations: Configuration[], repository: Rep
     const matched = detectConditions(conditions, repository.files, repository.dependencyFiles);
     return configurations.flatMap((configuration) =>
         listRuleFiles(configuration).filter((file) => {
-            const condition = configuration.rules[posix.basename(file.source)];
+            const condition = configuration.rules[file.path];
             return condition === undefined || matched.has(condition);
         }),
     );
@@ -157,7 +156,7 @@ export function selectRuleFiles(session: Pick<Session, 'settings' | 'scopes' | '
     const selected: RuleFile[] = [];
     const shipped = listConfigurationRules(configurations, repository).filter(({ path }) =>
         ruleFiles.exclude.every(
-            (excluded) => !isInScope(`${GSPOT_PATHS.configurations}/${path}`, stripTrailingSlashes(excluded)),
+            (excluded) => !isInScope(`${GSPOT_PATHS.rules}/${path}`, stripTrailingSlashes(excluded)),
         ),
     );
     for (const { source, path, group } of shipped) {
@@ -167,7 +166,7 @@ export function selectRuleFiles(session: Pick<Session, 'settings' | 'scopes' | '
         const scopes = scopeRules.filter((scope) => scope.rules.has(path)).map((scope) => scope.path);
         selected.push({
             path,
-            target: `${GSPOT_PATHS.configurations}/${path}`,
+            target: `${GSPOT_PATHS.rules}/${path}`,
             content: content.replaceAll(SETTING_PLACEHOLDER, (_token, name: string) =>
                 String(root.settings.valuesByKey[name]),
             ),

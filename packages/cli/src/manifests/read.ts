@@ -106,7 +106,12 @@ export function readConfigurations(): ReadonlyMap<string, Configuration> {
             .toArray()
             .toSorted((first, second) => compareText(first.configuration.name, second.configuration.name)),
     );
-
+    const ruleNames = shippedConfigurations
+        .values()
+        .flatMap((configuration) => listRuleFiles(configuration).map(({ path }) => path))
+        .toArray();
+    const repeated = ruleNames.find((name, index) => ruleNames.indexOf(name) !== index);
+    if (repeated !== undefined) throw new Error(`Two configurations ship a rule file named ${repeated}.`);
     return shippedConfigurations;
 }
 
@@ -133,7 +138,7 @@ export function listRuleFiles(configuration: Configuration): ShippedRule[] {
     return sources.map((source) => ({
         source,
         group,
-        path: posix.relative(CONFIGURATIONS_FOLDER, source),
+        path: posix.basename(source),
     }));
 }
 

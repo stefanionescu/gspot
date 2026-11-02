@@ -275,7 +275,6 @@ export const ruleFilesSchema = z.strictObject({
         .array()
         .default([] as [])
         .meta({
-            description:
-                'Rule files or folders under .gspot/configurations/ to leave out, such as .gspot/configurations/general/engineering/rules/PLANNING.md.',
+            description: 'Rule files under .gspot/rules/ to leave out, such as .gspot/rules/PLANNING.md.',
         }),
 });

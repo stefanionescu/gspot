@@ -39,7 +39,7 @@ test('with no configurations the block still lists the general rules', async () 
         ({ path }) => path === 'AGENTS.md',
     )!.body;
     const paths = listIndexPaths(block);
-    expect(paths).toContain('.gspot/configurations/general/engineering/rules/TESTING.md');
+    expect(paths).toContain('.gspot/rules/TESTING.md');
     expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
 });
 
@@ -55,8 +55,8 @@ test('a rule file that rule_files.exclude names leaves the index', async () => {
         ({ path }) => path === 'AGENTS.md',
     )!.body;
     const paths = listIndexPaths(block);
-    expect(paths).not.toContain('.gspot/configurations/general/engineering/rules/CLI.md');
-    expect(paths).toContain('.gspot/configurations/general/engineering/rules/TESTING.md');
+    expect(paths).not.toContain('.gspot/rules/CLI.md');
+    expect(paths).toContain('.gspot/rules/TESTING.md');
 });
 
 test('the AGENTS.md block moves its headings one level down in a file with its own title', async () => {
@@ -97,8 +97,8 @@ test('the AGENTS.md index keeps a rule opening that wraps onto a second line', (
     const block = buildAgentsBlock({
         files: [
             {
-                path: 'language/bash/rules/SAFETY.md',
-                target: '.gspot/configurations/language/bash/rules/SAFETY.md',
+                path: 'SAFETY.md',
+                target: '.gspot/rules/SAFETY.md',
                 content:
                     '# Bash Safety\n\nRead this rule when a shell script deletes files, or parses JSON or\nYAML.\n\n## Calling\n',
                 scopes: [''],

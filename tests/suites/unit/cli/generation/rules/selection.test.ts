@@ -53,9 +53,7 @@ test.each(
     });
     const session = await openSession(sandbox.path);
     const paths = selectRuleFiles(session).map((file) => file.path);
-    expect(paths.filter((path) => /\/rules\/(?:DENO|NODE)\.md$/u.test(path))).toStrictEqual(
-        rules.map((rule) => `language/javascript/rules/${rule}`),
-    );
+    expect(paths.filter((path) => /^(?:DENO|NODE)\.md$/u.test(path))).toStrictEqual([...rules]);
 });
 
 test('a rule file shows the limit that gspot.toml sets', async () => {
@@ -81,7 +79,7 @@ test('an always-selected configuration installs its rule file once', async () =>
     const engineering = configurations.find((configuration) => configuration.name === 'engineering')!;
     for (const selected of [configurations, [...configurations, engineering]]) {
         const files = selectRuleFiles({ ...session, scopes: [{ ...session.scopes[0]!, configurations: selected }] });
-        expect(files.filter((file) => file.path === 'general/engineering/rules/TALKING.md')).toHaveLength(1);
+        expect(files.filter((file) => file.path === 'TALKING.md')).toHaveLength(1);
     }
 });
 
@@ -135,7 +133,7 @@ test('a Supabase project selects Deno rules without a Deno settings file', async
         'supabase/config.toml': 'project_id = "example"\n',
     });
     const session = await openSession(sandbox.path);
-    expect(selectRuleFiles(session).map(({ path }) => path)).toContain('language/javascript/rules/DENO.md');
+    expect(selectRuleFiles(session).map(({ path }) => path)).toContain('DENO.md');
 });
 
 test.each(['pytest', 'jest'])(

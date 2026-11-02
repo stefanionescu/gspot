@@ -10,6 +10,7 @@ export const UV_LOCKFILE = 'uv.lock';
 
 export const GSPOT_PATHS = {
     configurations: `${GSPOT_FOLDER}/configurations`,
+    rules: `${GSPOT_FOLDER}/rules`,
     hooks: `${GSPOT_FOLDER}/hooks`,
     gitignore: `${GSPOT_FOLDER}/.gitignore`,
     miseProject: `${GSPOT_FOLDER}/${MISE_CONFIG_FILE}`,

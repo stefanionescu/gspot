@@ -41,9 +41,9 @@ Describe the shipped rules without applying repository-specific selection.
 export function listRuleReferences(configuration: Configuration): ConfigurationReference['ruleFiles'] {
     const files = listRuleFiles(configuration);
     return files.map(({ path }) => {
-        const condition = configuration.rules[posix.basename(path)];
+        const condition = configuration.rules[path];
         const detection =
             condition === undefined ? { conditions: [], exclusions: [] } : formatDetectionConditions(condition);
-        return { path: posix.join(GSPOT_PATHS.configurations, path), ...detection };
+        return { path: posix.join(GSPOT_PATHS.rules, path), ...detection };
     });
 }
