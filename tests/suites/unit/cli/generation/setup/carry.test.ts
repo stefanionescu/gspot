@@ -137,6 +137,7 @@ test('init goes on past a nested package.json that does not parse, and it marks 
         'package.json': '{"private":true}\n',
         'source.js': 'export const value = 1;\n',
         'tests/fixtures/broken/package.json': '{ nope',
+        'tests/fixtures/local/pyproject.toml': '[project]\ndependencies = ["./vendor/lib"]\n',
         'tests/fixtures/numbers/package.json': '{"scripts":{"build":1}}',
     });
     const { settings } = await runInit(sandbox.path);

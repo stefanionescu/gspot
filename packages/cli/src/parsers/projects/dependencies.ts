@@ -67,7 +67,7 @@ function listPythonRequirements(path: string, parsed: Pyproject): Dependencies {
             const name = parseRequirementName(spec);
             if (name === undefined)
                 throw new GspotError(
-                    'filesystem',
+                    'parse',
                     `${path}: ${spec} is not a PEP 508 requirement. Write it as name @ url, then run gspot again.`,
                 );
             return [name, spec];

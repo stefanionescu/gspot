@@ -17,7 +17,7 @@ test.each(['./local-package'])('pyproject names an invalid requirement and its f
         ),
     );
     expect(await captureRejection(parsed)).toMatchObject({
-        code: 'filesystem',
+        code: 'parse',
         message: `services/api/pyproject.toml: ${spec} is not a PEP 508 requirement. Write it as name @ url, then run gspot again.`,
     });
 });
