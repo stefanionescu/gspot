@@ -225,8 +225,6 @@ Here they override four shipped rules:
 - `tests/config/`, `tests/types/`, and `tests/schemas/` follow "Values, types, and schemas." The values of the tests in
   `tests/suites/unit/cli/engine/` sit in `tests/config/engine/`, and those of the e2e suite in `tests/config/e2e.ts`.
 - `tests/config/setup/` holds the values of `tests/setup/` and the values that tests of several layers read.
-- A value goes to `tests/config/` when two tests share it. A value that one test reads stays in that test, even when
-  it reads it twice. File text that only makes a file exist, and that no assertion compares, stays at each call that
-  writes it.
+- File text that only makes a file exist, and that no assertion compares, stays at each call that writes it.
 - RuleTester cases, command arguments, and sandbox file names stay beside their call.
 - `tests/schemas/` holds the schemas that read tool output in tests.
