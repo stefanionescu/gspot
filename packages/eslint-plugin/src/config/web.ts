@@ -164,9 +164,20 @@ export const NAMESPACE_PATHS: Readonly<Record<string, readonly string[]>> = {
 
 export const MAIL_TRANSPORT = 'nodemailer.createTransport';
 
+export const ADDRESS_LITERAL_SELECTOR = 'Literal:not(NewExpression[callee.name="URL"] > :nth-child(2))';
+
 export const SECURE_MAIL_PORT = 465;
 
-export const MAIL_SECURE_OPTIONS = ['secure', 'requireTLS', 'port'] as const;
+export const MAIL_SECURE_OPTIONS = [
+    'SES',
+    'port',
+    'secure',
+    'service',
+    'sendmail',
+    'requireTLS',
+    'jsonTransport',
+    'streamTransport',
+] as const;
 
 export const FTP_MODULE = 'ftp';
 

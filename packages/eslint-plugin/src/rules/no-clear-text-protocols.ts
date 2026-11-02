@@ -23,6 +23,7 @@ import {
     SECURE_MAIL_PORT,
     PROTOCOL_SEPARATOR,
     MAIL_SECURE_OPTIONS,
+    ADDRESS_LITERAL_SELECTOR,
     SECURE_PROTOCOL_ALTERNATIVES,
 } from '../config/web.ts';
 
@@ -76,8 +77,7 @@ function isSecureOption(
 function isClearTextMail(source: Readonly<TSESLint.SourceCode>, node: TSESTree.CallExpression): boolean {
     const options = readExpressionValue(node.arguments[0], source);
     if (options?.type !== AST_NODE_TYPES.ObjectExpression) return false;
-    const isSes = readOptionProperties(options, source).has('SES');
-    return !isSes && !MAIL_SECURE_OPTIONS.some((key) => isSecureOption(source, options, key));
+    return !MAIL_SECURE_OPTIONS.some((key) => isSecureOption(source, options, key));
 }
 
 function isClearTextFtp(source: Readonly<TSESLint.SourceCode>, node: TSESTree.CallExpression): boolean {
@@ -166,7 +166,7 @@ export const noClearTextProtocols = createRule<[], 'clearText' | 'transitEncrypt
     create(context) {
         const source = context.sourceCode;
         return {
-            Literal(node) {
+            [ADDRESS_LITERAL_SELECTOR](node: TSESTree.Literal) {
                 const found = describeProtocol(node, readClearTextProtocol(node));
                 for (const report of found) context.report(report);
             },
