@@ -14,34 +14,6 @@ import {
     REFERENCE_CODE_CHARACTERS,
 } from '#docs/config/reference.ts';
 
-/**
-Build a reference page with no edit link or empty table of contents.
-
-@param title the visible heading
-@param description the one-line summary
-@param body the Markdown text
-*/
-export function buildReferencePage(title: string, description: string, body: string): ReferencePage {
-    const frontmatter: ReferencePage['data'] = { title, description, editUrl: false };
-    if (!SECTION_HEADING.test(body)) frontmatter.tableOfContents = false;
-    return { data: frontmatter, body: `\n${body}` };
-}
-
-/**
-Escape outside text while keeping Markdown fences and rendering inline code safely, including pipes in table cells.
-
-@param text prose, CLI help, or a manifest description that may contain Markdown code
-*/
-export function formatText(text: string): string {
-    let cursor = 0;
-    const segments = listCodeFences(text).flatMap(([start, end]) => {
-        const prose = formatInlineText(text.slice(cursor, start));
-        cursor = end;
-        return [prose, text.slice(start, end)];
-    });
-    return segments.join('') + formatInlineText(text.slice(cursor));
-}
-
 function listCodeFences(text: string): Array<readonly [number, number]> {
     const ranges: Array<readonly [number, number]> = [];
     let fence: RegExpExecArray | undefined;
@@ -50,11 +22,9 @@ function listCodeFences(text: string): Array<readonly [number, number]> {
             fence = marker;
             continue;
         }
-        const lineEnd = text.indexOf('\n', marker.index);
-        const end = lineEnd === -1 ? text.length : lineEnd + 1;
-        const line = text.slice(marker.index, end).trim();
+        const line = marker[0].trim();
         if (!line.startsWith(fence[1] as string) || !REFERENCE_FENCE_END.test(line)) continue;
-        ranges.push([fence.index, end]);
+        ranges.push([fence.index, marker.index + marker[0].length]);
         fence = undefined;
     }
     if (fence !== undefined) ranges.push([fence.index, text.length]);
@@ -97,6 +67,34 @@ function formatInlineText(text: string): string {
         result += flag === undefined ? literal : formatInlineCode(token[0]);
     }
     return result + text.slice(cursor);
+}
+
+/**
+Build a reference page with no edit link or empty table of contents.
+
+@param title the visible heading
+@param description the one-line summary
+@param body the Markdown text
+*/
+export function buildReferencePage(title: string, description: string, body: string): ReferencePage {
+    const frontmatter: ReferencePage['data'] = { title, description, editUrl: false };
+    if (!SECTION_HEADING.test(body)) frontmatter.tableOfContents = false;
+    return { data: frontmatter, body: `\n${body}` };
+}
+
+/**
+Escape outside text while keeping Markdown fences and rendering inline code safely, including pipes in table cells.
+
+@param text prose, CLI help, or a manifest description that may contain Markdown code
+*/
+export function formatText(text: string): string {
+    let cursor = 0;
+    const segments = listCodeFences(text).flatMap(([start, end]) => {
+        const prose = formatInlineText(text.slice(cursor, start));
+        cursor = end;
+        return [prose, text.slice(start, end)];
+    });
+    return segments.join('') + formatInlineText(text.slice(cursor));
 }
 
 /**
