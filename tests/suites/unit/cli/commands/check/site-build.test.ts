@@ -17,11 +17,11 @@ test('a staged Astro build resolves linked packages and builds HTML inside its d
         'package.json': JSON.stringify({
             private: true,
             type: 'module',
-            dependencies: { astro: SANDBOX_PACKAGES.astro, picomatch: '0.0.0-test' },
+            dependencies: { astro: SANDBOX_PACKAGES.astro, semver: '0.0.0-test' },
         }),
         'package-lock.json': '{"lockfileVersion":3,"packages":{}}',
         'src/pages/index.astro':
-            '---\nimport picomatch from "picomatch";\nconst matches = picomatch("content")("content");\n---\n<html lang="en"><head><title>Copy build</title></head><body><p>{String(matches)}</p></body></html>\n',
+            '---\nimport semver from "semver";\nconst matches = semver.satisfies("1.2.3", "^1.0.0");\n---\n<html lang="en"><head><title>Copy build</title></head><body><p>{String(matches)}</p></body></html>\n',
     });
     await linkInstalledModules(join(sandbox.path, 'node_modules'));
     runGitStep(sandbox.path, ['add', '--all']);

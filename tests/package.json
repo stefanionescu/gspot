@@ -18,7 +18,6 @@
         "mdast-util-from-markdown": "2.0.3",
         "mdast-util-gfm-table": "2.0.0",
         "micromark-extension-gfm-table": "2.1.2",
-        "picomatch": "4.0.7",
         "semver": "7.8.5",
         "testdirs": "4.0.2",
         "unist-util-visit": "5.1.0",
