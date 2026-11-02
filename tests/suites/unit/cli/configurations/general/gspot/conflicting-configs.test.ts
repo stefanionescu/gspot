@@ -46,3 +46,39 @@ test('a conflicting config file that .gitattributes marks linguist-generated is 
         })),
     ).toStrictEqual([{ file: '.commitlintrc.json', rule: 'conflicting-config' }]);
 });
+
+test('gspot/conflicting-configs reports a tool section that no generated file edits, and leaves a pointer key', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['python', 'css']),
+        'pyproject.toml': '[project]\nname = "app"\n\n[tool.ruff]\nline-length = 100\n',
+        'package.json': '{"private":true,"stylelint":{"extends":".gspot/stylelint.json"}}\n',
+        'app.py': 'VALUE = 1\n',
+        'a.css': 'a { color: red; }\n',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'gspot/conflicting-configs');
+    expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
+        { file: 'pyproject.toml', rule: 'conflicting-config' },
+    ]);
+});
+
+test('gspot/conflicting-configs reports an lint command until it goes', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript']),
+        'package.json': '{\n  "private": true,\n  "scripts": { "lint": "eslint ." }\n}\n',
+        'main.js': 'export const value = 1;\n',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'gspot/conflicting-configs');
+    expect(findings.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
+        {
+            file: 'package.json',
+            line: 3,
+            rule: 'lint-command',
+            message: 'This script calls eslint: eslint .. Replace this command with gspot check.',
+        },
+    ]);
+    await writeFile(
+        join(sandbox.path, 'package.json'),
+        '{\n  "private": true,\n  "scripts": { "lint": "gspot check" }\n}\n',
+    );
+    expect(await runSandboxCheck(sandbox.path, 'gspot/conflicting-configs')).toStrictEqual([]);
+});

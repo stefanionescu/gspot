@@ -112,7 +112,7 @@ export type Suggestions = {
     suggested: ConfigurationSuggestion[];
     undetected: ConfigurationSuggestion[];
     unowned: SuggestionRow[];
-    lintJobs: SuggestionRow[];
+    lintCommands: SuggestionRow[];
 };
 
 export type DoctorTool = ToolInspection & { kind: Tool['kind'] };

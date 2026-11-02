@@ -5,6 +5,7 @@ import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { listReplacedTools } from '#cli/tools/pins.ts';
 import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { selectForInit } from '#cli/repository/proposals.ts';
@@ -14,6 +15,7 @@ import { readRepositorySetup } from '#cli/repository/setup.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { listLintCommands } from '#cli/repository/lint-commands.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 import { readGspotPin, writeGspotPin } from '#cli/repository/javascript/gspot-pin.ts';
@@ -72,6 +74,7 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
         conflicts,
         template: options.template,
         pinPath: hasPin ? undefined : pinPath,
+        lintCommands: listLintCommands({ root, files: repository.files, ...listReplacedTools(applicable) }),
     };
     const plan = planInitFiles(planning, { settings, requirements: applicable, generated });
     return {

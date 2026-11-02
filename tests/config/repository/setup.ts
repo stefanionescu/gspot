@@ -112,46 +112,6 @@ export const LINKED_RUFF_SECTION = {
     table: 'tool.ruff',
 } as const;
 
-export const CI_JOB_DOCUMENTS = [
-    {
-        name: 'GitHub run steps',
-        path: '.github/workflows/check.yml',
-        document: {
-            jobs: {
-                quality: { steps: [{ uses: 'actions/checkout@v4' }, { run: 'bun run lint' }, null, 12] },
-                build: { steps: [{ run: 'bun run build' }] },
-            },
-        },
-        expected: ['quality'],
-    },
-    {
-        name: 'GitLab scalar and array scripts',
-        path: '.gitlab-ci.yml',
-        document: {
-            quality: { script: 'eslint src' },
-            analysis: { script: [null, 12, 'npm run lint'] },
-            '.lint-template': { script: 'eslint src' },
-            build: { script: ['bun run build'] },
-        },
-        expected: ['quality', 'analysis'],
-    },
-    {
-        name: 'named inherited jobs',
-        path: '.gitlab/ci/check.yml',
-        document: {
-            'code-lint': { extends: '.base' },
-            unrelated: { extends: '.base' },
-            'lint-settings': { variables: {} },
-            'lint-invalid': [],
-        },
-        expected: ['code-lint'],
-    },
-    { name: 'null document', path: '.gitlab-ci.yml', document: null, expected: [] },
-] as const;
-
-export const GITLAB_COMPONENT =
-    'spec:\n  inputs:\n    stage:\n      default: test\n---\n.base:\n  script: echo ready\nquality:\n  script:\n    - !reference [.base, script]\n    - eslint src\n';
-
 export const PRETTIER_SETTINGS_FILES = {
     'src/.prettierrc.json': '{"semi":false}',
     'vendor/.prettierrc.json': '{"semi":true}',

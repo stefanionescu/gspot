@@ -29,6 +29,7 @@ function listReplacementConflicts(root: string, paths: string[], replacement: Co
             shared: replacement.shared,
             ...(replacement.table !== undefined && { table: replacement.table }),
             ...(replacement.key !== undefined && { key: replacement.key }),
+            ...(replacement.pointer === true && { pointer: true }),
         }));
 }
 
@@ -61,14 +62,32 @@ function listConfigurationConflicts(
     });
 }
 
-function parseSharedFile(text: string, extension: string, path: string): unknown {
+/**
+Parse a shared settings file by its extension.
+
+@param text the file contents.
+@param extension the extension of the path.
+@param path the file, for the error.
+*/
+export function parseSharedFile(text: string, extension: string, path: string): unknown {
     if (extension === JSON_EXTENSION) return parseJsonFile(path, text);
     if (YAML_EXTENSIONS.includes(extension)) return parseYamlFile(path, text);
     if (extension === TOML_EXTENSION) return parseTomlFile(path, text);
     throw new Error(`${path}: gspot cannot read the settings format of this shared file.`);
 }
 
-function hasToolSection(text: string, path: string, selector: Pick<ConflictingConfig, 'key' | 'table'>): boolean {
+/**
+Check whether a shared file holds the key or the table of a tool.
+
+@param text the file contents.
+@param path the file.
+@param selector the key or the table.
+*/
+export function hasToolSection(
+    text: string,
+    path: string,
+    selector: Pick<ConflictingConfig, 'key' | 'table'>,
+): boolean {
     const extension = extname(path);
     if (selector.table !== undefined && INI_EXTENSIONS.has(extension)) {
         const header = new RegExp(String.raw`^\s*\[${escapeRegExp(selector.table)}(?::[^\]]+)?\]\s*(?:[#;].*)?$`, 'mu');

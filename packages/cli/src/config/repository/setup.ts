@@ -31,10 +31,6 @@ export const AGENT_FILES = ['CLAUDE.md', 'AGENTS.md', 'GEMINI.md', '.cursorrules
 
 export const RULE_FOLDERS = ['rules', '.rules', '.cursor/rules', 'docs/rules', '.claude/rules'] as const;
 
-export const LINT_WORDS = new Set(['lint', 'quality', 'gspot']);
-
-export const LINT_PAIRS = new Set(['gspot check', 'biome check', 'ruff check']);
-
 export const FOREIGN_CI_FILES = new Set([
     'Jenkinsfile',
     'bitbucket-pipelines.yml',
@@ -53,15 +49,94 @@ export const GITHUB_WORKFLOWS_FOLDER = '.github/workflows/';
 
 export const GITLAB_CI_FOLDER = '.gitlab/ci/';
 
-export const COMMAND_SEPARATORS = /[\s;&|]+/u;
+export const COMMAND_SEPARATORS = /[\s;&|()]+/u;
+
+export const BIN_FOLDER_PREFIX = /^.*node_modules\/\.bin\//u;
+
+export const LINT_PACKAGE = /eslint|stylelint|prettier/u;
+
+export const QUOTE_MARK = /["'`,]/gu;
+
+export const COMMENT_LINE = /^\s*#/u;
+
+export const HOOK_ID_SEPARATOR = /-/gu;
+
+export const COMMAND_KEYS: ReadonlySet<string> = new Set(['run', 'script', 'before_script', 'after_script']);
+
+export const PRE_COMMIT_KEYS: ReadonlySet<string> = new Set(['id', 'entry']);
+
+export const PRE_COMMIT_TOOL = 'pre-commit';
+
+export const LINT_STAGED_KEY = 'lint-staged';
+
+export const HOOK_FOLDER_PATH = /^(?:\.githooks|\.husky|\.git-hooks)\//u;
+
+export const COMMAND_FILES = [
+    { path: /(?:^|\/)package\.json$/u, source: 'script' },
+    { path: /(?:^|\/)(?:\.lintstagedrc(?:\..+)?|lint-staged\.config\..+)$/u, source: 'lint-staged' },
+    { path: /^\.pre-commit-config\.yaml$/u, source: 'pre-commit' },
+    { path: HOOK_FOLDER_PATH, source: 'hook' },
+    { path: /^(?:\.config\/|\.)?lefthook(?:-local)?\.(?:yml|yaml|toml|json)$/u, source: 'hook' },
+    { path: /^(?:\.gitlab-ci\.yml|\.gitlab\/ci\/.+\.ya?ml|\.github\/workflows\/.+\.ya?ml)$/u, source: 'ci' },
+] as const;
+
+export const LINT_COMMAND_NAMES = {
+    script: 'This script',
+    ci: 'This CI step',
+    hook: 'This hook',
+    'lint-staged': 'This lint-staged entry',
+    'pre-commit': 'This pre-commit entry',
+    dependency: 'This devDependency',
+    settings: 'This section',
+} as const;
+
+export const LINT_COMMAND_FIXES = {
+    script: 'Replace this command with gspot check.',
+    ci: 'Replace this line with gspot check.',
+    hook: 'Delete this line: the hooks of gspot run the checks.',
+    'lint-staged': 'Delete this entry: the hooks of gspot run the checks.',
+    'pre-commit': 'Delete this entry: the hooks of gspot run the checks.',
+    dependency: 'Delete this line: gspot installs its own copy in .gspot/.',
+    settings: 'Delete these settings: gspot runs a tool that covers this one.',
+} as const;
+
+export const SECOND_TOOLS = [
+    { name: 'black', owner: 'ruff', files: [], sections: [['pyproject.toml', 'tool.black']] },
+    {
+        name: 'flake8',
+        owner: 'ruff',
+        files: ['.flake8'],
+        sections: [
+            ['setup.cfg', 'flake8'],
+            ['tox.ini', 'flake8'],
+        ],
+    },
+    {
+        name: 'isort',
+        owner: 'ruff',
+        files: ['.isort.cfg'],
+        sections: [
+            ['pyproject.toml', 'tool.isort'],
+            ['setup.cfg', 'isort'],
+            ['tox.ini', 'isort'],
+        ],
+    },
+    {
+        name: 'mypy',
+        owner: 'basedpyright',
+        files: ['mypy.ini', '.mypy.ini'],
+        sections: [
+            ['pyproject.toml', 'tool.mypy'],
+            ['setup.cfg', 'mypy'],
+        ],
+    },
+    { name: 'pyright', owner: 'basedpyright', files: [], sections: [] },
+    { name: 'markdownlint', owner: 'markdownlint-cli2', files: [], sections: [] },
+] as const;
 
 export const RUN_WORD = 'run';
 
-export const LINT_TASK = 'lint';
-
 export const KEPT_DOT_FILE = '.gitkeep';
-
-export const JOB_NAME_SEPARATORS = /[-_: ]/u;
 
 export const HUSKY_PATH = '.husky';
 

@@ -5,14 +5,15 @@ import type { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { KeyPath, DependencyFile } from '#cli/types/parsers.ts';
 import type { SpawnResult, FileContents } from '#cli/types/system.ts';
 import type { START_RUNNERS } from '#cli/config/repository/javascript.ts';
+import type { LINT_COMMAND_FIXES } from '#cli/config/repository/setup.ts';
 import type { Configuration, ParsedManifest } from '#cli/types/manifests.ts';
 
 import type {
-    ciJobSchema,
     gitFileSchema,
     gitIndexFileSchema,
     packageManagerSchema,
     packageManagerPinSchema,
+    lintCommandPackageSchema,
 } from '#cli/schemas/repository.ts';
 
 export type ConfigurationOrigin = 'named' | 'template' | 'detected' | 'suggested' | 'required' | 'always';
@@ -170,9 +171,32 @@ export type ConflictingConfig = {
     shared: boolean;
     table?: string;
     key?: string;
+    pointer?: boolean;
 };
 
-export type CiJob = z.infer<typeof ciJobSchema>;
+export type LintCommandSource = keyof typeof LINT_COMMAND_FIXES;
+
+export type LintCommand = {
+    file: string;
+    line: number;
+    source: LintCommandSource;
+    command: string;
+    tool: string;
+    fix: string;
+};
+
+export type LintCommandSearch = {
+    root: string;
+    files: TrackedFile[];
+    tools: ReadonlySet<string>;
+    pins: Record<string, string>;
+};
+
+export type CommandSearch = Pick<LintCommandSearch, 'tools'> & { scripts: ReadonlyMap<string, string> };
+
+export type LintCommandPlace = { file: string; text: string; source: LintCommandSource };
+
+export type LintCommandPackage = { place: LintCommandPlace; manifest: z.infer<typeof lintCommandPackageSchema> };
 
 export type RepositoryHooks = { hooksPath: string; hooks: RepositorySetup['hooks'] };
 

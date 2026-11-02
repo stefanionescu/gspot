@@ -1,16 +1,18 @@
 import { readBytes } from '#cli/system/files/reads.ts';
+import { listReplacedTools } from '#cli/tools/pins.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { BANNER_BYTES } from '#cli/config/repository/files.ts';
 import { isEditedInPlace } from '#cli/repository/conflicts.ts';
+import { readRepositorySetup } from '#cli/repository/setup.ts';
 import type { Session, Generation } from '#cli/types/tools.ts';
+import { LEVEL_COMMAND } from '#cli/config/commands/reports.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import { formatScope, quoteArgument } from '#cli/system/text.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';
+import { listLintCommands } from '#cli/repository/lint-commands.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
-import { readLintJobs, readRepositorySetup } from '#cli/repository/setup.ts';
-import { LEVEL_COMMAND, LINT_JOB_NOTE } from '#cli/config/commands/reports.ts';
 import type { Suggestions, SuggestionRow } from '#cli/types/commands/reports.ts';
 import type { RepositorySetup, ConflictingConfig } from '#cli/types/repository.ts';
 import { expandSuggestions, listSelectedConfigurations } from '#cli/manifests/select.ts';
@@ -137,9 +139,10 @@ export async function listSuggestions(session: Session): Promise<Suggestions> {
     return {
         ...listConfigurationSuggestions(session),
         unowned: listUnownedConfigs(session, repositorySetup, tools, generated),
-        lintJobs: readLintJobs(
-            session.root,
-            repositorySetup.ci.filter((path) => !workflows.has(path)),
-        ).map((path) => ({ path, note: LINT_JOB_NOTE })),
+        lintCommands: listLintCommands({
+            root: session.root,
+            files: session.repository.files.filter(({ path }) => !workflows.has(path)),
+            ...listReplacedTools(configurations),
+        }).map(({ file, line, fix }) => ({ path: `${file}:${String(line)}`, note: fix })),
     };
 }

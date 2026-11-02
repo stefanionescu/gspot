@@ -35,7 +35,7 @@ export const GSPOT_RULES = {
     conflictingConfig: 'conflicting-config',
     staleBaseline: 'stale-baseline',
     detectedConfiguration: 'detected-configuration',
-    oldCommand: 'old-command',
+    lintCommand: 'lint-command',
 } as const;
 
 export const WEAKENING_RULES = {

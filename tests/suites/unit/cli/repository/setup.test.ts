@@ -1,18 +1,16 @@
+import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
 import { createFileTree } from 'testdirs';
-import { test, spyOn, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
+import { readHooks, readRepositorySetup } from '#cli/repository/setup.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { chmod, mkdir, unlink, symlink, writeFile } from 'node:fs/promises';
-import { readHooks, readLintJobs, readRepositorySetup } from '#cli/repository/setup.ts';
 
 import {
-    CI_JOB_DOCUMENTS,
-    GITLAB_COMPONENT,
     LINKED_HOOK_FILES,
     HOOK_FOLDER_FILES,
     LINKED_RUFF_SECTION,
@@ -28,31 +26,6 @@ test('tool discovery finds nested config files and skips root .gspot and vendore
     expect(discovered.conflictingConfigs.map((conflictingConfig) => conflictingConfig.path)).toStrictEqual([
         'src/.prettierrc.json',
     ]);
-});
-
-test.each([...CI_JOB_DOCUMENTS])('CI discovery recognizes $name', async ({ path, document, expected }) => {
-    await using sandbox = await createGitSandbox({ [path]: JSON.stringify(document) });
-
-    expect(readLintJobs(sandbox.path, [path, 'missing.yml'])).toStrictEqual(expected.map((name) => `${path}: ${name}`));
-});
-
-test('CI discovery reports malformed YAML', async () => {
-    await using sandbox = await createGitSandbox({});
-    const path = '.gitlab-ci.yml';
-    await createFileTree(sandbox.path, { [path]: 'quality: [unterminated' });
-    const error = await captureRejection(Promise.try(() => readLintJobs(sandbox.path, [path])));
-    expect(error).toMatchObject({ name: 'GspotError', code: 'parse' });
-    expect(error.message).toStartWith('.gitlab-ci.yml is not valid YAML: ');
-});
-
-test('CI discovery reads jobs after a GitLab component specification and keeps reference tags quiet', async () => {
-    await using sandbox = await createGitSandbox({ '.gitlab/ci/quality.yml': GITLAB_COMPONENT });
-    const warnings: string[] = [];
-    using _warnings = spyOn(process, 'emitWarning').mockImplementation((warning) => {
-        warnings.push(String(warning));
-    });
-    expect(readLintJobs(sandbox.path, ['.gitlab/ci/quality.yml'])).toStrictEqual(['.gitlab/ci/quality.yml: quality']);
-    expect(warnings).toStrictEqual([]);
 });
 
 test('tool discovery reads tool sections through a link inside the repository', async () => {

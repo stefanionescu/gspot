@@ -34,6 +34,7 @@ import {
     LINT_FOLDERS_HEADING,
     CHANGE_LATER_MESSAGE,
     ALWAYS_SELECTED_NOUN,
+    LINT_COMMANDS_HEADING,
     INSTALL_LOCKFILE_NOTE,
     UNREAD_SUBMODULE_MESSAGE,
     DROPPED_LINE_SETTINGS_NOTE,
@@ -200,6 +201,7 @@ export function planInitFiles(
             path: `${folder}/`,
             note: LINT_FOLDER_MESSAGE,
         })),
+        lintCommands: scan.lintCommands,
     };
 }
 
@@ -223,6 +225,13 @@ export function formatInitPlan(plan: InitPlan, settingsText: string): string {
         ...formatFileSection('keep', plan.keep),
         ...formatFileSection('change', plan.change),
         ...formatFileSection(LINT_FOLDERS_HEADING, plan.lintFolders),
+        ...formatFileSection(
+            LINT_COMMANDS_HEADING,
+            plan.lintCommands.map(({ file, line, command, fix }) => ({
+                path: `${file}:${String(line)}`,
+                note: `${command}  ${fix}`,
+            })),
+        ),
         CI_OFF_MESSAGE,
         CHANGE_LATER_MESSAGE,
         '',

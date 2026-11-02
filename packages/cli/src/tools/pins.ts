@@ -3,7 +3,9 @@ import { stringify } from '@decimalturn/toml-patch';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import type { LintCommandSearch } from '#cli/types/repository.ts';
 import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
+import { LINT_PACKAGE, SECOND_TOOLS } from '#cli/config/repository/setup.ts';
 import { UV_TOOL, NODE_TOOL, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import type { Host, PackagePin, MiseToolPin, PackagePins, GeneratedFile } from '#cli/types/tools.ts';
 
@@ -79,6 +81,27 @@ export function listPackagePins(configurations: Configuration[]): PackagePins {
         npm: Object.fromEntries(npm.toSorted(([first], [second]) => compareText(first, second))),
         python,
     };
+}
+
+/**
+List the tools that gspot replaces, the tools that they cover, and the npm pins of their stack.
+
+@param configurations the configurations in use.
+@returns the command names to look for, and the pins that a root devDependency may repeat.
+*/
+export function listReplacedTools(configurations: Configuration[]): Pick<LintCommandSearch, 'tools' | 'pins'> {
+    const replaced = listDistinctTools(configurations).filter(
+        ({ replace, replace_key }) => replace !== undefined || replace_key !== undefined,
+    );
+    const names = new Set(replaced.map(({ name }) => name));
+    const covered = SECOND_TOOLS.filter(({ owner }) => names.has(owner)).map(({ name }) => name);
+    const stack = configurations.map((configuration) => ({
+        ...configuration,
+        tools: configuration.tools.filter(
+            ({ name, kind }) => names.has(name) || (kind === 'package' && LINT_PACKAGE.test(name)),
+        ),
+    }));
+    return { tools: new Set([...names, ...covered]), pins: listPackagePins(stack).npm };
 }
 
 /**

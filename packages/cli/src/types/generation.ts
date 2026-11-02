@@ -11,6 +11,7 @@ import type { Level, Scope, Settings, TomlTable, AvailableSettings } from '#cli/
 
 import type {
     Repository,
+    LintCommand,
     ScopeFolder,
     TrackedFile,
     RepositorySetup,
@@ -105,6 +106,7 @@ export type InitScan = {
     everySelected: Configuration[];
     conflicts: ConflictingConfigs;
     pinPath?: string | undefined;
+    lintCommands: LintCommand[];
 };
 
 export type InitPlan = {
@@ -122,6 +124,7 @@ export type InitPlan = {
     keep: InitFileRow[];
     change: InitFileRow[];
     lintFolders: InitFileRow[];
+    lintCommands: LintCommand[];
 };
 
 export type ConflictingConfigs = {

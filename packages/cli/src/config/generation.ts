@@ -356,6 +356,9 @@ export const DELETED_RULES_NOTE =
 
 export const LINT_FOLDERS_HEADING = 'lint folders; delete when nothing calls them';
 
+export const LINT_COMMANDS_HEADING =
+    'lint commands; gspot edits none of them, and gspot/conflicting-configs reports each until it goes';
+
 export const CHANGE_LATER_MESSAGE =
     'Change the hooks and rule files later with gspot set hooks.enabled or rule_files.enabled.';
 

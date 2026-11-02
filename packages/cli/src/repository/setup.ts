@@ -4,34 +4,26 @@ import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { parseYamlDocuments } from '#cli/parsers/formats/yaml.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
-import { find, findContainedPath } from '#cli/system/files/reads.ts';
+import { findContainedPath } from '#cli/system/files/reads.ts';
 import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
 import { join, dirname, resolve, basename, relative } from 'node:path';
 import { statSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
-import { ciJobSchema, ciDocumentSchema } from '#cli/schemas/repository.ts';
 import { readGitSetting, readHooksFolder } from '#cli/repository/git/run.ts';
 import { EXECUTABLE_BITS, MARKDOWN_EXTENSION } from '#cli/config/repository/files.ts';
-import type { CiJob, Repository, RepositoryHooks, RepositorySetup } from '#cli/types/repository.ts';
+import type { Repository, RepositoryHooks, RepositorySetup } from '#cli/types/repository.ts';
 
 import {
-    RUN_WORD,
     LFS_HOOKS,
-    LINT_TASK,
     HUSKY_PATH,
-    LINT_PAIRS,
-    LINT_WORDS,
     AGENT_FILES,
     HOOK_SHEBANG,
     LINT_FOLDERS,
     RULE_FOLDERS,
-    RUNNER_NAMES,
     KEPT_DOT_FILE,
     LFS_PUSH_CALLS,
     LEFTHOOK_NAMES,
     GITLAB_CI_FILE,
-    TASK_AFTER_RUN,
     YAML_EXTENSIONS,
     PRE_COMMIT_FILE,
     LFS_GUARD_PREFIX,
@@ -40,26 +32,11 @@ import {
     LEFTHOOK_PREFIXES,
     SAMPLE_HOOK_SUFFIX,
     HOOKS_PATH_SETTING,
-    COMMAND_SEPARATORS,
     LEFTHOOK_EXTENSIONS,
-    JOB_NAME_SEPARATORS,
-    ESLINT_MANIFEST_TOOL,
     FOREIGN_HOOK_FOLDERS,
     SIMPLE_GIT_HOOKS_KEY,
     GITHUB_WORKFLOWS_FOLDER,
 } from '#cli/config/repository/setup.ts';
-
-function isLintCommand(command: string): boolean {
-    const words = command.split(COMMAND_SEPARATORS).filter((word) => word !== '');
-    return words.some((word, index) => {
-        if (word === ESLINT_MANIFEST_TOOL) return true;
-        const next = words[index + 1];
-        if (next !== undefined && LINT_PAIRS.has(`${word} ${next}`)) return true;
-        if (!RUNNER_NAMES.includes(word)) return false;
-        const task = next === RUN_WORD ? words[index + TASK_AFTER_RUN] : next;
-        return task === LINT_TASK;
-    });
-}
 
 function listFolder(root: string, folder: string): string[] {
     if (statSync(join(root, folder), { throwIfNoEntry: false }) === undefined) return [];
@@ -81,37 +58,6 @@ function detectHookFolder(
     );
     if (files.length === 0) return undefined;
     return { kind: folder === HUSKY_PATH ? 'husky' : 'githooks', path: folder, files };
-}
-
-function listJobCommands(job: CiJob): string[] {
-    if (job.script !== undefined) return Array.isArray(job.script) ? job.script : [job.script];
-    return (job.steps ?? []).flatMap((step) => (step.run === undefined ? [] : [step.run]));
-}
-
-function isLintJob(name: string, job: CiJob): boolean {
-    if (job.steps === undefined && job.script === undefined && job.extends === undefined) return false;
-    return (
-        name
-            .toLowerCase()
-            .split(JOB_NAME_SEPARATORS)
-            .some((word) => LINT_WORDS.has(word)) || listJobCommands(job).some((command) => isLintCommand(command))
-    );
-}
-
-function listLintJobs(path: string, document: unknown): string[] {
-    const parsed = ciDocumentSchema.safeParse(document);
-    if (!parsed.success) return [];
-    const source = path.startsWith(GITHUB_WORKFLOWS_FOLDER) ? ciDocumentSchema.safeParse(parsed.data['jobs']) : parsed;
-    if (!source.success) return [];
-    return Object.entries(source.data)
-        .values()
-        .map(([name, value]) => {
-            if (name.startsWith('.')) return undefined;
-            const job = ciJobSchema.safeParse(value);
-            return job.success && isLintJob(name, job.data) ? `${path}: ${name}` : undefined;
-        })
-        .filter((job) => job !== undefined)
-        .toArray();
 }
 
 async function readHooksPathSetup(root: string, hooksPath: string): Promise<RepositorySetup['hooks']> {
@@ -192,22 +138,6 @@ export async function readHooks(repository: Pick<Repository, 'root'>): Promise<R
     const hooks = await listHookSetups(root, own ? '' : hooksPath);
     if (written === undefined) hooks.push(...(await listGitFolderHooks(root)));
     return { hooksPath, hooks };
-}
-
-/**
-Find the existing jobs that run a linter.
-
-@param root the repository to read.
-@param paths the CI files to read.
-*/
-export function readLintJobs(root: string, paths: string[]): string[] {
-    return paths
-        .filter((path) => !FOREIGN_CI_FILES.has(path))
-        .flatMap((path) => {
-            const source = find(root, path);
-            if (source === undefined) return [];
-            return parseYamlDocuments(path, source).flatMap((document) => listLintJobs(path, document));
-        });
 }
 
 /**

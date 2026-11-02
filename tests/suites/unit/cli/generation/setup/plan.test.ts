@@ -82,6 +82,26 @@ test('init plans no scope for an old lint folder, and --level all replaces the c
     ]);
 });
 
+test('the init plan names the line of each lint command and leaves the file alone', async () => {
+    const manifest = '{\n  "private": true,\n  "scripts": { "lint": "eslint ." }\n}\n';
+    await using sandbox = await createGitSandbox({ 'package.json': manifest, 'main.js': 'export const value = 1;\n' });
+    commitAll(sandbox.path);
+    const result = await runGspot(sandbox.path, ['init', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
+    expect(plan.lintCommands).toStrictEqual([
+        {
+            file: 'package.json',
+            line: 3,
+            source: 'script',
+            command: 'eslint .',
+            tool: 'eslint',
+            fix: 'Replace this command with gspot check.',
+        },
+    ]);
+    expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toContain('"lint": "eslint ."');
+});
+
 test('init names the crlf setting of your .editorconfig as dropped', async () => {
     await using sandbox = await createGitSandbox({ '.editorconfig': 'root = true\n\n[*]\nend_of_line = crlf\n' });
     commitAll(sandbox.path);

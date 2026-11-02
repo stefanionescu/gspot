@@ -23,13 +23,13 @@ summary = "Reports each count in `gspot.baseline.json` that the checks of the ru
 why = "A count with room left hides the next finding of that rule in that file."
 
 [[check]]
-example = "A `.commitlintrc.json` while gspot runs commitlint reports a conflicting config file. Delete it, and write the rule you need in `gspot.toml`, such as `commits.types`."
-help = "Delete the file. gspot writes the settings this tool reads; move a rule you need into gspot.toml."
+example = "A `.commitlintrc.json` while gspot runs commitlint reports a conflicting config file. Delete it, and write the rule you need in `gspot.toml`, such as `commits.types`. A script `eslint .` in `package.json` reports an lint command. Replace it with `gspot check`."
+help = "Delete the file or the line that the message names, or replace the line with `gspot check`. gspot writes the settings of this tool; move a rule you need into gspot.toml."
 name = "conflicting-configs"
 runs = "once"
 stage = "commit"
-summary = "Finds the settings file of a tool that gspot writes settings for, such as `.commitlintrc.json` while commitlint runs."
-why = "The tool reads only the settings gspot writes, so a rule left in the old file looks active and does nothing."
+summary = "Finds the settings file of a tool that gspot writes settings for, such as `.commitlintrc.json` while commitlint runs, and what still calls or repeats such a tool: package scripts, lint-staged entries, hook lines, pre-commit entries, CI steps, repeated devDependencies, and the settings of black, flake8, isort, and mypy."
+why = "The tool reads only the settings gspot writes, so a rule left in the old file looks active and does nothing, and an lint command fails or runs a second lint stack beside gspot."
 
 [[check]]
 example = "An edit by hand to a generated config file reports drift. Move the change into gspot.toml, then run `gspot apply`."
