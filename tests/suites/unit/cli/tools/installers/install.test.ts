@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { join, parse } from 'node:path';
 import { createFileTree } from 'testdirs';
-import { join, basename } from 'node:path';
 import { getTool } from '#cli/tools/pins.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -21,7 +21,7 @@ async function runBunInstall(root: string, installPackages: () => Promise<void>,
     using _lookup = fakeExecutableLookup((name) => (name === 'node' ? undefined : null));
     let installs = 0;
     using _commands = fakeCommands(undefined, async (command) => {
-        if (basename(command[0] ?? '') === damagedTool) return buildProcessResult({ code: 1, stderr: 'damaged' });
+        if (parse(command[0] ?? '').name === damagedTool) return buildProcessResult({ code: 1, stderr: 'damaged' });
         if (!command.includes('install')) return buildProcessResult({ stdout: '1.4.2\n' });
         installs += 1;
         if (installs > 1) await installPackages();
