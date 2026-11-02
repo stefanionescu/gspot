@@ -5,8 +5,12 @@ description: Review what init preserves, replaces, and leaves for you to migrate
 
 ## Read the plan
 
-`gspot init` prints its plan and writes without asking. To read the plan first, run `gspot scan`: it prints the
-same plan and changes nothing in your repository. Commit your current config files before you run init.
+`gspot init` prints its plan and writes without asking. To read the plan first, run `gspot scan`: it prints the plan
+of the default level and changes nothing in your repository. Commit your current config files before you run init.
+
+When the repository does not pin gspot, init adds the pin to `package.json`, or to `mise.toml` in a repository without
+a `package.json`. Init installs nothing, so its last line names the install to run before `gspot install`.
+
 The level decides which tools run and which config files init replaces. To start at level `all`:
 
 ```shell

@@ -2,6 +2,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import * as installers from '#cli/tools/installers/install.ts';
 import type { ScanReport } from '#cli/types/commands/reports.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -44,6 +45,12 @@ test('scan reports its run and the plan of init, and leaves the repository as it
         { check: 'secrets/env-examples', file: 'src/a.js', line: 1 },
     ]);
     expect(report.notRun.length).toBeGreaterThan(0);
+    expect(report.nextSteps).toStrictEqual([
+        `npm install --save-dev --save-exact @gspothq/cli@${cliPackage.version}`,
+        'npm exec --no -- gspot init',
+        'npm exec --no -- gspot install',
+        'npm exec --no -- gspot baseline',
+    ]);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 

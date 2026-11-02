@@ -16,6 +16,7 @@ import type { InitJson, InitFlags, CommandDefinition } from '#cli/types/commands
 import {
     FROM_OPTION,
     LEVEL_OPTION,
+    NEXT_PIN_MESSAGE,
     INIT_INSTALL_NOTES,
     WROTE_PLAN_MESSAGE,
     NEXT_INSTALL_MESSAGE,
@@ -29,7 +30,7 @@ import {
 async function runInitCommand(root: string, options: InitOptions): Promise<CommandResult<InitJson>> {
     if (find(root, SETTINGS_FILE) !== undefined) throw new GspotError('arguments', SETTINGS_EXIST_MESSAGE);
     const initPlan = await planInit(root, options);
-    const { plan, settingsText } = initPlan;
+    const { plan, settingsText, pinPath, session } = initPlan;
     assertFilesCommitted(root, initPlan.replaced);
     print(formatDetection(initPlan.detection));
     print(formatInitPlan(plan, settingsText));
@@ -45,9 +46,13 @@ async function runInitCommand(root: string, options: InitOptions): Promise<Comma
     };
     const applied = await writeInitFiles(root, initPlan);
     const notes = applied.notes.filter((note) => !INIT_INSTALL_NOTES.has(note));
+    const next =
+        pinPath === undefined
+            ? NEXT_INSTALL_MESSAGE
+            : NEXT_PIN_MESSAGE.replace('{runner}', session.startRunner.name).replace('{file}', () => pinPath);
     return {
-        text: [WROTE_PLAN_MESSAGE, ...notes, '', NEXT_INSTALL_MESSAGE].join('\n'),
-        json: { ...json, ...applied, notes: [...notes, NEXT_INSTALL_MESSAGE] },
+        text: [WROTE_PLAN_MESSAGE, ...notes, '', next].join('\n'),
+        json: { ...json, ...applied, notes: [...notes, next] },
         exitCode: 0,
     };
 }

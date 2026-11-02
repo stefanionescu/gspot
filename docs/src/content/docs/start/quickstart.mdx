@@ -60,7 +60,8 @@ The agent then:
 
 1. Adds `@gspothq/cli` with the package manager of your repository, or pins it with mise.
 2. Runs `gspot scan`, and shows you the findings and the plan.
-3. Asks which [level](/start/concepts/#levels) you want, and runs `gspot init` at that level only after you agree.
+3. Asks which [level](/start/concepts/#levels) you want, and waits for your answer. Then it runs `gspot init` at that
+   level, which writes without asking.
 4. Runs `gspot install` and `gspot check`, and shows you the result.
 5. Reads `AGENTS.md` and the agent rules before it writes more code.
 

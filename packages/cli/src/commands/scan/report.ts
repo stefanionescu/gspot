@@ -1,3 +1,4 @@
+import cliPackage from '#cli-package' with { type: 'json' };
 import { INCOMPLETE_STATUSES } from '#cli/config/engine.ts';
 import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
@@ -73,6 +74,12 @@ function listNotRun({ checks }: RunReport): string[] {
     return [...new Set(stopped.map(({ check, note }) => `${check}: ${note ?? ''}`.trim()))];
 }
 
+function listNextSteps({ pinPath, session }: ScanInput['planning']): string[] {
+    const { command, installCommand } = session.startRunner;
+    const add = installCommand.replace('<version>', () => cliPackage.version);
+    return [...(pinPath === undefined ? [] : [add]), ...SCAN_NEXT_STEPS.map((step) => `${command} ${step}`)];
+}
+
 /**
 Sum up a finished trial run.
 
@@ -97,7 +104,7 @@ export function buildScanReport(input: ScanInput): ScanReport {
         cost: buildCost(input),
         plan: planning.plan,
         settingsText: planning.settingsText,
-        nextSteps: SCAN_NEXT_STEPS,
+        nextSteps: listNextSteps(planning),
         checks: report.checks,
     };
 }
@@ -134,7 +141,7 @@ function listSections(report: ScanReport): ScanSection[] {
             rows: formatInitPlan(plan, settingsText).trimEnd().split('\n'),
             preformatted: true,
         },
-        { title: SCAN_NEXT_STEPS_TITLE, rows: [...nextSteps] },
+        { title: SCAN_NEXT_STEPS_TITLE, rows: nextSteps },
     ];
 }
 

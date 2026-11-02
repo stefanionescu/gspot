@@ -145,6 +145,7 @@ export type InitPlanning = {
     settingsText: string;
     reviewed: Map<string, FileContents | undefined>;
     replaced: string[];
+    pinPath: string | undefined;
 };
 
 export type DetectionSummary = {

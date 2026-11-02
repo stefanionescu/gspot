@@ -6,6 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { STOPPED_ERROR_MESSAGE, GENERATED_WRITE_MESSAGE } from '#tests/config/generation/plan.ts';
@@ -27,6 +28,24 @@ test('init keeps the old config file when the generated one cannot be written', 
     expect(await readFile(join(sandbox.path, 'typos.toml'), 'utf8')).toBe(authored);
     const exists = await isOnDisk(join(sandbox.path, getManifestTarget('spelling', 'typos.toml')));
     expect(exists).toBe(false);
+});
+
+test.each([
+    {
+        name: 'a package.json without a pin needs the install of the package manager',
+        manifest: '{"name":"example","private":true}\n',
+        next: 'Next: run npm install to install the gspot that package.json now pins, then gspot install, then gspot baseline.',
+    },
+    {
+        name: 'a repository with a pin goes on to gspot install',
+        manifest: `{"name":"example","private":true,"devDependencies":{"${cliPackage.name}":"${cliPackage.version}"}}\n`,
+        next: 'Next: gspot install, then gspot baseline.',
+    },
+])('the last line of init: $name', async ({ manifest, next }) => {
+    await using sandbox = await createGitSandbox({ 'package.json': manifest });
+    const result = await runGspot(sandbox.path, ['init', '--no-configurations']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout.trimEnd().split('\n').at(-1)).toBe(next);
 });
 
 test('init keeps a shared file that was edited after the plan', async () => {

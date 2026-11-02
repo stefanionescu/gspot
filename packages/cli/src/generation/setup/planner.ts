@@ -82,6 +82,7 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
         settingsText,
         reviewed: conflicts.reviewed,
         replaced: conflicts.deleted.map(({ path }) => path),
+        pinPath: planning.pinPath,
     };
 }
 

@@ -222,6 +222,6 @@ export const SCAN_PLAN_TITLE = 'What gspot init would do';
 
 export const SCAN_NEXT_STEPS_TITLE = 'Next steps';
 
-export const SCAN_NEXT_STEPS = ['gspot init', 'gspot install', 'gspot baseline'] as const;
+export const SCAN_NEXT_STEPS = ['init', 'install', 'baseline'] as const;
 
 export const BYTES_PER_MEGABYTE = 1_048_576;

@@ -42,7 +42,8 @@ ${setup.map(({ label, add }) => `   - ${label}: \`${add}\``).join('\n')}
 
 ${setup.flatMap(({ label, prerequisites }) => prerequisites.map((command) => `   With ${label}, run \`${command}\` first, so that gspot uses a supported runtime.`)).join('\n')}
    Start the next commands with ${DISJUNCTION_FORMAT.format(setup.map(({ start }) => `\`${start}\``))}.
-2. Run \`gspot scan\`. It changes nothing in the repository. Show the user its findings and its plan of init.
+2. Run \`gspot scan\`. It changes nothing in the repository. Show the user its findings and the plan of init at the
+   default level.
 3. Ask the user which level, and wait for the answer. ${CLI_REFERENCE.levelSummaries.basic} ${CLI_REFERENCE.levelSummaries.all} Level \`all\` also
    installs a few more tools. Suggest \`basic\`, the default, for an existing codebase, and \`all\` for a new
    repository or one that agents write. The level decides which config files the plan replaces.

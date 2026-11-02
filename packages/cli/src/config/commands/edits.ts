@@ -76,6 +76,9 @@ export const SETTINGS_EXIST_MESSAGE =
 
 export const NEXT_INSTALL_MESSAGE = 'Next: gspot install, then gspot baseline.';
 
+export const NEXT_PIN_MESSAGE =
+    'Next: run {runner} install to install the gspot that {file} now pins, then gspot install, then gspot baseline.';
+
 export const CONFIGURATIONS_OPTION = '--configurations <names>';
 
 export const NO_CONFIGURATIONS_FLAG = '--no-configurations';

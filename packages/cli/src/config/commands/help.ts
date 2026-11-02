@@ -28,7 +28,7 @@ export const COMMAND_HELP = {
         summary: 'Find what this repository needs, then write gspot.toml and the generated files',
         group: 'Set up a repository:',
         description:
-            'Find the configurations this repository needs and print a plan. gspot writes gspot.toml and the generated files: the tool settings, the rule files for coding agents, and the Git hooks. CI starts off; turn it on with gspot set ci.enabled true.\n\ninit deletes your tool configs that gspot replaces. Each one must be committed unchanged, so git show HEAD:<path> can restore it. init installs no tools and runs no checks. Run gspot install next.\n\nWith --from, init also selects the configurations of the gspot.toml of another repository, and copies its settings that fit any repository. The plan lists each one it leaves out.',
+            'Find the configurations this repository needs and print a plan. gspot writes gspot.toml and the generated files: the tool settings, the rule files for coding agents, and the Git hooks. CI starts off; turn it on with gspot set ci.enabled true.\n\ninit deletes your tool configs that gspot replaces. Each one must be committed unchanged, so git show HEAD:<path> can restore it. init installs nothing and runs no checks. Its last line names the commands to run next.\n\nWith --from, init also selects the configurations of the gspot.toml of another repository, and copies its settings that fit any repository. The plan lists each one it leaves out.',
         arguments: {},
         options: {
             '--from <file>': "Start from another repository's gspot.toml",

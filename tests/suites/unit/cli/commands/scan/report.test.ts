@@ -50,7 +50,7 @@ test('the text report prints each section with its rows', async () => {
     expect(text).toContain('Could not run\n  python/ruff: ruff is not installed.\n');
     expect(text).toContain('  pre-push  4.9s\n');
     expect(text).toContain('What gspot init would do\n  configurations\n');
-    expect(text).toEndWith('Next steps\n  gspot init\n  gspot install\n  gspot baseline\n');
+    expect(text).toEndWith('  mise exec -- gspot init\n  mise exec -- gspot install\n  mise exec -- gspot baseline\n');
 });
 
 test('the Markdown report uses headings and lists, and fences the plan', async () => {
@@ -58,7 +58,7 @@ test('the Markdown report uses headings and lists, and fences the plan', async (
     expect(text).toStartWith('# gspot scan\n\nChecked 2 files');
     expect(text).toContain('## Secrets: 1 finding\n\n- src/key.ts:2  secrets/gitleaks-staged generic-api-key');
     expect(text).toContain('## What gspot init would do\n\n```text\nconfigurations\n');
-    expect(text).toEndWith('## Next steps\n\n- gspot init\n- gspot install\n- gspot baseline\n');
+    expect(text).toEndWith('- mise exec -- gspot init\n- mise exec -- gspot install\n- mise exec -- gspot baseline\n');
 });
 
 test('the report words one file to format in the singular', async () => {

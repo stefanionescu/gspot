@@ -249,7 +249,7 @@ export type ScanReport = {
     cost: { tools: number; megabytes: number; perTool: ScanTime[]; perHook: ScanTime[] };
     plan: InitPlan;
     settingsText: string;
-    nextSteps: readonly string[];
+    nextSteps: string[];
     checks: RunReport['checks'];
 };
 
