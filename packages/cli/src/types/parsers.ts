@@ -95,7 +95,7 @@ export type CommentParser = (text: string, path: string) => SourceComment[] | Pr
 
 export type ComponentScript = { grammar: GrammarName; source: string };
 
-export type EnvironmentRead = { key: string | undefined; line: number; column: number };
+export type EnvironmentRead = { key: string | undefined; line: number; column: number; hasDefault?: true };
 
 export type EnvironmentKind = 'os' | 'environ' | 'getenv' | undefined;
 

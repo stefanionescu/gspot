@@ -230,6 +230,10 @@ export const LICENSE_RULES = { unusedRecord: 'unused-record', disallowedLicense:
 
 export const GITLEAKS_LOG_OPTIONS = '--diff-merges=separate';
 
+export const SECRET_KEY_NAME = /(?:TOKEN|SECRET|KEY|PASSWORD)/u;
+
+export const ENV_DEFAULT_RULE = 'env-fallback';
+
 export const ENV_KEY_LINE = /^(?:#\s*)?(?:export )?(?<key>[A-Z][A-Z0-9_]*)=/u;
 
 export const GITLEAKS_LOG_FLAG = '--log-opts';

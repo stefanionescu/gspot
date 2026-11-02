@@ -19,6 +19,7 @@ import {
     PYTHON_SCOPE_NODES,
     COMPONENT_EXTENSION,
     PYTHON_IMPORT_NODES,
+    PYTHON_LITERAL_NODES,
     PYTHON_STRING_ESCAPE,
     PYTHON_STRING_ESCAPES,
     OS_ENVIRONMENT_MEMBERS,
@@ -41,6 +42,23 @@ function findEnvironmentKey(node: ts.Node, source: ts.SourceFile, getters: Set<s
         return undefined;
     if (ts.isPropertyAccessExpression(node)) return node.name.text;
     return ts.isStringLiteralLike(node.argumentExpression) ? node.argumentExpression.text : undefined;
+}
+
+function hasPythonDefault(keyNode: Node | null | undefined): boolean {
+    const call = keyNode?.parent;
+    const defaultValue = call?.type === 'argument_list' ? call.namedChildren[1] : undefined;
+    return defaultValue !== undefined && PYTHON_LITERAL_NODES.has(defaultValue.type);
+}
+
+function hasLiteralDefault(node: ts.Node): boolean {
+    const ts = requireTypescript();
+    const { parent } = node;
+    return (
+        ts.isBinaryExpression(parent) &&
+        parent.left === node &&
+        [ts.SyntaxKind.QuestionQuestionToken, ts.SyntaxKind.BarBarToken].includes(parent.operatorToken.kind) &&
+        (ts.isLiteralExpression(parent.right) || ts.isNoSubstitutionTemplateLiteral(parent.right))
+    );
 }
 
 function findDeclarationScope(node: Node): Node {
@@ -267,7 +285,12 @@ export function listJavascriptEnvironmentReads(
         const key = findEnvironmentKey(node, source, getters);
         if (key !== undefined && VARIABLE_NAME.test(key)) {
             const position = source.getLineAndCharacterOfPosition(node.getStart(source));
-            reads.push({ key, line: position.line + 1, column: position.character + 1 });
+            reads.push({
+                key,
+                line: position.line + 1,
+                column: position.character + 1,
+                ...(hasLiteralDefault(node) && { hasDefault: true }),
+            });
         }
         ts.forEachChild(node, visit);
     };
@@ -311,6 +334,11 @@ export function listPythonEnvironmentReads(
                 literal?.type === 'string' && literal.descendantsOfType('interpolation').length === 0
                     ? decodePythonKey(literal)
                     : undefined;
-            return { key, line: node.startPosition.row + 1, column: node.startPosition.column + 1 };
+            return {
+                key,
+                line: node.startPosition.row + 1,
+                column: node.startPosition.column + 1,
+                ...(hasPythonDefault(literal) && { hasDefault: true }),
+            };
         });
 }

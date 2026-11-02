@@ -56,6 +56,8 @@ export const BASH_COMPOUND_NODES: readonly string[] = [
 
 export const FOR_HEADER_FIELDS = ['initializer', 'condition', 'update'] as const;
 
+export const PYTHON_LITERAL_NODES: ReadonlySet<string> = new Set(['string', 'integer', 'float', 'true', 'false']);
+
 export const BASH_TOKEN_FORMS: Readonly<Record<string, Readonly<Record<string, BashForm>>>> = {
     function_definition: { function: 'function-keyword' },
     declaration_command: { typeset: 'typeset' },

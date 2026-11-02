@@ -51,7 +51,6 @@ import { checkUnusedFunctions } from '#cli/configurations/language/bash/checks/u
 import { checkDockerignore } from '#cli/configurations/infrastructure/docker/checks/dockerignore.ts';
 import { checkInstructions } from '#cli/configurations/infrastructure/docker/checks/instructions.ts';
 import { checkMigrationOrder } from '#cli/configurations/database/postgres/checks/migration-order.ts';
-import { checkEnvExamples, checkGitleaksPushed } from '#cli/configurations/general/secrets/checks.ts';
 import { checkSharedPrefixes } from '#cli/configurations/general/structure/checks/shared-prefixes.ts';
 import { checkReferences, checkCommitlintPushed } from '#cli/configurations/general/commits/checks.ts';
 import { checkEditedMigrations } from '#cli/configurations/database/postgres/checks/edited-migrations.ts';
@@ -64,6 +63,7 @@ import { checkJavascriptTsc, checkJavascriptBiome } from '#cli/configurations/la
 import { checkEnvironmentReaders } from '#cli/configurations/general/structure/checks/environment-readers.ts';
 import { checkPassThroughFolders } from '#cli/configurations/general/structure/checks/pass-through-folders.ts';
 import { checkActionlint, checkWorkflowShape } from '#cli/configurations/infrastructure/github-actions/checks.ts';
+import { checkEnvExamples, checkEnvDefaults, checkGitleaksPushed } from '#cli/configurations/general/secrets/checks.ts';
 
 import {
     checkLockfiles,
@@ -179,6 +179,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'repository/large-files': { check: checkLargeFiles },
     'repository/local-files': { check: checkLocalFiles },
     'secrets/env-examples': { check: checkEnvExamples },
+    'secrets/env-fallbacks': { check: checkEnvDefaults },
     'secrets/gitleaks-pushed': { run: checkGitleaksPushed },
     'security/semgrep': { run: checkSemgrep },
     'site/build': { check: checkSiteBuild },

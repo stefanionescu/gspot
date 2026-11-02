@@ -131,3 +131,32 @@ test.each([...ENVIRONMENT_TEXT_CASES])('$name', async ({ files, changed, finding
     const findings = await runSandboxCheck(sandbox.path, 'secrets/env-examples');
     expect(findings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([...expected]);
 });
+
+test('env-fallbacks reports a secret with a literal fallback in JavaScript and Python, and no other read', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript', 'python']),
+        'config.js': [
+            "export const token = process.env.API_TOKEN ?? 'dev-token';",
+            "export const key = process.env.API_KEY || 'dev-key';",
+            "export const url = process.env.API_URL ?? 'http://localhost';",
+            'export const secret = process.env.API_SECRET;',
+            'export const password = process.env.DB_PASSWORD ?? fallbackPassword();',
+            '',
+        ].join('\n'),
+        'config.py': [
+            'import os',
+            'TOKEN = os.environ.get("API_TOKEN", "dev")',
+            'KEY = os.getenv("API_KEY", "dev")',
+            'URL = os.getenv("API_URL", "dev")',
+            'SECRET = os.environ.get("API_SECRET")',
+            '',
+        ].join('\n'),
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'secrets/env-fallbacks');
+    expect(findings.map(({ file, line }) => [file, line])).toStrictEqual([
+        ['config.js', 1],
+        ['config.js', 2],
+        ['config.py', 2],
+        ['config.py', 3],
+    ]);
+});

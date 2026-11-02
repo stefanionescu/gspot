@@ -19,7 +19,9 @@ import { listPythonEnvironmentReads, listJavascriptEnvironmentReads } from '#cli
 
 import {
     ENV_KEY_LINE,
+    SECRET_KEY_NAME,
     MISSING_KEY_RULE,
+    ENV_DEFAULT_RULE,
     GITLEAKS_LOG_FLAG,
     GITLEAKS_LOG_OPTIONS,
     ENVIRONMENT_READ_LANGUAGES,
@@ -114,6 +116,34 @@ export async function checkEnvExamples(session: Session, planned: PlannedCheck):
     for (const file of sourceFiles) {
         const reads = await readEnvironmentReferences(session, file.path, environmentFunctions);
         findings.push(...listMissingEnvironmentKeys(file.path, reads, exampleKeys));
+    }
+    return findings;
+}
+
+/**
+Reports each read of a secret environment variable with a literal fallback.
+
+@param session the repository and its tools.
+@param planned the configured check and selected scope files.
+*/
+export async function checkEnvDefaults(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+    const { environment_functions: environmentFunctions } = getTable(planned.scope.settings, 'secrets');
+    const extensions = listTaggedExtensions(...ENVIRONMENT_READ_LANGUAGES);
+    const findings: CheckFinding[] = [];
+    for (const file of planned.files) {
+        if (file.kind !== 'source' || !extensions.some((extension) => file.path.endsWith(extension))) continue;
+        const reads = await readEnvironmentReferences(session, file.path, environmentFunctions);
+        findings.push(
+            ...reads
+                .filter(({ key, hasDefault }) => hasDefault === true && SECRET_KEY_NAME.test(key ?? ''))
+                .map(({ key, line, column }) => ({
+                    file: file.path,
+                    line,
+                    column,
+                    rule: ENV_DEFAULT_RULE,
+                    message: `${String(key)} has a literal fallback. A secret has no default: fail when it is missing.`,
+                })),
+        );
     }
     return findings;
 }
