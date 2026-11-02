@@ -20,14 +20,15 @@ import type {
 const options: OutputState = { isJson: false, notes: [] };
 
 /**
-Remove terminal escape sequences, control characters except tabs and line feeds, and format characters such as
-bidirectional overrides. Keep the color codes of the gspot palette. Repository text then cannot control terminal output.
+Write text as a line, without terminal escape sequences, control characters except tabs and line feeds, and format
+characters such as bidirectional overrides. Keep the color codes of the gspot palette. Repository text then cannot
+control terminal output.
 
-@param text the text to print.
+@param stream the terminal stream.
+@param text the text to print, which gets a final newline if it lacks one.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Terminal writers share the same control-character removal.
-function stripControlCharacters(text: string): string {
-    return text
+function writePrintableLine(stream: NodeJS.WriteStream, text: string): void {
+    const printable = text
         .split(TERMINAL_COLOR_SEQUENCE)
         .map((segment) =>
             TERMINAL_COLOR_SEQUENCE.test(segment)
@@ -35,6 +36,7 @@ function stripControlCharacters(text: string): string {
                 : stripVTControlCharacters(segment).replaceAll(TERMINAL_CONTROL_CHARACTERS, ''),
         )
         .join('');
+    stream.write(printable.endsWith('\n') ? printable : `${printable}\n`);
 }
 
 /**
@@ -58,12 +60,12 @@ export function printError(failure: string | CommandFailureJson): void {
         process.stdout.write(`${JSON.stringify({ ...fields, ...failure }, null, RESULT_JSON_INDENT)}\n`);
         return;
     }
-    const text = stripControlCharacters(
+    writePrintableLine(
+        process.stderr,
         typeof failure === 'string'
             ? failure
             : [failure.message, failure.stack].filter((line) => line !== undefined).join('\n'),
     );
-    process.stderr.write(text.endsWith('\n') ? text : `${text}\n`);
 }
 
 /**
@@ -131,8 +133,7 @@ Print readable text on stdout without terminal control bytes, unless --json asks
 */
 export function print(text: string): void {
     if (options.isJson) return;
-    const printable = stripControlCharacters(text);
-    process.stdout.write(printable.endsWith('\n') ? printable : `${printable}\n`);
+    writePrintableLine(process.stdout, text);
 }
 
 /**
