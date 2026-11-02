@@ -1,7 +1,7 @@
 import { createRule } from '../../rule.ts';
 import { getModuleName } from '../../language/modules.ts';
 import type { LocalFunction } from '../../types/plugin.ts';
-import { MEMOIZE_FUNCTIONS } from '../../config/frameworks.ts';
+import { MEMOIZE_FUNCTIONS } from '../../config/libraries.ts';
 import { getLocalFunction } from '../../language/functions.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

@@ -207,3 +207,104 @@ export const SHORTHAND_ITERATEES = new Set<string>([
 ]);
 
 export const PATTERN_TEXT = /^(?:\/|(?:new\s+)?RegExp\()/u;
+
+export const UTILITY_LIBRARIES = new Map([
+    ['lodash', { minimum: [4, 0, 0], example: 'lodash/map' }],
+    ['lodash-es', { minimum: [4, 0, 0], example: undefined }],
+    ['rxjs', { minimum: [7, 2, 0], example: undefined }],
+    ['rambda', { minimum: [0, 8, 8], example: undefined }],
+    ['validator', { minimum: [12, 1, 0], example: 'validator/es/lib/isEmail' }],
+]);
+
+export const MEMOIZE_FUNCTIONS = new Set(['lodash.memoize', 'lodash-es.memoize', 'underscore.memoize']);
+
+export const JQUERY_GLOBALS = new Set(['jQuery', '$']);
+
+export const JQUERY_ORIGINS = new Set(
+    ['jquery', 'jquery.slim', 'jquery.dist.jquery.slim', 'jquery.dist.jquery.slim.js'].flatMap((module) => [
+        module,
+        `${module}.$`,
+        `${module}.jQuery`,
+    ]),
+);
+
+export const JQUERY_METHODS: ReadonlyMap<string | null, { alternative: string; isDeprecated: boolean }> = new Map([
+    ['isArray', { alternative: 'Array.isArray()', isDeprecated: true }],
+    ['parseJSON', { alternative: 'JSON.parse()', isDeprecated: true }],
+    ['now', { alternative: 'Date.now()', isDeprecated: true }],
+    ['trim', { alternative: 'String.prototype.trim()', isDeprecated: true }],
+    ['inArray', { alternative: 'Array.prototype.indexOf()', isDeprecated: false }],
+]);
+
+export const AXIOS_DEPRECATIONS = new Map([
+    ['axios.all', { symbol: 'axios.all()', alternative: 'Promise.all()' }],
+    ['axios.spread', { symbol: 'axios.spread()', alternative: 'array destructuring' }],
+]);
+
+export const AXIOS_CANCEL_TOKEN = 'axios.CancelToken';
+
+export const AXIOS_CONFIG_POSITIONS = new Map([
+    ['axios', [0, 1]],
+    ['axios.request', [0]],
+    ['axios.get', [1]],
+    ['axios.delete', [1]],
+    ['axios.head', [1]],
+    ['axios.options', [1]],
+    ['axios.post', [2]],
+    ['axios.put', [2]],
+    ['axios.patch', [2]],
+]);
+
+export const NESTED_MEMBER_DEPTH = 2;
+
+export const STRUCTURED_CLONE_NAME = 'structuredClone';
+
+export const MUTATING_CALL =
+    'CallExpression[callee.type="MemberExpression"][callee.property.name=/^(?:add|clear|copyWithin|delete|fill|pop|push|reverse|set|shift|sort|splice|unshift)$/]';
+
+export const CLONE_ADVICE: ReadonlyMap<string | undefined, string> = new Map([
+    ['lodash.clone', 'structuredClone() or _.cloneDeep()'],
+    ['lodash-es.clone', 'structuredClone() or _.cloneDeep()'],
+    ['underscore.clone', 'structuredClone()'],
+]);
+
+export const DEEP_CLONE_NAMES: ReadonlySet<string | undefined> = new Set(['lodash.cloneDeep', 'lodash-es.cloneDeep']);
+
+export const SHALLOW_CLONE_NAMES: ReadonlySet<string | undefined> = new Set([
+    'lodash.clone',
+    'lodash-es.clone',
+    'underscore.clone',
+]);
+
+export const DEPENDENCY_FIELDS = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'];
+
+export const PACKAGE_MANIFEST = 'package.json';
+
+export const REPOSITORY_MARKER = '.git';
+
+export const VERSION_PATTERN = /^(?<operator>[<>]=?|[~=^])?v?(?<number>[\d.xX*]+)(?:[-+][\w.]*)?$/u;
+
+export const VERSION_NUMBER = /^(?:\d+|[xX*])$/u;
+
+export const VERSION_WILDCARD = /^[xX*]$/u;
+
+export const VERSION_OPERATORS = new Map([
+    ['', 'exact'],
+    ['=', 'exact'],
+    ['^', 'caret'],
+    ['~', 'tilde'],
+    ['<', 'below'],
+    ['<=', 'upto'],
+    ['>', 'unbounded'],
+    ['>=', 'unbounded'],
+]);
+
+export const VERSION_ALTERNATIVES = '||';
+
+export const VERSION_SPACES = /\s+/u;
+
+export const VERSION_SIZE = 3;
+
+export const UNBOUNDED_VERSIONS = new Set(['', '*', 'x', 'X', 'latest']);
+
+export const VUE_THREE = [3, 0, 0];

@@ -1,6 +1,6 @@
 import { createRule } from '../../rule.ts';
 import { listBodyNodes } from '../../libraries/testing.ts';
-import { GENERATED_KEY_CALLS } from '../../config/frameworks.ts';
+import { GENERATED_KEY_CALLS } from '../../config/react.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 export const noGeneratedKeys = createRule<[], 'generated'>({

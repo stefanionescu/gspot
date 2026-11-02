@@ -10,14 +10,14 @@ import {
     VERSION_NUMBER,
     VERSION_SPACES,
     VERSION_PATTERN,
-    VERSION_WILDCARD,
     PACKAGE_MANIFEST,
-    VERSION_OPERATORS,
+    VERSION_WILDCARD,
     DEPENDENCY_FIELDS,
     REPOSITORY_MARKER,
+    VERSION_OPERATORS,
     UNBOUNDED_VERSIONS,
     VERSION_ALTERNATIVES,
-} from '../config/packages.ts';
+} from '../config/libraries.ts';
 
 const manifestCache = new WeakMap<TSESLint.SourceCode, PackageFacts>();
 

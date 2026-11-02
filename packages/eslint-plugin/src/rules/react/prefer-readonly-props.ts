@@ -6,12 +6,12 @@ import type { TypeReader, CheckedType } from '../../types/plugin.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
-    READONLY_MAPPED,
     JSX_NODE_PREFIX,
+    READONLY_MAPPED,
     READONLY_MEMBER,
     READONLY_UTILITY,
     COMPONENT_DECLARATION,
-} from '../../config/frameworks.ts';
+} from '../../config/react.ts';
 
 function traceReturnedValue(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node {
     const variable =

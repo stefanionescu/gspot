@@ -2,7 +2,7 @@ import { createRule } from '../../rule.ts';
 import { getModuleName } from '../../language/modules.ts';
 import { usesVueThree } from '../../libraries/packages.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { VUE_CLASS_BASE, VUE_CLASS_DECORATORS, VUE_PROPERTY_DECORATORS } from '../../config/frameworks.ts';
+import { VUE_CLASS_BASE, VUE_CLASS_DECORATORS, VUE_PROPERTY_DECORATORS } from '../../config/vue.ts';
 
 function hasDecorator(
     decorators: TSESTree.Decorator[],

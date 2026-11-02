@@ -8,12 +8,12 @@ import {
     VUE_REF,
     GUARD_TESTS,
     VUE_REACTIVE,
-    VUE_ON_UPDATED,
     VOLATILE_CALLS,
+    VUE_ON_UPDATED,
     VUE_DEFINE_COMPONENT,
     VUE_OPTION_PROPERTIES,
     TERMINATING_STATEMENTS,
-} from '../../config/frameworks.ts';
+} from '../../config/vue.ts';
 
 function getHookBody(node: TSESTree.Node | undefined, source: TSESLint.SourceCode): TSESTree.Node | undefined {
     const variable =

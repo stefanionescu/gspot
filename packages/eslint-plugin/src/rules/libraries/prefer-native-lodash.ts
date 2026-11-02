@@ -16,7 +16,7 @@ import {
     CALLBACK_METHODS,
     NATIVE_REPLACEMENTS,
     SHORTHAND_ITERATEES,
-} from '../../config/lodash.ts';
+} from '../../config/libraries.ts';
 
 const methodNames = new Map([...NATIVE_REPLACEMENTS.keys()].map((method) => [method.toLowerCase(), method]));
 

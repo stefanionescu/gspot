@@ -13,7 +13,7 @@ import {
     TIMER_FUNCTION,
     CLASS_OUTPUT_METHOD,
     STATEFUL_FUNCTION_NAME,
-} from '../../config/frameworks.ts';
+} from '../../config/react.ts';
 
 function isRefCall(node: TSESTree.Node | null | undefined, source: TSESLint.SourceCode): boolean {
     const callee = node?.type === AST_NODE_TYPES.CallExpression ? node.callee : undefined;

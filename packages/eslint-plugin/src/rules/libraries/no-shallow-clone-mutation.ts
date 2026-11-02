@@ -8,10 +8,10 @@ import {
     CLONE_ADVICE,
     MUTATING_CALL,
     DEEP_CLONE_NAMES,
-    SHALLOW_CLONE_NAMES,
     NESTED_MEMBER_DEPTH,
+    SHALLOW_CLONE_NAMES,
     STRUCTURED_CLONE_NAME,
-} from '../../config/collections.ts';
+} from '../../config/libraries.ts';
 
 function getMemberRoot(node: TSESTree.Node): TSESTree.Identifier | undefined {
     let value = unwrapExpression(node);

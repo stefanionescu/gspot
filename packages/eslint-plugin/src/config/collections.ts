@@ -54,24 +54,3 @@ export const WRITING_COLLECTION_METHODS: ReadonlySet<string> = new Set([
 ]);
 
 export const ELEMENT_WRITE_OPERATORS: ReadonlySet<string> = new Set(['=', '||=', '&&=', '??=']);
-
-export const NESTED_MEMBER_DEPTH = 2;
-
-export const STRUCTURED_CLONE_NAME = 'structuredClone';
-
-export const MUTATING_CALL =
-    'CallExpression[callee.type="MemberExpression"][callee.property.name=/^(?:add|clear|copyWithin|delete|fill|pop|push|reverse|set|shift|sort|splice|unshift)$/]';
-
-export const CLONE_ADVICE: ReadonlyMap<string | undefined, string> = new Map([
-    ['lodash.clone', 'structuredClone() or _.cloneDeep()'],
-    ['lodash-es.clone', 'structuredClone() or _.cloneDeep()'],
-    ['underscore.clone', 'structuredClone()'],
-]);
-
-export const DEEP_CLONE_NAMES: ReadonlySet<string | undefined> = new Set(['lodash.cloneDeep', 'lodash-es.cloneDeep']);
-
-export const SHALLOW_CLONE_NAMES: ReadonlySet<string | undefined> = new Set([
-    'lodash.clone',
-    'lodash-es.clone',
-    'underscore.clone',
-]);
