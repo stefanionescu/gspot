@@ -12,6 +12,7 @@ import { toolsSchema } from '#cli/schemas/settings/tools.ts';
 import { LINE_BREAK, GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { MARKDOWNLINT_RULE_ID } from '#cli/config/settings/schema.ts';
+import { listUnparsedCiFiles } from '#cli/repository/lint-commands.ts';
 import { listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
 import { MARKDOWNLINT_PRETTIER_DISABLED } from '#cli/config/configurations/language.ts';
 import { readRuffOptions, readPrettierOptions, buildPrettierOverrides } from '#cli/generation/setup/format.ts';
@@ -250,12 +251,10 @@ export async function readCarry(input: CarryInput): Promise<Carry> {
         await readCommitlintCarry(input),
         {
             ...EMPTY_CARRY,
-            rows: listUnparsedDependencyFiles(input.repository.files, input.repository.dependencyFiles).map((path) => ({
-                ...CARRY_ROW_START,
-                path,
-                tool: 'gspot',
-                dropped: [UNREADABLE_CONFIG_MESSAGE],
-            })),
+            rows: [
+                ...listUnparsedDependencyFiles(input.repository.files, input.repository.dependencyFiles),
+                ...listUnparsedCiFiles(input.repository),
+            ].map((path) => ({ ...CARRY_ROW_START, path, tool: 'gspot', dropped: [UNREADABLE_CONFIG_MESSAGE] })),
         },
     ];
     const tools = Object.fromEntries(sections.flatMap((section) => Object.entries(section.tools)));

@@ -117,6 +117,12 @@ export const CARRY_ROW_CASES = [
         row: { tool: 'gspot', dropped: ['the whole file, which gspot could not read'] },
     },
     {
+        name: 'a CI file that does not parse',
+        files: { '.gitlab-ci.yml': 'quality: [unterminated', 'source.js': 'export const value = 1;\n' },
+        path: '.gitlab-ci.yml',
+        row: { tool: 'gspot', dropped: ['the whole file, which gspot could not read'] },
+    },
+    {
         name: 'an EditorConfig width that gspot.toml cannot hold',
         files: { '.editorconfig': '[*]\nmax_line_length = 9999\n', 'source.js': 'export const value = 1;\n' },
         path: '.editorconfig',

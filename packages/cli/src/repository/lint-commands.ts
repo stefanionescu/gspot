@@ -86,13 +86,16 @@ function listDocumentCommands(value: unknown, keys: ReadonlySet<string>): string
     );
 }
 
-function readDocumentRows(place: LintCommandPlace, search: CommandSearch): LintCommand[] {
-    const { file, text, source } = place;
+function parseCommandDocuments({ file, text }: LintCommandPlace): unknown[] | undefined {
     const extension = posix.extname(file);
-    const documents = tryParseFile(() =>
+    return tryParseFile(() =>
         YAML_EXTENSIONS.includes(extension) ? parseYamlDocuments(file, text) : [parseSharedFile(text, extension, file)],
     );
-    if (source === 'pre-commit')
+}
+
+function readDocumentRows(place: LintCommandPlace, search: CommandSearch): LintCommand[] {
+    const documents = parseCommandDocuments(place);
+    if (place.source === 'pre-commit')
         return listDocumentCommands(documents, PRE_COMMIT_KEYS).flatMap((command) =>
             buildRow(place, command, search, command.replaceAll(HOOK_ID_SEPARATOR, ' ')),
         );
@@ -144,7 +147,7 @@ function readSecondToolRows({ root, files, tools }: LintCommandSearch): LintComm
     ]);
 }
 
-function readPlaces({ root, files }: LintCommandSearch): LintCommandPlace[] {
+function readPlaces({ root, files }: Pick<LintCommandSearch, 'root' | 'files'>): LintCommandPlace[] {
     const paths = files.filter((file) => file.kind === 'source' && !isGspotPath(file.path));
     return paths.flatMap(({ path: file }) => {
         const source = COMMAND_FILES.find(({ path }) => path.test(file))?.source;
@@ -159,6 +162,19 @@ function readPackageRows({ place, manifest }: LintCommandPackage, search: Comman
         ...Object.values(manifest.scripts).flatMap((command) => buildRow(place, command, search)),
         ...Object.values(manifest[SIMPLE_GIT_HOOKS_KEY]).flatMap((command) => buildRow(hook, command, search)),
     ];
+}
+
+/**
+List the CI files that do not parse. listLintCommands gives them no row, because a row there fails the commit of a
+user, so the init plan names them instead.
+
+@param input the repository root and its tracked files.
+@returns the path of each file.
+*/
+export function listUnparsedCiFiles(input: Pick<LintCommandSearch, 'root' | 'files'>): string[] {
+    return readPlaces(input)
+        .filter((place) => place.source === 'ci' && parseCommandDocuments(place) === undefined)
+        .map(({ file }) => file);
 }
 
 /**
