@@ -65,6 +65,19 @@ test.each([...ASSET_REFERENCE_CASES])(
     },
 );
 
+test('an asset that a package import alias names counts as used', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['site'], { level: 'all' }),
+        'package.json': '{ "imports": { "#site/*": "./src/*" } }\n',
+        'src/components/Logo.astro': "---\nimport logo from '#site/assets/logo.svg';\n---\n<img src={logo.src} />\n",
+        'src/assets/logo.svg': '<svg/>',
+        'src/assets/unused.svg': '<svg/>',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'site/unused-assets')).toMatchObject([
+        { file: 'src/assets/unused.svg', rule: 'unused-asset' },
+    ]);
+});
+
 test('an unstaged deletion removes the reference without failing the asset check', async () => {
     await using resources = new AsyncDisposableStack();
     const root = await prepareAssetRepository(resources, {

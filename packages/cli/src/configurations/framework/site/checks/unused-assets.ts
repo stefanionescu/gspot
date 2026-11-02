@@ -10,6 +10,7 @@ import { parseSource } from '#cli/parsers/code/grammars.ts';
 import type { ComponentScript } from '#cli/types/parsers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { readScopeAliases } from '#cli/repository/javascript/aliases.ts';
 import type { AssetSource, AssetGlobImport } from '#cli/types/configurations/language.ts';
 import { getStringLiteral, listJavascriptSources } from '#cli/parsers/code/environment.ts';
 import { SYMLINK_MODE, FILENAME_TAGS, GIT_FILE_MODES } from '#cli/config/repository/files.ts';
@@ -41,6 +42,15 @@ async function readGlobImports(source: ComponentScript, session: Session): Promi
         const name = node.childForFieldName('function')?.text.replaceAll(WHITESPACE_RUN, '');
         const patterns = name === ASSET_GLOB_CALL ? getGlobPatterns(node) : undefined;
         return patterns === undefined ? [] : [{ patterns, text: node.text }];
+    });
+}
+
+function listAliasSpecifiers(path: string, aliases: Record<string, string>): string[] {
+    return Object.entries(aliases).flatMap(([pattern, target]) => {
+        const [start = '', end] = target.split('*');
+        if (end === undefined) return target === path ? [pattern] : [];
+        const fits = path.length >= start.length + end.length && path.startsWith(start) && path.endsWith(end);
+        return fits ? [pattern.replace('*', path.slice(start.length, path.length - end.length))] : [];
     });
 }
 
@@ -85,6 +95,7 @@ export async function checkSiteUnusedAssets(session: Session, planned: PlannedCh
             )
             .map((indexFile) => indexFile.path),
     ]);
+    const aliases = readScopeAliases(session.root, planned.scope.path, session.cache);
     const texts: AssetSource[] = [];
     for (const path of paths) {
         const text = TEXT_EXTENSIONS.has(posix.extname(path)) ? findText(session.cache, path) : undefined;
@@ -101,10 +112,9 @@ export async function checkSiteUnusedAssets(session: Session, planned: PlannedCh
         .filter((file) => {
             const folder = ASSET_FOLDER.exec(file.path);
             const belowAssets = file.path.slice((folder?.index ?? 0) + (folder?.[0].length ?? 0));
-            const reference = new RegExp(
-                `${ASSET_REFERENCE_PREFIX}/?${escapeRegExp(belowAssets)}${ASSET_REFERENCE_SUFFIX}`,
-                'u',
-            );
+            const names = [`${ASSET_REFERENCE_PREFIX}/?${escapeRegExp(belowAssets)}`];
+            for (const specifier of listAliasSpecifiers(file.path, aliases)) names.push(escapeRegExp(specifier));
+            const reference = new RegExp(`(?:${names.join('|')})${ASSET_REFERENCE_SUFFIX}`, 'u');
             return !texts.some(
                 ({ path, text, matches }) =>
                     matches(file.path) ||
