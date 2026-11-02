@@ -87,7 +87,7 @@ the scope has no example environment file.
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export async function checkEnvExamples(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkEnvironmentExamples(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const { environment_examples: names, environment_functions: environmentFunctions } = getTable(
         planned.scope.settings,
         'secrets',
@@ -125,7 +125,7 @@ Reports each read of a secret environment variable with a literal fallback.
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export async function checkEnvDefaults(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkEnvironmentDefaults(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const { environment_functions: environmentFunctions } = getTable(planned.scope.settings, 'secrets');
     const extensions = listTaggedExtensions(...ENVIRONMENT_READ_LANGUAGES);
     const findings: CheckFinding[] = [];

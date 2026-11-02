@@ -18,7 +18,6 @@ import { checkMessages } from '#cli/configurations/library/translations/checks.t
 import { checkPytestCoverage } from '#cli/configurations/testing/pytest/checks.ts';
 import { checkSiteBuild } from '#cli/configurations/framework/site/checks/build.ts';
 import { checkGrants } from '#cli/configurations/database/postgres/checks/grants.ts';
-import { checkAgentsFiles } from '#cli/configurations/general/engineering/checks.ts';
 import { checkBaseline } from '#cli/configurations/general/gspot/checks/baseline.ts';
 import { checkHtmlInlineScripts } from '#cli/configurations/language/html/checks.ts';
 import { checkSwiftBuild } from '#cli/configurations/language/swift/checks/build.ts';
@@ -28,6 +27,7 @@ import { checkAnsibleLint } from '#cli/configurations/infrastructure/ansible/che
 import { checkPeriphery } from '#cli/configurations/language/swift/checks/periphery.ts';
 import { checkWeakenings } from '#cli/configurations/general/gspot/checks/weakenings.ts';
 import { checkShellcheck } from '#cli/configurations/language/bash/checks/shellcheck.ts';
+import { checkNestedAgentsFiles } from '#cli/configurations/general/engineering/checks.ts';
 import { checkCompose } from '#cli/configurations/infrastructure/docker/checks/compose.ts';
 import { checkSwiftSecurity } from '#cli/configurations/language/swift/checks/security.ts';
 import { checkIdentifiers } from '#cli/configurations/general/naming/checks/identifiers.ts';
@@ -72,7 +72,6 @@ import { checkPassThroughFolders } from '#cli/configurations/general/structure/c
 import { checkDetectedConfigurations } from '#cli/configurations/general/gspot/checks/detected-configurations.ts';
 import { checkActionlint, checkWorkflowShape } from '#cli/configurations/infrastructure/github-actions/checks.ts';
 import { checkMissingPaths, checkRequiredFiles, checkVersionStrings } from '#cli/configurations/general/docs/checks.ts';
-import { checkEnvExamples, checkEnvDefaults, checkGitleaksPushed } from '#cli/configurations/general/secrets/checks.ts';
 
 import {
     checkLockfiles,
@@ -85,6 +84,11 @@ import {
     checkPurgecss,
     checkHtmlValidate,
 } from '#cli/configurations/framework/site/checks/pages.ts';
+import {
+    checkGitleaksPushed,
+    checkEnvironmentExamples,
+    checkEnvironmentDefaults,
+} from '#cli/configurations/general/secrets/checks.ts';
 import {
     checkEncoding,
     checkLargeFiles,
@@ -142,7 +146,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'docs/missing-paths': { check: checkMissingPaths },
     'docs/required-files': { check: checkRequiredFiles },
     'docs/version-strings': { check: checkVersionStrings },
-    'engineering/nested-agents-files': { check: checkAgentsFiles },
+    'engineering/nested-agents-files': { check: checkNestedAgentsFiles },
     'structure/jscpd': { check: checkJscpd },
     'expo/expo-doctor': { check: checkExpoDoctor },
     'github-actions/actionlint': { run: checkActionlint },
@@ -185,8 +189,8 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'react-dom/react-versions': { check: checkReactVersions },
     'repository/large-files': { check: checkLargeFiles },
     'repository/local-files': { check: checkLocalFiles },
-    'secrets/environment-examples': { check: checkEnvExamples },
-    'secrets/environment-defaults': { check: checkEnvDefaults },
+    'secrets/environment-examples': { check: checkEnvironmentExamples },
+    'secrets/environment-defaults': { check: checkEnvironmentDefaults },
     'secrets/gitleaks-pushed': { run: checkGitleaksPushed },
     'security/semgrep': { run: checkSemgrep },
     'site/build': { check: checkSiteBuild },

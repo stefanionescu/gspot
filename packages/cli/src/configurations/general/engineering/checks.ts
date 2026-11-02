@@ -11,7 +11,7 @@ Reports each tracked AGENTS.md outside the repository root.
 @param session the repository and its tools.
 @param _planned the configured check.
 */
-export function checkAgentsFiles(session: Session, _planned: PlannedCheck): CheckFinding[] {
+export function checkNestedAgentsFiles(session: Session, _planned: PlannedCheck): CheckFinding[] {
     return session.repository.files
         .filter(({ path }) => path !== AGENTS_FILE && posix.basename(path) === AGENTS_FILE)
         .map(({ path }) => ({ file: path, line: 1, rule: NESTED_AGENTS_RULE, message: NESTED_AGENTS_MESSAGE }));
