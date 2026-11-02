@@ -63,17 +63,13 @@ function isEmptyValue(node: TSESTree.Node): boolean {
     return isUndefined || isEmptyList;
 }
 
-function listLiteralTargets(source: Readonly<TSESLint.SourceCode>, target: CdkTarget): CdkLiteralTarget[] | undefined {
-    const value = readExpressionValue(target.value, source) ?? target.value;
-    if (value.type === AST_NODE_TYPES.ObjectExpression) return [{ literal: value, report: target.report }];
-    const elements = value.type === AST_NODE_TYPES.ArrayExpression ? value.elements : [];
-    if (elements.length === 0) return undefined;
-    return elements.flatMap((element) => {
-        const literal = element === null ? undefined : (readExpressionValue(element, source) ?? element);
-        return element !== null && literal?.type === AST_NODE_TYPES.ObjectExpression
-            ? [{ literal, report: element }]
-            : [];
-    });
+function listLiteralTargets(source: Readonly<TSESLint.SourceCode>, target: CdkTarget): CdkLiteralTarget[] {
+    const value = readExpressionValue(target.value, source);
+    if (value?.type === AST_NODE_TYPES.ObjectExpression) return [{ literal: value, report: target.report }];
+    if (value?.type !== AST_NODE_TYPES.ArrayExpression) return [];
+    return value.elements
+        .filter((element) => element !== null)
+        .flatMap((element) => listLiteralTargets(source, { value: element, report: element }));
 }
 
 function readPathStep(
@@ -99,8 +95,6 @@ function listPathTargets(
     required: boolean,
 ): CdkPathResult {
     const literals = isUnresolved(source, target.value) ? [] : listLiteralTargets(source, target);
-    if (literals === undefined)
-        return { targets: [], issues: required ? [{ node: target.report, kind: 'omitted' }] : [] };
     const results = literals.map((child) => readPathStep(source, child, path, { required, report: target.report }));
     return {
         targets: results.flatMap(({ targets }) => targets),
@@ -176,7 +170,7 @@ export function listCdkTableIssues(
     const checks = Object.hasOwn(table, name) ? table[name] : undefined;
     if (checks === undefined || node.arguments.some(({ type }) => type === AST_NODE_TYPES.SpreadElement)) return [];
     return checks.flatMap((check) =>
-        listCdkIssues(source, node, check).map((issue) => ({ ...issue, property: check.path.at(-1) ?? '' })),
+        listCdkIssues(source, node, check).map((issue) => ({ ...issue, property: check.path.join('.') })),
     );
 }
 
@@ -248,8 +242,7 @@ Read an argument of the call or the construction that a result holds.
 @returns the argument value, `missing` when the call has no such argument, or `unknown` when the result holds no call.
 */
 export function readCdkArgument(source: Readonly<TSESLint.SourceCode>, result: CdkResult, position: number): CdkResult {
-    const { node, status } = result;
-    if (status !== 'found') return result;
+    const { node } = result;
     if (node.type !== AST_NODE_TYPES.CallExpression && node.type !== AST_NODE_TYPES.NewExpression)
         return { status: 'unknown', node };
     const argument = node.arguments[position];
@@ -293,22 +286,16 @@ List the string literals that a result holds, as one value or as the elements of
 @returns the string literals, after following identifiers to their written values.
 */
 export function listCdkStrings(source: Readonly<TSESLint.SourceCode>, result: CdkResult): TSESTree.StringLiteral[] {
-    const { node, status } = result;
-    const values =
-        node.type === AST_NODE_TYPES.ArrayExpression
-            ? node.elements.map((element) => (element === null ? undefined : readCdkResult(source, element).node))
-            : [node];
-    return status === 'found'
-        ? values.filter(
-              (value): value is TSESTree.StringLiteral =>
-                  value?.type === AST_NODE_TYPES.Literal && typeof value.value === 'string',
-          )
-        : [];
+    const { node } = result;
+    const values = listArgumentValues([node], source);
+    return values.filter(
+        (value): value is TSESTree.StringLiteral =>
+            value.type === AST_NODE_TYPES.Literal && typeof value.value === 'string',
+    );
 }
 
 function listDocumentStatements(source: Readonly<TSESLint.SourceCode>, document: TSESTree.Node): PolicyStatement[] {
     const statements = readCdkProperty(source, readCdkResult(source, document), POLICY_STATEMENTS_KEY);
-    if (statements.status !== 'found') return [];
     return listArgumentValues([statements.node], source).map((statement) => ({
         statement: readCdkResult(source, statement),
         keys: POLICY_JSON_KEYS,

@@ -5,6 +5,7 @@ buildRuleTester().run('weak-ssl', plugin.rules['weak-ssl'], {
     valid: [
         "import tls from 'tls';\ntls.connect({ host: 'example.com', minVersion: 'TLSv1.2' });",
         "import * as apigateway from 'aws-cdk-lib/aws-apigateway';\nnew apigateway.CfnDomainName(this, 'Domain', { securityPolicy: 'TLS_1_2' });",
+        "import * as apigateway from 'aws-cdk-lib/aws-apigateway';\nnew apigateway.DomainName(this, 'Domain', { securityPolicy: undefined });",
     ],
     invalid: [
         {

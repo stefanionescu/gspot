@@ -4,6 +4,7 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 buildRuleTester().run('aws-apigateway-public-api', plugin.rules['aws-apigateway-public-api'], {
     valid: [
         "import * as apigateway from 'aws-cdk-lib/aws-apigateway';\nconst api = new apigateway.RestApi(this, 'Api', { defaultMethodOptions: { authorizationType: apigateway.AuthorizationType.IAM } });\napi.root.addMethod('GET', integration);",
+        "import * as apigateway from 'aws-cdk-lib/aws-apigateway';\nconst api = new apigateway.RestApi(this, 'Api');\napi.root.addMethod('GET', integration, buildOptions());",
     ],
     invalid: [
         {
