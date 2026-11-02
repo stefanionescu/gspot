@@ -1,5 +1,6 @@
 import type { RuleDocs } from './types/plugin.ts';
 import { PLUGIN_PREFIX } from './config/plugin.ts';
+import type { TSESLint } from '@typescript-eslint/utils';
 import { noInMisuse } from './rules/collections/no-in-misuse.ts';
 import pluginPackage from '../package.json' with { type: 'json' };
 import { noTryPromise } from './rules/promises/no-try-promise.ts';
@@ -199,22 +200,25 @@ const selectLevelRules = (levels: ReadonlyArray<RuleDocs['level']>) =>
             .map(([name]) => [`${PLUGIN_PREFIX}/${name}`, 'error' as const]),
     );
 
+const configPlugins: TSESLint.FlatConfig.Plugins = {};
+
 const plugin = {
     meta: { name: pluginPackage.name, version: pluginPackage.version },
     rules,
-};
-
-export default Object.assign(plugin, {
     configs: {
         recommended: {
             name: `${PLUGIN_PREFIX}/recommended`,
-            plugins: { [PLUGIN_PREFIX]: plugin },
+            plugins: configPlugins,
             rules: selectLevelRules(['recommended']),
         },
         all: {
             name: `${PLUGIN_PREFIX}/all`,
-            plugins: { [PLUGIN_PREFIX]: plugin },
+            plugins: configPlugins,
             rules: selectLevelRules(['recommended', 'all']),
         },
     },
-});
+};
+
+configPlugins[PLUGIN_PREFIX] = plugin;
+
+export default plugin;
