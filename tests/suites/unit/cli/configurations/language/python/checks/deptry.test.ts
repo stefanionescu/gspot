@@ -91,5 +91,20 @@ test('deptry counts python.externals as first party beside the known_first_party
     const { commands } = await runFakeDeptry(sandbox.path);
     const command = commands.find((command) => command.includes('deptry'))!;
     const firstParty = command.flatMap((value, index) => (value === '--known-first-party' ? command[index + 1]! : []));
-    expect(firstParty).toStrictEqual(['nodes', 'folder_paths', 'comfy']);
+    expect(firstParty).toStrictEqual(['example', 'nodes', 'folder_paths', 'comfy']);
+});
+
+test('deptry counts the project name and each package under src as first party', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['python']),
+        'pyproject.toml': '[project]\nname = "Shop-Core"\nversion = "1.0.0"\n',
+        'src/shop_core/__init__.py': '',
+        'src/shop_tools/__init__.py': '',
+        'src/shop_tools/nested/__init__.py': '',
+        [join(join(GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder), 'deptry')]: 'stub',
+    });
+    const { commands } = await runFakeDeptry(sandbox.path);
+    const command = commands.find((command) => command.includes('deptry'))!;
+    const firstParty = command.flatMap((value, index) => (value === '--known-first-party' ? command[index + 1]! : []));
+    expect(firstParty).toStrictEqual(['shop_core', 'shop_tools']);
 });

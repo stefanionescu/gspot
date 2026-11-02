@@ -4,7 +4,7 @@ import type { Files } from '#cli/types/system.ts';
 import type { Config } from '#cli/types/repository.ts';
 import type { ScriptSyntax } from '#cli/types/parsers.ts';
 import type { FENCE_GRAMMARS } from '#cli/config/parsers.ts';
-import type { xccovSchema } from '#cli/schemas/configurations.ts';
+import { type xccovSchema, type deptrySchema } from '#cli/schemas/configurations.ts';
 import type { Session, GeneratedFile } from '#cli/types/tools.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { settingsSchema } from '#cli/schemas/settings/file.ts';
@@ -53,6 +53,8 @@ export type GrammarFenceParser = (typeof FENCE_GRAMMARS)[number];
 export type FenceParser = FormatFenceParser | GrammarFenceParser;
 
 export type FenceSyntaxError = { line: number; message: string };
+
+export type DeptryProject = z.infer<typeof deptrySchema>;
 
 export type PydoclintOptions = { command: string[]; style: PythonDocstringStyle | undefined };
 

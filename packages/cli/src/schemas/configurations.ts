@@ -110,6 +110,7 @@ const toolDeptrySchema = z.object({
 });
 
 export const deptrySchema = z.object({
+    project: z.object({ name: z.string().optional() }).default({}),
     tool: z
         .object({
             deptry: toolDeptrySchema.default({ extend_exclude: [], known_first_party: [] }),

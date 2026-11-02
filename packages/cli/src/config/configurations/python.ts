@@ -79,6 +79,10 @@ export const PYTHON_FILES = ['**/*.py'] as const;
 
 export const FASTAPI_CONFIGURATION = 'fastapi';
 
+export const PYTHON_SOURCE_FOLDER = 'src';
+
+export const PYTHON_NAME_SEPARATORS = /[-.]+/gu;
+
 export const PYDANTIC_PACKAGE = 'pydantic';
 
 export const RUFF_RUNTIME_TYPES = {

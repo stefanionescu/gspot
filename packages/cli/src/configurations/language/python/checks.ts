@@ -16,14 +16,19 @@ import { REQUIREMENTS_FILE } from '#cli/config/repository/files.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import { PATH_SEPARATOR_PATTERN } from '#cli/config/configurations/blocks.ts';
+import { PYTHON_PACKAGE_FILE } from '#cli/config/configurations/structure.ts';
 import { splitWords } from '#cli/configurations/general/naming/checks/settings.ts';
 import { runCommandCheck, runCommandBatches } from '#cli/engine/tool-runs/check.ts';
 import { deptrySchema, docstringStyleSchema } from '#cli/schemas/configurations.ts';
 import { GSPOT_FOLDER, PYPROJECT_TOML, PYTHON_EXTENSION } from '#cli/config/parsers.ts';
 import { findDocstring, readPythonFiles, parsePythonModule } from '#cli/parsers/code/python.ts';
-import type { PydoclintOptions, PythonDocstringStyle } from '#cli/types/configurations/language.ts';
 import { joinScope, isInScope, listNestedScopes, isOutsideChildScopes } from '#cli/repository/scopes.ts';
 
+import {
+    type DeptryProject,
+    type PydoclintOptions,
+    type PythonDocstringStyle,
+} from '#cli/types/configurations/language.ts';
 import {
     PIP_INSTALL,
     PYTHON_RULES,
@@ -41,9 +46,11 @@ import {
     PIP_INSTALL_MESSAGE,
     DEPTRY_EXCLUDE_FLAG,
     PYDOCLINT_STYLE_FLAG,
+    PYTHON_SOURCE_FOLDER,
     INSTALL_FILE_SUFFIXES,
     PYDOCLINT_TYPE_OPTIONS,
     CLASS_DOCSTRING_OPENING,
+    PYTHON_NAME_SEPARATORS,
     DEPTRY_FIRST_PARTY_FLAG,
     PYDOCLINT_DEFAULT_STYLE,
     REQUIREMENTS_FOLDER_FILE,
@@ -51,11 +58,23 @@ import {
     PYDOCLINT_ALL_LEVEL_OPTIONS,
 } from '#cli/config/configurations/python.ts';
 
-function listFirstParty(planned: PlannedCheck, written: string[]): string[] {
-    const externals = getTable(planned.scope.settings, 'python').externals;
-    return externals.length === 0
-        ? []
-        : [...new Set([...written, ...externals])].flatMap((module) => [DEPTRY_FIRST_PARTY_FLAG, module]);
+function listFirstParty(session: Session, planned: PlannedCheck, project: DeptryProject): string[] {
+    const sources = joinScope(planned.scope.path, PYTHON_SOURCE_FOLDER);
+    const packages = session.repository.files
+        .map(({ path }) => path)
+        .filter((path) => posix.basename(path) === PYTHON_PACKAGE_FILE)
+        .map((path) => posix.dirname(path))
+        .filter((folder) => posix.dirname(folder) === sources)
+        .map((folder) => posix.basename(folder));
+    const projectName = project.project.name?.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '_');
+    return [
+        ...new Set([
+            ...(projectName === undefined ? [] : [projectName]),
+            ...packages,
+            ...project.tool.deptry.known_first_party,
+            ...getTable(planned.scope.settings, 'python').externals,
+        ]),
+    ].flatMap((module) => [DEPTRY_FIRST_PARTY_FLAG, module]);
 }
 
 async function listLongFunctions(
@@ -160,8 +179,7 @@ export async function checkDeptry(session: CheckSession, planned: PlannedCheck):
     const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
     const text = find(session.cache, pyproject);
     if (text === undefined) throw new CheckStop('skipped', NO_PYPROJECT_NOTE);
-    const { extend_exclude: exclusions, known_first_party: firstParty } = parseTomlFile(pyproject, text, deptrySchema)
-        .tool.deptry;
+    const project = parseTomlFile(pyproject, text, deptrySchema);
     return await runCommandCheck(session, planned, {
         command: buildUvRunCommand(planned.scope, join(session.root, planned.scope.path), [
             ...DEPTRY_COMMAND,
@@ -178,9 +196,9 @@ export async function checkDeptry(session: CheckSession, planned: PlannedCheck):
                         .join(PATH_SEPARATOR_PATTERN);
                     return String.raw`^${child}([/\\]|$)`;
                 }),
-                ...exclusions,
+                ...project.tool.deptry.extend_exclude,
             ].flatMap((pattern) => [DEPTRY_EXCLUDE_FLAG, pattern]),
-            ...listFirstParty(planned, firstParty),
+            ...listFirstParty(session, planned, project),
         ]),
     });
 }
