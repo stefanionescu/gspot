@@ -227,11 +227,23 @@ export const PRINT_TIMEOUT_SECONDS = 60;
 
 export const PRETTIER_OVERRIDES_KEY = 'overrides';
 
+export const PRETTIER_EXCLUDE_KEY = 'excludeFiles';
+
 export const RUFF_ALL_SELECTOR = /\bALL\b/u;
 
 export const RUFF_ANY_PREFIX = '[A-Z]+';
 
 export const UNREADABLE_CONFIG_MESSAGE = 'the whole file, which gspot could not read';
+
+export const UNREAD_CONFIG_MESSAGE = 'its settings, because init reads this tool only at the root and at a scope';
+
+export const CARRIED_TOOLS: ReadonlySet<string> = new Set([
+    'prettier',
+    'editorconfig-checker',
+    'ruff',
+    'markdownlint-cli2',
+    'commitlint',
+]);
 
 export const MARKDOWNLINT_TARGET = `${GSPOT_PATHS.configurations}/language/markdown/markdownlint.jsonc`;
 

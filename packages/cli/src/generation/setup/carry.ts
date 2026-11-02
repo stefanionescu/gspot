@@ -31,6 +31,7 @@ import type {
 import {
     EMPTY_CARRY,
     IGNORE_FILES,
+    CARRIED_TOOLS,
     LEADING_SLASH,
     RUFF_CHECK_IDS,
     COMMENT_PATTERN,
@@ -41,6 +42,8 @@ import {
     COMMITLINT_CHECK_ID,
     IGNORE_REASON_START,
     MARKDOWNLINT_TARGET,
+    PRETTIER_EXCLUDE_KEY,
+    UNREAD_CONFIG_MESSAGE,
     MARKDOWNLINT_CHECK_ID,
     COMMITLINT_CONFIG_PATH,
     PRETTIER_OVERRIDES_KEY,
@@ -218,6 +221,19 @@ function listUncomparedRows({ conflictingConfigs, tools }: CarryInput): CarryRow
     );
 }
 
+function listUnreadRows({ conflictingConfigs, tools }: CarryInput, rows: CarryRow[]): CarryRow[] {
+    const read = new Set(rows.map(({ path }) => path));
+    const unread = conflictingConfigs.filter(
+        ({ path, tool }) => CARRIED_TOOLS.has(tool) && tools.has(tool) && !read.has(path),
+    );
+    return [...new Map(unread.map(({ path, tool }) => [path, tool])).entries()].map(([path, tool]) => ({
+        ...CARRY_ROW_START,
+        path,
+        tool,
+        dropped: [UNREAD_CONFIG_MESSAGE],
+    }));
+}
+
 function listPrettierRows({ repository, session, prettierScripts, tools }: CarryInput): CarryRow[] {
     if (!tools.has('prettier')) return [];
     return session.scopes.flatMap(({ path: scope }) => {
@@ -226,7 +242,10 @@ function listPrettierRows({ repository, session, prettierScripts, tools }: Carry
         const readKeys = new Set(sources.slice(0, 1).flatMap(({ options }) => Object.keys(options)));
         return sources.map(({ path, options }) => {
             const { dropped, overrides, ...style } = options;
-            const inOverrides = (overrides ?? []).flatMap((override) => override.options.dropped);
+            const inOverrides = (overrides ?? []).flatMap((override) => [
+                ...override.options.dropped,
+                ...(override.excludeFiles === undefined ? [] : [PRETTIER_EXCLUDE_KEY]),
+            ]);
             const keys = Object.keys(style);
             const held = new Set(
                 [...keys, PRETTIER_OVERRIDES_KEY].filter(
@@ -268,6 +287,7 @@ export async function readCarry(input: CarryInput): Promise<Carry> {
             ].map((path) => ({ ...CARRY_ROW_START, path, tool: 'gspot', dropped: [UNREADABLE_CONFIG_MESSAGE] })),
         },
     ];
+    const rows = sections.flatMap((section) => section.rows);
     const tools = Object.fromEntries(sections.flatMap((section) => Object.entries(section.tools)));
     const ignore = [...input.templateIgnore, ...sections.flatMap((section) => section.ignore)];
     return {
@@ -275,6 +295,6 @@ export async function readCarry(input: CarryInput): Promise<Carry> {
             ...(Object.keys(tools).length > 0 && { tools }),
             ...(ignore.length > 0 && { ignore }),
         },
-        rows: sections.flatMap((section) => section.rows),
+        rows: [...rows, ...listUnreadRows(input, rows)],
     };
 }

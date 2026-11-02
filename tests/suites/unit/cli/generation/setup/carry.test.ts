@@ -244,3 +244,27 @@ test('init keeps the EditorConfig line width for Python files without Ruff setti
     const { override = [] } = settings['format'] as { override?: TomlTable[] };
     expect(override.filter(({ print_width }) => print_width !== undefined)).toStrictEqual([]);
 });
+
+test('init names each replaced config that it does not read', async () => {
+    await using sandbox = await createGitSandbox({
+        'ruff.toml': '[lint]\nselect = ["F"]\n',
+        'tools/.ruff.toml': '[lint]\nselect = ["AIR"]\n',
+        'tools/main.py': 'VALUE = 1\n',
+        'sample/.prettierrc': '{"semi":false}\n',
+        'sample/source.js': 'export const value = 1;\n',
+    });
+    const { plan } = await runInit(sandbox.path);
+    expect(plan.carry.filter(({ path }) => path !== 'ruff.toml')).toMatchObject([
+        { path: 'sample/.prettierrc', dropped: [expect.stringContaining('at the root and at a scope')] },
+        { path: 'tools/.ruff.toml', dropped: [expect.stringContaining('at the root and at a scope')] },
+    ]);
+});
+
+test('init names the excludeFiles of a Prettier override', async () => {
+    await using sandbox = await createGitSandbox({
+        '.prettierrc': '{"overrides":[{"files":"*.js","excludeFiles":"vendor/**","options":{"semi":false}}]}\n',
+        'source.js': 'export const value = 1;\n',
+    });
+    const { plan } = await runInit(sandbox.path);
+    expect(plan.carry.find(({ path }) => path === '.prettierrc')?.dropped).toStrictEqual(['excludeFiles']);
+});

@@ -41,6 +41,7 @@ export const prettierOptionsSchema = buildCarriedSchema(prettierFields);
 
 const overridesSchema = z.object({
     files: z.union([z.string(), z.string().array()]),
+    excludeFiles: z.unknown().optional(),
     options: prettierOptionsSchema,
 });
 

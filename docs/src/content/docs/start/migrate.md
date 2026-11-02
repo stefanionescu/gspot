@@ -101,7 +101,9 @@ gspot resolves its own ESLint and Stylelint rules through the plugins that `gspo
 nothing. Run `gspot scan` before init to see their table. commitlint, ESLint, and Stylelint print your rules through
 the copy in your `node_modules`, so run your package manager's install first.
 
-gspot does not compare the other replaced configs. The plan lists each of them under `delete`.
+gspot does not compare the other replaced configs. The plan lists each of them under `delete`. init reads the settings
+of Prettier at the root and at a scope, and the settings of Ruff and markdownlint at the root. The table names every
+other config of these tools as dropped.
 
 To keep a rule of your own ESLint plugin, add a `[[tools.eslint.plugins]]` record. See
 [lint-rule settings](/configure/lint-rules/). A tool that gspot does not run can remain a
