@@ -37,15 +37,13 @@ function stripFactorsOfTwo(value: number): number {
 
 function isFractionDivision(node: TSESTree.BinaryExpression): boolean {
     const [left, right] = [getNumber(node.left), getNumber(node.right)];
-    if (
-        left === undefined ||
-        right === undefined ||
-        right === 0 ||
-        !Number.isInteger(left) ||
-        Number.isInteger(left / right)
-    )
-        return false;
-    return !Number.isSafeInteger(left) || !Number.isSafeInteger(right) || left % stripFactorsOfTwo(right) !== 0;
+    if (left === undefined || right === undefined || right === 0) return false;
+    if (Number.isSafeInteger(left) && Number.isSafeInteger(right)) return left % stripFactorsOfTwo(right) !== 0;
+    // Every finite number past the safe integers has no fractional part.
+    const [isLeftInteger, isQuotientInteger] = [left, left / right].map(
+        (value) => Number.isSafeInteger(value) || (Number.isFinite(value) && Math.abs(value) > Number.MAX_SAFE_INTEGER),
+    );
+    return isLeftInteger === true && isQuotientInteger === false;
 }
 
 function isFloatingConstant(node: TSESTree.Identifier, source: TSESLint.SourceCode, seen: Set<unknown>): boolean {
