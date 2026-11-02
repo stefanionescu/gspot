@@ -25,7 +25,7 @@ version = "1.21.5"
 required_tools = ["eslint-plugin-expo"]
 all_level_rules = ["expo/prefer-box-shadow"]
 
-[[eslint.client_env]]
+[[eslint.client_environment]]
 files = ["**/*.{js,jsx,ts,tsx}", "!**/*+api.{js,ts}", "!**/*.config.{js,cjs,mjs,ts}", "!**/scripts/**"]
 public_prefixes = ["EXPO_PUBLIC_"]
 

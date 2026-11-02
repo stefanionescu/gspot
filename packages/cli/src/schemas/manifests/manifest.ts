@@ -222,7 +222,7 @@ export const manifestSchema = z
                 rules_off: rulesOffSchema.array().default([]),
                 export_names: exportNamesSchema.array().default([]),
                 forwarding_files: forwardingFilesSchema.array().default([]),
-                client_env: clientEnvironmentSchema.array().default([]),
+                client_environment: clientEnvironmentSchema.array().default([]),
                 required_tools: z.string().min(1).array().default([]),
             })
             .prefault({}),

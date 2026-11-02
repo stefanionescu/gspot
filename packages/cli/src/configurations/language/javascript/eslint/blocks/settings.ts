@@ -43,7 +43,7 @@ function listManifestRuleBlocks(scope: Scope, excluded: string[], dependencyName
     const tables = scope.configurations.map(({ eslint }) => eslint);
     return [
         ...tables
-            .flatMap(({ client_env }) => client_env)
+            .flatMap(({ client_environment }) => client_environment)
             .filter(({ dependencies }) => dependencies.every((name) => dependencyNames.includes(name)))
             .map(({ files, public_prefixes, allowed_names }) => ({
                 scope: scope.path,
