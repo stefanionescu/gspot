@@ -5,6 +5,7 @@ import { parseSource } from '#cli/parsers/code/grammars.ts';
 import {
     PACKAGE_SWIFT,
     SWIFT_TEST_TAG,
+    SWIFT_TAG_WORDS,
     SWIFT_CALL_NODE,
     SWIFT_TYPE_NODE,
     SWIFT_IMPORT_TAG,
@@ -24,6 +25,7 @@ Identify Swift imports, test declarations, and package targets without matching 
 @param text the Swift source.
 */
 export async function detectSwiftTags(path: string, text: string): Promise<string[]> {
+    if (!SWIFT_TAG_WORDS.test(text)) return [];
     using tree = await parseSource('swift', text);
     const imports = tree.rootNode
         .descendantsOfType(SWIFT_IMPORT_NODE)

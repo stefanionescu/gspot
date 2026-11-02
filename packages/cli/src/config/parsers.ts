@@ -271,6 +271,8 @@ export const SWIFT_TEST_TARGET_CALLS: ReadonlySet<string> = new Set(['.testTarge
 
 export const SWIFT_IMPORT_TAG = 'swift-import:';
 
+export const SWIFT_TAG_WORDS = /SwiftUI|UIKit|XCTest|Testing|@Test|@Suite|testTarget/u;
+
 export const SWIFT_TEST_TAG = 'swift-test';
 
 export const SWIFT_TEST_TARGET_TAG = 'swift-test-target';
