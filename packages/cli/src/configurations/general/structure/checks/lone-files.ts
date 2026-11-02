@@ -29,14 +29,14 @@ export function checkLoneFiles(_session: Session, planned: PlannedCheck): CheckF
         .flatMap((folder) => {
             const children = tree.get(folder) ?? [];
             if (children.some((child) => child.kind === 'folder')) return [];
-            const siblings = children.filter(
-                (child) => !DECLARATION_EXTENSIONS.some((extension) => child.name.endsWith(extension)),
+            const siblings = children.filter((child) =>
+                DECLARATION_EXTENSIONS.every((extension) => !child.name.endsWith(extension)),
             );
             const [only] = siblings;
             if (
                 only === undefined ||
                 siblings.length !== 1 ||
-                !extensions.some((extension) => only.name.endsWith(extension)) ||
+                extensions.every((extension) => !only.name.endsWith(extension)) ||
                 isRouteFile(only.name)
             )
                 return [];

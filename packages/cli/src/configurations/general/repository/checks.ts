@@ -15,43 +15,43 @@ import { BYTES_PER_KILOBYTE, CONFLICT_MARKER_LINE } from '#cli/config/engine.ts'
 import { LFS_FILTER, SYMLINK_MODE, FILTER_ATTRIBUTE } from '#cli/config/repository/files.ts';
 import { REPOSITORY_RULES, OUTWARD_LINK_HELP, ABSOLUTE_LINK_HELP } from '#cli/config/configurations/structure.ts';
 
+function listLinkFindings(root: string, path: string): CheckFinding[] {
+    const source = join(root, path);
+    if (lstatSync(source, { throwIfNoEntry: false })?.isSymbolicLink() !== true) return [];
+    const link = readlinkSync(source);
+    if (isAbsolute(link))
+        return [
+            {
+                file: path,
+                line: 1,
+                rule: REPOSITORY_RULES.absoluteLink,
+                message: `${path} uses an absolute link target.`,
+                help: ABSOLUTE_LINK_HELP,
+            },
+        ];
+    let target = resolve(dirname(source), link);
+    try {
+        target = realpathSync(target);
+    } catch (error) {
+        if (!hasErrorCode(error, 'ENOENT') && !hasErrorCode(error, 'ELOOP')) throw error;
+    }
+    return isInside(relative(root, target))
+        ? []
+        : [
+              {
+                  file: path,
+                  line: 1,
+                  rule: REPOSITORY_RULES.outwardLink,
+                  message: `${path} links outside the repository.`,
+                  help: OUTWARD_LINK_HELP,
+              },
+          ];
+}
+
 function listInvalidLinks(session: Session, narrowedLinks: string[] | undefined): CheckFinding[] {
     return session.repository.index
         .filter((file) => file.mode === SYMLINK_MODE && (narrowedLinks?.includes(file.path) ?? true))
-        .flatMap(({ path }): CheckFinding[] => {
-            const source = join(session.root, path);
-            if (lstatSync(source, { throwIfNoEntry: false })?.isSymbolicLink() !== true) return [];
-            const link = readlinkSync(source);
-            if (isAbsolute(link))
-                return [
-                    {
-                        file: path,
-                        line: 1,
-                        rule: REPOSITORY_RULES.absoluteLink,
-                        message: `${path} uses an absolute link target.`,
-
-                        help: ABSOLUTE_LINK_HELP,
-                    },
-                ];
-            let target = resolve(dirname(source), link);
-            try {
-                target = realpathSync(target);
-            } catch (error) {
-                if (!hasErrorCode(error, 'ENOENT') && !hasErrorCode(error, 'ELOOP')) throw error;
-            }
-            return isInside(relative(session.root, target))
-                ? []
-                : [
-                      {
-                          file: path,
-                          line: 1,
-                          rule: REPOSITORY_RULES.outwardLink,
-                          message: `${path} links outside the repository.`,
-
-                          help: OUTWARD_LINK_HELP,
-                      },
-                  ];
-        });
+        .flatMap(({ path }) => listLinkFindings(session.root, path));
 }
 
 /**
@@ -93,15 +93,15 @@ export function checkLocalFiles(session: Session, planned: PlannedCheck): CheckF
     const scopes = session.repository.scopeFolders;
     const matchers = new Map(
         session.scopes.map(({ path: scopePath, configurations, settings }): [string, (path: string) => boolean] => {
-            const matches = buildPathMatcher(configurations.flatMap((configuration) => configuration.ignored_paths));
+            const isIgnored = buildPathMatcher(configurations.flatMap((configuration) => configuration.ignored_paths));
             const examples = new Set(getTable(settings, 'secrets').environment_examples);
             return [
                 scopePath,
                 (path) => {
                     const parent = extractParentFolder(path);
                     return (
-                        matches(path) &&
-                        (!examples.has(posix.basename(path)) || matches(parent === '' ? parent : `${parent}/`))
+                        isIgnored(path) &&
+                        (!examples.has(posix.basename(path)) || isIgnored(parent === '' ? parent : `${parent}/`))
                     );
                 },
             ];

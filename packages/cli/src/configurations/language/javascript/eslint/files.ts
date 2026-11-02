@@ -158,7 +158,7 @@ Intersect file selectors with root-relative patterns and one literal project sco
 export function buildScopeFiles(
     files: NonNullable<EslintBlockFields['files']>,
     scopePath: string,
-    paths: (string | string[])[],
+    paths: Array<string | string[]>,
 ): NonNullable<EslintBlockFields['files']> {
     return files.flatMap((file) =>
         paths.map((path) => [
@@ -176,6 +176,6 @@ Intersect each authored test selector with the generated code selectors.
 @param code the code selectors.
 @returns one intersection per test and code selector.
 */
-export function buildTestFiles(tests: string[], code: string[]): [string, string][] {
+export function buildTestFiles(tests: string[], code: string[]): Array<[string, string]> {
     return tests.flatMap((test) => code.map((pattern): [string, string] => [test, pattern]));
 }

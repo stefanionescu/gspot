@@ -24,11 +24,15 @@ export function checkBaseline(session: Session, _planned: PlannedCheck, options:
             ['', ...files.map(({ path }) => path)].map((path) => `${check.id}\0${path}`),
         ),
     );
-    const stale = [...unused.values()].flat().filter(({ file, check, count }) => {
-        const isGone = !configured.has(check) || (file !== '' && !tracked.has(file));
-        const isRead = read.has(`${check}\0${file}`) && paths?.includes(file) !== false;
-        return count > 0 && (isGone || isRead);
-    });
+    const stale = unused
+        .values()
+        .toArray()
+        .flat()
+        .filter(({ file, check, count }) => {
+            const isGone = !configured.has(check) || (file !== '' && !tracked.has(file));
+            const isRead = read.has(`${check}\0${file}`) && paths?.includes(file) !== false;
+            return count > 0 && (isGone || isRead);
+        });
     return stale.map(({ file, check, rule, count }) => ({
         file,
         rule: GSPOT_RULES.staleBaseline,

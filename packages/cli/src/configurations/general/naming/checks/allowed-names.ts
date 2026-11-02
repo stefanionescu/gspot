@@ -44,6 +44,28 @@ async function readSourceNames(session: Session, planned: PlannedCheck): Promise
     return files;
 }
 
+function listOverrideNames(
+    override: Session['settings']['naming']['override'][number],
+    files: FileNames[],
+    folders: FileNames['folders'],
+): Set<string> {
+    const isMatched = buildPathMatcher(override.paths);
+    const sourceNames = new Set(
+        files
+            .filter((file) => isMatched(file.path))
+            .flatMap((file) => {
+                const declarations = file.declarations
+                    .filter((identifier) => isCategoryCovered(override, identifier.category))
+                    .map((identifier) => identifier.name);
+                return isCategoryCovered(override, 'files') ? [file.stem, ...declarations] : declarations;
+            }),
+    );
+    if (isCategoryCovered(override, 'folders'))
+        for (const identifier of folders)
+            if (isMatched(identifier.folder ?? identifier.file)) sourceNames.add(identifier.name);
+    return sourceNames;
+}
+
 /**
 Reports allowed names in root naming overrides that match no code or path name.
 
@@ -54,22 +76,7 @@ export async function checkAllowedNames(session: Session, planned: PlannedCheck)
     const files = await readSourceNames(session, { ...planned, files: session.repository.files });
     const folders = files.flatMap((file) => file.folders).filter((identifier) => identifier.category === 'folders');
     return session.settings.naming.override.flatMap((override, index) => {
-        const matches = buildPathMatcher(override.paths);
-        const sourceNames = new Set(
-            files
-                .filter((file) => matches(file.path))
-                .flatMap((file) => {
-                    const declarations = file.declarations
-                        .filter((identifier) => isCategoryCovered(override, identifier.category))
-                        .map((identifier) => identifier.name);
-                    return isCategoryCovered(override, 'files') ? [file.stem, ...declarations] : declarations;
-                }),
-        );
-        if (isCategoryCovered(override, 'folders')) {
-            for (const identifier of folders) {
-                if (matches(identifier.folder ?? identifier.file)) sourceNames.add(identifier.name);
-            }
-        }
+        const sourceNames = listOverrideNames(override, files, folders);
         return (override.allowed_names ?? [])
             .filter((name) => !sourceNames.has(name))
             .map((name) => ({

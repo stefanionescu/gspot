@@ -40,6 +40,37 @@ function readSitemapLocations(folder: string, file: string, planned: PlannedChec
     return { urls, findings };
 }
 
+function readSitemapTree(
+    file: string,
+    tree: {
+        folder: string;
+        files: ReadonlySet<string>;
+        planned: PlannedCheck;
+        visited: Set<string>;
+        urls: Map<string, URL>;
+        findings: CheckFinding[];
+        base: string;
+    },
+): void {
+    if (tree.visited.has(file)) return;
+    tree.visited.add(file);
+    const found = readSitemapLocations(tree.folder, file, tree.planned);
+    tree.findings.push(...found.findings);
+    for (const url of found.urls) {
+        if (!url.pathname.endsWith(SITEMAP_EXTENSION)) {
+            tree.urls.set(url.href, url);
+            continue;
+        }
+        const pathname = decodeURIComponent(url.pathname);
+        const nested = [...tree.files]
+            .filter((path) => pathname.endsWith(`/${path}`))
+            .toSorted((left, right) => right.length - left.length)[0];
+        if (nested === undefined) continue;
+        if (tree.base === '/') tree.base = pathname.slice(0, -nested.length);
+        readSitemapTree(nested, tree);
+    }
+}
+
 /**
 Read sitemap pages and infer the site base path from its nested sitemap URLs.
 
@@ -52,29 +83,16 @@ export function readSitemapUrls(
     files: ReadonlySet<string>,
     planned: PlannedCheck,
 ): SitemapUrls & { base: string } {
-    let base = '/';
-    const visited = new Set<string>();
-    const urls = new Map<string, URL>();
     const findings: CheckFinding[] = [];
-    const readSitemap = (file: string): void => {
-        if (visited.has(file)) return;
-        visited.add(file);
-        const found = readSitemapLocations(folder, file, planned);
-        findings.push(...found.findings);
-        for (const url of found.urls) {
-            if (!url.pathname.endsWith(SITEMAP_EXTENSION)) {
-                urls.set(url.href, url);
-                continue;
-            }
-            const pathname = decodeURIComponent(url.pathname);
-            const nested = [...files]
-                .filter((path) => pathname.endsWith(`/${path}`))
-                .toSorted((left, right) => right.length - left.length)[0];
-            if (nested === undefined) continue;
-            base = base === '/' ? pathname.slice(0, -nested.length) : base;
-            readSitemap(nested);
-        }
+    const tree = {
+        folder,
+        files,
+        planned,
+        visited: new Set<string>(),
+        urls: new Map<string, URL>(),
+        findings,
+        base: '/',
     };
-    for (const file of files) if (SITEMAP_FILE.test(file)) readSitemap(file);
-    return { urls: urls.values().toArray(), findings, base };
+    for (const file of files) if (SITEMAP_FILE.test(file)) readSitemapTree(file, tree);
+    return { urls: tree.urls.values().toArray(), findings, base: tree.base };
 }

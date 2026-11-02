@@ -241,7 +241,6 @@ Find the implementation of a built-in check or a check that compares generator o
 @param check the manifest check.
 */
 export function selectCheckCode(check: Check): CheckCode | undefined {
-    const code = CHECK_CODE[check.id];
     if (check.generator_outputs !== undefined) return { check: checkGeneratorOutputs };
-    return code;
+    return CHECK_CODE[check.id];
 }

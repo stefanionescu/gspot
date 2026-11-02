@@ -29,7 +29,6 @@ import {
     JSON_FENCE_OPTIONS,
     CAMEL_CASE_BOUNDARY,
     SYNTAX_ERROR_MESSAGE,
-    CAMEL_CASE_REPLACEMENT,
 } from '#cli/config/configurations/language.ts';
 
 function findJsonSyntaxError(body: string, options: ParseOptions): FenceSyntaxError | undefined {
@@ -38,7 +37,7 @@ function findJsonSyntaxError(body: string, options: ParseOptions): FenceSyntaxEr
     const error = errors[0];
     if (error === undefined) return undefined;
     const message = printParseErrorCode(error.error)
-        .replaceAll(CAMEL_CASE_BOUNDARY, CAMEL_CASE_REPLACEMENT)
+        .replaceAll(CAMEL_CASE_BOUNDARY, (_pair, first: string, next: string) => `${first} ${next}`)
         .toLowerCase();
     return { line: getPosition(body, error.offset).line, message: `JSON syntax error: ${message}.` };
 }

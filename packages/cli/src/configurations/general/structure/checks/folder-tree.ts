@@ -22,7 +22,7 @@ Maps each folder to its files and child folders, sorted by name.
 
 @param files the tracked paths.
 */
-export function buildFolderTree(files: readonly { path: string }[]): Map<string, FolderChild[]> {
+export function buildFolderTree(files: ReadonlyArray<{ path: string }>): Map<string, FolderChild[]> {
     const tree = new Map<string, Map<string, FolderChild['kind']>>();
     const addChild = (folder: string, name: string, kind: FolderChild['kind']): void => {
         const children = tree.get(folder) ?? new Map<string, FolderChild['kind']>();

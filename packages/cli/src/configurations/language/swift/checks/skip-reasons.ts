@@ -43,7 +43,7 @@ function listUnexplainedSkips(syntaxRoot: Node, lines: string[]): Node[] {
     const attributes = syntaxRoot.descendantsOfType('attribute').filter((attribute) => {
         if (
             attribute.firstNamedChild?.text !== 'available' ||
-            !attribute.namedChildren.some((node) => node.type === 'simple_identifier' && node.text === 'unavailable')
+            attribute.namedChildren.every((node) => !(node.type === 'simple_identifier' && node.text === 'unavailable'))
         )
             return false;
         const reasonArgument =

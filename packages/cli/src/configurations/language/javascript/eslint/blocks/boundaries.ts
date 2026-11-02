@@ -87,7 +87,7 @@ function buildBoundarySettings({
     tests,
     serverFiles,
 }: ScopeBoundaries): NonNullable<EslintBlock['settings']> {
-    const files: { category: string; pattern: readonly string[]; stopMatching?: boolean }[] = importRules.map(
+    const files: Array<{ category: string; pattern: readonly string[]; stopMatching?: boolean }> = importRules.map(
         (rule) => ({
             category: `${IMPORT_RULE_CATEGORY}${rule.name}`,
             pattern: rule.paths,

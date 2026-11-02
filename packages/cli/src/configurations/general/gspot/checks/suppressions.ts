@@ -148,11 +148,14 @@ export async function checkSuppressions(session: Session, planned: PlannedCheck)
         }
     }
     const settings = findText(session.cache, SETTINGS_FILE) ?? '';
-    const settingsReasons = [...settings.matchAll(SETTINGS_REASON)].flatMap((match) =>
-        listReasonReferences(match.groups?.['reason'], {
-            file: SETTINGS_FILE,
-            line: getPosition(settings, match.index).line,
-        }),
-    );
+    const settingsReasons = settings
+        .matchAll(SETTINGS_REASON)
+        .flatMap((match) =>
+            listReasonReferences(match.groups?.['reason'], {
+                file: SETTINGS_FILE,
+                line: getPosition(settings, match.index).line,
+            }),
+        )
+        .toArray();
     return [...found, ...settingsReasons];
 }

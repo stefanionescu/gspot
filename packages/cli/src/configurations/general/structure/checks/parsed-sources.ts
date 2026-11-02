@@ -30,6 +30,24 @@ function captureSource(source: ParsedSource): void {
 
 const PARSED_SOURCES = Symbol('parsed sources');
 
+async function parseSources(
+    session: Pick<Session, 'cache' | 'resources'>,
+    planned: Pick<PlannedCheck, 'files' | 'scope'>,
+): Promise<ParsedSource[]> {
+    const sources: ParsedSource[] = [];
+    for (const file of planned.files) {
+        if (file.kind !== 'source') continue;
+        const language = detectLanguage(file);
+        if (language === undefined || !planned.scope.settings.configurations.includes(language)) continue;
+        const tree = await parseSource(language, readText(session.cache, file.path), session);
+        session.resources.push(tree);
+        const source = { path: file.path, language, tree, captures: new Map<string, Node[]>() };
+        sources.push(source);
+        captureSource(source);
+    }
+    return sources;
+}
+
 /**
 Parse the scope sources once for each list of paths, and free their trees with the run.
 
@@ -40,18 +58,7 @@ export function readParsedSources(
     session: Pick<Session, 'cache' | 'resources'>,
     planned: Pick<PlannedCheck, 'files' | 'scope'>,
 ): Promise<ParsedSource[]> {
-    return remember(session.cache, PARSED_SOURCES, JSON.stringify(planned.files.map((file) => file.path)), async () => {
-        const sources: ParsedSource[] = [];
-        for (const file of planned.files) {
-            if (file.kind !== 'source') continue;
-            const language = detectLanguage(file);
-            if (language === undefined || !planned.scope.settings.configurations.includes(language)) continue;
-            const tree = await parseSource(language, readText(session.cache, file.path), session);
-            session.resources.push(tree);
-            const source = { path: file.path, language, tree, captures: new Map<string, Node[]>() };
-            sources.push(source);
-            captureSource(source);
-        }
-        return sources;
-    });
+    return remember(session.cache, PARSED_SOURCES, JSON.stringify(planned.files.map((file) => file.path)), () =>
+        parseSources(session, planned),
+    );
 }

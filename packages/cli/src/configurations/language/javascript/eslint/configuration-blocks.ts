@@ -76,7 +76,7 @@ function buildConfigurationBlocks(
 }
 
 function listMatchingScopes(
-    scopeBlocks: { path: string; blocks: ConfigurationBlocks }[],
+    scopeBlocks: Array<{ path: string; blocks: ConfigurationBlocks }>,
     scopes: Scope[],
 ): Set<string> {
     return new Set(
@@ -91,7 +91,7 @@ function listMatchingScopes(
 }
 
 function buildScopeConfigurationBlocks(
-    configurations: { configuration: Configuration; builder: ConfigurationBuilder }[],
+    configurations: Array<{ configuration: Configuration; builder: ConfigurationBuilder }>,
     planned: PlannedEslintFile,
 ): ConfigurationScopeBlocks[] {
     const result: ConfigurationScopeBlocks[] = [];

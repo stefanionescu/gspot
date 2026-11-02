@@ -140,7 +140,7 @@ function groupTrivialRules(
     scope: Scope,
     parent: Scope | undefined,
     reexports: Settings['structure']['reexports'],
-): { rules: Record<string, unknown>; languages: string[] }[] {
+): Array<{ rules: Record<string, unknown>; languages: string[] }> {
     const groups = new Map<string, { rules: Record<string, unknown>; languages: string[] }>();
     for (const language of CODE_LANGUAGES) {
         const rules = buildTrivialRules(scope, language, reexports);
@@ -148,7 +148,7 @@ function groupTrivialRules(
         const key = JSON.stringify(rules);
         groups.set(key, { rules, languages: [...(groups.get(key)?.languages ?? []), language] });
     }
-    return [...groups.values()];
+    return groups.values().toArray();
 }
 
 function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintRuleBlock[] {

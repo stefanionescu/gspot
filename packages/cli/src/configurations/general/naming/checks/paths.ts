@@ -101,5 +101,5 @@ export function checkPaths(session: Session, planned: PlannedCheck): CheckFindin
             identifiers.set(key, identifier);
         }
     }
-    return validateIdentifiers(planned, settings, [...identifiers.values()]);
+    return validateIdentifiers(planned, settings, identifiers.values().toArray());
 }

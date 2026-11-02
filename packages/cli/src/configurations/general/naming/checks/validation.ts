@@ -59,20 +59,21 @@ const CASE_TESTS = {
     'timestamp-snake': isSnakeMigration,
 } satisfies Record<NamingCase, (name: string) => boolean>;
 
+function isInflectedForm(word: string, base: string): boolean {
+    if (word === base) return true;
+    if (
+        base.endsWith(SILENT_E) &&
+        WORD_FORM_SUFFIXES.some((suffix) => VOWEL_SUFFIX.test(suffix) && word === base.slice(0, -1) + suffix)
+    )
+        return true;
+    if (base.endsWith(TRAILING_Y) && ['ies', 'ied'].some((suffix) => word === base.slice(0, -1) + suffix)) return true;
+    const forms = WORD_FORM_CONSONANT.test(base) ? [base, base + (base.at(-1) as string)] : [base];
+    return forms.some((form) => WORD_FORM_SUFFIXES.some((suffix) => word === form + suffix));
+}
+
 function isWordForm(word: string, term: string): boolean {
-    return (BANNED_WORD_FORMS[term] ?? [term]).some((base) => {
-        if (word === base) return true;
-        const forms = [base];
-        if (
-            base.endsWith(SILENT_E) &&
-            WORD_FORM_SUFFIXES.some((suffix) => VOWEL_SUFFIX.test(suffix) && word === base.slice(0, -1) + suffix)
-        )
-            return true;
-        if (base.endsWith(TRAILING_Y) && ['ies', 'ied'].some((suffix) => word === base.slice(0, -1) + suffix))
-            return true;
-        if (WORD_FORM_CONSONANT.test(base)) forms.push(base + (base.at(-1) as string));
-        return forms.some((form) => WORD_FORM_SUFFIXES.some((suffix) => word === form + suffix));
-    });
+    const bases = BANNED_WORD_FORMS[term] ?? [term];
+    return bases.some((base) => isInflectedForm(word, base));
 }
 
 function hasTerm(words: string[], term: BannedWord): boolean {
@@ -112,7 +113,7 @@ function validateCase(checked: CheckedIdentifier, name: string, limits: Category
 
 function validateDigits(checked: CheckedIdentifier, words: string[], overrides: CompiledOverride[]) {
     if (
-        !words.some((segment) => DIGIT.test(segment) && !NUMERIC_WORDS.has(segment)) ||
+        words.every((segment) => !DIGIT.test(segment) || NUMERIC_WORDS.has(segment)) ||
         overrides.some((override) => override.digitsAllowed)
     )
         return undefined;
@@ -153,27 +154,34 @@ function validateRepeatedWords(checked: CheckedIdentifier, words: string[], over
           };
 }
 
+function isPhraseAt(words: string[], index: number, phrase: string[]): boolean {
+    const end = index + phrase.length;
+    return (
+        end <= words.length &&
+        phrase.every((word, offset) =>
+            offset === phrase.length - 1
+                ? isWordForm(words[index + offset] as string, word)
+                : words[index + offset] === word,
+        )
+    );
+}
+
+function removePhrase(words: string[], phrase: string[]): string[] {
+    const remaining: string[] = [];
+    let index = 0;
+    while (index < words.length) {
+        if (isPhraseAt(words, index, phrase)) index += phrase.length;
+        else {
+            remaining.push(words[index] as string);
+            index += 1;
+        }
+    }
+    return remaining;
+}
+
 function removeAllowedPhrases(sourceWords: string[], phrases: string[][]): string[] {
     let words = sourceWords;
-    for (const phrase of phrases) {
-        const remaining: string[] = [];
-        for (let index = 0; index < words.length; ) {
-            if (
-                index + phrase.length <= words.length &&
-                phrase.every((word, offset) =>
-                    offset === phrase.length - 1
-                        ? isWordForm(words[index + offset] as string, word)
-                        : words[index + offset] === word,
-                )
-            )
-                index += phrase.length;
-            else {
-                remaining.push(words[index] as string);
-                index += 1;
-            }
-        }
-        words = remaining;
-    }
+    for (const phrase of phrases) words = removePhrase(words, phrase);
     return words;
 }
 

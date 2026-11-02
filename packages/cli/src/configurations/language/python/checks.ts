@@ -126,7 +126,7 @@ async function groupByDocstringStyle(
     files: TrackedFile[],
     configured: PythonDocstringStyle | undefined,
 ) {
-    const styled: { file: TrackedFile; style: PythonDocstringStyle | undefined }[] = [];
+    const styled: Array<{ file: TrackedFile; style: PythonDocstringStyle | undefined }> = [];
     for (const file of files) {
         const style = configured ?? (await detectDocstringStyle(session, file.path));
         styled.push({ file, style });
@@ -179,24 +179,25 @@ export async function checkDeptry(session: CheckSession, planned: PlannedCheck):
     const text = findText(session.cache, pyproject);
     if (text === undefined) throw new CheckStop('skipped', NO_PYPROJECT_NOTE);
     const project = parseTomlFile(pyproject, text, deptrySchema);
+    const excluded = [
+        String.raw`(^|.*[/\\])${escapeRegExp(GSPOT_FOLDER)}([/\\]|$)`,
+        ...listNestedScopes(
+            session.scopes.map((scope) => scope.path),
+            planned.scope.path,
+        ).map((path) => {
+            const child = posix
+                .relative(planned.scope.path, path)
+                .split('/')
+                .map((segment) => escapeRegExp(segment))
+                .join(PATH_SEPARATOR_PATTERN);
+            return String.raw`^${child}([/\\]|$)`;
+        }),
+        ...project.tool.deptry.extend_exclude,
+    ];
     return await runCommandCheck(session, planned, {
         command: buildUvRunCommand(planned.scope, join(session.root, planned.scope.path), [
             ...DEPTRY_COMMAND,
-            ...[
-                String.raw`(^|.*[/\\])${escapeRegExp(GSPOT_FOLDER)}([/\\]|$)`,
-                ...listNestedScopes(
-                    session.scopes.map((scope) => scope.path),
-                    planned.scope.path,
-                ).map((path) => {
-                    const child = posix
-                        .relative(planned.scope.path, path)
-                        .split('/')
-                        .map((segment) => escapeRegExp(segment))
-                        .join(PATH_SEPARATOR_PATTERN);
-                    return String.raw`^${child}([/\\]|$)`;
-                }),
-                ...project.tool.deptry.extend_exclude,
-            ].flatMap((pattern) => [DEPTRY_EXCLUDE_FLAG, pattern]),
+            ...excluded.flatMap((pattern) => [DEPTRY_EXCLUDE_FLAG, pattern]),
             ...listFirstPartyPackages(session, planned, project),
         ]),
     });
@@ -226,8 +227,8 @@ Reports hand-kept requirements files and unmanaged pip installs, so pyproject.to
 */
 export function checkPipInstalls(session: Session, planned: PlannedCheck): CheckFinding[] {
     if (
-        !(planned.check.files?.filenames ?? []).some((file) =>
-            planned.files.some(({ path }) => path === joinScope(planned.scope.path, file)),
+        (planned.check.files?.filenames ?? []).every((file) =>
+            planned.files.every(({ path }) => path !== joinScope(planned.scope.path, file)),
         )
     )
         throw new CheckStop('skipped', NO_LOCKFILE_NOTE);

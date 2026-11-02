@@ -60,7 +60,7 @@ function isSecretDefault(call: Node, defaults: Set<string>): boolean {
     );
 }
 
-function listSecretNodes(syntaxRoot: Node, source: string): (readonly [Node, { rule: string; message: string }])[] {
+function listSecretNodes(syntaxRoot: Node, source: string): Array<readonly [Node, { rule: string; message: string }]> {
     const defaults = new Set(source.matchAll(USER_DEFAULTS_DECLARATION).map((declaration) => declaration[1] ?? ''));
     return syntaxRoot.descendantsOfType('call_expression').flatMap((call) => {
         if (isSecretLog(call)) return [[call, SWIFT_SECRET_FINDINGS.log] as const];

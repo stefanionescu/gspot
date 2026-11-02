@@ -68,6 +68,26 @@ function validateDocComment(
     return undefined;
 }
 
+function findDocCommentFinding(
+    scriptFunction: ScriptFunction,
+    lines: string[],
+): Pick<CheckFinding, 'rule' | 'message'> | undefined {
+    const block = findCommentBlock(lines, scriptFunction.start);
+    const isUndocumentedReader =
+        scriptFunction.highestRead > 0 &&
+        !LEADING_UNDERSCORES.test(scriptFunction.name) &&
+        !block.includes(ARGUMENTS_SECTION);
+    return (
+        validateDocComment(scriptFunction, block) ??
+        (isUndocumentedReader
+            ? {
+                  rule: DOC_COMMENT_RULES.missingArguments,
+                  message: `${scriptFunction.name} is public and reads arguments, but its comment has no "${ARGUMENTS_SECTION}" section that lists them.`,
+              }
+            : undefined)
+    );
+}
+
 /**
 Reports each function without a summary line, with a vague summary, or with doc sections out of order, and each
 public function that reads arguments without an Arguments section.
@@ -77,32 +97,11 @@ public function that reads arguments without an Arguments section.
 */
 export async function checkBashDocComments(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scripts = await readScripts(session, planned);
-    return scripts.flatMap((file) => {
-        return file.functions.flatMap((scriptFunction) => {
+    return scripts.flatMap((file) =>
+        file.functions.flatMap((scriptFunction) => {
             if (scriptFunction.name === MAIN_FUNCTION) return [];
-            const block = findCommentBlock(file.lines, scriptFunction.start);
-            const isUndocumentedReader =
-                scriptFunction.highestRead > 0 &&
-                !LEADING_UNDERSCORES.test(scriptFunction.name) &&
-                !block.includes(ARGUMENTS_SECTION);
-            const found =
-                validateDocComment(scriptFunction, block) ??
-                (isUndocumentedReader
-                    ? {
-                          rule: DOC_COMMENT_RULES.missingArguments,
-                          message: `${scriptFunction.name} is public and reads arguments, but its comment has no "${ARGUMENTS_SECTION}" section that lists them.`,
-                      }
-                    : undefined);
-            return found === undefined
-                ? []
-                : [
-                      {
-                          file: file.path,
-                          line: scriptFunction.start,
-                          rule: found.rule,
-                          message: found.message,
-                      },
-                  ];
-        });
-    });
+            const found = findDocCommentFinding(scriptFunction, file.lines);
+            return found === undefined ? [] : [{ file: file.path, line: scriptFunction.start, ...found }];
+        }),
+    );
 }

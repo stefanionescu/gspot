@@ -22,8 +22,9 @@ export async function checkLongFiles(session: Session, planned: PlannedCheck): P
             : GRAMMAR_NAMES.find((name) => file.tags.includes(name));
         const language: GrammarName | 'sql' | undefined =
             file.tags.includes('shell') || file.tags.includes('bash') ? 'bash' : tagged;
-        if (language === undefined) return [];
-        return [{ file, language, limit: getLimit(planned.scope.settings, 'max_file_lines', language) }];
+        return language === undefined
+            ? []
+            : [{ file, language, limit: getLimit(planned.scope.settings, 'max_file_lines', language) }];
     });
     const findings = await Promise.all(
         sources.map(async ({ file, language, limit }) => {

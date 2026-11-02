@@ -96,17 +96,6 @@ function openBuildCache(folder: string): Files {
     return openFiles(folder);
 }
 
-/**
-Return the cache folder of one repository, which all of its build tools share.
-
-@param root the folder whose canonical path identifies the shared build cache.
-*/
-export function readRepositoryCacheFolder(root: string): string {
-    const canonicalRoot = realpathSync(root);
-    const digest = createHash('sha256').update(canonicalRoot).digest('hex');
-    return join(readCacheFolder(), digest);
-}
-
 function createBuildLock(path: string): Disposable | undefined {
     try {
         writeFileSync(path, String(process.pid), { flag: 'wx', mode: PRIVATE_FILE });
@@ -119,6 +108,17 @@ function createBuildLock(path: string): Disposable | undefined {
         if (!hasErrorCode(error, 'EEXIST')) throw error;
         return undefined;
     }
+}
+
+/**
+Return the cache folder of one repository, which all of its build tools share.
+
+@param root the folder whose canonical path identifies the shared build cache.
+*/
+export function readRepositoryCacheFolder(root: string): string {
+    const canonicalRoot = realpathSync(root);
+    const digest = createHash('sha256').update(canonicalRoot).digest('hex');
+    return join(readCacheFolder(), digest);
 }
 
 /**
@@ -164,7 +164,7 @@ export function planSwiftBuild(session: Session, planned: PlannedCheck): SwiftBu
         xcode_destination: destination,
     } = getTable(planned.scope.settings, 'swift');
     if (project === undefined) {
-        if (!session.repository.files.some(({ path }) => path === joinScope(planned.scope.path, PACKAGE_SWIFT)))
+        if (session.repository.files.every(({ path }) => path !== joinScope(planned.scope.path, PACKAGE_SWIFT)))
             throw new CheckStop('skipped', NO_SWIFT_PROJECT_NOTE);
         const scratch = join(folder, PACKAGE_SCRATCH_FOLDER);
         return {

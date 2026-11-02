@@ -10,8 +10,14 @@ import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { parseTree, findNodeAtLocation } from 'jsonc-parser/lib/esm/main.js';
 import type { MessageFiles, ParsedMessage } from '#cli/types/configurations/language.ts';
-import { TYPE, parse, type MessageFormatElement } from '@formatjs/icu-messageformat-parser';
 
+import {
+    TYPE,
+    parse,
+    type PluralElement,
+    type SelectElement,
+    type MessageFormatElement,
+} from '@formatjs/icu-messageformat-parser';
 import {
     EMPTY_MESSAGE,
     PLURAL_FORMAT,
@@ -22,7 +28,7 @@ import {
 
 function flattenMessages(value: unknown, prefix = ''): Map<string, string> {
     if (value === null || typeof value !== 'object') return new Map();
-    const pairs = Object.entries(value).flatMap(([key, child]): [string, string][] => {
+    const pairs = Object.entries(value).flatMap(([key, child]): Array<[string, string]> => {
         const name = prefix === '' ? key : `${prefix}.${key}`;
         return typeof child === 'string' ? [[name, child]] : flattenMessages(child, name).entries().toArray();
     });
@@ -124,24 +130,26 @@ function compareMessages(
     return [...broken, ...missing, ...changed, ...unexpected];
 }
 
+function formatChoiceArguments(element: SelectElement | PluralElement, enclosing: ReadonlySet<string>): string[] {
+    const keys =
+        element.type === TYPE.select
+            ? `, select, ${Object.keys(element.options)
+                  .toSorted((left, right) => compareText(left, right))
+                  .join(' ')}`
+            : PLURAL_FORMAT;
+    const nested = Object.values(element.options).flatMap((option) =>
+        listArgumentNames(option.value, new Set([...enclosing, element.value])),
+    );
+    return [`{${element.value}${keys}}`, ...nested];
+}
+
 function listArgumentNames(elements: MessageFormatElement[], enclosing: ReadonlySet<string> = new Set()): string[] {
     const visible = elements.filter((element) => element.type !== TYPE.argument || !enclosing.has(element.value));
     return visible.flatMap((element): string[] => {
-        if (element.type === TYPE.literal) return [];
-        if (element.type === TYPE.pound) return [];
+        if (element.type === TYPE.literal || element.type === TYPE.pound) return [];
         if (element.type === TYPE.tag) return [`<${element.value}>`, ...listArgumentNames(element.children, enclosing)];
-        if (element.type === TYPE.select || element.type === TYPE.plural) {
-            const keys =
-                element.type === TYPE.select
-                    ? `, select, ${Object.keys(element.options)
-                          .toSorted((left, right) => compareText(left, right))
-                          .join(' ')}`
-                    : PLURAL_FORMAT;
-            const nested = Object.values(element.options).flatMap((option) =>
-                listArgumentNames(option.value, new Set([...enclosing, element.value])),
-            );
-            return [`{${element.value}${keys}}`, ...nested];
-        }
+        if (element.type === TYPE.select || element.type === TYPE.plural)
+            return formatChoiceArguments(element, enclosing);
         const format = ARGUMENT_FORMATS[element.type];
         return [`{${element.value}${format}}`];
     });
@@ -184,20 +192,11 @@ function readMessageFiles(
             messagesByPath.set(
                 path,
                 new Map(
-                    messages.value
-                        .entries()
-                        .map(([key, message]) => [
-                            key,
-                            parseMessage(
-                                message,
-                                getPosition(
-                                    text,
-                                    tree === undefined
-                                        ? 0
-                                        : (findNodeAtLocation(tree, key.split('.'))?.parent?.offset ?? 0),
-                                ).line,
-                            ),
-                        ]),
+                    messages.value.entries().map(([key, message]): [string, ParsedMessage] => {
+                        const offset =
+                            tree === undefined ? 0 : (findNodeAtLocation(tree, key.split('.'))?.parent?.offset ?? 0);
+                        return [key, parseMessage(message, getPosition(text, offset).line)];
+                    }),
                 ),
             );
     }
@@ -248,8 +247,9 @@ export function checkMessages(session: Session, planned: PlannedCheck): CheckFin
             const basePath = selectBaseFile(path, messageFiles);
             const messages = messagesByPath.get(path);
             const baseMessages = messagesByPath.get(basePath);
-            if (messages === undefined || baseMessages === undefined) return [];
-            return compareMessages(planned, path, messages, baseMessages);
+            return messages === undefined || baseMessages === undefined
+                ? []
+                : compareMessages(planned, path, messages, baseMessages);
         }),
     ];
 }

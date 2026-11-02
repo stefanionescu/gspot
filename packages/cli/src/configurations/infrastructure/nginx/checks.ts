@@ -43,17 +43,21 @@ import {
     OPENSSL_CERTIFICATE_FLAG,
 } from '#cli/config/configurations/infrastructure.ts';
 
-function listIncludedFiles(planned: PlannedCheck, text: string, base: string): Pick<Mount, 'path' | 'target'>[] {
-    const included: Pick<Mount, 'path' | 'target'>[] = [];
+function listIncludedFiles(planned: PlannedCheck, text: string, base: string): Array<Pick<Mount, 'path' | 'target'>> {
+    const included: Array<Pick<Mount, 'path' | 'target'>> = [];
     for (const [name, value] of parseNginxDirectives(text)) {
         if (name !== 'include' || value === undefined || value.includes(NGINX_VARIABLE_MARK)) continue;
         const target = posix.resolve(NGINX_FOLDER, value);
         const relativeTarget = posix.relative(NGINX_FOLDER, target);
         const isIncluded = picomatch(posix.normalize(posix.join(base, relativeTarget)));
-        for (const file of planned.files) {
-            if (!isIncluded(file.path)) continue;
-            included.push({ path: file.path, target: posix.resolve(NGINX_FOLDER, posix.relative(base, file.path)) });
-        }
+        included.push(
+            ...planned.files
+                .filter((file) => isIncluded(file.path))
+                .map((file) => ({
+                    path: file.path,
+                    target: posix.resolve(NGINX_FOLDER, posix.relative(base, file.path)),
+                })),
+        );
     }
     return included;
 }
@@ -77,18 +81,17 @@ function copyNginxFiles(session: Session, planned: PlannedCheck, path: string, w
 
 function buildSyntaxResult(path: string, copies: Map<string, Mount>, message: string): BuiltInCheckResult {
     const location = ERROR_LOCATION.exec(message)?.groups;
-    const { file: target = '', line = '1' } = location === undefined ? {} : location;
-    const file = copies.get(target)?.path ?? path;
+    const copy = copies.get(location?.['file'] ?? '');
     return {
         findings: [
             {
-                file,
-                line: Number(line),
+                file: copy === undefined ? path : copy.path,
+                line: Number(location?.['line'] ?? '1'),
                 rule: SYNTAX_RULE,
                 message: message,
             },
         ],
-        files: copies.has(target) ? [file] : [],
+        files: copy === undefined ? [] : [copy.path],
     };
 }
 

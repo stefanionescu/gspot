@@ -51,7 +51,7 @@ function parseHeadersFile(text: string): ParsedHeadersFile {
     for (const line of splitContentLines(text)) {
         if (!INDENTED_LINE.test(line.text)) {
             blocks.push({ path: line.text.trim(), headers: [] });
-            if (!PATH_PREFIXES.some((prefix) => line.text.startsWith(prefix)))
+            if (PATH_PREFIXES.every((prefix) => !line.text.startsWith(prefix)))
                 errors.push({
                     number: line.number,
                     text: BLOCK_PATH_MESSAGE,
@@ -77,25 +77,22 @@ function listMissingHeaders(blocks: HeaderBlock[]): string[] {
         .map(([name]) => name);
 }
 
+function validateRedirectLine(text: string): string | undefined {
+    const segments = text.trim().split(WHITESPACE_RUN);
+    const [source, destination, status] = segments as [string, string, string | undefined];
+    if (segments.length < REDIRECT_FIELDS.minimum || segments.length > REDIRECT_FIELDS.maximum)
+        return REDIRECT_FIELDS_MESSAGE;
+    if (!source.startsWith('/')) return REDIRECT_SOURCE_MESSAGE;
+    if (PATH_PREFIXES.every((prefix) => !destination.startsWith(prefix))) return REDIRECT_DESTINATION_MESSAGE;
+    return status === undefined || REDIRECT_STATUS_CODES.has(status)
+        ? undefined
+        : `Use a supported Cloudflare redirect status instead of ${status}.`;
+}
+
 function validateRedirects(text: string): NumberedLine[] {
     return splitContentLines(text).flatMap((line) => {
-        const segments = line.text.trim().split(WHITESPACE_RUN);
-        const [source, destination, status] = segments as [string, string, string | undefined];
-        if (segments.length < REDIRECT_FIELDS.minimum || segments.length > REDIRECT_FIELDS.maximum)
-            return [
-                {
-                    number: line.number,
-                    text: REDIRECT_FIELDS_MESSAGE,
-                },
-            ];
-        if (!source.startsWith('/')) return [{ number: line.number, text: REDIRECT_SOURCE_MESSAGE }];
-        if (!PATH_PREFIXES.some((prefix) => destination.startsWith(prefix)))
-            return [{ number: line.number, text: REDIRECT_DESTINATION_MESSAGE }];
-        if (status === undefined) return [];
-        const isRedirectStatus = REDIRECT_STATUS_CODES.has(status);
-        return isRedirectStatus
-            ? []
-            : [{ number: line.number, text: `Use a supported Cloudflare redirect status instead of ${status}.` }];
+        const message = validateRedirectLine(line.text);
+        return message === undefined ? [] : [{ number: line.number, text: message }];
     });
 }
 

@@ -24,7 +24,7 @@ export function checkGeneratedFiles(
             rule: staleFile.kind,
             message: GENERATED_FILE_FINDINGS[staleFile.kind].message,
             help: TOOL_LOCKFILES.has(staleFile.path) ? INSTALL_HELP : GENERATED_FILE_FINDINGS[staleFile.kind].help,
-            ...(diff === undefined ? {} : { diff }),
+            ...(diff !== undefined && { diff }),
         };
     });
 }

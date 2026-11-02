@@ -15,7 +15,10 @@ Reports each SECURITY DEFINER function that sets no search_path.
 export async function checkDefinerSearchPath(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const message = SECURITY_DEFINER_MESSAGE;
     const { functions } = buildDatabaseSchema(await readParsedMigrations(session, planned));
-    const looseDefiners = [...functions.values()].filter(({ definer, path }) => definer && !path);
+    const looseDefiners = functions
+        .values()
+        .filter(({ definer, path }) => definer && !path)
+        .toArray();
     return looseDefiners.map(({ migration, statement }) => ({
         file: migration.path,
         ...getPosition(migration.text, statement.start),

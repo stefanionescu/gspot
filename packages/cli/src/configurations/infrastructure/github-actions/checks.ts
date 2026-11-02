@@ -92,42 +92,6 @@ function replaceSelfReferences(text: string): string {
     return replaced;
 }
 
-/**
-Runs actionlint. If a workflow or action uses a $/ reference, checks a copy with that reference changed to ./.
-
-@param session the repository and its tools.
-@param planned the actionlint check and its files.
-*/
-export async function checkActionlint(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
-    const replacements = new Map<string, string>();
-    const actionFiles = new Map(
-        [
-            ...planned.files,
-            ...session.repository.files.filter((file) => ACTION_FILES.includes(posix.basename(file.path))),
-        ].map((file) => [file.path, file]),
-    );
-    for (const file of actionFiles.values()) {
-        const source = readText(session.cache, file.path);
-        const replaced = replaceSelfReferences(source);
-        if (replaced !== source) replacements.set(file.path, replaced);
-    }
-    if (replacements.size === 0) return runCommandCheck(session, planned);
-    using scratch = await createCopy(session, [
-        ...new Set([
-            ...session.repository.files.filter((file) => file.path.startsWith(GITHUB_FOLDER)).map((file) => file.path),
-            ...actionFiles.keys(),
-        ]),
-    ]);
-    mkdirSync(join(scratch.path, GIT_FOLDER));
-    for (const [path, source] of replacements) {
-        const target = join(scratch.path, path);
-        chmodSync(target, PRIVATE_FILE);
-        writeFileSync(target, source);
-    }
-    const result = await runCommandCheck({ ...session, root: scratch.path }, planned);
-    return restoreCommandPaths(result, scratch.path, session.root);
-}
-
 function listTriggers(document: Document): string[] {
     const triggers = document.get('on', true);
     if (isScalar(triggers)) return [String(triggers.value)];
@@ -185,6 +149,42 @@ function listConcurrencyHits(document: Document & { contents: YAMLMap }): Workfl
     return group !== undefined && triggers.every((trigger) => trigger === PUSH_TRIGGER)
         ? [{ kind: 'pushConcurrency', node: group }]
         : [];
+}
+
+/**
+Runs actionlint. If a workflow or action uses a $/ reference, checks a copy with that reference changed to ./.
+
+@param session the repository and its tools.
+@param planned the actionlint check and its files.
+*/
+export async function checkActionlint(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
+    const replacements = new Map<string, string>();
+    const actionFiles = new Map(
+        [
+            ...planned.files,
+            ...session.repository.files.filter((file) => ACTION_FILES.includes(posix.basename(file.path))),
+        ].map((file) => [file.path, file]),
+    );
+    for (const file of actionFiles.values()) {
+        const source = readText(session.cache, file.path);
+        const replaced = replaceSelfReferences(source);
+        if (replaced !== source) replacements.set(file.path, replaced);
+    }
+    if (replacements.size === 0) return runCommandCheck(session, planned);
+    using scratch = await createCopy(session, [
+        ...new Set([
+            ...session.repository.files.filter((file) => file.path.startsWith(GITHUB_FOLDER)).map((file) => file.path),
+            ...actionFiles.keys(),
+        ]),
+    ]);
+    mkdirSync(join(scratch.path, GIT_FOLDER));
+    for (const [path, source] of replacements) {
+        const target = join(scratch.path, path);
+        chmodSync(target, PRIVATE_FILE);
+        writeFileSync(target, source);
+    }
+    const result = await runCommandCheck({ ...session, root: scratch.path }, planned);
+    return restoreCommandPaths(result, scratch.path, session.root);
 }
 
 /**

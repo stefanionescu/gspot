@@ -43,6 +43,27 @@ function listIgnoredGlobs(planned: PlannedConfig, checkId: string, root: string)
     return [...shared, ...own].map((path) => `${root}/${path}`);
 }
 
+function listConsoleModules(planned: PlannedConfig): string[] {
+    const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
+    const text = findText(planned.session.cache, pyproject);
+    if (text === undefined) return [];
+    const scripts = tryParseFile(() => parseTomlFile(pyproject, text, pyprojectSchema))?.project?.scripts;
+    return scripts === undefined
+        ? []
+        : Object.values(scripts).map((target) => (target.split(':', 1)[0] as string).replaceAll('.', '/'));
+}
+
+function buildRuntimeTypeOptions(planned: PlannedConfig): Record<string, unknown> {
+    const { configurations } = planned.scope.settings;
+    const { dependencyFiles } = planned.session.repository;
+    const hasPydantic = dependencyFiles.some(
+        (file) => isInScope(file.path, planned.scope.path) && file.dependencies[PYDANTIC_PACKAGE] !== undefined,
+    );
+    return hasPydantic || configurations.includes(FASTAPI_CONFIGURATION)
+        ? { 'flake8-type-checking': RUFF_RUNTIME_TYPES }
+        : {};
+}
+
 /**
 Build basedpyright.json: the Python environment and source paths used by Basedpyright.
 
@@ -70,26 +91,6 @@ export function buildBasedpyrightFile(planned: PlannedConfig): string {
         null,
         JSON_INDENT,
     );
-}
-
-function listConsoleModules(planned: PlannedConfig): string[] {
-    const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
-    const text = findText(planned.session.cache, pyproject);
-    if (text === undefined) return [];
-    const scripts = tryParseFile(() => parseTomlFile(pyproject, text, pyprojectSchema))?.project?.scripts;
-    if (scripts === undefined) return [];
-    return Object.values(scripts).map((target) => (target.split(':', 1)[0] as string).replaceAll('.', '/'));
-}
-
-function buildRuntimeTypeOptions(planned: PlannedConfig): Record<string, unknown> {
-    const { configurations } = planned.scope.settings;
-    const { dependencyFiles } = planned.session.repository;
-    const hasPydantic = dependencyFiles.some(
-        (file) => isInScope(file.path, planned.scope.path) && file.dependencies[PYDANTIC_PACKAGE] !== undefined,
-    );
-    return hasPydantic || configurations.includes(FASTAPI_CONFIGURATION)
-        ? { 'flake8-type-checking': RUFF_RUNTIME_TYPES }
-        : {};
 }
 
 /**

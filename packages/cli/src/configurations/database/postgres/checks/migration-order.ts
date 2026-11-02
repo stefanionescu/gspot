@@ -2,18 +2,11 @@ import type { Session } from '#cli/types/tools.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { compareMigrationVersions } from '#cli/parsers/code/sql.ts';
+import type { Migration } from '#cli/types/configurations/infrastructure.ts';
 import { MIGRATION_RULES, MISSING_VERSION_MESSAGE } from '#cli/config/configurations/infrastructure.ts';
 import { readMigrations, readCommittedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 
-/**
-Reports a version that two files share, a file with no version, and a new file that sorts before a committed one.
-
-@param session the repository and its tools.
-@param planned the scope whose migrations to compare with the last commit.
-*/
-export async function checkMigrationOrder(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
-    const { migrations, findings: syntax } = await readMigrations(session, planned);
-    if (syntax.length > 0) return syntax;
+function listVersionFindings(migrations: Migration[]): CheckFinding[] {
     const findings: CheckFinding[] = [];
     const seen = new Map<string, string>();
     for (const migration of migrations) {
@@ -34,6 +27,19 @@ export async function checkMigrationOrder(session: Session, planned: PlannedChec
             });
         seen.set(migration.version, migration.name);
     }
+    return findings;
+}
+
+/**
+Reports a version that two files share, a file with no version, and a new file that sorts before a committed one.
+
+@param session the repository and its tools.
+@param planned the scope whose migrations to compare with the last commit.
+*/
+export async function checkMigrationOrder(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+    const { migrations, findings: syntax } = await readMigrations(session, planned);
+    if (syntax.length > 0) return syntax;
+    const findings = listVersionFindings(migrations);
     const texts = await readCommittedMigrations(
         session,
         migrations.map((migration) => migration.path),

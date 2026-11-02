@@ -68,15 +68,16 @@ function listMembershipBuckets(expression: SqlNodeFields['A_Expr']): string[] {
         return [];
     let values: Node[] | undefined;
     if (expression.kind === 'AEXPR_IN') values = findNodeFields(expression.rexpr, 'List')?.items;
-    if (expression.kind === 'AEXPR_OP_ANY') values = findNodeFields(expression.rexpr, 'A_ArrayExpr')?.elements;
+    else if (expression.kind === 'AEXPR_OP_ANY') values = findNodeFields(expression.rexpr, 'A_ArrayExpr')?.elements;
     return listNodeFields(values, 'A_Const').flatMap((literal) => literal.sval?.sval ?? []);
 }
 
 function listBucketConditions(node: Node | undefined): string[] {
     const boolean = findNodeFields(node, 'BoolExpr');
     if (boolean !== undefined) {
-        if (boolean.boolop === 'NOT_EXPR') return [];
-        return (boolean.args ?? []).flatMap((child) => listBucketConditions(child));
+        return boolean.boolop === 'NOT_EXPR'
+            ? []
+            : (boolean.args ?? []).flatMap((child) => listBucketConditions(child));
     }
     const expression = findNodeFields(node, 'A_Expr');
     if (expression === undefined || listNodeFields(expression.name, 'String')[0]?.sval !== '=') return [];
@@ -127,7 +128,8 @@ function addConfiguredFunctions(
     entrypoints: Map<string, FunctionEntrypoint>,
 ): void {
     const base = getTable(planned.scope.settings, 'supabase').functions_folder;
-    for (const [name, settings] of Object.entries(functions).filter(([name]) => !name.startsWith(SHARED_PREFIX))) {
+    const configured = Object.entries(functions).filter(([name]) => !name.startsWith(SHARED_PREFIX));
+    for (const [name, settings] of configured) {
         const folder = posix.join(base, name);
         const path =
             settings.entrypoint === undefined
@@ -221,7 +223,8 @@ export async function checkDenoLint(session: CheckSession, planned: PlannedCheck
     const findings: CheckFinding[] = [];
     const parsed = readSupabaseProjectFile(session, planned);
     if (parsed !== undefined && 'error' in parsed) return [parsed.error];
-    for (const entrypoint of listFunctionEntrypoints(planned, parsed?.value)) {
+    const entrypoints = listFunctionEntrypoints(planned, parsed?.value);
+    for (const entrypoint of entrypoints) {
         const result = await runDenoFunction(session, planned, {
             command: DENO_LINT_COMMAND,
             entrypoint,
@@ -260,7 +263,8 @@ export async function checkDenoCheck(session: CheckSession, planned: PlannedChec
     const findings: CheckFinding[] = [];
     const parsed = readSupabaseProjectFile(session, planned);
     if (parsed !== undefined && 'error' in parsed) return [parsed.error];
-    for (const entrypoint of listFunctionEntrypoints(planned, parsed?.value)) {
+    const entrypoints = listFunctionEntrypoints(planned, parsed?.value);
+    for (const entrypoint of entrypoints) {
         const result = await runDenoFunction(session, planned, {
             command: DENO_CHECK_COMMAND,
             entrypoint,
@@ -292,7 +296,7 @@ export function checkServiceRoleKey(session: Session, planned: PlannedCheck): Ch
         readText(session.cache, file.path)
             .split('\n')
             .flatMap((text, index): CheckFinding[] => {
-                if (!SERVICE_ROLE_KEY_NAMES.some((name) => text.includes(name))) return [];
+                if (SERVICE_ROLE_KEY_NAMES.every((name) => !text.includes(name))) return [];
                 return [
                     {
                         file: file.path,

@@ -28,6 +28,13 @@ import {
     KNIP_JAVASCRIPT_ENTRY_FILES,
 } from '#cli/config/configurations/javascript.ts';
 
+function buildScopePattern(pattern: string, scopePath: string): string | undefined {
+    const sign = pattern.startsWith('!') ? '!' : '';
+    const source = sign === '' ? pattern : pattern.slice(1);
+    if (scopePath === '' || source.startsWith('**/')) return pattern;
+    return source.startsWith(`${scopePath}/`) ? `${sign}${source.slice(scopePath.length + 1)}` : undefined;
+}
+
 function selectEntryFiles(settings: Settings, scopes: Scope[], scopePath: string): string[] {
     const authored = listApplicableTables(settings, scopePath).flatMap(({ table, scope = '' }) =>
         (table.javascript?.entry_files ?? []).map((pattern) => joinScopeSelector(pattern, scope)),
@@ -43,15 +50,8 @@ function selectEntryFiles(settings: Settings, scopes: Scope[], scopePath: string
             ...(scopeSettings.tables.javascript?.script_files ?? []),
             ...(scopePath === '' ? [KNIP_ESLINT_CONFIG] : []),
         ]);
-    const entries: string[] = [];
-    const patterns = new Set([...authored, ...nearest]);
-    for (const pattern of patterns) {
-        const sign = pattern.startsWith('!') ? '!' : '';
-        const source = sign === '' ? pattern : pattern.slice(1);
-        if (scopePath === '' || source.startsWith('**/')) entries.push(pattern);
-        else if (source.startsWith(`${scopePath}/`)) entries.push(`${sign}${source.slice(scopePath.length + 1)}`);
-    }
-    return entries;
+    const entries = new Set([...authored, ...nearest]);
+    return [...entries].flatMap((entry) => buildScopePattern(entry, scopePath) ?? []);
 }
 
 function buildWorkspaces(root: string, settings: Settings, scopes: Scope[]) {
@@ -152,8 +152,8 @@ export function buildKnipFile(planned: PlannedConfig): string {
                     ...listFileTaskPackages(planned, dependencyNames),
                 ]),
             ],
-            ignoreBinaries: [...new Set(toolBinaries)].filter((name) => scriptWords.has(name)),
-            ...(planned.level === 'all' ? {} : { ignoreExportsUsedInFile: true }),
+            ignoreBinaries: [...new Set(toolBinaries).intersection(scriptWords)],
+            ...(planned.level !== 'all' && { ignoreExportsUsedInFile: true }),
             ...(externals.length > 0 && { ignoreUnresolved: externals }),
             workspaces,
         },

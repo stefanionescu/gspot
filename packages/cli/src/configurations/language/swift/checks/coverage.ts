@@ -59,22 +59,23 @@ function findFailureFile(planned: PlannedCheck, file: string, cwd: string): stri
     return matches.length === 1 ? matches[0]?.path : undefined;
 }
 
+function parseFailureLine(planned: PlannedCheck, line: string, cwd: string): CheckFinding | undefined {
+    const groups = (XCTEST_FAILURE_LINE.exec(line) ?? SWIFT_TESTING_FAILURE_LINE.exec(line))?.groups;
+    if (groups === undefined) return undefined;
+    const file = findFailureFile(planned, groups['file'] ?? '', cwd);
+    if (file === undefined) return undefined;
+    return {
+        file,
+        line: Number(groups['line']),
+        ...(groups['column'] !== undefined && { column: Number(groups['column']) }),
+        rule: FAILED_TEST_RULE,
+        message: groups['message'] ?? '',
+    };
+}
+
 function parseFailedTests(planned: PlannedCheck, output: string, cwd: string): CheckFinding[] {
-    return [...new Set(output.split('\n'))].flatMap((line) => {
-        const groups = (XCTEST_FAILURE_LINE.exec(line) ?? SWIFT_TESTING_FAILURE_LINE.exec(line))?.groups;
-        if (groups === undefined) return [];
-        const file = findFailureFile(planned, groups['file'] ?? '', cwd);
-        if (file === undefined) return [];
-        return [
-            {
-                file,
-                line: Number(groups['line']),
-                ...(groups['column'] === undefined ? {} : { column: Number(groups['column']) }),
-                rule: FAILED_TEST_RULE,
-                message: groups['message'] ?? '',
-            },
-        ];
-    });
+    const lines = new Set(output.split('\n'));
+    return [...lines].flatMap((line) => parseFailureLine(planned, line, cwd) ?? []);
 }
 
 async function measurePackageCoverage(
@@ -148,11 +149,10 @@ function listCoverageShortfalls(
     const limits = [
         ...settings.swift_target,
         ...output.targets
-            .filter(
-                (target) =>
-                    !settings.swift_target.some(
-                        (limit) => target.name === limit.name || target.name === `${limit.name}${APP_TARGET_SUFFIX}`,
-                    ),
+            .filter((target) =>
+                settings.swift_target.every(
+                    (limit) => !(target.name === limit.name || target.name === `${limit.name}${APP_TARGET_SUFFIX}`),
+                ),
             )
             .map((target) => ({ name: target.name, min_line_percent: settings.min_line_percent })),
     ];

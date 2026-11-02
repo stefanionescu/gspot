@@ -44,7 +44,7 @@ function listComposeFiles(files: TrackedFile[]): ComposeFiles[] {
     return groups.values().toArray();
 }
 
-function listBuildContexts(declarations: ComposeDeclaration[], folder: string): [string, string[]][] {
+function listBuildContexts(declarations: ComposeDeclaration[], folder: string): Array<[string, string[]]> {
     return Map.groupBy(declarations, ({ name }) => name)
         .values()
         .flatMap((service) => {

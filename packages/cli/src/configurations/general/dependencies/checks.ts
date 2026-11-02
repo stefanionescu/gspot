@@ -39,13 +39,18 @@ function validateUrl(url: URL, hosts: Set<string>): string | undefined {
     return hosts.has(url.host) ? undefined : `${url.host} is not an allowed registry host.`;
 }
 
+function findUrlOffset(text: string, url: string, start: number): number {
+    let offset = text.indexOf(url, start);
+    while (offset !== -1 && LOCKFILE_KEY_SUFFIX.test(text.slice(offset + url.length)))
+        offset = text.indexOf(url, offset + url.length);
+    return offset;
+}
+
 function validateLockfileHosts(session: Session, path: string, hosts: Set<string>): CheckFinding[] {
     const text = readText(session.cache, path);
     let nextOffset = 0;
     return listLockfileUrls(path, text).flatMap((url) => {
-        let offset = text.indexOf(url, nextOffset);
-        while (offset !== -1 && LOCKFILE_KEY_SUFFIX.test(text.slice(offset + url.length)))
-            offset = text.indexOf(url, offset + url.length);
+        const offset = findUrlOffset(text, url, nextOffset);
         nextOffset = offset === -1 ? nextOffset : offset + url.length;
         const parsed = URL.parse(url);
         const message =
@@ -87,7 +92,8 @@ function listForeignLockfiles(planned: PlannedCheck): CheckFinding[] {
         .toArray();
 }
 
-function getExactVersion(value: unknown): string | undefined {
+function getExactVersion(tools: Record<string, unknown>, tool: string): string | undefined {
+    const value = tools[tool] ?? tools[`${NPM_TOOL_PREFIX}${tool}`];
     const first: unknown = Array.isArray(value) ? value[0] : value;
     if (typeof first === 'string') return first;
     const version = isTable(first) ? first['version'] : undefined;
@@ -112,7 +118,7 @@ function findMiseFilePin(
             continue;
         }
         const { tools } = parsed.value;
-        const version = getExactVersion(tools[tool] ?? tools[`${NPM_TOOL_PREFIX}${tool}`]);
+        const version = getExactVersion(tools, tool);
         if (version !== undefined && pin === undefined) pin = { path, version };
     }
     return { pin, findings };
@@ -146,6 +152,24 @@ function compareSpecifiers(
     return [...changed, ...removed];
 }
 
+function listMissingPins(session: Session, folder: string): CheckFinding[] {
+    const packageJsonPath = posix.join(folder, PACKAGE_JSON);
+    return LOCKFILES.filter(
+        ({ file, packageManager }) =>
+            UNBUNDLED_PACKAGE_MANAGERS.includes(packageManager) &&
+            findText(session.cache, posix.join(folder, file)) !== undefined &&
+            findText(session.cache, packageJsonPath) !== undefined,
+    ).map(({ packageManager }) => {
+        const { pin } = findMiseFilePin(session, folder, packageManager);
+        return {
+            file: packageJsonPath,
+            line: 1,
+            rule: DEPENDENCY_RULES.packageManagerPin,
+            message: `CI installs only a pinned ${packageManager}. Add "packageManager": "${packageManager}@${pin?.version ?? '<version>'}" to ${packageJsonPath}.`,
+        };
+    });
+}
+
 /**
 Reports lockfile downloads from other hosts or over plain HTTP, and lockfiles of a second package manager in the
 scope.
@@ -163,24 +187,6 @@ export function checkLockfiles(session: Session, planned: PlannedCheck): CheckFi
                 : [];
         }),
     ];
-}
-
-function listMissingPins(session: Session, folder: string): CheckFinding[] {
-    const packageJsonPath = posix.join(folder, PACKAGE_JSON);
-    return LOCKFILES.filter(
-        ({ file, packageManager }) =>
-            UNBUNDLED_PACKAGE_MANAGERS.includes(packageManager) &&
-            findText(session.cache, posix.join(folder, file)) !== undefined &&
-            findText(session.cache, packageJsonPath) !== undefined,
-    ).map(({ packageManager }) => {
-        const { pin } = findMiseFilePin(session, folder, packageManager);
-        return {
-            file: packageJsonPath,
-            line: 1,
-            rule: DEPENDENCY_RULES.packageManagerPin,
-            message: `CI installs only a pinned ${packageManager}. Add "packageManager": "${packageManager}@${pin?.version ?? '<version>'}" to ${packageJsonPath}.`,
-        };
-    });
 }
 
 /**

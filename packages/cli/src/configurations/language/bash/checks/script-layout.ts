@@ -25,7 +25,7 @@ import {
 } from '#cli/config/configurations/bash.ts';
 
 function validateStrictMode(codeLines: NumberedLine[]): LayoutFinding[] {
-    const first = codeLines.findIndex((line) => !OPTION_COMMANDS.some((command) => line.text.startsWith(command)));
+    const first = codeLines.findIndex((line) => OPTION_COMMANDS.every((command) => !line.text.startsWith(command)));
     const before = new Set(codeLines.slice(0, first === -1 ? codeLines.length : first).map((line) => line.text));
     return before.has(STRICT_MODE)
         ? []

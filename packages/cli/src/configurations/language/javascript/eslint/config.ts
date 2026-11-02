@@ -53,7 +53,7 @@ function buildConfigurationFiles(
     planned: PlannedConfig,
     blocks: Map<Configuration, PlannedEslintBlock[]>,
     writer: BlockWriter,
-): { importName: string; module: string; file: GeneratedFile }[] {
+): Array<{ importName: string; module: string; file: GeneratedFile }> {
     const folder = dirname(planned.targetPath);
     return [...blocks].map(([configuration, configurationBlocks]) => {
         const path = join(

@@ -121,6 +121,24 @@ function listRouteBatches(files: TrackedFile[]): ProseRouteBatch[] {
     return [...byExtension, ...routes.filter((each) => each.mode === 'stdin').map((route): ProseRouteBatch => [route])];
 }
 
+async function listFileDates(session: CheckSession, file: TrackedFile): Promise<CheckFinding[]> {
+    const source = readText(session.cache, file.path);
+    const texts = file.tags.includes('markdown')
+        ? listMarkdownTexts(source)
+        : await parseComments(file.path, source, file.tags, session);
+    return texts.flatMap(({ line, text }) =>
+        text
+            .matchAll(AMBIGUOUS_DATE)
+            .map((match) => ({
+                file: file.path,
+                line: line + text.slice(0, match.index).split('\n').length - 1,
+                rule: DATE_RULE,
+                message: `Ambiguous date ${match[0]}. Write an ISO date, such as 2026-09-17, or the month name.`,
+            }))
+            .toArray(),
+    );
+}
+
 /**
 Runs Vale on the scope files, by path where Vale has a grammar and through stdin elsewhere.
 
@@ -132,12 +150,14 @@ export async function checkVale(session: CheckSession, planned: PlannedCheck): P
     const command = [VALE_TOOL, CONFIG_FLAG, join(session.root, GSPOT_PATHS.valeConfig), ...VALE_ARGUMENTS];
     const folder = dirname(join(session.root, GSPOT_PATHS.valeConfig));
     const groups = listRouteBatches(planned.files.filter((file) => file.kind === 'source'));
-    const batches: Promise<ValeAlert[]>[] = [];
+    const batches: Array<Promise<ValeAlert[]>> = [];
     for (const group of groups) {
         const [first] = group;
-        if (first.mode === 'path')
-            batches.push(Promise.resolve(await runValeOnPaths(session, planned, group, command, folder)));
-        else batches.push(runValeOnStdin(session, planned, first, command, folder));
+        batches.push(
+            first.mode === 'path'
+                ? Promise.resolve(await runValeOnPaths(session, planned, group, command, folder))
+                : runValeOnStdin(session, planned, first, command, folder),
+        );
     }
     const results = await Promise.all(batches);
     return results.flatMap((alerts) =>
@@ -181,23 +201,6 @@ export async function checkCommitMessage(session: CheckSession, planned: Planned
         rule: alert.check,
         message: `Line ${String(alert.line)}: ${alert.message}`,
     }));
-}
-
-async function listFileDates(session: CheckSession, file: TrackedFile): Promise<CheckFinding[]> {
-    const source = readText(session.cache, file.path);
-    const texts = file.tags.includes('markdown')
-        ? listMarkdownTexts(source)
-        : await parseComments(file.path, source, file.tags, session);
-    return texts.flatMap(({ line, text }) =>
-        [...text.matchAll(AMBIGUOUS_DATE)].map(
-            (match): CheckFinding => ({
-                file: file.path,
-                line: line + text.slice(0, match.index).split('\n').length - 1,
-                rule: DATE_RULE,
-                message: `Ambiguous date ${match[0]}. Write an ISO date, such as 2026-09-17, or the month name.`,
-            }),
-        ),
-    );
 }
 
 /**

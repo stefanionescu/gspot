@@ -85,17 +85,19 @@ function isForwarding(node: Node, language: ParsedLanguage): boolean {
         : LANGUAGE_FORWARDING[language](node);
 }
 
+function countNodeStatements(node: Node, language: ParsedLanguage): number {
+    if (!COUNTED_FUNCTION_NODES.has(node.type))
+        return STATEMENT_COUNTS[language](node) + countExecutableStatements(node.namedChildren, language);
+    return node.type === 'lambda'
+        ? 1 + countExecutableStatements(node.namedChildren, language)
+        : countExecutableStatements(extractFunctionBody(node, language), language);
+}
+
 function countExecutableStatements(nodes: Node[], language: ParsedLanguage): number {
     let count = 0;
-    for (const node of nodes) {
-        if (node.type.includes('comment') || TYPE_ALIAS_NODES.has(node.type)) continue;
-        if (COUNTED_FUNCTION_NODES.has(node.type)) {
-            const body = node.type === 'lambda' ? node.namedChildren : extractFunctionBody(node, language);
-            count += Number(node.type === 'lambda') + countExecutableStatements(body, language);
-            continue;
-        }
-        count += STATEMENT_COUNTS[language](node) + countExecutableStatements(node.namedChildren, language);
-    }
+    for (const node of nodes)
+        if (!node.type.includes('comment') && !TYPE_ALIAS_NODES.has(node.type))
+            count += countNodeStatements(node, language);
     return count;
 }
 

@@ -49,26 +49,30 @@ function listAliasSpecifiers(path: string, aliases: Record<string, string>): str
     return Object.entries(aliases).flatMap(([pattern, target]) => {
         const [start = '', end] = target.split('*');
         if (end === undefined) return target === path ? [pattern] : [];
-        const fits = path.length >= start.length + end.length && path.startsWith(start) && path.endsWith(end);
-        return fits ? [pattern.replace('*', path.slice(start.length, path.length - end.length))] : [];
+        const doesFit = path.length >= start.length + end.length && path.startsWith(start) && path.endsWith(end);
+        return doesFit ? [pattern.replace('*', () => path.slice(start.length, path.length - end.length))] : [];
     });
 }
 
+function buildAssetPattern(pattern: string, importer: string, scope: string): string {
+    const isNegative = pattern.startsWith('!');
+    const bare = isNegative ? pattern.slice(1) : pattern;
+    const target = bare.startsWith('/')
+        ? posix.join(scope, bare.slice(1))
+        : posix.join(extractParentFolder(importer), bare);
+    return isNegative ? `!${target}` : target;
+}
+
 async function readAssetSource(path: string, text: string, session: Session, scope: string): Promise<AssetSource> {
-    const matchers: ((path: string) => boolean)[] = [];
+    const matchers: Array<(path: string) => boolean> = [];
     let references = text;
     const sources = text.includes(ASSET_GLOB_CALL) ? await listJavascriptSources(path, text) : [];
     for (const source of sources) {
-        for (const imported of await readGlobImports(source, session)) {
-            const patterns = imported.patterns.map((pattern) => {
-                const negative = pattern.startsWith('!');
-                const bare = negative ? pattern.slice(1) : pattern;
-                const target = bare.startsWith('/')
-                    ? posix.join(scope, bare.slice(1))
-                    : posix.join(extractParentFolder(path), bare);
-                return negative ? `!${target}` : target;
-            });
-            matchers.push(buildPathMatcher(patterns));
+        const imports = await readGlobImports(source, session);
+        for (const imported of imports) {
+            matchers.push(
+                buildPathMatcher(imported.patterns.map((pattern) => buildAssetPattern(pattern, path, scope))),
+            );
             references = references.replaceAll(imported.text, '');
         }
     }
@@ -115,11 +119,11 @@ export async function checkSiteUnusedAssets(session: Session, planned: PlannedCh
             const names = [`${ASSET_REFERENCE_PREFIX}/?${escapeRegExp(belowAssets)}`];
             for (const specifier of listAliasSpecifiers(file.path, aliases)) names.push(escapeRegExp(specifier));
             const reference = new RegExp(`(?:${names.join('|')})${ASSET_REFERENCE_SUFFIX}`, 'u');
-            return !texts.some(
+            return texts.every(
                 ({ path, text, matches }) =>
-                    matches(file.path) ||
-                    reference.test(text) ||
-                    text.includes(posix.relative(extractParentFolder(path), file.path)),
+                    !matches(file.path) &&
+                    !reference.test(text) &&
+                    !text.includes(posix.relative(extractParentFolder(path), file.path)),
             );
         })
         .map((file) => ({

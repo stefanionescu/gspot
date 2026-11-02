@@ -52,8 +52,10 @@ function parseOutputFindings(
         })
         .map((groups): CheckFinding => {
             const text = groups['text'] ?? '';
-            const suffix = RULE_SUFFIX.exec(text)?.groups;
-            const { rule = defaultRule, text: message = text } = suffix === undefined ? {} : suffix;
+            const { rule = defaultRule, text: message = text } = RULE_SUFFIX.exec(text)?.groups ?? {
+                rule: defaultRule,
+                text,
+            };
             const file = groups['file'] ?? '';
             const posixFile = convertToPosixPath(file);
             return {

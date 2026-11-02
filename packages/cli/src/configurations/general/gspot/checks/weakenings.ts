@@ -50,7 +50,7 @@ function listConfigurationWeakenings(base: Settings, head: Settings, tracked: st
     const tables = new Map(listSettingsTables(head).map(({ table, scope }) => [scope, table]));
     return listSettingsTables(base).flatMap(({ table, scope = '' }) => {
         const kept = tables.get(scope);
-        if (kept === undefined && !tracked.some((path) => isInScope(path, scope))) return [];
+        if (kept === undefined && tracked.every((path) => !isInScope(path, scope))) return [];
         const removed = new Set([
             ...table.configurations.filter((name) => kept?.configurations.includes(name) !== true),
             ...(kept?.removed_configurations ?? []).filter((name) => !table.removed_configurations.includes(name)),

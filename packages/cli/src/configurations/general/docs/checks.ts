@@ -147,12 +147,13 @@ function readTaskNames(session: Session, scopePath: string): TaskNames {
     );
     const files = [
         ...new Set(
-            ancestors.flatMap(({ path }) => [
-                ...MISE_FILES.map((file) => posix.join(path, file)),
-                ...session.repository.files
-                    .map(({ path }) => path)
-                    .filter(buildPathMatcher([posix.join(escapeGlob(path), MISE_CONFIG_GLOB)])),
-            ]),
+            ancestors.flatMap(({ path }) => {
+                const isMiseConfig = buildPathMatcher([posix.join(escapeGlob(path), MISE_CONFIG_GLOB)]);
+                return [
+                    ...MISE_FILES.map((file) => posix.join(path, file)),
+                    ...session.repository.files.map(({ path }) => path).filter((path) => isMiseConfig(path)),
+                ];
+            }),
         ),
     ];
     let scripts: string[] = [];
@@ -205,15 +206,15 @@ function isCommandFence(language: string | null | undefined, written: string | n
 
 function extractProseLines(text: string): ProseLine[] {
     const lines: ProseLine[] = [];
-    const addLines = (value: string, first: number, command: boolean): void => {
+    const addLines = (value: string, position: { start: { line: number } } | undefined, isFenced: boolean): void => {
+        const first = (position?.start.line ?? 1) + (isFenced ? 1 : 0);
         for (const [index, line] of value.split('\n').entries())
-            lines.push({ number: first + index, text: line, command });
+            lines.push({ number: first + index, text: line, command: isFenced });
     };
     visit(fromMarkdown(text), (node) => {
-        const start = node.position?.start.line ?? 1;
-        if (node.type === 'code' && isCommandFence(node.lang, node.meta)) addLines(node.value, start + 1, true);
-        if (node.type === 'definition') addLines(node.url, start, false);
-        if (node.type === 'text' || node.type === 'inlineCode') addLines(node.value, start, false);
+        if (node.type === 'code' && isCommandFence(node.lang, node.meta)) addLines(node.value, node.position, true);
+        else if (node.type === 'definition') addLines(node.url, node.position, false);
+        else if (node.type === 'text' || node.type === 'inlineCode') addLines(node.value, node.position, false);
     });
     return lines;
 }
@@ -234,6 +235,22 @@ function extractPathTokens(line: string): string[] {
                 PATH_CHARACTERS.test(token) &&
                 PATH_TOKEN_SKIPS.every((skip) => !skip.test(token)),
         );
+}
+
+function listScopeVersions(session: Session, scopePath: string): string[] {
+    return session.repository.files
+        .filter(({ kind, path }) => kind === 'source' && selectScopePath(path, session.scopes) === scopePath)
+        .flatMap(({ path }) => {
+            const name = posix.basename(path);
+            if (name === PACKAGE_JSON) return [tryParseFile(() => readPackageJson(session.cache, path))?.['version']];
+            return name === PYPROJECT_TOML
+                ? [
+                      tryParseFile(() => parseTomlFile(path, readText(session.cache, path), pyprojectSchema))?.project
+                          ?.version,
+                  ]
+                : [];
+        })
+        .filter((version): version is string => typeof version === 'string');
 }
 
 /**
@@ -279,7 +296,7 @@ export function checkRequiredFiles(session: Session, planned: PlannedCheck): Che
         });
     if (
         planned.scope.path === '' &&
-        ![...repositoryPaths].some((path) => !path.includes('/') && LICENSE_FILE.test(path))
+        [...repositoryPaths].every((path) => path.includes('/') || !LICENSE_FILE.test(path))
     )
         findings.push({
             file: LICENSE_PATH,
@@ -287,22 +304,6 @@ export function checkRequiredFiles(session: Session, planned: PlannedCheck): Che
             message: MISSING_LICENSE_MESSAGE,
         });
     return findings;
-}
-
-function listScopeVersions(session: Session, scopePath: string): string[] {
-    return session.repository.files
-        .filter(({ kind, path }) => kind === 'source' && selectScopePath(path, session.scopes) === scopePath)
-        .flatMap(({ path }) => {
-            const name = posix.basename(path);
-            if (name === PACKAGE_JSON) return [tryParseFile(() => readPackageJson(session.cache, path))?.['version']];
-            return name === PYPROJECT_TOML
-                ? [
-                      tryParseFile(() => parseTomlFile(path, readText(session.cache, path), pyprojectSchema))?.project
-                          ?.version,
-                  ]
-                : [];
-        })
-        .filter((version): version is string => typeof version === 'string');
 }
 
 /**

@@ -24,13 +24,13 @@ export function checkReactVersions(session: Session, planned: PlannedCheck): Che
     const folder = planned.scope.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
     const specifiers = listSpecifiers(readPackageJson(session.cache, packageJsonPath));
-    if (![REACT_PACKAGE, REACT_DOM_PACKAGE].every((name) => specifiers.has(name))) return [];
+    if ([REACT_PACKAGE, REACT_DOM_PACKAGE].some((name) => !specifiers.has(name))) return [];
     const locked = readLockedVersions(session.cache, folder);
     const versions = locked ?? specifiers;
     const react = versions.get(REACT_PACKAGE) ?? '';
     const reactDom = versions.get(REACT_DOM_PACKAGE) ?? '';
-    const matches = locked === undefined ? canRangesMeet(react, reactDom) : react === reactDom;
-    if (matches) return [];
+    const areCompatible = locked === undefined ? canRangesMeet(react, reactDom) : react === reactDom;
+    if (areCompatible) return [];
     return [
         {
             file: packageJsonPath,

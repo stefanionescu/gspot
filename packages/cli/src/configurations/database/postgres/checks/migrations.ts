@@ -26,7 +26,10 @@ import {
 
 const MIGRATIONS = Symbol('migrations');
 
-async function parseMigrations(session: Session, paths: Pick<Migration, 'path' | 'version'>[]): Promise<Migration[]> {
+async function parseMigrations(
+    session: Session,
+    paths: Array<Pick<Migration, 'path' | 'version'>>,
+): Promise<Migration[]> {
     const migrations: Migration[] = [];
     for (const { path, version } of paths) {
         const text = extractForwardText(readText(session.cache, path));

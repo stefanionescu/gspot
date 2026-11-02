@@ -5,6 +5,12 @@ import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { READS_NO_POSITIONAL, UNREAD_ARGUMENTS_RULE } from '#cli/config/configurations/bash.ts';
 import { readScripts, listFunctionCalls } from '#cli/configurations/language/bash/checks/scripts.ts';
 
+function formatUnreadPositions(width: number, highest: number): string {
+    const unread = Array.from({ length: width - highest }, (_, offset) => String(highest + offset + 1));
+    const isSingle = unread.length === 1;
+    return `${isSingle ? 'position' : 'positions'} ${formatNameList(unread)} ${isSingle ? 'is' : 'are'}`;
+}
+
 /**
 Reports each function called with more arguments than it reads.
 
@@ -23,10 +29,8 @@ export async function checkUnreadArguments(session: Session, planned: PlannedChe
             );
             const highest = scriptFunction.highestRead;
             if (width <= highest) return [];
-            const unread = Array.from({ length: width - highest }, (_, offset) => String(highest + offset + 1));
             const read = highest === 0 ? READS_NO_POSITIONAL : `reads none past $${String(highest)}`;
-            const isSingle = unread.length === 1;
-            const positions = `${isSingle ? 'position' : 'positions'} ${formatNameList(unread)} ${isSingle ? 'is' : 'are'}`;
+            const positions = formatUnreadPositions(width, highest);
             return [
                 {
                     file: file.path,

@@ -4,7 +4,7 @@ import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 import { PUBLIC_SCHEMA } from '#cli/config/configurations/infrastructure.ts';
 import type { SchemaState, StatementApplier, FunctionSecurity } from '#cli/types/configurations/infrastructure.ts';
 
-function buildFunctionKey(names: Node[] | undefined, parameters: (TypeName | undefined)[]): string {
+function buildFunctionKey(names: Node[] | undefined, parameters: Array<TypeName | undefined>): string {
     const path = listNodeFields(names, 'String').map(({ sval = '' }) => sval);
     const qualified = path.length === 1 ? [PUBLIC_SCHEMA, ...path] : path;
     return JSON.stringify([
@@ -22,7 +22,7 @@ function setFunctionSecurity(security: FunctionSecurity, action: DefElem): boole
         return true;
     }
     const setting = findNodeFields(action.arg, 'VariableSetStmt');
-    if (action.defname !== 'set' || setting === undefined) return false;
+    if (setting === undefined || action.defname !== 'set') return false;
     if (setting.name !== 'search_path' && setting.kind !== 'VAR_RESET_ALL') return false;
     security.path = setting.kind !== 'VAR_RESET' && setting.kind !== 'VAR_RESET_ALL';
     return true;

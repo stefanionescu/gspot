@@ -1,6 +1,7 @@
 import type { Node, Constraint } from '@pgsql/types';
 import type { SqlStatement } from '#cli/types/parsers.ts';
 import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
+import { renameTable, applyRename } from '#cli/configurations/database/postgres/checks/renames.ts';
 
 import {
     dropFunctions,
@@ -51,31 +52,6 @@ function applyViewOptions(
     );
     if (isInvoker) state.unprotectedViews.delete(view);
     else if (source !== undefined) state.unprotectedViews.set(view, source);
-}
-
-function renameTable(state: SchemaState, table: string, renamed: string): void {
-    const source = state.tables.get(table);
-    if (source !== undefined) {
-        state.tables.set(renamed, source);
-        state.tables.delete(table);
-    }
-    if (state.secured.delete(table)) state.secured.add(renamed);
-    const policies = state.policies.get(table);
-    if (policies !== undefined) {
-        state.policies.set(renamed, policies);
-        state.policies.delete(table);
-    }
-    const constraints = state.constraints.get(table);
-    if (constraints !== undefined) {
-        state.constraints.set(
-            renamed,
-            new Map([...constraints].map(([constraint, key]) => [constraint, { ...key, table: renamed }])),
-        );
-        state.constraints.delete(table);
-    }
-    state.indexes = state.indexes.map((index) =>
-        index.table === table ? { ...index, table: renamed, schema: renamed.slice(0, renamed.indexOf('.')) } : index,
-    );
 }
 
 function buildConstraintName(node: Constraint, table: string, kind: string, keys: string[]): string {
@@ -146,14 +122,14 @@ const ALTERATIONS: SchemaAlterations = {
     },
     AT_AddColumn: (state, at, command) => {
         const column = findNodeFields(command.def, 'ColumnDef');
-        for (const node of listNodeFields(column?.constraints, 'Constraint'))
-            addConstraint(state, at, node, column?.colname ?? '');
+        const constraints = listNodeFields(column?.constraints, 'Constraint');
+        for (const node of constraints) addConstraint(state, at, node, column?.colname ?? '');
     },
     AT_DropColumn: (state, at, command) => {
         const name = command.name ?? '';
         const constraints = state.constraints.get(at.table);
-        for (const [key, constraint] of constraints ?? [])
-            if (constraint.columns.includes(name)) constraints?.delete(key);
+        if (constraints !== undefined)
+            for (const [key, constraint] of constraints) if (constraint.columns.includes(name)) constraints.delete(key);
         state.indexes = state.indexes.filter((index) => index.table !== at.table || !index.columns.includes(name));
     },
     AT_AddConstraint: (state, at, command) => {
@@ -189,43 +165,13 @@ const DROP_APPLIERS: Partial<Record<string, (state: SchemaState, name: string, n
 };
 
 const applyDrop: StatementApplier<'DropStmt'> = (statement, state) => {
-    const { removeType = '' } = statement.fields;
-    if (removeType === 'OBJECT_FUNCTION') dropFunctions(statement, state);
+    const { removeType: droppedKind = '' } = statement.fields;
+    if (droppedKind === 'OBJECT_FUNCTION') dropFunctions(statement, state);
     for (const nodeField of listNodeFields(statement.fields.objects, 'List')) {
         const names = listNodeFields(nodeField.items, 'String').map((stringNode) => stringNode.sval ?? '');
-        DROP_APPLIERS[removeType]?.(state, qualifyName(names.at(SCHEMA_NAME_INDEX), names.at(-1)), names);
+        DROP_APPLIERS[droppedKind]?.(state, qualifyName(names.at(SCHEMA_NAME_INDEX), names.at(-1)), names);
     }
 };
-
-function renameColumn(state: SchemaState, table: string, previous: string | undefined, name: string): void {
-    const keys = state.constraints.get(table)?.values() ?? [];
-    for (const key of keys) key.columns = key.columns.map((column) => (column === previous ? name : column));
-    for (const index of state.indexes) {
-        if (index.table === table) index.columns = index.columns.map((column) => (column === previous ? name : column));
-    }
-}
-
-function renameConstraint(state: SchemaState, table: string, previous: string, name: string): void {
-    const constraints = state.constraints.get(table);
-
-    const constraint = constraints?.get(previous);
-    if (constraint !== undefined) {
-        constraints?.delete(previous);
-        constraints?.set(name, constraint);
-    }
-    for (const index of state.indexes) {
-        if (index.table === table && index.constraint === previous) {
-            index.constraint = name;
-            index.name = name;
-        }
-    }
-}
-
-function renameIndex(state: SchemaState, previous: string, name: string): void {
-    const index = state.indexes.find((otherIndex) => qualifyName(otherIndex.schema, otherIndex.name) === previous);
-    if (index === undefined) return;
-    index.name = name;
-}
 
 const STATEMENT_APPLIERS: SqlStatementVisitors<void, [SchemaState, Migration]> = {
     DropStmt: applyDrop,
@@ -243,15 +189,7 @@ const STATEMENT_APPLIERS: SqlStatementVisitors<void, [SchemaState, Migration]> =
     AlterFunctionStmt: applyAlterFunction,
     CreatePolicyStmt: applyCreatePolicy,
     AlterPolicyStmt: applyAlterPolicy,
-    RenameStmt: ({ fields }, state) => {
-        const { relation = {}, newname: name = '', subname: previous = '' } = fields;
-        const table = qualifyName(relation.schemaname, relation.relname);
-        if (fields.renameType === 'OBJECT_TABLE') renameTable(state, table, qualifyName(relation.schemaname, name));
-        if (fields.renameType === 'OBJECT_INDEX') renameIndex(state, table, name);
-        if (fields.renameType === 'OBJECT_TABCONSTRAINT') renameConstraint(state, table, previous, name);
-        if (fields.renameType !== 'OBJECT_COLUMN') return;
-        renameColumn(state, table, previous, name);
-    },
+    RenameStmt: applyRename,
     AlterObjectSchemaStmt: ({ fields }, state) => {
         if (fields.objectType === 'OBJECT_TABLE')
             renameTable(
@@ -293,9 +231,7 @@ export function buildDatabaseSchema(migrations: Migration[]): Schema {
     };
     for (const migration of migrations)
         for (const statement of migration.statements) {
-            const apply = STATEMENT_APPLIERS[statement.kind] as
-                | ((statement: SqlStatement, state: SchemaState, migration: Migration) => void)
-                | undefined;
+            const apply = STATEMENT_APPLIERS[statement.kind] as StatementApplier<SqlStatement['kind']> | undefined;
             apply?.(statement, state, migration);
         }
     const foreignKeys = state.constraints

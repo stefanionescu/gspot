@@ -43,7 +43,7 @@ function listScopeFormats(settings: Settings): ScopeFormat[] {
     const orderedTables = listSettingsTables(settings).toSorted((first, second) =>
         compareScopeDepth(first.scope, second.scope),
     );
-    const tables: { scope: string; format: WrittenFormat }[] = [];
+    const tables: Array<{ scope: string; format: WrittenFormat }> = [];
     for (const { scope = '', table } of orderedTables) {
         const authored = table.written['format'];
         if (table.format === undefined || !isTable(authored)) continue;

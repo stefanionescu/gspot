@@ -19,14 +19,12 @@ import {
 } from '#cli/config/configurations/naming.ts';
 
 function listColumnNames(nodes: Node[] | undefined): SqlName[] {
-    const names: SqlName[] = [];
-    for (const column of listNodeFields(nodes, 'ColumnDef'))
-        names.push({
-            category: 'columns',
-            name: column.colname ?? '',
-            ...(column.location !== undefined && { location: column.location }),
-        });
-    return names;
+    const columns = listNodeFields(nodes, 'ColumnDef');
+    return columns.map((column) => ({
+        category: 'columns',
+        name: column.colname ?? '',
+        ...(column.location !== undefined && { location: column.location }),
+    }));
 }
 
 function listAddedColumns({ fields }: SqlStatement<'AlterTableStmt'>): SqlName[] {
@@ -69,8 +67,8 @@ function scanParameterList(source: string, start: number): { spans: number[]; sp
     while (at < source.length) {
         const next = tokens.get(at) ?? at + 1;
         const character = source.slice(at, next);
-        if (character === ')' && depth === 0) break;
         depth += PARAMETER_DEPTH.get(character) ?? 0;
+        if (depth < 0) break;
         if (character === ',' && depth === 0) {
             spans.push(span);
             span = at + 1;
@@ -156,6 +154,19 @@ function findIdentifierOffset(named: SqlName, parsed: SqlFile, source: string, o
     return found;
 }
 
+function buildSqlIdentifier(sqlName: SqlName, location: { file: string; source: string; start: number }): Identifier {
+    const { file, source, start } = location;
+    const quoteWidth = source[start] === '"' ? 1 : 0;
+    return {
+        file,
+        language: 'sql',
+        label: `sql ${CATEGORY_LABELS[sqlName.category]}`,
+        ...getPosition(source, start + quoteWidth),
+        category: sqlName.category,
+        name: sqlName.name,
+    };
+}
+
 function extractStatementIdentifiers({
     file,
     source,
@@ -182,18 +193,7 @@ function extractStatementIdentifiers({
             if (found !== -1)
                 offset = found + (QUALIFIED_NAME.exec(lexicalSource.slice(found))?.[0].length ?? sqlName.name.length);
             if (parsed.variables.some(({ start, end }) => found >= start && found < end)) return [];
-            const identifierStart = found === -1 ? statement.start : found;
-            const quoteWidth = source[identifierStart] === '"' ? 1 : 0;
-            return [
-                {
-                    file,
-                    language: 'sql',
-                    label: `sql ${CATEGORY_LABELS[sqlName.category]}`,
-                    ...getPosition(source, identifierStart + quoteWidth),
-                    category: sqlName.category,
-                    name: sqlName.name,
-                },
-            ];
+            return [buildSqlIdentifier(sqlName, { file, source, start: found === -1 ? statement.start : found })];
         });
 }
 
@@ -207,12 +207,10 @@ Lists the identifiers a SQL file declares, or the parse error.
 export async function extractSqlIdentifiers(file: string, source: string, cache: RunCache): Promise<IdentifierRead> {
     const parsed = await parseSqlFile(source, cache);
     if (parsed.error !== undefined) return { identifiers: [], error: parsed.error };
-    // eslint-disable-next-line unicorn/prefer-spread -- reason: SQL offsets count UTF-16 code units, including each surrogate half.
-    const characters = parsed.source.split('');
+    let lexicalSource = parsed.source;
     for (const token of listSqlTokens(parsed.source))
         if (token.kind === 'line-comment' || token.kind === 'block-comment')
-            characters.fill(' ', token.start, token.end);
-    const lexicalSource = characters.join('');
+            lexicalSource = `${lexicalSource.slice(0, token.start)}${' '.repeat(token.end - token.start)}${lexicalSource.slice(token.end)}`;
     return {
         identifiers: parsed.statements.flatMap((statement) =>
             extractStatementIdentifiers({

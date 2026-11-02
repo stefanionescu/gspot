@@ -71,11 +71,9 @@ function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBl
         ...boundaryBlocks,
     ].map((fields) => ({
         fields,
-        ...(fields.settings?.[BOUNDARIES_FILES_SETTING] === undefined
-            ? {}
-            : {
-                  calls: [{ name: 'setBoundaryLookup', args: [{ value: projects }] }],
-              }),
+        ...(fields.settings?.[BOUNDARIES_FILES_SETTING] !== undefined && {
+            calls: [{ name: 'setBoundaryLookup', args: [{ value: projects }] }],
+        }),
     }));
 }
 

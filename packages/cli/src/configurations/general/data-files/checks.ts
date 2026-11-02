@@ -12,6 +12,7 @@ import {
     isAlias,
     isScalar,
     type Node,
+    type Alias,
     type Scalar,
     LineCounter,
     type Document,
@@ -30,9 +31,9 @@ import {
 } from '#cli/config/configurations/general.ts';
 
 function listScalarFindings(node: Scalar, isKey: boolean): YamlFinding[] {
+    if (node.type !== 'PLAIN' || node.tag !== undefined) return [];
     const source = node.source ?? '';
     const offset = node.range?.[0] ?? 0;
-    if (node.type !== 'PLAIN' || node.tag !== undefined) return [];
     const rules = [
         {
             found: !isKey && YAML_TRUTHY.test(source),
@@ -45,26 +46,26 @@ function listScalarFindings(node: Scalar, isKey: boolean): YamlFinding[] {
     return rules.filter(({ found }) => found).map(({ rule, message }) => ({ offset, rule, message }));
 }
 
+function listTokenAnnotations(token: CST.Token | null | undefined): CST.Token[] {
+    if (token === undefined || token === null) return [];
+    const ends = 'end' in token ? (token.end ?? []) : [];
+    return token.type === 'block-scalar' ? [...ends, ...token.props] : ends;
+}
+
 function listSourceAnnotations(token: CST.Token): CST.SourceToken[] {
     const found = new Map<number, CST.SourceToken>();
     CST.visit({ start: [], value: token }, (member) => {
         const sources = [
             ...member.start,
             ...(member.sep ?? []),
-            ...[member.key, member.value].flatMap((value) =>
-                value === undefined || value === null
-                    ? []
-                    : [
-                          ...('end' in value ? (value.end ?? []) : []),
-                          ...(value.type === 'block-scalar' ? value.props : []),
-                      ],
-            ),
+            ...listTokenAnnotations(member.key),
+            ...listTokenAnnotations(member.value),
         ];
         for (const source of sources) {
             if (source.type === 'comment' || source.type === 'anchor') found.set(source.offset, source);
         }
     });
-    return [...found.values()];
+    return found.values().toArray();
 }
 
 function listCommentFindings(text: string, tokens: CST.SourceToken[]): YamlFinding[] {
@@ -91,21 +92,21 @@ function findAnchorOffset(node: Node, anchors: YamlAnchorToken[]): number {
 
 function listAnchorFindings(document: Document.Parsed, tokens: CST.SourceToken[]): YamlFinding[] {
     const anchors = tokens.filter(({ type }) => type === 'anchor');
+    const aliases: Alias[] = [];
     const declarations: Node[] = [];
-    const used = new Set<Node>();
-    const findings: YamlFinding[] = [];
     visit(document, (_key, node) => {
-        if (isAlias(node)) {
-            const target = node.resolve(document);
-            if (target === undefined)
-                findings.push({
-                    offset: node.range?.[0] ?? 0,
-                    rule: YAML_RULES.anchors,
-                    message: `Alias *${node.source} has no preceding anchor in this document.`,
-                });
-            else used.add(target);
-        } else if (isNode(node) && node.anchor !== undefined) declarations.push(node);
+        if (isAlias(node)) aliases.push(node);
+        else if (isNode(node) && node.anchor !== undefined) declarations.push(node);
     });
+    const aliasTargets = aliases.map((alias) => ({ alias, target: alias.resolve(document) }));
+    const used = new Set<Node | undefined>(aliasTargets.map(({ target }) => target));
+    const findings: YamlFinding[] = aliasTargets
+        .filter(({ target }) => target === undefined)
+        .map(({ alias }) => ({
+            offset: alias.range?.[0] ?? 0,
+            rule: YAML_RULES.anchors,
+            message: `Alias *${alias.source} has no preceding anchor in this document.`,
+        }));
     for (const node of declarations) {
         const offset = findAnchorOffset(node, anchors);
         if (!used.has(node))

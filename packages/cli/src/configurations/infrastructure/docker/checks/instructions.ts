@@ -22,28 +22,12 @@ import {
     INSTRUCTION_MESSAGES,
 } from '#cli/config/configurations/infrastructure.ts';
 
-/**
-List the instructions of a Dockerfile, each with its continued lines joined.
-
-@param text the Dockerfile.
-*/
-export function listDockerInstructions(text: string): DockerInstruction[] {
-    const instructions: DockerInstruction[] = [];
-    for (const match of text.matchAll(DOCKER_INSTRUCTION))
-        instructions.push({
-            name: (match.groups?.['name'] ?? '').toUpperCase(),
-            text: (match.groups?.['text'] ?? '').replaceAll(LINE_CONTINUATION, ' ').trim(),
-            line: getPosition(text, match.index).line,
-        });
-    return instructions;
-}
-
 function isUnlockedInstall(command: Node): boolean {
     const [verb = '', ...rest] = command.childrenForFieldName('argument').map(({ text }) => text);
     const name = posix.basename(command.childForFieldName('name')?.text ?? '');
     if (name === NPM_COMMAND) return NPM_INSTALL_VERBS.has(verb) && rest.every((word) => word.startsWith('-'));
     const locked = LOCKED_INSTALLS[name];
-    return locked?.verbs.includes(verb) === true && !rest.some((word) => locked.flags.includes(word));
+    return locked?.verbs.includes(verb) === true && rest.every((word) => !locked.flags.includes(word));
 }
 
 function isPipedDownload(pipeline: Node): boolean {
@@ -59,7 +43,7 @@ function isPipedDownload(pipeline: Node): boolean {
     );
 }
 
-async function listRunHits(session: Session, text: string): Promise<(keyof typeof INSTRUCTION_RULES)[]> {
+async function listRunHits(session: Session, text: string): Promise<Array<keyof typeof INSTRUCTION_RULES>> {
     using tree = await parseSource('bash', text, session);
     return [
         ...tree.rootNode
@@ -73,14 +57,29 @@ async function listRunHits(session: Session, text: string): Promise<(keyof typeo
 
 function hasFloatingNginxTag(text: string): boolean {
     const image = text.split(WHITESPACE_RUN).find((word) => !word.startsWith('--')) ?? '';
-    const [name = '', tag = ''] = image.split(':');
+    const name = image.split(':', 1)[0] ?? '';
+    const tag = image.slice(name.length + 1);
     return !image.includes('@') && NGINX_IMAGE.test(name) && !PATCH_LEVEL_VERSION.test(tag);
 }
 
-function listStaticHits({ name, text }: DockerInstruction): (keyof typeof INSTRUCTION_RULES)[] {
+function listStaticHits({ name, text }: DockerInstruction): Array<keyof typeof INSTRUCTION_RULES> {
     const program = EXEC_FORM_START.exec(text)?.groups?.['program'] ?? '';
     if (name === 'ENTRYPOINT' && INTERPRETER_COMMANDS.has(posix.basename(program))) return ['shellEntrypoint'];
     return name === 'FROM' && hasFloatingNginxTag(text) ? ['nginxTag'] : [];
+}
+
+/**
+List the instructions of a Dockerfile, each with its continued lines joined.
+
+@param text the Dockerfile.
+*/
+export function listDockerInstructions(text: string): DockerInstruction[] {
+    const instructions: DockerInstruction[] = Array.from(text.matchAll(DOCKER_INSTRUCTION), (match) => ({
+        name: (match.groups?.['name'] ?? '').toUpperCase(),
+        text: (match.groups?.['text'] ?? '').replaceAll(LINE_CONTINUATION, ' ').trim(),
+        line: getPosition(text, match.index).line,
+    }));
+    return instructions;
 }
 
 /**

@@ -13,16 +13,16 @@ import type {
 
 export const root = fileURLToPath(new URL('../../../../..', import.meta.url)).replace(/[\\/]$/u, '');
 
-let importLookup: unknown;
+const importLookups = new WeakMap<object, unknown>();
 
 const componentParserOptions = { tsconfigRootDir: root, ecmaVersion: 'latest', sourceType: 'module' };
 
 function pickRuleOptions(
     block: JavascriptBlock,
     options: EslintRuleOptionBlock,
-): (JavascriptBlock & { rules: Record<string, unknown> })[] {
+): Array<JavascriptBlock & { rules: Record<string, unknown> }> {
     const rules = block.rules === undefined ? [] : Object.entries(block.rules);
-    const picked = rules.flatMap(([name, value]): [string, unknown][] => {
+    const picked = rules.flatMap(([name, value]): Array<[string, unknown]> => {
         const override = options.rules[name];
         const severity: unknown = Array.isArray(value) ? value[0] : value;
         return override === undefined || severity === 'off' || severity === 0 ? [] : [[name, [severity, ...override]]];
@@ -43,6 +43,21 @@ function setRuleLevel(value: unknown, level: unknown): unknown {
     const [severity, ...options] = configured;
     if (severity === 'off' || severity === 0) return value;
     return Array.isArray(value) ? [level, ...options] : level;
+}
+
+function listScriptLanguages(parsed: ReturnType<ComponentParser['parseForESLint']>): Array<string | undefined> {
+    const vueComponent = parsed.services?.getDocumentFragment?.();
+    return vueComponent === undefined
+        ? parsed.ast.body
+              .filter((node) => node.type === 'SvelteScriptElement')
+              .flatMap((script) => script.startTag.attributes)
+              .filter((attribute) => attribute.key?.name === 'lang')
+              .map((attribute) => attribute.value[0]?.value)
+        : vueComponent.children
+              .filter((node) => node.type === 'VElement' && node.name === 'script')
+              .flatMap((script) => script.startTag.attributes)
+              .filter((attribute) => attribute.key?.name === 'lang')
+              .map((attribute) => attribute.value?.value);
 }
 
 /**
@@ -114,20 +129,7 @@ export function buildComponentMatcher(parser: ComponentParser, typescriptParser?
                 filePath: file,
                 parser: scriptParser,
             });
-            const vueComponent = parsed.services?.getDocumentFragment?.();
-            const languages =
-                vueComponent === undefined
-                    ? parsed.ast.body
-                          .filter((node) => node.type === 'SvelteScriptElement')
-                          .flatMap((script) => script.startTag.attributes)
-                          .filter((attribute) => attribute.key?.name === 'lang')
-                          .map((attribute) => attribute.value[0]?.value)
-                    : vueComponent.children
-                          .filter((node) => node.type === 'VElement' && node.name === 'script')
-                          .flatMap((script) => script.startTag.attributes)
-                          .filter((attribute) => attribute.key?.name === 'lang')
-                          .map((attribute) => attribute.value?.value);
-            return languages.some((language) => language === 'ts' || language === 'typescript');
+            return listScriptLanguages(parsed).some((language) => language === 'ts' || language === 'typescript');
         } catch (error) {
             if (error instanceof SyntaxError || (error instanceof Error && error.name === 'TSError')) return false;
             throw error;
@@ -223,17 +225,14 @@ export function setRuleOptions(blocks: JavascriptBlock[], ruleOptions: EslintRul
         picked: ruleOptions.flatMap((options) => pickRuleOptions(block, options)),
     }));
     const applied = new Set(pairs.flatMap(({ picked }) => picked.flatMap((option) => Object.keys(option.rules))));
-    const refused = [...new Set(ruleOptions.flatMap((options) => Object.keys(options.rules)))].filter(
-        (name) => !applied.has(name),
-    );
-    if (refused.length > 0)
+    const refused = new Set(ruleOptions.flatMap((options) => Object.keys(options.rules))).difference(applied);
+    if (refused.size > 0)
         throw new Error(
-            refused
-                .map(
-                    (name) =>
-                        `gspot runs ${name} at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.`,
-                )
-                .join('\n'),
+            Array.from(
+                refused,
+                (name) =>
+                    `gspot runs ${name} at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.`,
+            ).join('\n'),
         );
     return pairs.flatMap(({ block, picked }) => [block, ...picked]);
 }
@@ -283,7 +282,8 @@ export function setRootFolder(block: JavascriptBlock, keys: string[][], scope = 
     const result: JavascriptBlock = { ...block };
     for (const path of keys) {
         let target: Record<string, unknown> = result;
-        for (const key of path.slice(0, -1)) {
+        const parents = path.slice(0, -1);
+        for (const key of parents) {
             const child = { ...(target[key] as Record<string, unknown> | undefined) };
             target[key] = child;
             target = child;
@@ -306,7 +306,10 @@ export function setImportLookup(
     createImportLookup: (options: { project: string[] }) => unknown,
     projects: string[],
 ): JavascriptBlock {
-    importLookup ??= createImportLookup({ project: projects.map((project) => join(root, project)) });
+    const importLookup =
+        importLookups.get(createImportLookup) ??
+        createImportLookup({ project: projects.map((project) => join(root, project)) });
+    importLookups.set(createImportLookup, importLookup);
     return { ...block, settings: { ...block.settings, 'import-x/resolver-next': [importLookup] } };
 }
 
@@ -370,9 +373,9 @@ export function setComponentParser(
             parser,
             parserOptions: {
                 ...options,
-                ...(typescriptParser === undefined
-                    ? {}
-                    : { parser: { ts: typescriptParser, typescript: typescriptParser } }),
+                ...(typescriptParser !== undefined && {
+                    parser: { ts: typescriptParser, typescript: typescriptParser },
+                }),
             },
         },
     };

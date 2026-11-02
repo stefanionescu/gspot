@@ -18,8 +18,9 @@ function describePythonFunction(statement: Node): TopLevelFunction | undefined {
     const declaration =
         statement.type === 'decorated_definition' ? statement.childForFieldName('definition') : statement;
     const name = declaration?.type === 'function_definition' ? declaration.childForFieldName('name')?.text : undefined;
-    if (name === undefined) return undefined;
-    return { name, isPrivate: name.startsWith('_') && !(name.startsWith('__') && name.endsWith('__')) };
+    return name === undefined
+        ? undefined
+        : { name, isPrivate: name.startsWith('_') && !(name.startsWith('__') && name.endsWith('__')) };
 }
 
 function describeSwiftFunction(statement: Node): TopLevelFunction | undefined {
@@ -71,8 +72,7 @@ function describeTopLevelFunction(
     listed: ReadonlySet<string>,
 ): TopLevelFunction | undefined {
     if (grammar === 'python') return describePythonFunction(statement);
-    if (grammar === 'swift') return describeSwiftFunction(statement);
-    return describeScriptFunction(statement, listed);
+    return grammar === 'swift' ? describeSwiftFunction(statement) : describeScriptFunction(statement, listed);
 }
 
 function listFunctionOrderFindings(rootNode: Node, path: string, grammar: GrammarName): CheckFinding[] {

@@ -267,8 +267,6 @@ export const PLACEHOLDER_VALUE = 'PLACEHOLDER';
 
 export const CAMEL_CASE_BOUNDARY = /(?<first>[a-z])(?<next>[A-Z])/gu;
 
-export const CAMEL_CASE_REPLACEMENT = '$<first> $<next>';
-
 export const SYNTAX_ERROR_MESSAGE = 'Syntax error.';
 
 export const TSCONFIG_NAME = /^tsconfig\.(?:.+\.)?json$/u;

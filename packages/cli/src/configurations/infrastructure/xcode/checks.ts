@@ -61,7 +61,7 @@ export function checkFilesWithoutTarget(session: Session, planned: PlannedCheck)
         .filter(
             (file) =>
                 !referenced.has(file) &&
-                !folders.some(({ path, excluded }) => file.startsWith(path) && !excluded.has(file)),
+                folders.every(({ path, excluded }) => !file.startsWith(path) || excluded.has(file)),
         )
         .map((file) => ({
             file,
@@ -124,12 +124,14 @@ export function checkXcodeUnusedAssets(session: Session, planned: PlannedCheck):
         .filter((path) => {
             const name = extractAssetSetName(path);
             const assignment = new RegExp(String.raw`=\s*${escapeRegExp(name)}\s*(?:;|$)`, 'mu');
-            return !sourceTexts.some(
+            return sourceTexts.every(
                 (text) =>
-                    text.includes(`"${name}"`) ||
-                    text.includes(`<string>${name}</string>`) ||
-                    text.includes(`.${camelCase(name.replace(ASSET_KIND_SUFFIX, '').split(WORD_SEPARATOR))}`) ||
-                    assignment.test(text),
+                    !(
+                        text.includes(`"${name}"`) ||
+                        text.includes(`<string>${name}</string>`) ||
+                        text.includes(`.${camelCase(name.replace(ASSET_KIND_SUFFIX, '').split(WORD_SEPARATOR))}`) ||
+                        assignment.test(text)
+                    ),
             );
         })
         .map((path) => ({

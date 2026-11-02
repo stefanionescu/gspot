@@ -22,16 +22,6 @@ import {
     ESLINT_PACKAGE_IMPORTERS,
 } from '#cli/config/configurations/javascript.ts';
 
-/**
-Build the name that a generated module gives an imported package or a configuration module.
-
-@param name the package or configuration name.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The block writer and the file writer share this one name format.
-export function buildImportName(name: string): string {
-    return name.replace(PACKAGE_SCOPE_MARK, '').replaceAll(NAME_SEPARATOR, (_, letter: string) => letter.toUpperCase());
-}
-
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Each printed call records its import here, at one place.
 function serializeCall(writer: EslintFileWriter, name: string, args: string[]): string {
     writer.functions.add(name);
@@ -118,37 +108,41 @@ function serializeExtends(writer: EslintFileWriter, block: PlannedEslintBlock): 
     return `"extends": [${presets.join(', ')}]`;
 }
 
+function serializeFilePattern(
+    writer: EslintFileWriter,
+    value: NonNullable<PlannedEslintBlock['fields']['files']>[number],
+): string {
+    if (Array.isArray(value)) return `[${value.map((pattern) => serializeFilePattern(writer, pattern)).join(', ')}]`;
+    if (typeof value === 'string') return JSON.stringify(value);
+    if ('runtime' in value)
+        return serializeCall(writer, 'buildRuntimeMatcher', [String(value.runtime), serializeRuntimes(writer)]);
+    return serializeCall(
+        writer,
+        'buildComponentMatcher',
+        value.component === 'vue'
+            ? [serializeReference(writer, { package: 'vue-eslint-parser' })]
+            : [
+                  serializeReference(writer, { package: 'svelte-eslint-parser' }),
+                  serializeReference(writer, { package: 'typescript-eslint', path: 'parser' }),
+              ],
+    );
+}
+
 function serializeFields(writer: EslintFileWriter, block: PlannedEslintBlock): string {
     const { files, ...fields } = block.fields;
     const members = Object.entries(fields).map(
         ([key, value]) => `${JSON.stringify(key)}: ${serializeValue(writer, value)}`,
     );
     if (block.presets?.some(({ merge }) => merge === 'fields') === true) members.push(serializeExtends(writer, block));
-    if (files !== undefined) {
-        const matcher = (value: (typeof files)[number]): string => {
-            if (Array.isArray(value)) return `[${value.map((pattern) => matcher(pattern)).join(', ')}]`;
-            if (typeof value === 'string') return JSON.stringify(value);
-            if ('runtime' in value)
-                return serializeCall(writer, 'buildRuntimeMatcher', [String(value.runtime), serializeRuntimes(writer)]);
-            return serializeCall(
-                writer,
-                'buildComponentMatcher',
-                value.component === 'vue'
-                    ? [serializeReference(writer, { package: 'vue-eslint-parser' })]
-                    : [
-                          serializeReference(writer, { package: 'svelte-eslint-parser' }),
-                          serializeReference(writer, { package: 'typescript-eslint', path: 'parser' }),
-                      ],
-            );
-        };
-        members.push(`"files": [${files.map((pattern) => matcher(pattern)).join(', ')}]`);
-    }
+    if (files !== undefined)
+        members.push(`"files": [${files.map((pattern) => serializeFilePattern(writer, pattern)).join(', ')}]`);
     return `{${members.join(',\n')}}`;
 }
 
 function buildBlockCalls(writer: EslintFileWriter, block: PlannedEslintBlock): string {
+    const { presets = [], calls = [] } = block;
     let value = serializeFields(writer, block);
-    for (const preset of (block.presets ?? []).toReversed())
+    for (const preset of presets.toReversed())
         if (preset.merge === 'rules')
             value = serializeCall(writer, 'mergePresetRules', [value, serializeReference(writer, preset)]);
     if (block.scope === undefined)
@@ -157,7 +151,7 @@ function buildBlockCalls(writer: EslintFileWriter, block: PlannedEslintBlock): s
             serializeReference(writer, { package: '@gspothq/eslint-plugin' }),
             JSON.stringify(GSPOT_PRESET_LEVELS[writer.level]),
         ]);
-    for (const call of block.calls ?? [])
+    for (const call of calls)
         value = serializeCall(writer, call.name, [
             value,
             ...call.args.map((argument) => serializeArgument(writer, argument)),
@@ -175,6 +169,16 @@ function isSameBlock(left: PlannedEslintBlock, right: PlannedEslintBlock): boole
         fields: { ...block.fields, files: block.fields.files === undefined },
     }));
     return left.fields.files !== undefined && right.fields.files !== undefined && isDeepStrictEqual(first, second);
+}
+
+/**
+Build the name that a generated module gives an imported package or a configuration module.
+
+@param name the package or configuration name.
+*/
+export function buildImportName(name: string): string {
+    const unscoped = name.replace(PACKAGE_SCOPE_MARK, '');
+    return unscoped.replaceAll(NAME_SEPARATOR, (_, letter: string) => letter.toUpperCase());
 }
 
 /**

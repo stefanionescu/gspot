@@ -23,7 +23,7 @@ export function checkUnmatchedPaths(session: Session, _planned: PlannedCheck): C
     const repositoryPaths = [...includeParentFolders(files.map((file) => file.path))];
     const { text } = readSettingsFile(session.root);
     return listSettingsTables(session.settings).flatMap(({ table, scope = '', path }) => {
-        const sources: { pattern: string; selector: string; location: SettingLocation }[] = [];
+        const sources: Array<{ pattern: string; selector: string; location: SettingLocation }> = [];
         const visit: PathVisitor = (pattern, location, role) => {
             const selector = location.keys[0] === 'path' ? pattern : joinScopeSelector(pattern, scope);
             if (role === 'source') sources.push({ pattern, selector, location });
@@ -36,8 +36,8 @@ export function checkUnmatchedPaths(session: Session, _planned: PlannedCheck): C
         });
         const unmatched = new Set(
             [...new Set(sources.map(({ selector }) => selector))].filter((selector) => {
-                const matches = buildPathMatcher([selector.replace(NEGATED_PATTERN, '')]);
-                return repositoryPaths.every((repositoryPath) => !matches(repositoryPath));
+                const isMatched = buildPathMatcher([selector.replace(NEGATED_PATTERN, '')]);
+                return repositoryPaths.every((repositoryPath) => !isMatched(repositoryPath));
             }),
         );
         return sources

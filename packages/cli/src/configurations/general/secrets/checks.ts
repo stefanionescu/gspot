@@ -130,11 +130,11 @@ export async function checkEnvironmentDefaults(session: Session, planned: Planne
     const extensions = listTaggedExtensions(...ENVIRONMENT_READ_LANGUAGES);
     const findings: CheckFinding[] = [];
     for (const file of planned.files) {
-        if (file.kind !== 'source' || !extensions.some((extension) => file.path.endsWith(extension))) continue;
+        if (file.kind !== 'source' || extensions.every((extension) => !file.path.endsWith(extension))) continue;
         const reads = await readEnvironmentReferences(session, file.path, environmentFunctions);
         findings.push(
             ...reads
-                .filter(({ key, hasDefault }) => hasDefault === true && SECRET_KEY_NAME.test(key ?? ''))
+                .filter(({ key = '', hasDefault }) => hasDefault === true && SECRET_KEY_NAME.test(key))
                 .map(({ key, line, column }) => ({
                     file: file.path,
                     line,

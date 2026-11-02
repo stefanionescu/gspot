@@ -56,7 +56,7 @@ function buildRuleLookup(rules: ImportRule[]): RuleLookup {
 
 function buildExemption(planned: PlannedCheck): (file: TrackedFile) => boolean {
     const { settings, path: scopePath } = planned.scope;
-    const matches = buildPathMatcher([
+    const isExemptPath = buildPathMatcher([
         ...settings.test_files,
         ...CONFIG_PATTERNS,
         ...[
@@ -66,7 +66,7 @@ function buildExemption(planned: PlannedCheck): (file: TrackedFile) => boolean {
         ...(settings.tables.javascript?.script_files ?? []),
         joinScope(escapeGlob(scopePath), MISE_TASKS_GLOB),
     ]);
-    return (file) => matches(file.path) || file.tags.includes(NODE_SHEBANG_TAG);
+    return (file) => isExemptPath(file.path) || file.tags.includes(NODE_SHEBANG_TAG);
 }
 
 function listUncoveredFiles(planned: PlannedCheck, lookup: RuleLookup): CheckFinding[] {
@@ -87,7 +87,7 @@ function listUncoveredFiles(planned: PlannedCheck, lookup: RuleLookup): CheckFin
         }));
 }
 
-function findRefusedOwner(lookup: RuleLookup, from: number, owners: (number | undefined)[]): string | undefined {
+function findRefusedOwner(lookup: RuleLookup, from: number, owners: Array<number | undefined>): string | undefined {
     const allowed = lookup.allowed[from] ?? [];
     const refused = owners
         .map((owner) => (owner === undefined ? undefined : lookup.rules[owner]?.name))
@@ -200,7 +200,7 @@ function findAbsoluteModule(dotted: string, search: PythonSearch): string | unde
     return undefined;
 }
 
-function listImportedNames(node: Node): (string | undefined)[] {
+function listImportedNames(node: Node): Array<string | undefined> {
     const names = node
         .childrenForFieldName('name')
         .map((nameNode) =>
@@ -225,32 +225,39 @@ function listRelativeImports(node: Node, prefix: Node, file: string, search: Pyt
     const dots = prefix.namedChildren.find((child) => child.type === 'import_prefix')?.text.length ?? 1;
     const dotted = prefix.namedChildren.find((child) => child.type === 'dotted_name')?.text ?? '';
     const folder = posix.join(posix.dirname(file), ...Array.from({ length: dots - 1 }, () => '..'));
+    const packagePath = findModuleFile(folder, dotted, search.files);
+    const packageImports = packagePath === undefined ? [] : [{ node, module: prefix.text, path: packagePath }];
     return listImportedNames(node).flatMap((name) => {
-        if (name !== undefined) {
-            const innerPath = findModuleFile(folder, [dotted, name].filter(Boolean).join('.'), search.files);
-            const module = prefix.text.endsWith('.') ? prefix.text + name : [prefix.text, name].join('.');
-            if (innerPath !== undefined) return [{ node, module, path: innerPath }];
-        }
-        const path = findModuleFile(folder, dotted, search.files);
-        return path === undefined ? [] : [{ node, module: prefix.text, path }];
+        if (name === undefined) return packageImports;
+        const innerPath = findModuleFile(folder, [dotted, name].filter(Boolean).join('.'), search.files);
+        if (innerPath === undefined) return packageImports;
+        const module = prefix.text.endsWith('.') ? prefix.text + name : [prefix.text, name].join('.');
+        return [{ node, module, path: innerPath }];
     });
 }
 
-function listPythonImports(syntaxRoot: Node, file: string, search: PythonSearch): LocatedImport[] {
-    return syntaxRoot.descendantsOfType([PYTHON_IMPORT_STATEMENT, PYTHON_FROM_STATEMENT]).flatMap((node) => {
-        if (node.type === PYTHON_IMPORT_STATEMENT)
-            return listImportedNames(node).flatMap((module) => {
-                if (module === undefined || search.externals.has(module.split('.', 1)[0] ?? '')) return [];
-                const path = findAbsoluteModule(module, search);
-                return path === undefined ? [] : [{ node, module, path }];
-            });
-        const source = node.childForFieldName('module_name');
-        if (source === null) return [];
-        if (source.type === RELATIVE_IMPORT) return listRelativeImports(node, source, file, search);
-        return search.externals.has(source.text.split('.', 1)[0] ?? '')
-            ? []
-            : listAbsoluteImports(node, source.text, search);
+function listModuleImports(node: Node, search: PythonSearch): LocatedImport[] {
+    return listImportedNames(node).flatMap((module) => {
+        if (module === undefined || search.externals.has(module.split('.', 1)[0] ?? '')) return [];
+        const path = findAbsoluteModule(module, search);
+        return path === undefined ? [] : [{ node, module, path }];
     });
+}
+
+function listFromImports(node: Node, file: string, search: PythonSearch): LocatedImport[] {
+    const source = node.childForFieldName('module_name');
+    if (source === null) return [];
+    if (source.type === RELATIVE_IMPORT) return listRelativeImports(node, source, file, search);
+    return search.externals.has(source.text.split('.', 1)[0] ?? '')
+        ? []
+        : listAbsoluteImports(node, source.text, search);
+}
+
+function listPythonImports(syntaxRoot: Node, file: string, search: PythonSearch): LocatedImport[] {
+    const statements = syntaxRoot.descendantsOfType([PYTHON_IMPORT_STATEMENT, PYTHON_FROM_STATEMENT]);
+    return statements.flatMap((node) =>
+        node.type === PYTHON_IMPORT_STATEMENT ? listModuleImports(node, search) : listFromImports(node, file, search),
+    );
 }
 
 /**
