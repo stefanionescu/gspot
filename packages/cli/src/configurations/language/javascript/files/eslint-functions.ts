@@ -173,16 +173,6 @@ export function importSvelteParser(moduleUrl: string = import.meta.url): Compone
 }
 
 /**
-Copy a block before applying its configuration calls.
-
-@param block the JSON fields of the block.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Generated ESLint files import this transformation by name.
-export function buildBlock(block: JavascriptBlock): JavascriptBlock {
-    return { ...block };
-}
-
-/**
 Read one value of a preset or parser package.
 
 @param preset the imported package.

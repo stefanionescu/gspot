@@ -33,7 +33,6 @@ export const ESLINT_SETTINGS_TABLE = 'tools.eslint';
 export const COMPONENT_CONFIGURATIONS = ['vue', 'svelte'] as const;
 
 export const ESLINT_FUNCTIONS = [
-    'buildBlock',
     'readPreset',
     'mergePreset',
     'mergePresetRules',

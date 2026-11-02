@@ -200,7 +200,7 @@ export function buildEslintFile(planned: PlannedConfig): ConfigOutput {
     const { plugins, imports } = listEslintImports(planned, blockWriter, boundaryBlocks, configurationImports);
     const configurationFiles = buildConfigurationFiles(planned, configurationBlocks, imports, blockWriter);
     const blockTexts = [
-        `${ESLINT_INDENT}buildBlock(${JSON.stringify({ ignores: ignoredGlobs }, null, JSON_INDENT)})`,
+        `${ESLINT_INDENT}${JSON.stringify({ ignores: ignoredGlobs }, null, JSON_INDENT)}`,
         ...buildOpeningBlocks(eslintFile, plugins, boundaryBlocks, ignoredGlobs).map((block) =>
             buildBlockCalls(blockWriter, { ...block, label: ESLINT_BASE_LABEL }),
         ),
