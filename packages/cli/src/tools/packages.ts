@@ -6,9 +6,11 @@ import { join, dirname, relative } from 'node:path';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { findProgram } from '#cli/system/programs.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { PackageJson } from '#cli/types/parsers.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { NODE_TOOL } from '#cli/config/tools/installers.ts';
 import type { InstalledDependency } from '#cli/types/tools.ts';
 import { BIN_FOLDER_NAME } from '#cli/config/tools/programs.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
@@ -48,7 +50,10 @@ export function listToolStart(root: string, tool: Tool, path: string): string[] 
     const packagePath = join(root, GSPOT_PATHS.nodeModules, npm.name, PACKAGE_JSON);
     const bin = readToolProjectPackage(openFiles(root), root, packagePath)?.bin;
     const script = typeof bin === 'object' ? bin[tool.name] : bin;
-    return script === undefined ? [path] : [process.execPath, join(dirname(packagePath), script)];
+    if (script === undefined) return [path];
+    const node =
+        process.versions['bun'] === undefined ? process.execPath : (findProgram(NODE_TOOL) ?? process.execPath);
+    return [node, join(dirname(packagePath), script)];
 }
 
 /**
