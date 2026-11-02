@@ -120,12 +120,12 @@ export function buildPrettierOverrides(
 }
 
 function parseEditorWidths(fields: Record<string, string>): PrettierOptions {
+    const { indent_style: style, max_line_length: lineWidth } = fields;
     const width = fields['indent_size'] === 'tab' ? fields['tab_width'] : fields['indent_size'];
-    const lineWidth = fields['max_line_length'];
     const options: Record<string, number | boolean> = {};
     if (width !== undefined && DIGITS_ONLY.test(width)) options['tabWidth'] = Number(width);
     if (lineWidth !== undefined && DIGITS_ONLY.test(lineWidth)) options['printWidth'] = Number(lineWidth);
-    if (fields['indent_style'] !== undefined) options['useTabs'] = fields['indent_style'] === 'tab';
+    if (style === 'tab' || style === 'space') options['useTabs'] = style === 'tab';
     return prettierOptionsSchema.parse(options);
 }
 

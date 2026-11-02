@@ -182,3 +182,12 @@ test('init keeps the format overrides of a scope', async () => {
         { path: 'app', format: { override: [{ paths: ['**/*.md'], indent_width: 4 }] } },
     ]);
 });
+
+test('init leaves out an EditorConfig indent style of unset', async () => {
+    await using sandbox = await createGitSandbox({
+        '.editorconfig': '[*]\nindent_style = space\n[vendor/**]\nindent_style = unset\nindent_size = 3\n',
+        'vendor/a.js': 'export const a = 1;\n',
+    });
+    const { settings } = await runInit(sandbox.path);
+    expect((settings['format'] as TomlTable)['override']).toStrictEqual([{ paths: ['vendor/**'], indent_width: 3 }]);
+});
