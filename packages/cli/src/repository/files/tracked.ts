@@ -9,14 +9,7 @@ import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/system.ts';
 import type { ListedFile, GitIndexFile } from '#cli/types/repository.ts';
 import { buildGitError, runGitForBytes } from '#cli/repository/git/run.ts';
 import { extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
-
-import {
-    GITLINK_MODE,
-    GIT_FILE_MODES,
-    EXECUTABLE_FILE,
-    EXECUTABLE_BITS,
-    GIT_UNTRACKED_FILES_ARGUMENTS,
-} from '#cli/config/repository/files.ts';
+import { GITLINK_MODE, GIT_FILE_MODES, EXECUTABLE_FILE, EXECUTABLE_BITS } from '#cli/config/repository/files.ts';
 
 function readSymlinkFile(root: string, path: string, isTracked: boolean): ListedFile | undefined {
     const link = { path, size: 0, executable: false, isSymlink: true };
@@ -89,16 +82,11 @@ List tracked and new files as sorted, root-relative paths.
 
 @param root the folder where Git runs.
 @param index the parsed staging area entries.
-@param unreadablePaths paths that the inventory cannot read.
+@param untracked the null-delimited listing of the untracked files.
 */
-export async function listTrackedFiles(
-    root: string,
-    index: GitIndexFile[],
-    unreadablePaths: string[],
-): Promise<ListedFile[]> {
-    const listed = await listGitFiles(root, GIT_UNTRACKED_FILES_ARGUMENTS, undefined, unreadablePaths);
+export function listTrackedFiles(root: string, index: GitIndexFile[], untracked: string): ListedFile[] {
     const tracked = new Set(index.map((indexFile) => indexFile.path));
-    const paths = [...tracked, ...listed.split('\0').filter(Boolean)];
+    const paths = [...tracked, ...untracked.split('\0').filter(Boolean)];
     const submodules = listSubmodulePaths(index);
     const executables =
         process.platform === 'win32'

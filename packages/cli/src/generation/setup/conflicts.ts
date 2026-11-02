@@ -1,7 +1,7 @@
 import { GspotError } from '#cli/system/errors.ts';
+import { runGit } from '#cli/repository/git/run.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { writePlans } from '#cli/repository/writer.ts';
-import { runGitBlocking } from '#cli/repository/git/run.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
 import { isEditedInPlace } from '#cli/repository/conflicts.ts';
 import type { Files, FileContents } from '#cli/types/system.ts';
@@ -10,11 +10,13 @@ import type { WritePlan, RepositorySetup, ConflictingConfig } from '#cli/types/r
 import type { InitPlan, ConflictSearch, PrettierScripts, ConflictingConfigs } from '#cli/types/generation.ts';
 import { VERIFY_FLAG, NAME_ONLY_FLAG, DROPPED_LINE_SETTINGS, READ_COMMITTED_MESSAGE } from '#cli/config/generation.ts';
 
-function listCommittedPaths(root: string, paths: string[]): Set<string> {
-    const head = runGitBlocking(root, ['rev-parse', VERIFY_FLAG, '--quiet', 'HEAD']);
+async function listCommittedPaths(root: string, paths: string[]): Promise<Set<string>> {
+    const head = await runGit(root, ['rev-parse', VERIFY_FLAG, '--quiet', 'HEAD'], {});
     if (head.code !== 0) return new Set();
-    const tracked = runGitBlocking(root, ['ls-files', '-z', '--', ...paths]);
-    const changed = runGitBlocking(root, ['diff', NAME_ONLY_FLAG, '-z', 'HEAD', '--', ...paths]);
+    const [tracked, changed] = await Promise.all([
+        runGit(root, ['ls-files', '-z', '--', ...paths], {}),
+        runGit(root, ['diff', NAME_ONLY_FLAG, '-z', 'HEAD', '--', ...paths], {}),
+    ]);
     if (tracked.code !== 0 || changed.code !== 0) throw new GspotError('git', READ_COMMITTED_MESSAGE);
     const modified = new Set(changed.stdout.split('\0'));
     return new Set(tracked.stdout.split('\0').filter((path) => path !== '' && !modified.has(path)));
@@ -84,8 +86,8 @@ Refuse to replace a config file unless Git holds it unchanged in the last commit
 @param root the repository folder.
 @param paths the config files init deletes.
 */
-export function assertFilesCommitted(root: string, paths: string[]): void {
-    const committed = listCommittedPaths(root, paths);
+export async function assertFilesCommitted(root: string, paths: string[]): Promise<void> {
+    const committed = await listCommittedPaths(root, paths);
     const uncommitted = paths.filter((path) => !committed.has(path));
     if (uncommitted.length === 0) return;
     const pronoun = uncommitted.length === 1 ? 'it' : 'them';

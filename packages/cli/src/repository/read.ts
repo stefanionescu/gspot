@@ -39,6 +39,7 @@ import {
     VENDORED_ATTRIBUTE,
     GENERATED_ATTRIBUTE,
     GIT_INDEX_FILES_ARGUMENTS,
+    GIT_UNTRACKED_FILES_ARGUMENTS,
     GIT_CHECK_ATTRIBUTES_ARGUMENTS,
 } from '#cli/config/repository/files.ts';
 
@@ -60,13 +61,15 @@ attributes.
 export async function listRepositoryFiles(cache: RunCache): Promise<RepositoryListing> {
     const root = cache.root;
     const unreadablePaths: string[] = [];
-    const index = await listGitFiles(root, GIT_INDEX_FILES_ARGUMENTS, undefined, unreadablePaths).then((listed) =>
-        listed
-            .split('\0')
-            .filter(Boolean)
-            .map((line) => parseListingLine(INDEX_LINE.exec(line), gitIndexFileSchema)),
-    );
-    const listedFiles = await listTrackedFiles(root, index, unreadablePaths);
+    const [indexed, untracked] = await Promise.all([
+        listGitFiles(root, GIT_INDEX_FILES_ARGUMENTS, undefined, unreadablePaths),
+        listGitFiles(root, GIT_UNTRACKED_FILES_ARGUMENTS, undefined, unreadablePaths),
+    ]);
+    const index = indexed
+        .split('\0')
+        .filter(Boolean)
+        .map((line) => parseListingLine(INDEX_LINE.exec(line), gitIndexFileSchema));
+    const listedFiles = listTrackedFiles(root, index, untracked);
     const attributes = await readAttributes(
         root,
         listedFiles.map((file) => file.path),
@@ -77,7 +80,7 @@ export async function listRepositoryFiles(cache: RunCache): Promise<RepositoryLi
             ? Buffer.alloc(0)
             : readBytes(cache, listedFile.path, { limit: FILE_PREFIX_BYTES }),
     }));
-    return { root, index, attributes, files, unreadablePaths };
+    return { root, index, attributes, files, unreadablePaths: unreadablePaths.toSorted(compareText) };
 }
 
 /**

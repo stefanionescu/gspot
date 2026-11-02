@@ -3,9 +3,10 @@ import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { unlink, symlink } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
+import { createRunCache } from '#cli/system/cache.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { listTrackedFiles } from '#cli/repository/files/tracked.ts';
+import { listRepositoryFiles } from '#cli/repository/read.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { OUTSIDE_LINK_CASES } from '#tests/config/repository/files.ts';
@@ -29,7 +30,7 @@ test.skipIf(isWindows)('the Git inventory leaves out untracked named pipes', asy
     await using sandbox = await createGitSandbox({ 'source.ts': 'export {};\n' });
 
     expect(runCommandBlocking(['mkfifo', 'stream.ts'], { cwd: sandbox.path }).code).toBe(0);
-    const files = await listTrackedFiles(sandbox.path, [], []);
+    const { files } = await listRepositoryFiles(createRunCache(sandbox.path));
     expect(files.map((file) => file.path)).toStrictEqual(['source.ts']);
 });
 
@@ -80,7 +81,7 @@ test.each(
         await symlink('../../outside', join(root, 'blocked/external'), 'dir');
         await symlink(folder, join(root, 'linked-directory'), 'dir');
         runGitStep(root, ['init', '-q']);
-        const files = await listTrackedFiles(root, [], []);
+        const { files } = await listRepositoryFiles(createRunCache(root));
         expect(files.map((file) => file.path)).toStrictEqual(
             [
                 '.gitignore',
@@ -92,15 +93,15 @@ test.each(
                 'source.ts',
             ].toSorted(compareText),
         );
-        expect(files.find(({ path }) => path === 'linked.ts')).toStrictEqual({
+        expect(files.find(({ path }) => path === 'linked.ts')).toMatchObject({
             path: 'linked.ts',
             size: Buffer.byteLength('source'),
             executable: false,
             isSymlink: true,
         });
         await symlink('../outside/private.ts', join(root, 'external.ts'));
-        const linked = await listTrackedFiles(root, [], []);
-        expect(linked.map((file) => file.path)).toStrictEqual(files.map((file) => file.path));
+        const linked = await listRepositoryFiles(createRunCache(root));
+        expect(linked.files.map((file) => file.path)).toStrictEqual(files.map((file) => file.path));
     },
 );
 

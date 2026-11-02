@@ -1,18 +1,18 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { createRunCache } from '#cli/system/cache.ts';
 import { rm, chmod, writeFile } from 'node:fs/promises';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { listTrackedFiles } from '#cli/repository/files/tracked.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { INDEX_LINE_FAILURE } from '#tests/config/setup/languages.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { readRepositoryRoot, listRepositoryFiles } from '#cli/repository/read.ts';
 import { ROOT_DISCOVERY_CASES, DUBIOUS_GIT_ENVIRONMENT } from '#tests/config/repository/files.ts';
 
 test.each([...ROOT_DISCOVERY_CASES])(
@@ -47,9 +47,8 @@ test('deleted tracked files are left out of the file list', async () => {
 
     runGitStep(sandbox.path, ['add', 'source.ts']);
     await rm(join(sandbox.path, 'source.ts'));
-    expect(
-        await listTrackedFiles(sandbox.path, await readTestRepository(sandbox.path).then(({ index }) => index), []),
-    ).toStrictEqual([]);
+    const { files } = await listRepositoryFiles(createRunCache(sandbox.path));
+    expect(files).toStrictEqual([]);
 });
 
 test('a broken Git index is reported instead of a folder walk', async () => {
@@ -58,7 +57,7 @@ test('a broken Git index is reported instead of a folder walk', async () => {
     const cwd = sandbox.path;
     runGitStep(cwd, ['init']);
     runGitStep(cwd, ['add', 'source.ts']);
-    const files = await listTrackedFiles(cwd, await readTestRepository(cwd).then(({ index }) => index), []);
+    const { files } = await listRepositoryFiles(createRunCache(cwd));
     expect(files.map((file) => file.path)).toStrictEqual(['source.ts']);
     await writeFile(join(cwd, '.git', 'index'), 'corrupt index');
     const error = await captureRejection(readTestRepository(cwd));
@@ -101,11 +100,7 @@ test.skipIf(!isWindows)('on Windows the executable bit comes from the Git index'
     ])
         runGitStep(sandbox.path, commandArguments);
     await chmod(join(sandbox.path, 'local.sh'), 0o700);
-    const files = await listTrackedFiles(
-        sandbox.path,
-        await readTestRepository(sandbox.path).then(({ index }) => index),
-        [],
-    );
+    const { files } = await listRepositoryFiles(createRunCache(sandbox.path));
     expect(files.map(({ path, executable }) => ({ path, executable }))).toStrictEqual([
         { path: 'indexed.sh', executable: true },
         { path: 'local.sh', executable: false },
@@ -127,7 +122,8 @@ test('an unmerged index keeps the working file readable but refuses a staged rev
         { path: 'source.txt', stage: 2 },
         { path: 'source.txt', stage: 3 },
     ]);
-    expect(await listTrackedFiles(sandbox.path, index, [])).toStrictEqual([
+    const { files } = await listRepositoryFiles(createRunCache(sandbox.path));
+    expect(files).toMatchObject([
         { path: 'source.txt', size: Buffer.byteLength('working content\n'), executable: false, isSymlink: false },
     ]);
     const error = await captureRejection(listRevisionFiles(sandbox.path, { kind: 'index' }));

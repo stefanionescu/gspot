@@ -2,9 +2,9 @@ import { resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { LINE_BREAK } from '#cli/config/parsers.ts';
+import { runGit } from '#cli/repository/git/run.ts';
 import { readHooks } from '#cli/repository/setup.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { runGitBlocking } from '#cli/repository/git/run.ts';
 import type { Repository, RepositorySetup } from '#cli/types/repository.ts';
 import type { Session, HookName, HookPlan, HookStatus, ScopeCheck } from '#cli/types/tools.ts';
 
@@ -65,7 +65,7 @@ export async function installHooks(session: Session, steps: (readonly string[])[
     const plan = await planHooks(session);
     if (plan.command !== undefined) {
         steps.push(plan.command);
-        const result = runGitBlocking(session.repository.root, plan.command.slice(1));
+        const result = await runGit(session.repository.root, plan.command.slice(1), {});
         if (result.code !== 0) throw new GspotError('install', `Cannot set core.hooksPath: ${result.stderr.trim()}`);
     }
     return plan;

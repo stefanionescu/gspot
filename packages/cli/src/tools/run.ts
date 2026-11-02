@@ -12,7 +12,7 @@ Run a tool command with the shared output environment and the timeout from the s
 */
 export async function runTool(command: readonly string[], options: ToolRunOptions): Promise<SpawnResult> {
     const { timeoutSeconds, cancelSignal, ...spawnOptions } = options;
-    const selected = buildGitEnvironment(spawnOptions.cwd, command, { ...TOOL_ENVIRONMENT, ...spawnOptions.env });
+    const selected = await buildGitEnvironment(spawnOptions.cwd, command, { ...TOOL_ENVIRONMENT, ...spawnOptions.env });
     if ('failure' in selected) return selected.failure;
     const result = await spawnProcess(command, {
         ...spawnOptions,

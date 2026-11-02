@@ -3,7 +3,7 @@ import { runTool } from '#cli/tools/run.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { runGit, readGitText, runGitBlocking, runGitForBytes } from '#cli/repository/git/run.ts';
+import { runGit, readGitText, runGitForBytes } from '#cli/repository/git/run.ts';
 
 const [timeoutSeconds = '', reportPath = ''] = process.argv.slice(2);
 
@@ -37,8 +37,8 @@ for (const source of [{ kind: 'index' as const }, { kind: 'commit' as const, has
         cwd: copy.root,
         timeoutSeconds: Number(timeoutSeconds),
     });
-    const boundaryConfig = runGitBlocking(copy.root, ['config', '--get', 'gspot.boundary'], {});
-    const explicitConfig = runGitBlocking(copy.root, ['config', '--get', 'gspot.explicit'], {
+    const boundaryConfig = await runGit(copy.root, ['config', '--get', 'gspot.boundary'], {});
+    const explicitConfig = await runGit(copy.root, ['config', '--get', 'gspot.explicit'], {
         env: { GIT_CONFIG_COUNT: '1', GIT_CONFIG_KEY_0: 'gspot.explicit', GIT_CONFIG_VALUE_0: 'caller' },
     });
     const controller = new AbortController();

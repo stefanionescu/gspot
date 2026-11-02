@@ -239,17 +239,19 @@ async function initializeRevisionCopy(
     source: Revision,
     cancelSignal: AbortSignal | undefined,
 ): Promise<void> {
-    const formatLine = await readGitText(toplevel, GIT_HASH_FORMAT_ARGUMENTS, { cancelSignal });
+    const [formatLine, gitStoreLine, shallowLine, head] = await Promise.all([
+        readGitText(toplevel, GIT_HASH_FORMAT_ARGUMENTS, { cancelSignal }),
+        readGitText(toplevel, [...GIT_PATH_ARGUMENTS, 'objects'], { cancelSignal }),
+        readGitText(toplevel, [...GIT_PATH_ARGUMENTS, 'shallow'], { cancelSignal }),
+        runGit(toplevel, GIT_VERIFY_HEAD_ARGUMENTS, { cancelSignal }),
+    ]);
     await readGitText(copyRoot, [...GIT_INIT_ARGUMENTS, `--object-format=${formatLine.trim()}`, copyRoot], {
         cancelSignal,
     });
-    const gitStoreLine = await readGitText(toplevel, [...GIT_PATH_ARGUMENTS, 'objects'], { cancelSignal });
     writeFileSync(join(copyRoot, GIT_ALTERNATES_PATH), `${gitStoreLine.trim()}\n`);
-    const shallowLine = await readGitText(toplevel, [...GIT_PATH_ARGUMENTS, 'shallow'], { cancelSignal });
     const shallow = shallowLine.trim();
     if (statSync(shallow, { throwIfNoEntry: false }) !== undefined)
         copyFileSync(shallow, join(copyRoot, GIT_SHALLOW_PATH));
-    const head = await runGit(toplevel, GIT_VERIFY_HEAD_ARGUMENTS, { cancelSignal });
     if (source.kind === 'index' && head.code === 0)
         await readGitText(copyRoot, [...GIT_SET_HEAD_ARGUMENTS, head.stdout.trim()], { cancelSignal });
     if (source.kind === 'commit')

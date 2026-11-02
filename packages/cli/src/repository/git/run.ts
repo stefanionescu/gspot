@@ -2,8 +2,8 @@ import { resolve } from 'node:path';
 import { realpathSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
-import { spawnProcess, streamProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
-import type { SpawnResult, SpawnOptions, StdoutReader, AsyncSpawnOptions } from '#cli/types/system.ts';
+import { spawnProcess, streamProcess } from '#cli/system/processes.ts';
+import type { SpawnResult, StdoutReader, AsyncSpawnOptions } from '#cli/types/system.ts';
 import type { GitLookup, GitRepository, GitEnvironment, GitVariableGroups } from '#cli/types/repository.ts';
 import { foldVariableName, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
 
@@ -28,16 +28,20 @@ import {
     GIT_NONLOCAL_ENVIRONMENT_NAME,
 } from '#cli/config/repository/git.ts';
 
-let inheritedGit: { localVariables: string[]; repository?: GitLookup } | undefined;
+const folderEnvironments = new Map<string, Promise<GitEnvironment>>();
 
-function readInheritedGitEnvironment(origin: string): GitLookup {
+let localVariablesRead: Promise<SpawnResult> | undefined;
+
+let inheritedRepository: Promise<GitLookup> | undefined;
+
+async function readInheritedGitEnvironment(origin: string): Promise<GitLookup> {
     const env = Object.fromEntries(
         GIT_PATH_VARIABLES.flatMap((name) => {
             const value = readEnvironmentVariable(name);
             return value === undefined ? [] : [[name, resolve(origin, value)]];
         }),
     );
-    const source = spawnProcessBlocking([GIT_PROGRAM, ...GIT_SOURCE_ARGUMENTS], {
+    const source = await spawnProcess([GIT_PROGRAM, ...GIT_SOURCE_ARGUMENTS], {
         cwd: origin,
         env,
     });
@@ -50,7 +54,7 @@ function readInheritedGitEnvironment(origin: string): GitLookup {
         readEnvironmentVariable(GIT_DIR_VARIABLE) !== undefined &&
         readEnvironmentVariable(GIT_WORK_TREE_VARIABLE) === undefined
     ) {
-        const worktree = spawnProcessBlocking([GIT_PROGRAM, ...GIT_TOP_LEVEL_ARGUMENTS], {
+        const worktree = await spawnProcess([GIT_PROGRAM, ...GIT_TOP_LEVEL_ARGUMENTS], {
             cwd: origin,
             env,
         });
@@ -60,31 +64,47 @@ function readInheritedGitEnvironment(origin: string): GitLookup {
     return { folder, environment: env };
 }
 
-function readFolderGitEnvironment(root: string, source: GitRepository, environment: GitVariableGroups): GitEnvironment {
-    const { isolated, overrides, explicit } = environment;
-    const target = spawnProcessBlocking([GIT_PROGRAM, ...GIT_FOLDER_ARGUMENTS], {
+async function readFolderGitEnvironment(
+    root: string,
+    source: GitRepository,
+    { isolated, overrides }: GitVariableGroups,
+): Promise<GitEnvironment> {
+    const target = await spawnProcess([GIT_PROGRAM, ...GIT_FOLDER_ARGUMENTS], {
         cwd: root,
         env: { ...isolated, ...overrides, ...GIT_LOCALE },
     });
-    if (isNotRepository(target)) return { variables: { ...isolated, ...explicit } };
+    if (isNotRepository(target)) return { variables: isolated };
     if (target.code !== 0) return { failure: target };
     const isSameRepository = realpathSync(source.folder) === realpathSync(target.stdout.replace(TRAILING_NEWLINE, ''));
-    return { variables: { ...(isSameRepository ? source.environment : isolated), ...explicit } };
+    return { variables: isSameRepository ? source.environment : isolated };
+}
+
+async function selectFolderEnvironment(
+    cwd: string,
+    origin: string,
+    groups: GitVariableGroups,
+): Promise<GitEnvironment> {
+    inheritedRepository ??= readInheritedGitEnvironment(origin);
+    const repository = await inheritedRepository;
+    if ('failure' in repository) return repository;
+    const folder = folderEnvironments.get(cwd) ?? readFolderGitEnvironment(cwd, repository, groups);
+    folderEnvironments.set(cwd, folder);
+    return await folder;
 }
 
 /**
-Build the environment for one Git command. Git lists the repository-local variables and the worktree settings; the
-caller overrides apply last.
+Build the environment for one Git command. Git lists the repository-local variables and the worktree settings once a
+process, and each folder resolves once; the caller overrides apply last.
 
 @param cwd the repository folder.
 @param command the executable and its arguments, literally.
 @param explicit the environment overrides for this command.
 */
-export function buildGitEnvironment(
+export async function buildGitEnvironment(
     cwd: string,
     command: readonly string[],
     explicit: Record<string, string | undefined>,
-): GitEnvironment {
+): Promise<GitEnvironment> {
     if (
         !Object.keys(buildSpawnEnvironment()).some((key) => {
             const name = foldVariableName(key);
@@ -93,19 +113,13 @@ export function buildGitEnvironment(
     )
         return { variables: explicit };
     const origin = process.cwd();
-    if (inheritedGit === undefined) {
-        const listed = spawnProcessBlocking([GIT_PROGRAM, ...GIT_LOCAL_VARIABLES_ARGUMENTS], {
-            cwd: origin,
-            env: {},
-        });
-        if (listed.code !== 0) return { failure: listed };
-        const localVariables = listed.stdout
-            .replace(TRAILING_NEWLINE, '')
-            .split('\n')
-            .filter((name) => !GIT_COMMAND_CONFIGURATION.has(name));
-        inheritedGit = { localVariables };
-    }
-    const { localVariables } = inheritedGit;
+    localVariablesRead ??= spawnProcess([GIT_PROGRAM, ...GIT_LOCAL_VARIABLES_ARGUMENTS], { cwd: origin, env: {} });
+    const listed = await localVariablesRead;
+    if (listed.code !== 0) return { failure: listed };
+    const localVariables = listed.stdout
+        .replace(TRAILING_NEWLINE, '')
+        .split('\n')
+        .filter((name) => !GIT_COMMAND_CONFIGURATION.has(name));
     if (localVariables.every((name) => readEnvironmentVariable(name) === undefined)) return { variables: explicit };
     const isolated = Object.fromEntries(localVariables.map((name) => [name, undefined]));
     if (GIT_CREATION_COMMANDS.some((words) => words.every((word, index) => command[index] === word)))
@@ -113,28 +127,8 @@ export function buildGitEnvironment(
     const overrides = Object.fromEntries(
         Object.entries(explicit).filter(([name]) => !localVariables.includes(foldVariableName(name))),
     );
-    const repository = (inheritedGit.repository ??= readInheritedGitEnvironment(origin));
-    return 'failure' in repository
-        ? repository
-        : readFolderGitEnvironment(cwd, repository, { isolated, overrides, explicit });
-}
-
-/**
-Run Git without a time limit and wait for its result.
-
-@param cwd where Git runs.
-@param commandArguments the arguments after git.
-@param options the other spawn settings, such as the environment.
-*/
-export function runGitBlocking(
-    cwd: string,
-    commandArguments: readonly string[],
-    options: Omit<SpawnOptions, 'cwd' | 'timeoutSeconds'> = {},
-): SpawnResult {
-    const command = [GIT_PROGRAM, ...commandArguments];
-    const selected = buildGitEnvironment(cwd, command, { ...options.env });
-    if ('failure' in selected) return selected.failure;
-    return spawnProcessBlocking(command, { ...options, env: selected.variables, cwd: cwd });
+    const environment = await selectFolderEnvironment(cwd, origin, { isolated, overrides });
+    return 'failure' in environment ? environment : { variables: { ...environment.variables, ...explicit } };
 }
 
 /**
@@ -150,7 +144,7 @@ export async function runGit(
     options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
 ): Promise<SpawnResult> {
     const command = [GIT_PROGRAM, ...commandArguments];
-    const selected = buildGitEnvironment(cwd, command, { ...options.env });
+    const selected = await buildGitEnvironment(cwd, command, { ...options.env });
     if ('failure' in selected) return selected.failure;
     return spawnProcess(command, { ...options, env: selected.variables, cwd: cwd });
 }
@@ -170,7 +164,7 @@ export async function runGitStream(
     readStdout: StdoutReader,
 ): Promise<SpawnResult> {
     const command = [GIT_PROGRAM, ...commandArguments];
-    const selected = buildGitEnvironment(cwd, command, { ...options.env });
+    const selected = await buildGitEnvironment(cwd, command, { ...options.env });
     if ('failure' in selected) return selected.failure;
     return streamProcess(command, { ...options, env: selected.variables, cwd: cwd }, readStdout);
 }

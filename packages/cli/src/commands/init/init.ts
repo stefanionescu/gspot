@@ -31,7 +31,7 @@ async function runInitCommand(root: string, options: InitOptions): Promise<Comma
     if (find(root, SETTINGS_FILE) !== undefined) throw new GspotError('arguments', SETTINGS_EXIST_MESSAGE);
     const initPlan = await planInit(root, options);
     const { plan, settingsText, pinPath, session } = initPlan;
-    assertFilesCommitted(root, initPlan.replaced);
+    await assertFilesCommitted(root, initPlan.replaced);
     print(formatDetection(initPlan.detection));
     print(formatInitPlan(plan, settingsText));
     const json: InitJson = {

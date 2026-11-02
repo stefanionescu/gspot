@@ -45,8 +45,7 @@ function isGroupRunning(child: ChildProcess, pid: number): boolean {
         process.kill(-pid, 0);
         return true;
     } catch (error) {
-        if (isGroupGone(error as Error, child)) return false;
-        throw error;
+        return !isGroupGone(error as Error, child);
     }
 }
 
@@ -118,8 +117,10 @@ export function trackProcessTree(child: ChildProcess, options: AsyncSpawnOptions
     const startExitCleanup = () => {
         clearTimeout(timer);
         exitCleanup = (async () => {
-            await delay(EXIT_CLEANUP_MILLISECONDS);
-            if (process.platform !== 'win32') stopTree();
+            if (process.platform !== 'win32' && child.pid !== undefined && isGroupRunning(child, child.pid)) {
+                await delay(EXIT_CLEANUP_MILLISECONDS);
+                stopTree();
+            }
             termination.stopped = true;
         })();
     };
