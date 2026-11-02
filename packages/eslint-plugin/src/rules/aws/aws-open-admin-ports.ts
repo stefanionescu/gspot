@@ -48,17 +48,12 @@ function findArgument(
     return getExpressionValue(isCall ? call.arguments[position] : undefined, source);
 }
 
-function isAdminRange(start: number, end: number | undefined): boolean {
-    const high = end ?? start;
-    return ADMIN_PORTS.some((port) => port >= start && port <= high);
-}
-
 function isAdminPortOptions(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): boolean {
     const protocol = getOptionProperties(node, source).get('protocol');
     const isTcp = protocol !== undefined && TCP_PROTOCOL_NAMES.has(getCdkName(source, protocol.value));
     const start = Number.parseInt(String(getField(source, node, 'fromPort')));
     const end = Number.parseInt(String(getField(source, node, 'toPort')));
-    return isTcp && isAdminRange(start, end);
+    return isTcp && ADMIN_PORTS.some((port) => port >= start && port <= end);
 }
 
 function isAdminPortCall(
@@ -67,8 +62,9 @@ function isAdminPortCall(
     name: string,
 ): boolean {
     const [start, end] = [0, 1].map((position) => getLiteralValue(findArgument(source, node, position), source));
-    const high = name === PORT_RANGE && typeof end === 'number' ? end : undefined;
-    return typeof start === 'number' && isAdminRange(start, high);
+    if (typeof start !== 'number') return false;
+    const high = name === PORT_RANGE && typeof end === 'number' ? end : start;
+    return ADMIN_PORTS.some((port) => port >= start && port <= high);
 }
 
 function isAdminPort(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): boolean {
@@ -123,7 +119,9 @@ function listOpenIngress(source: Readonly<TSESLint.SourceCode>, node: TSESTree.N
     const protocol = getField(source, node, 'ipProtocol');
     const start = Number.parseInt(String(getField(source, node, 'fromPort')));
     const end = Number.parseInt(String(getField(source, node, 'toPort')));
-    const isAdmin = protocol === ALL_PROTOCOLS || (TCP_PROTOCOLS.has(protocol) && isAdminRange(start, end));
+    const isAdmin =
+        protocol === ALL_PROTOCOLS ||
+        (TCP_PROTOCOLS.has(protocol) && ADMIN_PORTS.some((port) => port >= start && port <= end));
     return Object.entries(OPEN_ADDRESSES).flatMap(([key, address]) => {
         const property = getOptionProperties(node, source).get(key);
         const value = property ? getExpressionValue(property.value, source) : undefined;
