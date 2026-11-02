@@ -32,8 +32,7 @@ export const dynamicTemplates = createRule<[], 'builtTemplate'>({
                 'Finds `compile` and `render` calls of `pug` and `ejs` whose template text is not a literal: a template literal with an expression, a concatenation with a computed part, or any other value that is not written in the code.',
             why: 'A template engine runs the code inside a template, so a template built from input lets an attacker run code on the server.',
             fix: 'Keep templates in fixed files or constants, and pass the values as template data.',
-            example:
-                'The call ``pug.render(`p Hello ${name}`)`` reports `builtTemplate`. Use `pug.render("p Hello #{name}", { name })`.',
+            example: `The call \`\`pug.render(\`p Hello \${name}\`)\`\` reports \`builtTemplate\`. Use \`pug.render("p Hello #{name}", { name })\`.`,
         },
         schema: [],
         messages: { builtTemplate: 'Pass the values of this template as data, not inside the template text.' },

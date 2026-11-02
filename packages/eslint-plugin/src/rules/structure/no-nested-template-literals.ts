@@ -11,7 +11,7 @@ export const noNestedTemplateLiterals = createRule<[], 'template'>({
             description: 'Reports nested templates sharing the opening or closing line of their enclosing template.',
             why: 'Several template delimiters on one line make interpolation boundaries difficult to follow.',
             fix: 'Name the inner text before interpolating it, or place multiline templates on separate lines.',
-            example: '``const text = `outer ${`inner ${value}`}`;`` reports the inner template.',
+            example: `\`\`const text = \`outer \${\`inner \${value}\`}\`;\`\` reports the inner template.`,
         },
         schema: [],
         messages: { template: 'Name this inner template separately, or separate its delimiters onto their own lines.' },

@@ -41,8 +41,7 @@ export const hardcodedSecretSignatures = createRule<[], 'hardcoded'>({
         type: 'problem',
         docs: {
             level: 'recommended',
-            description:
-                'Finds a string written in the code that a call passes as a secret, except a value of five characters or fewer and a placeholder such as `${SECRET}`, `example-key`, or `changeme`: the key of `crypto.createHmac`, `jsonwebtoken.sign`, `jsonwebtoken.verify`, and other signing and decryption functions, the secret of `cookie-parser`, `express-session`, and `cookie-session`, and the password of `mysql`, `mysql2`, and `typeorm` connections.',
+            description: `Finds a string written in the code that a call passes as a secret, except a value of five characters or fewer and a placeholder such as \`\${SECRET}\`, \`example-key\`, or \`changeme\`: the key of \`crypto.createHmac\`, \`jsonwebtoken.sign\`, \`jsonwebtoken.verify\`, and other signing and decryption functions, the secret of \`cookie-parser\`, \`express-session\`, and \`cookie-session\`, and the password of \`mysql\`, \`mysql2\`, and \`typeorm\` connections.`,
             why: 'A secret in the code reaches everyone who can read the repository or the built files, so it protects nothing.',
             fix: 'Revoke the secret, and read its replacement from the environment or a secret store at run time.',
             example:
