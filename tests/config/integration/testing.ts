@@ -71,7 +71,7 @@ const HALF_COVERED_SOURCE =
 
 export const PYTEST_CASES = [
     {
-        check: 'pytest/coverage',
+        check: 'pytest/tests',
         files: {
             'example/__init__.py': '',
             'example/math.py': HALF_COVERED_SOURCE,

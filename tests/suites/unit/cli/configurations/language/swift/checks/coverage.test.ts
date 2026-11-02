@@ -25,7 +25,7 @@ import {
 } from '#tests/config/configurations/swift.ts';
 
 test.each([...XCTEST_FAILURES])(
-    'swift/coverage: XCTest coverage classifies $failure and passes after the fix',
+    'swift/tests: XCTest coverage classifies $failure and passes after the fix',
     async ({ tables, build, coverage, code, status, produced, note, failure }) => {
         await using sandbox = await createGitSandbox({});
         await using _cache = await redirectCacheFolder();
@@ -55,7 +55,7 @@ test.each([...XCTEST_FAILURES])(
         );
         const session = await openSession(sandbox.path);
         const viewed = join(
-            planSwiftBuild(session, planSandboxCheck(session, 'swift/coverage'), 'coverage').folder,
+            planSwiftBuild(session, planSandboxCheck(session, 'swift/tests'), 'coverage').folder,
             'source/viewed.txt',
         );
         expect((await isOnDisk(viewed)) ? await readFile(viewed, 'utf8') : undefined).toBe(
@@ -67,7 +67,7 @@ test.each([...XCTEST_FAILURES])(
             xcrun: ['--line', JSON.stringify({ targets: [{ name: 'Example', lineCoverage: 1 }] })],
         });
         expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
-        expect(corrected.report.checks).toMatchObject([{ check: 'swift/coverage', status: 'passed', findings: [] }]);
+        expect(corrected.report.checks).toMatchObject([{ check: 'swift/tests', status: 'passed', findings: [] }]);
     },
 );
 
@@ -83,13 +83,10 @@ async function runXcodeCoverage(
     });
     await writeProgramCommand(sandbox.path, 'node_modules/.bin/xcodebuild', 'fakes/xcodebuild', ...options.xcodebuild);
     await writeProgramCommand(sandbox.path, 'node_modules/.bin/xcrun', 'fakes/tool', ...options.xcrun);
-    return await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
-    );
+    return await runChecks(await openSession(sandbox.path), buildRunOptions({ stage: 'push', only: ['swift/tests'] }));
 }
 
-test('swift/coverage: XCTest coverage refuses an external result link and removes a previous result bundle', async () => {
+test('swift/tests: XCTest coverage refuses an external result link and removes a previous result bundle', async () => {
     using _system = spyOn(environment, 'getOperatingSystem').mockReturnValue('macos');
     await using sandbox = await createGitSandbox({});
     await using outside = await testdir();
@@ -106,7 +103,7 @@ test('swift/coverage: XCTest coverage refuses an external result link and remove
         xcrun: ['--line', JSON.stringify({ targets: [{ name: 'Example', lineCoverage: 1 }] })],
     };
     const session = await openSession(sandbox.path);
-    const cache = planSwiftBuild(session, planSandboxCheck(session, 'swift/coverage'), 'coverage').folder;
+    const cache = planSwiftBuild(session, planSandboxCheck(session, 'swift/tests'), 'coverage').folder;
     await writeFile(join(outside.path, 'authored.txt'), 'preserved');
     await mkdir(cache, { recursive: true });
     const bundle = join(cache, 'coverage.xcresult');
@@ -154,7 +151,7 @@ test('Swift package coverage runs swift test, reads the custom target paths, and
     );
     const measured = await runChecks(
         await openSession(sandbox.path),
-        buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
+        buildRunOptions({ stage: 'push', only: ['swift/tests'] }),
     );
 
     expect(measured.report.checks[0]?.findings.map(({ message }) => message)).toStrictEqual([
@@ -167,7 +164,7 @@ test('Swift package coverage runs swift test, reads the custom target paths, and
     );
     const omitted = await runChecks(
         await openSession(sandbox.path),
-        buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
+        buildRunOptions({ stage: 'push', only: ['swift/tests'] }),
     );
 
     expect(omitted.report.checks[0]?.note).toBe('The Swift coverage report has no source lines for target API.');
@@ -182,13 +179,13 @@ test('Swift coverage skips a scope that holds no Swift tests', async () => {
 
     const { report } = await runChecks(
         await openSession(sandbox.path),
-        buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
+        buildRunOptions({ stage: 'push', only: ['swift/tests'] }),
     );
     expect(report.checks).toMatchObject([...UNTESTED_COVERAGE_RESULTS]);
 });
 
 test.each([...COVERAGE_LIMIT_CASES])(
-    'swift/coverage compares each target with the shared and per-target limits: $name',
+    'swift/tests compares each target with the shared and per-target limits: $name',
     async ({ report, tables, expected }) => {
         await using _cache = await redirectCacheFolder();
         await using sandbox = await createGitSandbox({});

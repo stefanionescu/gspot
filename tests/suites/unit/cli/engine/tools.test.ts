@@ -61,7 +61,7 @@ describe.each(COVERAGE_PROVIDERS.flatMap((row) => [0, 80].map((lines) => ({ ...r
                 }),
             );
             session = await openSession(sandbox.path);
-            checks = planChecks(session, { stage: 'push', only: [configuration + '/coverage'] });
+            checks = planChecks(session, { stage: 'push', only: [configuration + '/tests'] });
         });
         afterAll(() => resources.disposeAsync());
         test.each(['', 'app'])(

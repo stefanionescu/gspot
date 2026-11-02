@@ -221,9 +221,9 @@ test('the jest, vitest, and pytest coverage checks drop exactly their coverage a
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, {
         stage: 'push',
-        only: ['jest/coverage', 'vitest/coverage', 'pytest/coverage'],
+        only: ['jest/tests', 'vitest/tests', 'pytest/tests'],
     });
-    expect(planned.map(({ check }) => check.id)).toStrictEqual(['jest/coverage', 'vitest/coverage', 'pytest/coverage']);
+    expect(planned.map(({ check }) => check.id)).toStrictEqual(['jest/tests', 'vitest/tests', 'pytest/tests']);
     for (const plannedCheck of planned) {
         const command = plannedCheck.check.command!;
         const stripped = stripCoverageArguments(plannedCheck, {})!;

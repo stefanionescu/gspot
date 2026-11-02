@@ -17,7 +17,7 @@ gspot selects `jest` when your project depends on `jest` or has a `jest.config.*
 Then run the coverage check:
 
 ```shell
-gspot check --only jest/coverage
+gspot check --only jest/tests
 ```
 
 The check runs Jest in your working tree. Failed tests, missed coverage limits, and a suite that cannot load report
@@ -42,7 +42,7 @@ gspot selects `vitest` from its dependency or a `vitest.config.*` or `vitest.wor
 coverage provider in your project. Then run:
 
 ```shell
-gspot check --only vitest/coverage
+gspot check --only vitest/tests
 ```
 
 Set the minimums under `coverage`: `lines`, `branches`, `functions`, and `statements`. Vitest reads its own
@@ -54,7 +54,7 @@ gspot selects `pytest` when your project depends on `pytest` or has `conftest.py
 add pytest`. Install pytest and pytest-cov in the `.venv` of your project. Then run:
 
 ```shell
-gspot check --only pytest/coverage
+gspot check --only pytest/tests
 ```
 
 `coverage.min_line_percent` sets the line coverage limit. The check runs pytest with `--strict-markers` and `--strict-config`.

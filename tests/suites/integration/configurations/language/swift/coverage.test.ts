@@ -15,7 +15,7 @@ import {
 } from '#tests/config/integration/swift.ts';
 
 test.skipIf(!isMacos)(
-    'swift/coverage reports a target under its coverage limit and passes after testing the uncovered function',
+    'swift/tests reports a target under its coverage limit and passes after testing the uncovered function',
     async () => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['swift', 'xcode'], COVERAGE_TARGET_SETTINGS),
@@ -27,12 +27,12 @@ test.skipIf(!isMacos)(
         });
 
         await using _cache = await redirectCacheFolder();
-        const command = ['check', '--only', 'swift/coverage', '--json'];
+        const command = ['check', '--only', 'swift/tests', '--json'];
         const failed = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
         expect(failed.exitCode, JSON.stringify(failed)).toBe(1);
         expect(failed.checks).toMatchObject([
             {
-                check: 'swift/coverage',
+                check: 'swift/tests',
                 status: 'failed',
                 findings: [
                     {
@@ -53,6 +53,6 @@ test.skipIf(!isMacos)(
         );
         const corrected = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
         expect(corrected.exitCode, JSON.stringify(corrected)).toBe(0);
-        expect(corrected.checks).toMatchObject([{ check: 'swift/coverage', status: 'passed', findings: [] }]);
+        expect(corrected.checks).toMatchObject([{ check: 'swift/tests', status: 'passed', findings: [] }]);
     },
 );

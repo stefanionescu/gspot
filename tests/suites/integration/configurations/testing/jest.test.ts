@@ -17,12 +17,12 @@ import {
 } from '#tests/config/integration/testing.ts';
 
 async function runJestCoverage(root: string, code: number): Promise<RunReport['checks']> {
-    const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'jest/coverage', '--json']));
+    const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'jest/tests', '--json']));
     expect(result.code, result.stdout + result.stderr).toBe(code);
     return result.report.checks;
 }
 
-test("jest/coverage at level all uses the scope's coverage limits and runs only that scope's tests", async () => {
+test("jest/tests at level all uses the scope's coverage limits and runs only that scope's tests", async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
@@ -42,7 +42,7 @@ test("jest/coverage at level all uses the scope's coverage limits and runs only 
     const uncovered = await runJestCoverage(sandbox.path, 1);
     expect(uncovered).toMatchObject([
         {
-            check: 'jest/coverage',
+            check: 'jest/tests',
             scope: 'app',
             status: 'failed',
             findings: [
@@ -56,10 +56,10 @@ test("jest/coverage at level all uses the scope's coverage limits and runs only 
     ]);
     await writeFile(join(sandbox.path, 'app/math.test.cjs'), CORRECTED_MATH_TEST_SOURCE);
     const passing = await runJestCoverage(sandbox.path, 0);
-    expect(passing).toMatchObject([{ check: 'jest/coverage', scope: 'app', status: 'passed', findings: [] }]);
+    expect(passing).toMatchObject([{ check: 'jest/tests', scope: 'app', status: 'passed', findings: [] }]);
 });
 
-test('jest/coverage at level all reports failed tests and keeps the authored files', async () => {
+test('jest/tests at level all reports failed tests and keeps the authored files', async () => {
     await using sandbox = await createGitSandbox({
         ...JEST_PROJECT_FILES,
         'gspot.toml': buildSandboxSettings(['jest'], { tables: JEST_COVERAGE_TABLES, level: 'all' }),
@@ -68,12 +68,12 @@ test('jest/coverage at level all reports failed tests and keeps the authored fil
     await writeFile(join(sandbox.path, 'math.test.cjs'), CORRECTED_MATH_TEST_SOURCE.replace('toBe(6)', 'toBe(7)'));
     const failed = await runJestCoverage(sandbox.path, 1);
     expect(failed[0]!.findings.map(({ check, file, message }) => ({ check, file, message }))).toStrictEqual([
-        { check: 'jest/coverage', file: '', message: '● triples an integer' },
+        { check: 'jest/tests', file: '', message: '● triples an integer' },
     ]);
     await assertJestFilesKept(sandbox.path);
 });
 
-test('jest/coverage reports a test file with a missing import as a failed test and passes after the fix', async () => {
+test('jest/tests reports a test file with a missing import as a failed test and passes after the fix', async () => {
     await using sandbox = await createGitSandbox({
         ...JEST_PROJECT_FILES,
         'gspot.toml': buildSandboxSettings(['jest'], { tables: JEST_COVERAGE_TABLES, level: 'all' }),
@@ -81,12 +81,12 @@ test('jest/coverage reports a test file with a missing import as a failed test a
     });
     const unavailable = await runJestCoverage(sandbox.path, 1);
     expect(unavailable).toMatchObject([
-        { check: 'jest/coverage', status: 'failed', findings: [{ file: '', message: '● Test suite failed to run' }] },
+        { check: 'jest/tests', status: 'failed', findings: [{ file: '', message: '● Test suite failed to run' }] },
     ]);
     expect(unavailable[0]!.note).toBeUndefined();
     await writeFile(join(sandbox.path, 'math.test.cjs'), CORRECTED_MATH_TEST_SOURCE);
     const recovered = await runJestCoverage(sandbox.path, 0);
-    expect(recovered).toMatchObject([{ check: 'jest/coverage', status: 'passed', findings: [] }]);
+    expect(recovered).toMatchObject([{ check: 'jest/tests', status: 'passed', findings: [] }]);
     await assertJestFilesKept(sandbox.path);
 });
 

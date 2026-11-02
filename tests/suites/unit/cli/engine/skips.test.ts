@@ -134,13 +134,13 @@ test('generated and vendored test files do not satisfy a source-tag condition', 
     });
     const session = await openSession(sandbox.path);
     expect(
-        planChecks(session, { stage: 'push', only: ['swift/coverage'] }).map(({ check, skip }) => ({
+        planChecks(session, { stage: 'push', only: ['swift/tests'] }).map(({ check, skip }) => ({
             check: check.id,
             skip,
         })),
     ).toStrictEqual([
         {
-            check: 'swift/coverage',
+            check: 'swift/tests',
             skip: { cause: 'condition', note: 'Needs files marked swift-test or swift-test-target in this scope.' },
         },
     ]);

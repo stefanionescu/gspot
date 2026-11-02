@@ -172,7 +172,7 @@ why = "A skipped test with no reason stays off, because nobody can tell when to 
 example = "A Swift target reports 85% line coverage against a 90% minimum. Add a test that exercises its uncovered lines, then rerun the target."
 files = { extensions = [".swift"] }
 help = "Add tests for the target, or lower its minimum with a reason."
-name = "coverage"
+name = "tests"
 needs = ["build"]
 operating_systems = ["macos", "linux"]
 runs = "scope"

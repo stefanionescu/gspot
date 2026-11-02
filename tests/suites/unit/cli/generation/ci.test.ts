@@ -74,11 +74,11 @@ test('two operating systems get one job each, and the Linux job uses the configu
 
 test('test checks move to a tests job that differs from the lint job only in its check command', () => {
     const { jobs } = parse(
-        buildGithubWorkflow({ ...LINUX_PIPELINE, testChecks: ['jest/coverage', 'pytest/coverage'] }).content,
+        buildGithubWorkflow({ ...LINUX_PIPELINE, testChecks: ['jest/tests', 'pytest/tests'] }).content,
     ) as GithubWorkflow;
     expect(Object.keys(jobs)).toStrictEqual(['lint', 'tests', 'advisories']);
-    expect(jobs['lint']!.steps.at(-1)?.run).toBe(`${CI_CHECK_COMMAND} --skip jest/coverage,pytest/coverage\n`);
-    expect(jobs['tests']!.steps.at(-1)?.run).toBe(`${CI_CHECK_COMMAND} --only jest/coverage,pytest/coverage\n`);
+    expect(jobs['lint']!.steps.at(-1)?.run).toBe(`${CI_CHECK_COMMAND} --skip jest/tests,pytest/tests\n`);
+    expect(jobs['tests']!.steps.at(-1)?.run).toBe(`${CI_CHECK_COMMAND} --only jest/tests,pytest/tests\n`);
     expect(jobs['tests']!.steps.slice(0, -1)).toStrictEqual(jobs['lint']!.steps.slice(0, -1));
 });
 
@@ -93,7 +93,7 @@ test('each operating system gets one pair of jobs', () => {
         buildGithubWorkflow({
             ...LINUX_PIPELINE,
             operatingSystems: ['linux', 'macos'],
-            testChecks: ['vitest/coverage'],
+            testChecks: ['vitest/tests'],
         }).content,
     ) as GithubWorkflow;
     expect(Object.keys(jobs)).toStrictEqual(['lint-linux', 'lint-macos', 'tests-linux', 'tests-macos', 'advisories']);
@@ -114,8 +114,8 @@ test('a selected testing configuration gets a tests job on GitHub and one job on
             ({ path }) => path === '.github/workflows/gspot.yml',
         )!.content,
     ) as GithubWorkflow;
-    expect(workflow.jobs['lint']?.steps.at(-1)?.run).toBe(`${CI_CHECK_COMMAND} --skip jest/coverage\n`);
-    expect(workflow.jobs['tests']?.steps.at(-1)?.run).toBe(`${CI_CHECK_COMMAND} --only jest/coverage\n`);
+    expect(workflow.jobs['lint']?.steps.at(-1)?.run).toBe(`${CI_CHECK_COMMAND} --skip jest/tests\n`);
+    expect(workflow.jobs['tests']?.steps.at(-1)?.run).toBe(`${CI_CHECK_COMMAND} --only jest/tests\n`);
     await using gitlab = await createGitSandbox({
         ...files,
         'gspot.toml': buildSandboxSettings(['javascript', 'jest'], {

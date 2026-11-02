@@ -58,7 +58,7 @@ source files keep those lint rules.
 `gspot check --only swift/swiftlint` reads these nested files. In an editor, run SwiftLint without `--config`, because
 that option turns off the nested files.
 
-`swift/skip-reasons` asks each disabled test for a reason. `swift/coverage` measures each target against its coverage
+`swift/skip-reasons` asks each disabled test for a reason. `swift/tests` measures each target against its coverage
 minimum, and skips a scope that holds no tests.
 
 ## Coverage
@@ -76,7 +76,7 @@ Then apply the record and run the check:
 
 ```shell
 gspot apply
-gspot check --only swift/coverage
+gspot check --only swift/tests
 ```
 
 ## Security rules

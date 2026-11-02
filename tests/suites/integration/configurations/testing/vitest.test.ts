@@ -44,11 +44,11 @@ async function createVitestProject(tables: string): Promise<TestdirResult> {
     return sandbox;
 }
 
-test('vitest/coverage reports coverage under its limit and passes after the fix, in the root and a scope', async () => {
+test('vitest/tests reports coverage under its limit and passes after the fix, in the root and a scope', async () => {
     await using sandbox = await createVitestProject('[coverage]\nmin_line_percent = 100\nmin_function_percent = 100\n');
     const source = join(sandbox.path, 'app/src/public.ts');
     await writeFile(source, UNTESTED_SOURCE);
-    const failed = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'vitest/coverage', '--json']));
+    const failed = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'vitest/tests', '--json']));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(
         failed.report.checks.map(({ scope, status, findings }) => ({
@@ -68,9 +68,7 @@ test('vitest/coverage reports coverage under its limit and passes after the fix,
         },
     ]);
     await writeFile(source, VITEST_SOURCE);
-    const corrected = parseCheckReport(
-        await spawnGspot(sandbox.path, ['check', '--only', 'vitest/coverage', '--json']),
-    );
+    const corrected = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'vitest/tests', '--json']));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(corrected.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
         { scope: '', status: 'passed' },
@@ -78,10 +76,10 @@ test('vitest/coverage reports coverage under its limit and passes after the fix,
     ]);
 });
 
-test('vitest/coverage at a limit above 0 reports @vitest/coverage-v8 as missing when the project lacks it', async () => {
+test('vitest/tests at a limit above 0 reports @vitest/coverage-v8 as missing when the project lacks it', async () => {
     await using sandbox = await createVitestProject(COVERAGE_ZERO_LIMITS.replace(/^lines = .*$/mu, 'lines = 80'));
     await rm(join(sandbox.path, 'node_modules/@vitest/coverage-v8'));
-    const checked = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'vitest/coverage', '--json']));
+    const checked = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'vitest/tests', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(2);
     const note = '@vitest/coverage-v8 is not installed. Run npm install --save-dev --save-exact @vitest/coverage-v8.';
     expect(checked.report.checks.map(({ scope, status, note }) => ({ scope, status, note }))).toStrictEqual([

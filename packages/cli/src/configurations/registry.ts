@@ -210,7 +210,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'supabase/verify-jwt': { check: checkVerifyJwt },
     'svelte/svelte-check': { check: checkSvelteCheck },
     'swift/build': { check: checkSwiftBuild },
-    'swift/coverage': { check: checkCoverage },
+    'swift/tests': { check: checkCoverage },
     'swift/doc-comments': { check: checkSwiftDocComments },
     'swift/periphery': { check: checkPeriphery },
     'swift/skip-reasons': { check: checkSkipReasons },

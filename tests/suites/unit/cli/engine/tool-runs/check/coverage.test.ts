@@ -27,7 +27,7 @@ test.each(COVERAGE_PROJECT_FILES)(
         });
         await applyGeneratedFiles(sandbox.path);
         const session = await openSession(sandbox.path);
-        const planned = planChecks(session, { only: ['pytest/coverage'], stage: 'push' })[0]!;
+        const planned = planChecks(session, { only: ['pytest/tests'], stage: 'push' })[0]!;
         planned.tool = { name: process.execPath, kind: 'program', installers: {} };
         planned.check = { ...planned.check, tool: process.execPath, other_tools: [] };
         const commands: string[][] = [];

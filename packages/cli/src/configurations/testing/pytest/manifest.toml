@@ -34,7 +34,7 @@ version_pattern = "pytest-cov-(\\d+(?:\\.\\d+)+)"
 per_scope = true
 target = "coveragerc"
 tool = "pytest-cov"
-check = "pytest/coverage"
+check = "pytest/tests"
 
 [ruff]
 all = ["PT001", "PT002", "PT003", "PT006", "PT007", "PT018", "PT019", "PT022", "PT023", "PT026"]
@@ -48,7 +48,7 @@ example = "pytest-cov reports `FAIL Required test coverage of 90% not reached. T
 exit_codes = [1, 5]
 files = { extensions = [".py"] }
 help = "Fix each failed test, and add tests for the code that the report marks uncovered. Lower `coverage.min_line_percent` only with a reason."
-name = "coverage"
+name = "tests"
 needs = ["python-environment"]
 output = { format = "regex", pattern = "^(?:(?:FAILED|ERROR) (?<file>[^\\s:]+)(?:::\\S+)?(?: - .*)?|FAIL Required test coverage.*|(?:=+ )?no tests ran in .+?(?: =+)?)$" }
 runs = "scope"

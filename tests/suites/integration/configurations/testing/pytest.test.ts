@@ -22,7 +22,7 @@ test.each([...PYTEST_CASES])('$check reports the required coverage and passes af
 });
 
 test.each([...COVERAGE_LIMIT_CASES])(
-    "pytest/coverage with a $limit limit uses the project's Python and needs pytest-cov only above 0",
+    "pytest/tests with a $limit limit uses the project's Python and needs pytest-cov only above 0",
     async ({ coverage, code, result }) => {
         const { root } = installedSandbox();
         const project = PYTEST_PYPROJECT.replace(', "pytest-cov==7.1.0"', '');
@@ -42,7 +42,7 @@ test.each([...COVERAGE_LIMIT_CASES])(
             const installed = await runCommand(['uv', 'sync'], { cwd: root });
             expect(installed.code, installed.stdout + installed.stderr).toBe(0);
             const lockfile = await readFile(join(root, 'uv.lock'), 'utf8');
-            const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', 'pytest/coverage', '--json']));
+            const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', 'pytest/tests', '--json']));
             expect(checked.code, checked.stdout + checked.stderr).toBe(code);
             expect(
                 checked.report.checks.map(({ scope, status, note, command }) => ({

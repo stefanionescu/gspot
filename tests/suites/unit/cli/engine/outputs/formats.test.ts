@@ -220,12 +220,12 @@ test('a regex finding without a rule group keeps a trailing bracketed word in it
             paths,
         ),
     ).toStrictEqual([...BRACKETED_WORD_FINDINGS]);
-    const pytest = getShippedCheck('pytest/coverage');
+    const pytest = getShippedCheck('pytest/tests');
     expect(
         parseOutput(pytest, 'FAILED tests/test_total.py::test_sum - assert total(items) == expected(items)', '', paths),
     ).toStrictEqual([
         {
-            check: 'pytest/coverage',
+            check: 'pytest/tests',
             file: 'tests/test_total.py',
             message: 'FAILED tests/test_total.py::test_sum - assert total(items) == expected(items)',
             help: pytest.help,

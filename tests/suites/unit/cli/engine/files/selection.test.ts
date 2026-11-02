@@ -131,7 +131,7 @@ test(`a scope's per-scope check plans every file of its scope and covers only it
     });
 
     const session = await openSession(sandbox.path);
-    const planned = planChecks(session, { stage: 'all', only: ['jest/coverage'] });
+    const planned = planChecks(session, { stage: 'all', only: ['jest/tests'] });
     const project = planned.find((each) => each.scope.path === 'apps/web')!;
     expect(project.files.map((file) => file.path).toSorted(compareText)).toStrictEqual([
         'apps/web/image.bin',

@@ -249,7 +249,7 @@ export const COVERAGE_LIMIT_CASES = [
 
 export const UNTESTED_COVERAGE_RESULTS = [
     {
-        check: 'swift/coverage',
+        check: 'swift/tests',
         status: 'skipped',
         note: 'Needs files marked swift-test or swift-test-target in this scope.',
     },
