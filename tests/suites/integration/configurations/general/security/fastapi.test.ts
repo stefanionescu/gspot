@@ -77,6 +77,7 @@ describe.skipIf(!hasToolBuild('semgrep'))('semgrep rule files', () => {
             'gspot.toml': buildSandboxSettings(['python', 'security'], { tables: FASTAPI_SCOPE_SETTINGS }),
             'app/pyproject.toml': FASTAPI_PROJECT,
             'app/service.py': FASTAPI_SOURCE,
+            'app/child/service.py': FASTAPI_SOURCE,
             'sibling/service.py': 'PORT = 8080\n',
         };
         await using _sourceChange = await writeSandboxChanges(
