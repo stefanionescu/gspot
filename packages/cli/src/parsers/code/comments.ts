@@ -96,34 +96,6 @@ function parseTomlComments(text: string, path: string): SourceComment[] {
     });
 }
 
-/**
-Read the markup and the scripts of a component, each padded so that its lines stay where the file has them.
-
-@param text the component source.
-@param path the component file, whose extension says whether it has Astro front matter.
-@returns the markup without the front matter, and the script blocks with the front matter.
-*/
-export async function readComponentSources(
-    text: string,
-    path: string,
-): Promise<{ markup: string; scripts: ComponentScript[] }> {
-    const masked = text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
-    const front = path.endsWith(ASTRO_EXTENSION) ? ASTRO_FRONT_MATTER.exec(text) : null;
-    const markup = front === null ? text : masked.slice(0, front[0].length) + text.slice(front[0].length);
-    using tree = await parseSource('html', markup);
-    const scripts = tree.rootNode
-        .descendantsOfType('script_element')
-        .flatMap((element) => listComponentScripts(element, text, masked));
-    if (front !== null) {
-        const start = text.indexOf('\n') + 1;
-        scripts.push({
-            grammar: 'typescript',
-            source: replaceRanges(masked, text, [{ start, end: start + (front[1] as string).length }]),
-        });
-    }
-    return { markup, scripts };
-}
-
 async function parseComponentComments(text: string, path: string): Promise<SourceComment[]> {
     const { markup, scripts } = await readComponentSources(text, path);
     const comments: SourceComment[] = [];
@@ -132,26 +104,6 @@ async function parseComponentComments(text: string, path: string): Promise<Sourc
         (left, right) => left.line - right.line,
     );
 }
-
-const COMMENT_PARSERS = new Map<string, CommentParser>([
-    ['.vue', parseComponentComments],
-    ['.svelte', parseComponentComments],
-    ['.astro', parseComponentComments],
-    ['.toml', parseTomlComments],
-    ['.yaml', parseYamlComments],
-    ['.yml', parseYamlComments],
-    ['.sql', parseSqlComments],
-    ['.pgsql', parseSqlComments],
-    ['.psql', parseSqlComments],
-    ['.html', (text) => parseGrammarComments('html', text)],
-    ['.htm', (text) => parseGrammarComments('html', text)],
-    ...['.md'].map((extension): [string, CommentParser] => [
-        extension,
-        (text) => parseGrammarComments('html', text, { source: extractMarkdownHtml(text) }),
-    ]),
-    ['.mdx', parseMdxComments],
-    ['.css', (text) => parseGrammarComments('css', text)],
-]);
 
 async function parseGrammarComments(
     grammar: GrammarName,
@@ -233,6 +185,54 @@ function listComponentScripts(element: Node, text: string, masked: string): Comp
             source: replaceRanges(masked, text, [{ start: node.startIndex, end: node.endIndex }]),
         }));
 }
+
+/**
+Read the markup and the scripts of a component, each padded so that its lines stay where the file has them.
+
+@param text the component source.
+@param path the component file, whose extension says whether it has Astro front matter.
+@returns the markup without the front matter, and the script blocks with the front matter.
+*/
+export async function readComponentSources(
+    text: string,
+    path: string,
+): Promise<{ markup: string; scripts: ComponentScript[] }> {
+    const masked = text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
+    const front = path.endsWith(ASTRO_EXTENSION) ? ASTRO_FRONT_MATTER.exec(text) : null;
+    const markup = front === null ? text : masked.slice(0, front[0].length) + text.slice(front[0].length);
+    using tree = await parseSource('html', markup);
+    const scripts = tree.rootNode
+        .descendantsOfType('script_element')
+        .flatMap((element) => listComponentScripts(element, text, masked));
+    if (front !== null) {
+        const start = text.indexOf('\n') + 1;
+        scripts.push({
+            grammar: 'typescript',
+            source: replaceRanges(masked, text, [{ start, end: start + (front[1] as string).length }]),
+        });
+    }
+    return { markup, scripts };
+}
+
+const COMMENT_PARSERS = new Map<string, CommentParser>([
+    ['.vue', parseComponentComments],
+    ['.svelte', parseComponentComments],
+    ['.astro', parseComponentComments],
+    ['.toml', parseTomlComments],
+    ['.yaml', parseYamlComments],
+    ['.yml', parseYamlComments],
+    ['.sql', parseSqlComments],
+    ['.pgsql', parseSqlComments],
+    ['.psql', parseSqlComments],
+    ['.html', (text) => parseGrammarComments('html', text)],
+    ['.htm', (text) => parseGrammarComments('html', text)],
+    ...['.md'].map((extension): [string, CommentParser] => [
+        extension,
+        (text) => parseGrammarComments('html', text, { source: extractMarkdownHtml(text) }),
+    ]),
+    ['.mdx', parseMdxComments],
+    ['.css', (text) => parseGrammarComments('css', text)],
+]);
 
 /**
 Remove only the closing delimiter that matches the comment syntax.

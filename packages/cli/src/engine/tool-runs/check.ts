@@ -133,19 +133,6 @@ async function findMissingSecondaryTool(
 }
 
 /**
-Select the folder that a command of a check runs in.
-
-@param root the repository, or the copy of it that the tool runs in.
-@param planned the check and its scope.
-*/
-export function selectCommandFolder(root: string, planned: PlannedCheck): string {
-    const { check, scope } = planned;
-    const usesScopeFolder =
-        check.cwd === 'scope' || (check.runs === 'scope' && check.cwd !== 'root') || runsInPackageFolder(root, planned);
-    return usesScopeFolder ? join(root, scope.path) : root;
-}
-
-/**
 Resolves the working folder and expands the tool environment values.
 
 @param session the repository and its settings.
@@ -171,6 +158,19 @@ function buildCommandSetup(session: CheckSession, planned: PlannedCheck, root: s
             ? buildCopyPythonEnvironment({ root, toolsRoot: session.toolsRoot }, scope.path)
             : {};
     return { root, cwd, files, substitutions, env: { ...env, ...python } };
+}
+
+/**
+Select the folder that a command of a check runs in.
+
+@param root the repository, or the copy of it that the tool runs in.
+@param planned the check and its scope.
+*/
+export function selectCommandFolder(root: string, planned: PlannedCheck): string {
+    const { check, scope } = planned;
+    const usesScopeFolder =
+        check.cwd === 'scope' || (check.runs === 'scope' && check.cwd !== 'root') || runsInPackageFolder(root, planned);
+    return usesScopeFolder ? join(root, scope.path) : root;
 }
 
 /**

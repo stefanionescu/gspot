@@ -20,6 +20,24 @@ import type {
 let options: OutputState = { isJson: false, notes: [] };
 
 /**
+Remove terminal escape sequences, control characters except tabs and line feeds, and format characters such as
+bidirectional overrides. Keep the color codes of the gspot palette. Repository text then cannot control terminal output.
+
+@param text the text to print.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Terminal writers share the same control-character removal.
+function stripControlCharacters(text: string): string {
+    return text
+        .split(TERMINAL_COLOR_SEQUENCE)
+        .map((segment) =>
+            TERMINAL_COLOR_SEQUENCE.test(segment)
+                ? segment
+                : stripVTControlCharacters(segment).replaceAll(TERMINAL_CONTROL_CHARACTERS, ''),
+        )
+        .join('');
+}
+
+/**
 Set the output mode for the process.
 
 @param next the JSON output choice.
@@ -151,24 +169,6 @@ export async function runCancelableCommand<Json extends object>(
     } finally {
         for (const { signal, onSignal } of cancellations) process.removeListener(signal, onSignal);
     }
-}
-
-/**
-Remove terminal escape sequences, control characters except tabs and line feeds, and format characters such as
-bidirectional overrides. Keep the color codes of the gspot palette. Repository text then cannot control terminal output.
-
-@param text the text to print.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Terminal writers share the same control-character removal.
-function stripControlCharacters(text: string): string {
-    return text
-        .split(TERMINAL_COLOR_SEQUENCE)
-        .map((segment) =>
-            TERMINAL_COLOR_SEQUENCE.test(segment)
-                ? segment
-                : stripVTControlCharacters(segment).replaceAll(TERMINAL_CONTROL_CHARACTERS, ''),
-        )
-        .join('');
 }
 
 /**

@@ -80,6 +80,20 @@ async function planLockfiles(
     ];
 }
 
+async function findUvPath(install: ToolInstall, miseBinPaths: string[]): Promise<string | undefined> {
+    const { session, misePath } = install;
+    if (misePath === undefined && which.sync(UV_TOOL, { nothrow: true }) === null) return undefined;
+    const search = { folders: [], miseBinPaths, timeoutSeconds: session.settings.tool_timeout_seconds };
+    const { paths } = await listExecutablePaths(session.toolsRoot, UV_TOOL, search);
+    return paths[0] ?? UV_TOOL;
+}
+
+async function buildNpmInstall(install: ToolInstall): Promise<NpmToolInstall | undefined> {
+    const { session, packageManager } = install;
+    if (packageManager === undefined) return undefined;
+    return { ...install, packageManager, registryEnvironment: await readRegistryEnvironment(session.root) };
+}
+
 /**
 List the state of each tool project lockfile: whether it exists and names every pin at its version. It resolves and
 writes nothing, and it reads no package manager settings.
@@ -100,20 +114,6 @@ export function listStaleLockfiles(
         lockfiles.push(findStaleNpmLockfile(files, toolPackageManager, session));
     if (projects.has(GSPOT_PATHS.pythonProject)) lockfiles.push(findStalePythonLockfile(files, toolConfigurations));
     return lockfiles.filter((lockfile): lockfile is StaleLockfile => lockfile !== undefined);
-}
-
-async function findUvPath(install: ToolInstall, miseBinPaths: string[]): Promise<string | undefined> {
-    const { session, misePath } = install;
-    if (misePath === undefined && which.sync(UV_TOOL, { nothrow: true }) === null) return undefined;
-    const search = { folders: [], miseBinPaths, timeoutSeconds: session.settings.tool_timeout_seconds };
-    const { paths } = await listExecutablePaths(session.toolsRoot, UV_TOOL, search);
-    return paths[0] ?? UV_TOOL;
-}
-
-async function buildNpmInstall(install: ToolInstall): Promise<NpmToolInstall | undefined> {
-    const { session, packageManager } = install;
-    if (packageManager === undefined) return undefined;
-    return { ...install, packageManager, registryEnvironment: await readRegistryEnvironment(session.root) };
 }
 
 /**

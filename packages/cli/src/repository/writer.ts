@@ -89,6 +89,12 @@ function writeBatch(writer: Files, plans: WritePlan[]): void {
     }
 }
 
+function isTemporaryPath(path: string): boolean {
+    if (TEMPORARY_FILE_NAME.test(basename(path))) return true;
+    const [folder, name] = path.split('/');
+    return folder === GSPOT_FOLDER && name !== undefined && VALE_TEMPORARY_NAME.test(name);
+}
+
 /**
 Merge the requested keys and leave every other value in place.
 
@@ -119,12 +125,6 @@ Check that each key holds its value, read with the parser that the write plans u
 export function hasManagedKeys(output: ManagedKeys, onDisk: FileContents): boolean {
     const document = openManagedKeysFile(output.path, onDisk, output.keys);
     return output.keys.every((field) => isDeepStrictEqual(document.getValue(field.key), normalizeTables(field.value)));
-}
-
-function isTemporaryPath(path: string): boolean {
-    if (TEMPORARY_FILE_NAME.test(basename(path))) return true;
-    const [folder, name] = path.split('/');
-    return folder === GSPOT_FOLDER && name !== undefined && VALE_TEMPORARY_NAME.test(name);
 }
 
 /**

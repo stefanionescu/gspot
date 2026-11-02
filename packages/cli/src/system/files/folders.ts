@@ -24,6 +24,22 @@ function isStaleTemporaryPath(path: string, pid: string | undefined): boolean {
     return Date.now() - stat.mtimeMs > TEMPORARY_STALE_MILLISECONDS;
 }
 
+function hasSymlinkPrefix(folder: string, pattern: string): boolean {
+    const { base } = picomatch.scan(pattern);
+    const segments = base.split('/').filter((segment) => segment !== '' && segment !== '.');
+    return segments.some(
+        (_, index) =>
+            lstatSync(join(folder, ...segments.slice(0, index + 1)), { throwIfNoEntry: false })?.isSymbolicLink() ===
+            true,
+    );
+}
+
+function assertInsideFolder(pattern: string): void {
+    const bare = pattern.startsWith(GLOB_EXCLUDE) ? pattern.slice(1) : pattern;
+    const climbs = bare.startsWith('/') || DRIVE_LETTER.test(bare) || PARENT_SEGMENT.test(bare);
+    if (climbs) throw new GspotError('filesystem', `A path pattern cannot leave its folder: ${pattern}`);
+}
+
 /**
 Remove interrupted temporary writes and installs. Keep live owners and recent files without an owner.
 
@@ -47,22 +63,6 @@ export function deleteStaleTemporaryPaths(files: Files, folder: string, pattern:
             printWarning(`Could not remove temporary path ${path}: ${String(error)}`);
         }
     }
-}
-
-function hasSymlinkPrefix(folder: string, pattern: string): boolean {
-    const { base } = picomatch.scan(pattern);
-    const segments = base.split('/').filter((segment) => segment !== '' && segment !== '.');
-    return segments.some(
-        (_, index) =>
-            lstatSync(join(folder, ...segments.slice(0, index + 1)), { throwIfNoEntry: false })?.isSymbolicLink() ===
-            true,
-    );
-}
-
-function assertInsideFolder(pattern: string): void {
-    const bare = pattern.startsWith(GLOB_EXCLUDE) ? pattern.slice(1) : pattern;
-    const climbs = bare.startsWith('/') || DRIVE_LETTER.test(bare) || PARENT_SEGMENT.test(bare);
-    if (climbs) throw new GspotError('filesystem', `A path pattern cannot leave its folder: ${pattern}`);
 }
 
 /**

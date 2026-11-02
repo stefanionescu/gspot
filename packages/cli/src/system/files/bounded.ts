@@ -49,6 +49,19 @@ function readRegularFile(absolutePath: string, stat: Stats, path: string): FileC
     return { bytes, mode: normalizeFileMode({ mode: stat.mode & MODE_BITS }) };
 }
 
+function writeStagedFile(path: string, contents: FileContents): void {
+    const file = openSync(path, 'wx', PRIVATE_FILE);
+    try {
+        writeFileSync(file, contents.bytes);
+        fchmodSync(file, contents.mode);
+    } catch (error) {
+        closeSync(file);
+        unlinkSync(path);
+        throw error;
+    }
+    closeSync(file);
+}
+
 /**
 Build the absolute path of a file after a check that every parent names a real folder, not a link.
 
@@ -74,19 +87,6 @@ export function buildContainedPath(
             );
     }
     return join(bounds.root, ...segments);
-}
-
-function writeStagedFile(path: string, contents: FileContents): void {
-    const file = openSync(path, 'wx', PRIVATE_FILE);
-    try {
-        writeFileSync(file, contents.bytes);
-        fchmodSync(file, contents.mode);
-    } catch (error) {
-        closeSync(file);
-        unlinkSync(path);
-        throw error;
-    }
-    closeSync(file);
 }
 
 /**

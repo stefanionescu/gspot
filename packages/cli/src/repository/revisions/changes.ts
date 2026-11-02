@@ -27,6 +27,18 @@ import {
     GIT_CHANGED_COMMITS_ARGUMENTS,
 } from '#cli/config/repository/git.ts';
 
+async function explainInvalidBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<MergeBase> {
+    if (COMMIT_HASH_PATTERN.test(compared)) {
+        const presence = await runGit(root, [...GIT_HASH_EXISTS_ARGUMENTS, compared], { cancelSignal });
+        if (presence.code !== 0) return { note: `Checked every file: base ${compared} is not present in this clone.` };
+    }
+    const branches = await readGitLines(root, GIT_LOCAL_BRANCHES_ARGUMENTS, { cancelSignal });
+    throw new GspotError(
+        'arguments',
+        `${compared} is not a branch, tag, or commit in this repository. Local branches: ${branches.join(', ') || 'none'}.`,
+    );
+}
+
 /**
 List the symbolic `HEAD` of each remote.
 
@@ -62,18 +74,6 @@ export async function readDefaultRef(root: string, cancelSignal?: AbortSignal): 
     const heads = await listRemoteHeads(root, cancelSignal);
     const preferred = heads.find(([name]) => name === ORIGIN_HEAD);
     return preferred?.[1] ?? '';
-}
-
-async function explainInvalidBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<MergeBase> {
-    if (COMMIT_HASH_PATTERN.test(compared)) {
-        const presence = await runGit(root, [...GIT_HASH_EXISTS_ARGUMENTS, compared], { cancelSignal });
-        if (presence.code !== 0) return { note: `Checked every file: base ${compared} is not present in this clone.` };
-    }
-    const branches = await readGitLines(root, GIT_LOCAL_BRANCHES_ARGUMENTS, { cancelSignal });
-    throw new GspotError(
-        'arguments',
-        `${compared} is not a branch, tag, or commit in this repository. Local branches: ${branches.join(', ') || 'none'}.`,
-    );
 }
 
 /**

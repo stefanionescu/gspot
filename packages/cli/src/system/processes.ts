@@ -78,22 +78,6 @@ function buildSpawnResult(result: SpawnCompletion, started: number): SpawnResult
     };
 }
 
-/**
-Check a process without signaling it. A permission refusal still means that the process exists.
-
-@param pid the process that owns a copy.
-*/
-export function isProcessRunning(pid: number): boolean {
-    try {
-        process.kill(pid, 0);
-        return true;
-    } catch (error) {
-        if (hasErrorCode(error, 'ESRCH')) return false;
-        if (hasErrorCode(error, 'EPERM')) return true;
-        throw error;
-    }
-}
-
 async function finishProcess(
     child: RunningProcess,
     supervision: ProcessTreeControl,
@@ -186,6 +170,22 @@ function spawnProcess(command: readonly string[], options: CancelableSpawnOption
     });
     const supervision = trackProcessTree(child, options);
     return { child, supervision };
+}
+
+/**
+Check a process without signaling it. A permission refusal still means that the process exists.
+
+@param pid the process that owns a copy.
+*/
+export function isProcessRunning(pid: number): boolean {
+    try {
+        process.kill(pid, 0);
+        return true;
+    } catch (error) {
+        if (hasErrorCode(error, 'ESRCH')) return false;
+        if (hasErrorCode(error, 'EPERM')) return true;
+        throw error;
+    }
 }
 
 /**

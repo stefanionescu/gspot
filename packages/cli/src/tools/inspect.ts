@@ -160,6 +160,16 @@ function formatMissingProgram(tool: Tool, inspection: ToolInspection): string {
     return `${tool.name}${version} is not installed.`;
 }
 
+function buildMissingInspection(
+    search: ToolSearch,
+    tool: Tool,
+    fields: Pick<ToolInspection, 'help' | 'want'>,
+): ToolInspection {
+    const missing: ToolInspection = { name: tool.name, state: 'missing', ...fields };
+    if (search.miseFailure === undefined || findMisePin(tool) === undefined) return missing;
+    return { ...missing, note: search.miseFailure };
+}
+
 /**
 Explain why the required tool cannot run.
 
@@ -173,16 +183,6 @@ export function formatUnavailableNote(tool: Tool, inspection: ToolInspection): s
     if (inspection.state === 'outdated')
         return `${tool.name} ${inspection.found ?? '?'} is below ${inspection.minimumVersion ?? '?'}. ${help}`;
     return `${formatMissingProgram(tool, inspection)} ${help}`;
-}
-
-function buildMissingInspection(
-    search: ToolSearch,
-    tool: Tool,
-    fields: Pick<ToolInspection, 'help' | 'want'>,
-): ToolInspection {
-    const missing: ToolInspection = { name: tool.name, state: 'missing', ...fields };
-    if (search.miseFailure === undefined || findMisePin(tool) === undefined) return missing;
-    return { ...missing, note: search.miseFailure };
 }
 
 /**

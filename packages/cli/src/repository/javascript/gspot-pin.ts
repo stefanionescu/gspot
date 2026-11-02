@@ -36,6 +36,14 @@ function readCliSpecifier(root: string): string | undefined {
     return manifest?.devDependencies?.[name] ?? manifest?.dependencies?.[name];
 }
 
+function addPackagePin(text: string): string {
+    const indent = JSON_INDENT_PATTERN.exec(text)?.[0] ?? DEFAULT_JSON_INDENT;
+    const edits = modify(text, ['devDependencies', cliPackage.name], cliPackage.version, {
+        formattingOptions: { insertSpaces: !indent.startsWith('\t'), tabSize: indent.length },
+    });
+    return applyEdits(text, edits);
+}
+
 /**
 Read the gspot version that a repository pins where its hooks start gspot. A package.json dependency gives its locked
 version, and a repository without that dependency gives its mise tool.
@@ -63,14 +71,6 @@ export function assertGspotPin(root: string): void {
         'arguments',
         `This repository pins gspot ${pin}; this is gspot ${cliPackage.version}. Run ${install}.`,
     );
-}
-
-function addPackagePin(text: string): string {
-    const indent = JSON_INDENT_PATTERN.exec(text)?.[0] ?? DEFAULT_JSON_INDENT;
-    const edits = modify(text, ['devDependencies', cliPackage.name], cliPackage.version, {
-        formattingOptions: { insertSpaces: !indent.startsWith('\t'), tabSize: indent.length },
-    });
-    return applyEdits(text, edits);
 }
 
 /**

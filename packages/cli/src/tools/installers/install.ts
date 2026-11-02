@@ -72,6 +72,32 @@ async function repairTools(install: ToolInstall, tools: Tool[], miseBinPaths: st
 }
 
 /**
+Build what every install step reads from the session.
+
+@param session the repository and its settings.
+@param input the repository handle, generated files, and tools of the checks.
+*/
+async function buildToolInstall(
+    session: Session,
+    input: Pick<ToolInstall, 'writer' | 'generated' | 'checkTools'>,
+): Promise<ToolInstall> {
+    const configurations = session.toolConfigurations;
+    const steps: Array<readonly string[]> = [];
+    const tools = listDistinctTools(configurations);
+    const misePath = findProgram(MISE_TOOL);
+    return {
+        session,
+        packageManager: await readInstallPackageManager(session),
+        pythonSettings: readPythonSettings(session.root),
+        releaseAgeDays: getTable(getRootScope(session.scopes).settings, 'dependencies').min_release_age_days,
+        ...input,
+        tools,
+        misePath,
+        steps,
+    };
+}
+
+/**
 Install the tools in their tool projects, inspect each one, reinstall the ones that fail, and set the hooks of this
 clone.
 
@@ -103,32 +129,6 @@ export async function installTools(
         installed: installed.filter(Boolean),
         missing: missing.filter(Boolean),
         notes: notes.filter(Boolean),
-        steps,
-    };
-}
-
-/**
-Build what every install step reads from the session.
-
-@param session the repository and its settings.
-@param input the repository handle, generated files, and tools of the checks.
-*/
-async function buildToolInstall(
-    session: Session,
-    input: Pick<ToolInstall, 'writer' | 'generated' | 'checkTools'>,
-): Promise<ToolInstall> {
-    const configurations = session.toolConfigurations;
-    const steps: Array<readonly string[]> = [];
-    const tools = listDistinctTools(configurations);
-    const misePath = findProgram(MISE_TOOL);
-    return {
-        session,
-        packageManager: await readInstallPackageManager(session),
-        pythonSettings: readPythonSettings(session.root),
-        releaseAgeDays: getTable(getRootScope(session.scopes).settings, 'dependencies').min_release_age_days,
-        ...input,
-        tools,
-        misePath,
         steps,
     };
 }

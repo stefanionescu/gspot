@@ -28,6 +28,16 @@ function readFilePrefix(path: string, limit: number): Buffer {
     }
 }
 
+function decodeCachedText(source: string | RunCache, path: string): string {
+    const bytes = readBytes(source, path);
+    if (typeof source === 'string') return decodeUtf8File(path, bytes);
+    const held = source.texts.get(bytes);
+    if (held !== undefined) return held;
+    const text = decodeUtf8File(path, bytes);
+    source.texts.set(bytes, text);
+    return text;
+}
+
 /**
 Read file bytes inside a folder, and refuse a link outside it. A run cache keeps the bytes of the first read.
 
@@ -45,16 +55,6 @@ export function readBytes(source: string | RunCache, path: string, options?: { l
     const bytes = readFileSync(readContainedPath(source.root, path));
     source.sources.set(path, bytes);
     return bytes;
-}
-
-function decodeCachedText(source: string | RunCache, path: string): string {
-    const bytes = readBytes(source, path);
-    if (typeof source === 'string') return decodeUtf8File(path, bytes);
-    const held = source.texts.get(bytes);
-    if (held !== undefined) return held;
-    const text = decodeUtf8File(path, bytes);
-    source.texts.set(bytes, text);
-    return text;
 }
 
 /**

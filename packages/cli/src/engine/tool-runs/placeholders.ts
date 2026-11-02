@@ -27,21 +27,6 @@ import {
     SETTING_ONLY_PLACEHOLDER,
 } from '#cli/config/engine.ts';
 
-/**
-Find the repository-relative path of the config file for a scope.
-
-@param scopePath the folder, empty for the root.
-@param config the config file from the manifest.
-@param configs the generated paths by scope and file name, and the scopes whose file failed to build.
-@returns the file of the scope, or the root file when the scope has no file of its own.
-@throws the build failure of the file in this scope.
-*/
-export function getConfigTarget(scopePath: string, config: Config, configs: ConfigTargets): string {
-    const failure = configs.failures.get(scopePath)?.get(config.target);
-    if (failure !== undefined) throw failure;
-    return config.per_scope ? (configs.targets.get(scopePath)?.get(config.target) ?? config.target) : config.target;
-}
-
 function assertArgumentList(value: unknown, name: string): string[] {
     if (Array.isArray(value) && value.every((element) => typeof element === 'string')) return value;
     throw new GspotError('settings', `Command setting ${name} must contain only string arguments.`);
@@ -89,6 +74,53 @@ function expandArgument(
             ? [workspace, substitutions.scope]
             : [];
     return [replacePlaceholders(session, planned, argument, substitutions)];
+}
+
+function buildFormattedExtensions({ scope: { configurations } }: PlannedCheck): string {
+    const extensions = configurations.flatMap((configuration) =>
+        configuration.checks
+            .filter(({ id }) => FORMATTER_CHECKS.has(id))
+            .flatMap((check) => addPluginExtensions(check.files ?? configuration.files, configurations).extensions),
+    );
+    return String.raw`\.(${[...new Set(extensions)].map((extension) => extension.slice(1)).join('|')})$`;
+}
+
+function buildPlaceholderReaders(
+    session: CheckSession,
+    planned: PlannedCheck,
+    substitutions: Substitutions,
+): Record<string, (value: string) => string> {
+    return {
+        setting: (name) => getScalarSetting(planned.scope.settings, name),
+        config_file: (name) =>
+            join(substitutions.root, getConfigPath(session, planned, name))
+                .split('/')
+                .join(sep),
+        pointer: (name) => selectPointerPath(session, substitutions.scope, name).split('/').join(sep),
+        formatted_extensions: () => buildFormattedExtensions(planned),
+        scope: () => (substitutions.scope === '' ? '.' : substitutions.scope),
+        root: () => substitutions.root,
+        indent: () => {
+            const { indent_style: style, indent_width: width } = planned.scope.settings.tables.format;
+            return String(style === 'space' ? width : 0);
+        },
+        message_file: () => substitutions.messageFile ?? '',
+    };
+}
+
+/**
+Find the repository-relative path of the config file for a scope.
+
+@param scopePath the folder, empty for the root.
+@param config the config file from the manifest.
+@param configs the generated paths by scope and file name, and the scopes whose file failed to build.
+@returns the file of the scope, or the root file when the scope has no file of its own.
+@throws the build failure of the file in this scope.
+*/
+export function getConfigTarget(scopePath: string, config: Config, configs: ConfigTargets): string {
+    const failure = configs.failures.get(scopePath)?.get(config.target);
+    if (failure !== undefined) throw failure;
+    return config.per_scope ? (configs.targets.get(scopePath)?.get(config.target) ?? config.target) : config.target;
 }
 
 /**
@@ -193,38 +225,6 @@ export function getScalarSetting(scopeSettings: ScopeSettings, name: string): st
     if (Array.isArray(found))
         throw new GspotError('settings', `List setting ${name} must occupy a whole command argument.`);
     return typeof found === 'string' || typeof found === 'number' || typeof found === 'boolean' ? String(found) : '';
-}
-
-function buildFormattedExtensions({ scope: { configurations } }: PlannedCheck): string {
-    const extensions = configurations.flatMap((configuration) =>
-        configuration.checks
-            .filter(({ id }) => FORMATTER_CHECKS.has(id))
-            .flatMap((check) => addPluginExtensions(check.files ?? configuration.files, configurations).extensions),
-    );
-    return String.raw`\.(${[...new Set(extensions)].map((extension) => extension.slice(1)).join('|')})$`;
-}
-
-function buildPlaceholderReaders(
-    session: CheckSession,
-    planned: PlannedCheck,
-    substitutions: Substitutions,
-): Record<string, (value: string) => string> {
-    return {
-        setting: (name) => getScalarSetting(planned.scope.settings, name),
-        config_file: (name) =>
-            join(substitutions.root, getConfigPath(session, planned, name))
-                .split('/')
-                .join(sep),
-        pointer: (name) => selectPointerPath(session, substitutions.scope, name).split('/').join(sep),
-        formatted_extensions: () => buildFormattedExtensions(planned),
-        scope: () => (substitutions.scope === '' ? '.' : substitutions.scope),
-        root: () => substitutions.root,
-        indent: () => {
-            const { indent_style: style, indent_width: width } = planned.scope.settings.tables.format;
-            return String(style === 'space' ? width : 0);
-        },
-        message_file: () => substitutions.messageFile ?? '',
-    };
 }
 
 /**

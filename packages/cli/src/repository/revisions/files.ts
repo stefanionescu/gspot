@@ -17,6 +17,26 @@ import {
 } from '#cli/config/repository/git.ts';
 
 /**
+Collect the validated blobs.
+
+@param root the folder where Git runs.
+@param requested full blob object IDs.
+@param cancelSignal stops the command.
+*/
+async function readBlobs(root: string, requested: string[], cancelSignal?: AbortSignal): Promise<Buffer[]> {
+    const blobs = new Map<string, Buffer>();
+    await visitGitBlobs(
+        root,
+        requested,
+        async (stream) => {
+            for await (const [hash, bytes] of stream) blobs.set(hash, bytes);
+        },
+        cancelSignal,
+    );
+    return requested.map((hash) => getRequired(blobs, hash, 'blob'));
+}
+
+/**
 Read complete index or tree entries without Git path quoting. Reject unresolved conflicts.
 
 @param root the folder where Git runs.
@@ -77,26 +97,6 @@ export async function visitGitBlobs(
     );
     if (result.code !== 0)
         throw new GspotError('git', `Git could not read the objects of this revision: ${result.stderr.trim()}`);
-}
-
-/**
-Collect the validated blobs.
-
-@param root the folder where Git runs.
-@param requested full blob object IDs.
-@param cancelSignal stops the command.
-*/
-async function readBlobs(root: string, requested: string[], cancelSignal?: AbortSignal): Promise<Buffer[]> {
-    const blobs = new Map<string, Buffer>();
-    await visitGitBlobs(
-        root,
-        requested,
-        async (stream) => {
-            for await (const [hash, bytes] of stream) blobs.set(hash, bytes);
-        },
-        cancelSignal,
-    );
-    return requested.map((hash) => getRequired(blobs, hash, 'blob'));
 }
 
 /**

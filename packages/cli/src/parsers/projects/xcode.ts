@@ -196,6 +196,24 @@ function parsePbxproj(text: string, path: string): ParsedPbxproj {
     }
 }
 
+function listConfigurations(project: ParsedPbxproj, list: string | undefined): PbxElement[] {
+    const configurations = list === undefined ? [] : (getElement(project, list).buildConfigurations ?? []);
+    return configurations.map((configuration) => getElement(project, configuration));
+}
+
+function isStrictConfiguration(project: ParsedPbxproj, list: string | undefined): boolean {
+    const shared = listConfigurations(project, project.root.buildConfigurationList);
+    return listConfigurations(project, list).every((configuration) => {
+        if (configuration.baseConfigurationReference !== undefined) return true;
+        const inherited = shared.find((each) => each.name === configuration.name)?.buildSettings;
+        const settings = { ...inherited, ...configuration.buildSettings };
+        return (
+            settings.SWIFT_STRICT_CONCURRENCY === STRICT_CONCURRENCY ||
+            settings.SWIFT_VERSION?.startsWith(SWIFT_SIX_PREFIX) === true
+        );
+    });
+}
+
 /**
 Find the Swift sources and managed folders that belong to project targets.
 
@@ -234,24 +252,6 @@ export function parseProjectSources(text: string, path: string): ProjectSources 
     } catch (error) {
         throw buildProjectParseError(path, error);
     }
-}
-
-function listConfigurations(project: ParsedPbxproj, list: string | undefined): PbxElement[] {
-    const configurations = list === undefined ? [] : (getElement(project, list).buildConfigurations ?? []);
-    return configurations.map((configuration) => getElement(project, configuration));
-}
-
-function isStrictConfiguration(project: ParsedPbxproj, list: string | undefined): boolean {
-    const shared = listConfigurations(project, project.root.buildConfigurationList);
-    return listConfigurations(project, list).every((configuration) => {
-        if (configuration.baseConfigurationReference !== undefined) return true;
-        const inherited = shared.find((each) => each.name === configuration.name)?.buildSettings;
-        const settings = { ...inherited, ...configuration.buildSettings };
-        return (
-            settings.SWIFT_STRICT_CONCURRENCY === STRICT_CONCURRENCY ||
-            settings.SWIFT_VERSION?.startsWith(SWIFT_SIX_PREFIX) === true
-        );
-    });
 }
 
 /**

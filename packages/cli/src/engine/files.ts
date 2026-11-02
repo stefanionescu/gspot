@@ -21,18 +21,6 @@ import {
     isOutsideChildScopes,
 } from '#cli/repository/scopes.ts';
 
-/**
-Get the name that a config-file placeholder uses for a config file.
-
-@param file the path that the manifest names.
-@returns the file name without its folder and extensions.
-*/
-export function extractConfigName(file: string): string {
-    const name = posix.basename(file);
-    const dot = name.indexOf('.');
-    return dot === -1 ? name : name.slice(0, dot);
-}
-
 function listScopeFiles(planned: PlannedScope, scopePath: string, runs: Check['runs']): TrackedFile[] {
     const prefix = joinScope(scopePath, '');
     return planned.session.repository.files.filter(
@@ -150,6 +138,30 @@ function listToolFiles(planned: PlannedScope, scopeCheck: ScopeCheck, files: Tra
     return check.command === undefined ? readable : readable.filter((file) => !file.tags.includes('symlink'));
 }
 
+function addNarrowedLinks(
+    { narrowedPaths, session }: PlannedScope,
+    check: Check,
+    selection: Pick<PlannedCheck, 'files' | 'triggerPaths' | 'skip'>,
+): Pick<PlannedCheck, 'files' | 'triggerPaths' | 'skip' | 'narrowedLinks'> {
+    if (check.symlink_files !== true || narrowedPaths === undefined) return selection;
+    const narrowedLinks = session.repository.index
+        .filter(({ path, mode }) => mode === SYMLINK_MODE && narrowedPaths.has(path))
+        .map(({ path }) => path);
+    return { ...selection, triggerPaths: [...selection.triggerPaths, ...narrowedLinks], narrowedLinks };
+}
+
+/**
+Get the name that a config-file placeholder uses for a config file.
+
+@param file the path that the manifest names.
+@returns the file name without its folder and extensions.
+*/
+export function extractConfigName(file: string): string {
+    const name = posix.basename(file);
+    const dot = name.indexOf('.');
+    return dot === -1 ? name : name.slice(0, dot);
+}
+
 /**
 Check whether a file passes the size limit of its scope.
 
@@ -216,18 +228,6 @@ export function isRootOnlyCheck(configuration: Configuration | undefined, check:
             (config.check.includes(check.id) ||
                 command.some((argument) => argument.includes(`{config_file:${extractConfigName(config.file)}}`))),
     );
-}
-
-function addNarrowedLinks(
-    { narrowedPaths, session }: PlannedScope,
-    check: Check,
-    selection: Pick<PlannedCheck, 'files' | 'triggerPaths' | 'skip'>,
-): Pick<PlannedCheck, 'files' | 'triggerPaths' | 'skip' | 'narrowedLinks'> {
-    if (check.symlink_files !== true || narrowedPaths === undefined) return selection;
-    const narrowedLinks = session.repository.index
-        .filter(({ path, mode }) => mode === SYMLINK_MODE && narrowedPaths.has(path))
-        .map(({ path }) => path);
-    return { ...selection, triggerPaths: [...selection.triggerPaths, ...narrowedLinks], narrowedLinks };
 }
 
 /**

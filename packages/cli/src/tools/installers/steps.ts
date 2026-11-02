@@ -8,6 +8,22 @@ import { redactInstallOutput } from '#cli/tools/installers/credentials.ts';
 import { npmReleaseSchema, pypiReleaseSchema } from '#cli/schemas/tools.ts';
 import { NOT_FOUND_STATUS, MILLISECONDS_PER_DAY, PYTHON_DEFAULT_INDEX_ORIGIN } from '#cli/config/tools/installers.ts';
 
+async function readReleaseState(install: ToolInstall, release: ToolRelease): Promise<'absent' | 'held' | undefined> {
+    const response = await fetch(release.url, {
+        signal: AbortSignal.timeout(install.session.settings.tool_timeout_seconds * MILLISECONDS_PER_SECOND),
+    });
+    if (response.status === NOT_FOUND_STATUS) return 'absent';
+    if (!response.ok) return undefined;
+    const body: unknown = await response.json();
+    const published =
+        release.kind === 'npm'
+            ? npmReleaseSchema.parse(body).time[release.version]
+            : pypiReleaseSchema.parse(body).urls[0]?.upload_time_iso_8601;
+    if (published === undefined) return 'absent';
+    const oldest = Date.now() - install.releaseAgeDays * MILLISECONDS_PER_DAY;
+    return new Date(published).getTime() > oldest ? 'held' : undefined;
+}
+
 /**
 Record and run one install command with the shared cancellation and time limit.
 
@@ -64,22 +80,6 @@ export async function runRequiredInstallStep(
             `${name} failed (exit ${String(result.code)}):\n${redactInstallOutput(result, [])}`,
         );
     return result;
-}
-
-async function readReleaseState(install: ToolInstall, release: ToolRelease): Promise<'absent' | 'held' | undefined> {
-    const response = await fetch(release.url, {
-        signal: AbortSignal.timeout(install.session.settings.tool_timeout_seconds * MILLISECONDS_PER_SECOND),
-    });
-    if (response.status === NOT_FOUND_STATUS) return 'absent';
-    if (!response.ok) return undefined;
-    const body: unknown = await response.json();
-    const published =
-        release.kind === 'npm'
-            ? npmReleaseSchema.parse(body).time[release.version]
-            : pypiReleaseSchema.parse(body).urls[0]?.upload_time_iso_8601;
-    if (published === undefined) return 'absent';
-    const oldest = Date.now() - install.releaseAgeDays * MILLISECONDS_PER_DAY;
-    return new Date(published).getTime() > oldest ? 'held' : undefined;
 }
 
 /**

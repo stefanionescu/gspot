@@ -7,39 +7,6 @@ import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
 import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/matchers.ts';
 import type { TrackedFile, CoveredFilesOptions } from '#cli/types/repository.ts';
 
-/**
-Add the extensions that the selected Prettier and ESLint plugins read to a files table.
-
-@param table the file patterns.
-@param configurations the configurations whose tools can add extensions.
-*/
-export function addPluginExtensions(
-    table: Configuration['files'],
-    configurations: Configuration[],
-): Configuration['files'] {
-    if (!table.prettier_plugins && !table.eslint_plugins) return table;
-    const extensions = configurations
-        .flatMap((configuration) => configuration.tools)
-        .flatMap((tool) => [
-            ...(table.prettier_plugins ? (tool.prettier?.extensions ?? []) : []),
-            ...(table.eslint_plugins ? (tool.eslint?.extensions ?? []) : []),
-        ]);
-    return { ...table, extensions: [...table.extensions, ...extensions] };
-}
-/**
-Build one matcher for the extensions, filenames, tags, and paths of a files table.
-
-@param table the file patterns.
-*/
-export function buildFileMatcher(table: Configuration['files']): (file: Pick<TrackedFile, 'path' | 'tags'>) => boolean {
-    const filenames = buildFilenameMatcher(table.filenames);
-    const paths = buildPathMatcher(table.paths);
-    return (file) =>
-        table.extensions.includes(extractExtension(file.path)) ||
-        filenames(file.path) ||
-        table.tags.some((tag) => file.tags.includes(tag)) ||
-        paths(file.path);
-}
 function buildCoverageMatcher(
     table: Configuration['files'],
     { configurations, scopePath: scope, settings }: CoveredFilesOptions,
@@ -75,6 +42,41 @@ function buildCoverageMatcher(
         const scopeFile = { ...file, path: scope === '' ? file.path : file.path.slice(scope.length + 1) };
         return tests(file.path) || settingMatches(file.path) || matches.some((match) => match(scopeFile));
     };
+}
+
+/**
+Add the extensions that the selected Prettier and ESLint plugins read to a files table.
+
+@param table the file patterns.
+@param configurations the configurations whose tools can add extensions.
+*/
+export function addPluginExtensions(
+    table: Configuration['files'],
+    configurations: Configuration[],
+): Configuration['files'] {
+    if (!table.prettier_plugins && !table.eslint_plugins) return table;
+    const extensions = configurations
+        .flatMap((configuration) => configuration.tools)
+        .flatMap((tool) => [
+            ...(table.prettier_plugins ? (tool.prettier?.extensions ?? []) : []),
+            ...(table.eslint_plugins ? (tool.eslint?.extensions ?? []) : []),
+        ]);
+    return { ...table, extensions: [...table.extensions, ...extensions] };
+}
+
+/**
+Build one matcher for the extensions, filenames, tags, and paths of a files table.
+
+@param table the file patterns.
+*/
+export function buildFileMatcher(table: Configuration['files']): (file: Pick<TrackedFile, 'path' | 'tags'>) => boolean {
+    const filenames = buildFilenameMatcher(table.filenames);
+    const paths = buildPathMatcher(table.paths);
+    return (file) =>
+        table.extensions.includes(extractExtension(file.path)) ||
+        filenames(file.path) ||
+        table.tags.some((tag) => file.tags.includes(tag)) ||
+        paths(file.path);
 }
 
 /**

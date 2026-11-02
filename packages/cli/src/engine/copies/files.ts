@@ -45,6 +45,30 @@ function writeCopyFile(files: Files, copyRoot: string, file: CopyFile): void {
 }
 
 /**
+Selects the paths and installed dependency trees for a copy of the working tree.
+
+@param root the repository folder.
+@param paths the tracked files to copy.
+@param scopes the folders that hold installed dependencies.
+*/
+function selectCopyPaths(root: string, paths: string[], scopes: string[]): CopyPaths {
+    const projects = paths.flatMap((path) =>
+        DEPENDENCY_FILES.has(posix.basename(path)) && posix.basename(posix.dirname(path)) !== GSPOT_FOLDER
+            ? [posix.dirname(path)]
+            : [],
+    );
+    const dependencies = [
+        ...new Set([GSPOT_FOLDER, ...scopes, ...projects].map((project) => posix.join(project, NODE_MODULES))),
+    ].filter((path) => statSync(join(root, path), { throwIfNoEntry: false }) !== undefined);
+    return {
+        paths: [...new Set([...paths, ...COPY_ROOT_FILES])].filter(
+            (path) => statSync(join(root, path), { throwIfNoEntry: false }) !== undefined,
+        ),
+        dependencies,
+    };
+}
+
+/**
 Writes files and Git blobs into a copy.
 
 @param plan what to write, and where.
@@ -117,28 +141,4 @@ export async function createCopy(
         folder[Symbol.dispose]();
         throw error;
     }
-}
-
-/**
-Selects the paths and installed dependency trees for a copy of the working tree.
-
-@param root the repository folder.
-@param paths the tracked files to copy.
-@param scopes the folders that hold installed dependencies.
-*/
-function selectCopyPaths(root: string, paths: string[], scopes: string[]): CopyPaths {
-    const projects = paths.flatMap((path) =>
-        DEPENDENCY_FILES.has(posix.basename(path)) && posix.basename(posix.dirname(path)) !== GSPOT_FOLDER
-            ? [posix.dirname(path)]
-            : [],
-    );
-    const dependencies = [
-        ...new Set([GSPOT_FOLDER, ...scopes, ...projects].map((project) => posix.join(project, NODE_MODULES))),
-    ].filter((path) => statSync(join(root, path), { throwIfNoEntry: false }) !== undefined);
-    return {
-        paths: [...new Set([...paths, ...COPY_ROOT_FILES])].filter(
-            (path) => statSync(join(root, path), { throwIfNoEntry: false }) !== undefined,
-        ),
-        dependencies,
-    };
 }
