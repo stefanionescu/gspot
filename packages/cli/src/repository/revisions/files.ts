@@ -85,7 +85,7 @@ Collect the validated blobs.
 @param requested full blob object IDs.
 @param cancelSignal stops the command.
 */
-export async function readBlobs(root: string, requested: string[], cancelSignal?: AbortSignal): Promise<Buffer[]> {
+async function readBlobs(root: string, requested: string[], cancelSignal?: AbortSignal): Promise<Buffer[]> {
     const blobs = new Map<string, Buffer>();
     await visitGitBlobs(
         root,

@@ -9,8 +9,27 @@ async function buildSampleReport(): Promise<ScanReport> {
     await using sandbox = await createGitSandbox({ 'README.md': '# Example\n', 'src/a.js': 'export const a = 1;\n' });
     const planning = await planInit(sandbox.path, { cwd: sandbox.path });
     const { session } = planning;
-    return buildScanReport({ planning, session, report: SCAN_RUN_REPORT, toolBytes: 3 * 1024 * 1024 });
+    return buildScanReport({ planning, session, report: SCAN_RUN_REPORT, toolBytes: 3 * 1024 * 1024, ruleRows: [] });
 }
+
+test('scan prints the commands that would break and what init carries once, before the plan', async () => {
+    await using sandbox = await createGitSandbox({
+        '.prettierrc.json': '{"semi":false,"quoteProps":"consistent"}',
+        'package.json': '{"private":true,"scripts":{"lint":"eslint ."}}\n',
+        'src/a.js': 'export const a = 1;\n',
+    });
+    const planning = await planInit(sandbox.path, { cwd: sandbox.path });
+    const { session } = planning;
+    const report = buildScanReport({ planning, session, report: SCAN_RUN_REPORT, toolBytes: 0, ruleRows: [] });
+    const text = formatScanText(report);
+    expect(text).toContain('Commands that would break\n  package.json:1  eslint .  Replace this command');
+    expect(text).toContain(
+        'What gspot init would carry over and drop\n  .prettierrc.json  carried over: semi; dropped: quoteProps',
+    );
+    expect(text.match(/Replace this command/gu)).toHaveLength(1);
+    expect(text.indexOf('Commands that would break')).toBeLessThan(text.indexOf('What gspot init would do'));
+    expect(formatScanMarkdown(report)).toContain('## Commands that would break\n\n- package.json:1  eslint .');
+});
 
 test('scan lists real problems first, keeps three examples, and counts formatting apart', async () => {
     const report = await buildSampleReport();

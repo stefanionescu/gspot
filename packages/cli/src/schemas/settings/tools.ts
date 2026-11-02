@@ -10,6 +10,7 @@ import {
     stylelintRulesSchema,
 } from '#cli/schemas/settings/rules.ts';
 import {
+    RUFF_SELECTOR,
     TRIVY_SEVERITIES,
     KNIP_PACKAGE_NAME,
     SQLFLUFF_DIALECTS,
@@ -216,8 +217,22 @@ export const toolConfigurationSchemas = {
         .optional(),
 };
 
+const ruffSchema = z.strictObject({
+    rules: z
+        .string()
+        .regex(RUFF_SELECTOR, 'Use a Ruff rule code or prefix, such as ANN or E501.')
+        .array()
+        .default([] as [])
+        .meta({
+            configurations: ['python'],
+            description:
+                'Ruff rules or rule prefixes to run on top of the rules of the level, such as ANN. Accept a finding with `gspot ignore python/ruff --rule <rule> --reason "<why>"`.',
+        }),
+});
+
 export const toolsSchema = z.strictObject({
     eslint: eslintTableSchema.optional(),
+    ruff: ruffSchema.optional(),
     commitlint: commitlintSchema,
     markdownlint: markdownlintSchema.optional(),
     stylelint: z

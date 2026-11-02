@@ -177,3 +177,115 @@ export const TOML_BARE_KEY = /^[A-Za-z0-9_-]+$/u;
 export const TEMPORARY_FILE_NAME = /^\.gspot-(?:(?<pid>[1-9]\d{0,8})-)?[\da-f-]{36}\.tmp$/u;
 
 export const VALE_TEMPORARY_NAME = /^vale-(?:(?<pid>[1-9]\d{0,8})-)?[a-zA-Z0-9]{6}$/u;
+
+export const PRETTIER_ROOT_FILES = [
+    '.prettierrc',
+    '.prettierrc.json',
+    '.prettierrc.yml',
+    '.prettierrc.yaml',
+    '.prettierrc.toml',
+    '.prettierrc.js',
+    '.prettierrc.cjs',
+    '.prettierrc.mjs',
+    '.prettierrc.ts',
+    'prettier.config.js',
+    'prettier.config.cjs',
+    'prettier.config.mjs',
+    'prettier.config.ts',
+] as const;
+
+export const IGNORE_FILES = [
+    { file: '.prettierignore', tool: 'prettier', check: 'format/prettier' },
+    { file: '.eslintignore', tool: 'eslint', check: 'javascript/eslint' },
+] as const;
+
+export const RUFF_CHECK_ID = 'python/ruff';
+
+export const RUFF_CHECK_IDS = [RUFF_CHECK_ID, 'python/ruff-format'] as const;
+
+export const COMMITLINT_CHECK_ID = 'commits/commitlint';
+
+export const MARKDOWNLINT_CHECK_ID = 'markdown/markdownlint';
+
+export const COMMENT_PATTERN = /^#/u;
+
+export const LEADING_SLASH = /^\//u;
+
+export const COMMITLINT_CONFIG_PATH = /^(?:\.commitlintrc|commitlint\.config)/u;
+
+export const EMPTY_CARRY = { tools: {}, ignore: [], rows: [] } as const;
+
+export const IGNORE_REASON_START = 'Carried over from';
+
+export const REASON_PLACEHOLDER = '"<why>"';
+
+export const LIMIT_RULE = /max/u;
+
+export const FIRST_NUMBER = /\d+/u;
+
+export const PRINT_TIMEOUT_SECONDS = 60;
+
+export const CARRIED_PRETTIER_OPTIONS: ReadonlySet<string> = new Set([
+    'tabWidth',
+    'printWidth',
+    'singleQuote',
+    'useTabs',
+    'semi',
+    'trailingComma',
+    'bracketSpacing',
+    'arrowParens',
+    'proseWrap',
+    'overrides',
+]);
+
+export const MARKDOWNLINT_TARGET = `${GSPOT_PATHS.configurations}/language/markdown/markdownlint.jsonc`;
+
+export const MARKDOWNLINT_CONFIG_FILES = [
+    '.markdownlint.json',
+    '.markdownlint.jsonc',
+    '.markdownlint.yaml',
+    '.markdownlint.yml',
+    '.markdownlint-cli2.jsonc',
+    '.markdownlint-cli2.yaml',
+] as const;
+
+export const CARRY_HEADING = 'what init carries from the configs it replaces';
+
+export const CARRY_GROUPS = {
+    carried: 'carried over',
+    differing: 'other options, to set after init',
+    commandChecks: 'keep with a command check of your own',
+    dropped: 'dropped',
+} as const;
+
+export const CARRY_ROW_START = {
+    covered: 0,
+    carried: [],
+    differing: [],
+    reasons: [],
+    commandChecks: [],
+    dropped: [],
+} as const;
+
+export const RULE_PRINT_FLAG = '--print-config';
+
+export const NOT_COMPARED_MESSAGE = 'its rules, because a tool could not print them';
+
+export const SCAN_FIRST_MESSAGE = 'its rules; gspot scan compares them before init';
+
+export const PRINTED_RULE_TOOLS = [
+    {
+        tool: 'eslint',
+        check: 'javascript/eslint',
+        sample: /(?:^|\/)[^./][^/]*(?<!\.config)\.[cm]?[jt]sx?$/u,
+        hasSeverity: true,
+        gspotArguments: [],
+    },
+    {
+        tool: 'stylelint',
+        check: 'css/stylelint',
+        sample: /\.css$/u,
+        hasSeverity: false,
+        gspotArguments: ['--config', '.gspot/configurations/language/css/stylelint.json', '--config-basedir', '.gspot'],
+    },
+] as const;

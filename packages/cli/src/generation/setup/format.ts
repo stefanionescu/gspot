@@ -3,15 +3,16 @@ import { pathToFileURL } from 'node:url';
 import { getTool } from '#cli/tools/pins.ts';
 import { isTable } from '#cli/system/tables.ts';
 import { find } from '#cli/system/files/reads.ts';
-import type { Repository } from '#cli/types/repository.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { DIGITS_ONLY } from '#cli/config/configurations/naming.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
+import { PRETTIER_ROOT_FILES } from '#cli/config/repository/setup.ts';
 import type { TomlTable, ScopeConfigurations } from '#cli/types/settings.ts';
 import { LINE_BREAK, PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers.ts';
+import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository.ts';
 import { ruffOptionsSchema, ruffProjectSchema, prettierSettingsSchema } from '#cli/schemas/generation.ts';
 
 import type {
@@ -42,19 +43,6 @@ function convertQuotes(singleQuote: boolean | undefined): 'single' | 'double' | 
     return singleQuote ? 'single' : 'double';
 }
 
-function readRuffOptions(root: string): RuffOptions | undefined {
-    for (const file of RUFF_SETTINGS_FILES) {
-        const text = find(root, file);
-        if (text === undefined) continue;
-        const options =
-            file === PYPROJECT_TOML
-                ? parseTomlFile(file, text, ruffProjectSchema).tool?.ruff
-                : parseTomlFile(file, text, ruffOptionsSchema);
-        if (options !== undefined) return options;
-    }
-    return undefined;
-}
-
 function convertRuffFormat(options: RuffOptions): TomlTable {
     const fields = {
         indent_style: options.format?.['indent-style'],
@@ -83,7 +71,7 @@ function convertPrettierFormat(options: PrettierOptions): TomlTable {
 
 function buildFormatterOverrides(fields: TomlTable, repository: Repository): TomlTable[] {
     const tags = new Set(repository.files.filter((file) => file.kind === 'source').flatMap((file) => file.tags));
-    const ruff = readRuffOptions(repository.root);
+    const ruff = readRuffOptions(repository.root)?.options;
     return FORMATTER_DEFAULTS.filter(({ tag }) => tags.has(tag)).flatMap(({ tag, paths, format }) => {
         const carried = tag === PYTHON_TAG && ruff !== undefined ? convertRuffFormat(ruff) : {};
         const differing = Object.entries({ ...format, ...carried }).filter(([key, value]) => fields[key] !== value);
@@ -175,14 +163,60 @@ function readFormatOptions(
 }
 
 /**
-Load each JavaScript or TypeScript Prettier config, as Prettier does. This runs the code of the file.
+Read the first Ruff settings of the repository.
 
 @param root the repository root.
-@param paths the tracked files.
+@returns the file and its settings, or undefined without Ruff settings.
+*/
+export function readRuffOptions(root: string): { path: string; options: RuffOptions } | undefined {
+    for (const path of RUFF_SETTINGS_FILES) {
+        const text = find(root, path);
+        if (text === undefined) continue;
+        const options =
+            path === PYPROJECT_TOML
+                ? parseTomlFile(path, text, ruffProjectSchema).tool?.ruff
+                : parseTomlFile(path, text, ruffOptionsSchema);
+        if (options !== undefined) return { path, options };
+    }
+    return undefined;
+}
+
+/**
+Read the options of each Prettier config at the root.
+
+@param root the repository root.
+@param scripts the options of the JavaScript and TypeScript configs that loaded.
+@returns the file and its options, for each config that gspot can read.
+*/
+export function readPrettierOptions(
+    root: string,
+    scripts: PrettierScripts,
+): { path: string; options: PrettierOptions }[] {
+    return PRETTIER_ROOT_FILES.flatMap((path) => {
+        const text = find(root, path);
+        const options = text === undefined ? undefined : parsePrettierFile(path, text, scripts);
+        return options === undefined ? [] : [{ path, options }];
+    });
+}
+
+/**
+Load each JavaScript or TypeScript Prettier config at the root or at a scope, as Prettier does. This runs the code of
+the file.
+
+@param root the repository root.
+@param files the tracked files.
+@param scopes the scopes that init sets up.
 @returns the options of each config that loads, by path.
 */
-export async function readPrettierScripts(root: string, paths: string[]): Promise<PrettierScripts> {
-    const scripts = paths.filter((path) => PRETTIER_SCRIPT_NAME.test(posix.basename(path)));
+export async function readPrettierScripts(
+    root: string,
+    files: TrackedFile[],
+    scopes: ScopeFolder[],
+): Promise<PrettierScripts> {
+    const folders = new Set(['.', ...scopes.map(({ path }) => path)]);
+    const scripts = files
+        .map(({ path }) => path)
+        .filter((path) => PRETTIER_SCRIPT_NAME.test(posix.basename(path)) && folders.has(posix.dirname(path)));
     const results = await Promise.all(
         scripts.map(async (path): Promise<[string, PrettierOptions][]> => {
             try {

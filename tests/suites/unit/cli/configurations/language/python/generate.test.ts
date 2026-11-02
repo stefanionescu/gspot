@@ -48,6 +48,18 @@ test('ignores of one test path share one Ruff per-file-ignores list', async () =
     expect(ignored.lint['per-file-ignores']?.['../../../../**/test_*.py']).toStrictEqual(['S101', 'D102', 'D103']);
 });
 
+test('tools.ruff.rules adds selectors to the rules of the level', async () => {
+    const ruff = parse(
+        await buildGeneratedFile(
+            buildSandboxSettings(['python'], { tables: '[tools.ruff]\nrules = ["AIR"]\n' }),
+            getManifestTarget('python', 'ruff.toml'),
+            { 'example.py': 'value = 1\n' },
+        ),
+    ) as { lint: { select: string[] } };
+    expect(ruff.lint.select).toContain('AIR');
+    expect(ruff.lint.select).toContain('A');
+});
+
 test('Ruff accepts an assert in the Python test paths and no other file', async () => {
     const ruff = parse(
         await buildGeneratedFile(buildSandboxSettings(['python']), getManifestTarget('python', 'ruff.toml'), {

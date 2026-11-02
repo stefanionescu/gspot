@@ -2,7 +2,6 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { INCOMPLETE_STATUSES } from '#cli/config/engine.ts';
 import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
-import { formatInitPlan } from '#cli/generation/setup/plan.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
 import { listHookNames } from '#cli/tools/installers/hooks.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
@@ -10,17 +9,20 @@ import { LINE_BREAK, GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { findToolName, listDistinctTools } from '#cli/tools/pins.ts';
 import type { RunReport, CheckResult } from '#cli/types/engine/run.ts';
 import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
+import { formatInitPlan, listCarryLines } from '#cli/generation/setup/plan.ts';
 import type { ScanTime, ScanInput, ScanReport, ScanSection, ScanCategory } from '#cli/types/commands/reports.ts';
 
 import {
     SCAN_CATEGORIES,
     SCAN_NEXT_STEPS,
     SCAN_PLAN_TITLE,
+    SCAN_CARRY_TITLE,
     BYTES_PER_MEGABYTE,
     SCAN_BUILT_IN_TOOL,
     SCAN_CODE_CATEGORY,
     SCAN_FORMAT_CHECKS,
     SCAN_NOT_RUN_TITLE,
+    SCAN_COMMANDS_TITLE,
     SCAN_EXAMPLES_SHOWN,
     SCAN_FORMATTING_TITLE,
     SCAN_NEXT_STEPS_TITLE,
@@ -102,7 +104,13 @@ export function buildScanReport(input: ScanInput): ScanReport {
         filesToFormat: new Set(formatting.map(({ file }) => file)).size,
         notRun: listNotRun(report),
         cost: buildCost(input),
-        plan: planning.plan,
+        plan: {
+            ...planning.plan,
+            carry: [
+                ...planning.plan.carry.filter(({ path }) => input.ruleRows.every((row) => row.path !== path)),
+                ...input.ruleRows,
+            ],
+        },
         settingsText: planning.settingsText,
         nextSteps: listNextSteps(planning),
         checks: report.checks,
@@ -136,9 +144,29 @@ function listSections(report: ScanReport): ScanSection[] {
             title: `Cost: ${formatCount(cost.tools, 'tool')}, ${String(cost.megabytes)} MB in ${GSPOT_FOLDER}/`,
             rows: [...cost.perTool, ...cost.perHook].map(({ name, seconds }) => `${name}  ${seconds.toFixed(1)}s`),
         },
+        ...(plan.lintCommands.length === 0
+            ? []
+            : [
+                  {
+                      title: SCAN_COMMANDS_TITLE,
+                      rows: plan.lintCommands.map(
+                          ({ file, line, command, fix }) => `${file}:${String(line)}  ${command}  ${fix}`,
+                      ),
+                  },
+              ]),
+        ...(plan.carry.length === 0
+            ? []
+            : [
+                  {
+                      title: SCAN_CARRY_TITLE,
+                      rows: listCarryLines(plan.carry).map(({ path, note }) => `${path}  ${note}`),
+                  },
+              ]),
         {
             title: SCAN_PLAN_TITLE,
-            rows: formatInitPlan(plan, settingsText).trimEnd().split('\n'),
+            rows: formatInitPlan({ ...plan, lintCommands: [], carry: [] }, settingsText)
+                .trimEnd()
+                .split('\n'),
             preformatted: true,
         },
         { title: SCAN_NEXT_STEPS_TITLE, rows: nextSteps },

@@ -11,7 +11,8 @@ import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { listMisePins, listPackagePins } from '#cli/tools/pins.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
-import type { InitPlan, InitScan, InitFileRow, ConflictingConfigs } from '#cli/types/generation.ts';
+import { CARRY_GROUPS, CARRY_HEADING } from '#cli/config/repository/setup.ts';
+import type { InitPlan, InitScan, CarryRow, InitFileRow, ConflictingConfigs } from '#cli/types/generation.ts';
 
 import {
     COLUMN_GAP,
@@ -143,6 +144,25 @@ function buildGeneratedRows(generated: Generation, conflicts: ConflictingConfigs
 }
 
 /**
+Word the table of what init carries: one line per replaced config, and one per weakening that needs a reason.
+
+@param rows one row per replaced config.
+@returns the lines of the table.
+*/
+export function listCarryLines(rows: CarryRow[]): InitFileRow[] {
+    return rows.flatMap((row) => {
+        const groups = Object.entries(CARRY_GROUPS)
+            .filter(([key]) => row[key as keyof typeof CARRY_GROUPS].length > 0)
+            .map(([key, title]) => `${title}: ${row[key as keyof typeof CARRY_GROUPS].join(', ')}`);
+        const note = [...(row.covered > 0 ? [`covered: ${String(row.covered)}`] : []), ...groups].join('; ');
+        return [
+            ...(note === '' ? [] : [{ path: row.path, note }]),
+            ...row.reasons.map((line) => ({ path: row.path, note: `needs a reason: ${line}` })),
+        ];
+    });
+}
+
+/**
 Build the file changes that init reports before it writes them.
 
 @param scan the repository facts, answers, and configurations.
@@ -202,6 +222,7 @@ export function planInitFiles(
             note: LINT_FOLDER_MESSAGE,
         })),
         lintCommands: scan.lintCommands,
+        carry: scan.carry,
     };
 }
 
@@ -225,6 +246,7 @@ export function formatInitPlan(plan: InitPlan, settingsText: string): string {
         ...formatFileSection('keep', plan.keep),
         ...formatFileSection('change', plan.change),
         ...formatFileSection(LINT_FOLDERS_HEADING, plan.lintFolders),
+        ...formatFileSection(CARRY_HEADING, listCarryLines(plan.carry)),
         ...formatFileSection(
             LINT_COMMANDS_HEADING,
             plan.lintCommands.map(({ file, line, command, fix }) => ({

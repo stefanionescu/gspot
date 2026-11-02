@@ -136,7 +136,7 @@ export function buildRuffFile(planned: PlannedConfig): string {
         lint: {
             preview: true,
             'explicit-preview-rules': true,
-            select: ruffRules,
+            select: [...ruffRules, ...getTable(planned.scope.settings, 'tools.ruff').rules],
             ignore: listOffRules(planned),
             isort: RUFF_ISORT,
             'flake8-tidy-imports': RUFF_TIDY_IMPORTS,

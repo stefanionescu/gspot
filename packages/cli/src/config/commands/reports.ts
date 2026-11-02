@@ -217,6 +217,10 @@ export const SCAN_NOT_RUN_TITLE = 'Could not run';
 
 export const SCAN_PLAN_TITLE = 'What gspot init would do';
 
+export const SCAN_COMMANDS_TITLE = 'Commands that would break';
+
+export const SCAN_CARRY_TITLE = 'What gspot init would carry over and drop';
+
 export const SCAN_NEXT_STEPS_TITLE = 'Next steps';
 
 export const SCAN_NEXT_STEPS = ['init', 'install', 'baseline'] as const;

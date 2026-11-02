@@ -16,6 +16,7 @@ import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
 import { planInit, writeInitFiles } from '#cli/generation/setup/planner.ts';
 import type { ScanFlags, ScanReport } from '#cli/types/commands/reports.ts';
+import { readUserRules, compareInstalledRules } from '#cli/commands/scan/rules.ts';
 import { formatScanText, buildScanReport, formatScanMarkdown } from '#cli/commands/scan/report.ts';
 
 import {
@@ -35,6 +36,7 @@ async function runScanCommand(
     // With no commit behind the index, Git counts every tracked file as staged, so the secret scan reads every file.
     await readGitText(copy.root, GIT_UNBORN_HEAD_ARGUMENTS, { cancelSignal });
     const planning = await planInit(copy.root, { cwd: copy.root });
+    const userRules = await readUserRules(planning);
     await writeInitFiles(copy.root, planning);
     const session = await openSession(copy.root, { cancelSignal });
     await installTools(session, {
@@ -44,7 +46,8 @@ async function runScanCommand(
     });
     const { report } = await runEveryCheck(session);
     const toolBytes = measureFolder(join(copy.root, GSPOT_FOLDER));
-    const scan = buildScanReport({ planning, session, report, toolBytes });
+    const ruleRows = await compareInstalledRules(copy.root, userRules);
+    const scan = buildScanReport({ planning, session, report, toolBytes, ruleRows });
     return { text: flags.markdown === true ? formatScanMarkdown(scan) : formatScanText(scan), json: scan, exitCode: 0 };
 }
 

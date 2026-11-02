@@ -351,8 +351,7 @@ export const UNREAD_SUBMODULE_MESSAGE = 'submodule; init does not read it';
 
 export const LINT_FOLDER_MESSAGE = 'a folder of lint scripts; check remaining references before deleting it';
 
-export const DELETED_RULES_NOTE =
-    '(your own lint rules in them do not carry over; read them with git show HEAD:<path>)';
+export const DELETED_RULES_NOTE = '(read them with git show HEAD:<path>; the table below names what init carries)';
 
 export const LINT_FOLDERS_HEADING = 'lint folders; delete when nothing calls them';
 

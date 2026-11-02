@@ -54,6 +54,28 @@ test('scan reports its run and the plan of init, and leaves the repository as it
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
+test('scan runs the commit checks of the setup, and lists each command that would break and what init carries', async () => {
+    await using sandbox = await createGitSandbox({
+        '.prettierrc.json': '{"semi":false,"quoteProps":"consistent"}',
+        '.prettierignore': 'src/made/\n',
+        'package.json': '{"name":"example","private":true,"type":"module","scripts":{"lint":"eslint ."}}\n',
+        'src/a.js': 'export const value = 1\n',
+        'src/made/b.js': 'export const value = 2\n',
+    });
+    commitAll(sandbox.path);
+    const report = await runScan(sandbox.path);
+    const results = report.checks.filter(({ check }) => check.startsWith('gspot/'));
+    expect(results.find(({ check }) => check === 'gspot/detected-configurations')?.status).toBe('passed');
+    expect(
+        results.find(({ check }) => check === 'gspot/conflicting-configs')?.findings.map(({ rule }) => rule),
+    ).toStrictEqual(['lint-command']);
+    expect(report.plan.lintCommands).toMatchObject([{ file: 'package.json', command: 'eslint .', tool: 'eslint' }]);
+    expect(report.plan.carry).toMatchObject([
+        { path: '.prettierrc.json', carried: ['semi'], dropped: ['quoteProps'] },
+        { path: '.prettierignore', carried: ['src/made'] },
+    ]);
+});
+
 test('scan reads the staged files, so a file that Git does not track stays out of the report', async () => {
     await using sandbox = await createGitSandbox({ 'README.md': '# Example\n' });
     const { totals } = await runScan(sandbox.path);

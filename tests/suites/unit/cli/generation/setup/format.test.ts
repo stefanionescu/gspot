@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { parse } from '@decimalturn/toml-patch';
@@ -8,6 +9,7 @@ import { readSettings } from '#cli/settings/read.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { InitJson } from '#cli/types/commands/edits.ts';
 import type { FormatSettings } from '#cli/types/configurations/language.ts';
 
@@ -125,6 +127,17 @@ test.each([
     expect(formats[0]).toMatchObject({ print_width: 100, semicolons: false });
 });
 
+test('init runs no Prettier config outside the root and the scopes', async () => {
+    await using sandbox = await testdir({
+        'tests/samples/prettier.config.mjs':
+            "import { writeFileSync } from 'node:fs';\nwriteFileSync(new URL('ran', import.meta.url), '');\nexport default {};\n",
+        'source.js': 'export const count = 1;\n',
+    });
+    commitAll(sandbox.path);
+    await readInitFormatOptions(sandbox.path, ['init', '--configurations', 'format']);
+    expect(await isOnDisk(join(sandbox.path, 'tests/samples/ran'))).toBe(false);
+});
+
 test('init carries the bracket, arrow, and prose options of Prettier', async () => {
     await using sandbox = await testdir({
         '.prettierrc.json': '{"bracketSpacing":false,"arrowParens":"avoid","proseWrap":"always"}',
@@ -143,7 +156,7 @@ test('init carries the Ruff line length, indent, and quotes into the Python over
     });
     commitAll(sandbox.path);
     const formats = await readInitFormatOptions(sandbox.path, ['init', '--configurations', 'format']);
-    expect(formats[0]?.['override']).toStrictEqual([
+    expect(formats[0]).toHaveProperty('override', [
         {
             paths: ['**/*.py'],
             indent_style: 'tab',

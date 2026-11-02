@@ -251,6 +251,8 @@ export const DOCSTRING_CONVENTIONS = ['google', 'numpy', 'pep257'] as const;
 
 export const RULE_CONDITIONS = ['always', 'never'] as const;
 
+export const RUFF_SELECTOR = /^[A-Z]+\d*$/u;
+
 export const IMPORT_EXTENSION_STYLES = ['js', 'ts', 'extensionless'] as const;
 
 export const TRIVY_SEVERITIES = ['UNKNOWN', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const;

@@ -57,7 +57,7 @@ test.each([
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, 'gspot.toml'), head);
     const { rules: found } = await runWeakenings(sandbox.path);
-    expect(found).toStrictEqual(rules);
+    expect(found).toStrictEqual([...rules]);
 });
 
 test.each([

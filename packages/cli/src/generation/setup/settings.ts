@@ -40,6 +40,7 @@ function buildSettingsTable(
         ...(draft.level !== undefined && { level: draft.level }),
         configurations: draft.configurations,
         ...tables.get(''),
+        ...draft.carried,
         ...(scope.length > 0 && { scope }),
     });
 }

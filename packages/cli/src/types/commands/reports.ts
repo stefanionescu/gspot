@@ -1,7 +1,7 @@
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
-import type { InitPlan, InitPlanning } from '#cli/types/generation.ts';
 import type { StageFilter, CheckDescription } from '#cli/types/engine/plan.ts';
 import type { Session, HookStatus, ToolInspection } from '#cli/types/tools.ts';
+import type { CarryRow, InitPlan, InitPlanning } from '#cli/types/generation.ts';
 import type { Tool, Check, Setting, Configuration } from '#cli/types/manifests.ts';
 import type { RunReport, PushInput, CheckProgress } from '#cli/types/engine/run.ts';
 import type { InheritedSetting, RemovedConfiguration } from '#cli/types/settings.ts';
@@ -251,7 +251,13 @@ export type ScanReport = {
     checks: RunReport['checks'];
 };
 
-export type ScanInput = { planning: InitPlanning; session: Session; report: RunReport; toolBytes: number };
+export type ScanInput = {
+    planning: InitPlanning;
+    session: Session;
+    report: RunReport;
+    toolBytes: number;
+    ruleRows: CarryRow[];
+};
 
 export type ScanSection = { title: string; rows: string[]; preformatted?: boolean };
 

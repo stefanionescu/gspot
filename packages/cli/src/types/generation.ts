@@ -1,12 +1,14 @@
 import type { z } from 'zod';
+import type { SessionOptions } from '#cli/types/engine/plan.ts';
 import type { Tool, Configuration } from '#cli/types/manifests.ts';
 import type { ConfigTargets } from '#cli/types/engine/tool-runs.ts';
 import type { TextRange, FileContents } from '#cli/types/system.ts';
 import type { OwnedConfig } from '#cli/types/configurations/language.ts';
+import type { PRINTED_RULE_TOOLS } from '#cli/config/repository/setup.ts';
 import type { FROZEN_INSTALLS } from '#cli/config/repository/javascript.ts';
-import type { Session, Generation, GeneratedFile } from '#cli/types/tools.ts';
 import type { SourcedConfig, IgnoreSection } from '#cli/types/configurations/general.ts';
 import type { ruffOptionsSchema, prettierSettingsSchema } from '#cli/schemas/generation.ts';
+import type { Session, Generation, GeneratedFile, ExecutableSearch } from '#cli/types/tools.ts';
 import type { Level, Scope, Settings, TomlTable, AvailableSettings } from '#cli/types/settings.ts';
 
 import type {
@@ -17,6 +19,7 @@ import type {
     TrackedFile,
     RepositorySetup,
     PackageManagerPin,
+    ConflictingConfig,
     InitConfigurations,
     ConfigurationOrigin,
     ConfigurationEvidence,
@@ -108,6 +111,7 @@ export type InitScan = {
     conflicts: ConflictingConfigs;
     pinPath?: string | undefined;
     lintCommands: LintCommand[];
+    carry: CarryRow[];
 };
 
 export type InitPlan = {
@@ -126,6 +130,88 @@ export type InitPlan = {
     change: InitFileRow[];
     lintFolders: InitFileRow[];
     lintCommands: LintCommand[];
+    carry: CarryRow[];
+};
+
+export type CarryRow = {
+    path: string;
+    tool: string;
+    covered: number;
+    carried: readonly string[];
+    differing: readonly string[];
+    reasons: readonly string[];
+    commandChecks: readonly string[];
+    dropped: readonly string[];
+};
+
+export type RuleRead = {
+    definition: (typeof PRINTED_RULE_TOOLS)[number];
+    path: string;
+    sample: string;
+    user: RuleTable | undefined;
+};
+
+export type Carry = { settings: TomlTable; rows: CarryRow[] };
+
+export type CarrySection = { tools: TomlTable; ignore: readonly TomlTable[]; rows: readonly CarryRow[] };
+
+export type ToolCarryInput = {
+    setting: string;
+    tool: string;
+    path: string;
+    compared: ComparedRules;
+    options: Map<string, unknown>;
+};
+
+export type CarryInput = {
+    repository: Repository;
+    conflictingConfigs: ConflictingConfig[];
+    session: Session;
+    configurations: Configuration[];
+    tools: ReadonlySet<string>;
+    level: Level;
+    prettierScripts: PrettierScripts;
+    templateIgnore: readonly TomlTable[];
+};
+
+export type SettingsPlan = {
+    root: string;
+    draft: SettingsDraft;
+    repository: Repository;
+    configurationsByName: ReadonlyMap<string, Configuration>;
+    conflictingConfigs: ConflictingConfig[];
+    sessionOptions: Pick<SessionOptions, 'cache' | 'listing'>;
+};
+
+export type PlannedSettings = { carry: Carry; settingsText: string; settings: Settings; planned: Session };
+
+export type RuleState = { on: boolean; options: unknown[] };
+
+export type RuleTable = Map<string, RuleState>;
+
+export type RuleComparison = {
+    check: string;
+    user: RuleTable;
+    lookup: (rule: string) => RuleState | undefined;
+};
+
+export type ComparedRules = {
+    covered: number;
+    options: Map<string, unknown[]>;
+    reasons: string[];
+    added: string[];
+};
+
+export type RuffRuleInput = { path: string; options: RuffOptions; shipped: string[] };
+
+export type RuffRules = { rules: string[]; row: CarryRow };
+
+export type PrintedRules = {
+    root: string;
+    tool: string;
+    search: ExecutableSearch;
+    commandArguments: string[];
+    hasSeverity: boolean;
 };
 
 export type ConflictSearch = { tools: Set<string>; managedKeys: ManagedKeys[]; prettierScripts: PrettierScripts };
@@ -144,6 +230,7 @@ export type SettingsDraft = {
     configurations: string[];
     scopes: ScopeFolder[];
     prettierScripts: PrettierScripts;
+    carried?: TomlTable | undefined;
 };
 
 export type InitPlanning = {
