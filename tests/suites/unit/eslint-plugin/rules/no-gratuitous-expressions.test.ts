@@ -4,7 +4,6 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 buildRuleTester().run('no-gratuitous-expressions', plugin.rules['no-gratuitous-expressions'], {
     valid: [
         'function start(ready) { if (ready) { ready = check(); if (ready) run(); } }',
-        'function start(ready) { if (ready) run(ready && other); }',
         'function start(ready) { if (!ready) { run(); } else if (ready) { run(); } }',
         'function start(ready, other) { if (ready && (other && last)) { if (other) run(); } }',
         'function start(ready) { if (ready) { run(ready); } }',
@@ -12,6 +11,10 @@ buildRuleTester().run('no-gratuitous-expressions', plugin.rules['no-gratuitous-e
     ],
     invalid: [
         { code: 'if (true) run();', errors: [{ messageId: 'decided', data: { value: 'truthy' } }] },
+        {
+            code: 'function start(ready) { if (ready) run(ready && other); }',
+            errors: [{ messageId: 'decided', data: { value: 'truthy' } }],
+        },
 
         {
             code: 'function start(ready) { if (ready) { if (ready) run(); } }',

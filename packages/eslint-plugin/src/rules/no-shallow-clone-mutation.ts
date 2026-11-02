@@ -6,6 +6,7 @@ import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescr
 
 import {
     CLONE_ADVICE,
+    MUTATING_CALL,
     DEEP_CLONE_NAMES,
     SHALLOW_CLONE_NAMES,
     NESTED_MEMBER_DEPTH,
@@ -66,7 +67,8 @@ function readPriorIsolation(
 ): Isolation | undefined {
     const { parent } = child;
     const isBlock = parent?.type === AST_NODE_TYPES.BlockStatement || parent?.type === AST_NODE_TYPES.Program;
-    const statements: readonly TSESTree.Node[] = isBlock ? parent.body : [];
+    const cases = parent?.type === AST_NODE_TYPES.SwitchCase ? parent.consequent : [];
+    const statements: readonly TSESTree.Node[] = isBlock ? parent.body : cases;
     return statements
         .slice(
             0,
@@ -108,7 +110,7 @@ export const noShallowCloneMutation = createRule<[], 'shared'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a write, an update, or a `delete` of a nested property, two or more static members deep, of a variable whose only value comes from `clone` of lodash, lodash-es, or underscore. An earlier assignment in the same function that replaces the parent object with a fresh object or a deep clone does not count.',
+                'Reports a write, an update, a `delete`, or a call of a mutating method such as `push` on a nested property, two or more static members deep, of a variable whose only value comes from `clone` of lodash, lodash-es, or underscore. An earlier assignment in the same function that replaces the parent object with a fresh object or a deep clone does not count.',
             why: 'A shallow clone shares its nested objects with the original, so a change to a nested property changes the original value too.',
             fix: 'Copy with `structuredClone()` or `_.cloneDeep()` when the copy needs its own nested values, or replace the parent object before the write.',
             example: '`const copy = _.clone(settings); copy.theme.color = "red";` reports `shared`.',
@@ -120,15 +122,22 @@ export const noShallowCloneMutation = createRule<[], 'shared'>({
     },
     create(context) {
         const source = context.sourceCode;
+        const inspect = (mutation: TSESTree.Node, target: TSESTree.Node) => {
+            const advice = readCloneAdvice(target, source);
+            if (advice !== undefined && !hasIsolatedPrefix(target, mutation, source))
+                context.report({ node: mutation, messageId: 'shared', data: { advice } });
+        };
         return {
-            'AssignmentExpression, UpdateExpression, UnaryExpression[operator="delete"]'(
+            'AssignmentExpression, UpdateExpression, UnaryExpression[operator="delete"]': (
                 mutation: TSESTree.AssignmentExpression | TSESTree.UpdateExpression | TSESTree.UnaryExpression,
-            ) {
-                const target =
-                    mutation.type === AST_NODE_TYPES.AssignmentExpression ? mutation.left : mutation.argument;
-                const advice = readCloneAdvice(target, source);
-                if (advice !== undefined && !hasIsolatedPrefix(target, mutation, source))
-                    context.report({ node: mutation, messageId: 'shared', data: { advice } });
+            ) => {
+                inspect(
+                    mutation,
+                    mutation.type === AST_NODE_TYPES.AssignmentExpression ? mutation.left : mutation.argument,
+                );
+            },
+            [MUTATING_CALL]: (mutation: TSESTree.CallExpression) => {
+                inspect(mutation, mutation.callee);
             },
         };
     },

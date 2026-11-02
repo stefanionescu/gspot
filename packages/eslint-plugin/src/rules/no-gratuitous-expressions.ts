@@ -36,25 +36,23 @@ function readFunctionScope(scope: TSESLint.Scope.Scope | null): TSESLint.Scope.S
     return enclosing;
 }
 
-function isWithin(inner: TSESLint.Scope.Scope | null, outer: TSESLint.Scope.Scope): boolean {
-    for (let enclosing = inner; enclosing !== null; enclosing = enclosing.upper)
-        if (Object.is(enclosing, outer)) return true;
-    return false;
-}
-
 function isWrittenAround(variable: TSESLint.Scope.Variable, scope: TSESLint.Scope.Scope): boolean {
     const functionScope = readFunctionScope(scope);
     return variable.references.some(
         (reference) =>
             reference.isWrite() &&
-            (isWithin(reference.from, scope) || !Object.is(readFunctionScope(reference.from), functionScope)),
+            (reference.identifier.range[0] > scope.block.range[0] ||
+                !Object.is(readFunctionScope(reference.from), functionScope)),
     );
 }
 
-function listDecided(tested: readonly TestedName[], scope: TSESLint.Scope.Scope): DecidedVariable[] {
+function listDecided(
+    tested: readonly TestedName[],
+    scope: TSESLint.Scope.Scope,
+    source: TSESLint.SourceCode,
+): DecidedVariable[] {
     return tested.flatMap(({ identifier, value }) => {
-        const reference = scope.upper?.references.find((each) => Object.is(each.identifier, identifier));
-        const variable = reference?.resolved ?? null;
+        const variable = ASTUtils.findVariable(source.getScope(identifier), identifier);
         return variable === null || isWrittenAround(variable, scope) ? [] : [{ variable, value }];
     });
 }
@@ -104,7 +102,7 @@ export const noGratuitousExpressions = createRule<[], 'decided'>({
             ':statement'(node: TSESTree.Node) {
                 const { parent } = node;
                 if (parent?.type === AST_NODE_TYPES.IfStatement)
-                    decided.set(node, listDecided(listTested(node, parent), source.getScope(node)));
+                    decided.set(node, listDecided(listTested(node, parent), source.getScope(node), source));
             },
             ':statement:exit': (node: TSESTree.Node) => decided.delete(node),
             Identifier(node) {

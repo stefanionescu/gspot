@@ -9,6 +9,9 @@ function readOwnerName(node: TSESTree.Node): TSESTree.Node | null | undefined {
         case AST_NODE_TYPES.VariableDeclarator: {
             return node.id;
         }
+        case AST_NODE_TYPES.CallExpression: {
+            return readOwnerName(node.parent);
+        }
         default: {
             return undefined;
         }
@@ -16,15 +19,16 @@ function readOwnerName(node: TSESTree.Node): TSESTree.Node | null | undefined {
 }
 
 /**
-Check whether a function has a name that matches a pattern: its own name, or the name of the variable or member that
-holds it.
+Check whether a function has a name that matches a pattern: its own name, or the name of the variable that holds it,
+directly or through a call such as `memo`.
 
 @param node the function to read.
 @param pattern the pattern of component or hook names.
 */
 export function isNamedFunction(node: TSESTree.Node, pattern: RegExp): boolean {
     const owner = node.type === AST_NODE_TYPES.FunctionDeclaration ? node : node.parent;
-    const name = owner && readOwnerName(owner);
+    const ownName = node.type === AST_NODE_TYPES.FunctionExpression ? node.id : undefined;
+    const name = ownName ?? (owner && readOwnerName(owner));
     return name?.type === AST_NODE_TYPES.Identifier && pattern.test(name.name);
 }
 
