@@ -1,8 +1,8 @@
 import { createRule } from '../../rule.ts';
 import type { MemberCall } from '../../types/plugin.ts';
 import type { UiFrameworks } from '../../types/testing.ts';
-import { usesModule, readPackageFacts } from '../../libraries/packages.ts';
 import { listBodyNodes, isCypressChain } from '../../libraries/testing.ts';
+import { isModuleUsed, readPackageFacts } from '../../libraries/packages.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { getLiteralValue, getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
 
@@ -56,7 +56,7 @@ export const noForcedUiActions = createRule<[], 'force'>({
     create(context) {
         const frameworks = {
             hasCypress: readPackageFacts(context).dependencies.has('cypress'),
-            hasPlaywright: usesModule(context, ['@playwright/test']),
+            hasPlaywright: isModuleUsed(context, ['@playwright/test']),
         };
         if (!frameworks.hasCypress && !frameworks.hasPlaywright) return {};
         const source = context.sourceCode;

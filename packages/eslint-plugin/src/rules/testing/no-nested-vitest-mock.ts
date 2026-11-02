@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import { usesModule } from '../../libraries/packages.ts';
+import { isModuleUsed } from '../../libraries/packages.ts';
 import { getCalleeName } from '../../libraries/testing.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { VITEST_MOCK_RECEIVERS, VITEST_GLOBAL_ORIGINS, VITEST_IMPORT_ORIGINS } from '../../config/testing.ts';
@@ -24,7 +24,7 @@ export const noNestedVitestMock = createRule<[], 'scope'>({
         },
     },
     create(context) {
-        const origins = usesModule(context, ['vitest']) ? VITEST_GLOBAL_ORIGINS : VITEST_IMPORT_ORIGINS;
+        const origins = isModuleUsed(context, ['vitest']) ? VITEST_GLOBAL_ORIGINS : VITEST_IMPORT_ORIGINS;
         return {
             'CallExpression[optional=false][callee.type="MemberExpression"][callee.optional=false][callee.object.type="Identifier"][callee.property.name="mock"]'(
                 node: TSESTree.CallExpression & { callee: TSESTree.MemberExpression },

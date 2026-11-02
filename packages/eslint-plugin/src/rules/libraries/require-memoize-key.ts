@@ -45,11 +45,11 @@ export const requireMemoizeKey = createRule<[], 'keyFunction'>({
                 const parameters = (getMemoizedFunction(node, source)?.params ?? []).filter(
                     (parameter) => !(parameter.type === AST_NODE_TYPES.Identifier && parameter.name === 'this'),
                 );
-                const needsKey =
+                const isKeyRequired =
                     parameters.length > 1 || parameters.some(({ type }) => type === AST_NODE_TYPES.RestElement);
                 const callee =
                     node.callee.type === AST_NODE_TYPES.MemberExpression ? node.callee.property : node.callee;
-                if (needsKey) context.report({ node: callee, messageId: 'keyFunction' });
+                if (isKeyRequired) context.report({ node: callee, messageId: 'keyFunction' });
             },
         };
     },

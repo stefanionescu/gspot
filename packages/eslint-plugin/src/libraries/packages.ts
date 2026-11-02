@@ -113,7 +113,7 @@ Check whether the file imports one of the modules, or a package.json above it de
 @param modules the module names to find in imports.
 @param dependencies the package names to find in the manifests.
 */
-export function usesModule(
+export function isModuleUsed(
     context: FileContext,
     modules: readonly string[],
     dependencies: readonly string[] = modules,
@@ -209,7 +209,7 @@ form of a version range as Vue 3.
 
 @param context the rule context of the file.
 */
-export function usesVueThree(context: FileContext): boolean {
+export function isVueThreeUsed(context: FileContext): boolean {
     const range = readPackageFacts(context).dependencies.get('vue');
     if (range === undefined) return false;
     return allowsVersion(range, VUE_THREE) !== false;

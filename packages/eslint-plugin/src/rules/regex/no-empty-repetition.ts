@@ -2,10 +2,10 @@ import { createRule } from '../../rule.ts';
 import { buildRegexVisitors } from '../../language/regex.ts';
 import { type AST, visitRegExpAST } from '@eslint-community/regexpp';
 
-function matchesEmpty(node: AST.Node): boolean {
+function canMatchEmpty(node: AST.Node): boolean {
     switch (node.type) {
         case 'Alternative': {
-            return node.elements.every((element) => matchesEmpty(element));
+            return node.elements.every((element) => canMatchEmpty(element));
         }
         case 'Assertion': {
             return true;
@@ -13,7 +13,7 @@ function matchesEmpty(node: AST.Node): boolean {
         case 'CapturingGroup':
         case 'Group':
         case 'Pattern': {
-            return node.alternatives.some((alternative) => matchesEmpty(alternative));
+            return node.alternatives.some((alternative) => canMatchEmpty(alternative));
         }
         case 'Quantifier': {
             return node.min === 0;
@@ -46,7 +46,7 @@ export const noEmptyRepetition = createRule<[], 'empty'>({
         return buildRegexVisitors((node, regex) => {
             visitRegExpAST(regex, {
                 onQuantifierEnter: (quantifier) => {
-                    if (matchesEmpty(quantifier.element))
+                    if (canMatchEmpty(quantifier.element))
                         context.report({ node, messageId: 'empty', data: { part: quantifier.element.raw } });
                 },
             });

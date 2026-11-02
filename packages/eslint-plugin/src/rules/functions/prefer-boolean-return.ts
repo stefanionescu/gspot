@@ -51,8 +51,7 @@ export const preferBooleanReturn = createRule<[], 'return'>({
             IfStatement(node) {
                 if (node.parent.type === AST_NODE_TYPES.IfStatement || getBooleanReturn(node.consequent) === undefined)
                     return;
-                const returnsBoolean = hasBooleanAlternative(node);
-                if (returnsBoolean) context.report({ node, messageId: 'return' });
+                if (hasBooleanAlternative(node)) context.report({ node, messageId: 'return' });
             },
         };
     },

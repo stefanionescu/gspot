@@ -1,7 +1,7 @@
 import { createRule } from '../../rule.ts';
 import { getTypes } from '../../language/checker.ts';
 import type { TypeReader } from '../../types/plugin.ts';
-import { usesModule } from '../../libraries/packages.ts';
+import { isModuleUsed } from '../../libraries/packages.ts';
 import { listChildNodes } from '../../libraries/testing.ts';
 import type { AssertionSearch } from '../../types/assertions.ts';
 import { readAssertionKind, isChaiPropertyAssertion } from '../../libraries/assertions.ts';
@@ -25,7 +25,11 @@ function getTestCallback(node: TSESTree.CallExpression, source: TSESLint.SourceC
     return isTest && callback !== undefined && ASTUtils.isFunction(callback) ? callback : undefined;
 }
 
-function usesDone(callback: TSESTree.Node, source: TSESLint.SourceCode, doneUses: ReadonlySet<TSESTree.Node>): boolean {
+function isDoneUsed(
+    callback: TSESTree.Node,
+    source: TSESLint.SourceCode,
+    doneUses: ReadonlySet<TSESTree.Node>,
+): boolean {
     const [done] = source.getDeclaredVariables(callback);
     const isFirst = ASTUtils.isFunction(callback) && callback.params[0]?.type === AST_NODE_TYPES.Identifier;
     return isFirst && done?.references.some((reference) => doneUses.has(reference.identifier)) === true;
@@ -72,10 +76,10 @@ function hasAssertion(node: TSESTree.Node, search: AssertionSearch): boolean {
     const cached = search.visited.get(node);
     if (cached !== undefined) return cached;
     search.visited.set(node, false);
-    const found =
+    const isFound =
         isEvidence(node, search) || listChildNodes(node, search.source).some((child) => hasAssertion(child, search));
-    search.visited.set(node, found);
-    return found;
+    search.visited.set(node, isFound);
+    return isFound;
 }
 
 export const requireTestAssertions = createRule<[], 'missing'>({
@@ -98,15 +102,15 @@ export const requireTestAssertions = createRule<[], 'missing'>({
     create(context) {
         const source = context.sourceCode;
         const doneUses = new Set<TSESTree.Node>();
-        const hasTests = usesModule(context, TEST_FRAMEWORK_IMPORTS, TEST_FRAMEWORK_DEPENDENCIES);
+        const hasTests = isModuleUsed(context, TEST_FRAMEWORK_IMPORTS, TEST_FRAMEWORK_DEPENDENCIES);
         const search = { context, source, types: getTypes(context), visited: new Map<TSESTree.Node, boolean>() };
-        if (!hasTests || !usesModule(context, EVIDENCE_IMPORTS, EVIDENCE_DEPENDENCIES)) return {};
+        if (!hasTests || !isModuleUsed(context, EVIDENCE_IMPORTS, EVIDENCE_DEPENDENCIES)) return {};
         return {
             [DONE_CALLBACKS]: (node: TSESTree.Identifier) => doneUses.add(node),
             'CallExpression:exit'(node: TSESTree.CallExpression) {
                 const callback = getTestCallback(node, source);
                 const isChecked =
-                    callback === undefined || usesDone(callback, source, doneUses) || hasAssertion(callback, search);
+                    callback === undefined || isDoneUsed(callback, source, doneUses) || hasAssertion(callback, search);
                 if (!isChecked) context.report({ node: node.callee, messageId: 'missing' });
             },
         };

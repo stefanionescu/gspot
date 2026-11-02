@@ -59,14 +59,14 @@ export const requireErrorChecks = createRule<[], 'errorType' | 'ignoredError'>({
                     context.report({ node: node.callee.property, messageId: 'errorType' });
             },
             'CatchClause[param.type="Identifier"]'(node: TSESTree.CatchClause & { param: TSESTree.Identifier }) {
-                const callsDone = listBodyNodes(node.body, source).some(
+                const isDoneCalled = listBodyNodes(node.body, source).some(
                     (each) =>
                         each.type === AST_NODE_TYPES.CallExpression &&
                         ASTUtils.isIdentifier(each.callee) &&
                         each.callee.name === 'done',
                 );
                 const error = ASTUtils.findVariable(source.getScope(node.body), node.param);
-                if (callsDone && error?.references.length === 0 && isInsideTest(node, source))
+                if (isDoneCalled && error?.references.length === 0 && isInsideTest(node, source))
                     context.report({ node: node.param, messageId: 'ignoredError' });
             },
         };

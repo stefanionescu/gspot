@@ -25,7 +25,7 @@ function getCallback(call: TSESTree.CallExpression, types: TypeReader): TSESTree
     return isArrayFrom(callee) ? values[1] : undefined;
 }
 
-function returnsVoid(callback: TSESTree.CallExpressionArgument, types: TypeReader): boolean {
+function isVoidCallback(callback: TSESTree.CallExpressionArgument, types: TypeReader): boolean {
     const isBlockFunction = ASTUtils.isFunction(callback) && callback.body.type === AST_NODE_TYPES.BlockStatement;
     if (isBlockFunction || callback.type === AST_NODE_TYPES.SpreadElement) return false;
     const signatures = types.get(callback).getCallSignatures();
@@ -64,7 +64,7 @@ export const noVoidArrayCallback = createRule<[], 'void'>({
         return {
             CallExpression(call) {
                 const callback = getCallback(call, types);
-                if (callback === undefined || !returnsVoid(callback, types)) return;
+                if (callback === undefined || !isVoidCallback(callback, types)) return;
                 const method = source.getText(call.callee);
                 context.report({ loc: getCallbackLocation(callback, source), messageId: 'void', data: { method } });
             },

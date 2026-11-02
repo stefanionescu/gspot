@@ -1,7 +1,7 @@
 import { FUNCTION_NODES } from '../config/plugin.ts';
 import type { FileContext } from '../types/plugin.ts';
 import { findFunction } from '../language/functions.ts';
-import { usesModule, getRequiredModule } from './packages.ts';
+import { isModuleUsed, getRequiredModule } from './packages.ts';
 import type { TestCall, TableCall, TestCallee, TestOrigin } from '../types/testing.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
@@ -145,7 +145,7 @@ export function listBodyNodes(root: TSESTree.Node, source: TSESLint.SourceCode):
 function isTableTest(call: TestCall | undefined, context: FileContext): call is TestCall {
     const isRunning = call?.modifiers.slice(0, -1).every((modifier) => RUNNING_TEST_MODIFIERS.has(modifier)) === true;
     const isTable = isRunning && TABLE_TEST_NAMES.has(call.name);
-    return isTable && (TABLE_ORIGINS.has(call.module) || usesModule(context, TABLE_MODULES, TABLE_DEPENDENCIES));
+    return isTable && (TABLE_ORIGINS.has(call.module) || isModuleUsed(context, TABLE_MODULES, TABLE_DEPENDENCIES));
 }
 
 /**

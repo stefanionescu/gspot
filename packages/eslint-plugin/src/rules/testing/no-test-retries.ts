@@ -1,6 +1,6 @@
 import { createRule } from '../../rule.ts';
-import { usesModule } from '../../libraries/packages.ts';
 import { getTestCall } from '../../libraries/testing.ts';
+import { isModuleUsed } from '../../libraries/packages.ts';
 import { RETRY_MODULES, MARKED_TEST_MODIFIERS } from '../../config/testing.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
@@ -29,14 +29,14 @@ export const noTestRetries = createRule<[], 'retry'>({
         messages: { retry: 'Make your tests stable so that they pass on the first try, or remove the flaky ones.' },
     },
     create(context) {
-        const usesJest = usesModule(context, RETRY_MODULES, ['jest']);
+        const isJestUsed = isModuleUsed(context, RETRY_MODULES, ['jest']);
         const source = context.sourceCode;
         return {
             'CallExpression[callee.type="MemberExpression"][callee.property.name="retryTimes"]'(
                 node: TSESTree.CallExpression & { callee: TSESTree.MemberExpression },
             ) {
                 const origin = getJestOrigin(node.callee.object, source);
-                const isJest = origin === '@jest/globals' || (origin === 'global' && usesJest);
+                const isJest = origin === '@jest/globals' || (origin === 'global' && isJestUsed);
                 if (isJest) context.report({ node, messageId: 'retry' });
             },
             'CallExpression[callee.object.type="ThisExpression"][callee.property.name="retries"]'(

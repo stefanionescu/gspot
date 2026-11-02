@@ -1,6 +1,6 @@
 import { createRule } from '../../rule.ts';
-import { usesModule } from '../../libraries/packages.ts';
 import { getTestCall } from '../../libraries/testing.ts';
+import { isModuleUsed } from '../../libraries/packages.ts';
 import { ASTUtils, type TSESTree } from '@typescript-eslint/utils';
 import { TEST_FRAMEWORK_MODULES, RUNNING_TEST_MODIFIERS } from '../../config/testing.ts';
 
@@ -21,7 +21,7 @@ export const noEmptyTestTitles = createRule<[], 'empty'>({
         messages: { empty: 'Replace this empty or blank title with a name for the behavior under test.' },
     },
     create(context) {
-        if (!usesModule(context, [...TEST_FRAMEWORK_MODULES])) return {};
+        if (!isModuleUsed(context, [...TEST_FRAMEWORK_MODULES])) return {};
         return {
             'CallExpression[arguments.0.type=/^(Literal|TemplateLiteral)$/]'(node: TSESTree.CallExpression) {
                 const call = getTestCall(node, context.sourceCode);

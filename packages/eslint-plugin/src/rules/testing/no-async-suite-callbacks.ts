@@ -1,7 +1,7 @@
 import { createRule } from '../../rule.ts';
-import { usesModule } from '../../libraries/packages.ts';
 import type { FunctionNode } from '../../types/plugin.ts';
 import { findFunction } from '../../language/functions.ts';
+import { isModuleUsed } from '../../libraries/packages.ts';
 import { getTestCall, listBodyNodes } from '../../libraries/testing.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { ASYNC_SUITE_MODULES, ASYNC_SUITE_ORIGINS, ASYNC_SUITE_MODIFIERS } from '../../config/testing.ts';
@@ -25,7 +25,7 @@ function findFirstAwait(callback: FunctionNode, source: TSESLint.SourceCode): TS
     );
 }
 
-function registersAfter(callback: FunctionNode, wait: TSESTree.Node, source: TSESLint.SourceCode): boolean {
+function hasRegistrationAfter(callback: FunctionNode, wait: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     const offset = wait.type === AST_NODE_TYPES.ForOfStatement ? wait.range[0] : wait.range[1];
     const calls = listBodyNodes(callback.body, source).flatMap((node) =>
         node.type === AST_NODE_TYPES.ExpressionStatement &&
@@ -44,7 +44,7 @@ function isDroppingFunction(call: TSESTree.CallExpression, source: TSESLint.Sour
     const dropping = findFunction(call.callee, source);
     if (dropping?.async !== true) return false;
     const wait = findFirstAwait(dropping, source);
-    return wait !== undefined && registersAfter(dropping, wait, source);
+    return wait !== undefined && hasRegistrationAfter(dropping, wait, source);
 }
 
 function getDroppingAwait(wait: TSESTree.Node | undefined, source: TSESLint.SourceCode): TSESTree.Node | undefined {
@@ -95,7 +95,7 @@ export const noAsyncSuiteCallbacks = createRule<
         },
     },
     create(context) {
-        if (!usesModule(context, ASYNC_SUITE_MODULES)) return {};
+        if (!isModuleUsed(context, ASYNC_SUITE_MODULES)) return {};
         const source = context.sourceCode;
         const reportKeyword = (callback: FunctionNode): void => {
             const token = source.getFirstToken(callback);

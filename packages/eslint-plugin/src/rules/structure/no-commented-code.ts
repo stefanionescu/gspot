@@ -12,7 +12,7 @@ import {
     COMMENT_PARSER_OPTIONS,
 } from '../../config/structure.ts';
 
-function parsesAsCode(parser: TSESLint.Parser.LooseParserModule, text: string): boolean {
+function isParsedAsCode(parser: TSESLint.Parser.LooseParserModule, text: string): boolean {
     try {
         const program =
             'parseForESLint' in parser
@@ -39,9 +39,9 @@ function isCommentedCode(parser: TSESLint.Parser.LooseParserModule, text: string
     if (COMMENT_DIRECTIVES.some((pattern) => pattern.test(text)) || !COMMENT_CODE.test(text) || text === '}')
         return false;
     return (
-        parsesAsCode(parser, text) ||
-        parsesAsCode(parser, balanceBraces(text)) ||
-        (COMMENT_JSX_ATTRIBUTE.test(text) && parsesAsCode(parser, `(<Comment ${text} />)`)) ||
+        isParsedAsCode(parser, text) ||
+        isParsedAsCode(parser, balanceBraces(text)) ||
+        (COMMENT_JSX_ATTRIBUTE.test(text) && isParsedAsCode(parser, `(<Comment ${text} />)`)) ||
         COMMENT_CODE_PATTERNS.some((pattern) => pattern.test(text))
     );
 }

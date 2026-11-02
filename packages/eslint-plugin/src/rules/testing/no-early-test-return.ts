@@ -2,7 +2,7 @@ import { createRule } from '../../rule.ts';
 import { getTestCall } from '../../libraries/testing.ts';
 import type { FileContext } from '../../types/plugin.ts';
 import type { TestCall, EarlyReturnFramework } from '../../types/testing.ts';
-import { usesModule, listImportedModules } from '../../libraries/packages.ts';
+import { isModuleUsed, listImportedModules } from '../../libraries/packages.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -17,7 +17,7 @@ function selectFramework(context: FileContext): EarlyReturnFramework | undefined
     const imported = listImportedModules(context.sourceCode);
     const direct = EARLY_RETURN_IMPORTS.find(({ modules }) => modules.some((module) => imported.has(module)));
     if (direct !== undefined) return direct.framework;
-    return EARLY_RETURN_DEPENDENCIES.find(({ modules, dependencies }) => usesModule(context, modules, dependencies))
+    return EARLY_RETURN_DEPENDENCIES.find(({ modules, dependencies }) => isModuleUsed(context, modules, dependencies))
         ?.framework;
 }
 

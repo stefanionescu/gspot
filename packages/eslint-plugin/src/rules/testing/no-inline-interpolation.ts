@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import { usesModule } from '../../libraries/packages.ts';
+import { isModuleUsed } from '../../libraries/packages.ts';
 import { getCalleeName } from '../../libraries/testing.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
@@ -39,7 +39,7 @@ export const noInlineInterpolation = createRule<[], 'interpolation'>({
         messages: { interpolation: 'Remove this interpolation from the inline snapshot.' },
     },
     create(context) {
-        if (!usesModule(context, INLINE_EXPECT_MODULES, ['jest', 'vitest'])) return {};
+        if (!isModuleUsed(context, INLINE_EXPECT_MODULES, ['jest', 'vitest'])) return {};
         return {
             'CallExpression[callee.type="MemberExpression"][arguments.length>0]'(
                 node: TSESTree.CallExpression & { callee: TSESTree.MemberExpression },

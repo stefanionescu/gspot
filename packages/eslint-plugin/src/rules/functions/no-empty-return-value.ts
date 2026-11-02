@@ -5,7 +5,7 @@ import { getLocalFunction } from '../../language/functions.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { EMPTY_RETURN_TYPES, UNUSED_CALL_PARENTS } from '../../config/functions.ts';
 
-function usesCallValue(node: TSESTree.CallExpression | TSESTree.SequenceExpression): boolean {
+function isCallValueUsed(node: TSESTree.CallExpression | TSESTree.SequenceExpression): boolean {
     const { parent } = node;
     switch (parent.type) {
         case AST_NODE_TYPES.LogicalExpression: {
@@ -15,7 +15,7 @@ function usesCallValue(node: TSESTree.CallExpression | TSESTree.SequenceExpressi
             return parent.test === node;
         }
         case AST_NODE_TYPES.SequenceExpression: {
-            return parent.expressions.at(-1) === node && usesCallValue(parent);
+            return parent.expressions.at(-1) === node && isCallValueUsed(parent);
         }
         default: {
             return !UNUSED_CALL_PARENTS.has(parent.type);
@@ -23,7 +23,7 @@ function usesCallValue(node: TSESTree.CallExpression | TSESTree.SequenceExpressi
     }
 }
 
-function returnsValue(declaration: LocalFunction, returning: Set<TSESTree.Node>): boolean {
+function hasReturnValue(declaration: LocalFunction, returning: Set<TSESTree.Node>): boolean {
     if (declaration.type === AST_NODE_TYPES.TSDeclareFunction) {
         const annotation = declaration.returnType?.typeAnnotation.type;
         return annotation !== undefined && !EMPTY_RETURN_TYPES.has(annotation);
@@ -59,7 +59,7 @@ export const noEmptyReturnValue = createRule<[], 'return'>({
         const returning = new Set<TSESTree.Node>();
         return {
             CallExpression(node) {
-                if (node.callee.type !== AST_NODE_TYPES.Identifier || !usesCallValue(node)) return;
+                if (node.callee.type !== AST_NODE_TYPES.Identifier || !isCallValueUsed(node)) return;
                 const declaration = getLocalFunction(node.callee, context.sourceCode);
                 if (declaration !== undefined) calls.set(node, declaration);
             },
@@ -72,7 +72,7 @@ export const noEmptyReturnValue = createRule<[], 'return'>({
             },
             'Program:exit'() {
                 for (const [call, declaration] of calls) {
-                    if (returnsValue(declaration, returning)) continue;
+                    if (hasReturnValue(declaration, returning)) continue;
                     context.report({ node: call.callee, messageId: 'return' });
                 }
             },

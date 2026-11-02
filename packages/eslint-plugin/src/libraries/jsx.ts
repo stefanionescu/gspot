@@ -139,18 +139,18 @@ function listTableRows(
     return rows;
 }
 
-function fillColumns(row: readonly TableCell[], columns: Array<TableCell | undefined>): boolean {
+function fillColumns(row: readonly TableCell[], columns: Array<TableCell | undefined>): number {
     let next = 0;
     for (const [column, occupant] of columns.entries()) {
         if (occupant !== undefined || next >= row.length) continue;
         columns[column] = row[next];
         next += 1;
     }
-    return next > 0;
+    return next;
 }
 
 function placeRow(row: readonly TableCell[], columns: Array<TableCell | undefined>): PlacedRow {
-    const isUsed = fillColumns(row, columns);
+    const isUsed = fillColumns(row, columns) > 0;
     const cells = columns.filter((cell) => cell !== undefined);
     let isOpen = true;
     for (const [column, cell] of columns.entries()) {

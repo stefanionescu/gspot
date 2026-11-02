@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import { usesVueThree } from '../../libraries/packages.ts';
+import { isVueThreeUsed } from '../../libraries/packages.ts';
 import { getExpressionValue } from '../../language/expressions.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
@@ -20,7 +20,7 @@ export const noVueMixins = createRule<[], 'mixin'>({
         messages: { mixin: 'Replace this mixin with a Vue composable.' },
     },
     create(context) {
-        if (!usesVueThree(context)) return {};
+        if (!isVueThreeUsed(context)) return {};
         return {
             'ObjectExpression > Property'(node: TSESTree.Property) {
                 const source = context.sourceCode;

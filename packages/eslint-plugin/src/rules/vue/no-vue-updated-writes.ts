@@ -40,10 +40,10 @@ function getTarget(node: TSESTree.Node, source: TSESLint.SourceCode): string | u
     return kind === VUE_REACTIVE || (kind === VUE_REF && text.endsWith('.value')) ? text : undefined;
 }
 
-function terminates(statement: TSESTree.Statement | undefined): boolean {
+function isTerminating(statement: TSESTree.Statement | undefined): boolean {
     const type = statement?.type;
     const last = statement?.type === AST_NODE_TYPES.BlockStatement ? statement.body.at(-1) : undefined;
-    return TERMINATING_STATEMENTS.has(type) || (last !== undefined && terminates(last));
+    return TERMINATING_STATEMENTS.has(type) || (last !== undefined && isTerminating(last));
 }
 
 function isGuardStep(ancestor: TSESTree.Node, child: TSESTree.Node): boolean {
@@ -55,7 +55,7 @@ function isGuardStep(ancestor: TSESTree.Node, child: TSESTree.Node): boolean {
             statement.range[1] <= child.range[0] &&
             statement.type === AST_NODE_TYPES.IfStatement &&
             statement.alternate === null &&
-            terminates(statement.consequent),
+            isTerminating(statement.consequent),
     );
 }
 
@@ -71,7 +71,7 @@ function isVolatile(node: TSESTree.Node, target: string, source: TSESLint.Source
     return isCounter || isClock || (node.type === AST_NODE_TYPES.MemberExpression && source.getText(node) === target);
 }
 
-function changesEachRun(
+function isChangedEachRun(
     node: TSESTree.AssignmentExpression | TSESTree.UpdateExpression,
     target: string,
     source: TSESLint.SourceCode,
@@ -85,7 +85,7 @@ function isLoopingWrite(node: TSESTree.Node, source: TSESLint.SourceCode): boole
     if (node.type !== AST_NODE_TYPES.AssignmentExpression && node.type !== AST_NODE_TYPES.UpdateExpression)
         return false;
     const target = getTarget(node.type === AST_NODE_TYPES.UpdateExpression ? node.argument : node.left, source);
-    return target !== undefined && !isGuarded(node, source) && changesEachRun(node, target, source);
+    return target !== undefined && !isGuarded(node, source) && isChangedEachRun(node, target, source);
 }
 
 export const noVueUpdatedWrites = createRule<[], 'loop'>({

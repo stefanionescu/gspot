@@ -1,7 +1,7 @@
 import { createRule } from '../../rule.ts';
 import { FUNCTION_NODES } from '../../config/plugin.ts';
-import { usesModule } from '../../libraries/packages.ts';
 import type { FunctionNode } from '../../types/plugin.ts';
+import { isModuleUsed } from '../../libraries/packages.ts';
 import { getLocalFunction } from '../../language/functions.ts';
 import type { TestCall, TitleScan } from '../../types/testing.ts';
 import { getTestCall, listChildNodes } from '../../libraries/testing.ts';
@@ -71,7 +71,7 @@ export const noDuplicateTestTitles = createRule<[], 'duplicate'>({
         messages: { duplicate: 'Rename this test title to make it unique within the suite.' },
     },
     create(context) {
-        if (!usesModule(context, [...TEST_FRAMEWORK_MODULES])) return {};
+        if (!isModuleUsed(context, [...TEST_FRAMEWORK_MODULES])) return {};
         const scan: TitleScan = {
             source: context.sourceCode,
             path: new Set(),

@@ -10,7 +10,7 @@ function getKey(node: TSESTree.Node | undefined): string | undefined {
     return isKey ? String(node.value) : undefined;
 }
 
-function containsTokens(value: TSESTree.Node, expression: TSESTree.Node, source: TSESLint.SourceCode): boolean {
+function hasTokens(value: TSESTree.Node, expression: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     const wanted = source.getTokens(value).map((token) => token.value);
     const tokens = source.getTokens(expression).map((token) => token.value);
     return tokens.some((_, start) => wanted.every((token, offset) => tokens[start + offset] === token));
@@ -20,7 +20,7 @@ function getIndexWrite(expression: TSESTree.AssignmentExpression, source: TSESLi
     const { left, right, operator } = expression;
     if (operator !== '=' || left.type !== AST_NODE_TYPES.MemberExpression || !left.computed) return undefined;
     const key = getKey(left.property);
-    return key === undefined || containsTokens(left.object, right, source)
+    return key === undefined || hasTokens(left.object, right, source)
         ? undefined
         : { collection: left.object, key, node: expression };
 }

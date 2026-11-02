@@ -1,7 +1,7 @@
 import type { FileContext } from '../types/plugin.ts';
 import { getModuleName } from '../language/modules.ts';
 import { isCallOf, isCypressChain } from './testing.ts';
-import { usesModule, listImportedModules } from './packages.ts';
+import { isModuleUsed, listImportedModules } from './packages.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import type {
@@ -67,24 +67,24 @@ function readAssertionStyles(context: FileContext): AssertionStyles {
     const imported = listImportedModules(context.sourceCode);
     const expect =
         EXPECT_STYLES.find(({ modules }) => modules.some((module) => imported.has(module))) ??
-        EXPECT_STYLES.find(({ modules, dependencies }) => usesModule(context, modules, dependencies));
+        EXPECT_STYLES.find(({ modules, dependencies }) => isModuleUsed(context, modules, dependencies));
     const styles = {
         expect: expect?.style,
-        chai: usesModule(context, CHAI_MODULES),
+        chai: isModuleUsed(context, CHAI_MODULES),
         nodeAssert: NODE_ASSERT_MODULES.some((module) => imported.has(module)),
-        cypress: usesModule(context, CYPRESS_MODULES),
-        globalExpect: usesModule(context, GLOBAL_EXPECT_IMPORTS, GLOBAL_EXPECT_DEPENDENCIES),
+        cypress: isModuleUsed(context, CYPRESS_MODULES),
+        globalExpect: isModuleUsed(context, GLOBAL_EXPECT_IMPORTS, GLOBAL_EXPECT_DEPENDENCIES),
     };
     styleCache.set(context.sourceCode, styles);
     return styles;
 }
 
 function getExpectSubject(node: TSESTree.Node): AssertionSubject | undefined {
-    const negated = node.type === AST_NODE_TYPES.MemberExpression && ASTUtils.getPropertyName(node) === 'not';
-    const expect = negated ? node.object : node;
+    const isNegated = node.type === AST_NODE_TYPES.MemberExpression && ASTUtils.getPropertyName(node) === 'not';
+    const expect = isNegated ? node.object : node;
     const [received, ...others] = isCallOf(expect, 'expect') ? expect.arguments : [];
     const isSingle = others.length === 0 && received !== undefined && received.type !== AST_NODE_TYPES.SpreadElement;
-    return isSingle ? { received, negated } : undefined;
+    return isSingle ? { received, negated: isNegated } : undefined;
 }
 
 function getExpectAssertion(node: TSESTree.CallExpression, style: AssertionStyles['expect']): Assertion | undefined {
@@ -117,13 +117,13 @@ function getChaiPredicate(node: TSESTree.MemberExpression): Assertion | undefine
     const chain = getChaiChain(node.object);
     const predicate = chaiPredicates.get(ASTUtils.getPropertyName(node));
     if (chain === undefined || predicate === undefined) return undefined;
-    const negated = chain.names.includes('not');
+    const isNegated = chain.names.includes('not');
     return {
         style: 'chai-bdd',
         kind: 'predicate',
         predicate,
         received: chain.received,
-        negated,
+        negated: isNegated,
         node,
         report: chain.received,
     };
@@ -135,11 +135,10 @@ function getChaiCall(node: TSESTree.CallExpression, styles: AssertionStyles): As
     const chain = getChaiChain(member.object);
     const comparison = chaiComparisons.get(ASTUtils.getPropertyName(member));
     if (chain === undefined || comparison === undefined) return undefined;
-    const negated = chain.names.includes('not');
     const checks = {
         style: 'chai-bdd' as const,
         comparison: chain.names.includes('deep') ? 'deep' : comparison,
-        negated,
+        negated: chain.names.includes('not'),
     };
     return getCheckedCall(node, checks, member.property, [chain.received, ...node.arguments]);
 }
@@ -148,9 +147,12 @@ function getCypressChecks(chainer: TSESTree.Node | undefined): AssertionChecks |
     const names =
         chainer?.type === AST_NODE_TYPES.Literal && typeof chainer.value === 'string' ? chainer.value.split('.') : [];
     const comparison = chaiComparisons.get(names.at(-1));
-    const negated = names.includes('not');
     if (comparison === undefined) return undefined;
-    return { style: 'cypress', comparison: names.includes('deep') ? 'deep' : comparison, negated };
+    return {
+        style: 'cypress',
+        comparison: names.includes('deep') ? 'deep' : comparison,
+        negated: names.includes('not'),
+    };
 }
 
 function getCypressCall(node: TSESTree.CallExpression, styles: AssertionStyles): Assertion | undefined {

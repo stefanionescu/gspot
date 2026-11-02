@@ -41,13 +41,13 @@ export const noInsecureCookies = createRule<[], 'flag'>({
         return {
             CallExpression(node) {
                 const options = getCookieOptions(node, context.sourceCode);
-                const implicit =
+                const isImplicit =
                     getModuleName(node.callee, context.sourceCode) === 'csurf' &&
                     getLiteralValue(options, context.sourceCode) === true;
                 const properties = getOptionProperties(options, context.sourceCode);
                 for (const flag of COOKIE_SECURITY_FLAGS) {
                     const property = properties.get(flag);
-                    if (implicit || getLiteralValue(property?.value, context.sourceCode) === false)
+                    if (isImplicit || getLiteralValue(property?.value, context.sourceCode) === false)
                         context.report({ node: property ?? node.callee, messageId: 'flag', data: { flag } });
                 }
             },

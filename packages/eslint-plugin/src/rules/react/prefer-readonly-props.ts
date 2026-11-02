@@ -20,7 +20,7 @@ function traceReturnedValue(node: TSESTree.Node, source: TSESLint.SourceCode): T
     return value ?? node;
 }
 
-function returnsMarkup(node: TSESTree.FunctionDeclaration, source: TSESLint.SourceCode): boolean {
+function hasMarkupReturn(node: TSESTree.FunctionDeclaration, source: TSESLint.SourceCode): boolean {
     const statements = listBodyNodes(node.body, source);
     const returned = statements.flatMap((statement) =>
         statement.type === AST_NODE_TYPES.ReturnStatement && statement.argument !== null ? [statement.argument] : [],
@@ -76,7 +76,7 @@ export const preferReadonlyProps = createRule<[], 'mutable' | 'mark'>({
                 if (
                     props === undefined ||
                     annotation === undefined ||
-                    !returnsMarkup(node, source) ||
+                    !hasMarkupReturn(node, source) ||
                     isReadonlyType(types.get(props), types)
                 )
                     return;

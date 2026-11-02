@@ -1,7 +1,7 @@
 import { createRule } from '../../rule.ts';
-import { usesModule } from '../../libraries/packages.ts';
 import { getTestCall } from '../../libraries/testing.ts';
 import type { FileContext } from '../../types/plugin.ts';
+import { isModuleUsed } from '../../libraries/packages.ts';
 import type { PlacementState } from '../../types/assertions.ts';
 import { readAssertionKind } from '../../libraries/assertions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
@@ -60,7 +60,7 @@ export const noMisplacedAssertions = createRule<[], 'misplaced'>({
     create(context) {
         const source = context.sourceCode;
         const state: PlacementState = { reported: new Set(), topLevel: new Map(), hasTests: false };
-        if (!usesModule(context, EVIDENCE_IMPORTS, EVIDENCE_DEPENDENCIES)) return {};
+        if (!isModuleUsed(context, EVIDENCE_IMPORTS, EVIDENCE_DEPENDENCIES)) return {};
         return {
             CallExpression(node) {
                 const test = getTestCall(node, source);

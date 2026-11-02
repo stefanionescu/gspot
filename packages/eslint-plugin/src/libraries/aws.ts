@@ -91,10 +91,12 @@ function listPathTargets(
     source: Readonly<TSESLint.SourceCode>,
     target: CdkTarget,
     path: readonly string[],
-    required: boolean,
+    isRequired: boolean,
 ): CdkPathResult {
     const literals = isUnresolved(source, target.value) ? [] : listLiteralTargets(source, target);
-    const results = literals.map((child) => getPathStep(source, child, path, { required, report: target.report }));
+    const results = literals.map((child) =>
+        getPathStep(source, child, path, { required: isRequired, report: target.report }),
+    );
     return {
         targets: results.flatMap(({ targets }) => targets),
         issues: results.flatMap(({ issues }) => issues),

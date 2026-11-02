@@ -34,26 +34,27 @@ function haveSameValues(first: ValueState, second: ValueState): boolean {
     });
 }
 
-function propagate(flow: SegmentFlow, flows: ReadonlyMap<string, SegmentFlow>): boolean {
-    const states = flow.segment.prevSegments.map(({ id }) => flows.get(id)?.outgoing);
-    const incoming = joinStates(states.filter((state) => state !== undefined));
+function buildOutgoing(flow: SegmentFlow, incoming: ValueState): ValueState {
     const outgoing = new Map(incoming);
     for (const reference of flow.references) {
         const { resolved, writeExpr, from } = reference;
         if (resolved !== null && reference.isWrite())
             outgoing.set(resolved, getAssignedValues(writeExpr, outgoing, from));
     }
-    flow.incoming = incoming;
-    const isChanged = !haveSameValues(flow.outgoing, outgoing);
-    if (isChanged) flow.outgoing = outgoing;
-    return isChanged;
+    return outgoing;
 }
 
 function solveFlows(flows: ReadonlyMap<string, SegmentFlow>): void {
     const pending = [...flows.values()].map(({ segment }) => segment);
     for (let segment = pending.pop(); segment !== undefined; segment = pending.pop()) {
         const flow = flows.get(segment.id);
-        if (flow !== undefined && propagate(flow, flows)) pending.push(...segment.nextSegments);
+        if (flow === undefined) continue;
+        const states = flow.segment.prevSegments.map(({ id }) => flows.get(id)?.outgoing);
+        flow.incoming = joinStates(states.filter((state) => state !== undefined));
+        const outgoing = buildOutgoing(flow, flow.incoming);
+        if (haveSameValues(flow.outgoing, outgoing)) continue;
+        flow.outgoing = outgoing;
+        pending.push(...segment.nextSegments);
     }
 }
 

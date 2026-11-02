@@ -47,8 +47,7 @@ export const noFixedTestWaits = createRule<[], 'wait'>({
         if (!isTestRelatedPath(context.filename, context.settings['testFileExtensions'])) return {};
         return {
             CallExpression(node) {
-                const fixed = isFixedWait(node, context.sourceCode);
-                if (!fixed) return;
+                if (!isFixedWait(node, context.sourceCode)) return;
                 context.report({ node: node.callee, messageId: 'wait' });
             },
         };

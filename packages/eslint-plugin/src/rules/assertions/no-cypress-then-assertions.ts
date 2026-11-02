@@ -89,7 +89,7 @@ function isReference(node: TSESTree.Identifier): boolean {
     return !isProperty && !isKey;
 }
 
-function usesYielded(node: TSESTree.Node, yielded: ReadonlySet<string>, source: TSESLint.SourceCode): boolean {
+function hasYieldedReference(node: TSESTree.Node, yielded: ReadonlySet<string>, source: TSESLint.SourceCode): boolean {
     const names = listBodyNodes(node, source).filter(
         (value): value is TSESTree.Identifier => value.type === AST_NODE_TYPES.Identifier,
     );
@@ -97,19 +97,19 @@ function usesYielded(node: TSESTree.Node, yielded: ReadonlySet<string>, source: 
     return references.some((name) => yielded.has(name.name));
 }
 
-function acceptDeclaration(
+function getDeclarationUse(
     statement: TSESTree.VariableDeclaration,
     scope: CallbackScope,
     source: TSESLint.SourceCode,
-): boolean {
-    const declarations = statement.kind === 'const' ? statement.declarations : [];
-    for (const { id, init } of declarations) {
+): string {
+    if (statement.kind !== 'const') return 'unsafe';
+    for (const { id, init } of statement.declarations) {
         const kind = init && getSafeKind(init, scope.kinds);
-        if (init === null || typeof kind !== 'string' || id.type !== AST_NODE_TYPES.Identifier) return false;
+        if (init === null || typeof kind !== 'string' || id.type !== AST_NODE_TYPES.Identifier) return 'unsafe';
         scope.kinds.set(id.name, kind);
-        if (usesYielded(init, scope.yielded, source)) scope.yielded.add(id.name);
+        if (hasYieldedReference(init, scope.yielded, source)) scope.yielded.add(id.name);
     }
-    return declarations.length > 0;
+    return 'declaration';
 }
 
 function getAssertionUse(expression: TSESTree.Expression, scope: CallbackScope, source: TSESLint.SourceCode): string {
@@ -125,7 +125,7 @@ function getAssertionUse(expression: TSESTree.Expression, scope: CallbackScope, 
         (value) => value.type !== AST_NODE_TYPES.SpreadElement && getSafeKind(value, scope.kinds) !== undefined,
     );
     if (!isAssertion || !isSafe) return 'unsafe';
-    return values.some((value) => usesYielded(value, scope.yielded, source)) ? 'yielded' : 'assertion';
+    return values.some((value) => hasYieldedReference(value, scope.yielded, source)) ? 'yielded' : 'assertion';
 }
 
 function isAssertionBody(body: TSESTree.BlockStatement, parameter: string, source: TSESLint.SourceCode): boolean {
@@ -133,7 +133,7 @@ function isAssertionBody(body: TSESTree.BlockStatement, parameter: string, sourc
     const uses = new Set(
         body.body.map((statement) => {
             if (statement.type === AST_NODE_TYPES.VariableDeclaration)
-                return acceptDeclaration(statement, scope, source) ? 'declaration' : 'unsafe';
+                return getDeclarationUse(statement, scope, source);
             return statement.type === AST_NODE_TYPES.ExpressionStatement
                 ? getAssertionUse(statement.expression, scope, source)
                 : 'unsafe';

@@ -41,8 +41,8 @@ export const noUnsafeFileUploads = createRule<[], 'folder' | 'extension' | 'exte
     create(context) {
         const source = context.sourceCode;
         const forms = new Map<TSESLint.Scope.Variable, UploadForm>();
-        const report = (node: TSESTree.Node, hasFolder: boolean, keepsExtensions: boolean): void => {
-            const key = `${String(hasFolder)},${String(keepsExtensions)}`;
+        const report = (node: TSESTree.Node, hasFolder: boolean, hasExtensions: boolean): void => {
+            const key = `${String(hasFolder)},${String(hasExtensions)}`;
             const messageId = Object.hasOwn(UPLOAD_MESSAGES, key) ? UPLOAD_MESSAGES[key] : undefined;
             if (messageId) context.report({ node, messageId });
         };

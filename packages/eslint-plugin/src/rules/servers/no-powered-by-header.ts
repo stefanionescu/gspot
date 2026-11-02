@@ -10,7 +10,7 @@ import {
     POWERED_BY_SET_ARGUMENTS,
 } from '../../config/servers.ts';
 
-function protectsHeader(node: TSESTree.CallExpressionArgument, source: TSESLint.SourceCode): boolean {
+function hasHeaderProtection(node: TSESTree.CallExpressionArgument, source: TSESLint.SourceCode): boolean {
     const value = node.type === AST_NODE_TYPES.SpreadElement ? node.argument : node;
     return listArgumentValues([value], source).some((middleware) => {
         const name =
@@ -19,8 +19,8 @@ function protectsHeader(node: TSESTree.CallExpressionArgument, source: TSESLint.
     });
 }
 
-function disablesHeader(call: TSESTree.CallExpression, method: string | null, source: TSESLint.SourceCode): boolean {
-    if (method === 'use') return call.arguments.some((argument) => protectsHeader(argument, source));
+function isHeaderDisabled(call: TSESTree.CallExpression, method: string | null, source: TSESLint.SourceCode): boolean {
+    if (method === 'use') return call.arguments.some((argument) => hasHeaderProtection(argument, source));
     const [header, enabled] = call.arguments.map((argument) => ASTUtils.getStaticValue(argument)?.value);
     if (String(header).toLowerCase() !== POWERED_BY_HEADER) return false;
     return (
@@ -42,7 +42,7 @@ function isProtected(variable: TSESLint.Scope.Variable, source: TSESLint.SourceC
             return (
                 call.type === AST_NODE_TYPES.CallExpression &&
                 call.callee === parent &&
-                disablesHeader(call, ASTUtils.getPropertyName(parent), source)
+                isHeaderDisabled(call, ASTUtils.getPropertyName(parent), source)
             );
         });
 }
