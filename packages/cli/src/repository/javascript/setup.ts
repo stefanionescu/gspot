@@ -18,7 +18,7 @@ Choose the frozen-install arguments for a lockfile and package-manager version.
 @param lockfile the project's dependency lockfile.
 @param version the package-manager version; docs select Yarn Berry explicitly.
 */
-export function frozenInstallArguments(
+export function buildFrozenInstallArguments(
     lockfile: keyof typeof FROZEN_INSTALLS,
     version: string | undefined,
 ): readonly string[] {
@@ -41,7 +41,7 @@ export function buildSetupReference(): SetupReference[] {
                 ? []
                 : [
                       name,
-                      ...frozenInstallArguments(
+                      ...buildFrozenInstallArguments(
                           lockfile as keyof typeof FROZEN_INSTALLS,
                           String(YARN_BERRY_MAJOR) + '.0.0',
                       ),

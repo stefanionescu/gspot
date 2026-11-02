@@ -29,7 +29,7 @@ export const RECORD_FIELDS: Readonly<Record<string, readonly string[]>> = Object
     }).map(([name, fields]) => [name, Object.keys(fields)]),
 );
 
-function settingValueType(schema: z.ZodType, path: boolean): Setting['type'] {
+function getSettingValueType(schema: z.ZodType, path: boolean): Setting['type'] {
     if (schema instanceof z.ZodArray) return 'list';
     if (schema instanceof z.ZodNumber) return 'number';
     if (schema instanceof z.ZodBoolean) return 'boolean';
@@ -37,7 +37,7 @@ function settingValueType(schema: z.ZodType, path: boolean): Setting['type'] {
     return path ? 'path' : 'string';
 }
 
-function settingInputSchema(schema: z.ZodType): z.ZodType {
+function unwrapSettingInput(schema: z.ZodType): z.ZodType {
     let inner = unwrapSettingSchema(schema);
     while (inner instanceof z.ZodPipe || inner instanceof z.ZodUnion) {
         let next = inner instanceof z.ZodUnion ? inner.options[0] : inner.out;
@@ -97,13 +97,13 @@ Describe the input type and path role of a setting without converting its schema
 @param schema the setting validator.
 */
 export function getSettingType(schema: z.ZodType): Pick<Setting, 'type' | 'path_role'> {
-    const inner = settingInputSchema(schema);
+    const inner = unwrapSettingInput(schema);
     const metadata = schema.meta() ?? inner.meta();
     const elementRole = inner instanceof z.ZodArray ? (inner.element as z.ZodType).meta()?.['path_role'] : undefined;
     const role = metadata?.['path_role'] ?? elementRole;
     const pathRole = PATH_ROLES.find((allowed) => allowed === role);
     return {
-        type: settingValueType(inner, pathRole !== undefined),
+        type: getSettingValueType(inner, pathRole !== undefined),
         ...(pathRole === undefined ? {} : { path_role: pathRole }),
     };
 }

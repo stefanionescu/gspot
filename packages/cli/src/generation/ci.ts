@@ -11,7 +11,7 @@ import { STRICT_MODE } from '#cli/config/configurations/bash.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
 import type { PackageManagerPin } from '#cli/types/repository.ts';
-import { frozenInstallArguments } from '#cli/repository/javascript/setup.ts';
+import { buildFrozenInstallArguments } from '#cli/repository/javascript/setup.ts';
 import type { Pipeline, ActionPin, FrozenLockfile } from '#cli/types/generation.ts';
 import { type Session, type MiseToolPin, type GeneratedFile } from '#cli/types/tools.ts';
 import { Scalar, Document, type Node, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
@@ -159,7 +159,7 @@ function buildFrozenInstall(session: Session, scopePath: string, lockfile: Froze
     const name = PACKAGE_MANAGERS.find((tool) => tool === command[0]);
     const uv = findMisePin(getTool(readConfigurations().values(), UV_TOOL)) as MiseToolPin;
     const runner = name === undefined ? uv : readProjectPackageManager(session, scopePath, name);
-    return buildPackageManagerCommand(runner, frozenInstallArguments(lockfile, runner.version));
+    return buildPackageManagerCommand(runner, buildFrozenInstallArguments(lockfile, runner.version));
 }
 
 /**

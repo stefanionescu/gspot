@@ -8,22 +8,22 @@ import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts'
 import { buildAvailableSettings, SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import type { SettingVariant, SettingReference, AcceptedSettingValues } from '#cli/types/settings.ts';
 
-function inputSchema(schema: z.ZodType): z.ZodType {
+function unwrapSchemaPipes(schema: z.ZodType): z.ZodType {
     let inner = unwrapSettingSchema(schema);
     while (inner instanceof z.ZodPipe) inner = unwrapSettingSchema(inner.in as z.ZodType);
     return inner;
 }
 
-function acceptedAlternatives(schema: z.ZodUnion): AcceptedSettingValues {
-    const alternatives = schema.options.map((option) => acceptedValues(option as z.ZodType));
+function buildAcceptedAlternatives(schema: z.ZodUnion): AcceptedSettingValues {
+    const alternatives = schema.options.map((option) => buildAcceptedValues(option as z.ZodType));
     const choicesOnly = alternatives.every((option) => option.choices.length > 0);
     return choicesOnly
         ? { types: [], choices: alternatives.flatMap((option) => option.choices), alternatives: [] }
         : { types: [], choices: [], alternatives };
 }
 
-function acceptedValues(schema: z.ZodType): AcceptedSettingValues {
-    const inner = inputSchema(schema);
+function buildAcceptedValues(schema: z.ZodType): AcceptedSettingValues {
+    const inner = unwrapSchemaPipes(schema);
     const description = schema.description;
     if (inner instanceof z.ZodLiteral)
         return { types: [], choices: [...inner.values].map((value) => ({ value, description })), alternatives: [] };
@@ -33,16 +33,16 @@ function acceptedValues(schema: z.ZodType): AcceptedSettingValues {
             choices: Object.values(inner.enum).map((value) => ({ value, description: undefined })),
             alternatives: [],
         };
-    if (inner instanceof z.ZodUnion) return acceptedAlternatives(inner);
+    if (inner instanceof z.ZodUnion) return buildAcceptedAlternatives(inner);
     const type = inner instanceof z.ZodNumber && inner.format?.includes('int') === true ? 'integer' : inner.type;
     return { types: [type === 'record' ? 'object' : type], choices: [], alternatives: [] };
 }
 
 function childSchemas(schema: z.ZodType): Array<[string, z.ZodType]> {
-    let inner = inputSchema(schema);
-    if (inner instanceof z.ZodArray) inner = inputSchema(inner.element as z.ZodType);
+    let inner = unwrapSchemaPipes(schema);
+    if (inner instanceof z.ZodArray) inner = unwrapSchemaPipes(inner.element as z.ZodType);
     if (inner instanceof z.ZodObject) return Object.entries<z.ZodType>(inner.shape);
-    if (inner instanceof z.ZodRecord && inputSchema(inner.valueType as z.ZodType) instanceof z.ZodObject)
+    if (inner instanceof z.ZodRecord && unwrapSchemaPipes(inner.valueType as z.ZodType) instanceof z.ZodObject)
         return [[SETTING_NAME_PLACEHOLDER, inner.valueType as z.ZodType]];
     return [];
 }
@@ -76,7 +76,7 @@ function listSettingVariants(configurations: Configuration[]): SettingVariant[] 
 }
 
 function buildSettingNode(key: string, schema: z.ZodType, variants: SettingVariant[]): SettingReference {
-    const inner = inputSchema(schema);
+    const inner = unwrapSchemaPipes(schema);
     const metadata = { ...inner.meta(), ...schema.meta() };
     const reasoned = metadata['reasoned'] === true;
     const children = reasoned
@@ -97,7 +97,7 @@ function buildSettingNode(key: string, schema: z.ZodType, variants: SettingVaria
         variantOf: typeof metadata['variantOf'] === 'string' ? metadata['variantOf'] : undefined,
         rootOnly: scope === undefined,
         scopeKeys: scope === undefined ? [] : childSchemas(scope).map(([name]) => name),
-        accepted: acceptedValues(schema),
+        accepted: buildAcceptedValues(schema),
         variants: variants.filter(({ setting }) => setting.name === key),
         children,
     };

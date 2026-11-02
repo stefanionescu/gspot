@@ -20,7 +20,7 @@ import { buildScopeLimitRules } from '#cli/configurations/language/javascript/es
 import { listImportBoundaryFolders } from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';
 import { buildFilePatterns, buildExtensionGlob } from '#cli/configurations/language/javascript/eslint/files.ts';
 
-function listConfigConfigurations(scopes: Scope[], scope: Scope, config: Config): Configuration[] {
+function listContributingConfigurations(scopes: Scope[], scope: Scope, config: Config): Configuration[] {
     if (config.per_scope) return scope.configurations;
     const every = [scope, ...scopes].flatMap((each) => each.configurations);
     return new Map(every.map((configuration) => [configuration.name, configuration])).values().toArray();
@@ -56,7 +56,7 @@ export function buildPlannedEslintFile(planned: PlannedConfig): PlannedEslintFil
     const nodeFiles = session.repository.files
         .filter((file) => !isRecognized(file.path) && file.kind === 'source' && file.tags.includes(NODE_SHEBANG_TAG))
         .map((file) => file.path);
-    const configurations = listConfigConfigurations(scopes, scope, config);
+    const configurations = listContributingConfigurations(scopes, scope, config);
     const eslintFiles = buildFilePatterns({
         components: configurations,
         nodeFiles,

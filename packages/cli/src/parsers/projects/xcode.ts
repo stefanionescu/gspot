@@ -173,7 +173,7 @@ function listTargetFolders(project: XcodeProject, id: string, target: PbxElement
     });
 }
 
-function projectParseError(path: string, error: unknown): GspotError {
+function buildProjectParseError(path: string, error: unknown): GspotError {
     const reason = error instanceof Error ? error.message : String(error);
     const punctuation = reason.endsWith('.') ? '' : '.';
     return new GspotError(
@@ -192,7 +192,7 @@ function parsePbxproj(text: string, path: string): ParsedPbxproj {
         if (root?.isa !== 'PBXProject') throw new Error(MISSING_ROOT_MESSAGE);
         return { objects: project.objects, root };
     } catch (error) {
-        throw projectParseError(path, error);
+        throw buildProjectParseError(path, error);
     }
 }
 
@@ -232,7 +232,7 @@ export function parseProjectSources(text: string, path: string): ProjectSources 
             targets,
         };
     } catch (error) {
-        throw projectParseError(path, error);
+        throw buildProjectParseError(path, error);
     }
 }
 
@@ -287,7 +287,7 @@ export function parseBuildTargets(text: string, path: string): ProjectBuildTarge
             ];
         });
     } catch (error) {
-        throw projectParseError(path, error);
+        throw buildProjectParseError(path, error);
     }
 }
 
