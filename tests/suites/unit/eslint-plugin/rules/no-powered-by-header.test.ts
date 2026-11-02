@@ -30,6 +30,8 @@ buildRuleTester().run('no-powered-by-header', plugin.rules['no-powered-by-header
         'import express from "express"; const make = express; const app = make();',
         'const express = require("express"); const app = express();',
         'const app = require("express")();',
+        'import express from "express"; const app = express(); const copy = app;',
+        'import express from "express"; const app = express(); app.use(logger);',
         'import express from "express"; const app = express(); app.set("x-powered-by", true);',
         'import express from "express"; const app = express(); app.disable("other");',
         'import express from "express"; const first = express(); first.disable("x-powered-by"); const second = express();',

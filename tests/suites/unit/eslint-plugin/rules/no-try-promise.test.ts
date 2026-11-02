@@ -1,5 +1,10 @@
 import plugin from '#eslint-plugin/plugin.ts';
-import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+
+buildRuleTester().run('no-try-promise', plugin.rules['no-try-promise'], {
+    valid: ['try { list.sort(); } catch {}'],
+    invalid: [],
+});
 
 buildTypedRuleTester().run('no-try-promise', plugin.rules['no-try-promise'], {
     valid: [

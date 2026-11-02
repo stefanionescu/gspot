@@ -1,5 +1,6 @@
 import { createRule } from '../rule.ts';
-import { readModuleName, readAssignedValue } from '../modules.ts';
+import { readModuleName } from '../modules.ts';
+import { listArgumentValues } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -9,41 +10,21 @@ import {
     POWERED_BY_SET_ARGUMENTS,
 } from '../config/security.ts';
 
-function protectsVariable(node: TSESTree.Identifier, source: TSESLint.SourceCode, seen: Set<TSESTree.Node>): boolean {
-    const variable = ASTUtils.findVariable(source.getScope(node), node);
-    if (variable === null) return false;
-    const value = readAssignedValue(variable);
-    return value !== undefined && protectsHeader(value, source, seen);
-}
-
-function protectsHeader(node: TSESTree.Node, source: TSESLint.SourceCode, seen = new Set<TSESTree.Node>()): boolean {
-    if (seen.has(node)) return false;
-    seen.add(node);
-    if (node.type === AST_NODE_TYPES.SpreadElement) return protectsHeader(node.argument, source, seen);
-    if (node.type === AST_NODE_TYPES.ArrayExpression)
-        return node.elements.some((element) => element !== null && protectsHeader(element, source, seen));
-    if (node.type === AST_NODE_TYPES.Identifier) return protectsVariable(node, source, seen);
-    if (node.type !== AST_NODE_TYPES.CallExpression) return false;
-    const name = readModuleName(node.callee, source);
-    return name !== undefined && POWERED_BY_MIDDLEWARE.has(name);
-}
-
-function isPoweredByArgument(node: TSESTree.Node | undefined): boolean {
-    if (node?.type !== AST_NODE_TYPES.Literal) return false;
-    return String(node.value).toLowerCase() === POWERED_BY_HEADER;
-}
-
-function isFalseLiteral(node: TSESTree.Node | undefined): boolean {
-    if (node?.type !== AST_NODE_TYPES.Literal) return false;
-    return node.value === false;
+function protectsHeader(node: TSESTree.CallExpressionArgument, source: TSESLint.SourceCode): boolean {
+    const value = node.type === AST_NODE_TYPES.SpreadElement ? node.argument : node;
+    return listArgumentValues([value], source).some((middleware) => {
+        const name =
+            middleware.type === AST_NODE_TYPES.CallExpression ? readModuleName(middleware.callee, source) : undefined;
+        return name !== undefined && POWERED_BY_MIDDLEWARE.has(name);
+    });
 }
 
 function disablesHeader(call: TSESTree.CallExpression, method: string | null, source: TSESLint.SourceCode): boolean {
     if (method === 'use') return call.arguments.some((argument) => protectsHeader(argument, source));
-    const [header, enabled] = call.arguments;
-    if (!isPoweredByArgument(header)) return false;
+    const [header, enabled] = call.arguments.map((argument) => ASTUtils.getStaticValue(argument)?.value);
+    if (String(header).toLowerCase() !== POWERED_BY_HEADER) return false;
     if (method === 'disable' && call.arguments.length === 1) return true;
-    return method === 'set' && call.arguments.length === POWERED_BY_SET_ARGUMENTS && isFalseLiteral(enabled);
+    return method === 'set' && call.arguments.length === POWERED_BY_SET_ARGUMENTS && enabled === false;
 }
 
 function isProtected(variable: TSESLint.Scope.Variable, source: TSESLint.SourceCode, creationOffset: number): boolean {

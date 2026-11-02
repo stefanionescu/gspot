@@ -20,9 +20,7 @@ function readTested(node: TSESTree.Expression): TestedName | undefined {
     if (ASTUtils.isIdentifier(node)) return { identifier: node, value: 'truthy' };
     if (!isNegation(node)) return undefined;
     const { argument } = node;
-    if (ASTUtils.isIdentifier(argument)) return { identifier: argument, value: 'falsy' };
-    const inner = isNegation(argument) ? argument.argument : undefined;
-    return ASTUtils.isIdentifier(inner) ? { identifier: inner, value: 'truthy' } : undefined;
+    return ASTUtils.isIdentifier(argument) ? { identifier: argument, value: 'falsy' } : undefined;
 }
 
 function listTested(node: TSESTree.Node, statement: TSESTree.IfStatement): TestedName[] {

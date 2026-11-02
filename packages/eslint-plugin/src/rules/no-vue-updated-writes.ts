@@ -32,24 +32,16 @@ function isUpdatedOption(node: TSESTree.Property, source: TSESLint.SourceCode): 
     return isComponent && ASTUtils.getPropertyName(node) === 'updated';
 }
 
-function readStateKind(node: TSESTree.Node, source: TSESLint.SourceCode): string | undefined {
-    const definition =
-        node.type === AST_NODE_TYPES.Identifier
-            ? ASTUtils.findVariable(source.getScope(node), node)?.defs.at(0)?.node
-            : undefined;
-    const init = definition?.type === AST_NODE_TYPES.VariableDeclarator ? definition.init : null;
-    return init?.type === AST_NODE_TYPES.CallExpression ? readModuleName(init.callee, source) : undefined;
-}
-
 function readTarget(node: TSESTree.Node, source: TSESLint.SourceCode): string | undefined {
     const isMember = node.type === AST_NODE_TYPES.MemberExpression && !node.computed;
-    const kind = isMember ? readStateKind(node.object, source) : undefined;
+    const state = isMember ? readExpressionValue(node.object, source) : undefined;
+    const kind = state?.type === AST_NODE_TYPES.CallExpression ? readModuleName(state.callee, source) : undefined;
     const text = source.getText(node);
     return kind === VUE_REACTIVE || (kind === VUE_REF && text.endsWith('.value')) ? text : undefined;
 }
 
 function terminates(statement: TSESTree.Statement | undefined): boolean {
-    const type = statement?.type ?? '';
+    const type = statement?.type;
     const last = statement?.type === AST_NODE_TYPES.BlockStatement ? statement.body.at(-1) : undefined;
     return TERMINATING_STATEMENTS.has(type) || (last !== undefined && terminates(last));
 }
@@ -70,13 +62,11 @@ function isGuardStep(ancestor: TSESTree.Node, child: TSESTree.Node): boolean {
 function isGuarded(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     const ancestors = source.getAncestors(node);
     const chain = [...ancestors.slice(ancestors.findLastIndex((ancestor) => ASTUtils.isFunction(ancestor)) + 1), node];
-    return chain.slice(0, -1).some((ancestor, index) => isGuardStep(ancestor, chain[index + 1] ?? node));
+    return chain.slice(1).some((child) => child.parent !== undefined && isGuardStep(child.parent, child));
 }
 
 function isVolatile(node: TSESTree.Node, target: string, source: TSESLint.SourceCode): boolean {
-    const isCounter =
-        node.type === AST_NODE_TYPES.UpdateExpression ||
-        (node.type === AST_NODE_TYPES.AssignmentExpression && node.operator !== '=');
+    const isCounter = node.type === AST_NODE_TYPES.UpdateExpression;
     const isClock = node.type === AST_NODE_TYPES.CallExpression && VOLATILE_CALLS.has(source.getText(node.callee));
     return isCounter || isClock || (node.type === AST_NODE_TYPES.MemberExpression && source.getText(node) === target);
 }

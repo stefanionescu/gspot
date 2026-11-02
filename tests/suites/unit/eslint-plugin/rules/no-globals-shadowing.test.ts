@@ -14,6 +14,10 @@ buildRuleTester({ languageOptions: { sourceType: 'script' } }).run(
             'Math.limit = 1;',
         ],
         invalid: [
+            { code: 'const [Map] = load();', errors: [{ messageId: 'declaration' }] },
+            { code: 'function read(Set = 1) {}', errors: [{ messageId: 'declaration' }] },
+            { code: 'const { ...Promise } = load();', errors: [{ messageId: 'declaration' }] },
+
             {
                 code: 'function read(Object) {}',
                 errors: [{ messageId: 'declaration', data: { kind: 'parameter', name: 'Object' } }],

@@ -3,6 +3,11 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('prefer-type-guard', plugin.rules['prefer-type-guard'], {
     valid: [
+        'function isFish(pet: Pet) { return (pet as Fish).swim === undefined; }',
+        'function isFish(pet: Pet) { return (pet as Fish).swim !== null; }',
+        'function isFish(pet: Pet) { return !(pet as Fish).swim; }',
+        'function isFish(pet: Pet) { return load((pet as Fish).swim); }',
+
         'function isFish(pet: Pet): pet is Fish { return (pet as Fish).swim !== undefined; }',
         'function isFish(pet: Pet, other: Pet) { return (pet as Fish).swim !== undefined; }',
         'function isFish(pet: Pet) { return (pet as any).swim !== undefined; }',

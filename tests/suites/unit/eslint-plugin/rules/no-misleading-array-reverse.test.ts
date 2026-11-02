@@ -1,8 +1,15 @@
 import plugin from '#eslint-plugin/plugin.ts';
-import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+
+buildRuleTester().run('no-misleading-array-reverse', plugin.rules['no-misleading-array-reverse'], {
+    valid: ['try { list.sort(); } catch {}'],
+    invalid: [],
+});
 
 buildTypedRuleTester().run('no-misleading-array-reverse', plugin.rules['no-misleading-array-reverse'], {
     valid: [
+        'declare const tree: { sort(): void }; tree.sort();',
+        'declare const list: number[]; declare const name: "pop"; list[name]();',
         'declare const posts: string[]; posts.reverse();',
         'declare const posts: string[]; function newest() { return posts.sort(); }',
         'declare let posts: string[]; posts = posts.reverse();',

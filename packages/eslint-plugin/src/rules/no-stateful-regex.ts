@@ -26,7 +26,7 @@ function isLoopExec(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
 function readCalledRegex(node: TSESTree.CallExpression): TSESTree.Identifier | undefined {
     const { callee } = node;
     if (callee.type !== AST_NODE_TYPES.MemberExpression || node.arguments.length !== 1) return undefined;
-    const isStateful = STATEFUL_REGEX_METHODS.has(ASTUtils.getPropertyName(callee) ?? '');
+    const isStateful = STATEFUL_REGEX_METHODS.has(ASTUtils.getPropertyName(callee));
     return isStateful && ASTUtils.isIdentifier(callee.object) ? callee.object : undefined;
 }
 
@@ -39,7 +39,7 @@ function readGlobalVariable(node: TSESTree.CallExpression, source: TSESLint.Sour
 }
 
 function isReusedOnSubjects(uses: readonly TSESTree.CallExpression[], source: TSESLint.SourceCode): boolean {
-    const subjects = new Set(uses.map(({ arguments: [input] }) => (input === undefined ? '' : source.getText(input))));
+    const subjects = new Set(uses.map(({ arguments: [input] }) => source.getText(input)));
     return subjects.size >= DISTINCT_SUBJECTS && [...subjects].every((input) => !EMPTY_STRING_TEXTS.has(input));
 }
 

@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
 import { readModuleName } from '../modules.ts';
 import { ASTUtils, TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { readLiteralValue, readExpressionValue, readOptionProperties } from '../expressions.ts';
+import { readLiteralValue, listArgumentValues, readExpressionValue, readOptionProperties } from '../expressions.ts';
 
 import {
     MINIMUM_HSTS_AGE,
@@ -14,13 +14,12 @@ function isApplication(identifier: TSESTree.Identifier, source: TSESLint.SourceC
     const variable = ASTUtils.findVariable(source.getScope(identifier), identifier);
     return (
         variable?.defs.some((definition) => {
-            if (definition.node.range[0] > identifier.range[0]) return false;
             if (definition.type === TSESLint.Scope.DefinitionType.Parameter) return identifier.name === 'app';
-            if (definition.node.type !== AST_NODE_TYPES.VariableDeclarator) return false;
-            if (definition.node.init?.type !== AST_NODE_TYPES.CallExpression) return false;
-            const name = readModuleName(definition.node.init.callee, source);
+            const init = definition.node.type === AST_NODE_TYPES.VariableDeclarator ? definition.node.init : null;
+            if (init?.type !== AST_NODE_TYPES.CallExpression) return false;
+            const name = readModuleName(init.callee, source);
             return name !== undefined && POWERED_BY_FACTORIES.has(name);
-        }) ?? false
+        }) === true
     );
 }
 
@@ -35,16 +34,14 @@ function listMiddleware(
     if (value.type === AST_NODE_TYPES.CallExpression) return [value];
     if (value.type === AST_NODE_TYPES.SpreadElement) return listMiddleware(value.argument, source, seen);
     if (value.type !== AST_NODE_TYPES.ArrayExpression) return [];
-    return value.elements.flatMap((element) =>
-        element === null ? [] : listMiddleware(element, source, new Set(seen)),
-    );
+    return value.elements
+        .filter((element) => element !== null)
+        .flatMap((element) => listMiddleware(element, source, new Set(seen)));
 }
 
 function hasUnsafeReferrerPolicy(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
-    const value = readExpressionValue(node, source);
-    const values = value?.type === AST_NODE_TYPES.ArrayExpression ? value.elements : [value];
-    return values.some((policy) => {
-        const literal = readLiteralValue(policy ?? undefined, source);
+    return listArgumentValues([node], source).some((policy) => {
+        const literal = readLiteralValue(policy, source);
         return typeof literal === 'string' && UNSAFE_REFERRER_POLICIES.has(literal);
     });
 }
@@ -106,7 +103,7 @@ export const noUnsafeSecurityHeaders = createRule<[], 'header'>({
                         context.report({
                             node: option,
                             messageId: 'header',
-                            data: { option: ASTUtils.getPropertyName(option) ?? 'this setting' },
+                            data: { option: context.sourceCode.getText(option.key) },
                         });
             },
         };

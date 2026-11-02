@@ -128,7 +128,7 @@ export const GUARD_TESTS = new Map([
     ['LogicalExpression', 'left'],
 ]);
 
-export const TERMINATING_STATEMENTS = new Set<string>([
+export const TERMINATING_STATEMENTS = new Set<string | undefined>([
     'ReturnStatement',
     'ThrowStatement',
     'BreakStatement',

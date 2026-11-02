@@ -7,6 +7,11 @@ const filename = join(root, 'mocha/a.test.ts');
 
 buildRuleTester({ root }).run('no-duplicate-test-titles', plugin.rules['no-duplicate-test-titles'], {
     valid: [
+        { code: 'it[mode]("adds", () => {}); it[mode]("adds", () => {});', filename },
+        {
+            code: 'const tools = require(name);\nit("adds", () => {}); it("adds", () => {});',
+            filename: join(root, 'plain/a.test.ts'),
+        },
         { code: 'it("adds", () => {}); it("adds", () => {});', filename: join(root, 'plain/a.test.ts') },
         {
             code: 'describe("a", () => { it("adds", () => {}); }); describe("b", () => { it("adds", () => {}); });',
@@ -25,6 +30,31 @@ buildRuleTester({ root }).run('no-duplicate-test-titles', plugin.rules['no-dupli
         { code: 'describe("a", (cases) => { cases(); it("adds", () => {}); });', filename, name: 'a parameter call' },
     ],
     invalid: [
+        ...[
+            'const { it } = require("vitest");\nit("adds", () => {}); it("adds", () => {});',
+            'const it = require("vitest").it;\nit("adds", () => {}); it("adds", () => {});',
+            'const test = require("node:test");\ntest("adds", () => {}); test("adds", () => {});',
+        ].map((code) => ({
+            code,
+            filename: join(root, 'plain/a.test.ts'),
+            errors: [{ messageId: 'duplicate' as const, line: 2 }],
+        })),
+        {
+            code: 'const { it } = require("vitest");\nit("adds", () => {}); it("adds", () => {});',
+            filename: join(root, 'plain/a.test.ts'),
+            languageOptions: { globals: { require: 'readonly' } },
+            errors: [{ messageId: 'duplicate', line: 2 }],
+        },
+        {
+            code: 'describe("cart", () => { describe("list", () => { it("adds", () => {}); it("adds", () => {}); }); });',
+            filename,
+            errors: [{ messageId: 'duplicate', line: 1 }],
+        },
+        {
+            code: 'describe("cart", () => { if (ready) { it("adds", () => {}); } it("adds", () => {}); });',
+            filename,
+            errors: [{ messageId: 'duplicate', line: 1 }],
+        },
         {
             code: 'it("adds", () => {}); it("adds", () => {}); it("adds", () => {});',
             filename,

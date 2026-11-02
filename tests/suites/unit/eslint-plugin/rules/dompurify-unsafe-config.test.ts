@@ -3,6 +3,11 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('dompurify-unsafe-config', plugin.rules['dompurify-unsafe-config'], {
     valid: [
+        "import DOMPurify from 'dompurify';\nDOMPurify.sanitize(html, { ...options });",
+        "import DOMPurify from 'dompurify';\nDOMPurify.sanitize(html, { ALLOWED_TAGS: tags });",
+        "import DOMPurify from 'dompurify';\nDOMPurify.sanitize(html, { KEEP_CONTENT: true, RETURN_DOM: true });",
+        "import DOMPurify from 'dompurify';\nDOMPurify.sanitize(html, { [key]: true });",
+
         "import DOMPurify from 'dompurify';\nDOMPurify.sanitize(html, { ALLOWED_TAGS: ['b', 'i'], ALLOWED_URI_REGEXP: /^https:/ });",
     ],
     invalid: [

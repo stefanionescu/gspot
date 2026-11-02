@@ -8,6 +8,9 @@ buildRuleTester().run<keyof (typeof plugin.rules)['no-client-env']['meta']['mess
     plugin.rules['no-client-env'],
     {
         valid: [
+            'log(process);',
+            'const { argv } = process;',
+
             {
                 code: 'const { MODE, BASE_URL, PROD, DEV, SSR } = import.meta.env;',
                 options: [{ client: true, publicPrefixes: ['VITE_'] }],

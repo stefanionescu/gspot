@@ -6,8 +6,8 @@ import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescr
 
 function readKey(node: TSESTree.Node | undefined): string | undefined {
     if (node?.type === AST_NODE_TYPES.Identifier) return node.name;
-    if (node?.type !== AST_NODE_TYPES.Literal) return undefined;
-    return typeof node.value === 'string' || typeof node.value === 'number' ? String(node.value) : undefined;
+    const isKey = node?.type === AST_NODE_TYPES.Literal && ['string', 'number'].includes(typeof node.value);
+    return isKey ? String(node.value) : undefined;
 }
 
 function containsTokens(value: TSESTree.Node, expression: TSESTree.Node, source: TSESLint.SourceCode): boolean {

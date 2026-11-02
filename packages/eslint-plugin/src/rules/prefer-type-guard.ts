@@ -10,10 +10,10 @@ function readComparedValue(node: TSESTree.BinaryExpression): TSESTree.Node | und
     return index === -1 ? undefined : sides[1 - index];
 }
 
-function readNegatedValue(node: TSESTree.UnaryExpression): TSESTree.Node | undefined {
+function readNegatedValue(node: TSESTree.UnaryExpression): TSESTree.Expression | undefined {
     const { argument, operator } = node;
-    if (operator !== '!' || argument.type !== AST_NODE_TYPES.UnaryExpression) return undefined;
-    return argument.operator === '!' ? argument.argument : undefined;
+    const isDouble = operator === '!' && argument.type === AST_NODE_TYPES.UnaryExpression;
+    return isDouble && argument.operator === '!' ? argument.argument : undefined;
 }
 
 function readTestedValue(node: TSESTree.Expression | null): TSESTree.Node | undefined {

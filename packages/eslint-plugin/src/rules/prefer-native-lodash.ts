@@ -1,6 +1,7 @@
 import { createRule } from '../rule.ts';
 import { isCallOf } from '../testing.ts';
 import { readModuleName } from '../modules.ts';
+import { unwrapExpression } from '../syntax.ts';
 import type { TypeReader } from '../types/plugin.ts';
 import { readExpressionValue } from '../expressions.ts';
 import { readTypes, readTypeCategory } from '../checker.ts';
@@ -44,7 +45,7 @@ function readLibraryCall(node: TSESTree.CallExpression, source: TSESLint.SourceC
 }
 
 function readSyntaxShape(node: TSESTree.Node): string | undefined {
-    const value = node.type === AST_NODE_TYPES.ChainExpression ? node.expression : node;
+    const value = unwrapExpression(node);
     const isText =
         value.type === AST_NODE_TYPES.TemplateLiteral ||
         (value.type === AST_NODE_TYPES.Literal && typeof value.value === 'string');
@@ -64,13 +65,13 @@ function readTypeShape(node: TSESTree.Node, types: TypeReader | undefined): stri
 }
 
 function hasCallback(argument: TSESTree.CallExpressionArgument | undefined, source: TSESLint.SourceCode): boolean {
-    const value = argument === undefined ? undefined : (readExpressionValue(argument, source) ?? argument);
+    const value = readExpressionValue(argument, source) ?? argument;
     const isShorthand = value !== undefined && SHORTHAND_ITERATEES.has(value.type);
     return value !== undefined && value.type !== AST_NODE_TYPES.SpreadElement && !isShorthand;
 }
 
 function isPatternSearch(argument: TSESTree.CallExpressionArgument | undefined, source: TSESLint.SourceCode): boolean {
-    const value = argument === undefined ? undefined : (readExpressionValue(argument, source) ?? argument);
+    const value = readExpressionValue(argument, source) ?? argument;
     const text = value === undefined ? '' : source.getText(value);
     return value?.type === AST_NODE_TYPES.SpreadElement || PATTERN_TEXT.test(text);
 }

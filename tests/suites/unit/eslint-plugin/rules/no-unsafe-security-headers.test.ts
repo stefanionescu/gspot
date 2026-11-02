@@ -15,6 +15,9 @@ buildRuleTester().run('no-unsafe-security-headers', plugin.rules['no-unsafe-secu
         'import express from "express"; import helmet from "helmet"; const app = express(); let options = { noSniff: false }; options = safe; app.use(helmet(options));',
         'import helmet from "helmet"; function configure(app) { app.use(helmet()); }',
         'import helmet from "helmet"; function configure(server) { server.use(helmet({ noSniff: false })); }',
+        'import helmet from "helmet"; import app from "./app"; app.use(helmet({ noSniff: false }));',
+        'import helmet from "helmet"; app.use(helmet({ noSniff: false }));',
+        'import express from "express"; const app = express(); app.use((request, response, next) => next());',
     ],
     invalid: [
         ...[

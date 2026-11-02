@@ -28,7 +28,7 @@ function findCodeAfter(call: TSESTree.Node, source: TSESLint.SourceCode): TSESTr
 }
 
 function listDoneCalls(callback: TestCall['callback'], source: TSESLint.SourceCode): TSESTree.Node[] {
-    const [done] = callback?.params ?? [];
+    const done = callback?.params[0];
     const variable =
         done?.type === AST_NODE_TYPES.Identifier ? ASTUtils.findVariable(source.getScope(done), done) : null;
     const identifiers = (variable?.references ?? []).map(({ identifier }) => identifier);

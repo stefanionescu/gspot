@@ -2,24 +2,9 @@ import { createRule } from '../rule.ts';
 import { haveSameTokens, listDescendants } from '../syntax.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function listAssigned(node: TSESTree.Node | null): TSESTree.Node[] {
-    if (node === null) return [];
-    switch (node.type) {
-        case AST_NODE_TYPES.ArrayPattern: {
-            return node.elements.flatMap((element) => listAssigned(element));
-        }
-        case AST_NODE_TYPES.ObjectPattern: {
-            return node.properties.flatMap((property) =>
-                listAssigned(property.type === AST_NODE_TYPES.Property ? property.value : property.argument),
-            );
-        }
-        case AST_NODE_TYPES.AssignmentPattern: {
-            return listAssigned(node.left);
-        }
-        default: {
-            return [node];
-        }
-    }
+function listAssigned(node: TSESTree.Node): TSESTree.Node[] {
+    if (node.type !== AST_NODE_TYPES.ArrayPattern) return [node];
+    return node.elements.filter((element) => element !== null).flatMap((element) => listAssigned(element));
 }
 
 function listUpdated(update: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node[] {

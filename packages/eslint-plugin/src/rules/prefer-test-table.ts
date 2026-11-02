@@ -50,7 +50,7 @@ function listSimilarGroups(tests: SimilarTest[], source: TSESLint.SourceCode): {
         if (grouped.has(base)) continue;
         const parameters = new Set<TSESTree.Node>();
         const similar = tests.slice(index + 1).filter((other) => {
-            const differences = grouped.has(other) ? undefined : compareBodies(base, other, source);
+            const differences = compareBodies(base, other, source);
             const union = new Set([...parameters, ...(differences ?? [])]);
             const isWithin = union.size <= SIMILAR_TEST_LIMITS.parameters && union.size < base.body.length;
             if (differences === undefined || !isWithin) return false;
@@ -116,21 +116,18 @@ export const preferTestTable = createRule<[], 'table'>({
         const isGlobal =
             active.some((each) => each.isGlobal) && GLOBAL_TEST_BLOCKERS.every((module) => !imported.has(module));
         const origins = new Set<string | undefined>([...SIMILAR_TEST_ORIGINS, ...(isGlobal ? [undefined] : [])]);
-        const frames = new Map<TSESTree.Node, SimilarTest[]>();
-        const callbacks = new Set<TSESTree.Node>();
+        const frames = new Map<TSESTree.Node | undefined, SimilarTest[]>();
         return {
             CallExpression(node) {
                 const call = readSimilarCall(node, source, origins);
                 if (call?.callback === undefined) return;
-                const ancestors = source.getAncestors(node);
-                const frame =
-                    ancestors.findLast(
+                const frame = source
+                    .getAncestors(node)
+                    .findLast(
                         (ancestor) =>
                             ancestor.type === AST_NODE_TYPES.BlockStatement || ancestor.type === AST_NODE_TYPES.Program,
-                    ) ?? source.ast;
-                const isNested = ancestors.some((ancestor) => callbacks.has(ancestor));
-                const test = isNested ? undefined : readComparableTest(node, call, source);
-                callbacks.add(call.callback);
+                    );
+                const test = readComparableTest(node, call, source);
                 if (test !== undefined) frames.set(frame, [...(frames.get(frame) ?? []), test]);
             },
             'Program:exit'() {

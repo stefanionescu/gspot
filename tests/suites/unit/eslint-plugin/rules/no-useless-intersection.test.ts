@@ -1,5 +1,10 @@
 import plugin from '#eslint-plugin/plugin.ts';
-import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+
+buildRuleTester().run('no-useless-intersection', plugin.rules['no-useless-intersection'], {
+    valid: ['type Options = { size: number } & {};'],
+    invalid: [],
+});
 
 buildTypedRuleTester().run('no-useless-intersection', plugin.rules['no-useless-intersection'], {
     valid: [

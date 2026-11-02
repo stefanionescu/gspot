@@ -1,5 +1,10 @@
 import plugin from '#eslint-plugin/plugin.ts';
-import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+
+buildRuleTester().run('no-undefined-argument', plugin.rules['no-undefined-argument'], {
+    valid: ['read(undefined);'],
+    invalid: [],
+});
 
 buildTypedRuleTester().run('no-undefined-argument', plugin.rules['no-undefined-argument'], {
     valid: [

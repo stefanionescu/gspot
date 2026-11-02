@@ -9,14 +9,12 @@ import {
     CHMOD_METHODS,
     UMASK_FUNCTION,
     FILE_MODE_MODULE,
-    ZERO_PREFIXED_OCTAL,
     FILE_MODE_CONSTANTS,
 } from '../config/security.ts';
 
 function readLiteralMode(literal: TSESTree.Literal): number | undefined {
     if (typeof literal.value === 'string') return Number.parseInt(literal.value, OCTAL_RADIX);
-    if (typeof literal.value !== 'number') return undefined;
-    return ZERO_PREFIXED_OCTAL.test(literal.raw) ? Number.parseInt(literal.raw, OCTAL_RADIX) : literal.value;
+    return typeof literal.value === 'number' ? literal.value : undefined;
 }
 
 function readConstantMode(

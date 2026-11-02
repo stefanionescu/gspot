@@ -13,6 +13,9 @@ buildRuleTester().run('no-vue-updated-writes', plugin.rules['no-vue-updated-writ
             'onUpdated(() => { setTimeout(() => { count.value++; }); });',
             'onMounted(() => { count.value++; });',
             'onUpdated(() => { state.total = read(); });',
+            'onUpdated(refresh);',
+            'onUpdated((value) => { value.total++; });',
+            'onUpdated(() => { state.items.total++; });',
         ].map(
             (body) =>
                 `import { ref, reactive, onUpdated, onMounted } from "vue";\nconst count = ref(0);\nconst state = reactive({ total: 0 });\nlet other = { value: 0 };\n${body}`,

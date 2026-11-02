@@ -4,12 +4,6 @@ import type { TypeReader } from '../types/plugin.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { VOID_TYPE, ARRAY_NAME, ARRAY_TYPE_NAMES, ARRAY_FROM_METHOD, ARRAY_CALLBACK_METHODS } from '../config/calls.ts';
 
-function readMethodName(callee: TSESTree.MemberExpression): string | undefined {
-    const { property, computed } = callee;
-    if (!computed) return property.type === AST_NODE_TYPES.Identifier ? property.name : undefined;
-    return property.type === AST_NODE_TYPES.Literal && typeof property.value === 'string' ? property.value : undefined;
-}
-
 function isArrayFrom(callee: TSESTree.MemberExpression): boolean {
     const { object, property } = callee;
     const isArray = ASTUtils.isIdentifier(object) && object.name === ARRAY_NAME;
@@ -19,8 +13,8 @@ function isArrayFrom(callee: TSESTree.MemberExpression): boolean {
 function readCallback(call: TSESTree.CallExpression, types: TypeReader): TSESTree.CallExpressionArgument | undefined {
     const { callee, arguments: values } = call;
     if (callee.type !== AST_NODE_TYPES.MemberExpression) return undefined;
-    const isMethod = ARRAY_CALLBACK_METHODS.has(readMethodName(callee) ?? '');
-    if (isMethod && ARRAY_TYPE_NAMES.has(types.read(callee.object).getSymbol()?.name ?? '')) return values[0];
+    const isMethod = ARRAY_CALLBACK_METHODS.has(ASTUtils.getPropertyName(callee));
+    if (isMethod && ARRAY_TYPE_NAMES.has(types.read(callee.object).getSymbol()?.name)) return values[0];
     return isArrayFrom(callee) ? values[1] : undefined;
 }
 

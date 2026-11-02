@@ -37,7 +37,7 @@ export const EFFECT_CHILD_KEYS: Readonly<Record<string, readonly string[]>> = {
     Property: ['value'],
 };
 
-export const ARRAY_CALLBACK_METHODS: ReadonlySet<string> = new Set([
+export const ARRAY_CALLBACK_METHODS: ReadonlySet<string | null> = new Set([
     'every',
     'filter',
     'find',
@@ -53,7 +53,7 @@ export const ARRAY_CALLBACK_METHODS: ReadonlySet<string> = new Set([
     'toSorted',
 ]);
 
-export const ARRAY_TYPE_NAMES: ReadonlySet<string> = new Set([
+export const ARRAY_TYPE_NAMES: ReadonlySet<string | undefined> = new Set([
     'Array',
     'Int8Array',
     'Uint8Array',

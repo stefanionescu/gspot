@@ -1,5 +1,10 @@
 import plugin from '#eslint-plugin/plugin.ts';
-import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+
+buildRuleTester().run('no-mismatched-assertion-types', plugin.rules['no-mismatched-assertion-types'], {
+    valid: ['read(undefined);'],
+    invalid: [],
+});
 
 buildTypedRuleTester().run('no-mismatched-assertion-types', plugin.rules['no-mismatched-assertion-types'], {
     valid: [

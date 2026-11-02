@@ -217,8 +217,6 @@ export const OTHERS_MASK = 0o7;
 
 export const UMASK_FUNCTION = 'process.umask';
 
-export const ZERO_PREFIXED_OCTAL = /^0\d/u;
-
 export const HASH_FUNCTIONS: Readonly<Record<string, ReadonlySet<string>>> = {
     'crypto.createHash': new Set([
         'md2',

@@ -9,6 +9,16 @@ buildRuleTester().run('no-unenclosed-multiline-block', plugin.rules['no-unenclos
     ],
     invalid: [
         {
+            code: 'for (let index = 0; index < 3; index++)\n    run();\n    notify();',
+            errors: [{ messageId: 'unenclosed' }],
+        },
+        { code: 'for (const key in items)\n    run(key);\n    notify();', errors: [{ messageId: 'unenclosed' }] },
+        {
+            code: 'namespace Tasks {\n    if (isReady)\n        run();\n        notify();\n}',
+            errors: [{ messageId: 'unenclosed' }],
+        },
+
+        {
             code: 'if (isReady)\n    run();\n    notify();',
             errors: [{ messageId: 'unenclosed', data: { runs: 'unconditionally' }, line: 3 }],
         },

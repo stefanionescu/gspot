@@ -81,7 +81,7 @@ export const noUnexplainedTestSkips = createRule<[], 'skipped'>({
                     if (skip !== undefined) context.report({ node: skip, messageId: 'skipped' });
                 },
                 'CallExpression[arguments.length=3]'(node: TSESTree.CallExpression) {
-                    const options = readNodeTest(node, source) === undefined ? undefined : node.arguments[1];
+                    const options = readNodeTest(node, source) && node.arguments[1];
                     const skip = readOptionProperties(options, source).get('skip');
                     const value = readLiteralValue(skip?.value, source);
                     if (skip !== undefined && (value === true || value === ''))

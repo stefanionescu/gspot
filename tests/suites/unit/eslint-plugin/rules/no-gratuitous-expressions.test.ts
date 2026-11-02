@@ -11,6 +11,8 @@ buildRuleTester().run('no-gratuitous-expressions', plugin.rules['no-gratuitous-e
         'function start(ready) { const reset = () => { ready = false; }; if (ready) { if (ready) run(reset); } }',
     ],
     invalid: [
+        { code: 'if (true) run();', errors: [{ messageId: 'decided', data: { value: 'truthy' } }] },
+
         {
             code: 'function start(ready) { if (ready) { if (ready) run(); } }',
             errors: [{ messageId: 'decided', data: { value: 'truthy' }, column: 42 }],
