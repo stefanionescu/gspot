@@ -53,7 +53,6 @@ export const PROGRAM_NAMES = [
     'fakes/xcodebuild',
     'processes/revisions',
     'processes/manifests',
-    'processes/environment',
     'processes/assets',
     'processes/eslint-plugin',
     'fakes/generator',

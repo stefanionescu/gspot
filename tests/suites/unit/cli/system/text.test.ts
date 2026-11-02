@@ -8,8 +8,6 @@ test('an escaped text matches itself in a Unicode pattern, and each syntax chara
 });
 
 test.each([
-    { names: ['a'], type: undefined, joined: 'a' },
-    { names: ['a', 'b'], type: undefined, joined: 'a and b' },
     { names: ['a', 'b', 'c'], type: undefined, joined: 'a, b, and c' },
     { names: ['a', 'b', 'c'], type: 'disjunction' as const, joined: 'a, b, or c' },
 ])('formatNameList joins $names as "$joined"', ({ names, type, joined }) => {

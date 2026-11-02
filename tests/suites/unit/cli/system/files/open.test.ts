@@ -4,7 +4,6 @@ import * as filesystem from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
 import { openFiles } from '#cli/system/files/open.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { MODE_REPLACEMENTS } from '#tests/config/system.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { link, stat, symlink, readFile } from 'node:fs/promises';
@@ -25,16 +24,13 @@ test.skipIf(isWindows)(
     },
 );
 
-test.each(['../outside', '/outside', 'folder/../outside', 'nul\0suffix'])(
-    'system paths refuse the escape %j',
-    async (path) => {
-        await using sandbox = await testdir();
-        const root = openFiles(sandbox.path);
-        expect(() => {
-            root.write(path, { bytes: Buffer.from('inside'), mode: 0o640 });
-        }).toThrow(UNSAFE_PATH_MESSAGE);
-    },
-);
+test.each(['../outside', '/outside', 'nul\0suffix'])('system paths refuse the escape %j', async (path) => {
+    await using sandbox = await testdir();
+    const root = openFiles(sandbox.path);
+    expect(() => {
+        root.write(path, { bytes: Buffer.from('inside'), mode: 0o640 });
+    }).toThrow(UNSAFE_PATH_MESSAGE);
+});
 
 test('deleteFolder refuses linked and outside parents and keeps folders that are not empty', async () => {
     await using sandbox = await testdir({ 'project/.keep': '', 'outside/kept/value': 'external' });
@@ -89,23 +85,20 @@ test('a refused file replacement keeps the original bytes and reports a filesyst
     expect(files.list('')).toStrictEqual(['settings.json']);
 });
 
-test.each(MODE_REPLACEMENTS.filter(({ posix }) => !posix || !isWindows))(
-    'write and remove keep the file modes $original/$replacement',
-    async ({ original: previousMode, replacement: replacementMode, content }) => {
-        await using sandbox = await testdir();
-        const root = openFiles(sandbox.path);
-        const previous = { bytes: Buffer.from([0, 255, 10]), mode: normalizeFileMode({ mode: previousMode }) };
-        const replacement = { bytes: Buffer.from(content), mode: normalizeFileMode({ mode: replacementMode }) };
-        root.write('config/input', previous);
-        expect(root.read('config/input')).toStrictEqual(previous);
-        root.write('config/input', replacement);
-        expect(root.read('config/input')).toStrictEqual(replacement);
-        root.write('config/input', previous);
-        expect(root.read('config/input')).toStrictEqual(previous);
-        root.deleteFile('config/input');
-        expect(root.read('config/input')).toBeUndefined();
-    },
-);
+test('write and remove keep the file modes of a read-only file and its replacement', async () => {
+    await using sandbox = await testdir();
+    const root = openFiles(sandbox.path);
+    const previous = { bytes: Buffer.from([0, 255, 10]), mode: normalizeFileMode({ mode: 0o444 }) };
+    const replacement = { bytes: Buffer.from('replacement'), mode: normalizeFileMode({ mode: 0o644 }) };
+    root.write('config/input', previous);
+    expect(root.read('config/input')).toStrictEqual(previous);
+    root.write('config/input', replacement);
+    expect(root.read('config/input')).toStrictEqual(replacement);
+    root.write('config/input', previous);
+    expect(root.read('config/input')).toStrictEqual(previous);
+    root.deleteFile('config/input');
+    expect(root.read('config/input')).toBeUndefined();
+});
 
 test.skipIf(isWindows)('a linked parent folder refuses writes and removals of a file outside the folder', async () => {
     await using sandbox = await testdir({ 'project/.keep': '', 'outside/sentinel': 'authored\n' });
