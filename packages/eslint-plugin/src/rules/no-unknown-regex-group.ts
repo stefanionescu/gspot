@@ -10,7 +10,7 @@ function readCalledMethod(value: TSESTree.Node | null) {
     const call = value === null ? undefined : unwrapExpression(value);
     if (call?.type !== AST_NODE_TYPES.CallExpression || call.callee.type !== AST_NODE_TYPES.MemberExpression)
         return undefined;
-    return { call, receiver: call.callee.object, method: ASTUtils.getPropertyName(call.callee) ?? '' };
+    return { call, receiver: call.callee.object, method: ASTUtils.getPropertyName(call.callee) };
 }
 
 function readMatchedRegex(value: TSESTree.Node | null, source: TSESLint.SourceCode): AST.RegExpLiteral | undefined {
@@ -32,9 +32,8 @@ function readGroupNames(regex: AST.RegExpLiteral): Set<string> {
 
 function readTarget(reader: TSESTree.Node): TSESTree.Node | undefined {
     const { parent } = reader;
-    if (parent?.type === AST_NODE_TYPES.VariableDeclarator)
-        return Object.is(parent.init, reader) ? parent.id : undefined;
-    return parent?.type === AST_NODE_TYPES.AssignmentExpression && parent.right === reader ? parent.left : undefined;
+    if (parent?.type === AST_NODE_TYPES.VariableDeclarator) return parent.id;
+    return parent?.type === AST_NODE_TYPES.AssignmentExpression ? parent.left : undefined;
 }
 
 function listDestructuredNames(reader: TSESTree.Node): GroupRead[] {

@@ -16,29 +16,34 @@ function readConstructorStatement(ancestors: readonly TSESTree.Node[]): TSESTree
 }
 
 function isAssignedToThis(call: TSESTree.CallExpression, statement: TSESTree.Node): boolean {
-    if (statement.type !== AST_NODE_TYPES.ExpressionStatement) return false;
-    const assignment = statement.expression;
-    if (assignment.type !== AST_NODE_TYPES.AssignmentExpression || assignment.operator !== '=') return false;
+    const assignment = statement.type === AST_NODE_TYPES.ExpressionStatement ? statement.expression : undefined;
+    if (assignment?.type !== AST_NODE_TYPES.AssignmentExpression || assignment.operator !== '=') return false;
     const { left, right } = assignment;
-    if (unwrapExpression(right) !== call || left.type !== AST_NODE_TYPES.MemberExpression) return false;
     return (
-        left.object.type === AST_NODE_TYPES.ThisExpression &&
-        (!left.computed || left.property.type === AST_NODE_TYPES.Literal)
+        unwrapExpression(right) === call &&
+        left.type === AST_NODE_TYPES.MemberExpression &&
+        left.object.type === AST_NODE_TYPES.ThisExpression
     );
 }
 
 function isLibraryPromiseSettle(call: TSESTree.CallExpression, types: TypeReader): boolean {
     const { callee } = call;
-    if (call.arguments.length > 0 || callee.type !== AST_NODE_TYPES.MemberExpression) return false;
-    if (!ASTUtils.isIdentifier(callee.object) || callee.object.name !== PROMISE_NAME) return false;
-    if (ASTUtils.getPropertyName(callee) !== SETTLE_METHOD) return false;
-    return [callee.object, callee.property].every((member) => {
-        const declarations = types.checker.getSymbolAtLocation(types.map.get(member))?.declarations ?? [];
-        return (
-            declarations.length > 0 &&
-            declarations.every((declaration) => types.program.isSourceFileDefaultLibrary(declaration.getSourceFile()))
-        );
-    });
+    if (
+        call.arguments.length > 0 ||
+        callee.type !== AST_NODE_TYPES.MemberExpression ||
+        !ASTUtils.isIdentifier(callee.object) ||
+        callee.object.name !== PROMISE_NAME ||
+        ASTUtils.getPropertyName(callee) !== SETTLE_METHOD
+    )
+        return false;
+    return [callee.object, callee.property].every(
+        (member) =>
+            types.checker
+                .getSymbolAtLocation(types.map.get(member))
+                ?.declarations?.every((declaration) =>
+                    types.program.isSourceFileDefaultLibrary(declaration.getSourceFile()),
+                ) === true,
+    );
 }
 
 export const noAsyncConstructor = createRule<[], 'async'>({

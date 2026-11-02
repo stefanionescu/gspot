@@ -8,6 +8,8 @@ buildRuleTester().run('no-updated-loop-counter', plugin.rules['no-updated-loop-c
         'for (let index = 0; index < 10; index++) { items.splice(index, 1); index = index - 1; }',
         'for (let index = 0; index < 10; index++) index = 3;',
         'for (const item of items) { item = next(item); }',
+        'for (let index = 0; index < 10; index++) { const [item] = items.splice(index, 1); index = index - 1; }',
+        'for (index = 0; index < 10; index++) { index = 5; }',
     ],
     invalid: [
         {
@@ -18,5 +20,11 @@ buildRuleTester().run('no-updated-loop-counter', plugin.rules['no-updated-loop-c
             code: 'for (let index = 0; index < 10; index++) { for (let inner = 0; inner < 3; index++) {} }',
             errors: [{ messageId: 'counter' }],
         },
+        ...[
+            'for (let index = 0; index < 10; index += 2) { index = 5; }',
+            'for (let index = 0, size = 3; index < 10; index++, size++) { index = 5; }',
+            'for (let index = 0; index < 10; index++) { if (done) break; index = 5; }',
+            'for (let index = 0; index < 10; index++) { [index] = next(); }',
+        ].map((code) => ({ code, errors: [{ messageId: 'counter' as const, data: { name: 'index' } }] })),
     ],
 });

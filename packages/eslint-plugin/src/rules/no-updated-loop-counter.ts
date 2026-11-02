@@ -40,10 +40,9 @@ function isSkipAhead(identifier: TSESTree.Identifier, ancestors: readonly TSESTr
     if (parent.type === AST_NODE_TYPES.UpdateExpression) return true;
     if (parent.type !== AST_NODE_TYPES.AssignmentExpression) return false;
     const block = ancestors.findLast((ancestor) => ancestor.type === AST_NODE_TYPES.BlockStatement);
-    const statements = block?.type === AST_NODE_TYPES.BlockStatement ? block.body : [];
     return (
         parent.operator !== '=' ||
-        statements.some((statement) => isSpliceOf(readStatementCall(statement), identifier.name))
+        block?.body.some((statement) => isSpliceOf(readStatementCall(statement), identifier.name)) === true
     );
 }
 

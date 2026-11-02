@@ -47,7 +47,7 @@ export const MARKED_TEST_MODIFIERS = new Set(['only', 'skip']);
 
 const PLAYWRIGHT_TEST_MODIFIERS = new Set(['only', 'fail']);
 
-export const PLAYWRIGHT_SUITE_MODES = new Set(['parallel', 'serial']);
+export const PLAYWRIGHT_SUITE_MODES: ReadonlySet<string | null> = new Set(['parallel', 'serial']);
 
 export const EXCLUSIVE_TEST_NAMES = new Set(['context', 'describe', 'it', 'specify', 'test']);
 
@@ -141,9 +141,12 @@ export const INLINE_EXPECT_MODULES = ['jest', '@jest/globals', 'vitest'];
 
 export const INLINE_EXPECT_ORIGINS = new Set([undefined, '@jest/globals', 'vitest']);
 
-export const INLINE_MATCHERS = new Set(['toMatchInlineSnapshot', 'toThrowErrorMatchingInlineSnapshot']);
+export const INLINE_MATCHERS: ReadonlySet<string | null> = new Set([
+    'toMatchInlineSnapshot',
+    'toThrowErrorMatchingInlineSnapshot',
+]);
 
-export const INLINE_EXPECT_MODIFIERS = new Set(['not', 'resolves', 'rejects']);
+export const INLINE_EXPECT_MODIFIERS: ReadonlySet<string | null> = new Set(['not', 'resolves', 'rejects']);
 
 export const VITEST_MOCK_RECEIVERS = new Set(['vi', 'vitest']);
 
@@ -157,7 +160,7 @@ export const TABLE_MODULES = ['bun:test', 'jest', '@jest/globals', 'vitest'];
 
 export const TABLE_DEPENDENCIES = ['bun:test', 'jest', 'vitest'];
 
-export const TABLE_ORIGINS = new Set(['bun:test', 'jest', '@jest/globals', 'vitest']);
+export const TABLE_ORIGINS: ReadonlySet<string | undefined> = new Set(['bun:test', 'jest', '@jest/globals', 'vitest']);
 
 export const TABLE_CALL =
     'CallExpression[callee.type="CallExpression"][callee.callee.type="MemberExpression"][callee.callee.property.name="each"][arguments.length>1]';
@@ -258,7 +261,7 @@ export const TESTING_LIBRARY_DEBUGGERS = [
 
 export const DEBUG_ROOTS = new Set(['cy', 'page', 'screen']);
 
-export const DEBUG_METHODS = new Map([
+export const DEBUG_METHODS: ReadonlyMap<string | null, readonly string[]> = new Map([
     ['pause', ['cypress', 'page']],
     ['debug', ['cypress', 'library']],
     ['logTestingPlaygroundURL', ['library']],
@@ -299,7 +302,11 @@ export const QUERY_METHOD = /^(?:get|query|find)(?:All)?By[A-Z]/u;
 
 export const ALL_QUERY_METHOD = /^(?:get|query)AllBy[A-Z]/u;
 
-export const PRESENCE_MATCHERS = new Set(['toBeInTheDocument', 'toBeTruthy', 'toBeDefined']);
+export const PRESENCE_MATCHERS: ReadonlySet<string | null> = new Set([
+    'toBeInTheDocument',
+    'toBeTruthy',
+    'toBeDefined',
+]);
 
 export const QUERY_ASSERTION =
     'CallExpression[arguments.length=0][callee.type="MemberExpression"][callee.property.name=/^(?:toBeInTheDocument|toBeTruthy|toBeDefined|toBeNull|toBeFalsy)$/]';

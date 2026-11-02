@@ -62,7 +62,7 @@ function isInsideWaitFor(node: TSESTree.Node, source: TSESLint.SourceCode): bool
 function readMismatch(node: MemberCall, source: TSESLint.SourceCode): QueryUse | undefined {
     const subject = readExpectSubject(node.callee.object);
     const method = subject && readScreenQuery(readQueryTarget(subject.value), source);
-    const isPresence = PRESENCE_MATCHERS.has(ASTUtils.getPropertyName(node.callee) ?? '') !== subject?.isNegated;
+    const isPresence = PRESENCE_MATCHERS.has(ASTUtils.getPropertyName(node.callee)) !== subject?.isNegated;
     const isMismatch =
         method !== undefined && !method.name.startsWith('find') && isPresence !== method.name.startsWith('get');
     return isMismatch && !isInsideWaitFor(node, source) ? { method, isPresence } : undefined;

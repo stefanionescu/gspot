@@ -141,7 +141,7 @@ export type StateHook = {
     name: TSESTree.Node;
 };
 
-export type MethodCall = { call: TSESTree.CallExpression; method: string };
+export type MethodCall = { call: TSESTree.CallExpression; method: string | null };
 
 export type UploadForm = { node: TSESTree.Node; hasFolder: boolean; keepsExtensions: boolean };
 

@@ -4,7 +4,7 @@ export const STRING_PATTERN_METHODS: ReadonlySet<string> = new Set(['match', 'ma
 
 export const REGEXP_CONSTRUCTOR = 'RegExp';
 
-export const MATCH_METHODS: ReadonlySet<string> = new Set(['match', 'matchAll']);
+export const MATCH_METHODS: ReadonlySet<string | null> = new Set(['match', 'matchAll']);
 
 export const EXEC_METHOD = 'exec';
 
@@ -12,7 +12,7 @@ export const GROUPS_PROPERTY = 'groups';
 
 export const INDICES_PROPERTY = 'indices';
 
-export const STATEFUL_REGEX_METHODS: ReadonlySet<string> = new Set(['exec', 'test']);
+export const STATEFUL_REGEX_METHODS: ReadonlySet<string | null> = new Set(['exec', 'test']);
 
 export const EMPTY_STRING_TEXTS: ReadonlySet<string> = new Set(["''", '""']);
 

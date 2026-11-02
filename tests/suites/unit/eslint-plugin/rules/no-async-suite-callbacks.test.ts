@@ -59,5 +59,31 @@ buildRuleTester({ root }).run('no-async-suite-callbacks', plugin.rules['no-async
             filename,
             errors: [{ messageId: 'droppingHelper', line: 2 }],
         },
+        {
+            code: 'async function cases() { for await (const row of rows) { it(row, run); } }\ndescribe("cart", () => { cases(); });',
+            filename,
+            errors: [{ messageId: 'droppingHelper', line: 2 }],
+        },
+        {
+            code: 'async function cases() { await load(); describe("rows", run); }\ndescribe("cart", () => { cases(); });',
+            filename,
+            errors: [{ messageId: 'droppingHelper', line: 2 }],
+        },
+        {
+            code: 'async function cases() { it("adds", run); }\ndescribe("cart", cases);',
+            filename,
+            errors: [
+                {
+                    messageId: 'removeAsync',
+                    line: 1,
+                    suggestions: [
+                        {
+                            messageId: 'removeAsyncKeyword',
+                            output: 'function cases() { it("adds", run); }\ndescribe("cart", cases);',
+                        },
+                    ],
+                },
+            ],
+        },
     ],
 });

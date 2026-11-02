@@ -3,15 +3,13 @@ import { EQUALITY_OPERATORS } from '../config/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { STEP_OPERATORS, INCREMENT_OPERATORS, INEQUALITY_OPERATORS } from '../config/operators.ts';
 
-function listCounters(update: TSESTree.Expression): TSESTree.Node[] | undefined {
-    if (update.type === AST_NODE_TYPES.SequenceExpression) {
-        const counters = update.expressions.map((expression) => listCounters(expression));
-        return counters.every((each) => each !== undefined) ? counters.flat() : undefined;
-    }
-    if (update.type === AST_NODE_TYPES.UpdateExpression) return [update.argument];
-    if (update.type === AST_NODE_TYPES.AssignmentExpression && STEP_OPERATORS.has(update.operator))
-        return [update.left];
-    return undefined;
+function listCounters(update: TSESTree.Expression | null): TSESTree.Node[] {
+    if (update?.type === AST_NODE_TYPES.SequenceExpression)
+        return update.expressions.flatMap((expression) => listCounters(expression));
+    if (update?.type === AST_NODE_TYPES.UpdateExpression) return [update.argument];
+    return update?.type === AST_NODE_TYPES.AssignmentExpression && STEP_OPERATORS.has(update.operator)
+        ? [update.left]
+        : [];
 }
 
 function readStep(update: TSESTree.Expression): { counter: TSESTree.Node; direction: number } | undefined {
@@ -23,9 +21,8 @@ function readStep(update: TSESTree.Expression): { counter: TSESTree.Node; direct
 }
 
 function readLiteralNumber(node: TSESTree.Node | null | undefined): number | undefined {
-    if (node?.type !== AST_NODE_TYPES.Literal) return undefined;
-    const { value } = node;
-    return typeof value === 'number' ? value : undefined;
+    if (node?.type !== AST_NODE_TYPES.Literal || typeof node.value !== 'number') return undefined;
+    return node.value;
 }
 
 function readStart(init: TSESTree.ForStatement['init']): number | undefined {
@@ -43,7 +40,7 @@ function isReadInBody(node: TSESTree.ForStatement, counter: TSESTree.Identifier,
 }
 
 function isSimpleCount(node: TSESTree.ForStatement, test: TSESTree.BinaryExpression, source: TSESLint.SourceCode) {
-    const step = node.update === null ? undefined : readStep(node.update);
+    const step = node.update && readStep(node.update);
     if (step?.counter.type !== AST_NODE_TYPES.Identifier || !INEQUALITY_OPERATORS.has(test.operator)) return false;
     const [start, end] = [readStart(node.init), readLiteralNumber(test.right)];
     if (start === undefined || end === undefined || isReadInBody(node, step.counter, source)) return false;
@@ -51,12 +48,12 @@ function isSimpleCount(node: TSESTree.ForStatement, test: TSESTree.BinaryExpress
 }
 
 function readCounterTest(node: TSESTree.ForStatement): TSESTree.BinaryExpression | undefined {
-    const { test, update } = node;
+    const { test } = node;
     if (test?.type !== AST_NODE_TYPES.BinaryExpression || !EQUALITY_OPERATORS.has(test.operator)) return undefined;
-    const tested = test.left;
-    const counters = update === null ? undefined : listCounters(update);
-    if (counters === undefined || tested.type !== AST_NODE_TYPES.Identifier) return undefined;
-    const isCounter = counters.some((counter) => ASTUtils.isIdentifier(counter) && counter.name === tested.name);
+    const { left } = test;
+    const isCounter =
+        left.type === AST_NODE_TYPES.Identifier &&
+        listCounters(node.update).some((counter) => ASTUtils.isIdentifier(counter) && counter.name === left.name);
     return isCounter ? test : undefined;
 }
 

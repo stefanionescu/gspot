@@ -16,6 +16,11 @@ buildTypedRuleTester().run('no-selector-parameter', rule, {
         'declare function store(): void; function save(draft?: boolean) { if (draft) store(); else store(); }',
         'declare function store(): void; declare function run(callback: unknown): void; run((draft: boolean) => { if (draft) store(); else store(); });',
         'declare function store(): void; const handlers = { onSave(draft: boolean) { if (draft) store(); else store(); } };',
+        'declare function store(): void; const handlers = { "onSave": function (draft: boolean) { if (draft) store(); else store(); } };',
+        'declare function store(): void; const button = <a onClick={(draft: boolean) => { if (draft) store(); else store(); }} />;',
+        'declare function store(): void; const draft = true; function save() { if (draft) store(); else store(); }',
+        'declare function store(): void; function save({ draft }: { draft: boolean }) { if (draft) store(); else store(); }',
+        'declare function store(): void; const save = (draft: boolean) => draft ? store() : 1;',
     ],
     invalid: [
         {
@@ -24,6 +29,10 @@ buildTypedRuleTester().run('no-selector-parameter', rule, {
         },
         {
             code: 'declare function store(): void; class Editor { save(draft: boolean) { return draft ? store() : 1; } }',
+            errors: [{ messageId: 'selector', data: { name: 'draft' } }],
+        },
+        {
+            code: 'declare function read(): number; function total(draft: boolean) { return draft ? 1 + read() : 1; }',
             errors: [{ messageId: 'selector', data: { name: 'draft' } }],
         },
         {

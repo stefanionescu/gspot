@@ -5,25 +5,18 @@ import { readExpressionValue } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { DIGEST_METHOD, SUBTLE_DIGEST, HASH_FUNCTIONS, TRUNCATION_METHODS } from '../config/security.ts';
 
-function readIndex(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node): number | null | undefined {
-    const value =
-        node.type === AST_NODE_TYPES.SpreadElement ? null : ASTUtils.getStaticValue(node, source.getScope(node));
-    if (value === null || (typeof value.value === 'object' && value.value !== null)) return null;
-    return value.value === undefined ? undefined : Number(value.value);
-}
-
 function classifyIndex(index: number | null | undefined, missing: 'zero' | 'length'): 'zero' | 'length' | 'other' {
     if (index === undefined) return missing;
-    if (index === Infinity) return 'length';
     return index !== null && (index <= 0 || Number.isNaN(index)) ? 'zero' : 'other';
 }
 
 function isEntireCopy(source: Readonly<TSESLint.SourceCode>, { call, method }: MethodCall): boolean {
-    if (call.arguments.length === 0) return true;
-    const [start, end] = call.arguments.map((argument) => readIndex(source, argument));
+    const [start, end] = call.arguments.map((argument) => {
+        const value = ASTUtils.getStaticValue(argument, source.getScope(argument));
+        return value === null ? null : Number(value.value);
+    });
     const isNegativeStart = method === 'slice' && typeof start === 'number' && start < 0;
-    const kinds = `${classifyIndex(start, 'zero')},${call.arguments.length === 1 ? 'length' : classifyIndex(end, 'length')}`;
-    return !isNegativeStart && (kinds === 'zero,length' || (method === 'substring' && kinds === 'length,zero'));
+    return !isNegativeStart && classifyIndex(start, 'zero') === 'zero' && classifyIndex(end, 'length') === 'length';
 }
 
 function findMethodCall(node: TSESTree.Node): MethodCall | undefined {
@@ -31,7 +24,7 @@ function findMethodCall(node: TSESTree.Node): MethodCall | undefined {
     if (parent?.type !== AST_NODE_TYPES.MemberExpression || parent.object !== node) return undefined;
     const call = parent.parent;
     return call.type === AST_NODE_TYPES.CallExpression && call.callee === parent
-        ? { call, method: ASTUtils.getPropertyName(parent) ?? '' }
+        ? { call, method: ASTUtils.getPropertyName(parent) }
         : undefined;
 }
 
@@ -43,8 +36,12 @@ function isTruncating(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node
 
 function hasOnlyTruncatedReads(source: Readonly<TSESLint.SourceCode>, name: TSESTree.Identifier): boolean {
     const variable = ASTUtils.findVariable(source.getScope(name), name);
-    const reads = variable?.references.filter((reference) => reference.isRead()) ?? [];
-    return reads.length > 0 && reads.every((reference) => isTruncating(source, reference.identifier));
+    const reads = variable?.references.filter((reference) => reference.isRead());
+    return (
+        reads !== undefined &&
+        reads.length > 0 &&
+        reads.every((reference) => isTruncating(source, reference.identifier))
+    );
 }
 
 function isStoredTruncated(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Expression): boolean {

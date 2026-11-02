@@ -10,39 +10,23 @@ import {
     TRUE_TYPE,
     RETURN_DOC_TAGS,
     BOXED_STRING_NAME,
-    TYPE_ARGUMENTS_END,
     FUNCTION_TYPE_TEXT,
     SANITATION_MEMBERS,
-    TYPED_ARRAY_SUFFIX,
     UNKNOWN_TYPE_NAMES,
-    TYPE_ARGUMENTS_START,
     READONLY_TYPE_PREFIX,
 } from '../config/checker.ts';
 
-function isTypedArray(text: string): boolean {
-    if (text.endsWith(TYPED_ARRAY_SUFFIX)) return true;
-    const start = text.lastIndexOf(TYPE_ARGUMENTS_START);
-    if (!text.endsWith(TYPE_ARGUMENTS_END) || start <= 0) return false;
-    return text.slice(0, start).endsWith(TYPED_ARRAY_SUFFIX) && !text.slice(start + 1, -1).includes(TYPE_ARGUMENTS_END);
-}
-
-function readScalarLabel(type: CheckedType, types: TypeReader): string {
+function readTypeLabel(type: CheckedType, types: TypeReader): string {
     const { checker } = types;
     const text = checker.typeToString(type);
+    if (type.isUnionOrIntersection()) return text;
     if (FUNCTION_TYPE_TEXT.test(text)) return 'function';
-    const isArray = checker.isArrayType(type) && !text.startsWith(READONLY_TYPE_PREFIX);
-    if (isArray || isTypedArray(text)) return 'array';
+    if (checker.isArrayType(type) && !text.startsWith(READONLY_TYPE_PREFIX)) return 'array';
     const isNonPrimitive =
         !type.isTypeParameter() &&
         !UNKNOWN_TYPE_NAMES.has(text) &&
         checker.isTypeAssignableTo(type, checker.getNonPrimitiveType());
     return isNonPrimitive ? 'object' : checker.typeToString(checker.getBaseTypeOfLiteralType(type));
-}
-
-function readTypeLabel(type: CheckedType, types: TypeReader): string {
-    if (!type.isUnionOrIntersection()) return readScalarLabel(type, types);
-    const labels = new Set(type.types.map((member) => readTypeLabel(member, types)));
-    return [...labels].join(type.isUnion() ? ' | ' : ' & ');
 }
 
 function hasMixedReturnType(signature: CheckedSignature, types: TypeReader): boolean {
@@ -122,8 +106,8 @@ export const noMixedReturnTypes = createRule<[], 'mixed'>({
                 if (argument !== null) frames.at(-1)?.push(argument);
             },
             ':function:exit': (node: FunctionNode) => {
-                const values = frames.pop() ?? [];
-                if (isMixedFunction(node, values, types))
+                const values = frames.pop();
+                if (values !== undefined && isMixedFunction(node, values, types))
                     context.report({ loc: readFunctionLocation(node, source), messageId: 'mixed' });
             },
         };

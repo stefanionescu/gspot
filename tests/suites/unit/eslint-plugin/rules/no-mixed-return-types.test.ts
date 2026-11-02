@@ -29,5 +29,13 @@ buildTypedRuleTester().run('no-mixed-return-types', rule, {
             code: 'class Reader { read(raw: boolean) { if (raw) return () => 1; return new Date(); } }',
             errors: [{ messageId: 'mixed', column: 16 }],
         },
+        {
+            code: 'function read(raw: boolean, value: string | number) { if (raw) return value; return [1]; }',
+            errors: [{ messageId: 'mixed', column: 10 }],
+        },
+        {
+            code: 'function read(raw: boolean, ready: boolean) { if (raw) return "1"; if (ready) return 1; return null; }',
+            errors: [{ messageId: 'mixed', column: 10 }],
+        },
     ],
 });

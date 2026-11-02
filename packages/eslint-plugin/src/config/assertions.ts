@@ -1,4 +1,4 @@
-export const ASSERTION_METHODS = new Set([
+export const ASSERTION_METHODS: ReadonlySet<string | null> = new Set([
     'a',
     'an',
     'include',
@@ -148,7 +148,7 @@ export const ASSERTION_METHODS = new Set([
     'ifError',
 ]);
 
-export const ASSERTION_WORDS = new Set([
+export const ASSERTION_WORDS: ReadonlySet<string | null> = new Set([
     'to',
     'be',
     'been',
@@ -178,7 +178,7 @@ export const ASSERTION_WORDS = new Set([
     'rejects',
 ]);
 
-export const EXPECT_STATIC_METHODS = new Set(['soft', 'poll']);
+export const EXPECT_STATIC_METHODS: ReadonlySet<string | null> = new Set(['soft', 'poll']);
 
 export const ASSERTION_ROOTS = new Set(['assert', 'expect', 'should']);
 

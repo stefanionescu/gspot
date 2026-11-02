@@ -10,27 +10,17 @@ function isCallbackArgument(node: FunctionNode): boolean {
     const { parent } = node;
     if (parent.type === AST_NODE_TYPES.CallExpression) return parent.arguments.some((value) => Object.is(value, node));
     if (parent.type === AST_NODE_TYPES.JSXExpressionContainer) return true;
-    if (parent.type !== AST_NODE_TYPES.Property || parent.computed) return false;
-    const { key } = parent;
-    const name = ASTUtils.isIdentifier(key) ? key.name : String(key.value);
-    return EVENT_LISTENER_KEY.test(name);
+    return parent.type === AST_NODE_TYPES.Property && EVENT_LISTENER_KEY.test(String(ASTUtils.getPropertyName(parent)));
 }
 
 function hasSideEffects(node: TSESTree.Node): boolean {
     if (SIDE_EFFECT_NODES.has(node.type)) return true;
-    if (node.type === AST_NODE_TYPES.UnaryExpression && node.operator === 'delete') return true;
     return listChildren(node, EFFECT_CHILD_KEYS).some((child) => hasSideEffects(child));
 }
 
-function readParameter(node: TSESTree.Identifier, source: TSESLint.SourceCode): TSESTree.Node | undefined {
-    const scope = source.getScope(node);
-    const variables = [...scope.variables, ...(scope.upper?.variables ?? [])];
-    const definition = variables.find(({ name }) => name === node.name)?.defs.at(-1);
-    return definition?.type === TSESLint.Scope.DefinitionType.Parameter ? definition.name : undefined;
-}
-
 function readSelector(node: TSESTree.Identifier, source: TSESLint.SourceCode, types: TypeReader): string | undefined {
-    const parameter = readParameter(node, source);
+    const definition = ASTUtils.findVariable(source.getScope(node), node)?.defs.at(-1);
+    const parameter = definition?.type === TSESLint.Scope.DefinitionType.Parameter ? definition.name : undefined;
     if (!ASTUtils.isIdentifier(parameter) || parameter.parent.type === AST_NODE_TYPES.Property) return undefined;
     const type = types.checker.getBaseTypeOfLiteralType(types.read(parameter));
     return type === types.checker.getBooleanType() ? parameter.name : undefined;
@@ -59,7 +49,6 @@ export const noSelectorParameter = createRule<[], 'selector'>({
         if (types === undefined) return {};
         const bodies = new Set<TSESTree.Node>();
         const tests: TSESTree.Node[] = [];
-        const returns: TSESTree.Node[] = [];
         const inspectFunction = (node: FunctionNode) => {
             const isSkipped = node.type !== AST_NODE_TYPES.FunctionDeclaration && isCallbackArgument(node);
             const statements = node.body.type === AST_NODE_TYPES.BlockStatement ? node.body.body : [];
@@ -70,9 +59,8 @@ export const noSelectorParameter = createRule<[], 'selector'>({
             FunctionDeclaration: inspectFunction,
             FunctionExpression: inspectFunction,
             ArrowFunctionExpression: inspectFunction,
-            ConditionalExpression(node) {
-                const isSuspect = bodies.has(node.parent) || returns.includes(node.parent);
-                if (isSuspect && (hasSideEffects(node.consequent) || hasSideEffects(node.alternate)))
+            ConditionalExpression: (node) => {
+                if (bodies.has(node.parent) && (hasSideEffects(node.consequent) || hasSideEffects(node.alternate)))
                     tests.push(node.test);
             },
             IfStatement: (node) => {
@@ -80,12 +68,6 @@ export const noSelectorParameter = createRule<[], 'selector'>({
             },
             'IfStatement:exit': (node: TSESTree.IfStatement) => {
                 if (bodies.has(node) && node.alternate !== null) tests.pop();
-            },
-            ReturnStatement: (node) => {
-                if (bodies.has(node)) returns.push(node);
-            },
-            'ReturnStatement:exit': (node: TSESTree.ReturnStatement) => {
-                if (bodies.has(node)) returns.pop();
             },
             Identifier(node) {
                 if (tests.length === 0) return;

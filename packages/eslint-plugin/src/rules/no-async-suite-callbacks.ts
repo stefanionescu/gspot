@@ -1,35 +1,33 @@
 import { createRule } from '../rule.ts';
 import { usesModule } from '../packages.ts';
-import { readLocalFunction } from '../functions.ts';
-import type { LocalFunction } from '../types/plugin.ts';
+import { findFunction } from '../functions.ts';
+import type { FunctionNode } from '../types/rules.ts';
 import { readTestCall, listBodyNodes } from '../testing.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { ASYNC_SUITE_MODULES, ASYNC_SUITE_ORIGINS, ASYNC_SUITE_MODIFIERS } from '../config/testing.ts';
 
-function readSuiteCallback(node: TSESTree.CallExpression, source: TSESLint.SourceCode): LocalFunction | undefined {
+function readSuiteCallback(node: TSESTree.CallExpression, source: TSESLint.SourceCode): FunctionNode | undefined {
     const call = readTestCall(node, source);
     const isSuite =
         call?.kind === 'suite' &&
         ASYNC_SUITE_ORIGINS.has(call.module) &&
         call.modifiers.every((modifier) => ASYNC_SUITE_MODIFIERS.has(modifier));
     if (!isSuite) return undefined;
-    const functions = node.arguments.map((argument) => readLocalFunction(argument, source));
-    return call.callback ?? functions.find((callback) => callback?.body !== undefined);
+    const functions = node.arguments.map((argument) => findFunction(argument, source));
+    return call.callback ?? functions.find((callback) => callback !== undefined);
 }
 
-function findFirstAwait(callback: LocalFunction, source: TSESLint.SourceCode): TSESTree.Node | undefined {
-    const nodes = callback.body === undefined ? [] : listBodyNodes(callback.body, source);
-    const waits = nodes.filter(
+function findFirstAwait(callback: FunctionNode, source: TSESLint.SourceCode): TSESTree.Node | undefined {
+    const nodes = listBodyNodes(callback.body, source);
+    return nodes.find(
         (node) =>
             node.type === AST_NODE_TYPES.AwaitExpression || (node.type === AST_NODE_TYPES.ForOfStatement && node.await),
     );
-    return waits.toSorted((left, right) => left.range[0] - right.range[0])[0];
 }
 
-function registersAfter(callback: LocalFunction, wait: TSESTree.Node, source: TSESLint.SourceCode): boolean {
+function registersAfter(callback: FunctionNode, wait: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     const offset = wait.type === AST_NODE_TYPES.ForOfStatement ? wait.range[0] : wait.range[1];
-    const nodes = callback.body?.type === AST_NODE_TYPES.BlockStatement ? listBodyNodes(callback.body, source) : [];
-    const calls = nodes.flatMap((node) =>
+    const calls = listBodyNodes(callback.body, source).flatMap((node) =>
         node.type === AST_NODE_TYPES.ExpressionStatement &&
         node.expression.type === AST_NODE_TYPES.CallExpression &&
         node.range[0] >= offset
@@ -43,7 +41,7 @@ function registersAfter(callback: LocalFunction, wait: TSESTree.Node, source: TS
 }
 
 function isDroppingFunction(call: TSESTree.CallExpression, source: TSESLint.SourceCode): boolean {
-    const dropping = readLocalFunction(call.callee, source);
+    const dropping = findFunction(call.callee, source);
     if (dropping?.async !== true) return false;
     const wait = findFirstAwait(dropping, source);
     return wait !== undefined && registersAfter(dropping, wait, source);
@@ -55,9 +53,8 @@ function readDroppingAwait(wait: TSESTree.Node | undefined, source: TSESLint.Sou
     return isCall && isDroppingFunction(argument, source) ? argument : undefined;
 }
 
-function listDroppingCalls(callback: LocalFunction, source: TSESLint.SourceCode): TSESTree.CallExpression[] {
-    const nodes = callback.body === undefined ? [] : listBodyNodes(callback.body, source);
-    const expressions = nodes.flatMap((node) =>
+function listDroppingCalls(callback: FunctionNode, source: TSESLint.SourceCode): TSESTree.CallExpression[] {
+    const expressions = listBodyNodes(callback.body, source).flatMap((node) =>
         node.type === AST_NODE_TYPES.ExpressionStatement ? [node.expression] : [],
     );
     const calls = expressions.map((expression) =>
@@ -100,19 +97,22 @@ export const noAsyncSuiteCallbacks = createRule<
     create(context) {
         if (!usesModule(context, ASYNC_SUITE_MODULES)) return {};
         const source = context.sourceCode;
-        const reportKeyword = (callback: LocalFunction): void => {
+        const reportKeyword = (callback: FunctionNode): void => {
             const token = source.getFirstToken(callback);
-            if (token?.value !== 'async') return;
-            const end = source.getTokenAfter(token)?.range[0] ?? token.range[1];
+            const next = token && source.getTokenAfter(token);
+            if (token?.value !== 'async' || !next) return;
             context.report({
                 loc: token.loc,
                 messageId: 'removeAsync',
                 suggest: [
-                    { messageId: 'removeAsyncKeyword', fix: (fixer) => fixer.removeRange([token.range[0], end]) },
+                    {
+                        messageId: 'removeAsyncKeyword',
+                        fix: (fixer) => fixer.removeRange([token.range[0], next.range[0]]),
+                    },
                 ],
             });
         };
-        const reportAsync = (callback: LocalFunction): TSESTree.Node | undefined => {
+        const reportAsync = (callback: FunctionNode): TSESTree.Node | undefined => {
             const wait = findFirstAwait(callback, source);
             const dropping = readDroppingAwait(wait, source);
             if (wait === undefined) reportKeyword(callback);

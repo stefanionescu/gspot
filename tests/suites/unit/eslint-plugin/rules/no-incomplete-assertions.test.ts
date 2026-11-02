@@ -9,6 +9,7 @@ buildRuleTester().run('no-incomplete-assertions', plugin.rules['no-incomplete-as
         'expect(1);',
         'other.to.be;',
         'const check = expect(total).to;',
+        'load().to;',
     ],
     invalid: [
         { code: 'expect(total);', errors: [{ messageId: 'complete', data: { name: 'expect' } }] },
@@ -20,5 +21,8 @@ buildRuleTester().run('no-incomplete-assertions', plugin.rules['no-incomplete-as
         { code: 'expect.soft(total);', errors: [{ messageId: 'complete', data: { name: 'soft' } }] },
         { code: 'await expect.poll(read).not;', errors: [{ messageId: 'complete', data: { name: 'not' } }] },
         { code: 'expect.soft;', errors: [{ messageId: 'complete', data: { name: 'soft' } }] },
+        { code: 'await expect(load()).rejects;', errors: [{ messageId: 'complete', data: { name: 'rejects' } }] },
+        { code: 'assert.rejects;', errors: [{ messageId: 'call', data: { name: 'rejects' } }] },
+        { code: 'expect(total).to.be.a("number").and;', errors: [{ messageId: 'complete', data: { name: 'and' } }] },
     ],
 });

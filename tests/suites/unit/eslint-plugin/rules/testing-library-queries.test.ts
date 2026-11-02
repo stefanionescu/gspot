@@ -9,6 +9,9 @@ buildRuleTester().run('testing-library-queries', plugin.rules['testing-library-q
         'import { screen, waitFor } from "@testing-library/react";\nawait waitFor(() => { expect(screen.getByText("Saved")).toBeNull(); });',
         'import { screen, waitForElementToBeRemoved } from "@testing-library/react";\nawait waitForElementToBeRemoved(() => screen.queryByText("Saving"));',
         'import { screen, waitForElementToBeRemoved } from "@testing-library/react";\nawait waitForElementToBeRemoved(screen.getByText("Saving"));',
+        'import { screen } from "@testing-library/react";\nexpect(element).toBeTruthy();',
+        'import { screen } from "@testing-library/react";\nexpect(load()[0]).toBeTruthy();',
+        'import { screen } from "@testing-library/react";\nwrapper(element).toBeTruthy();',
     ],
     invalid: [
         {
@@ -20,6 +23,16 @@ buildRuleTester().run('testing-library-queries', plugin.rules['testing-library-q
             code: 'import { screen } from "@testing-library/vue";\nexpect(screen.queryAllByRole("row")[0]).toBeTruthy();',
             output: 'import { screen } from "@testing-library/vue";\nexpect(screen.getAllByRole("row")[0]).toBeTruthy();',
             errors: [{ messageId: 'presence', line: 2 }],
+        },
+        {
+            code: 'import { screen } from "@testing-library/react";\nexpect(screen.queryAllByRole("row").length).toBeTruthy();',
+            output: 'import { screen } from "@testing-library/react";\nexpect(screen.getAllByRole("row").length).toBeTruthy();',
+            errors: [{ messageId: 'presence', line: 2 }],
+        },
+        {
+            code: 'import { screen } from "@testing-library/react/pure";\nexpect(screen.getByText("Saved")).not.toBeInTheDocument();',
+            output: 'import { screen } from "@testing-library/react/pure";\nexpect(screen.queryByText("Saved")).not.toBeInTheDocument();',
+            errors: [{ messageId: 'absence', line: 2 }],
         },
         {
             code: 'import { screen, waitForElementToBeRemoved } from "@testing-library/react";\nawait waitForElementToBeRemoved(() => screen.getByText("Saving"));',

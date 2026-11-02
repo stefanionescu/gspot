@@ -20,14 +20,13 @@ function isExpectCall(node: TSESTree.Node): boolean {
 
 function isExpectStatic(node: TSESTree.Node): boolean {
     if (node.type !== AST_NODE_TYPES.MemberExpression) return false;
-    if (!EXPECT_STATIC_METHODS.has(ASTUtils.getPropertyName(node) ?? '')) return false;
-    return ASTUtils.isIdentifier(node.object) ? node.object.name === 'expect' : isExpectStatic(node.object);
+    if (!EXPECT_STATIC_METHODS.has(ASTUtils.getPropertyName(node))) return false;
+    return ASTUtils.isIdentifier(node.object) && node.object.name === 'expect';
 }
 
 function readNext(node: TSESTree.Node): TSESTree.Node | undefined {
     if (node.type === AST_NODE_TYPES.MemberExpression) return node.object;
-    const callee = node.type === AST_NODE_TYPES.CallExpression ? node.callee : undefined;
-    return callee?.type === AST_NODE_TYPES.MemberExpression && !isExpectStatic(callee) ? callee : undefined;
+    return node.type === AST_NODE_TYPES.CallExpression ? node.callee : undefined;
 }
 
 function isAssertionRoot(node: TSESTree.Node, roots: ReadonlySet<string>): boolean {
@@ -52,7 +51,7 @@ function isAssertionChain(node: TSESTree.Node, roots: ReadonlySet<string>): bool
 
 function readIncomplete(node: TSESTree.Node): AssertionFinding | undefined {
     if (node.type !== AST_NODE_TYPES.MemberExpression || !isAssertionChain(node, ASSERTION_ROOTS)) return undefined;
-    const name = ASTUtils.getPropertyName(node) ?? '';
+    const name = ASTUtils.getPropertyName(node);
     const isRejects = name === 'rejects' && isAssertionChain(node.object, EXPECT_ROOTS);
     if (ASSERTION_METHODS.has(name) && !isRejects) return [node.property, 'call'];
     return ASSERTION_WORDS.has(name) ? [node.property, 'complete'] : undefined;
@@ -91,8 +90,7 @@ export const noIncompleteAssertions = createRule<[], 'complete' | 'call'>({
             ExpressionStatement({ expression }) {
                 const node = expression.type === AST_NODE_TYPES.AwaitExpression ? expression.argument : expression;
                 for (const [reported, messageId] of listIncomplete(node)) {
-                    const name = ASTUtils.isIdentifier(reported) ? reported.name : '';
-                    context.report({ node: reported, messageId, data: { name } });
+                    context.report({ node: reported, messageId, data: { name: context.sourceCode.getText(reported) } });
                 }
             },
         };
