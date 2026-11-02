@@ -91,14 +91,6 @@ import {
     checkStoragePolicies,
 } from '#cli/configurations/platform/supabase/checks.ts';
 import {
-    checkBaseline,
-    checkSuppressions,
-    checkGeneratedFiles,
-    checkUnmatchedPaths,
-    checkConflictingConfigs,
-    checkDetectedConfigurations,
-} from '#cli/configurations/general/gspot/checks.ts';
-import {
     checkDeptry,
     checkVulture,
     checkPydoclint,
@@ -106,6 +98,14 @@ import {
     checkPythonFunctionSize,
     checkPlaceholderDocstrings,
 } from '#cli/configurations/language/python/checks.ts';
+import {
+    checkBaseline,
+    checkSuppressions,
+    checkGeneratedFiles,
+    checkUnmatchedPaths,
+    checkConflictingConfigs,
+    checkDetectedConfigurations,
+} from '#cli/configurations/general/gspot/checks.ts';
 import {
     checkAssets,
     checkXcstrings,
