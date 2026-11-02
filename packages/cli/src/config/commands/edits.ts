@@ -1,7 +1,4 @@
-import { SWIFT_FILES } from '#cli/config/configurations/swift.ts';
-import { GITATTRIBUTES_FILE } from '#cli/config/repository/files.ts';
-import { SQL_FILES, PYTHON_FILES } from '#cli/config/configurations/python.ts';
-import { GITHUB_WORKFLOW, GITLAB_WORKFLOW, HOOKS_CHANGED_NOTE, TOOLS_CHANGED_NOTE } from '#cli/config/generation.ts';
+import { HOOKS_CHANGED_NOTE, TOOLS_CHANGED_NOTE } from '#cli/config/generation.ts';
 
 export const IGNORE_CHECK_MESSAGE = 'Run gspot ignore <check> --reason "<why>".';
 
@@ -42,29 +39,6 @@ export const NO_CHECK_IGNORE_TEXTS = {
 
 export const ESCAPED_GLOB_CHARACTERS = /\\([()[\]{}*?!+@])/gu;
 
-export const VERIFY_FLAG = '--verify';
-
-export const NAME_ONLY_FLAG = '--name-only';
-
-export const READ_COMMITTED_MESSAGE =
-    'Cannot read your committed tool configs. Run git status, then commit or stash the change.';
-
-export const PRETTIER_SCRIPT_NOTE =
-    'gspot cannot read this Prettier config, so set format.indent_width and format.print_width by hand';
-
-export const DROPPED_LINE_SETTINGS =
-    /^[ \t]*(?:end_of_line[ \t]*=[ \t]*crlf|insert_final_newline[ \t]*=[ \t]*false)[ \t]*$/imu;
-
-export const DROPPED_LINE_SETTINGS_NOTE =
-    'drops its crlf or missing final newline: gspot always writes lf and a final newline';
-
-export const DETECTED_SETTINGS = [
-    'site.build_command',
-    'swift.xcode_destination',
-    'cloudflare.types_file',
-    'cloudflare.types_interface',
-] as const;
-
 export const DETECTION_LABEL_WIDTH = 20;
 
 export const DETECTION_GAP_WIDTH = 3;
@@ -79,8 +53,6 @@ export const OWN_HOOKS = 'your own';
 
 export const HOOKS_LABEL = 'existing hooks';
 
-export const FOREIGN_HOOK_NOTE = 'keeps running your hooks; add the lines of gspot install to call .gspot/hooks';
-
 export const CI_LABEL = 'existing ci';
 
 export const AGENT_FILES_LABEL = 'agent files';
@@ -94,37 +66,6 @@ export const NOT_CHECKED_LABEL = 'not checked';
 export const REPLACES_LABEL = 'gspot replaces';
 
 export const LEAVES_LABEL = 'gspot leaves';
-
-export const RUFF_SETTINGS_FILES = ['.ruff.toml', 'ruff.toml', 'pyproject.toml'] as const;
-
-export const EDITORCONFIG_FILE = '.editorconfig';
-
-export const EDITORCONFIG_COMMENT = /^\s*[#;]/u;
-
-export const EDITORCONFIG_SECTION = /^\s*\[(.+)\]\s*$/u;
-
-export const PRETTIER_FILE_FORMATS: Readonly<Record<string, 'yaml' | 'json' | 'toml'>> = {
-    '.prettierrc': 'yaml',
-    '.prettierrc.yml': 'yaml',
-    '.prettierrc.yaml': 'yaml',
-    '.prettierrc.json': 'json',
-    '.prettierrc.json5': 'yaml',
-    '.prettierrc.toml': 'toml',
-};
-
-export const PRETTIER_DEFAULTS = { tabWidth: 2, printWidth: 80, singleQuote: false, useTabs: false } as const;
-
-export const FORMATTER_DEFAULTS = [
-    {
-        tag: 'python',
-        paths: PYTHON_FILES,
-        format: { indent_style: 'space', indent_width: 4, print_width: 88, quotes: 'double' },
-    },
-    { tag: 'swift', paths: SWIFT_FILES, format: { indent_style: 'space', indent_width: 4, print_width: 120 } },
-    { tag: 'sql', paths: SQL_FILES, format: { indent_style: 'space', indent_width: 4, print_width: 80 } },
-] as const;
-
-export const PROSE_TAGS: ReadonlySet<string> = new Set(['text', 'markdown']);
 
 export const INIT_INSTALL_NOTES: ReadonlySet<string> = new Set([HOOKS_CHANGED_NOTE, TOOLS_CHANGED_NOTE]);
 
@@ -141,59 +82,6 @@ export const NO_CONFIGURATIONS_FLAG = '--no-configurations';
 
 export const LEVEL_OPTION = '--level <level>';
 
-export const COLUMN_GAP = 2;
-
-export const CONFIGURATION_WIDTH = 16;
-
-export const ORIGIN_WIDTH = 12;
-
-export const ATTRIBUTES_ROW = {
-    path: GITATTRIBUTES_FILE,
-    note: 'marks the generated files and keeps LF line endings',
-} as const;
-
-export const CI_FILE_NOTES = {
-    [GITHUB_WORKFLOW]: 'check workflow',
-    [GITLAB_WORKFLOW]: `add include: [{ local: ${GITLAB_WORKFLOW} }] to .gitlab-ci.yml`,
-} as const;
-
-export const GSPOT_FOLDER_NOTE = 'generated files';
-
-export const ADDS_BLOCK_NOTE = 'adds the gspot block';
-
-export const INSTALL_LOCKFILE_NOTE = 'lockfile written by gspot install';
-
-export const ALWAYS_SELECTED_NOUN = 'always-selected configuration';
-
-export const UNREAD_SUBMODULE_MESSAGE = 'submodule; init does not read it';
-
-export const LINT_FOLDER_MESSAGE = 'a folder of lint scripts; check remaining references before deleting it';
-
-export const DELETED_RULES_NOTE =
-    '(your own lint rules in them do not carry over; read them with git show HEAD:<path>)';
-
-export const LINT_FOLDERS_HEADING = 'lint folders; delete when nothing calls them';
-
-export const CHANGE_LATER_MESSAGE =
-    'Change the hooks and rule files later with gspot set hooks.enabled or rule_files.enabled.';
-
-export const TOOL_PIN_NOUN = 'tool pin';
-
-export const NPM_PIN_NOUN = 'pinned npm tool';
-
-export const PYTHON_PIN_NOUN = 'pinned Python tool';
-
-export const CI_FILE_NOTE = 'existing CI file';
-
-export const CI_OFF_MESSAGE =
-    'CI is off. To turn it on, run gspot set ci.enabled true; for GitLab, also run gspot set ci.provider gitlab.';
-
-export const PRETTIER_SCRIPT_FILE = /\.[cm]?[jt]s$/u;
-
-export const HAND_EDIT_RECORDS = '[[scope]], [[command_check]], and [[import_rule]] take a hand edit.';
-
-export const LEADING_COMMENTS = /^(?:#[^\n]*\n|[ \t]*\n)*/u;
-
 export const LOCAL_RECORDS = { scope: 'path', import_rule: 'name', command_check: 'id' } as const;
 
 export const FROM_CONFLICT_MESSAGE =
@@ -208,5 +96,3 @@ export const ADD_REMOVE_MESSAGE = 'Use gspot add or gspot remove to change confi
 export const FIX_APPLY_MESSAGE = 'Fix that, then run gspot apply.';
 
 export const COMMAND_SUGGESTION = /\(Did you mean ([^?)]+)\??\)/u;
-
-export const FORMAT_CONFIGURATION = 'format';

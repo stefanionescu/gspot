@@ -5,8 +5,8 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { stripDefaults } from '#cli/commands/init/defaults.ts';
-import { DEFAULT_CASES } from '#tests/config/commands/init/settings.ts';
+import { stripDefaults } from '#cli/generation/setup/defaults.ts';
+import { DEFAULT_CASES } from '#tests/config/generation/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each([...DEFAULT_CASES])('init strips $name without changing inherited values', ({ source, expected }) => {

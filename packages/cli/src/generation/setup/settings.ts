@@ -4,14 +4,14 @@ import type { TomlTable } from '#cli/types/settings.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import { stripDefaults } from '#cli/commands/init/defaults.ts';
-import { readScopeFormat } from '#cli/commands/init/format.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { buildDetectedTables } from '#cli/settings/detected.ts';
 import { formatSettingsCommands } from '#cli/generation/rules.ts';
-import type { InitOptions, SettingsDraft } from '#cli/types/commands/edits.ts';
+import { stripDefaults } from '#cli/generation/setup/defaults.ts';
+import { readScopeFormat } from '#cli/generation/setup/format.ts';
+import type { InitOptions, SettingsDraft } from '#cli/types/generation.ts';
 import type { Repository, InitConfigurations } from '#cli/types/repository.ts';
-import { LEADING_COMMENTS, HAND_EDIT_RECORDS } from '#cli/config/commands/edits.ts';
+import { LEADING_COMMENTS, HAND_EDIT_RECORDS } from '#cli/config/generation.ts';
 
 function buildSettingsTable(
     draft: SettingsDraft,

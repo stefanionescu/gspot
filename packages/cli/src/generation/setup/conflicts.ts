@@ -5,16 +5,10 @@ import { runGitBlocking } from '#cli/repository/git/run.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
 import { isEditedInPlace } from '#cli/repository/conflicts.ts';
 import type { Files, FileContents } from '#cli/types/system.ts';
-import { parsePrettierFile } from '#cli/commands/init/format.ts';
-import type { InitPlan, ConflictingConfigs } from '#cli/types/commands/edits.ts';
+import { parsePrettierFile } from '#cli/generation/setup/format.ts';
+import type { InitPlan, ConflictingConfigs } from '#cli/types/generation.ts';
 import type { WritePlan, ManagedKeys, RepositorySetup, ConflictingConfig } from '#cli/types/repository.ts';
-
-import {
-    VERIFY_FLAG,
-    NAME_ONLY_FLAG,
-    DROPPED_LINE_SETTINGS,
-    READ_COMMITTED_MESSAGE,
-} from '#cli/config/commands/edits.ts';
+import { VERIFY_FLAG, NAME_ONLY_FLAG, DROPPED_LINE_SETTINGS, READ_COMMITTED_MESSAGE } from '#cli/config/generation.ts';
 
 function listCommittedPaths(root: string, paths: string[]): Set<string> {
     const head = runGitBlocking(root, ['rev-parse', VERIFY_FLAG, '--quiet', 'HEAD']);

@@ -11,8 +11,8 @@ import { DIGITS_ONLY } from '#cli/config/configurations/naming.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import type { TomlTable, ScopeConfigurations } from '#cli/types/settings.ts';
 import { LINE_BREAK, PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers.ts';
-import { ruffFormatSchema, prettierSettingsSchema } from '#cli/schemas/commands.ts';
-import type { SettingsDraft, PrettierOptions, EditorconfigSection } from '#cli/types/commands/edits.ts';
+import { ruffFormatSchema, prettierSettingsSchema } from '#cli/schemas/generation.ts';
+import type { SettingsDraft, PrettierOptions, EditorconfigSection } from '#cli/types/generation.ts';
 
 import {
     PROSE_TAGS,
@@ -25,7 +25,7 @@ import {
     EDITORCONFIG_SECTION,
     EDITORCONFIG_COMMENT,
     PRETTIER_FILE_FORMATS,
-} from '#cli/config/commands/edits.ts';
+} from '#cli/config/generation.ts';
 
 function convertQuotes(singleQuote: boolean | undefined): 'single' | 'double' | undefined {
     if (singleQuote === undefined) return undefined;

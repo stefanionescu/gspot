@@ -10,7 +10,7 @@ import { PACKAGE_JSON_ERROR } from '#tests/config/setup/programs.ts';
 import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
-import { PRESERVE_SOURCE, UNCOMMITTED_FORMAT_CASES } from '#tests/config/commands/init/plan.ts';
+import { PRESERVE_SOURCE, UNCOMMITTED_FORMAT_CASES } from '#tests/config/generation/plan.ts';
 
 test('init with an unknown configuration exits 2 and writes nothing', async () => {
     await using sandbox = await testdir({ 'scripts/a.sh': CLEAN_BASH_SCRIPT });

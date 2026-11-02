@@ -9,7 +9,7 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import type { InitJson } from '#cli/types/commands/edits.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { WORKSPACE_PYTHON_FILES } from '#tests/config/commands/init/settings.ts';
+import { WORKSPACE_PYTHON_FILES } from '#tests/config/generation/settings.ts';
 
 import {
     GIT_PLAN_CASES,
@@ -17,7 +17,7 @@ import {
     EDITORCONFIG_WRITE,
     ATTRIBUTES_PLAN_ROW,
     QUALITY_PACKAGE_FILES,
-} from '#tests/config/commands/init/plan.ts';
+} from '#tests/config/generation/plan.ts';
 
 test.each([
     { name: 'a new .gitattributes under write', files: {}, attributes: 'write' },

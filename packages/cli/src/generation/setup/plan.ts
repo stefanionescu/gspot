@@ -7,12 +7,11 @@ import type { Settings } from '#cli/types/settings.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import type { Configuration } from '#cli/types/manifests.ts';
 import { formatCount, formatScope } from '#cli/system/text.ts';
-import { GENERATED_FILE_NOUN } from '#cli/config/generation.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { listMisePins, listPackagePins } from '#cli/tools/pins.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
-import type { InitPlan, InitScan, InitFileRow, ConflictingConfigs } from '#cli/types/commands/edits.ts';
+import type { InitPlan, InitScan, InitFileRow, ConflictingConfigs } from '#cli/types/generation.ts';
 
 import {
     COLUMN_GAP,
@@ -28,6 +27,7 @@ import {
     GSPOT_FOLDER_NOTE,
     FOREIGN_HOOK_NOTE,
     DELETED_RULES_NOTE,
+    GENERATED_FILE_NOUN,
     CONFIGURATION_WIDTH,
     LINT_FOLDER_MESSAGE,
     PRETTIER_SCRIPT_NOTE,
@@ -37,7 +37,7 @@ import {
     INSTALL_LOCKFILE_NOTE,
     UNREAD_SUBMODULE_MESSAGE,
     DROPPED_LINE_SETTINGS_NOTE,
-} from '#cli/config/commands/edits.ts';
+} from '#cli/config/generation.ts';
 
 function buildToolProjectRows(configurations: Configuration[]): InitPlan['change'] {
     const pins = listPackagePins(

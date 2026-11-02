@@ -39,7 +39,7 @@ import {
     REPLACED_CONFIG_DELETIONS,
     REPLACED_PYPROJECT_TABLES,
     STYLELINT_REPLACEMENT_CASES,
-} from '#tests/config/commands/init/plan.ts';
+} from '#tests/config/generation/plan.ts';
 
 test.each([...HOOKS_PATH_CASES])(
     'the init plan tells hook scripts in the source apart from the hooks folder Git uses ($hooksPath)',

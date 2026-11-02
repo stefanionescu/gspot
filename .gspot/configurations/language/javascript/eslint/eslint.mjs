@@ -1067,7 +1067,8 @@ export default [
                         "pattern": [
                             "packages/cli/src/generation/**",
                             "packages/cli/src/config/generation.ts",
-                            "packages/cli/src/types/generation.ts"
+                            "packages/cli/src/types/generation.ts",
+                            "packages/cli/src/schemas/generation.ts"
                         ]
                     },
                     {
@@ -1075,8 +1076,7 @@ export default [
                         "pattern": [
                             "packages/cli/src/commands/**",
                             "packages/cli/src/config/commands/**",
-                            "packages/cli/src/types/commands/**",
-                            "packages/cli/src/schemas/commands.ts"
+                            "packages/cli/src/types/commands/**"
                         ]
                     },
                     {

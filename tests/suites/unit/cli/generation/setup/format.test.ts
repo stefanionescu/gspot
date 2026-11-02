@@ -19,7 +19,7 @@ import {
     PRETTIER_FORMAT_OPTIONS,
     INVALID_PRETTIER_OPTIONS,
     UNREADABLE_PRETTIER_FILES,
-} from '#tests/config/commands/init/settings.ts';
+} from '#tests/config/generation/settings.ts';
 
 test.each(INVALID_PRETTIER_OPTIONS)(
     'init names $file and $field for an invalid option type',

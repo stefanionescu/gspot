@@ -11,9 +11,9 @@ import { LEFT_OUT_NOTES } from '#cli/config/settings/schema.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { listUnknownConfigurations } from '#cli/manifests/select.ts';
 import { formatSettingsIssue } from '#cli/settings/validation/schema.ts';
+import type { Template, LeftOutSetting } from '#cli/types/generation.ts';
 import { formatSettingsError } from '#cli/settings/validation/messages.ts';
 import type { TomlTable, SettingDefinition } from '#cli/types/settings.ts';
-import type { Template, LeftOutSetting } from '#cli/types/commands/edits.ts';
 import { parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
 import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
 

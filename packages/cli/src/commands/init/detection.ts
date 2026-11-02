@@ -1,6 +1,6 @@
 import { extractExtension } from '#cli/system/paths.ts';
 import { GROUP_LABELS } from '#cli/config/generation.ts';
-import type { DetectionSummary } from '#cli/types/commands/edits.ts';
+import type { DetectionSummary } from '#cli/types/generation.ts';
 import { buildFileMatcher } from '#cli/repository/files/selection.ts';
 
 import {
