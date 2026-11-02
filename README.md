@@ -2,22 +2,6 @@
 
 gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents.
 
-## Try it
-
-Run this at the root of a Git repository. It works on a copy, so your repository does not change:
-
-```shell
-npx @gspothq/cli scan
-```
-
-`gspot scan` runs the checks on the copy. It reports the findings, the files that differ from your style, the cost in
-tools and seconds, and the plan of `gspot init`. Three findings it catches:
-
-- `secrets/gitleaks-staged`: an API key in a source file.
-- `javascript/eslint`, rule `@typescript-eslint/no-floating-promises`: a promise that nothing waits for, so its error
-  disappears.
-- `gspot/suppressions`: an `eslint-disable` comment with no reason.
-
 ## What it does
 
 - **Picks the checks.** `gspot init` reads your files and turns on the checks for the languages and frameworks it
@@ -71,6 +55,17 @@ dependencies first, then run the install command above.
 [Installation](https://generativespotting.com/start/install/) gives the commands for npm, pnpm, Yarn, and a repository
 without a `package.json`. The [Quickstart](https://generativespotting.com/start/quickstart/) gives a prompt that lets
 your coding agent do the setup.
+
+## Try it
+
+Run this at the root of a Git repository. It works on a copy, so your repository does not change:
+
+```shell
+npx @gspothq/cli scan
+```
+
+It reports the findings, the files that differ from your style, the cost in tools and seconds, and the plan of
+`gspot init`.
 
 ## Documentation
 
