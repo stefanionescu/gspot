@@ -56,7 +56,10 @@ init loads a JavaScript or TypeScript Prettier config as Prettier does, so the c
 does not load, the plan says so, and you set `format.indent_width` and `format.print_width` by hand. Prettier has more
 options than `gspot.toml` holds, such as `quoteProps`. The table lists each of those as dropped. It does the same for a
 value that `gspot.toml` cannot hold, such as the Ruff quote style `preserve`, and for a config file that does not parse.
-A config never stops init or `gspot scan`.
+
+A config that init replaces never stops init or `gspot scan`. A `package.json` below the root or a `pyproject.toml` that
+does not parse gets a row too, and gives no dependencies or scope. A `tsconfig.json`, `pnpm-workspace.yaml`, `mise.toml`,
+or root `package.json` that does not parse stops init, and the error names the file.
 
 For a repository that has code, unspecified widths and quotes follow the defaults of Prettier: 2 spaces, 80 columns,
 and double quotes. Python files follow the defaults of Ruff, through a `[[format.override]]` record: 4 spaces, 88
