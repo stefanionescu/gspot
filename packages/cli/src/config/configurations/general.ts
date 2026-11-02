@@ -70,8 +70,6 @@ export const COMMIT_RECORD_END = '\0\n';
 
 export const MESSAGE_FILE = 'message.txt';
 
-export const COMMITLINT_CHECK = 'commits/commitlint';
-
 export const COMMIT_SCISSORS = /^. -{24} >8 -{24}\r?$/mu;
 
 export const MESSAGE_REFERENCES = [

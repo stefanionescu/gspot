@@ -1,13 +1,7 @@
+import { getTable, selectFormat } from '#cli/settings/scopes.ts';
+import { listOffRules } from '#cli/configurations/rule-options.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { getTable, selectFormat, listIgnoredRules } from '#cli/settings/scopes.ts';
-
-import {
-    SQL_FILES,
-    SQLFLUFF_CHECK,
-    SQL_FILE_EXTENSIONS,
-    SQLFLUFF_CAPITALISATION,
-    SQLFLUFF_DEFAULT_LEVEL_OFF,
-} from '#cli/config/configurations/python.ts';
+import { SQL_FILES, SQL_FILE_EXTENSIONS, SQLFLUFF_CAPITALISATION } from '#cli/config/configurations/python.ts';
 
 /**
 Build sqlfluff.cfg: the SQL dialect, formatting choices, and SQLFluff rule exclusions.
@@ -16,9 +10,7 @@ Build sqlfluff.cfg: the SQL dialect, formatting choices, and SQLFluff rule exclu
 */
 export function buildSqlfluffFile(planned: PlannedConfig): string {
     const format = selectFormat(planned.scope.settings, SQL_FILES);
-    const isAll = planned.level === 'all';
-
-    const off = [...listIgnoredRules(planned.scope, SQLFLUFF_CHECK), ...(isAll ? [] : SQLFLUFF_DEFAULT_LEVEL_OFF)];
+    const off = listOffRules(planned);
     const sections = {
         sqlfluff: {
             dialect: getTable(planned.scope.settings, 'sql').dialect,

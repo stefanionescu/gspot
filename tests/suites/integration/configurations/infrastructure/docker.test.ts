@@ -15,7 +15,6 @@ import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { HADOLINT_DEFAULT_LEVEL_OFF } from '#cli/config/configurations/infrastructure.ts';
 import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
@@ -158,7 +157,10 @@ test('every rule code of the pinned hadolint has a level', async () => {
     });
     expect(located.code, located.stderr).toBe(0);
     const binary = await readFile(join(located.stdout.trim(), 'hadolint'), 'latin1');
-    const levelled = new Set<string>([...HADOLINT_DEFAULT_LEVEL_OFF, ...HADOLINT_BOTH_LEVEL_CODES]);
+    const levelled = new Set<string>([
+        ...(getTool(readConfigurations().values(), 'hadolint').off?.basic ?? []),
+        ...HADOLINT_BOTH_LEVEL_CODES,
+    ]);
     expect(new Set(binary.match(/DL[34]\d{3}/gu)).difference(levelled)).toStrictEqual(new Set());
 });
 

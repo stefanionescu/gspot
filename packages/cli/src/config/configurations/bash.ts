@@ -23,8 +23,6 @@ export const SHELLCHECK_CHECKS = [
     'check-unassigned-uppercase',
 ] as const;
 
-export const SHELLCHECK_CHECK = 'bash/shellcheck';
-
 export const SHELLCHECK_TOOL_COMMENT = /^#\s*shellcheck\b/u;
 
 export const LEADING_UNDERSCORES = /^_+/u;

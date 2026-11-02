@@ -11,72 +11,7 @@ export const SWIFT_TOOLS_VERSION = /^\s*\/\/\s*swift-tools-version\s*:\s*(\d+(?:
 
 export const SWIFTFORMAT_COMMAS = { none: 'never', es5: 'collections-only', all: 'always' } as const;
 
-export const SWIFTFORMAT_DEFAULT_LEVEL_OFF = [
-    'hoistPatternLet',
-    'modifierOrder',
-    'redundantClosure',
-    'redundantExtensionACL',
-    'redundantFileprivate',
-    'redundantGet',
-    'redundantInit',
-    'redundantLet',
-    'redundantLetError',
-    'redundantNilInit',
-    'redundantObjc',
-    'redundantRawValues',
-    'redundantReturn',
-    'strongOutlets',
-    'strongifiedSelf',
-    'typeSugar',
-    'void',
-    'redundantSelf',
-    'wrapEnumCases',
-    'andOperator',
-    'anyObjectProtocol',
-    'applicationMain',
-    'assertionFailures',
-    'conditionalAssignment',
-    'consistentSwitchCaseSpacing',
-    'docCommentsBeforeModifiers',
-    'emptyExtensions',
-    'enumNamespaces',
-    'environmentEntry',
-    'extensionAccessControl',
-    'fileHeader',
-    'fileMacro',
-    'genericExtensions',
-    'headerFileName',
-    'hoistAwait',
-    'hoistTry',
-    'modifiersOnSameLine',
-    'noForceTryInTests',
-    'noForceUnwrapInTests',
-    'opaqueGenericParameters',
-    'preferForLoop',
-    'preferKeyPath',
-    'redundantAsync',
-    'redundantEmptyView',
-    'redundantEquatable',
-    'redundantMemberwiseInit',
-    'redundantOptionalBinding',
-    'redundantSendable',
-    'redundantStaticSelf',
-    'redundantSwiftTestingSuite',
-    'redundantThrows',
-    'redundantType',
-    'redundantTypedThrows',
-    'redundantVariable',
-    'redundantViewBuilder',
-    'simplifyGenericConstraints',
-    'sortTypealiases',
-    'swiftTestingTestCaseNames',
-    'wrapFunctionBodies',
-    'wrapPropertyBodies',
-    'wrapSingleLineComments',
-    'yodaConditions',
-] as const;
-
-export const SWIFTFORMAT_ALWAYS_OFF: Readonly<Record<string, string>> = {
+export const SWIFTFORMAT_OFF_REASONS: Readonly<Record<string, string>> = {
     trailingClosures: '# SwiftLint trailing_closure owns closure syntax.',
     initCoderUnavailable:
         '# Inserts an availability attribute into UIKit initializers, a behavior change, not a layout one.',
@@ -97,8 +32,6 @@ export const SWIFTFORMAT_OPTIONS = {
     self: 'init-only',
 } as const;
 
-export const SWIFTFORMAT_CHECK = 'swift/swiftformat';
-
 export const SWIFT_FILES = ['**/*.swift'] as const;
 
 export const SWIFTLINT_FUNCTION_NESTING = 2;
@@ -108,74 +41,6 @@ export const SWIFTLINT_COMMENTS = {
         ' The case and length of types, variables, parameters, and enum cases; naming/identifiers checks functions and methods.',
     disabled_rules: ' SwiftFormat owns whitespace, punctuation, braces, and statement layout.',
 } as const;
-
-export const SWIFTLINT_ALWAYS_OFF = [
-    'redundant_discardable_let',
-    'duplicate_imports',
-    'unneeded_break_in_switch',
-    'empty_parentheses_with_trailing_closure',
-    'convenience_type',
-    'pattern_matching_keywords',
-    'direct_return',
-    'syntactic_sugar',
-    'redundant_string_enum_value',
-    'unneeded_synthesized_initializer',
-    'yoda_condition',
-    'prefer_key_path',
-    'redundant_type_annotation',
-    'explicit_init',
-    'shorthand_optional_binding',
-    'trailing_whitespace',
-    'opening_brace',
-    'statement_position',
-    'control_statement',
-    'implicit_getter',
-    'implicit_optional_initialization',
-    'closing_brace',
-    'colon',
-    'comma',
-    'redundant_void_return',
-    'return_arrow_whitespace',
-    'trailing_comma',
-    'trailing_newline',
-    'trailing_semicolon',
-    'vertical_whitespace',
-    'void_return',
-] as const;
-
-export const SWIFTLINT_DEFAULT_LEVEL_OFF = [
-    'closure_body_length',
-    'max_cyclomatic_complexity',
-    'discouraged_direct_init',
-    'enum_case_associated_values_count',
-    'explicit_acl',
-    'file_length',
-    'file_name_no_space',
-    'file_types_order',
-    'final_test_case',
-    'function_body_length',
-    'function_default_parameter_at_end',
-    'function_parameter_count',
-    'identifier_name',
-    'implicitly_unwrapped_optional',
-    'local_doc_comment',
-    'missing_docs',
-    'nesting',
-    'no_empty_block',
-    'no_extension_access_modifier',
-    'no_magic_numbers',
-    'period_spacing',
-    'private_action',
-    'private_outlet',
-    'private_over_fileprivate',
-    'test_case_accessibility',
-    'trailing_closure',
-    'type_body_length',
-    'type_contents_order',
-    'type_name',
-    'unavailable_function',
-    'unowned_variable_capture',
-] as const;
 
 export const SWIFTLINT_ANALYZER: ReadonlySet<string> = new Set([
     'capture_variable',
@@ -257,7 +122,5 @@ export const SWIFTLINT_OPT_IN: ReadonlySet<string> = new Set([
     'discouraged_optional_boolean',
     'discouraged_optional_collection',
 ]);
-
-export const SWIFTLINT_CHECK = 'swift/swiftlint';
 
 export const SWIFTLINT_LEVEL_NOTE = ' Off at this level.';

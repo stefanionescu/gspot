@@ -8,21 +8,21 @@ import { pyprojectSchema } from '#cli/schemas/parsers.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { listOffRules } from '#cli/configurations/rule-options.ts';
 import { DEFAULT_QUOTES } from '#cli/config/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { JSON_INDENT, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
+import { getTable, getLimit, listIgnores, selectFormat } from '#cli/settings/scopes.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
-import { getTable, getLimit, listIgnores, selectFormat, listIgnoredRules } from '#cli/settings/scopes.ts';
 
 import {
     RUFF_CHECK,
     RUFF_ISORT,
     PYTHON_FILES,
-    RUFF_ALWAYS_OFF,
     RUFF_PATH_RULES,
+    PYDANTIC_PACKAGE,
     RUFF_TIDY_IMPORTS,
     RUFF_CONSOLE_RULES,
-    PYDANTIC_PACKAGE,
     RUFF_RUNTIME_TYPES,
     BASEDPYRIGHT_CHECK,
     BASEDPYRIGHT_LEVELS,
@@ -105,7 +105,6 @@ export function buildRuffFile(planned: PlannedConfig): string {
         ...(planned.level === 'all' ? configuration.ruff.all : []),
     ]);
     const scope = planned.scope.path;
-    const off = listIgnoredRules(planned.scope, RUFF_CHECK);
     const perFile = listIgnores(planned.scope.settings, RUFF_CHECK).filter(
         (each) => each.rule !== undefined && each.paths !== undefined,
     );
@@ -138,7 +137,7 @@ export function buildRuffFile(planned: PlannedConfig): string {
             preview: true,
             'explicit-preview-rules': true,
             select: ruffRules,
-            ignore: [...off, ...RUFF_ALWAYS_OFF],
+            ignore: listOffRules(planned),
             isort: RUFF_ISORT,
             'flake8-tidy-imports': RUFF_TIDY_IMPORTS,
             mccabe: { 'max-complexity': getLimit(planned.scope.settings, 'max_cyclomatic_complexity', 'python') },

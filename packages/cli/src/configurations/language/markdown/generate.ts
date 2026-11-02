@@ -1,11 +1,10 @@
+import { getTable } from '#cli/settings/scopes.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { refuseIdleRuleOptions } from '#cli/configurations/rule-options.ts';
+import { listOffRules, refuseIdleRuleOptions } from '#cli/configurations/rule-options.ts';
 
 import {
     PRETTIER_STYLE,
-    MARKDOWNLINT_CHECK,
     MARKDOWNLINT_RULES,
     MARKDOWNLINT_ALL_RULES,
     MARKDOWNLINT_PRETTIER_DISABLED,
@@ -16,7 +15,7 @@ Build markdownlint.jsonc: the Markdown lint rules for the level, indentation, an
 
 @param planned the config file to build.
 */
-export function buildMarkdownlintFile(planned: Pick<PlannedConfig, 'scope' | 'level'>): string {
+export function buildMarkdownlintFile(planned: PlannedConfig): string {
     const isAll = planned.level === 'all';
     const document: Record<string, string | boolean | Record<string, unknown>> = {
         extends: PRETTIER_STYLE,
@@ -38,9 +37,6 @@ export function buildMarkdownlintFile(planned: Pick<PlannedConfig, 'scope' | 'le
     });
     for (const [rule, ruleOptions] of Object.entries(options))
         document[rule] = { ...(typeof document[rule] === 'object' && document[rule]), ...ruleOptions };
-    Object.assign(
-        document,
-        Object.fromEntries(listIgnoredRules(planned.scope, MARKDOWNLINT_CHECK).map((rule) => [rule, false])),
-    );
+    Object.assign(document, Object.fromEntries(listOffRules(planned).map((rule) => [rule, false])));
     return JSON.stringify(document, null, JSON_INDENT);
 }

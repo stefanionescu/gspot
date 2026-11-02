@@ -16,6 +16,7 @@ extensions = [".css"]
 [[tool]]
 name = "stylelint"
 npm = "stylelint"
+off = { basic = ["no-descending-specificity", "container-name-pattern", "custom-media-pattern", "custom-property-pattern", "declaration-block-no-redundant-longhand-properties", "keyframes-name-pattern", "layer-name-pattern", "number-max-precision", "selector-class-pattern", "selector-disallowed-list", "selector-id-pattern", "selector-max-id", "selector-max-specificity", "selector-not-notation"] }
 replace = [".stylelintrc", ".stylelintrc.json", ".stylelintrc.js", ".stylelintrc.cjs", ".stylelintrc.mjs", ".stylelintrc.yml", ".stylelintrc.yaml", "stylelint.config.js", "stylelint.config.cjs", "stylelint.config.mjs"]
 suppression = { marker = "^(?:/\\*|//)\\s*stylelint-disable(?:-next-line|-line)?(?=\\s|$)", reason = " -- (?<reason>\\S(?:[\\s\\S]*?\\S)?)\\s*(?:\\*/)?$", example = "/* stylelint-disable-next-line declaration-no-important -- reason: the vendor widget sets its own color */" }
 version = "17.16.0"

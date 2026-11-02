@@ -118,33 +118,6 @@ export const RUFF_PATH_RULES = {
 
 export const RUFF_CONSOLE_RULES = ['T20'] as const;
 
-export const RUFF_ALWAYS_OFF = [
-    'W291',
-    'W292',
-    'W293',
-    'W391',
-    'COM812',
-    'COM819',
-    'D203',
-    'D206',
-    'D213',
-    'D300',
-    'D417',
-    'I002',
-    'N806',
-    'N815',
-    'N816',
-    'N999',
-    'ISC001',
-    'ISC002',
-    'Q000',
-    'Q001',
-    'Q002',
-    'Q003',
-    'RUF023',
-    'W191',
-] as const;
-
 export const RUFF_CHECK = 'python/ruff';
 
 export const BASEDPYRIGHT_CHECK = 'python/basedpyright';
@@ -160,10 +133,6 @@ export const SQLFLUFF_CAPITALISATION = {
 export const SQL_FILE_EXTENSIONS = '.sql,.pgsql,.psql';
 
 export const SQL_FILES = ['**/*.sql', '**/*.pgsql', '**/*.psql'] as const;
-
-export const SQLFLUFF_DEFAULT_LEVEL_OFF = ['AM05', 'AM09', 'CV11', 'ST05', 'ST07', 'ST09'] as const;
-
-export const SQLFLUFF_CHECK = 'sql/sqlfluff';
 
 export const DEPTRY_FIRST_PARTY_FLAG = '--known-first-party';
 

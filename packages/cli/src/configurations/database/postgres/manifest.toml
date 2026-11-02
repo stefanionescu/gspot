@@ -19,6 +19,7 @@ paths = ["db/migrations/*.sql", "migrations/*.sql", "prisma/migrations/*/migrati
 min_version = "2.0.0"
 name = "squawk"
 npm = "squawk-cli"
+off = { basic = ["prefer-bigint-over-int", "prefer-bigint-over-smallint", "prefer-identity", "prefer-text-field"] }
 replace = [".squawk.toml", "squawk.toml"]
 version = "2.70.0"
 

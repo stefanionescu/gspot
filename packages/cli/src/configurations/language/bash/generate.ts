@@ -1,12 +1,6 @@
-import { listIgnoredRules } from '#cli/settings/scopes.ts';
+import { listOffRules } from '#cli/configurations/rule-options.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-
-import {
-    SHELLCHECK_CHECK,
-    SHELLCHECK_CHECKS,
-    SHELLCHECK_OPTIONS,
-    SHELLCHECK_ALL_LEVEL_ON,
-} from '#cli/config/configurations/bash.ts';
+import { SHELLCHECK_CHECKS, SHELLCHECK_OPTIONS, SHELLCHECK_ALL_LEVEL_ON } from '#cli/config/configurations/bash.ts';
 
 /**
 Build shellcheckrc: the ShellCheck source-path and excluded-rule settings.
@@ -16,7 +10,7 @@ Build shellcheckrc: the ShellCheck source-path and excluded-rule settings.
 export function buildShellcheckFile(planned: PlannedConfig): string {
     const isAll = planned.level === 'all';
     const enable = [...SHELLCHECK_CHECKS, ...(isAll ? SHELLCHECK_ALL_LEVEL_ON : [])];
-    const disable = listIgnoredRules(planned.scope, SHELLCHECK_CHECK);
+    const disable = listOffRules(planned);
     return [
         ...SHELLCHECK_OPTIONS.map(([key, value]) => `${key}=${value}`),
         `enable=${enable.join(',')}`,

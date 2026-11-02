@@ -1,17 +1,15 @@
+import { getTable } from '#cli/settings/scopes.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { refuseIdleRuleOptions } from '#cli/configurations/rule-options.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
+import { listOffRules, readToolOffRules, refuseIdleRuleOptions } from '#cli/configurations/rule-options.ts';
 
 import {
-    STYLELINT_CHECK,
     TAILWIND_AT_RULES,
     STYLELINT_COMPONENTS,
     CSS_MODULES_OVERRIDE,
     STYLELINT_BASE_RULES,
-    STYLELINT_DEFAULT_LEVEL_OFF,
 } from '#cli/config/configurations/language.ts';
 
 function buildComponentOverrides(tailwindFunctions: string[], picked: Record<string, unknown>, offRules: string[]) {
@@ -75,12 +73,13 @@ export function buildStylelintFile(planned: PlannedConfig): string {
     const options = getTable(scope.settings, 'tools.stylelint');
     const isAll = planned.level === 'all';
     const scopeDependencies = listProjectDependencyNames(dependencyFiles, scope.path);
-    const off = listIgnoredRules(planned.scope, STYLELINT_CHECK);
+    const { levelOff } = readToolOffRules(planned);
+    const off = listOffRules({ ...planned, level: 'all' });
     const configured = Object.keys(options.rules);
     refuseIdleRuleOptions({
         configured,
-        running: new Set(configured.filter((rule) => isAll || !STYLELINT_DEFAULT_LEVEL_OFF.has(rule))),
-        allLevelRules: STYLELINT_DEFAULT_LEVEL_OFF,
+        running: new Set(configured.filter((rule) => isAll || !levelOff.includes(rule))),
+        allLevelRules: new Set(levelOff),
         level: planned.level,
     });
     const picked = options.rules;
@@ -106,7 +105,7 @@ export function buildStylelintFile(planned: PlannedConfig): string {
         extends: 'stylelint-config-standard',
         rules: Object.assign(
             { ...STYLELINT_BASE_RULES, ...syntaxRules },
-            Object.fromEntries((isAll ? [] : [...STYLELINT_DEFAULT_LEVEL_OFF]).map((rule) => [rule, null])),
+            Object.fromEntries((isAll ? [] : levelOff).map((rule) => [rule, null])),
             picked,
             Object.fromEntries(off.map((rule) => [rule, null])),
         ),

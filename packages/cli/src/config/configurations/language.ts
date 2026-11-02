@@ -68,25 +68,6 @@ export const CSS_MODULES_OVERRIDE = {
     atRules: ['value'],
 } as const;
 
-export const STYLELINT_DEFAULT_LEVEL_OFF: ReadonlySet<string> = new Set([
-    'no-descending-specificity',
-    'container-name-pattern',
-    'custom-media-pattern',
-    'custom-property-pattern',
-    'declaration-block-no-redundant-longhand-properties',
-    'keyframes-name-pattern',
-    'layer-name-pattern',
-    'number-max-precision',
-    'selector-class-pattern',
-    'selector-disallowed-list',
-    'selector-id-pattern',
-    'selector-max-id',
-    'selector-max-specificity',
-    'selector-not-notation',
-]);
-
-export const STYLELINT_CHECK = 'css/stylelint';
-
 export const MARKDOWNLINT_ALL_RULES = ['MD041', 'MD025'] as const;
 
 export const MARKDOWNLINT_RULES = {
@@ -99,8 +80,6 @@ export const MARKDOWNLINT_RULES = {
 } as const;
 
 export const PRETTIER_STYLE = 'markdownlint/style/prettier';
-
-export const MARKDOWNLINT_CHECK = 'markdown/markdownlint';
 
 export const MARKDOWNLINT_PRETTIER_DISABLED = ['MD013'] as const;
 
@@ -167,8 +146,6 @@ export const TYPESCRIPT_TEST_RULES = {
 } as const;
 
 export const HTML_VALIDATE_EXTENDS = ['html-validate:recommended'] as const;
-
-export const HTML_DEFAULT_LEVEL_OFF = ['no-inline-style', 'prefer-button', 'prefer-native-element'] as const;
 
 export const HTML_VALIDATE_RULES = {
     'doctype-style': 'off',

@@ -11,6 +11,7 @@ extensions = [".sql", ".pgsql", ".psql"]
 crash_pattern = '^Traceback \(most recent call last\):$'
 min_version = "3.0.0"
 name = "sqlfluff"
+off = { basic = ["AM05", "AM09", "CV11", "ST05", "ST07", "ST09"] }
 pypi = "sqlfluff"
 replace = [".sqlfluff", ".sqlfluffignore"]
 suppression = { marker = "\\bnoqa\\b", reason = "--[^\\n]*?-- ?(?<reason>\\S.*)", example = "SELECT * FROM orders -- noqa: AM04 -- reason: the view mirrors every column" }

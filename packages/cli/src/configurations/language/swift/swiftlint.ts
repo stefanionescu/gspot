@@ -1,17 +1,15 @@
+import { getTable, getLimit, selectFormat } from '#cli/settings/scopes.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { getTable, getLimit, selectFormat, listIgnoredRules } from '#cli/settings/scopes.ts';
 import { Document, type Node, type Scalar, type YAMLMap, type YAMLSeq } from 'yaml';
+import { listOffRules, readToolOffRules } from '#cli/configurations/rule-options.ts';
 
 import {
     SWIFT_FILES,
-    SWIFTLINT_CHECK,
     SWIFTLINT_OPT_IN,
     SWIFTLINT_ANALYZER,
     SWIFTLINT_COMMENTS,
     SWIFTLINT_LEVEL_NOTE,
-    SWIFTLINT_ALWAYS_OFF,
     SWIFTLINT_FUNCTION_NESTING,
-    SWIFTLINT_DEFAULT_LEVEL_OFF,
 } from '#cli/config/configurations/swift.ts';
 
 function buildSwiftlintOptions(planned: PlannedConfig, offSet: Set<string>) {
@@ -66,13 +64,15 @@ Build swiftlint.yml: the SwiftLint rules with the source limits of the repositor
 @param planned the config file to build.
 */
 export function buildSwiftlintFile(planned: PlannedConfig): string {
-    const isAll = planned.level === 'all';
-    const off = [...listIgnoredRules(planned.scope, SWIFTLINT_CHECK), ...(isAll ? [] : SWIFTLINT_DEFAULT_LEVEL_OFF)];
+    const { always } = readToolOffRules(planned);
+    const off = listOffRules(planned);
     const offSet = new Set(off);
-    const levelOff = off.filter((rule) => !SWIFTLINT_OPT_IN.has(rule) && !SWIFTLINT_ANALYZER.has(rule));
+    const levelOff = off.filter(
+        (rule) => !always.includes(rule) && !SWIFTLINT_OPT_IN.has(rule) && !SWIFTLINT_ANALYZER.has(rule),
+    );
     const document = new Document({
         ...buildSwiftlintOptions(planned, offSet),
-        disabled_rules: [...SWIFTLINT_ALWAYS_OFF, ...levelOff],
+        disabled_rules: [...always, ...levelOff],
         opt_in_rules: [...SWIFTLINT_OPT_IN.difference(offSet)],
         analyzer_rules: [...SWIFTLINT_ANALYZER.difference(offSet)],
     });
@@ -80,7 +80,7 @@ export function buildSwiftlintFile(planned: PlannedConfig): string {
         const comment = SWIFTLINT_COMMENTS[key.value as keyof typeof SWIFTLINT_COMMENTS] as string | undefined;
         if (comment !== undefined) key.commentBefore = comment;
     }
-    const firstLevelOff = (document.get('disabled_rules') as YAMLSeq<Node>).items[SWIFTLINT_ALWAYS_OFF.length];
+    const firstLevelOff = (document.get('disabled_rules') as YAMLSeq<Node>).items[always.length];
     if (firstLevelOff !== undefined) firstLevelOff.commentBefore = SWIFTLINT_LEVEL_NOTE;
     return document.toString({ lineWidth: 0 }).trimEnd();
 }

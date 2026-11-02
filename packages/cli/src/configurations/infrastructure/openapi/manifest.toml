@@ -8,6 +8,7 @@ filenames = ["openapi.yaml", "openapi.yml", "openapi.json", "swagger.json", "swa
 [[tool]]
 name = "spectral"
 npm = "@stoplight/spectral-cli"
+off = { basic = ["info-contact", "info-description", "operation-description", "operation-tags"] }
 version = "6.17.0"
 
 [[tool]]

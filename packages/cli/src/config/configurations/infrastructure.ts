@@ -78,32 +78,13 @@ export const POLICY_SCHEMA_INDEX = -3;
 
 export const STORAGE_POLICY_TABLE = 'storage.objects';
 
-export const SQUAWK_DEFAULT_LEVEL_OFF = [
-    'prefer-bigint-over-int',
-    'prefer-bigint-over-smallint',
-    'prefer-identity',
-    'prefer-text-field',
-] as const;
-
 export const SQUAWK_ALL_LEVEL_ON = ['require-table-schema'] as const;
 
 export const HADOLINT_FAILURE_THRESHOLD = 'style';
 
-export const HADOLINT_DEFAULT_LEVEL_OFF = [
-    'DL3001',
-    'DL3003',
-    'DL3008',
-    'DL3010',
-    'DL3018',
-    'DL3048',
-    'DL4001',
-] as const;
-
 export const GIT_FOLDER = '.git';
 
 export const TRIVY_SKIPPED_FOLDERS = [NODE_MODULES, GSPOT_FOLDER, GIT_FOLDER] as const;
-
-export const HADOLINT_CHECK = 'docker/hadolint';
 
 export const WORKFLOW_SHAPE_RULES = {
     timeout: 'job-timeout',
@@ -134,13 +115,6 @@ export const FLOATING_RUNNER = /-latest$/u;
 export const UPLOAD_ARTIFACT_ACTION = 'actions/upload-artifact@';
 
 export const WORKFLOW_EXPRESSION = '${{';
-
-export const SPECTRAL_DEFAULT_LEVEL_OFF = [
-    'info-contact',
-    'info-description',
-    'operation-description',
-    'operation-tags',
-] as const;
 
 export const ANSIBLE_CONFIG_FILE = 'ansible.cfg';
 
@@ -452,9 +426,3 @@ export const VERIFY_JWT_MESSAGE =
 export const DENO_IMPORT_MAP_FLAG = '--import-map';
 
 export const SQL_EXTENSION = '.sql';
-
-export const GIXY_CHECK = 'nginx/gixy';
-
-export const ANSIBLE_LINT_ALWAYS_OFF = ['experimental'] as const;
-
-export const ANSIBLE_LINT_CHECKS = ['ansible/ansible-lint', 'ansible/ansible-lint-production'] as const;
