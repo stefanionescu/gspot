@@ -9,8 +9,12 @@ import { DENO_CONFIG_FILES } from '#cli/config/configurations/infrastructure.ts'
 import { SCRIPT_RULES, CONSOLE_RULES, JAVASCRIPT_RULES } from '#cli/config/configurations/eslint.ts';
 import { buildSelectorBlocks } from '#cli/configurations/language/javascript/eslint/blocks/selectors.ts';
 import { buildScopeFiles, listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
-import { buildRestrictedImportBlocks } from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
+import { buildLocalPluginBlocks } from '#cli/configurations/language/javascript/eslint/blocks/local-plugins.ts';
 
+import {
+    splitSettingsBlocks,
+    buildRestrictedImportBlocks,
+} from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
 import type {
     EslintBlock,
     EslintFiles,
@@ -222,14 +226,14 @@ export function buildOpeningBlocks(
 }
 
 /**
-Build the blocks after the configuration blocks: runtime, selector, test, script, and final pinned rules.
+Build the blocks after the configuration blocks: runtime, selector, test, script, final pinned rules, your settings,
+and the rules that wait for level all.
 
 @param planned the ESLint context of the scope.
-@param runtimeBlocks the runtime declarations shared with file matchers.
 */
-export function buildClosingBlocks(planned: PlannedEslintFile, runtimeBlocks: EslintRuntime[]): ConfigurationBlocks {
+export function buildClosingBlocks(planned: PlannedEslintFile): ConfigurationBlocks {
     const { eslintFiles, session } = planned;
-    const { level } = planned.blockWriter;
+    const { level, runtimes, allLevelRules } = planned.blockWriter;
     const rules = planned.levelRules;
     const privatePackages = session.repository.files
         .filter(
@@ -241,7 +245,7 @@ export function buildClosingBlocks(planned: PlannedEslintFile, runtimeBlocks: Es
         .map((file) => escapeGlob(file.path));
     const selectorGroups = buildSelectorBlocks(session.scopes, level, session.repository.dependencyFiles);
     return [
-        ...buildRuntimeBlocks(eslintFiles, runtimeBlocks),
+        ...buildRuntimeBlocks(eslintFiles, runtimes),
         ...selectorGroups
             .filter((group) => group.selectors.length > 0)
             .map((group): ConfigurationBlocks[number] => ({
@@ -276,5 +280,11 @@ export function buildClosingBlocks(planned: PlannedEslintFile, runtimeBlocks: Es
                 rules: rules.javascript,
             },
         },
+        ...[...splitSettingsBlocks(planned), ...buildLocalPluginBlocks(session.scopes, eslintFiles.code)].map(
+            (fields) => ({ fields }),
+        ),
+        ...(level === 'all'
+            ? []
+            : [{ fields: { rules: Object.fromEntries([...allLevelRules].map((rule) => [rule, 'off'])) } }]),
     ];
 }

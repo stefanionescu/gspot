@@ -140,6 +140,7 @@ export type EslintRuleOptions = PathExpressions & { scope: string; rules: NonNul
 export type BlockWriter = {
     runtimes: EslintRuntime[];
     rulePrefixes: ReadonlyMap<string, string | undefined>;
+    sharedLists: ReadonlyMap<string, string>;
     allLevelRules: Set<string>;
     level: Level;
     codeFiles: string[];
@@ -150,6 +151,7 @@ export type EslintFileWriter = BlockWriter & {
     functions: Set<string>;
     packages: Set<string>;
     modules: Map<string, string>;
+    constants: Map<string, string>;
 };
 
 export type SelectorBlock = { scope: string; ignoredScopes: string[]; selectors: SelectorPaths[] };

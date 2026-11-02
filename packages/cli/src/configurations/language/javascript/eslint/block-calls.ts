@@ -1,15 +1,10 @@
 import picomatch from 'picomatch';
+import { isDeepStrictEqual } from 'node:util';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { ESLINT_INDENT, GSPOT_PRESET_LEVELS } from '#cli/config/configurations/blocks.ts';
 
-import {
-    NAME_SEPARATOR,
-    PACKAGE_SCOPE_MARK,
-    ESLINT_NAMED_IMPORTS,
-    ESLINT_PACKAGE_IMPORTERS,
-} from '#cli/config/configurations/javascript.ts';
 import type {
     EslintReference,
     EslintFileWriter,
@@ -17,6 +12,15 @@ import type {
     EslintCallArgument,
     PlannedEslintBlock,
 } from '#cli/types/configurations/language.ts';
+import {
+    NAME_SEPARATOR,
+    SHARED_LIST_MARK,
+    PACKAGE_SCOPE_MARK,
+    ESLINT_NAMED_IMPORTS,
+    SHARED_LIST_REFERENCE,
+    ESLINT_RUNTIMES_CONSTANT,
+    ESLINT_PACKAGE_IMPORTERS,
+} from '#cli/config/configurations/javascript.ts';
 
 /**
 Build the name that a generated module gives an imported package or a configuration module.
@@ -45,8 +49,22 @@ function serializeReference(writer: EslintFileWriter, { package: name, path }: E
     return value + keys.map((key) => `[${JSON.stringify(key)}]`).join('');
 }
 
+function serializeValue(writer: EslintFileWriter, value: unknown): string {
+    const text = JSON.stringify(
+        value,
+        (_key, member: unknown) => {
+            const name = Array.isArray(member) ? writer.sharedLists.get(JSON.stringify(member)) : undefined;
+            if (name === undefined) return member;
+            writer.constants.set(name, JSON.stringify(member, null, JSON_INDENT));
+            return SHARED_LIST_MARK + name;
+        },
+        JSON_INDENT,
+    );
+    return text.replaceAll(SHARED_LIST_REFERENCE, '$<name>');
+}
+
 function serializeArgument(writer: EslintFileWriter, argument: EslintCallArgument): string {
-    if ('value' in argument) return JSON.stringify(argument.value, null, JSON_INDENT);
+    if ('value' in argument) return serializeValue(writer, argument.value);
     if ('package' in argument) return serializeReference(writer, argument);
     const shipped = argument.plugins.map((plugin) => {
         const reference = typeof plugin === 'string' ? { package: plugin } : plugin;
@@ -59,13 +77,14 @@ function serializeArgument(writer: EslintFileWriter, argument: EslintCallArgumen
     return `{ ${[...shipped, ...local].join(', ')} }`;
 }
 
-function serializeRuntimes({ runtimes }: EslintFileWriter): string {
+function serializeRuntimes({ runtimes, constants }: EslintFileWriter): string {
     const compiled = runtimes.map((runtime) => ({
         ...runtime,
         includes: runtime.includes.map((glob) => picomatch.makeRe(glob, { dot: true }).source),
         excludes: runtime.excludes.map((glob) => picomatch.makeRe(glob, { dot: true }).source),
     }));
-    return JSON.stringify(compiled, null, JSON_INDENT);
+    constants.set(ESLINT_RUNTIMES_CONSTANT, JSON.stringify(compiled, null, JSON_INDENT));
+    return ESLINT_RUNTIMES_CONSTANT;
 }
 
 function buildScopeFields(writer: EslintFileWriter, block: PlannedEslintBlock): EslintBlockFields {
@@ -100,9 +119,9 @@ function serializeExtends(writer: EslintFileWriter, block: PlannedEslintBlock): 
 }
 
 function serializeFields(writer: EslintFileWriter, block: PlannedEslintBlock): string {
-    const { files, ...fields } = buildScopeFields(writer, block);
+    const { files, ...fields } = block.fields;
     const members = Object.entries(fields).map(
-        ([key, value]) => `${JSON.stringify(key)}: ${JSON.stringify(value, null, JSON_INDENT)}`,
+        ([key, value]) => `${JSON.stringify(key)}: ${serializeValue(writer, value)}`,
     );
     if (block.presets?.some(({ merge }) => merge === 'fields') === true) members.push(serializeExtends(writer, block));
     if (files !== undefined) {
@@ -127,13 +146,7 @@ function serializeFields(writer: EslintFileWriter, block: PlannedEslintBlock): s
     return `{${members.join(',\n')}}`;
 }
 
-/**
-Print a block: its fields, the presets it extends, and the calls that finish it.
-
-@param writer the level, the code files, and the imports of the file.
-@param block the block, its scope, and its label.
-*/
-export function buildBlockCalls(writer: EslintFileWriter, block: PlannedEslintBlock): string {
+function buildBlockCalls(writer: EslintFileWriter, block: PlannedEslintBlock): string {
     let value = serializeFields(writer, block);
     for (const preset of (block.presets ?? []).toReversed())
         if (preset.merge === 'rules')
@@ -153,4 +166,38 @@ export function buildBlockCalls(writer: EslintFileWriter, block: PlannedEslintBl
         .split('\n')
         .map((line) => ESLINT_INDENT + line)
         .join('\n');
+}
+
+function isSameBlock(left: PlannedEslintBlock, right: PlannedEslintBlock): boolean {
+    const [first, second] = [left, right].map((block) => ({
+        ...block,
+        scope: block.scope !== undefined,
+        fields: { ...block.fields, files: block.fields.files === undefined },
+    }));
+    return left.fields.files !== undefined && right.fields.files !== undefined && isDeepStrictEqual(first, second);
+}
+
+/**
+Print blocks in order: each with the files of its scope, and adjacent blocks that differ only in their files as one
+block. A block prints its fields, the presets it extends, and the calls that finish it.
+
+@param writer the level, the code files, and the imports of the file.
+@param blocks the blocks of the file.
+*/
+export function buildBlockList(writer: EslintFileWriter, blocks: PlannedEslintBlock[]): string[] {
+    const merged: PlannedEslintBlock[] = [];
+    for (const block of blocks) {
+        const placed = { ...block, fields: buildScopeFields(writer, block) };
+        const previous = merged.at(-1);
+        if (previous === undefined || !isSameBlock(previous, placed)) merged.push(placed);
+        else
+            merged[merged.length - 1] = {
+                ...previous,
+                fields: {
+                    ...previous.fields,
+                    files: [...(previous.fields.files ?? []), ...(placed.fields.files ?? [])],
+                },
+            };
+    }
+    return merged.map((block) => buildBlockCalls(writer, block));
 }

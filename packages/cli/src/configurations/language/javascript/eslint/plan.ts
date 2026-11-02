@@ -9,6 +9,7 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { BASE_RULES } from '#cli/config/configurations/eslint.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
+import { BOUNDARY_FOLDERS_CONSTANT } from '#cli/config/configurations/javascript.ts';
 import { buildRuntimes } from '#cli/configurations/language/javascript/eslint/runtimes.ts';
 import { escapeGlob, convertToPosixPath, extractParentFolder } from '#cli/system/paths.ts';
 import { MISE_TASKS_GLOB, NODE_SHEBANG_TAG } from '#cli/config/configurations/structure.ts';
@@ -16,6 +17,7 @@ import { CODE_LANGUAGES, DEFAULT_PROJECT_FILES } from '#cli/config/configuration
 import type { PlannedConfig, PlannedEslintFile } from '#cli/types/configurations/language.ts';
 import { buildRuleOptions } from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
 import { buildScopeLimitRules } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
+import { listImportBoundaryFolders } from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';
 import { buildFilePatterns, buildExtensionGlob } from '#cli/configurations/language/javascript/eslint/files.ts';
 
 function listConfigConfigurations(scopes: Scope[], scope: Scope, config: Config): Configuration[] {
@@ -91,6 +93,7 @@ export function buildPlannedEslintFile(planned: PlannedConfig): PlannedEslintFil
                     .flatMap(({ tools }) => tools)
                     .map((tool) => [tool.installers['npm']?.name ?? tool.name, tool.rule_prefix]),
             ),
+            sharedLists: new Map([[JSON.stringify(listImportBoundaryFolders(scopes)), BOUNDARY_FOLDERS_CONSTANT]]),
             allLevelRules: new Set(
                 configurations.flatMap((configuration) => [...configuration.eslint.all_level_rules]),
             ),

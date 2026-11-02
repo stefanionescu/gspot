@@ -13,6 +13,8 @@ import type {
 
 export const root = fileURLToPath(new URL('../../../../..', import.meta.url)).replace(/[\\/]$/u, '');
 
+let importLookup: unknown;
+
 const componentParserOptions = { tsconfigRootDir: root, ecmaVersion: 'latest', sourceType: 'module' };
 
 function pickRuleOptions(
@@ -292,25 +294,20 @@ export function setRootFolder(block: JavascriptBlock, keys: string[][], scope = 
 }
 
 /**
-Set the import-x/resolver-next setting of the block to one TypeScript resolver over the projects.
+Set the import-x/resolver-next setting of the block to the TypeScript resolver over the projects. Every block of a
+config shares one resolver.
 
 @param block the block that the generated file writes.
 @param createImportLookup createTypeScriptImportResolver of eslint-import-resolver-typescript.
 @param projects the tsconfig.json paths, from the repository root.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Generated ESLint files import this transformation by name.
 export function setImportLookup(
     block: JavascriptBlock,
     createImportLookup: (options: { project: string[] }) => unknown,
     projects: string[],
 ): JavascriptBlock {
-    return {
-        ...block,
-        settings: {
-            ...block.settings,
-            'import-x/resolver-next': [createImportLookup({ project: projects.map((project) => join(root, project)) })],
-        },
-    };
+    importLookup ??= createImportLookup({ project: projects.map((project) => join(root, project)) });
+    return { ...block, settings: { ...block.settings, 'import-x/resolver-next': [importLookup] } };
 }
 
 /**

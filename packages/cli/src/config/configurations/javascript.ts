@@ -35,6 +35,14 @@ export const ESLINT_PACKAGE_IMPORTERS: Readonly<Record<string, string | undefine
     'svelte-eslint-parser': 'importSvelteParser',
 };
 
+export const SHARED_LIST_MARK = '@shared:';
+
+export const SHARED_LIST_REFERENCE = /"@shared:(?<name>\w+)"/gu;
+
+export const ESLINT_RUNTIMES_CONSTANT = 'runtimeDeclarations';
+
+export const BOUNDARY_FOLDERS_CONSTANT = 'importBoundaryFolders';
+
 export const ESLINT_CONFIG_API = 'eslint/config';
 
 export const ESLINT_NAMED_IMPORTS: Readonly<Record<string, string | undefined>> = {

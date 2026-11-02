@@ -64,6 +64,17 @@ export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[], den
 }
 
 /**
+List the folders that relative imports may not leave: the shipped folders, the projects, and your boundaries.
+
+@param scopes the projects and their settings.
+*/
+export function listImportBoundaryFolders(scopes: Scope[]): string[] {
+    const scopePaths = scopes.map((scope) => escapeGlob(scope.path)).filter((path) => path !== '');
+    const boundaries = scopes.flatMap(({ settings }) => settings.tables.javascript?.import_boundaries ?? []);
+    return [...new Set([...IMPORT_BOUNDARY_FOLDERS, ...scopePaths, ...boundaries])];
+}
+
+/**
 Build one relative-import boundary rule from the project folders and aliases. The root and nested rules share the
 boundary folders and the aliases of their project.
 
@@ -71,13 +82,11 @@ boundary folders and the aliases of their project.
 @param aliases the repository-relative alias paths.
 */
 export function buildImportBoundariesRule(scopes: Scope[], aliases: Record<string, string>): EslintImportBoundaryRule {
-    const scopePaths = scopes.map((scope) => escapeGlob(scope.path)).filter((path) => path !== '');
-    const boundaries = scopes.flatMap(({ settings }) => settings.tables.javascript?.import_boundaries ?? []);
     const externals = [...new Set(scopes.flatMap(({ settings }) => settings.tables.javascript?.externals ?? []))];
     return [
         'error',
         {
-            folders: [...new Set([...IMPORT_BOUNDARY_FOLDERS, ...scopePaths, ...boundaries])],
+            folders: listImportBoundaryFolders(scopes),
             aliases,
             ...(externals.length > 0 && { externals }),
         },
