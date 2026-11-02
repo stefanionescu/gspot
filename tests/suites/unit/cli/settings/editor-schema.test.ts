@@ -39,9 +39,10 @@ test('every accepted fixed property has an editor description, including nested 
         const table = followSchemaReference(schema);
         visitBranches(table, path);
         if (table.properties === undefined) return;
-        for (const [key, property] of Object.entries(table.properties)) {
-            if (typeof property === 'boolean') continue;
-            const child = followSchemaReference(property);
+        const children = Object.entries(table.properties).flatMap(([key, property]) =>
+            typeof property === 'boolean' ? [] : [[key, followSchemaReference(property)] as const],
+        );
+        for (const [key, child] of children) {
             if (child.not !== undefined) continue;
             expect(child.description, path + '.' + key).toBeString();
             expect(child.description?.length, path + '.' + key).toBeGreaterThan(0);

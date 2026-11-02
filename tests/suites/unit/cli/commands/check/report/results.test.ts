@@ -153,13 +153,13 @@ test('terminal progress rewrites one status line, and a log gets one line per fi
     const terminal: string[] = [];
     const log: string[] = [];
     using _environment = overrideEnvironment({ NO_COLOR: undefined });
-    for (const [isTTY, lines] of [
+    for (const [isTerminal, lines] of [
         [true, terminal],
         [false, log],
     ] as const) {
         using _terminals = fakeTerminals([
             [process.stdout, true],
-            [process.stderr, isTTY],
+            [process.stderr, isTerminal],
         ]);
         using _write = spyOn(process.stderr, 'write').mockImplementation((chunk) => {
             lines.push(String(chunk));

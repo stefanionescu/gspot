@@ -152,8 +152,7 @@ export function fakeExecutableLookup(
     const lookUp = (name: string, options?: executables.Options): string | string[] | null => {
         const found = typeof path === 'function' ? path(name) : path;
         if (found === undefined || name === GIT_PROGRAM) return locate(name, options);
-        if (options?.all === true) return found === null ? [] : [found];
-        return found;
+        return options?.all === true ? [found].filter((each) => each !== null) : found;
     };
     return spyOn(executables, 'sync').mockImplementation(lookUp as typeof executables.sync);
 }
@@ -165,13 +164,13 @@ export function fakeTerminals(
     terminals: ReadonlyArray<readonly [NodeJS.ReadStream | NodeJS.WriteStream, boolean]>,
 ): Disposable {
     using resources = new DisposableStack();
-    for (const [stream, isTTY] of terminals) {
+    for (const [stream, isTerminal] of terminals) {
         const descriptor = Object.getOwnPropertyDescriptor(stream, 'isTTY');
         resources.defer(() => {
             if (descriptor === undefined) Reflect.deleteProperty(stream, 'isTTY');
             else Object.defineProperty(stream, 'isTTY', descriptor);
         });
-        Object.defineProperty(stream, 'isTTY', { value: isTTY, configurable: true });
+        Object.defineProperty(stream, 'isTTY', { value: isTerminal, configurable: true });
     }
     return resources.move();
 }

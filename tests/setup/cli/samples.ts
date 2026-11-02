@@ -10,19 +10,6 @@ import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
 import { changeSandbox, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import type { Sandbox, SampleFix, CheckSample, ProcessOutput, SandboxChanges } from '#tests/types/setup.ts';
 
-/**
-Write the sample, run its check, and restore the sandbox.
-*/
-export async function runCheckOnChanges(
-    sandbox: Sandbox,
-    changes: SandboxChanges & { check: string },
-): Promise<ProcessOutput> {
-    await using resources = new AsyncDisposableStack();
-    resources.use(await changeSandbox(sandbox, changes));
-    const commandArguments = ['check', '--only', changes.check, '--json'];
-    return await sandbox.run(sandbox.root, commandArguments);
-}
-
 async function listReportedChecks(
     sandbox: Sandbox,
     sample: SandboxChanges & Pick<CheckSample, 'check' | 'apply'>,
@@ -35,6 +22,19 @@ async function listReportedChecks(
     const session = await openSession(sandbox.root, { resources: run });
     const { report } = await runChecks(session, buildRunOptions({ cwd: sandbox.root, only: [sample.check] }));
     return report.checks.filter(({ status, findings }) => status !== 'passed' || findings.length > 0);
+}
+
+/**
+Write the sample, run its check, and restore the sandbox.
+*/
+export async function runCheckOnChanges(
+    sandbox: Sandbox,
+    changes: SandboxChanges & { check: string },
+): Promise<ProcessOutput> {
+    await using resources = new AsyncDisposableStack();
+    resources.use(await changeSandbox(sandbox, changes));
+    const commandArguments = ['check', '--only', changes.check, '--json'];
+    return await sandbox.run(sandbox.root, commandArguments);
 }
 
 /**

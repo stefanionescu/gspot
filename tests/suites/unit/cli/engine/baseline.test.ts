@@ -3,25 +3,22 @@ import type { CheckResult } from '#cli/types/engine/run.ts';
 import { pruneCounts, countFindings, formatBaseline } from '#cli/engine/baseline.ts';
 
 test('the counts group by file, check, and rule, a finding with no rule counts under its check, and exempt checks stay out', () => {
-    const results = (
-        [
-            ['python/ruff', 'a.py', 'E501'],
-            ['python/ruff', 'a.py', 'E501'],
-            ['python/ruff', 'a.py', 'F401'],
-            ['docs/missing-paths', 'a.md', undefined],
-            ['secrets/gitleaks-staged', 'a.py', 'key'],
-            ['gspot/generated-files', '.gspot/mise.toml', 'changed'],
-        ] as const
-    ).map(
-        ([check, file, rule]): CheckResult => ({
-            check,
-            scope: '',
-            status: 'failed',
-            fileCount: 1,
-            duration: 1,
-            findings: [{ check, file, message: 'Found.', fixable: false, ...(rule !== undefined && { rule }) }],
-        }),
-    );
+    const rows = [
+        ['python/ruff', 'a.py', 'E501'],
+        ['python/ruff', 'a.py', 'E501'],
+        ['python/ruff', 'a.py', 'F401'],
+        ['docs/missing-paths', 'a.md', undefined],
+        ['secrets/gitleaks-staged', 'a.py', 'key'],
+        ['gspot/generated-files', '.gspot/mise.toml', 'changed'],
+    ] as const;
+    const results: CheckResult[] = rows.map(([check, file, rule]) => ({
+        check,
+        scope: '',
+        status: 'failed',
+        fileCount: 1,
+        duration: 1,
+        findings: [{ check, file, message: 'Found.', fixable: false, ...(rule !== undefined && { rule }) }],
+    }));
     const counts = countFindings(results);
     expect(counts).toStrictEqual([
         { file: 'a.py', check: 'python/ruff', rule: 'E501', count: 2 },

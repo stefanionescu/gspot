@@ -17,12 +17,10 @@ test('a shared function coverage limit enables Jest coverage without enabling py
         stage: 'push',
         only: ['pytest/tests', 'jest/tests'],
     });
-    expect(
-        stripCoverageArguments(plans.find(({ check }) => check.id === 'pytest/tests')!, {})!.some((argument) =>
-            argument.startsWith('--cov'),
-        ),
-    ).toBe(false);
-    expect(stripCoverageArguments(plans.find(({ check }) => check.id === 'jest/tests')!, {})).toContain('--coverage');
+    const pytestPlan = plans.find(({ check }) => check.id === 'pytest/tests')!;
+    const jestPlan = plans.find(({ check }) => check.id === 'jest/tests')!;
+    expect(stripCoverageArguments(pytestPlan, {})!.some((argument) => argument.startsWith('--cov'))).toBe(false);
+    expect(stripCoverageArguments(jestPlan, {})).toContain('--coverage');
 });
 
 test('stage all leaves out message checks even when only names one', async () => {

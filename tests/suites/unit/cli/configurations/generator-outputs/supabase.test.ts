@@ -39,6 +39,10 @@ async function prepareSupabaseCheck(
     await writeProgramCommand(root, 'bin/docker', 'fakes/tool');
     const supabase = executables.sync('supabase', { path: bin });
     const docker = executables.sync('docker', { path: bin });
+    const versions = new Map([
+        [supabase, '2.75.0\n'],
+        [docker, 'Docker version 29.2.1\n'],
+    ]);
     const requests: Array<{ commandArguments: string[]; cwd: string }> = [];
     const { runProcess: spawn } = processes;
     resources.use(
@@ -51,11 +55,11 @@ async function prepareSupabaseCheck(
     );
     resources.use(
         spyOn(processes, 'runProcess').mockImplementation(async (commandArguments, options) => {
-            if (commandArguments.at(-1) === '--version' && [supabase, docker].includes(commandArguments[0] ?? ''))
-                return buildProcessResult({
-                    stdout: commandArguments[0] === docker ? 'Docker version 29.2.1\n' : '2.75.0\n',
-                });
-            if (commandArguments[0] !== supabase) return spawn(commandArguments, options);
+            const [program = ''] = commandArguments;
+            const version = versions.get(program);
+            if (version !== undefined && commandArguments.at(-1) === '--version')
+                return buildProcessResult({ stdout: version });
+            if (program !== supabase) return spawn(commandArguments, options);
             requests.push({ commandArguments: commandArguments.slice(1), cwd: options.cwd });
             return result;
         }),

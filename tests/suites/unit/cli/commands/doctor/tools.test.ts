@@ -1,6 +1,7 @@
 import semver from 'semver';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import type { Tool } from '#cli/types/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
@@ -18,6 +19,14 @@ import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { getTool, findPackagePin, listDistinctTools } from '#cli/tools/pins.ts';
 import { fakeCommands, fakeToolExecutables, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+
+function selectExecutableFolder(tool: Tool): string {
+    const installation = findPackagePin(tool);
+    if (installation?.kind === 'npm') return join(GSPOT_PATHS.nodeModules, '.bin');
+    return installation?.kind === 'python'
+        ? join(GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder)
+        : 'test-tools';
+}
 
 test('doctor reports no unowned gspot files in a fresh clone', async () => {
     await using sandbox = await testdir();
@@ -57,12 +66,7 @@ test.each(['ok', 'newer', 'outdated'] as const)(
                             JSON.stringify({ name, version: tool.name === pin.name ? version : tool.version }),
                         ];
                     }
-                    const installation = findPackagePin(tool);
-                    let folder = 'test-tools';
-                    if (installation?.kind === 'npm') folder = join(GSPOT_PATHS.nodeModules, '.bin');
-                    else if (installation?.kind === 'python')
-                        folder = join(GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder);
-                    return [join(folder, tool.name), 'native lookup target'];
+                    return [join(selectExecutableFolder(tool), tool.name), 'native lookup target'];
                 }),
             ),
         );
