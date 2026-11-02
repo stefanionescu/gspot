@@ -57,7 +57,9 @@ export const GSPOT_MISE_TOOL = 'npm:@gspothq/cli';
 
 export const GSPOT_MISE_OPTIONS = { allow_low_downloads: 'true' } as const;
 
-export const PIN_JSON_FORMAT = { formattingOptions: { insertSpaces: true, tabSize: 2 } } as const;
+export const JSON_INDENT_PATTERN = /^[\t ]+(?=")/mu;
+
+export const DEFAULT_JSON_INDENT = '  ';
 
 export const LOCAL_PATH_PREFIX = './';
 

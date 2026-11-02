@@ -14,7 +14,13 @@ import { modify, applyEdits } from 'jsonc-parser/lib/esm/main.js';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
 import { selectStartRunner } from '#cli/repository/javascript/package-manager.ts';
-import { GSPOT_MISE_TOOL, PIN_JSON_FORMAT, GSPOT_MISE_OPTIONS } from '#cli/config/repository/javascript.ts';
+
+import {
+    GSPOT_MISE_TOOL,
+    GSPOT_MISE_OPTIONS,
+    DEFAULT_JSON_INDENT,
+    JSON_INDENT_PATTERN,
+} from '#cli/config/repository/javascript.ts';
 
 function readMisePin(root: string): string | undefined {
     const text = find(root, MISE_CONFIG_FILE);
@@ -59,6 +65,14 @@ export function assertGspotPin(root: string): void {
     );
 }
 
+function addPackagePin(text: string): string {
+    const indent = JSON_INDENT_PATTERN.exec(text)?.[0] ?? DEFAULT_JSON_INDENT;
+    const edits = modify(text, ['devDependencies', cliPackage.name], cliPackage.version, {
+        formattingOptions: { insertSpaces: !indent.startsWith('\t'), tabSize: indent.length },
+    });
+    return applyEdits(text, edits);
+}
+
 /**
 Pin this gspot where the hooks start it: as a development dependency, or as a mise tool without a package.json.
 
@@ -67,9 +81,8 @@ Pin this gspot where the hooks start it: as a development dependency, or as a mi
 export function writeGspotPin(writer: Files): void {
     const manifest = writer.read(PACKAGE_JSON);
     if (manifest !== undefined) {
-        const text = manifest.bytes.toString('utf8');
-        const edits = modify(text, ['devDependencies', cliPackage.name], cliPackage.version, PIN_JSON_FORMAT);
-        writer.write(PACKAGE_JSON, { ...manifest, bytes: Buffer.from(applyEdits(text, edits)) });
+        const bytes = Buffer.from(addPackagePin(manifest.bytes.toString('utf8')));
+        writer.write(PACKAGE_JSON, { ...manifest, bytes });
         return;
     }
     const tools = writer.read(MISE_CONFIG_FILE);
@@ -77,8 +90,9 @@ export function writeGspotPin(writer: Files): void {
     const document = parse(text) as { tools?: Record<string, unknown> };
     const pin = { version: cliPackage.version, ...GSPOT_MISE_OPTIONS };
     const next = { ...document, tools: { ...document.tools, [GSPOT_MISE_TOOL]: pin } };
+    const patched = patch(text, next);
     writer.write(MISE_CONFIG_FILE, {
-        bytes: Buffer.from(patch(text, next)),
+        bytes: Buffer.from(patched.endsWith('\n') ? patched : `${patched}\n`),
         mode: tools?.mode ?? OWNER_WRITABLE_FILE,
     });
 }

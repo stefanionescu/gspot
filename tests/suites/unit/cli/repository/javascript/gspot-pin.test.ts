@@ -17,6 +17,22 @@ test('the pin of a repository with package.json is an exact development dependen
     expect(readGspotPin(sandbox.path)).toBe(cliPackage.version);
 });
 
+test('the pin keeps the indentation of package.json', async () => {
+    await using sandbox = await createGitSandbox({ 'package.json': '{\n    "name": "example"\n}\n' });
+    writeGspotPin(openFiles(sandbox.path));
+    expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(
+        `{\n    "name": "example",\n    "devDependencies": {\n        "${cliPackage.name}": "${cliPackage.version}"\n    }\n}\n`,
+    );
+});
+
+test('the pin of a repository with neither file writes a mise.toml with a final newline', async () => {
+    await using sandbox = await createGitSandbox({});
+    writeGspotPin(openFiles(sandbox.path));
+    expect(await readFile(join(sandbox.path, 'mise.toml'), 'utf8')).toBe(
+        `[tools]\n"npm:${cliPackage.name}" = { version = "${cliPackage.version}", allow_low_downloads = "true" }\n`,
+    );
+});
+
 test('the pin of a repository without package.json is a mise tool beside the others', async () => {
     await using sandbox = await createGitSandbox({ 'mise.toml': '[tools]\nnode = "24.0.0"\n' });
     writeGspotPin(openFiles(sandbox.path));
