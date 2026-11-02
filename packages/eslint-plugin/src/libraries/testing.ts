@@ -1,4 +1,4 @@
-import { FUNCTION_NODES } from '../config/rules.ts';
+import { FUNCTION_NODES } from '../config/plugin.ts';
 import { findFunction } from '../language/functions.ts';
 import { usesModule, getRequiredModule } from './packages.ts';
 import type { TestCall, TableCall, TestOrigin, TestCallee, FileContext } from '../types/rules.ts';
@@ -8,14 +8,14 @@ import {
     CALL_STEP,
     TEST_KINDS,
     TEST_FOLDERS,
-    TABLE_ORIGINS,
     TABLE_MODULES,
+    TABLE_ORIGINS,
     TABLE_TEST_NAMES,
     TEST_FILE_MARKERS,
     TABLE_DEPENDENCIES,
     TEST_FILE_EXTENSIONS,
-    RUNNING_TEST_MODIFIERS,
     PLAYWRIGHT_SUITE_MODES,
+    RUNNING_TEST_MODIFIERS,
     TEST_FRAMEWORK_MODULES,
 } from '../config/testing.ts';
 

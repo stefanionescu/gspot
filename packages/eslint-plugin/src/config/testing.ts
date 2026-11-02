@@ -316,3 +316,5 @@ export const REMOVAL_CALLBACK = [
     'CallExpression > ArrowFunctionExpression.arguments:first-child[async=false] > CallExpression.body',
     'CallExpression > :matches(ArrowFunctionExpression, FunctionExpression).arguments:first-child[async=false][generator=false] > BlockStatement.body[body.length=1] > ReturnStatement > CallExpression.argument',
 ].join(', ');
+
+export const SIGNED_NUMBER_OPERATORS = new Set(['+', '-']);

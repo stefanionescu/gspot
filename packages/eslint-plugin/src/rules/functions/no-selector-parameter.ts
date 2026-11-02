@@ -4,7 +4,7 @@ import { listChildren } from '../../language/syntax.ts';
 import type { TypeReader } from '../../types/plugin.ts';
 import type { FunctionNode } from '../../types/rules.ts';
 import { ASTUtils, TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { EFFECT_CHILD_KEYS, SIDE_EFFECT_NODES, EVENT_LISTENER_KEY } from '../../config/calls.ts';
+import { EFFECT_CHILD_KEYS, SIDE_EFFECT_NODES, EVENT_LISTENER_KEY } from '../../config/functions.ts';
 
 function isCallbackArgument(node: FunctionNode): boolean {
     const { parent } = node;

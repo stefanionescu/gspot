@@ -13,7 +13,7 @@ import {
     FUNCTION_TYPE_TEXT,
     SANITATION_MEMBERS,
     UNKNOWN_TYPE_NAMES,
-} from '../../config/checker.ts';
+} from '../../config/functions.ts';
 
 function getTypeLabel(returned: CheckedType, types: TypeReader): string {
     const { checker } = types;

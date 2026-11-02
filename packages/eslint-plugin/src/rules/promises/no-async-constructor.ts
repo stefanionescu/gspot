@@ -1,10 +1,9 @@
 import { createRule } from '../../rule.ts';
 import type { TypeReader } from '../../types/plugin.ts';
 import { unwrapExpression } from '../../language/syntax.ts';
-import { CONSTRUCTOR_BODY_DEPTH } from '../../config/rules.ts';
 import { getTypes, isThenable } from '../../language/checker.ts';
-import { PROMISE_NAME, SETTLE_METHOD } from '../../config/builtins.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { PROMISE_NAME, SETTLE_METHOD, CONSTRUCTOR_BODY_DEPTH } from '../../config/functions.ts';
 
 function getConstructorStatement(ancestors: readonly TSESTree.Node[]): TSESTree.Node | undefined {
     const start = ancestors.findLastIndex(

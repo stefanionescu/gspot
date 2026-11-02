@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import { UNDEFINED_NAME } from '../../config/builtins.ts';
+import { UNDEFINED_NAME } from '../../config/plugin.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { NameSet, NamedNode, FunctionNode } from '../../types/rules.ts';
 import { ARGUMENTS_NAME, BUILTIN_GLOBALS, SHADOWING_EXCEPTIONS } from '../../config/variables.ts';

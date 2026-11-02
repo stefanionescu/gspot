@@ -1,8 +1,9 @@
 import { createRule } from '../../rule.ts';
+import { FUNCTION_NODES } from '../../config/plugin.ts';
 import type { LocalFunction } from '../../types/plugin.ts';
 import { getLocalFunction } from '../../language/functions.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { FUNCTION_NODES, EMPTY_RETURN_TYPES, UNUSED_CALL_PARENTS } from '../../config/rules.ts';
+import { EMPTY_RETURN_TYPES, UNUSED_CALL_PARENTS } from '../../config/functions.ts';
 
 function usesCallValue(node: TSESTree.CallExpression | TSESTree.SequenceExpression): boolean {
     const { parent } = node;

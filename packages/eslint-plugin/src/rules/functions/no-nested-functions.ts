@@ -1,8 +1,12 @@
 import { createRule } from '../../rule.ts';
 import type { FunctionNode } from '../../types/rules.ts';
-import { TEST_STRUCTURE_CALLS } from '../../config/builtins.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { DEFAULT_FUNCTION_NESTING, FUNCTION_NESTING_OPTIONS_SCHEMA } from '../../config/rules.ts';
+
+import {
+    TEST_STRUCTURE_CALLS,
+    DEFAULT_FUNCTION_NESTING,
+    FUNCTION_NESTING_OPTIONS_SCHEMA,
+} from '../../config/functions.ts';
 
 function isTestCallback(node: TSESTree.Node): boolean {
     const { parent } = node;

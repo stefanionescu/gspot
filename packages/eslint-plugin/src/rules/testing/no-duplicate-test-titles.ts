@@ -1,11 +1,11 @@
 import { createRule } from '../../rule.ts';
-import { FUNCTION_NODES } from '../../config/rules.ts';
+import { FUNCTION_NODES } from '../../config/plugin.ts';
 import { usesModule } from '../../libraries/packages.ts';
 import { getLocalFunction } from '../../language/functions.ts';
 import { getTestCall, listChildNodes } from '../../libraries/testing.ts';
 import type { TestCall, TitleScan, FunctionNode } from '../../types/rules.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { TEST_FRAMEWORK_MODULES, RUNNING_TEST_MODIFIERS } from '../../config/testing.ts';
+import { RUNNING_TEST_MODIFIERS, TEST_FRAMEWORK_MODULES } from '../../config/testing.ts';
 
 function getRunningCall(call: TestCall | undefined, kind: TestCall['kind']): TestCall | undefined {
     if (call?.kind !== kind) return undefined;

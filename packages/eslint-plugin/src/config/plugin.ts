@@ -29,3 +29,9 @@ export const NODE_PREFIX = /^node:/u;
 export const MODULE_SEPARATOR = '.';
 
 export const UNDEFINED_NAME = 'undefined';
+
+export const DRIVE_LETTER = /^[a-z]:/u;
+
+export const TRAILING_SLASH = /\/$/u;
+
+export const FUNCTION_NODES = new Set(['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression']);

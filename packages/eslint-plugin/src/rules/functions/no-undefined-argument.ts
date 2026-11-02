@@ -1,7 +1,7 @@
 import { createRule } from '../../rule.ts';
 import { getTypes } from '../../language/checker.ts';
+import { UNDEFINED_NAME } from '../../config/plugin.ts';
 import type { TypeReader } from '../../types/plugin.ts';
-import { UNDEFINED_NAME } from '../../config/builtins.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isOptionalParameter(node: TSESTree.CallExpression, types: TypeReader): boolean {

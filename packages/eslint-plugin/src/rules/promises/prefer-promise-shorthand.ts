@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import { PROMISE_NAME, SETTLE_ACTIONS } from '../../config/builtins.ts';
+import { PROMISE_NAME, SETTLE_ACTIONS } from '../../config/functions.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getSoleExpression(body: TSESTree.Node): TSESTree.Node | undefined {

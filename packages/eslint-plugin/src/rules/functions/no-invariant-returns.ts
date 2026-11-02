@@ -5,10 +5,10 @@ import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescr
 import {
     BRANCH_KEYS,
     MINIMUM_RETURNS,
-    EFFECT_ONLY_BRANCH,
     BARE_RETURN_BRANCH,
+    EFFECT_ONLY_BRANCH,
     EFFECT_RETURN_BRANCH,
-} from '../../config/rules.ts';
+} from '../../config/functions.ts';
 
 function isBranchBody(node: TSESTree.BlockStatement | TSESTree.ExpressionStatement): boolean {
     const { parent } = node;

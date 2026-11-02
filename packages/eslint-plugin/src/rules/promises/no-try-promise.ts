@@ -4,7 +4,7 @@ import { listChildren } from '../../language/syntax.ts';
 import type { TypeReader } from '../../types/plugin.ts';
 import { getTypes, isThenable } from '../../language/checker.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { CALL_NODES, CHAINED_USES, CATCH_METHOD, HANDLING_PARENTS } from '../../config/builtins.ts';
+import { CALL_NODES, CATCH_METHOD, CHAINED_USES, HANDLING_PARENTS } from '../../config/functions.ts';
 
 function listCalls(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node[] {
     if (ASTUtils.isFunction(node)) return [];

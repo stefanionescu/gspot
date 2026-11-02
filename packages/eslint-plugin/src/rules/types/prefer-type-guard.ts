@@ -1,6 +1,6 @@
 import { createRule } from '../../rule.ts';
 import { BOOLEAN_NAME } from '../../config/types.ts';
-import { UNDEFINED_NAME } from '../../config/builtins.ts';
+import { UNDEFINED_NAME } from '../../config/plugin.ts';
 import { INEQUALITY_OPERATORS } from '../../config/logic.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

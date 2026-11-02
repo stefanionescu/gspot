@@ -1,22 +1,21 @@
 import picomatch from 'picomatch';
 import { createRule } from '../../rule.ts';
-import { PLUGIN_PREFIX } from '../../config/plugin.ts';
 import { findPathInFolder } from '../../language/modules.ts';
+import { PLUGIN_PREFIX, FUNCTION_NODES } from '../../config/plugin.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { type FunctionNode, type TrivialFunctionsOptions } from '../../types/rules.ts';
 
 import {
     ONE_STATEMENT,
-    FUNCTION_NODES,
-    TYPE_DECLARATIONS,
     FUNCTION_SELECTOR,
+    TYPE_DECLARATIONS,
     INLINE_VALUE_PARENTS,
     EXECUTABLE_DECLARATIONS,
     TRANSPARENT_EXPRESSIONS,
     NON_EXECUTABLE_STATEMENTS,
     TRIVIAL_FUNCTION_STATEMENTS,
     TRIVIAL_FUNCTION_OPTIONS_SCHEMA,
-} from '../../config/rules.ts';
+} from '../../config/functions.ts';
 
 const isTransparentExpression = ASTUtils.isNodeOfTypes(TRANSPARENT_EXPRESSIONS.map((type) => AST_NODE_TYPES[type]));
 

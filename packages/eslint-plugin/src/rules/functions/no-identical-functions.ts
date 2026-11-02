@@ -2,7 +2,7 @@ import { createRule } from '../../rule.ts';
 import type { FunctionNode } from '../../types/rules.ts';
 import { haveSameTokens } from '../../language/syntax.ts';
 import { type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-import { DEFAULT_IDENTICAL_LINES, IDENTICAL_FUNCTIONS_OPTIONS_SCHEMA } from '../../config/rules.ts';
+import { DEFAULT_IDENTICAL_LINES, IDENTICAL_FUNCTIONS_OPTIONS_SCHEMA } from '../../config/functions.ts';
 
 function countBodyLines(body: TSESTree.Node, source: TSESLint.SourceCode): number {
     const tokens = source.getTokens(body);

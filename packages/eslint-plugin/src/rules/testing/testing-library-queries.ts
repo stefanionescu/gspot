@@ -1,6 +1,6 @@
 import { createRule } from '../../rule.ts';
 import { isCallOf } from '../../libraries/testing.ts';
-import { FUNCTION_NODES } from '../../config/rules.ts';
+import { FUNCTION_NODES } from '../../config/plugin.ts';
 import { getModuleName } from '../../language/modules.ts';
 import { unwrapExpression } from '../../language/syntax.ts';
 import type { QueryUse, MemberCall, ExpectSubject } from '../../types/rules.ts';

@@ -13,7 +13,7 @@ import {
     CRYPTO_ROUND_NAME,
     CRYPTO_STATE_SIZE,
     NAMED_ARGUMENT_MINIMUM,
-} from '../../config/calls.ts';
+} from '../../config/functions.ts';
 
 function getParameterNames(
     call: CallNode,
