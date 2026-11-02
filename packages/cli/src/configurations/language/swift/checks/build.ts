@@ -10,7 +10,7 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import type { SwiftBuildPlan, SwiftBuildOutput } from '#cli/types/configurations/language.ts';
-import { prepareBuild, planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
+import { prepareBuild, planSwiftBuild, acquireBuildLock } from '#cli/configurations/language/swift/checks/cache.ts';
 
 import {
     SWIFTC_CALL,
@@ -21,6 +21,7 @@ import {
     RESPONSE_FILE,
     REPORTED_LEVELS,
     SWIFT_BUILD_NAME,
+    XCODE_CLEAN_ACTION,
     MACOS_PRIVATE_PATH,
 } from '#cli/config/configurations/builds.ts';
 
@@ -87,19 +88,30 @@ Build the scope once for each build folder, and keep the compiler output for the
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 @param plan the build folder, the command, and the log path.
+@param options how to run the build.
+@param options.clean whether to compile every file, so the compiler log lists each one.
 @returns the compiler output, its exit code, and the source copy that it built.
 */
 export async function runSwiftBuild(
     session: CheckSession,
     planned: PlannedCheck,
     plan: SwiftBuildPlan,
+    { clean }: { clean: boolean },
 ): Promise<SwiftBuildOutput> {
-    return remember(session.cache, SWIFT_BUILD_OUTPUTS, plan.folder, async (): Promise<SwiftBuildOutput> => {
+    const key = JSON.stringify([plan.folder, clean]);
+    return remember(session.cache, SWIFT_BUILD_OUTPUTS, key, async (): Promise<SwiftBuildOutput> => {
+        using _lock = await acquireBuildLock(plan.folder, session.cancelSignal);
         const { files, source } = prepareBuild(session.root, planned.files, plan.folder);
-        if (plan.kind === 'package' && plan.purpose === 'analyze')
-            files.deleteTree(convertToPosixPath(relative(plan.folder, plan.scratch)));
+        if (clean && plan.kind === 'package') files.deleteTree(convertToPosixPath(relative(plan.folder, plan.scratch)));
+        const [program, ...commandArguments] = plan.commandArguments as [string, ...string[]];
+        const isCleanXcode = clean && plan.kind === 'xcode';
         const cwd = join(source, planned.scope.path);
-        const result = await runCheckTool(session, planned, plan.commandArguments, { cwd });
+        const result = await runCheckTool(
+            session,
+            planned,
+            [program, ...(isCleanXcode ? [XCODE_CLEAN_ACTION] : []), ...commandArguments],
+            { cwd },
+        );
         const output = `${result.stdout}\n${result.stderr}`
             .split('\n')
             .map((line) =>
@@ -111,7 +123,7 @@ export async function runSwiftBuild(
             .join('\n');
         const log = convertToPosixPath(relative(plan.folder, plan.log));
         files.write(log, { bytes: Buffer.from(output), mode: PRIVATE_FILE });
-        return { output, code: result.code, source };
+        return { output, code: result.code, source, files };
     });
 }
 
@@ -123,7 +135,7 @@ Builds the scope and reports the compiler errors.
 */
 export async function checkSwiftBuild(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const plan = planSwiftBuild(session, planned);
-    const { output, code, source } = await runSwiftBuild(session, planned, plan);
+    const { output, code, source } = await runSwiftBuild(session, planned, plan, { clean: false });
     const restored = output.replaceAll(
         source.replaceAll(MACOS_PRIVATE_PATH, (_match, before: string, folder: string) => `${before}/${folder}/`),
         () =>

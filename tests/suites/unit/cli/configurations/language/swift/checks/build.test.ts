@@ -103,7 +103,7 @@ test('compiler: canceled Swift compilation refuses to launch the compiler', asyn
     const run = resources.use(fakeCommands());
     const compilation = await runChecks(prepared.session, buildRunOptions({ only: ['swift/build'] }));
     expect(compilation.report.checks).toMatchObject([{ status: 'error', note: CANCELED_CHECK_NOTE }]);
-    const analyzer = planSwiftBuild(prepared.session, input, 'analyze');
+    const analyzer = planSwiftBuild(prepared.session, input);
     if (analyzer.kind !== 'package') throw new Error(UNEXPECTED_PLAN_MESSAGE);
     await mkdir(analyzer.scratch, { recursive: true });
     const state = join(analyzer.scratch, 'state');

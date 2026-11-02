@@ -28,7 +28,7 @@ test.each([...ANALYZER_EXIT_CASES])(
     },
 );
 
-test('analyzer: swift/swiftlint-analyze removes its own old compiler files and leaves the incremental build of swift/build in place', async () => {
+test('analyzer: swift/swiftlint-analyze removes the old compiler files, so its compiler log lists every file', async () => {
     using resources = new DisposableStack();
 
     await using sandbox = await createGitSandbox({});
@@ -36,26 +36,18 @@ test('analyzer: swift/swiftlint-analyze removes its own old compiler files and l
     await using prepared = await prepareSwiftCheck(sandbox, 'swift/swiftlint-analyze');
 
     const input = prepared.planned;
-    const compile = planSwiftBuild(prepared.session, input);
-    const analyzer = planSwiftBuild(prepared.session, input, 'analyze');
-    if (analyzer.kind !== 'package') throw new Error(UNEXPECTED_PLAN_MESSAGE);
-    const compilerState = join(compile.folder, 'package', 'state');
-    const analyzerState = join(analyzer.scratch, 'state');
-    await mkdir(join(compile.folder, 'package'), { recursive: true });
-    await mkdir(analyzer.scratch, { recursive: true });
+    const plan = planSwiftBuild(prepared.session, input);
+    if (plan.kind !== 'package') throw new Error(UNEXPECTED_PLAN_MESSAGE);
+    const compilerState = join(plan.scratch, 'state');
+    await mkdir(plan.scratch, { recursive: true });
     await writeFile(compilerState, 'incremental');
-    await writeFile(analyzerState, 'old analyzer');
     resources.use(
         spyOn(processes, 'spawnProcess')
-            .mockResolvedValueOnce(buildProcessResult({ stdout: 'incremental log' }))
             .mockResolvedValueOnce(buildProcessResult({ stdout: 'complete compiler log' }))
             .mockResolvedValue(buildProcessResult()),
     );
 
-    expect(await getBuiltInCheck('swift/build')(prepared.session, input)).toStrictEqual([]);
     expect(await getBuiltInCheck('swift/swiftlint-analyze')(prepared.session, input)).toStrictEqual([]);
-    expect(await readFile(compilerState, 'utf8')).toBe('incremental');
-    expect(await isOnDisk(analyzerState)).toBe(false);
-    expect(await readFile(analyzer.log, 'utf8')).toBe('complete compiler log\n');
-    expect(await readFile(compile.log, 'utf8')).toBe('incremental log\n');
+    expect(await isOnDisk(compilerState)).toBe(false);
+    expect(await readFile(plan.log, 'utf8')).toBe('complete compiler log\n');
 });

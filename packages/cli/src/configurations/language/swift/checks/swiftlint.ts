@@ -22,8 +22,8 @@ Runs the SwiftLint analyzer rules over the compiler log of the build.
 @param planned the scope to analyze.
 */
 export async function checkSwiftlintAnalyze(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
-    const plan = planSwiftBuild(session, planned, 'analyze');
-    const build = await runSwiftBuild(session, planned, plan);
+    const plan = planSwiftBuild(session, planned);
+    const build = await runSwiftBuild(session, planned, plan, { clean: true });
     if (build.code !== 0)
         throw new CheckStop('error', `Cannot analyze Swift because the build exited ${String(build.code)}.`);
     const config = join(session.root, getConfigPath(session, planned, SWIFTLINT_TOOL));

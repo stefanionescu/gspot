@@ -7,27 +7,34 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { setTimeout as delay } from 'node:timers/promises';
+import { isProcessRunning } from '#cli/system/processes.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Files, FileContents } from '#cli/types/system.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
-import { MODE_BITS, PRIVATE_FOLDER } from '#cli/config/system.ts';
-import { statSync, lstatSync, mkdirSync, realpathSync } from 'node:fs';
 import { CheckStop, GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import type { SwiftBuildPlan, SwiftBuildSetup, SwiftBuildPurpose } from '#cli/types/configurations/language.ts';
+import { MODE_BITS, PRIVATE_FILE, PRIVATE_FOLDER } from '#cli/config/system.ts';
+import type { SwiftBuildPlan, SwiftBuildSetup } from '#cli/types/configurations/language.ts';
+import { rmSync, statSync, lstatSync, mkdirSync, realpathSync, writeFileSync } from 'node:fs';
 
 import {
     BUILD_LOG,
+    BUILD_LOCK,
     SWIFT_PROGRAM,
     CODE_SIGNING_OFF,
     SCRATCH_PATH_FLAG,
     DERIVED_DATA_FLAG,
     XCODE_SCHEME_FLAG,
+    XCODE_INDEX_STORE,
+    XCODE_TEST_ACTION,
     ROOT_BUILD_FOLDER,
+    SWIFT_TEST_COMMAND,
     XCODEBUILD_PROGRAM,
     XCODE_PROJECT_FLAG,
     SWIFT_BUILD_FOLDER,
+    PACKAGE_INDEX_STORE,
     BUILD_SOURCE_FOLDER,
     DERIVED_DATA_FOLDER,
     SCOPE_FOLDER_PREFIX,
@@ -38,6 +45,8 @@ import {
     XCODE_DESTINATION_FLAG,
     XCODE_WORKSPACE_SUFFIX,
     PACKAGE_SCRATCH_FOLDER,
+    XCODE_WARNINGS_AS_ERRORS,
+    BUILD_LOCK_WAIT_MILLISECONDS,
 } from '#cli/config/configurations/builds.ts';
 
 function readBuildSources(root: string, paths: string[]): Map<string, FileContents> {
@@ -98,25 +107,55 @@ export function readRepositoryCacheFolder(root: string): string {
     return join(readCacheFolder(), digest);
 }
 
+function takeBuildLock(path: string): Disposable | undefined {
+    try {
+        writeFileSync(path, String(process.pid), { flag: 'wx', mode: PRIVATE_FILE });
+        return {
+            [Symbol.dispose]: () => {
+                rmSync(path, { force: true });
+            },
+        };
+    } catch (error) {
+        if (!hasErrorCode(error, 'EEXIST')) throw error;
+        return undefined;
+    }
+}
+
+/**
+Hold the lock of a build folder, so a commit and a push never rewrite the sources of each other. Remove a lock whose
+process stopped.
+
+@param folder the folder of the scope's build.
+@param cancelSignal stops the wait.
+@returns the lock, which disposal removes.
+*/
+export async function acquireBuildLock(folder: string, cancelSignal: AbortSignal | undefined): Promise<Disposable> {
+    const files = openBuildCache(folder);
+    const path = join(folder, BUILD_LOCK);
+    let lock = takeBuildLock(path);
+    while (lock === undefined) {
+        const owner = files.read(BUILD_LOCK);
+        if (owner !== undefined && isProcessRunning(Number(owner.bytes.toString('utf8'))))
+            await delay(BUILD_LOCK_WAIT_MILLISECONDS, undefined, { signal: cancelSignal });
+        else rmSync(path, { force: true });
+        lock = takeBuildLock(path);
+    }
+    return lock;
+}
+
 /**
 Plans the build of a scope: the command, its folder, and its log path.
 
 @param session the repository and its tools.
 @param planned the scope and its Swift settings.
-@param purpose the tool whose build needs its own cache.
 */
-export function planSwiftBuild(
-    session: Session,
-    planned: PlannedCheck,
-    purpose: Exclude<SwiftBuildPurpose, 'periphery'> = 'compile',
-): SwiftBuildPlan {
+export function planSwiftBuild(session: Session, planned: PlannedCheck): SwiftBuildPlan {
     const folder = join(
         readRepositoryCacheFolder(session.toolsRoot),
         SWIFT_BUILD_FOLDER,
         planned.scope.path === ''
             ? ROOT_BUILD_FOLDER
             : `${SCOPE_FOLDER_PREFIX}${Buffer.from(planned.scope.path).toString('hex')}`,
-        purpose,
     );
     const log = join(folder, BUILD_LOG);
     const {
@@ -132,16 +171,16 @@ export function planSwiftBuild(
             folder,
             log,
             kind: 'package',
-            purpose,
             scratch,
-            commandArguments: [SWIFT_PROGRAM, ...SWIFT_BUILD_COMMANDS[purpose].package, SCRATCH_PATH_FLAG, scratch],
+            store: join(scratch, PACKAGE_INDEX_STORE),
+            commandArguments: [SWIFT_PROGRAM, ...SWIFT_BUILD_COMMANDS.package, SCRATCH_PATH_FLAG, scratch],
+            testArguments: [SWIFT_PROGRAM, ...SWIFT_TEST_COMMAND, SCRATCH_PATH_FLAG, scratch],
         };
     }
     if (scheme === undefined) throw new GspotError('settings', XCODE_SCHEME_MESSAGE);
     const container = project.endsWith(XCODE_WORKSPACE_SUFFIX) ? XCODE_WORKSPACE_FLAG : XCODE_PROJECT_FLAG;
-    const commandArguments = [
-        XCODEBUILD_PROGRAM,
-        ...SWIFT_BUILD_COMMANDS[purpose].xcode,
+    const products = join(folder, DERIVED_DATA_FOLDER);
+    const target = [
         container,
         posix.relative(planned.scope.path, project),
         XCODE_SCHEME_FLAG,
@@ -149,10 +188,17 @@ export function planSwiftBuild(
         XCODE_DESTINATION_FLAG,
         destination,
         DERIVED_DATA_FLAG,
-        join(folder, DERIVED_DATA_FOLDER),
+        products,
         CODE_SIGNING_OFF,
     ];
-    return { kind: 'xcode', purpose, folder, log, commandArguments };
+    return {
+        kind: 'xcode',
+        folder,
+        log,
+        store: join(products, XCODE_INDEX_STORE),
+        commandArguments: [XCODEBUILD_PROGRAM, ...SWIFT_BUILD_COMMANDS.xcode, ...target, XCODE_WARNINGS_AS_ERRORS],
+        testArguments: [XCODEBUILD_PROGRAM, XCODE_TEST_ACTION, ...target],
+    };
 }
 
 /**

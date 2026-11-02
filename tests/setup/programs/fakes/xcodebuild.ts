@@ -1,15 +1,18 @@
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 
+const isTestRun = process.argv.includes('test-without-building');
 const bundle = process.argv[process.argv.indexOf('-resultBundlePath') + 1] ?? '';
 const exitIndex = process.argv.indexOf('--exit');
-if (process.argv.includes('--refuse-previous-bundle') && existsSync(join(bundle, 'data', 'previous'))) {
-    process.stderr.write('Previous bundle survived\n');
-    process.exitCode = 1;
-} else {
-    if (process.argv.includes('--mark-tested')) await Bun.write('tested.txt', 'tested');
-    process.exitCode = exitIndex === -1 ? 0 : Number(process.argv[exitIndex + 1]);
-}
+if (isTestRun) {
+    if (process.argv.includes('--refuse-previous-bundle') && existsSync(join(bundle, 'data', 'previous'))) {
+        process.stderr.write('Previous bundle survived\n');
+        process.exitCode = 1;
+    } else {
+        if (process.argv.includes('--mark-tested')) await Bun.write('tested.txt', 'tested');
+        process.exitCode = exitIndex === -1 ? 0 : Number(process.argv[exitIndex + 1]);
+    }
 
-const failureIndex = process.argv.indexOf('--failure');
-if (failureIndex !== -1) process.stdout.write(`${process.cwd()}/${process.argv[failureIndex + 1] ?? ''}\n`);
+    const failureIndex = process.argv.indexOf('--failure');
+    if (failureIndex !== -1) process.stdout.write(`${process.cwd()}/${process.argv[failureIndex + 1] ?? ''}\n`);
+}

@@ -96,8 +96,6 @@ swift = { xcode_project = "Choice.xcworkspace", xcode_scheme = "App" }
     },
 ] as const;
 
-export const SWIFT_BUILD_PURPOSES = [{ purpose: 'compile', check: 'swift/build' }] as const;
-
 export const UNEXPECTED_PLAN_MESSAGE = 'Expected a Swift package build.';
 
 export const PRIVATE_OTHER_FINDING = {

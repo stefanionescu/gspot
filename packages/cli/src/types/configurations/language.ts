@@ -3,14 +3,14 @@ import type { Node } from 'web-tree-sitter';
 import type { Files } from '#cli/types/system.ts';
 import type { Config } from '#cli/types/repository.ts';
 import type { FENCE_GRAMMARS } from '#cli/config/parsers.ts';
-import { type ScriptSyntax, type DependencyFile } from '#cli/types/parsers.ts';
-import { type xccovSchema, type deptrySchema } from '#cli/schemas/configurations.ts';
 import type { Session, GeneratedFile } from '#cli/types/tools.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { settingsSchema } from '#cli/schemas/settings/file.ts';
 import type { Configuration, ParsedManifest } from '#cli/types/manifests.ts';
 import type { MessageFormatElement } from '@formatjs/icu-messageformat-parser';
 import type { DOCSTRING_STYLES } from '#cli/config/configurations/registry.ts';
+import { type ScriptSyntax, type DependencyFile } from '#cli/types/parsers.ts';
+import { type xccovSchema, type deptrySchema } from '#cli/schemas/configurations.ts';
 import type { COMPONENT_CONFIGURATIONS } from '#cli/config/configurations/javascript.ts';
 import type { IgnoreSection, SourcedConfig } from '#cli/types/configurations/general.ts';
 import type { Level, Scope, Defined, Settings, ScopeSettings, ParsedSettings } from '#cli/types/settings.ts';
@@ -60,26 +60,17 @@ export type PydoclintOptions = { command: string[]; style: PythonDocstringStyle 
 
 export type PythonDocstringStyle = (typeof DOCSTRING_STYLES)[number];
 
-export type SwiftBuildPlan =
-    | {
-          kind: 'package';
-          purpose: Exclude<SwiftBuildPurpose, 'periphery'>;
-          folder: string;
-          log: string;
-          scratch: string;
-          commandArguments: string[];
-      }
-    | {
-          kind: 'xcode';
-          purpose: Exclude<SwiftBuildPurpose, 'periphery'>;
-          folder: string;
-          log: string;
-          commandArguments: string[];
-      };
+type SwiftBuildPaths = {
+    folder: string;
+    log: string;
+    store: string;
+    commandArguments: string[];
+    testArguments: string[];
+};
 
-export type SwiftBuildOutput = { code: number; output: string; source: string };
+export type SwiftBuildPlan = SwiftBuildPaths & ({ kind: 'package'; scratch: string } | { kind: 'xcode' });
 
-export type SwiftBuildPurpose = 'compile' | 'analyze' | 'coverage' | 'periphery';
+export type SwiftBuildOutput = { code: number; output: string; source: string; files: Files };
 
 export type SwiftBuildSetup = { files: Files; source: string };
 

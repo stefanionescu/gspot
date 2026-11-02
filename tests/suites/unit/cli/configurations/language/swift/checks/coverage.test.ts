@@ -55,7 +55,7 @@ test.each([...XCTEST_FAILURES])(
         );
         const session = await openSession(sandbox.path);
         const viewed = join(
-            planSwiftBuild(session, planSandboxCheck(session, 'swift/tests'), 'coverage').folder,
+            planSwiftBuild(session, planSandboxCheck(session, 'swift/tests')).folder,
             'source/viewed.txt',
         );
         expect((await isOnDisk(viewed)) ? await readFile(viewed, 'utf8') : undefined).toBe(
@@ -103,7 +103,7 @@ test('swift/tests: XCTest coverage refuses an external result link and removes a
         xcrun: ['--line', JSON.stringify({ targets: [{ name: 'Example', lineCoverage: 1 }] })],
     };
     const session = await openSession(sandbox.path);
-    const cache = planSwiftBuild(session, planSandboxCheck(session, 'swift/tests'), 'coverage').folder;
+    const cache = planSwiftBuild(session, planSandboxCheck(session, 'swift/tests')).folder;
     await writeFile(join(outside.path, 'authored.txt'), 'preserved');
     await mkdir(cache, { recursive: true });
     const bundle = join(cache, 'coverage.xcresult');

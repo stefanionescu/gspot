@@ -16,8 +16,9 @@ import { MAX_PERCENTAGE } from '#cli/config/settings/schema.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { join, resolve, relative, basename, isAbsolute } from 'node:path';
+import { runSwiftBuild } from '#cli/configurations/language/swift/checks/build.ts';
+import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
 import type { CoverageOutput, SwiftBuildPlan } from '#cli/types/configurations/language.ts';
-import { prepareBuild, planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
 import { xccovSchema, swiftCoverageSchema, packageDescriptionSchema } from '#cli/schemas/configurations.ts';
 
 import {
@@ -27,6 +28,7 @@ import {
     SWIFT_TEST_NAME,
     FAILED_TEST_RULE,
     TEST_TARGET_TYPE,
+    FAILED_BUILD_NOTE,
     SCRATCH_PATH_FLAG,
     APP_TARGET_SUFFIX,
     MACOS_PRIVATE_PATH,
@@ -82,7 +84,7 @@ async function measurePackageCoverage(
     files: Files,
     cwd: string,
 ): Promise<CoverageOutput | CheckFinding[]> {
-    const tested = await runCheckTool(session, planned, plan.commandArguments, { cwd });
+    const tested = await runCheckTool(session, planned, plan.testArguments, { cwd });
     if (tested.code !== 0) {
         const findings = parseFailedTests(planned, `${tested.stdout}\n${tested.stderr}`, cwd);
         if (findings.length > 0) return findings;
@@ -108,7 +110,7 @@ async function measureXcodeCoverage(
     cwd: string,
 ): Promise<CoverageOutput | CheckFinding[]> {
     const bundle = join(plan.folder, COVERAGE_BUNDLE);
-    const tested = await runCheckTool(session, planned, [...plan.commandArguments, ...XCODE_COVERAGE_FLAGS, bundle], {
+    const tested = await runCheckTool(session, planned, [...plan.testArguments, ...XCODE_COVERAGE_FLAGS, bundle], {
         cwd,
     });
     if (tested.code !== 0) {
@@ -129,8 +131,9 @@ async function measureXcodeCoverage(
 }
 
 async function measureCoverage(session: CheckSession, planned: PlannedCheck): Promise<CoverageOutput | CheckFinding[]> {
-    const plan = planSwiftBuild(session, planned, 'coverage');
-    const { files, source } = prepareBuild(session.root, planned.files, plan.folder);
+    const plan = planSwiftBuild(session, planned);
+    const { code, files, source } = await runSwiftBuild(session, planned, plan, { clean: false });
+    if (code !== 0) throw new CheckStop('skipped', FAILED_BUILD_NOTE);
     const cwd = join(source, planned.scope.path);
     files.deleteTree(COVERAGE_BUNDLE);
     return plan.kind === 'package'

@@ -30,10 +30,42 @@ export const PACKAGE_SCRATCH_FOLDER = 'package';
 export const SWIFT_PROGRAM = 'swift';
 
 export const SWIFT_BUILD_COMMANDS = {
-    compile: { package: ['build', '-v'], xcode: ['build-for-testing'] },
-    analyze: { package: ['build', '-v'], xcode: ['clean', 'build-for-testing'] },
-    coverage: { package: ['test', '--enable-code-coverage'], xcode: ['test'] },
+    package: [
+        'build',
+        '--build-tests',
+        '--enable-code-coverage',
+        '--enable-index-store',
+        '--force-resolved-versions',
+        '-Xswiftc',
+        '-warnings-as-errors',
+        '-v',
+    ],
+    xcode: [
+        'build-for-testing',
+        '-enableCodeCoverage',
+        'YES',
+        '-onlyUsePackageVersionsFromResolvedFile',
+        '-disableAutomaticPackageResolution',
+    ],
 } as const;
+
+export const XCODE_WARNINGS_AS_ERRORS = 'SWIFT_TREAT_WARNINGS_AS_ERRORS=YES';
+
+export const XCODE_CLEAN_ACTION = 'clean';
+
+export const SWIFT_TEST_COMMAND = ['test', '--skip-build', '--enable-code-coverage'] as const;
+
+export const XCODE_TEST_ACTION = 'test-without-building';
+
+export const PACKAGE_INDEX_STORE = 'debug/index/store';
+
+export const XCODE_INDEX_STORE = 'Index.noindex/DataStore';
+
+export const BUILD_LOCK = 'build.lock';
+
+export const BUILD_LOCK_WAIT_MILLISECONDS = 250;
+
+export const FAILED_BUILD_NOTE = 'The Swift build failed; swift/build reports it.';
 
 export const XCODE_WORKSPACE_SUFFIX = '.xcworkspace';
 
@@ -125,6 +157,7 @@ export const PERIPHERY_TOOL = 'periphery';
 export const PERIPHERY_COMMAND = [
     'periphery',
     'scan',
+    '--skip-build',
     '--strict',
     '--quiet',
     '--format',
@@ -132,6 +165,8 @@ export const PERIPHERY_COMMAND = [
     '--disable-update-check',
     '--config',
 ] as const;
+
+export const PERIPHERY_INDEX_STORE_FLAG = '--index-store-path';
 
 export const UNUSED_RULE = 'unused';
 
