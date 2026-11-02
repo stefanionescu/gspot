@@ -193,7 +193,7 @@ async function runDoctorCommand(root: string): Promise<CommandResult> {
     };
 }
 
-export const doctorCommand: CommandDefinition = {
+export const DOCTOR_COMMAND: CommandDefinition = {
     name: 'doctor',
     run: async (_arguments, _flags, { root }) => await runDoctorCommand(root),
 };

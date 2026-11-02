@@ -154,7 +154,7 @@ function findRequirementChain(
     return undefined;
 }
 
-export const removeCommand: CommandDefinition<[string[]], ScopeFlags & { reason: string }> = {
+export const REMOVE_COMMAND: CommandDefinition<[string[]], ScopeFlags & { reason: string }> = {
     name: 'remove',
     arguments: [{ term: '<configuration...>' }],
     options: [

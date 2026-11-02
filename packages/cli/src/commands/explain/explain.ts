@@ -65,7 +65,7 @@ function explainSubject(session: Session | undefined, { subject, cwd }: { subjec
     throw new GspotError('arguments', formatUnknownSubject(session, subject));
 }
 
-export const explainCommand: CommandDefinition<[string, string | undefined], { verbose?: true }> = {
+export const EXPLAIN_COMMAND: CommandDefinition<[string, string | undefined], { verbose?: true }> = {
     name: 'explain',
     arguments: [{ term: '<subject>' }, { term: '[rule]' }],
     options: [{ flags: VERBOSE_FLAG }],

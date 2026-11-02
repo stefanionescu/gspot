@@ -169,7 +169,7 @@ async function runSetCommand(options: SetOptions): Promise<CommandResult> {
     return await writeSettingsEdit(root, { edit: input, summary, notes, cache: edit.cache, listing: edit.listing });
 }
 
-export const setCommand: CommandDefinition<[string, string[]], ReasonFlags> = {
+export const SET_COMMAND: CommandDefinition<[string, string[]], ReasonFlags> = {
     name: 'set',
     arguments: [{ term: '<setting>' }, { term: '<values...>' }],
     options: [{ flags: REASON_OPTION }, { flags: SCOPE_OPTION, parse: stripTrailingSlashes }],

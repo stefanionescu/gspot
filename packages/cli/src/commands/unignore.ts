@@ -117,7 +117,7 @@ async function runUnignoreCommand(
     });
 }
 
-export const unignoreCommand: CommandDefinition<[string | undefined], Partial<IgnoreFlags>> = {
+export const UNIGNORE_COMMAND: CommandDefinition<[string | undefined], Partial<IgnoreFlags>> = {
     name: 'unignore',
     arguments: [{ term: '[check]' }],
     options: [{ flags: RULE_OPTION }, pathsOption],

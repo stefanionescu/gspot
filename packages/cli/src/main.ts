@@ -1,25 +1,25 @@
-import { addCommand } from '#cli/commands/add.ts';
-import { setCommand } from '#cli/commands/set.ts';
+import { ADD_COMMAND } from '#cli/commands/add.ts';
+import { SET_COMMAND } from '#cli/commands/set.ts';
 import { EXIT_ERROR } from '#cli/config/system.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { listCommand } from '#cli/commands/list.ts';
+import { LIST_COMMAND } from '#cli/commands/list.ts';
 import { formatNameList } from '#cli/system/text.ts';
-import { applyCommand } from '#cli/commands/apply.ts';
-import { unsetCommand } from '#cli/commands/unset.ts';
+import { APPLY_COMMAND } from '#cli/commands/apply.ts';
+import { UNSET_COMMAND } from '#cli/commands/unset.ts';
 import type { InvalidValue } from '#cli/types/main.ts';
-import { ignoreCommand } from '#cli/commands/ignore.ts';
-import { removeCommand } from '#cli/commands/remove.ts';
-import { initCommand } from '#cli/commands/init/init.ts';
-import { scanCommand } from '#cli/commands/scan/scan.ts';
-import { installCommand } from '#cli/commands/install.ts';
+import { IGNORE_COMMAND } from '#cli/commands/ignore.ts';
+import { REMOVE_COMMAND } from '#cli/commands/remove.ts';
+import { INIT_COMMAND } from '#cli/commands/init/init.ts';
+import { SCAN_COMMAND } from '#cli/commands/scan/scan.ts';
+import { INSTALL_COMMAND } from '#cli/commands/install.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { baselineCommand } from '#cli/commands/baseline.ts';
-import { checkCommand } from '#cli/commands/check/check.ts';
-import { unignoreCommand } from '#cli/commands/unignore.ts';
+import { BASELINE_COMMAND } from '#cli/commands/baseline.ts';
+import { CHECK_COMMAND } from '#cli/commands/check/check.ts';
+import { UNIGNORE_COMMAND } from '#cli/commands/unignore.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
-import { doctorCommand } from '#cli/commands/doctor/doctor.ts';
+import { DOCTOR_COMMAND } from '#cli/commands/doctor/doctor.ts';
 import { beginCheckReport } from '#cli/commands/check/report.ts';
-import { explainCommand } from '#cli/commands/explain/explain.ts';
+import { EXPLAIN_COMMAND } from '#cli/commands/explain/explain.ts';
 import { runGit, buildGitError } from '#cli/repository/git/run.ts';
 import { CODE_MARK, COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { assertGspotPin } from '#cli/repository/javascript/gspot-pin.ts';
@@ -206,21 +206,21 @@ export function buildProgram(onResult: CommandCompletion): Command {
         if (PIN_COMMANDS.has(action.name())) assertGspotPin(location.root);
     });
     const definitions: readonly CommandDefinition[] = [
-        scanCommand,
-        initCommand,
-        installCommand,
-        applyCommand,
-        checkCommand,
-        baselineCommand,
-        addCommand,
-        removeCommand,
-        setCommand,
-        unsetCommand,
-        ignoreCommand,
-        unignoreCommand,
-        listCommand,
-        explainCommand,
-        doctorCommand,
+        SCAN_COMMAND,
+        INIT_COMMAND,
+        INSTALL_COMMAND,
+        APPLY_COMMAND,
+        CHECK_COMMAND,
+        BASELINE_COMMAND,
+        ADD_COMMAND,
+        REMOVE_COMMAND,
+        SET_COMMAND,
+        UNSET_COMMAND,
+        IGNORE_COMMAND,
+        UNIGNORE_COMMAND,
+        LIST_COMMAND,
+        EXPLAIN_COMMAND,
+        DOCTOR_COMMAND,
     ];
     for (const definition of definitions) {
         const command = addCommandDefinition(program, definition);

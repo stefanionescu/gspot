@@ -63,7 +63,7 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
     });
 }
 
-export const addCommand: CommandDefinition<[string[]], ScopeFlags> = {
+export const ADD_COMMAND: CommandDefinition<[string[]], ScopeFlags> = {
     name: 'add',
     arguments: [{ term: '<configuration...>' }],
     options: [{ flags: SCOPE_OPTION, parse: stripTrailingSlashes }],

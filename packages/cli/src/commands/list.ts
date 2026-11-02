@@ -125,7 +125,7 @@ function buildSettingRows(settings: Settings, scopes: Scope[]): SettingsListJson
     });
 }
 
-export const listCommand: CommandDefinition<[(typeof LIST_KINDS)[number]]> = {
+export const LIST_COMMAND: CommandDefinition<[(typeof LIST_KINDS)[number]]> = {
     name: 'list',
     arguments: [{ term: LIST_ARGUMENT, choices: LIST_KINDS, defaultValue: 'configurations' }],
     run: async ([kind], _flags, { root }) => {

@@ -268,7 +268,7 @@ async function runCheckCommand(
     }
 }
 
-export const checkCommand: CommandDefinition<[string[]], CheckFlags> = {
+export const CHECK_COMMAND: CommandDefinition<[string[]], CheckFlags> = {
     name: 'check',
     arguments: [{ term: '[paths...]' }],
     options: [

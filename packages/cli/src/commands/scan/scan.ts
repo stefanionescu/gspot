@@ -60,7 +60,7 @@ async function runScanCommand(
     return { text: flags.markdown === true ? formatScanMarkdown(scan) : formatScanText(scan), json: scan, exitCode: 0 };
 }
 
-export const scanCommand: CommandDefinition<[], ScanFlags> = {
+export const SCAN_COMMAND: CommandDefinition<[], ScanFlags> = {
     name: 'scan',
     options: [{ flags: MARKDOWN_FLAG }],
     run: async (_arguments, flags, { root }) =>

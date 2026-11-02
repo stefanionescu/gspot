@@ -20,7 +20,7 @@ async function runApplyCommand(root: string): Promise<CommandResult> {
     return { text: formatApplyReport(report), json: report, exitCode: 0 };
 }
 
-export const applyCommand: CommandDefinition = {
+export const APPLY_COMMAND: CommandDefinition = {
     name: 'apply',
     run: async (_arguments, _flags, { root }) => await runApplyCommand(root),
 };

@@ -56,7 +56,7 @@ async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
     });
 }
 
-export const unsetCommand: CommandDefinition<[string, string[]], ScopeFlags> = {
+export const UNSET_COMMAND: CommandDefinition<[string, string[]], ScopeFlags> = {
     name: 'unset',
     arguments: [{ term: '<setting>' }, { term: '[items...]' }],
     options: [{ flags: SCOPE_OPTION, parse: stripTrailingSlashes }],

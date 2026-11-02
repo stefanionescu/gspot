@@ -61,7 +61,7 @@ async function runBaselineCommand(
     };
 }
 
-export const baselineCommand: CommandDefinition<[], BaselineFlags> = {
+export const BASELINE_COMMAND: CommandDefinition<[], BaselineFlags> = {
     name: 'baseline',
     options: [{ flags: PRUNE_FLAG }],
     run: async (_arguments, flags, { root }) =>

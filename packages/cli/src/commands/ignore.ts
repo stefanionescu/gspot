@@ -85,7 +85,7 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
     });
 }
 
-export const ignoreCommand: CommandDefinition<[string | undefined], IgnoreFlags> = {
+export const IGNORE_COMMAND: CommandDefinition<[string | undefined], IgnoreFlags> = {
     name: 'ignore',
     arguments: [{ term: '[check]' }],
     options: [{ flags: REASON_OPTION, required: true }, { flags: RULE_OPTION }, pathsOption],

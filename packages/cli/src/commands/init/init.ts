@@ -75,7 +75,7 @@ function assertTemplateFlags(from: string | undefined, configurations: string[] 
     );
 }
 
-export const initCommand: CommandDefinition<[], InitFlags> = {
+export const INIT_COMMAND: CommandDefinition<[], InitFlags> = {
     name: 'init',
     options: [
         { flags: FROM_OPTION },
