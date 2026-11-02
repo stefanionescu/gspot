@@ -45,6 +45,22 @@ test('scan lists real problems first, keeps three examples, and counts formattin
     expect(report.checks).toBe(SCAN_RUN_REPORT.checks);
 });
 
+test.each(['data-files/taplo-format', 'bash/shfmt'])('scan counts a file of %s as formatting', async (check) => {
+    await using sandbox = await createGitSandbox({ 'README.md': '# Example\n' });
+    const planning = await planInit(sandbox.path, { cwd: sandbox.path });
+    const finding = { check, file: 'a.toml', message: 'This file is not formatted.', fixable: true };
+    const checks = [{ check, scope: '', status: 'failed' as const, fileCount: 1, duration: 1, findings: [finding] }];
+    const report = buildScanReport({
+        planning,
+        session: planning.session,
+        report: { ...SCAN_RUN_REPORT, checks },
+        toolBytes: 0,
+        ruleRows: [],
+    });
+    expect(report.filesToFormat).toBe(1);
+    expect(report.categories).toStrictEqual([]);
+});
+
 test('scan sums the seconds of each tool and of each hook, slowest tool first', async () => {
     const { cost } = await buildSampleReport();
     expect(cost.megabytes).toBe(3);

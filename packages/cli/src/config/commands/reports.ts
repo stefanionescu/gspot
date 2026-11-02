@@ -207,6 +207,8 @@ export const SCAN_CATEGORIES = [
 ] as const;
 
 export const SCAN_FORMAT_CHECKS: ReadonlySet<string> = new Set([
+    'bash/shfmt',
+    'data-files/taplo-format',
     'format/editorconfig-checker',
     'format/prettier',
     'python/ruff-format',
