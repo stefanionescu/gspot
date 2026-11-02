@@ -61,10 +61,8 @@ attributes.
 export async function listRepositoryFiles(cache: RunCache): Promise<RepositoryListing> {
     const root = cache.root;
     const unreadablePaths: string[] = [];
-    const [indexed, untracked] = await Promise.all([
-        listGitFiles(root, GIT_INDEX_FILES_ARGUMENTS, undefined, unreadablePaths),
-        listGitFiles(root, GIT_UNTRACKED_FILES_ARGUMENTS, undefined, unreadablePaths),
-    ]);
+    const indexed = await listGitFiles(root, GIT_INDEX_FILES_ARGUMENTS, undefined, unreadablePaths);
+    const untracked = await listGitFiles(root, GIT_UNTRACKED_FILES_ARGUMENTS, undefined, unreadablePaths);
     const index = indexed
         .split('\0')
         .filter(Boolean)

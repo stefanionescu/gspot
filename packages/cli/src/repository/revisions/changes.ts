@@ -109,10 +109,8 @@ Read the staged paths, with deletions and both sides of renames, and count paths
 @returns the staged paths, sorted, and the unstaged count.
 */
 export async function readStagedPaths(root: string, cancelSignal?: AbortSignal): Promise<StagedPaths> {
-    const [cached, changed] = await Promise.all([
-        readGitPaths(root, GIT_STAGED_DIFF_ARGUMENTS, { cancelSignal }),
-        readGitPaths(root, GIT_DIFF_NAMES_ARGUMENTS, { cancelSignal }),
-    ]);
+    const cached = await readGitPaths(root, GIT_STAGED_DIFF_ARGUMENTS, { cancelSignal });
+    const changed = await readGitPaths(root, GIT_DIFF_NAMES_ARGUMENTS, { cancelSignal });
     const staged = cached.toSorted((a, b) => compareText(a, b));
     const dirty = new Set(changed);
     return { staged, unstaged: staged.filter((path) => dirty.has(path)).length };
