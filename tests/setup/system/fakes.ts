@@ -5,12 +5,12 @@ import * as locate from '#cli/tools/locate.ts';
 import { mock, spyOn, type Mock } from 'bun:test';
 import { quoteArgument } from '#cli/system/text.ts';
 import { type Tool } from '#cli/types/manifests.ts';
-import { join, dirname, basename } from 'node:path';
 import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { ProgramName } from '#tests/types/setup.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
+import { join, parse, dirname, basename } from 'node:path';
 import { GIT_PROGRAM } from '#cli/config/repository/git.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import type { spawnProcess } from '#cli/system/processes.ts';
@@ -29,8 +29,11 @@ export function fakeCommands(name?: string, spawn?: typeof spawnProcess): Mock<t
     const runProcess = spy.getMockImplementation() ?? unfaked;
     const fake = mock(spawn ?? runProcess);
     spy.mockImplementation((command, options) => {
+        const program = command[0] ?? '';
         const replaced =
-            name === undefined ? command[0] !== GIT_PROGRAM : [command[0], basename(command[0] ?? '')].includes(name);
+            name === undefined
+                ? program !== GIT_PROGRAM
+                : [program, basename(program), parse(program).name].includes(name);
         return replaced ? fake(command, options) : runProcess(command, options);
     });
     return Object.assign(fake, {

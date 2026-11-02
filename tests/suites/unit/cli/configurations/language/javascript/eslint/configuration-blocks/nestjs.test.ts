@@ -1,53 +1,33 @@
-import { join } from 'node:path';
-import type { ESLint } from 'eslint';
 import { test, expect } from 'bun:test';
-import { readFile, writeFile } from 'node:fs/promises';
-import type { PackageJson } from '#cli/types/parsers.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { NESTJS_SANDBOX } from '#tests/config/setup/languages.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
-import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
-test('the Swagger lint rules apply only when package.json declares @nestjs/swagger', async () => {
+test.each([
+    { name: 'without', swagger: {}, expected: [] },
+    {
+        name: 'with',
+        swagger: { '@nestjs/swagger': '11.2.3' },
+        expected: [
+            { rule: '@darraghor/nestjs-typed/controllers-should-supply-api-tags', line: 9 },
+            { rule: '@darraghor/nestjs-typed/api-method-should-specify-api-response', line: 23 },
+        ],
+    },
+])('a package.json $name @nestjs/swagger decides the Swagger lint rules', async ({ swagger, expected }) => {
     await using repository = await createSandbox({
         ...NESTJS_SANDBOX,
         level: 'all',
-        dependencies: { '@nestjs/common': SANDBOX_PACKAGES['@nestjs/common'] },
+        dependencies: { '@nestjs/common': SANDBOX_PACKAGES['@nestjs/common'], ...swagger },
     });
-    const path = join(repository.root, 'src/greeting.controller.ts');
-    expect(
-        await listLintFindings(
-            await buildEslint(repository.root),
-            repository.root,
-            ['src/greeting.controller.ts'],
-            [
-                '@darraghor/nestjs-typed/controllers-should-supply-api-tags',
-                '@darraghor/nestjs-typed/api-method-should-specify-api-response',
-            ],
-        ),
-    ).toStrictEqual([]);
-    const packagePath = join(repository.root, 'package.json');
-    const packageJson = JSON.parse(await readFile(packagePath, 'utf8')) as PackageJson;
-    await writeFile(
-        packagePath,
-        JSON.stringify({ ...packageJson, dependencies: { ...packageJson.dependencies, '@nestjs/swagger': '11.2.3' } }),
+    const findings = await listLintFindings(
+        await buildEslint(repository.root),
+        repository.root,
+        ['src/greeting.controller.ts'],
+        [
+            '@darraghor/nestjs-typed/controllers-should-supply-api-tags',
+            '@darraghor/nestjs-typed/api-method-should-specify-api-response',
+        ],
     );
-    await buildEslint(repository.root);
-    const swagger = await runCommand([join(toolModules, '.bin/eslint'), '--format', 'json', path], {
-        cwd: repository.root,
-    });
-    const swaggerResults = JSON.parse(swagger.stdout) as ESLint.LintResult[];
-    expect(swagger.code, swagger.stdout + swagger.stderr).toBe(1);
-    expect(
-        swaggerResults.flatMap(({ messages }) =>
-            messages
-                .filter(({ ruleId }) => ruleId?.startsWith('@darraghor/nestjs-typed/') === true)
-                .map(({ ruleId, line }) => ({ ruleId, line })),
-        ),
-    ).toStrictEqual([
-        { ruleId: '@darraghor/nestjs-typed/controllers-should-supply-api-tags', line: 9 },
-        { ruleId: '@darraghor/nestjs-typed/api-method-should-specify-api-response', line: 23 },
-    ]);
+    expect(findings.map(({ rule, line }) => ({ rule, line }))).toStrictEqual([...expected]);
 });

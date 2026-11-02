@@ -3,6 +3,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { type Tool } from '#cli/types/manifests.ts';
+import { executableLayout } from '#cli/system/paths.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
@@ -95,7 +96,13 @@ test('a Python tool is the version of its dist-info folder, whatever it prints',
     await using sandbox = await testdir({
         '.gspot/.venv/lib/python3.13/site-packages/some_tool-1.2.3.dist-info/METADATA': '',
     });
-    await writeProgramCommand(sandbox.path, '.gspot/.venv/bin/some-tool', 'fakes/tool', '--line', '9.9.9');
+    await writeProgramCommand(
+        sandbox.path,
+        `.gspot/.venv/${executableLayout.environmentFolder}/some-tool`,
+        'fakes/tool',
+        '--line',
+        '9.9.9',
+    );
     const tool: Tool = {
         name: 'some-tool',
         kind: 'program',

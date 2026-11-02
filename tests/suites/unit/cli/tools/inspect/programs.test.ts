@@ -159,7 +159,7 @@ test('mise finds the program of the repository, and it runs from a copy', async 
 test('a pinned program whose only executable is a mise shim that mise cannot resolve gives the mise error', async () => {
     await using sandbox = await testdir({ 'work/.keep': '' });
     const root = sandbox.path;
-    const failure = ['--stderr', 'mise ERROR Config files are not trusted.\n', '--exit', '1'];
+    const failure = ['--stderr', 'mise ERROR Config files are not trusted.', '--exit', '1'];
     await writeProgramCommand(root, 'mise/shims/vale', 'fakes/tool', ...failure);
     await writeProgramCommand(root, 'bin/mise', 'fakes/tool', ...failure);
     using _environment = overrideEnvironment({ MISE_DATA_DIR: join(root, 'mise') });
