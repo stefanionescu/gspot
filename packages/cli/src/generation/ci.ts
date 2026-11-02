@@ -12,7 +12,6 @@ import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
 import type { PackageManagerPin } from '#cli/types/repository.ts';
 import { frozenInstallArguments } from '#cli/repository/javascript/setup.ts';
-import { NEXTJS_CONFIGURATION } from '#cli/config/configurations/javascript.ts';
 import { type Session, type MiseToolPin, type GeneratedFile } from '#cli/types/tools.ts';
 import { Scalar, Document, type Node, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
 import { CI_NODE, FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/javascript.ts';
@@ -39,7 +38,7 @@ import {
     CHECKOUT_OPTIONS,
     GITLAB_BASE_LINE,
     GITLAB_MISE_IMAGE,
-    NEXT_TYPEGEN_LINE,
+    CI_PACKAGE_RUNNER,
     CI_TESTS_JOB_NAME,
     CI_ADVISORIES_JOB,
     CI_INSTALL_COMMAND,
@@ -280,8 +279,11 @@ export function listProjectInstallLines(session: Session): string[] {
         const installs = (Object.keys(FROZEN_INSTALLS) as FrozenLockfile[])
             .filter((lockfile) => lockfiles.has(joinScope(scopePath, lockfile)))
             .map((lockfile) => quoteCommand(buildFrozenInstall(session, scopePath, lockfile)));
-        const isNext = configurations.some((configuration) => configuration.name === NEXTJS_CONFIGURATION);
-        const lines = [...installs, ...(isNext && installs.length > 0 ? [NEXT_TYPEGEN_LINE] : [])];
+        const setup = configurations.flatMap((configuration) => configuration.ci_setup);
+        const lines = [
+            ...installs,
+            ...(installs.length > 0 ? setup.map((command) => `${CI_PACKAGE_RUNNER} ${quoteCommand(command)}`) : []),
+        ];
         return scopePath === '' ? lines : lines.map((line) => `(cd ${quoteArgument(scopePath)} && ${line})`);
     });
 }

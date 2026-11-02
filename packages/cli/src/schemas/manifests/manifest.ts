@@ -231,6 +231,7 @@ export const manifestSchema = z
         route_files: z.string().min(1).array().default([]),
         generated: z.string().min(1).array().default([]),
         allowed_words: stringsSchema,
+        ci_setup: z.string().min(1).array().array().default([]),
         configuration: z.strictObject({
             name: z.string().regex(NAME_PATTERN),
             group: z.enum(GROUPS),

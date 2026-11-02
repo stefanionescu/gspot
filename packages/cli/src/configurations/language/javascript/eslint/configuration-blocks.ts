@@ -1,9 +1,9 @@
-import { dirname } from 'node:path/posix';
 import { isDeepStrictEqual } from 'node:util';
+import { escapeGlob } from '#cli/system/paths.ts';
 import type { Scope } from '#cli/types/settings.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { getTable, findParentScope } from '#cli/settings/scopes.ts';
-import { escapeGlob, findEnclosingFolder } from '#cli/system/paths.ts';
+import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { buildZodBlocks } from '#cli/configurations/library/zod/generate.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { buildVueBlocks } from '#cli/configurations/framework/vue/generate.ts';
@@ -21,7 +21,6 @@ import { IMPORT_EXTENSIONS, FILE_EXTENSION_RULE } from '#cli/config/configuratio
 import { SUPABASE_RULES, PLUGIN_RULE_BLOCKS } from '#cli/config/configurations/javascript.ts';
 import { buildTanstackQueryBlocks } from '#cli/configurations/library/tanstack-query/generate.ts';
 import { buildTestingLibraryBlocks } from '#cli/configurations/library/testing-library/generate.ts';
-import { joinScope, isInScope, listNestedScopes, isOutsideChildScopes } from '#cli/repository/scopes.ts';
 import { buildTestFiles, listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
 
 import type {
@@ -61,14 +60,6 @@ function buildConfigurationBlocks(
 ): ConfigurationBlocks {
     const { session } = planned;
     const scopePath = scope.path;
-    const children = listNestedScopes(
-        planned.session.scopes.map((each) => each.path),
-        scopePath,
-    );
-    const nextProjects = session.repository.dependencyFiles
-        .filter((file) => file.kind === 'package.json' && file.dependencies['next'] !== undefined)
-        .map((file) => (dirname(file.path) === '.' ? '' : dirname(file.path)));
-    const nextProject = findEnclosingFolder(scopePath, new Set(nextProjects)) ?? scopePath;
     const testFiles = listCodeTestFiles(scope.settings.test_files).map((pattern) =>
         scopePath !== '' && pattern.startsWith(`${scopePath}/**/`) ? pattern.slice(scopePath.length + 1) : pattern,
     );
@@ -79,20 +70,13 @@ function buildConfigurationBlocks(
             projects: planned.projects,
             defaultProjectFiles: planned.defaultProjectFiles,
             path: scopePath,
-            projectPath: configuration.name === 'nextjs' ? nextProject : scopePath,
+            dependencyFiles: session.repository.dependencyFiles,
             dependencies: listProjectDependencyNames(session.repository.dependencyFiles, scopePath),
             eslintFiles: {
                 ...planned.eslintFiles,
                 tests: buildTestFiles(testFiles, planned.eslintFiles.code),
             },
-            sourceFiles: session.repository.files
-                .filter((file) => file.kind === 'source')
-                .map((file) => file.path)
-                .filter((path) =>
-                    configuration.name === 'nextjs'
-                        ? isInScope(path, nextProject)
-                        : isInScope(path, scopePath) && isOutsideChildScopes(path, children),
-                ),
+            sourceFiles: session.repository.files.filter((file) => file.kind === 'source').map((file) => file.path),
         },
         configuration.name,
     );

@@ -121,7 +121,7 @@ export const CI_STEP_NAMES = {
     gspot: 'Install gspot',
 } as const;
 
-export const NEXT_TYPEGEN_LINE = 'npx --no -- next typegen';
+export const CI_PACKAGE_RUNNER = 'npx --no --';
 
 const CI_DIFF_MESSAGE = 'gspot install changed .gspot/. Run gspot install, then commit .gspot/.';
 

@@ -1,4 +1,5 @@
 allowed_words = ["Next.js"]
+ci_setup = [["next", "typegen"]]
 generated = ["next-env.d.ts"]
 route_files = ["page.*", "route.*", "layout.*", "default.*", "template.*", "loading.*", "error.*", "global-error.*", "not-found.*"]
 

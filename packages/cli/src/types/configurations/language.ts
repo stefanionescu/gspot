@@ -2,8 +2,8 @@ import type { z } from 'zod';
 import type { Node } from 'web-tree-sitter';
 import type { Files } from '#cli/types/system.ts';
 import type { Config } from '#cli/types/repository.ts';
-import type { ScriptSyntax } from '#cli/types/parsers.ts';
 import type { FENCE_GRAMMARS } from '#cli/config/parsers.ts';
+import { type ScriptSyntax, type DependencyFile } from '#cli/types/parsers.ts';
 import { type xccovSchema, type deptrySchema } from '#cli/schemas/configurations.ts';
 import type { Session, GeneratedFile } from '#cli/types/tools.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
@@ -258,11 +258,11 @@ export type PlannedEslintBlock = {
 
 export type EslintScope = {
     level: Level;
-    projectPath: string;
     path: string;
     settings: ScopeSettings;
     eslintFiles: EslintFiles;
     dependencies: string[];
+    dependencyFiles: DependencyFile[];
     sourceFiles: string[];
     projects: string[];
     defaultProjectFiles: string[];

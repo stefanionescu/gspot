@@ -29,6 +29,8 @@ export const MARKED_LINES = 2;
 
 export const NEXT_TYPEGEN_COMMAND = ['next', 'typegen'] as const;
 
+export const NEXT_PACKAGE = 'next';
+
 export const CI_ENVIRONMENT = { CI: '1' } as const;
 
 export const REACT_PACKAGE = 'react';

@@ -1,8 +1,11 @@
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { extractParentFolder, findEnclosingFolder } from '#cli/system/paths.ts';
 import type { EslintScope, ConfigurationBlocks } from '#cli/types/configurations/language.ts';
 
 import {
     NEXT_RULES,
     REACT_FILES,
+    NEXT_PACKAGE,
     NEXT_RULE_OPTIONS,
     NEXT_SERVER_FILES,
     NEXT_PAGES_FOLDERS,
@@ -15,9 +18,13 @@ Apply the Next.js presets and the pages and JSX settings.
 @param scope the planned ESLint file of the scope.
 */
 export function buildNextjsBlocks(
-    scope: Pick<EslintScope, 'eslintFiles' | 'projectPath' | 'sourceFiles'>,
+    scope: Pick<EslintScope, 'path' | 'eslintFiles' | 'dependencyFiles' | 'sourceFiles'>,
 ): ConfigurationBlocks {
-    const { eslintFiles, projectPath: scopePath, sourceFiles } = scope;
+    const { path, eslintFiles, dependencyFiles, sourceFiles } = scope;
+    const nextProjects = dependencyFiles
+        .filter((file) => file.kind === PACKAGE_JSON && file.dependencies[NEXT_PACKAGE] !== undefined)
+        .map((file) => extractParentFolder(file.path));
+    const scopePath = findEnclosingFolder(path, new Set(nextProjects)) ?? path;
     const prefix = scopePath === '' ? '' : `${scopePath}/`;
     const hasPages = sourceFiles.some((path) => NEXT_PAGES_FOLDERS.some((folder) => path.startsWith(prefix + folder)));
     const blocks: ConfigurationBlocks['blocks'] = [
