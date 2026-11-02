@@ -172,6 +172,8 @@ export const ASSET_REFERENCE_PREFIX = String.raw`(?<![\w./-])`;
 
 export const ASSET_REFERENCE_SUFFIX = String.raw`(?=$|[^\w./-])`;
 
+export const ALIAS_WILDCARD_SIDES = 2;
+
 export const REACT_RULES = {
     '@eslint-react/no-missing-component-display-name': 'error',
     '@eslint-react/no-array-index-key': 'error',

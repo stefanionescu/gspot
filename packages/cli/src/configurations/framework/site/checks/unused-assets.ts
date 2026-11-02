@@ -21,6 +21,7 @@ import {
     ASSET_GLOB_CALL,
     UNUSED_ASSET_RULE,
     CONVENTIONAL_ASSETS,
+    ALIAS_WILDCARD_SIDES,
     UNUSED_ASSET_MESSAGE,
     ASSET_REFERENCE_PREFIX,
     ASSET_REFERENCE_SUFFIX,
@@ -47,7 +48,7 @@ async function readGlobImports(source: ComponentScript, session: Session): Promi
 
 function listAliasSpecifiers(path: string, aliases: Record<string, string>): string[] {
     return Object.entries(aliases).flatMap(([pattern, target]) => {
-        const [start = '', end] = target.split('*');
+        const [start = '', end] = target.split('*', ALIAS_WILDCARD_SIDES);
         if (end === undefined) return target === path ? [pattern] : [];
         const doesFit = path.length >= start.length + end.length && path.startsWith(start) && path.endsWith(end);
         return doesFit ? [pattern.replace('*', () => path.slice(start.length, path.length - end.length))] : [];
