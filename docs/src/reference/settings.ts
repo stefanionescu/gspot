@@ -1,7 +1,7 @@
 import { isDeepStrictEqual } from 'node:util';
 import { CLI_REFERENCE } from '#cli/reference.ts';
 import type { ReferencePage } from '#docs/types/pages.ts';
-import type { SettingVariant, SettingAccepted, SettingReference } from '#docs/types/reference.ts';
+import type { SettingVariant, SettingReference, AcceptedSettingValues } from '#docs/types/reference.ts';
 import { formatText, formatTable, formatSection, buildReferencePage } from '#docs/reference/markdown.ts';
 
 import {
@@ -24,12 +24,12 @@ import {
 } from '#docs/config/reference.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Setting headings and links must calculate the same explicit ID.
-function settingAnchor(key: string, kind: SettingReference['kind']): string {
+function buildSettingAnchor(key: string, kind: SettingReference['kind']): string {
     const name = key.replaceAll(ANGLE_BRACKETS, '');
     return kind === 'value' ? name : name.toLowerCase().replaceAll('.', '');
 }
 
-function formatAcceptedValue(accepted: SettingAccepted): string {
+function formatAcceptedValue(accepted: AcceptedSettingValues): string {
     const { choices, alternatives, types } = accepted;
     if (choices.length > LISTED_VALUES_LIMIT) return `One of ${String(choices.length)} names`;
     if (choices.length > 0) {
@@ -91,7 +91,7 @@ function formatSettingKeys(nodes: SettingReference[], headingLevel: number): str
                 `<code>${formatText(node.key)}</code>`,
                 formatSetting(node),
                 headingLevel,
-                settingAnchor(node.key, node.kind),
+                buildSettingAnchor(node.key, node.kind),
             ),
         )
         .join('\n');
@@ -122,7 +122,7 @@ function formatVariantSection(node: SettingReference, headingLevel: number): str
                   ) +
                   '\n'),
         headingLevel,
-        settingAnchor(pattern, 'table'),
+        buildSettingAnchor(pattern, 'table'),
     );
 }
 
@@ -140,7 +140,7 @@ function formatSettingTable(node: SettingReference, headingLevel: number): strin
                 .join('') +
             formatVariantSection(node, headingLevel + 1),
         headingLevel,
-        settingAnchor(node.key, node.kind),
+        buildSettingAnchor(node.key, node.kind),
     );
 }
 
@@ -159,7 +159,7 @@ function formatScopeSection(node: SettingReference): string {
             ) +
             `\n\nOnly the root takes these keys: ${rootOnlyNames}.\n`,
         TABLE_HEADING_LEVEL,
-        settingAnchor(node.key, node.kind),
+        buildSettingAnchor(node.key, node.kind),
     );
 }
 
@@ -185,7 +185,7 @@ Link a setting to its heading on the gspot.toml page.
 */
 export function formatSettingLink(key: string): string {
     const heading = getSettingHeading(key);
-    const anchor = settingAnchor(heading.key, heading.kind);
+    const anchor = buildSettingAnchor(heading.key, heading.kind);
     return `[\`${key}\`](${REFERENCE_PATH}${REFERENCE_FOLDERS.settings}/#${anchor})`;
 }
 
@@ -221,7 +221,7 @@ export function buildSettingsPage(): ReferencePage {
             .filter((node) => node.kind !== 'value')
             .map((node) => ({
                 depth: TABLE_HEADING_LEVEL,
-                slug: settingAnchor(node.key, node.kind),
+                slug: buildSettingAnchor(node.key, node.kind),
                 text: node.kind === 'record' ? `[[${node.key}]]` : `[${node.key}]`,
             })),
     ];
