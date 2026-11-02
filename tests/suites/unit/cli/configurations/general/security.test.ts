@@ -11,17 +11,17 @@ import { getConfigPath, getManifestTarget } from '#tests/setup/cli/generated-fil
 
 test('a language choice brings its security rules without selecting security', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['bash']),
-        'sample.sh': 'echo sample\n',
+        'gspot.toml': buildSandboxSettings(['javascript']),
+        'sample.js': 'export const sample = 1;\n',
     });
 
-    const target = getManifestTarget('bash', 'semgrep.yml');
+    const target = getManifestTarget('javascript', 'semgrep.yml');
     const defaultSession = await openSession(sandbox.path);
     const defaultOutput = buildGeneratedFiles(defaultSession);
     expect(
         parseDocument(defaultOutput.files.find((file) => file.path === target)!.content).getIn(['rules', 0, 'id']),
-    ).toBe('gspot.bash.curl-pipe-shell');
-    await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['bash', 'security']));
+    ).toBe('gspot.javascript.dom-html-sink');
+    await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['javascript', 'security']));
     const securitySession = await openSession(sandbox.path);
     const securityOutput = buildGeneratedFiles(securitySession);
     const generated = securityOutput.files.find((file) => file.path === target);

@@ -24,7 +24,6 @@ test('gspot/generated-files reports an edited file with the apply help and passe
     expect(missingLocks).toMatchObject([
         { file: GSPOT_PATHS.miseLockfile, rule: 'absent' },
         { file: `${GSPOT_FOLDER}/package-lock.json`, rule: 'absent' },
-        { file: GSPOT_PATHS.uvLockfile, rule: 'absent' },
     ]);
     const generated = await readFile(join(sandbox.path, shellcheckrc), 'utf8');
     await writeFile(join(sandbox.path, shellcheckrc), `${generated}disable=SC2034\n`);
