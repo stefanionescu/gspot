@@ -34,21 +34,21 @@ export const jscpdOutputSchema = z.object({
         .array(),
 });
 
-const licenseSchema = z.object({
-    licenses: z.union([z.string(), z.string().array()]).optional(),
+export const osvLicenseReportSchema = z.object({
+    results: z
+        .object({
+            source: z.object({ path: z.string() }),
+            packages: z
+                .object({
+                    package: z.object({ name: z.string(), version: z.string(), ecosystem: z.string() }),
+                    license_violations: z.string().array().default([]),
+                })
+                .array()
+                .default([]),
+        })
+        .array()
+        .default([]),
 });
-
-export const javascriptLicenseOutputSchema = z.record(z.string(), licenseSchema);
-
-export const pythonLicenseOutputSchema = z
-    .object({
-        Name: z.string().min(1),
-        Version: z.string().min(1),
-        'License-Expression': z.string().optional(),
-        'License-Metadata': z.string().optional(),
-        'License-Classifier': z.string().optional(),
-    })
-    .array();
 
 const alertSchema = z.object({
     Line: z.number().int().positive(),

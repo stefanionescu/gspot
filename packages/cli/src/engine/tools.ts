@@ -1,23 +1,14 @@
-import { basename } from 'node:path';
-import { getTable } from '#cli/settings/scopes.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { selectCheckFiles } from '#cli/engine/files.ts';
+import type { Scope } from '#cli/types/settings.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
 import { getTool, findPackagePin } from '#cli/tools/pins.ts';
-import type { Scope, Settings } from '#cli/types/settings.ts';
-import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
+import type { PrettierPlugin } from '#cli/types/engine/plan.ts';
 import type { ScopeCheck, SessionBase } from '#cli/types/tools.ts';
+import { isSettingEmpty, findSystemSkip } from '#cli/engine/skips.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
-import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { ESLINT_MANIFEST_TOOL } from '#cli/config/repository/setup.ts';
 import { isCoverageOff, hasCoverageArguments } from '#cli/engine/plan.ts';
 import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
-import { selectScopePath, listNestedScopes } from '#cli/repository/scopes.ts';
-import type { PrettierPlugin, LicenseProject } from '#cli/types/engine/plan.ts';
-import { isSettingEmpty, findSystemSkip, findSettingsSkip } from '#cli/engine/skips.ts';
-import { PIP_LICENSES_COMMAND, LICENSES_CONFIGURATION, LICENSE_CHECKER_COMMAND } from '#cli/config/engine.ts';
 
 function isToolConditionMet(scope: Scope, conditions: Tool['when']): boolean {
     return (
@@ -101,30 +92,7 @@ output does not depend on this machine.
 @returns the configurations with only the tools they need.
 */
 export function selectToolConfigurations(session: SessionBase, checks: ScopeCheck[]): Configuration[] {
-    const licenses = checks
-        .filter((each) => each.configuration?.name === LICENSES_CONFIGURATION)
-        .flatMap((configured) => {
-            const selection = selectCheckFiles(
-                {
-                    session,
-                    scope: configured.scope,
-                    options: { stage: 'any' },
-                    host: { platform: getOperatingSystem(), arch: process.arch },
-                    narrowedPaths: undefined,
-                    children: listNestedScopes(
-                        session.scopes.map((scope) => scope.path),
-                        configured.scope.path,
-                    ),
-                },
-                configured,
-            );
-            return listLicenseProjects(selection.files, session.scopes, session.settings, configured.check);
-        })
-        .filter((project) => project.skip === undefined)
-        .map((project) =>
-            basename(project.dependencyFile) === PACKAGE_JSON ? LICENSE_CHECKER_COMMAND[0] : PIP_LICENSES_COMMAND[0],
-        );
-    const toolNames = new Set([...checks.flatMap((check) => listCheckTools(check)), ...licenses]);
+    const toolNames = new Set(checks.flatMap((check) => listCheckTools(check)));
     for (const { name } of listPrettierPlugins(session.scopes.flatMap(({ configurations }) => configurations)).keys())
         toolNames.add(name);
     const configurations = listSelectedConfigurations(session.scopes);
@@ -146,54 +114,6 @@ export function selectToolConfigurations(session: SessionBase, checks: ScopeChec
             .filter(({ when: conditions }) => session.scopes.some((scope) => isToolConditionMet(scope, conditions)))
             .filter((tool) => toolNames.has(tool.name)),
     }));
-}
-
-/**
-List the dependency files that the licenses check reads, each with its scope, its allowed licenses, and the skip that
-the settings cause.
-
-@param files the inventory that the check reads.
-@param scopes every scope.
-@param settings the validated gspot.toml.
-@param check the licenses check.
-@returns one project for each dependency file whose scope sets allowed licenses.
-*/
-export function listLicenseProjects(
-    files: TrackedFile[],
-    scopes: Scope[],
-    settings: Settings,
-    check: Check,
-): LicenseProject[] {
-    return scopes.flatMap((scope) =>
-        files
-            .filter((file) => !isGspotPath(file.path) && selectScopePath(file.path, scopes) === scope.path)
-            .flatMap((file) => {
-                if (
-                    !scope.configurations.some(
-                        (configuration) =>
-                            configuration.name === LICENSES_CONFIGURATION &&
-                            listCoveredFiles(check.files ?? configuration.files, [file], {
-                                configurations: scope.configurations,
-                                scopePath: scope.path,
-                                settings: scope.settings,
-                            }).length > 0,
-                    )
-                )
-                    return [];
-                const options = getTable(scope.settings, 'licenses');
-                const licenseSettings = { allowed: options.allowed, allowed_package: options.allowed_package };
-                return licenseSettings.allowed.length === 0 && licenseSettings.allowed_package.length === 0
-                    ? []
-                    : [
-                          {
-                              dependencyFile: file.path,
-                              scope,
-                              settings: licenseSettings,
-                              skip: findSettingsSkip(settings, scope, check),
-                          },
-                      ];
-            }),
-    );
 }
 
 /**

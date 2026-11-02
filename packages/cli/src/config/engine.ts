@@ -218,17 +218,6 @@ export const COPIES_FOLDER = '.gspot-copies';
 
 export const JSCONFIG_FILE = 'jsconfig.json';
 
-export const PIP_LICENSES_COMMAND = ['pip-licenses', '--format=json', '--from=all', '--python'] as const;
-
-export const LICENSE_CHECKER_COMMAND = [
-    'license-checker-rseidelsohn',
-    '--json',
-    '--excludePrivatePackages',
-    '--start',
-] as const;
-
-export const LICENSES_CONFIGURATION = 'licenses';
-
 export const FILE_PLACEHOLDER = '{file}';
 
 export const EXIT_FINDINGS = 1;

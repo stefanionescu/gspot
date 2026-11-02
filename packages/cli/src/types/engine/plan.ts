@@ -48,13 +48,6 @@ export type PlannedCheck = ScopeCheck & {
 
 export type StageFilter = (typeof STAGE_FILTERS)[number];
 
-export type LicenseProject = {
-    dependencyFile: string;
-    scope: Scope;
-    settings: ConfigurationTables['licenses'];
-    skip: SettingsSkip | undefined;
-};
-
 export type SettingReader = { check: string; enabled: boolean; note?: string };
 
 export type PrettierPlugin = {

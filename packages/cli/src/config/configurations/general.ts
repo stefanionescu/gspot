@@ -1,3 +1,4 @@
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { RUNNER_NAMES } from '#cli/config/repository/setup.ts';
 
 export const YAML_REQUIRED_NAMES = new Set([
@@ -207,33 +208,32 @@ export const OUTPUT_FLAG = '--output';
 
 export const CLONE_RULE = 'clone';
 
-export const UNKNOWN_LICENSE = 'UNKNOWN';
+export const OSV_SCANNER_NAME = 'osv-scanner';
 
-export const LICENSE_CHOICE = ' OR ';
+export const OSV_LICENSE_COMMAND = [
+    OSV_SCANNER_NAME,
+    'scan',
+    'source',
+    '--format',
+    'json',
+    '--allow-no-lockfiles',
+    '--recursive',
+    '--experimental-exclude',
+    GSPOT_FOLDER,
+] as const;
 
-export const CLASSIFIER_SEPARATOR = '; ';
+export const OSV_EXCLUDE_FLAG = '--experimental-exclude';
 
-export const TROVE_LICENSES: Readonly<Record<string, string>> = {
-    'MIT License': 'MIT',
-    'Apache Software License': 'Apache-2.0',
-    'BSD License': 'BSD-3-Clause',
-    'ISC License (ISCL)': 'ISC',
-    'Python Software Foundation License': 'PSF-2.0',
-    'Mozilla Public License 2.0 (MPL 2.0)': 'MPL-2.0',
-    'GNU Lesser General Public License v3 or later (LGPLv3+)': 'LGPL-3.0-or-later',
-    'GNU Lesser General Public License v3 (LGPLv3)': 'LGPL-3.0-only',
-    'GNU General Public License v3 (GPLv3)': 'GPL-3.0-only',
-    'GNU General Public License v3 or later (GPLv3+)': 'GPL-3.0-or-later',
-    'The Unlicense (Unlicense)': 'Unlicense',
-    'Zope Public License': 'ZPL-2.1',
-};
+export const OSV_LICENSES_FLAG = '--licenses';
+
+export const OSV_PYTHON_ECOSYSTEM = 'PyPI';
+
+export const OSV_FINDINGS_CODE = 1;
 
 export const ANY_VERSION = '*';
 
 export const EMPTY_SCAN_MESSAGE =
     'The license scan found no packages. Install the selected project dependencies before scanning.';
-
-export const NO_ALLOWED_LICENSES_NOTE = 'Set licenses.allowed to check licenses.';
 
 export const LICENSE_RULES = { unusedRecord: 'unused-record', disallowedLicense: 'disallowed-license' } as const;
 

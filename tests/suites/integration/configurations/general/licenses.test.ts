@@ -1,100 +1,54 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
-import { stringify } from '@decimalturn/toml-patch';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGspot, spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
-import {
-    MIT_ONLY,
-    LICENSED_PACKAGES,
-    LICENSES_ROOT_PACKAGE,
-    PIP_LICENSES_PYPROJECT,
-} from '#tests/config/integration/general.ts';
-
-test('licenses/allowed accepts an allowed license choice and reports a disallowed dependency', async () => {
+test('licenses/allowed reads the license of a locked package, and an allowed_package record covers it', async () => {
+    const lockfile = JSON.stringify({
+        name: 'example',
+        version: '1.0.0',
+        lockfileVersion: 3,
+        requires: true,
+        packages: {
+            '': {
+                name: 'example',
+                version: '1.0.0',
+                dependencies: { 'caniuse-lite': '1.0.30001700', lodash: '4.17.21' },
+            },
+            'node_modules/caniuse-lite': { version: '1.0.30001700' },
+            'node_modules/lodash': { version: '4.17.21' },
+        },
+    });
+    const allowed = '[licenses]\nallowed = ["MIT"]\n';
     await using sandbox = await createGitSandbox({
-        'package.json': LICENSES_ROOT_PACKAGE,
-        '.gitignore': 'node_modules/\n',
-        ...LICENSED_PACKAGES,
+        'gspot.toml': buildSandboxSettings(['licenses'], { tables: allowed }),
+        'package-lock.json': lockfile,
     });
     const root = sandbox.path;
-    commitAll(root);
-    for (const command of [
-        ['init', '--configurations', 'licenses'],
-        ['set', 'licenses.allowed', '["MIT","Apache-2.0"]'],
-    ]) {
-        const applied = await spawnGspot(root, command);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    }
     await applyThenInstall(root);
-    const baseline = parseCheckReport(await spawnGspot(root, ['check', '--only', 'licenses/allowed', '--json']));
-    expect(baseline.code, baseline.stdout + baseline.stderr).toBe(0);
-    expect(baseline.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
-    await writeFile(
-        join(root, 'node_modules/strict/package.json'),
-        JSON.stringify({ name: 'strict', version: '1.0.0', license: 'GPL-3.0-only' }),
-    );
-    const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', 'licenses/allowed', '--json']));
-    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    expect(checked.report.checks[0]?.findings).toStrictEqual([
-        matchFields({
-            file: 'package.json',
-            line: 1,
-            rule: 'disallowed-license',
-            message: 'strict@1.0.0 uses GPL-3.0-only, which is not allowed.',
-        }),
-    ]);
-});
-
-test("licenses/allowed reads installed Python packages, ignores the project's pip-licenses settings, and matches an allowed package by its normalized name", async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['licenses'], { tables: stringify({ licenses: MIT_ONLY }), level: 'all' }),
-        'pyproject.toml': PIP_LICENSES_PYPROJECT,
-    });
-    const root = sandbox.path;
-    const venv = await runCommand(['uv', 'venv', '.venv'], { cwd: root });
-    expect(venv.code, venv.stdout + venv.stderr).toBe(0);
-    await applyThenInstall(root);
-    const [packages] = [...new Bun.Glob('**/site-packages').scanSync({ cwd: join(root, '.venv'), onlyFiles: false })];
-    await createFileTree(join(root, '.venv', packages!), {
-        'licensed_example-1.0.0.dist-info/METADATA': `Metadata-Version: 2.1\nName: licensed-example\nVersion: 1.0.0\nLicense: GPL-3.0-only\n`,
-    });
-    const failed = parseCheckReport(await spawnGspot(root, ['check', '--only', 'licenses/allowed', '--json']));
+    const command = ['check', '--only', 'licenses/allowed', '--json'];
+    const failed = parseCheckReport(await spawnGspot(root, command));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(failed.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([
         matchFields({
-            file: 'pyproject.toml',
+            file: 'package-lock.json',
+            line: 1,
             rule: 'disallowed-license',
-            message: 'licensed-example@1.0.0 uses GPL-3.0-only, which is not allowed.',
+            message: 'caniuse-lite@1.0.30001700 uses CC-BY-4.0, which is not allowed.',
         }),
     ]);
     await writeFile(
         join(root, 'gspot.toml'),
         buildSandboxSettings(['licenses'], {
-            tables: stringify({
-                licenses: {
-                    ...MIT_ONLY,
-                    allowed_package: [
-                        {
-                            name: 'Licensed._Example',
-                            version: '1.0.0',
-                            reason: 'GPL-3.0-only. This test checks name normalization.',
-                        },
-                    ],
-                },
-            }),
-            level: 'all',
+            tables: `${allowed}[[licenses.allowed_package]]\nname = "caniuse-lite"\nversion = "*"\nreason = "CC-BY-4.0. The data file stays unchanged."\n`,
         }),
     );
     const applied = await runGspot(root, ['apply', '--json']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const passed = parseCheckReport(await spawnGspot(root, ['check', '--only', 'licenses/allowed', '--json']));
+    const passed = parseCheckReport(await spawnGspot(root, command));
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);
     expect(passed.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
 });

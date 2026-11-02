@@ -8,25 +8,19 @@ Check dependencies for known vulnerabilities and review the licenses and registr
 
 ## Licenses
 
-An npm `package.json` or Python `pyproject.toml` selects the general `licenses` configuration automatically. It checks
-the license of every installed npm and Python package at the push stage. Install your project dependencies first. Python
-projects use the `.venv` of their scope, and `gspot install` installs the license scanner.
+`gspot add licenses` adds the general `licenses` configuration. At the push stage, it reads the license of every locked
+package through osv-scanner, which asks the deps.dev service, so the check needs the network and a lockfile.
 
 gspot picks no allowed licenses for you, and scans none until you set `licenses.allowed` or an allowed package. After
 you review the licenses that your project accepts, list them:
 
 ```shell
 gspot set licenses.allowed MIT Apache-2.0 BSD-3-Clause
-gspot install
 gspot check --only licenses/allowed
 ```
 
-The check keeps the installed packages that the lockfile of the project records: `uv.lock` for Python, and
-`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, or `bun.lock` for npm. A package left in `node_modules` or in the
-environment after its removal does not count. Without a lockfile, the check reads every installed package.
-
-A Python package states its license in one of three fields. gspot takes the first that names license IDs:
-`License-Expression`, then the `License` metadata, then the trove classifiers, such as `MIT License` for `MIT`.
+The check reads the lockfiles of each scope, such as `uv.lock`, `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, and
+`bun.lock`. Without a lockfile, it stops with a note.
 
 ## Allow a license or one package
 
@@ -52,8 +46,7 @@ reason = "LGPL-3.0-or-later. sharp loads the library as a separate file."
 
 gspot reports a record that matches no package of the lockfile. A package that the lockfile records for another platform
 still counts as a match. Python package names match as pip matches them: letter case and runs of `.`, `_`, and `-` do
-not matter. When init replaces `.license-checker.json`, move packages you still allow into
-`[[licenses.allowed_package]]` records, with exact versions.
+not matter.
 
 ## Vulnerabilities
 

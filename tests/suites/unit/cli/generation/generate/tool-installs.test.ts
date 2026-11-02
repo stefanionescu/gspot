@@ -33,15 +33,11 @@ test.each([...LICENSE_TOOL_CASES])(
             'gspot.toml': buildSandboxSettings([...configurations], {
                 tables: '[[licenses.allowed_package]]\nname = "example"\nversion = "1.0.0"\nreason = "Reviewed installed metadata."\n[[scope]]\npath = "docs"\nconfigurations = ["licenses"]\n[scope.licenses]\nallowed = ["MIT"]\n',
             }),
-            'docs/package.json': '{"name":"docs","private":true}',
+            'docs/package-lock.json': '{}',
         });
         const session = await openSession(sandbox.path);
         const generated = buildGeneratedFiles(session);
-        const npmProject = generated.files.find(({ path }) => path === GSPOT_PATHS.npmProject)!;
-        expect((JSON.parse(npmProject.content) as ToolPackageJson).devDependencies).toHaveProperty(
-            'license-checker-rseidelsohn',
-        );
-        expect(generated.files.find(({ path }) => path === GSPOT_PATHS.pythonProject)).toBeUndefined();
+        expect(generated.files.find(({ path }) => path === GSPOT_PATHS.miseProject)?.content).toContain('osv-scanner');
     },
 );
 
