@@ -352,8 +352,6 @@ export const PYTEST_TABLE = 'tool.pytest';
 
 export const PNPM_ROOT_IMPORTER = '.';
 
-export const PYTHON_LOCKFILES = ['uv.lock'] as const;
-
 export const JAVASCRIPT_LOCKFILES = [
     'bun.lock',
     'pnpm-lock.yaml',
