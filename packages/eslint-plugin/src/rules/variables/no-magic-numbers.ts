@@ -1,0 +1,69 @@
+import { createRule } from '../../rule.ts';
+import { createRequire } from 'node:module';
+import type { MagicNumbersOptions } from '../../types/rules.ts';
+import { UPSTREAM_RULE, FUNCTION_NODES, MAGIC_NUMBER_OPTIONS_SCHEMA } from '../../config/rules.ts';
+import { ESLintUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+
+const require = createRequire(import.meta.url);
+
+function isModuleConstant(declaration: TSESTree.VariableDeclaration): boolean {
+    if (declaration.kind !== 'const') return false;
+    const holder =
+        declaration.parent.type === AST_NODE_TYPES.ExportNamedDeclaration
+            ? declaration.parent.parent
+            : declaration.parent;
+    return holder.type === AST_NODE_TYPES.Program;
+}
+
+function isConstantValue(node: TSESTree.Node): boolean {
+    for (let ancestor: TSESTree.Node = node; ancestor.type !== AST_NODE_TYPES.Program; ancestor = ancestor.parent) {
+        if (FUNCTION_NODES.has(ancestor.type)) return false;
+        const { parent } = ancestor;
+        const isCall = parent.type === AST_NODE_TYPES.CallExpression || parent.type === AST_NODE_TYPES.NewExpression;
+        if (isCall && parent.arguments.includes(ancestor as TSESTree.CallExpressionArgument)) return false;
+        if (ancestor.type === AST_NODE_TYPES.VariableDeclarator) return isModuleConstant(ancestor.parent);
+    }
+    return false;
+}
+
+export const noMagicNumbers = createRule<MagicNumbersOptions, 'noMagic' | 'useConst'>({
+    name: 'no-magic-numbers',
+    meta: {
+        defaultOptions: [{}],
+        type: 'suggestion',
+        docs: {
+            example:
+                'The call `setTimeout(retry, 3000)` reports `noMagic`. Name the delay, such as `const RETRY_DELAY_MS = 3000;` at module level, and pass the constant. `const SIZES = [16, 32, 64];` and `const TIMEOUT_MS = 60 * 1000;` pass, because the constant names its numbers. `export const server = app.listen(8080);` reports `noMagic`, because `server` names the server, not the port.',
+            level: 'none',
+            description:
+                'Reports the numbers that @typescript-eslint/no-magic-numbers reports, except inside the initializer of a module-level `const`: literals, arrays, object property values, arithmetic, unary minus, and `as` or `satisfies`. An argument of a call or of `new` is reported there too, because the constant names the result, not the number. It takes the options of @typescript-eslint/no-magic-numbers and needs that package installed.',
+            why: 'A bare number hides what it measures, and a module-level constant gives it a name that callers share.',
+            fix: 'Move the number into a module-level constant whose name says what it measures.',
+        },
+        schema: [MAGIC_NUMBER_OPTIONS_SCHEMA],
+        messages: {
+            noMagic: 'No magic number: {{raw}}. Name it in a module-level constant.',
+            useConst: 'Declare this number with const at module level, and name it.',
+        },
+    },
+    create(context) {
+        const upstream = require('@typescript-eslint/eslint-plugin') as {
+            rules: Record<
+                typeof UPSTREAM_RULE,
+                TSESLint.RuleModule<string, MagicNumbersOptions> & { meta: { defaultOptions: MagicNumbersOptions } }
+            >;
+        };
+        const rule = upstream.rules[UPSTREAM_RULE];
+        return rule.create(
+            Object.create(context, {
+                options: { value: ESLintUtils.applyDefault(rule.meta.defaultOptions, context.options) },
+                report: {
+                    value: (descriptor: TSESLint.ReportDescriptor<string>) => {
+                        if ('node' in descriptor && isConstantValue(descriptor.node as TSESTree.Node)) return;
+                        context.report(descriptor as TSESLint.ReportDescriptor<'noMagic' | 'useConst'>);
+                    },
+                },
+            }) as TSESLint.RuleContext<string, MagicNumbersOptions>,
+        );
+    },
+});

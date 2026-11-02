@@ -31,7 +31,7 @@ allowed_names = ["default_all", "language_defaults", "path_role", "reason_values
 reason = "These properties retain the serialized gspot.toml, configuration manifest and tool report field names."
 
 [[naming.override]]
-paths = ["packages/eslint-plugin/src/rules/no-magic-numbers.ts"]
+paths = ["packages/eslint-plugin/src/rules/variables/no-magic-numbers.ts"]
 allowed_names = ["meta"]
 reason = "ESLint names the description of a rule meta."
 
