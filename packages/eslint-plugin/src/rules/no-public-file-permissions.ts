@@ -42,8 +42,8 @@ function getMode(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | un
     }
 }
 
-export const filePermissions = createRule<[], 'permissive'>({
-    name: 'file-permissions',
+export const noPublicFilePermissions = createRule<[], 'permissive'>({
+    name: 'no-public-file-permissions',
     meta: {
         defaultOptions: [],
         type: 'problem',

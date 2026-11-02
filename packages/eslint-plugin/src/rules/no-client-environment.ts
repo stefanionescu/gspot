@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import type { ClientEnvOptions } from '../types/rules.ts';
+import type { ClientEnvironmentOptions } from '../types/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -70,8 +70,8 @@ function listEnvironmentNames(node: TSESTree.Node): (string | null)[] {
     return [];
 }
 
-export const noClientEnv = createRule<ClientEnvOptions, 'private'>({
-    name: 'no-client-env',
+export const noClientEnvironment = createRule<ClientEnvironmentOptions, 'private'>({
+    name: 'no-client-environment',
     meta: {
         defaultOptions: [{ client: false, publicPrefixes: PUBLIC_PREFIXES, allowedNames: ALLOWED_ENVIRONMENT_NAMES }],
         type: 'problem',

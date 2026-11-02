@@ -1,7 +1,7 @@
 import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
-buildTypedRuleTester().run('post-message', plugin.rules['post-message'], {
+buildTypedRuleTester().run('no-any-origin-messages', plugin.rules['no-any-origin-messages'], {
     valid: [
         "declare function handler(event: MessageEvent): void;\nwindow.addEventListener('message', handler);",
 
@@ -53,7 +53,7 @@ buildTypedRuleTester().run('post-message', plugin.rules['post-message'], {
     ],
 });
 
-buildRuleTester().run('post-message', plugin.rules['post-message'], {
+buildRuleTester().run('no-any-origin-messages', plugin.rules['no-any-origin-messages'], {
     valid: ["window.postMessage({ ready: true }, '*');"],
     invalid: [],
 });

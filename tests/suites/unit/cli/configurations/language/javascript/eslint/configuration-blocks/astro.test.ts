@@ -28,11 +28,11 @@ test('an Astro script block may read only PUBLIC_ environment variables', async 
     const eslint = await buildEslint(sandbox.path);
     const script = (await eslint.calculateConfigForFile('src/pages/index.astro/0_0.ts')) as EslintConfiguration;
     const frontmatter = (await eslint.calculateConfigForFile('src/pages/index.astro')) as EslintConfiguration;
-    expect(script.rules['gspot/no-client-env']).toStrictEqual([
+    expect(script.rules['gspot/no-client-environment']).toStrictEqual([
         2,
         { client: true, publicPrefixes: ['PUBLIC_'], allowedNames: ['NODE_ENV', 'SITE', 'ASSETS_PREFIX'] },
     ]);
-    expect(frontmatter.rules['gspot/no-client-env']?.[1]).toMatchObject({ client: false });
+    expect(frontmatter.rules['gspot/no-client-environment']?.[1]).toMatchObject({ client: false });
 });
 
 test('a failed Astro import restores the working folder', async () => {

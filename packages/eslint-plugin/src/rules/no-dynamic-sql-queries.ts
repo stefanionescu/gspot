@@ -4,8 +4,8 @@ import { isDynamicString } from '../expressions.ts';
 import { SQL_FUNCTIONS, SQL_BUILDING_METHODS } from '../config/servers.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-export const sqlQueries = createRule<[], 'builtQuery'>({
-    name: 'sql-queries',
+export const noDynamicSqlQueries = createRule<[], 'builtQuery'>({
+    name: 'no-dynamic-sql-queries',
     meta: {
         defaultOptions: [],
         type: 'problem',

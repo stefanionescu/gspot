@@ -1,7 +1,7 @@
 import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
-buildRuleTester().run('sql-queries', plugin.rules['sql-queries'], {
+buildRuleTester().run('no-dynamic-sql-queries', plugin.rules['no-dynamic-sql-queries'], {
     valid: [
         "import { Client } from 'pg';\nconst client = new Client();\nclient.query('SELECT * FROM users WHERE id = $1', [id]);",
         'database.query(`SELECT ${columns}`);',

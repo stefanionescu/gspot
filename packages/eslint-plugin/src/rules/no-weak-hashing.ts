@@ -75,8 +75,8 @@ function getAlgorithm(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node
     return isText ? algorithm.value.toLowerCase() : '';
 }
 
-export const hashing = createRule<[], 'weak'>({
-    name: 'hashing',
+export const noWeakHashing = createRule<[], 'weak'>({
+    name: 'no-weak-hashing',
     meta: {
         defaultOptions: [],
         type: 'problem',

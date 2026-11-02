@@ -11,8 +11,8 @@ function getOption(source: Readonly<TSESLint.SourceCode>, options: TSESTree.Node
     return getOptionProperties(literal, source).get(key);
 }
 
-export const fileUploads = createRule<[], 'folder' | 'extension' | 'extensionAndFolder'>({
-    name: 'file-uploads',
+export const noUnsafeFileUploads = createRule<[], 'folder' | 'extension' | 'extensionAndFolder'>({
+    name: 'no-unsafe-file-uploads',
     meta: {
         defaultOptions: [],
         type: 'problem',

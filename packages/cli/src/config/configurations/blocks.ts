@@ -202,7 +202,7 @@ export const TRIVIAL_FUNCTIONS_RULE = 'gspot/no-trivial-functions';
 
 export const TRIVIAL_FILES_RULE = 'gspot/no-trivial-files';
 
-export const CLIENT_ENVIRONMENT_RULE = 'gspot/no-client-env';
+export const CLIENT_ENVIRONMENT_RULE = 'gspot/no-client-environment';
 
 export const RESTRICTED_SYNTAX_RULE = 'gspot/restricted-syntax';
 

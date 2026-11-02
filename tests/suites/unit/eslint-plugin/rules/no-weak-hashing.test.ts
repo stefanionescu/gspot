@@ -1,7 +1,7 @@
 import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
-buildRuleTester().run('hashing', plugin.rules['hashing'], {
+buildRuleTester().run('no-weak-hashing', plugin.rules['no-weak-hashing'], {
     valid: [
         "import { type createHash } from 'crypto';\ncreateHash('md5');",
         "const createHash = require(name).createHash;\ncreateHash('md5');",

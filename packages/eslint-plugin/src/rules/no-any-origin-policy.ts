@@ -134,8 +134,8 @@ function listPermissiveNodes(source: Readonly<TSESLint.SourceCode>, node: TSESTr
     return EXPRESS_ROUTE_METHODS.has(method) ? listCopiedOrigins(source, node) : [];
 }
 
-export const crossOriginPolicy = createRule<[], 'permissive'>({
-    name: 'cross-origin-policy',
+export const noAnyOriginPolicy = createRule<[], 'permissive'>({
+    name: 'no-any-origin-policy',
     meta: {
         defaultOptions: [],
         type: 'problem',

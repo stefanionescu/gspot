@@ -1,7 +1,7 @@
 import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
-buildRuleTester().run('use-type-alias', plugin.rules['use-type-alias'], {
+buildRuleTester().run('prefer-type-alias', plugin.rules['prefer-type-alias'], {
     valid: [
         'function resize(first: "s" | "m" | "l", second: "s" | "m" | "l") {}',
         'type Size = "s" | "m" | "l"; function resize(first: "s" | "m" | "l", second: "s" | "m" | "l") {}',

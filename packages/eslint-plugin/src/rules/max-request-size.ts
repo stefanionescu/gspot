@@ -95,8 +95,8 @@ function listOversizedNodes(source: Readonly<TSESLint.SourceCode>, node: UploadC
     return module === MULTER_MODULE ? listOversizedUploads(source, node) : [];
 }
 
-export const contentLength = createRule<[], 'unlimited'>({
-    name: 'content-length',
+export const maxRequestSize = createRule<[], 'unlimited'>({
+    name: 'max-request-size',
     meta: {
         defaultOptions: [],
         type: 'problem',

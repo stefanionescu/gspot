@@ -1,7 +1,7 @@
 import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
-buildRuleTester().run('cross-origin-policy', plugin.rules['cross-origin-policy'], {
+buildRuleTester().run('no-any-origin-policy', plugin.rules['no-any-origin-policy'], {
     valid: [
         "import cors from 'cors';\nimport express from 'express';\nconst app = express();\napp.use(cors({ origin: ['https://app.example.com'] }));",
         ...[

@@ -1,7 +1,7 @@
 import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
-buildRuleTester().run('reduce-initial-value', plugin.rules['reduce-initial-value'], {
+buildRuleTester().run('require-reduce-initial-value', plugin.rules['require-reduce-initial-value'], {
     valid: [
         'const prices = [1, 2]; prices.reduce((sum, price) => sum + price, 0);',
         'prices.reduce((sum, price) => sum + price);',
@@ -16,7 +16,7 @@ buildRuleTester().run('reduce-initial-value', plugin.rules['reduce-initial-value
     ],
 });
 
-buildTypedRuleTester().run('reduce-initial-value with types', plugin.rules['reduce-initial-value'], {
+buildTypedRuleTester().run('require-reduce-initial-value with types', plugin.rules['require-reduce-initial-value'], {
     valid: ['declare const prices: Set<number>; prices.forEach((price) => price);'],
     invalid: [
         {

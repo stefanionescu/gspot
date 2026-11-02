@@ -13,10 +13,10 @@ test('Expo app code may read only EXPO_PUBLIC_ variables, and API routes and con
     });
     const eslint = await buildEslint(sandbox.path);
     const rules = await readEslintRules(eslint, ['app/index.jsx', 'app/items+api.js', 'app.config.js']);
-    expect(rules['app/index.jsx']!['gspot/no-client-env']).toStrictEqual([
+    expect(rules['app/index.jsx']!['gspot/no-client-environment']).toStrictEqual([
         2,
         { client: true, publicPrefixes: ['EXPO_PUBLIC_'], allowedNames: ['NODE_ENV'] },
     ]);
-    expect(rules['app/items+api.js']!['gspot/no-client-env']?.[1]).toMatchObject({ client: false });
-    expect(rules['app.config.js']!['gspot/no-client-env']?.[1]).toMatchObject({ client: false });
+    expect(rules['app/items+api.js']!['gspot/no-client-environment']?.[1]).toMatchObject({ client: false });
+    expect(rules['app.config.js']!['gspot/no-client-environment']?.[1]).toMatchObject({ client: false });
 });

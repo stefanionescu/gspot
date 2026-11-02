@@ -8,12 +8,12 @@ test('the recommended preset reports the rules of its level, and the all preset 
     const options = { filename: '/repo/app/page.js' };
     const recommended: object[] = [plugin.configs.recommended];
     expect(linter.verify(source, recommended, options).map(({ ruleId }) => ruleId)).toStrictEqual([
-        'gspot/no-client-env',
+        'gspot/no-client-environment',
     ]);
     const all: object[] = [plugin.configs.all];
     expect(linter.verify(source, all, options).map(({ ruleId }) => ruleId)).toStrictEqual([
         'gspot/no-trivial-functions',
-        'gspot/no-client-env',
+        'gspot/no-client-environment',
     ]);
 });
 

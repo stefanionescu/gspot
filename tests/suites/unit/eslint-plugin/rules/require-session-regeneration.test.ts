@@ -1,7 +1,7 @@
 import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
-buildRuleTester().run('session-regeneration', plugin.rules['session-regeneration'], {
+buildRuleTester().run('require-session-regeneration', plugin.rules['require-session-regeneration'], {
     valid: [
         "import passport from 'passport';\napp.post('/login', passport.authenticate('local'), function (req, res) {\n  req.session.regenerate(() => res.redirect('/'));\n});",
         "import passport from 'passport';\nfunction addLogin(handler) {\n  app.post('/login', passport.authenticate('local'), handler);\n}",

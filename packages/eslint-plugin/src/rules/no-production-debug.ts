@@ -4,8 +4,8 @@ import { listArgumentValues } from '../expressions.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { DEBUG_MIDDLEWARE, MIDDLEWARE_SELECTOR } from '../config/servers.ts';
 
-export const productionDebug = createRule<[], 'debugMiddleware'>({
-    name: 'production-debug',
+export const noProductionDebug = createRule<[], 'debugMiddleware'>({
+    name: 'no-production-debug',
     meta: {
         defaultOptions: [],
         type: 'problem',

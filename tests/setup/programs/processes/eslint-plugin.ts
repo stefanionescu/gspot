@@ -14,7 +14,7 @@ for (const published of [plugin, commonjs.default])
         assert.deepEqual(
             results
                 .flatMap(({ messages }) => messages)
-                .filter(({ ruleId }) => ruleId === 'gspot/no-client-env')
+                .filter(({ ruleId }) => ruleId === 'gspot/no-client-environment')
                 .map(({ line, messageId }) => ({ line, messageId })),
             [{ line: 2, messageId: 'private' }],
         );

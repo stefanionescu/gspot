@@ -10,8 +10,8 @@ function getLeftmostText(node: TSESTree.BinaryExpression): string {
     return ASTUtils.getStringIfConstant(left) ?? '';
 }
 
-export const codeEval = createRule<[], 'dynamicCode' | 'scriptUrl'>({
-    name: 'code-eval',
+export const noCodeEval = createRule<[], 'dynamicCode' | 'scriptUrl'>({
+    name: 'no-code-eval',
     meta: {
         defaultOptions: [],
         type: 'problem',

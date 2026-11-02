@@ -2,11 +2,9 @@ import type { RuleDocs } from './types/plugin.ts';
 import { PLUGIN_PREFIX } from './config/plugin.ts';
 import { noInMisuse } from './rules/no-in-misuse.ts';
 import { tableHeader } from './rules/table-header.ts';
-import { noClientEnv } from './rules/no-client-env.ts';
 import { awsRules, securityRules } from './security.ts';
 import { noGlobalThis } from './rules/no-global-this.ts';
 import { noTryPromise } from './rules/no-try-promise.ts';
-import { useTypeAlias } from './rules/use-type-alias.ts';
 import { testRules, frameworkRules } from './registry.ts';
 import { preferLiteral } from './rules/prefer-literal.ts';
 import { noPathCommand } from './rules/no-path-command.ts';
@@ -23,6 +21,7 @@ import { noCommentedCode } from './rules/no-commented-code.ts';
 import { noIgnoredReturn } from './rules/no-ignored-return.ts';
 import { noStatefulRegex } from './rules/no-stateful-regex.ts';
 import { noUnthrownError } from './rules/no-unthrown-error.ts';
+import { preferTypeAlias } from './rules/prefer-type-alias.ts';
 import { preferTypeGuard } from './rules/prefer-type-guard.ts';
 import { importBoundaries } from './rules/import-boundaries.ts';
 import { noTableAsLayout } from './rules/no-table-as-layout.ts';
@@ -47,10 +46,10 @@ import { noRedundantBoolean } from './rules/no-redundant-boolean.ts';
 import { noSwappedArguments } from './rules/no-swapped-arguments.ts';
 import { noTrivialFunctions } from './rules/no-trivial-functions.ts';
 import { noUnusedCollection } from './rules/no-unused-collection.ts';
-import { reduceInitialValue } from './rules/reduce-initial-value.ts';
 import { noEmptyReturnValue } from './rules/no-empty-return-value.ts';
 import { noMixedReturnTypes } from './rules/no-mixed-return-types.ts';
 import { noSwitchCaseLabels } from './rules/no-switch-case-labels.ts';
+import { noClientEnvironment } from './rules/no-client-environment.ts';
 import { noIdenticalOperands } from './rules/no-identical-operands.ts';
 import { noNegatedComparison } from './rules/no-negated-comparison.ts';
 import { noRedundantOptional } from './rules/no-redundant-optional.ts';
@@ -91,6 +90,7 @@ import { noUnsafeSanitizerBypass } from './rules/no-unsafe-sanitizer-bypass.ts';
 import { noUnsafeSecurityHeaders } from './rules/no-unsafe-security-headers.ts';
 import { noMisleadingArrayReverse } from './rules/no-misleading-array-reverse.ts';
 import { noNestedTemplateLiterals } from './rules/no-nested-template-literals.ts';
+import { requireReduceInitialValue } from './rules/require-reduce-initial-value.ts';
 import { noImpossibleCollectionSize } from './rules/no-impossible-collection-size.ts';
 import { noInconsistentFunctionCall } from './rules/no-inconsistent-function-call.ts';
 import { noUnenclosedMultilineBlock } from './rules/no-unenclosed-multiline-block.ts';
@@ -121,14 +121,14 @@ const rules = {
     'no-redundant-optional': noRedundantOptional,
     'prefer-promise-shorthand': preferPromiseShorthand,
     'prefer-type-guard': preferTypeGuard,
-    'use-type-alias': useTypeAlias,
+    'prefer-type-alias': preferTypeAlias,
     'no-duplicate-in-composite': noDuplicateInComposite,
     'no-ignored-return': noIgnoredReturn,
     'no-misleading-array-reverse': noMisleadingArrayReverse,
     'no-positive-index-check': noPositiveIndexCheck,
     'no-async-constructor': noAsyncConstructor,
     'no-try-promise': noTryPromise,
-    'reduce-initial-value': reduceInitialValue,
+    'require-reduce-initial-value': requireReduceInitialValue,
     'no-undefined-argument': noUndefinedArgument,
     'no-in-misuse': noInMisuse,
     'no-globals-shadowing': noGlobalsShadowing,
@@ -169,7 +169,7 @@ const rules = {
     'no-switch-case-labels': noSwitchCaseLabels,
     'prefer-readonly-static': preferReadonlyStatic,
     'no-comments-in-imports': noCommentsInImports,
-    'no-client-env': noClientEnv,
+    'no-client-environment': noClientEnvironment,
     'no-powered-by-header': noPoweredByHeader,
     'no-insecure-random': noInsecureRandom,
     'no-unsafe-security-headers': noUnsafeSecurityHeaders,

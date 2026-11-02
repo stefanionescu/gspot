@@ -25,8 +25,8 @@ function findIgnoredMethod(
     );
 }
 
-export const csrf = createRule<[], 'ignoredMethod' | 'unprotectedRoute'>({
-    name: 'csrf',
+export const requireCsrfMiddleware = createRule<[], 'ignoredMethod' | 'unprotectedRoute'>({
+    name: 'require-csrf-middleware',
     meta: {
         defaultOptions: [],
         type: 'problem',

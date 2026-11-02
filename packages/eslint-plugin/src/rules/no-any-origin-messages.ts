@@ -153,8 +153,8 @@ function findMessageListener(
     return listener;
 }
 
-export const postMessage = createRule<[], 'anyTarget' | 'unverifiedOrigin'>({
-    name: 'post-message',
+export const noAnyOriginMessages = createRule<[], 'anyTarget' | 'unverifiedOrigin'>({
+    name: 'no-any-origin-messages',
     meta: {
         defaultOptions: [],
         type: 'problem',

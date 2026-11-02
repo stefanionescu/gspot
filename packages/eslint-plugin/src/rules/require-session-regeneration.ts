@@ -23,8 +23,8 @@ function findAuthenticatedCallback(
         : findFunction(route.arguments[ROUTE_CALLBACK_POSITION], source);
 }
 
-export const sessionRegeneration = createRule<[], 'keptSession'>({
-    name: 'session-regeneration',
+export const requireSessionRegeneration = createRule<[], 'keptSession'>({
+    name: 'require-session-regeneration',
     meta: {
         defaultOptions: [],
         type: 'problem',

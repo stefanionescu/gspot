@@ -1,7 +1,7 @@
 import type { TableCell, TypeReader } from './plugin.ts';
 import { type TSESTree, type TSESLint } from '@typescript-eslint/utils';
 
-export type ClientEnvOptions = [
+export type ClientEnvironmentOptions = [
     { client: boolean; publicPrefixes: readonly string[]; allowedNames: readonly string[] },
 ];
 

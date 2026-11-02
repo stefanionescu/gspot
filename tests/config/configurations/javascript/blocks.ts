@@ -76,8 +76,8 @@ export const DUPLICATE_RULE_CASES = [
     {
         file: 'eval.js',
         source: 'export const result = eval(process.env.SCRIPT);\n',
-        kept: 'gspot/code-eval',
-        rules: ['security/detect-eval-with-expression', 'gspot/code-eval'],
+        kept: 'gspot/no-code-eval',
+        rules: ['security/detect-eval-with-expression', 'gspot/no-code-eval'],
     },
     {
         file: 'buffer.js',

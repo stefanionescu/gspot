@@ -35,12 +35,12 @@ test('the src files of a Vite app may read only VITE_ variables, and its other f
     const eslint = await buildEslint(sandbox.path);
     const rules = await readEslintRules(eslint, ['src/main.ts', 'src/App.vue', 'vite.config.ts', 'server/src/main.ts']);
     for (const file of ['src/main.ts', 'src/App.vue'])
-        expect(rules[file]!['gspot/no-client-env']).toStrictEqual([
+        expect(rules[file]!['gspot/no-client-environment']).toStrictEqual([
             2,
             { client: true, publicPrefixes: ['VITE_'], allowedNames: ['NODE_ENV'] },
         ]);
-    expect(rules['vite.config.ts']!['gspot/no-client-env']?.[1]).toMatchObject({ client: false });
-    expect(rules['server/src/main.ts']!['gspot/no-client-env']?.[1]).toMatchObject({ client: false });
+    expect(rules['vite.config.ts']!['gspot/no-client-environment']?.[1]).toMatchObject({ client: false });
+    expect(rules['server/src/main.ts']!['gspot/no-client-environment']?.[1]).toMatchObject({ client: false });
 });
 
 test('the server files of a SvelteKit app under src may read any variable', async () => {
@@ -59,9 +59,9 @@ test('the server files of a SvelteKit app under src may read any variable', asyn
         'src/routes/+page.server.ts',
         'src/lib/server/database.ts',
     ]);
-    expect(rules['src/routes/+page.svelte']!['gspot/no-client-env']?.[1]).toMatchObject({ client: true });
+    expect(rules['src/routes/+page.svelte']!['gspot/no-client-environment']?.[1]).toMatchObject({ client: true });
     for (const file of ['src/routes/api/+server.ts', 'src/routes/+page.server.ts', 'src/lib/server/database.ts'])
-        expect(rules[file]!['gspot/no-client-env']?.[1]).toMatchObject({ client: false });
+        expect(rules[file]!['gspot/no-client-environment']?.[1]).toMatchObject({ client: false });
 });
 
 test('only the scope that depends on vite gets the VITE_ prefix', async () => {
@@ -76,8 +76,8 @@ test('only the scope that depends on vite gets the VITE_ prefix', async () => {
     });
     const eslint = await buildEslint(sandbox.path);
     const rules = await readEslintRules(eslint, ['src/main.ts', 'web/src/main.ts']);
-    expect(rules['src/main.ts']!['gspot/no-client-env']?.[1]).toMatchObject({ client: false });
-    expect(rules['web/src/main.ts']!['gspot/no-client-env']?.[1]).toMatchObject({
+    expect(rules['src/main.ts']!['gspot/no-client-environment']?.[1]).toMatchObject({ client: false });
+    expect(rules['web/src/main.ts']!['gspot/no-client-environment']?.[1]).toMatchObject({
         client: true,
         publicPrefixes: ['VITE_'],
     });

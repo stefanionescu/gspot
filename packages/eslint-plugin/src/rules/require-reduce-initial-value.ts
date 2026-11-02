@@ -4,8 +4,8 @@ import { REDUCE_METHOD } from '../config/builtins.ts';
 import { getTypes, getTypeCategory } from '../checker.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-export const reduceInitialValue = createRule<[], 'initial'>({
-    name: 'reduce-initial-value',
+export const requireReduceInitialValue = createRule<[], 'initial'>({
+    name: 'require-reduce-initial-value',
     meta: {
         defaultOptions: [],
         type: 'problem',
