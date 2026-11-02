@@ -28,7 +28,11 @@ test('Vale gets the timeout setting', async () => {
     await using sandbox = await createGitSandbox({});
     const path = 'sample.md';
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSandboxSettings(['prose', 'markdown'], { tables: 'tool_timeout_seconds = 1\n' }),
+        ...VALE_INSTALLED_FILES,
+        'gspot.toml': buildSandboxSettings(['prose', 'markdown'], {
+            level: 'all',
+            tables: 'tool_timeout_seconds = 1\n',
+        }),
         [GSPOT_PATHS.valeConfig]: EMPTY_VALE_INI,
         [path]: '# Example text\n',
     });
@@ -81,7 +85,7 @@ test.each([...VALE_OUTPUT_CASES])(
         const sandbox = resources.use(
             await createGitSandbox({
                 ...VALE_SANDBOX_FILES,
-                'gspot.toml': buildSandboxSettings(['prose', 'markdown']),
+                'gspot.toml': buildSandboxSettings(['prose', 'markdown'], { level: 'all' }),
             }),
         );
         const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
@@ -101,7 +105,10 @@ test.each([...VALE_OUTPUT_CASES])(
 test('the Vale check fails with the error line Vale prints when Vale exits non-zero', async () => {
     await using resources = new AsyncDisposableStack();
     const sandbox = resources.use(
-        await createGitSandbox({ ...VALE_SANDBOX_FILES, 'gspot.toml': buildSandboxSettings(['prose', 'markdown']) }),
+        await createGitSandbox({
+            ...VALE_SANDBOX_FILES,
+            'gspot.toml': buildSandboxSettings(['prose', 'markdown'], { level: 'all' }),
+        }),
     );
     const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
     resources.use(
@@ -116,7 +123,10 @@ test('the Vale check fails with the error line Vale prints when Vale exits non-z
 test('the Vale check fails before running Vale when the Vale packages are not installed', async () => {
     await using resources = new AsyncDisposableStack();
     const sandbox = resources.use(
-        await createGitSandbox({ ...VALE_SANDBOX_FILES, 'gspot.toml': buildSandboxSettings(['prose', 'markdown']) }),
+        await createGitSandbox({
+            ...VALE_SANDBOX_FILES,
+            'gspot.toml': buildSandboxSettings(['prose', 'markdown'], { level: 'all' }),
+        }),
     );
     const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
     await rm(join(sandbox.path, GSPOT_PATHS.valeConfig));
@@ -124,4 +134,25 @@ test('the Vale check fails before running Vale when the Vale packages are not in
     const uninstalledError = await captureRejection(runSandboxCheck(session.root, 'prose/vale'));
     expect(uninstalledError.message).toBe('The Vale packages are not installed. Run gspot install.');
     expect(run).not.toHaveBeenCalled();
+});
+
+test('prose/dates reports dates in Markdown text and code comments, not in code', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['prose', 'markdown', 'typescript']),
+        'guide.md': '# Schedule\n\nRelease on `03/04/2026` or\non 03/04/2026.\n\n```text\n05/06/2026\n```\n',
+        'run.ts': "// Runs since 04.05.2026.\nexport const version = '01/02/2026';\n",
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'prose/dates');
+    expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
+        { file: 'guide.md', line: 4, rule: 'ambiguous-date' },
+        { file: 'run.ts', line: 1, rule: 'ambiguous-date' },
+    ]);
+});
+
+test('an ISO date and a date with the month name pass prose/dates', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['prose', 'markdown']),
+        'guide.md': '# Schedule\n\nRelease on 2026-03-04 or March 4, 2026.\n',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'prose/dates')).toStrictEqual([]);
 });

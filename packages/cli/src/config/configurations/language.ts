@@ -77,6 +77,19 @@ export const MARKDOWNLINT_RULES = {
     MD024: { siblings_only: true },
     MD026: { punctuation: '.,;:!?。，；：！？' },
     MD046: { style: 'fenced' },
+    MD059: {
+        prohibited_texts: [
+            'here',
+            'this',
+            'this page',
+            'read more',
+            'more',
+            'click here',
+            'link',
+            'documentation',
+            'docs',
+        ],
+    },
 } as const;
 
 export const PRETTIER_STYLE = 'markdownlint/style/prettier';

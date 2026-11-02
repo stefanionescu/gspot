@@ -7,7 +7,6 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { join, posix, dirname, resolve } from 'node:path';
-import type { Level, Settings } from '#cli/types/settings.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { VALE_TEMPORARY_NAME } from '#cli/config/repository/setup.ts';
@@ -27,8 +26,6 @@ import {
 import {
     VALE_TOOL,
     VOCAB_LINE,
-    ALT_TEXT_ON,
-    ALT_TEXT_OFF,
     VALE_PACKAGES,
     BLOCK_IGNORES,
     TOKEN_IGNORES,
@@ -109,19 +106,17 @@ async function readBoundedArchive(response: Response, { url, name, limit }: Arch
 Check that the Vale packages exist before prose checks run.
 
 @param root the root with the generated Vale files and package folders.
-@param level the configured level, which decides the packages.
 */
-export function hasValePackages(root: string, level: Settings['level']): boolean {
+export function hasValePackages(root: string): boolean {
     const files = openFiles(root);
     if (files.read(GSPOT_PATHS.valeConfig) === undefined) return false;
-    if (level === 'basic') return true;
     return VALE_PACKAGE_FOLDERS.every(
         (name) => files.findStats(`${GSPOT_PATHS.valePackages}/${name}`)?.isDirectory() === true,
     );
 }
 
 /**
-Download the Vale packages for the level, and replace the installed ones, when a selected configuration uses Vale.
+Download the Vale packages, and replace the installed ones, when a selected configuration uses Vale.
 Skip the download when every package folder exists and the release file names the pinned releases. Needs the network.
 
 @param install what install needs for this step.
@@ -132,12 +127,10 @@ export async function installValePackages(install: ToolInstall, miseBinPaths: st
     const { root } = session;
     const files = openFiles(root);
     deleteStaleTemporaryPaths(files, GSPOT_FOLDER, VALE_TEMPORARY_NAME);
-    const level = session.settings.level;
     const usesVale = session.toolConfigurations.some(({ tools }) => tools.some((tool) => tool.name === VALE_TOOL));
-    if (level === 'basic' || !usesVale) return '';
+    if (session.settings.level === 'basic' || !usesVale) return '';
     const releases = `${JSON.stringify(VALE_PACKAGE_RELEASES, null, JSON_INDENT)}\n`;
-    if (files.read(GSPOT_PATHS.valeReleases)?.bytes.toString('utf8') === releases && hasValePackages(root, level))
-        return '';
+    if (files.read(GSPOT_PATHS.valeReleases)?.bytes.toString('utf8') === releases && hasValePackages(root)) return '';
     const tool = getTool(session.toolConfigurations, VALE_TOOL);
     const available = buildToolAvailability(tool, await inspectTool({ ...session, miseBinPaths }, tool));
     if ('status' in available) throw new GspotError('install', available.note);
@@ -147,7 +140,6 @@ export async function installValePackages(install: ToolInstall, miseBinPaths: st
     try {
         const config = join(temporary, GSPOT_PATHS.valeConfig);
         const content = buildValeIni({
-            level,
             stylesPaths: [
                 convertToPosixPath(resolve(root, VALE_STYLES_PATH)),
                 posix.relative(posix.dirname(GSPOT_PATHS.valeConfig), GSPOT_PATHS.valePackages),
@@ -175,53 +167,38 @@ export async function installValePackages(install: ToolInstall, miseBinPaths: st
 Build the text of a vale.ini from its style folders and package sources.
 
 @param ini the vale.ini settings.
-@param ini.level the configured level; level all adds the packages and the rules for code.
 @param ini.stylesPaths the style folders; Vale installs packages in the last one.
 @param ini.packages the package archives: each a URL or a local path.
 */
-export function buildValeIni({
-    level,
-    stylesPaths,
-    packages,
-}: {
-    level: Level;
-    stylesPaths: string[];
-    packages: string[];
-}): string {
-    const isAll = level === 'all';
-    const markupRules = isAll ? VALE_MARKUP_RULES : [];
+export function buildValeIni({ stylesPaths, packages }: { stylesPaths: string[]; packages: string[] }): string {
     const formats = Object.entries(PROSE_GRAMMARS).flatMap(([extension, grammar]) =>
         'format' in grammar ? [[extension.slice(1), grammar.format] as const] : [],
     );
     const lines = [
-        ...(isAll ? [STYLES_PATH_COMMENT] : []),
+        STYLES_PATH_COMMENT,
         ...stylesPaths.map((path) => `StylesPath = ${path}`),
         MIN_ALERT_LINE,
         `SkippedScopes = ${VALE_SKIPPED_SCOPES}`,
-        ...(isAll ? [`Packages = ${packages.join(', ')}`, VOCAB_LINE] : []),
+        `Packages = ${packages.join(', ')}`,
+        VOCAB_LINE,
         '',
-        ...(isAll ? ['[formats]', ...formats.map(([extension, format]) => `${extension} = ${format}`)] : []),
+        '[formats]',
+        ...formats.map(([extension, format]) => `${extension} = ${format}`),
         '',
         ALL_FILES_SECTION,
-        `BasedOnStyles = ${(isAll ? ['gspot', 'Vale', ...VALE_PACKAGES] : ['gspot']).join(', ')}`,
+        `BasedOnStyles = ${['gspot', 'Vale', ...VALE_PACKAGES].join(', ')}`,
         `BlockIgnores = ${BLOCK_IGNORES.join(', ')}`,
         `TokenIgnores = ${TOKEN_IGNORES.join(', ')}`,
-        ...(isAll ? Object.entries(VALE_OFF_RULES).flatMap(([rule, reason]) => [`# ${reason}`, `${rule} = NO`]) : []),
+        ...Object.entries(VALE_OFF_RULES).flatMap(([rule, reason]) => [`# ${reason}`, `${rule} = NO`]),
         MARKUP_RULES_COMMENT,
-        ALT_TEXT_OFF,
-        ...markupRules.map((rule) => `${rule} = NO`),
+        ...VALE_MARKUP_RULES.map((rule) => `${rule} = NO`),
         '',
-        ...(isAll
-            ? [
-                  `[*.{${formats.map(([extension]) => extension).join(',')}}]`,
-                  NO_STYLES_LINE,
-                  ...VALE_COMMENT_RULES.map((rule) => `${rule} = YES`),
-              ]
-            : []),
+        `[*.{${formats.map(([extension]) => extension).join(',')}}]`,
+        NO_STYLES_LINE,
+        ...VALE_COMMENT_RULES.map((rule) => `${rule} = YES`),
         '',
         `[${VALE_MARKUP_FILES}]`,
-        ALT_TEXT_ON,
-        ...markupRules.map((rule) => `${rule} = YES`),
+        ...VALE_MARKUP_RULES.map((rule) => `${rule} = YES`),
     ];
     return lines.join('\n');
 }

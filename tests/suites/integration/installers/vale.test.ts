@@ -110,6 +110,6 @@ test.each([...VALE_INSTALL_FAILURES])(
         expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.valePackages}/Google/terms.yml`), 'utf8')).toBe(
             'corrected bytes\n',
         );
-        expect(hasValePackages(sandbox.path, 'all')).toBe(true);
+        expect(hasValePackages(sandbox.path)).toBe(true);
     },
 );

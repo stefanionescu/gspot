@@ -8,10 +8,10 @@ import { formatHeader } from '#cli/generation/header.ts';
 import { join, dirname, relative } from 'node:path/posix';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import { listOwnedConfigs } from '#cli/generation/selection.ts';
-import { isPointerInherited, buildIgnoreSections } from '#cli/generation/ignores.ts';
 import type { ConfigGeneration } from '#cli/types/engine/tool-runs.ts';
 import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
+import { IMPORT_CYCLES_CONFIG } from '#cli/config/configurations/eslint.ts';
 import { buildLinkFiles, listLinkFilePaths } from '#cli/generation/links.ts';
 import { buildLycheeFile } from '#cli/configurations/general/docs/generate.ts';
 import { buildKnipFile } from '#cli/configurations/language/javascript/knip.ts';
@@ -19,30 +19,30 @@ import { buildSqlfluffFile } from '#cli/configurations/language/sql/generate.ts'
 import { buildTyposFile } from '#cli/configurations/general/spelling/generate.ts';
 import { buildStylelintFile } from '#cli/configurations/language/css/generate.ts';
 import { buildBiomeFile } from '#cli/configurations/language/javascript/biome.ts';
+import { buildJscpdFile } from '#cli/configurations/general/structure/generate.ts';
 import { buildCoverageFile } from '#cli/configurations/testing/pytest/generate.ts';
 import { buildSquawkFile } from '#cli/configurations/database/postgres/generate.ts';
 import { buildSemgrepFile } from '#cli/configurations/general/security/generate.ts';
 import { buildShellcheckFile } from '#cli/configurations/language/bash/generate.ts';
-import { buildJscpdFile } from '#cli/configurations/general/structure/generate.ts';
 import { buildGixyFile } from '#cli/configurations/infrastructure/nginx/generate.ts';
 import { buildPeripheryFile } from '#cli/configurations/language/swift/periphery.ts';
 import { buildSwiftlintFile } from '#cli/configurations/language/swift/swiftlint.ts';
+import { isPointerInherited, buildIgnoreSections } from '#cli/generation/ignores.ts';
 import { buildCommitlintFile } from '#cli/configurations/general/commits/generate.ts';
 import { buildHtmlValidateFile } from '#cli/configurations/language/html/generate.ts';
 import { buildJsconfigFile } from '#cli/configurations/language/javascript/jsconfig.ts';
 import type { OwnedConfig, PlannedConfig } from '#cli/types/configurations/language.ts';
 import { buildSwiftformatFile } from '#cli/configurations/language/swift/swiftformat.ts';
+import { buildMarkdownlintFile } from '#cli/configurations/language/markdown/generate.ts';
 import { buildPurgecssSafelistFile } from '#cli/configurations/framework/site/generate.ts';
 import { buildOsvScannerFile } from '#cli/configurations/general/dependencies/generate.ts';
 import { buildSpectralFile } from '#cli/configurations/infrastructure/openapi/generate.ts';
 import { buildEslintFile } from '#cli/configurations/language/javascript/eslint/config.ts';
-import { IMPORT_CYCLES_CONFIG } from '#cli/config/configurations/eslint.ts';
 import { buildAnsibleLintFile } from '#cli/configurations/infrastructure/ansible/generate.ts';
 import type { BuiltConfig, OwnedSourceFile, ConfigBuildState } from '#cli/types/generation.ts';
 import { buildV8rFile, buildTaploFile } from '#cli/configurations/general/data-files/generate.ts';
 import { buildRuffFile, buildBasedpyrightFile } from '#cli/configurations/language/python/generate.ts';
 import { buildTrivyFile, buildHadolintFile } from '#cli/configurations/infrastructure/docker/generate.ts';
-import { buildMarkdownlintFile } from '#cli/configurations/language/markdown/generate.ts';
 
 import {
     TS_EXTENSION,
@@ -58,7 +58,6 @@ import {
 import {
     buildValeIniFile,
     buildLengthStyle,
-    buildAltTextStyle,
     buildAcronymsStyle,
     buildAcceptedWordsFile,
     buildCapitalizationStyle,
@@ -90,7 +89,6 @@ const CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder | undefined>> = {
     'prose/vale.ini': buildValeIniFile,
     'prose/styles/gspot/heading-case.yml': (planned) => buildCapitalizationStyle(planned, 'heading'),
     'prose/styles/gspot/paragraph-length.yml': (planned) => buildLengthStyle(planned, 'paragraph'),
-    'prose/styles/gspot/alt-text.yml': buildAltTextStyle,
     'prose/styles/gspot/banned-headings.yml': buildBannedHeadingsStyle,
     'prose/styles/gspot/sentence-length.yml': (planned) => buildLengthStyle(planned, 'sentence'),
     'prose/styles/gspot/title-case.yml': (planned) => buildCapitalizationStyle(planned, 'title'),

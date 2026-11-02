@@ -278,11 +278,10 @@ export const VERSION_RANGE_SOURCE = [
 ].join('\n');
 
 export const ALT_TEXT_CASES = [
-    { tag: '<img title="no alt=here" src="a.png">', missing: true },
     { tag: '<img src="a.png">', missing: true },
     { tag: '<img data-alt="x" src="a.png">', missing: true },
     { tag: '<img alt="A cat" src="a.png">', missing: false },
-    { tag: '<img alt src="a.png">', missing: false },
+    { tag: '<img alt="" src="a.png">', missing: false },
     { tag: '<img src="a.png" alt="x" />', missing: false },
 ] as const;
 

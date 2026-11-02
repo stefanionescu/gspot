@@ -35,16 +35,11 @@ import {
     STALE_LOCKFILE_NOTE,
 } from '#cli/config/generation.ts';
 
-function deleteUnusedToolFolders(writer: Files, paths: ReadonlySet<string>, generated: Generation): void {
+function deleteUnusedToolFolders(writer: Files, paths: ReadonlySet<string>): void {
     for (const [path, keep] of [
         [INSTALLED_TOOL_FOLDERS.npm, paths.has(GSPOT_PATHS.npmProject)],
         [INSTALLED_TOOL_FOLDERS.python, paths.has(GSPOT_PATHS.pythonProject)],
-        [
-            INSTALLED_TOOL_FOLDERS.vale,
-            generated.files.some(
-                (file) => file.path === GSPOT_PATHS.valeConfig && file.content.includes('Packages = '),
-            ),
-        ],
+        [INSTALLED_TOOL_FOLDERS.vale, paths.has(GSPOT_PATHS.valeConfig)],
     ] as const) {
         if (!keep) writer.deleteTree(path);
     }
@@ -141,7 +136,7 @@ export async function writeGeneratedFiles(
     const blocks = generated.blocks.map((block) => planBlock(writer, block.path, block.body));
     const pruning = planRemovals(writer, listStrayPaths(session, paths, listOwnablePaths(session)));
     writePlans(writer, [...replacements, ...managedKeyPlans, ...blocks, ...pruning]);
-    deleteUnusedToolFolders(writer, paths, generated);
+    deleteUnusedToolFolders(writer, paths);
     report.written.push(...replacements.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
     report.unchanged.push(...replacements.filter((plan) => plan.status === 'unchanged').map((plan) => plan.path));
     report.updated.push(

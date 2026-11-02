@@ -2,7 +2,7 @@ allowed_words = ["Vale", "DOM", "DTO", "RPC"]
 
 [configuration]
 always_selected = true
-description = "Documentation: unambiguous dates, descriptive link text, and alternative text for images. Level all adds the complete gspot style, the upstream Vale packages, and the comment rules for code."
+description = "Documentation: unambiguous dates. Level all adds the complete gspot style, the upstream Vale packages, and the comment rules for code."
 title = "Prose"
 
 [files]
@@ -15,8 +15,10 @@ name = "vale"
 replace = [".vale.ini", "_vale.ini", "vale.ini"]
 suppression = { marker = "^<!--\\s*vale\\b", reason = "reason: (?<reason>\\S.*)", forbidden = true }
 version = "3.24.0"
+when = [{ level = "all" }]
 
 [[config_file]]
+level = "all"
 target = "vale.ini"
 tool = "vale"
 
@@ -26,7 +28,8 @@ target = "styles/gspot/acronyms.yml"
 tool = "vale"
 
 [[config_file]]
-target = "styles/gspot/alt-text.yml"
+level = "all"
+target = "styles/gspot/alt-prefix.yml"
 tool = "vale"
 
 [[config_file]]
@@ -238,22 +241,23 @@ tool = "vale"
 target = "styles/LICENSES.md"
 tool = "vale"
 
-[[config_file]]
-target = "styles/gspot/link-text.yml"
-tool = "vale"
-
-[[config_file]]
-target = "styles/gspot/dates.yml"
-tool = "vale"
+[[check]]
+example = "`Release on 03/04/2026.` reports `ambiguous-date`. Write `Release on March 4, 2026.` instead."
+help = "Write the date in ISO form, such as 2026-09-17, or with the month name."
+name = "dates"
+stage = "commit"
+summary = "Reports a date such as 03/04/2026 in Markdown text and in code comments."
+why = "03/04/2026 means March or April, depending on where the reader lives."
 
 [[check]]
-example = "`Release on 03/04/2026.` reports an ambiguous date. Write `Release on March 4, 2026.` instead."
+example = "`We shipped this change last week.` reports `gspot.history`. Say what the code does now."
 help = "Rewrite the sentence the alert names, or add a real name and its reason to the `spelling.allowed_words` setting."
+level = "all"
 name = "vale"
 stage = "commit"
-summary = "In Markdown, checks ambiguous dates, link text and alternative text at level basic, and the complete gspot style and upstream packages at level all. At level all, code comments get the comment rules: conscious language, placeholders, session identifiers, home paths, straight quotes, em dashes, and the word rules of WRITING.md."
+summary = "Checks prose against the complete gspot style and the upstream packages in Markdown, and the comment rules in code comments."
 tool = "vale"
-why = "An ambiguous date, a link that reads \"here\", or an image without alternative text fails some readers, and no other check catches it."
+why = "One style keeps the documentation readable, and no other check reads sentences."
 
 [[check]]
 example = "A commit message that says `We should simply retry` reports `gspot.modals` and `gspot.marketing`. Write `Retry the request` instead."

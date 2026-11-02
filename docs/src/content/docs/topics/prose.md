@@ -29,9 +29,10 @@ Vale accepts the word too.
 
 ## Prose
 
-At level `basic`, Vale checks ambiguous dates, link text, and image alt text. At level `all`, it adds the full
-style and the [prose limits](/reference/gspot-toml/#prose); raising one needs a reason. At level `all`, code comments get
-the comment rules: conscious language, placeholders, session identifiers, home paths, straight quotes, em dashes, and the
-word rules of `WRITING.md`. `prose/commit-message` runs the word rules on a new commit message.
+`prose/dates` reports ambiguous dates in Markdown text and code comments at both levels. markdownlint reports link text
+that says nothing and images without alt text. At level `all`, Vale adds the full style and the
+[prose limits](/reference/gspot-toml/#prose); raising one needs a reason. Code comments then get the comment rules:
+conscious language, placeholders, session identifiers, home paths, straight quotes, em dashes, and the word rules of
+`WRITING.md`. `prose/commit-message` runs the word rules on a new commit message.
 
 The [prose configuration](/reference/configurations/prose/) lists the checks.

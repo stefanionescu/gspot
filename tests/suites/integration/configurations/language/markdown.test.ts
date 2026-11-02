@@ -13,6 +13,7 @@ import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { ALT_TEXT_CASES, LINK_TEXT_GUIDE, CORRECTED_LINK_TEXT_GUIDE } from '#tests/config/integration/prose.ts';
 
 import {
     GUIDE,
@@ -150,4 +151,24 @@ test('markdownlint reads an MDX page from after its import and export blocks', a
     await writeFile(join(root, 'untitled.mdx'), MDX_FILES['untitled.mdx'].replace('The page', '# Notice\n\nThe page'));
     const corrected = await spawnGspot(root, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+});
+
+test.each(ALT_TEXT_CASES)('markdownlint identifies the alt attribute in $tag', async ({ tag, missing }) => {
+    const { root } = installedSandbox();
+    await using _change = await writeSandboxChanges(installedSandbox(), {
+        files: { 'image.md': `# Image\n\n${tag}\n` },
+    });
+    const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'markdown/markdownlint', '--json']));
+    expect(listFindingRows(result.report)).toStrictEqual(missing ? [{ file: 'image.md', line: 3, rule: 'MD045' }] : []);
+});
+
+test('markdownlint reports link text such as here', async () => {
+    const { root } = installedSandbox();
+    await using _change = await writeSandboxChanges(installedSandbox(), { files: { 'guide.md': LINK_TEXT_GUIDE } });
+    const command = ['check', '--only', 'markdown/markdownlint', '--json'];
+    const failed = parseCheckReport(await spawnGspot(root, command));
+    expect(listFindingRows(failed.report)).toStrictEqual([{ file: 'guide.md', line: 3, rule: 'MD059' }]);
+    await writeFile(join(root, 'guide.md'), CORRECTED_LINK_TEXT_GUIDE);
+    const corrected = parseCheckReport(await spawnGspot(root, command));
+    expect(listFindingRows(corrected.report)).toStrictEqual([]);
 });

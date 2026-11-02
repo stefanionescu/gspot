@@ -12,11 +12,9 @@ import {
     ACRONYMS,
     ACRONYM_NAME,
     LENGTH_STYLES,
-    ALT_TEXT_TOKENS,
     ACRONYM_MESSAGE,
     ACRONYM_PATTERN,
     BANNED_HEADINGS,
-    ALT_TEXT_MESSAGE,
     VALE_REGEX_SYMBOLS,
     CAPITALIZATION_STYLES,
     BANNED_HEADING_MESSAGE,
@@ -81,10 +79,10 @@ Build vale.ini: the Vale style locations and rule levels for the prose checks.
 @param planned the config file to build.
 */
 export function buildValeIniFile(planned: PlannedConfig): string {
-    const folders = planned.level === 'all' ? [VALE_STYLES_PATH, GSPOT_PATHS.valePackages] : [VALE_STYLES_PATH];
     return buildValeIni({
-        level: planned.level,
-        stylesPaths: folders.map((path) => relative(dirname(planned.targetPath), path)),
+        stylesPaths: [VALE_STYLES_PATH, GSPOT_PATHS.valePackages].map((path) =>
+            relative(dirname(planned.targetPath), path),
+        ),
         packages: VALE_PACKAGES.map((name) => VALE_PACKAGE_URLS[name]),
     });
 }
@@ -131,21 +129,4 @@ export function buildAcceptedWordsFile(planned: PlannedConfig): string {
     const words = listAllowedWords(planned.session);
 
     return words.toSorted((left, right) => compareText(left, right)).join('\n');
-}
-
-/**
-Build the Vale image alternative rule for the selected level.
-
-@param planned the config file and scope.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: CONFIG_BUILDERS selects this configuration's generator through its shared builder interface.
-export function buildAltTextStyle(planned: PlannedConfig): string {
-    return stringify({
-        extends: 'existence',
-        message: ALT_TEXT_MESSAGE,
-        level: 'error',
-        scope: 'raw',
-        nonword: true,
-        tokens: [ALT_TEXT_TOKENS[0], ...(planned.level === 'all' ? [ALT_TEXT_TOKENS[1]] : [])],
-    });
 }

@@ -26,7 +26,7 @@ console.log(configs, rule);
 `;
 
 export const PROSE_CHECK = {
-    check: 'prose/vale',
+    check: 'prose/dates',
     files: {
         'guide.md': `# Schedule
 
@@ -41,7 +41,7 @@ NebulaConfiguration uses Python. Release on March 4, 2026.
 `,
         },
     },
-    expected: { file: 'guide.md', line: 3, rule: 'gspot.dates' },
+    expected: { file: 'guide.md', line: 3, rule: 'ambiguous-date' },
 } as const;
 
 export const SWIFT_CHECK = {

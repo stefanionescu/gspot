@@ -81,7 +81,15 @@ export const VALE_ALERT = {
     Message: 'Use a concrete example.',
 } as const;
 
+export const VALE_INSTALLED_FILES = Object.fromEntries(
+    ['Google', 'write-good', 'proselint', 'alex', 'Harper', 'config/dictionaries'].map((folder) => [
+        `${GSPOT_PATHS.valePackages}/${folder}/.keep`,
+        '',
+    ]),
+);
+
 export const VALE_SANDBOX_FILES = {
+    ...VALE_INSTALLED_FILES,
     [GSPOT_PATHS.valeConfig]: 'Packages =\n',
     'example.md': '# Documentation\n',
 };
@@ -141,13 +149,6 @@ export const VALE_OUTPUT_CASES = [
 ] as const;
 
 export const EMPTY_VALE_INI = 'Packages =\n';
-
-export const VALE_INSTALLED_FILES = Object.fromEntries(
-    ['Google', 'write-good', 'proselint', 'alex', 'Harper', 'config/dictionaries'].map((folder) => [
-        `${GSPOT_PATHS.valePackages}/${folder}/.keep`,
-        '',
-    ]),
-);
 
 export const LOCAL_FILE_PATHS = {
     indexOnly: ['.env.'],

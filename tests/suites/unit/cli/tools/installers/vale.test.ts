@@ -7,12 +7,12 @@ import { existsSync, utimesSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import { LEVELS, GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { PREVIOUS_BYTES } from '#tests/config/setup/programs.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -22,18 +22,15 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { VALE_PACKAGE_FOLDERS, VALE_PACKAGE_RELEASES } from '#cli/config/tools/vale.ts';
 import { downloadArchive, hasValePackages, installValePackages } from '#cli/tools/installers/vale.ts';
 
-test.each([...LEVELS])(
-    'Vale packages are ready at %s only with the generated vale.ini and the installed folders',
-    async (level) => {
-        await using sandbox = await testdir();
-        expect(hasValePackages(sandbox.path, level)).toBe(false);
-        await createFileTree(sandbox.path, { [GSPOT_PATHS.valeConfig]: VALE_PACKAGES_INI });
-        expect(hasValePackages(sandbox.path, level)).toBe(level === 'basic');
-        for (const folder of VALE_PACKAGE_FOLDERS)
-            await createFileTree(sandbox.path, { [`${GSPOT_PATHS.valePackages}/${folder}/.keep`]: '' });
-        expect(hasValePackages(sandbox.path, level)).toBe(true);
-    },
-);
+test('Vale packages are ready only with the generated vale.ini and the installed folders', async () => {
+    await using sandbox = await testdir();
+    expect(hasValePackages(sandbox.path)).toBe(false);
+    await createFileTree(sandbox.path, { [GSPOT_PATHS.valeConfig]: VALE_PACKAGES_INI });
+    expect(hasValePackages(sandbox.path)).toBe(false);
+    for (const folder of VALE_PACKAGE_FOLDERS)
+        await createFileTree(sandbox.path, { [`${GSPOT_PATHS.valePackages}/${folder}/.keep`]: '' });
+    expect(hasValePackages(sandbox.path)).toBe(true);
+});
 
 test.each([VALE_PACKAGE_FOLDERS[0]])(
     'level all needs the shipped %s folder whatever the Packages line says',
@@ -44,7 +41,7 @@ test.each([VALE_PACKAGE_FOLDERS[0]])(
             if (folder === missing) continue;
             await createFileTree(sandbox.path, { [`${GSPOT_PATHS.valePackages}/${folder}/.keep`]: '' });
         }
-        expect(hasValePackages(sandbox.path, 'all')).toBe(false);
+        expect(hasValePackages(sandbox.path)).toBe(false);
     },
 );
 

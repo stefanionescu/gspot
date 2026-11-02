@@ -8,12 +8,14 @@ import type { TrackedFile } from '#cli/types/repository.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
+import { parseComments } from '#cli/parsers/code/comments.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { hasValePackages } from '#cli/tools/installers/vale.ts';
 import { join, dirname, relative, isAbsolute } from 'node:path';
 import { valeOutputSchema } from '#cli/schemas/configurations.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { listMarkdownTexts } from '#cli/parsers/formats/markdown.ts';
 import { splitFileArguments } from '#cli/engine/tool-runs/batches.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import { readCommitMessage } from '#cli/configurations/general/commits/checks.ts';
@@ -21,8 +23,10 @@ import type { ValeAlert, ProseRouteBatch } from '#cli/types/configurations/gener
 import { VALE_TOOL, PROSE_GRAMMARS, VALE_MESSAGE_RULES } from '#cli/config/tools/vale.ts';
 
 import {
+    DATE_RULE,
     VALE_NAME,
     NO_OUTPUT,
+    AMBIGUOUS_DATE,
     SCRIPT_GRAMMAR,
     VALE_ARGUMENTS,
     VALE_ERROR_LINE,
@@ -124,15 +128,10 @@ Runs Vale on the scope files, by path where Vale has a grammar and through stdin
 @param planned the scope to check.
 */
 export async function checkVale(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
-    if (!hasValePackages(session.toolsRoot, session.settings.level))
-        throw new CheckStop('missing', VALE_PACKAGES_MESSAGE);
+    if (!hasValePackages(session.toolsRoot)) throw new CheckStop('missing', VALE_PACKAGES_MESSAGE);
     const command = [VALE_TOOL, CONFIG_FLAG, join(session.root, GSPOT_PATHS.valeConfig), ...VALE_ARGUMENTS];
     const folder = dirname(join(session.root, GSPOT_PATHS.valeConfig));
-    const groups = listRouteBatches(
-        planned.files.filter(
-            (file) => file.kind === 'source' && (session.settings.level === 'all' || file.tags.includes('markdown')),
-        ),
-    );
+    const groups = listRouteBatches(planned.files.filter((file) => file.kind === 'source'));
     const batches: Promise<ValeAlert[]>[] = [];
     for (const group of groups) {
         const [first] = group;
@@ -160,8 +159,7 @@ Runs the word rules on a new commit message, with the comment lines that Git add
 */
 export async function checkCommitMessage(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     if (planned.messageFile === undefined) return [];
-    if (!hasValePackages(session.toolsRoot, session.settings.level))
-        throw new CheckStop('missing', VALE_PACKAGES_MESSAGE);
+    if (!hasValePackages(session.toolsRoot)) throw new CheckStop('missing', VALE_PACKAGES_MESSAGE);
     const { text, prefix } = await readCommitMessage(session, planned.messageFile);
     const lines = text.split('\n').map((line) => (line.startsWith(prefix) ? '' : line));
     const result = await runCheckTool(
@@ -183,4 +181,33 @@ export async function checkCommitMessage(session: CheckSession, planned: Planned
         rule: alert.check,
         message: `Line ${String(alert.line)}: ${alert.message}`,
     }));
+}
+
+async function listFileDates(session: CheckSession, file: TrackedFile): Promise<CheckFinding[]> {
+    const source = read(session.cache, file.path);
+    const texts = file.tags.includes('markdown')
+        ? listMarkdownTexts(source)
+        : await parseComments(file.path, source, file.tags, session);
+    return texts.flatMap(({ line, text }) =>
+        [...text.matchAll(AMBIGUOUS_DATE)].map(
+            (match): CheckFinding => ({
+                file: file.path,
+                line: line + text.slice(0, match.index).split('\n').length - 1,
+                rule: DATE_RULE,
+                message: `Ambiguous date ${match[0]}. Write an ISO date, such as 2026-09-17, or the month name.`,
+            }),
+        ),
+    );
+}
+
+/**
+Reports ambiguous dates in Markdown text and in code comments.
+
+@param session the repository and its tools.
+@param planned the scope files to read.
+*/
+export async function checkDates(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+    const files = planned.files.filter((file) => file.kind === 'source');
+    const findings = await Promise.all(files.map((file) => listFileDates(session, file)));
+    return findings.flat();
 }

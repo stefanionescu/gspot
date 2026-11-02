@@ -51,10 +51,9 @@ export const LENGTH_STYLES = {
     },
 } as const;
 
-export const ALT_TEXT_TOKENS = [
-    String.raw`<img(?:\s+(?!alt(?:\s*=|[\s/>]))[^\s=/>]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'>]+))?)*\s*/?>`,
-    String.raw`!\[(?:Image|Graphic|Picture) of`,
-] as const;
+export const AMBIGUOUS_DATE = /\b\d{1,2}\/\d{1,2}\/\d{2,4}\b|\b\d{1,2}[./]\d{1,2}[./]\d{4}\b/gu;
+
+export const DATE_RULE = 'ambiguous-date';
 
 export const ACRONYMS = [
     'API',
@@ -119,8 +118,6 @@ export const ACRONYM_MESSAGE = "Spell out '%s' on first use.";
 export const ACRONYM_PATTERN = String.raw`\b([A-Z]{3,6})\b`;
 
 export const ACRONYM_DEFINITION_PATTERN = String.raw`(?:\b[A-Za-z]+(?:-[A-Za-z]+)* ){2,5}\(([A-Z]{3,6})\)`;
-
-export const ALT_TEXT_MESSAGE = 'An image needs an alt attribute; decorative images can use an empty value.';
 
 export const ACRONYM_NAME = /^[A-Z]{3,6}$/u;
 

@@ -20,7 +20,7 @@ async function applyLevelChanges(changes: SandboxChanges): Promise<AsyncDisposab
     return resources.move();
 }
 
-test('prose/vale at level basic checks child files once at the root and reads the shared styles', async () => {
+test('prose/dates checks a child file once at the root', async () => {
     const { root } = installedSandbox();
     const path = 'child/only.md';
     await using _sourceChange = await applyLevelChanges({
@@ -29,25 +29,22 @@ test('prose/vale at level basic checks child files once at the root and reads th
                 level: 'basic',
                 scopes: [{ path: 'child', configurations: ['prose', 'docs'] }],
             }),
-            [path]: `# File map
-
-Read [here](only.md).
-`,
+            [path]: SCHEDULE_RELEASE_MARKDOWN,
         },
     });
 
-    const checked = parseCheckReport(await spawnGspot(root, ['check', path, '--only', 'prose/vale', '--json']));
+    const checked = parseCheckReport(await spawnGspot(root, ['check', path, '--only', 'prose/dates', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     expect(checked.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
         { scope: '', status: 'failed' },
     ]);
-    expect(listFindingRows(checked.report)).toStrictEqual([{ file: path, line: 3, rule: 'gspot.link-text' }]);
+    expect(listFindingRows(checked.report)).toStrictEqual([{ file: path, line: 3, rule: 'ambiguous-date' }]);
 });
 
-test('a Vale ignore with a lint rule and a path keeps findings in other files', async () => {
+test('an ignore with a lint rule and a path keeps findings in other files', async () => {
     const { root } = installedSandbox();
     const settings = buildSandboxSettings([]);
-    await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
+    await using _sourceChange = await applyLevelChanges({
         files: {
             'gspot.toml': settings,
             'guide.md': SCHEDULE_RELEASE_MARKDOWN,
@@ -55,18 +52,16 @@ test('a Vale ignore with a lint rule and a path keeps findings in other files', 
         },
     });
 
-    const command = ['check', '--only', 'prose/vale', '--json'];
+    const command = ['check', '--only', 'prose/dates', '--json'];
     const before = parseCheckReport(await spawnGspot(root, command));
     expect(before.code, before.stdout + before.stderr).toBe(1);
     expect(listFindingRows(before.report)).toStrictEqual([
-        { file: 'archive.md', line: 3, rule: 'gspot.dates' },
-        { file: 'guide.md', line: 3, rule: 'gspot.dates' },
+        { file: 'archive.md', line: 3, rule: 'ambiguous-date' },
+        { file: 'guide.md', line: 3, rule: 'ambiguous-date' },
     ]);
     const ignored = await spawnGspot(root, [
         'ignore',
-        'prose/vale',
-        '--rule',
-        'gspot.dates',
+        'prose/dates',
         '--paths',
         'archive.md',
         '--reason',
@@ -75,7 +70,7 @@ test('a Vale ignore with a lint rule and a path keeps findings in other files', 
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
     const after = parseCheckReport(await spawnGspot(root, command));
     expect(after.code, after.stdout + after.stderr).toBe(1);
-    expect(listFindingRows(after.report)).toStrictEqual([{ file: 'guide.md', line: 3, rule: 'gspot.dates' }]);
+    expect(listFindingRows(after.report)).toStrictEqual([{ file: 'guide.md', line: 3, rule: 'ambiguous-date' }]);
     await writeFile(join(root, 'guide.md'), '# Schedule\n\nRelease on March 4, 2026.\n');
     const corrected = await spawnGspot(root, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);

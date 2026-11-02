@@ -66,7 +66,7 @@ export const VALE_OFF_RULES: Readonly<Record<string, string>> = {
     'proselint.Very': 'gspot.hedging owns hedges',
     'Google.EmDash': 'gspot.em-dashes owns dashes',
     'proselint.DateCase': 'Google.AMPM owns times',
-    'Google.DateFormat': 'gspot.dates owns dates and accepts the month name before or after the day',
+    'Google.DateFormat': 'prose/dates owns dates and accepts the month name before or after the day',
     'write-good.E-Prime': 'it flags every form of to be, which plain sentences need',
     'Vale.Spelling': 'typos owns spelling',
     'Google.Spelling': 'typos owns spelling',
@@ -103,7 +103,7 @@ export const VALE_OFF_RULES: Readonly<Record<string, string>> = {
     'Harper.NumericRangeEnDash': 'gspot.en-dashes owns ranges',
 };
 
-export const VALE_MARKUP_RULES = ['gspot.tree-blocks'] as const;
+export const VALE_MARKUP_RULES = ['gspot.alt-prefix', 'gspot.tree-blocks'] as const;
 
 export const VALE_COMMENT_RULES = [
     'gspot.conscious-language',
@@ -154,11 +154,7 @@ export const ALL_FILES_SECTION = '[*]';
 
 export const MARKUP_RULES_COMMENT = '# Markup checks read markup only.';
 
-export const ALT_TEXT_OFF = 'gspot.alt-text = NO';
-
 export const NO_STYLES_LINE = 'BasedOnStyles =';
-
-export const ALT_TEXT_ON = 'gspot.alt-text = YES';
 
 export const VALE_DOWNLOAD_NAME = 'the Vale package';
 

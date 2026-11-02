@@ -7,7 +7,6 @@ import { checkAllowed } from '#cli/configurations/general/licenses/checks.ts';
 import { checkSemgrep } from '#cli/configurations/general/security/checks.ts';
 import { checkFences } from '#cli/configurations/language/markdown/checks.ts';
 import { checkExpoDoctor } from '#cli/configurations/framework/expo/checks.ts';
-import { checkJscpd } from '#cli/configurations/general/structure/checks/jscpd.ts';
 import { checkNextjsTsc } from '#cli/configurations/framework/nextjs/checks.ts';
 import { checkPaths } from '#cli/configurations/general/naming/checks/paths.ts';
 import { checkGeneratorOutputs } from '#cli/configurations/generator-outputs.ts';
@@ -15,6 +14,7 @@ import { checkSyntax } from '#cli/configurations/infrastructure/nginx/checks.ts'
 import { checkSafety } from '#cli/configurations/language/bash/checks/safety.ts';
 import { checkSvelteCheck } from '#cli/configurations/framework/svelte/checks.ts';
 import { checkTsconfig } from '#cli/configurations/language/typescript/checks.ts';
+import { checkJscpd } from '#cli/configurations/general/structure/checks/jscpd.ts';
 import { checkMessages } from '#cli/configurations/library/translations/checks.ts';
 import { checkPytestCoverage } from '#cli/configurations/testing/pytest/checks.ts';
 import { checkSiteBuild } from '#cli/configurations/framework/site/checks/build.ts';
@@ -29,7 +29,6 @@ import { checkPeriphery } from '#cli/configurations/language/swift/checks/periph
 import { checkShellcheck } from '#cli/configurations/language/bash/checks/shellcheck.ts';
 import { checkCompose } from '#cli/configurations/infrastructure/docker/checks/compose.ts';
 import { checkIdentifiers } from '#cli/configurations/general/naming/checks/identifiers.ts';
-import { checkVale, checkCommitMessage } from '#cli/configurations/general/prose/checks.ts';
 import { checkLoneFiles } from '#cli/configurations/general/structure/checks/lone-files.ts';
 import { checkLongFiles } from '#cli/configurations/general/structure/checks/long-files.ts';
 import { checkSkipReasons } from '#cli/configurations/language/swift/checks/skip-reasons.ts';
@@ -53,6 +52,7 @@ import { checkInstructions } from '#cli/configurations/infrastructure/docker/che
 import { checkMigrationOrder } from '#cli/configurations/database/postgres/checks/migration-order.ts';
 import { checkSharedPrefixes } from '#cli/configurations/general/structure/checks/shared-prefixes.ts';
 import { checkReferences, checkCommitlintPushed } from '#cli/configurations/general/commits/checks.ts';
+import { checkVale, checkDates, checkCommitMessage } from '#cli/configurations/general/prose/checks.ts';
 import { checkEditedMigrations } from '#cli/configurations/database/postgres/checks/edited-migrations.ts';
 import { checkTrivialFunctions } from '#cli/configurations/general/structure/checks/trivial-functions.ts';
 import { checkRowLevelSecurity } from '#cli/configurations/database/postgres/checks/row-level-security.ts';
@@ -170,6 +170,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'postgres/migration-order': { check: checkMigrationOrder },
     'postgres/row-level-security': { check: checkRowLevelSecurity },
     'prose/commit-message': { check: checkCommitMessage },
+    'prose/dates': { check: checkDates },
     'prose/vale': { check: checkVale },
     'python/deptry': { run: checkDeptry },
     'python/function-size': { check: checkPythonFunctionSize },

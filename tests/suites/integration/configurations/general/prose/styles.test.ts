@@ -1,30 +1,21 @@
-import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
 import { writeFile } from 'node:fs/promises';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { buildAssetPath } from '#cli/system/assets.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { TYPO } from '#tests/config/setup/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { writeSandboxChanges, applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { spawnGspot, spawnRootCheck, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
-    VALE_INI,
     STYLE_CASES,
     PROSE_SANDBOX,
     COMMENT_SOURCE,
-    ALT_TEXT_CASES,
-    LINK_TEXT_GUIDE,
     VOCABULARY_SOURCE,
     HEADING_CASE_GUIDE,
-    EXAMPLE_STYLE_FOLDER,
     VERSION_RANGE_SOURCE,
     SUPPRESSION_COMMENTS,
-    CORRECTED_LINK_TEXT_GUIDE,
 } from '#tests/config/integration/prose.ts';
 
 const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);
@@ -46,37 +37,22 @@ test('at level all, Vale skips ESLint and Stylelint directives and checks ordina
     expect(corrected.status, corrected.note).toBe('passed');
 });
 
-test.each(ALT_TEXT_CASES)('Vale identifies the alt attribute in $tag', async ({ tag, missing }) => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['prose']),
-        'image.md': `${tag}\n`,
-    });
-    await applyGeneratedFiles(sandbox.path);
-    const result = await spawnRootCheck(sandbox.path, 'prose/vale');
-    expect(result.status, result.note).toBe(missing ? 'failed' : 'passed');
-    expect(result.findings).toStrictEqual(
-        missing ? [matchFields({ file: 'image.md', line: 1, rule: 'gspot.alt-text' })] : [],
-    );
-});
-
 test("Vale's version-range rule accepts a minimum version and reports vague ranges", async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['prose', 'markdown']),
-        [GSPOT_PATHS.valeConfig]: VALE_INI,
-        [`${EXAMPLE_STYLE_FOLDER}/Versions.yml`]: readFileSync(
-            buildAssetPath('src/configurations/general/prose/files/styles/gspot/version-range.yml'),
-            'utf8',
-        ),
-        'versions.md': VERSION_RANGE_SOURCE,
+    const { root } = installedSandbox();
+    await using _change = await writeSandboxChanges(installedSandbox(), {
+        files: {
+            'gspot.toml': buildSandboxSettings(['prose', 'markdown'], { level: 'all' }),
+            'versions.md': VERSION_RANGE_SOURCE,
+        },
     });
 
-    const result = await spawnRootCheck(sandbox.path, 'prose/vale');
+    const result = await spawnRootCheck(root, 'prose/vale');
     expect(result.status, result.note).toBe('failed');
-    expect(result.findings).toStrictEqual(
+    expect(result.findings.filter(({ rule }) => rule === 'gspot.version-range')).toStrictEqual(
         [
-            { file: 'versions.md', line: 4, rule: 'Example.Versions' },
-            { file: 'versions.md', line: 5, rule: 'Example.Versions' },
-            { file: 'versions.md', line: 6, rule: 'Example.Versions' },
+            { file: 'versions.md', line: 4 },
+            { file: 'versions.md', line: 5 },
+            { file: 'versions.md', line: 6 },
         ].map((finding) => matchFields(finding)),
     );
 });
@@ -95,27 +71,6 @@ test("Vale's heading-case rule accepts a reviewed product name and reports title
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'prose/vale', '--json']));
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(listFindingRows(result.report)).toStrictEqual([{ file: 'guide.md', line: 7, rule: 'gspot.heading-case' }]);
-});
-
-test('the generated vale.ini at level basic reports link text such as here', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['prose']),
-        'guide.md': LINK_TEXT_GUIDE,
-        'source.ts': 'const example = "[here](guide.md)";\n// Read [here](guide.md).\n',
-    });
-    const root = sandbox.path;
-    await applyGeneratedFiles(root);
-    const failed = await spawnRootCheck(root, 'prose/vale');
-    expect(failed.status, failed.note).toBe('failed');
-    expect(failed.findings).toStrictEqual([matchFields({ file: 'guide.md', line: 3, rule: 'gspot.link-text' })]);
-    await writeFile(join(root, 'guide.md'), CORRECTED_LINK_TEXT_GUIDE);
-    await writeFile(
-        join(root, 'source.ts'),
-        'const example = "[here](guide.md)";\n// Read [request guide](guide.md).\n',
-    );
-    const corrected = await spawnRootCheck(root, 'prose/vale');
-    expect(corrected.status, corrected.note).toBe('passed');
-    expect(corrected.findings).toStrictEqual([]);
 });
 
 test.each([...STYLE_CASES])(

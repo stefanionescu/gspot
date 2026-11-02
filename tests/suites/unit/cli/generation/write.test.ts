@@ -112,7 +112,7 @@ test('writing a mise project preserves its lockfile and reports a changed hook',
     expect(changed.notes).not.toContain('Git hooks changed. Run gspot install.');
 });
 
-test('at level basic, prose keeps its Vale configuration and removes installed style packages', async () => {
+test('at level basic, gspot removes the Vale configuration and the installed style packages', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['prose']),
         'guide.md': '# Guide\n',
@@ -122,7 +122,7 @@ test('at level basic, prose keeps its Vale configuration and removes installed s
     const writer = openFiles(sandbox.path);
     await writeGeneratedFiles(session, buildGeneratedFiles(session), writer);
     expect(await isOnDisk(join(sandbox.path, '.gspot/vale'))).toBe(false);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/general/prose/vale.ini'))).toBe(true);
+    expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/general/prose/vale.ini'))).toBe(false);
 });
 
 test('apply preserves a copied header example and removes an obsolete scoped link file', async () => {
