@@ -24,13 +24,18 @@ const manifestCache = new WeakMap<TSESLint.SourceCode, PackageFacts>();
 const importCache = new WeakMap<TSESLint.SourceCode, ReadonlySet<string>>();
 
 function readManifestDependencies(path: string): [string, string][] {
-    const manifest = JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>;
-    const fields = DEPENDENCY_FIELDS.map((field) => manifest[field]);
-    return fields.flatMap((value) =>
-        value !== null && typeof value === 'object'
-            ? Object.entries(value).map(([name, range]): [string, string] => [name, String(range)])
-            : [],
-    );
+    try {
+        const manifest = JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown> | null;
+        const fields = DEPENDENCY_FIELDS.map((field) => manifest?.[field]);
+        return fields.flatMap((value) =>
+            value !== null && typeof value === 'object'
+                ? Object.entries(value).map(([name, range]): [string, string] => [name, String(range)])
+                : [],
+        );
+    } catch (error) {
+        if (error instanceof SyntaxError) return [];
+        throw error;
+    }
 }
 
 function listManifestFolders(context: FileContext): string[] {
