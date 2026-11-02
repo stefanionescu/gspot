@@ -177,7 +177,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'python/placeholder-docstrings': { check: checkPlaceholderDocstrings },
     'python/pydoclint': { run: checkPydoclint },
     'python/vulture': { check: checkVulture },
-    'pytest/coverage': { run: checkPytestCoverage },
+    'pytest/tests': { run: checkPytestCoverage },
     'repository/conflict-markers': { check: checkConflictMarkers },
     'repository/encoding': { check: checkEncoding },
     'react-dom/react-versions': { check: checkReactVersions },

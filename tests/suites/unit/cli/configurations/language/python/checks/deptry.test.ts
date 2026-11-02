@@ -101,6 +101,7 @@ test('deptry counts the project name and each package under src as first party',
         'src/shop_core/__init__.py': '',
         'src/shop_tools/__init__.py': '',
         'src/shop_tools/nested/__init__.py': '',
+        '.venv/pyvenv.cfg': '',
         [join(join(GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder), 'deptry')]: 'stub',
     });
     const { commands } = await runFakeDeptry(sandbox.path);

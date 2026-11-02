@@ -252,7 +252,7 @@ test('editorconfig-checker leaves out the extensions of the selected formatters'
         buildCheckSession(session, CHECK_GENERATION),
         planned as NonNullable<typeof planned>,
         '{formatted_extensions}',
-        { files: [], scope: '', root: sandbox.path, indent: 2 },
+        { files: [], scope: '', root: sandbox.path },
     );
     expect(excluded.split(/[.(|)$]+/u)).toContain('py');
     expect(excluded.split(/[.(|)$]+/u)).not.toContain('swift');
