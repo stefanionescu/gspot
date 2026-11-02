@@ -191,7 +191,7 @@ test('explain --json reports every field of a configuration', async () => {
         group: 'general',
         requires: [],
         tools: [],
-        checks: [],
+        checks: [{ check: 'engineering/agents-files', stage: 'commit' }],
         settings: [],
         ruleFiles: [],
         alwaysSelected: true,
