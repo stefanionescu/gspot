@@ -6,7 +6,9 @@ version = "1.0.0"
 dependencies = ["fastapi"]
 `;
 
-export const SEMGREP_CHECK = ['check', '--only', 'security/semgrep', '--json'] as const;
+export const SEMGREP_CHECK_ID = 'security/semgrep';
+
+export const SEMGREP_CHECK = ['check', '--only', SEMGREP_CHECK_ID, '--json'] as const;
 
 export const SEMGREP_SANDBOX = {
     configurations: ['typescript', 'python', 'bash', 'security', 'fastapi'],

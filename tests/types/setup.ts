@@ -1,7 +1,6 @@
 import type { z } from 'zod';
 import type { Linter } from 'eslint';
 import type { Level } from '#cli/types/settings.ts';
-import type { RunReport } from '#cli/types/engine/run.ts';
 import type { ManagedKeys } from '#cli/types/repository.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import type { ToolPackageManager } from '#cli/types/tools.ts';
@@ -90,6 +89,11 @@ export type MiseProject = { tools: Record<string, string | MiseVersion> };
 
 export type PausedGit = { pid: number; checkout?: string };
 
+export type ProcessBackend = {
+    name: string;
+    run: (command: string[], options: AsyncSpawnOptions) => SpawnResult | Promise<SpawnResult>;
+};
+
 export type ProcessOutput = Pick<SpawnResult, 'code' | 'stdout' | 'stderr'>;
 
 export type TerminalCapture = DisposableStack & { stdout: string[]; stderr: string[] };
@@ -102,11 +106,6 @@ export type ProcessCapture = Pick<
 >;
 
 export type ChildCapture = AsyncDisposable & { stdout: Promise<string>; stderr: Promise<string> };
-
-export type ProcessBackend = {
-    name: string;
-    run: (command: string[], options: AsyncSpawnOptions) => SpawnResult | Promise<SpawnResult>;
-};
 
 export type ProgramName = (typeof PROGRAM_NAMES)[number];
 
@@ -131,14 +130,10 @@ export type SampleFix = {
 
 export type CheckSample = SandboxChanges & {
     check: string;
+    apply?: boolean | undefined;
     expected: SampleFinding;
     findings?: readonly SampleFinding[];
     corrected?: SampleFix;
-};
-
-export type SampleResult = {
-    failed: ProcessOutput & { report: RunReport };
-    passed: ProcessOutput & { report: RunReport };
 };
 
 export type SandboxChanges = {

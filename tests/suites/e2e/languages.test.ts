@@ -2,13 +2,14 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
-import type { GspotProject } from '#tests/types/setup.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { PROSE_CHECK, SWIFT_CHECK } from '#tests/config/e2e.ts';
-import { assertCheckSample } from '#tests/setup/cli/samples.ts';
+import { parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { GUIDE_READ_MARKDOWN } from '#tests/config/setup/configurations.ts';
 import { createGspotProject } from '#tests/setup/sandboxes/projects/gspot.ts';
+import type { Sandbox, SampleFix, CheckSample, GspotProject } from '#tests/types/setup.ts';
 
 async function prepareLanguages(installation: GspotProject): Promise<void> {
     const { online } = installation;
@@ -28,13 +29,21 @@ async function prepareLanguages(installation: GspotProject): Promise<void> {
     expect(vocabulary.code, vocabulary.stdout + vocabulary.stderr).toBe(0);
 }
 
+async function assertInstalledCheck(sandbox: Sandbox, sample: CheckSample & { corrected: SampleFix }): Promise<void> {
+    const failed = parseCheckReport(await runCheckOnChanges(sandbox, sample));
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    expect(failed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([sample.expected]);
+    const passed = parseCheckReport(await runCheckOnChanges(sandbox, { ...sample.corrected, check: sample.check }));
+    expect(passed.code, passed.stdout + passed.stderr).toBe(0);
+}
+
 test('gspot installed from npm runs Vale and the built-in Swift naming check, reports their findings, and passes after the fixes', async () => {
     await using installation = await createGspotProject();
     await prepareLanguages(installation);
-    await assertCheckSample(installation.offline, PROSE_CHECK);
+    await assertInstalledCheck(installation.offline, PROSE_CHECK);
     const level = await installation.online.run(installation.root, ['set', 'level', 'all']);
     expect(level.code, level.stdout + level.stderr).toBe(0);
-    await assertCheckSample(installation.offline, SWIFT_CHECK);
+    await assertInstalledCheck(installation.offline, SWIFT_CHECK);
     const vocabulary = await readFile(
         join(installation.root, getManifestTarget('prose', 'styles/config/vocabularies/words/accept.txt')),
         'utf8',
