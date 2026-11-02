@@ -2,6 +2,8 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
+import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
+import type { DoctorReport } from '#cli/types/commands/reports.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -60,4 +62,16 @@ test('ESLint, astro check, and Prettier each report a finding in one Astro proje
     expect(await readFile(join(root, ASTRO_PAGE_PATH), 'utf8')).toBe(ASTRO_PAGE);
     const clean = await spawnGspot(root, ['check', '--json', '--only', 'javascript/eslint,astro/astro-check']);
     expect(clean.code, clean.stdout + clean.stderr).toBe(0);
+});
+
+test('install and doctor accept astro-check when the project has a type error', async () => {
+    const sandbox = installedSandbox();
+    await using _change = await changeSandbox(sandbox, {
+        files: { [ASTRO_PAGE_PATH]: ASTRO_PAGE.replace('const title: string', 'const title: number') },
+    });
+    const installed = await spawnGspot(sandbox.root, ['install']);
+    expect(installed.code, installed.stdout + installed.stderr).toBe(0);
+    const diagnosed = await spawnGspot(sandbox.root, ['doctor', '--json']);
+    const report = JSON.parse(diagnosed.stdout) as DoctorReport;
+    expect(report.tools.find(({ name }) => name === 'astro-check')).toMatchObject({ state: 'ok' });
 });
