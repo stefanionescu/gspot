@@ -14,26 +14,16 @@ buildRuleTester().run('testing-library-queries', plugin.rules['testing-library-q
         'import { screen } from "@testing-library/react";\nwrapper(element).toBeTruthy();',
     ],
     invalid: [
-        {
-            code: 'import { screen } from "@testing-library/react";\nexpect(screen.getByText("Saved")).not.toBeInTheDocument();',
-            output: 'import { screen } from "@testing-library/react";\nexpect(screen.queryByText("Saved")).not.toBeInTheDocument();',
-            errors: [{ messageId: 'absence', line: 2 }],
-        },
-        {
-            code: 'import { screen } from "@testing-library/vue";\nexpect(screen.queryAllByRole("row")[0]).toBeTruthy();',
-            output: 'import { screen } from "@testing-library/vue";\nexpect(screen.getAllByRole("row")[0]).toBeTruthy();',
-            errors: [{ messageId: 'presence', line: 2 }],
-        },
-        {
-            code: 'import { screen } from "@testing-library/react";\nexpect(screen.queryAllByRole("row").length).toBeTruthy();',
-            output: 'import { screen } from "@testing-library/react";\nexpect(screen.getAllByRole("row").length).toBeTruthy();',
-            errors: [{ messageId: 'presence', line: 2 }],
-        },
-        {
-            code: 'import { screen } from "@testing-library/react/pure";\nexpect(screen.getByText("Saved")).not.toBeInTheDocument();',
-            output: 'import { screen } from "@testing-library/react/pure";\nexpect(screen.queryByText("Saved")).not.toBeInTheDocument();',
-            errors: [{ messageId: 'absence', line: 2 }],
-        },
+        ...['@testing-library/react', '@testing-library/react/pure'].map((module) => ({
+            code: `import { screen } from "${module}";\nexpect(screen.getByText("Saved")).not.toBeInTheDocument();`,
+            output: `import { screen } from "${module}";\nexpect(screen.queryByText("Saved")).not.toBeInTheDocument();`,
+            errors: [{ messageId: 'absence' as const, line: 2 }],
+        })),
+        ...['[0]', '.length'].map((access) => ({
+            code: `import { screen } from "@testing-library/vue";\nexpect(screen.queryAllByRole("row")${access}).toBeTruthy();`,
+            output: `import { screen } from "@testing-library/vue";\nexpect(screen.getAllByRole("row")${access}).toBeTruthy();`,
+            errors: [{ messageId: 'presence' as const, line: 2 }],
+        })),
         {
             code: 'import { screen, waitForElementToBeRemoved } from "@testing-library/react";\nawait waitForElementToBeRemoved(() => screen.getByText("Saving"));',
             output: 'import { screen, waitForElementToBeRemoved } from "@testing-library/react";\nawait waitForElementToBeRemoved(() => screen.queryByText("Saving"));',
