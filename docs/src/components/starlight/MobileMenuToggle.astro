@@ -21,6 +21,7 @@ import { Icon } from '@astrojs/starlight/components';
         font-size: var(--sl-text-sm);
         font-weight: 500;
     }
+
     .menu-button:has(~ :popover-open) .when-closed,
     .menu-button:not(:has(~ :popover-open)) .when-open {
         display: none;
@@ -34,7 +35,7 @@ import { Icon } from '@astrojs/starlight/components';
 </style>
 
 <style is:global>
-    body:has(#starlight__sidebar:popover-open) {
+    body:has(.sidebar-pane:popover-open) {
         overflow: hidden;
     }
 </style>

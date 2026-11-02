@@ -28,28 +28,35 @@ import Select from '#docs/components/starlight/theme/Select.astro';
         gap: 4px;
         height: 100%;
     }
+
     .search {
         justify-self: end;
     }
+
     .search :global(button[data-open-modal]) {
         margin-inline: auto;
     }
+
     .controls {
         display: flex;
         align-items: center;
         justify-self: end;
         gap: 4px;
     }
+
     :global(html:not([data-has-sidebar])) .site-header {
         max-width: var(--home-width);
         margin-inline: auto;
     }
+
     :global(html:not([data-has-sidebar])) .controls {
         margin-inline-end: -12px;
     }
+
     .social {
         display: none;
     }
+
     @media (width < 50rem) {
         .search :global(button[data-open-modal]) {
             width: var(--target-size);
@@ -65,9 +72,11 @@ import Select from '#docs/components/starlight/theme/Select.astro';
             grid-template-columns: minmax(0, 1fr) minmax(0, 24rem) minmax(0, 1fr);
             gap: 24px;
         }
+
         .search {
             justify-self: stretch;
         }
+
         .social {
             display: flex;
         }
