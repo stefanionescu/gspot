@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { test, expect, describe } from 'bun:test';
-import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
@@ -12,9 +12,9 @@ import { writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes
 import {
     SEMGREP_CHECK,
     FASTAPI_SOURCE,
-    SEMGREP_CHECK_ID,
     FASTAPI_PROJECT,
     SEMGREP_SANDBOX,
+    SEMGREP_CHECK_ID,
     FASTAPI_SCOPE_SETTINGS,
     FASTAPI_CONFIGURATION_CASES,
 } from '#tests/config/integration/semgrep.ts';
