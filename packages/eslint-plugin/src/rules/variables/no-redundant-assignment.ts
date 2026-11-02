@@ -159,10 +159,10 @@ function indexIdentifiers(
     definitions: Map<TSESTree.Node, TSESLint.Scope.Variable>,
 ): void {
     const scopes = source.scopeManager?.scopes ?? [];
-    for (const scope of scopes) {
+    for (const scope of scopes)
         for (const reference of scope.references) references.set(reference.identifier, reference);
-        for (const variable of scope.variables) for (const { name } of variable.defs) definitions.set(name, variable);
-    }
+    const variables = scopes.flatMap((scope) => scope.variables);
+    for (const variable of variables) for (const { name } of variable.defs) definitions.set(name, variable);
 }
 
 function addReference(

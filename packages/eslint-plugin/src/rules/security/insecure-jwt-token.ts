@@ -1,8 +1,37 @@
 import { createRule } from '../../rule.ts';
 import { getQualifiedName } from '../../language/modules.ts';
-import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
 import { NO_ALGORITHM, JWT_FUNCTIONS, JWT_OPTIONS_ARGUMENT } from '../../config/security.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+
+function isUnsignedVerify(
+    node: TSESTree.CallExpression,
+    options: TSESTree.ObjectExpression,
+    source: TSESLint.SourceCode,
+): boolean {
+    const algorithms = getOptionProperties(options, source).get('algorithms');
+    const list = algorithms ? getExpressionValue(algorithms.value, source) : undefined;
+    const [, key] = node.arguments;
+    return list?.type === AST_NODE_TYPES.ArrayExpression
+        ? list.elements.some(
+              (element) =>
+                  element !== null &&
+                  ASTUtils.getStaticValue(element, source.getScope(element))?.value === NO_ALGORITHM,
+          )
+        : !algorithms && key?.type === AST_NODE_TYPES.Literal && key.value === null;
+}
+
+function findUnsignedUse(
+    node: TSESTree.CallExpression,
+    options: TSESTree.ObjectExpression,
+    source: TSESLint.SourceCode,
+): 'unsignedSign' | 'unsignedVerify' | undefined {
+    const name = getQualifiedName(node, source);
+    if (name === JWT_FUNCTIONS.verify) return isUnsignedVerify(node, options, source) ? 'unsignedVerify' : undefined;
+    const algorithm = name === JWT_FUNCTIONS.sign ? getOptionProperties(options, source).get('algorithm') : undefined;
+    const value = algorithm && ASTUtils.getStaticValue(algorithm.value, source.getScope(node))?.value;
+    return value === NO_ALGORITHM ? 'unsignedSign' : undefined;
+}
 
 export const insecureJwtToken = createRule<[], 'unsignedSign' | 'unsignedVerify'>({
     name: 'insecure-jwt-token',
@@ -26,33 +55,14 @@ export const insecureJwtToken = createRule<[], 'unsignedSign' | 'unsignedVerify'
     },
     create(context) {
         const source = context.sourceCode;
-        const checkVerify = (node: TSESTree.CallExpression, options: TSESTree.ObjectExpression): void => {
-            const algorithms = getOptionProperties(options, source).get('algorithms');
-            const list = algorithms ? getExpressionValue(algorithms.value, source) : undefined;
-            const [, key] = node.arguments;
-            const isUnsigned =
-                list?.type === AST_NODE_TYPES.ArrayExpression
-                    ? list.elements.some(
-                          (element) =>
-                              element !== null &&
-                              ASTUtils.getStaticValue(element, source.getScope(element))?.value === NO_ALGORITHM,
-                      )
-                    : !algorithms && key?.type === AST_NODE_TYPES.Literal && key.value === null;
-            if (isUnsigned) context.report({ node: node.callee, messageId: 'unsignedVerify' });
-        };
         return {
             CallExpression(node) {
-                const name = getQualifiedName(node, source);
                 const options = getExpressionValue(node.arguments[JWT_OPTIONS_ARGUMENT], source);
-                if (options?.type !== AST_NODE_TYPES.ObjectExpression) return;
-                const algorithm =
-                    name === JWT_FUNCTIONS.sign ? getOptionProperties(options, source).get('algorithm') : null;
-                if (
-                    algorithm &&
-                    ASTUtils.getStaticValue(algorithm.value, source.getScope(node))?.value === NO_ALGORITHM
-                )
-                    context.report({ node: node.callee, messageId: 'unsignedSign' });
-                if (name === JWT_FUNCTIONS.verify) checkVerify(node, options);
+                const messageId =
+                    options?.type === AST_NODE_TYPES.ObjectExpression
+                        ? findUnsignedUse(node, options, source)
+                        : undefined;
+                if (messageId !== undefined) context.report({ node: node.callee, messageId });
             },
         };
     },

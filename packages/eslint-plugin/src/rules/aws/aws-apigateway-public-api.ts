@@ -1,4 +1,5 @@
 import { createRule } from '../../rule.ts';
+import type { CdkIssue, CdkResult } from '../../types/aws.ts';
 import { getExpressionValue } from '../../language/expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { getCdkName, getCdkResult, getCdkArgument, getCdkProperty, listCdkTableIssues } from '../../libraries/aws.ts';
@@ -43,6 +44,19 @@ function getResourceMethod(name: string | undefined): string | undefined {
     return methods.every((method) => RESOURCE_METHODS.has(method)) ? methods.at(-1) : undefined;
 }
 
+function findAuthorizationIssue(
+    source: Readonly<TSESLint.SourceCode>,
+    node: TSESTree.CallExpression,
+    authorization: CdkResult,
+    inherited: TSESTree.Node | undefined,
+): CdkIssue | undefined {
+    if (authorization.status === 'found' && getCdkName(source, authorization.node) === NO_AUTHORIZATION)
+        return { node: authorization.node, kind: 'invalid' };
+    if (authorization.status !== 'missing') return undefined;
+    if (inherited === undefined) return { node: authorization.node, kind: 'omitted' };
+    return getCdkName(source, inherited) === NO_AUTHORIZATION ? { node, kind: 'invalid' } : undefined;
+}
+
 export const awsApigatewayPublicApi = createRule<[], 'omitted' | 'invalid'>({
     name: 'aws-apigateway-public-api',
     meta: {
@@ -81,12 +95,8 @@ export const awsApigatewayPublicApi = createRule<[], 'omitted' | 'invalid'>({
                 'authorizationType',
             );
             const inherited = authorization.status === 'missing' ? findDefault(node.callee) : undefined;
-            if (authorization.status === 'found' && getCdkName(source, authorization.node) === NO_AUTHORIZATION)
-                context.report({ node: authorization.node, messageId: 'invalid' });
-            else if (inherited === undefined && authorization.status === 'missing')
-                context.report({ node: authorization.node, messageId: 'omitted' });
-            else if (inherited && getCdkName(source, inherited) === NO_AUTHORIZATION)
-                context.report({ node, messageId: 'invalid' });
+            const issue = findAuthorizationIssue(source, node, authorization, inherited);
+            if (issue !== undefined) context.report({ node: issue.node, messageId: issue.kind });
         };
         return {
             NewExpression(node) {

@@ -100,6 +100,19 @@ function listOversizedNodes(source: Readonly<TSESLint.SourceCode>, node: UploadC
     return module === MULTER_MODULE ? listOversizedUploads(source, node) : [];
 }
 
+function setFormSize(
+    forms: Map<TSESLint.Scope.Variable, SizedForm>,
+    node: TSESTree.AssignmentExpression,
+    source: Readonly<TSESLint.SourceCode>,
+): void {
+    const assignment = findMemberAssignment(node, source);
+    const form = assignment?.property === 'maxFileSize' ? forms.get(assignment.variable) : undefined;
+    if (assignment === undefined || form === undefined) return;
+    const size = getSize(source, node.right);
+    if (size === undefined || size === 0) forms.delete(assignment.variable);
+    else Object.assign(form, { node, size });
+}
+
 export const maxRequestSize = createRule<[], 'unlimited'>({
     name: 'max-request-size',
     meta: {
@@ -128,13 +141,8 @@ export const maxRequestSize = createRule<[], 'unlimited'>({
                 const variable = isForm ? findAssignedVariable(node, source) : null;
                 if (variable) forms.set(variable, { node, size: SIZE_DEFAULTS.formidable });
             },
-            AssignmentExpression(node) {
-                const assignment = findMemberAssignment(node, source);
-                const form = assignment?.property === 'maxFileSize' ? forms.get(assignment.variable) : undefined;
-                if (assignment === undefined || form === undefined) return;
-                const size = getSize(source, node.right);
-                if (size === undefined || size === 0) forms.delete(assignment.variable);
-                else Object.assign(form, { node, size });
+            AssignmentExpression: (node) => {
+                setFormSize(forms, node, source);
             },
             'Program:exit'() {
                 for (const { node, size } of forms.values())

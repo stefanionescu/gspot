@@ -1,4 +1,4 @@
-import type { TSESTree } from '@typescript-eslint/utils';
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 
 export type ImportBoundariesOptions = [
     { folders: readonly string[]; aliases: Record<string, string>; externals: readonly string[] },
@@ -18,6 +18,10 @@ export type RestrictedSyntaxOptions = ReadonlyArray<{
 export type TrivialFilesOptions = [
     { reexports: 'none' | 'index-only'; indexExports: number; forwardingFiles: readonly string[] },
 ];
+
+export type TrivialFilesContext = Readonly<
+    TSESLint.RuleContext<'trivial' | 'reexport' | 'barrel', TrivialFilesOptions>
+>;
 
 export type ImportBlock = { first: TSESTree.Statement; last: TSESTree.Statement };
 

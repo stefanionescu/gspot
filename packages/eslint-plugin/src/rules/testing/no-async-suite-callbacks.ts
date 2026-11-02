@@ -128,8 +128,8 @@ export const noAsyncSuiteCallbacks = createRule<
                 const callback = getSuiteCallback(node, source);
                 if (callback === undefined) return;
                 const reported = callback.async ? reportAsync(callback) : undefined;
-                for (const call of listDroppingCalls(callback, source))
-                    if (call !== reported) context.report({ node: call, messageId: 'droppingHelper' });
+                const dropping = listDroppingCalls(callback, source).filter((call) => call !== reported);
+                for (const call of dropping) context.report({ node: call, messageId: 'droppingHelper' });
             },
         };
     },

@@ -4,8 +4,8 @@ import { createRule } from '../../rule.ts';
 import { PLUGIN_PREFIX } from '../../config/plugin.ts';
 import { findPathInFolder } from '../../language/modules.ts';
 import { isAlias, isTypeAlias } from '../../language/syntax.ts';
-import type { TrivialFilesOptions } from '../../types/structure.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import type { TrivialFilesOptions, TrivialFilesContext } from '../../types/structure.ts';
 
 import {
     INDEX_EXPORTS,
@@ -72,6 +72,42 @@ function isForwarding(statement: TSESTree.Node, source: TSESLint.SourceCode): bo
     }
 }
 
+function checkIndexFile(
+    context: TrivialFilesContext,
+    node: TSESTree.Program,
+    statements: readonly TSESTree.ProgramStatement[],
+    limit: number,
+): void {
+    const count = statements.reduce((total, statement) => total + countExports(statement), 0);
+    const declarations = statements.reduce((total, statement) => total + countDeclarations(statement), 0);
+    if (count > declarations && count > limit) context.report({ node, messageId: 'barrel', data: { count, limit } });
+}
+
+function checkForwardingFile(
+    context: TrivialFilesContext,
+    node: TSESTree.Program,
+    statements: readonly TSESTree.ProgramStatement[],
+    forwardingFiles: readonly string[],
+): void {
+    const reexports = statements.filter(
+        (statement) =>
+            statement.type === AST_NODE_TYPES.ExportAllDeclaration ||
+            (statement.type === AST_NODE_TYPES.ExportNamedDeclaration && statement.source !== null),
+    );
+    for (const statement of reexports) context.report({ node: statement, messageId: 'reexport' });
+    const path = findPathInFolder(
+        (context.settings[PLUGIN_PREFIX] as { root?: string } | undefined)?.root ?? context.cwd,
+        context.physicalFilename,
+    );
+    const isForwardingFile = path !== undefined && picomatch([...forwardingFiles], { dot: true })(path);
+    if (
+        !isForwardingFile &&
+        statements.length > reexports.length &&
+        statements.every((statement) => isForwarding(statement, context.sourceCode))
+    )
+        context.report({ node, messageId: 'trivial' });
+}
+
 export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial' | 'reexport' | 'barrel'>({
     name: 'no-trivial-files',
     meta: {
@@ -97,36 +133,11 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial' | 'reexp
     },
     create(context, [options]) {
         const isIndex = options.reexports === 'index-only' && INDEX_BASENAMES.has(basename(context.physicalFilename));
-        const path = findPathInFolder(
-            (context.settings[PLUGIN_PREFIX] as { root?: string } | undefined)?.root ?? context.cwd,
-            context.physicalFilename,
-        );
-        const isForwardingFile = path !== undefined && picomatch([...options.forwardingFiles], { dot: true })(path);
         return {
             Program(node) {
                 const statements = node.body.filter((statement) => statement.type !== AST_NODE_TYPES.EmptyStatement);
-                if (isIndex) {
-                    const count = statements.reduce((total, statement) => total + countExports(statement), 0);
-                    const declarations = statements.reduce(
-                        (total, statement) => total + countDeclarations(statement),
-                        0,
-                    );
-                    if (count > declarations && count > options.indexExports)
-                        context.report({ node, messageId: 'barrel', data: { count, limit: options.indexExports } });
-                    return;
-                }
-                const reexports = statements.filter(
-                    (statement) =>
-                        statement.type === AST_NODE_TYPES.ExportAllDeclaration ||
-                        (statement.type === AST_NODE_TYPES.ExportNamedDeclaration && statement.source !== null),
-                );
-                for (const statement of reexports) context.report({ node: statement, messageId: 'reexport' });
-                if (
-                    !isForwardingFile &&
-                    statements.length > reexports.length &&
-                    statements.every((statement) => isForwarding(statement, context.sourceCode))
-                )
-                    context.report({ node, messageId: 'trivial' });
+                if (isIndex) checkIndexFile(context, node, statements, options.indexExports);
+                else checkForwardingFile(context, node, statements, options.forwardingFiles);
             },
         };
     },

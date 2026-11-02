@@ -1,5 +1,20 @@
 import { createRule } from '../../rule.ts';
+import type { TSESLint } from '@typescript-eslint/utils';
 import { RESERVED_DECLARATION_NAMES } from '../../config/variables.ts';
+
+function listKeywordDeclarations(root: TSESLint.Scope.Scope): Array<TSESLint.ReportDescriptor<'keyword'>> {
+    const issues: Array<TSESLint.ReportDescriptor<'keyword'>> = [];
+    const pending = [root];
+    for (let scope = pending.pop(); scope !== undefined; scope = pending.pop()) {
+        pending.push(...scope.childScopes);
+        for (const variable of scope.variables) {
+            const declaration = variable.defs[0];
+            if (declaration !== undefined && RESERVED_DECLARATION_NAMES.has(variable.name))
+                issues.push({ node: declaration.name, messageId: 'keyword', data: { name: variable.name } });
+        }
+    }
+    return issues;
+}
 
 export const noKeywordDeclarations = createRule<[], 'keyword'>({
     name: 'no-keyword-declarations',
@@ -19,19 +34,8 @@ export const noKeywordDeclarations = createRule<[], 'keyword'>({
     create(context) {
         return {
             'Program:exit': (node) => {
-                const pending = [context.sourceCode.getScope(node)];
-                for (let scope = pending.pop(); scope !== undefined; scope = pending.pop()) {
-                    pending.push(...scope.childScopes);
-                    for (const variable of scope.variables) {
-                        const declaration = variable.defs[0];
-                        if (declaration !== undefined && RESERVED_DECLARATION_NAMES.has(variable.name))
-                            context.report({
-                                node: declaration.name,
-                                messageId: 'keyword',
-                                data: { name: variable.name },
-                            });
-                    }
-                }
+                const issues = listKeywordDeclarations(context.sourceCode.getScope(node));
+                for (const issue of issues) context.report(issue);
             },
         };
     },

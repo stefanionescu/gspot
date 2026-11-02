@@ -4,8 +4,8 @@ import { createRule } from '../../rule.ts';
 import { PLUGIN_PREFIX } from '../../config/plugin.ts';
 import { findPathInFolder } from '../../language/modules.ts';
 import { buildSourceVisitors } from '../../language/syntax.ts';
-import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { RelativeImport, ImportBoundariesOptions } from '../../types/structure.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
     RESOURCE_QUERY,
@@ -51,6 +51,17 @@ function findBoundary(parentFolder: string, isBoundary: (path: string) => boolea
     return ancestors.findLast((ancestor) => isBoundary(ancestor));
 }
 
+function replaceImportSource(
+    fixer: TSESLint.RuleFixer,
+    node: TSESTree.Node,
+    importSource: string,
+): TSESLint.RuleFix | null {
+    if (node.type !== AST_NODE_TYPES.Literal) return null;
+    const quote = node.raw.charAt(0);
+    const text = importSource.replaceAll('\\', '\\\\').replaceAll(quote, String.raw`\$&`);
+    return fixer.replaceText(node, `${quote}${text}${quote}`);
+}
+
 export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'escape'>({
     name: 'import-boundaries',
     meta: {
@@ -85,11 +96,9 @@ export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'e
         if (folder === undefined) return {};
         return buildSourceVisitors((node) => {
             const source = ASTUtils.getStringIfConstant(node);
-            const imported =
-                source === null || isExternal(source)
-                    ? undefined
-                    : findEscapingImport(source, posix.dirname(relative), folder);
-            if (source === null || imported === undefined) return;
+            if (source === null || isExternal(source)) return;
+            const imported = findEscapingImport(source, posix.dirname(relative), folder);
+            if (imported === undefined) return;
             const { target, query } = imported;
             const alias = findAlias(target, aliases);
             if (alias === undefined) {
@@ -104,12 +113,7 @@ export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'e
                 node,
                 messageId: 'alias',
                 data: { alias: `${alias}${query}`, source },
-                fix: (fixer) => {
-                    if (node.type !== AST_NODE_TYPES.Literal) return null;
-                    const quote = node.raw.charAt(0);
-                    const text = `${alias}${query}`.replaceAll('\\', '\\\\').replaceAll(quote, String.raw`\$&`);
-                    return fixer.replaceText(node, `${quote}${text}${quote}`);
-                },
+                fix: (fixer) => replaceImportSource(fixer, node, `${alias}${query}`),
             });
         });
     },

@@ -40,6 +40,29 @@ function getKeyWrite(statement: TSESTree.Node, source: TSESLint.SourceCode): Key
     return expression.type === AST_NODE_TYPES.CallExpression ? getCollectionWrite(expression) : undefined;
 }
 
+function listOverwrites(
+    statements: readonly TSESTree.Node[],
+    source: TSESLint.SourceCode,
+): Array<TSESLint.ReportDescriptor<'overwrite'>> {
+    const written = new Map<string, KeyWrite>();
+    const overwrites: Array<TSESLint.ReportDescriptor<'overwrite'>> = [];
+    let collection: TSESTree.Node | undefined;
+    for (const statement of statements) {
+        const write = getKeyWrite(statement, source);
+        if (write === undefined) {
+            written.clear();
+            continue;
+        }
+        if (collection !== undefined && !haveSameTokens(write.collection, collection, source)) written.clear();
+        const line = written.get(write.key)?.node.loc.start.line;
+        if (line !== undefined)
+            overwrites.push({ node: write.node, messageId: 'overwrite', data: { key: write.key, line } });
+        written.set(write.key, write);
+        collection = write.collection;
+    }
+    return overwrites;
+}
+
 export const noElementOverwrite = createRule<[], 'overwrite'>({
     name: 'no-element-overwrite',
     meta: {
@@ -58,35 +81,15 @@ export const noElementOverwrite = createRule<[], 'overwrite'>({
     },
     create(context) {
         const source = context.sourceCode;
-        const inspect = (statements: readonly TSESTree.Node[]) => {
-            const written = new Map<string, KeyWrite>();
-            let collection: TSESTree.Node | undefined;
-            for (const statement of statements) {
-                const write = getKeyWrite(statement, source);
-                if (
-                    write === undefined ||
-                    (collection !== undefined && !haveSameTokens(write.collection, collection, source))
-                )
-                    written.clear();
-                if (write === undefined) continue;
-                const earlier = written.get(write.key);
-                if (earlier !== undefined) {
-                    const line = earlier.node.loc.start.line;
-                    context.report({ node: write.node, messageId: 'overwrite', data: { key: write.key, line } });
-                }
-                written.set(write.key, write);
-                collection = write.collection;
-            }
-        };
         return {
             Program: (node) => {
-                inspect(node.body);
+                for (const overwrite of listOverwrites(node.body, source)) context.report(overwrite);
             },
             BlockStatement: (node) => {
-                inspect(node.body);
+                for (const overwrite of listOverwrites(node.body, source)) context.report(overwrite);
             },
             SwitchCase: (node) => {
-                inspect(node.consequent);
+                for (const overwrite of listOverwrites(node.consequent, source)) context.report(overwrite);
             },
         };
     },

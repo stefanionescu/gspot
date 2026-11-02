@@ -75,6 +75,13 @@ function getAlgorithm(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node
     return isText ? algorithm.value.toLowerCase() : '';
 }
 
+function isTruncatedHash(node: TSESTree.CallExpression, name: string, source: Readonly<TSESLint.SourceCode>): boolean {
+    if (name !== SUBTLE_DIGEST) return isDigestTruncated(source, node);
+    const value = node.parent.type === AST_NODE_TYPES.AwaitExpression ? node.parent : node;
+    const isBound = isStoredTruncated(source, value);
+    return isPromiseTruncated(source, node) || isTruncating(source, value) || isBound;
+}
+
 export const noWeakHashing = createRule<[], 'weak'>({
     name: 'no-weak-hashing',
     meta: {
@@ -94,18 +101,12 @@ export const noWeakHashing = createRule<[], 'weak'>({
     },
     create(context) {
         const source = context.sourceCode;
-        const isTruncatedSubtle = (digest: TSESTree.CallExpression): boolean => {
-            const value = digest.parent.type === AST_NODE_TYPES.AwaitExpression ? digest.parent : digest;
-            const isBound = isStoredTruncated(source, value);
-            return isPromiseTruncated(source, digest) || isTruncating(source, value) || isBound;
-        };
         return {
             'CallExpression[arguments.length>0]'(node: TSESTree.CallExpression) {
                 const name = getQualifiedName(node, source) ?? '';
                 const weak = Object.hasOwn(HASH_FUNCTIONS, name) ? HASH_FUNCTIONS[name] : undefined;
                 if (weak?.has(getAlgorithm(source, node.arguments[0])) !== true) return;
-                const isTruncated = name === SUBTLE_DIGEST ? isTruncatedSubtle(node) : isDigestTruncated(source, node);
-                if (!isTruncated) context.report({ node: node.callee, messageId: 'weak' });
+                if (!isTruncatedHash(node, name, source)) context.report({ node: node.callee, messageId: 'weak' });
             },
         };
     },

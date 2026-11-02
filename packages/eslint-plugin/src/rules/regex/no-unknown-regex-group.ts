@@ -58,6 +58,17 @@ function getOwner(groups: TSESTree.MemberExpression): TSESTree.Node {
     return isIndices ? unwrapExpression(owner.object) : owner;
 }
 
+function listUnknownGroups(
+    node: TSESTree.MemberExpression,
+    source: TSESLint.SourceCode,
+    matches: ReadonlyMap<TSESLint.Scope.Variable, Set<string>>,
+): GroupRead[] {
+    const owner = ASTUtils.getPropertyName(node) === GROUPS_PROPERTY ? getOwner(node) : undefined;
+    const variable = ASTUtils.isIdentifier(owner) ? ASTUtils.findVariable(source.getScope(owner), owner) : null;
+    const names = variable === null ? undefined : matches.get(variable);
+    return names === undefined ? [] : listReadNames(node).filter(({ name }) => !names.has(name));
+}
+
 export const noUnknownRegexGroup = createRule<[], 'unknown'>({
     name: 'no-unknown-regex-group',
     meta: {
@@ -92,14 +103,9 @@ export const noUnknownRegexGroup = createRule<[], 'unknown'>({
                 record(node.left, node.right);
             },
             MemberExpression(node) {
-                const owner = ASTUtils.getPropertyName(node) === GROUPS_PROPERTY ? getOwner(node) : undefined;
-                const variable = ASTUtils.isIdentifier(owner)
-                    ? ASTUtils.findVariable(source.getScope(owner), owner)
-                    : null;
-                const names = variable === null ? undefined : matches.get(variable);
-                if (names === undefined) return;
-                for (const { node: reader, name } of listReadNames(node))
-                    if (!names.has(name)) context.report({ node: reader, messageId: 'unknown', data: { name } });
+                const unknown = listUnknownGroups(node, source, matches);
+                for (const { node: reader, name } of unknown)
+                    context.report({ node: reader, messageId: 'unknown', data: { name } });
             },
         };
     },

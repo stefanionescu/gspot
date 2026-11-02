@@ -1,6 +1,15 @@
 import { createRule } from '../../rule.ts';
-import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { ALIAS_USE_LIMIT, ALIAS_MEMBER_LIMIT, NULLISH_TYPE_KEYWORDS } from '../../config/types.ts';
+
+function findRepeatedType(
+    nodes: ReadonlyArray<TSESTree.TSUnionType | TSESTree.TSIntersectionType>,
+): TSESLint.ReportDescriptor<'alias'> | undefined {
+    const [first, ...rest] = nodes;
+    if (first === undefined || rest.length < ALIAS_USE_LIMIT) return undefined;
+    const kind = first.type === AST_NODE_TYPES.TSUnionType ? 'union' : 'intersection';
+    return { node: first, messageId: 'alias', data: { kind, count: rest.length + 1 } };
+}
 
 export const preferTypeAlias = createRule<[], 'alias'>({
     name: 'prefer-type-alias',
@@ -39,10 +48,9 @@ export const preferTypeAlias = createRule<[], 'alias'>({
             TSUnionType: inspect,
             TSIntersectionType: inspect,
             'Program:exit'() {
-                for (const [first, ...rest] of uses.values()) {
-                    if (first === undefined || rest.length < ALIAS_USE_LIMIT) continue;
-                    const kind = first.type === AST_NODE_TYPES.TSUnionType ? 'union' : 'intersection';
-                    context.report({ node: first, messageId: 'alias', data: { kind, count: rest.length + 1 } });
+                for (const nodes of uses.values()) {
+                    const repeated = findRepeatedType(nodes);
+                    if (repeated !== undefined) context.report(repeated);
                 }
             },
         };

@@ -1,4 +1,5 @@
 import { createRule } from '../../rule.ts';
+import { LABEL_OWNERS } from '../../config/logic.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 export const noSwitchCaseLabels = createRule<[], 'label'>({
@@ -19,17 +20,11 @@ export const noSwitchCaseLabels = createRule<[], 'label'>({
     create(context) {
         return {
             LabeledStatement(node) {
-                for (const ancestor of context.sourceCode.getAncestors(node).toReversed()) {
-                    if (
-                        ancestor.type === AST_NODE_TYPES.FunctionDeclaration ||
-                        ancestor.type === AST_NODE_TYPES.FunctionExpression
-                    )
-                        return;
-                    if (ancestor.type === AST_NODE_TYPES.SwitchCase) {
-                        context.report({ node: node.label, messageId: 'label' });
-                        return;
-                    }
-                }
+                const owner = context.sourceCode
+                    .getAncestors(node)
+                    .findLast((ancestor) => LABEL_OWNERS.has(ancestor.type));
+                if (owner?.type !== AST_NODE_TYPES.SwitchCase) return;
+                context.report({ node: node.label, messageId: 'label' });
             },
         };
     },

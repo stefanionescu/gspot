@@ -55,6 +55,22 @@ function listRepeats(
     });
 }
 
+function listBranchIssues(
+    node: TSESTree.IfStatement | TSESTree.SwitchStatement,
+    source: TSESLint.SourceCode,
+): Array<TSESLint.ReportDescriptor<'branch' | 'all'>> {
+    const isIf = node.type === AST_NODE_TYPES.IfStatement;
+    if (isIf && node.parent.type === AST_NODE_TYPES.IfStatement) return [];
+    const { owner, kind, branches, closing } = isIf ? listIfBranches(node) : listSwitchBranches(node);
+    const isSame = isUniform(branches, source);
+    if (isSame && closing === 'filled') return [{ node: owner, messageId: 'all', data: { kind } }];
+    return listRepeats({ branches, isChain: isSame && closing === 'none' }, source).map(({ branch, first }) => ({
+        node: branch.node,
+        messageId: 'branch',
+        data: { kind, line: first.node.loc.start.line },
+    }));
+}
+
 export const noDuplicatedBranches = createRule<[], 'branch' | 'all' | 'ternary'>({
     name: 'no-duplicated-branches',
     meta: {
@@ -78,27 +94,13 @@ export const noDuplicatedBranches = createRule<[], 'branch' | 'all' | 'ternary'>
     },
     create(context) {
         const source = context.sourceCode;
-        const inspect = (node: TSESTree.IfStatement | TSESTree.SwitchStatement) => {
-            const isIf = node.type === AST_NODE_TYPES.IfStatement;
-            if (isIf && node.parent.type === AST_NODE_TYPES.IfStatement) return;
-            const { owner, kind, branches, closing } = isIf ? listIfBranches(node) : listSwitchBranches(node);
-            const isSame = isUniform(branches, source);
-            if (isSame && closing === 'filled') {
-                context.report({ node: owner, messageId: 'all', data: { kind } });
-                return;
-            }
-            const repeats = listRepeats({ branches, isChain: isSame && closing === 'none' }, source);
-            for (const { branch, first } of repeats) {
-                context.report({
-                    node: branch.node,
-                    messageId: 'branch',
-                    data: { kind, line: first.node.loc.start.line },
-                });
-            }
-        };
         return {
-            IfStatement: inspect,
-            SwitchStatement: inspect,
+            IfStatement: (node) => {
+                for (const issue of listBranchIssues(node, source)) context.report(issue);
+            },
+            SwitchStatement: (node) => {
+                for (const issue of listBranchIssues(node, source)) context.report(issue);
+            },
             ConditionalExpression(node) {
                 if (!haveSameTokens(node.consequent, node.alternate, source)) return;
                 context.report({ node, messageId: 'ternary' });

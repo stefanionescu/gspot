@@ -5,8 +5,8 @@ import { getModuleName } from '../../language/modules.ts';
 import { unwrapExpression } from '../../language/syntax.ts';
 import { getExpressionValue } from '../../language/expressions.ts';
 import { getTypes, getTypeCategory } from '../../language/checker.ts';
-import type { LibraryCall, NativeReplacement } from '../../types/libraries.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import type { LibraryCall, NativeMessageId, NativeReplacement } from '../../types/libraries.ts';
 
 import {
     PATTERN_TEXT,
@@ -90,13 +90,27 @@ function getShapedReplacement(
     return shape === 'string' && isSearch && !isPatternSearch(argument, source) ? STRING_INCLUDES : undefined;
 }
 
-function getMessageId(replacement: NativeReplacement): 'direct' | 'cautious' | 'example' {
+function getMessageId(replacement: NativeReplacement): NativeMessageId {
     const isCautious = replacement.reason !== undefined;
     if (!isCautious) return 'direct';
     return replacement.example === undefined ? 'cautious' : 'example';
 }
 
-export const preferNativeLodash = createRule<[], 'direct' | 'cautious' | 'example'>({
+function findNativeReplacement(
+    node: TSESTree.CallExpression,
+    { source, types, year }: { source: TSESLint.SourceCode; types: TypeReader | undefined; year: number },
+): TSESLint.ReportDescriptor<NativeMessageId> | undefined {
+    const call = getLibraryCall(node, source);
+    if (call === undefined) return undefined;
+    const { method } = call;
+    const isShaped = SEARCH_METHODS.has(method) || CALLBACK_METHODS.has(method);
+    const replacement = isShaped ? getShapedReplacement(method, node, source, types) : NATIVE_REPLACEMENTS.get(method);
+    if (replacement === undefined || year < replacement.year) return undefined;
+    const report = node.callee.type === AST_NODE_TYPES.MemberExpression ? node.callee.property : node.callee;
+    return { node: report, messageId: getMessageId(replacement), data: { ...replacement, ...call } };
+}
+
+export const preferNativeLodash = createRule<[], NativeMessageId>({
     name: 'prefer-native-lodash',
     meta: {
         defaultOptions: [],
@@ -119,26 +133,16 @@ export const preferNativeLodash = createRule<[], 'direct' | 'cautious' | 'exampl
         },
     },
     create(context) {
-        const source = context.sourceCode;
-        const types = getTypes(context);
-        const year = context.languageOptions.ecmaVersion as number;
+        const file = {
+            source: context.sourceCode,
+            types: getTypes(context),
+            year: context.languageOptions.ecmaVersion as number,
+        };
         return {
             CallExpression(node) {
-                const call = getLibraryCall(node, source);
-                if (call === undefined) return;
-                const { method } = call;
-                const isShaped = SEARCH_METHODS.has(method) || CALLBACK_METHODS.has(method);
-                const replacement = isShaped
-                    ? getShapedReplacement(method, node, source, types)
-                    : NATIVE_REPLACEMENTS.get(method);
-                if (replacement === undefined || year < replacement.year) return;
-                const report =
-                    node.callee.type === AST_NODE_TYPES.MemberExpression ? node.callee.property : node.callee;
-                context.report({
-                    node: report,
-                    messageId: getMessageId(replacement),
-                    data: { ...replacement, ...call },
-                });
+                const replacement = findNativeReplacement(node, file);
+                if (replacement === undefined) return;
+                context.report(replacement);
             },
         };
     },

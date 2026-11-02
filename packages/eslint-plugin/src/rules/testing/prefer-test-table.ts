@@ -43,6 +43,23 @@ function compareBodies(
     return isSameShape && isSame ? parameters : undefined;
 }
 
+function listSimilarTests(
+    base: SimilarTest,
+    others: readonly SimilarTest[],
+    source: TSESLint.SourceCode,
+): { similar: SimilarTest[]; parameters: Set<TSESTree.Node> } {
+    const parameters = new Set<TSESTree.Node>();
+    const similar = others.filter((other) => {
+        const differences = compareBodies(base, other, source);
+        const union = new Set([...parameters, ...(differences ?? [])]);
+        const isWithin = union.size <= SIMILAR_TEST_LIMITS.parameters && union.size < base.body.length;
+        if (differences === undefined || !isWithin) return false;
+        for (const parameter of differences) parameters.add(parameter);
+        return true;
+    });
+    return { similar, parameters };
+}
+
 function listSimilarGroups(
     tests: SimilarTest[],
     source: TSESLint.SourceCode,
@@ -51,15 +68,7 @@ function listSimilarGroups(
     const groups: Array<{ base: SimilarTest; count: number }> = [];
     for (const [index, base] of tests.entries()) {
         if (grouped.has(base)) continue;
-        const parameters = new Set<TSESTree.Node>();
-        const similar = tests.slice(index + 1).filter((other) => {
-            const differences = compareBodies(base, other, source);
-            const union = new Set([...parameters, ...(differences ?? [])]);
-            const isWithin = union.size <= SIMILAR_TEST_LIMITS.parameters && union.size < base.body.length;
-            if (differences === undefined || !isWithin) return false;
-            for (const parameter of differences) parameters.add(parameter);
-            return true;
-        });
+        const { similar, parameters } = listSimilarTests(base, tests.slice(index + 1), source);
         if (similar.length + 1 < SIMILAR_TEST_LIMITS.tests || parameters.size === 0) continue;
         for (const each of [base, ...similar]) grouped.add(each);
         groups.push({ base, count: similar.length + 1 });

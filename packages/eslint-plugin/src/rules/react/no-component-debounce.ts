@@ -78,6 +78,22 @@ function getComponentKind(
     return outputMethods.has(callback) ? 'class' : undefined;
 }
 
+function findComponentTimer(
+    node: TSESTree.CallExpression,
+    source: TSESLint.SourceCode,
+    outputMethods: ReadonlySet<TSESTree.Node>,
+): TSESLint.ReportDescriptor<'function' | 'class'> | undefined {
+    const method = TIMER_FUNCTION.exec(getModuleName(node.callee, source) ?? '')?.[1];
+    const words = TIMER_WORDS.get(method);
+    if (words === undefined) return undefined;
+    const callback = source.getAncestors(node).findLast((ancestor) => ASTUtils.isFunction(ancestor));
+    if (callback === undefined) return undefined;
+    const kind = getComponentKind(callback, outputMethods);
+    if (kind === undefined || isExempt(node, callback, source)) return undefined;
+    const report = node.callee.type === AST_NODE_TYPES.MemberExpression ? node.callee.property : node.callee;
+    return { node: report, messageId: kind, data: words };
+}
+
 export const noComponentDebounce = createRule<[], 'function' | 'class'>({
     name: 'no-component-debounce',
     meta: {
@@ -107,16 +123,9 @@ export const noComponentDebounce = createRule<[], 'function' | 'class'>({
                 if (isReactClass(node.parent.parent?.parent, source)) outputMethods.add(node);
             },
             CallExpression(node) {
-                const method = TIMER_FUNCTION.exec(getModuleName(node.callee, source) ?? '')?.[1];
-                const words = TIMER_WORDS.get(method);
-                if (words === undefined) return;
-                const callback = source.getAncestors(node).findLast((ancestor) => ASTUtils.isFunction(ancestor));
-                if (callback === undefined) return;
-                const kind = getComponentKind(callback, outputMethods);
-                if (kind === undefined || isExempt(node, callback, source)) return;
-                const report =
-                    node.callee.type === AST_NODE_TYPES.MemberExpression ? node.callee.property : node.callee;
-                context.report({ node: report, messageId: kind, data: words });
+                const timer = findComponentTimer(node, source, outputMethods);
+                if (timer === undefined) return;
+                context.report(timer);
             },
         };
     },

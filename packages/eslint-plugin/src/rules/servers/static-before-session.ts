@@ -2,7 +2,7 @@ import { createRule } from '../../rule.ts';
 import type { FunctionNode } from '../../types/plugin.ts';
 import { getQualifiedName } from '../../language/modules.ts';
 import { listArgumentValues } from '../../language/expressions.ts';
-import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
     EXPRESS_MODULE,
@@ -30,6 +30,32 @@ function findInjectedApplication(node: FunctionNode): TSESTree.Identifier | unde
                   ASTUtils.isIdentifier(parameter) && parameter.name === INJECTED_APPLICATION,
           )
         : undefined;
+}
+
+function listMiddlewareNames(
+    node: TSESTree.CallExpression,
+    application: TSESTree.Identifier | undefined,
+    source: TSESLint.SourceCode,
+): Array<string | undefined> {
+    const { object } = node.callee as TSESTree.MemberExpression;
+    if (application === undefined || !ASTUtils.isIdentifier(object) || object.name !== application.name) return [];
+    return listArgumentValues(node.arguments, source).map((middleware) =>
+        middleware.type === AST_NODE_TYPES.CallExpression ? getQualifiedName(middleware, source) : undefined,
+    );
+}
+
+function checkMiddlewareOrder(
+    context: Readonly<TSESLint.RuleContext<'staticAfterSession', []>>,
+    node: TSESTree.CallExpression,
+    names: ReadonlyArray<string | undefined>,
+    session: TSESTree.CallExpression | undefined,
+): TSESTree.CallExpression | undefined {
+    let lastSession = session;
+    for (const name of names) {
+        if (SESSION_MIDDLEWARES.has(name)) lastSession = node;
+        else if (lastSession && name === STATIC_MIDDLEWARE) context.report({ node, messageId: 'staticAfterSession' });
+    }
+    return lastSession;
 }
 
 export const staticBeforeSession = createRule<[], 'staticAfterSession'>({
@@ -78,20 +104,9 @@ export const staticBeforeSession = createRule<[], 'staticAfterSession'>({
                 application = node.id;
                 session = undefined;
             },
-            [MIDDLEWARE_SELECTOR](node: TSESTree.CallExpression) {
-                const { object } = node.callee as TSESTree.MemberExpression;
-                if (application === undefined || !ASTUtils.isIdentifier(object) || object.name !== application.name)
-                    return;
-                const names = listArgumentValues(node.arguments, source).map((middleware) =>
-                    middleware.type === AST_NODE_TYPES.CallExpression
-                        ? getQualifiedName(middleware, source)
-                        : undefined,
-                );
-                for (const name of names) {
-                    if (SESSION_MIDDLEWARES.has(name)) session = node;
-                    else if (session && name === STATIC_MIDDLEWARE)
-                        context.report({ node, messageId: 'staticAfterSession' });
-                }
+            [MIDDLEWARE_SELECTOR]: (node: TSESTree.CallExpression) => {
+                const names = listMiddlewareNames(node, application, source);
+                session = checkMiddlewareOrder(context, node, names, session);
             },
         };
     },

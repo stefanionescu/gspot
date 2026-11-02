@@ -17,6 +17,12 @@ function getOption(source: Readonly<TSESLint.SourceCode>, options: TSESTree.Node
     return getOptionProperties(literal, source).get(key);
 }
 
+function setFormOption(form: UploadForm, property: string, value: TSESTree.Expression): void {
+    if (property === 'uploadDir') form.hasFolder = true;
+    else if (property === 'keepExtensions')
+        form.keepsExtensions = value.type === AST_NODE_TYPES.Literal && value.value === true;
+}
+
 export const noUnsafeFileUploads = createRule<[], 'folder' | 'extension' | 'extensionAndFolder'>({
     name: 'no-unsafe-file-uploads',
     meta: {
@@ -80,9 +86,7 @@ export const noUnsafeFileUploads = createRule<[], 'folder' | 'extension' | 'exte
                 const assignment = findMemberAssignment(node, source);
                 const form = assignment ? forms.get(assignment.variable) : undefined;
                 if (form === undefined || assignment === undefined) return;
-                if (assignment.property === 'uploadDir') form.hasFolder = true;
-                else if (assignment.property === 'keepExtensions')
-                    form.keepsExtensions = node.right.type === AST_NODE_TYPES.Literal && node.right.value === true;
+                setFormOption(form, assignment.property, node.right);
             },
             'Program:exit'() {
                 for (const { node, hasFolder, keepsExtensions } of forms.values())

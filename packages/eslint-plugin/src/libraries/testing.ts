@@ -48,14 +48,7 @@ function getOrigin(base: TSESTree.Identifier, source: TSESLint.SourceCode): Test
         : (getImportedName(definition) ?? getRequiredName(definition));
 }
 
-/**
-Get the name at the base of a callee, its module when a test framework exports it, and the member names after it.
-A call of `each` without its table call counts as no callee.
-
-@param callee the callee to read.
-@param source the file and its scopes.
-*/
-export function getCalleeName(callee: TSESTree.Node, source: TSESLint.SourceCode): TestCallee | undefined {
+function listCalleeSteps(callee: TSESTree.Node): { steps: string[]; base: TSESTree.Node } {
     const steps: string[] = [];
     let node = callee;
     while (node.type === AST_NODE_TYPES.CallExpression || node.type === AST_NODE_TYPES.MemberExpression) {
@@ -67,11 +60,23 @@ export function getCalleeName(callee: TSESTree.Node, source: TSESLint.SourceCode
             node = node.object;
         }
     }
+    return { steps, base: node };
+}
+
+/**
+Get the name at the base of a callee, its module when a test framework exports it, and the member names after it.
+A call of `each` without its table call counts as no callee.
+
+@param callee the callee to read.
+@param source the file and its scopes.
+*/
+export function getCalleeName(callee: TSESTree.Node, source: TSESLint.SourceCode): TestCallee | undefined {
+    const { steps, base } = listCalleeSteps(callee);
     const isFactory = steps.some((step, index) => step === 'each' && steps[index - 1] !== CALL_STEP);
-    if (isFactory || node.type !== AST_NODE_TYPES.Identifier) return undefined;
-    const origin = getOrigin(node, source);
+    if (isFactory || base.type !== AST_NODE_TYPES.Identifier) return undefined;
+    const origin = getOrigin(base, source);
     const modifiers = steps.filter((step) => step !== CALL_STEP).toReversed();
-    return origin && { ...origin, base: node, modifiers };
+    return origin && { ...origin, base, modifiers };
 }
 
 /**

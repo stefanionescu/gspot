@@ -44,6 +44,17 @@ function describeValueAction(key: string, value: TSESTree.Node): string | undefi
         : undefined;
 }
 
+function listUnsafeActions(config: TSESTree.ObjectExpression): string[] {
+    return config.properties.flatMap((property) => {
+        if (property.type !== AST_NODE_TYPES.Property) return [];
+        const key = ASTUtils.getPropertyName(property) ?? '';
+        const action = Object.hasOwn(SANITIZE_LIST_OPTIONS, key)
+            ? describeListAction(key, property.value)
+            : describeValueAction(key, property.value);
+        return action === undefined ? [] : [action];
+    });
+}
+
 export const dompurifyUnsafeConfig = createRule<[], 'unsafe'>({
     name: 'dompurify-unsafe-config',
     meta: {
@@ -71,14 +82,7 @@ export const dompurifyUnsafeConfig = createRule<[], 'unsafe'>({
                     !SANITIZE_FUNCTIONS.has(getQualifiedName(node, source))
                 )
                     return;
-                const actions = config.properties.flatMap((property) => {
-                    if (property.type !== AST_NODE_TYPES.Property) return [];
-                    const key = ASTUtils.getPropertyName(property) ?? '';
-                    const action = Object.hasOwn(SANITIZE_LIST_OPTIONS, key)
-                        ? describeListAction(key, property.value)
-                        : describeValueAction(key, property.value);
-                    return action === undefined ? [] : [action];
-                });
+                const actions = listUnsafeActions(config);
                 if (actions.length > 0)
                     context.report({
                         node: config,

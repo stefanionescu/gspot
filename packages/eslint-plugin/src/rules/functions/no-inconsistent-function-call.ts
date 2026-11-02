@@ -1,6 +1,15 @@
 import { createRule } from '../../rule.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
+function findCalledVariable(
+    node: TSESTree.CallExpression | TSESTree.NewExpression,
+    source: TSESLint.SourceCode,
+): TSESLint.Scope.Variable | undefined {
+    if (node.callee.type !== AST_NODE_TYPES.Identifier) return undefined;
+    const variable = ASTUtils.findVariable(source.getScope(node), node.callee);
+    return variable === null || variable.defs.length === 0 ? undefined : variable;
+}
+
 export const noInconsistentFunctionCall = createRule<[], 'inconsistent'>({
     name: 'no-inconsistent-function-call',
     meta: {
@@ -25,18 +34,18 @@ export const noInconsistentFunctionCall = createRule<[], 'inconsistent'>({
         const called = new Map<TSESLint.Scope.Variable, TSESTree.Node>();
         const reported = new Set<TSESLint.Scope.Variable>();
         const inspect = (node: TSESTree.CallExpression | TSESTree.NewExpression) => {
-            if (node.callee.type !== AST_NODE_TYPES.Identifier) return;
-            const variable = ASTUtils.findVariable(context.sourceCode.getScope(node), node.callee);
-            if (variable === null || variable.defs.length === 0 || reported.has(variable)) return;
-            const isConstructed = node.type === AST_NODE_TYPES.NewExpression;
-            const [same, opposite] = isConstructed ? [constructed, called] : [called, constructed];
+            const variable = findCalledVariable(node, context.sourceCode);
+            if (variable === undefined || reported.has(variable)) return;
+            const [same, opposite, other] =
+                node.type === AST_NODE_TYPES.NewExpression
+                    ? ([constructed, called, 'without'] as const)
+                    : ([called, constructed, 'with'] as const);
             const earlier = opposite.get(variable);
             if (earlier === undefined) {
                 same.set(variable, node);
                 return;
             }
             reported.add(variable);
-            const other = isConstructed ? 'without' : 'with';
             context.report({
                 node: node.callee,
                 messageId: 'inconsistent',

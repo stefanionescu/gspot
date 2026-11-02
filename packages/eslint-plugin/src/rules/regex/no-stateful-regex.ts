@@ -42,6 +42,23 @@ function isReusedOnSubjects(uses: readonly TSESTree.CallExpression[], source: TS
     return subjects.size >= DISTINCT_SUBJECTS && subjects.isDisjointFrom(EMPTY_STRING_TEXTS);
 }
 
+function listReusedRegexes(
+    calls: ReadonlyMap<TSESLint.Scope.Variable, TSESTree.CallExpression[]>,
+    resets: ReadonlySet<TSESLint.Scope.Variable>,
+    source: TSESLint.SourceCode,
+): TSESTree.Expression[] {
+    return calls
+        .entries()
+        .flatMap(([variable, uses]) => {
+            if (resets.has(variable) || !isReusedOnSubjects(uses, source)) return [];
+            const declarator = variable.defs[0]?.node;
+            return declarator?.type === AST_NODE_TYPES.VariableDeclarator && declarator.init !== null
+                ? [declarator.init]
+                : [];
+        })
+        .toArray();
+}
+
 export const noStatefulRegex = createRule<[], 'loop' | 'subjects'>({
     name: 'no-stateful-regex',
     meta: {
@@ -81,12 +98,8 @@ export const noStatefulRegex = createRule<[], 'loop' | 'subjects'>({
                 if (variable !== null) resets.add(variable);
             },
             'Program:exit'() {
-                for (const [variable, uses] of calls) {
-                    const declarator = variable.defs[0]?.node;
-                    if (resets.has(variable) || !isReusedOnSubjects(uses, source)) continue;
-                    if (declarator?.type === AST_NODE_TYPES.VariableDeclarator && declarator.init !== null)
-                        context.report({ node: declarator.init, messageId: 'subjects' });
-                }
+                const reused = listReusedRegexes(calls, resets, source);
+                for (const node of reused) context.report({ node, messageId: 'subjects' });
             },
         };
     },

@@ -3,16 +3,26 @@ import { isAlias } from '../../language/syntax.ts';
 import { type RenamedValue } from '../../types/structure.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function listRenamedProperties(pattern: TSESTree.ObjectPattern): RenamedValue[] {
-    return pattern.properties.flatMap((property) => {
-        if (property.type !== AST_NODE_TYPES.Property || property.computed) return [];
-        const value = property.value.type === AST_NODE_TYPES.AssignmentPattern ? property.value.left : property.value;
-        if (value.type === AST_NODE_TYPES.ObjectPattern) return listRenamedProperties(value);
-        const source = property.key.type === AST_NODE_TYPES.Identifier ? property.key.name : String(property.key.value);
-        return value.type === AST_NODE_TYPES.Identifier && value.name !== source
-            ? [{ node: property, name: value.name, source }]
-            : [];
-    });
+function listPropertyRenames(property: TSESTree.Property | TSESTree.RestElement): RenamedValue[] {
+    if (property.type !== AST_NODE_TYPES.Property || property.computed) return [];
+    const value = property.value.type === AST_NODE_TYPES.AssignmentPattern ? property.value.left : property.value;
+    if (value.type === AST_NODE_TYPES.ObjectPattern)
+        return value.properties.flatMap((nested) => listPropertyRenames(nested));
+    const source = property.key.type === AST_NODE_TYPES.Identifier ? property.key.name : String(property.key.value);
+    return value.type === AST_NODE_TYPES.Identifier && value.name !== source
+        ? [{ node: property, name: value.name, source }]
+        : [];
+}
+
+function findExportRename(
+    node: TSESTree.ExportSpecifier,
+    sourceCode: TSESLint.SourceCode,
+): { name: string; source: string } | undefined {
+    const local = sourceCode.getText(node.local);
+    const name = node.exported.type === AST_NODE_TYPES.Identifier ? node.exported.name : node.exported.value;
+    if (local === 'default' || name === 'default') return undefined;
+    const source = findSourceName(node, local, sourceCode);
+    return source === name ? undefined : { name, source };
 }
 
 function findSourceName(node: TSESTree.ExportSpecifier, local: string, sourceCode: TSESLint.SourceCode): string {
@@ -24,7 +34,8 @@ function findSourceName(node: TSESTree.ExportSpecifier, local: string, sourceCod
 
 function listRenamedValues(declarator: TSESTree.VariableDeclarator, sourceCode: TSESLint.SourceCode): RenamedValue[] {
     const { id, init } = declarator;
-    if (id.type === AST_NODE_TYPES.ObjectPattern) return listRenamedProperties(id);
+    if (id.type === AST_NODE_TYPES.ObjectPattern)
+        return id.properties.flatMap((property) => listPropertyRenames(property));
     return init === null || id.type !== AST_NODE_TYPES.Identifier || !isAlias(init, sourceCode.getScope(init))
         ? []
         : [{ node: declarator, name: id.name, source: sourceCode.getText(init) }];
@@ -58,13 +69,8 @@ export const noRenamedExports = createRule<[], 'renamed'>({
             },
             ExportSpecifier(node) {
                 if (node.parent.source !== null) return;
-                const local = context.sourceCode.getText(node.local);
-                const name =
-                    node.exported.type === AST_NODE_TYPES.Identifier ? node.exported.name : node.exported.value;
-                if (local === 'default' || name === 'default') return;
-                const source = findSourceName(node, local, context.sourceCode);
-                if (source === name) return;
-                context.report({ node, messageId: 'renamed', data: { name, source } });
+                const rename = findExportRename(node, context.sourceCode);
+                if (rename !== undefined) context.report({ node, messageId: 'renamed', data: rename });
             },
         };
     },

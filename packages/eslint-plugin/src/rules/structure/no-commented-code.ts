@@ -72,6 +72,17 @@ function groupComments(comments: TSESTree.Comment[]): CommentGroup[] {
     return groups;
 }
 
+function listCodeLocations(
+    parser: TSESLint.Parser.LooseParserModule,
+    { first, last, comments }: CommentGroup,
+): TSESTree.SourceLocation[] {
+    const text = comments.map((comment) => comment.value.trim()).join('\n');
+    if (COMMENT_DIRECTIVES.some((pattern) => pattern.test(text)) || COMMENT_DOCUMENTATION.test(text)) return [];
+    return isCommentedCode(parser, text)
+        ? [{ start: first.loc.start, end: last.loc.end }]
+        : comments.filter((comment) => isCommentedCode(parser, comment.value.trim())).map((comment) => comment.loc);
+}
+
 export const noCommentedCode = createRule<[], 'code'>({
     name: 'no-commented-code',
     meta: {
@@ -97,17 +108,9 @@ export const noCommentedCode = createRule<[], 'code'>({
         if (parser === undefined) return {};
         return {
             'Program:exit'() {
-                for (const { first, last, comments } of groupComments(context.sourceCode.getAllComments())) {
-                    const text = comments.map((comment) => comment.value.trim()).join('\n');
-                    if (COMMENT_DIRECTIVES.some((pattern) => pattern.test(text)) || COMMENT_DOCUMENTATION.test(text))
-                        continue;
-                    const locations = isCommentedCode(parser, text)
-                        ? [{ start: first.loc.start, end: last.loc.end }]
-                        : comments
-                              .filter((comment) => isCommentedCode(parser, comment.value.trim()))
-                              .map((comment) => comment.loc);
-                    for (const loc of locations) context.report({ loc, messageId: 'code' });
-                }
+                const groups = groupComments(context.sourceCode.getAllComments());
+                const locations = groups.flatMap((group) => listCodeLocations(parser, group));
+                for (const loc of locations) context.report({ loc, messageId: 'code' });
             },
         };
     },

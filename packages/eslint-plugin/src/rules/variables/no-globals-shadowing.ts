@@ -2,7 +2,7 @@ import { createRule } from '../../rule.ts';
 import { UNDEFINED_NAME } from '../../config/plugin.ts';
 import type { FunctionNode } from '../../types/plugin.ts';
 import type { NameSet, NamedNode } from '../../types/variables.ts';
-import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { ARGUMENTS_NAME, BUILTIN_GLOBALS, SHADOWING_EXCEPTIONS } from '../../config/variables.ts';
 
 function unwrapPattern(node: TSESTree.Node | null | undefined): TSESTree.Node | null | undefined {
@@ -71,6 +71,18 @@ function isShadowing({ name, isUnset }: { name: string; isUnset: boolean }): boo
     return name === UNDEFINED_NAME ? !isUnset : name === ARGUMENTS_NAME || BUILTIN_GLOBALS.has(name);
 }
 
+function listShadowingNames(node: NamedNode): Array<TSESLint.ReportDescriptor<'declaration' | 'assignment'>> {
+    return listNameSets(node).flatMap(({ names, kind, unset }) =>
+        names
+            .filter((identifier) => isShadowing({ name: identifier.name, isUnset: unset.includes(identifier) }))
+            .map((identifier) => ({
+                node: identifier,
+                messageId: kind === 'assignment' ? 'assignment' : 'declaration',
+                data: { kind, name: identifier.name },
+            })),
+    );
+}
+
 export const noGlobalsShadowing = createRule<[], 'declaration' | 'assignment'>({
     name: 'no-globals-shadowing',
     meta: {
@@ -93,14 +105,8 @@ export const noGlobalsShadowing = createRule<[], 'declaration' | 'assignment'>({
     },
     create(context) {
         const inspect = (node: NamedNode) => {
-            for (const { names, kind, unset } of listNameSets(node)) {
-                const messageId = kind === 'assignment' ? 'assignment' : 'declaration';
-                for (const identifier of names) {
-                    const { name } = identifier;
-                    if (isShadowing({ name, isUnset: unset.includes(identifier) }))
-                        context.report({ node: identifier, messageId, data: { kind, name } });
-                }
-            }
+            const issues = listShadowingNames(node);
+            for (const issue of issues) context.report(issue);
         };
         return {
             FunctionDeclaration: inspect,

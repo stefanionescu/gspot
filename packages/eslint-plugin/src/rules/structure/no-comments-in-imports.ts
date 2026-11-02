@@ -139,6 +139,36 @@ function buildRemovalRange(source: TSESLint.SourceCode, text: string, comment: T
     return [start, comment.range[1]];
 }
 
+function listMisplacedComments(
+    { first, last }: ImportBlock,
+    body: readonly TSESTree.ProgramStatement[],
+    text: string,
+    comments: TSESTree.Comment[],
+): TSESTree.Comment[] {
+    const nextStatement = body[body.indexOf(last) + 1];
+    const end = nextStatement === undefined ? text.length : getStatementOffset(nextStatement);
+    return comments.filter(
+        (comment) =>
+            comment.range[0] > first.range[0] &&
+            comment.range[1] <= end &&
+            !isToolDirective(comment) &&
+            (nextStatement === undefined || !isLeading(text, comment, nextStatement, comments)),
+    );
+}
+
+function buildCommentFix(
+    source: TSESLint.SourceCode,
+    comment: TSESTree.Comment,
+    { first, last }: ImportBlock,
+): TSESLint.ReportFixFunction | null {
+    if (comment.loc.start.line > last.loc.end.line) return null;
+    const text = source.getText();
+    return (fixer) => [
+        fixer.removeRange(buildRemovalRange(source, text, comment)),
+        fixer.insertTextBefore(first, `${source.getText(comment)}\n`),
+    ];
+}
+
 export const noCommentsInImports = createRule<[], 'comment'>({
     name: 'no-comments-in-imports',
     meta: {
@@ -163,30 +193,13 @@ export const noCommentsInImports = createRule<[], 'comment'>({
         const comments = mergeCommentLines(source, text);
         return {
             Program(node) {
-                for (const { first, last } of listImportBlocks(node.body, context.languageOptions.sourceType)) {
-                    const nextStatement = node.body[node.body.indexOf(last) + 1];
-                    const end = nextStatement === undefined ? text.length : getStatementOffset(nextStatement);
-                    const misplaced = comments.filter(
-                        (comment) =>
-                            comment.range[0] > first.range[0] &&
-                            comment.range[1] <= end &&
-                            !isToolDirective(comment) &&
-                            (nextStatement === undefined || !isLeading(text, comment, nextStatement, comments)),
-                    );
-                    for (const comment of misplaced) {
+                for (const block of listImportBlocks(node.body, context.languageOptions.sourceType))
+                    for (const comment of listMisplacedComments(block, node.body, text, comments))
                         context.report({
                             loc: comment.loc,
                             messageId: 'comment',
-                            fix:
-                                comment.loc.start.line > last.loc.end.line
-                                    ? null
-                                    : (fixer) => [
-                                          fixer.removeRange(buildRemovalRange(source, text, comment)),
-                                          fixer.insertTextBefore(first, `${source.getText(comment)}\n`),
-                                      ],
+                            fix: buildCommentFix(source, comment, block),
                         });
-                    }
-                }
             },
         };
     },

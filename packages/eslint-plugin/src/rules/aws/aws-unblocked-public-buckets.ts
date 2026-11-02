@@ -20,6 +20,20 @@ function listUnblockedSettings(
     });
 }
 
+function listBucketIssues(
+    source: Readonly<TSESLint.SourceCode>,
+    node: TSESTree.NewExpression,
+): Array<TSESLint.ReportDescriptor<'aclsOnly' | 'public'>> {
+    const option = getCdkName(source, node) === S3_BUCKET ? findBucketOption(source, node, 'blockPublicAccess') : null;
+    const value = option ? getExpressionValue(option.value, source) : undefined;
+    const isAclsOnly = value?.type === AST_NODE_TYPES.MemberExpression && getCdkName(source, value) === BLOCK_ACLS_ONLY;
+    const unblocked = listUnblockedSettings(source, value).map((setting) => ({
+        node: setting,
+        messageId: 'public' as const,
+    }));
+    return option && isAclsOnly ? [{ node: option, messageId: 'aclsOnly' }, ...unblocked] : unblocked;
+}
+
 export const awsUnblockedPublicBuckets = createRule<[], 'aclsOnly' | 'public'>({
     name: 'aws-unblocked-public-buckets',
     meta: {
@@ -43,18 +57,8 @@ export const awsUnblockedPublicBuckets = createRule<[], 'aclsOnly' | 'public'>({
     create(context) {
         const source = context.sourceCode;
         return {
-            NewExpression(node) {
-                const option =
-                    getCdkName(source, node) === S3_BUCKET ? findBucketOption(source, node, 'blockPublicAccess') : null;
-                const value = option ? getExpressionValue(option.value, source) : undefined;
-                if (
-                    option &&
-                    value?.type === AST_NODE_TYPES.MemberExpression &&
-                    getCdkName(source, value) === BLOCK_ACLS_ONLY
-                )
-                    context.report({ node: option, messageId: 'aclsOnly' });
-                for (const setting of listUnblockedSettings(source, value))
-                    context.report({ node: setting, messageId: 'public' });
+            NewExpression: (node) => {
+                for (const issue of listBucketIssues(source, node)) context.report(issue);
             },
         };
     },

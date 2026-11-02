@@ -16,12 +16,15 @@ function isModuleConstant(declaration: TSESTree.VariableDeclaration): boolean {
     return holder.type === AST_NODE_TYPES.Program;
 }
 
+function isCallArgument(node: TSESTree.Node): boolean {
+    const { parent } = node;
+    const isCall = parent?.type === AST_NODE_TYPES.CallExpression || parent?.type === AST_NODE_TYPES.NewExpression;
+    return isCall && parent.arguments.includes(node as TSESTree.CallExpressionArgument);
+}
+
 function isConstantValue(node: TSESTree.Node): boolean {
     for (let ancestor: TSESTree.Node = node; ancestor.type !== AST_NODE_TYPES.Program; ancestor = ancestor.parent) {
-        if (FUNCTION_NODES.has(ancestor.type)) return false;
-        const { parent } = ancestor;
-        const isCall = parent.type === AST_NODE_TYPES.CallExpression || parent.type === AST_NODE_TYPES.NewExpression;
-        if (isCall && parent.arguments.includes(ancestor as TSESTree.CallExpressionArgument)) return false;
+        if (FUNCTION_NODES.has(ancestor.type) || isCallArgument(ancestor)) return false;
         if (ancestor.type === AST_NODE_TYPES.VariableDeclarator) return isModuleConstant(ancestor.parent);
     }
     return false;

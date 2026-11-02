@@ -12,15 +12,17 @@ function listAssignedNodes(node: TSESTree.Node): TSESTree.Node[] {
         : [node];
 }
 
+function listCallTargets(node: TSESTree.Node): TSESTree.Node[] {
+    if (node.type !== AST_NODE_TYPES.CallExpression || node.callee.type !== AST_NODE_TYPES.MemberExpression) return [];
+    let target: TSESTree.Node = node.callee;
+    while (target.type === AST_NODE_TYPES.MemberExpression) target = target.object;
+    return target.type === AST_NODE_TYPES.Identifier ? [target] : [];
+}
+
 function listUpdatedNodes(update: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node[] {
     return listDescendants(update, source.visitorKeys).flatMap((node): TSESTree.Node[] => {
         if (node.type === AST_NODE_TYPES.AssignmentExpression) return listAssignedNodes(node.left);
-        if (node.type === AST_NODE_TYPES.UpdateExpression) return [node.argument];
-        if (node.type !== AST_NODE_TYPES.CallExpression || node.callee.type !== AST_NODE_TYPES.MemberExpression)
-            return [];
-        let target: TSESTree.Node = node.callee;
-        while (target.type === AST_NODE_TYPES.MemberExpression) target = target.object;
-        return target.type === AST_NODE_TYPES.Identifier ? [target] : [];
+        return node.type === AST_NODE_TYPES.UpdateExpression ? [node.argument] : listCallTargets(node);
     });
 }
 

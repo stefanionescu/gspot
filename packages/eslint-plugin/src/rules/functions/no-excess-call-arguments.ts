@@ -3,6 +3,12 @@ import type { LocalFunction } from '../../types/plugin.ts';
 import { getLocalFunction } from '../../language/functions.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
+function isEmptyFunction(declaration: LocalFunction): boolean {
+    if (declaration.type === AST_NODE_TYPES.TSDeclareFunction) return false;
+    const { params, body } = declaration;
+    return params.length === 0 && body.type === AST_NODE_TYPES.BlockStatement && body.body.length === 0;
+}
+
 export const noExcessCallArguments = createRule<[], 'arguments'>({
     name: 'no-excess-call-arguments',
     meta: {
@@ -51,14 +57,7 @@ export const noExcessCallArguments = createRule<[], 'arguments'>({
             },
             'Program:exit'() {
                 for (const [call, declaration] of calls) {
-                    if (variadic.has(declaration)) continue;
-                    if (
-                        declaration.type !== AST_NODE_TYPES.TSDeclareFunction &&
-                        declaration.params.length === 0 &&
-                        declaration.body.type === AST_NODE_TYPES.BlockStatement &&
-                        declaration.body.body.length === 0
-                    )
-                        continue;
+                    if (variadic.has(declaration) || isEmptyFunction(declaration)) continue;
                     context.report({
                         node: call.callee,
                         messageId: 'arguments',

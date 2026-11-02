@@ -2,8 +2,24 @@ import { createRule } from '../../rule.ts';
 import type { FunctionNode } from '../../types/plugin.ts';
 import { findFunction } from '../../language/functions.ts';
 import { TLS_OPTION_ARGUMENTS } from '../../config/networks.ts';
-import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { listOptionLiterals, getOptionProperties } from '../../language/expressions.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+
+function buildHostnameCheck(
+    call: TSESTree.CallExpression,
+    options: TSESTree.ObjectExpression,
+    source: TSESLint.SourceCode,
+): { call: TSESTree.CallExpression; isRejecting: boolean; checker: FunctionNode | undefined } {
+    const properties = getOptionProperties(options, source);
+    const rejection = properties.get('rejectUnauthorized');
+    const identity = properties.get('checkServerIdentity');
+    const checker = identity ? findFunction(identity.value, source) : undefined;
+    return {
+        call,
+        isRejecting: !rejection || ASTUtils.getStaticValue(rejection.value, source.getScope(call))?.value !== false,
+        checker: checker?.body.type === AST_NODE_TYPES.BlockStatement ? checker : undefined,
+    };
+}
 
 export const unverifiedHostname = createRule<[], 'unverified'>({
     name: 'unverified-hostname',
@@ -36,18 +52,8 @@ export const unverifiedHostname = createRule<[], 'unverified'>({
                 if (owner !== undefined) returns.set(owner, [...(returns.get(owner) ?? []), node]);
             },
             CallExpression(node) {
-                for (const options of listOptionLiterals(node, source, TLS_OPTION_ARGUMENTS)) {
-                    const rejection = getOptionProperties(options, source).get('rejectUnauthorized');
-                    const identity = getOptionProperties(options, source).get('checkServerIdentity');
-                    const checker = identity ? findFunction(identity.value, source) : undefined;
-                    checks.push({
-                        call: node,
-                        isRejecting:
-                            !rejection ||
-                            ASTUtils.getStaticValue(rejection.value, source.getScope(node))?.value !== false,
-                        checker: checker?.body.type === AST_NODE_TYPES.BlockStatement ? checker : undefined,
-                    });
-                }
+                const literals = listOptionLiterals(node, source, TLS_OPTION_ARGUMENTS);
+                for (const options of literals) checks.push(buildHostnameCheck(node, options, source));
             },
             'Program:exit'() {
                 for (const { call, isRejecting, checker } of checks) {

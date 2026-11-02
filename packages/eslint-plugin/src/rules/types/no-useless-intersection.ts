@@ -1,7 +1,7 @@
 import { createRule } from '../../rule.ts';
 import { getTypes } from '../../language/checker.ts';
 import type { TypeReader, CheckedType } from '../../types/plugin.ts';
-import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
     ABSORBING_TYPES,
@@ -39,6 +39,27 @@ function isNormalizing(siblings: readonly TSESTree.TypeNode[], types: TypeReader
     });
 }
 
+function listIntersectionIssues(
+    node: TSESTree.TSIntersectionType,
+    types: TypeReader,
+): Array<TSESLint.ReportDescriptor<'absorbing' | 'empty'>> {
+    const absorbing = node.types.find((member) => ABSORBING_TYPES.has(member.type));
+    if (absorbing !== undefined)
+        return [{ node, messageId: 'absorbing', data: { type: ABSORBING_TYPES.get(absorbing.type) } }];
+    return isLiteralUnion(node)
+        ? []
+        : node.types
+              .filter(
+                  (member) =>
+                      !hasMembers(types.get(member), types) &&
+                      !isNormalizing(
+                          node.types.filter((sibling) => sibling !== member),
+                          types,
+                      ),
+              )
+              .map((member): TSESLint.ReportDescriptor<'empty'> => ({ node: member, messageId: 'empty' }));
+}
+
 export const noUselessIntersection = createRule<[], 'empty' | 'absorbing'>({
     name: 'no-useless-intersection',
     meta: {
@@ -62,26 +83,8 @@ export const noUselessIntersection = createRule<[], 'empty' | 'absorbing'>({
         const types = getTypes(context);
         if (types === undefined) return {};
         return {
-            TSIntersectionType(node) {
-                const absorbing = node.types.find((member) => ABSORBING_TYPES.has(member.type));
-                if (absorbing !== undefined) {
-                    context.report({
-                        node,
-                        messageId: 'absorbing',
-                        data: { type: ABSORBING_TYPES.get(absorbing.type) },
-                    });
-                    return;
-                }
-                for (const member of node.types) {
-                    if (hasMembers(types.get(member), types) || isLiteralUnion(node)) continue;
-                    if (
-                        !isNormalizing(
-                            node.types.filter((sibling) => sibling !== member),
-                            types,
-                        )
-                    )
-                        context.report({ node: member, messageId: 'empty' });
-                }
+            TSIntersectionType: (node) => {
+                for (const issue of listIntersectionIssues(node, types)) context.report(issue);
             },
         };
     },

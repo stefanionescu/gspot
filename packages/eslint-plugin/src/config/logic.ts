@@ -1,5 +1,7 @@
 export const STEP_OPERATORS = new Set(['+=', '-=']);
 
+export const LABEL_OWNERS: ReadonlySet<string> = new Set(['FunctionDeclaration', 'FunctionExpression', 'SwitchCase']);
+
 export const INCREMENT_OPERATORS = new Set(['++', '+=']);
 
 export const INEQUALITY_OPERATORS = new Set(['!=', '!==']);

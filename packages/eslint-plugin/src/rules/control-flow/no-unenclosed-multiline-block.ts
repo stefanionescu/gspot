@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getLastBody(statement: TSESTree.ProgramStatement): TSESTree.Statement | undefined {
     switch (statement.type) {
@@ -27,6 +27,24 @@ function isMisleading(owner: TSESTree.Node, body: TSESTree.Node, next: TSESTree.
     );
 }
 
+function listUnenclosedStatements(
+    statements: readonly TSESTree.ProgramStatement[],
+): Array<TSESLint.ReportDescriptor<'unenclosed'>> {
+    return statements.flatMap((owner, index): Array<TSESLint.ReportDescriptor<'unenclosed'>> => {
+        const next = statements[index + 1];
+        const body = getLastBody(owner);
+        if (
+            next === undefined ||
+            body === undefined ||
+            body.type === AST_NODE_TYPES.BlockStatement ||
+            !isMisleading(owner, body, next)
+        )
+            return [];
+        const runs = owner.type === AST_NODE_TYPES.IfStatement ? 'unconditionally' : 'only once';
+        return [{ node: next, messageId: 'unenclosed', data: { runs } }];
+    });
+}
+
 export const noUnenclosedMultilineBlock = createRule<[], 'unenclosed'>({
     name: 'no-unenclosed-multiline-block',
     meta: {
@@ -47,30 +65,15 @@ export const noUnenclosedMultilineBlock = createRule<[], 'unenclosed'>({
         },
     },
     create(context) {
-        const inspect = (statements: readonly TSESTree.ProgramStatement[]) => {
-            for (const [index, owner] of statements.entries()) {
-                const next = statements[index + 1];
-                const body = getLastBody(owner);
-                if (
-                    next === undefined ||
-                    body === undefined ||
-                    body.type === AST_NODE_TYPES.BlockStatement ||
-                    !isMisleading(owner, body, next)
-                )
-                    continue;
-                const runs = owner.type === AST_NODE_TYPES.IfStatement ? 'unconditionally' : 'only once';
-                context.report({ node: next, messageId: 'unenclosed', data: { runs } });
-            }
-        };
         return {
             Program: (node) => {
-                inspect(node.body);
+                for (const issue of listUnenclosedStatements(node.body)) context.report(issue);
             },
             BlockStatement: (node) => {
-                inspect(node.body);
+                for (const issue of listUnenclosedStatements(node.body)) context.report(issue);
             },
             TSModuleBlock: (node) => {
-                inspect(node.body);
+                for (const issue of listUnenclosedStatements(node.body)) context.report(issue);
             },
         };
     },

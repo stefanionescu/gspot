@@ -89,6 +89,31 @@ function getWrapFix(
         : [{ messageId: 'wrap', fix: (fixer) => fixer.replaceText(received, `() => ${source.getText(received)}`) }];
 }
 
+function checkThrowAssertion(
+    context: Readonly<TSESLint.RuleContext<'async' | 'value' | 'rejection' | 'wrap', []>>,
+    node: TSESTree.CallExpression & { callee: TSESTree.MemberExpression },
+    types: TypeReader | undefined,
+): void {
+    const source = context.sourceCode;
+    const assertion = getThrowAssertion(node, source);
+    if (assertion === undefined) return;
+    const { received } = assertion;
+    const isAsync =
+        (received.type === AST_NODE_TYPES.ArrowFunctionExpression ||
+            received.type === AST_NODE_TYPES.FunctionExpression) &&
+        received.async &&
+        !received.generator;
+    if (isAsync)
+        context.report({ node: received, messageId: 'async', suggest: getRejectionFix(assertion, node, source) });
+    else if (types !== undefined && isNonCallable(types, received))
+        context.report({
+            node: received,
+            messageId: 'value',
+            data: { matcher: assertion.matcher },
+            suggest: getWrapFix(assertion, types, source),
+        });
+}
+
 export const validThrowAssertions = createRule<[], 'async' | 'value' | 'rejection' | 'wrap'>({
     name: 'valid-throw-assertions',
     meta: {
@@ -112,35 +137,12 @@ export const validThrowAssertions = createRule<[], 'async' | 'value' | 'rejectio
         },
     },
     create(context) {
-        const source = context.sourceCode;
         const types = getTypes(context);
         return {
-            'CallExpression[callee.type="MemberExpression"][callee.property.name=/^toThrow(?:Error)?$/]'(
+            'CallExpression[callee.type="MemberExpression"][callee.property.name=/^toThrow(?:Error)?$/]': (
                 node: TSESTree.CallExpression & { callee: TSESTree.MemberExpression },
-            ) {
-                const assertion = getThrowAssertion(node, source);
-                if (assertion === undefined) return;
-                const { received } = assertion;
-                const isAsync =
-                    (received.type === AST_NODE_TYPES.ArrowFunctionExpression ||
-                        received.type === AST_NODE_TYPES.FunctionExpression) &&
-                    received.async &&
-                    !received.generator;
-                if (isAsync) {
-                    context.report({
-                        node: received,
-                        messageId: 'async',
-                        suggest: getRejectionFix(assertion, node, source),
-                    });
-                    return;
-                }
-                if (types !== undefined && isNonCallable(types, received))
-                    context.report({
-                        node: received,
-                        messageId: 'value',
-                        data: { matcher: assertion.matcher },
-                        suggest: getWrapFix(assertion, types, source),
-                    });
+            ) => {
+                checkThrowAssertion(context, node, types);
             },
         };
     },

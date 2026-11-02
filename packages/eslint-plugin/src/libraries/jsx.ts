@@ -90,19 +90,24 @@ function getCellName(child: TSESTree.JSXChild): string | undefined {
     return name?.type === AST_NODE_TYPES.JSXIdentifier && TABLE_CELLS.has(name.name) ? name.name : undefined;
 }
 
+function listSpannedCells(cell: TSESTree.JSXElement, block: { next: number }): TableCell[] | null {
+    const columns = getSpan(cell, 'colspan', MAXIMUM_COLUMN_SPAN);
+    const rows = getSpan(cell, 'rowspan', MAXIMUM_ROW_SPAN);
+    if (Number.isNaN(columns) || Number.isNaN(rows)) return null;
+    const cells = Array.from({ length: columns }, () => buildCell(cell, block.next, rows));
+    block.next += 1;
+    return cells;
+}
+
 function listRowCells(row: TSESTree.JSXElement, block: { next: number }): TableCell[] | null {
     const cells: TableCell[] = [];
     for (const child of row.children) {
         const name = getCellName(child);
         if (name === undefined) return null;
         if (name === '' || child.type !== AST_NODE_TYPES.JSXElement) continue;
-        const [columns, rows] = [
-            getSpan(child, 'colspan', MAXIMUM_COLUMN_SPAN),
-            getSpan(child, 'rowspan', MAXIMUM_ROW_SPAN),
-        ];
-        if (Number.isNaN(columns) || Number.isNaN(rows)) return null;
-        cells.push(...Array.from({ length: columns }, () => buildCell(child, block.next, rows)));
-        block.next += 1;
+        const spanned = listSpannedCells(child, block);
+        if (spanned === null) return null;
+        cells.push(...spanned);
     }
     return cells;
 }

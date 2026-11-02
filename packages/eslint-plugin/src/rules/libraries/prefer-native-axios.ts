@@ -3,6 +3,17 @@ import { getModuleName } from '../../language/modules.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { AXIOS_CANCEL_TOKEN, AXIOS_DEPRECATIONS, AXIOS_CONFIG_POSITIONS } from '../../config/libraries.ts';
 
+function listCancelTokens(node: TSESTree.CallExpression, name: string): TSESTree.Property[] {
+    const configs = (AXIOS_CONFIG_POSITIONS.get(name) ?? []).map((position) => node.arguments[position]);
+    const options = configs.flatMap((config) =>
+        config?.type === AST_NODE_TYPES.ObjectExpression ? config.properties : [],
+    );
+    return options.filter(
+        (option): option is TSESTree.Property =>
+            option.type === AST_NODE_TYPES.Property && ASTUtils.getPropertyName(option) === 'cancelToken',
+    );
+}
+
 export const preferNativeAxios = createRule<[], 'helper' | 'cancelToken'>({
     name: 'prefer-native-axios',
     meta: {
@@ -30,13 +41,8 @@ export const preferNativeAxios = createRule<[], 'helper' | 'cancelToken'>({
                 const name = getModuleName(node.callee, source) ?? '';
                 const deprecation = AXIOS_DEPRECATIONS.get(name);
                 if (deprecation !== undefined) context.report({ node, messageId: 'helper', data: deprecation });
-                const configs = (AXIOS_CONFIG_POSITIONS.get(name) ?? []).map((position) => node.arguments[position]);
-                const options = configs.flatMap((config) =>
-                    config?.type === AST_NODE_TYPES.ObjectExpression ? config.properties : [],
-                );
-                for (const option of options)
-                    if (option.type === AST_NODE_TYPES.Property && ASTUtils.getPropertyName(option) === 'cancelToken')
-                        context.report({ node: option, messageId: 'cancelToken' });
+                for (const option of listCancelTokens(node, name))
+                    context.report({ node: option, messageId: 'cancelToken' });
             },
             'MemberExpression[property.name="CancelToken"]'(node: TSESTree.MemberExpression) {
                 const name = getModuleName(node, source);

@@ -8,6 +8,8 @@ export type Isolation = 'deep' | 'shallow' | 'written';
 
 export type LibraryCall = { method: string; library: string };
 
+export type NativeMessageId = 'direct' | 'cautious' | 'example';
+
 export type NativeReplacement = {
     alternative: string;
     year: number;
