@@ -13,6 +13,7 @@ import type {
     Check,
     ShippedRule,
     Configuration,
+    ManifestSource,
     ParsedManifest,
     ConfigurationCheck,
 } from '#cli/types/manifests.ts';
@@ -89,22 +90,30 @@ function listManifestTools(manifests: Iterable<ParsedManifest>): Map<string, Too
 }
 
 /**
+Parse manifest texts into configurations, sorted by name, and refuse an invalid manifest.
+
+@param manifests the folder of each configuration and the text of its manifest.
+*/
+export function parseConfigurations(manifests: readonly ManifestSource[]): Map<string, Configuration> {
+    return buildConfigurations(
+        manifests
+            .map(({ folder, text }) => parseManifest(text, folder))
+            .toSorted((first, second) => compareText(first.configuration.name, second.configuration.name)),
+    );
+}
+
+/**
 Read every configuration once per process.
 */
 export function readConfigurations(): ReadonlyMap<string, Configuration> {
     if (shippedConfigurations !== undefined) return shippedConfigurations;
-    const manifests = new Map<string, ParsedManifest>();
-    const paths = listAssets(`${CONFIGURATIONS_FOLDER}/`).filter((path) => path.endsWith(`/${MANIFEST_FILE}`));
-    for (const path of paths) {
-        const folder = path.slice(0, -`/${MANIFEST_FILE}`.length);
-        const manifest = parseManifest(readFileSync(buildAssetPath(path), 'utf8'), folder);
-        manifests.set(manifest.configuration.name, manifest);
-    }
-    shippedConfigurations = buildConfigurations(
-        manifests
-            .values()
-            .toArray()
-            .toSorted((first, second) => compareText(first.configuration.name, second.configuration.name)),
+    shippedConfigurations = parseConfigurations(
+        listAssets(`${CONFIGURATIONS_FOLDER}/`)
+            .filter((path) => path.endsWith(`/${MANIFEST_FILE}`))
+            .map((path) => ({
+                folder: path.slice(0, -`/${MANIFEST_FILE}`.length),
+                text: readFileSync(buildAssetPath(path), 'utf8'),
+            })),
     );
     const ruleNames = shippedConfigurations
         .values()

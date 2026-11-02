@@ -19,6 +19,8 @@ export type RequirementWalk = {
     seen: Set<string>;
 };
 
+export type ManifestSource = { folder: string; text: string };
+
 export type ParsedManifest = z.infer<typeof manifestSchema>;
 
 export type Check = Omit<z.infer<typeof checkSchema>, 'example' | 'name' | 'output'> & {

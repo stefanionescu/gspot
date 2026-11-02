@@ -1,28 +1,14 @@
 import { test, expect } from 'bun:test';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
+import { parseConfigurations } from '#cli/manifests/read.ts';
 import { buildConfiguration } from '#tests/setup/cli/manifests.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 import {
     DECLARATION_ORDERS,
     CONFIGURATION_TABLE,
-    EXAMPLE_MANIFEST_PATH,
+    EXAMPLE_MANIFEST_FOLDER,
     MANIFEST_INVARIANT_CASES,
 } from '#tests/config/manifests.ts';
-
-async function readTestManifests(
-    files: Record<string, string>,
-    assets: readonly string[] = [],
-): Promise<Map<string, Configuration>> {
-    const result = await runCommand(buildProgramCommand('processes/manifests', JSON.stringify({ files, assets })), {
-        cwd: process.cwd(),
-    });
-    if (result.code !== 0) throw new Error(result.stderr.trim());
-    return new Map(JSON.parse(result.stdout) as [string, Configuration][]);
-}
 
 test('a manifest without [detect] takes the matchers of [files]', () => {
     const tables = '[files]\nfilenames = ["native.project"]\npaths = ["source/**"]\n';
@@ -41,14 +27,16 @@ test('a manifest without [detect] takes the matchers of [files]', () => {
 
 test.each(DECLARATION_ORDERS)(
     'a tool name links to the configuration that declares it, listed $order',
-    async ({ ownerFirst }) => {
-        const consumer = 'src/configurations/infrastructure/consumer/manifest.toml';
-        const owner = 'src/configurations/general/owner/manifest.toml';
-        const consumed = CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\n';
-        const manifest = CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\nsystem = true\n';
-        const paths = ownerFirst ? [owner, consumer] : [consumer, owner];
-        const files = Object.fromEntries(paths.map((path) => [path, path === consumer ? consumed : manifest]));
-        const configurationsByName = await readTestManifests(files);
+    ({ ownerFirst }) => {
+        const consumer = {
+            folder: 'src/configurations/infrastructure/consumer',
+            text: CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\n',
+        };
+        const owner = {
+            folder: 'src/configurations/general/owner',
+            text: CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\nsystem = true\n',
+        };
+        const configurationsByName = parseConfigurations(ownerFirst ? [owner, consumer] : [consumer, owner]);
         expect(configurationsByName.get('owner')!.tools).toStrictEqual([
             { name: 'probe', kind: 'program', system: true, installers: {} },
         ]);
@@ -56,20 +44,16 @@ test.each(DECLARATION_ORDERS)(
     },
 );
 
-test('only declared config files are loaded and each record sets its tool and scope', async () => {
-    const configurationsByName = await readTestManifests(
+test('only declared config files are loaded and each record sets its tool and scope', () => {
+    const configurationsByName = parseConfigurations([
         {
-            [EXAMPLE_MANIFEST_PATH]:
+            folder: EXAMPLE_MANIFEST_FOLDER,
+            text:
                 CONFIGURATION_TABLE +
                 '\n[[config_file]]\ntarget = "other.yml"\npointer = { path = "other.yml", body = "{target}" }\n\n[[config_file]]\ntarget = "semgrep/first.yml"\ntool = "semgrep"\nper_scope = true\n\n[[config_file]]\ntarget = "semgrep/second.yml"\ntool = "semgrep"\nper_scope = true\n' +
                 '[[tool]]\nname = "semgrep"\nversion = "1.0.0"\n',
         },
-        [
-            'src/configurations/language/example/files/semgrep/first.yml',
-            'src/configurations/language/example/files/semgrep/second.yml',
-            'src/configurations/language/example/files/semgrep/not-a-pack.txt',
-        ] as const,
-    );
+    ]);
     const configuration = configurationsByName.get('example')!;
     expect(configuration.configs.map(({ source, target }) => [source, target])).toStrictEqual([
         ['files/other.yml', `${GSPOT_PATHS.configurations}/language/example/other.yml`],
@@ -84,17 +68,17 @@ test('only declared config files are loaded and each record sets its tool and sc
 
 test.each([...MANIFEST_INVARIANT_CASES])(
     'the loader refuses $name with the owning configuration',
-    async ({ tables, message }) => {
-        const error = await captureRejection(
-            readTestManifests({ [EXAMPLE_MANIFEST_PATH]: CONFIGURATION_TABLE + tables }),
+    ({ tables, message }) => {
+        const manifests = [{ folder: EXAMPLE_MANIFEST_FOLDER, text: CONFIGURATION_TABLE + tables }];
+        expect(() => parseConfigurations(manifests)).toThrow(
+            `The configuration manifest for example is not valid:\n${message}`,
         );
-        expect(error.message).toBe(`The configuration manifest for example is not valid:\n${message}`);
     },
 );
 
-test('a reference to an undeclared tool names the configuration and missing declaration', async () => {
-    const error = await captureRejection(
-        readTestManifests({ [EXAMPLE_MANIFEST_PATH]: CONFIGURATION_TABLE + '[[tool]]\nname = "absent"\n' }),
+test('a reference to an undeclared tool names the configuration and missing declaration', () => {
+    const manifests = [{ folder: EXAMPLE_MANIFEST_FOLDER, text: CONFIGURATION_TABLE + '[[tool]]\nname = "absent"\n' }];
+    expect(() => parseConfigurations(manifests)).toThrow(
+        'The configuration manifest for example is not valid:\ntool absent has no declaration.',
     );
-    expect(error.message).toBe('The configuration manifest for example is not valid:\ntool absent has no declaration.');
 });

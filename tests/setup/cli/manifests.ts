@@ -1,8 +1,6 @@
-import { parse } from '@decimalturn/toml-patch';
-import { DEFAULT_OUTPUT_FORMAT } from '#cli/config/manifests.ts';
-import { manifestSchema } from '#cli/schemas/manifests/manifest.ts';
+import { stringify } from '@decimalturn/toml-patch';
 import { type Check, type Configuration } from '#cli/types/manifests.ts';
-import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
+import { listChecksById, readConfigurations, parseConfigurations } from '#cli/manifests/read.ts';
 
 export function listAlwaysSelected(): string[] {
     return readConfigurations()
@@ -19,24 +17,15 @@ export function buildConfiguration(
     name: string,
     fields: { requires?: string[]; tables?: string; group?: Configuration['group'] } = {},
 ): Configuration {
-    const parsed = manifestSchema.parse({
-        ...parse(fields.tables ?? ''),
-        folder: `src/configurations/${fields.group ?? 'language'}/${name}`,
+    const header = stringify({
         configuration: {
-            name,
             title: name,
-            group: fields.group ?? 'language',
             requires: fields.requires ?? [],
             description: 'A configuration for the tests, long enough.',
         },
     });
-    const { configuration, ...rest } = parsed;
-    return {
-        ...rest,
-        ...configuration,
-        checks: rest.checks.map((check) => ({ ...check, output: check.output ?? DEFAULT_OUTPUT_FORMAT })),
-        tools: [],
-    };
+    const folder = `src/configurations/${fields.group ?? 'language'}/${name}`;
+    return parseConfigurations([{ folder, text: `${header}${fields.tables ?? ''}` }]).get(name) as Configuration;
 }
 
 /**
