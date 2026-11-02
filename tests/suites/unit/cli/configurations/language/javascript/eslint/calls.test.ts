@@ -8,7 +8,7 @@ import { CONFIG_PROJECT } from '#tests/config/setup/configurations.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('generated ESLint modules hold static imports and calls without executable expressions', async () => {
-    const configurations = [...readConfigurations().keys()];
+    const configurations = readConfigurations().keys().toArray();
     await using sandbox = await createGitSandbox({
         ...CONFIG_PROJECT,
         'gspot.toml': buildSandboxSettings(configurations, { level: 'all' }),

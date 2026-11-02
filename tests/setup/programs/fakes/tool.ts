@@ -67,8 +67,10 @@ const steps: Partial<Record<keyof typeof FAKE_TOOL_OPTIONS, (value: string) => u
 
 const stopCode = findStopCode();
 if (stopCode === undefined) {
-    for (const [name, step] of Object.entries(steps))
-        for (const value of option[name as keyof typeof FAKE_TOOL_OPTIONS]) await step(value);
+    for (const [name, step] of Object.entries(steps)) {
+        const optionValues = option[name as keyof typeof FAKE_TOOL_OPTIONS];
+        for (const value of optionValues) await step(value);
+    }
     if (values['copy-stdin'] === true) process.stdout.write(await Bun.stdin.bytes());
     if (values['print-pid'] === true) process.stdout.write(String(process.pid));
     for (const signal of option.signal) process.kill(process.pid, signal);

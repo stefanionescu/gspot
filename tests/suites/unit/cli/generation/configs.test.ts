@@ -25,7 +25,7 @@ test('a check copy builds the config files of the repository, not of the copy fo
 });
 
 test('every shipped source config has a working producer, including optional outputs', async () => {
-    const configurations = [...readConfigurations().values()];
+    const configurations = readConfigurations().values().toArray();
     await using sandbox = await createGitSandbox({
         ...CONFIG_PROJECT,
         'gspot.toml': buildSandboxSettings(

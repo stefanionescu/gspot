@@ -244,7 +244,7 @@ test('partial indexes do not cover foreign keys and schema changes retain securi
         statements: movedSchema.statements,
     };
     const schema = buildDatabaseSchema([migration]);
-    expect([...schema.tables.keys()]).toStrictEqual(['client.posts']);
+    expect(schema.tables.keys().toArray()).toStrictEqual(['client.posts']);
     expect([...schema.secured]).toStrictEqual(['client.posts']);
     expect(schema.foreignKeys.map(({ table }) => table)).toStrictEqual(['client.posts']);
     expect([...schema.indexed]).toStrictEqual([]);

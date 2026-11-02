@@ -58,7 +58,8 @@ test.each([...LEVELS])('%s runs each gspot rule of its level in JavaScript and T
                 levels.has(rule.meta.docs?.level ?? 'none') ? 2 : 0,
             ]),
     );
-    for (const [file, table] of Object.entries(await readEslintRules(eslint, ['source.js', 'view.tsx'])))
+    const tables = await readEslintRules(eslint, ['source.js', 'view.tsx']);
+    for (const [file, table] of Object.entries(tables))
         expect(
             Object.fromEntries(Object.keys(expected).map((name): [string, number] => [name, table[name]?.[0] ?? 0])),
             file,

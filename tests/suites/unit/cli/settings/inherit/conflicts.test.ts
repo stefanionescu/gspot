@@ -69,7 +69,7 @@ test('a scope value settles the scopes below it, and a sibling scope still repor
         }),
         sandbox.path,
     );
-    const scopes = new Map([...settings.scopes.keys()].map((path) => [path, conflictingSettings]));
+    const scopes = new Map(settings.scopes.keys().map((path) => [path, conflictingSettings]));
     expect(
         validateKeys(buildAvailableSettings([], 'basic'), settings, scopes, buildAvailableSettings([], 'basic')),
     ).toStrictEqual([{ path: ['scope', 2, 'configurations'], message: CONFLICTING_DEFAULT_ERRORS[0].message }]);

@@ -25,7 +25,7 @@ async function prepareExample(installation: GspotProject): Promise<string> {
         [example.before.path]: 'export {};\n',
     });
     const devDependencies = { [cliPackage.name]: cliPackage.version };
-    for (const [path, contents] of Object.entries({
+    const projectFiles = {
         'package.json': {
             name: 'home-example',
             private: true,
@@ -40,7 +40,8 @@ async function prepareExample(installation: GspotProject): Promise<string> {
             packages: { '': { name: 'home-example', devDependencies } },
         },
         'tsconfig.json': { compilerOptions: { strict: true, module: 'NodeNext', target: 'ES2022' }, include: ['src'] },
-    }))
+    };
+    for (const [path, contents] of Object.entries(projectFiles))
         writeFileSync(join(root, path), await format(JSON.stringify(contents), { filepath: path, tabWidth: 4 }));
     commitAll(root);
     await initSandbox(

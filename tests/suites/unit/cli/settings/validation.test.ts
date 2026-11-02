@@ -97,7 +97,9 @@ test('relative folders with spaces, percent signs and Unicode are accepted', asy
     const path = 'apps/café 100%';
     await using sandbox = await testdir({ [`${path}/source.ts`]: 'export const count = 1;\n' });
 
-    const settings = [...readSettings(stringify({ scope: [{ path }] }), sandbox.path).scopes.keys()];
+    const settings = readSettings(stringify({ scope: [{ path }] }), sandbox.path)
+        .scopes.keys()
+        .toArray();
     expect(settings).toStrictEqual([path]);
 });
 

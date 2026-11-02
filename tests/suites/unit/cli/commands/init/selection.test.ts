@@ -212,7 +212,7 @@ test('init proposes workspace scopes without a lockfile, and writes nothing when
     expect(proposed.code, proposed.stdout + proposed.stderr).toBe(0);
     const plan = JSON.parse(proposed.stdout) as Required<Pick<InitJson, 'settingsText'>>;
     const settings = readSettings(plan.settingsText, sandbox.path);
-    expect([...settings.scopes.keys()]).toStrictEqual(['packages/api']);
+    expect(settings.scopes.keys().toArray()).toStrictEqual(['packages/api']);
     const before = await readTree(broken.path);
     const refused = await runGspot(broken.path, command);
     expect(refused.code).toBe(2);
@@ -236,7 +236,7 @@ test('init keeps root Docker and GitHub configurations beside an app scope', asy
     const parsed = readSettings(settingsText, sandbox.path);
     expect(parsed.configurations).toContain('docker');
     expect(parsed.configurations).toContain('github-actions');
-    expect([...parsed.scopes.keys()]).toContain('app');
+    expect(parsed.scopes.keys().toArray()).toContain('app');
 });
 
 test('init names an uninstalled tsconfig extension and the dependency install step', async () => {

@@ -40,7 +40,7 @@ test('a numeric scope keeps its authored position after a nonnumeric scope', asy
         ],
     });
     const settings = readSettings(text, sandbox.path);
-    expect([...settings.scopes.keys()]).toStrictEqual(['app', '2024']);
+    expect(settings.scopes.keys().toArray()).toStrictEqual(['app', '2024']);
 });
 
 test('adding an external Python module needs a reason and accepts a recorded reason', () => {

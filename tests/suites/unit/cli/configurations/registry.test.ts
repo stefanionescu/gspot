@@ -3,7 +3,10 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
 
 test('every shipped check without a command has runnable code', () => {
-    const checks = [...readConfigurations().values()].flatMap((configuration) => configuration.checks);
+    const checks = readConfigurations()
+        .values()
+        .flatMap((configuration) => configuration.checks)
+        .toArray();
     const missing = checks.filter(
         (check) =>
             check.command === undefined &&
