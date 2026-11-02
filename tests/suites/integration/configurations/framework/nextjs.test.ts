@@ -2,17 +2,18 @@ import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
+import { listPackagePins } from '#cli/tools/pins.ts';
 import type { Sandbox } from '#tests/types/setup.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { tsconfigSchema } from '#tests/schemas/setup.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import workspacePackage from '#root-package' with { type: 'json' };
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
-import testsPackage from '#tests/package.json' with { type: 'json' };
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
@@ -35,7 +36,7 @@ const dependencies = Object.fromEntries(
         ...NEXT_PACKAGE.dependencies,
         react: SANDBOX_PACKAGES.react,
         'react-dom': SANDBOX_PACKAGES['react-dom'],
-        typescript: testsPackage.devDependencies.typescript,
+        typescript: listPackagePins(readConfigurations().values().toArray()).npm['typescript']!,
         '@types/react': SANDBOX_PACKAGES['@types/react'],
         '@types/node': workspacePackage.devDependencies['@types/node'],
     }).toSorted(([left], [right]) => compareText(left, right)),

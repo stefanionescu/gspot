@@ -7,7 +7,6 @@ import { PLUGIN_TYPES_SOURCE } from '#tests/config/e2e.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { NPM_INSTALL_FLAGS } from '#tests/config/setup/sandboxes.ts';
-import testsPackage from '#tests/package.json' with { type: 'json' };
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { isolatedEnvironment } from '#tests/setup/sandboxes/projects/gspot.ts';
@@ -41,10 +40,11 @@ test('the installed ESLint plugin loads through import and require and enforces 
     const consumer = join(workspace.path, 'consumer');
     await mkdir(consumer);
     await writeFile(join(consumer, 'package.json'), '{"name":"plugin-consumer","private":true,"type":"module"}\n');
+    const pins = listPackagePins(readConfigurations().values().toArray()).npm;
     const peerPackages = [
         `eslint@${eslintPluginPackage.devDependencies.eslint}`,
-        `typescript@${testsPackage.devDependencies.typescript}`,
-        `typescript-eslint@${listPackagePins(readConfigurations().values().toArray()).npm['typescript-eslint']!}`,
+        `typescript@${pins['typescript']!}`,
+        `typescript-eslint@${pins['typescript-eslint']!}`,
     ];
     const installed = await runCommand(
         [

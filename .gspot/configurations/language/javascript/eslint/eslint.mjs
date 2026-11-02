@@ -520,7 +520,14 @@ export default [
                         "#eslint-plugin/*": "packages/eslint-plugin/src/*",
                         "#eslint-plugin-package": "packages/eslint-plugin/package.json",
                         "#root-package": "package.json",
-                        "#docs/*": "docs/src/*"
+                        "#docs/*": "docs/src/*",
+                        "ajv/*": "node_modules/.test-tools/node_modules/ajv/*",
+                        "eslint": "node_modules/.test-tools/node_modules/eslint",
+                        "html-validate": "node_modules/.test-tools/node_modules/html-validate",
+                        "prettier": "node_modules/.test-tools/node_modules/prettier/index.d.ts",
+                        "prettier/*": "node_modules/.test-tools/node_modules/prettier/*",
+                        "stylelint": "node_modules/.test-tools/node_modules/stylelint/types/stylelint/index.d.ts",
+                        "typescript": "node_modules/.test-tools/node_modules/typescript"
                     }
                 }
             ],
@@ -613,7 +620,14 @@ export default [
                         "#eslint-plugin/*": "packages/eslint-plugin/src/*",
                         "#eslint-plugin-package": "packages/eslint-plugin/package.json",
                         "#root-package": "package.json",
-                        "#docs/*": "docs/src/*"
+                        "#docs/*": "docs/src/*",
+                        "ajv/*": "node_modules/.test-tools/node_modules/ajv/*",
+                        "eslint": "node_modules/.test-tools/node_modules/eslint",
+                        "html-validate": "node_modules/.test-tools/node_modules/html-validate",
+                        "prettier": "node_modules/.test-tools/node_modules/prettier/index.d.ts",
+                        "prettier/*": "node_modules/.test-tools/node_modules/prettier/*",
+                        "stylelint": "node_modules/.test-tools/node_modules/stylelint/types/stylelint/index.d.ts",
+                        "typescript": "node_modules/.test-tools/node_modules/typescript"
                     }
                 }
             ]
@@ -642,7 +656,14 @@ export default [
                         "#eslint-plugin/*": "packages/eslint-plugin/src/*",
                         "#eslint-plugin-package": "packages/eslint-plugin/package.json",
                         "#root-package": "package.json",
-                        "#docs/*": "docs/src/*"
+                        "#docs/*": "docs/src/*",
+                        "ajv/*": "node_modules/.test-tools/node_modules/ajv/*",
+                        "eslint": "node_modules/.test-tools/node_modules/eslint",
+                        "html-validate": "node_modules/.test-tools/node_modules/html-validate",
+                        "prettier": "node_modules/.test-tools/node_modules/prettier/index.d.ts",
+                        "prettier/*": "node_modules/.test-tools/node_modules/prettier/*",
+                        "stylelint": "node_modules/.test-tools/node_modules/stylelint/types/stylelint/index.d.ts",
+                        "typescript": "node_modules/.test-tools/node_modules/typescript"
                     }
                 }
             ]
