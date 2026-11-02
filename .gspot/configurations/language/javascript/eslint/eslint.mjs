@@ -119,7 +119,6 @@ export default [
             "**/.env.*",
             "**/*.log",
             "packages/*/dist/**",
-            "packages/cli/grammars/**",
             "docs/dist/**",
             "docs/.astro/**",
             "docs/.wrangler/**",
@@ -204,7 +203,6 @@ export default [
             'import-x/ignore': [
                 "[\\\\/]build[\\\\/]",
                 "[\\\\/]node_modules[\\\\/]",
-                "[\\\\/]packages[\\\\/]cli[\\\\/]grammars[\\\\/]",
                 "[\\\\/]docs[\\\\/]dist[\\\\/]",
                 "[\\\\/]docs[\\\\/]\\.astro[\\\\/]",
                 "[\\\\/]docs[\\\\/]\\.wrangler[\\\\/]",
