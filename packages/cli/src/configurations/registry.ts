@@ -186,7 +186,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'repository/large-files': { check: checkLargeFiles },
     'repository/local-files': { check: checkLocalFiles },
     'secrets/env-examples': { check: checkEnvExamples },
-    'secrets/env-fallbacks': { check: checkEnvDefaults },
+    'secrets/environment-defaults': { check: checkEnvDefaults },
     'secrets/gitleaks-pushed': { run: checkGitleaksPushed },
     'security/semgrep': { run: checkSemgrep },
     'site/build': { check: checkSiteBuild },

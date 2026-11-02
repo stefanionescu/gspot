@@ -132,7 +132,7 @@ test.each([...ENVIRONMENT_TEXT_CASES])('$name', async ({ files, changed, finding
     expect(findings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([...expected]);
 });
 
-test('env-fallbacks reports a secret with a literal fallback in JavaScript and Python, and no other read', async () => {
+test('environment-defaults reports a secret with a literal fallback in JavaScript and Python, and no other read', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'python']),
         'config.js': [
@@ -152,7 +152,7 @@ test('env-fallbacks reports a secret with a literal fallback in JavaScript and P
             '',
         ].join('\n'),
     });
-    const findings = await runSandboxCheck(sandbox.path, 'secrets/env-fallbacks');
+    const findings = await runSandboxCheck(sandbox.path, 'secrets/environment-defaults');
     expect(findings.map(({ file, line }) => [file, line])).toStrictEqual([
         ['config.js', 1],
         ['config.js', 2],
