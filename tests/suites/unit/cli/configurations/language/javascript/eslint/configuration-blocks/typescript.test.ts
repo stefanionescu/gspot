@@ -1,9 +1,12 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
+import type { ESLint } from 'eslint';
 import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { buildEslint, listFindingRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
@@ -11,7 +14,7 @@ import {
     TYPED_RULE_PROJECTS,
 } from '#tests/config/configurations/javascript/configuration-blocks.ts';
 
-// typescript-estree keeps the first project service of a process, so this test runs first in its file.
+// typescript-estree keeps the first project service of a process, and unit files share a process, so ESLint runs alone.
 test('a config file outside every tsconfig gets the typed rules, and one that a tsconfig includes stays there', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['typescript']),
@@ -22,8 +25,19 @@ test('a config file outside every tsconfig gets the typed rules, and one that a 
         'vitest.config.ts': 'export const timeout = 3000;\n',
         'scripts/deploy.ts': 'export const target = "production";\n',
     });
-    const eslint = await buildEslint(sandbox.path);
-    const results = await eslint.lintFiles(['vite.config.ts', 'vitest.config.ts', 'scripts/deploy.ts']);
+    await buildEslint(sandbox.path);
+    const linted = await runCommand(
+        [
+            join(toolModules, '.bin/eslint'),
+            '--format',
+            'json',
+            'vite.config.ts',
+            'vitest.config.ts',
+            'scripts/deploy.ts',
+        ],
+        { cwd: sandbox.path },
+    );
+    const results = JSON.parse(linted.stdout) as ESLint.LintResult[];
     expect(results.flatMap(({ messages }) => messages.filter(({ fatal }) => fatal === true))).toStrictEqual([]);
     expect(results.flatMap(({ messages }) => messages.map(({ message }) => message))).not.toContainEqual(
         expect.stringContaining('strictNullChecks'),
