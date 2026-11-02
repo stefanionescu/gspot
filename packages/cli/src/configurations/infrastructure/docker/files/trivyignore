@@ -14,3 +14,5 @@ DS021
 DS022
 DS025
 DS029
+# Gitleaks reports secrets in ENV and ARG.
+DS031
