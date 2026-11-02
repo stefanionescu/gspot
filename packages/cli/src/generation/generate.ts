@@ -2,12 +2,13 @@ import { basename } from 'node:path/posix';
 import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { stringify } from '@decimalturn/toml-patch';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
 import { getSettingValue } from '#cli/settings/inherit.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { AGENTS_FILE } from '#cli/config/repository/setup.ts';
+import { AGENTS_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/repository/setup.ts';
 import { listWrittenPaths } from '#cli/generation/ignores.ts';
 import { buildLinkFieldEdits } from '#cli/generation/links.ts';
 import { listHookNames } from '#cli/tools/installers/hooks.ts';
@@ -37,7 +38,6 @@ import {
     NPM_TOOL_PROJECT,
     AUTO_LF_ATTRIBUTES,
     CI_SYSTEMS_SETTING,
-    TOOL_FOLDER_IGNORES,
     GIT_ATTRIBUTES_BLOCK,
     ATTRIBUTE_GLOB_CHARACTERS,
     ATTRIBUTE_QUOTED_CHARACTERS,
@@ -154,7 +154,14 @@ Generate every file in memory, and write nothing.
 export function buildGeneratedFiles(session: Session): Generation {
     const { settings } = session;
     const generated: Generation = {
-        files: [{ path: GSPOT_PATHS.gitignore, content: TOOL_FOLDER_IGNORES.join('\n') + '\n' }],
+        files: [
+            {
+                path: GSPOT_PATHS.gitignore,
+                content: Object.values(INSTALLED_TOOL_FOLDERS)
+                    .map((folder) => `${folder.slice(GSPOT_FOLDER.length + 1)}/\n`)
+                    .join(''),
+            },
+        ],
         blocks: [],
         managedKeys: [],
     };

@@ -133,6 +133,13 @@ You can edit the other keys of that file.
 These folder rules apply to `packages/cli/src/`, `packages/eslint-plugin/src/`, `docs/src/`, and `tests/` in this
 repository.
 
+Here they override four shipped rules:
+
+- WORKING.md keeps "one copy of each table of values, in the module that uses it."
+- NAMING.md says "Prefer feature folders to top-level type buckets."
+- ZOD.md says "Put a runtime schema with the feature that owns the contract."
+- TYPESCRIPT.md asks for a module-level constant per number.
+
 ### Values, types, and schemas
 
 - `packages/cli/src/`, `packages/eslint-plugin/src/`, `docs/src/`, and `tests/` keep fixed values in `config/`,
