@@ -22,7 +22,7 @@ test('suppression detection agrees with Ruff on every noqa comment form and plac
     );
     expect(toolResult.code, toolResult.stdout + toolResult.stderr).toBe(1);
     const reported = new Set(
-        (JSON.parse(toolResult.stdout) as Record<'filename', string>[]).map(({ filename }) => basename(filename)),
+        (JSON.parse(toolResult.stdout) as Array<Record<'filename', string>>).map(({ filename }) => basename(filename)),
     );
     expect(await readSuppressionResults(sandbox.path, paths, reported)).toStrictEqual(
         RUFF_SUPPRESSIONS.map(({ source, suppressed, directive }, index) => ({

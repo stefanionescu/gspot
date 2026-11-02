@@ -97,7 +97,7 @@ test('uv installs the tool project with its own Python, whatever UV_PYTHON and .
         '.python-version': '3.12.13\n',
     });
 
-    const runs: { command: string[]; env: Record<string, string | undefined> | undefined }[] = [];
+    const runs: Array<{ command: string[]; env: Record<string, string | undefined> | undefined }> = [];
     using _boundary = fakeCommands('pinned-uv', (command, options) => {
         runs.push({ command: [...command], env: options.env });
         return Promise.resolve(buildProcessResult());
@@ -116,8 +116,7 @@ test('the uv lockfile check ignores name spelling and requirement order and refu
     expect(isPythonLockfileFresh(pythonProject, 'not valid =', {})).toBe(false);
     const rangedProject = (parse(PYTHON_TOOL_PROJECT.replace('==1.2.3', '>=1.2.3')) as { project: PythonToolProject })
         .project;
-    const exists = isPythonLockfileFresh(rangedProject, PYTHON_TOOL_LOCKFILE, {});
-    expect(exists).toBe(false);
+    expect(isPythonLockfileFresh(rangedProject, PYTHON_TOOL_LOCKFILE, {})).toBe(false);
 });
 
 test.each([...UV_LOCKFILE_MISMATCHES])('a changed %s makes the uv lockfile stale', (_name, before, after) => {

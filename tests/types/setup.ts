@@ -150,7 +150,7 @@ export type SandboxPlan = {
 export type InstalledSandboxPlan = SandboxPlan & {
     without?: readonly string[];
     install?: false;
-    commands?: readonly (readonly string[])[];
+    commands?: ReadonlyArray<readonly string[]>;
 };
 
 export type Sandbox = {

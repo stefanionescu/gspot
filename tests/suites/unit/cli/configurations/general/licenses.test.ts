@@ -20,7 +20,7 @@ import {
 
 async function runLicenseCheck(
     root: string,
-    packages: readonly (Record<'name' | 'version' | 'ecosystem', string> & { licenses: readonly string[] })[],
+    packages: ReadonlyArray<Record<'name' | 'version' | 'ecosystem', string> & { licenses: readonly string[] }>,
 ) {
     using resources = new DisposableStack();
     const stdout = JSON.stringify({

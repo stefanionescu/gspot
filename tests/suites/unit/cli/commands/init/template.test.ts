@@ -24,7 +24,7 @@ test('init --from copies the settings that fit any repository and lists each one
     const result = await runGspot(sandbox.path, ['init', '--from', join(team.path, 'gspot.toml'), '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const json = JSON.parse(result.stdout) as {
-        plan: { from: { file: string; leftOut: { key: string; note: string }[] }; configurations: unknown[] };
+        plan: { from: { file: string; leftOut: Array<{ key: string; note: string }> }; configurations: unknown[] };
     };
     expect(json.plan.from.file).toBe(join(team.path, 'gspot.toml'));
     expect(json.plan.from.leftOut.toSorted((a, b) => compareText(a.key, b.key))).toStrictEqual(

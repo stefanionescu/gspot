@@ -181,7 +181,7 @@ mdx = md
 BasedOnStyles = Example
 `;
 
-export const API_TOKEN = 'n3K5p7R9' + 't2V4w6Y8' + 'z1A3c5E7' + 'g9I2m4O6';
+export const API_TOKEN = ['n3K5p7R9', 't2V4w6Y8', 'z1A3c5E7', 'g9I2m4O6'].join('');
 
 const AWS_CREDENTIALS = `aws_access_key_id = "${AWS_KEY_ID}"\n`;
 

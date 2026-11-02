@@ -4,8 +4,8 @@ export type SourceRuleCase = { name?: string; source: string; rule: string; coun
 
 export type ScriptFindingCase = {
     file: string;
-    everyLevel: readonly { ruleId: string | null; line: number }[];
-    all?: readonly { ruleId: string | null; line: number }[];
+    everyLevel: ReadonlyArray<{ ruleId: string | null; line: number }>;
+    all?: ReadonlyArray<{ ruleId: string | null; line: number }>;
 };
 
 export type RuffConfig = {

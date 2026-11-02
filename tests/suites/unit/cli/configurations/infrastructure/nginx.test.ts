@@ -31,13 +31,13 @@ test.each([...NGINX_MOUNT_CASES])(
             getTool(readConfigurations().values(), 'openssl'),
             getTool(readConfigurations().values(), 'docker'),
         ]);
-        const containers: {
+        const containers: Array<{
             hosts: string[];
             targets: string[];
             configuration: string;
             tail: string[];
             image: string | undefined;
-        }[] = [];
+        }> = [];
         using _run = fakeCommands().mockImplementation(async (command) => {
             const mounts = command
                 .filter((_, index) => command[index - 1] === '--mount')

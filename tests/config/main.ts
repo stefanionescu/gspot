@@ -13,4 +13,4 @@ export const JSON_ARGUMENT_ERRORS = [
 
 export const MALFORMED_SETTINGS = 'malformed = [';
 
-export const VERSION_ARGUMENTS: readonly (readonly string[])[] = [['--version'], ['--json', '--version']] as const;
+export const VERSION_ARGUMENTS: ReadonlyArray<readonly string[]> = [['--version'], ['--json', '--version']] as const;

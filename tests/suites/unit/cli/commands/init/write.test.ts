@@ -26,8 +26,8 @@ test('init keeps the old config file when the generated one cannot be written', 
     expect(refused.code).toBe(2);
     expect(refused.stderr).toBe(STOPPED_ERROR_MESSAGE);
     expect(await readFile(join(sandbox.path, 'typos.toml'), 'utf8')).toBe(authored);
-    const exists = existsSync(join(sandbox.path, getManifestTarget('spelling', 'typos.toml')));
-    expect(exists).toBe(false);
+    const generated = join(sandbox.path, getManifestTarget('spelling', 'typos.toml'));
+    expect(existsSync(generated)).toBe(false);
 });
 
 test.each([
@@ -68,8 +68,8 @@ ignore = E501
     const written = await runGspot(sandbox.path, ['init', '--configurations', 'sql']);
     expect(written.code, written.stdout + written.stderr).toBe(0);
     expect(await readFile(join(sandbox.path, 'setup.cfg'), 'utf8')).toBe(edited);
-    const exists = existsSync(join(sandbox.path, getManifestTarget('sql', 'sqlfluff.cfg')));
-    expect(exists).toBe(true);
+    const generated = join(sandbox.path, getManifestTarget('sql', 'sqlfluff.cfg'));
+    expect(existsSync(generated)).toBe(true);
 });
 
 test('init keeps a replaced config that changes after the plan reads it', async () => {

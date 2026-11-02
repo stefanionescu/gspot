@@ -160,7 +160,7 @@ export const UV_LOCKFILE_ORIGINS = [
         true,
         { index: [{ url: 'https://packages.example/simple' }] },
     ],
-] satisfies [string, string, boolean, Record<string, unknown>][];
+] satisfies Array<[string, string, boolean, Record<string, unknown>]>;
 
 export const LOCKFILE_PASSWORD_ERROR = {
     name: 'GspotError',

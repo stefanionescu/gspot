@@ -30,7 +30,7 @@ test('deptry skips a scope without pyproject.toml', async () => {
 
 test('deptry excludes nested scopes and keeps your own exclude patterns', async () => {
     await using sandbox = await createGitSandbox({});
-    const scopes = Object.keys(DEPTRY_SCOPE_PATHS) as (keyof typeof DEPTRY_SCOPE_PATHS)[];
+    const scopes = Object.keys(DEPTRY_SCOPE_PATHS) as Array<keyof typeof DEPTRY_SCOPE_PATHS>;
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',

@@ -29,7 +29,7 @@ test('a Python check that runs in a copy uses the environment that the working t
     await fakeNpmTool(working.path, 'basedpyright');
     await createFileTree(sandbox.path, files);
     const copy = await openSession(sandbox.path, { toolsRoot: working.path });
-    const calls: { pythonPath: string | undefined; environment: string | undefined }[] = [];
+    const calls: Array<{ pythonPath: string | undefined; environment: string | undefined }> = [];
     using _spawn = fakeCommands().mockImplementation((command, options) => {
         const flag = command.indexOf('--pythonpath');
         calls.push({

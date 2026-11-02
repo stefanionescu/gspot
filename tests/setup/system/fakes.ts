@@ -30,11 +30,11 @@ export function fakeCommands(name?: string, spawn?: typeof runProcess): Mock<typ
     const fake = mock(spawn ?? run);
     spy.mockImplementation((command, options) => {
         const program = command[0] ?? '';
-        const replaced =
+        const isReplaced =
             name === undefined
                 ? program !== GIT_PROGRAM
                 : [program, basename(program), parse(program).name].includes(name);
-        return replaced ? fake(command, options) : run(command, options);
+        return isReplaced ? fake(command, options) : run(command, options);
     });
     return Object.assign(fake, {
         [Symbol.dispose]: () => {
@@ -162,7 +162,7 @@ export function fakeExecutableLookup(
 Mark each stream as a terminal or not, and restore the streams when the scope ends.
 */
 export function fakeTerminals(
-    terminals: readonly (readonly [NodeJS.ReadStream | NodeJS.WriteStream, boolean])[],
+    terminals: ReadonlyArray<readonly [NodeJS.ReadStream | NodeJS.WriteStream, boolean]>,
 ): Disposable {
     using resources = new DisposableStack();
     for (const [stream, isTTY] of terminals) {

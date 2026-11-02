@@ -132,6 +132,6 @@ test('a typeless package lints its .js files as CommonJS and its .mjs files as a
     const eslint = await buildEslint(sandbox.path);
     const configs = (await Promise.all(
         ['server.js', 'tool.mjs'].map((path) => eslint.calculateConfigForFile(path)),
-    )) as { languageOptions: { sourceType: string } }[];
+    )) as Array<{ languageOptions: { sourceType: string } }>;
     expect(configs.map(({ languageOptions }) => languageOptions.sourceType)).toStrictEqual(['commonjs', 'module']);
 });

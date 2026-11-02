@@ -60,7 +60,7 @@ test.each([...TYPOS_REPORT_ERRORS])('typos refuses $name: $message', async ({ ou
 
 test('a typo in a code file asks for a rename, and the fixer leaves it alone', async () => {
     const report = { ...TYPO_REPORT, path: 'sample.ts' };
-    await using sandbox = await testdir({ 'sample.ts': 'te\u0068\n' });
+    await using sandbox = await testdir({ 'sample.ts': `${TYPO.the}\n` });
     const check = getShippedCheck('spelling/typos');
     expect(parseOutput(check, JSON.stringify(report), '', { root: sandbox.path, cwd: sandbox.path })).toMatchObject([
         { file: 'sample.ts', fixable: false, help: "Rename it with your editor's rename, and update its callers." },

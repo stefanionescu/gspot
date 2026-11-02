@@ -37,7 +37,7 @@ export const BLOCK_FORMATS = [
     { path: '.gitignore', start: '# >>> gspot managed >>>', end: '# <<< gspot managed <<<' },
 ] as const;
 
-export const NGINX_DIRECTIVE_CASES: { source: string; expected: [string, ...string[]][] }[] = [
+export const NGINX_DIRECTIVE_CASES: Array<{ source: string; expected: Array<[string, ...string[]]> }> = [
     {
         source: 'location / { proxy_pass "https://api:3000"; add_header X-Value "two  spaces # text"; }',
         expected: [

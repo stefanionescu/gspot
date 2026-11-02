@@ -48,7 +48,7 @@ test.each([
     { commandArguments: ['explain', './README.md', '--json'], headings: ['### `path`'], kind: true },
 ])('$commandArguments prints the fields of its section of json-output.mdx', async (row) => {
     await using sandbox = await createGitSandbox({
-        ...(row.settings === false ? {} : { 'gspot.toml': buildSandboxSettings(['markdown', 'data-files']) }),
+        ...(row.settings !== false && { 'gspot.toml': buildSandboxSettings(['markdown', 'data-files']) }),
         'README.md': '# Example\n',
     });
     using _install = spyOn(installers, 'installTools').mockResolvedValue({

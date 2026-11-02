@@ -261,7 +261,9 @@ test('Ruff from the installed environment reports a staged Python finding while 
     expect(working.report.checks).toMatchObject([{ check: 'python/ruff', status: 'passed' }]);
 });
 
-function listScopeRules(report: RunReport): Record<string, { status: string; rules: readonly (string | undefined)[] }> {
+function listScopeRules(
+    report: RunReport,
+): Record<string, { status: string; rules: ReadonlyArray<string | undefined> }> {
     return Object.fromEntries(
         report.checks.map(({ scope, status, findings }) => [
             scope,

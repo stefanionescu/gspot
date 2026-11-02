@@ -146,7 +146,7 @@ reason = "This sandbox exercises tools without the npm formatter."
 
 export const TWO_WORDS = 'two words';
 
-export const AWS_KEY_ID = 'AKIA' + 'IOSFODNN7' + 'EXAMPLA';
+export const AWS_KEY_ID = ['AKIA', 'IOSFODNN7', 'EXAMPLA'].join('');
 
 export const TYPO = {
     the: 'teh',

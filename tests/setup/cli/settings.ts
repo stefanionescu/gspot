@@ -18,7 +18,7 @@ export function buildSandboxSettings(
     options: {
         level?: Level;
         tables?: string;
-        scopes?: readonly { path: string; configurations?: readonly string[] }[];
+        scopes?: ReadonlyArray<{ path: string; configurations?: readonly string[] }>;
         rules?: boolean;
         ignore?: { checks: readonly string[]; reason: string };
     } = {},

@@ -19,7 +19,7 @@ test('the ignore file of the copies stays until every check of a run ends', asyn
         'run.sh': '#!/usr/bin/env bash\n',
     });
     const ignoreFile = join(sandbox.path, '.gspot-copies/.gitignore');
-    let held = false;
+    let isHeld = false;
     await runChecks(
         await openSession(sandbox.path),
         buildRunOptions({
@@ -27,13 +27,13 @@ test('the ignore file of the copies stays until every check of a run ends', asyn
             selectCheckCode: () => ({
                 check: () => {
                     createCopyFolder(sandbox.path)[Symbol.dispose]();
-                    held = existsSync(ignoreFile);
+                    isHeld = existsSync(ignoreFile);
                     return [];
                 },
             }),
         }),
     );
-    expect(held).toBe(true);
+    expect(isHeld).toBe(true);
     expect(existsSync(ignoreFile)).toBe(false);
 });
 
@@ -94,12 +94,12 @@ test('a copy survives another check removing its parent during creation', async 
     await using sandbox = await testdir();
     const previous = createCopyFolder(sandbox.path);
     const create = fs.mkdtempSync;
-    let removed = false;
+    let isRemoved = false;
     using _creation = spyOn(fs, 'mkdtempSync').mockImplementation(
         new Proxy(create, {
             apply(target, receiver, args) {
-                if (!removed) {
-                    removed = true;
+                if (!isRemoved) {
+                    isRemoved = true;
                     previous[Symbol.dispose]();
                 }
                 return Reflect.apply(target, receiver, args) as string | Buffer;

@@ -33,16 +33,16 @@ test('a printed result removes escape sequences and format characters but keeps 
     const { stdout } = output;
     try {
         setOutputOptions({ isJson: false });
-        const name = 'title\u001B]0;renamed\u0007\u001B[2Jcheck‮gnp.exe​⁦x⁩';
-        printResult({ text: `\u001B[31mfailed\u001B[39m ${name}\n`, json: {}, exitCode: 1 });
-        expect(stdout).toStrictEqual(['\u001B[31mfailed\u001B[39m titlecheckgnp.exex\n']);
+        const name = 'title\u{1B}]0;renamed\u{7}\u{1B}[2Jcheck‮gnp.exe\u{200B}⁦x⁩';
+        printResult({ text: `\u{1B}[31mfailed\u{1B}[39m ${name}\n`, json: {}, exitCode: 1 });
+        expect(stdout).toStrictEqual(['\u{1B}[31mfailed\u{1B}[39m titlecheckgnp.exex\n']);
     } finally {
         setOutputOptions({ isJson: false });
     }
 });
 
 test('a human error removes terminal controls while JSON preserves the message as escaped data', () => {
-    const message = 'Before\u001B[2Kafter\u0000\u0007\u007F';
+    const message = 'Before\u{1B}[2Kafter\0\u{7}\u{7F}';
     using output = captureTerminal();
     const { stdout, stderr } = output;
     try {
@@ -51,7 +51,7 @@ test('a human error removes terminal controls while JSON preserves the message a
         expect(stderr).toStrictEqual(['Beforeafter\n']);
         setOutputOptions({ isJson: true });
         printError({ error: 'filesystem', message });
-        expect(stdout.join('')).not.toContain('\u001B');
+        expect(stdout.join('')).not.toContain('\u{1B}');
         expect(JSON.parse(stdout.join(''))).toStrictEqual({
             version: cliPackage.version,
             exitCode: 2,
@@ -69,7 +69,7 @@ test('warnings use stderr in text mode and join existing JSON notes without writ
     const { stdout, stderr } = output;
     try {
         setOutputOptions({ isJson: false });
-        printWarning('Check\u001B[2K again.');
+        printWarning('Check\u{1B}[2K again.');
         expect(stderr).toStrictEqual(['[warn] Check again.\n']);
         stderr.length = 0;
         setOutputOptions({ isJson: true });
@@ -116,6 +116,6 @@ test.each([true, false])('warning colors follow stderr when its terminal state i
     printWarning('Read the note.');
     expect(output.stdout).toStrictEqual([]);
     expect(output.stderr).toStrictEqual([
-        stderrIsTerminal ? '\u001B[33m[warn]\u001B[39m Read the note.\n' : '[warn] Read the note.\n',
+        stderrIsTerminal ? '\u{1B}[33m[warn]\u{1B}[39m Read the note.\n' : '[warn] Read the note.\n',
     ]);
 });

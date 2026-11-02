@@ -100,7 +100,7 @@ test.each([...REASON_VALUES])(
         expect(
             (
                 JSON.parse(reported.stdout) as {
-                    scopes: { scope: string; value: unknown; source: string; reason?: string }[];
+                    scopes: Array<{ scope: string; value: unknown; source: string; reason?: string }>;
                 }
             ).scopes.map(({ scope, value, source, reason }) => ({ scope, value, source, reason })),
         ).toStrictEqual([
@@ -153,7 +153,7 @@ test('explain shows the default of a path setting joined with the scope, as gspo
     const explained = await runGspot(sandbox.path, ['explain', 'site.build_folder', '--json']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
     const { scopes } = JSON.parse(explained.stdout) as {
-        scopes: { scope: string; default: unknown; value: unknown; source: string }[];
+        scopes: Array<{ scope: string; default: unknown; value: unknown; source: string }>;
     };
     expect(scopes.filter((each) => each.scope === 'web')).toStrictEqual([
         { scope: 'web', default: 'web/dist', value: 'web/dist', source: 'configuration site' },

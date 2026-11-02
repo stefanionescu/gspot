@@ -9,7 +9,7 @@ const { own, call } = splitProgramArguments();
 
 const { values } = parseArgs({ args: own, options: FAKE_CI_MISE_OPTIONS });
 
-if (!call.some((argument) => argument.startsWith(CLI_PACKAGE_REQUEST))) {
+if (call.every((argument) => !argument.startsWith(CLI_PACKAGE_REQUEST))) {
     const nativeMise = values['native-mise'] ?? 'mise';
     const path = `${dirname(nativeMise)}${delimiter}${readEnvironmentVariable('PATH') ?? ''}`;
     process.exitCode = Bun.spawnSync([nativeMise, ...call], {

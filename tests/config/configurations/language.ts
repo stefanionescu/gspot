@@ -94,7 +94,7 @@ export const panel = <div>Hello</div>;
 \`\`\`
 
 \`\`\`toml
-key =\u0020
+key =
 \`\`\`
 
 \`\`\`ts

@@ -72,7 +72,7 @@ test("Stylelint run by an editor finds the scope's config file and checks the bu
     const tool = join(root, `${GSPOT_PATHS.nodeModules}/.bin/stylelint`);
     const failed = await runCommand([tool, '--formatter', 'json', 'build/site.css'], { cwd: root });
     expect(failed.code, failed.stdout + failed.stderr).toBe(2);
-    const [result] = JSON.parse(failed.stderr) as { warnings: { rule: string; line: number }[] }[];
+    const [result] = JSON.parse(failed.stderr) as Array<{ warnings: Array<{ rule: string; line: number }> }>;
     expect(result!.warnings.map(({ rule, line }) => ({ rule, line }))).toStrictEqual([
         { rule: 'color-hex-length', line: 2 },
         { rule: 'number-max-precision', line: 3 },

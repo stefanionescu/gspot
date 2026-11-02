@@ -28,8 +28,8 @@ Unclosed instructions.
         'AGENTS.md has incomplete or repeated gspot block markers. Fix the markers, then run gspot apply.\n',
     );
     expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).toBe(authored);
-    const exists = existsSync(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')));
-    expect(exists).toBe(false);
+    const generated = join(sandbox.path, getManifestTarget('bash', 'shellcheckrc'));
+    expect(existsSync(generated)).toBe(false);
 });
 
 test('apply --json prints one error object when an unowned file blocks generation', async () => {

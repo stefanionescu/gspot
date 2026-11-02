@@ -107,15 +107,15 @@ export const WORKSPACE_SCOPE_CASES = [
 ] as const;
 
 export const ASTRO_CHECK_SUMMARY = [
-    '\u001B[1mResult (1 file): \u001B[22m',
-    '- \u001B[1m\u001B[31m1 error\u001B[39m\u001B[22m',
+    '\u{1B}[1mResult (1 file): \u{1B}[22m',
+    '- \u{1B}[1m\u{1B}[31m1 error\u{1B}[39m\u{1B}[22m',
 ].join('\n');
 
 export const ASTRO_CHECK_OUTPUT = [
-    "\u001B[96msrc/env.ts\u001B[0m:\u001B[93m1\u001B[0m:\u001B[93m14\u001B[0m - \u001B[91merror\u001B[0m\u001B[90m ts(2322): \u001B[0mType 'string' is not assignable to type 'number'.",
+    "\u{1B}[96msrc/env.ts\u{1B}[0m:\u{1B}[93m1\u{1B}[0m:\u{1B}[93m14\u{1B}[0m - \u{1B}[91merror\u{1B}[0m\u{1B}[90m ts(2322): \u{1B}[0mType 'string' is not assignable to type 'number'.",
     '',
-    "\u001B[7m1\u001B[0m export const count: number = 'three';",
-    '\u001B[7m \u001B[0m \u001B[91m             ~~~~~\u001B[0m',
+    "\u{1B}[7m1\u{1B}[0m export const count: number = 'three';",
+    '\u{1B}[7m \u{1B}[0m \u{1B}[91m             ~~~~~\u{1B}[0m',
     '',
     ASTRO_CHECK_SUMMARY,
 ].join('\n');

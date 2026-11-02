@@ -85,7 +85,7 @@ export const VERSION_OUTPUTS = [
     },
     {
         name: 'a version between color codes',
-        toolArguments: ['--line', 'version-teller \u001B[1;36m3.8.1\u001B[0m using more'],
+        toolArguments: ['--line', 'version-teller \u{1B}[1;36m3.8.1\u{1B}[0m using more'],
         state: 'system',
         found: '3.8.1',
         note: undefined,

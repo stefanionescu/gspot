@@ -8,7 +8,7 @@ import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
-async function runWeakenings(root: string): Promise<{ rules: (string | undefined)[]; notes: string[] }> {
+async function runWeakenings(root: string): Promise<{ rules: Array<string | undefined>; notes: string[] }> {
     const session = await openSession(root);
     const { report } = await runChecks(session, buildRunOptions({ only: ['gspot/weakenings'] }));
     return {

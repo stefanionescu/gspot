@@ -235,7 +235,7 @@ export const NEST_SUFFIX_FILES = {
     'app/custom.three.ts': '',
 };
 
-export const NESTJS_PREFIX_RESULTS: { scope: string; paths: string[] }[] = [
+export const NESTJS_PREFIX_RESULTS: Array<{ scope: string; paths: string[] }> = [
     { scope: '', paths: ['feature.controller.spec.ts'] },
     { scope: 'app', paths: ['app/custom.one.ts', 'app/jsx.controller.tsx'] },
     { scope: 'app/deep', paths: [] },

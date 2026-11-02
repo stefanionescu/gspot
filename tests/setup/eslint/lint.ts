@@ -80,7 +80,7 @@ export async function readEslintRules(
 /**
 List each rule name once, sorted.
 */
-export function listFindingRules(findings: readonly LintFinding[]): (string | null)[] {
+export function listFindingRules(findings: readonly LintFinding[]): Array<string | null> {
     return [...new Set(findings.map(({ rule }) => rule))].toSorted((left, right) =>
         compareText(String(left), String(right)),
     );

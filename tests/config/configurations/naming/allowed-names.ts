@@ -209,7 +209,7 @@ export const QUALIFIED_SQL_NAMES = [
     { category: 'parameters', name: 'out', line: 5, column: 6 },
 ] as const;
 
-export const SQL_SOURCE_NAMES: (string | number)[][] = [
+export const SQL_SOURCE_NAMES: Array<Array<string | number>> = [
     ['schemas', 'app', 2],
     ['tables', 'user_accounts', 4],
     ['columns', 'id', 5],

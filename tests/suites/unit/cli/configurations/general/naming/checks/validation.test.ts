@@ -278,7 +278,10 @@ async function readNaming(tables: string): Promise<FileNaming> {
 }
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Naming tests compare rule IDs and messages through the same finding projection.
-function listRuleMessages(identifier: Identifier, naming: FileNaming): { rule: string | undefined; message: string }[] {
+function listRuleMessages(
+    identifier: Identifier,
+    naming: FileNaming,
+): Array<{ rule: string | undefined; message: string }> {
     return validateIdentifiers(
         { scope: { settings: { test_files: naming.isTestFile ? ['**'] : [] } } },
         naming.settings,

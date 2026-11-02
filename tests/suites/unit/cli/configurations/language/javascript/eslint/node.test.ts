@@ -181,7 +181,6 @@ function buildExpectedFindings(cases: readonly ScriptFindingCase[], level: Level
         )
         .toSorted((left, right) => {
             if (left.file !== right.file) return compareText(left.file, right.file);
-            if (left.line !== right.line) return left.line - right.line;
-            return compareText(left.rule ?? '', right.rule ?? '');
+            return left.line === right.line ? compareText(left.rule ?? '', right.rule ?? '') : left.line - right.line;
         });
 }

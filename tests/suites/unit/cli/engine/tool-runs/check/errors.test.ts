@@ -187,8 +187,8 @@ test.each(['crash', 'parse'] as const)('a later %s preserves only selected, unig
             findings: findings.map(({ file, rule, message }) => ({ file, rule, message })),
         })),
     ).toStrictEqual([{ status: 'error', findings: [{ file: 'one.txt', rule: 'kept', message: 'Kept finding.' }] }]);
-    for (const verbose of [false, true]) {
-        const text = formatRunReport(result.report, { verbose });
+    for (const isVerbose of [false, true]) {
+        const text = formatRunReport(result.report, { verbose: isVerbose });
         expect(text).toContain('Kept finding.');
         expect(text).not.toContain('Outside finding.');
     }

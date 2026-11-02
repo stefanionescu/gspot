@@ -7,8 +7,8 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each(['exception', 'rejection'])('an uncaught %s exits 2 with the command error envelope', async (kind) => {
     await using sandbox = await createGitSandbox({});
-    for (const verbose of [false, true]) {
-        const argumentsList = ['gspot', '--version', '--json', ...(verbose ? ['--verbose'] : [])];
+    for (const isVerbose of [false, true]) {
+        const argumentsList = ['gspot', '--version', '--json', ...(isVerbose ? ['--verbose'] : [])];
         const failure =
             kind === 'exception'
                 ? 'setImmediate(() => { throw new TypeError("Uncaught failure detail"); });'
@@ -32,7 +32,7 @@ test.each(['exception', 'rejection'])('an uncaught %s exits 2 with the command e
             error: 'unexpected',
             message: `gspot stopped because of an internal error. Report it at ${cliPackage.bugs.url}.`,
         });
-        if (verbose) expect(report).toHaveProperty('stack');
+        if (isVerbose) expect(report).toHaveProperty('stack');
         else expect(result.stdout).not.toContain('Uncaught failure detail');
     }
 });

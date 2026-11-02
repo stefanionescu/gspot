@@ -144,7 +144,7 @@ test.each([
 test('switching the level and back writes the same files', async () => {
     await using sandbox = await createGitSandbox({});
     await writeFile(join(sandbox.path, 'source.js'), 'export const value = 1;\n');
-    const outputs: { path: string; content: string }[][] = [];
+    const outputs: Array<Array<{ path: string; content: string }>> = [];
     for (const level of ['basic', 'all', 'basic'] as const) {
         const settings = buildSandboxSettings(['javascript'], { rules: true, level });
         await writeFile(join(sandbox.path, 'gspot.toml'), settings);

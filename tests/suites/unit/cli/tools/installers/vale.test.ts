@@ -141,13 +141,13 @@ test('an oversized archive cancels its response stream before reporting the size
     const session = await openSession(sandbox.path);
     const writer = openFiles(sandbox.path);
     const install = await buildSandboxToolInstall(session, writer);
-    let canceled = false;
+    let isCanceled = false;
     const stream = new ReadableStream<Uint8Array>({
         start: (controller) => {
             controller.enqueue(new Uint8Array([1, 2, 3]));
         },
         cancel: () => {
-            canceled = true;
+            isCanceled = true;
         },
     });
     using _request = spyOn(globalThis, 'fetch').mockImplementation(
@@ -164,7 +164,7 @@ test('an oversized archive cancels its response stream before reporting the size
         code: 'install',
         message: 'https://example.com/styles.zip exceeds the size limit for styles.',
     });
-    expect(canceled).toBe(true);
+    expect(isCanceled).toBe(true);
     expect(stream.locked).toBe(false);
 });
 

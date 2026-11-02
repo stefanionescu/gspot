@@ -1,7 +1,7 @@
 export const PUBLISHED_SCHEMA_CASES = [
     { name: 'escaped glob brackets', input: { test_files: [String.raw`src/\[draft\]/*.test.ts`] }, valid: true },
-    { name: 'a path with an ASCII control character', input: { test_files: ['src/\u0001.test.ts'] }, valid: false },
-    { name: 'a path with a C1 control character', input: { test_files: ['src/\u0085.test.ts'] }, valid: false },
+    { name: 'a path with an ASCII control character', input: { test_files: ['src/\u{1}.test.ts'] }, valid: false },
+    { name: 'a path with a C1 control character', input: { test_files: ['src/\u{85}.test.ts'] }, valid: false },
     { name: 'a path with an invalid escape', input: { test_files: [String.raw`src/\a.test.ts`] }, valid: false },
     {
         name: 'GitHub CI with systems',

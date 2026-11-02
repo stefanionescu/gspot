@@ -25,11 +25,11 @@ export const TRANSLATION_CASES = [
     },
 ] as const;
 
-export const MESSAGE_LAYOUTS: {
+export const MESSAGE_LAYOUTS: Array<{
     layout: string;
     files: Record<string, string>;
-    expected: { file: string; message: string }[];
-}[] = [
+    expected: Array<{ file: string; message: string }>;
+}> = [
     {
         layout: 'nested catalogs',
         files: {

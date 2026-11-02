@@ -159,7 +159,7 @@ export function buildToolLockfiles(configurations: Configuration[]): Record<stri
                     source: { virtual: '.' },
                     metadata: {
                         'requires-dist': python.dependencies.map((pin) => {
-                            const [name, version] = pin.split('==');
+                            const [name, version] = pin.split('==', 2);
                             return { name, specifier: `==${version!}` };
                         }),
                     },

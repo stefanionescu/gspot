@@ -134,7 +134,7 @@ test.each([true, false])('report colors follow stdout when its terminal state is
         [process.stderr, !stdoutIsTerminal],
     ]);
     const text = formatRunReport(FAILED_CHECK_REPORT, { verbose: false });
-    expect(text.includes('\u001B[')).toBe(stdoutIsTerminal);
+    expect(text.includes('\u{1B}[')).toBe(stdoutIsTerminal);
     using _plain = overrideEnvironment({ NO_COLOR: '1' });
     expect(stripVTControlCharacters(text)).toBe(formatRunReport(FAILED_CHECK_REPORT, { verbose: false }));
 });

@@ -130,7 +130,7 @@ test.each([...LEVELS])("every configuration's generated config files parse at le
     const generated = output.files.filter(
         (file) => !file.path.startsWith(`${GSPOT_FOLDER}/`) || file.path.startsWith(`${GSPOT_PATHS.configurations}/`),
     );
-    const failures: { path: string; error: string }[] = [];
+    const failures: Array<{ path: string; error: string }> = [];
     for (const file of generated) {
         if (new Set<string>(UNPARSED_CONFIGS).has(basename(file.path))) continue;
         try {

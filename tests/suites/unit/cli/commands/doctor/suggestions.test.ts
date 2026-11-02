@@ -13,7 +13,7 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { REMOVE_SUGGESTIONS, CI_PREFERENCE_CASES } from '#tests/config/commands/reports.ts';
 import { STYLELINT_FILES, COMMITLINT_PACKAGE } from '#tests/config/setup/configurations.ts';
 
-async function listDetectedNames(root: string): Promise<(string | undefined)[]> {
+async function listDetectedNames(root: string): Promise<Array<string | undefined>> {
     const findings = await runSandboxCheck(root, 'gspot/detected-configurations');
     return findings.map(({ message }) => /Run gspot add (\S+?)[,\s]/u.exec(message)?.[1]);
 }

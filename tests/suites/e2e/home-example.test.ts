@@ -76,7 +76,7 @@ test('the home example matches staged findings and summaries and passes after it
                 check: finding.check,
                 file: finding.file,
                 line: finding.line,
-                ...(finding.column === undefined ? {} : { column: finding.column }),
+                ...(finding.column !== undefined && { column: finding.column }),
                 rule: finding.rule,
                 message: finding.message,
             }));

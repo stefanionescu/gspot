@@ -247,7 +247,7 @@ test('each file holds one import rule, the tRPC category comes first, and a refu
 
     const eslint = await buildEslint(sandbox.path);
     const { settings } = (await eslint.calculateConfigForFile('app/source.ts')) as EslintConfiguration;
-    const files = settings['boundaries/files'] as { category: string; stopMatching?: boolean }[];
+    const files = settings['boundaries/files'] as Array<{ category: string; stopMatching?: boolean }>;
     expect(files.map(({ category, stopMatching }) => ({ category, stopMatching }))).toStrictEqual([
         { category: 'tests', stopMatching: true },
         { category: 'trpc:server', stopMatching: undefined },

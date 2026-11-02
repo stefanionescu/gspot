@@ -120,33 +120,31 @@ buildTypedRuleTester().run('prefer-native-lodash with types', rule, {
         'import _ from "lodash";\ndeclare const value: any;\n_.map(value, (entry: unknown) => entry);',
     ],
     invalid: [
-        ...[
-            [
-                'declare const value: number[] | undefined;\n_.map(value, (entry) => entry);',
-                'map',
-                'Array.prototype.map()',
-                'the library also accepts objects and nullish values',
-            ],
-            [
-                'declare const value: [number, string];\n_.some(value, (entry) => entry);',
-                'some',
-                'Array.prototype.some()',
-                'the library also accepts objects, nullish values, and shorthand predicates',
-            ],
-            [
-                'declare const value: string;\n_.contains(value, "t");',
-                'contains',
-                'String.prototype.includes()',
-                'the library also accepts arrays, objects, and nullish values',
-            ],
-        ].map(([body = '', method = '', alternative = '', reason = '']) => ({
-            code: `import _ from "lodash";\n${body}`,
-            errors: [
-                {
-                    messageId: 'cautious' as const,
-                    data: { alternative, method, reason, library: 'lodash' },
-                },
-            ],
-        })),
-    ],
+        [
+            'declare const value: number[] | undefined;\n_.map(value, (entry) => entry);',
+            'map',
+            'Array.prototype.map()',
+            'the library also accepts objects and nullish values',
+        ],
+        [
+            'declare const value: [number, string];\n_.some(value, (entry) => entry);',
+            'some',
+            'Array.prototype.some()',
+            'the library also accepts objects, nullish values, and shorthand predicates',
+        ],
+        [
+            'declare const value: string;\n_.contains(value, "t");',
+            'contains',
+            'String.prototype.includes()',
+            'the library also accepts arrays, objects, and nullish values',
+        ],
+    ].map(([body = '', method = '', alternative = '', reason = '']) => ({
+        code: `import _ from "lodash";\n${body}`,
+        errors: [
+            {
+                messageId: 'cautious' as const,
+                data: { alternative, method, reason, library: 'lodash' },
+            },
+        ],
+    })),
 });

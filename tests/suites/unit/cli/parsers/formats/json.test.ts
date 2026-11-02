@@ -28,9 +28,9 @@ test('JSON files accept comments and trailing commas without a JSONC extension',
 });
 
 test('a JSON file may begin with one byte order mark', () => {
-    expect(parseJsonFile('example.json', '\uFEFF{"name":"project"}')).toStrictEqual({ name: 'project' });
-    const file = openJsonFile('example.json', '\uFEFF{"name":"project"}');
+    expect(parseJsonFile('example.json', '\u{FEFF}{"name":"project"}')).toStrictEqual({ name: 'project' });
+    const file = openJsonFile('example.json', '\u{FEFF}{"name":"project"}');
     file.set(['name'], 'renamed');
-    expect(file.getText()).toBe('\uFEFF{"name":"renamed"}');
+    expect(file.getText()).toBe('\u{FEFF}{"name":"renamed"}');
     expect(parseJsonFile('example.json', file.getText())).toStrictEqual({ name: 'renamed' });
 });

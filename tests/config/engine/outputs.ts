@@ -88,7 +88,7 @@ export const FIXABLE_FORMAT_CASES = [
     ['python/ruff-format', 'source.py:1:1: unformatted: different spacing', 'source.py'],
 ] as const;
 
-export const ESLINT_PATH_CASES: [root: string, path: string, expected: string][] = [
+export const ESLINT_PATH_CASES: Array<[root: string, path: string, expected: string]> = [
     ['/repo', '/repo/a.js', 'a.js'],
     ['/repo', '/repository/a.js', '/repository/a.js'],
     [
@@ -243,26 +243,32 @@ export const TYPOS_REPORT_ERRORS = [
 export const TYPOS_FINDING_CASES = [
     {
         name: 'a byte offset after Unicode text',
-        source: 'café te\u0068\n',
+        source: `café ${TYPO.the}\n`,
         report: { ...TYPO_REPORT, byte_offset: 6 },
-        expected: { file: 'sample.txt', line: 1, column: 6, message: '`te\u0068` should be `the`', fixable: true },
+        expected: {
+            file: 'sample.txt',
+            line: 1,
+            column: 6,
+            message: `\`${TYPO.the}\` should be \`the\``,
+            fixable: true,
+        },
     },
     {
         name: 'several possible corrections',
-        source: 'te\u0068\n',
+        source: `${TYPO.the}\n`,
         report: { ...TYPO_REPORT, corrections: ['the', 'tea'] },
         expected: {
             file: 'sample.txt',
             line: 1,
             column: 1,
-            message: '`te\u0068` should be `the`, `tea`',
+            message: `\`${TYPO.the}\` should be \`the\`, \`tea\``,
             fixable: false,
         },
     },
     {
         name: 'a misspelled file name',
         source: '',
-        report: { type: 'typo', path: 'te\u0068.txt', byte_offset: 0, typo: 'te\u0068', corrections: ['the'] },
-        expected: { file: 'te\u0068.txt', message: 'Filename: `te\u0068` should be `the`', fixable: false },
+        report: { type: 'typo', path: `${TYPO.the}.txt`, byte_offset: 0, typo: TYPO.the, corrections: ['the'] },
+        expected: { file: `${TYPO.the}.txt`, message: `Filename: \`${TYPO.the}\` should be \`the\``, fixable: false },
     },
 ] as const;

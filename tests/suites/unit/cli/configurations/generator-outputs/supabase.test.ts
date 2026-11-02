@@ -39,7 +39,7 @@ async function prepareSupabaseCheck(
     await writeProgramCommand(root, 'bin/docker', 'fakes/tool');
     const supabase = executables.sync('supabase', { path: bin });
     const docker = executables.sync('docker', { path: bin });
-    const requests: { commandArguments: string[]; cwd: string }[] = [];
+    const requests: Array<{ commandArguments: string[]; cwd: string }> = [];
     const { runProcess: spawn } = processes;
     resources.use(
         fakeExecutableLookup((name) =>

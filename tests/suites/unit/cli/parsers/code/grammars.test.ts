@@ -20,12 +20,12 @@ test('parsed source copies remain usable after the run releases its resources', 
 
 test('a long parse pass lets the event loop run', async () => {
     using _loaded = await parseSource('bash', 'echo ready\n');
-    let turned = false;
+    let hasLoopRun = false;
     setImmediate(() => {
-        turned = true;
+        hasLoopRun = true;
     });
     for (let parsed = 0; parsed < 200; parsed += 1) {
         using _tree = await parseSource('bash', 'echo ready\n');
     }
-    expect(turned).toBe(true);
+    expect(hasLoopRun).toBe(true);
 });

@@ -10,7 +10,7 @@ import { getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 async function checkMessage(
     message: string,
     commentChar?: string,
-): Promise<{ rule: string | undefined; message: string }[]> {
+): Promise<Array<{ rule: string | undefined; message: string }>> {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     if (commentChar !== undefined) runGitStep(sandbox.path, ['config', 'core.commentChar', commentChar]);
     const messageFile = join(sandbox.path, '.git', 'COMMIT_EDITMSG');

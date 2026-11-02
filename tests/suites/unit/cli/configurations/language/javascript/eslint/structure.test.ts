@@ -24,14 +24,14 @@ import {
     TRIVIAL_ENTRYPOINT_FILES,
 } from '#tests/config/configurations/javascript/plugins.ts';
 
-async function listTrivialFindings(root: string, settings: string): Promise<Pick<LintFinding, 'file' | 'rule'>[]> {
+async function listTrivialFindings(root: string, settings: string): Promise<Array<Pick<LintFinding, 'file' | 'rule'>>> {
     await writeFile(join(root, 'gspot.toml'), settings);
     const eslint = await buildEslint(root);
     const findings = await listLintFindings(eslint, root, ['src', 'api/src'], TRIVIAL_RULES);
     return findings.map(({ file, rule }) => ({ file, rule }));
 }
 
-function listTrivialFiles(findings: Pick<LintFinding, 'file' | 'rule'>[]): string[] {
+function listTrivialFiles(findings: Array<Pick<LintFinding, 'file' | 'rule'>>): string[] {
     const files = findings.filter(({ rule }) => rule === 'gspot/no-trivial-files').map(({ file }) => file);
     return [...new Set(files)].toSorted(compareText);
 }

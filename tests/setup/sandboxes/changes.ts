@@ -15,14 +15,14 @@ import { rm, mkdir, lstat, rmdir, unlink, readFile, writeFile } from 'node:fs/pr
 async function deleteLeftover(root: string, path: string): Promise<void> {
     await rm(join(root, path), { force: true });
     for (let folder = dirname(path); folder !== '.'; folder = dirname(folder)) {
-        const removed = await rmdir(join(root, folder)).then(
+        const isRemoved = await rmdir(join(root, folder)).then(
             () => true,
             (error: unknown) => {
                 if (!hasErrorCode(error, 'ENOTEMPTY') && !hasErrorCode(error, 'ENOENT')) throw error;
                 return false;
             },
         );
-        if (!removed) return;
+        if (!isRemoved) return;
     }
 }
 

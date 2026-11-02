@@ -11,7 +11,7 @@ import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { COMMANDS_HEADING } from '#tests/config/generation/generate.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
-function listIndexPaths(block: string): (string | undefined)[] {
+function listIndexPaths(block: string): Array<string | undefined> {
     const index = block.slice(0, block.indexOf(COMMANDS_HEADING));
     return index
         .matchAll(/^- `([^`]+)`/gmu)

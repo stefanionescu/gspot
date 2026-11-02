@@ -137,7 +137,7 @@ Read \`./missing.ts\`.
 <Example />
 `;
 
-export const RELATIVE_PATH_FINDINGS: (string | number)[][] = [
+export const RELATIVE_PATH_FINDINGS: Array<Array<string | number>> = [
     [2, './examples/gone.ts names no tracked file or folder.'],
     [2, '../src/gone.ts names no tracked file or folder.'],
     [3, './src/here.ts names no tracked file or folder.'],

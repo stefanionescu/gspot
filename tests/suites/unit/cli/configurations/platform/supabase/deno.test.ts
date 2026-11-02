@@ -114,7 +114,7 @@ test('Deno type errors use their location or the entrypoint', async () => {
                     code: 1,
                     stderr:
                         command.at(-1)?.includes(join('greet', 'index.ts')) === true
-                            ? `\u001B[31merror\u001B[0m: TS2322 [ERROR]: Type mismatch.\n    at ${location}:4:7\n`
+                            ? `\u{1B}[31merror\u{1B}[0m: TS2322 [ERROR]: Type mismatch.\n    at ${location}:4:7\n`
                             : 'error: Module not found "./missing.ts".\n',
                 }),
             ),

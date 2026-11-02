@@ -37,7 +37,7 @@ test('a sitemap index supplies the base path for encoded and CDATA page URLs and
         const buildUrl = `${pathToFileURL(options.cwd).href}/`;
         remaps.push(
             mappings.map((mapping) => {
-                const [pattern, target] = mapping.split(' ');
+                const [pattern, target] = mapping.split(' ', 2);
                 return 'https://example.com/docs/guide/'.replace(new RegExp(pattern!), target!);
             }),
         );
