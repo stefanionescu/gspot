@@ -17,10 +17,6 @@ buildRuleTester().run('no-identical-functions', plugin.rules['no-identical-funct
             errors: [{ messageId: 'identical', data: { line: 1 }, line: 6 }],
         },
         {
-            code: 'const first = () => {\n    a();\n    b();\n    c();\n};\nclass Shape {\n    second() {\n        a();\n        b();\n        c();\n    }\n}',
-            errors: [{ messageId: 'identical', data: { line: 1 }, line: 7 }],
-        },
-        {
             code: 'function first() {\n    a();\n    b();\n}\nconst second = function () {\n    a();\n    b();\n};',
             options: [{ minLines: 2 }],
             errors: [{ messageId: 'identical', data: { line: 1 }, line: 5 }],

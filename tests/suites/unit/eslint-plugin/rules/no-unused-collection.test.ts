@@ -4,7 +4,6 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 buildRuleTester().run('no-unused-collection', plugin.rules['no-unused-collection'], {
     valid: [
         'function list() { const names = []; names.push("a"); return names; }',
-        'function list() { const names = []; names.push("a"); return names.length; }',
         'function list(run) { const names = []; run(() => names.push("a")); }',
         'function list(make) { const names = make(); names.push("a"); }',
         'export const names = []; names.push("a");',

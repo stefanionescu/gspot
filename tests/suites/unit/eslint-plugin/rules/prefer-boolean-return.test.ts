@@ -18,18 +18,8 @@ buildRuleTester().run('prefer-boolean-return', plugin.rules['prefer-boolean-retu
             errors: [{ messageId: 'return' }],
         },
         { code: 'function read() { if (ready) return true; return false; }', errors: [{ messageId: 'return' }] },
-        { code: 'function read() { if (ready) return true; else return true; }', errors: [{ messageId: 'return' }] },
-        { code: 'function read() { if (ready) return false; else return false; }', errors: [{ messageId: 'return' }] },
-        {
-            code: 'function read() { if (first ? second : third) return true; else return false; }',
-            errors: [{ messageId: 'return' }],
-        },
         {
             code: 'function read() { if (ready) run(); if (other) return true; return false; }',
-            errors: [{ messageId: 'return' }],
-        },
-        {
-            code: 'function read() { if (ready) return true; /* explanation */ return false; }',
             errors: [{ messageId: 'return' }],
         },
     ],

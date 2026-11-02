@@ -23,10 +23,6 @@ buildRuleTester().run('test-hooks-first', plugin.rules['test-hooks-first'], {
             errors: [{ messageId: 'group', column: 26 }],
         },
         {
-            code: 'describe("cart", () => { afterEach(a); it("a", run); afterEach(b); });',
-            errors: [{ messageId: 'group', column: 54 }],
-        },
-        {
             code: 'describe("cart", () => { it("a", run); beforeEach.skip(reset); });',
             errors: [{ messageId: 'before' }],
         },

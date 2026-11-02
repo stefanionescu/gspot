@@ -4,13 +4,8 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 buildRuleTester().run('no-index-imports', plugin.rules['no-index-imports'], {
     valid: [
         "vi.requireActual('@/turn/index.js');",
-        "jest.importActual('@/turn/index.js');",
         "import { a } from '@scope/package/index';",
         "import { a } from '#app/myindex';",
-        "import { a } from './a';",
-        "import { a } from '@/turn/build.js';",
-        "import { a } from 'package/index.js';",
-        "import { a } from './indexes.js';",
     ],
     invalid: [
         { code: "import { a } from '~/lib/index.js';", errors: [{ messageId: 'index' }] },

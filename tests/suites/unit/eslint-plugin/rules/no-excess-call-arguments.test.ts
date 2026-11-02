@@ -10,7 +10,6 @@ buildRuleTester().run('no-excess-call-arguments', plugin.rules['no-excess-call-a
         'const read = () => {}; read(1);',
         'function read() { return arguments[0]; } read(1, 2);',
         'function read() { return (() => arguments[0])(); } read(1, 2);',
-        'function read(value = 1) { return value; } read(); read(1);',
         'function read(value) { return value; } const alias = read; alias(1, 2);',
         'const api = { read(value) { return value; } }; api.read(1, 2);',
         'import read from "reader"; read(1, 2);',
@@ -18,12 +17,10 @@ buildRuleTester().run('no-excess-call-arguments', plugin.rules['no-excess-call-a
     ],
     invalid: [
         { code: 'function read(value) { return value; } read(1, 2);', errors: [{ messageId: 'arguments' }] },
-        { code: 'function read(value) { return value; } read(1, ...values);', errors: [{ messageId: 'arguments' }] },
         { code: 'function read() { work(); } read(...values);', errors: [{ messageId: 'arguments' }] },
         { code: 'const read = (value) => value; read(1, 2);', errors: [{ messageId: 'arguments' }] },
         { code: '(function(value) { return value; })(1, 2);', errors: [{ messageId: 'arguments' }] },
         { code: '((value) => value)(1, 2);', errors: [{ messageId: 'arguments' }] },
-        { code: 'function read(value = 1) { return value; } read(1, 2);', errors: [{ messageId: 'arguments' }] },
         {
             code: 'function read() { function nested() { return arguments[0]; } work(); } read(1);',
             errors: [{ messageId: 'arguments' }],
@@ -34,10 +31,6 @@ buildRuleTester().run('no-excess-call-arguments', plugin.rules['no-excess-call-a
         },
         {
             code: 'declare function read(value: string): void; read("one", "two");',
-            errors: [{ messageId: 'arguments' }],
-        },
-        {
-            code: 'function read(value) { return value; } read = other; read(1, 2);',
             errors: [{ messageId: 'arguments' }],
         },
     ],

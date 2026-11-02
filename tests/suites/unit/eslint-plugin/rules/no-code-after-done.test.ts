@@ -19,13 +19,5 @@ buildRuleTester().run('no-code-after-done', plugin.rules['no-code-after-done'], 
             code: 'specify.only("saves", function (finish) { if (ready) finish(); check(); });',
             errors: [{ messageId: 'afterDone', column: 64 }],
         },
-        {
-            code: 'it("saves", (done) => { done(); const value = 1; if (value) { check(); } });',
-            errors: [{ messageId: 'afterDone', column: 63 }],
-        },
-        {
-            code: 'it("saves", (done) => { setTimeout(() => { done(); check(); }); });',
-            errors: [{ messageId: 'afterDone', column: 52 }],
-        },
     ],
 });

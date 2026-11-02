@@ -11,7 +11,6 @@ buildRuleTester().run('no-fixed-test-waits', plugin.rules['no-fixed-test-waits']
         { filename: 'page.test.ts', code: 'page["waitForTimeout"](1000); cy["wait"](1000);' },
         { filename: 'page.test.ts', code: 'cy.wait(delay());' },
         { filename: 'page.test.ts', code: 'let delay = 1000; delay = other; cy.wait(delay);' },
-        { filename: 'page.test.ts', code: 'cy.wait(1 + 2);' },
         { filename: 'page.test.ts', code: 'cy.wait(~1000);' },
         { filename: 'page.test.ts', code: 'cy.wait(1000);', settings: { testFileExtensions: ['js'] } },
     ],

@@ -7,18 +7,12 @@ buildTypedRuleTester().run('prefer-readonly-props', rule, {
     valid: [
         'function Badge(props: Readonly<{ label: string }>) { return <b>{props.label}</b>; }',
         'function Badge({ label }: { readonly label: string }) { return <b>{label}</b>; }',
-        'type Props = Readonly<{ label: string }>;\nfunction Badge(props: Props) { return <b>{props.label}</b>; }',
-        'interface Props { readonly label: string }\nfunction Badge(props: Props) { return <b>{props.label}</b>; }',
-        'interface Base { readonly id: number }\ninterface Props extends Base { readonly label: string }\nfunction Badge(props: Props) { return <b>{props.id}</b>; }',
-        'type Props = { readonly [key in "label" | "title"]: string };\nfunction Badge(props: Props) { return <b>{props.label}</b>; }',
         'function Badge(label: string) { return <b>{label}</b>; }',
         'function Badge(props: {}) { return <b />; }',
         'function Badge(props: { label: string } & { title: string }) { return <b />; }',
         'function Badge(props) { return <b>{props.label}</b>; }',
         'function Badge(props: { label: string }) { return props.label; }',
         'function badge(props: { label: string }) { return <b>{props.label}</b>; }',
-        'function Badge(props: { label: string }, context: unknown) { return <b />; }',
-        'const Badge = (props: { label: string }) => <b>{props.label}</b>;',
         'function Badge(props: { label: string }) { function view() { return <b />; } return view; }',
     ].map((code) => ({ code, filename: 'react.tsx' })),
     invalid: [

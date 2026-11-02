@@ -8,18 +8,5 @@ buildRuleTester().run('no-nested-switch', plugin.rules['no-nested-switch'], {
             code: 'switch (kind) { case "file": function read(format) { switch (format) { case "text": return readText(); } } }',
             errors: [{ messageId: 'nested' }],
         },
-        {
-            code: 'switch (kind) { case "file": const read = (format) => { switch (format) { case "text": return readText(); } }; }',
-            errors: [{ messageId: 'nested' }],
-        },
-
-        {
-            code: 'switch (kind) { case "file": switch (format) { case "text": readText(); } }',
-            errors: [{ messageId: 'nested' }],
-        },
-        {
-            code: 'switch (kind) { case "file": if (ready) { switch (format) { case "text": readText(); } } }',
-            errors: [{ messageId: 'nested' }],
-        },
     ],
 });

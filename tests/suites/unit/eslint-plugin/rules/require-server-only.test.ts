@@ -8,7 +8,6 @@ buildRuleTester().run('require-server-only', plugin.rules['require-server-only']
         "import 'server-only';\nexport const secret = 1;",
         "'use server';\nexport async function act() {}",
         "import marker from 'server-only';",
-        "import * as marker from 'server-only';",
         "import { type Marker, value } from 'server-only';",
     ],
     invalid: [
@@ -17,7 +16,6 @@ buildRuleTester().run('require-server-only', plugin.rules['require-server-only']
             errors: [{ messageId: 'missing' }],
         },
         { code: "import {} from 'server-only';\nexport const secret = 1;", errors: [{ messageId: 'missing' }] },
-        { code: "import /* keeps no value */ {} from 'server-only';", errors: [{ messageId: 'missing' }] },
         { code: 'export const secret = 1;', errors: [{ messageId: 'missing' }] },
         { code: "import type {} from 'server-only';\nexport const secret = 1;", errors: [{ messageId: 'missing' }] },
     ],

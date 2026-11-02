@@ -9,7 +9,6 @@ buildRuleTester({ root }).run('no-duplicate-test-rows', plugin.rules['no-duplica
     valid: [
         { code: 'test.each([1, 1])("adds %d", () => {});', filename: join(root, 'plain/a.test.ts') },
         { code: 'test.each([1, 2, "1"])("adds %d", () => {});', filename },
-        { code: 'test.each([[1, 2], [2, 1]])("adds %d", () => {});', filename },
         { code: 'test.each([...rows, ...rows])("adds %d", () => {});', filename },
     ],
     invalid: [

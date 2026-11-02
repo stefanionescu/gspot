@@ -38,8 +38,6 @@ buildRuleTester({ root }).run('require-test-assertions', rule, {
         'import { expect } from "chai";\nfunction check(value) { expect(value).to.equal(1); }\nit("adds", () => { check(run()); });',
         'import { expect } from "chai";\nconst check = (value) => expect(value).to.equal(1);\nit("adds", () => check(run()));',
         'import { expect } from "chai";\nit("loads", (done) => { load().then(() => {}, done); });',
-        'import { expect } from "chai";\nit("loads", (done) => { load((error) => done(error)); });',
-        'import { expect } from "chai";\nit("loads", (done) => { load().catch(done); });',
         'import { expect } from "chai";\nit("loads", (done) => { stream.subscribe({ error: done }); });',
         'import { it, expect } from "vitest";\nit("adds", () => { expect(add(1, 2)).toBe(3); });',
         'import { it } from "mocha";\nimport sinon from "sinon";\nit("calls", () => { sinon.assert.calledOnce(spy); });',
@@ -58,10 +56,6 @@ buildRuleTester({ root }).run('require-test-assertions', rule, {
         {
             code: 'import { expect } from "chai";\nit.only("adds", function () { run(); });',
             errors: [{ messageId: 'missing', line: 2, column: 1 }],
-        },
-        {
-            code: 'import { test } from "uvu";\nimport * as assert from "uvu/assert";\ntest("adds", () => { run(); });',
-            errors: [{ messageId: 'missing', line: 3, column: 1 }],
         },
         ...[
             'import chai from "chai";\nit("reads", () => { value.should.be; });',

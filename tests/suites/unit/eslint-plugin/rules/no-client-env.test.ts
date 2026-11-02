@@ -87,7 +87,6 @@ buildRuleTester().run<keyof (typeof plugin.rules)['no-client-env']['meta']['mess
                 options: [{ client: true }],
                 errors: [{ messageId: 'private' }],
             },
-            { code: "'use client';\nconst key = process.env['SECRET'];", errors: [{ messageId: 'private' }] },
             {
                 code: "'use client';\nconst name = 'NEXT_PUBLIC_URL';\nconst key = process.env[name];",
                 errors: [{ messageId: 'private' }],

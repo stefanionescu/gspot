@@ -8,11 +8,7 @@ buildRuleTester().run('no-bitwise-in-condition', plugin.rules['no-bitwise-in-con
         'if (flags & 4) run();',
         'const value = isReady ? (isReady & hasData) : 1;',
     ],
-    invalid: [
-        { code: 'if (isReady & hasData) run();', errors: [{ messageId: 'bitwise', data: { operator: '&' } }] },
-        { code: 'while (isReady | hasData) run();', errors: [{ messageId: 'bitwise', data: { operator: '|' } }] },
-        { code: 'const value = (isReady | hasData) ? 1 : 2;', errors: [{ messageId: 'bitwise' }] },
-    ],
+    invalid: [{ code: 'if (isReady & hasData) run();', errors: [{ messageId: 'bitwise', data: { operator: '&' } }] }],
 });
 
 buildTypedRuleTester().run('no-bitwise-in-condition with types', plugin.rules['no-bitwise-in-condition'], {

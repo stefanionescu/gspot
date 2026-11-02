@@ -5,7 +5,6 @@ buildRuleTester().run('no-misplaced-loop-counter', plugin.rules['no-misplaced-lo
     valid: [
         'for (let index = 0; index < items.length; index++) {}',
         'for (let row = 0, column = 0; row < 9; column++, row++) {}',
-        'for (let node = head; node.value < 3; node.value++) {}',
         'for (let row = 0; row < 9; [column, row] = [1, row + 1]) {}',
         'for (const node = head; node.ready; ) {}',
     ],

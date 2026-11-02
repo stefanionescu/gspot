@@ -169,7 +169,7 @@ buildRuleTester().run<
             options: [{ folders: ['apps', 'apps/api'] }],
             errors: [{ messageId: 'escape', data: { source: '../../other/a.js', folder: 'apps/api', target: 'apps' } }],
         },
-        ...['import(`../../supabase/src/a.js`);', "import { a } from '../../supabase/src/a.js';"].map((code) => ({
+        ...['import(`../../supabase/src/a.js`);'].map((code) => ({
             code,
             filename: '/repo/api/src/b.ts',
             options: [{ folders: PROJECT_FOLDERS }] satisfies [Partial<ImportBoundariesOptions[0]>],

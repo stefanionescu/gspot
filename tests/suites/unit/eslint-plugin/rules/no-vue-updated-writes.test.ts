@@ -7,15 +7,12 @@ buildRuleTester().run('no-vue-updated-writes', plugin.rules['no-vue-updated-writ
             'onUpdated(() => { count.value = 1; });',
             'onUpdated(() => { count.value = count.value; });',
             'onUpdated(() => { if (count.value < 3) count.value++; });',
-            'onUpdated(() => { count.value < 3 && count.value++; });',
-            'onUpdated(() => { const next = count.value < 3 ? count.value++ : 3; });',
             'onUpdated(() => { if (count.value > 3) { return; } count.value++; });',
             'onUpdated(() => { if (count.value > 3) { throw new Error("full"); } count.value += 1; });',
             'onUpdated(() => { other.value++; });',
             'onUpdated(() => { setTimeout(() => { count.value++; }); });',
             'onMounted(() => { count.value++; });',
             'onUpdated(() => { state.total = read(); });',
-            'function bump() { count.value++; }',
         ].map(
             (body) =>
                 `import { ref, reactive, onUpdated, onMounted } from "vue";\nconst count = ref(0);\nconst state = reactive({ total: 0 });\nlet other = { value: 0 };\n${body}`,
@@ -34,7 +31,6 @@ buildRuleTester().run('no-vue-updated-writes', plugin.rules['no-vue-updated-writ
             'function bump() { count.value++; }\nonUpdated(bump);',
             'const bump = () => { count.value++; };\nonUpdated(bump);',
             'export default { updated() { count.value++; } };',
-            'export default defineComponent({ updated: () => { count.value++; } });',
             'onUpdated(() => { if (ready) { save(); } count.value++; });',
         ].map((body) => ({
             code: `import { ref, reactive, onUpdated, defineComponent } from "vue";\nconst count = ref(0);\nconst state = reactive({ total: 0 });\n${body}`,

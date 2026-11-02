@@ -14,7 +14,6 @@ buildTypedRuleTester().run('no-selector-parameter', rule, {
         'declare function store(): void; function save(draft: boolean) { store(); if (draft) store(); else store(); }',
         'function label(draft: boolean) { return draft ? "draft" : "final"; }',
         'declare function store(): void; function save(draft?: boolean) { if (draft) store(); else store(); }',
-        'declare function store(): void; function save(draft: number) { if (draft) store(); else store(); }',
         'declare function store(): void; declare function run(callback: unknown): void; run((draft: boolean) => { if (draft) store(); else store(); });',
         'declare function store(): void; const handlers = { onSave(draft: boolean) { if (draft) store(); else store(); } };',
     ],

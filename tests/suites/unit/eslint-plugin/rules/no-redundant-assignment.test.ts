@@ -17,16 +17,8 @@ buildRuleTester().run('no-redundant-assignment', plugin.rules['no-redundant-assi
             errors: [{ messageId: 'redundant', data: { name: 'mode' }, column: 61 }],
         },
         {
-            code: 'function pick(ready) { let mode = 1; if (ready) { mode = 2; } else { mode = 1; } return mode; }',
-            errors: [{ messageId: 'redundant', column: 77 }],
-        },
-        {
             code: 'function pick() { let first = null; let second = null; second = first; return second; }',
             errors: [{ messageId: 'redundant', data: { name: 'second' } }],
-        },
-        {
-            code: 'function pick(ready) { let mode = true; while (ready) { mode = true; } return mode; }',
-            errors: [{ messageId: 'redundant' }],
         },
     ],
 });

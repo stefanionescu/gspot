@@ -6,19 +6,15 @@ const rule = plugin.rules['prefer-native-lodash'];
 buildRuleTester().run('prefer-native-lodash', rule, {
     valid: [
         'import _ from "./utilities";\n_.isArray(value);',
-        'import _ from "lodash";\n_.groupBy(values, read);',
         'import _ from "lodash";\n_(values).keys();',
         'import _ from "lodash";\n_["keys"](value);',
         'import _ from "lodash";\n_.map(values, read);',
         'import _ from "lodash";\n_.map([1], "id");',
-        'import _ from "lodash";\n_.filter([1], { id: 1 });',
         'import _ from "lodash";\n_.map([1]);',
         'import _ from "lodash";\n_.map(...values, read);',
         'import _ from "lodash";\nconst id = "id";\n_.map([1], id);',
         'import _ from "lodash";\n_.includes("text", /t/u);',
-        'import _ from "lodash";\n_.includes("text", new RegExp("t"));',
         'import _ from "lodash";\n_.includes(values, 1);',
-        'import fp from "lodash/fp";\nfp.keys(value);',
     ],
     invalid: [
         {

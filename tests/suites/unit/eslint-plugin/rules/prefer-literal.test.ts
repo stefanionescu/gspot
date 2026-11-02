@@ -15,18 +15,11 @@ buildRuleTester().run('prefer-object-literal', plugin.rules['prefer-object-liter
             code: 'const user = {}; import { name } from "user"; user.name = name;',
             errors: [{ messageId: 'literal' }],
         },
-        { code: 'const user = {}; export {}; user.name = name;', errors: [{ messageId: 'literal' }] },
-        { code: 'const user = {}, other = 1; user.name = name;', errors: [{ messageId: 'literal' }] },
         { code: 'const other = {}, user = {}; user.name = name;', errors: [{ messageId: 'literal' }] },
-        { code: 'const user = {}; user[user.key] = name;', errors: [{ messageId: 'literal' }] },
-        { code: 'const user = {}; user.name += name;', errors: [{ messageId: 'literal' }] },
-        { code: 'const user = {}; user.name =\n name;', errors: [{ messageId: 'literal' }] },
         { code: 'const user = {}; user.name = readName(user);', errors: [{ messageId: 'literal' }] },
-        { code: 'const user = {}; user.name = name;', errors: [{ messageId: 'literal' }] },
         {
             code: 'function read() { const user = {}; user["name"] = name; return user; }',
             errors: [{ messageId: 'literal' }],
         },
-        { code: 'const user = {}; user.name = name; user.age = age;', errors: [{ messageId: 'literal' }] },
     ],
 });

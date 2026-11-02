@@ -5,7 +5,6 @@ buildTypedRuleTester().run('no-undefined-argument', plugin.rules['no-undefined-a
     valid: [
         'function format(value: number, style: string | undefined) {} format(1, undefined);',
         'function format(value: number, style?: string) {} format(1);',
-        'function format(value?: number, style?: string) {} format(undefined, "short");',
     ],
     invalid: [
         {

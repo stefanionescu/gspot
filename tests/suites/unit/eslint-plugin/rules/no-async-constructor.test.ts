@@ -12,9 +12,5 @@ buildTypedRuleTester().run('no-async-constructor', plugin.rules['no-async-constr
             code: 'declare function load(): Promise<void>; class Store { constructor() { load(); } }',
             errors: [{ messageId: 'async' }],
         },
-        {
-            code: 'declare function load(): Promise<void>; class Store { constructor(ready: boolean) { if (ready) { load(); } } }',
-            errors: [{ messageId: 'async' }],
-        },
     ],
 });

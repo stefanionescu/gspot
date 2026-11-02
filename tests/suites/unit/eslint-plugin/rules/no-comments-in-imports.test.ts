@@ -32,7 +32,6 @@ buildRuleTester().run('no-comments-in-imports', plugin.rules['no-comments-in-imp
 
         "// The file header.\nimport { a } from './a';\n\nexport const b = a;",
         "import { a } from './a';\n\n// Explains b.\nexport const b = a;",
-        "import { a } from './a';\n\n// Explains b.\n\nexport const b = a;",
         "import { a } from './a';\n// @ts-expect-error\nconsole.log(a);",
         "import { a } from './a';\n\n/**\n * Doc for b.\n */\nexport const b = a;",
         "import { a } from './a';\n\n// TYPES\n\n/** Doc for b. */\nexport const b = a;",

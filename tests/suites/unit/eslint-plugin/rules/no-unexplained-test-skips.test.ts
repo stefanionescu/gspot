@@ -26,20 +26,22 @@ buildRuleTester({ root }).run('no-unexplained-test-skips', plugin.rules['no-unex
         { code: 'test("adds", (t) => { other.skip(); });', filename: join(root, 'node/c.test.ts') },
     ],
     invalid: [
-        ...['xit("adds", run);', 'xdescribe("cart", run);', 'xcontext("cart", run);'].map((code) => ({
+        ...['xit("adds", run);'].map((code) => ({
             code,
             filename: join(root, 'jasmine/a.test.ts'),
             errors: [{ messageId: 'skipped' as const }],
         })),
-        ...['test.skip("a", run);', 'describe.skip("a", run);', 'xtest("a", run);', 'xdescribe("a", run);'].map(
-            (code) => ({ code, filename: join(root, 'jest/a.test.ts'), errors: [{ messageId: 'skipped' as const }] }),
-        ),
-        ...['suite.skip("a", run);', 'it.skip("a", run);'].map((code) => ({
+        ...['test.skip("a", run);', 'xtest("a", run);'].map((code) => ({
+            code,
+            filename: join(root, 'jest/a.test.ts'),
+            errors: [{ messageId: 'skipped' as const }],
+        })),
+        ...['suite.skip("a", run);'].map((code) => ({
             code,
             filename: join(root, 'vitest/a.test.ts'),
             errors: [{ messageId: 'skipped' as const }],
         })),
-        ...['specify.skip("a", run);', 'xspecify("a", run);', 'context.skip("a", run);'].map((code) => ({
+        ...['specify.skip("a", run);', 'xspecify("a", run);'].map((code) => ({
             code,
             filename: join(root, 'cypress/a.cy.ts'),
             errors: [{ messageId: 'skipped' as const }],

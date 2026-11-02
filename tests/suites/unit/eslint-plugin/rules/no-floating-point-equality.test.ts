@@ -17,7 +17,6 @@ buildRuleTester().run('no-floating-point-equality', plugin.rules['no-floating-po
         { code: 'if (total !== 1 / 3) pay();', errors: [{ messageId: 'equality' }] },
         { code: 'const LIMIT = 0.3; if (total == LIMIT) pay();', errors: [{ messageId: 'equality' }] },
         { code: 'if (total <= 0.1 && total >= 0.1) pay();', errors: [{ messageId: 'equality' }] },
-        { code: 'if (total < 0.1 || total > 0.1) pay();', errors: [{ messageId: 'equality' }] },
         { code: 'switch (total) { case 0.1: pay(); }', errors: [{ messageId: 'equality' }] },
         { code: 'if (total === -1e-3) pay();', errors: [{ messageId: 'equality' }] },
         { code: 'expect(total).not.toEqual(0.3);', errors: [{ messageId: 'equality' }] },

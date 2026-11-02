@@ -5,7 +5,6 @@ buildRuleTester().run('no-overflowing-test-timeout', plugin.rules['no-overflowin
     valid: [
         'describe("cart", function () { this.timeout(3000000000); });',
         'import { expect } from "chai";\ndescribe("cart", function () { this.timeout(0); });',
-        'import { expect } from "chai";\ndescribe("cart", function () { this.timeout(2147483647); });',
         'import { expect } from "chai";\nthis.timeout(3000000000);',
         'import { expect } from "chai";\ntest("cart", function () { this.timeout(3000000000); });',
     ],

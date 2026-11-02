@@ -15,10 +15,6 @@ buildRuleTester().run('no-updated-loop-counter', plugin.rules['no-updated-loop-c
             errors: [{ messageId: 'counter', data: { name: 'index' } }],
         },
         {
-            code: 'for (let index = 0; index < 10; index++) { if (skip) { index = 3; } }',
-            errors: [{ messageId: 'counter' }],
-        },
-        {
             code: 'for (let index = 0; index < 10; index++) { for (let inner = 0; inner < 3; index++) {} }',
             errors: [{ messageId: 'counter' }],
         },

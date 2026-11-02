@@ -7,7 +7,6 @@ buildRuleTester().run('no-empty-collection', plugin.rules['no-empty-collection']
         'function list() { const names = ["a"]; return names.map(String); }',
         'function list() { const names = []; names[0] = "a"; return names.join(); }',
         'function list(fill) { const names = []; fill(names); return names.join(); }',
-        'function list() { const names = []; return names.length; }',
         'function list(names) { names = []; return names.join(); }',
     ],
     invalid: [

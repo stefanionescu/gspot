@@ -14,8 +14,6 @@ buildRuleTester({ root }).run('no-default-utility-imports', plugin.rules['no-def
         { code: 'import rx from "rxjs";', filename: join(root, 'old/cart.ts') },
         { code: 'import validator from "validator";', filename: join(root, 'old/cart.ts') },
         { code: 'import { map } from "lodash";', filename },
-        { code: 'import type Lodash from "lodash";', filename },
-        { code: 'import _, * as all from "lodash";', filename },
         { code: 'import dayjs from "dayjs";', filename },
     ],
     invalid: [

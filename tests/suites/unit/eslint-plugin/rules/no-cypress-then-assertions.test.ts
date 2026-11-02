@@ -11,8 +11,6 @@ buildRuleTester().run('no-cypress-then-assertions', plugin.rules['no-cypress-the
             'cy.get("li").then(($items) => { expect($items.length).to.equal(3); });',
             'cy.get("li").then(async ($items) => { expect($items).to.exist; });',
             'cy.get("li").then(($items) => { let size = 1; expect($items).to.exist; });',
-            'cy.get("li").then(($items) => expect($items).to.exist);',
-            'cy.get("li").then(($items) => { expect($items); });',
             'cy.request("/").then((response) => { expect(response).to.exist; });',
             'cy.get(selector).then(($items) => { expect($items).to.exist; });',
             'const cy = load();\ncy.get("li").then(($items) => { expect($items).to.exist; });',

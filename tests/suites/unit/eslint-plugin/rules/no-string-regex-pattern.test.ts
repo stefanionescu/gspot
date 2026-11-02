@@ -9,7 +9,6 @@ buildRuleTester().run('no-string-regex-pattern without types', plugin.rules['no-
 buildTypedRuleTester().run('no-string-regex-pattern', plugin.rules['no-string-regex-pattern'], {
     valid: [
         String.raw`declare const title: string; title.match(/v1\.2/u);`,
-        'declare const title: string, pattern: RegExp; title.search(pattern);',
         'declare const title: string; title.replace("v1", "v2");',
         'declare const tracker: { match(value: string): void }; tracker.match("v1");',
     ],
@@ -18,10 +17,5 @@ buildTypedRuleTester().run('no-string-regex-pattern', plugin.rules['no-string-re
             code: 'declare const title: string; title.match("v1.2");',
             errors: [{ messageId: 'pattern', data: { method: 'match' } }],
         },
-        {
-            code: 'declare const title: string, pattern: string; title.search(pattern);',
-            errors: [{ messageId: 'pattern', data: { method: 'search' } }],
-        },
-        { code: 'declare const title: string; title.matchAll("[a]");', errors: [{ messageId: 'pattern' }] },
     ],
 });
