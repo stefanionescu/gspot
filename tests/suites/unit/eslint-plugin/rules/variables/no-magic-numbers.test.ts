@@ -10,6 +10,8 @@ buildRuleTester().run<keyof (typeof plugin.rules)['no-magic-numbers']['meta']['m
             'const SIZES = [16, 32, 64];',
             'export const TIMEOUT_MS = 60 * 1000;',
             'export const STEPS = [1, 2, 4].map((step) => step) as const;',
+            "export const DEPTHS = new Map([['expect', 3], ['assert', 2]]);",
+            'export const UNITS = new Set<unknown>([1, 1n]);',
             {
                 name: 'numeric argument explicitly ignored',
                 code: 'setTimeout(retry, 3000);',
@@ -47,6 +49,11 @@ buildRuleTester().run<keyof (typeof plugin.rules)['no-magic-numbers']['meta']['m
                 name: 'constructor argument in a module constant',
                 code: 'const BUFFER = new ArrayBuffer(1024);',
                 errors: [{ messageId: 'noMagic', data: { raw: '1024' } }],
+            },
+            {
+                name: 'call argument inside a module constant map',
+                code: "export const TIMERS = new Map([['retry', setTimeout(retry, 3000)]]);",
+                errors: [{ messageId: 'noMagic', data: { raw: '3000' } }],
             },
             {
                 code: 'function build() { const SIZES = [16, 32]; return SIZES; }',

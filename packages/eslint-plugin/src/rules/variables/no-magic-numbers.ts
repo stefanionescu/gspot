@@ -2,8 +2,8 @@ import { createRule } from '../../rule.ts';
 import { createRequire } from 'node:module';
 import { FUNCTION_NODES } from '../../config/plugin.ts';
 import type { MagicNumbersOptions } from '../../types/variables.ts';
-import { UPSTREAM_RULE, MAGIC_NUMBER_OPTIONS_SCHEMA } from '../../config/variables.ts';
 import { ESLintUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { UPSTREAM_RULE, TABLE_CONSTRUCTORS, MAGIC_NUMBER_OPTIONS_SCHEMA } from '../../config/variables.ts';
 
 const require = createRequire(import.meta.url);
 
@@ -18,8 +18,12 @@ function isModuleConstant(declaration: TSESTree.VariableDeclaration): boolean {
 
 function isCallArgument(node: TSESTree.Node): boolean {
     const { parent } = node;
-    const isCall = parent?.type === AST_NODE_TYPES.CallExpression || parent?.type === AST_NODE_TYPES.NewExpression;
-    return isCall && parent.arguments.includes(node as TSESTree.CallExpressionArgument);
+    if (parent?.type !== AST_NODE_TYPES.CallExpression && parent?.type !== AST_NODE_TYPES.NewExpression) return false;
+    const isTable =
+        parent.type === AST_NODE_TYPES.NewExpression &&
+        parent.callee.type === AST_NODE_TYPES.Identifier &&
+        TABLE_CONSTRUCTORS.has(parent.callee.name);
+    return !isTable && parent.arguments.includes(node as TSESTree.CallExpressionArgument);
 }
 
 function isConstantValue(node: TSESTree.Node): boolean {
@@ -40,7 +44,7 @@ export const noMagicNumbers = createRule<MagicNumbersOptions, 'noMagic' | 'useCo
                 'The call `setTimeout(retry, 3000)` reports `noMagic`. Name the delay, such as `const RETRY_DELAY_MS = 3000;` at module level, and pass the constant. `const SIZES = [16, 32, 64];` and `const TIMEOUT_MS = 60 * 1000;` pass, because the constant names its numbers. `export const server = app.listen(8080);` reports `noMagic`, because `server` names the server, not the port.',
             level: 'none',
             description:
-                'Reports the numbers that @typescript-eslint/no-magic-numbers reports, except inside the initializer of a module-level `const`: literals, arrays, object property values, arithmetic, unary minus, and `as` or `satisfies`. An argument of a call or of `new` is reported there too, because the constant names the result, not the number. It takes the options of @typescript-eslint/no-magic-numbers and needs that package installed.',
+                'Reports the numbers that @typescript-eslint/no-magic-numbers reports, except inside the initializer of a module-level `const`: literals, arrays, object property values, arithmetic, unary minus, `as` or `satisfies`, and the argument of `new Map` or `new Set`. An argument of another call or `new` is reported there too, because the constant names the result, not the number. It takes the options of @typescript-eslint/no-magic-numbers and needs that package installed.',
             why: 'A bare number hides what it measures, and a module-level constant gives it a name that callers share.',
             fix: 'Move the number into a module-level constant whose name says what it measures.',
         },

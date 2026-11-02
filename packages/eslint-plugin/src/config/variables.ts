@@ -88,6 +88,8 @@ export const EMPTY_LITERAL_DECLARATION =
 
 export const UPSTREAM_RULE = 'no-magic-numbers';
 
+export const TABLE_CONSTRUCTORS: ReadonlySet<string> = new Set(['Map', 'Set']);
+
 export const MAGIC_NUMBER_OPTIONS_SCHEMA = {
     description: 'The options of @typescript-eslint/no-magic-numbers, passed through unchanged.',
     type: 'object',
