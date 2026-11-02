@@ -239,7 +239,7 @@ export const RUFF_ANY_PREFIX = '[A-Z]+';
 
 export const UNREADABLE_CONFIG_MESSAGE = 'the whole file, which gspot could not read';
 
-export const UNREAD_CONFIG_MESSAGE = 'its settings, because init reads this tool only at the root and at a scope';
+export const UNREAD_CONFIG_MESSAGE = 'its settings, because init does not read this config';
 
 export const CARRIED_TOOLS: ReadonlySet<string> = new Set([
     'prettier',
