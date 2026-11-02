@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
+import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, listFindingRows, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -27,6 +28,7 @@ extend_exclude = ["^vendor/"]
     });
 
     await applyThenInstall(sandbox.path);
+    await runCommand(['uv', 'venv', '.venv'], { cwd: sandbox.path });
     const commandArguments = ['check', '--only', 'python/deptry', '--json'];
     const failed = parseCheckReport(await spawnGspot(sandbox.path, commandArguments));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
@@ -39,4 +41,18 @@ extend_exclude = ["^vendor/"]
     const changed = parseCheckReport(await spawnGspot(sandbox.path, commandArguments));
     expect(changed.code, changed.stdout + changed.stderr).toBe(1);
     expect(listFindingRows(changed.report)).toStrictEqual([{ file: 'vendor/client.py', line: 1, rule: 'DEP001' }]);
+});
+
+test('deptry reads the project name and the packages under src as first party', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['python']),
+        'pyproject.toml': '[project]\nname = "shop-core"\nversion = "1.0.0"\ndependencies = []\n',
+        'src/shop_core/__init__.py': 'from shop_tools import helper\n\nprint(helper)\n',
+        'src/shop_tools/__init__.py': 'helper = 1\n',
+    });
+    await applyThenInstall(sandbox.path);
+    await runCommand(['uv', 'venv', '.venv'], { cwd: sandbox.path });
+    const checked = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'python/deptry', '--json']));
+    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+    expect(checked.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });

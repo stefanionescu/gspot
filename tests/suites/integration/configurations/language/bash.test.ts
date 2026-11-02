@@ -1,4 +1,6 @@
+import { Glob } from 'bun';
 import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { planChecks } from '#cli/engine/plan.ts';
@@ -6,8 +8,10 @@ import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -62,6 +66,29 @@ test('ShellCheck reports dialect findings by shebang and leaves source files unc
         { scope: '', status: 'passed', fileCount: 5, findings: [] },
         { scope: 'app', status: 'passed', fileCount: 2, findings: [] },
     ]);
+});
+
+test('the shell examples of the rule files pass ShellCheck', async () => {
+    const folder = join(REPOSITORY_ROOT, 'packages/cli/src/configurations');
+    const examples = [...new Glob('**/rules/*.md').scanSync(folder)].flatMap((path) =>
+        listCodeFences(readFileSync(join(folder, path), 'utf8'))
+            .filter(({ language }) => language === 'bash')
+            .map(({ startLine, body }): [string, string] => [
+                `examples/${path.replaceAll('/', '-')}-${String(startLine)}.sh`,
+                `#!/usr/bin/env bash
+# An example reads the names of a whole script.
+# shellcheck disable=SC2034,SC2154
+${body}
+`,
+            ]),
+    );
+    await using sandbox = await createGitSandbox({
+        ...Object.fromEntries(examples),
+        'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
+    });
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
+    const result = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json']));
+    expect(result.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
 });
 
 test('partial ShellCheck output beside an unreadable file is an execution error', async () => {
