@@ -56,6 +56,10 @@ const locatorCases = [
     ],
     ['const row = page.locator("tr");\nexpect(await row.count()).toBe(3)', 'await expect(row).toHaveCount(3)'],
     [
+        'expect(await page.locator("tr").getByRole("cell").isVisible()).toBe(true)',
+        'await expect(page.locator("tr").getByRole("cell")).toBeVisible()',
+    ],
+    [
         'const box = page.getByRole("checkbox");\nexpect(await box.isChecked()).toEqual(false)',
         'await expect(box).not.toBeChecked()',
     ],
@@ -71,6 +75,8 @@ buildRuleTester({ root }).run('prefer-matcher-assertions', plugin.rules['prefer-
         'import { expect } from "vitest";\nexpect(name.includes("a")).toBe(true);',
         'import { expect } from "vitest";\nexpect(await page.locator("a").isVisible()).toBe(true);',
         'import { expect } from "@playwright/test";\nexpect(await other.isVisible()).toBe(true);',
+        'import { expect } from "@playwright/test";\nexpect(await load().isVisible()).toBe(true);',
+        'import { expect } from "@playwright/test";\nexpect(value).toBe(1);',
         'import { assert } from "chai";\nassert.equal(value, null);',
         'import { assert } from "chai";\nassert.notStrictEqual(items.length, 3);',
         'import assert from "node:assert";\nassert.strictEqual(value, null);',

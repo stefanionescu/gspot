@@ -23,7 +23,7 @@ export const BOOLEAN_KINDS = new Set(['true', 'false']);
 
 export const EQUALITY_OPERATORS = new Set(['===', '!==']);
 
-export const NUMERIC_MATCHERS = new Map([
+export const NUMERIC_MATCHERS: ReadonlyMap<string | undefined, string> = new Map([
     ['>', 'above'],
     ['>=', 'atLeast'],
     ['<', 'below'],
@@ -151,7 +151,7 @@ export const MATCHER_TEMPLATES = new Map<string, readonly string[]>([
     ['cypress.undefined', ["{received}.{method}('be.undefined')", "{received}.{method}('not.be.undefined')"]],
 ]);
 
-export const LOCATOR_FACTORIES = new Set([
+export const LOCATOR_FACTORIES: ReadonlySet<string | null> = new Set([
     'getByRole',
     'getByText',
     'getByLabel',
@@ -163,7 +163,7 @@ export const LOCATOR_FACTORIES = new Set([
     'frameLocator',
 ]);
 
-export const LOCATOR_STATES = new Map([
+export const LOCATOR_STATES: ReadonlyMap<string | null, readonly string[]> = new Map([
     ['isVisible', ['toBeVisible', 'toBeHidden']],
     ['isHidden', ['toBeHidden', 'toBeVisible']],
     ['isEnabled', ['toBeEnabled', 'toBeDisabled']],
@@ -171,7 +171,7 @@ export const LOCATOR_STATES = new Map([
     ['isChecked', ['toBeChecked', 'not.toBeChecked']],
 ]);
 
-export const LOCATOR_VALUES = new Map([
+export const LOCATOR_VALUES: ReadonlyMap<string | null, string> = new Map([
     ['count', 'toHaveCount'],
     ['inputValue', 'toHaveValue'],
 ]);

@@ -27,17 +27,20 @@ function listResponseCalls(
         .find(({ name }) => ASTUtils.isIdentifier(response) && name === response.name);
     return (variable?.references ?? []).flatMap(({ identifier }) => {
         const call = identifier.parent.parent;
-        if (call?.type !== AST_NODE_TYPES.CallExpression || call.callee.type !== AST_NODE_TYPES.MemberExpression)
-            return [];
-        const isMethod = call.arguments.length === RESPONSE_CALL_ARGUMENTS && !call.callee.computed;
-        return isMethod && ASTUtils.getPropertyName(call.callee) === method ? [call] : [];
+        const isMethod =
+            call?.type === AST_NODE_TYPES.CallExpression &&
+            call.callee.type === AST_NODE_TYPES.MemberExpression &&
+            call.arguments.length === RESPONSE_CALL_ARGUMENTS &&
+            !call.callee.computed &&
+            ASTUtils.getPropertyName(call.callee) === method;
+        return isMethod ? [call] : [];
     });
 }
 
 function readText(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): string | undefined {
-    if (node === undefined) return undefined;
-    const value = ASTUtils.getStaticValue(node, source.getScope(node))?.value;
-    return typeof value === 'string' ? value : undefined;
+    const evaluated = node && ASTUtils.getStaticValue(node, source.getScope(node));
+    if (typeof evaluated?.value !== 'string') return undefined;
+    return evaluated.value;
 }
 
 function isCompared(identifier: TSESTree.Node): boolean {
@@ -46,14 +49,10 @@ function isCompared(identifier: TSESTree.Node): boolean {
     return false;
 }
 
-function isValidated(
-    source: Readonly<TSESLint.SourceCode>,
-    callback: FunctionNode,
-    header: TSESTree.Node | undefined,
-): boolean {
+function isValidated(source: Readonly<TSESLint.SourceCode>, header: TSESTree.Node | undefined): boolean {
     if (header?.type !== AST_NODE_TYPES.Identifier) return false;
-    const variable = source.scopeManager?.acquire(callback)?.set.get(header.name);
-    return (variable?.references ?? []).some(({ identifier }) => isCompared(identifier));
+    const variable = ASTUtils.findVariable(source.getScope(header), header);
+    return variable?.references.some(({ identifier }) => isCompared(identifier)) === true;
 }
 
 function isCopiedOrigin(
@@ -77,12 +76,8 @@ function listPermissiveServers(source: Readonly<TSESLint.SourceCode>, node: TSES
     const calls = callback ? listResponseCalls(source, callback, 'writeHead') : [];
     return calls
         .filter((call) => {
-            const headers = readExpressionValue(call.arguments[1], source);
-            const origin =
-                headers?.type === AST_NODE_TYPES.ObjectExpression
-                    ? readOptionProperties(headers, source).get('Access-Control-Allow-Origin')
-                    : null;
-            return Boolean(origin) && readText(source, origin?.value) === '*';
+            const origin = readOptionProperties(call.arguments[1], source).get('Access-Control-Allow-Origin');
+            return readText(source, origin?.value) === '*';
         })
         .map(({ callee }) => callee);
 }
@@ -92,8 +87,10 @@ function findOriginMiddleware(
     node: TSESTree.CallExpression,
 ): TSESTree.CallExpression | undefined {
     const middleware = readExpressionValue(node.arguments[0], source);
-    if (middleware?.type !== AST_NODE_TYPES.CallExpression) return undefined;
-    return readQualifiedName(middleware, source) === CROSS_ORIGIN_MODULE ? middleware : undefined;
+    const isCrossOrigin =
+        middleware?.type === AST_NODE_TYPES.CallExpression &&
+        readQualifiedName(middleware, source) === CROSS_ORIGIN_MODULE;
+    return isCrossOrigin ? middleware : undefined;
 }
 
 function listPermissiveMiddlewares(
@@ -113,9 +110,7 @@ function listCopiedOrigins(source: Readonly<TSESLint.SourceCode>, node: TSESTree
     const request = callback?.params[0];
     if (callback === undefined || !ASTUtils.isIdentifier(request)) return [];
     return listResponseCalls(source, callback, 'setHeader')
-        .filter(
-            (call) => isCopiedOrigin(source, call, request.name) && !isValidated(source, callback, call.arguments[1]),
-        )
+        .filter((call) => isCopiedOrigin(source, call, request.name) && !isValidated(source, call.arguments[1]))
         .map(({ callee }) => callee);
 }
 

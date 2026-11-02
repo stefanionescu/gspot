@@ -70,7 +70,7 @@ function readBinarySuggestion(
     if (EQUALITY_OPERATORS.has(node.operator)) return readEqualitySuggestion(node.left, node.right, negated, source);
     if (node.operator === 'instanceof')
         return { kind: 'instance', received: node.left, expected: node.right, negated: !positive };
-    const kind = NUMERIC_MATCHERS.get((positive ? node.operator : INVERTED_OPERATORS.get(node.operator)) ?? '');
+    const kind = NUMERIC_MATCHERS.get(positive ? node.operator : INVERTED_OPERATORS.get(node.operator));
     const isNumber = isNumeric(node.left, source) && isNumeric(node.right, source);
     return kind !== undefined && isNumber
         ? { kind, received: node.left, expected: node.right, negated: false }
@@ -124,9 +124,7 @@ function readTemplateKey(assertion: ComparisonAssertion, kind: string, family: s
 function readMessage(assertion: ComparisonAssertion, family: string, source: TSESLint.SourceCode): string {
     const { node, received } = assertion;
     const [, ...expectValues] = received.parent.type === AST_NODE_TYPES.CallExpression ? received.parent.arguments : [];
-    const assertValues = (node.type === AST_NODE_TYPES.CallExpression ? node.arguments : []).slice(
-        ASSERT_MESSAGE_INDEX,
-    );
+    const assertValues = node.arguments.slice(ASSERT_MESSAGE_INDEX);
     const messages = family === 'chai-assert' ? assertValues : expectValues;
     return messages.map((message) => `, ${source.getText(message)}`).join('');
 }
@@ -137,8 +135,7 @@ function readFields(
     family: string,
     source: TSESLint.SourceCode,
 ): Map<string, string> {
-    const { node } = assertion;
-    const callee = node.type === AST_NODE_TYPES.CallExpression ? node.callee : node;
+    const { callee } = assertion.node;
     const text = source.getText(suggestion.received);
     const needsParentheses = family === 'chai-should' && !BARE_RECEIVERS.has(suggestion.received.type);
     return new Map([
@@ -159,11 +156,12 @@ function isLocatorVariable(node: TSESTree.Identifier, source: TSESLint.SourceCod
 
 function isLocator(node: TSESTree.Node, source: TSESLint.SourceCode, seen: Set<TSESTree.Node>): boolean {
     if (node.type === AST_NODE_TYPES.Identifier) return isLocatorVariable(node, source, seen);
-    const callee = node.type === AST_NODE_TYPES.CallExpression ? node.callee : node;
-    if (callee.type !== AST_NODE_TYPES.MemberExpression) return false;
-    const isPage = callee.object.type === AST_NODE_TYPES.Identifier && callee.object.name === 'page';
-    const isFactory = LOCATOR_FACTORIES.has(ASTUtils.getPropertyName(callee) ?? '');
-    return isFactory && (isPage || isLocator(callee.object, source, seen));
+    if (node.type !== AST_NODE_TYPES.CallExpression || node.callee.type !== AST_NODE_TYPES.MemberExpression)
+        return false;
+    const { object: receiver } = node.callee;
+    const isPage = receiver.type === AST_NODE_TYPES.Identifier && receiver.name === 'page';
+    const isFactory = LOCATOR_FACTORIES.has(ASTUtils.getPropertyName(node.callee));
+    return isFactory && (isPage || isLocator(receiver, source, seen));
 }
 
 function readLocatorGetter(
@@ -178,7 +176,7 @@ function readLocatorGetter(
 }
 
 function readLocatorMatcher(
-    name: string,
+    name: string | null,
     assertion: ComparisonAssertion,
     source: TSESLint.SourceCode,
 ): string | undefined {
@@ -193,11 +191,9 @@ function readLocatorMatcher(
 
 function readLocatorSuggestion(assertion: ComparisonAssertion, source: TSESLint.SourceCode): string | undefined {
     const getter = assertion.style === 'playwright' ? readLocatorGetter(assertion, source) : undefined;
-    const name = getter === undefined ? '' : (ASTUtils.getPropertyName(getter) ?? '');
-    const matcher = readLocatorMatcher(name, assertion, source);
-    return getter === undefined || matcher === undefined
-        ? undefined
-        : `await expect(${source.getText(getter.object)}).${matcher}`;
+    if (getter === undefined) return undefined;
+    const matcher = readLocatorMatcher(ASTUtils.getPropertyName(getter), assertion, source);
+    return matcher === undefined ? undefined : `await expect(${source.getText(getter.object)}).${matcher}`;
 }
 
 function allowsJasmineSize(context: FileContext): boolean {
@@ -217,7 +213,7 @@ function readMatcherText(
     const key = readTemplateKey(assertion, suggestion.kind, family, allowsSize);
     const template = MATCHER_TEMPLATES.get(key)?.[Number(suggestion.negated)];
     const fields = readFields(assertion, suggestion, family, source);
-    return template?.replaceAll(TEMPLATE_FIELD, (_field, name: string) => fields.get(name) ?? '');
+    return template?.replaceAll(TEMPLATE_FIELD, (_field, name: string) => String(fields.get(name)));
 }
 
 export const preferMatcherAssertions = createRule<[], 'matcher' | 'length' | 'replace'>({

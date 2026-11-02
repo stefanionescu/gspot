@@ -4,6 +4,16 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 buildRuleTester().run('cross-origin-policy', plugin.rules['cross-origin-policy'], {
     valid: [
         "import cors from 'cors';\nimport express from 'express';\nconst app = express();\napp.use(cors({ origin: ['https://app.example.com'] }));",
+        ...[
+            'app.use(express.json());',
+            'app.use(logger);',
+            "app.get('/', handler);",
+            "app.get('/', (req, res) => { res.send('ok'); });",
+            "app.get('/', (req, res) => { read(res); });",
+            "app.get('/', (req) => { read(req); });",
+            "app.get('/', (req, res) => { res.setHeader('X-Frame-Options', 'DENY'); });",
+            'http.createServer(app);',
+        ].map((code) => `import express from 'express';\nimport http from 'http';\nconst app = express();\n${code}`),
     ],
     invalid: [
         {

@@ -15,6 +15,10 @@ buildRuleTester().run('no-cypress-then-assertions', plugin.rules['no-cypress-the
             'cy.get(selector).then(($items) => { expect($items).to.exist; });',
             'const cy = load();\ncy.get("li").then(($items) => { expect($items).to.exist; });',
             'cy.get("li").then(($items) => { expect($items.text().split(",")).to.have.length(3); });',
+            'cy.get("li").then(($items) => { expect($items).to.equal(`${total}`); });',
+            'cy.get("li").then(($items) => { const size = load(); expect($items).to.exist; });',
+            'cy.get("li").then(($items) => { if (ready) expect($items).to.exist; });',
+            'cy.get("li").then(({ length }) => { expect(length).to.equal(3); });',
         ].map((code) => ({ code, filename: '/repo/cypress/e2e/cart.cy.ts' })),
     ],
     invalid: [

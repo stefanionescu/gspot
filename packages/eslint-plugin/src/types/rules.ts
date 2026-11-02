@@ -227,9 +227,14 @@ export type AssertionComparison = 'strict' | 'deep' | 'loose';
 
 export type AssertionSubject = { received: TSESTree.Expression; negated: boolean };
 
-export type Assertion = AssertionSubject & { style: AssertionStyle; node: TSESTree.Node; report: TSESTree.Node } & (
-        | { kind: 'predicate'; predicate: AssertionPredicate }
-        | { kind: 'comparison'; comparison: AssertionComparison; expected: TSESTree.Expression }
+export type Assertion = AssertionSubject & { style: AssertionStyle; report: TSESTree.Node } & (
+        | { kind: 'predicate'; predicate: AssertionPredicate; node: TSESTree.Node }
+        | {
+              kind: 'comparison';
+              comparison: AssertionComparison;
+              expected: TSESTree.Expression;
+              node: TSESTree.CallExpression;
+          }
     );
 
 export type AssertionChecks = {

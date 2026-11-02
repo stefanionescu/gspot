@@ -12,22 +12,16 @@ import {
     COMMENT_PARSER_OPTIONS,
 } from '../config/comments.ts';
 
-function hasProgramBody(program: unknown): boolean {
-    if (typeof program !== 'object' || program === null || !('body' in program)) return false;
-    return Array.isArray(program.body) && program.body.length > 0;
-}
-
 function parsesAsCode(parser: TSESLint.Parser.LooseParserModule, text: string): boolean {
     try {
         const program =
             'parseForESLint' in parser
                 ? parser.parseForESLint(text, COMMENT_PARSER_OPTIONS).ast
                 : parser.parse(text, COMMENT_PARSER_OPTIONS);
-        return hasProgramBody(program);
+        return (program as TSESTree.Program).body.length > 0;
     } catch (error) {
-        if (!(error instanceof Error)) throw error;
-        if (!COMMENT_PARSE_ERRORS.has(error.name)) throw error;
-        return false;
+        if (error instanceof Error && COMMENT_PARSE_ERRORS.has(error.name)) return false;
+        throw error;
     }
 }
 

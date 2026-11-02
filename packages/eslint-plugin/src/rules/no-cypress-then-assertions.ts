@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
 import { listBodyNodes, isTestRelatedPath } from '../testing.ts';
-import type { ThenCall, CallbackScope } from '../types/rules.ts';
+import type { ThenCall, MemberCall, FunctionNode, CallbackScope } from '../types/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -13,22 +13,11 @@ import {
     ASSERTION_DEPTHS,
 } from '../config/cypress.ts';
 
-function isUnsafeShape(node: TSESTree.Node): boolean {
-    const isDelete = node.type === AST_NODE_TYPES.UnaryExpression && node.operator === 'delete';
-    const isSpecial =
-        node.type === AST_NODE_TYPES.Property &&
-        (node.computed || node.method || node.kind !== 'init' || ASTUtils.getPropertyName(node) === '__proto__');
-    return isDelete || isSpecial;
-}
-
 function readCallKind(node: TSESTree.CallExpression, kinds: ReadonlyMap<string, string>): string | undefined {
     const { callee } = node;
-    const method =
-        callee.type === AST_NODE_TYPES.MemberExpression && node.arguments.length === 0
-            ? ASTUtils.getPropertyName(callee)
-            : null;
-    const receiver = callee.type === AST_NODE_TYPES.MemberExpression ? readSafeKind(callee.object, kinds) : undefined;
-    return STRING_CALLS.has(`${receiver ?? ''}.${method ?? ''}`) ? 'string' : undefined;
+    if (callee.type !== AST_NODE_TYPES.MemberExpression || node.arguments.length > 0) return undefined;
+    const name = [readSafeKind(callee.object, kinds), ASTUtils.getPropertyName(callee)].join('.');
+    return STRING_CALLS.has(name) ? 'string' : undefined;
 }
 
 function readLeafKind(node: TSESTree.Node, kinds: ReadonlyMap<string, string>): string | undefined {
@@ -44,11 +33,10 @@ function readLeafKind(node: TSESTree.Node, kinds: ReadonlyMap<string, string>): 
 
 function readSafeKind(node: TSESTree.Node, kinds: ReadonlyMap<string, string>): string | undefined {
     const [kind, ...fields] = SAFE_OPERANDS.get(node.type) ?? [];
+    if (kind === undefined) return readLeafKind(node, kinds);
     const operands = fields
         .flatMap((field): unknown => node[field as keyof TSESTree.Node])
         .filter((value): value is TSESTree.Node => value !== null && typeof value === 'object');
-    if (isUnsafeShape(node)) return undefined;
-    if (kind === undefined) return readLeafKind(node, kinds);
     return operands.every((operand) => readSafeKind(operand, kinds) !== undefined) ? kind : undefined;
 }
 
@@ -78,13 +66,12 @@ function isSafeArgument(
     return isSelector ? isSelectorText : readSafeKind(argument, new Map()) !== undefined;
 }
 
-function isRetriedQuery(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
-    const callee = node.type === AST_NODE_TYPES.CallExpression ? node.callee : undefined;
-    const method = callee?.type === AST_NODE_TYPES.MemberExpression ? (ASTUtils.getPropertyName(callee) ?? '') : '';
-    const values = node.type === AST_NODE_TYPES.CallExpression ? node.arguments : [];
+function isRetriedQuery(node: TSESTree.CallExpression, source: TSESLint.SourceCode): boolean {
+    const { callee } = node;
+    const method = callee.type === AST_NODE_TYPES.MemberExpression ? ASTUtils.getPropertyName(callee) : null;
     return (
         CYPRESS_QUERIES.has(method) &&
-        values.every((value, index) => isSafeArgument(value, method === 'get' && index === 0, source))
+        node.arguments.every((value, index) => isSafeArgument(value, method === 'get' && index === 0, source))
     );
 }
 
@@ -118,8 +105,8 @@ function acceptDeclaration(
 ): boolean {
     const declarations = statement.kind === 'const' ? statement.declarations : [];
     for (const { id, init } of declarations) {
-        const kind = init === null ? undefined : readSafeKind(init, scope.kinds);
-        if (kind === undefined || init === null || id.type !== AST_NODE_TYPES.Identifier) return false;
+        const kind = init && readSafeKind(init, scope.kinds);
+        if (init === null || typeof kind !== 'string' || id.type !== AST_NODE_TYPES.Identifier) return false;
         scope.kinds.set(id.name, kind);
         if (usesYielded(init, scope.yielded, source)) scope.yielded.add(id.name);
     }
@@ -157,10 +144,10 @@ function isAssertionBody(body: TSESTree.BlockStatement, parameter: string, sourc
 }
 
 function readThenCall(body: TSESTree.BlockStatement): ThenCall | undefined {
-    const callback = body.parent;
-    const callee = callback.parent?.type === AST_NODE_TYPES.CallExpression ? callback.parent.callee : undefined;
-    const [parameter] = ASTUtils.isFunction(callback) ? callback.params : [];
-    return callee?.type === AST_NODE_TYPES.MemberExpression && parameter?.type === AST_NODE_TYPES.Identifier
+    const callback = body.parent as FunctionNode;
+    const { callee } = callback.parent as MemberCall;
+    const [parameter] = callback.params;
+    return parameter?.type === AST_NODE_TYPES.Identifier
         ? { property: callee.property, receiver: callee.object, parameter: parameter.name }
         : undefined;
 }

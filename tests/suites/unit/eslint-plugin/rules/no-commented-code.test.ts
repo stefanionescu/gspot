@@ -1,4 +1,5 @@
 import plugin from '#eslint-plugin/plugin.ts';
+import * as parser from '@typescript-eslint/parser';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-commented-code', plugin.rules['no-commented-code'], {
@@ -22,5 +23,18 @@ buildRuleTester().run('no-commented-code', plugin.rules['no-commented-code'], {
         { code: '/* sendResponse(user); */', errors: [{ messageId: 'code' }] },
         { code: '// if (ready) {\n//   sendResponse(user);\n// }', errors: [{ messageId: 'code' }] },
         { code: '// Previous implementation:\n// sendResponse(user);', errors: [{ messageId: 'code' }] },
+        { code: '// sendResponse(user); }', errors: [{ messageId: 'code' }] },
+        {
+            name: 'parses with the script parser of an Astro component',
+            code: '// sendResponse(user);',
+            languageOptions: { parserOptions: { parser: { parse: parser.parse } } },
+            errors: [{ messageId: 'code' }],
+        },
+        {
+            name: 'parses with the script parsers of a Vue component',
+            code: '// sendResponse(user);',
+            languageOptions: { parserOptions: { parser: { ts: parser } } },
+            errors: [{ messageId: 'code' }],
+        },
     ],
 });

@@ -1,4 +1,4 @@
-export const CYPRESS_QUERIES = new Set([
+export const CYPRESS_QUERIES: ReadonlySet<string | null> = new Set([
     'children',
     'closest',
     'contains',
