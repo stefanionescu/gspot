@@ -22,8 +22,10 @@ there, and runs the checks with no fixes. It then deletes the copy, so your repo
 The report gives the findings by category, with three examples each, and the number of files that differ from your
 style. It also gives the cost in tools, megabytes, and seconds, and the plan of `gspot init`. It lists every command
 that breaks after init, what init carries over from your configs, what it drops, and the next steps. Add `--markdown` to paste the report into a pull request or a chat, or `--json` to read every finding. A scan exits with
-`0` when it prints its report, whatever it finds. npm, uv, and mise keep their download caches, so a second scan
-downloads nothing new.
+`0` when it prints its report, whatever it finds.
+
+npm, uv, and mise keep their download caches, so a second scan downloads no tool again. Each scan still asks GitHub for
+the pinned releases. If GitHub limits those requests, see [Troubleshooting](/use/troubleshooting/).
 
 ## Set up gspot yourself
 
