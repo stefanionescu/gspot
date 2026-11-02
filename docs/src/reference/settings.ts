@@ -194,6 +194,7 @@ Build the settings page from the CLI's documented tree, with one explicit anchor
 */
 export function buildSettingsPage(): ReferencePage {
     const roots = CLI_REFERENCE.settings;
+    const topLevelKeys = roots.filter((node) => node.kind === 'value');
     const sections = roots
         .filter((node) => node.kind !== 'value')
         .map((node) =>
@@ -206,10 +207,7 @@ export function buildSettingsPage(): ReferencePage {
             `The [JSON Schema](${CLI_REFERENCE.docs.schema}) describes every key.\n` +
             formatSection(
                 TOP_LEVEL_HEADING,
-                formatSettingKeys(
-                    roots.filter((node) => node.kind === 'value'),
-                    TABLE_HEADING_LEVEL + 1,
-                ),
+                formatSettingKeys(topLevelKeys, TABLE_HEADING_LEVEL + 1),
                 TABLE_HEADING_LEVEL,
                 'top-level-keys',
             ) +

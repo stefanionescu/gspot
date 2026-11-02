@@ -137,39 +137,23 @@ Build the grouped configuration index and its pages.
 @returns the index and each configuration page with a section per check, keyed by path
 */
 export function buildConfigurationPages(guides: Map<string, ConfigurationGuide>): Map<string, ReferencePage> {
-    const pages = new Map<string, ReferencePage>([
-        [
-            `${REFERENCE_FOLDERS.configurations}/index`,
-            buildReferencePage(
-                'Configurations',
-                CONFIGURATIONS_DESCRIPTION,
-                CONFIGURATIONS_OPENING +
-                    formatSection(
-                        'Always selected',
-                        formatTable(
-                            ['Configuration', SELECTED_HEADING],
-                            CLI_REFERENCE.configurations
-                                .filter(({ always_selected }) => always_selected)
-                                .map((configuration) => [
-                                    formatConfigurationLink(configuration.name),
-                                    formatSelection(configuration),
-                                ]),
-                        ),
-                    ) +
-                    Object.entries(CLI_REFERENCE.groups)
-                        .map(([group, title]) => {
-                            const rows = CLI_REFERENCE.configurations
-                                .filter((configuration) => configuration.group === group)
-                                .map((configuration) => [
-                                    formatConfigurationLink(configuration.name),
-                                    configuration.description,
-                                ]);
-                            return formatSection(title, formatTable(['Configuration', CHECKS_HEADING], rows));
-                        })
-                        .join(''),
-            ),
-        ],
-    ]);
+    const selectedRows = CLI_REFERENCE.configurations
+        .filter(({ always_selected }) => always_selected)
+        .map((configuration) => [formatConfigurationLink(configuration.name), formatSelection(configuration)]);
+    const groupSections = Object.entries(CLI_REFERENCE.groups).map(([group, title]) => {
+        const rows = CLI_REFERENCE.configurations
+            .filter((configuration) => configuration.group === group)
+            .map((configuration) => [formatConfigurationLink(configuration.name), configuration.description]);
+        return formatSection(title, formatTable(['Configuration', CHECKS_HEADING], rows));
+    });
+    const index = buildReferencePage(
+        'Configurations',
+        CONFIGURATIONS_DESCRIPTION,
+        CONFIGURATIONS_OPENING +
+            formatSection('Always selected', formatTable(['Configuration', SELECTED_HEADING], selectedRows)) +
+            groupSections.join(''),
+    );
+    const pages = new Map<string, ReferencePage>([[`${REFERENCE_FOLDERS.configurations}/index`, index]]);
     for (const configuration of CLI_REFERENCE.configurations)
         pages.set(
             `${REFERENCE_FOLDERS.configurations}/${configuration.name}`,
