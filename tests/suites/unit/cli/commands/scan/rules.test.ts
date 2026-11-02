@@ -54,6 +54,21 @@ test('scan sorts the ESLint rules of the repository by what gspot runs', async (
     ]);
 });
 
+test('scan offers no plugin record for a rule of a plugin that gspot loads', async () => {
+    await using sandbox = await createGitSandbox({ 'a.js': 'export const a = 1;\n' });
+    await writePrinter(sandbox.path, { curly: [2], 'unicorn/no-null': [2] });
+    const user = new Map(
+        ['unicorn/no-array-reduce', 'acme/no-legacy', 'curl/no-legacy'].map((rule) => [rule, convertRule([2], true)]),
+    );
+    const [definition] = PRINTED_RULE_TOOLS;
+    const rows = await compareInstalledRules(sandbox.path, [
+        { definition, path: 'eslint.config.js', sample: 'a.js', user },
+    ]);
+    expect(rows).toMatchObject([
+        { plugins: ['acme/no-legacy []', 'curl/no-legacy []'], commandChecks: ['unicorn/no-array-reduce'] },
+    ]);
+});
+
 test('scan says so when a tool cannot print its rules', async () => {
     await using sandbox = await createGitSandbox({ 'a.js': 'export const a = 1;\n' });
     const [definition] = PRINTED_RULE_TOOLS;

@@ -85,7 +85,7 @@ gspot compares the names and options of your rules with the rules it runs. The t
 | other options, to set after init      | gspot runs the rule with other options, and only `gspot scan` could compare them. | Set them in `tools.<tool>.rules` if you want to keep them.  |
 | needs a reason                        | You turned off a rule that gspot runs, or gave it a looser limit.                 | Fix the findings, or run the `gspot ignore` line it names.  |
 | keep with a plugin record             | The rule comes from a plugin that gspot does not install.                         | Add a [plugin record](/configure/lint-rules/#plugins).      |
-| keep with a command check of your own | gspot does not run the rule, and no plugin holds it.                              | Keep it with a [command check](/configure/command-checks/). |
+| keep with a command check of your own | gspot does not run the rule, and no plugin record can add it.                     | Keep it with a [command check](/configure/command-checks/). |
 | dropped                               | `gspot.toml` has no place for it.                                                 | Decide whether you still need it.                           |
 
 Each tool reads its rules from one place:

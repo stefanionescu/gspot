@@ -61,7 +61,11 @@ export async function compareInstalledRules(root: string, reads: RuleRead[]): Pr
             if (user === undefined || shipped === undefined)
                 return { ...CARRYOVER_ROW_START, path, tool, dropped: [NOT_COMPARED_MESSAGE] };
             const compared = compareRules({ check, user, lookup: (rule) => shipped.get(rule) });
-            const added = Map.groupBy(compared.added, (rule) => rule.includes('/'));
+            const prefixes = new Set([...shipped.keys()].map((rule) => rule.slice(0, rule.lastIndexOf('/') + 1)));
+            const added = Map.groupBy(
+                compared.added,
+                (rule) => rule.includes('/') && !prefixes.has(rule.slice(0, rule.lastIndexOf('/') + 1)),
+            );
             return {
                 ...CARRYOVER_ROW_START,
                 path,
