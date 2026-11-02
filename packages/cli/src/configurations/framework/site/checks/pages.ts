@@ -20,8 +20,12 @@ import { splitFileArguments } from '#cli/engine/tool-runs/batches.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { purgecssOutputSchema } from '#cli/schemas/configurations.ts';
 import { readSitemapUrls } from '#cli/configurations/framework/site/checks/sitemap.ts';
-import { toBuildPath, listBuiltFiles, readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
 
+import {
+    listBuiltFiles,
+    convertToBuildPath,
+    readSuccessfulBuild,
+} from '#cli/configurations/framework/site/checks/build.ts';
 import {
     SITE_RULES,
     REMAP_FLAG,
@@ -30,10 +34,10 @@ import {
     EXCLUDE_FLAG,
     SITEMAP_FILE,
     PURGECSS_TOOL,
-    ROOT_DIR_FLAG,
     CSS_EXTENSION,
     STYLE_SCOPING,
     HTML_EXTENSION,
+    ROOT_FOLDER_FLAG,
     STYLE_EXTENSIONS,
     STYLE_COMPONENTS,
     STYLE_WHITESPACE,
@@ -96,7 +100,7 @@ export async function checkLychee(session: CheckSession, planned: PlannedCheck):
     const command = [
         LYCHEE_TOOL,
         ...LYCHEE_ARGUMENTS,
-        ROOT_DIR_FLAG,
+        ROOT_FOLDER_FLAG,
         build.folder,
         ...(location === undefined
             ? []
@@ -187,7 +191,10 @@ export async function checkPurgecss(session: CheckSession, planned: PlannedCheck
                 return owned !== '' && styles.includes(owned);
             })
             .map((selector) => ({
-                file: toBuildPath(planned, isAbsolute(sheet.file) ? relative(build.folder, sheet.file) : sheet.file),
+                file: convertToBuildPath(
+                    planned,
+                    isAbsolute(sheet.file) ? relative(build.folder, sheet.file) : sheet.file,
+                ),
                 line: 1,
                 rule: SITE_RULES.unusedSelector,
                 message: `No built page uses the selector ${selector.trim()}.`,
@@ -220,15 +227,18 @@ export async function checkSitemap(session: CheckSession, planned: PlannedCheck)
             ),
         )
         .map((url) => ({
-            file: toBuildPath(planned, sitemapFile),
+            file: convertToBuildPath(planned, sitemapFile),
             line: 1,
             rule: SITE_RULES.missingPage,
             message: `The sitemap lists ${url.href}, and the build wrote no such page.`,
         }));
     const unlisted = [...files]
-        .filter((path) => path.endsWith(HTML_EXTENSION) && !listed.has(path) && !isLeftOut(toBuildPath(planned, path)))
+        .filter(
+            (path) =>
+                path.endsWith(HTML_EXTENSION) && !listed.has(path) && !isLeftOut(convertToBuildPath(planned, path)),
+        )
         .map((path) => ({
-            file: toBuildPath(planned, path),
+            file: convertToBuildPath(planned, path),
             line: 1,
             rule: SITE_RULES.unlistedPage,
             message: UNLISTED_PAGE_MESSAGE,

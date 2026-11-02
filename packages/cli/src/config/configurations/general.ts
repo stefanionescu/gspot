@@ -165,7 +165,7 @@ export const MISE_RUN = 'mise run ';
 
 export const BUN_RUN = 'bun run ';
 
-export const MISE_CONF_FILES = '.mise/conf.d/*.toml';
+export const MISE_CONFIG_GLOB = '.mise/conf.d/*.toml';
 
 export const README_FILE = 'README.md';
 

@@ -10,8 +10,8 @@ import { detectScopeFolders } from '#cli/repository/scopes.ts';
 import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
-import { runGit, isNotRepository } from '#cli/repository/git/run.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
+import { runGit, isOutsideRepository } from '#cli/repository/git/run.ts';
 import { readText, findText, readBytes } from '#cli/system/files/reads.ts';
 import { readGitListing, listTrackedFiles } from '#cli/repository/files/tracked.ts';
 import { INDEX_LINE, GIT_LOCALE, TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/repository/git.ts';
@@ -171,7 +171,7 @@ export async function readRepositoryRoot(start: string): Promise<string> {
     const folder = realpathSync(start);
     const top = await runGit(folder, GIT_TOP_LEVEL_ARGUMENTS, { env: GIT_LOCALE });
     if (top.code === 0) return resolve(top.stdout.replace(TRAILING_NEWLINE, ''));
-    if (isNotRepository(top)) throw new GspotError('git', NEEDS_GIT_MESSAGE);
+    if (isOutsideRepository(top)) throw new GspotError('git', NEEDS_GIT_MESSAGE);
     if (top.stderr.includes('must be run in a work tree'))
         throw new GspotError(
             'git',

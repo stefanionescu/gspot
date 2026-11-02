@@ -17,7 +17,6 @@ import type { CheckSession, BuiltInCheckResult } from '#cli/types/engine/run.ts'
 import type { Mount, NginxMounts } from '#cli/types/configurations/infrastructure.ts';
 
 import {
-    NGINX_CONF,
     MOUNT_FLAG,
     SYNTAX_RULE,
     LOCAL_NAMES,
@@ -29,6 +28,7 @@ import {
     OPENSSL_PROGRAM,
     LOOPBACK_ADDRESS,
     OPENSSL_KEY_FLAG,
+    NGINX_CONFIG_FILE,
     NGINX_COPY_PREFIX,
     NGINX_MAIN_TARGET,
     NGINX_TEST_COMMAND,
@@ -183,7 +183,7 @@ Tests every tracked nginx.conf with the server's own parser.
 */
 export async function checkSyntax(session: CheckSession, planned: PlannedCheck): Promise<BuiltInCheckResult> {
     const image = getTable(planned.scope.settings, 'nginx').image;
-    const paths = listSourcePaths(planned.files, [NGINX_CONF]);
+    const paths = listSourcePaths(planned.files, [NGINX_CONFIG_FILE]);
     if (paths.length === 0) return { findings: [], files: [] };
     using workFolder = createTemporaryFolder();
     const certificate = await runCheckTool(

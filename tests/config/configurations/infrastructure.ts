@@ -58,7 +58,7 @@ export const OUTSIDE_GITHUB_ACTIONS = {
         'name: Setup\nruns:\n  using: composite\n  steps:\n    - shell: bash\n      run: echo safe\n',
 } as const;
 
-export const NGINX_UPSTREAM_CONF = `events {}
+export const NGINX_UPSTREAM_CONFIG = `events {}
 http {
     upstream backend {
         server api:3000;
@@ -86,7 +86,7 @@ const DYNAMIC_TARGET_CASE = {
 export const NGINX_MOUNT_CASES = [
     {
         name: 'certificate paths and upstream hosts',
-        source: NGINX_UPSTREAM_CONF,
+        source: NGINX_UPSTREAM_CONFIG,
         hosts: ['api:127.0.0.1', 'backend:127.0.0.1'],
         certificates: ['/etc/nginx/ssl/fullchain.pem', '/etc/nginx/ssl/privkey.pem'],
     },

@@ -214,7 +214,7 @@ export const SELF_REFERENCE_PREFIX = '$/';
 
 export const ENCODED_DOLLAR_SUFFIX = /24$/u;
 
-export const NGINX_CONF = 'nginx.conf';
+export const NGINX_CONFIG_FILE = 'nginx.conf';
 
 export const CERTIFICATE_ARGUMENTS = [
     'req',
@@ -249,7 +249,7 @@ export const ADD_HOST_FLAG = '--add-host';
 
 export const MOUNT_FLAG = '--mount';
 
-export const NGINX_MAIN_TARGET = `${NGINX_FOLDER}/${NGINX_CONF}`;
+export const NGINX_MAIN_TARGET = `${NGINX_FOLDER}/${NGINX_CONFIG_FILE}`;
 
 export const CERTIFICATE_DIRECTIVES = {
     ssl_certificate_key: 'key',

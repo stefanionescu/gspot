@@ -16,8 +16,8 @@ import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts'
 
 import {
     NGINX_MOUNT_CASES,
-    NGINX_UPSTREAM_CONF,
     NGINX_FAILURE_CASES,
+    NGINX_UPSTREAM_CONFIG,
 } from '#tests/config/configurations/infrastructure.ts';
 
 test.each([...NGINX_MOUNT_CASES])(
@@ -73,7 +73,7 @@ test.each([...NGINX_MOUNT_CASES])(
 test('a failed certificate step reports its error text, removes the scratch files, and does not start Docker', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['nginx']),
-        'nginx.conf': NGINX_UPSTREAM_CONF,
+        'nginx.conf': NGINX_UPSTREAM_CONFIG,
     });
 
     const session = await openSession(sandbox.path);
@@ -98,7 +98,7 @@ test('a failed certificate step reports its error text, removes the scratch file
         expect(folder).not.toBe(sandbox.path);
         expect(existsSync(folder)).toBe(false);
     }
-    expect(await readFile(join(sandbox.path, 'nginx.conf'), 'utf8')).toBe(NGINX_UPSTREAM_CONF);
+    expect(await readFile(join(sandbox.path, 'nginx.conf'), 'utf8')).toBe(NGINX_UPSTREAM_CONFIG);
 });
 
 test.each(NGINX_FAILURE_CASES)('nginx/syntax reports $name', async ({ stderr, status, note, findings }) => {

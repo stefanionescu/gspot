@@ -199,7 +199,7 @@ export const GIT_NONLOCAL_ENVIRONMENT_NAME = /^GIT_(?:PAGER|CONFIG_(?:COUNT|PARA
 
 export const GIT_LOCALE = { LC_ALL: 'C' } as const;
 
-export const GIT_DIR_VARIABLE = 'GIT_DIR';
+export const GIT_FOLDER_VARIABLE = 'GIT_DIR';
 
 export const GIT_LOCAL_VARIABLES_ARGUMENTS = ['rev-parse', '--local-env-vars'] as const;
 

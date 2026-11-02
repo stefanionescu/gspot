@@ -107,7 +107,7 @@ export const STYLE_WHITESPACE = /\s+/gu;
 
 export const STYLE_SCOPING = /:where\(\.astro-[a-z\d-]+\)|\[data-(?:astro-cid|v)-[a-z\d-]+\]|\.svelte-[a-z\d-]+/giu;
 
-export const ROOT_DIR_FLAG = '--root-dir';
+export const ROOT_FOLDER_FLAG = '--root-dir';
 
 export const REMAP_FLAG = '--remap';
 

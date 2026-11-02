@@ -10,9 +10,9 @@ import { foldVariableName, buildSpawnEnvironment, readEnvironmentVariable } from
 import {
     GIT_LOCALE,
     GIT_PROGRAM,
-    GIT_DIR_VARIABLE,
     TRAILING_NEWLINE,
     GIT_PATH_VARIABLES,
+    GIT_FOLDER_VARIABLE,
     GIT_HOOKS_ARGUMENTS,
     GIT_VARIABLE_PREFIX,
     NOT_REPOSITORY_CODE,
@@ -51,7 +51,7 @@ async function readInheritedGitEnvironment(origin: string): Promise<GitLookup> {
     const folder = source.stdout.slice(line + 1).replace(TRAILING_NEWLINE, '');
     if (
         !isBare &&
-        readEnvironmentVariable(GIT_DIR_VARIABLE) !== undefined &&
+        readEnvironmentVariable(GIT_FOLDER_VARIABLE) !== undefined &&
         readEnvironmentVariable(GIT_WORK_TREE_VARIABLE) === undefined
     ) {
         const worktree = await runProcess([GIT_PROGRAM, ...GIT_TOP_LEVEL_ARGUMENTS], {
@@ -73,7 +73,7 @@ async function readFolderGitEnvironment(
         cwd: root,
         env: { ...isolated, ...overrides, ...GIT_LOCALE },
     });
-    if (isNotRepository(target)) return { variables: isolated };
+    if (isOutsideRepository(target)) return { variables: isolated };
     if (target.code !== 0) return { failure: target };
     const isSameRepository = realpathSync(source.folder) === realpathSync(target.stdout.replace(TRAILING_NEWLINE, ''));
     return { variables: isSameRepository ? source.environment : isolated };
@@ -294,6 +294,6 @@ Check whether Git refused to run because the folder holds no repository.
 @param result how Git exited.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The repository read and the Git commands tell a folder without a repository apart by this one test.
-export function isNotRepository(result: Pick<SpawnResult, 'code' | 'stderr'>): boolean {
+export function isOutsideRepository(result: Pick<SpawnResult, 'code' | 'stderr'>): boolean {
     return result.code === NOT_REPOSITORY_CODE && result.stderr.startsWith(NOT_REPOSITORY_MESSAGE);
 }

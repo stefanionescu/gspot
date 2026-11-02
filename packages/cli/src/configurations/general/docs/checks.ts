@@ -40,8 +40,8 @@ import {
     COMMAND_FENCES,
     FILE_EXTENSION,
     PATH_CHARACTERS,
-    MISE_CONF_FILES,
     TITLE_ATTRIBUTE,
+    MISE_CONFIG_GLOB,
     PATH_TOKEN_SKIPS,
     REMOTE_ARGUMENTS,
     TOKEN_SEPARATORS,
@@ -151,7 +151,7 @@ function readTaskNames(session: Session, scopePath: string): TaskNames {
                 ...MISE_FILES.map((file) => posix.join(path, file)),
                 ...session.repository.files
                     .map(({ path }) => path)
-                    .filter(buildPathMatcher([posix.join(escapeGlob(path), MISE_CONF_FILES)])),
+                    .filter(buildPathMatcher([posix.join(escapeGlob(path), MISE_CONFIG_GLOB)])),
             ]),
         ),
     ];
