@@ -66,8 +66,7 @@ function listNameSets(node: NamedNode): NameSet[] {
 
 function isShadowing({ name, isUnset }: { name: string; isUnset: boolean }): boolean {
     if (SHADOWING_EXCEPTIONS.has(name)) return false;
-    if (name === UNDEFINED_NAME) return !isUnset;
-    return name === ARGUMENTS_NAME || BUILTIN_GLOBALS.has(name);
+    return name === UNDEFINED_NAME ? !isUnset : name === ARGUMENTS_NAME || BUILTIN_GLOBALS.has(name);
 }
 
 export const noGlobalsShadowing = createRule<[], 'declaration' | 'assignment'>({

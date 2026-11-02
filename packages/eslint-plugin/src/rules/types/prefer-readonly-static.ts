@@ -20,8 +20,13 @@ export const preferReadonlyStatic = createRule<[], 'readonly'>({
         if (!READONLY_STATIC_FILES.test(context.filename)) return {};
         return {
             PropertyDefinition(node) {
-                if (!node.static || node.readonly) return;
-                if (node.accessibility === 'private' || node.accessibility === 'protected') return;
+                if (
+                    !node.static ||
+                    node.readonly ||
+                    node.accessibility === 'private' ||
+                    node.accessibility === 'protected'
+                )
+                    return;
                 context.report({ node, messageId: 'readonly' });
             },
         };

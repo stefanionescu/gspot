@@ -9,19 +9,18 @@ function getAssignedValues(
     scope: TSESLint.Scope.Scope,
 ): AssignedValues {
     if (value?.type === AST_NODE_TYPES.Literal) return new Set([value.raw]);
-    if (value?.type !== AST_NODE_TYPES.Identifier) return null;
-    return state.get(ASTUtils.findVariable(scope, value.name)) ?? null;
-}
-
-function joinValues(held: AssignedValues | undefined, values: AssignedValues): AssignedValues {
-    if (held === null || values === null) return null;
-    return new Set([...(held ?? []), ...values]);
+    return value?.type === AST_NODE_TYPES.Identifier
+        ? (state.get(ASTUtils.findVariable(scope, value.name)) ?? null)
+        : null;
 }
 
 function joinStates(states: readonly ValueState[]): ValueState {
     const joined: ValueState = new Map();
     for (const state of states)
-        for (const [variable, values] of state) joined.set(variable, joinValues(joined.get(variable), values));
+        for (const [variable, values] of state) {
+            const held = joined.get(variable);
+            joined.set(variable, held === null || values === null ? null : new Set([...(held ?? []), ...values]));
+        }
     return joined;
 }
 
@@ -29,8 +28,9 @@ function haveSameValues(first: ValueState, second: ValueState): boolean {
     if (first.size !== second.size) return false;
     return [...first].every(([variable, values]) => {
         const other = second.get(variable);
-        if (other === undefined || values === null || other === null) return Object.is(values, other);
-        return values.size === other.size && [...values].every((value) => other.has(value));
+        return other === undefined || values === null || other === null
+            ? Object.is(values, other)
+            : values.size === other.size && values.isSubsetOf(other);
     });
 }
 
@@ -84,8 +84,10 @@ function isLoopSetup(reference: TSESLint.Scope.Reference, value: TSESTree.Node, 
             Object.is(name, reference.identifier),
     );
     const declaration = definition?.node.parent;
-    if (declaration?.type !== AST_NODE_TYPES.VariableDeclaration) return false;
-    return listLocalChain(declaration, source).some(({ type }) => LOOP_BODY_PARENTS.has(type));
+    return (
+        declaration?.type === AST_NODE_TYPES.VariableDeclaration &&
+        listLocalChain(declaration, source).some(({ type }) => LOOP_BODY_PARENTS.has(type))
+    );
 }
 
 function isExcludedWrite(reference: TSESLint.Scope.Reference, source: TSESLint.SourceCode): boolean {

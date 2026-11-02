@@ -19,8 +19,8 @@ function isExpectCall(node: TSESTree.Node): boolean {
 }
 
 function isExpectStatic(node: TSESTree.Node): boolean {
-    if (node.type !== AST_NODE_TYPES.MemberExpression) return false;
-    if (!EXPECT_STATIC_METHODS.has(ASTUtils.getPropertyName(node))) return false;
+    if (node.type !== AST_NODE_TYPES.MemberExpression || !EXPECT_STATIC_METHODS.has(ASTUtils.getPropertyName(node)))
+        return false;
     return ASTUtils.isIdentifier(node.object) && node.object.name === 'expect';
 }
 

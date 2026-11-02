@@ -10,8 +10,9 @@ function getDetachedCallToken(
     const closing = source.getTokensBetween(callee, first).findLast((token) => token.value === ')');
     const previous = closing ?? source.getLastToken(callee);
     const following = source.getTokenAfter(callee, (token) => token.value !== ')');
-    if (previous === null || following === null || previous.loc.end.line === following.loc.start.line) return undefined;
-    return following;
+    return previous === null || following === null || previous.loc.end.line === following.loc.start.line
+        ? undefined
+        : following;
 }
 
 export const noDetachedCall = createRule<[], 'call' | 'template'>({

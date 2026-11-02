@@ -30,8 +30,12 @@ export const noTransposedAssignment = createRule<[], 'operator'>({
             UnaryExpression(node) {
                 if (!TRANSPOSED_UNARY_OPERATORS.has(node.operator) || !isAssignmentValue(node)) return;
                 const assignment = context.sourceCode.getTokenBefore(node);
-                if (assignment?.value !== '=' || assignment.range[1] !== node.range[0]) return;
-                if (node.argument.range[0] === node.range[0] + 1) return;
+                if (
+                    assignment?.value !== '=' ||
+                    assignment.range[1] !== node.range[0] ||
+                    node.argument.range[0] === node.range[0] + 1
+                )
+                    return;
                 context.report({ node, messageId: 'operator', data: { operator: node.operator } });
             },
         };

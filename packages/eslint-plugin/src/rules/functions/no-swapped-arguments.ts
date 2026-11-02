@@ -85,8 +85,9 @@ function getOperand(node: TSESTree.Node, source: TSESLint.SourceCode): TSESLint.
     let operand = node;
     while (operand.type === AST_NODE_TYPES.CallExpression || operand.type === AST_NODE_TYPES.MemberExpression)
         operand = operand.type === AST_NODE_TYPES.CallExpression ? operand.callee : operand.object;
-    if (!ASTUtils.isIdentifier(operand)) return undefined;
-    return ASTUtils.findVariable(source.getScope(operand), operand.name) ?? operand.name;
+    return ASTUtils.isIdentifier(operand)
+        ? (ASTUtils.findVariable(source.getScope(operand), operand.name) ?? operand.name)
+        : undefined;
 }
 
 function isCompared(call: CallNode, [first, second]: SwappedPair, source: TSESLint.SourceCode): boolean {

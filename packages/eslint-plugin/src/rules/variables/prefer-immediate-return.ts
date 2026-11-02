@@ -8,8 +8,7 @@ function getExitStatement(
 ): TSESTree.ReturnStatement | TSESTree.ThrowStatement | undefined {
     const next = getNextStatement(node);
     if (next?.type === AST_NODE_TYPES.ReturnStatement) return next;
-    if (next?.type === AST_NODE_TYPES.ThrowStatement) return next;
-    return undefined;
+    return next?.type === AST_NODE_TYPES.ThrowStatement ? next : undefined;
 }
 
 export const preferImmediateReturn = createRule<[], 'immediate'>({

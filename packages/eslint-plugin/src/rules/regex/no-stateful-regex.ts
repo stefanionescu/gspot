@@ -11,8 +11,7 @@ function isLoopCondition(node: TSESTree.Node, ancestors: readonly TSESTree.Node[
         (ancestor) => LOOP_STATEMENTS.has(ancestor.type) || ASTUtils.isFunction(ancestor),
     );
     const loop = chain[index];
-    if (loop === undefined || ASTUtils.isFunction(loop) || !('test' in loop)) return false;
-    return Object.is(loop.test, chain[index + 1]);
+    return loop !== undefined && !ASTUtils.isFunction(loop) && 'test' in loop && Object.is(loop.test, chain[index + 1]);
 }
 
 function isLoopExec(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
@@ -40,7 +39,7 @@ function getGlobalVariable(node: TSESTree.CallExpression, source: TSESLint.Sourc
 
 function isReusedOnSubjects(uses: readonly TSESTree.CallExpression[], source: TSESLint.SourceCode): boolean {
     const subjects = new Set(uses.map(({ arguments: [input] }) => source.getText(input)));
-    return subjects.size >= DISTINCT_SUBJECTS && [...subjects].every((input) => !EMPTY_STRING_TEXTS.has(input));
+    return subjects.size >= DISTINCT_SUBJECTS && subjects.isDisjointFrom(EMPTY_STRING_TEXTS);
 }
 
 export const noStatefulRegex = createRule<[], 'loop' | 'subjects'>({

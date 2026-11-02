@@ -7,8 +7,9 @@ function listAssignedNodes(node: TSESTree.Node): TSESTree.Node[] {
         return node.properties.flatMap((property) =>
             listAssignedNodes(property.type === AST_NODE_TYPES.Property ? property.value : property.argument),
         );
-    if (node.type !== AST_NODE_TYPES.ArrayPattern) return [node];
-    return node.elements.filter((element) => element !== null).flatMap((element) => listAssignedNodes(element));
+    return node.type === AST_NODE_TYPES.ArrayPattern
+        ? node.elements.filter((element) => element !== null).flatMap((element) => listAssignedNodes(element))
+        : [node];
 }
 
 function listUpdatedNodes(update: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node[] {

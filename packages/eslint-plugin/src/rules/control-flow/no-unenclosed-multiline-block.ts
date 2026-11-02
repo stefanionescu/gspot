@@ -21,8 +21,10 @@ function getLastBody(statement: TSESTree.ProgramStatement): TSESTree.Statement |
 function isMisleading(owner: TSESTree.Node, body: TSESTree.Node, next: TSESTree.Node): boolean {
     if (body.loc.end.line === next.loc.start.line) return true;
     const isIndented = body.loc.start.column > owner.loc.start.column;
-    if (body.loc.start.column === next.loc.start.column && isIndented) return true;
-    return body.loc.start.line === owner.loc.end.line && next.loc.start.column > owner.loc.start.column;
+    return (
+        (body.loc.start.column === next.loc.start.column && isIndented) ||
+        (body.loc.start.line === owner.loc.end.line && next.loc.start.column > owner.loc.start.column)
+    );
 }
 
 export const noUnenclosedMultilineBlock = createRule<[], 'unenclosed'>({
@@ -49,8 +51,13 @@ export const noUnenclosedMultilineBlock = createRule<[], 'unenclosed'>({
             for (const [index, owner] of statements.entries()) {
                 const next = statements[index + 1];
                 const body = getLastBody(owner);
-                if (next === undefined || body === undefined || body.type === AST_NODE_TYPES.BlockStatement) continue;
-                if (!isMisleading(owner, body, next)) continue;
+                if (
+                    next === undefined ||
+                    body === undefined ||
+                    body.type === AST_NODE_TYPES.BlockStatement ||
+                    !isMisleading(owner, body, next)
+                )
+                    continue;
                 const runs = owner.type === AST_NODE_TYPES.IfStatement ? 'unconditionally' : 'only once';
                 context.report({ node: next, messageId: 'unenclosed', data: { runs } });
             }

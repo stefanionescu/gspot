@@ -32,8 +32,10 @@ function isLiteralUnion(node: TSESTree.TSIntersectionType): boolean {
 function isNormalizing(siblings: readonly TSESTree.TypeNode[], types: TypeReader): boolean {
     return siblings.some((sibling) => {
         if (sibling.type === AST_NODE_TYPES.TSMappedType) return true;
-        if (sibling.type !== AST_NODE_TYPES.TSTypeReference) return false;
-        return sibling.typeArguments !== undefined || types.get(sibling).isTypeParameter();
+        return (
+            sibling.type === AST_NODE_TYPES.TSTypeReference &&
+            (sibling.typeArguments !== undefined || types.get(sibling).isTypeParameter())
+        );
     });
 }
 

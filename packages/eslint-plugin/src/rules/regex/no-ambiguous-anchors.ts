@@ -15,8 +15,14 @@ function getAnchors({ elements }: AST.Alternative): { start: boolean; end: boole
 function isOuterAnchorOnly(anchors: ReadonlyArray<{ start: boolean; end: boolean }>): boolean {
     const [first] = anchors;
     const last = anchors.at(-1);
-    if (first === undefined || last === undefined || first.end || last.start) return false;
-    return (first.start || last.end) && anchors.slice(1, -1).every(({ start, end }) => !start && !end);
+    return (
+        first !== undefined &&
+        last !== undefined &&
+        !first.end &&
+        !last.start &&
+        (first.start || last.end) &&
+        anchors.slice(1, -1).every(({ start, end }) => !start && !end)
+    );
 }
 
 function isAmbiguous({ alternatives }: AST.Pattern): boolean {

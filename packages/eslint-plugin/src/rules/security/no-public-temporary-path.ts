@@ -12,8 +12,10 @@ function isPublicTemporaryPath(text: string): boolean {
     if (PUBLIC_TEMPORARY_FOLDERS.some((prefix) => path.startsWith(`/${prefix}/`))) return true;
     const segments = path.split(/\\{1,2}/u);
     const folder = segments[1];
-    if (folder === undefined) return false;
-    return WINDOWS_TEMPORARY_FOLDERS.has(folder) || (folder === 'windows' && segments[2] === 'temp');
+    return (
+        folder !== undefined &&
+        (WINDOWS_TEMPORARY_FOLDERS.has(folder) || (folder === 'windows' && segments[2] === 'temp'))
+    );
 }
 
 export const noPublicTemporaryPath = createRule<[], 'directory'>({

@@ -31,7 +31,7 @@ function listSwitchBranches(node: TSESTree.SwitchStatement): BranchSet {
         const body = statements.at(-1)?.type === AST_NODE_TYPES.BreakStatement ? statements.slice(0, -1) : statements;
         return body.length > 0 ? [{ node: clause, body }] : [];
     });
-    if (!node.cases.some((clause) => clause.test === null))
+    if (node.cases.every((clause) => clause.test !== null))
         return { owner: node, kind: 'case', branches, closing: 'none' };
     const isFilled = branches.at(-1)?.node === node.cases.at(-1);
     return { owner: node, kind: 'case', branches, closing: isFilled ? 'filled' : 'empty' };
@@ -39,8 +39,7 @@ function listSwitchBranches(node: TSESTree.SwitchStatement): BranchSet {
 
 function isUniform(branches: readonly Branch[], source: TSESLint.SourceCode): boolean {
     const [first, ...rest] = branches;
-    if (first === undefined) return false;
-    return rest.length > 0 && rest.every(({ body }) => haveSameTokens(body, first.body, source));
+    return first !== undefined && rest.length > 0 && rest.every(({ body }) => haveSameTokens(body, first.body, source));
 }
 
 function listRepeats(

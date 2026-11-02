@@ -117,8 +117,10 @@ function isRequired(node: FunctionNode, exportNames: ReadonlySet<string>): boole
 function isInlineValue(node: FunctionNode): boolean {
     if (node.type === AST_NODE_TYPES.FunctionDeclaration) return false;
     const value = getOutermostValue(node);
-    if (value.parent.type === AST_NODE_TYPES.Property) return true;
-    return node.id === null && (INLINE_VALUE_PARENTS.has(value.parent.type) || isValueSlot(value));
+    return (
+        value.parent.type === AST_NODE_TYPES.Property ||
+        (node.id === null && (INLINE_VALUE_PARENTS.has(value.parent.type) || isValueSlot(value)))
+    );
 }
 
 export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>({

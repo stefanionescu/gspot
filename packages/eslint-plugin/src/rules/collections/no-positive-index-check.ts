@@ -4,8 +4,14 @@ import { getTypes, getTypeCategory } from '../../language/checker.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getSearchedArray({ left, right, operator }: TSESTree.BinaryExpression): TSESTree.Node | undefined {
-    if (operator !== '>' || right.type !== AST_NODE_TYPES.Literal || right.value !== 0) return undefined;
-    if (left.type !== AST_NODE_TYPES.CallExpression || left.arguments.length !== 1) return undefined;
+    if (
+        operator !== '>' ||
+        right.type !== AST_NODE_TYPES.Literal ||
+        right.value !== 0 ||
+        left.type !== AST_NODE_TYPES.CallExpression ||
+        left.arguments.length !== 1
+    )
+        return undefined;
     const { callee } = left;
     const isIndexOf =
         callee.type === AST_NODE_TYPES.MemberExpression && ASTUtils.getPropertyName(callee) === INDEX_OF_METHOD;

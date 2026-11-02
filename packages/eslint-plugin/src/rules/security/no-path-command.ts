@@ -35,7 +35,7 @@ export const noPathCommand = createRule<[], 'path'>({
                 if (
                     argument !== undefined &&
                     typeof command === 'string' &&
-                    !EXPLICIT_COMMAND_PREFIXES.some((prefix) => command.startsWith(prefix))
+                    EXPLICIT_COMMAND_PREFIXES.every((prefix) => !command.startsWith(prefix))
                 )
                     context.report({ node: argument, messageId: 'path' });
             },

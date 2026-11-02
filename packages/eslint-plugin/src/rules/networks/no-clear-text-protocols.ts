@@ -33,7 +33,7 @@ function getHost(url: string): { host: string; path: string | undefined } {
         const [authority = ''] = url
             .slice(url.indexOf(PROTOCOL_SEPARATOR) + PROTOCOL_SEPARATOR.length)
             .split(AUTHORITY_END);
-        const [host = ''] = authority.slice(authority.lastIndexOf('@') + 1).split(':');
+        const [host = ''] = authority.slice(authority.lastIndexOf('@') + 1).split(':', 1);
         return { host, path: undefined };
     }
 }
@@ -74,8 +74,10 @@ function isSecureOption(
 
 function isClearTextMail(source: Readonly<TSESLint.SourceCode>, node: TSESTree.CallExpression): boolean {
     const options = getExpressionValue(node.arguments[0], source);
-    if (options?.type !== AST_NODE_TYPES.ObjectExpression) return false;
-    return !MAIL_SECURE_OPTIONS.some((key) => isSecureOption(source, options, key));
+    return (
+        options?.type === AST_NODE_TYPES.ObjectExpression &&
+        MAIL_SECURE_OPTIONS.every((key) => !isSecureOption(source, options, key))
+    );
 }
 
 function isClearTextFtp(source: Readonly<TSESLint.SourceCode>, node: TSESTree.CallExpression): boolean {
@@ -113,7 +115,7 @@ function findListener(
     const listeners: Readonly<Record<string, ClearTextListener>> = CLEAR_TEXT_LISTENERS;
     const listener = Object.hasOwn(listeners, name) ? listeners[name] : undefined;
     const kind = node.type === AST_NODE_TYPES.NewExpression ? 'construct' : 'call';
-    return listener?.kind === kind && !node.arguments.some(({ type }) => type === AST_NODE_TYPES.SpreadElement)
+    return listener?.kind === kind && node.arguments.every(({ type }) => type !== AST_NODE_TYPES.SpreadElement)
         ? findClearTextListener(source, node, listener)
         : undefined;
 }

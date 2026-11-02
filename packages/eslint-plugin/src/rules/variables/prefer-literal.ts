@@ -7,11 +7,12 @@ function getAssignedProperty(node: TSESTree.VariableDeclaration): TSESTree.Membe
     const next = getNextStatement(node);
     if (next?.type !== AST_NODE_TYPES.ExpressionStatement) return undefined;
     const assignment = next.expression;
-    if (assignment.type !== AST_NODE_TYPES.AssignmentExpression) return undefined;
-    if (assignment.right.loc.start.line !== assignment.right.loc.end.line) return undefined;
-    if (assignment.left.type !== AST_NODE_TYPES.MemberExpression) return undefined;
-    if (assignment.left.object.type !== AST_NODE_TYPES.Identifier) return undefined;
-    return assignment.left;
+    return assignment.type === AST_NODE_TYPES.AssignmentExpression &&
+        assignment.right.loc.start.line === assignment.right.loc.end.line &&
+        assignment.left.type === AST_NODE_TYPES.MemberExpression &&
+        assignment.left.object.type === AST_NODE_TYPES.Identifier
+        ? assignment.left
+        : undefined;
 }
 
 export const preferLiteral = createRule<[], 'literal'>({
@@ -42,7 +43,7 @@ export const preferLiteral = createRule<[], 'literal'>({
                         identifiers.some((identifier) => identifier.range[0] === declaration.id.range[0]),
                     )
                     .flatMap((variable) => variable.references);
-                if (!references.some(({ identifier }) => identifier.range[0] === member.object.range[0])) return;
+                if (references.every(({ identifier }) => identifier.range[0] !== member.object.range[0])) return;
                 const assignment = member.parent as TSESTree.AssignmentExpression;
                 if (
                     assignment.right.type === AST_NODE_TYPES.Identifier &&

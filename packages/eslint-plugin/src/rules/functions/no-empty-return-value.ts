@@ -28,9 +28,13 @@ function returnsValue(declaration: LocalFunction, returning: Set<TSESTree.Node>)
         const annotation = declaration.returnType?.typeAnnotation.type;
         return annotation !== undefined && !EMPTY_RETURN_TYPES.has(annotation);
     }
-    if (declaration.async || declaration.generator || returning.has(declaration)) return true;
-    if (declaration.body.type !== AST_NODE_TYPES.BlockStatement) return true;
-    return declaration.body.body.length === 0;
+    return (
+        declaration.async ||
+        declaration.generator ||
+        returning.has(declaration) ||
+        declaration.body.type !== AST_NODE_TYPES.BlockStatement ||
+        declaration.body.body.length === 0
+    );
 }
 
 export const noEmptyReturnValue = createRule<[], 'return'>({

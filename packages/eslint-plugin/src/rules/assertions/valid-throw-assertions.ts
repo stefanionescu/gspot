@@ -32,8 +32,9 @@ function getThrowAssertion(
         .find((argument): argument is TSESTree.Expression => argument.type !== AST_NODE_TYPES.SpreadElement);
     const target = callee.object.type === AST_NODE_TYPES.MemberExpression ? callee.object.property : callee.property;
     const isChained = parent.type === AST_NODE_TYPES.MemberExpression || parent.type === AST_NODE_TYPES.CallExpression;
-    if (isChained || expect === undefined || received === undefined) return undefined;
-    return { expect, received, target, matcher: source.getText(callee.property) };
+    return isChained || expect === undefined || received === undefined
+        ? undefined
+        : { expect, received, target, matcher: source.getText(callee.property) };
 }
 
 function isNonCallable(types: TypeReader, node: TSESTree.Node): boolean {
@@ -83,8 +84,9 @@ function getWrapFix(
 ): TSESLint.ReportSuggestionArray<'wrap'> {
     const { received } = assertion;
     const isCall = received.type === AST_NODE_TYPES.CallExpression || received.type === AST_NODE_TYPES.NewExpression;
-    if (!isCall || isThenable(types, received)) return [];
-    return [{ messageId: 'wrap', fix: (fixer) => fixer.replaceText(received, `() => ${source.getText(received)}`) }];
+    return !isCall || isThenable(types, received)
+        ? []
+        : [{ messageId: 'wrap', fix: (fixer) => fixer.replaceText(received, `() => ${source.getText(received)}`) }];
 }
 
 export const validThrowAssertions = createRule<[], 'async' | 'value' | 'rejection' | 'wrap'>({

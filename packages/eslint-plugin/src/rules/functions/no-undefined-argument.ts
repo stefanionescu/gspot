@@ -8,8 +8,11 @@ function isOptionalParameter(node: TSESTree.CallExpression, types: TypeReader): 
     const declaration = types.checker.getResolvedSignature(types.map.get(node))?.declaration;
     const parameters = declaration !== undefined && 'parameters' in declaration ? declaration.parameters : [];
     const parameter = parameters[node.arguments.length - 1];
-    if (parameter === undefined || 'tagName' in parameter) return false;
-    return parameter.questionToken !== undefined || parameter.initializer !== undefined;
+    return (
+        parameter !== undefined &&
+        !('tagName' in parameter) &&
+        (parameter.questionToken !== undefined || parameter.initializer !== undefined)
+    );
 }
 
 export const noUndefinedArgument = createRule<[], 'undefined'>({
@@ -35,8 +38,12 @@ export const noUndefinedArgument = createRule<[], 'undefined'>({
         return {
             CallExpression(node) {
                 const last = node.arguments.at(-1);
-                if (last?.type !== AST_NODE_TYPES.Identifier || last.name !== UNDEFINED_NAME) return;
-                if (!isOptionalParameter(node, types)) return;
+                if (
+                    last?.type !== AST_NODE_TYPES.Identifier ||
+                    last.name !== UNDEFINED_NAME ||
+                    !isOptionalParameter(node, types)
+                )
+                    return;
                 context.report({ node: last, messageId: 'undefined' });
             },
         };

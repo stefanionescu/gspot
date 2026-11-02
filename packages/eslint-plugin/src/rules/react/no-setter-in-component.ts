@@ -9,9 +9,9 @@ function isComponentBody(hook: StateHook, ancestors: TSESTree.Node[], source: TS
     const owner = ancestors.findLast((ancestor) => FUNCTION_NODES.has(ancestor.type));
     const index = owner === undefined ? -1 : ancestors.indexOf(owner);
     const hookOwner = source.getAncestors(hook.call).findLast((ancestor) => FUNCTION_NODES.has(ancestor.type));
-    const isOutermost = !ancestors
+    const isOutermost = ancestors
         .slice(0, index)
-        .some((ancestor) => FUNCTION_NODES.has(ancestor.type) && isNamedFunction(ancestor, COMPONENT_NAME));
+        .every((ancestor) => !FUNCTION_NODES.has(ancestor.type) || !isNamedFunction(ancestor, COMPONENT_NAME));
     const isConditional = ancestors.slice(index).some((ancestor) => ancestor.type === AST_NODE_TYPES.IfStatement);
     const isComponent = owner !== undefined && hookOwner === owner && isNamedFunction(owner, COMPONENT_NAME);
     return isComponent && isOutermost && !isConditional && hook.call.arguments.length === 1;

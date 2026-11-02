@@ -14,8 +14,13 @@ function listCounters(update: TSESTree.Expression | null): TSESTree.Node[] {
 function getStep(update: TSESTree.Expression): { counter: TSESTree.Node; direction: number } | undefined {
     if (update.type === AST_NODE_TYPES.UpdateExpression)
         return { counter: update.argument, direction: update.operator === '++' ? 1 : -1 };
-    if (update.type !== AST_NODE_TYPES.AssignmentExpression || !STEP_OPERATORS.has(update.operator)) return undefined;
-    if (update.right.type !== AST_NODE_TYPES.Literal || update.right.value !== 1) return undefined;
+    if (
+        update.type !== AST_NODE_TYPES.AssignmentExpression ||
+        !STEP_OPERATORS.has(update.operator) ||
+        update.right.type !== AST_NODE_TYPES.Literal ||
+        update.right.value !== 1
+    )
+        return undefined;
     return { counter: update.left, direction: INCREMENT_OPERATORS.has(update.operator) ? 1 : -1 };
 }
 
@@ -26,8 +31,9 @@ function getLiteralNumber(node: TSESTree.Node | null | undefined): number | unde
 
 function getStart(init: TSESTree.ForStatement['init']): number | undefined {
     if (init?.type === AST_NODE_TYPES.AssignmentExpression) return getLiteralNumber(init.right);
-    if (init?.type !== AST_NODE_TYPES.VariableDeclaration || init.declarations.length !== 1) return undefined;
-    return getLiteralNumber(init.declarations[0]?.init);
+    return init?.type === AST_NODE_TYPES.VariableDeclaration && init.declarations.length === 1
+        ? getLiteralNumber(init.declarations[0]?.init)
+        : undefined;
 }
 
 function isReadInBody(node: TSESTree.ForStatement, counter: TSESTree.Identifier, source: TSESLint.SourceCode) {
@@ -42,8 +48,12 @@ function isSimpleCount(node: TSESTree.ForStatement, test: TSESTree.BinaryExpress
     const step = node.update && getStep(node.update);
     if (step?.counter.type !== AST_NODE_TYPES.Identifier || !INEQUALITY_OPERATORS.has(test.operator)) return false;
     const [start, end] = [getStart(node.init), getLiteralNumber(test.right)];
-    if (start === undefined || end === undefined || isReadInBody(node, step.counter, source)) return false;
-    return step.direction === Math.sign(end - start);
+    return (
+        start !== undefined &&
+        end !== undefined &&
+        !isReadInBody(node, step.counter, source) &&
+        step.direction === Math.sign(end - start)
+    );
 }
 
 function getCounterTest(node: TSESTree.ForStatement): TSESTree.BinaryExpression | undefined {

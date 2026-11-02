@@ -42,8 +42,11 @@ function isKept(node: TSESTree.CallExpression, target: TSESTree.Node): boolean {
         ASTUtils.isIdentifier(parent.left) &&
         ASTUtils.isIdentifier(target) &&
         parent.left.name === target.name;
-    if (isSelfAssignment || isNestedIn(node, AST_NODE_TYPES.ExpressionStatement, STANDALONE_PARENTS)) return true;
-    return isNestedIn(node, AST_NODE_TYPES.ReturnStatement, RETURNED_PARENTS);
+    return (
+        isSelfAssignment ||
+        isNestedIn(node, AST_NODE_TYPES.ExpressionStatement, STANDALONE_PARENTS) ||
+        isNestedIn(node, AST_NODE_TYPES.ReturnStatement, RETURNED_PARENTS)
+    );
 }
 
 export const noMisleadingArrayReverse = createRule<[], 'mutation'>({

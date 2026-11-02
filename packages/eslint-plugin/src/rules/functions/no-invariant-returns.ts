@@ -44,8 +44,9 @@ function getVariableLiteral(node: TSESTree.Identifier, source: TSESLint.SourceCo
     const definitions = getStableVariable(node, source)?.defs ?? [];
     const [definition] = definitions;
     const declarator = definitions.length === 1 ? definition?.node : undefined;
-    if (declarator?.type !== AST_NODE_TYPES.VariableDeclarator || declarator.init === null) return undefined;
-    return getLiteral(declarator.init, source);
+    return declarator?.type !== AST_NODE_TYPES.VariableDeclarator || declarator.init === null
+        ? undefined
+        : getLiteral(declarator.init, source);
 }
 
 function getLiteral(node: TSESTree.Node, source: TSESLint.SourceCode): { value: unknown } | undefined {
@@ -64,18 +65,24 @@ function isSameVariable(values: readonly TSESTree.Node[], source: TSESLint.Sourc
 function isSameLiteral(values: readonly TSESTree.Node[], source: TSESLint.SourceCode): boolean {
     const literals = values.map((value) => getLiteral(value, source));
     const [first] = literals;
-    if (first === undefined) return false;
-    return literals.every((literal) => literal !== undefined && Object.is(literal.value, first.value));
+    return (
+        first !== undefined &&
+        literals.every((literal) => literal !== undefined && Object.is(literal.value, first.value))
+    );
 }
 
 function isInvariant(scope: ReturnScope, source: TSESLint.SourceCode): boolean {
     const values = scope.returns.flatMap((statement) => (statement.argument === null ? [] : [statement.argument]));
     const isReachable = [...scope.segments].some((segment) => segment.reachable);
-    if (isReachable || scope.codePath.thrownSegments.length > 0) return false;
-    if (values.length < Math.max(scope.returns.length, MINIMUM_RETURNS)) return false;
-    if (isSameLiteral(values, source))
-        return !scope.kinds.has(EFFECT_RETURN_BRANCH) || scope.kinds.has(BARE_RETURN_BRANCH);
-    return isSameVariable(values, source) && !scope.kinds.has(EFFECT_ONLY_BRANCH);
+    if (
+        isReachable ||
+        scope.codePath.thrownSegments.length > 0 ||
+        values.length < Math.max(scope.returns.length, MINIMUM_RETURNS)
+    )
+        return false;
+    return isSameLiteral(values, source)
+        ? !scope.kinds.has(EFFECT_RETURN_BRANCH) || scope.kinds.has(BARE_RETURN_BRANCH)
+        : isSameVariable(values, source) && !scope.kinds.has(EFFECT_ONLY_BRANCH);
 }
 
 export const noInvariantReturns = createRule<[], 'invariant'>({

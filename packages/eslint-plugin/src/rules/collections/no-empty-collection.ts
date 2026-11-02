@@ -7,15 +7,20 @@ function isElementWrite(member: TSESTree.MemberExpression, source: TSESLint.Sour
     const chain = [...source.getAncestors(member), member];
     const index = chain.findLastIndex(({ type }) => type === AST_NODE_TYPES.AssignmentExpression);
     const assignment = chain[index];
-    if (assignment?.type !== AST_NODE_TYPES.AssignmentExpression) return false;
-    return ELEMENT_WRITE_OPERATORS.has(assignment.operator) && chain.slice(index + 1).includes(assignment.left);
+    return (
+        assignment?.type === AST_NODE_TYPES.AssignmentExpression &&
+        ELEMENT_WRITE_OPERATORS.has(assignment.operator) &&
+        chain.slice(index + 1).includes(assignment.left)
+    );
 }
 
 function isMemberRead(member: TSESTree.MemberExpression, source: TSESLint.SourceCode): boolean {
     const { property } = member;
     const isMethod = property.type === AST_NODE_TYPES.Identifier && READING_COLLECTION_METHODS.has(property.name);
-    if (isMethod && member.parent.type === AST_NODE_TYPES.CallExpression) return true;
-    return member.computed && !isElementWrite(member, source);
+    return (
+        (isMethod && member.parent.type === AST_NODE_TYPES.CallExpression) ||
+        (member.computed && !isElementWrite(member, source))
+    );
 }
 
 function isCollectionRead({ identifier }: TSESLint.Scope.Reference, source: TSESLint.SourceCode): boolean {

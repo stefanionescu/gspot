@@ -75,8 +75,13 @@ function getComparableTest(
     const [title] = node.arguments;
     const body = call.callback?.body.type === AST_NODE_TYPES.BlockStatement ? call.callback.body.body : [];
     const isConcrete = call.modifiers.every((modifier) => CONCRETE_TEST_MODIFIERS.has(modifier));
-    if (!isConcrete || title === undefined || ASTUtils.getStringIfConstant(title) === null) return undefined;
-    if (body.length < SIMILAR_TEST_LIMITS.statements) return undefined;
+    if (
+        !isConcrete ||
+        title === undefined ||
+        ASTUtils.getStringIfConstant(title) === null ||
+        body.length < SIMILAR_TEST_LIMITS.statements
+    )
+        return undefined;
     const literals = new Map<number, TSESTree.Literal>();
     for (const statement of body) mapLiterals(statement, source, literals);
     return { title, body, literals };

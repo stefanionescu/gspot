@@ -143,15 +143,6 @@ function isDomReceiver(source: Readonly<TSESLint.SourceCode>, types: TypeReader,
     );
 }
 
-function findMessageListener(
-    source: Readonly<TSESLint.SourceCode>,
-    node: TSESTree.Node | undefined,
-): FunctionNode | undefined {
-    const listener = findFunction(node, source);
-    if (listener?.body.type === AST_NODE_TYPES.CallExpression) return undefined;
-    return listener;
-}
-
 export const noAnyOriginMessages = createRule<[], 'anyTarget' | 'unverifiedOrigin'>({
     name: 'no-any-origin-messages',
     meta: {
@@ -177,9 +168,14 @@ export const noAnyOriginMessages = createRule<[], 'anyTarget' | 'unverifiedOrigi
         const types = getTypes(context);
         if (types === undefined) return {};
         const checkListener = (node: TSESTree.Node | undefined, report: TSESTree.Node): void => {
-            const listener = findMessageListener(source, node);
+            const listener = findFunction(node, source);
             const event = listener?.params[0];
-            if (listener && ASTUtils.isIdentifier(event) && !isOriginVerified(source, listener, event))
+            if (
+                listener !== undefined &&
+                listener.body.type !== AST_NODE_TYPES.CallExpression &&
+                ASTUtils.isIdentifier(event) &&
+                !isOriginVerified(source, listener, event)
+            )
                 context.report({ node: report, messageId: 'unverifiedOrigin' });
         };
         return {

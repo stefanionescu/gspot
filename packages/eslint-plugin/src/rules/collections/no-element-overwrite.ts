@@ -20,8 +20,9 @@ function getIndexWrite(expression: TSESTree.AssignmentExpression, source: TSESLi
     const { left, right, operator } = expression;
     if (operator !== '=' || left.type !== AST_NODE_TYPES.MemberExpression || !left.computed) return undefined;
     const key = getKey(left.property);
-    if (key === undefined || containsTokens(left.object, right, source)) return undefined;
-    return { collection: left.object, key, node: expression };
+    return key === undefined || containsTokens(left.object, right, source)
+        ? undefined
+        : { collection: left.object, key, node: expression };
 }
 
 function getCollectionWrite({ callee, arguments: values }: TSESTree.CallExpression): KeyWrite | undefined {

@@ -62,8 +62,11 @@ export const noEarlyTestReturn = createRule<[], EarlyReturnFramework>({
             [EARLY_RETURN_GUARD](guard: TSESTree.IfStatement) {
                 const callback = guard.parent.parent;
                 const call = callback?.parent;
-                if (call?.type !== AST_NODE_TYPES.CallExpression) return;
-                if (getRunningTest(call, context.sourceCode, framework)?.callback !== callback) return;
+                if (
+                    call?.type !== AST_NODE_TYPES.CallExpression ||
+                    getRunningTest(call, context.sourceCode, framework)?.callback !== callback
+                )
+                    return;
                 const { consequent } = guard;
                 const early = consequent.type === AST_NODE_TYPES.BlockStatement ? consequent.body[0] : consequent;
                 context.report({ node: early ?? guard, messageId: framework });

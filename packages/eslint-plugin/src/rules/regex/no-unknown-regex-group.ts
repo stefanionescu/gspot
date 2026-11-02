@@ -6,17 +6,13 @@ import { type AST, visitRegExpAST } from '@eslint-community/regexpp';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { EXEC_METHOD, MATCH_METHODS, GROUPS_PROPERTY, INDICES_PROPERTY } from '../../config/regex.ts';
 
-function getCalledMethod(value: TSESTree.Node | null) {
+function getMatchedRegex(value: TSESTree.Node | null, source: TSESLint.SourceCode): AST.RegExpLiteral | undefined {
     const call = value === null ? undefined : unwrapExpression(value);
     if (call?.type !== AST_NODE_TYPES.CallExpression || call.callee.type !== AST_NODE_TYPES.MemberExpression)
         return undefined;
-    return { call, receiver: call.callee.object, method: ASTUtils.getPropertyName(call.callee) };
-}
-
-function getMatchedRegex(value: TSESTree.Node | null, source: TSESLint.SourceCode): AST.RegExpLiteral | undefined {
-    const called = getCalledMethod(value);
-    if (called?.method === EXEC_METHOD) return traceRegex(called.receiver, source);
-    const [pattern] = called !== undefined && MATCH_METHODS.has(called.method) ? called.call.arguments : [];
+    const method = ASTUtils.getPropertyName(call.callee);
+    if (method === EXEC_METHOD) return traceRegex(call.callee.object, source);
+    const [pattern] = MATCH_METHODS.has(method) ? call.arguments : [];
     return pattern === undefined ? undefined : traceRegex(pattern, source);
 }
 

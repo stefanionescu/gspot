@@ -26,8 +26,9 @@ function getSanitizerProperty(node: TSESTree.Node, source: TSESLint.SourceCode):
     )
         return undefined;
     const receiver = getSanitizerSource(node.object, source);
-    if (receiver.type !== AST_NODE_TYPES.ObjectExpression) return undefined;
-    return getOptionProperties(receiver, source).get(node.property.name)?.value;
+    return receiver.type === AST_NODE_TYPES.ObjectExpression
+        ? getOptionProperties(receiver, source).get(node.property.name)?.value
+        : undefined;
 }
 
 function isLiteralSanitizerValue(

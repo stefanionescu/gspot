@@ -57,9 +57,9 @@ function getEqualitySuggestion(
     const length = sides.find(({ received }) => getOperand(received, source) === 'length');
     if (nullish !== undefined)
         return { kind: getOperand(nullish.expected, source), received: nullish.received, negated };
-    if (length?.received.type === AST_NODE_TYPES.MemberExpression)
-        return { kind: 'length', received: length.received.object, expected: length.expected, negated };
-    return { kind: 'equal', received: left, expected: right, negated };
+    return length?.received.type === AST_NODE_TYPES.MemberExpression
+        ? { kind: 'length', received: length.received.object, expected: length.expected, negated }
+        : { kind: 'equal', received: left, expected: right, negated };
 }
 
 function getBinarySuggestion(

@@ -25,8 +25,9 @@ function findSourceName(node: TSESTree.ExportSpecifier, local: string, sourceCod
 function listRenamedValues(declarator: TSESTree.VariableDeclarator, sourceCode: TSESLint.SourceCode): RenamedValue[] {
     const { id, init } = declarator;
     if (id.type === AST_NODE_TYPES.ObjectPattern) return listRenamedProperties(id);
-    if (init === null || id.type !== AST_NODE_TYPES.Identifier || !isAlias(init, sourceCode.getScope(init))) return [];
-    return [{ node: declarator, name: id.name, source: sourceCode.getText(init) }];
+    return init === null || id.type !== AST_NODE_TYPES.Identifier || !isAlias(init, sourceCode.getScope(init))
+        ? []
+        : [{ node: declarator, name: id.name, source: sourceCode.getText(init) }];
 }
 
 export const noRenamedExports = createRule<[], 'renamed'>({

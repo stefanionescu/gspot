@@ -4,11 +4,16 @@ import { COLLECTION_TYPE_NAMES, COLLECTION_SIZE_MEMBERS } from '../../config/col
 
 function getCollectionSize(node: TSESTree.BinaryExpression): TSESTree.MemberExpression | undefined {
     if (node.operator !== '<' && node.operator !== '>=') return undefined;
-    if (node.right.type !== AST_NODE_TYPES.Literal || node.right.value !== 0) return undefined;
-    if (node.left.type !== AST_NODE_TYPES.MemberExpression) return undefined;
+    if (
+        node.right.type !== AST_NODE_TYPES.Literal ||
+        node.right.value !== 0 ||
+        node.left.type !== AST_NODE_TYPES.MemberExpression
+    )
+        return undefined;
     const { property } = node.left;
-    if (property.type !== AST_NODE_TYPES.Identifier || !COLLECTION_SIZE_MEMBERS.has(property.name)) return undefined;
-    return node.left;
+    return property.type === AST_NODE_TYPES.Identifier && COLLECTION_SIZE_MEMBERS.has(property.name)
+        ? node.left
+        : undefined;
 }
 
 export const noImpossibleCollectionSize = createRule<[], 'comparison'>({

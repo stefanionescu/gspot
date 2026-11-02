@@ -20,8 +20,7 @@ export function getExpressionValue(
     const value = unwrapExpression(node);
     if (value.type !== AST_NODE_TYPES.Identifier) return value;
     const variable = ASTUtils.findVariable(source.getScope(value), value);
-    if (variable === null) return undefined;
-    return getExpressionValue(getAssignedValue(variable), source, seen);
+    return variable === null ? undefined : getExpressionValue(getAssignedValue(variable), source, seen);
 }
 
 /**

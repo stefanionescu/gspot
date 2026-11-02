@@ -4,8 +4,9 @@ import { TEST_FILE_PATTERN, TEST_DECLARATIONS, TITLED_TEST_DECLARATIONS } from '
 
 function getChainName(node: TSESTree.Node): string {
     if (node.type === AST_NODE_TYPES.Identifier) return node.name;
-    if (node.type !== AST_NODE_TYPES.MemberExpression || node.property.type !== AST_NODE_TYPES.Identifier) return '';
-    return `${getChainName(node.object)}.${node.property.name}`;
+    return node.type === AST_NODE_TYPES.MemberExpression && node.property.type === AST_NODE_TYPES.Identifier
+        ? `${getChainName(node.object)}.${node.property.name}`
+        : '';
 }
 
 function isTitledDeclaration(name: string, call: TSESTree.CallExpression): boolean {

@@ -66,8 +66,7 @@ Resolve a binding only when one write supplies its value.
 */
 export function getAssignedValue(variable: TSESLint.Scope.Variable): TSESTree.Node | undefined {
     const writes = variable.references.filter((reference) => reference.isWrite());
-    if (writes.length !== 1) return undefined;
-    return writes[0]?.writeExpr ?? undefined;
+    return writes.length === 1 ? (writes[0]?.writeExpr ?? undefined) : undefined;
 }
 
 function getBoundModule(
@@ -85,8 +84,9 @@ function getBoundModule(
     const value = getAssignedValue(variable);
     if (value === undefined) return undefined;
     const module = getModuleName(value, source, seen);
-    if (module === undefined || definition.node.id.type === AST_NODE_TYPES.Identifier) return module;
-    return getDestructuredName(definition.name, module);
+    return module === undefined || definition.node.id.type === AST_NODE_TYPES.Identifier
+        ? module
+        : getDestructuredName(definition.name, module);
 }
 
 function getMemberProperty(

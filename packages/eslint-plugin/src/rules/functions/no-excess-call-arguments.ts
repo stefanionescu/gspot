@@ -28,8 +28,12 @@ export const noExcessCallArguments = createRule<[], 'arguments'>({
         return {
             CallExpression(node) {
                 const declaration = getLocalFunction(node.callee, context.sourceCode);
-                if (declaration === undefined || node.arguments.length <= declaration.params.length) return;
-                if (declaration.params.some((parameter) => parameter.type === AST_NODE_TYPES.RestElement)) return;
+                if (
+                    declaration === undefined ||
+                    node.arguments.length <= declaration.params.length ||
+                    declaration.params.some((parameter) => parameter.type === AST_NODE_TYPES.RestElement)
+                )
+                    return;
                 calls.set(node, declaration);
             },
             Identifier(node) {

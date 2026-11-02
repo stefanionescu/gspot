@@ -89,7 +89,7 @@ function getUploadModule(source: Readonly<TSESLint.SourceCode>, node: UploadCall
     const { callee } = node;
     const origin = callee.type === AST_NODE_TYPES.MemberExpression ? callee.object : callee;
     const name = getQualifiedName(origin, source);
-    const [module] = (name ?? '').split('.');
+    const [module] = (name ?? '').split('.', 1);
     return module !== MULTER_MODULE || (name === MULTER_MODULE && callee === origin) ? module : undefined;
 }
 

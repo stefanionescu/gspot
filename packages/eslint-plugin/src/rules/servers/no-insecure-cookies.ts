@@ -8,16 +8,17 @@ function getCookiesOptions(call: TSESTree.CallExpression, source: TSESLint.Sourc
     if (call.callee.type !== AST_NODE_TYPES.MemberExpression || ASTUtils.getPropertyName(call.callee) !== 'set')
         return undefined;
     const instance = getExpressionValue(call.callee.object, source);
-    if (instance?.type !== AST_NODE_TYPES.NewExpression || getModuleName(instance.callee, source) !== 'cookies')
-        return undefined;
-    return call.arguments[COOKIE_SET_OPTIONS_POSITION];
+    return instance?.type === AST_NODE_TYPES.NewExpression && getModuleName(instance.callee, source) === 'cookies'
+        ? call.arguments[COOKIE_SET_OPTIONS_POSITION]
+        : undefined;
 }
 
 function getCookieOptions(call: TSESTree.CallExpression, source: TSESLint.SourceCode): TSESTree.Node | undefined {
     const name = getModuleName(call.callee, source);
     if (name === 'cookie-session') return call.arguments[0];
-    if (name !== 'express-session' && name !== 'csurf') return getCookiesOptions(call, source);
-    return getOptionProperties(call.arguments[0], source).get('cookie')?.value;
+    return name === 'express-session' || name === 'csurf'
+        ? getOptionProperties(call.arguments[0], source).get('cookie')?.value
+        : getCookiesOptions(call, source);
 }
 
 export const noInsecureCookies = createRule<[], 'flag'>({

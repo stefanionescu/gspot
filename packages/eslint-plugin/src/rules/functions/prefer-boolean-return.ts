@@ -9,8 +9,7 @@ function getBooleanLiteral(statement: TSESTree.Statement | undefined): boolean |
 
 function getBooleanReturn(statement: TSESTree.Statement | undefined): boolean | undefined {
     if (statement?.type !== AST_NODE_TYPES.BlockStatement) return getBooleanLiteral(statement);
-    if (statement.body.length !== 1) return undefined;
-    return getBooleanLiteral(statement.body[0]);
+    return statement.body.length === 1 ? getBooleanLiteral(statement.body[0]) : undefined;
 }
 
 function hasBooleanAlternative(node: TSESTree.IfStatement): boolean {

@@ -37,8 +37,14 @@ function stripFactorsOfTwo(value: number): number {
 
 function isFractionDivision(node: TSESTree.BinaryExpression): boolean {
     const [left, right] = [getNumber(node.left), getNumber(node.right)];
-    if (left === undefined || right === undefined || right === 0) return false;
-    if (!Number.isInteger(left) || Number.isInteger(left / right)) return false;
+    if (
+        left === undefined ||
+        right === undefined ||
+        right === 0 ||
+        !Number.isInteger(left) ||
+        Number.isInteger(left / right)
+    )
+        return false;
     return !Number.isSafeInteger(left) || !Number.isSafeInteger(right) || left % stripFactorsOfTwo(right) !== 0;
 }
 
@@ -55,8 +61,9 @@ function isFloatingArithmetic(node: TSESTree.BinaryExpression, source: TSESLint.
     const value = getNumber(node);
     if (value !== undefined && Number.isSafeInteger(value)) return false;
     const isOperand = [node.left, node.right].some((operand) => isFloatingPoint(operand, source, seen));
-    if (node.operator === '/') return isOperand || isFractionDivision(node);
-    return FLOAT_ARITHMETIC_OPERATORS.has(node.operator) && isOperand;
+    return node.operator === '/'
+        ? isOperand || isFractionDivision(node)
+        : FLOAT_ARITHMETIC_OPERATORS.has(node.operator) && isOperand;
 }
 
 function isFloatingPoint(node: TSESTree.Node, source: TSESLint.SourceCode, seen: Set<unknown>): boolean {
@@ -121,7 +128,7 @@ export const noFloatingPointEquality = createRule<[], 'equality'>({
         return {
             BinaryExpression(node) {
                 const operands = EQUALITY_OPERATORS.has(node.operator) ? [node.left, node.right] : [];
-                if (!operands.some((operand) => isFloatingPoint(operand, source, new Set()))) return;
+                if (operands.every((operand) => !isFloatingPoint(operand, source, new Set()))) return;
                 context.report({ node, messageId: 'equality' });
             },
             LogicalExpression(node) {

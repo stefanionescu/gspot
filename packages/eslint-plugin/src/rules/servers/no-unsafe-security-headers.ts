@@ -97,9 +97,12 @@ export const noUnsafeSecurityHeaders = createRule<[], 'header'>({
         return {
             CallExpression(node) {
                 const { callee } = node;
-                if (callee.type !== AST_NODE_TYPES.MemberExpression || callee.object.type !== AST_NODE_TYPES.Identifier)
-                    return;
-                if (ASTUtils.getPropertyName(callee) !== 'use' || !isApplication(callee.object, context.sourceCode))
+                if (
+                    callee.type !== AST_NODE_TYPES.MemberExpression ||
+                    callee.object.type !== AST_NODE_TYPES.Identifier ||
+                    ASTUtils.getPropertyName(callee) !== 'use' ||
+                    !isApplication(callee.object, context.sourceCode)
+                )
                     return;
                 for (const middleware of node.arguments.flatMap((argument) =>
                     listMiddleware(argument, context.sourceCode),

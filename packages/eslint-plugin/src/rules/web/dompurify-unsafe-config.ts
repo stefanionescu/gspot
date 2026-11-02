@@ -44,12 +44,6 @@ function describeValueAction(key: string, value: TSESTree.Node): string | undefi
         : undefined;
 }
 
-function describeAction(property: TSESTree.Property): string | undefined {
-    const key = ASTUtils.getPropertyName(property) ?? '';
-    if (Object.hasOwn(SANITIZE_LIST_OPTIONS, key)) return describeListAction(key, property.value);
-    return describeValueAction(key, property.value);
-}
-
 export const dompurifyUnsafeConfig = createRule<[], 'unsafe'>({
     name: 'dompurify-unsafe-config',
     meta: {
@@ -78,7 +72,11 @@ export const dompurifyUnsafeConfig = createRule<[], 'unsafe'>({
                 )
                     return;
                 const actions = config.properties.flatMap((property) => {
-                    const action = property.type === AST_NODE_TYPES.Property ? describeAction(property) : undefined;
+                    if (property.type !== AST_NODE_TYPES.Property) return [];
+                    const key = ASTUtils.getPropertyName(property) ?? '';
+                    const action = Object.hasOwn(SANITIZE_LIST_OPTIONS, key)
+                        ? describeListAction(key, property.value)
+                        : describeValueAction(key, property.value);
                     return action === undefined ? [] : [action];
                 });
                 if (actions.length > 0)

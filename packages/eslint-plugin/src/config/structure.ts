@@ -1,7 +1,7 @@
 import type { JSONSchema4 } from '@typescript-eslint/utils/json-schema';
 
 export const COMMENT_DIRECTIVES = [
-    /^(?:\*|@|SPDX-)/u,
+    /^(?:[*@]|SPDX-)/u,
     /^eslint(?:-[\w-]+)?(?:\s|$)(?!\s*=)/u,
     /^(?:istanbul|c8|v8|prettier|noinspection)(?:\s|$)(?!\s*=)/u,
     /^(?:TODO|FIXME)\s*:/u,

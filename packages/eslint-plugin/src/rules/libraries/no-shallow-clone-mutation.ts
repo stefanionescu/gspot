@@ -32,12 +32,6 @@ function getCloneCall(target: TSESTree.Node, source: TSESLint.SourceCode): TSEST
     return value?.type === AST_NODE_TYPES.CallExpression && value.arguments.length === 1 ? value : undefined;
 }
 
-function getCloneAdvice(target: TSESTree.Node, source: TSESLint.SourceCode): string | undefined {
-    const call = getCloneCall(target, source);
-    if (call === undefined || call.arguments[0]?.type === AST_NODE_TYPES.SpreadElement) return undefined;
-    return CLONE_ADVICE.get(getQualifiedName(call.callee, source));
-}
-
 function getFreshIsolation(node: TSESTree.Node, source: TSESLint.SourceCode): Isolation {
     const value = unwrapExpression(node);
     if (value.type === AST_NODE_TYPES.ObjectExpression || value.type === AST_NODE_TYPES.ArrayExpression)
@@ -55,8 +49,11 @@ function getStatementIsolation(
     source: TSESLint.SourceCode,
 ): Isolation | undefined {
     const value = statement.type === AST_NODE_TYPES.ExpressionStatement ? statement.expression : undefined;
-    if (value?.type !== AST_NODE_TYPES.AssignmentExpression) return undefined;
-    if (!haveSameTokens(unwrapExpression(value.left), prefix, source)) return undefined;
+    if (
+        value?.type !== AST_NODE_TYPES.AssignmentExpression ||
+        !haveSameTokens(unwrapExpression(value.left), prefix, source)
+    )
+        return undefined;
     return value.operator === '=' ? getFreshIsolation(value.right, source) : 'written';
 }
 
@@ -123,7 +120,9 @@ export const noShallowCloneMutation = createRule<[], 'shared'>({
     create(context) {
         const source = context.sourceCode;
         const inspect = (mutation: TSESTree.Node, target: TSESTree.Node) => {
-            const advice = getCloneAdvice(target, source);
+            const call = getCloneCall(target, source);
+            if (call === undefined || call.arguments[0]?.type === AST_NODE_TYPES.SpreadElement) return;
+            const advice = CLONE_ADVICE.get(getQualifiedName(call.callee, source));
             if (advice !== undefined && !hasIsolatedPrefix(target, mutation, source))
                 context.report({ node: mutation, messageId: 'shared', data: { advice } });
         };

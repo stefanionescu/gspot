@@ -26,9 +26,9 @@ function convertEncodedAddress(address: string): string | undefined {
     const octets = address.split('.');
     const numbers = octets.map((octet) => {
         if (OCTAL_OCTET.test(octet)) return Number.parseInt(octet, OCTAL_RADIX);
-        return HEXADECIMAL_OCTET.test(octet) ? Number.parseInt(octet, HEXADECIMAL_RADIX) : Number.NaN;
+        return HEXADECIMAL_OCTET.test(octet) ? Number.parseInt(octet, HEXADECIMAL_RADIX) : undefined;
     });
-    return octets.length === IPV4_OCTETS && numbers.every((number) => !Number.isNaN(number))
+    return octets.length === IPV4_OCTETS && numbers.every((number) => number !== undefined)
         ? numbers.join('.')
         : undefined;
 }

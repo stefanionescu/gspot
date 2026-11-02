@@ -10,8 +10,9 @@ function getConstructorStatement(ancestors: readonly TSESTree.Node[]): TSESTree.
         (ancestor) => ancestor.type === AST_NODE_TYPES.MethodDefinition && ancestor.kind === 'constructor',
     );
     const body = start === -1 ? [] : ancestors.slice(start + CONSTRUCTOR_BODY_DEPTH);
-    if (body.some((ancestor) => ASTUtils.isFunction(ancestor))) return undefined;
-    return body.findLast((ancestor) => ancestor.type.endsWith('Statement'));
+    return body.some((ancestor) => ASTUtils.isFunction(ancestor))
+        ? undefined
+        : body.findLast((ancestor) => ancestor.type.endsWith('Statement'));
 }
 
 function isAssignedToThis(call: TSESTree.CallExpression, statement: TSESTree.Node): boolean {

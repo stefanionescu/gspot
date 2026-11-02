@@ -15,8 +15,10 @@ function getReceiver(node: TSESTree.Node, types: TypeReader): string | undefined
 
 function hasAssignment(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     if (node.type === AST_NODE_TYPES.AssignmentExpression) return true;
-    if (ASTUtils.isFunction(node)) return false;
-    return listChildren(node, source.visitorKeys).some((child) => hasAssignment(child, source));
+    return (
+        !ASTUtils.isFunction(node) &&
+        listChildren(node, source.visitorKeys).some((child) => hasAssignment(child, source))
+    );
 }
 
 function getPureMethod(callee: TSESTree.MemberExpression, types: TypeReader, source: TSESLint.SourceCode) {

@@ -14,8 +14,9 @@ function listMembers(body: TSESTree.Statement[], source: TSESLint.SourceCode): S
     return calls.flatMap(({ call, index }) => {
         const test = getTestCall(call, source);
         const isMarked = test?.modifiers.every((modifier) => MARKED_TEST_MODIFIERS.has(modifier)) === true;
-        if (test === undefined || !isMarked) return [];
-        return [{ call, index, kind: test.kind, isAfter: TEST_AFTER_HOOK_NAMES.has(test.name) }];
+        return test === undefined || !isMarked
+            ? []
+            : [{ call, index, kind: test.kind, isAfter: TEST_AFTER_HOOK_NAMES.has(test.name) }];
     });
 }
 

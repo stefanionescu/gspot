@@ -32,8 +32,12 @@ export const noIdenticalOperands = createRule<[], 'operands'>({
     create(context) {
         const inspect = (node: TSESTree.BinaryExpression | TSESTree.LogicalExpression) => {
             const { left, right } = node;
-            if (left.type !== right.type || !isComparedOperator(node)) return;
-            if (!haveSameTokens(left, right, context.sourceCode)) return;
+            if (
+                left.type !== right.type ||
+                !isComparedOperator(node) ||
+                !haveSameTokens(left, right, context.sourceCode)
+            )
+                return;
             context.report({ node, messageId: 'operands', data: { operator: node.operator } });
         };
         return { BinaryExpression: inspect, LogicalExpression: inspect };

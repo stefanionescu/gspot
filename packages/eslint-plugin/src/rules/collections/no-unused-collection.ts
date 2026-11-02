@@ -10,8 +10,12 @@ function isWriteStatement(expression: TSESTree.Expression, identifier: TSESTree.
         );
     if (expression.type !== AST_NODE_TYPES.CallExpression) return false;
     const { callee } = expression;
-    if (callee.type !== AST_NODE_TYPES.MemberExpression || !Object.is(callee.object, identifier)) return false;
-    return ASTUtils.isIdentifier(callee.property) && WRITING_COLLECTION_METHODS.has(callee.property.name);
+    return (
+        callee.type === AST_NODE_TYPES.MemberExpression &&
+        Object.is(callee.object, identifier) &&
+        ASTUtils.isIdentifier(callee.property) &&
+        WRITING_COLLECTION_METHODS.has(callee.property.name)
+    );
 }
 
 function isContentRead({ identifier }: TSESLint.Scope.Reference, source: TSESLint.SourceCode): boolean {

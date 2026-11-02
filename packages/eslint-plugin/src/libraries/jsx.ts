@@ -20,8 +20,9 @@ Name the element of a JSX tag as written: `table`, `Layout.Table`, or `svg:rect`
 */
 export function getElementName(name: TSESTree.JSXTagNameExpression): string {
     if (name.type === AST_NODE_TYPES.JSXIdentifier) return name.name;
-    if (name.type === AST_NODE_TYPES.JSXNamespacedName) return `${name.namespace.name}:${name.name.name}`;
-    return `${getElementName(name.object)}.${name.property.name}`;
+    return name.type === AST_NODE_TYPES.JSXNamespacedName
+        ? `${name.namespace.name}:${name.name.name}`
+        : `${getElementName(name.object)}.${name.property.name}`;
 }
 
 function normalizeLiteral(value: unknown): unknown {
@@ -32,9 +33,9 @@ function normalizeLiteral(value: unknown): unknown {
 
 function getExpressionValue(expression: TSESTree.Node): unknown {
     if (expression.type === AST_NODE_TYPES.Literal) return normalizeLiteral(expression.value);
-    if (expression.type === AST_NODE_TYPES.TemplateLiteral && expression.expressions.length === 0)
-        return expression.quasis[0]?.value.cooked;
-    return null;
+    return expression.type === AST_NODE_TYPES.TemplateLiteral && expression.expressions.length === 0
+        ? expression.quasis[0]?.value.cooked
+        : null;
 }
 
 function getAttributeValue(value: TSESTree.JSXAttribute['value']): unknown {
@@ -57,8 +58,7 @@ export function getAttribute(element: TSESTree.JSXOpeningElement, name: string):
             child.type === AST_NODE_TYPES.JSXAttribute &&
             getElementName(child.name).toLowerCase() === name.toLowerCase(),
     );
-    if (attribute === undefined) return undefined;
-    return { node: attribute, value: getAttributeValue(attribute.value) };
+    return attribute === undefined ? undefined : { node: attribute, value: getAttributeValue(attribute.value) };
 }
 
 function getSpan(cell: TSESTree.JSXElement, name: string, maximum: number): number {

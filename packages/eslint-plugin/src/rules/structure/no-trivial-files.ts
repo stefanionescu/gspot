@@ -43,9 +43,11 @@ function countExports(statement: TSESTree.Node): number {
 
 function countDeclarations(statement: TSESTree.Node): number {
     if (statement.type === AST_NODE_TYPES.VariableDeclaration) return statement.declarations.length;
-    if (statement.type === AST_NODE_TYPES.ExportDefaultDeclaration)
-        return Number(DECLARING_DEFAULT_EXPORTS.has(statement.declaration.type));
-    return Number(BARREL_DECLARATIONS.has(statement.type));
+    return Number(
+        statement.type === AST_NODE_TYPES.ExportDefaultDeclaration
+            ? DECLARING_DEFAULT_EXPORTS.has(statement.declaration.type)
+            : BARREL_DECLARATIONS.has(statement.type),
+    );
 }
 
 function isForwarding(statement: TSESTree.Node, source: TSESLint.SourceCode): boolean {

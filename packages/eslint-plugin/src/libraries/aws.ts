@@ -52,7 +52,7 @@ function isUnresolved(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node
     const variable = ASTUtils.findVariable(source.getScope(root), root);
     if (variable === null) return true;
     return (
-        getQualifiedName(root, source) === undefined && !variable.references.some((reference) => reference.isWrite())
+        getQualifiedName(root, source) === undefined && variable.references.every((reference) => !reference.isWrite())
     );
 }
 

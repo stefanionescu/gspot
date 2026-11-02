@@ -28,8 +28,9 @@ function isCatchCall(call: TSESTree.Node): boolean {
 function classifyCall(call: TSESTree.Node, types: TypeReader): PromiseUse {
     if (call.type === AST_NODE_TYPES.AwaitExpression || !isThenable(types, call)) return 'blocking';
     const parentType = call.parent?.type;
-    if (isCatchCall(call) || (parentType !== undefined && HANDLING_PARENTS.has(parentType))) return 'handled';
-    return getChainedUse(call);
+    return isCatchCall(call) || (parentType !== undefined && HANDLING_PARENTS.has(parentType))
+        ? 'handled'
+        : getChainedUse(call);
 }
 
 export const noTryPromise = createRule<[], 'open' | 'caught'>({

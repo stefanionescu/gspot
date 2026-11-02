@@ -34,8 +34,13 @@ export const requireReduceInitialValue = createRule<[], 'initial'>({
         return {
             CallExpression(node) {
                 const { callee } = node;
-                if (callee.type !== AST_NODE_TYPES.MemberExpression || node.arguments.length !== 1) return;
-                if (ASTUtils.getPropertyName(callee) !== REDUCE_METHOD || !isArray(callee.object)) return;
+                if (
+                    callee.type !== AST_NODE_TYPES.MemberExpression ||
+                    node.arguments.length !== 1 ||
+                    ASTUtils.getPropertyName(callee) !== REDUCE_METHOD ||
+                    !isArray(callee.object)
+                )
+                    return;
                 context.report({ node: callee.property, messageId: 'initial' });
             },
         };

@@ -74,8 +74,9 @@ function isAdminPortCall(
 function isAdminPort(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): boolean {
     const name = getCdkName(source, node);
     if (ALL_PORTS.has(name)) return true;
-    if (name === PORT_CONSTRUCT) return isAdminPortOptions(source, findArgument(source, node, 0));
-    return (name === SINGLE_PORT || name === PORT_RANGE) && isAdminPortCall(source, node, name);
+    return name === PORT_CONSTRUCT
+        ? isAdminPortOptions(source, findArgument(source, node, 0))
+        : (name === SINGLE_PORT || name === PORT_RANGE) && isAdminPortCall(source, node, name);
 }
 
 function isOpenPeer(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): boolean {

@@ -73,8 +73,13 @@ export const preferReadonlyProps = createRule<[], 'mutable' | 'mark'>({
                 const [props] = node.params;
                 const annotation =
                     props !== undefined && 'typeAnnotation' in props ? props.typeAnnotation?.typeAnnotation : undefined;
-                if (props === undefined || annotation === undefined || !returnsMarkup(node, source)) return;
-                if (isReadonlyType(types.get(props), types)) return;
+                if (
+                    props === undefined ||
+                    annotation === undefined ||
+                    !returnsMarkup(node, source) ||
+                    isReadonlyType(types.get(props), types)
+                )
+                    return;
                 context.report({
                     node: props,
                     messageId: 'mutable',

@@ -43,8 +43,9 @@ function getRequiredName(definition: TSESLint.Scope.Definition): TestOrigin | un
 function getOrigin(base: TSESTree.Identifier, source: TSESLint.SourceCode): TestOrigin | undefined {
     const variable = ASTUtils.findVariable(source.getScope(base), base);
     const [definition] = variable?.defs ?? [];
-    if (definition === undefined) return { name: base.name, module: undefined };
-    return getImportedName(definition) ?? getRequiredName(definition);
+    return definition === undefined
+        ? { name: base.name, module: undefined }
+        : (getImportedName(definition) ?? getRequiredName(definition));
 }
 
 /**
@@ -105,8 +106,9 @@ Check whether an expression names a Playwright suite: `test.describe`, with any 
 export function isPlaywrightSuite(node: TSESTree.Node): boolean {
     if (node.type !== AST_NODE_TYPES.MemberExpression) return false;
     const name = ASTUtils.getPropertyName(node);
-    if (name === 'describe') return node.object.type === AST_NODE_TYPES.Identifier && node.object.name === 'test';
-    return PLAYWRIGHT_SUITE_MODES.has(name) && isPlaywrightSuite(node.object);
+    return name === 'describe'
+        ? node.object.type === AST_NODE_TYPES.Identifier && node.object.name === 'test'
+        : PLAYWRIGHT_SUITE_MODES.has(name) && isPlaywrightSuite(node.object);
 }
 
 /**

@@ -8,8 +8,10 @@ import { EFFECT_CHILD_KEYS, SIDE_EFFECT_NODES, EVENT_LISTENER_KEY } from '../../
 function isCallbackArgument(node: FunctionNode): boolean {
     const { parent } = node;
     if (parent.type === AST_NODE_TYPES.CallExpression) return parent.arguments.some((value) => Object.is(value, node));
-    if (parent.type === AST_NODE_TYPES.JSXExpressionContainer) return true;
-    return parent.type === AST_NODE_TYPES.Property && EVENT_LISTENER_KEY.test(String(ASTUtils.getPropertyName(parent)));
+    return (
+        parent.type === AST_NODE_TYPES.JSXExpressionContainer ||
+        (parent.type === AST_NODE_TYPES.Property && EVENT_LISTENER_KEY.test(String(ASTUtils.getPropertyName(parent))))
+    );
 }
 
 function hasSideEffects(node: TSESTree.Node): boolean {
@@ -71,7 +73,7 @@ export const noSelectorParameter = createRule<[], 'selector'>({
             Identifier(node) {
                 if (tests.length === 0) return;
                 const ancestors = new Set(source.getAncestors(node));
-                if (!tests.some((test) => Object.is(test, node) || ancestors.has(test))) return;
+                if (tests.every((test) => !Object.is(test, node) && !ancestors.has(test))) return;
                 const name = getSelector(node, source, types);
                 if (name !== undefined) context.report({ node, messageId: 'selector', data: { name } });
             },

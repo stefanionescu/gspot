@@ -23,8 +23,10 @@ function disablesHeader(call: TSESTree.CallExpression, method: string | null, so
     if (method === 'use') return call.arguments.some((argument) => protectsHeader(argument, source));
     const [header, enabled] = call.arguments.map((argument) => ASTUtils.getStaticValue(argument)?.value);
     if (String(header).toLowerCase() !== POWERED_BY_HEADER) return false;
-    if (method === 'disable' && call.arguments.length === 1) return true;
-    return method === 'set' && call.arguments.length === POWERED_BY_SET_ARGUMENTS && enabled === false;
+    return (
+        (method === 'disable' && call.arguments.length === 1) ||
+        (method === 'set' && call.arguments.length === POWERED_BY_SET_ARGUMENTS && enabled === false)
+    );
 }
 
 function isProtected(variable: TSESLint.Scope.Variable, source: TSESLint.SourceCode, creationOffset: number): boolean {
@@ -75,8 +77,8 @@ export const noPoweredByHeader = createRule<[], 'header'>({
                 for (const declaration of applications) {
                     const variables = context.sourceCode.getDeclaredVariables(declaration);
                     if (
-                        !variables.some((variable) =>
-                            isProtected(variable, context.sourceCode, declaration.id.range[0]),
+                        variables.every(
+                            (variable) => !isProtected(variable, context.sourceCode, declaration.id.range[0]),
                         )
                     )
                         context.report({ node: declaration.id, messageId: 'header' });

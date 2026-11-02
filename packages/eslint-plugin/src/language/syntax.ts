@@ -72,10 +72,10 @@ export function isAlias(node: TSESTree.Node | null, scope: TSESLint.Scope.Scope)
     return (
         variable !== null &&
         variable.defs.length > 0 &&
-        !variable.references.some(
+        variable.references.every(
             (reference) =>
-                (reference.isWrite() && reference.init !== true) ||
-                isMemberWrite(getOutermostMember(reference.identifier)),
+                (!reference.isWrite() || reference.init === true) &&
+                !isMemberWrite(getOutermostMember(reference.identifier)),
         )
     );
 }

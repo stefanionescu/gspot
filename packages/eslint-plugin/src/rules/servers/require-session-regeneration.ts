@@ -56,7 +56,7 @@ export const requireSessionRegeneration = createRule<[], 'keptSession'>({
             },
             'Program:exit'() {
                 for (const callback of callbacks)
-                    if (!regenerations.some((call) => source.getAncestors(call).includes(callback)))
+                    if (regenerations.every((call) => !source.getAncestors(call).includes(callback)))
                         context.report({ node: callback, messageId: 'keptSession' });
             },
         };

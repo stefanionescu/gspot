@@ -158,8 +158,9 @@ function getCypressCall(node: TSESTree.CallExpression, styles: AssertionStyles):
     const [chainer, ...values] = node.arguments;
     const isMethod =
         callee.type === AST_NODE_TYPES.MemberExpression && CYPRESS_ASSERTIONS.has(ASTUtils.getPropertyName(callee));
-    if (!styles.cypress || !isMethod || values.length !== 1 || !isCypressChain(callee.object)) return undefined;
-    return getCheckedCall(node, getCypressChecks(chainer), callee.property, [callee.object, ...values]);
+    return styles.cypress && isMethod && values.length === 1 && isCypressChain(callee.object)
+        ? getCheckedCall(node, getCypressChecks(chainer), callee.property, [callee.object, ...values])
+        : undefined;
 }
 
 function getCheckedCall(
@@ -175,9 +176,9 @@ function getCheckedCall(
     const { style, predicate, comparison, negated } = checks;
     if (predicate !== undefined)
         return { style, kind: 'predicate', predicate, received, negated, node, report: received };
-    return expected !== undefined && comparison !== undefined
-        ? { style, kind: 'comparison', comparison, received, expected, negated, node, report }
-        : undefined;
+    return expected === undefined || comparison === undefined
+        ? undefined
+        : { style, kind: 'comparison', comparison, received, expected, negated, node, report };
 }
 
 function getAssertChecks(name: string, styles: AssertionStyles): AssertionChecks | undefined {
