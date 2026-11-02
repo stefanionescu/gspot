@@ -98,7 +98,7 @@ test.each([...VALE_INSTALL_FAILURES])(
             ...fakeArguments,
         );
         const writer = openFiles(sandbox.path);
-        const request = buildSandboxToolInstall(session, writer);
+        const request = await buildSandboxToolInstall(session, writer);
         const failure = await captureRejection(installValePackages(request, [miseBin]));
         expect(failure.message).toEndWith(message);
         expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.valePackages}/Google/terms.yml`), 'utf8')).toBe(
@@ -106,7 +106,7 @@ test.each([...VALE_INSTALL_FAILURES])(
         );
         await writeProgramCommand(sandbox.path, 'mise/bin/vale', 'fakes/vale', '../../../vale', version);
         await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['prose'], { level: 'all' }));
-        const fixed = buildSandboxToolInstall(await openSession(sandbox.path), writer);
+        const fixed = await buildSandboxToolInstall(await openSession(sandbox.path), writer);
         await installValePackages(fixed, [miseBin]);
         expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.valePackages}/Google/terms.yml`), 'utf8')).toBe(
             'corrected bytes\n',
