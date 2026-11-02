@@ -1,7 +1,7 @@
-import { createRule } from '../rule.ts';
-import type { TableCell } from '../types/plugin.ts';
-import type { TableBlock, HeaderIssue } from '../types/rules.ts';
-import { buildTableGrid, getElementName } from '../libraries/jsx.ts';
+import { createRule } from '../../rule.ts';
+import type { TableCell } from '../../types/plugin.ts';
+import type { TableBlock, HeaderIssue } from '../../types/rules.ts';
+import { buildTableGrid, getElementName } from '../../libraries/jsx.ts';
 
 function listHeaderIds(cells: readonly (TableCell | undefined)[]): Set<string> {
     const ids = cells.flatMap((cell) =>

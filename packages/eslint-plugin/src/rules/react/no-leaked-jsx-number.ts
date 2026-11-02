@@ -1,6 +1,6 @@
-import { createRule } from '../rule.ts';
-import { listImportedModules } from '../libraries/packages.ts';
-import { LEAKING_TYPES, NATIVE_LEAKING_TYPES } from '../config/frameworks.ts';
+import { createRule } from '../../rule.ts';
+import { listImportedModules } from '../../libraries/packages.ts';
+import { LEAKING_TYPES, NATIVE_LEAKING_TYPES } from '../../config/frameworks.ts';
 import { ESLintUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function listOperands(node: TSESTree.Expression): TSESTree.Expression[] {

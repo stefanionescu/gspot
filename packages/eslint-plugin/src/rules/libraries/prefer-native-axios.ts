@@ -1,7 +1,7 @@
-import { createRule } from '../rule.ts';
-import { getModuleName } from '../language/modules.ts';
+import { createRule } from '../../rule.ts';
+import { getModuleName } from '../../language/modules.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { AXIOS_DEPRECATIONS, AXIOS_CANCEL_TOKEN, AXIOS_CONFIG_POSITIONS } from '../config/frameworks.ts';
+import { AXIOS_DEPRECATIONS, AXIOS_CANCEL_TOKEN, AXIOS_CONFIG_POSITIONS } from '../../config/frameworks.ts';
 
 export const preferNativeAxios = createRule<[], 'helper' | 'cancelToken'>({
     name: 'prefer-native-axios',

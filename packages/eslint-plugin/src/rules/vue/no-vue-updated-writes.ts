@@ -1,7 +1,7 @@
-import { createRule } from '../rule.ts';
-import { getModuleName } from '../language/modules.ts';
-import { listBodyNodes } from '../libraries/testing.ts';
-import { getExpressionValue } from '../language/expressions.ts';
+import { createRule } from '../../rule.ts';
+import { getModuleName } from '../../language/modules.ts';
+import { listBodyNodes } from '../../libraries/testing.ts';
+import { getExpressionValue } from '../../language/expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -13,7 +13,7 @@ import {
     VUE_DEFINE_COMPONENT,
     VUE_OPTION_PROPERTIES,
     TERMINATING_STATEMENTS,
-} from '../config/frameworks.ts';
+} from '../../config/frameworks.ts';
 
 function getHookBody(node: TSESTree.Node | undefined, source: TSESLint.SourceCode): TSESTree.Node | undefined {
     const variable =

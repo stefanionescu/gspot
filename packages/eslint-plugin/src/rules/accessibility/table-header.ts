@@ -1,7 +1,7 @@
-import { createRule } from '../rule.ts';
-import type { TableCell } from '../types/plugin.ts';
+import { createRule } from '../../rule.ts';
+import type { TableCell } from '../../types/plugin.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { getAttribute, isLayoutTable, buildTableGrid, getElementName } from '../libraries/jsx.ts';
+import { getAttribute, isLayoutTable, buildTableGrid, getElementName } from '../../libraries/jsx.ts';
 
 function hasHeaderLine(grid: readonly (readonly TableCell[])[] | null): boolean {
     if (grid === null) return true;

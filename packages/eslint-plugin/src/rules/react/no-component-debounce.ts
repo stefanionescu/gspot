@@ -1,6 +1,6 @@
-import { createRule } from '../rule.ts';
-import { getModuleName } from '../language/modules.ts';
-import { isNamedFunction } from '../libraries/react.ts';
+import { createRule } from '../../rule.ts';
+import { getModuleName } from '../../language/modules.ts';
+import { isNamedFunction } from '../../libraries/react.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -13,7 +13,7 @@ import {
     TIMER_FUNCTION,
     CLASS_OUTPUT_METHOD,
     STATEFUL_FUNCTION_NAME,
-} from '../config/frameworks.ts';
+} from '../../config/frameworks.ts';
 
 function isRefCall(node: TSESTree.Node | null | undefined, source: TSESLint.SourceCode): boolean {
     const callee = node?.type === AST_NODE_TYPES.CallExpression ? node.callee : undefined;

@@ -1,11 +1,11 @@
-import { createRule } from '../rule.ts';
-import { isCallOf } from '../libraries/testing.ts';
-import type { TypeReader } from '../types/plugin.ts';
-import { getModuleName } from '../language/modules.ts';
-import { unwrapExpression } from '../language/syntax.ts';
-import { getExpressionValue } from '../language/expressions.ts';
-import { getTypes, getTypeCategory } from '../language/checker.ts';
-import type { LibraryCall, NativeReplacement } from '../types/rules.ts';
+import { createRule } from '../../rule.ts';
+import { isCallOf } from '../../libraries/testing.ts';
+import type { TypeReader } from '../../types/plugin.ts';
+import { getModuleName } from '../../language/modules.ts';
+import { unwrapExpression } from '../../language/syntax.ts';
+import { getExpressionValue } from '../../language/expressions.ts';
+import { getTypes, getTypeCategory } from '../../language/checker.ts';
+import type { LibraryCall, NativeReplacement } from '../../types/rules.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -16,7 +16,7 @@ import {
     CALLBACK_METHODS,
     NATIVE_REPLACEMENTS,
     SHORTHAND_ITERATEES,
-} from '../config/lodash.ts';
+} from '../../config/lodash.ts';
 
 const methodNames = new Map([...NATIVE_REPLACEMENTS.keys()].map((method) => [method.toLowerCase(), method]));
 
