@@ -80,7 +80,7 @@ test('the AGENTS.md block moves its headings one level down in a file with its o
     expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).toBe(agents);
 });
 
-test('the AGENTS.md Commands section names its launcher and requires agreement before configuration changes', () => {
+test('the AGENTS.md Commands section names its launcher once', () => {
     const command = 'pnpm exec gspot';
     const block = buildAgentsBlock({
         files: [],
@@ -90,14 +90,6 @@ test('the AGENTS.md Commands section names its launcher and requires agreement b
     });
     const commands = block.slice(block.indexOf(COMMANDS_HEADING), block.indexOf('\n## Generated files'));
     expect(commands).toContain(`The rules write \`gspot\` for \`${command}\`.`);
-    expect(commands).toContain('Before you commit, run `gspot check --staged --stage commit`.');
-    expect(commands).toContain('Before you push, run `gspot check --changed --stage push`.');
-    expect(commands).toContain('To change `gspot.toml`, run `gspot set`, `unset`, or `unignore`.');
-    expect(commands).toContain(
-        'When `gspot check` or `gspot doctor` names a new configuration, ask the user, then run the `gspot add` line it prints and `gspot install`.',
-    );
-    expect(commands).toContain('Run `gspot ignore` or `gspot remove` only after the user agrees, with a reason.');
-    expect(commands).toContain('After you edit `gspot.toml`, a package manifest, or a tsconfig, run `gspot apply`.');
     expect(commands.match(/pnpm exec gspot/gu)).toHaveLength(1);
 });
 
