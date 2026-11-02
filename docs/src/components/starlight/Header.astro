@@ -21,55 +21,55 @@ import Select from '#docs/components/starlight/theme/Select.astro';
     </div>
 </div>
 <style>
-.site-header {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
-    align-items: center;
-    gap: 4px;
-    height: 100%;
-}
-.search {
-    justify-self: end;
-}
-.search :global(button[data-open-modal]) {
-    margin-inline: auto;
-}
-.controls {
-    display: flex;
-    align-items: center;
-    justify-self: end;
-    gap: 4px;
-}
-:global(html:not([data-has-sidebar])) .site-header {
-    max-width: var(--home-width);
-    margin-inline: auto;
-}
-:global(html:not([data-has-sidebar])) .controls {
-    margin-inline-end: -12px;
-}
-.social {
-    display: none;
-}
-@media (width < 50rem) {
-    .search :global(button[data-open-modal]) {
-        width: var(--target-size);
-        height: var(--target-size);
-        padding: 0;
-        justify-content: center;
-        border-radius: 8px;
-    }
-}
-
-@media (width >= 50rem) {
     .site-header {
-        grid-template-columns: minmax(0, 1fr) minmax(0, 24rem) minmax(0, 1fr);
-        gap: 24px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        align-items: center;
+        gap: 4px;
+        height: 100%;
     }
     .search {
-        justify-self: stretch;
+        justify-self: end;
+    }
+    .search :global(button[data-open-modal]) {
+        margin-inline: auto;
+    }
+    .controls {
+        display: flex;
+        align-items: center;
+        justify-self: end;
+        gap: 4px;
+    }
+    :global(html:not([data-has-sidebar])) .site-header {
+        max-width: var(--home-width);
+        margin-inline: auto;
+    }
+    :global(html:not([data-has-sidebar])) .controls {
+        margin-inline-end: -12px;
     }
     .social {
-        display: flex;
+        display: none;
     }
-}
+    @media (width < 50rem) {
+        .search :global(button[data-open-modal]) {
+            width: var(--target-size);
+            height: var(--target-size);
+            padding: 0;
+            justify-content: center;
+            border-radius: 8px;
+        }
+    }
+
+    @media (width >= 50rem) {
+        .site-header {
+            grid-template-columns: minmax(0, 1fr) minmax(0, 24rem) minmax(0, 1fr);
+            gap: 24px;
+        }
+        .search {
+            justify-self: stretch;
+        }
+        .social {
+            display: flex;
+        }
+    }
 </style>

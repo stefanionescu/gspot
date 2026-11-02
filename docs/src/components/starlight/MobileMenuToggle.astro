@@ -10,31 +10,31 @@ import { Icon } from '@astrojs/starlight/components';
 </button>
 
 <style>
-.menu-button {
-    position: fixed;
-    z-index: var(--sl-z-index-navbar);
-    top: var(--sl-nav-height);
-    inset-inline-start: 4px;
-    width: auto;
-    gap: 8px;
-    padding-inline: 12px;
-    font-size: var(--sl-text-sm);
-    font-weight: 500;
-}
-.menu-button:has(~ :popover-open) .when-closed,
-.menu-button:not(:has(~ :popover-open)) .when-open {
-    display: none;
-}
-
-@media (width >= 50rem) {
     .menu-button {
+        position: fixed;
+        z-index: var(--sl-z-index-navbar);
+        top: var(--sl-nav-height);
+        inset-inline-start: 4px;
+        width: auto;
+        gap: 8px;
+        padding-inline: 12px;
+        font-size: var(--sl-text-sm);
+        font-weight: 500;
+    }
+    .menu-button:has(~ :popover-open) .when-closed,
+    .menu-button:not(:has(~ :popover-open)) .when-open {
         display: none;
     }
-}
+
+    @media (width >= 50rem) {
+        .menu-button {
+            display: none;
+        }
+    }
 </style>
 
 <style is:global>
-body:has(#starlight__sidebar:popover-open) {
-    overflow: hidden;
-}
+    body:has(#starlight__sidebar:popover-open) {
+        overflow: hidden;
+    }
 </style>

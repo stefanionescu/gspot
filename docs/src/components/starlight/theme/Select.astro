@@ -19,7 +19,6 @@ import { THEME_STORAGE_KEY, THEME_SWITCH_LABELS } from '#docs/config/site.ts';
 </theme-toggle>
 
 <script>
-
     class ThemeToggle extends HTMLElement {
         connectedCallback(): void {
             const button = this.querySelector('button') as HTMLButtonElement;
@@ -37,7 +36,7 @@ import { THEME_STORAGE_KEY, THEME_SWITCH_LABELS } from '#docs/config/site.ts';
                 root.dataset['theme'] = next;
                 refreshLabel();
                 try {
-                    localStorage.setItem((this.dataset['storageKey'] as string), next);
+                    localStorage.setItem(this.dataset['storageKey'] as string, next);
                 } catch (error) {
                     if (!(error instanceof DOMException)) throw error;
                 }
@@ -48,12 +47,12 @@ import { THEME_STORAGE_KEY, THEME_SWITCH_LABELS } from '#docs/config/site.ts';
 </script>
 
 <style>
-.moon,
-.sun {
-    display: contents;
-}
-:global([data-theme='light']) .moon,
-:global([data-theme='dark']) .sun {
-    display: none;
-}
+    .moon,
+    .sun {
+        display: contents;
+    }
+    :global([data-theme='light']) .moon,
+    :global([data-theme='dark']) .sun {
+        display: none;
+    }
 </style>
