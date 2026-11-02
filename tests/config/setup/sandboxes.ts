@@ -106,7 +106,7 @@ export const PACKED_PACKAGES_FILE = 'packages.json';
 
 export const TEST_TIMEOUT_MILLISECONDS = 360_000;
 
-export const UNIT_TEST_TIMEOUT_MILLISECONDS = 60_000;
+export const UNIT_TEST_TIMEOUT_MILLISECONDS = 15_000;
 
 export const AUTHENTICATION_REQUIRED_MESSAGE = 'Authentication required';
 
@@ -117,6 +117,8 @@ export const MISSING_TEST_RUN_FOLDER = 'Set TEST_RUN_FOLDER before running the t
 export const CACHE_FOLDER = 'cache';
 
 export const TEMPORARY_FOLDER = 'temporary';
+
+export const CONFIG_FOLDER = 'config';
 
 export const NPM_INSTALL_FLAGS = ['--ignore-scripts', '--no-audit', '--no-fund'] as const;
 

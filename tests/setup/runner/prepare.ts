@@ -25,11 +25,11 @@ await runNpmPack(TEST_RUN_FOLDER, [
     { ...cliPackage, source: join(REPOSITORY_ROOT, 'packages/cli') },
 ]);
 
-await writeProgramCommand(TEST_RUN_FOLDER, GSPOT_LAUNCHER_PATH, 'processes/cli');
-
-const paths = await installTestTools();
-
-await writeFile(join(TEST_RUN_FOLDER, TOOL_PATHS_FILE), paths.join('\n') + '\n');
+if (process.argv[2] !== 'e2e') {
+    await writeProgramCommand(TEST_RUN_FOLDER, GSPOT_LAUNCHER_PATH, 'processes/cli');
+    const paths = await installTestTools();
+    await writeFile(join(TEST_RUN_FOLDER, TOOL_PATHS_FILE), paths.join('\n') + '\n');
+}
 
 async function installTestTools(): Promise<string[]> {
     const folder = join(TEST_RUN_FOLDER, TOOL_INSTALL_FOLDER);

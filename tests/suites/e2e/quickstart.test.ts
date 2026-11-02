@@ -1,8 +1,11 @@
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
+import { getTool } from '#cli/tools/pins.ts';
 import { parse } from '@decimalturn/toml-patch';
 import { testdir, createFileTree } from 'testdirs';
+import { UV_TOOL } from '#cli/config/tools/installers.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { runtimePinsSchema } from '#tests/schemas/setup.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
@@ -40,8 +43,9 @@ async function runQuickstart(tutorial: typeof PYTHON_TUTORIAL | typeof SWIFT_TUT
     const runtimePins = runtimePinsSchema.parse(
         parse(await readFile(join(REPOSITORY_ROOT, TOOL_PINS_FILE), 'utf8')),
     ).tools;
+    const uvPin = String(getTool(readConfigurations().values(), UV_TOOL).version);
     for (const command of [
-        ['mise', 'use', `node@${runtimePins.node}`, `npm:@gspothq/cli@${cliPackage.version}`],
+        ['mise', 'use', `node@${runtimePins.node}`, `uv@${uvPin}`, `npm:@gspothq/cli@${cliPackage.version}`],
         ...tutorial.projectCommands,
     ]) {
         const created = await runCommand([...command], { cwd: root, env: environment });

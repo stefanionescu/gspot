@@ -22,9 +22,10 @@ test('apply removes interrupted temporary writes and keeps active writes and unr
         '.gspot-notes.tmp': 'authored',
     });
     utimesSync(join(sandbox.path, ownerless), new Date(0), new Date(0));
-    using _processes = spyOn(process, 'kill').mockImplementation((pid) => {
+    const kill = process.kill.bind(process);
+    using _processes = spyOn(process, 'kill').mockImplementation((pid, signal) => {
         if (pid === exited) throw Object.assign(new Error('The process exited.'), { code: 'ESRCH' });
-        return true;
+        return kill(pid, signal);
     });
     const result = await runGspot(sandbox.path, ['apply', '--json']);
     expect(result).toMatchObject({ code: 0 });

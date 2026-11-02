@@ -55,8 +55,8 @@ export const PYTHON_TUTORIAL = {
     folder: 'orders-python',
     firstCheckCode: 0,
     projectCommands: [
-        ['uv', 'init', '--lib'],
-        ['uv', 'sync'],
+        ['mise', 'exec', '--', 'uv', 'init', '--lib'],
+        ['mise', 'exec', '--', 'uv', 'sync'],
     ],
     files: {
         'src/orders_python/__init__.py': `__all__ = ["hello"]

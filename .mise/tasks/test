@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #MISE description="Run one test suite: unit, integration, or e2e. With no suite, run unit. A shard such as 1/3 runs one part of the suite."
-#MISE depends=["build"]
+#MISE depends=["packages:eslint-plugin:build"]
 #USAGE arg "[suite]" default="unit" {
 #USAGE   choices "unit" "integration" "e2e"
 #USAGE }
@@ -13,9 +13,12 @@ trap 'rm -rf -- "${test_run_folder}"' EXIT
 export TEST_RUN_FOLDER="${test_run_folder}"
 
 if [[ ${usage_suite} == unit ]]; then
-    bun test --parallel ${usage_shard:+"--shard=${usage_shard}"} --preload ./tests/setup/runner/unit.ts ./tests/suites/unit
+    bun test --timeout=15000 --parallel --no-isolate ${usage_shard:+"--shard=${usage_shard}"} \
+        --preload ./tests/setup/runner/unit.ts ./tests/suites/unit
 else
-    bun tests/setup/runner/prepare.ts
-    bun test --parallel ${usage_shard:+"--shard=${usage_shard}"} --preload ./tests/setup/runner/integration.ts \
+    mise run build
+    bun tests/setup/runner/prepare.ts "${usage_suite}"
+    bun test --timeout=360000 --parallel ${usage_shard:+"--shard=${usage_shard}"} \
+        --preload ./tests/setup/runner/integration.ts \
         "./tests/suites/${usage_suite}"
 fi
