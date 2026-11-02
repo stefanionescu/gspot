@@ -1,8 +1,3 @@
-export const INVALID_PRETTIER_OPTIONS = [
-    { file: '.prettierrc.json', text: '{"tabWidth":"4"}', field: 'tabWidth' },
-    { file: 'app/package.json', text: '{"prettier":{"printWidth":"wide"}}', field: 'printWidth' },
-];
-
 export const FORMAT_FILE_CASES = [
     {
         name: 'Prettier dependency without configuration',
@@ -41,7 +36,7 @@ export const FORMAT_FILE_CASES = [
     },
     {
         name: 'EditorConfig project settings and section overrides',
-        files: { '.editorconfig': '[*]\nindent_size = 4\n[*.json]\nindent_size = 2\n' },
+        files: { '.editorconfig': '[*]\nindent_size = 4\n[*.json]\nindent_size = 2\n', 'data.json': '{}\n' },
         expected: { indent_width: 4, override: [{ paths: ['**/*.json'], indent_width: 2 }] },
     },
     {
@@ -99,11 +94,6 @@ export const FORMAT_WORKSPACE_FILES = {
     'app/deep/package.json': '{"private":true}',
     'sibling/package.json': '{"private":true}',
 } as const;
-
-export const UNREADABLE_PRETTIER_FILES = [
-    { path: 'prettier.config.mjs', text: "import missing from './missing.mjs';\nexport default missing;\n" },
-    { path: '.prettierrc.json5', text: '// formatting\n{ tabWidth: 4, }\n' },
-] as const;
 
 export const DEFAULT_CASES = [
     {

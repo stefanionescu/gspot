@@ -1,4 +1,5 @@
 import { posix } from 'node:path';
+import { tryParseFile } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { isTable, getRequired } from '#cli/system/tables.ts';
@@ -88,9 +89,9 @@ function listDocumentCommands(value: unknown, keys: ReadonlySet<string>): string
 function readDocumentRows(place: LintCommandPlace, search: CommandSearch): LintCommand[] {
     const { file, text, source } = place;
     const extension = posix.extname(file);
-    const documents = YAML_EXTENSIONS.includes(extension)
-        ? parseYamlDocuments(file, text)
-        : [parseSharedFile(text, extension, file)];
+    const documents = tryParseFile(() =>
+        YAML_EXTENSIONS.includes(extension) ? parseYamlDocuments(file, text) : [parseSharedFile(text, extension, file)],
+    );
     if (source === 'pre-commit')
         return listDocumentCommands(documents, PRE_COMMIT_KEYS).flatMap((command) =>
             buildRow(place, command, search, command.replaceAll(HOOK_ID_SEPARATOR, ' ')),
@@ -110,8 +111,9 @@ function readLineRows(place: LintCommandPlace, search: CommandSearch): LintComma
 function readDependencyRows({ root, pins }: LintCommandSearch): LintCommand[] {
     const text = findText(root, PACKAGE_JSON);
     if (text === undefined) return [];
-    const { devDependencies } = parseJsonFile(PACKAGE_JSON, text, lintCommandPackageSchema);
-    return Object.entries(devDependencies).flatMap(([name, version]) => {
+    const manifest = tryParseFile(() => parseJsonFile(PACKAGE_JSON, text, lintCommandPackageSchema));
+    if (manifest === undefined) return [];
+    return Object.entries(manifest.devDependencies).flatMap(([name, version]) => {
         const shipped = pins[name];
         if (shipped === undefined) return [];
         return [
@@ -171,14 +173,17 @@ export function listLintCommands(input: LintCommandSearch): LintCommand[] {
     const places = readPlaces(input);
     const packages = places
         .filter(({ source }) => source === 'script')
-        .map((place) => ({ place, manifest: parseJsonFile(place.file, place.text, lintCommandPackageSchema) }));
+        .flatMap((place) => {
+            const manifest = tryParseFile(() => parseJsonFile(place.file, place.text, lintCommandPackageSchema));
+            return manifest === undefined ? [] : [{ place, manifest }];
+        });
     const scripts = new Map(packages.flatMap(({ manifest }) => Object.entries(manifest.scripts)));
     const search = { ...input, scripts };
     const staged = [
         ...packages.flatMap(({ place, manifest }) =>
-            Object.values(manifest[LINT_STAGED_KEY])
-                .flat()
-                .flatMap((command) => buildRow({ ...place, source: 'lint-staged' }, command, search)),
+            manifest[LINT_STAGED_KEY].flatMap((command) =>
+                buildRow({ ...place, source: 'lint-staged' }, command, search),
+            ),
         ),
         ...places.filter(({ source }) => source === 'lint-staged').flatMap((place) => readLineRows(place, search)),
     ];

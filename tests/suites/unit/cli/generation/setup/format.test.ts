@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { readFile } from 'node:fs/promises';
 import { parse } from '@decimalturn/toml-patch';
 import { getTable } from '#cli/settings/scopes.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -12,6 +11,7 @@ import type { TomlTable } from '#cli/types/settings.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import type { InitJson } from '#cli/types/commands/edits.ts';
 import type { FormatSettings } from '#cli/types/configurations/language.ts';
+import { INVALID_PRETTIER_OPTIONS, UNREADABLE_PRETTIER_FILES } from '#tests/config/generation/carry.ts';
 
 import {
     FORMAT_FILE_CASES,
@@ -19,12 +19,10 @@ import {
     WORKSPACE_PYTHON_FILES,
     FORMAT_WORKSPACE_FILES,
     PRETTIER_FORMAT_OPTIONS,
-    INVALID_PRETTIER_OPTIONS,
-    UNREADABLE_PRETTIER_FILES,
 } from '#tests/config/generation/settings.ts';
 
 test.each(INVALID_PRETTIER_OPTIONS)(
-    'init names $file and $field for an invalid option type',
+    'init drops $field of $file, which gspot.toml cannot hold, and goes on',
     async ({ file, field, text }) => {
         await using sandbox = await testdir({
             ...FORMAT_WORKSPACE_FILES,
@@ -33,11 +31,10 @@ test.each(INVALID_PRETTIER_OPTIONS)(
             [file]: text,
         });
         commitAll(sandbox.path);
-        const result = await runGspot(sandbox.path, ['init', '--configurations', 'format']);
-        expect(result.code).toBe(2);
-        expect(result.stdout).toBe('');
-        expect(result.stderr).toStartWith(`${file}: ${field}: `);
-        expect(await readFile(`${sandbox.path}/${file}`, 'utf8')).toBe(text);
+        const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
+        expect(result.code, result.stdout + result.stderr).toBe(0);
+        const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
+        expect(plan.carry.find(({ path }) => path === file)?.dropped).toStrictEqual([field]);
     },
 );
 
@@ -89,10 +86,24 @@ test('init turns Prettier overrides and the Ruff quote style into format overrid
         'ruff.toml': '[format]\nquote-style = "single"\n',
         'main.py': 'value = 1\n',
         'package.json': '{"private":true,"devDependencies":{"prettier":"3.8.1"}}',
+        'source.ts': 'export {};\n',
+        'src/style.css': 'a {}\n',
     });
     commitAll(sandbox.path);
     const options = await readInitFormatOptions(sandbox.path, ['init', '--configurations', 'format']);
     expect(options[0]).toMatchObject(PRETTIER_FORMAT_OPTIONS);
+});
+
+test('init leaves out an override that matches no tracked file', async () => {
+    await using sandbox = await testdir({
+        '.editorconfig': '[*]\nindent_size = 2\n[*.py]\nindent_size = 4\n[Makefile]\nindent_style = tab\n',
+        'source.js': 'export const value = 1;\n',
+    });
+    commitAll(sandbox.path);
+    const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const { settingsText } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settingsText'>>;
+    expect(settingsText).not.toContain('override');
 });
 
 test.each([...UNREADABLE_PRETTIER_FILES])(

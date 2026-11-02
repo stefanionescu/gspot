@@ -2,6 +2,7 @@ import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { compareText } from '#cli/system/text.ts';
 import { getRequired } from '#cli/system/tables.ts';
+import { tryParseFile } from '#cli/system/errors.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { listCheckTools } from '#cli/engine/tools.ts';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -180,7 +181,8 @@ export function buildPointerFieldEdits(
     for (const path of packages) {
         const source = files.read(path);
         if (source === undefined) continue;
-        const document = parseJsonFile(path, source.bytes.toString('utf8'));
+        const document = tryParseFile(() => parseJsonFile(path, source.bytes.toString('utf8')));
+        if (document === undefined) continue;
         const keys = pointerFields
             .values()
             .map((row) => ({ ...row, extends: buildModuleSpecifier(path, row.target) }))

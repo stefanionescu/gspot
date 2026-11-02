@@ -43,26 +43,21 @@ test('a pytest table counts as a pytest dependency', async () => {
     expect(dependencyFiles[0]?.dependencies).toStrictEqual({ pytest: 'tool.pytest' });
 });
 
-test.each(INVALID_DEPENDENCY_FILES)(
-    'invalid %s content %s is a dependency file error that names the file and field',
-    async (path, content, prefix) => {
-        await using sandbox = await createGitSandbox({ [path]: content, 'source.ts': 'export {};\n' });
+test.each(INVALID_DEPENDENCY_FILES)('invalid %s content %s gives no dependency file', async (path, content) => {
+    await using sandbox = await createGitSandbox({ [path]: content, 'source.ts': 'export {};\n' });
 
-        const files = [
-            {
-                path: path,
-                kind: 'source' as const,
-                kindOrigin: SOURCE_KIND.origin,
-                tags: ['text'],
-                executable: false,
-                size: 1,
-            },
-        ];
-        const error = await captureRejection(readDependencyFiles(createRunCache(sandbox.path), files));
-        expect(error).toMatchObject({ name: 'GspotError', code: 'parse', cause: expect.any(Error) as Error });
-        expect(error.message).toStartWith(prefix);
-    },
-);
+    const files = [
+        {
+            path: path,
+            kind: 'source' as const,
+            kindOrigin: SOURCE_KIND.origin,
+            tags: ['text'],
+            executable: false,
+            size: 1,
+        },
+    ];
+    expect(await readDependencyFiles(createRunCache(sandbox.path), files)).toStrictEqual([]);
+});
 
 test('package.json reads keep your own fields and tell a missing file from invalid data', async () => {
     await using sandbox = await createGitSandbox({});

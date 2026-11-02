@@ -1,6 +1,5 @@
 import { test, spyOn, expect } from 'bun:test';
 import type { LintCommand } from '#cli/types/repository.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
 import { listLintCommands } from '#cli/repository/lint-commands.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -106,8 +105,26 @@ test('lint commands read the jobs after a GitLab component specification and kee
     expect(warnings).toStrictEqual([]);
 });
 
-test('lint commands report a CI file that does not parse', async () => {
-    await using sandbox = await createGitSandbox({ '.gitlab-ci.yml': 'quality: [unterminated' });
-    const error = await captureRejection(listRows(sandbox.path));
-    expect(error).toMatchObject({ name: 'GspotError', code: 'parse' });
+test('lint commands skip a CI file and a package.json that do not parse', async () => {
+    await using sandbox = await createGitSandbox({
+        '.gitlab-ci.yml': 'quality: [unterminated',
+        'tests/fixtures/broken/package.json': '{ nope',
+    });
+    expect(await listRows(sandbox.path)).toStrictEqual([]);
+});
+
+test('lint commands read the strings of a package.json and leave its other values', async () => {
+    await using sandbox = await createGitSandbox({
+        'package.json': JSON.stringify({
+            scripts: { lint: 'eslint .', build: 1 },
+            devDependencies: 'none',
+            'lint-staged': { '*.js': { command: 'eslint' } },
+            'simple-git-hooks': { 'pre-commit': 'npx eslint .', preserveUnused: ['commit-msg'] },
+        }),
+    });
+    const rows = await listRows(sandbox.path);
+    expect(rows.map(({ source, command }) => [source, command])).toStrictEqual([
+        ['script', 'eslint .'],
+        ['hook', 'npx eslint .'],
+    ]);
 });

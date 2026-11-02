@@ -1,47 +1,70 @@
 import { z } from 'zod';
-import { PROSE_WRAPS, ARROW_PARENS, TRAILING_COMMAS } from '#cli/config/settings/schema.ts';
+import { configTableSchema } from '#cli/schemas/parsers.ts';
+import { formatSchema } from '#cli/schemas/settings/fields.ts';
 
-const prettierOptionsSchema = z.looseObject({
-    tabWidth: z.number().optional(),
-    printWidth: z.number().optional(),
-    singleQuote: z.boolean().optional(),
-    useTabs: z.boolean().optional(),
-    semi: z.boolean().optional(),
-    trailingComma: z.enum(TRAILING_COMMAS).optional(),
-    bracketSpacing: z.boolean().optional(),
-    arrowParens: z.enum(ARROW_PARENS).optional(),
-    proseWrap: z.enum(PROSE_WRAPS).optional(),
-});
+/**
+Read the options of a config that init replaces. An option that gspot does not know, or a value that gspot.toml cannot
+hold, goes to `dropped`, so a config of the user reaches the table and stops nothing.
+
+@param shape the options that gspot carries, each with the values it can hold.
+@returns a schema that accepts any table, and gives the options that gspot carries and the names of the others.
+*/
+function buildCarriedSchema<Shape extends z.ZodRawShape>(shape: Shape) {
+    const carried = z.object(shape).partial();
+    return configTableSchema.transform((table) => {
+        const groups = Map.groupBy(
+            Object.entries(table),
+            ([key, value]) => Object.hasOwn(shape, key) && (shape[key] as z.ZodType).safeParse(value).success,
+        );
+        return {
+            ...carried.parse(Object.fromEntries(groups.get(true) ?? [])),
+            dropped: (groups.get(false) ?? []).map(([key]) => key),
+        };
+    });
+}
+
+const { shape: format } = formatSchema;
+
+const prettierFields = {
+    tabWidth: format.indent_width.unwrap(),
+    printWidth: format.print_width.unwrap(),
+    singleQuote: z.boolean(),
+    useTabs: z.boolean(),
+    semi: format.semicolons.unwrap(),
+    trailingComma: format.trailing_commas.unwrap(),
+    bracketSpacing: format.bracket_spacing.unwrap(),
+    arrowParens: format.arrow_parens.unwrap(),
+    proseWrap: format.prose_wrap.unwrap(),
+};
+
+export const prettierOptionsSchema = buildCarriedSchema(prettierFields);
+
 const overridesSchema = z.object({
     files: z.union([z.string(), z.string().array()]),
     options: prettierOptionsSchema,
 });
 
-export const prettierSettingsSchema = prettierOptionsSchema.extend({
-    overrides: overridesSchema.array().optional(),
-});
+export const prettierSettingsSchema = buildCarriedSchema({ ...prettierFields, overrides: overridesSchema.array() });
 
 const ruffRuleFields = {
-    select: z.string().array().optional(),
-    'extend-select': z.string().array().optional(),
-    ignore: z.string().array().optional(),
-    'extend-ignore': z.string().array().optional(),
-    'per-file-ignores': z.record(z.string(), z.string().array()).optional(),
+    select: z.string().array(),
+    'extend-select': z.string().array(),
+    ignore: z.string().array(),
+    'extend-ignore': z.string().array(),
+    'per-file-ignores': z.record(z.string(), z.string().array()),
 };
 
-export const ruffOptionsSchema = z.looseObject({
+export const ruffOptionsSchema = buildCarriedSchema({
     ...ruffRuleFields,
-    'line-length': z.number().optional(),
-    'indent-width': z.number().optional(),
-    exclude: z.string().array().optional(),
-    'extend-exclude': z.string().array().optional(),
-    lint: z.looseObject(ruffRuleFields).optional(),
-    format: z
-        .looseObject({
-            'quote-style': z.string().optional(),
-            'indent-style': z.string().optional(),
-        })
-        .optional(),
+    'line-length': format.print_width.unwrap(),
+    'indent-width': format.indent_width.unwrap(),
+    exclude: z.string().array(),
+    'extend-exclude': z.string().array(),
+    lint: buildCarriedSchema(ruffRuleFields),
+    format: buildCarriedSchema({
+        'quote-style': format.quotes,
+        'indent-style': format.indent_style.unwrap(),
+    }),
 });
 
 export const printedRulesSchema = z.looseObject({ rules: z.record(z.string(), z.unknown()) });

@@ -1,4 +1,5 @@
 import { basename } from 'node:path/posix';
+import { tryParseFile } from '#cli/system/errors.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { escapeGlob, extractParentFolder } from '#cli/system/paths.ts';
@@ -240,7 +241,7 @@ export function buildClosingBlocks(planned: PlannedEslintFile): ConfigurationBlo
             (file) =>
                 file.kind === 'source' &&
                 basename(file.path) === PACKAGE_JSON &&
-                readPackageJson(session.cache, file.path)?.['private'] === true,
+                tryParseFile(() => readPackageJson(session.cache, file.path))?.['private'] === true,
         )
         .map((file) => escapeGlob(file.path));
     const selectorGroups = buildSelectorBlocks(session.scopes, level, session.repository.dependencyFiles);

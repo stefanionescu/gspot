@@ -225,20 +225,15 @@ export const FIRST_NUMBER = /\d+/u;
 
 export const PRINT_TIMEOUT_SECONDS = 60;
 
-export const CARRIED_PRETTIER_OPTIONS: ReadonlySet<string> = new Set([
-    'tabWidth',
-    'printWidth',
-    'singleQuote',
-    'useTabs',
-    'semi',
-    'trailingComma',
-    'bracketSpacing',
-    'arrowParens',
-    'proseWrap',
-    'overrides',
-]);
+export const PRETTIER_OVERRIDES_KEY = 'overrides';
+
+export const UNREADABLE_CONFIG_MESSAGE = 'the whole file, which gspot could not read';
 
 export const MARKDOWNLINT_TARGET = `${GSPOT_PATHS.configurations}/language/markdown/markdownlint.jsonc`;
+
+export const COMMITLINT_TARGET = `${GSPOT_PATHS.configurations}/general/commits/commitlint.json`;
+
+export const MARKDOWNLINT_RUNNER_FILE = /cli2/u;
 
 export const MARKDOWNLINT_CONFIG_FILES = [
     '.markdownlint.json',

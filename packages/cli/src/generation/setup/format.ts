@@ -4,22 +4,31 @@ import { getTool } from '#cli/tools/pins.ts';
 import { isTable } from '#cli/system/tables.ts';
 import { muteOutput } from '#cli/system/terminal.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
+import { joinScopeSelector } from '#cli/settings/paths.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { includeParentFolders } from '#cli/system/paths.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { DIGITS_ONLY } from '#cli/config/configurations/naming.ts';
-import { GspotError, parseFileFields } from '#cli/system/errors.ts';
-import { PRETTIER_ROOT_FILES } from '#cli/config/repository/setup.ts';
+import { tryParseFile, parseFileFields } from '#cli/system/errors.ts';
+import { joinScope, selectScopePath } from '#cli/repository/scopes.ts';
 import type { TomlTable, ScopeConfigurations } from '#cli/types/settings.ts';
 import { LINE_BREAK, PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository.ts';
-import { ruffOptionsSchema, ruffProjectSchema, prettierSettingsSchema } from '#cli/schemas/generation.ts';
+import { PRETTIER_ROOT_FILES, UNREADABLE_CONFIG_MESSAGE } from '#cli/config/repository/setup.ts';
 
+import {
+    ruffOptionsSchema,
+    ruffProjectSchema,
+    prettierOptionsSchema,
+    prettierSettingsSchema,
+} from '#cli/schemas/generation.ts';
 import type {
     RuffOptions,
     FormatSearch,
     SettingsDraft,
+    PrettierStyle,
     PrettierOptions,
     PrettierScripts,
     EditorconfigSection,
@@ -36,6 +45,7 @@ import {
     PRETTIER_SCRIPT_NAME,
     EDITORCONFIG_SECTION,
     EDITORCONFIG_COMMENT,
+    PRETTIER_PACKAGE_KEY,
     PRETTIER_FILE_FORMATS,
 } from '#cli/config/generation.ts';
 
@@ -54,7 +64,7 @@ function convertRuffFormat(options: RuffOptions): TomlTable {
     return Object.fromEntries(Object.entries(fields).filter(([, value]) => value !== undefined));
 }
 
-function convertPrettierFormat(options: PrettierOptions): TomlTable {
+function convertPrettierFormat(options: PrettierStyle): TomlTable {
     const indent = options.useTabs === true ? 'tab' : 'space';
     const indentStyle = options.useTabs === undefined ? undefined : indent;
     return {
@@ -80,25 +90,43 @@ function buildFormatterOverrides(fields: TomlTable, repository: Repository): Tom
     });
 }
 
-function buildPrettierOverrides(options: PrettierOptions | null): TomlTable[] {
+/**
+Build the format overrides of a Prettier config. A glob that matches no tracked file stays out, because
+`gspot/unmatched-paths` reports such a glob.
+
+@param options the options that hold the overrides.
+@param scope the scope of the config, empty for the root.
+@param repository the tracked files.
+@returns one record per override with a path and a format option.
+*/
+export function buildPrettierOverrides(
+    options: PrettierStyle | null,
+    scope: string,
+    repository: Repository,
+): TomlTable[] {
+    const tracked = [...includeParentFolders(repository.files.map(({ path }) => path))];
     return (options?.overrides ?? [])
         .map((override) => ({
-            paths: (Array.isArray(override.files) ? override.files : [override.files]).map((glob) =>
-                glob.includes('/') ? glob : `**/${glob}`,
-            ),
+            paths: [override.files]
+                .flat()
+                .map((glob) => (glob.includes('/') ? glob : `**/${glob}`))
+                .filter((glob) => tracked.some(buildPathMatcher([joinScopeSelector(glob, scope)]))),
             ...convertPrettierFormat(override.options),
         }))
-        .filter((override: TomlTable) => Object.values(override).filter((value) => value !== undefined).length > 1);
+        .filter(
+            (override: TomlTable & { paths: string[] }) =>
+                override.paths.length > 0 && Object.values(override).filter((value) => value !== undefined).length > 1,
+        );
 }
 
 function parseEditorWidths(fields: Record<string, string>): PrettierOptions {
     const width = fields['indent_size'] === 'tab' ? fields['tab_width'] : fields['indent_size'];
     const lineWidth = fields['max_line_length'];
-    const options: PrettierOptions = {};
-    if (width !== undefined && DIGITS_ONLY.test(width)) options.tabWidth = Number(width);
-    if (lineWidth !== undefined && DIGITS_ONLY.test(lineWidth)) options.printWidth = Number(lineWidth);
-    if (fields['indent_style'] !== undefined) options.useTabs = fields['indent_style'] === 'tab';
-    return options;
+    const options: Record<string, number | boolean> = {};
+    if (width !== undefined && DIGITS_ONLY.test(width)) options['tabWidth'] = Number(width);
+    if (lineWidth !== undefined && DIGITS_ONLY.test(lineWidth)) options['printWidth'] = Number(lineWidth);
+    if (fields['indent_style'] !== undefined) options['useTabs'] = fields['indent_style'] === 'tab';
+    return prettierOptionsSchema.parse(options);
 }
 
 function parseEditorconfigSections(text: string): EditorconfigSection[] {
@@ -134,6 +162,11 @@ function readEditorconfig(folder: string): PrettierOptions | null {
     };
 }
 
+function readPackagePrettier(root: string, path: string): unknown {
+    const text = findText(root, path);
+    return text === undefined ? undefined : tryParseFile(() => parseJsonFile(path, text)['prettier']);
+}
+
 function hasCode(repository: Repository): boolean {
     return repository.files.some((file) => file.kind === 'source' && file.tags.some((tag) => !PROSE_TAGS.has(tag)));
 }
@@ -142,12 +175,11 @@ function readFormatOptions(
     { root, scopePath, scripts }: FormatSearch,
     dependencies: Record<string, string>,
     prettierFiles: string[],
-): PrettierOptions | null {
+): PrettierStyle | null {
     const folder = posix.join(root, scopePath);
     const editorconfig = readEditorconfig(folder);
     const packagePath = posix.join(scopePath, PACKAGE_JSON);
-    const packageJson = findText(folder, PACKAGE_JSON);
-    const packageOptions = packageJson === undefined ? undefined : parseJsonFile(packagePath, packageJson)['prettier'];
+    const packageOptions = readPackagePrettier(root, packagePath);
     const prettierFile = prettierFiles
         .filter((path) => path !== '.prettierignore')
         .map((path) => ({ path, text: findText(folder, path) }))
@@ -173,31 +205,47 @@ export function readRuffOptions(root: string): { path: string; options: RuffOpti
     for (const path of RUFF_SETTINGS_FILES) {
         const text = findText(root, path);
         if (text === undefined) continue;
-        const options =
+        const read = tryParseFile(() =>
             path === PYPROJECT_TOML
-                ? parseTomlFile(path, text, ruffProjectSchema).tool?.ruff
-                : parseTomlFile(path, text, ruffOptionsSchema);
-        if (options !== undefined) return { path, options };
+                ? parseTomlFile(path, text, ruffProjectSchema)
+                : { tool: { ruff: parseTomlFile(path, text, ruffOptionsSchema) } },
+        );
+        if (read === undefined) return { path, options: { dropped: [UNREADABLE_CONFIG_MESSAGE] } };
+        if (read.tool?.ruff !== undefined) return { path, options: read.tool.ruff };
     }
     return undefined;
 }
 
 /**
-Read the options of each Prettier config at the root.
+Read the options of each Prettier config of one folder, of the `prettier` key of its package.json, and of its
+.editorconfig.
 
 @param root the repository root.
+@param scope the folder, empty for the root.
 @param scripts the options of the JavaScript and TypeScript configs that loaded.
 @returns the file and its options, for each config that gspot can read.
 */
 export function readPrettierOptions(
     root: string,
+    scope: string,
     scripts: PrettierScripts,
 ): { path: string; options: PrettierOptions }[] {
-    return PRETTIER_ROOT_FILES.flatMap((path) => {
+    const files = PRETTIER_ROOT_FILES.map((name) => joinScope(scope, name)).flatMap((path) => {
         const text = findText(root, path);
         const options = text === undefined ? undefined : parsePrettierFile(path, text, scripts);
         return options === undefined ? [] : [{ path, options }];
     });
+    const packagePath = joinScope(scope, PACKAGE_JSON);
+    const key = readPackagePrettier(root, packagePath);
+    const parsed = prettierSettingsSchema.safeParse(key);
+    const editorconfig = readEditorconfig(posix.join(root, scope));
+    return [
+        ...files,
+        ...(key === undefined
+            ? []
+            : [{ path: packagePath, options: parsed.data ?? { dropped: [PRETTIER_PACKAGE_KEY] } }]),
+        ...(editorconfig === null ? [] : [{ path: joinScope(scope, EDITORCONFIG_FILE), options: editorconfig }]),
+    ];
 }
 
 /**
@@ -244,14 +292,9 @@ export function parsePrettierFile(path: string, text: string, scripts: PrettierS
     if (PRETTIER_SCRIPT_FILE.test(path)) return scripts.get(path);
     const format = PRETTIER_FILE_FORMATS[posix.basename(path)];
     const parsers = { yaml: parseYamlFile, json: parseJsonFile, toml: parseTomlFile };
-    let options: unknown;
-    try {
-        options = format === undefined ? {} : parsers[format](path, text);
-    } catch (error) {
-        if (path.endsWith('.json5') && error instanceof GspotError) return undefined;
-        throw error;
-    }
-    return parseFileFields(path, options, prettierSettingsSchema);
+    return tryParseFile(() =>
+        parseFileFields(path, format === undefined ? {} : parsers[format](path, text), prettierSettingsSchema),
+    );
 }
 
 /**
@@ -282,7 +325,7 @@ export function readScopeFormat(
     const options = scope === '' && hasCode(repository) ? { ...PRETTIER_DEFAULTS, ...read } : read;
     const fields = options === null ? {} : convertPrettierFormat(options);
     const overrides = [
-        ...buildPrettierOverrides(options),
+        ...buildPrettierOverrides(options, scope, repository),
         ...(scope === '' ? buildFormatterOverrides(fields, repository) : []),
     ];
     const table: TomlTable = { ...fields, ...(overrides.length > 0 && { override: overrides }) };

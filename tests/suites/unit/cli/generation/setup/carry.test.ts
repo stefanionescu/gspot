@@ -6,6 +6,7 @@ import type { TomlTable } from '#cli/types/settings.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
 import type { InitJson } from '#cli/types/commands/edits.ts';
+import { CARRY_ROW_CASES } from '#tests/config/generation/carry.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 async function runInit(
@@ -108,6 +109,38 @@ test('init compares the rules that the commitlint of the repository prints', asy
         ],
         dropped: ['body-max-length'],
     });
+});
+
+test.each([...CARRY_ROW_CASES])('init goes on past $name, and the table names it', async ({ files, path, row }) => {
+    await using sandbox = await createGitSandbox(files);
+    const { plan } = await runInit(sandbox.path);
+    expect(plan.carry.find((each) => each.path === path)).toMatchObject(row);
+});
+
+test('init keeps commitlint options out of a rule that the generated config turns off', async () => {
+    await using sandbox = await createGitSandbox({
+        '.commitlintrc.json': '{}\n',
+        '.gitignore': 'node_modules\n',
+        'app/package.json': '{"private":true}\n',
+        'README.md': '# Example\n',
+    });
+    await mkdir(join(sandbox.path, 'node_modules/.bin'), { recursive: true });
+    const program = join(sandbox.path, 'node_modules/.bin/commitlint');
+    await writeFile(program, `#!/bin/sh\necho '{"rules":{"scope-case":[2,"always","lower-case"]}}'\n`);
+    await chmod(program, 0o755);
+    const { plan } = await runInit(sandbox.path, ['--level', 'all']);
+    expect(plan.carry.find(({ path }) => path === '.commitlintrc.json')).toMatchObject({ dropped: ['scope-case'] });
+});
+
+test('init goes on past a nested package.json that does not parse, and it marks no scope', async () => {
+    await using sandbox = await createGitSandbox({
+        'package.json': '{"private":true}\n',
+        'source.js': 'export const value = 1;\n',
+        'tests/fixtures/broken/package.json': '{ nope',
+        'tests/fixtures/numbers/package.json': '{"scripts":{"build":1}}',
+    });
+    const { settings } = await runInit(sandbox.path);
+    expect(settings['scope']).toMatchObject([{ path: 'tests/fixtures/numbers' }]);
 });
 
 test('init sends the rules of an ESLint config to gspot scan, which can compare them', async () => {

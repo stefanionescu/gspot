@@ -3,13 +3,13 @@ import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { remember } from '#cli/system/cache.ts';
 import { compareText } from '#cli/system/text.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import type { RunCache } from '#cli/types/system.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import type { PackageJson } from '#cli/types/parsers.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { GspotError, tryParseFile } from '#cli/system/errors.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { packageManagerSchema, packageManagerPinSchema } from '#cli/schemas/repository.ts';
 
@@ -61,7 +61,7 @@ function readFirstPackageManager(
     packageJsonPaths: string[],
 ): PackageManagerField | { name: PackageManagerPin['name']; version?: undefined } {
     for (const path of packageJsonPaths) {
-        const packageJson = readPackageJson(root, path);
+        const packageJson = tryParseFile(() => readPackageJson(root, path));
         const pin = packageJson === undefined ? undefined : findPackageManagerPin(packageJson);
         if (pin !== undefined) return pin;
         const lockfile = LOCKFILES.filter((row) => 'configuration' in row && row.configuration === 'javascript').find(

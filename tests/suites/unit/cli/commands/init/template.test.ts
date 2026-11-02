@@ -111,22 +111,6 @@ test('what init reads from this repository wins over the file', async () => {
     expect(written['format']).toMatchObject({ indent_width: 2 });
 });
 
-test('init --from stops when a copied setting does not fit this repository, and names the setting', async () => {
-    await using team = await testdir({ 'gspot.toml': 'configurations = ["typescript"]\n[format]\nindent_width = 8\n' });
-    await using sandbox = await createGitSandbox({
-        '.editorconfig': 'root = true\n[*]\nindent_size = 0\nindent_style = space\n',
-    });
-    commitAll(sandbox.path);
-    const before = await readTree(sandbox.path);
-    const result = await runGspot(sandbox.path, ['init', '--from', join(team.path, 'gspot.toml')]);
-    expect(result.code).toBe(2);
-    expect(result.stderr).toStartWith(
-        `The settings copied from ${join(team.path, 'gspot.toml')} do not fit this repository. Edit a copy of the file, then run gspot init again:\n`,
-    );
-    expect(result.stderr).toContain('format.indent_width');
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-});
-
 test('the comments of copied keys stay and the template preface is replaced', async () => {
     await using team = await testdir({ 'gspot.toml': COMMENTED_TEMPLATE });
     await using sandbox = await createGitSandbox({});

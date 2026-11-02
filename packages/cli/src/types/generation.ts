@@ -156,12 +156,15 @@ export type Carry = { settings: TomlTable; rows: CarryRow[] };
 export type CarrySection = { tools: TomlTable; ignore: readonly TomlTable[]; rows: readonly CarryRow[] };
 
 export type ToolCarryInput = {
-    setting: string;
+    setting: 'markdownlint' | 'commitlint';
     tool: string;
     path: string;
     compared: ComparedRules;
     options: Map<string, unknown>;
+    dropped: readonly string[];
 };
+
+export type MarkdownlintConfig = { path: string; rules: Record<string, unknown>; dropped: readonly string[] };
 
 export type CarryInput = {
     repository: Repository;
@@ -264,6 +267,8 @@ export type InitOptions = {
 };
 
 export type PrettierOptions = z.infer<typeof prettierSettingsSchema>;
+
+export type PrettierStyle = Omit<PrettierOptions, 'dropped'>;
 
 export type PrettierScripts = ReadonlyMap<string, PrettierOptions>;
 

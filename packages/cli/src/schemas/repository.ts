@@ -2,6 +2,7 @@ import { z } from 'zod';
 import semver from 'semver';
 import { GIT_MODES } from '#cli/config/repository/files.ts';
 import { PACKAGE_MANAGERS } from '#cli/config/repository/javascript.ts';
+import { configTableSchema, stringValuesSchema } from '#cli/schemas/parsers.ts';
 
 export const gitFileSchema = z.object({
     mode: z.enum(GIT_MODES),
@@ -26,11 +27,15 @@ export const packageManagerSchema = packageManagerPinSchema.extend({
     version: exactVersionSchema,
 });
 
-const stringRecordSchema = z.record(z.string(), z.string()).default({});
+const stringListSchema = configTableSchema.transform((table) =>
+    Object.values(table)
+        .flat()
+        .filter((value) => typeof value === 'string'),
+);
 
 export const lintCommandPackageSchema = z.looseObject({
-    scripts: stringRecordSchema,
-    devDependencies: stringRecordSchema,
-    'lint-staged': z.record(z.string(), z.union([z.string(), z.string().array()])).default({}),
-    'simple-git-hooks': stringRecordSchema,
+    scripts: stringValuesSchema.catch({}),
+    devDependencies: stringValuesSchema.catch({}),
+    'lint-staged': stringListSchema.catch([]),
+    'simple-git-hooks': stringValuesSchema.catch({}),
 });

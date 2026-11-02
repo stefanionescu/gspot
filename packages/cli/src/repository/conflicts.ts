@@ -2,6 +2,7 @@ import picomatch from 'picomatch';
 import { posix, extname } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
 import { escapeRegExp } from '#cli/system/text.ts';
+import { tryParseFile } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
@@ -94,7 +95,7 @@ export function hasToolSection(
         return header.test(text);
     }
     const segments = selector.key === undefined ? (selector.table as string).split('.') : [selector.key];
-    let value = parseSharedFile(text, extension, path);
+    let value = tryParseFile(() => parseSharedFile(text, extension, path));
     for (const segment of segments) {
         if (!isTable(value) || !Object.hasOwn(value, segment)) return false;
         value = value[segment];

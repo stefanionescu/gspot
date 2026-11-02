@@ -1,4 +1,5 @@
 import { posix } from 'node:path';
+import { tryParseFile } from '#cli/system/errors.ts';
 import type { RunCache } from '#cli/types/system.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers.ts';
@@ -34,7 +35,7 @@ async function readDependencyFile(cache: RunCache, file: TrackedFile): Promise<D
         : DEPENDENCY_FILE_PARSERS.get(posix.basename(file.path));
     if (parse === undefined) return undefined;
     const text = readText(cache, file.path);
-    return await parse(file.path, text);
+    return await tryParseFile(() => parse(file.path, text));
 }
 
 /**

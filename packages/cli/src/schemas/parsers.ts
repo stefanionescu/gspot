@@ -4,6 +4,14 @@ const stringsSchema = z.string().array();
 
 const stringRecordSchema = z.record(z.string(), z.string());
 
+export const configTableSchema = z.record(z.string(), z.unknown());
+
+export const stringValuesSchema = configTableSchema.transform((table) =>
+    Object.fromEntries(
+        Object.entries(table).filter((field): field is [string, string] => typeof field[1] === 'string'),
+    ),
+);
+
 const workspacePackagesSchema = z.object({
     packages: stringsSchema,
 });
@@ -31,7 +39,7 @@ export const packageJsonSchema = z.looseObject({
     devDependencies: stringRecordSchema.optional(),
     peerDependencies: stringRecordSchema.optional(),
     optionalDependencies: stringRecordSchema.optional(),
-    scripts: stringRecordSchema.optional(),
+    scripts: stringValuesSchema.optional().catch(undefined),
     engines: stringRecordSchema.optional(),
 });
 

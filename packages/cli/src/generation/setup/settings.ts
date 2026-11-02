@@ -1,10 +1,8 @@
-import { GspotError } from '#cli/system/errors.ts';
 import { overlayTable } from '#cli/settings/edit.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { buildDetectedTables } from '#cli/settings/detected.ts';
 import { formatSettingsCommands } from '#cli/generation/rules.ts';
 import { stripDefaults } from '#cli/generation/setup/defaults.ts';
@@ -60,16 +58,6 @@ export function buildInitSettings(
 ): string {
     const document = buildSettingsTable(draft, repository, configurationsByName);
     delete document['ci'];
-    const checked = settingsSchema.safeParse(document);
-    if (draft.template !== undefined && !checked.success) {
-        const errors = checked.error.issues
-            .map((issue) => '  ' + issue.path.join('.') + ': ' + issue.message)
-            .join('\n');
-        throw new GspotError(
-            'settings',
-            `The settings copied from ${draft.template.file} do not fit this repository. Edit a copy of the file, then run gspot init again:\n${errors}`,
-        );
-    }
     const preface = `# Change these settings with ${formatSettingsCommands()}. ${HAND_EDIT_RECORDS}`;
     return `${preface}\n${buildSettingsText(draft.base, stripDefaults(document))}`;
 }

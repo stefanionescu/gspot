@@ -74,6 +74,21 @@ export function parseFileFields<Value>(path: string, value: unknown, schema: z.Z
 }
 
 /**
+Read a file of the user that gspot can go on without.
+
+@param parse the read, which names the file when it cannot parse it.
+@returns the value, or undefined when the file does not parse.
+*/
+export function tryParseFile<Value>(parse: () => Value): Value | undefined {
+    try {
+        return parse();
+    } catch (error) {
+        if (error instanceof GspotError && error.code === 'parse') return undefined;
+        throw error;
+    }
+}
+
+/**
 Check whether an operation failed with an operating-system error code.
 
 @param error the caught value.

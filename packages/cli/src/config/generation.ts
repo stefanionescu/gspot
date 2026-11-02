@@ -305,6 +305,8 @@ export const PRETTIER_FILE_FORMATS: Readonly<Record<string, 'yaml' | 'json' | 't
     '.prettierrc.toml': 'toml',
 };
 
+export const PRETTIER_PACKAGE_KEY = 'prettier';
+
 export const PRETTIER_DEFAULTS = { tabWidth: 2, printWidth: 80, singleQuote: false, useTabs: false } as const;
 
 export const FORMATTER_DEFAULTS = [

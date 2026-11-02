@@ -3,6 +3,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { RUFF_SELECTOR } from '#cli/config/settings/schema.ts';
 import { printedRulesSchema } from '#cli/schemas/generation.ts';
 import { listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
 
@@ -84,7 +85,8 @@ export function compareRuffRules(input: RuffRuleInput): RuffRules {
     const lint = { ...options, ...options.lint };
     const selected = [...(lint.select ?? []), ...(lint['extend-select'] ?? [])];
     const running = new RegExp(String.raw`^(?:${shipped.join('|')})(?:\d|$)`, 'u');
-    const rules = selected.filter((rule) => !running.test(rule));
+    const added = selected.filter((rule) => !running.test(rule));
+    const rules = added.filter((rule) => RUFF_SELECTOR.test(rule));
     const perFile = lint['per-file-ignores'] === undefined ? [] : Object.entries(lint['per-file-ignores']);
     const turnedOff = [
         ...[...(lint.ignore ?? []), ...(lint['extend-ignore'] ?? [])].map((rule) => ({ rule, file: undefined })),
@@ -94,11 +96,17 @@ export function compareRuffRules(input: RuffRuleInput): RuffRules {
         ...CARRY_ROW_START,
         path,
         tool: 'ruff',
-        covered: selected.length - rules.length,
+        covered: selected.length - added.length,
         carried: rules,
         reasons: turnedOff
             .filter(({ rule }) => running.test(rule))
             .map(({ rule, file }) => formatIgnoreLine(RUFF_CHECK_ID, rule, file)),
+        dropped: [
+            ...Object.entries({ '': options, 'lint.': options.lint, 'format.': options.format }).flatMap(
+                ([prefix, table]) => (table?.dropped ?? []).map((key) => `${prefix}${key}`),
+            ),
+            ...added.filter((rule) => !RUFF_SELECTOR.test(rule)),
+        ],
     };
     return { rules, row };
 }

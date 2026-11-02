@@ -26,8 +26,8 @@ export const PROJECT_DEPENDENCY_SCOPES = [
 ] as const;
 
 export const INVALID_DEPENDENCY_FILES = [
-    ['package.json', '{"dependencies":{"typescript":7}}', 'package.json: dependencies.typescript: '],
-    ['pyproject.toml', '[project', 'pyproject.toml:1:9 is not valid TOML: '],
+    ['package.json', '{"dependencies":{"typescript":7}}'],
+    ['pyproject.toml', '[project'],
 ] as const;
 
 export const REACT_VUE_PACKAGES = {

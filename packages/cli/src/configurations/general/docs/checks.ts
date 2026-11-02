@@ -3,6 +3,7 @@ import { visit } from 'unist-util-visit';
 import { isTable } from '#cli/system/tables.ts';
 import { statSync, readdirSync } from 'node:fs';
 import type { Session } from '#cli/types/tools.ts';
+import { tryParseFile } from '#cli/system/errors.ts';
 import { TRAILING_SLASH } from '#cli/config/system.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
@@ -293,9 +294,12 @@ function listScopeVersions(session: Session, scopePath: string): string[] {
         .filter(({ kind, path }) => kind === 'source' && selectScopePath(path, session.scopes) === scopePath)
         .flatMap(({ path }) => {
             const name = posix.basename(path);
-            if (name === PACKAGE_JSON) return [readPackageJson(session.cache, path)?.['version']];
+            if (name === PACKAGE_JSON) return [tryParseFile(() => readPackageJson(session.cache, path))?.['version']];
             return name === PYPROJECT_TOML
-                ? [parseTomlFile(path, readText(session.cache, path), pyprojectSchema).project?.version]
+                ? [
+                      tryParseFile(() => parseTomlFile(path, readText(session.cache, path), pyprojectSchema))?.project
+                          ?.version,
+                  ]
                 : [];
         })
         .filter((version): version is string => typeof version === 'string');

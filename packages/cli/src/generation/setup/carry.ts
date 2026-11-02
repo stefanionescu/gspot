@@ -1,19 +1,30 @@
 import { posix } from 'node:path';
+import { isTable } from '#cli/system/tables.ts';
+import { tryParseFile } from '#cli/system/errors.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { TRAILING_SLASH } from '#cli/config/system.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { configTableSchema } from '#cli/schemas/parsers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import { getTable, getRootScope } from '#cli/settings/scopes.ts';
+import { toolsSchema } from '#cli/schemas/settings/tools.ts';
 import { LINE_BREAK, GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { MARKDOWNLINT_RULE_ID } from '#cli/config/settings/schema.ts';
-import { COMMITLINT_ERROR_SEVERITY } from '#cli/config/configurations/general.ts';
-import { readRuffOptions, readPrettierOptions } from '#cli/generation/setup/format.ts';
+import { MARKDOWNLINT_PRETTIER_DISABLED } from '#cli/config/configurations/language.ts';
+import { readRuffOptions, readPrettierOptions, buildPrettierOverrides } from '#cli/generation/setup/format.ts';
 import { convertRule, compareRules, compareRuffRules, readPrintedRules } from '#cli/generation/setup/lint-rules.ts';
-import type { Carry, CarryRow, RuleTable, CarryInput, CarrySection, ToolCarryInput } from '#cli/types/generation.ts';
 
+import type {
+    Carry,
+    CarryRow,
+    RuleTable,
+    CarryInput,
+    CarrySection,
+    ToolCarryInput,
+    MarkdownlintConfig,
+} from '#cli/types/generation.ts';
 import {
     EMPTY_CARRY,
     IGNORE_FILES,
@@ -21,6 +32,7 @@ import {
     RUFF_CHECK_IDS,
     COMMENT_PATTERN,
     CARRY_ROW_START,
+    COMMITLINT_TARGET,
     PRINTED_RULE_TOOLS,
     SCAN_FIRST_MESSAGE,
     COMMITLINT_CHECK_ID,
@@ -28,8 +40,10 @@ import {
     MARKDOWNLINT_TARGET,
     MARKDOWNLINT_CHECK_ID,
     COMMITLINT_CONFIG_PATH,
-    CARRIED_PRETTIER_OPTIONS,
+    PRETTIER_OVERRIDES_KEY,
+    MARKDOWNLINT_RUNNER_FILE,
     MARKDOWNLINT_CONFIG_FILES,
+    UNREADABLE_CONFIG_MESSAGE,
 } from '#cli/config/repository/setup.ts';
 
 function convertIgnorePattern(pattern: string, folder: string, tracked: string[]): string | undefined {
@@ -95,40 +109,59 @@ function readRuffCarry(input: CarryInput): CarrySection {
     };
 }
 
-function readMarkdownlintFile(root: string): { path: string; rules: Record<string, unknown> } | undefined {
+function splitMarkdownlintTable(path: string, table: Record<string, unknown>): MarkdownlintConfig {
+    if (!MARKDOWNLINT_RUNNER_FILE.test(path)) return { path, rules: table, dropped: [] };
+    const { config, ...others } = table;
+    return { path, rules: isTable(config) ? config : {}, dropped: Object.keys(others) };
+}
+
+function readMarkdownlintFile(root: string): MarkdownlintConfig | undefined {
     for (const path of MARKDOWNLINT_CONFIG_FILES) {
         const text = findText(root, path);
         if (text === undefined) continue;
-        const table = (path.includes('.json') ? parseJsonFile(path, text) : parseYamlFile(path, text)) as Record<
-            string,
-            unknown
-        >;
-        return { path, rules: (path.includes('cli2') ? table['config'] : table) as Record<string, unknown> };
+        const parse = path.includes('.json') ? parseJsonFile : parseYamlFile;
+        const table = tryParseFile(() => parse(path, text, configTableSchema));
+        return table === undefined
+            ? { path, rules: {}, dropped: [UNREADABLE_CONFIG_MESSAGE] }
+            : splitMarkdownlintTable(path, table);
     }
     return undefined;
 }
 
-function buildToolCarry({ setting, tool, path, compared, options }: ToolCarryInput): CarrySection {
+function readGeneratedFile(session: CarryInput['session'], target: string): Record<string, unknown> {
+    const generated = buildGeneratedFiles(session).files.find(({ path }) => path === target);
+    return parseJsonFile(target, generated?.content ?? '{}');
+}
+
+function buildToolCarry({ setting, tool, path, compared, options, dropped }: ToolCarryInput): CarrySection {
+    const held = Map.groupBy(
+        options,
+        ([rule, value]) => toolsSchema.shape[setting].safeParse({ rules: { [rule]: value } }).success,
+    );
+    const carried = held.get(true) ?? [];
     const row: CarryRow = {
         ...CARRY_ROW_START,
         path,
         tool,
         covered: compared.covered,
-        carried: [...options.keys()],
+        carried: carried.map(([rule]) => rule),
         reasons: compared.reasons,
-        dropped: compared.added,
+        dropped: [...dropped, ...compared.added, ...(held.get(false) ?? []).map(([rule]) => rule)],
     };
-    const rules = Object.fromEntries(options);
-    return { tools: options.size === 0 ? {} : { [setting]: { rules } }, ignore: [], rows: [row] };
+    const rules = Object.fromEntries(carried);
+    return { tools: carried.length === 0 ? {} : { [setting]: { rules } }, ignore: [], rows: [row] };
 }
 
 function readMarkdownlintCarry({ repository, session, tools }: CarryInput): CarrySection {
     const found = tools.has('markdownlint-cli2') ? readMarkdownlintFile(repository.root) : undefined;
     if (found === undefined) return EMPTY_CARRY;
-    const generated = buildGeneratedFiles(session).files.find(({ path }) => path === MARKDOWNLINT_TARGET);
-    const document = parseJsonFile(MARKDOWNLINT_TARGET, generated?.content ?? '{}');
+    const document = {
+        ...Object.fromEntries(MARKDOWNLINT_PRETTIER_DISABLED.map((rule) => [rule, false])),
+        ...readGeneratedFile(session, MARKDOWNLINT_TARGET),
+    };
+    const rules = Object.entries(found.rules);
     const user: RuleTable = new Map(
-        Object.entries(found.rules)
+        rules
             .filter(([rule]) => MARKDOWNLINT_RULE_ID.test(rule))
             .map(([rule, value]) => [rule, convertRule(value, false)]),
     );
@@ -143,6 +176,7 @@ function readMarkdownlintCarry({ repository, session, tools }: CarryInput): Carr
         path: found.path,
         compared,
         options: new Map([...compared.options].map(([rule, [table]]) => [rule, table])),
+        dropped: [...found.dropped, ...rules.map(([rule]) => rule).filter((rule) => !MARKDOWNLINT_RULE_ID.test(rule))],
     });
 }
 
@@ -157,12 +191,7 @@ async function readCommitlintCarry({ repository, session, tools }: CarryInput): 
         hasSeverity: true,
     });
     if (user === undefined) return EMPTY_CARRY;
-    const commits = getTable(getRootScope(session.scopes).settings, 'commits');
-    const configuration = session.toolConfigurations.find(({ name }) => name === 'commits');
-    const shipped: Record<string, readonly unknown[]> = {
-        ...configuration?.commitlint.rules,
-        'type-enum': [COMMITLINT_ERROR_SEVERITY, 'always', commits.types],
-    };
+    const shipped = readGeneratedFile(session, COMMITLINT_TARGET)['rules'] as Record<string, readonly unknown[]>;
     const compared = compareRules({
         check: COMMITLINT_CHECK_ID,
         user,
@@ -174,6 +203,7 @@ async function readCommitlintCarry({ repository, session, tools }: CarryInput): 
         path: config.path,
         compared,
         options: compared.options,
+        dropped: [],
     });
 }
 
@@ -185,16 +215,22 @@ function listUncomparedRows({ conflictingConfigs, tools }: CarryInput): CarryRow
     );
 }
 
-function listPrettierRows({ repository, prettierScripts, tools }: CarryInput): CarryRow[] {
-    return tools.has('prettier')
-        ? readPrettierOptions(repository.root, prettierScripts).map(({ path, options }) => ({
-              ...CARRY_ROW_START,
-              path,
-              tool: 'prettier',
-              carried: Object.keys(options).filter((key) => CARRIED_PRETTIER_OPTIONS.has(key)),
-              dropped: Object.keys(options).filter((key) => !CARRIED_PRETTIER_OPTIONS.has(key)),
-          }))
-        : [];
+function listPrettierRows({ repository, session, prettierScripts, tools }: CarryInput): CarryRow[] {
+    if (!tools.has('prettier')) return [];
+    return session.scopes.flatMap(({ path: scope }) =>
+        readPrettierOptions(repository.root, scope, prettierScripts).map(({ path, options }) => {
+            const { dropped, overrides, ...carried } = options;
+            const inOverrides = (overrides ?? []).flatMap((override) => override.options.dropped);
+            const isOverridden = buildPrettierOverrides(options, scope, repository).length > 0;
+            return {
+                ...CARRY_ROW_START,
+                path,
+                tool: 'prettier',
+                carried: [...Object.keys(carried), ...(isOverridden ? [PRETTIER_OVERRIDES_KEY] : [])],
+                dropped: [...new Set([...dropped, ...inOverrides])],
+            };
+        }),
+    );
 }
 
 /**

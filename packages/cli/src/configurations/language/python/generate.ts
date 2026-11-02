@@ -1,6 +1,7 @@
 import { posix } from 'node:path';
 import { relative } from 'node:path/posix';
 import { stringify } from '@decimalturn/toml-patch';
+import { tryParseFile } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { UV_LOCKFILE } from '#cli/config/manifests.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
@@ -75,7 +76,7 @@ function listConsoleModules(planned: PlannedConfig): string[] {
     const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
     const text = findText(planned.session.cache, pyproject);
     if (text === undefined) return [];
-    const scripts = parseTomlFile(pyproject, text, pyprojectSchema).project?.scripts;
+    const scripts = tryParseFile(() => parseTomlFile(pyproject, text, pyprojectSchema))?.project?.scripts;
     if (scripts === undefined) return [];
     return Object.values(scripts).map((target) => (target.split(':', 1)[0] as string).replaceAll('.', '/'));
 }
