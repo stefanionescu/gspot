@@ -88,20 +88,8 @@ buildRuleTester({
         },
     ],
     invalid: [
-        {
-            code: 'import { expect } from "chai";\nimport { run } from "./plain";\nit("adds", () => { run(); });',
-            filename: join(root, 'typed/a.test.ts'),
-            errors: [{ messageId: 'missing' }],
-        },
-        {
-            code: 'import { HttpTestingController } from "@angular/common/http/testing";\ndeclare const http: HttpTestingController;\nit("loads", () => { http.flush(); });',
-            filename: join(root, 'typed/a.test.ts'),
-            errors: [{ messageId: 'missing' }],
-        },
-        {
-            code: 'import { test } from "vitest";\ntest("a", () => { console.log(1); });',
-            filename: join(root, 'typed/a.test.ts'),
-            errors: [{ messageId: 'missing' }],
-        },
-    ],
+        'import { expect } from "chai";\nimport { run } from "./plain";\nit("adds", () => { run(); });',
+        'import { HttpTestingController } from "@angular/common/http/testing";\ndeclare const http: HttpTestingController;\nit("loads", () => { http.flush(); });',
+        'import { test } from "vitest";\ntest("a", () => { console.log(1); });',
+    ].map((code) => ({ code, filename: join(root, 'typed/a.test.ts'), errors: [{ messageId: 'missing' as const }] })),
 });
