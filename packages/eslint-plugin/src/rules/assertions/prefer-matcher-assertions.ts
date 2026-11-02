@@ -185,9 +185,9 @@ function getLocatorMatcher(
     const operand = getOperand(assertion.expected, source);
     const isFalsy = (operand === 'true') === assertion.negated;
     const state = BOOLEAN_KINDS.has(operand) ? LOCATOR_STATES.get(name)?.[Number(isFalsy)] : undefined;
+    if (state !== undefined) return `${state}()`;
     const value = LOCATOR_VALUES.get(name);
     const negation = assertion.negated ? 'not.' : '';
-    if (state !== undefined) return `${state}()`;
     return value === undefined ? undefined : `${negation}${value}(${source.getText(assertion.expected)})`;
 }
 
