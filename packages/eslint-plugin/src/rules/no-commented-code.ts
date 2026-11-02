@@ -6,6 +6,7 @@ import {
     COMMENT_CODE,
     COMMENT_DIRECTIVES,
     COMMENT_PARSE_ERRORS,
+    COMMENT_JSX_ATTRIBUTE,
     COMMENT_DOCUMENTATION,
     COMMENT_CODE_PATTERNS,
     COMMENT_PARSER_OPTIONS,
@@ -46,7 +47,7 @@ function isCommentedCode(parser: TSESLint.Parser.LooseParserModule, text: string
     return (
         parsesAsCode(parser, text) ||
         parsesAsCode(parser, balanceBraces(text)) ||
-        parsesAsCode(parser, `(<Comment ${text} />)`) ||
+        (COMMENT_JSX_ATTRIBUTE.test(text) && parsesAsCode(parser, `(<Comment ${text} />)`)) ||
         COMMENT_CODE_PATTERNS.some((pattern) => pattern.test(text))
     );
 }

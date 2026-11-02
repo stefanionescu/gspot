@@ -9,6 +9,8 @@ export const COMMENT_DOCUMENTATION = /^(?:e\.g[.:]|for example\b|examples?:)/iu;
 
 export const COMMENT_CODE = /[=;{}()<>]|\b(?:return|throw|import|export)\b/u;
 
+export const COMMENT_JSX_ATTRIBUTE = /[={]/u;
+
 export const COMMENT_CODE_PATTERNS = [
     /^(?:if|for|while|switch|catch)\s*\([^)]*\)\s*\{$/u,
     /^(?:async\s+)?function\s+[\w$]+\s*\([^)]*\)\s*\{$/u,
