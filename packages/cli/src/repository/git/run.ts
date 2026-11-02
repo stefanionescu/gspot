@@ -282,7 +282,7 @@ Build the error for a Git command that exited with a failure.
 @param commandArguments the arguments after git.
 @param result how Git exited.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Git commands in system and repository code report a failure with this one message.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Git commands in main.ts and repository code report a failure with this one message.
 export function buildGitError(
     cwd: string,
     commandArguments: readonly string[],

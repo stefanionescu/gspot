@@ -206,7 +206,7 @@ Check whether a path sits in the folder of gspot.
 
 @param path the repository-relative path.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: More than twenty readers in every layer above this one test a path against the gspot folder.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The repository, engine, configurations, generation, and commands layers test a path against the gspot folder with this one definition.
 export function isGspotPath(path: string): boolean {
     return path.startsWith(`${GSPOT_FOLDER}/`);
 }

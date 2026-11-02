@@ -32,11 +32,6 @@ function listReplacementConflicts(root: string, paths: string[], replacement: Co
         }));
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The manifest dotfile convention identifies configs that cascade below project roots.
-function isCascadingConfig(path: string): boolean {
-    return posix.basename(path).startsWith('.');
-}
-
 function listConfigurationConflicts(
     root: string,
     configuration: Configuration,
@@ -53,7 +48,8 @@ function listConfigurationConflicts(
     ]);
     return replacements.flatMap((replacement) => {
         const matches = buildPathMatcher([replacement.path, `**/${replacement.path}`]);
-        const cascading = isCascadingConfig(replacement.path);
+        // A manifest names a config that cascades below the project roots with a leading dot.
+        const cascading = posix.basename(replacement.path).startsWith('.');
         const paths = [...files.inventory].filter(
             (path) => matches(path) && (cascading || files.projectFolders.has(posix.dirname(path))),
         );
