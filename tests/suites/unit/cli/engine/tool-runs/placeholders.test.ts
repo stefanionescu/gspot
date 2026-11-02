@@ -240,3 +240,20 @@ test('a setting value that holds a placeholder stays literal', async () => {
         `${sandbox.path}:{root}/{scope}/{config_file:shellcheckrc}`,
     );
 });
+
+test('editorconfig-checker leaves out the extensions of the selected formatters', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['python']),
+        'main.py': 'value = 1\n',
+    });
+    const session = await openSession(sandbox.path);
+    const [planned] = planChecks(session, { stage: 'all', only: ['format/editorconfig-checker'] });
+    const excluded = replacePlaceholders(
+        buildCheckSession(session, CHECK_GENERATION),
+        planned as NonNullable<typeof planned>,
+        '{formatted_extensions}',
+        { files: [], scope: '', root: sandbox.path, indent: 2 },
+    );
+    expect(excluded.split(/[.(|)$]+/u)).toContain('py');
+    expect(excluded.split(/[.(|)$]+/u)).not.toContain('swift');
+});

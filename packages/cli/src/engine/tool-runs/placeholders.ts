@@ -11,12 +11,14 @@ import type { ScopeSettings } from '#cli/types/settings.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
+import { addPluginExtensions } from '#cli/repository/files/selection.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import type { CommandLine, ConfigTargets, Substitutions, CommandArgument } from '#cli/types/engine/tool-runs.ts';
 
 import {
     FILE_PLACEHOLDER,
     EACH_PLACEHOLDER,
+    FORMATTER_CHECKS,
     FILES_PLACEHOLDER,
     CONFIG_PLACEHOLDER,
     COMMAND_PLACEHOLDER,
@@ -193,6 +195,15 @@ export function readScalarSetting(scopeSettings: ScopeSettings, name: string): s
     return typeof found === 'string' || typeof found === 'number' || typeof found === 'boolean' ? String(found) : '';
 }
 
+function buildFormattedExtensions({ scope: { configurations } }: PlannedCheck): string {
+    const extensions = configurations.flatMap((configuration) =>
+        configuration.checks
+            .filter(({ id }) => FORMATTER_CHECKS.has(id))
+            .flatMap((check) => addPluginExtensions(check.files ?? configuration.files, configurations).extensions),
+    );
+    return String.raw`\.(${[...new Set(extensions)].map((extension) => extension.slice(1)).join('|')})$`;
+}
+
 function buildPlaceholderReaders(
     session: CheckSession,
     planned: PlannedCheck,
@@ -205,6 +216,7 @@ function buildPlaceholderReaders(
                 .split('/')
                 .join(sep),
         pointer: (name) => selectLinkFilePath(session, substitutions.scope, name).split('/').join(sep),
+        formatted_extensions: () => buildFormattedExtensions(planned),
         scope: () => (substitutions.scope === '' ? '.' : substitutions.scope),
         root: () => substitutions.root,
         indent: () => {

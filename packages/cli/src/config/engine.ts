@@ -199,6 +199,15 @@ export const CONFIG_PLACEHOLDER = /\{config_file:(?<name>[a-z0-9-]+)\}/gu;
 
 export const LINK_FILE_PLACEHOLDER = /\{pointer:(?<name>[^}]+)\}/gu;
 
+export const FORMATTER_CHECKS: ReadonlySet<string> = new Set([
+    'format/prettier',
+    'python/ruff-format',
+    'swift/swiftformat',
+    'bash/shfmt',
+    'data-files/taplo',
+    'sql/sqlfluff',
+]);
+
 export const COMMAND_PLACEHOLDER = /\{(?<name>[a-z_]+)(?::(?<value>[^{}]+))?\}/gu;
 
 export const SETTING_ONLY_PLACEHOLDER = /^\{setting:(?<name>[a-z\d_.-]+)\}$/u;

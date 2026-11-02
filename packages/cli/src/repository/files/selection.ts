@@ -7,7 +7,17 @@ import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
 import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/matchers.ts';
 import type { TrackedFile, CoveredFilesOptions } from '#cli/types/repository.ts';
 
-function addPluginExtensions(table: Configuration['files'], configurations: Configuration[]): Configuration['files'] {
+/**
+Add the extensions that the selected Prettier and ESLint plugins read to a files table.
+
+@param table the file patterns.
+@param configurations the configurations whose tools can add extensions.
+@returns the table with the extensions of its plugins.
+*/
+export function addPluginExtensions(
+    table: Configuration['files'],
+    configurations: Configuration[],
+): Configuration['files'] {
     if (!table.prettier_plugins && !table.eslint_plugins) return table;
     const extensions = configurations
         .flatMap((configuration) => configuration.tools)

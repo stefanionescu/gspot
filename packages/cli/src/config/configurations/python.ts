@@ -119,6 +119,10 @@ export const RUFF_PATH_RULES = {
 export const RUFF_CONSOLE_RULES = ['T20'] as const;
 
 export const RUFF_ALWAYS_OFF = [
+    'W291',
+    'W292',
+    'W293',
+    'W391',
     'COM812',
     'COM819',
     'D203',
