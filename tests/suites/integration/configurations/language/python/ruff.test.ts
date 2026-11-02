@@ -7,7 +7,7 @@ import type { RunReport } from '#cli/types/engine/run.ts';
 import { LEVELS, GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import type { LinterJsonFinding } from '#tests/types/integration.ts';
-import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -84,7 +84,7 @@ test.each([...LEVELS])(
             buildSandboxChanges(RUFF_SANDBOX.files, sourceFiles),
         );
 
-        const resultRules = runCommandBlocking(
+        const resultRules = runBlockingCommand(
             [
                 buildVenvExecutablePath(join(root, GSPOT_PATHS.pythonEnvironment), 'ruff'),
                 'rule',
@@ -144,7 +144,7 @@ quotes = "double"
         const fixed = await spawnGspot(root, ['check', file, '--only', 'python/ruff-format', '--fix', '--json']);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await readFile(join(root, file), 'utf8')).toBe(formatted);
-        const editor = runCommandBlocking(
+        const editor = runBlockingCommand(
             [
                 buildVenvExecutablePath(join(root, GSPOT_PATHS.pythonEnvironment), 'ruff'),
                 'format',
@@ -275,7 +275,7 @@ test('Ruff counts parameters with maximum default', async () => {
     await using sandbox = await createGitSandbox({});
     const { maximum, defaultMaximum } = await prepareParameterProject(sandbox.path, scenario, 'default');
     await applyThenInstall(sandbox.path);
-    const result = runCommandBlocking(
+    const result = runBlockingCommand(
         [
             buildVenvExecutablePath(join(sandbox.path, GSPOT_PATHS.pythonEnvironment), 'ruff'),
             'check',

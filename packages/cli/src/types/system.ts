@@ -61,7 +61,7 @@ export type SpawnOptions = {
     timeoutSeconds?: number;
 };
 
-export type AsyncSpawnOptions = SpawnOptions & {
+export type CancelableSpawnOptions = SpawnOptions & {
     cancelSignal?: AbortSignal | undefined;
 };
 

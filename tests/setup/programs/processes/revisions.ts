@@ -3,7 +3,7 @@ import { runTool } from '#cli/tools/run.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { runGit, readGitText, runGitForBytes } from '#cli/repository/git/run.ts';
+import { runGit, readGitText, runGitBytes } from '#cli/repository/git/run.ts';
 
 const [timeoutSeconds = '', reportPath = ''] = process.argv.slice(2);
 
@@ -32,7 +32,7 @@ for (const source of [{ kind: 'index' as const }, { kind: 'commit' as const, has
     const folderOutput = await readGitText(copy.root, ['rev-parse', '--absolute-git-dir'], {});
     const folder = folderOutput.trim();
     const treeOutput = await readGitText(copy.root, ['write-tree'], {});
-    const bytes = await runGitForBytes(copy.root, ['ls-files', '-z'], {});
+    const bytes = await runGitBytes(copy.root, ['ls-files', '-z'], {});
     const tool = await runTool(['git', 'rev-parse', '--absolute-git-dir'], {
         cwd: copy.root,
         timeoutSeconds: Number(timeoutSeconds),

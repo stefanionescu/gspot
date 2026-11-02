@@ -3,7 +3,7 @@ import { realpathSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { runProcess, streamProcess } from '#cli/system/processes.ts';
-import type { SpawnResult, StdoutReader, AsyncSpawnOptions } from '#cli/types/system.ts';
+import type { SpawnResult, StdoutReader, CancelableSpawnOptions } from '#cli/types/system.ts';
 import type { GitLookup, GitRepository, GitEnvironment, GitVariableGroups } from '#cli/types/repository.ts';
 import { foldVariableName, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
 
@@ -141,7 +141,7 @@ Run one Git command and wait for it; the cancel signal in the options stops it.
 export async function runGit(
     cwd: string,
     commandArguments: readonly string[],
-    options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
+    options: Omit<CancelableSpawnOptions, 'cwd' | 'timeoutSeconds'>,
 ): Promise<SpawnResult> {
     const command = [GIT_PROGRAM, ...commandArguments];
     const selected = await buildGitEnvironment(cwd, command, { ...options.env });
@@ -160,7 +160,7 @@ Stream Git output with repository isolation and optional cancellation.
 export async function runGitStream(
     cwd: string,
     commandArguments: readonly string[],
-    options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
+    options: Omit<CancelableSpawnOptions, 'cwd' | 'timeoutSeconds'>,
     readStdout: StdoutReader,
 ): Promise<SpawnResult> {
     const command = [GIT_PROGRAM, ...commandArguments];
@@ -176,10 +176,10 @@ Run Git with cancellation, and keep the output bytes for paths and objects.
 @param commandArguments the arguments after git.
 @param options the standard input and the cancel signal.
 */
-export async function runGitForBytes(
+export async function runGitBytes(
     cwd: string,
     commandArguments: readonly string[],
-    options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
+    options: Omit<CancelableSpawnOptions, 'cwd' | 'timeoutSeconds'>,
 ): Promise<Omit<SpawnResult, 'stdout'> & { stdout: Uint8Array }> {
     const chunks: Buffer[] = [];
     const result = await runGitStream(cwd, commandArguments, options, async (output) => {
@@ -225,7 +225,7 @@ Read what a Git command prints, and throw a GspotError when it fails.
 export async function readGitText(
     cwd: string,
     commandArguments: readonly string[],
-    options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
+    options: Omit<CancelableSpawnOptions, 'cwd' | 'timeoutSeconds'>,
 ): Promise<string> {
     const result = await runGit(cwd, commandArguments, options);
     if (result.code !== 0) throw buildGitError(cwd, commandArguments, result);
@@ -242,7 +242,7 @@ Read the non-empty output lines of a Git command.
 export async function readGitLines(
     cwd: string,
     commandArguments: readonly string[],
-    options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
+    options: Omit<CancelableSpawnOptions, 'cwd' | 'timeoutSeconds'>,
 ): Promise<string[]> {
     const text = await readGitText(cwd, commandArguments, options);
     return text.split('\n').filter((line) => line !== '');
@@ -258,9 +258,9 @@ Read paths from a null-separated Git listing. Exclude paths with invalid UTF-8.
 export async function readGitPaths(
     cwd: string,
     commandArguments: readonly string[],
-    options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
+    options: Omit<CancelableSpawnOptions, 'cwd' | 'timeoutSeconds'>,
 ): Promise<string[]> {
-    const result = await runGitForBytes(cwd, commandArguments, options);
+    const result = await runGitBytes(cwd, commandArguments, options);
     if (result.code !== 0) throw buildGitError(cwd, commandArguments, result);
     return Buffer.from(result.stdout)
         .toString('latin1')

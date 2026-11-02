@@ -1,7 +1,7 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { listOffRules, assertRunningRuleOptions } from '#cli/configurations/rule-options.ts';
+import { listDisabledRules, assertRunningRuleOptions } from '#cli/configurations/rule-options.ts';
 
 import {
     PRETTIER_STYLE,
@@ -37,6 +37,6 @@ export function buildMarkdownlintFile(planned: PlannedConfig): string {
     });
     for (const [rule, ruleOptions] of Object.entries(options))
         document[rule] = { ...(typeof document[rule] === 'object' && document[rule]), ...ruleOptions };
-    Object.assign(document, Object.fromEntries(listOffRules(planned).map((rule) => [rule, false])));
+    Object.assign(document, Object.fromEntries(listDisabledRules(planned).map((rule) => [rule, false])));
     return JSON.stringify(document, null, JSON_INDENT);
 }

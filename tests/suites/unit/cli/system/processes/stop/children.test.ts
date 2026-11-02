@@ -7,7 +7,7 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { runProcess, streamProcess } from '#cli/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { isWindows, fakePlatform } from '#tests/setup/system/platform.ts';
-import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system.ts';
+import type { SpawnResult, CancelableSpawnOptions } from '#cli/types/system.ts';
 import { CLEANING_TOOL, STUBBORN_TOOL, STREAM_FAILURE, STOPPED_CAPTURES } from '#tests/config/system.ts';
 
 import {
@@ -176,7 +176,7 @@ test.skipIf(isWindows)('a tool that ignores SIGTERM stops with SIGKILL', async (
 async function captureProcess(
     capture: 'text' | 'bytes',
     command: string[],
-    options: AsyncSpawnOptions,
+    options: CancelableSpawnOptions,
 ): Promise<Omit<SpawnResult, 'stdout'> & { stdout: string | Buffer }> {
     const bounded = {
         timeoutSeconds: CHILD_TIMEOUT_SECONDS,

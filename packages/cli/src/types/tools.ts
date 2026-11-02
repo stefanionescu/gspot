@@ -4,7 +4,7 @@ import type { uvLockfileSchema } from '#cli/schemas/parsers.ts';
 import type { CHECK_HOOKS } from '#cli/config/tools/installers.ts';
 import type { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
-import type { Files, RunCache, AsyncSpawnOptions } from '#cli/types/system.ts';
+import type { Files, RunCache, CancelableSpawnOptions } from '#cli/types/system.ts';
 
 import type {
     bunPackageSchema,
@@ -234,7 +234,7 @@ export type ToolProjectLockfileName = Extract<Lockfile, { toolProject: true }>['
 
 export type LintRuleDocs = z.infer<typeof lintRuleDocsSchema>;
 
-export type ToolRunOptions = Pick<AsyncSpawnOptions, 'cwd' | 'env' | 'stdin'> & {
+export type ToolRunOptions = Pick<CancelableSpawnOptions, 'cwd' | 'env' | 'stdin'> & {
     timeoutSeconds: number;
     cancelSignal?: AbortSignal | undefined;
 };

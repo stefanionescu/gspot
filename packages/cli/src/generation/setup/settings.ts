@@ -1,12 +1,12 @@
 import { overlayTable } from '#cli/settings/edit.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
-import { selectForScope } from '#cli/settings/scopes.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { buildDetectedTables } from '#cli/settings/detected.ts';
 import { formatSettingsCommands } from '#cli/generation/rules.ts';
 import { stripDefaults } from '#cli/generation/setup/defaults.ts';
 import { readScopeFormat } from '#cli/generation/setup/format.ts';
+import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { LEADING_COMMENTS, HAND_EDIT_RECORDS } from '#cli/config/generation.ts';
 import type { Repository, ProposedConfigurations } from '#cli/types/repository.ts';
 import type { InitOptions, SettingsDraft, PrettierScripts } from '#cli/types/generation.ts';
@@ -24,7 +24,7 @@ function buildSettingsTable(
     const scopes = ['', ...draft.scopes.map((each) => each.path)];
     const scopeConfigurations = scopes.map((scopePath) => ({
         scope: scopePath,
-        selected: selectForScope(selected, scopePath, configurationsByName),
+        selected: selectConfigurationsForScope(selected, scopePath, configurationsByName),
     }));
     const detected = buildDetectedTables(scopeConfigurations, { repository, scopes: draft.scopes });
     const tables = new Map(

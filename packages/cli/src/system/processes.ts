@@ -6,15 +6,6 @@ import { trackProcessTree } from '#cli/system/process-trees.ts';
 import { dirname, resolve, delimiter, isAbsolute } from 'node:path';
 import { foldVariableName, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
 
-import type {
-    SpawnResult,
-    SpawnOptions,
-    StdoutReader,
-    RunningProcess,
-    SpawnCompletion,
-    AsyncSpawnOptions,
-    ProcessTreeControl,
-} from '#cli/types/system.ts';
 import {
     FAILED_CODE,
     OUTPUT_LIMIT,
@@ -24,6 +15,15 @@ import {
     EMPTY_COMMAND_MESSAGE,
     CANCELED_START_MESSAGE,
 } from '#cli/config/system.ts';
+import type {
+    SpawnResult,
+    SpawnOptions,
+    StdoutReader,
+    RunningProcess,
+    SpawnCompletion,
+    ProcessTreeControl,
+    CancelableSpawnOptions,
+} from '#cli/types/system.ts';
 
 function buildExecaOptions(options: SpawnOptions, executable: string) {
     const env: Record<string, string | undefined> = { ...buildSpawnEnvironment(options.env), PWD: options.cwd };
@@ -118,7 +118,7 @@ async function finishProcess(
 
 async function readProcessOutput(
     child: RunningProcess,
-    options: AsyncSpawnOptions,
+    options: CancelableSpawnOptions,
     readStdout: StdoutReader,
 ): Promise<SpawnCompletion> {
     await readStdout({
@@ -155,7 +155,7 @@ function findMissingExecutable(
 
 function findUnstartedProcess(
     command: readonly string[],
-    options: AsyncSpawnOptions,
+    options: CancelableSpawnOptions,
     started: number,
 ): SpawnResult | undefined {
     const missing = findMissingExecutable(command, options, started);
@@ -174,7 +174,7 @@ function findUnstartedProcess(
     );
 }
 
-function spawnProcess(command: readonly string[], options: AsyncSpawnOptions, output: Pick<Options, 'buffer'>) {
+function spawnProcess(command: readonly string[], options: CancelableSpawnOptions, output: Pick<Options, 'buffer'>) {
     const [executable, ...commandArguments] = findProgramCommand(command, options.env) as readonly [
         string,
         ...string[],
@@ -194,7 +194,7 @@ Run a supervised process tree and capture its text.
 @param command executable and literal arguments.
 @param options where and how the process runs.
 */
-export async function runProcess(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
+export async function runProcess(command: readonly string[], options: CancelableSpawnOptions): Promise<SpawnResult> {
     const started = performance.now();
     const unstarted = findUnstartedProcess(command, options, started);
     if (unstarted !== undefined) return unstarted;
@@ -228,7 +228,7 @@ Run a supervised process tree and read its output bytes.
 */
 export async function streamProcess(
     command: readonly string[],
-    options: AsyncSpawnOptions,
+    options: CancelableSpawnOptions,
     readStdout: StdoutReader,
 ): Promise<SpawnResult> {
     const started = performance.now();

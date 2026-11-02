@@ -57,7 +57,7 @@ import {
     PYDOCLINT_ALL_LEVEL_OPTIONS,
 } from '#cli/config/configurations/python.ts';
 
-function listFirstParty(session: Session, planned: PlannedCheck, project: DeptryProject): string[] {
+function listFirstPartyPackages(session: Session, planned: PlannedCheck, project: DeptryProject): string[] {
     const sources = joinScope(planned.scope.path, PYTHON_SOURCE_FOLDER);
     const packages = session.repository.files
         .map(({ path }) => path)
@@ -197,7 +197,7 @@ export async function checkDeptry(session: CheckSession, planned: PlannedCheck):
                 }),
                 ...project.tool.deptry.extend_exclude,
             ].flatMap((pattern) => [DEPTRY_EXCLUDE_FLAG, pattern]),
-            ...listFirstParty(session, planned, project),
+            ...listFirstPartyPackages(session, planned, project),
         ]),
     });
 }

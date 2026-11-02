@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { cp, symlink, readFile } from 'node:fs/promises';
-import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { BASH_MANIFEST, PACKAGE_FOLDER } from '#tests/config/system.ts';
 
@@ -44,7 +44,7 @@ async function writePackageFolder(folder: string): Promise<string> {
 test('a package folder with spaces, percent signs, and Unicode reads and lists its assets', async () => {
     await using sandbox = await testdir();
     const cwd = await writePackageFolder(sandbox.path);
-    const result = runCommandBlocking([process.execPath, '--no-install', join(cwd, 'assets.ts')], {
+    const result = runBlockingCommand([process.execPath, '--no-install', join(cwd, 'assets.ts')], {
         cwd,
     });
     expect(result.code, result.stderr).toBe(0);

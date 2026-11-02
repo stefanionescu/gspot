@@ -12,10 +12,10 @@ import type { SessionOptions } from '#cli/types/engine/plan.ts';
 import type { Session, SessionBase } from '#cli/types/tools.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
-import { selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 import type { Repository, RepositoryListing } from '#cli/types/repository.ts';
 import { listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
+import { buildScopeSettings, selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { selectStartRunner, detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
 
 function buildScopes(
@@ -27,7 +27,7 @@ function buildScopes(
     const automatic = listAutomaticConfigurations(configurationsByName, repository);
     const active = { ...settings, configurations: [...new Set([...settings.configurations, ...automatic])] };
     return scopeFolders.map((scope) => {
-        const selected = selectForScope(active, scope.path, configurationsByName);
+        const selected = selectConfigurationsForScope(active, scope.path, configurationsByName);
         const available = buildAvailableSettings(selected, settings.level);
         const scopeSettings = buildScopeSettings(available, active, selected, scope.path);
         return {
@@ -55,7 +55,10 @@ async function readSessionRepository({
 }): Promise<Repository> {
     const listed = listing ?? (await listRepositoryFiles(cache));
     const selected = new Map(
-        ['', ...settings.scopes.keys()].map((path) => [path, selectForScope(settings, path, configurationsByName)]),
+        ['', ...settings.scopes.keys()].map((path) => [
+            path,
+            selectConfigurationsForScope(settings, path, configurationsByName),
+        ]),
     );
     return readRepository(
         cache,

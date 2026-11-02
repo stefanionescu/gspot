@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { findProgram } from '#cli/system/programs.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { buildProgramPin } from '#tests/setup/cli/tools.ts';
-import { listToolStart, findInstalledDependency } from '#cli/tools/packages.ts';
+import { readToolCommandPrefix, findInstalledDependency } from '#cli/tools/packages.ts';
 
 test('an installed dependency version is found when exports hide its package manifest', async () => {
     await using sandbox = await testdir({
@@ -28,9 +28,9 @@ test.each([
     });
     const tool = buildProgramPin('teller', '1.0.0', 'teller');
     const path = join(sandbox.path, GSPOT_PATHS.nodeModules, '.bin', 'teller');
-    expect(listToolStart(sandbox.path, tool, path)).toStrictEqual([
+    expect(readToolCommandPrefix(sandbox.path, tool, path)).toStrictEqual([
         findProgram('node')!,
         join(sandbox.path, GSPOT_PATHS.nodeModules, 'teller', script),
     ]);
-    expect(listToolStart(sandbox.path, tool, join(sandbox.path, 'node_modules/.bin/teller'))).toHaveLength(1);
+    expect(readToolCommandPrefix(sandbox.path, tool, join(sandbox.path, 'node_modules/.bin/teller'))).toHaveLength(1);
 });

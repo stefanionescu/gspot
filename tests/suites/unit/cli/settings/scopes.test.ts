@@ -9,8 +9,14 @@ import { TWO_WORDS } from '#tests/config/setup/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { getLimit, getTable, listIgnores, selectForScope, listIgnoredRules } from '#cli/settings/scopes.ts';
 
+import {
+    getLimit,
+    getTable,
+    listIgnores,
+    listIgnoredRules,
+    selectConfigurationsForScope,
+} from '#cli/settings/scopes.ts';
 import {
     PROJECT_CHOICES,
     PROJECT_SCOPE_CASES,
@@ -101,7 +107,7 @@ test('Postgres client schemas come from Supabase or from gspot.toml', async () =
 });
 
 test.each([...PROJECT_SCOPE_CASES])('scope $scope selects $name: $selected', ({ scope, name, selected }) => {
-    const names = selectForScope(
+    const names = selectConfigurationsForScope(
         {
             configurations: [...PROJECT_CHOICES.configurations],
             removed_configurations: [...PROJECT_CHOICES.removed_configurations],

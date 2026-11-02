@@ -6,7 +6,7 @@ import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import { SETTING_NAME_PLACEHOLDER } from '#cli/config/settings/validation.ts';
 import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
 import { buildAvailableSettings, SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
-import type { SettingVariant, SettingAccepted, SettingReference } from '#cli/types/settings.ts';
+import type { SettingVariant, SettingReference, AcceptedSettingValues } from '#cli/types/settings.ts';
 
 function inputSchema(schema: z.ZodType): z.ZodType {
     let inner = unwrapSettingSchema(schema);
@@ -14,7 +14,7 @@ function inputSchema(schema: z.ZodType): z.ZodType {
     return inner;
 }
 
-function acceptedAlternatives(schema: z.ZodUnion): SettingAccepted {
+function acceptedAlternatives(schema: z.ZodUnion): AcceptedSettingValues {
     const alternatives = schema.options.map((option) => acceptedValues(option as z.ZodType));
     const choicesOnly = alternatives.every((option) => option.choices.length > 0);
     return choicesOnly
@@ -22,7 +22,7 @@ function acceptedAlternatives(schema: z.ZodUnion): SettingAccepted {
         : { types: [], choices: [], alternatives };
 }
 
-function acceptedValues(schema: z.ZodType): SettingAccepted {
+function acceptedValues(schema: z.ZodType): AcceptedSettingValues {
     const inner = inputSchema(schema);
     const description = schema.description;
     if (inner instanceof z.ZodLiteral)

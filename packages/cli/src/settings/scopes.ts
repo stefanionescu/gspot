@@ -105,7 +105,7 @@ Select the configurations of the root and each parent scope, each once, in order
 @param scopePath the folder to select for.
 @param configurationsByName every configuration.
 */
-export function selectForScope(
+export function selectConfigurationsForScope(
     selected: SelectedConfigurations,
     scopePath: string,
     configurationsByName: ReadonlyMap<string, Configuration>,

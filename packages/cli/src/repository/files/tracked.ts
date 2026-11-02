@@ -6,8 +6,8 @@ import { isInScope } from '#cli/repository/scopes.ts';
 import { decodeGitPaths } from '#cli/repository/git/output.ts';
 import { findContainedPath } from '#cli/system/files/reads.ts';
 import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/system.ts';
+import { runGitBytes, buildGitError } from '#cli/repository/git/run.ts';
 import type { ListedFile, GitIndexFile } from '#cli/types/repository.ts';
-import { buildGitError, runGitForBytes } from '#cli/repository/git/run.ts';
 import { extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
 import { GITLINK_MODE, GIT_FILE_MODES, EXECUTABLE_FILE, EXECUTABLE_BITS } from '#cli/config/repository/files.ts';
 
@@ -58,7 +58,7 @@ export async function readGitListing(
     cancelSignal: AbortSignal | undefined,
     unreadablePaths: string[],
 ): Promise<string> {
-    const listed = await runGitForBytes(root, gitArguments, { cancelSignal });
+    const listed = await runGitBytes(root, gitArguments, { cancelSignal });
     if (listed.code !== 0) throw buildGitError(root, gitArguments, listed);
     return decodeGitPaths(listed.stdout, unreadablePaths);
 }

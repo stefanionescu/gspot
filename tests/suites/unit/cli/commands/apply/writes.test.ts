@@ -8,7 +8,7 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { ApplyReport } from '#cli/types/generation.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
@@ -72,7 +72,7 @@ test('a fresh Git clone keeps the committed generated files byte for byte and mo
     const reconciled = await runGspot(original.path, ['apply', '--json']);
     expect(reconciled.code, reconciled.stdout + reconciled.stderr).toBe(0);
     commitAll(original.path);
-    const cloned = runCommandBlocking(['git', 'clone', '--quiet', '--no-local', original.path, clone.path], {
+    const cloned = runBlockingCommand(['git', 'clone', '--quiet', '--no-local', original.path, clone.path], {
         cwd: original.path,
         env: {},
     });
@@ -91,7 +91,7 @@ test('a fresh Git clone keeps the committed generated files byte for byte and mo
     const repeated = await runGspot(clone.path, ['apply', '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
     expect((JSON.parse(repeated.stdout) as ApplyReport).written).toStrictEqual([]);
-    const unchanged = runCommandBlocking(['git', 'diff', '--exit-code'], { cwd: clone.path, env: {} });
+    const unchanged = runBlockingCommand(['git', 'diff', '--exit-code'], { cwd: clone.path, env: {} });
     expect(unchanged.code, unchanged.stdout + unchanged.stderr).toBe(0);
 });
 

@@ -8,7 +8,7 @@ import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { listSpecifiers, readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
 import { REACT_PACKAGE, REACT_DOM_PACKAGE, REACT_VERSIONS_RULE } from '#cli/config/configurations/framework.ts';
 
-function rangesCanMeet(react: string, reactDom: string): boolean {
+function canRangesMeet(react: string, reactDom: string): boolean {
     const first = validRange(react);
     const second = validRange(reactDom);
     return first === null || second === null || intersects(first, second);
@@ -29,7 +29,7 @@ export function checkReactVersions(session: Session, planned: PlannedCheck): Che
     const versions = locked ?? specifiers;
     const react = versions.get(REACT_PACKAGE) ?? '';
     const reactDom = versions.get(REACT_DOM_PACKAGE) ?? '';
-    const matches = locked === undefined ? rangesCanMeet(react, reactDom) : react === reactDom;
+    const matches = locked === undefined ? canRangesMeet(react, reactDom) : react === reactDom;
     if (matches) return [];
     return [
         {

@@ -1,4 +1,4 @@
-import { listOffRules } from '#cli/configurations/rule-options.ts';
+import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 /**
@@ -8,6 +8,6 @@ Build the Gixy exclusions from configured rule ignores.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: CONFIG_BUILDERS selects this configuration's generator through its shared builder interface.
 export function buildGixyFile(planned: PlannedConfig): string {
-    const off = listOffRules(planned);
+    const off = listDisabledRules(planned);
     return off.length === 0 ? '' : `skips = ${off.join(',')}`;
 }

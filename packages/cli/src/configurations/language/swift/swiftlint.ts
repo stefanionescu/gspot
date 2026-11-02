@@ -1,7 +1,7 @@
 import { getTable, getLimit, selectFormat } from '#cli/settings/scopes.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { Document, type Node, type Scalar, type YAMLMap, type YAMLSeq } from 'yaml';
-import { listOffRules, readToolOffRules } from '#cli/configurations/rule-options.ts';
+import { listDisabledRules, readToolDisabledRules } from '#cli/configurations/rule-options.ts';
 
 import {
     SWIFT_FILES,
@@ -64,8 +64,8 @@ Build swiftlint.yml: the SwiftLint rules with the source limits of the repositor
 @param planned the config file to build.
 */
 export function buildSwiftlintFile(planned: PlannedConfig): string {
-    const { always } = readToolOffRules(planned);
-    const off = listOffRules(planned);
+    const { always } = readToolDisabledRules(planned);
+    const off = listDisabledRules(planned);
     const offSet = new Set(off);
     const levelOff = off.filter(
         (rule) => !always.includes(rule) && !SWIFTLINT_OPT_IN.has(rule) && !SWIFTLINT_ANALYZER.has(rule),

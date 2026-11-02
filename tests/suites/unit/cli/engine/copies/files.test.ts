@@ -10,7 +10,7 @@ import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { cp, mkdir, lstat, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
@@ -38,7 +38,7 @@ test('a copy isolates workspace sources and links external dependencies and exec
     const planned = planSandboxCheck(session, 'gspot/generated-files', { paths: ['packages/core/value.js'] });
     using copy = await createCheckCopy(session, planned);
     const scratch = copy.path;
-    const result = runCommandBlocking([process.execPath, 'node_modules/.bin/tool'], { cwd: scratch });
+    const result = runBlockingCommand([process.execPath, 'node_modules/.bin/tool'], { cwd: scratch });
     expect(result.code, result.stderr).toBe(0);
     expect(result.stdout.trim()).toBe('tool works');
     await writeFile(join(scratch, 'node_modules/core/value.js'), 'preview edit');
@@ -174,7 +174,7 @@ test.each([false, true])(
             });
             expect(input.files.map((file) => file.path)).toStrictEqual(['apps/web/main.js']);
             using copy = await createCheckCopy(session, input);
-            const output = runCommandBlocking([process.execPath, 'apps/web/main.js'], { cwd: copy.path });
+            const output = runBlockingCommand([process.execPath, 'apps/web/main.js'], { cwd: copy.path });
             expect(output.code, output.stderr).toBe(0);
             expect(output.stdout.trim()).toBe('staged dependency');
             expect(await readFile(join(copy.path, 'packages/aliased/value.js'), 'utf8')).toBe(

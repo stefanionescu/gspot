@@ -35,7 +35,10 @@ Read the rules that the tool of a config file turns off, by the level that turns
 @param planned the config file.
 @returns the rules that stay off at every level, and the rules that level basic leaves off.
 */
-export function readToolOffRules(planned: Pick<PlannedConfig, 'config'>): { always: string[]; levelOff: string[] } {
+export function readToolDisabledRules(planned: Pick<PlannedConfig, 'config'>): {
+    always: string[];
+    levelOff: string[];
+} {
     const tools = planned.config.tool.map((name) => getTool(readConfigurations().values(), name));
     return {
         always: tools.flatMap(({ off }) => off?.always ?? []),
@@ -49,9 +52,11 @@ leaves off at this level.
 
 @param planned the config file, its configuration, and the level.
 */
-export function listOffRules(planned: Pick<PlannedConfig, 'config' | 'configuration' | 'scope' | 'level'>): string[] {
+export function listDisabledRules(
+    planned: Pick<PlannedConfig, 'config' | 'configuration' | 'scope' | 'level'>,
+): string[] {
     const { config, configuration, scope, level } = planned;
-    const { always, levelOff } = readToolOffRules(planned);
+    const { always, levelOff } = readToolDisabledRules(planned);
     const checks = configuration.checks.filter((check) => {
         const tools = new Set([check.tool ?? check.command?.[0] ?? []].flat());
         return config.tool.some((name) => tools.has(name));

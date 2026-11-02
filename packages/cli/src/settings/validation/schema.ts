@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { findValueAt } from '#cli/system/tables.ts';
-import { selectForScope } from '#cli/settings/scopes.ts';
 import { formatSimilarNames } from '#cli/system/text.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
@@ -9,6 +8,7 @@ import { buildAvailableSettings } from '#cli/settings/available.ts';
 import type { WrittenConfiguration } from '#cli/types/manifests.ts';
 import { listUnknownConfigurations } from '#cli/manifests/select.ts';
 import type { Settings, SettingsError } from '#cli/types/settings.ts';
+import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
 import { formatFileValueError } from '#cli/settings/validation/messages.ts';
 import { validateSettingReasons } from '#cli/settings/validation/reasons.ts';
@@ -122,10 +122,13 @@ export function validateSettings(settings: Settings, root: string): SettingsErro
     const scopes = new Map(
         [...settings.scopes.keys()].map((scope) => [
             scope,
-            buildAvailableSettings(selectForScope(settings, scope, configurationsByName), settings.level),
+            buildAvailableSettings(selectConfigurationsForScope(settings, scope, configurationsByName), settings.level),
         ]),
     );
-    const rootKeys = buildAvailableSettings(selectForScope(settings, '', configurationsByName), settings.level);
+    const rootKeys = buildAvailableSettings(
+        selectConfigurationsForScope(settings, '', configurationsByName),
+        settings.level,
+    );
     const general = configurationsByName
         .values()
         .filter((configuration) => configuration.group === 'general')

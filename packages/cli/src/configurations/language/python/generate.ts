@@ -9,8 +9,8 @@ import { pyprojectSchema } from '#cli/schemas/parsers.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import { listOffRules } from '#cli/configurations/rule-options.ts';
 import { DEFAULT_QUOTES } from '#cli/config/configurations/general.ts';
+import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { JSON_INDENT, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import { getTable, getLimit, listIgnores, selectFormat } from '#cli/settings/scopes.ts';
@@ -138,7 +138,7 @@ export function buildRuffFile(planned: PlannedConfig): string {
             preview: true,
             'explicit-preview-rules': true,
             select: [...ruffRules, ...getTable(planned.scope.settings, 'tools.ruff').rules],
-            ignore: listOffRules(planned),
+            ignore: listDisabledRules(planned),
             isort: RUFF_ISORT,
             'flake8-tidy-imports': RUFF_TIDY_IMPORTS,
             mccabe: { 'max-complexity': getLimit(planned.scope.settings, 'max_cyclomatic_complexity', 'python') },

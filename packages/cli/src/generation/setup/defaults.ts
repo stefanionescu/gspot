@@ -1,7 +1,6 @@
 import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { buildSettings } from '#cli/settings/read.ts';
-import { selectForScope } from '#cli/settings/scopes.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { WrittenTable } from '#cli/types/generation.ts';
@@ -9,6 +8,7 @@ import { DETECTED_SETTINGS } from '#cli/config/generation.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import type { Settings, TomlTable } from '#cli/types/settings.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
+import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { findSetting, getSettingValue } from '#cli/settings/inherit.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { isTable, findValueAt, getRequired } from '#cli/system/tables.ts';
@@ -121,14 +121,20 @@ export function stripDefaults(settings: TomlTable): TomlTable {
     const root = {
         scope: '',
         table: settings,
-        availableSettings: buildAvailableSettings(selectForScope(selected, '', configurationsByName), level),
+        availableSettings: buildAvailableSettings(
+            selectConfigurationsForScope(selected, '', configurationsByName),
+            level,
+        ),
     };
     const tables = [
         root,
         ...scopes.map<WrittenTable>(({ path, table }) => ({
             scope: path,
             table,
-            availableSettings: buildAvailableSettings(selectForScope(selected, path, configurationsByName), level),
+            availableSettings: buildAvailableSettings(
+                selectConfigurationsForScope(selected, path, configurationsByName),
+                level,
+            ),
         })),
     ].toSorted((left, right) => compareScopeDepth(left.scope, right.scope));
     for (const key of DETECTED_SETTINGS) for (const table of tables) table.availableSettings.defaults.delete(key);

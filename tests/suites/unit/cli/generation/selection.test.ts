@@ -14,7 +14,7 @@ import { LEVELS, GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
-import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { CONFIG_PROJECT } from '#tests/config/setup/configurations.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -201,7 +201,7 @@ function parseConfig(text: string, path: string): void {
             parseYaml(text);
         },
         '.mjs': (text, path) => {
-            const result = runCommandBlocking(['node', '--input-type=module', '--check'], {
+            const result = runBlockingCommand(['node', '--input-type=module', '--check'], {
                 cwd: process.cwd(),
                 stdin: text,
             });

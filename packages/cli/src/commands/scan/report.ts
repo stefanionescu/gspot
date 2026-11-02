@@ -71,7 +71,7 @@ function buildCost({ session, report, toolBytes }: ScanInput): ScanReport['cost'
     };
 }
 
-function listNotRun({ checks }: RunReport): string[] {
+function listChecksNotRun({ checks }: RunReport): string[] {
     const stopped = checks.filter(({ status }) => INCOMPLETE_STATUSES.has(status));
     return [...new Set(stopped.map(({ check, note }) => `${check}: ${note ?? ''}`.trim()))];
 }
@@ -102,7 +102,7 @@ export function buildScanReport(input: ScanInput): ScanReport {
         },
         categories: buildCategories(findings.filter(({ check }) => !SCAN_FORMAT_CHECKS.has(check))),
         filesToFormat: new Set(formatting.map(({ file }) => file)).size,
-        notRun: listNotRun(report),
+        notRun: listChecksNotRun(report),
         cost: buildCost(input),
         plan: {
             ...planning.plan,

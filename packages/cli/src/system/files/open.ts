@@ -7,9 +7,9 @@ import { GspotError, hasErrorCode, buildWriteError } from '#cli/system/errors.ts
 import { rmSync, chmodSync, lstatSync, mkdirSync, rmdirSync, unlinkSync, readdirSync, realpathSync } from 'node:fs';
 
 import {
-    readBounded,
     preparePath,
-    replaceBounded,
+    readBoundedFile,
+    replaceBoundedFile,
     buildContainedPath,
     readBoundedKeepingLinks,
 } from '#cli/system/files/bounded.ts';
@@ -84,9 +84,9 @@ export function openFiles(root: string): Files {
                 throw error;
             }
         },
-        read: (path) => readBounded(bounds, path),
+        read: (path) => readBoundedFile(bounds, path),
         readKeepingLinks: (path) => readBoundedKeepingLinks(bounds, path),
-        write: replaceBounded.bind(undefined, bounds),
+        write: replaceBoundedFile.bind(undefined, bounds),
         deleteFile: deleteBoundedFile.bind(undefined, bounds),
         createPrivateFolder: createBoundedFolder.bind(undefined, bounds),
     };

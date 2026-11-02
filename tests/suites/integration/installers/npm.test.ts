@@ -14,7 +14,7 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import prettierPackage from 'prettier/package.json' with { type: 'json' };
 import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
 import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
-import { runCommand, runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { runCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { stat, chmod, unlink, readFile, writeFile, appendFile } from 'node:fs/promises';
 import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { PACKAGE_MANAGER_CASES, PACKAGE_MANAGER_AGE_REFUSALS } from '#tests/config/integration/commands.ts';
@@ -174,7 +174,7 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
         for (let round = 0; round < 2; round++) {
             const cloneInstall = await spawnGspot(clone, ['install']);
             expect(cloneInstall.code, cloneInstall.stdout + cloneInstall.stderr).toBe(0);
-            const status = runCommandBlocking(['git', 'status', '--porcelain'], { cwd: clone, env: {} });
+            const status = runBlockingCommand(['git', 'status', '--porcelain'], { cwd: clone, env: {} });
             expect(status, status.stderr).toMatchObject({ code: 0, stdout: '' });
             const contents = await readFile(join(clone, GSPOT_FOLDER, basename(lockfilePath)));
             expect(contents).toStrictEqual(Buffer.from(lockfile));

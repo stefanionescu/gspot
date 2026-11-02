@@ -14,7 +14,7 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
-import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -67,7 +67,7 @@ test('generated attributes keep LF through an autocrlf checkout', async () => {
     const bytes = await readFile(join(sandbox.path, path));
     runGitStep(sandbox.path, ['add', '--', '.gitattributes', path]);
     await rm(join(sandbox.path, path));
-    const checked = runCommandBlocking(['git', '-c', 'core.autocrlf=true', 'checkout-index', '--force', '--', path], {
+    const checked = runBlockingCommand(['git', '-c', 'core.autocrlf=true', 'checkout-index', '--force', '--', path], {
         cwd: sandbox.path,
         env: {},
     });
@@ -89,7 +89,7 @@ test.each([true, false])(
         expect(refused.code).toBe(2);
         const path = join(sandbox.path, '.gitignore');
         expect(existsSync(path) ? await readFile(path, 'utf8') : undefined).toBe(authored ? previous : undefined);
-        const initialized = runCommandBlocking(['git', 'init', '--quiet'], { cwd: sandbox.path, env: {} });
+        const initialized = runBlockingCommand(['git', 'init', '--quiet'], { cwd: sandbox.path, env: {} });
         expect(initialized.code, initialized.stderr).toBe(0);
         await applyGeneratedFiles(sandbox.path);
         const ignorePath = join(sandbox.path, GSPOT_PATHS.gitignore);

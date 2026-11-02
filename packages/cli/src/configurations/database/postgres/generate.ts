@@ -1,8 +1,8 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
-import { listOffRules } from '#cli/configurations/rule-options.ts';
 import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
+import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { SQL_EXTENSION, SQUAWK_ALL_LEVEL_ON } from '#cli/config/configurations/infrastructure.ts';
 
@@ -15,7 +15,7 @@ export function buildSquawkFile(planned: PlannedConfig): string {
     const { files } = planned.session.repository;
 
     const isAll = planned.level === 'all';
-    const off = listOffRules(planned);
+    const off = listDisabledRules(planned);
     const migrations = files.flatMap((file) =>
         file.path.endsWith(SQL_EXTENSION) && file.kind === 'source' ? file.path : [],
     );

@@ -6,8 +6,8 @@ import { isWindows } from '#tests/setup/system/platform.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import type { ChildCapture, ProcessCapture } from '#tests/types/setup.ts';
-import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system.ts';
 import { POLL_INTERVAL_MILLISECONDS } from '#tests/config/setup/programs.ts';
+import type { SpawnResult, CancelableSpawnOptions } from '#cli/types/system.ts';
 import { TEST_TIMEOUT_MILLISECONDS, UNIT_TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/sandboxes.ts';
 
 function readCommandResult(result: SpawnResult, limited: ReturnType<typeof limitCommand>): SpawnResult {
@@ -21,8 +21,8 @@ Limit a child command and build the text a timeout error shows.
 */
 export function limitCommand(
     command: readonly string[],
-    options: AsyncSpawnOptions,
-): { options: AsyncSpawnOptions & { timeoutSeconds: number }; context: string } {
+    options: CancelableSpawnOptions,
+): { options: CancelableSpawnOptions & { timeoutSeconds: number }; context: string } {
     const context = `Command: ${command.join(' ')}\nWorking directory: ${options.cwd}`;
     const timeoutSeconds = Math.min(
         options.timeoutSeconds ?? Infinity,
@@ -34,7 +34,7 @@ export function limitCommand(
 /**
 Run a command within its requested limit and the command timeout.
 */
-export async function runCommand(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
+export async function runCommand(command: readonly string[], options: CancelableSpawnOptions): Promise<SpawnResult> {
     const limited = limitCommand(command, options);
     const result = await runProcess(command, limited.options);
     return readCommandResult(result, limited);
@@ -43,7 +43,7 @@ export async function runCommand(command: readonly string[], options: AsyncSpawn
 /**
 Run a synchronous command within the command timeout.
 */
-export function runCommandBlocking(command: readonly string[], options: AsyncSpawnOptions): SpawnResult {
+export function runBlockingCommand(command: readonly string[], options: CancelableSpawnOptions): SpawnResult {
     const limited = limitCommand(command, options);
     const child = Bun.spawnSync([...command], {
         cwd: limited.options.cwd,
@@ -103,7 +103,7 @@ Start and capture one test child within the command timeout.
 */
 export function spawnCommand(
     command: readonly string[],
-    options: AsyncSpawnOptions,
+    options: CancelableSpawnOptions,
 ): ChildCapture & { child: ProcessCapture & Pick<Bun.Subprocess, 'pid'> } {
     const limited = limitCommand(command, options);
     const child = Bun.spawn([...command], {

@@ -21,10 +21,10 @@ export type DetectedScopes = { repository: Repository; scopes: readonly { path: 
 
 export type SettingVariant = { setting: Setting; owners: string[] };
 
-export type SettingAccepted = {
+export type AcceptedSettingValues = {
     types: string[];
     choices: { value: unknown; description: string | undefined }[];
-    alternatives: SettingAccepted[];
+    alternatives: AcceptedSettingValues[];
 };
 
 export type SettingReference = {
@@ -38,7 +38,7 @@ export type SettingReference = {
     variantOf: string | undefined;
     rootOnly: boolean;
     scopeKeys: string[];
-    accepted: SettingAccepted;
+    accepted: AcceptedSettingValues;
     variants: SettingVariant[];
     children: SettingReference[];
 };

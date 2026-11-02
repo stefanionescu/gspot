@@ -11,7 +11,7 @@ import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runCommand, runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { runCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings, prepareParameterProject } from '#tests/setup/cli/settings.ts';
 
@@ -156,7 +156,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each(['default', 8] as const)(
         const scenario = PARAMETER_LIMIT_CASE;
         await using sandbox = await createGitSandbox({});
         const { maximum, defaultMaximum } = await prepareParameterProject(sandbox.path, scenario, supplied);
-        const result = runCommandBlocking(
+        const result = runBlockingCommand(
             [
                 'swiftlint',
                 'lint',

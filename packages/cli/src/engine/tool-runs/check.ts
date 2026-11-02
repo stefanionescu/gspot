@@ -5,13 +5,13 @@ import { findToolPath } from '#cli/tools/inspect.ts';
 import { listOtherTools } from '#cli/engine/tools.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { listToolStart } from '#cli/tools/packages.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { ProcessFailure } from '#cli/types/tools.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { stripCoverageArguments } from '#cli/engine/plan.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { readToolCommandPrefix } from '#cli/tools/packages.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { buildCommandLines } from '#cli/engine/tool-runs/batches.ts';
 import { RAN_STATUSES, FILES_PLACEHOLDER } from '#cli/config/engine.ts';
@@ -210,7 +210,7 @@ export function buildCommandLaunch(
     const { session, root, toolPath } = expansion;
     const { cwd, files, substitutions, env } = buildCommandSetup(session, planned, root);
     const command = [
-        ...listToolStart(session.toolsRoot, planned.tool as Tool, toolPath),
+        ...readToolCommandPrefix(session.toolsRoot, planned.tool as Tool, toolPath),
         ...expansion.command.slice(1),
     ];
     const commandArguments = expandCommand(session, planned, command, substitutions);

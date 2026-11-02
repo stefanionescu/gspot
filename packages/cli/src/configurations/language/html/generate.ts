@@ -1,5 +1,5 @@
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import { listOffRules } from '#cli/configurations/rule-options.ts';
+import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 import {
@@ -19,6 +19,6 @@ export function buildHtmlValidateFile(planned: PlannedConfig): string {
         ...(configuration === 'html' && HTML_VALIDATE_RULES),
         ...HTML_VALIDATE_OVERRIDES[configuration],
     };
-    for (const rule of listOffRules(planned)) rules[rule] = 'off';
+    for (const rule of listDisabledRules(planned)) rules[rule] = 'off';
     return JSON.stringify({ extends: HTML_VALIDATE_EXTENDS, rules }, null, JSON_INDENT);
 }

@@ -4,8 +4,12 @@ import { buildModuleSpecifier } from '#cli/system/paths.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import { listOffRules, readToolOffRules, assertRunningRuleOptions } from '#cli/configurations/rule-options.ts';
 
+import {
+    listDisabledRules,
+    readToolDisabledRules,
+    assertRunningRuleOptions,
+} from '#cli/configurations/rule-options.ts';
 import {
     TAILWIND_AT_RULES,
     STYLELINT_COMPONENTS,
@@ -74,8 +78,8 @@ export function buildStylelintFile(planned: PlannedConfig): string {
     const options = getTable(scope.settings, 'tools.stylelint');
     const isAll = planned.level === 'all';
     const scopeDependencies = listProjectDependencyNames(dependencyFiles, scope.path);
-    const { levelOff } = readToolOffRules(planned);
-    const off = listOffRules({ ...planned, level: 'all' });
+    const { levelOff } = readToolDisabledRules(planned);
+    const off = listDisabledRules({ ...planned, level: 'all' });
     const configured = Object.keys(options.rules);
     assertRunningRuleOptions({
         configured,

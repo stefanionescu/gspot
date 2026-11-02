@@ -3,11 +3,11 @@ import { getTool } from '#cli/tools/pins.ts';
 import { dirname, delimiter } from 'node:path';
 import { CheckStop } from '#cli/system/errors.ts';
 import { listOtherTools } from '#cli/engine/tools.ts';
-import { listToolStart } from '#cli/tools/packages.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { readToolCommandPrefix } from '#cli/tools/packages.ts';
 import { lookUpTool, findToolPath } from '#cli/tools/inspect.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import type { ProcessFailure, ToolRunOptions } from '#cli/types/tools.ts';
@@ -28,7 +28,7 @@ async function readCheckTool(
         if (availability.status === 'error') throw new CheckStop('error', availability.note);
         throw new CheckStop('missing', availability.note);
     }
-    const start = listToolStart(session.toolsRoot, tool, availability.path);
+    const start = readToolCommandPrefix(session.toolsRoot, tool, availability.path);
     return { name: tool.name, path: availability.path, start, env };
 }
 

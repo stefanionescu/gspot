@@ -16,8 +16,8 @@ import type { Weakening } from '#cli/types/configurations/general.ts';
 import { readCommittedTexts } from '#cli/repository/revisions/files.ts';
 import { BASELINE_FILE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { BaselineCount, BuiltInCheckResult } from '#cli/types/engine/run.ts';
-import { selectForScope, listRemovedConfigurations } from '#cli/settings/scopes.ts';
 import { getSettingValue, listWrittenKeys, listSettingsTables } from '#cli/settings/inherit.ts';
+import { listRemovedConfigurations, selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 
 import {
     WEAKENING_FIXES,
@@ -92,7 +92,10 @@ function listSettingMoves(base: Settings, head: Settings): Weakening[] {
     return listSettingsTables(head).flatMap(({ table, scope = '' }) => {
         const previous = tables.get(scope);
         if (previous === undefined) return [];
-        const available = buildAvailableSettings(selectForScope(head, scope, configurationsByName), head.level);
+        const available = buildAvailableSettings(
+            selectConfigurationsForScope(head, scope, configurationsByName),
+            head.level,
+        );
         const keys = new Set([...listWrittenKeys(table, available), ...listWrittenKeys(previous, available)]);
         const place = scope === '' ? '' : ` in ${scope}`;
         return [...keys].flatMap((key) => {

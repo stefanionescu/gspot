@@ -74,7 +74,7 @@ async function runFakeDeptry(root: string) {
     return { checked, commands: spawn.mock.calls.map(([command]) => command) };
 }
 
-async function readFirstParty(settings: string, pyproject: string, sources: Record<string, string>) {
+async function readFirstPartyPackages(settings: string, pyproject: string, sources: Record<string, string>) {
     await using sandbox = await createGitSandbox({
         ...sources,
         'gspot.toml': settings,
@@ -89,7 +89,7 @@ async function readFirstParty(settings: string, pyproject: string, sources: Reco
 }
 
 test('deptry counts python.externals as first party beside the known_first_party of the project', async () => {
-    const firstParty = await readFirstParty(
+    const firstParty = await readFirstPartyPackages(
         buildSandboxSettings(['python'], {
             tables: '[python]\nexternals = { value = ["folder_paths", "comfy"], reason = "The host application provides these modules at run time." }\n',
         }),
@@ -100,7 +100,7 @@ test('deptry counts python.externals as first party beside the known_first_party
 });
 
 test('deptry counts the project name and each package under src as first party', async () => {
-    const firstParty = await readFirstParty(
+    const firstParty = await readFirstPartyPackages(
         buildSandboxSettings(['python']),
         '[project]\nname = "Shop-Core"\nversion = "1.0.0"\n',
         {

@@ -3,7 +3,7 @@ import { onExit } from 'signal-exit';
 import type { ChildProcess } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import type { AsyncSpawnOptions, ProcessTermination, ProcessTreeControl } from '#cli/types/system.ts';
+import type { ProcessTermination, ProcessTreeControl, CancelableSpawnOptions } from '#cli/types/system.ts';
 
 import {
     FAILED_CODE,
@@ -89,7 +89,7 @@ Supervise a process tree: stop it on a timeout, a cancel, or a stream error, and
 @param child the process that leads the tree.
 @param options the time limit and the cancel signal.
 */
-export function trackProcessTree(child: ChildProcess, options: AsyncSpawnOptions): ProcessTreeControl {
+export function trackProcessTree(child: ChildProcess, options: CancelableSpawnOptions): ProcessTreeControl {
     const state = { timedOut: false, canceled: false };
     const termination: ProcessTermination = { stopped: false, failure: undefined, drainTimer: undefined };
     const stopTree = () => {

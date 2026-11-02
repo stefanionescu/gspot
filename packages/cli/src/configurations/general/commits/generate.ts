@@ -1,7 +1,7 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { listOffRules, assertRunningRuleOptions } from '#cli/configurations/rule-options.ts';
+import { listDisabledRules, assertRunningRuleOptions } from '#cli/configurations/rule-options.ts';
 import { COMMITLINT_PARSER_PRESET, COMMITLINT_ERROR_SEVERITY } from '#cli/config/configurations/general.ts';
 
 /**
@@ -39,6 +39,6 @@ export function buildCommitlintFile(planned: PlannedConfig): string {
         level: planned.level,
     });
     for (const [name, value] of Object.entries(options)) rules[name] = [COMMITLINT_ERROR_SEVERITY, ...value];
-    for (const name of listOffRules(planned)) rules[name] = [0];
+    for (const name of listDisabledRules(planned)) rules[name] = [0];
     return JSON.stringify({ parserPreset: COMMITLINT_PARSER_PRESET, rules }, null, JSON_INDENT);
 }

@@ -1,6 +1,6 @@
 import { stringify } from 'yaml';
 import { getTable } from '#cli/settings/scopes.ts';
-import { listOffRules } from '#cli/configurations/rule-options.ts';
+import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { TRIVY_SKIPPED_FOLDERS, HADOLINT_FAILURE_THRESHOLD } from '#cli/config/configurations/infrastructure.ts';
 
@@ -10,7 +10,7 @@ Build hadolint.yml: the Hadolint exclusions and trusted registry settings.
 @param planned the config file to build.
 */
 export function buildHadolintFile(planned: PlannedConfig): string {
-    const off = listOffRules(planned);
+    const off = listDisabledRules(planned);
     const registries = getTable(planned.scope.settings, 'docker').allowed_registries;
     const document = {
         'failure-threshold': HADOLINT_FAILURE_THRESHOLD,

@@ -3,7 +3,7 @@ import { getRequired } from '#cli/system/tables.ts';
 import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
 import { readGitListing } from '#cli/repository/files/tracked.ts';
 import type { GitFile, Revision } from '#cli/types/repository.ts';
-import { runGit, runGitStream, runGitForBytes } from '#cli/repository/git/run.ts';
+import { runGit, runGitBytes, runGitStream } from '#cli/repository/git/run.ts';
 import { SYMLINK_MODE, GITLINK_MODE, GIT_INDEX_FILES_ARGUMENTS } from '#cli/config/repository/files.ts';
 import { parseGitBlobs, parseTreeFiles, parseListingLine, stripIndexStages } from '#cli/repository/git/output.ts';
 
@@ -39,7 +39,7 @@ export async function listRevisionFiles(
                     .map((line) => parseListingLine(INDEX_LINE.exec(line), gitIndexFileSchema)),
             ),
         );
-    const read = await runGitForBytes(root, [...GIT_LS_TREE_ARGUMENTS, source.hash], { cancelSignal });
+    const read = await runGitBytes(root, [...GIT_LS_TREE_ARGUMENTS, source.hash], { cancelSignal });
     if (read.code !== 0)
         throw new GspotError(
             'git',

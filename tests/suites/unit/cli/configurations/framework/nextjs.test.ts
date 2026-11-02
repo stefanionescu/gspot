@@ -17,8 +17,8 @@ import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system.ts';
 import { open, chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
+import type { SpawnResult, CancelableSpawnOptions } from '#cli/types/system.ts';
 
 import {
     UNRELATED_FILE,
@@ -56,7 +56,9 @@ async function prepareNextjsBuild(root: string, scopePath: string): Promise<Sess
     return session;
 }
 
-function fakeNextjsCommands(spawn: (command: readonly string[], options: AsyncSpawnOptions) => Promise<SpawnResult>) {
+function fakeNextjsCommands(
+    spawn: (command: readonly string[], options: CancelableSpawnOptions) => Promise<SpawnResult>,
+) {
     using resources = new DisposableStack();
 
     const folders: string[] = [];
@@ -154,7 +156,7 @@ test('nextjs/tsc removes its copy after a failed type generation and keeps a con
 
 async function fakeNextjsBuild(
     command: readonly string[],
-    options: AsyncSpawnOptions,
+    options: CancelableSpawnOptions,
     routesSeen: string[],
 ): Promise<SpawnResult> {
     const cwd = options.cwd;

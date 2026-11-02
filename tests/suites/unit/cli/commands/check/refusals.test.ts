@@ -12,7 +12,7 @@ import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { limitCommand, runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { limitCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { CLEAN_BASH_SCRIPT, INDEX_LINE_FAILURE } from '#tests/config/setup/languages.ts';
 import { FIX_REFUSALS, ARGUMENT_REFUSALS, PUSH_INPUT_REFUSALS } from '#tests/config/commands/check.ts';
 
@@ -104,7 +104,7 @@ test('a staged check during a merge conflict exits 2, names the conflict, and le
     runGitStep(sandbox.path, ['checkout', '-q', '-']);
     await writeFile(join(sandbox.path, 'source.txt'), 'main\n');
     runGitStep(sandbox.path, ['commit', '-qam', 'Main']);
-    expect(runCommandBlocking(['git', 'merge', '-q', 'other'], { cwd: sandbox.path, env: {} }).code).toBe(1);
+    expect(runBlockingCommand(['git', 'merge', '-q', 'other'], { cwd: sandbox.path, env: {} }).code).toBe(1);
     await using temporary = await testdir();
     using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary.path);
     const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);

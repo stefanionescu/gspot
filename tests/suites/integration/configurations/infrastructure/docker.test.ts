@@ -12,7 +12,7 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
-import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -30,9 +30,9 @@ import {
 
 async function importImage(root: string, tag: string, contents: string | Buffer): Promise<void> {
     await writeFile(join(root, 'payload.pem'), contents);
-    const archive = runCommandBlocking(['tar', '-cf', 'payload.tar', 'payload.pem'], { cwd: root });
+    const archive = runBlockingCommand(['tar', '-cf', 'payload.tar', 'payload.pem'], { cwd: root });
     if (archive.code !== 0) throw new Error(archive.stderr);
-    const imported = runCommandBlocking(['docker', 'import', 'payload.tar', tag], { cwd: root });
+    const imported = runBlockingCommand(['docker', 'import', 'payload.tar', tag], { cwd: root });
     if (imported.code !== 0) throw new Error(imported.stderr);
 }
 
@@ -156,7 +156,7 @@ test.skipIf(!isLinux || Bun.which('docker') === null)(
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             expect(corrected.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
         } finally {
-            runCommandBlocking(['docker', 'image', 'rm', '--force', ...tags], { cwd: sandbox.path });
+            runBlockingCommand(['docker', 'image', 'rm', '--force', ...tags], { cwd: sandbox.path });
         }
     },
 );
@@ -165,7 +165,7 @@ const installedSandbox = shareInstalledSandbox(DOCKER_SANDBOX);
 
 test('every rule code of the pinned hadolint has a level', async () => {
     const { version } = getTool(readConfigurations().values(), 'hadolint');
-    const located = runCommandBlocking(['mise', 'where', `hadolint@${String(version)}`], { cwd: REPOSITORY_ROOT });
+    const located = runBlockingCommand(['mise', 'where', `hadolint@${String(version)}`], { cwd: REPOSITORY_ROOT });
     expect(located.code, located.stderr).toBe(0);
     const binary = await readFile(Bun.which('hadolint', { PATH: located.stdout.trim() })!, 'latin1');
     const levelled = new Set<string>([

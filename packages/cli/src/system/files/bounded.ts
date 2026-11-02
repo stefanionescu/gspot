@@ -135,7 +135,7 @@ Read a regular file, or return undefined when absent.
 @param bounds the root.
 @param path the root-relative file.
 */
-export function readBounded(bounds: FileBounds, path: string): FileContents | undefined {
+export function readBoundedFile(bounds: FileBounds, path: string): FileContents | undefined {
     try {
         const target = buildContainedPath(bounds, path);
         return readRegularFile(target, lstatSync(target), path);
@@ -171,7 +171,7 @@ Replace the file at a path with new file contents, through a staged file that mo
 @param path the root-relative file.
 @param contents the file contents to write.
 */
-export function replaceBounded(bounds: FileBounds, path: string, contents: FileContents): void {
+export function replaceBoundedFile(bounds: FileBounds, path: string, contents: FileContents): void {
     const target = preparePath(bounds, path);
     const temporary = join(
         dirname(target),

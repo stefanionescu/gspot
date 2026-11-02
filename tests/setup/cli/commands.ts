@@ -7,9 +7,9 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import type { InitJson } from '#cli/types/commands/edits.ts';
-import type { AsyncSpawnOptions } from '#cli/types/system.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { captureTerminal } from '#tests/setup/system/terminal.ts';
+import type { CancelableSpawnOptions } from '#cli/types/system.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/setup/programs.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
@@ -86,7 +86,7 @@ export async function spawnGspot(
     cwd: string,
     commandArguments: readonly string[],
     environment: Record<string, string> = {},
-    options: Pick<AsyncSpawnOptions, 'stdin'> = {},
+    options: Pick<CancelableSpawnOptions, 'stdin'> = {},
 ): Promise<ProcessOutput> {
     return await runCommand([process.execPath, CLI_BIN, ...commandArguments], {
         cwd,

@@ -12,7 +12,7 @@ import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
-import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, runGspotStep, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -101,7 +101,7 @@ test('partial ShellCheck output beside an unreadable file is an execution error'
     const planned = plans[0]!;
     const command = ['shellcheck', '--norc', '--format=gcc', 'sample.sh'];
     const paths = { cwd: sandbox.path, root: sandbox.path };
-    const broken = runCommandBlocking([...command, 'missing.sh'], { cwd: sandbox.path });
+    const broken = runBlockingCommand([...command, 'missing.sh'], { cwd: sandbox.path });
     expect(broken.code, broken.stderr).toBe(2);
     const note = parseCommandFindings(planned, broken, paths, {}).note ?? '';
     expect(note).toStartWith('shellcheck failed with exit 2:');

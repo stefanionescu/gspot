@@ -8,7 +8,7 @@ import { runGitStep } from '#tests/setup/system/git.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { listRepositoryFiles } from '#cli/repository/read.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
-import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { OUTSIDE_LINK_CASES } from '#tests/config/repository/files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -29,7 +29,7 @@ test.each([...OUTSIDE_LINK_CASES])('the repository file list leaves out the outs
 test.skipIf(isWindows)('the Git inventory leaves out untracked named pipes', async () => {
     await using sandbox = await createGitSandbox({ 'source.ts': 'export {};\n' });
 
-    expect(runCommandBlocking(['mkfifo', 'stream.ts'], { cwd: sandbox.path }).code).toBe(0);
+    expect(runBlockingCommand(['mkfifo', 'stream.ts'], { cwd: sandbox.path }).code).toBe(0);
     const { files } = await listRepositoryFiles(createRunCache(sandbox.path));
     expect(files.map((file) => file.path)).toStrictEqual(['source.ts']);
 });
@@ -109,7 +109,7 @@ test.skipIf(isWindows)('tracked pipes and links to pipes are left out before rea
     await using sandbox = await createGitSandbox({ 'stream.ts': 'before' });
     runGitStep(sandbox.path, ['add', '.']);
     await unlink(join(sandbox.path, 'stream.ts'));
-    expect(runCommandBlocking(['mkfifo', 'stream.ts'], { cwd: sandbox.path }).code).toBe(0);
+    expect(runBlockingCommand(['mkfifo', 'stream.ts'], { cwd: sandbox.path }).code).toBe(0);
     await symlink('stream.ts', join(sandbox.path, 'linked.ts'));
     runGitStep(sandbox.path, ['add', 'linked.ts']);
     const repository = await readTestRepository(sandbox.path);

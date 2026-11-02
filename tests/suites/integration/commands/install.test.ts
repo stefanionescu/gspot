@@ -7,7 +7,7 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { INIT_FILES } from '#tests/config/setup/sandboxes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -35,7 +35,7 @@ test.each([true, false])(
         await writeFile(join(sandbox.path, 'plans.txt'), 'unstaged\n');
         await writeFile(join(sandbox.path, 'notes.txt'), 'draft\n');
         const staged = runGitStep(sandbox.path, ['diff', '--cached', '--binary']);
-        const head = runCommandBlocking(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: sandbox.path, env: {} });
+        const head = runBlockingCommand(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: sandbox.path, env: {} });
         const initialized = await spawnGspot(sandbox.path, ['init', '--json', '--no-configurations']);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(true);
@@ -45,7 +45,7 @@ test.each([true, false])(
         expect(await readFile(join(sandbox.path, 'plans.txt'), 'utf8')).toBe('unstaged\n');
         expect(await readFile(join(sandbox.path, 'notes.txt'), 'utf8')).toBe('draft\n');
         expect(runGitStep(sandbox.path, ['diff', '--cached', '--binary'])).toBe(staged);
-        const after = runCommandBlocking(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: sandbox.path, env: {} });
+        const after = runBlockingCommand(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: sandbox.path, env: {} });
         expect({ code: after.code, stdout: after.stdout }).toStrictEqual({ code: head.code, stdout: head.stdout });
     },
 );

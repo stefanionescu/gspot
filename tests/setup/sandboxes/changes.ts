@@ -7,7 +7,7 @@ import { runGspotStep } from '#tests/setup/cli/commands.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { runGitStep, markExecutable } from '#tests/setup/system/git.ts';
 import type { Sandbox, SandboxWrite, SandboxChanges } from '#tests/types/setup.ts';
 import { rm, mkdir, lstat, rmdir, unlink, readFile, writeFile } from 'node:fs/promises';
@@ -50,7 +50,7 @@ bring back an ignored file that the change deleted.
 export async function changeSandbox(sandbox: Sandbox, changes: SandboxChanges): Promise<AsyncDisposable> {
     const cwd = sandbox.root;
     const index = runGitStep(cwd, ['write-tree']);
-    const head = runCommandBlocking(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: cwd, env: {} });
+    const head = runBlockingCommand(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: cwd, env: {} });
     const ignored = new Set(
         runGitStep(cwd, ['ls-files', '--others', '--ignored', '--exclude-standard', '-z']).split('\0'),
     );
@@ -74,7 +74,7 @@ export async function changeSandbox(sandbox: Sandbox, changes: SandboxChanges): 
             runGitStep(cwd, ['add', '-A'], environment);
             runGitStep(cwd, ['read-tree', '-u', '--reset', savedTree], environment);
             if (head.code === 0) runGitStep(cwd, ['reset', '--soft', head.stdout.trim()]);
-            else if (runCommandBlocking(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: cwd, env: {} }).code === 0)
+            else if (runBlockingCommand(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: cwd, env: {} }).code === 0)
                 runGitStep(cwd, ['update-ref', '-d', 'HEAD']);
             runGitStep(cwd, ['read-tree', index]);
             for (const path of ignoredAfter) if (path !== '' && !ignored.has(path)) await deleteLeftover(cwd, path);

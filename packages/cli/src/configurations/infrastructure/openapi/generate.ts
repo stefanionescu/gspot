@@ -1,5 +1,5 @@
 import { stringify as stringifyYaml } from 'yaml';
-import { listOffRules } from '#cli/configurations/rule-options.ts';
+import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 /**
@@ -8,7 +8,7 @@ Build spectral.yml: the OpenAPI preset and the Spectral rules at this level.
 @param planned the config file to build.
 */
 export function buildSpectralFile(planned: PlannedConfig): string {
-    const off = listOffRules(planned);
+    const off = listDisabledRules(planned);
 
     return stringifyYaml({
         extends: ['spectral:oas'],

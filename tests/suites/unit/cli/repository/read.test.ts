@@ -8,7 +8,7 @@ import { isWindows } from '#tests/setup/system/platform.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { INDEX_LINE_FAILURE } from '#tests/config/setup/languages.ts';
-import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -28,7 +28,7 @@ test('a Git ownership refusal while finding the root stays a Git error', async (
     await using sandbox = await testdir({ 'source.txt': 'source\n' });
     commitAll(sandbox.path);
     using _environment = overrideEnvironment(DUBIOUS_GIT_ENVIRONMENT);
-    const refused = runCommandBlocking(['git', 'rev-parse', '--show-toplevel'], {
+    const refused = runBlockingCommand(['git', 'rev-parse', '--show-toplevel'], {
         cwd: sandbox.path,
         env: DUBIOUS_GIT_ENVIRONMENT,
     });
@@ -111,7 +111,7 @@ test('an unmerged index keeps the working file readable but refuses a staged rev
     await using sandbox = await createGitSandbox({ 'source.txt': 'working content\n' });
 
     const hash = runGitStep(sandbox.path, ['hash-object', '-w', 'source.txt']);
-    const update = runCommandBlocking(['git', 'update-index', '--index-info'], {
+    const update = runBlockingCommand(['git', 'update-index', '--index-info'], {
         cwd: sandbox.path,
         stdin: [1, 2, 3].map((stage) => `100644 ${hash} ${String(stage)}\tsource.txt\n`).join(''),
     });
@@ -144,7 +144,7 @@ test('an invalid UTF-8 index name is reported separately from readable files', a
     await using sandbox = await createGitSandbox({ 'valid.ts': 'export {};\n' });
     const hash = runGitStep(sandbox.path, ['hash-object', '-w', 'valid.ts']);
     runGitStep(sandbox.path, ['add', 'valid.ts']);
-    const added = runCommandBlocking(['git', 'update-index', '--index-info'], {
+    const added = runBlockingCommand(['git', 'update-index', '--index-info'], {
         cwd: sandbox.path,
         stdin: `100644 ${hash}\t"\\377.ts"\n`,
     });

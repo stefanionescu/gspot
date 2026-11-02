@@ -5,7 +5,6 @@ import { formatNameList } from '#cli/system/text.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { buildSettings } from '#cli/settings/read.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
-import { selectForScope } from '#cli/settings/scopes.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
@@ -14,6 +13,7 @@ import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { removeKey, addScopeTable } from '#cli/settings/edit.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
+import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
 import { GSPOT_REMOVE, REMOVE_CONFIGURATION_MESSAGE } from '#cli/config/commands/edits.ts';
 import { findSetting, listWrittenKeys, listSettingsTables } from '#cli/settings/inherit.ts';
@@ -57,7 +57,7 @@ function removeUnusedSettings(
     const removed: string[] = [];
     const affected = listSettingsTables(edited).filter((written) => isInScope(written.scope, scopePath));
     for (const written of affected) {
-        const selected = selectForScope(edited, written.scope, configurationsByName);
+        const selected = selectConfigurationsForScope(edited, written.scope, configurationsByName);
         const available = buildAvailableSettings([...general, ...selected], edited.level);
         const keys = listWrittenKeys(written.table, available).filter(
             (key) => findSetting(available, key) === undefined,

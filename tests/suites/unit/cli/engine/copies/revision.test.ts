@@ -14,7 +14,7 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
-import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { LOWERCASE_SELECT_SQL } from '#tests/config/engine/tool-runs.ts';
 import { readHead, listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { SELECTED_SOURCE, GIT_HOOK_REPORT } from '#tests/config/engine/files.ts';
@@ -84,7 +84,7 @@ test('a Git hook in a linked worktree copies the index and the commit, and keeps
     const standard = await readFile(join(folder, 'index'));
     await copyFile(join(folder, 'index'), index);
     await writeFile(join(worktree, 'nested/source.txt'), 'selected\n');
-    const staged = runCommandBlocking(['git', 'add', 'nested/source.txt'], {
+    const staged = runBlockingCommand(['git', 'add', 'nested/source.txt'], {
         cwd: worktree,
         env: { GIT_INDEX_FILE: index },
     });
@@ -93,7 +93,7 @@ test('a Git hook in a linked worktree copies the index and the commit, and keeps
     const report = join(sandbox.path, 'report.json');
     const timeout = String(rootSettingSchemas.tool_timeout_seconds.parse(undefined));
     const hooks = await writeProgramCommand(sandbox.path, 'hook/pre-commit', 'processes/revisions', timeout, report);
-    const result = runCommandBlocking(['git', '-c', `core.hooksPath=${hooks}`, 'commit', '-qm', 'hook'], {
+    const result = runBlockingCommand(['git', '-c', `core.hooksPath=${hooks}`, 'commit', '-qm', 'hook'], {
         cwd: worktree,
         env: {
             GIT_INDEX_FILE: index,

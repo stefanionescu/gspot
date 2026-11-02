@@ -43,7 +43,7 @@ names, so a Windows run skips the .cmd shim and its short command line.
 @param path the resolved executable.
 @returns the program and its first arguments.
 */
-export function listToolStart(root: string, tool: Tool, path: string): string[] {
+export function readToolCommandPrefix(root: string, tool: Tool, path: string): string[] {
     const npm = tool.installers['npm'];
     const binFolder = join(root, GSPOT_PATHS.nodeModules, BIN_FOLDER_NAME);
     if (npm === undefined || dirname(path) !== binFolder) return [path];

@@ -14,7 +14,7 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { SWIFT_TUTORIAL, PYTHON_TUTORIAL } from '#tests/config/e2e.ts';
 import { listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { runCommand, runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { runCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
 
 test('a Python project reports its finding through the installed hook and passes after the fix', async () => {
     await runQuickstart(PYTHON_TUTORIAL);
@@ -67,7 +67,7 @@ async function runQuickstart(tutorial: typeof PYTHON_TUTORIAL | typeof SWIFT_TUT
     }
     const source = join(root, tutorial.sourcePath);
     runGitStep(root, ['add', '-A']);
-    const committed = runCommandBlocking(['git', 'commit', '-qm', 'chore: Set up gspot'], {
+    const committed = runBlockingCommand(['git', 'commit', '-qm', 'chore: Set up gspot'], {
         cwd: root,
         env: environment,
     });
@@ -87,7 +87,7 @@ async function runQuickstart(tutorial: typeof PYTHON_TUTORIAL | typeof SWIFT_TUT
 
 function assertCommitRejected(root: string, rule: string, environment: Record<string, string | undefined>): void {
     runGitStep(root, ['add', '-A']);
-    const refused = runCommandBlocking(['git', 'commit', '-qm', 'feat: Add invalid source'], {
+    const refused = runBlockingCommand(['git', 'commit', '-qm', 'feat: Add invalid source'], {
         cwd: root,
         env: environment,
     });

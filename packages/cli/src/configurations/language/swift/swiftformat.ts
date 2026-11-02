@@ -2,9 +2,9 @@ import { join } from 'node:path/posix';
 import type { RunCache } from '#cli/types/system.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { getTable, selectFormat } from '#cli/settings/scopes.ts';
-import { listOffRules } from '#cli/configurations/rule-options.ts';
 import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
 import { PBXPROJ_FILE, PACKAGE_SWIFT } from '#cli/config/parsers.ts';
+import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 import {
@@ -36,7 +36,7 @@ export function buildSwiftformatFile(planned: PlannedConfig): string {
     const format = selectFormat(scope.settings, SWIFT_FILES);
     const isAll = planned.level === 'all';
     const version = readSwiftVersion(cache, scope.path, getTable(scope.settings, 'swift').xcode_project ?? '');
-    const disabled = listOffRules(planned);
+    const disabled = listDisabledRules(planned);
     const options = {
         ...SWIFTFORMAT_OPTIONS,
         indent: format.indent_style === 'tab' ? 'tab' : format.indent_width,
