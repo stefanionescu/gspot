@@ -73,8 +73,8 @@ export const filePermissions = createRule<[], 'permissive'>({
             CallExpression(node) {
                 const method = node.callee.type === AST_NODE_TYPES.MemberExpression ? node.callee.property : null;
                 if (method?.type === AST_NODE_TYPES.Identifier && CHMOD_METHODS.has(method.name)) {
-                    checkMode(node.arguments[0], 0);
-                    checkMode(node.arguments[1], 0);
+                    const [first, second = first] = node.arguments;
+                    checkMode(second, 0);
                 } else if (readQualifiedName(node, source) === UMASK_FUNCTION)
                     checkMode(node.arguments[0], OTHERS_MASK);
             },

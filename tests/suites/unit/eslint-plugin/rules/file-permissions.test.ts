@@ -21,7 +21,6 @@ buildRuleTester().run('file-permissions', plugin.rules['file-permissions'], {
                 { messageId: 'permissive', line: 5 },
                 { messageId: 'permissive', line: 10 },
                 { messageId: 'permissive', line: 11 },
-                { messageId: 'permissive', line: 11 },
             ],
         },
     ],
