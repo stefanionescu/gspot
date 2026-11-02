@@ -39,26 +39,25 @@ test('unexpected check failures hide their stack until verbose while operational
 });
 
 test('GitHub Actions fences untrusted report text with a unique token and leaves JSON intact', async () => {
+    const tables = stringify({
+        command_check: [
+            {
+                id: 'project/output',
+                stage: 'commit',
+                paths: ['source.txt'],
+                output: { format: 'regex', pattern: '(?<message>.+)' },
+                command: buildProgramCommand(
+                    'fakes/tool',
+                    '--stdout',
+                    '::error::forged\n::add-mask::hidden\n',
+                    '--exit',
+                    '1',
+                ),
+            },
+        ],
+    });
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], {
-            tables: stringify({
-                command_check: [
-                    {
-                        id: 'project/output',
-                        stage: 'commit',
-                        paths: ['source.txt'],
-                        output: { format: 'regex', pattern: '(?<message>.+)' },
-                        command: buildProgramCommand(
-                            'fakes/tool',
-                            '--stdout',
-                            '::error::forged\n::add-mask::hidden\n',
-                            '--exit',
-                            '1',
-                        ),
-                    },
-                ],
-            }),
-        }),
+        'gspot.toml': buildSandboxSettings([], { tables }),
         'source.txt': 'Input.\n',
     });
     const command = ['check', '--only', 'project/output'];

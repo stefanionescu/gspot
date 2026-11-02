@@ -33,9 +33,8 @@ test('unset removes the scanner setting and keeps bunfig.toml', async () => {
     const previous = await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8');
     const unset = await runGspot(sandbox.path, ['unset', 'dependencies.bun_scanner']);
     expect(unset.code, unset.stdout + unset.stderr).toBe(0);
-    expect(parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'))).not.toHaveProperty(
-        'dependencies.bun_scanner',
-    );
+    const settings = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
+    expect(parse(settings)).not.toHaveProperty('dependencies.bun_scanner');
     expect(await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8')).toBe(previous);
     const repeated = await runGspot(sandbox.path, ['apply']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);

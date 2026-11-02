@@ -193,9 +193,8 @@ test('a tool project program linked outside the repository is refused before it 
         '1.2.3',
     );
     await symlink('../../../../outside/teller', binary);
-    expect(
-        await captureRejection(inspectTool(buildToolSearch(root), buildProgramPin('teller', '1.2.3'))),
-    ).toMatchObject({
+    const rejection = await captureRejection(inspectTool(buildToolSearch(root), buildProgramPin('teller', '1.2.3')));
+    expect(rejection).toMatchObject({
         message: `${GSPOT_PATHS.nodeModules}/.bin/teller links to a file outside the repository. Replace the link with the file.`,
     });
     expect(existsSync(ranMarker)).toBe(false);

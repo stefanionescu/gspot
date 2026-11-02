@@ -30,13 +30,15 @@ async function readCheckReport(sandbox: Sandbox, checks: string[], code: number)
     return result.report;
 }
 
+const npmPins = listPackagePins(readConfigurations().values().toArray()).npm;
+
 const dependencies = Object.fromEntries(
     Object.entries({
         next: SANDBOX_PACKAGES.next,
         ...NEXT_PACKAGE.dependencies,
         react: SANDBOX_PACKAGES.react,
         'react-dom': SANDBOX_PACKAGES['react-dom'],
-        typescript: listPackagePins(readConfigurations().values().toArray()).npm['typescript']!,
+        typescript: npmPins['typescript']!,
         '@types/react': SANDBOX_PACKAGES['@types/react'],
         '@types/node': workspacePackage.devDependencies['@types/node'],
     }).toSorted(([left], [right]) => compareText(left, right)),

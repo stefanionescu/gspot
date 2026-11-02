@@ -159,28 +159,22 @@ test('a commit in a linked worktree runs staged checks and blocks a finding', as
 test('a hook ignores a nested gspot.toml and checks the index at the Git root', async () => {
     await using sandbox = await createGitSandbox({});
     const project = join(sandbox.path, 'nested config');
+    const command = buildProgramCommand(
+        'checks/search',
+        '--text',
+        'invalid',
+        '--report',
+        'message',
+        '--message',
+        'Indexed defect',
+        'source.txt',
+    );
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], {
             tables: stringify({
                 rule_files: { enabled: false },
                 hooks: { enabled: true },
-                command_check: [
-                    {
-                        id: 'project/content',
-                        stage: 'commit',
-                        paths: ['source.txt'],
-                        command: buildProgramCommand(
-                            'checks/search',
-                            '--text',
-                            'invalid',
-                            '--report',
-                            'message',
-                            '--message',
-                            'Indexed defect',
-                            'source.txt',
-                        ),
-                    },
-                ],
+                command_check: [{ id: 'project/content', stage: 'commit', paths: ['source.txt'], command }],
             }),
         }),
         'nested config/gspot.toml': buildSandboxSettings([], { tables: HOOKS_OFF_SETTINGS }),
@@ -207,9 +201,8 @@ test('a hook ignores a nested gspot.toml and checks the index at the Git root', 
 
 async function writeRuntimePins(root: string): Promise<void> {
     if (!existsSync(join(root, TOOL_PINS_FILE))) {
-        const tools = runtimePinsSchema.parse(
-            parse(await readFile(join(REPOSITORY_ROOT, TOOL_PINS_FILE), 'utf8')),
-        ).tools;
+        const pins = await readFile(join(REPOSITORY_ROOT, TOOL_PINS_FILE), 'utf8');
+        const { tools } = runtimePinsSchema.parse(parse(pins));
         await writeFile(join(root, TOOL_PINS_FILE), stringify({ tools }));
     }
     const trusted = await runCommand([...MISE_TRUST, TOOL_PINS_FILE], { cwd: root });

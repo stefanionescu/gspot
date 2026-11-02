@@ -85,25 +85,20 @@ test.each(['{file}', '{files}'])(
     async (placeholder) => {
         const source = 'input.txt';
         const located = `${source}:1: Located defect before exit`;
+        const tables = stringify({
+            command_check: [
+                {
+                    id: 'project/exit-contract',
+                    command: buildProgramCommand('fakes/tool', '--line', located, '--exit', '1', placeholder),
+                    paths: [source],
+                    stage: 'commit',
+                    exit_codes: [1],
+                    output: { format: 'regex', pattern: String.raw`^(?<file>.+):(?<line>\d+): (?<message>.+)$` },
+                },
+            ],
+        });
         await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings([], {
-                rules: true,
-                tables: stringify({
-                    command_check: [
-                        {
-                            id: 'project/exit-contract',
-                            command: buildProgramCommand('fakes/tool', '--line', located, '--exit', '1', placeholder),
-                            paths: [source],
-                            stage: 'commit',
-                            exit_codes: [1],
-                            output: {
-                                format: 'regex',
-                                pattern: String.raw`^(?<file>.+):(?<line>\d+): (?<message>.+)$`,
-                            },
-                        },
-                    ],
-                }),
-            }),
+            'gspot.toml': buildSandboxSettings([], { rules: true, tables }),
             [source]: 'input\n',
         });
         const session = await openSession(sandbox.path);
@@ -127,24 +122,18 @@ test.each(['{file}', '{files}'])(
 );
 
 test('per-file failures drop only the header lines the tool declares', async () => {
+    const command = buildProgramCommand(
+        'fakes/tool',
+        '--stderr',
+        'Banner: scanner 1\nNative input failed.\n',
+        '--exit',
+        '1',
+        '{file}',
+    );
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             tables: stringify({
-                command_check: [
-                    {
-                        id: 'project/native',
-                        stage: 'commit',
-                        paths: ['source.txt'],
-                        command: buildProgramCommand(
-                            'fakes/tool',
-                            '--stderr',
-                            'Banner: scanner 1\nNative input failed.\n',
-                            '--exit',
-                            '1',
-                            '{file}',
-                        ),
-                    },
-                ],
+                command_check: [{ id: 'project/native', stage: 'commit', paths: ['source.txt'], command }],
             }),
         }),
         'source.txt': 'source\n',
@@ -166,11 +155,12 @@ test('per-file failures drop only the header lines the tool declares', async () 
 test('a regex finding in a file that does not exist is a note until the file exists', async () => {
     await using sandbox = await createGitSandbox({});
     const source = 'unchanged input\n';
+    const command = buildProgramCommand('fakes/tool');
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], {
             tables: String.raw`[[command_check]]
 id = "notes/regex"
-command = ${JSON.stringify(buildProgramCommand('fakes/tool'))}
+command = ${JSON.stringify(command)}
 paths = ["notes/**"]
 stage = "commit"
 [command_check.output]

@@ -57,12 +57,9 @@ for (const source of [{ kind: 'index' as const }, { kind: 'commit' as const, has
     });
 }
 
+const isHeadKept = readFileSync(join(gitFolder, 'HEAD')).equals(head);
+const workingBytes = readFileSync(join(nested, 'source.txt'), 'utf8');
 writeFileSync(
     reportPath,
-    JSON.stringify({
-        reports,
-        headKept: readFileSync(join(gitFolder, 'HEAD')).equals(head),
-        indexKept: readFileSync(index).equals(indexed),
-        workingBytes: readFileSync(join(nested, 'source.txt'), 'utf8'),
-    }),
+    JSON.stringify({ reports, headKept: isHeadKept, indexKept: readFileSync(index).equals(indexed), workingBytes }),
 );

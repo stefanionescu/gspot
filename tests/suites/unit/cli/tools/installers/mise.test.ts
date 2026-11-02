@@ -51,7 +51,13 @@ test('mise lock freshness refuses a download from another host and a checksum ot
         },
     });
     expect(isMiseLockfileFresh(project, lock)).toBe(true);
-    expect(isMiseLockfileFresh(project, lock.replace(checksum, `sha256:${'b'.repeat(64)}`))).toBe(false);
+    const changedChecksum = `sha256:${'b'.repeat(64)}`;
+    expect(
+        isMiseLockfileFresh(
+            project,
+            lock.replace(checksum, () => changedChecksum),
+        ),
+    ).toBe(false);
     expect(isMiseLockfileFresh(project, lock.replace('https://github.com/', 'https://example.com/'))).toBe(false);
     expect(isMiseLockfileFresh(project, lock.replaceAll('https:', 'http:'))).toBe(false);
     expect(isMiseLockfileFresh(project, lock.replace('https://api.github.com/', 'https://example.com/'))).toBe(false);

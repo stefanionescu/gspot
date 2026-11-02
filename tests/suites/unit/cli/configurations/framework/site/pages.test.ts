@@ -17,10 +17,11 @@ import { fakeCommands, writeProgramCommand, fakeToolExecutables } from '#tests/s
 import { INVALID_SITEMAP_URLS, PURGECSS_STYLE_CASES } from '#tests/config/configurations/framework.ts';
 
 test('a sitemap index supplies the base path for encoded and CDATA page URLs and Lychee remaps', async () => {
+    const buildCommand = buildProgramCommand('fakes/site-build', '--copy', 'built=dist');
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['site'], {
             level: 'all',
-            tables: `[site]\nbuild_command = ${JSON.stringify(buildProgramCommand('fakes/site-build', '--copy', 'built=dist'))}\n`,
+            tables: `[site]\nbuild_command = ${JSON.stringify(buildCommand)}\n`,
         }),
         'built/index.html': '<h1>Home</h1><a href="/docs/guide/">Guide</a>\n',
         'built/guide/index.html': '<h1>Guide</h1>\n',
@@ -68,10 +69,11 @@ test('a sitemap index supplies the base path for encoded and CDATA page URLs and
 });
 
 test.each(INVALID_SITEMAP_URLS)('site/sitemap reports %s as an invalid URL and site/lychee skips it', async (url) => {
+    const buildCommand = buildProgramCommand('fakes/site-build', '--copy', 'sitemap.xml=dist/sitemap.xml');
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['site'], {
             level: 'all',
-            tables: `[site]\nbuild_command = ${JSON.stringify(buildProgramCommand('fakes/site-build', '--copy', 'sitemap.xml=dist/sitemap.xml'))}\n`,
+            tables: `[site]\nbuild_command = ${JSON.stringify(buildCommand)}\n`,
         }),
         'sitemap.xml': `<?xml version="1.0"?>\n<urlset>\n<url><loc>${url}</loc></url>\n</urlset>\n`,
     });
@@ -90,18 +92,17 @@ test.each(INVALID_SITEMAP_URLS)('site/sitemap reports %s as an invalid URL and s
 test.each([...PURGECSS_STYLE_CASES])('site/purgecss checks $name', async ({ source, css, expected }) => {
     const { version } = getTool(readConfigurations().values(), 'purgecss');
     const library = pathToFileURL(join(toolModules, 'purgecss/lib/purgecss.esm.js')).href;
+    const buildCommand = buildProgramCommand(
+        'fakes/site-build',
+        '--copy',
+        'index.html=dist/index.html',
+        '--copy',
+        'bundle.txt=dist/site.css',
+    );
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['site'], {
             level: 'all',
-            tables: `[site]\nbuild_command = ${JSON.stringify(
-                buildProgramCommand(
-                    'fakes/site-build',
-                    '--copy',
-                    'index.html=dist/index.html',
-                    '--copy',
-                    'bundle.txt=dist/site.css',
-                ),
-            )}\n`,
+            tables: `[site]\nbuild_command = ${JSON.stringify(buildCommand)}\n`,
         }),
         'index.html':
             '<!doctype html><html lang="en"><body><h1 class="w-[13px] w-1.5 !mt-0 md:w-1/2">Test</h1></body></html>\n',

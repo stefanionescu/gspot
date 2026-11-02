@@ -88,11 +88,12 @@ test.each([...BUILT_HTML_SITES])(
 
 test('HTML Validate reports all 400 missing alt attributes in a built page', async () => {
     const { root } = installedSandbox();
+    const buildCommand = buildProgramCommand('fakes/site-build', '--copy', 'pages=dist');
     await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
         files: {
             'gspot.toml': buildSandboxSettings(['site'], {
                 level: 'all',
-                tables: `[site]\nbuild_command = ${JSON.stringify(buildProgramCommand('fakes/site-build', '--copy', 'pages=dist'))}\n`,
+                tables: `[site]\nbuild_command = ${JSON.stringify(buildCommand)}\n`,
             }),
             'pages/index.html': `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body>${'<img src="image.png">'.repeat(400)}</body></html>`,
         },

@@ -129,27 +129,21 @@ test('a Markdown command run in a copy keeps the config files its manifest write
 });
 
 test('per-file commands keep the arguments after the file', async () => {
+    const command = buildProgramCommand(
+        'fakes/tool',
+        '--record',
+        '-',
+        '--environment',
+        'TOOL_RELEASE',
+        '--',
+        '{file}',
+        'config',
+        '--quiet',
+    );
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             tables: stringify({
-                command_check: [
-                    {
-                        id: 'sandbox/arguments',
-                        command: buildProgramCommand(
-                            'fakes/tool',
-                            '--record',
-                            '-',
-                            '--environment',
-                            'TOOL_RELEASE',
-                            '--',
-                            '{file}',
-                            'config',
-                            '--quiet',
-                        ),
-                        paths: ['inputs/**'],
-                        stage: 'commit',
-                    },
-                ],
+                command_check: [{ id: 'sandbox/arguments', command, paths: ['inputs/**'], stage: 'commit' }],
             }),
         }),
         'inputs/café source.txt': '',

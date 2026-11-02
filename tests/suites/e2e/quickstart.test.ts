@@ -40,9 +40,8 @@ async function runQuickstart(tutorial: typeof PYTHON_TUTORIAL | typeof SWIFT_TUT
         // The quickstart page pins Node.js, so the version that the CI job on the minimum Node.js sets does not apply.
         MISE_NODE_VERSION: undefined,
     };
-    const runtimePins = runtimePinsSchema.parse(
-        parse(await readFile(join(REPOSITORY_ROOT, TOOL_PINS_FILE), 'utf8')),
-    ).tools;
+    const pins = await readFile(join(REPOSITORY_ROOT, TOOL_PINS_FILE), 'utf8');
+    const runtimePins = runtimePinsSchema.parse(parse(pins)).tools;
     const uvPin = String(getTool(readConfigurations().values(), UV_TOOL).version);
     for (const command of [
         ['mise', 'use', `node@${runtimePins.node}`, `uv@${uvPin}`, `npm:@gspothq/cli@${cliPackage.version}`],

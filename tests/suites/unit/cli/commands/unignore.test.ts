@@ -98,7 +98,8 @@ test('unignore --paths from a subfolder removes only the repository-relative pat
         summary: 'Removed 1 path from 1 ignore for rule SC2086 of bash/shellcheck for entry.sh.',
         changed: true,
     });
-    expect((parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable)['ignore']).toStrictEqual([
+    const settings = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
+    expect(settings['ignore']).toStrictEqual([
         {
             check: 'bash/shellcheck',
             rule: 'SC2086',

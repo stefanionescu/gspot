@@ -10,20 +10,19 @@ import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('a rerun line quotes a check name and protects a path beginning with a dash', async () => {
+    const tables = stringify({
+        command_check: [
+            {
+                id: 'project/check$literal',
+                stage: 'commit',
+                paths: ['*.txt'],
+                command: buildProgramCommand('fakes/tool', '--line', 'A finding.', '--exit', '1', '{file}'),
+                output: { format: 'regex', pattern: '(?<message>.+)' },
+            },
+        ],
+    });
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], {
-            tables: stringify({
-                command_check: [
-                    {
-                        id: 'project/check$literal',
-                        stage: 'commit',
-                        paths: ['*.txt'],
-                        command: buildProgramCommand('fakes/tool', '--line', 'A finding.', '--exit', '1', '{file}'),
-                        output: { format: 'regex', pattern: '(?<message>.+)' },
-                    },
-                ],
-            }),
-        }),
+        'gspot.toml': buildSandboxSettings([], { tables }),
         '-entry.txt': 'input',
     });
     const checked = parseCheckReport(
@@ -43,21 +42,20 @@ test('a rerun line quotes a check name and protects a path beginning with a dash
 });
 
 test('a fixable finding prints the fix command of its check, and that command changes only the reported file', async () => {
+    const tables = stringify({
+        command_check: [
+            {
+                id: 'project/fixable',
+                stage: 'commit',
+                paths: ['*.txt'],
+                command: buildProgramCommand('fakes/tool', '--line', 'broken.txt', '--exit', '1'),
+                fix: buildProgramCommand('fakes/tool', '--text', 'fixed\n', '{files}'),
+                output: { format: 'regex', pattern: '(?<file>.+)', fixable: 'broken' },
+            },
+        ],
+    });
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], {
-            tables: stringify({
-                command_check: [
-                    {
-                        id: 'project/fixable',
-                        stage: 'commit',
-                        paths: ['*.txt'],
-                        command: buildProgramCommand('fakes/tool', '--line', 'broken.txt', '--exit', '1'),
-                        fix: buildProgramCommand('fakes/tool', '--text', 'fixed\n', '{files}'),
-                        output: { format: 'regex', pattern: '(?<file>.+)', fixable: 'broken' },
-                    },
-                ],
-            }),
-        }),
+        'gspot.toml': buildSandboxSettings([], { tables }),
         'broken.txt': 'input\n',
         'other.txt': 'input\n',
     });

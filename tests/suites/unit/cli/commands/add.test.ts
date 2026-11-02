@@ -29,7 +29,8 @@ test('add --scope writes the scope list and applies the generated files', async 
     commitAll(sandbox.path);
     const initial = await runGspot(sandbox.path, ['apply']);
     expect(initial.code, initial.stdout + initial.stderr).toBe(0);
-    expect(existsSync(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')))).toBe(false);
+    const generated = join(sandbox.path, getManifestTarget('bash', 'shellcheckrc'));
+    expect(existsSync(generated)).toBe(false);
     const result = await runGspot(sandbox.path, ['add', 'bash', '--scope', 'api', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const saved = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
@@ -37,7 +38,7 @@ test('add --scope writes the scope list and applies the generated files', async 
     expect(saved.configurations).toStrictEqual(['markdown']);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(existsSync(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')))).toBe(true);
+    expect(existsSync(generated)).toBe(true);
 });
 
 test('add security exits 2, names gspot set level, and writes nothing', async () => {
@@ -91,9 +92,8 @@ test('add names a repeated configuration once and saves it once', async () => {
     const result = await runGspot(sandbox.path, ['add', 'pytest', 'pytest']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout.split('\n', 1)[0]).toBe('Added pytest.');
-    expect(
-        readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path).configurations,
-    ).toStrictEqual(['python', 'pytest']);
+    const saved = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
+    expect(saved.configurations).toStrictEqual(['python', 'pytest']);
 });
 
 test('add --scope on a project folder writes its scope record', async () => {
@@ -104,10 +104,8 @@ test('add --scope on a project folder writes its scope record', async () => {
     });
     const result = await runGspot(sandbox.path, ['add', 'fastapi', '--scope', 'py']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(
-        readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path).scopes.get('py')
-            ?.configurations,
-    ).toStrictEqual(['fastapi']);
+    const saved = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
+    expect(saved.scopes.get('py')?.configurations).toStrictEqual(['fastapi']);
 });
 
 test.each(

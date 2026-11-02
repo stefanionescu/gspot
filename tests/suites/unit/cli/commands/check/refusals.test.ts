@@ -159,21 +159,20 @@ test.each([...ARGUMENT_REFUSALS])(
 );
 
 test('a linked .gspot folder fails check, and nothing outside changes', async () => {
+    const tables = stringify({
+        command_check: [
+            {
+                id: 'project/storage',
+                paths: ['source.txt'],
+                stage: 'commit',
+                command: buildProgramCommand('fakes/tool', '--stdout', 'Exact finding\n', '--exit', '1'),
+                output: { format: 'regex', pattern: '(?<message>.+)' },
+            },
+        ],
+    });
     await using sandbox = await testdir({
         'project/source.txt': 'input\n',
-        'project/gspot.toml': buildSandboxSettings([], {
-            tables: stringify({
-                command_check: [
-                    {
-                        id: 'project/storage',
-                        paths: ['source.txt'],
-                        stage: 'commit',
-                        command: buildProgramCommand('fakes/tool', '--stdout', 'Exact finding\n', '--exit', '1'),
-                        output: { format: 'regex', pattern: '(?<message>.+)' },
-                    },
-                ],
-            }),
-        }),
+        'project/gspot.toml': buildSandboxSettings([], { tables }),
         'outside/sentinel': 'authored outside\n',
     });
     const project = join(sandbox.path, 'project');

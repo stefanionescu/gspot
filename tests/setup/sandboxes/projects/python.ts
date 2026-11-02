@@ -30,15 +30,13 @@ export async function createPythonProject(
         }),
         ...PYTHON_PROJECT_FILES,
     });
+    const projectVariables = UV_PROJECT_VARIABLES.map(
+        (name) => [name, name === 'UV_PROJECT_ENVIRONMENT' ? join(root, '.venv') : root] as const,
+    );
     await using resources = new AsyncDisposableStack();
     resources.use(
         overrideEnvironment(
-            Object.fromEntries<string | undefined>([
-                ['UV_DEFAULT_INDEX', undefined],
-                ...UV_PROJECT_VARIABLES.map(
-                    (name) => [name, name === 'UV_PROJECT_ENVIRONMENT' ? join(root, '.venv') : root] as const,
-                ),
-            ]),
+            Object.fromEntries<string | undefined>([['UV_DEFAULT_INDEX', undefined], ...projectVariables]),
         ),
     );
     const indexPrefix = indexFile === 'pyproject.toml' ? 'tool.uv.' : '';

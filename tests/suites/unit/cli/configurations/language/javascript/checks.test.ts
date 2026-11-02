@@ -34,10 +34,8 @@ test('javascript/biome checks shebang scripts, TypeScript, and component files i
         'app/source.ts': `export ${typed}\n`,
     });
     const modules = join(sandbox.path, '.gspot/node_modules');
-    await cp(dirname(await realpath(join(toolModules, '@biomejs/biome'))), join(modules, '@biomejs'), {
-        recursive: true,
-        dereference: true,
-    });
+    const biome = await realpath(join(toolModules, '@biomejs/biome'));
+    await cp(dirname(biome), join(modules, '@biomejs'), { recursive: true, dereference: true });
     await mkdir(join(modules, '.bin'));
     const launcher = join(modules, '.bin/biome');
     await copyFile(join(modules, '@biomejs/biome/bin/biome'), launcher);

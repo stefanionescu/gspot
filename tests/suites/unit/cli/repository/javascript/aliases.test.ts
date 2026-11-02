@@ -54,10 +54,9 @@ test('inherited aliases are read relative to the file that declares them', async
 
 test('alias reads name a missing extended file', async () => {
     await using sandbox = await testdir({ 'tsconfig.json': '{"extends":"./missing-base.json"}' });
+    const missing = convertToPosixPath(join(sandbox.path, 'missing-base.json'));
     expect(() => readScopeAliases(sandbox.path, '', createRunCache(sandbox.path))).toThrow(
-        new Error(
-            `Cannot read the compiler settings in tsconfig.json: Cannot read file '${convertToPosixPath(join(sandbox.path, 'missing-base.json'))}'.`,
-        ),
+        new Error(`Cannot read the compiler settings in tsconfig.json: Cannot read file '${missing}'.`),
     );
 });
 

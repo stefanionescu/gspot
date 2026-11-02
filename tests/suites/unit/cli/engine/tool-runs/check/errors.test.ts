@@ -48,18 +48,12 @@ test.skipIf(isWindows)('a command check whose program lost its execute bit error
 });
 
 test('per-file failures name the selected file', async () => {
+    const command = buildProgramCommand('checks/search', '--text', 'invalid', '{file}');
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             rules: true,
             tables: stringify({
-                command_check: [
-                    {
-                        id: 'project/file-result',
-                        command: buildProgramCommand('checks/search', '--text', 'invalid', '{file}'),
-                        paths: ['inputs/**'],
-                        stage: 'commit',
-                    },
-                ],
+                command_check: [{ id: 'project/file-result', command, paths: ['inputs/**'], stage: 'commit' }],
             }),
         }),
         'inputs/café source.txt': 'invalid',
@@ -74,18 +68,12 @@ test('per-file failures name the selected file', async () => {
 });
 
 test.skipIf(isWindows)('a per-file process killed by a signal is an error, not a finding', async () => {
+    const command = buildProgramCommand('fakes/tool', '--signal', 'SIGTERM', '{file}');
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             rules: true,
             tables: stringify({
-                command_check: [
-                    {
-                        id: 'project/termination',
-                        command: buildProgramCommand('fakes/tool', '--signal', 'SIGTERM', '{file}'),
-                        paths: ['source.txt'],
-                        stage: 'commit',
-                    },
-                ],
+                command_check: [{ id: 'project/termination', command, paths: ['source.txt'], stage: 'commit' }],
             }),
         }),
         'source.txt': 'valid source',
@@ -159,12 +147,9 @@ test('a fatal command group stops before the next group runs', async () => {
 });
 
 test.each(['crash', 'parse'] as const)('a later %s preserves only selected, unignored findings', async (failure) => {
+    const command = buildProgramCommand('fakes/tool', '{file}');
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], {
-            tables: stringify({
-                command_check: [{ ...BATCH_CHECK, command: buildProgramCommand('fakes/tool', '{file}') }],
-            }),
-        }),
+        'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: [{ ...BATCH_CHECK, command }] }) }),
         'one.txt': 'one',
         'two.txt': 'two',
         'outside.txt': 'outside',

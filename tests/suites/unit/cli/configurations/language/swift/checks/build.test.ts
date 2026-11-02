@@ -132,8 +132,9 @@ test('compiler: swift/build refuses a response file outside the compiler cache a
     const run = resources.use(spawn);
 
     const buildError = await captureRejection(getBuiltInCheck('swift/build')(prepared.session, input));
+    const external = convertToPosixPath(relative(plan.folder, join(sandbox.path, 'external-response')));
     expect(buildError.message).toBe(
-        `"${convertToPosixPath(relative(plan.folder, join(sandbox.path, 'external-response')))}" is not a safe repository-relative path. Choose a path inside the repository.`,
+        `"${external}" is not a safe repository-relative path. Choose a path inside the repository.`,
     );
     expect(existsSync(plan.log)).toBe(false);
     const response = join(plan.folder, 'sources');

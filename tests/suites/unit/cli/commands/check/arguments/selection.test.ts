@@ -67,27 +67,25 @@ test('--only repeats and leaves the paths after it as paths', async () => {
 });
 
 test.each([false, true])('path arguments narrow project-wide findings (staged: %p)', async (staged) => {
+    const tables = stringify({
+        command_check: [
+            {
+                id: 'sandbox/project',
+                paths: ['src/**'],
+                stage: 'commit',
+                command: buildProgramCommand(
+                    'fakes/tool',
+                    '--stdout',
+                    'src/selected.ts:demo:here\nsrc/other.ts:demo:elsewhere\n:demo:fileless\n',
+                    '--exit',
+                    '1',
+                ),
+                output: { format: 'regex', pattern: '^(?<file>[^:]*):(?<rule>[^:]+):(?<message>.*)$' },
+            },
+        ],
+    });
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], {
-            rules: true,
-            tables: stringify({
-                command_check: [
-                    {
-                        id: 'sandbox/project',
-                        paths: ['src/**'],
-                        stage: 'commit',
-                        command: buildProgramCommand(
-                            'fakes/tool',
-                            '--stdout',
-                            'src/selected.ts:demo:here\nsrc/other.ts:demo:elsewhere\n:demo:fileless\n',
-                            '--exit',
-                            '1',
-                        ),
-                        output: { format: 'regex', pattern: '^(?<file>[^:]*):(?<rule>[^:]+):(?<message>.*)$' },
-                    },
-                ],
-            }),
-        }),
+        'gspot.toml': buildSandboxSettings([], { rules: true, tables }),
         'src/selected.ts': 'selected',
         'src/other.ts': 'other',
     });

@@ -12,23 +12,24 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 test.each(['{file}', '{files}'])(
     '%s keeps filenames beginning with a dash out of tool options',
     async (placeholder) => {
+        const command = buildProgramCommand(
+            'checks/search',
+            '--text',
+            'invalid',
+            '--report',
+            'message',
+            '--message',
+            'Check this file.',
+            '--',
+            placeholder,
+        );
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([], {
                 tables: stringify({
                     command_check: [
                         {
                             id: 'project/dashed-files',
-                            command: buildProgramCommand(
-                                'checks/search',
-                                '--text',
-                                'invalid',
-                                '--report',
-                                'message',
-                                '--message',
-                                'Check this file.',
-                                '--',
-                                placeholder,
-                            ),
+                            command,
                             paths: ['*.sh', '*.mjs'],
                             stage: 'commit',
                             output: {

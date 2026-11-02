@@ -105,29 +105,27 @@ test('after --fix, the checks read the fixed file and other files stay as they w
 });
 
 test('a later pass formats what a fix after the formatter wrote', async () => {
+    const tables = stringify({
+        command_check: [
+            {
+                id: 'project/format',
+                stage: 'commit',
+                paths: ['*.txt'],
+                command: buildProgramCommand('checks/search', '--text', '  ', '--', '{files}'),
+                fix: buildProgramCommand('checks/replacement', '  ', ' ', '{files}'),
+            },
+            {
+                id: 'project/codemod',
+                stage: 'commit',
+                paths: ['*.txt'],
+                command: buildProgramCommand('checks/search', '--text', 'var', '--', '{files}'),
+                fix: buildProgramCommand('checks/replacement', 'var', 'let ', '{files}'),
+            },
+        ],
+    });
     await using sandbox = await createGitSandbox({
         'source.txt': 'var x\n',
-        'gspot.toml': buildSandboxSettings([], {
-            rules: true,
-            tables: stringify({
-                command_check: [
-                    {
-                        id: 'project/format',
-                        stage: 'commit',
-                        paths: ['*.txt'],
-                        command: buildProgramCommand('checks/search', '--text', '  ', '--', '{files}'),
-                        fix: buildProgramCommand('checks/replacement', '  ', ' ', '{files}'),
-                    },
-                    {
-                        id: 'project/codemod',
-                        stage: 'commit',
-                        paths: ['*.txt'],
-                        command: buildProgramCommand('checks/search', '--text', 'var', '--', '{files}'),
-                        fix: buildProgramCommand('checks/replacement', 'var', 'let ', '{files}'),
-                    },
-                ],
-            }),
-        }),
+        'gspot.toml': buildSandboxSettings([], { rules: true, tables }),
     });
 
     const options = buildRunOptions({ stage: 'commit', fix: true, only: ['project/format', 'project/codemod'] });

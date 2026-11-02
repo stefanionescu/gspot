@@ -14,12 +14,13 @@ import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('a command check runs its command and reports file and line through its output format', async () => {
+    const command = buildProgramCommand('checks/search', '--text', 'PENDING', '--report', 'line', '--', '{files}');
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             rules: true,
             tables: String.raw`[[command_check]]
 id = "notes/no-pending"
-command = ${JSON.stringify(buildProgramCommand('checks/search', '--text', 'PENDING', '--report', 'line', '--', '{files}'))}
+command = ${JSON.stringify(command)}
 paths = ["notes/**"]
 stage = "commit"
 summary = "Finds pending notes left in the notes folder."

@@ -145,7 +145,8 @@ test('an ignore of every path skips the check and keeps its configured tool and 
     expect(await readFile(join(sandbox.path, '.prettierignore'), 'utf8')).toContain('**/*.json');
     expect(report.removed).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toContain('prettier');
-    expect(existsSync(join(sandbox.path, getManifestTarget('format', 'prettier.json')))).toBe(true);
+    const generated = join(sandbox.path, getManifestTarget('format', 'prettier.json'));
+    expect(existsSync(generated)).toBe(true);
     expect(existsSync(join(sandbox.path, 'prettier.config.mjs'))).toBe(true);
     const checked = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'format/prettier', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);

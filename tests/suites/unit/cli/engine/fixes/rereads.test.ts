@@ -29,22 +29,20 @@ test('a fix run rereads the repository and keeps the package scopes it found', a
 });
 
 test('checks read a new file inventory after a fixer creates a source and leave the session they got as it was', async () => {
+    const tables = stringify({
+        command_check: [
+            {
+                id: 'project/inventory',
+                stage: 'commit',
+                paths: ['*.txt'],
+                command: buildProgramCommand('checks/arguments', '--includes', 'added.txt', '--', '{files}'),
+                fix: buildProgramCommand('fakes/tool', '--text', 'created', 'added.txt'),
+            },
+        ],
+    });
     await using sandbox = await createGitSandbox({
         'source.txt': 'input',
-        'gspot.toml': buildSandboxSettings([], {
-            rules: true,
-            tables: stringify({
-                command_check: [
-                    {
-                        id: 'project/inventory',
-                        stage: 'commit',
-                        paths: ['*.txt'],
-                        command: buildProgramCommand('checks/arguments', '--includes', 'added.txt', '--', '{files}'),
-                        fix: buildProgramCommand('fakes/tool', '--text', 'created', 'added.txt'),
-                    },
-                ],
-            }),
-        }),
+        'gspot.toml': buildSandboxSettings([], { rules: true, tables }),
     });
 
     using resources = createRunResources();

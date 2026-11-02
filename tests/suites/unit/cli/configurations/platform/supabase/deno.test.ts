@@ -107,13 +107,14 @@ test('Deno type errors use their location or the entrypoint', async () => {
     using resources = new DisposableStack();
     await openFakeToolSession(sandbox.path, ['deno'], resources);
     const location = pathToFileURL(join(sandbox.path, 'supabase/functions/greet/util.ts')).href;
+    const entrypoint = join('greet', 'index.ts');
     resources.use(
         fakeCommands().mockImplementation((command) =>
             Promise.resolve(
                 buildProcessResult({
                     code: 1,
                     stderr:
-                        command.at(-1)?.includes(join('greet', 'index.ts')) === true
+                        command.at(-1)?.includes(entrypoint) === true
                             ? `\u{1B}[31merror\u{1B}[0m: TS2322 [ERROR]: Type mismatch.\n    at ${location}:4:7\n`
                             : 'error: Module not found "./missing.ts".\n',
                 }),

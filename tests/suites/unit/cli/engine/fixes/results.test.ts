@@ -168,27 +168,20 @@ test('a failed version check blocks a check and its fix without changing source 
 
 test('a fixer that breaks a file with an unstaged edit puts the file back and exits 2', async () => {
     await using sandbox = await createGitSandbox({});
+    const tables = stringify({
+        command_check: [
+            {
+                id: 'project/merge-imports',
+                stage: 'commit',
+                paths: ['*.ts'],
+                command: buildProgramCommand('fakes/tool'),
+                fix: buildProgramCommand('fakes/tool', '--text', "import Hls, type { A } from 'hls.js';\n", '{files}'),
+                output: { format: 'none' },
+            },
+        ],
+    });
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSandboxSettings([], {
-            rules: true,
-            tables: stringify({
-                command_check: [
-                    {
-                        id: 'project/merge-imports',
-                        stage: 'commit',
-                        paths: ['*.ts'],
-                        command: buildProgramCommand('fakes/tool'),
-                        fix: buildProgramCommand(
-                            'fakes/tool',
-                            '--text',
-                            "import Hls, type { A } from 'hls.js';\n",
-                            '{files}',
-                        ),
-                        output: { format: 'none' },
-                    },
-                ],
-            }),
-        }),
+        'gspot.toml': buildSandboxSettings([], { rules: true, tables }),
         'client.ts': "import Hls from 'hls.js';\nexport { Hls };\n",
         'notes.ts': "export const note = 'kept';\n",
     });

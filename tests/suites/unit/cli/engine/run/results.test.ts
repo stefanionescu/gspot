@@ -20,17 +20,11 @@ import { SCOPE_FINDINGS, SCOPE_CHECK_FILES, QUALITY_SEARCH_ARGUMENTS } from '#te
 test('an aborted run stops its command and reports cancellation on every system', async () => {
     await using sandbox = await createGitSandbox({});
     const marker = join(sandbox.path, 'command-ready');
+    const command = buildProgramCommand('fakes/tool', '--mark', marker, '--wait');
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], {
             tables: stringify({
-                command_check: [
-                    {
-                        id: 'project/cancel',
-                        stage: 'commit',
-                        paths: ['source.txt'],
-                        command: buildProgramCommand('fakes/tool', '--mark', marker, '--wait'),
-                    },
-                ],
+                command_check: [{ id: 'project/cancel', stage: 'commit', paths: ['source.txt'], command }],
             }),
         }),
         'source.txt': 'Input.\n',
@@ -206,46 +200,44 @@ test('a check with malformed JSON reports an error, and the other checks keep th
 });
 
 test('progress is reported as soon as each check ends, with ignores applied to the final results', async () => {
+    const tables = stringify({
+        ignore: [{ check: 'project/fast', rule: 'demo', reason: 'The sandbox tests filtered progress.' }],
+        command_check: [
+            {
+                id: 'project/fast',
+                paths: ['source.sh'],
+                stage: 'commit',
+                command: buildProgramCommand(
+                    'fakes/tool',
+                    '--stdout',
+                    'source.sh:demo:Ignored finding\n',
+                    '--exit',
+                    '1',
+                ),
+                output: { format: 'regex', pattern: '^(?<file>[^:]+):(?<rule>[^:]+):(?<message>.*)$' },
+            },
+            {
+                id: 'project/waiting',
+                paths: ['source.sh'],
+                stage: 'commit',
+                command: buildProgramCommand('fakes/tool', '--until', 'completed'),
+            },
+        ],
+    });
     await using sandbox = await createGitSandbox({
         'source.sh': 'echo example\n',
-        'gspot.toml': buildSandboxSettings([], {
-            rules: true,
-            tables: stringify({
-                ignore: [{ check: 'project/fast', rule: 'demo', reason: 'The sandbox tests filtered progress.' }],
-                command_check: [
-                    {
-                        id: 'project/fast',
-                        paths: ['source.sh'],
-                        stage: 'commit',
-                        command: buildProgramCommand(
-                            'fakes/tool',
-                            '--stdout',
-                            'source.sh:demo:Ignored finding\n',
-                            '--exit',
-                            '1',
-                        ),
-                        output: { format: 'regex', pattern: '^(?<file>[^:]+):(?<rule>[^:]+):(?<message>.*)$' },
-                    },
-                    {
-                        id: 'project/waiting',
-                        paths: ['source.sh'],
-                        stage: 'commit',
-                        command: buildProgramCommand('fakes/tool', '--until', 'completed'),
-                    },
-                ],
-            }),
-        }),
+        'gspot.toml': buildSandboxSettings([], { rules: true, tables }),
     });
 
     const finished: number[] = [];
-    const ready = Promise.withResolvers<undefined>();
+    const ready = Promise.withResolvers<number>();
     const running = runChecks(
         await openSession(sandbox.path),
         buildRunOptions({
             only: ['project/fast', 'project/waiting'],
             onProgress: (progress) => {
                 finished.push(progress.finished);
-                if (progress.finished === 1) ready.resolve(undefined);
+                if (progress.finished === 1) ready.resolve(progress.finished);
             },
         }),
     );

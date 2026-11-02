@@ -73,7 +73,8 @@ test('remove --scope writes removed_configurations with its reason and applies t
     commitAll(sandbox.path);
     const initial = await runGspot(sandbox.path, ['apply']);
     expect(initial.code, initial.stdout + initial.stderr).toBe(0);
-    expect(existsSync(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')))).toBe(true);
+    const generated = join(sandbox.path, getManifestTarget('bash', 'shellcheckrc'));
+    expect(existsSync(generated)).toBe(true);
     const reason = 'The API scope no longer uses Bash.';
     const result = await runGspot(sandbox.path, ['remove', 'bash', '--scope', 'api', '--reason', reason, '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
@@ -85,7 +86,7 @@ test('remove --scope writes removed_configurations with its reason and applies t
     expect(contents).toStrictEqual([{ path: 'api', configurations: [], removed_configurations: { bash: reason } }]);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(existsSync(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')))).toBe(false);
+    expect(existsSync(generated)).toBe(false);
 });
 
 test('remove reports no change for a configuration the root does not list', async () => {

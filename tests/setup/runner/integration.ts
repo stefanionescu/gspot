@@ -52,6 +52,8 @@ const work = resources.use(await testdir());
 
 const registry = resources.use(await startNpmRegistry(work.path));
 
+const launcherFolder = dirname(join(TEST_RUN_FOLDER, GSPOT_LAUNCHER_PATH));
+
 resources.use(
     overrideEnvironment({
         ...MISE_LOCK_ENVIRONMENT,
@@ -60,7 +62,7 @@ resources.use(
         GSPOT_TEST_NPM_REGISTRY: registry.url,
         NPM_CONFIG_USERCONFIG: registry.npmrc,
         PATH: [
-            dirname(join(TEST_RUN_FOLDER, GSPOT_LAUNCHER_PATH)),
+            launcherFolder,
             ...toolFolders,
             join(toolModules, '.bin'),
             join(workspaceModules, '.bin'),

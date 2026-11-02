@@ -43,19 +43,21 @@ test.each([...SVELTE_PROJECTS])(
         using _run = fakeCommands().mockImplementation((commandArguments, options) => {
             runtimePath = commandArguments[commandArguments.indexOf('--tsconfig') + 1] ?? '';
             const config = tsconfigSchema.parse(JSON.parse(readFileSync(runtimePath, 'utf8')));
+            const runtimeFolder = dirname(runtimePath);
+            const extendedPath =
+                config.extends === undefined
+                    ? null
+                    : convertToPosixPath(relative(sandbox.path, resolve(runtimeFolder, config.extends)));
 
             seen.push({
                 cwd: convertToPosixPath(relative(sandbox.path, options.cwd)),
                 insideSandbox: runtimePath.startsWith(sandbox.path),
-                extends:
-                    config.extends === undefined
-                        ? null
-                        : convertToPosixPath(relative(sandbox.path, resolve(dirname(runtimePath), config.extends))),
+                extends: extendedPath,
                 include:
                     config.include === undefined
                         ? null
                         : config.include.map((path) =>
-                              convertToPosixPath(relative(sandbox.path, resolve(dirname(runtimePath), path))),
+                              convertToPosixPath(relative(sandbox.path, resolve(runtimeFolder, path))),
                           ),
             });
             return Promise.resolve(buildProcessResult());

@@ -23,9 +23,8 @@ test('baseline writes a count per file, check, and rule, and check subtracts it'
     const written = await runGspot(sandbox.path, ['baseline', '--json']);
     expect(written.code, written.stdout + written.stderr).toBe(0);
     expect(JSON.parse(written.stdout)).toMatchObject({ findings: 2, files: 1, leftOut: [] });
-    expect(JSON.parse(await readFile(join(sandbox.path, 'gspot.baseline.json'), 'utf8'))).toStrictEqual({
-        'guide.md': { 'docs/missing-paths': { 'missing-path': 2 } },
-    });
+    const baseline = await readFile(join(sandbox.path, 'gspot.baseline.json'), 'utf8');
+    expect(JSON.parse(baseline)).toStrictEqual({ 'guide.md': { 'docs/missing-paths': { 'missing-path': 2 } } });
     const { report, code } = parseCheckReport(await runGspot(sandbox.path, ['check', '--json']));
     expect(code).toBe(0);
     expect(report.baselined).toStrictEqual({ 'docs/missing-paths': 2 });
@@ -66,9 +65,8 @@ test('a stale count fails gspot/baseline until --prune lowers it, and --prune ad
     const pruned = await runGspot(sandbox.path, ['baseline', '--prune']);
     expect(pruned.code, pruned.stdout + pruned.stderr).toBe(0);
     expect(pruned.stdout).toBe('Removed 1 finding from gspot.baseline.json. It holds 1 finding in 1 file.\n');
-    expect(JSON.parse(await readFile(join(sandbox.path, 'gspot.baseline.json'), 'utf8'))).toStrictEqual({
-        'guide.md': { 'docs/missing-paths': { 'missing-path': 1 } },
-    });
+    const prunedBaseline = await readFile(join(sandbox.path, 'gspot.baseline.json'), 'utf8');
+    expect(JSON.parse(prunedBaseline)).toStrictEqual({ 'guide.md': { 'docs/missing-paths': { 'missing-path': 1 } } });
 });
 
 test('a count of a deleted file is stale in a run of one check', async () => {
@@ -94,7 +92,8 @@ test('a secret never enters the baseline, and check reports a count that someone
     const written = await runGspot(sandbox.path, ['baseline', '--json']);
     expect(written.code, written.stdout + written.stderr).toBe(0);
     expect(JSON.parse(written.stdout)).toMatchObject({ findings: 0, leftOut: ['secrets/environment-examples'] });
-    expect(JSON.parse(await readFile(join(sandbox.path, 'gspot.baseline.json'), 'utf8'))).toStrictEqual({});
+    const baseline = await readFile(join(sandbox.path, 'gspot.baseline.json'), 'utf8');
+    expect(JSON.parse(baseline)).toStrictEqual({});
     await writeFile(
         join(sandbox.path, 'gspot.baseline.json'),
         '{"source.js":{"secrets/environment-examples":{"secrets/environment-examples":1}}}\n',

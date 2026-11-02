@@ -141,7 +141,8 @@ test('init keeps a linked shared file and the bytes and mode of the file it link
     expect(await readFile(target, 'utf8')).toBe(LINKED_SETUP_CONFIG);
     const attributes = await stat(target);
     expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
-    expect(existsSync(join(sandbox.path, getManifestTarget('sql', 'sqlfluff.cfg')))).toBe(true);
+    const generated = join(sandbox.path, getManifestTarget('sql', 'sqlfluff.cfg'));
+    expect(existsSync(generated)).toBe(true);
 });
 
 test.each([...REPLACED_PYPROJECT_TABLES])(
@@ -174,12 +175,11 @@ test('at level basic, init keeps the config files of checks that are off', async
     expect(plan.delete).toStrictEqual([]);
     expect(plan.change.map(({ path }) => path)).toStrictEqual(['package.json']);
     expect(plan.write.map(({ path }) => path).filter((path) => /commitlint|syncpack/u.test(path))).toStrictEqual([]);
-    for (const [path, source] of Object.entries(INACTIVE_CONFIGURATIONS))
-        if (path === 'package.json')
-            expect(JSON.parse(await readFile(join(sandbox.path, path), 'utf8'))).toMatchObject(
-                JSON.parse(source) as object,
-            );
-        else expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(source);
+    for (const [path, source] of Object.entries(INACTIVE_CONFIGURATIONS)) {
+        const text = await readFile(join(sandbox.path, path), 'utf8');
+        if (path === 'package.json') expect(JSON.parse(text)).toMatchObject(JSON.parse(source) as object);
+        else expect(text).toBe(source);
+    }
 });
 
 test.each([...STYLELINT_REPLACEMENT_CASES])(
@@ -211,10 +211,10 @@ test.each([...STYLELINT_REPLACEMENT_CASES])(
             changed.map((path) => ({ path, note: 'managed stylelint fields; other content stays' })),
         );
         expect(existsSync(join(sandbox.path, authoredConfiguration))).toBe(false);
-        for (const { path, text } of unchangedFiles)
-            expect(JSON.parse(await readFile(join(sandbox.path, path), 'utf8'))).toMatchObject(
-                JSON.parse(text) as object,
-            );
+        for (const { path, text } of unchangedFiles) {
+            const saved = await readFile(join(sandbox.path, path), 'utf8');
+            expect(JSON.parse(saved)).toMatchObject(JSON.parse(text) as object);
+        }
         for (const level of LEVELS) {
             const levelSet = await runGspot(sandbox.path, ['set', 'level', level]);
             expect(levelSet.code, levelSet.stdout + levelSet.stderr).toBe(0);

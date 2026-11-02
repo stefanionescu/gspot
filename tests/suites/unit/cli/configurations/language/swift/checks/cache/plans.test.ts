@@ -93,7 +93,8 @@ test('Swift skips without swift.xcode_project or Package.swift, then builds the 
             note: 'Set swift.xcode_project or add Package.swift in this scope.',
         },
     ]);
-    expect(existsSync(join(readRepositoryCacheFolder(session.toolsRoot), 'swift', 'root'))).toBe(false);
+    const cacheFolder = readRepositoryCacheFolder(session.toolsRoot);
+    expect(existsSync(join(cacheFolder, 'swift', 'root'))).toBe(false);
     await createFileTree(sandbox.path, {
         'Package.swift': SWIFT_PACKAGE_HEADER,
     });

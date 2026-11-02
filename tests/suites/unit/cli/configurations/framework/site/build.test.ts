@@ -18,10 +18,11 @@ import { BUILD_OUTPUT_CHECKS, WORKSPACE_SITE_FILES } from '#tests/config/configu
 import { listBuiltFiles, readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
 
 test('build: a push run builds the site without changing committed dist files or Git status', async () => {
+    const buildCommand = buildProgramCommand('fakes/tool', '--write', 'dist/index.html=built');
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['site'], {
             level: 'all',
-            tables: `[site]\nbuild_command = ${JSON.stringify(buildProgramCommand('fakes/tool', '--write', 'dist/index.html=built'))}\n`,
+            tables: `[site]\nbuild_command = ${JSON.stringify(buildCommand)}\n`,
         }),
         '.gitignore': `${GSPOT_FOLDER}/\n`,
         'dist/index.html': 'committed output\n',
@@ -82,10 +83,11 @@ test('build: a build that reads an untracked file fails until the file is in the
 });
 
 test.each([0, 7])("build: a run deletes the build's copy after exit %i", async (code) => {
+    const buildCommand = buildProgramCommand('fakes/tool');
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['site'], {
             level: 'all',
-            tables: `[site]\nbuild_command = ${JSON.stringify(buildProgramCommand('fakes/tool'))}\n`,
+            tables: `[site]\nbuild_command = ${JSON.stringify(buildCommand)}\n`,
         }),
         'dist/index.html': 'authored output',
     });

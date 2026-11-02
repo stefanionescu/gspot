@@ -94,6 +94,7 @@ test.each([...ACTIONLINT_EXITS])(
         const record = join(sandbox.path, 'workspace.txt');
         const executable = join(sandbox.path, 'actionlint');
         const workflow = CALLER_WORKFLOW;
+        const { version } = getTool(readConfigurations().values(), 'actionlint');
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings(['github-actions']),
             '.github/workflows/caller.yml': workflow,
@@ -103,7 +104,7 @@ test.each([...ACTIONLINT_EXITS])(
             'actionlint',
             'fakes/tool',
             '--version-line',
-            String(getTool(readConfigurations().values(), 'actionlint').version),
+            String(version),
             '--record',
             record,
             ...(code === 0 ? [] : ['--line', '.github/workflows/caller.yml:4:11: located defect [workflow-call]']),

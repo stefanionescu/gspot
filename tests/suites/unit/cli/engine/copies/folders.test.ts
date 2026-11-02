@@ -83,8 +83,10 @@ test('a new copy removes exited owners and keeps live owners and unknown folders
         return true;
     });
     using copy = createCopyFolder(sandbox.path);
-    expect(existsSync(join(sandbox.path, `.gspot-copies/${String(exited)}-abandoned`))).toBe(false);
-    expect(existsSync(join(sandbox.path, `.gspot-copies/${String(process.pid)}-active/source.txt`))).toBe(true);
+    const abandoned = join(sandbox.path, `.gspot-copies/${String(exited)}-abandoned`);
+    const active = join(sandbox.path, `.gspot-copies/${String(process.pid)}-active/source.txt`);
+    expect(existsSync(abandoned)).toBe(false);
+    expect(existsSync(active)).toBe(true);
     expect(readFileSync(join(sandbox.path, '.gspot-copies/notes/source.txt'), 'utf8')).toBe('unowned');
     expect(existsSync(join(sandbox.path, '.gspot-copies/999999999999999999999-invalid/source.txt'))).toBe(true);
     expect(existsSync(copy.path)).toBe(true);

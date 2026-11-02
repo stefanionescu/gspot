@@ -44,7 +44,8 @@ test.each([...INVALID_BLOBS])(`a batch is refused: $name`, async ({ output }) =>
 });
 
 test('a batch parses the same for every split between header, body and delimiters', async () => {
-    expect(await Array.fromAsync(parseGitBlobs(Readable.from([Buffer.alloc(0)]), []))).toStrictEqual([]);
+    const empty = Readable.from([Buffer.alloc(0)]);
+    expect(await Array.fromAsync(parseGitBlobs(empty, []))).toStrictEqual([]);
     const output = Buffer.concat([
         Buffer.from(`${SHA1} blob ${String(BINARY_BLOB.length)}\n`),
         Buffer.from(BINARY_BLOB),
