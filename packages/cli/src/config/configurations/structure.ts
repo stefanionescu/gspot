@@ -31,6 +31,7 @@ export const BRACKET_HELP = String.raw` If a folder name holds ( ) [ ], escape e
 export const GSPOT_RULES = {
     unmatchedPath: 'unmatched-path',
     conflictingConfig: 'conflicting-config',
+    staleBaseline: 'stale-baseline',
 } as const;
 
 export const REPOSITORY_RULES = {

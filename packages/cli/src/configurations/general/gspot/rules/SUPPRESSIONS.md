@@ -23,4 +23,6 @@ This rule covers every suppression comment, in every language. gspot rejects Sem
 ignore instead.
 
 To accept a finding without changing the code, ask the user first. Then run `gspot ignore <check>` with a reason.
+Ask the user before you run `gspot baseline`, which accepts every current finding. When `gspot/baseline` reports a stale
+count, run `gspot baseline --prune` and commit `gspot.baseline.json`.
 Never remove a configuration or lower the level to stop a finding. Ask the user, and give `gspot remove` a reason.

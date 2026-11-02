@@ -131,6 +131,7 @@ export const FAILED_CHECK_REPORT = {
         },
     ],
     ignores: [{ check: 'bash/shellcheck', rule: 'SC2312', reason: 'why' }],
+    baselined: {},
     unstagedChanges: 0,
     partial: false,
     failed: ['bash/shellcheck', 'format/prettier'],
@@ -170,6 +171,27 @@ export const STAGED_PACKAGE_JSON = {
 export const UPPERCASE_NOTES_MARKDOWN = '# NOTES\n';
 
 export const SCRIPT_SPACES = 'script with spaces.sh';
+
+export const BASELINE_SANDBOX = {
+    ignore: {
+        checks: [
+            'data-files/taplo-format',
+            'dependencies/osv-scanner',
+            'docs/lychee',
+            'format/editorconfig-checker',
+            'format/prettier',
+            'gspot/generated-files',
+            'javascript/eslint',
+            'javascript/knip',
+            'prose/vale',
+            'secrets/dotenv-linter',
+            'secrets/gitleaks-staged',
+            'security/semgrep',
+            'spelling/typos',
+        ],
+        reason: 'A unit test has no installed tools.',
+    },
+} as const;
 
 export const SCAN_RUN_REPORT: RunReport = {
     notes: [],
@@ -251,6 +273,7 @@ export const SCAN_RUN_REPORT: RunReport = {
         },
     ],
     ignores: [],
+    baselined: {},
     unstagedChanges: 0,
     partial: false,
     failed: ['javascript/eslint', 'secrets/gitleaks-staged', 'format/prettier', 'spelling/typos'],

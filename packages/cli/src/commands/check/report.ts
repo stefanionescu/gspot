@@ -5,6 +5,7 @@ import { formatCheckedContent } from '#cli/engine/report.ts';
 import { formatExplainCommand } from '#cli/engine/results.ts';
 import { print, printWarning } from '#cli/system/terminal.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
+import { BASELINE_FILE } from '#cli/config/repository/files.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { CODE_MARK, EVERY_CHECK } from '#cli/config/commands/help.ts';
@@ -119,6 +120,11 @@ function formatIgnores(report: RunReport, { verbose }: { verbose: boolean }): st
         const paths = ignore.paths === undefined ? '' : ` ${ignore.paths.join(' ')}`;
         return `ignore     ${ignore.check ?? EVERY_CHECK}${rule}${paths}  ${styleText('dim', ignore.reason, { stream: process.stdout })}`;
     });
+}
+
+function formatBaselined({ baselined }: RunReport): string[] {
+    const count = Object.values(baselined).reduce((total, each) => total + each, 0);
+    return count === 0 ? [] : [`baselined  ${String(count)} (counted in ${BASELINE_FILE})`];
 }
 
 function formatIncompleteCounts({ checks }: RunReport): string[] {
@@ -243,6 +249,7 @@ export function formatRunReport(
         ...formatNotChecked(report.notChecked),
         ...report.notes.map((note) => `note     ${note}`),
         ...formatIgnores(report, { verbose }),
+        ...formatBaselined(report),
         ...formatUnstagedChanges(report),
         formatSummary(report),
         `Time: ${(report.duration / MILLISECONDS_PER_SECOND).toFixed(1)}s. ${ending}`,

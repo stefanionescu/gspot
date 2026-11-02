@@ -2,6 +2,7 @@ import { runChecks } from '#cli/engine/run.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { readBaseline } from '#cli/engine/baseline.ts';
 import { printWarning } from '#cli/system/terminal.ts';
 import { findSettingsSkip } from '#cli/engine/skips.ts';
 import type { CommandResult } from '#cli/types/system.ts';
@@ -170,7 +171,10 @@ export async function runTreeCheck(
         const onlyNotes = assertNamedChecks(session, options);
         const filters = await readRunFilters(session, options, cancelSignal, revision);
         await warnMissingHooks(session, revision);
-        const result = await runChecks(session, buildRunOptions(options, filters, revision));
+        const result = await runChecks(session, {
+            ...buildRunOptions(options, filters, revision),
+            baseline: readBaseline(treeFolder),
+        });
         if (result.fixes !== undefined) printFailedFixers(result.fixes, { verbose: options.verbose });
         addRevisionNotes(result.report, revision);
         result.report.notes.push(...onlyNotes);

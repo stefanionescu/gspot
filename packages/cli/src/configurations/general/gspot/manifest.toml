@@ -2,7 +2,7 @@ allowed_words = ["gspot"]
 
 [configuration]
 always_selected = true
-description = "gspot itself: path patterns in gspot.toml that match files, current generated files, no config files that conflict with the generated ones, and a reason on each suppression."
+description = "gspot itself: path patterns in gspot.toml that match files, current generated files, no config files that conflict with the generated ones, a reason on each suppression, and a baseline with no stale counts."
 title = "gspot"
 
 [[tool]]
@@ -11,6 +11,15 @@ min_version = "22.22.3"
 name = "node"
 system = true
 version_command = ["--version"]
+
+[[check]]
+example = "A file with one `no-console` finding under a baseline count of two reports a stale count. Run `gspot baseline --prune`, then commit `gspot.baseline.json`."
+help = "Run `gspot baseline --prune`, then commit `gspot.baseline.json`."
+name = "baseline"
+runs = "once"
+stage = "commit"
+summary = "Reports each count in `gspot.baseline.json` that the checks of the run no longer find."
+why = "A count with room left hides the next finding of that rule in that file."
 
 [[check]]
 example = "A `.commitlintrc.json` while gspot runs commitlint reports a conflicting config file. Delete it, and write the rule you need in `gspot.toml`, such as `commits.types`."

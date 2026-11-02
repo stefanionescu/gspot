@@ -8,7 +8,8 @@ the tracked tree. Some tools and caches serve several repositories.
 
 ## Files to commit
 
-Commit `gspot.toml`, the generated config files and lockfiles in `.gspot/`, and the generated files outside it. The
+Commit `gspot.toml`, `gspot.baseline.json` when `gspot baseline` wrote one, the generated config files and lockfiles in
+`.gspot/`, and the generated files outside it. The
 [Generated files table](/reference/generated-files/#what-gspot-writes) lists each kind and whether to commit it.
 The gspot block of `.gitattributes` marks the generated paths outside `.gspot/` with `linguist-generated`.
 

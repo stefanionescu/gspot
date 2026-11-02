@@ -69,6 +69,9 @@ The agent then:
 Run `gspot check --fix` before your first commit. It formats the files that the checks now cover, such as a
 `package.json` or `tsconfig.json` with another indentation, so that the pre-commit hook does not stop the commit.
 
+To accept the findings that remain, run `gspot baseline`. The checks then fail only on new findings; see
+[Keep the findings that predate gspot](/use/ignore/#keep-the-findings-that-predate-gspot).
+
 Commit `gspot.toml` and the files that gspot wrote; [Generated files](/reference/generated-files/) lists them. Then
 commit as usual. The pre-commit hook checks the staged files and stops the commit when a check fails. Run
 `gspot check` to check every file, including work that you did not commit.

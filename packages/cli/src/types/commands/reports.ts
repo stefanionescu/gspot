@@ -256,3 +256,7 @@ export type ScanReport = {
 export type ScanInput = { planning: InitPlanning; session: Session; report: RunReport; toolBytes: number };
 
 export type ScanSection = { title: string; rows: string[]; preformatted?: boolean };
+
+export type BaselineFlags = { prune?: boolean };
+
+export type BaselineJson = { summary: string; findings: number; files: number; leftOut: string[] };

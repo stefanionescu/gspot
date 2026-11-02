@@ -53,7 +53,8 @@ ${setup.flatMap(({ label, prerequisites }) => prerequisites.map((command) => `  
    cannot install, tell the user. \`gspot doctor\` lists what is missing.
 6. Run \`gspot check\`, and show the user its last line. Fix the findings in the files that you changed. Ask the user
    before you fix findings in other files.
-7. Tell the user what gspot wrote, the level, which checks run, and which findings are left.
+7. Ask the user whether to accept the other findings with \`gspot baseline\`, and run it only after the user agrees.
+8. Tell the user what gspot wrote, the level, which checks run, and which findings are left.
 
 ## Rules for daily work
 
@@ -76,6 +77,8 @@ ${setup.flatMap(({ label, prerequisites }) => prerequisites.map((command) => `  
   \`gspot ignore <check> --reason "<why>"\`, with \`--rule <rule>\` and \`--paths "<path>"\` to narrow it.
   A suppression comment needs a reason, such as
   \`// eslint-disable-next-line no-console -- reason: the command prints its result\`.
+- Ask the user before you run \`gspot baseline\`, which accepts every current finding. When \`gspot/baseline\`
+  reports a stale count, run \`gspot baseline --prune\` and commit \`gspot.baseline.json\`.
 - Never suppress a size or complexity limit. Split the code, or ask the user to raise the limit with
   \`gspot set limits.<name> <value> --reason "<why>"\`.
 - Change settings only with \`gspot add\`, \`remove\`, \`set\`, \`unset\`, \`ignore\`, and \`unignore\`. Do not edit files

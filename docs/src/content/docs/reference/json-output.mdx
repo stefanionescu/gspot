@@ -70,6 +70,15 @@ holds repository-relative paths.
 | `nextSteps`     | The commands to run next.                                                                   |
 | `checks`        | The result of every planned check, as in [`gspot check`](#gspot-check), with every finding. |
 
+## `gspot baseline`
+
+| Field      | Meaning                                                                     |
+| ---------- | --------------------------------------------------------------------------- |
+| `summary`  | One sentence about the result.                                              |
+| `findings` | Number of findings that `gspot.baseline.json` holds.                        |
+| `files`    | Number of files that those findings sit in.                                 |
+| `leftOut`  | The checks that keep failing, because a baseline leaves their findings out. |
+
 ## `gspot init`
 
 The object of `gspot init --json` also has the [generated-file fields](#generated-files).
@@ -117,6 +126,7 @@ gspot neither computes nor includes those diffs.
 | `comparison`      | When present, the selected content (`working-tree`, `index`, or `commit`) and its reference. |
 | `checks`          | The result of every planned check, skipped ones included, with their findings.               |
 | `ignores`         | Ignores in effect, with their check, optional lint rule, paths, and reason.                  |
+| `baselined`       | The findings that `gspot.baseline.json` subtracted, as a count per check.                    |
 | `unstagedChanges` | Number of changed files left out when the run reads the staging area.                        |
 | `partial`         | Whether the run selected only staged files, changed files, or named paths.                   |
 | `fixes`           | When present, the changed files, files restored after broken fixes, and fixer errors.        |

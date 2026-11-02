@@ -13,6 +13,7 @@ export type FinishedRun = {
     active: PlannedCheck[];
     results: CheckResult[];
     fixes: FixReport | undefined;
+    baselined: RunReport['baselined'];
 };
 
 export type ReproduceOptions = {
@@ -46,11 +47,24 @@ export type PlanAfterFixes = { session: CheckSession; planned: PlannedCheck[]; f
 export type Run = {
     session: CheckSession;
     options: RunOptions;
+    codes: Map<PlannedCheck, CheckCode | undefined>;
+    baselineRun: BaselineRun;
+    baselined: Record<string, number>;
+    progress: Pick<CheckProgress, 'finished' | 'total'>;
 };
+
+export type BaselineRun = {
+    unused: Map<string, BaselineCount[]>;
+    finished: PlannedCheck[];
+    paths: string[] | undefined;
+};
+
+export type BaselineCount = { file: string; check: string; rule: string; count: number };
 
 export type RunOptions = PlanOptions & {
     generation: CheckGeneration;
     selectCheckCode: (check: Check) => CheckCode | undefined;
+    baseline?: BaselineCount[] | undefined;
     started?: Date | undefined;
     stage: StageFilter;
     onProgress?: ((progress: CheckProgress) => void) | undefined;
@@ -72,6 +86,7 @@ export type RunReport = {
     duration: number;
     checks: readonly CheckResult[];
     ignores: readonly IgnoreRecord[];
+    baselined: Readonly<Record<string, number>>;
     unstagedChanges: number;
     partial: boolean;
     failed: readonly string[];
@@ -84,6 +99,7 @@ export type CheckStatus = 'passed' | 'failed' | 'missing' | 'skipped' | 'error';
 
 export type CheckCode = ({ check: BuiltInCheck; run?: never } | { run?: CheckRun; check?: never }) & {
     ruleDocs?: Readonly<Record<string, LintRuleDocs>>;
+    runsLast?: boolean;
 };
 
 type CheckRun = (
@@ -95,6 +111,7 @@ type CheckRun = (
 export type CheckRunOptions = {
     verbose?: boolean | undefined;
     command?: string[];
+    baselineRun?: BaselineRun | undefined;
 };
 
 export type FindingOptions = { verbose: boolean; help: string | undefined };

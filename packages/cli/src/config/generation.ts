@@ -5,7 +5,7 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { SWIFT_FILES } from '#cli/config/configurations/swift.ts';
 import { LFS_GUARD_PREFIX } from '#cli/config/repository/setup.ts';
 import { SQL_FILES, PYTHON_FILES } from '#cli/config/configurations/python.ts';
-import { GITATTRIBUTES_FILE, GENERATED_HEADER_MARK } from '#cli/config/repository/files.ts';
+import { BASELINE_FILE, GITATTRIBUTES_FILE, GENERATED_HEADER_MARK } from '#cli/config/repository/files.ts';
 
 export const CACHED_PATHS = {
     linux: {
@@ -217,7 +217,7 @@ export const BUILD_OUTPUT_FOLDERS: ReadonlySet<string> = new Set(['.build', 'Der
 
 export const BUILD_OUTPUT_PATTERNS = ['dist/', 'build/', 'coverage/'] as const;
 
-export const GSPOT_FOLDER_PATTERNS = [`${GSPOT_FOLDER}/**`, `${COPIES_FOLDER}/**`] as const;
+export const GSPOT_FOLDER_PATTERNS = [`${GSPOT_FOLDER}/**`, `${COPIES_FOLDER}/**`, BASELINE_FILE] as const;
 
 export const TARGET_PLACEHOLDER = /\{target_(?:json|module)\}/gu;
 

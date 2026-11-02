@@ -53,6 +53,11 @@ configurations named there. The plan lists settings it leaves out because they n
 folders. It detects the new repository's scopes and files again. Review the resulting `gspot.toml` before installing
 tools; this option does not import arbitrary ESLint, Ruff, or other tool configuration files.
 
+## Findings in existing code
+
+The first `gspot check` reports what the code holds today. To fix those findings over time, run `gspot baseline`. See
+[Keep the findings that predate gspot](/use/ignore/#keep-the-findings-that-predate-gspot).
+
 ## Old settings files after init
 
 When you raise the level or add a configuration later, a tool that starts to run can find its old settings file.

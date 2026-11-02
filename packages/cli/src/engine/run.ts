@@ -12,6 +12,7 @@ import { buildRunReport } from '#cli/engine/report.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { findMissingEnvironment } from '#cli/tools/uv.ts';
+import { subtractBaseline } from '#cli/engine/baseline.ts';
 import { isActive, planChecks } from '#cli/engine/plan.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { IgnoreRecord } from '#cli/types/settings.ts';
@@ -99,8 +100,9 @@ async function runPlannedCheck(run: Run, planned: PlannedCheck): Promise<CheckRe
     if (unrunnable) return unrunnable;
     const started = performance.now();
     try {
-        return await runCheckCode(session, planned, run.options.selectCheckCode(planned.check), {
+        return await runCheckCode(session, planned, run.codes.get(planned), {
             verbose: run.options.verbose,
+            baselineRun: run.baselineRun,
         });
     } catch (error) {
         return {
@@ -113,8 +115,10 @@ async function runPlannedCheck(run: Run, planned: PlannedCheck): Promise<CheckRe
     }
 }
 
-function removeIgnoredFindings(result: CheckResult, ignores: IgnoreRecord[]): CheckResult {
-    const findings = result.findings.filter((finding) => ignores.every((record) => !isIgnoreMatch(record, finding)));
+function removeAcceptedFindings(run: Run, result: CheckResult): CheckResult {
+    const { ignore } = run.session.settings;
+    const kept = result.findings.filter((finding) => ignore.every((record) => !isIgnoreMatch(record, finding)));
+    const { findings } = subtractBaseline({ ...result, findings: kept }, run);
     if (result.status !== 'passed' && result.status !== 'failed') return { ...result, findings };
     return { ...result, findings, status: findings.length > 0 ? 'failed' : 'passed' };
 }
@@ -157,10 +161,7 @@ function formatReproduceCommand(checkId: string, scopeArgument: string | undefin
 }
 
 function finishResult(run: Run, ran: CheckResult): CheckResult {
-    const result = normalizeResultPaths(
-        run.session,
-        removeIgnoredFindings(removeOutsideFindings(ran, run), run.session.settings.ignore),
-    );
+    const result = normalizeResultPaths(run.session, removeAcceptedFindings(run, removeOutsideFindings(ran, run)));
     if (!FAILED_STATUSES.has(result.status) || run.session.cancelSignal?.aborted === true) return result;
     const scopeArgument =
         result.scope === ''
@@ -173,16 +174,16 @@ function finishResult(run: Run, ran: CheckResult): CheckResult {
 }
 
 async function runActiveChecks(run: Run, checks: PlannedCheck[]): Promise<CheckResult[]> {
-    let finished = 0;
     const settled = await Promise.allSettled(
         checks.map(async (planned) => {
             const result = finishResult(run, await runPlannedCheck(run, planned));
+            if (result.status === 'passed' || result.status === 'failed') run.baselineRun.finished.push(planned);
             run.options.onProgress?.({
                 check: result.check,
                 scope: result.scope,
                 duration: result.duration,
-                finished: ++finished,
-                total: checks.length,
+                finished: ++run.progress.finished,
+                total: run.progress.total,
                 comparison: run.options.comparison,
             });
             return result;
@@ -211,7 +212,8 @@ async function planAfterFixes(session: CheckSession, options: RunOptions): Promi
 }
 
 /**
-Plan and run the checks, after the fixers when --fix asks, then drop ignored findings and build the run report.
+Plan and run the checks, after the fixers when --fix asks, then drop ignored and baselined findings and build the run
+report.
 
 @param session the repository and its tools.
 @param options the stage, the file selection, and the fix flags.
@@ -225,15 +227,31 @@ export async function runChecks(session: Session, options: RunOptions): Promise<
         fixes,
     } = await planAfterFixes(buildCheckSession(session, options.generation), options);
     const active = planned.filter((check) => isActive(check) && check.skip === undefined);
-    const ran = await runActiveChecks({ session: checked, options }, active);
+    const codes = new Map(active.map((check) => [check, options.selectCheckCode(check.check)]));
+    const last = active.filter((check) => codes.get(check)?.runsLast === true);
+    const first = active.filter((check) => !last.includes(check));
+    const run: Run = {
+        session: checked,
+        options,
+        codes,
+        baselineRun: {
+            unused: Map.groupBy(structuredClone(options.baseline ?? []), ({ file }) => file),
+            finished: [],
+            paths: options.paths,
+        },
+        baselined: {},
+        progress: { finished: 0, total: active.length },
+    };
+    const results = [...(await runActiveChecks(run, first)), ...(await runActiveChecks(run, last))];
     const report = buildRunReport({
         session: checked,
         options,
         started,
         planned,
-        active,
-        results: ran,
+        active: [...first, ...last],
+        results,
         fixes,
+        baselined: run.baselined,
     });
     return fixes ? { report, planned, fixes } : { report, planned };
 }

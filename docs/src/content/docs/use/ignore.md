@@ -37,3 +37,30 @@ gspot unignore javascript/eslint --rule no-console --paths "scripts/**"
 `gspot check --verbose` prints each ignore in effect and its reason.
 
 To change a limit, see [limits](/reference/gspot-toml/#limits). Use an ignore only when you can state why the check does not fit that code.
+
+## Keep the findings that predate gspot
+
+An ignore records a permanent decision with a reason. A baseline holds old findings until you fix them:
+
+```shell
+gspot baseline
+```
+
+The command runs the commit and push checks on every file, and writes `gspot.baseline.json` beside `gspot.toml`. The
+file holds a count per file, check, and lint rule. Commit it. `gspot check` then subtracts those counts, so a file fails
+only when it gains a finding. `gspot check --verbose` and `gspot check --json` show how many findings it subtracted.
+
+Findings of `secrets/*` checks stay out of the baseline, because a committed secret needs rotation. Findings of
+`gspot/*` checks stay out too, because they describe the setup of gspot itself. `gspot baseline` stops and writes
+nothing when a check cannot run.
+
+After you fix an old finding, the check `gspot/baseline` fails, because the file counts a finding that the checks did
+not find. Run this command and commit the file:
+
+```shell
+gspot baseline --prune
+```
+
+`--prune` lowers each count to what the checks still find, and adds nothing, so the file only shrinks. Only
+`gspot baseline` without `--prune` adds counts. A run of some files or some checks judges only what it read, so a
+full `gspot check` reports every stale count.

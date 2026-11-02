@@ -74,3 +74,8 @@ export const reportedTypoSchema = z.object({
     typo: z.string().min(1),
     corrections: z.string().array().nullable(),
 });
+
+export const baselineSchema = z.record(
+    z.string(),
+    z.record(z.string(), z.record(z.string(), z.number().int().positive())),
+);

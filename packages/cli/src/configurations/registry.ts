@@ -113,6 +113,7 @@ import {
     checkStoragePolicies,
 } from '#cli/configurations/platform/supabase/checks.ts';
 import {
+    checkBaseline,
     checkSuppressions,
     checkGeneratedFiles,
     checkUnmatchedPaths,
@@ -217,6 +218,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'duplication/jscpd': { check: checkJscpd },
     'expo/expo-doctor': { check: checkExpoDoctor },
     'github-actions/actionlint': { run: checkActionlint },
+    'gspot/baseline': { check: checkBaseline, runsLast: true },
     'gspot/generated-files': { check: checkGeneratedFiles },
     'gspot/conflicting-configs': { check: checkConflictingConfigs },
     'gspot/suppressions': { check: checkSuppressions },

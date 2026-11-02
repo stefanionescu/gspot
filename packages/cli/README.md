@@ -59,6 +59,9 @@ bunx --no-install gspot check
    do not come from npm or PyPI. Without mise, it names each program that you must install yourself.
 4. `gspot check` runs the checks on every file. From then on, the Git hooks check each commit and push.
 
+To accept the findings that exist today, run `gspot baseline` after `gspot install`. It writes
+`gspot.baseline.json`, and `gspot check` then fails only on new findings. Secrets stay out of it.
+
 gspot starts at level `basic`. To start at level `all`, add `--level all` to the init command. Init writes without
 asking, so run `gspot scan` first to read its plan.
 

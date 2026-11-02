@@ -13,6 +13,7 @@ import { initCommand } from '#cli/commands/init/init.ts';
 import { scanCommand } from '#cli/commands/scan/scan.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { baselineCommand } from '#cli/commands/baseline.ts';
 import { checkCommand } from '#cli/commands/check/check.ts';
 import { unignoreCommand } from '#cli/commands/unignore.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
@@ -209,6 +210,7 @@ export function buildProgram(onResult: CommandCompletion): Command {
         installCommand,
         applyCommand,
         checkCommand,
+        baselineCommand,
         addCommand,
         removeCommand,
         setCommand,
