@@ -24,6 +24,9 @@ buildRuleTester({ root }).run('no-unexplained-test-skips', plugin.rules['no-unex
         { code: 'test("adds", (t) => { t.skip("no network"); });', filename: join(root, 'node/a.test.ts') },
         { code: 'test("adds", { skip: false }, run);', filename: join(root, 'node/b.test.ts') },
         { code: 'test("adds", (t) => { other.skip(); });', filename: join(root, 'node/c.test.ts') },
+        { code: 'list.push(1);', filename: join(root, 'jest/b.test.ts') },
+        { code: 'test("adds", ({ skip }) => { run(); });', filename: join(root, 'node/d.test.ts') },
+        { code: 'test("adds", (t) => { run(t); });', filename: join(root, 'node/e.test.ts') },
     ],
     invalid: [
         ...['xit("adds", run);'].map((code) => ({

@@ -34,10 +34,9 @@ function readCalledModule(
 }
 
 function readDestructuredName(identifier: TSESTree.Node, module: string): string | undefined {
-    if (identifier.type !== AST_NODE_TYPES.Identifier) return undefined;
     const { parent } = identifier;
-    if (parent.type !== AST_NODE_TYPES.Property || parent.value !== identifier) return undefined;
-    const property = ASTUtils.getPropertyName(parent);
+    const isValue = parent?.type === AST_NODE_TYPES.Property && parent.value === identifier;
+    const property = isValue ? ASTUtils.getPropertyName(parent) : null;
     if (property === null) return undefined;
     return property === 'default' ? module : `${module}.${property}`;
 }

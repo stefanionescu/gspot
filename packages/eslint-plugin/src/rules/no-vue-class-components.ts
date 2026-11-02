@@ -6,12 +6,12 @@ import { VUE_CLASS_BASE, VUE_CLASS_DECORATORS, VUE_PROPERTY_DECORATORS } from '.
 
 function hasDecorator(
     decorators: TSESTree.Decorator[],
-    names: ReadonlySet<string>,
+    names: ReadonlySet<string | undefined>,
     source: TSESLint.SourceCode,
 ): boolean {
     return decorators.some(({ expression }) => {
         const target = expression.type === AST_NODE_TYPES.CallExpression ? expression.callee : expression;
-        return target.type === AST_NODE_TYPES.Identifier && names.has(readModuleName(target, source) ?? '');
+        return target.type === AST_NODE_TYPES.Identifier && names.has(readModuleName(target, source));
     });
 }
 

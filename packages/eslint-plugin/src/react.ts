@@ -9,9 +9,6 @@ function readOwnerName(node: TSESTree.Node): TSESTree.Node | null | undefined {
         case AST_NODE_TYPES.VariableDeclarator: {
             return node.id;
         }
-        case AST_NODE_TYPES.AssignmentExpression: {
-            return node.left.type === AST_NODE_TYPES.MemberExpression ? node.left.property : node.left;
-        }
         default: {
             return undefined;
         }
@@ -27,7 +24,7 @@ holds it.
 */
 export function isNamedFunction(node: TSESTree.Node, pattern: RegExp): boolean {
     const owner = node.type === AST_NODE_TYPES.FunctionDeclaration ? node : node.parent;
-    const name = owner === undefined ? undefined : readOwnerName(owner);
+    const name = owner && readOwnerName(owner);
     return name?.type === AST_NODE_TYPES.Identifier && pattern.test(name.name);
 }
 
@@ -51,6 +48,6 @@ Read the `useState` call of React that declares a variable, and the state value 
 */
 export function readStateHook(identifier: TSESTree.Identifier, source: TSESLint.SourceCode): StateHook | undefined {
     const definition = ASTUtils.findVariable(source.getScope(identifier), identifier)?.defs[0];
-    const declaration = definition === undefined ? undefined : readStateDeclaration(definition.node, source);
-    return declaration && definition && { ...declaration, name: definition.name };
+    const declaration = definition && readStateDeclaration(definition.node, source);
+    return declaration && { ...declaration, name: definition.name };
 }

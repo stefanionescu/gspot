@@ -2,12 +2,10 @@ import { createRule } from '../rule.ts';
 import { JSON_BODY_READ, SCHEMA_PARSERS, BODY_SCHEMA_PARSERS } from '../config/security.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function isParsedBy(node: TSESTree.Node, parsers: ReadonlySet<string>): boolean {
+function isParsedBy(node: TSESTree.Node, parsers: ReadonlySet<string | null>): boolean {
     const call = node.parent;
     if (call?.type !== AST_NODE_TYPES.CallExpression || call.arguments[0]?.range[0] !== node.range[0]) return false;
-    return (
-        call.callee.type === AST_NODE_TYPES.MemberExpression && parsers.has(ASTUtils.getPropertyName(call.callee) ?? '')
-    );
+    return call.callee.type === AST_NODE_TYPES.MemberExpression && parsers.has(ASTUtils.getPropertyName(call.callee));
 }
 
 function isValidatedLater(wait: TSESTree.AwaitExpression, source: TSESLint.SourceCode): boolean {

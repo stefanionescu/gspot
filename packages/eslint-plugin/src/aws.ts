@@ -46,7 +46,7 @@ an undeclared variable, or a variable without an import or a write, such as a pa
 @param node the expression to check.
 @returns true when the file gives the expression no value.
 */
-export function isUnresolved(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): boolean {
+function isUnresolved(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): boolean {
     let root = node;
     while (root?.type === AST_NODE_TYPES.MemberExpression) root = root.object;
     if (root?.type !== AST_NODE_TYPES.Identifier || root.name === UNDEFINED_NAME) return false;

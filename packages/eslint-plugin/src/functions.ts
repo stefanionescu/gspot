@@ -4,8 +4,7 @@ import type { LocalFunction } from './types/plugin.ts';
 import { ASTUtils, TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function readFunctionNode(node: TSESTree.Node | null): LocalFunction | undefined {
-    if (node === null) return undefined;
-    switch (node.type) {
+    switch (node?.type) {
         case AST_NODE_TYPES.FunctionDeclaration:
         case AST_NODE_TYPES.FunctionExpression:
         case AST_NODE_TYPES.ArrowFunctionExpression:
@@ -43,7 +42,7 @@ a body does not count.
 @param source the file and its lexical variables.
 */
 export function findFunction(node: TSESTree.Node | undefined, source: TSESLint.SourceCode): FunctionNode | undefined {
-    const value = node === undefined ? undefined : (readExpressionValue(node, source) ?? node);
-    const found = value === undefined ? undefined : readLocalFunction(value, source);
+    const value = readExpressionValue(node, source) ?? node;
+    const found = value && readLocalFunction(value, source);
     return found?.type === AST_NODE_TYPES.TSDeclareFunction ? undefined : found;
 }

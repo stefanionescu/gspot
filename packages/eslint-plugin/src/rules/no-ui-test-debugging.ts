@@ -18,7 +18,7 @@ function isDebugCommand(callee: TSESTree.Node, source: TSESLint.SourceCode): boo
         ...(ASTUtils.isIdentifier(receiver) && receiver.name === 'page' ? ['page'] : []),
         ...(isTestingLibraryDebugger(callee, source) ? ['library'] : []),
     ]);
-    return (DEBUG_METHODS.get(ASTUtils.getPropertyName(callee) ?? '') ?? []).some((kind) => kinds.has(kind));
+    return (DEBUG_METHODS.get(ASTUtils.getPropertyName(callee)) ?? []).some((kind) => kinds.has(kind));
 }
 
 function readRemoval(node: TSESTree.CallExpression): TSESTree.Node | [number, number] | undefined {

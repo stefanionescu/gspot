@@ -14,7 +14,7 @@ function isExpectChain(node: TSESTree.Node, source: TSESLint.SourceCode): boolea
     let value = node;
     while (
         value.type === AST_NODE_TYPES.MemberExpression &&
-        INLINE_EXPECT_MODIFIERS.has(ASTUtils.getPropertyName(value) ?? '')
+        INLINE_EXPECT_MODIFIERS.has(ASTUtils.getPropertyName(value))
     )
         value = value.object;
     const expect = value.type === AST_NODE_TYPES.CallExpression ? readCalleeName(value.callee, source) : undefined;
@@ -45,7 +45,7 @@ export const noInlineInterpolation = createRule<[], 'interpolation'>({
                 node: TSESTree.CallExpression & { callee: TSESTree.MemberExpression },
             ) {
                 const inline = node.arguments.at(-1);
-                const isMatcher = INLINE_MATCHERS.has(ASTUtils.getPropertyName(node.callee) ?? '');
+                const isMatcher = INLINE_MATCHERS.has(ASTUtils.getPropertyName(node.callee));
                 const isInterpolated = inline?.type === AST_NODE_TYPES.TemplateLiteral && inline.expressions.length > 0;
                 if (isMatcher && isInterpolated && isExpectChain(node.callee.object, context.sourceCode))
                     context.report({ node: inline, messageId: 'interpolation' });

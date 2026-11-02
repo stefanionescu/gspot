@@ -131,7 +131,7 @@ function bumpVersion(numbers: number[], kind: string): number[] {
             0,
         );
     if (kind === 'tilde') position = Math.min(1, position);
-    return [...numbers.slice(0, position), (numbers[position] ?? 0) + 1];
+    return numbers.slice(0, position + 1).map((value, index) => (index === position ? value + 1 : value));
 }
 
 function buildCeiling(numbers: number[], kind: string | undefined): VersionCeiling | null {

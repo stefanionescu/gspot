@@ -195,6 +195,10 @@ export const TYPE_CATEGORIES = new Map([
 
 export const OPEN_CATEGORIES = new Set(['object', 'null', 'undefined', 'unknown']);
 
-export const THROW_EXPECTS = new Set(['@jest/globals.expect', 'vitest.expect', 'bun:test.expect']);
+export const THROW_EXPECTS: ReadonlySet<string | undefined> = new Set([
+    '@jest/globals.expect',
+    'vitest.expect',
+    'bun:test.expect',
+]);
 
 export const UNCERTAIN_TYPES = new Set(['any', 'unknown']);

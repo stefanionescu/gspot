@@ -3,6 +3,8 @@ import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-
 
 buildTypedRuleTester().run('post-message', plugin.rules['post-message'], {
     valid: [
+        "declare function handler(event: MessageEvent): void;\nwindow.addEventListener('message', handler);",
+
         "declare const worker: Worker;\nworker.postMessage({ ready: true }, '*' as never);",
         "window.parent.postMessage({ ready: true }, 'https://app.example.com');",
         "window.addEventListener('message', (event) => {\n    if (event.origin !== 'https://app.example.com') return;\n    console.log(event.data);\n});",

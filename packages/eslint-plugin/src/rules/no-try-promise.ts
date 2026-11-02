@@ -16,7 +16,7 @@ function listCalls(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.N
 function readChainedUse(node: TSESTree.Node): PromiseUse {
     const { parent } = node;
     if (parent?.type !== AST_NODE_TYPES.MemberExpression || parent.object !== node) return 'open';
-    return CHAINED_USES.get(ASTUtils.getPropertyName(parent) ?? '') ?? 'open';
+    return CHAINED_USES.get(ASTUtils.getPropertyName(parent)) ?? 'open';
 }
 
 function isCatchCall(call: TSESTree.Node): boolean {

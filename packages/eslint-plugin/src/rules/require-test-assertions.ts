@@ -42,7 +42,7 @@ function isHttpExpectation(node: TSESTree.CallExpression, types: TypeReader | un
     const method = callee.type === AST_NODE_TYPES.MemberExpression ? ASTUtils.getPropertyName(callee) : null;
     const declaration = types?.read(callee).getCallSignatures().at(0)?.getDeclaration();
     const file = declaration?.getSourceFile().fileName ?? '';
-    return HTTP_EXPECTATIONS.has(method ?? '') && file.includes(HTTP_TESTING_MODULE);
+    return HTTP_EXPECTATIONS.has(method) && file.includes(HTTP_TESTING_MODULE);
 }
 
 function readImportedText(callee: TSESTree.Node, types: TypeReader): string {

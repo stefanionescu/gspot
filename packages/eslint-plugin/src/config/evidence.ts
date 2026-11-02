@@ -106,7 +106,7 @@ export const CHECKED_TEST_CALLEE = /^(?:it|specify|test)(?:\.(?:only|skip))?$/u;
 
 export const HTTP_TESTING_MODULE = '@angular/common/http/testing';
 
-export const HTTP_EXPECTATIONS = new Set(['expectOne', 'expectNone', 'verify']);
+export const HTTP_EXPECTATIONS: ReadonlySet<string | null> = new Set(['expectOne', 'expectNone', 'verify']);
 
 export const DONE_CALLBACKS =
     'CallExpression[arguments.length>0] > Identifier.callee, CallExpression[callee.property.name="catch"] > Identifier.arguments:first-child, CallExpression[callee.property.name=/^(?:then|subscribe)$/] > Identifier.arguments:nth-child(2), CallExpression[callee.property.name="subscribe"] > ObjectExpression > Property[key.name="error"] > Identifier.value';

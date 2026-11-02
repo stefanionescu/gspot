@@ -1,5 +1,5 @@
+import { findFunction } from './functions.ts';
 import { FUNCTION_NODES } from './config/rules.ts';
-import { readLocalFunction } from './functions.ts';
 import { usesModule, readRequiredModule } from './packages.ts';
 import type { TestCall, TableCall, TestOrigin, TestCallee, FileContext } from './types/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
@@ -105,7 +105,7 @@ export function isPlaywrightSuite(node: TSESTree.Node): boolean {
     if (node.type !== AST_NODE_TYPES.MemberExpression) return false;
     const name = ASTUtils.getPropertyName(node);
     if (name === 'describe') return node.object.type === AST_NODE_TYPES.Identifier && node.object.name === 'test';
-    return PLAYWRIGHT_SUITE_MODES.has(name ?? '') && isPlaywrightSuite(node.object);
+    return PLAYWRIGHT_SUITE_MODES.has(name) && isPlaywrightSuite(node.object);
 }
 
 /**
@@ -142,7 +142,7 @@ export function listBodyNodes(root: TSESTree.Node, source: TSESLint.SourceCode):
 function isTableTest(call: TestCall | undefined, context: FileContext): call is TestCall {
     const isRunning = call?.modifiers.slice(0, -1).every((modifier) => RUNNING_TEST_MODIFIERS.has(modifier)) === true;
     const isTable = isRunning && TABLE_TEST_NAMES.has(call.name);
-    return isTable && (TABLE_ORIGINS.has(call.module ?? '') || usesModule(context, TABLE_MODULES, TABLE_DEPENDENCIES));
+    return isTable && (TABLE_ORIGINS.has(call.module) || usesModule(context, TABLE_MODULES, TABLE_DEPENDENCIES));
 }
 
 /**
@@ -153,7 +153,7 @@ Read the table of a parameterized test or suite of Bun, Jest, or Vitest: `test.e
 */
 export function readTestTable(node: TableCall, context: FileContext): TSESTree.Node | undefined {
     const [table] = node.callee.arguments;
-    const callback = readLocalFunction(node.arguments[1] ?? node, context.sourceCode);
+    const callback = findFunction(node.arguments[1], context.sourceCode);
     const isTable = isTableTest(readTestCall(node, context.sourceCode), context);
     return isTable && callback !== undefined && table?.type !== AST_NODE_TYPES.SpreadElement ? table : undefined;
 }
@@ -204,10 +204,6 @@ export function isCypressChain(node: TSESTree.Node): boolean {
             }
             case AST_NODE_TYPES.CallExpression: {
                 value = value.callee;
-                break;
-            }
-            case AST_NODE_TYPES.ChainExpression: {
-                value = value.expression;
                 break;
             }
             default: {

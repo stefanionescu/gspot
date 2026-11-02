@@ -1,27 +1,19 @@
-import { readAssignedValue } from './modules.ts';
 import { REGEXP_CONSTRUCTOR } from './config/regex.ts';
-import { GLOBAL_THIS_NAME } from './config/builtins.ts';
+import { readExpressionValue } from './expressions.ts';
 import { type AST, parseRegExpLiteral } from '@eslint-community/regexpp';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function readStaticString(node: TSESTree.Node | undefined, source: TSESLint.SourceCode): string | undefined {
-    if (node === undefined || node.type === AST_NODE_TYPES.SpreadElement) return undefined;
-    const value = ASTUtils.getStaticValue(node, source.getScope(node))?.value;
-    return typeof value === 'string' ? value : undefined;
-}
-
-function isRegExpCallee(callee: TSESTree.Expression): boolean {
-    if (ASTUtils.isIdentifier(callee)) return callee.name === REGEXP_CONSTRUCTOR;
-    if (callee.type !== AST_NODE_TYPES.MemberExpression || ASTUtils.getPropertyName(callee) !== REGEXP_CONSTRUCTOR)
-        return false;
-    return ASTUtils.isIdentifier(callee.object) && callee.object.name === GLOBAL_THIS_NAME;
+    const evaluated = node && ASTUtils.getStaticValue(node, source.getScope(node));
+    if (typeof evaluated?.value !== 'string') return undefined;
+    return evaluated.value;
 }
 
 function readConstructorSource(
     node: TSESTree.CallExpression | TSESTree.NewExpression,
     source: TSESLint.SourceCode,
 ): { pattern: string; flags: string } | undefined {
-    if (!isRegExpCallee(node.callee)) return undefined;
+    if (!ASTUtils.isIdentifier(node.callee) || node.callee.name !== REGEXP_CONSTRUCTOR) return undefined;
     const [patternNode, flagsNode] = node.arguments;
     const pattern = readStaticString(patternNode, source);
     const flags = flagsNode === undefined ? '' : readStaticString(flagsNode, source);
@@ -73,8 +65,7 @@ Read the regular expression that a node holds, following a variable that gets on
 @param source the file that holds the node.
 */
 export function traceRegex(node: TSESTree.Node, source: TSESLint.SourceCode): AST.RegExpLiteral | undefined {
-    if (!ASTUtils.isIdentifier(node)) return readRegex(node, source);
-    const variable = ASTUtils.findVariable(source.getScope(node), node);
-    const value = variable === null ? undefined : readAssignedValue(variable);
-    return value === undefined ? undefined : readRegex(value, source);
+    const value = readExpressionValue(node, source);
+    if (value === undefined) return undefined;
+    return readRegex(value, source);
 }

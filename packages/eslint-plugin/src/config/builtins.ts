@@ -284,7 +284,7 @@ export const CALL_NODES: ReadonlySet<string> = new Set(['AwaitExpression', 'Call
 
 export const HANDLING_PARENTS: ReadonlySet<string> = new Set(['AwaitExpression', 'YieldExpression']);
 
-export const CHAINED_USES: ReadonlyMap<string, 'handled' | 'caught'> = new Map([
+export const CHAINED_USES: ReadonlyMap<string | null, 'handled' | 'caught'> = new Map([
     ['then', 'handled'],
     ['catch', 'caught'],
 ]);
@@ -313,8 +313,6 @@ export const LITERAL_UNION_MEMBERS: ReadonlySet<string> = new Set([
 export const INTERFACE_DECLARATION = /^(?:export\s+)?(?:declare\s+)?interface\s+[\w$]+\s*(?:(?:<[^{]*>)\s*)?\{/u;
 
 export const LITERAL_UNION_SIZE = 2;
-
-export const GLOBAL_THIS_NAME = 'globalThis';
 
 export const LOOP_STATEMENTS: ReadonlySet<string> = new Set(['WhileStatement', 'DoWhileStatement']);
 

@@ -17,7 +17,7 @@ function readThrowExpect(
             ? object.object
             : object;
     const isExpect =
-        expect.type === AST_NODE_TYPES.CallExpression && THROW_EXPECTS.has(readModuleName(expect.callee, source) ?? '');
+        expect.type === AST_NODE_TYPES.CallExpression && THROW_EXPECTS.has(readModuleName(expect.callee, source));
     return isExpect ? expect : undefined;
 }
 

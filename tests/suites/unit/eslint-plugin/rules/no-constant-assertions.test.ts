@@ -31,6 +31,8 @@ const freshCases = [
 
 buildRuleTester().run('no-constant-assertions', plugin.rules['no-constant-assertions'], {
     valid: [
+        'import "cypress";\nthis.page.should("equal", 1);',
+
         'expect(true).toBe(true);',
         `import { expect } from "vitest";\nexpect(isReady()).toBe(true);`,
         `import { expect } from "vitest";\nexpect(true).toBe(false);`,
