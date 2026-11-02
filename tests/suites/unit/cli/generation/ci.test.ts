@@ -12,6 +12,7 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { CI_NODE } from '#cli/config/repository/javascript.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { readCallRecords } from '#tests/setup/system/programs.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
@@ -149,12 +150,12 @@ test.each([...SETUP_CASES])(
         runGitStep(sandbox.path, ['add', '.gspot/version']);
         const commands = join(sandbox.path, 'commands.log');
         const bin = await writeProgramCommand(sandbox.path, 'bin/mise', 'fakes/tool');
-        await writeProgramCommand(sandbox.path, 'bin/gspot', 'fakes/tool', '--log-arguments', commands, '--');
+        await writeProgramCommand(sandbox.path, 'bin/gspot', 'fakes/tool', '--record', commands, '--');
         await writeProgramCommand(
             sandbox.path,
             'bin/project setup',
             'fakes/tool',
-            '--log-arguments',
+            '--record',
             commands,
             '--stdout',
             'setup out\n',
@@ -184,8 +185,9 @@ test.each([...SETUP_CASES])(
         expect(result.code, result.stdout + result.stderr).toBe(setupExit);
         expect(result.stdout).toBe('setup out\n');
         expect(result.stderr).toBe('setup err\n');
-        const gspotCalls = setupExit === 0 ? '["install"]\n["check","--base",""]\n' : '';
-        expect(await readFile(commands, 'utf8')).toBe(`${JSON.stringify(SETUP_ARGUMENTS)}\n${gspotCalls}`);
+        const gspotCalls = setupExit === 0 ? [['install'], ['check', '--base', '']] : [];
+        const calls = await readCallRecords(commands);
+        expect(calls.map((call) => call.arguments)).toStrictEqual([[...SETUP_ARGUMENTS], ...gspotCalls]);
         expect(await isOnDisk(join(sandbox.path, 'unexpected'))).toBe(false);
     },
 );

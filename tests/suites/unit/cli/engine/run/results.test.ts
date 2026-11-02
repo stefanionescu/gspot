@@ -9,12 +9,12 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { CANCELED_CHECK_NOTE } from '#tests/config/setup/sandboxes.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
 import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
+import { readCallRecords, buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { SCOPE_FINDINGS, SCOPE_CHECK_FILES, QUALITY_SEARCH_ARGUMENTS } from '#tests/config/engine/run.ts';
 
 test('an aborted run stops its command and reports cancellation on every system', async () => {
@@ -83,7 +83,7 @@ test('a path ignore keeps the check and its fixer off those paths, and a run of 
                     command: buildProgramCommand('checks/search', ...QUALITY_SEARCH_ARGUMENTS),
                     fix: buildProgramCommand(
                         'fakes/tool',
-                        '--log-arguments',
+                        '--record',
                         'fixed.txt',
                         '--text',
                         'corrected\n',
@@ -113,14 +113,17 @@ test('a path ignore keeps the check and its fixer off those paths, and a run of 
     const corrected = parseCheckReport(await runGspot(sandbox.path, commandArguments));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(corrected.report.checks[0]).toMatchObject({ status: 'passed', fileCount: 2, findings: [] });
-    for (const log of ['checked.txt', 'fixed.txt']) {
-        const logText = await readFile(join(sandbox.path, log), 'utf8');
-        for (const line of logText.trim().split('\n'))
-            expect((JSON.parse(line) as string[]).toSorted(compareText)).toStrictEqual([
-                'inputs/regular.txt',
-                'inputs/skip-keep.txt',
-            ]);
-    }
+    const checkedLog = await readFile(join(sandbox.path, 'checked.txt'), 'utf8');
+    const fixedCalls = await readCallRecords(join(sandbox.path, 'fixed.txt'));
+    const fileLists = [
+        ...checkedLog
+            .trim()
+            .split('\n')
+            .map((line) => JSON.parse(line) as string[]),
+        ...fixedCalls.map((call) => call.arguments),
+    ];
+    for (const files of fileLists)
+        expect(files.toSorted(compareText)).toStrictEqual(['inputs/regular.txt', 'inputs/skip-keep.txt']);
     expect(await readFile(join(sandbox.path, 'inputs/skip café.txt'), 'utf8')).toBe('defect\n');
     const checked = await readFile(join(sandbox.path, 'checked.txt'), 'utf8');
     const fixed = await readFile(join(sandbox.path, 'fixed.txt'), 'utf8');

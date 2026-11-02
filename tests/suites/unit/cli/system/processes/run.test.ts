@@ -158,7 +158,9 @@ test.each(buildProcessBackends())(
 
         const result = await backend.run(
             buildProgramCommand(
-                'processes/call',
+                'fakes/tool',
+                '--record',
+                '-',
                 '--environment',
                 'GSPOT_PROCESS_CASE',
                 '--stdin',
@@ -188,7 +190,7 @@ test.skipIf(isWindows).each(buildProcessBackends())(
     async (backend) => {
         await using sandbox = await testdir();
 
-        const result = await backend.run(buildProgramCommand('processes/call', '--environment', 'PATH'), {
+        const result = await backend.run(buildProgramCommand('fakes/tool', '--record', '-', '--environment', 'PATH'), {
             cwd: sandbox.path,
             env: { PATH: undefined },
         });
@@ -214,10 +216,10 @@ function buildProcessBackends(): ProcessBackend[] {
 
 test.each(buildProcessBackends())('$name: sets PWD to the child working folder', async (backend) => {
     await using sandbox = await testdir();
-    const result = await backend.run(buildProgramCommand('fakes/tool', '--print-environment', 'PWD'), {
+    const result = await backend.run(buildProgramCommand('fakes/tool', '--record', '-', '--environment', 'PWD'), {
         cwd: sandbox.path,
         env: { PWD: '/different/symlink/path' },
     });
     expect(result.code).toBe(0);
-    expect(result.stdout).toBe(sandbox.path);
+    expect(JSON.parse(result.stdout)).toMatchObject({ environment: { PWD: sandbox.path } });
 });

@@ -110,6 +110,13 @@ export type ProcessBackend = {
 
 export type ProgramName = (typeof PROGRAM_NAMES)[number];
 
+export type CallRecord = {
+    arguments: string[];
+    environment: Record<string, string | null>;
+    cwd: string;
+    stdin?: string;
+};
+
 export type FindingRow = { file: string; line: number | undefined; rule: string | undefined };
 
 export type ScopeFindingRow = FindingRow & { scope: string };

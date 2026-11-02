@@ -15,7 +15,9 @@ test('a tool run keeps literal arguments, stdin, and the caller environment, and
     await using sandbox = await testdir();
     const result = await runTool(
         buildProgramCommand(
-            'processes/call',
+            'fakes/tool',
+            '--record',
+            '-',
             '--environment',
             'NO_COLOR',
             '--environment',

@@ -9,6 +9,7 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
+import { readCallRecords } from '#tests/setup/system/programs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
@@ -103,7 +104,7 @@ test.each([...ACTIONLINT_EXITS])(
             'fakes/tool',
             '--version-line',
             String(getTool(readConfigurations().values(), 'actionlint').version),
-            '--record-cwd',
+            '--record',
             record,
             ...(code === 0 ? [] : ['--line', '.github/workflows/caller.yml:4:11: located defect [workflow-call]']),
             '--exit',
@@ -122,7 +123,8 @@ test.each([...ACTIONLINT_EXITS])(
             {},
         );
         expect(result.status, JSON.stringify(result)).toBe(status);
-        const workspace = await readFile(record, 'utf8');
+        const [call] = await readCallRecords(record);
+        const workspace = call?.cwd ?? '';
         expect(workspace).not.toBe(sandbox.path);
         expect(await isOnDisk(workspace)).toBe(false);
         expect(await readFile(join(sandbox.path, '.github/workflows/caller.yml'), 'utf8')).toBe(workflow);

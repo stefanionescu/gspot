@@ -1,6 +1,7 @@
 import { join } from 'node:path';
+import { readFile } from 'node:fs/promises';
 import { executableLayout } from '#cli/system/paths.ts';
-import type { ProgramName } from '#tests/types/setup.ts';
+import type { CallRecord, ProgramName } from '#tests/types/setup.ts';
 
 /**
 Build the arguments that run one of the test programs in tests/setup/programs, after the Bun executable.
@@ -16,6 +17,27 @@ Build the command that runs one of the test programs in tests/setup/programs wit
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Its ProgramName parameter checks that the test program exists.
 export function buildProgramCommand(program: ProgramName, ...programArguments: string[]): string[] {
     return [process.execPath, ...buildProgramArguments(program, ...programArguments)];
+}
+
+/**
+Split a `name=value` argument of a test program at its first `=`.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The test programs read every path=text argument through it.
+export function splitAssignment(pair: string): [string, string] {
+    const separator = pair.indexOf('=');
+    return [pair.slice(0, separator), pair.slice(separator + 1)];
+}
+
+/**
+Read the calls that fakes/tool recorded with `--record`, oldest first.
+*/
+
+export async function readCallRecords(log: string): Promise<CallRecord[]> {
+    const text = await readFile(log, 'utf8');
+    return text
+        .trim()
+        .split('\n')
+        .map((line) => JSON.parse(line) as CallRecord);
 }
 
 /**

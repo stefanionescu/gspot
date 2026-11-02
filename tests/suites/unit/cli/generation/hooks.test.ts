@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
@@ -8,11 +9,12 @@ import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
+import { readCallRecords } from '#tests/setup/system/programs.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { chmod, mkdir, realpath, writeFile } from 'node:fs/promises';
 import { HOOK_CASES, START_COMMANDS } from '#tests/config/generation/files.ts';
-import { chmod, mkdir, readFile, realpath, writeFile } from 'node:fs/promises';
 import { selectStartRunner } from '#cli/repository/javascript/package-manager.ts';
 import { createGitSandbox, createLfsRepository } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -57,7 +59,9 @@ test.each(START_COMMANDS.map(([program, packageManager, prefix]) => ({ program, 
         await writeProgramCommand(
             sandbox.path,
             `bin/${program}`,
-            'processes/call',
+            'fakes/tool',
+            '--record',
+            '-',
             '--environment',
             'GSPOT_HOOK',
             '--',
@@ -131,16 +135,16 @@ test('an npm hook with no local gspot binary names both worktree installation st
     const hook = buildHookFiles(selectStartRunner(sandbox.path), ['pre-commit'], { hasLfsFiles: false })[0]!;
     const path = join(sandbox.path, 'pre-commit');
     await writeFile(path, hook.content);
-    const bin = await writeProgramCommand(sandbox.path, 'bin/npm', 'fakes/logger', 'npm');
     const log = join(sandbox.path, 'calls.jsonl');
+    const bin = await writeProgramCommand(sandbox.path, 'bin/npm', 'fakes/tool', '--record', log);
     const result = await runCommand([Bun.which('sh')!, path], {
         cwd: sandbox.path,
-        env: { PATH: bin, CALLS_LOG: log },
+        env: { PATH: bin },
         stdin: '',
     });
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(result.stderr).toBe('Run npm install, then gspot install, in this worktree.\n');
-    expect(await Bun.file(log).exists()).toBe(false);
+    expect(existsSync(log)).toBe(false);
 });
 
 test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, and the other LFS hooks run git lfs', async () => {
@@ -153,12 +157,13 @@ test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, a
             (name) => `${GSPOT_PATHS.hooks}/${name}`,
         ),
     );
-    const bin = await writeProgramCommand(sandbox.path, 'bin/git', 'fakes/logger', 'git');
-    await writeProgramCommand(sandbox.path, 'bin/git-lfs', 'fakes/logger', 'git-lfs');
-    await writeProgramCommand(sandbox.path, 'bin/mise', 'fakes/logger', 'mise');
-    await writeProgramCommand(sandbox.path, 'bin/cat', 'fakes/tool', '--copy-stdin');
     const log = join(sandbox.path, 'calls.jsonl');
-    const environment = { PATH: bin, CALLS_LOG: log };
+    const recorder = ['--record', log, '--stdin', '--'];
+    const bin = await writeProgramCommand(sandbox.path, 'bin/git', 'fakes/tool', ...recorder, 'git');
+    await writeProgramCommand(sandbox.path, 'bin/git-lfs', 'fakes/tool', ...recorder, 'git-lfs');
+    await writeProgramCommand(sandbox.path, 'bin/mise', 'fakes/tool', ...recorder, 'mise');
+    await writeProgramCommand(sandbox.path, 'bin/cat', 'fakes/tool', '--copy-stdin');
+    const environment = { PATH: bin };
     for (const hook of hooks) {
         const path = join(sandbox.path, hook.path);
         await mkdir(dirname(path), { recursive: true });
@@ -182,15 +187,13 @@ test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, a
         stdin: '',
     });
     expect(checkedOut.code, checkedOut.stdout + checkedOut.stderr).toBe(0);
-    const logged = await readFile(log, 'utf8');
-    const calls = logged
-        .trim()
-        .split('\n')
-        .map((line) => JSON.parse(line) as unknown);
-    expect(calls).toStrictEqual([
-        { name: 'git', argv: ['lfs', 'pre-push', 'origin', 'url'], input },
-        { name: 'mise', argv: ['exec', '--', 'gspot', 'check', '--hook', 'pre-push', '--', 'origin', 'url'], input },
-        { name: 'git', argv: ['lfs', 'post-checkout', 'a', 'b', '1'], input: '' },
+    expect(await readCallRecords(log)).toMatchObject([
+        { arguments: ['git', 'lfs', 'pre-push', 'origin', 'url'], stdin: input },
+        {
+            arguments: ['mise', 'exec', '--', 'gspot', 'check', '--hook', 'pre-push', '--', 'origin', 'url'],
+            stdin: input,
+        },
+        { arguments: ['git', 'lfs', 'post-checkout', 'a', 'b', '1'], stdin: '' },
     ]);
 });
 
@@ -210,7 +213,7 @@ test.each(['pre-push', 'post-merge'])('%s exits before reading input when git-lf
         env: { PATH: bin },
         stdin: '',
     });
-    expect(await Bun.file(readMarker).exists()).toBe(false);
+    expect(existsSync(readMarker)).toBe(false);
     expect(missing.code, missing.stdout + missing.stderr).toBe(2);
     expect(missing.stderr).toBe(
         'This repository uses Git LFS. Install git-lfs, then run git lfs install --skip-repo.\n',

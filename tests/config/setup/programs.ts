@@ -36,7 +36,6 @@ export const PROGRAM_NAMES = [
     'checks/staged',
     'checks/dependency',
     'checks/bash',
-    'processes/call',
     'processes/output',
     'processes/descendant',
     'processes/process-group',
@@ -45,7 +44,6 @@ export const PROGRAM_NAMES = [
     'processes/node-version',
     'processes/cli',
     'processes/command',
-    'fakes/logger',
     'fakes/git',
     'fakes/mise',
     'fakes/swift',
@@ -72,15 +70,15 @@ export const FAKE_TOOL_OPTIONS = {
     delete: { type: 'string', multiple: true },
     append: { type: 'string', multiple: true },
     text: { type: 'string' },
-    'log-arguments': { type: 'string' },
-    'record-cwd': { type: 'string' },
+    record: { type: 'string' },
+    environment: { type: 'string', multiple: true },
+    stdin: { type: 'boolean' },
     line: { type: 'string', multiple: true },
     stdout: { type: 'string' },
     stderr: { type: 'string' },
     'stdout-hex': { type: 'string' },
     'print-arguments': { type: 'boolean' },
     'print-pid': { type: 'boolean' },
-    'print-environment': { type: 'string', multiple: true },
     mark: { type: 'string' },
     until: { type: 'string' },
     wait: { type: 'boolean' },
@@ -110,11 +108,6 @@ export const CHECK_STAGED_COPY_OPTIONS = {
 export const SITE_BUILD_OPTIONS = { copy: { type: 'string', multiple: true }, import: { type: 'string' } } as const;
 
 export const IMPORT_DEPENDENCY_OPTIONS = { name: { type: 'string' }, write: { type: 'string' } } as const;
-
-export const DESCRIBE_CALL_OPTIONS = {
-    environment: { type: 'string', multiple: true },
-    stdin: { type: 'boolean' },
-} as const;
 
 export const LARGE_OUTPUT_OPTIONS = {
     text: { type: 'string' },

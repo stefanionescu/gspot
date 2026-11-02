@@ -136,7 +136,9 @@ test('per-file commands keep the arguments after the file', async () => {
                     {
                         id: 'sandbox/arguments',
                         command: buildProgramCommand(
-                            'processes/call',
+                            'fakes/tool',
+                            '--record',
+                            '-',
                             '--environment',
                             'TOOL_RELEASE',
                             '--',
