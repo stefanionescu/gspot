@@ -108,6 +108,15 @@ export const JAVASCRIPT_ENVIRONMENT_FIELDS: ReadonlySet<string> = new Set([
 
 export const JAVASCRIPT_ENVIRONMENT_GETTERS: ReadonlySet<string> = new Set(['Deno.env.get']);
 
+export const JAVASCRIPT_LITERAL_NODES: ReadonlySet<string> = new Set(['number', 'regex']);
+
+export const JAVASCRIPT_DEFAULT_OPERATORS: ReadonlySet<string> = new Set(['??', '||']);
+
+export const JAVASCRIPT_PROPERTY_NODES: ReadonlySet<string> = new Set([
+    'property_identifier',
+    'shorthand_property_identifier_pattern',
+]);
+
 export const OS_ENVIRONMENT_MEMBERS = { environ: 'environ', getenv: 'getenv' } as const;
 
 export const PYTHON_IMPORT_NODES = new Set(['import_statement', 'import_from_statement', 'future_import_statement']);
@@ -137,10 +146,6 @@ export const PYTHON_STRING_ESCAPES: Readonly<Record<string, string>> = {
 };
 
 export const COMPONENT_EXTENSION = /\.(?:vue|svelte|astro)$/u;
-
-export const COMPONENT_SCRIPT = /<script(?<attributes>[^>]*)>(?<body>[\s\S]*?)<\/script\s*>/giu;
-
-export const SCRIPT_LANGUAGE = /\blang\s*=\s*["'](?<language>[^"']+)["']/iu;
 
 export const MAXIMUM_CODE_POINT = 0x10_ff_ff;
 

@@ -96,7 +96,17 @@ function parseTomlComments(text: string, path: string): SourceComment[] {
     });
 }
 
-async function parseComponentComments(text: string, path: string): Promise<SourceComment[]> {
+/**
+Read the markup and the scripts of a component, each padded so that its lines stay where the file has them.
+
+@param text the component source.
+@param path the component file, whose extension says whether it has Astro front matter.
+@returns the markup without the front matter, and the script blocks with the front matter.
+*/
+export async function readComponentSources(
+    text: string,
+    path: string,
+): Promise<{ markup: string; scripts: ComponentScript[] }> {
     const masked = text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
     const front = path.endsWith(ASTRO_EXTENSION) ? ASTRO_FRONT_MATTER.exec(text) : null;
     const markup = front === null ? text : masked.slice(0, front[0].length) + text.slice(front[0].length);
@@ -111,6 +121,11 @@ async function parseComponentComments(text: string, path: string): Promise<Sourc
             source: replaceRanges(masked, text, [{ start, end: start + (front[1] as string).length }]),
         });
     }
+    return { markup, scripts };
+}
+
+async function parseComponentComments(text: string, path: string): Promise<SourceComment[]> {
+    const { markup, scripts } = await readComponentSources(text, path);
     const comments: SourceComment[] = [];
     for (const { grammar, source } of scripts) comments.push(...(await parseGrammarComments(grammar, source)));
     return [...comments, ...(await parseGrammarComments('html', markup))].toSorted(

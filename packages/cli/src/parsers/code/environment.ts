@@ -1,20 +1,23 @@
-import type ts from 'typescript';
 import type { Node } from 'web-tree-sitter';
-import { requireTypescript } from '#cli/system/typescript.ts';
-import type { EnvironmentRead, EnvironmentKind, EnvironmentNames, EnvironmentScope } from '#cli/types/parsers.ts';
+import { readComponentSources } from '#cli/parsers/code/comments.ts';
+import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 
+import type {
+    ParseCache,
+    EnvironmentRead,
+    EnvironmentKind,
+    ComponentScript,
+    EnvironmentNames,
+    EnvironmentScope,
+} from '#cli/types/parsers.ts';
 import {
     OS_MODULE,
     OCTAL_RADIX,
     VARIABLE_NAME,
     WHITESPACE_RUN,
     EXPANSION_NODES,
-    ASTRO_EXTENSION,
-    SCRIPT_LANGUAGE,
-    COMPONENT_SCRIPT,
     HEXADECIMAL_RADIX,
     SWIFT_ENVIRONMENT,
-    ASTRO_FRONT_MATTER,
     MAXIMUM_CODE_POINT,
     PYTHON_SCOPE_NODES,
     COMPONENT_EXTENSION,
@@ -23,25 +26,25 @@ import {
     PYTHON_STRING_ESCAPE,
     PYTHON_STRING_ESCAPES,
     OS_ENVIRONMENT_MEMBERS,
+    JAVASCRIPT_LITERAL_NODES,
+    JAVASCRIPT_PROPERTY_NODES,
+    JAVASCRIPT_DEFAULT_OPERATORS,
     JAVASCRIPT_ENVIRONMENT_FIELDS,
     JAVASCRIPT_ENVIRONMENT_GETTERS,
 } from '#cli/config/parsers.ts';
 
-function findGetterKey(node: ts.CallExpression, source: ts.SourceFile, getters: Set<string>): string | undefined {
-    const ts = requireTypescript();
-    if (!getters.has(node.expression.getText(source).replaceAll(WHITESPACE_RUN, ''))) return undefined;
-    const argument = node.arguments[0];
-    return argument !== undefined && ts.isStringLiteralLike(argument) ? argument.text : undefined;
+function readCallKey(node: Node, getters: Set<string>): string | undefined {
+    const name = node.childForFieldName('function')?.text.replaceAll(WHITESPACE_RUN, '');
+    if (name === undefined || !getters.has(name)) return undefined;
+    return readStringLiteral(node.childForFieldName('arguments')?.namedChild(0));
 }
 
-function findEnvironmentKey(node: ts.Node, source: ts.SourceFile, getters: Set<string>): string | undefined {
-    const ts = requireTypescript();
-    if (ts.isCallExpression(node)) return findGetterKey(node, source, getters);
-    if (!ts.isPropertyAccessExpression(node) && !ts.isElementAccessExpression(node)) return undefined;
-    if (!JAVASCRIPT_ENVIRONMENT_FIELDS.has(node.expression.getText(source).replaceAll(WHITESPACE_RUN, '')))
-        return undefined;
-    if (ts.isPropertyAccessExpression(node)) return node.name.text;
-    return ts.isStringLiteralLike(node.argumentExpression) ? node.argumentExpression.text : undefined;
+function readMemberKey(node: Node): string | undefined {
+    const receiver = node.childForFieldName('object')?.text.replaceAll(WHITESPACE_RUN, '');
+    if (receiver === undefined || !JAVASCRIPT_ENVIRONMENT_FIELDS.has(receiver)) return undefined;
+    return node.type === 'member_expression'
+        ? node.childForFieldName('property')?.text
+        : readStringLiteral(node.childForFieldName('index'));
 }
 
 function hasPythonDefault(keyNode: Node | null | undefined): boolean {
@@ -50,14 +53,14 @@ function hasPythonDefault(keyNode: Node | null | undefined): boolean {
     return defaultValue !== undefined && PYTHON_LITERAL_NODES.has(defaultValue.type);
 }
 
-function hasLiteralDefault(node: ts.Node): boolean {
-    const ts = requireTypescript();
+function hasLiteralDefault(node: Node): boolean {
     const { parent } = node;
+    if (parent?.type !== 'binary_expression' || parent.childForFieldName('left')?.id !== node.id) return false;
+    const operator = parent.childForFieldName('operator')?.type ?? '';
+    const right = parent.childForFieldName('right');
     return (
-        ts.isBinaryExpression(parent) &&
-        parent.left === node &&
-        [ts.SyntaxKind.QuestionQuestionToken, ts.SyntaxKind.BarBarToken].includes(parent.operatorToken.kind) &&
-        (ts.isLiteralExpression(parent.right) || ts.isNoSubstitutionTemplateLiteral(parent.right))
+        JAVASCRIPT_DEFAULT_OPERATORS.has(operator) &&
+        (readStringLiteral(right) !== undefined || JAVASCRIPT_LITERAL_NODES.has(right?.type ?? ''))
     );
 }
 
@@ -193,23 +196,45 @@ function decodePythonKey(literal: Node): string | undefined {
     );
 }
 
-function listDeclarationReads(node: ts.Node, source: ts.SourceFile): EnvironmentRead[] {
-    const ts = requireTypescript();
-    if (!ts.isVariableDeclaration(node) || !ts.isObjectBindingPattern(node.name) || node.initializer === undefined)
+function findBoundProperty(element: Node): Node | null {
+    if (element.type === 'pair_pattern') return element.childForFieldName('key');
+    return element.type === 'object_assignment_pattern' ? element.childForFieldName('left') : element;
+}
+
+function readPropertyName(property: Node | null): string | undefined {
+    if (property?.type === 'string') return readStringLiteral(property);
+    return property !== null && JAVASCRIPT_PROPERTY_NODES.has(property.type) ? property.text : undefined;
+}
+
+function listDeclarationReads(node: Node): EnvironmentRead[] {
+    const pattern = node.childForFieldName('name');
+    const value = node.childForFieldName('value')?.text.replaceAll(WHITESPACE_RUN, '');
+    if (pattern?.type !== 'object_pattern' || value === undefined || !JAVASCRIPT_ENVIRONMENT_FIELDS.has(value))
         return [];
-    if (!JAVASCRIPT_ENVIRONMENT_FIELDS.has(node.initializer.getText(source).replaceAll(WHITESPACE_RUN, ''))) return [];
-    return node.name.elements.flatMap((declaration) => {
-        const property = declaration.propertyName ?? declaration.name;
-        if (
-            declaration.dotDotDotToken !== undefined ||
-            (!ts.isIdentifier(property) && !ts.isStringLiteralLike(property))
-        )
-            return [];
-        const key = property.text;
-        if (!VARIABLE_NAME.test(key)) return [];
-        const position = source.getLineAndCharacterOfPosition(property.getStart(source));
-        return [{ key, line: position.line + 1, column: position.character + 1 }];
+    return pattern.namedChildren.flatMap((element) => {
+        const property = findBoundProperty(element);
+        const key = readPropertyName(property);
+        if (property === null || key === undefined || !VARIABLE_NAME.test(key)) return [];
+        return [{ key, line: property.startPosition.row + 1, column: property.startPosition.column + 1 }];
     });
+}
+
+function listTreeReads(syntaxRoot: Node, getters: Set<string>): EnvironmentRead[] {
+    return syntaxRoot
+        .descendantsOfType(['variable_declarator', 'call_expression', 'member_expression', 'subscript_expression'])
+        .flatMap((node) => {
+            if (node.type === 'variable_declarator') return listDeclarationReads(node);
+            const key = node.type === 'call_expression' ? readCallKey(node, getters) : readMemberKey(node);
+            if (key === undefined || !VARIABLE_NAME.test(key)) return [];
+            return [
+                {
+                    key,
+                    line: node.startPosition.row + 1,
+                    column: node.startPosition.column + 1,
+                    ...(hasLiteralDefault(node) && { hasDefault: true }),
+                },
+            ];
+        });
 }
 
 /**
@@ -243,58 +268,52 @@ export function listSwiftEnvironmentReads(syntaxRoot: Node): EnvironmentRead[] {
 }
 
 /**
+Read the text of a string or a template without substitutions.
+
+@param node the expression.
+@returns undefined for any other expression.
+*/
+export function readStringLiteral(node: Node | null | undefined): string | undefined {
+    if (node?.type === 'string') return node.text.slice(1, -1);
+    const isStaticTemplate =
+        node?.type === 'template_string' && node.namedChildren.every(({ type }) => type !== 'template_substitution');
+    return isStaticTemplate ? node.text.slice(1, -1) : undefined;
+}
+
+/**
+List the JavaScript and TypeScript sources of a file: the file itself, or the scripts of a component.
+
+@param path the original source path.
+@param text the source.
+@returns each source with its grammar.
+*/
+export async function listJavascriptSources(path: string, text: string): Promise<ComponentScript[]> {
+    if (!COMPONENT_EXTENSION.test(path))
+        return [{ grammar: findGrammarByExtension(path) ?? 'typescript', source: text }];
+    const { scripts } = await readComponentSources(text, path);
+    return scripts;
+}
+
+/**
 Read environment members and calls to the environment functions in JavaScript or TypeScript.
 
 @param path the original source path.
 @param text the JavaScript or TypeScript source.
 @param environmentFunctions the configured names that read process variables.
+@param cache the parsed trees of this run.
 */
-export function listJavascriptEnvironmentReads(
+export async function listJavascriptEnvironmentReads(
     path: string,
     text: string,
     environmentFunctions: readonly string[],
-): EnvironmentRead[] {
-    const ts = requireTypescript();
-    if (COMPONENT_EXTENSION.test(path)) {
-        const front = path.endsWith(ASTRO_EXTENSION) ? ASTRO_FRONT_MATTER.exec(text)?.[1] : undefined;
-        const frontReads =
-            front === undefined ? [] : listJavascriptEnvironmentReads(`${path}.ts`, `\n${front}`, environmentFunctions);
-        return [
-            ...frontReads,
-            ...[...text.matchAll(COMPONENT_SCRIPT)].flatMap((script) => {
-                const body = script.groups?.['body'] ?? '';
-                const language =
-                    SCRIPT_LANGUAGE.exec(script.groups?.['attributes'] ?? '')?.groups?.['language'] ?? 'ts';
-                const start = script.index + script[0].indexOf('>') + 1;
-                const prefix = text.slice(0, start).replaceAll(/[^\r\n]/gu, ' ');
-                return listJavascriptEnvironmentReads(`${path}.${language}`, prefix + body, environmentFunctions);
-            }),
-        ];
-    }
-    const source = ts.createSourceFile(
-        path,
-        text,
-        ts.ScriptTarget.Latest,
-        true,
-        /\.[cm]?[jt]sx$/u.test(path) ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
-    );
+    cache?: ParseCache,
+): Promise<EnvironmentRead[]> {
     const getters = new Set([...JAVASCRIPT_ENVIRONMENT_GETTERS, ...environmentFunctions]);
     const reads: EnvironmentRead[] = [];
-    const visit = (node: ts.Node): void => {
-        reads.push(...listDeclarationReads(node, source));
-        const key = findEnvironmentKey(node, source, getters);
-        if (key !== undefined && VARIABLE_NAME.test(key)) {
-            const position = source.getLineAndCharacterOfPosition(node.getStart(source));
-            reads.push({
-                key,
-                line: position.line + 1,
-                column: position.character + 1,
-                ...(hasLiteralDefault(node) && { hasDefault: true }),
-            });
-        }
-        ts.forEachChild(node, visit);
-    };
-    visit(source);
+    for (const { grammar, source } of await listJavascriptSources(path, text)) {
+        using tree = await parseSource(grammar, source, cache);
+        reads.push(...listTreeReads(tree.rootNode, getters));
+    }
     return reads;
 }
 

@@ -1,20 +1,23 @@
-import type ts from 'typescript';
 import { posix } from 'node:path';
+import type { Node } from 'web-tree-sitter';
 import { find } from '#cli/system/files/reads.ts';
 import { escapeRegExp } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
-import { requireTypescript } from '#cli/system/typescript.ts';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
+import type { ComponentScript } from '#cli/types/parsers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { AssetSource, AssetGlobImport } from '#cli/types/configurations/language.ts';
+import { readStringLiteral, listJavascriptSources } from '#cli/parsers/code/environment.ts';
 import { SYMLINK_MODE, FILENAME_TAGS, GIT_FILE_MODES } from '#cli/config/repository/files.ts';
-import { ASTRO_EXTENSION, COMPONENT_SCRIPT, ASTRO_FRONT_MATTER, COMPONENT_EXTENSION } from '#cli/config/parsers.ts';
 
 import {
     ASSET_FOLDER,
     TEXT_EXTENSIONS,
+    ASSET_GLOB_CALL,
     UNUSED_ASSET_RULE,
     CONVENTIONAL_ASSETS,
     UNUSED_ASSET_MESSAGE,
@@ -22,53 +25,31 @@ import {
     ASSET_REFERENCE_SUFFIX,
 } from '#cli/config/configurations/framework.ts';
 
-function readGlobPatterns(node: ts.Node): string[] | undefined {
-    const ts = requireTypescript();
-    if (!ts.isCallExpression(node) || !ts.isPropertyAccessExpression(node.expression)) return undefined;
-    const expression = node.expression;
-    if (expression.name.text !== 'glob' || !ts.isMetaProperty(expression.expression)) return undefined;
-    if (
-        expression.expression.keywordToken !== ts.SyntaxKind.ImportKeyword ||
-        expression.expression.name.text !== 'meta'
-    )
-        return undefined;
-    return readGlobArguments(node.arguments[0]);
+function readGlobPatterns(node: Node): string[] | undefined {
+    const argument = node.childForFieldName('arguments')?.namedChild(0);
+    if (argument?.type !== 'array') {
+        const pattern = readStringLiteral(argument);
+        return pattern === undefined ? undefined : [pattern];
+    }
+    const patterns = argument.namedChildren.map((element) => readStringLiteral(element));
+    return patterns.includes(undefined) ? undefined : (patterns as string[]);
 }
 
-function readGlobArguments(argument: ts.Expression | undefined): string[] | undefined {
-    const ts = requireTypescript();
-    if (argument === undefined) return undefined;
-    if (ts.isStringLiteralLike(argument)) return [argument.text];
-    if (!ts.isArrayLiteralExpression(argument)) return undefined;
-    const patterns = argument.elements.filter((element) => ts.isStringLiteralLike(element));
-    return patterns.length === argument.elements.length ? patterns.map((pattern) => pattern.text) : undefined;
+async function readGlobImports(source: ComponentScript, session: Session): Promise<AssetGlobImport[]> {
+    using tree = await parseSource(source.grammar, source.source, session);
+    return tree.rootNode.descendantsOfType('call_expression').flatMap((node) => {
+        const name = node.childForFieldName('function')?.text.replaceAll(WHITESPACE_RUN, '');
+        const patterns = name === ASSET_GLOB_CALL ? readGlobPatterns(node) : undefined;
+        return patterns === undefined ? [] : [{ patterns, text: node.text }];
+    });
 }
 
-function readGlobImports(path: string, script: string): AssetGlobImport[] {
-    const ts = requireTypescript();
-    const source = ts.createSourceFile(path, script, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-    const imports: AssetGlobImport[] = [];
-    const visit = (node: ts.Node): void => {
-        const patterns = readGlobPatterns(node);
-        if (patterns !== undefined) imports.push({ patterns, text: node.getText(source) });
-        ts.forEachChild(node, visit);
-    };
-    visit(source);
-    return imports;
-}
-
-function readAssetSource(path: string, text: string, scope: string): AssetSource {
+async function readAssetSource(path: string, text: string, session: Session, scope: string): Promise<AssetSource> {
     const matchers: ((path: string) => boolean)[] = [];
     let references = text;
-    const scripts = COMPONENT_EXTENSION.test(path)
-        ? [
-              ...(path.endsWith(ASTRO_EXTENSION) ? [ASTRO_FRONT_MATTER.exec(text)?.[1]] : []),
-              ...[...text.matchAll(COMPONENT_SCRIPT)].map((script) => script.groups?.['body']),
-          ]
-        : [text];
-    for (const script of scripts) {
-        if (script?.includes('glob') !== true) continue;
-        for (const imported of readGlobImports(path, script)) {
+    const sources = text.includes(ASSET_GLOB_CALL) ? await listJavascriptSources(path, text) : [];
+    for (const source of sources) {
+        for (const imported of await readGlobImports(source, session)) {
             const patterns = imported.patterns.map((pattern) => {
                 const negative = pattern.startsWith('!');
                 const bare = negative ? pattern.slice(1) : pattern;
@@ -91,7 +72,7 @@ Report assets absent from the text files and index. Exclude files that browsers 
 @param session the repository and its tools.
 @param planned the scope files and the tracked files.
 */
-export function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): CheckFinding[] {
+export async function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const local = new Set(planned.files.map((file) => file.path));
     const paths = new Set([
         ...local,
@@ -104,15 +85,11 @@ export function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): 
             )
             .map((indexFile) => indexFile.path),
     ]);
-    const texts = paths
-        .values()
-        .filter((path) => TEXT_EXTENSIONS.has(posix.extname(path)))
-        .map((path) => {
-            const text = find(session.cache, path);
-            return text === undefined ? undefined : readAssetSource(path, text, planned.scope.path);
-        })
-        .filter((source) => source !== undefined)
-        .toArray();
+    const texts: AssetSource[] = [];
+    for (const path of paths) {
+        const text = TEXT_EXTENSIONS.has(posix.extname(path)) ? find(session.cache, path) : undefined;
+        if (text !== undefined) texts.push(await readAssetSource(path, text, session, planned.scope.path));
+    }
     return planned.files
         .filter(
             (file) =>
