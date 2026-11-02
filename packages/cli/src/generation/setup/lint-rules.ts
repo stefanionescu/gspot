@@ -7,14 +7,6 @@ import { RUFF_SELECTOR } from '#cli/config/settings/schema.ts';
 import { printedRulesSchema } from '#cli/schemas/generation.ts';
 import { listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
 
-import {
-    LIMIT_RULE,
-    FIRST_NUMBER,
-    RUFF_CHECK_ID,
-    CARRY_ROW_START,
-    REASON_PLACEHOLDER,
-    PRINT_TIMEOUT_SECONDS,
-} from '#cli/config/repository/setup.ts';
 import type {
     CarryRow,
     RuffRules,
@@ -25,6 +17,16 @@ import type {
     RuffRuleInput,
     RuleComparison,
 } from '#cli/types/generation.ts';
+import {
+    LIMIT_RULE,
+    FIRST_NUMBER,
+    RUFF_CHECK_ID,
+    RUFF_ANY_PREFIX,
+    CARRY_ROW_START,
+    RUFF_ALL_SELECTOR,
+    REASON_PLACEHOLDER,
+    PRINT_TIMEOUT_SECONDS,
+} from '#cli/config/repository/setup.ts';
 
 function isLooser(rule: string, user: unknown[], shipped: unknown[]): boolean {
     const value = FIRST_NUMBER.exec(JSON.stringify(user))?.[0];
@@ -76,7 +78,8 @@ export function compareRules(input: RuleComparison): ComparedRules {
 
 /**
 Compare the selectors of a Ruff config with the selectors that gspot runs. A selector counts as covered when a selector
-of gspot holds it: E5 holds E501, and A holds A001 but no selector of another Ruff plugin.
+of gspot holds it: E5 holds E501, and A holds A001 but no selector of another Ruff plugin. A rule that the config turns
+off needs a reason when a shipped or a carried selector holds it.
 
 @param input the Ruff settings, and the selectors that gspot runs.
 */
@@ -87,6 +90,8 @@ export function compareRuffRules(input: RuffRuleInput): RuffRules {
     const running = new RegExp(String.raw`^(?:${shipped.join('|')})(?:\d|$)`, 'u');
     const added = selected.filter((rule) => !running.test(rule));
     const rules = added.filter((rule) => RUFF_SELECTOR.test(rule));
+    const held = [...shipped, ...rules].join('|').replace(RUFF_ALL_SELECTOR, RUFF_ANY_PREFIX);
+    const runsAfterInit = new RegExp(String.raw`^(?:${held})(?:\d|$)`, 'u');
     const perFile = lint['per-file-ignores'] === undefined ? [] : Object.entries(lint['per-file-ignores']);
     const turnedOff = [
         ...[...(lint.ignore ?? []), ...(lint['extend-ignore'] ?? [])].map((rule) => ({ rule, file: undefined })),
@@ -99,7 +104,7 @@ export function compareRuffRules(input: RuffRuleInput): RuffRules {
         covered: selected.length - added.length,
         carried: rules,
         reasons: turnedOff
-            .filter(({ rule }) => running.test(rule))
+            .filter(({ rule }) => runsAfterInit.test(rule))
             .map(({ rule, file }) => formatIgnoreLine(RUFF_CHECK_ID, rule, file)),
         dropped: [
             ...Object.entries({ '': options, 'lint.': options.lint, 'format.': options.format }).flatMap(

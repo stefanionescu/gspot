@@ -68,6 +68,24 @@ export const CARRY_ROW_CASES = [
         row: { dropped: ['the whole file, which gspot could not read'] },
     },
     {
+        name: 'a Ruff rule that a carried selector holds',
+        files: { 'ruff.toml': 'select = ["E", "F", "T20"]\nignore = ["E501"]\n', 'main.py': 'VALUE = 1\n' },
+        path: 'ruff.toml',
+        row: { carried: ['E'], reasons: ['gspot ignore python/ruff --rule E501 --reason "<why>"'] },
+    },
+    {
+        name: 'Ruff rules that the selector ALL holds',
+        files: { 'ruff.toml': '[lint]\nselect = ["ALL"]\nignore = ["E", "D"]\n', 'main.py': 'VALUE = 1\n' },
+        path: 'ruff.toml',
+        row: {
+            carried: ['ALL'],
+            reasons: [
+                'gspot ignore python/ruff --rule E --reason "<why>"',
+                'gspot ignore python/ruff --rule D --reason "<why>"',
+            ],
+        },
+    },
+    {
         name: 'the prettier key of package.json',
         files: {
             'package.json': '{"prettier":{"singleQuote":true,"quoteProps":"consistent"}}',
