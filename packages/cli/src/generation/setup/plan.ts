@@ -229,7 +229,6 @@ export function formatInitPlan(plan: InitPlan, settingsText: string): string {
         ...formatFileSection('change', plan.change),
         ...formatFileSection(LINT_FOLDERS_HEADING, plan.lintFolders),
         CI_OFF_MESSAGE,
-        FOREIGN_HOOK_NOTE,
         CHANGE_LATER_MESSAGE,
         '',
         SETTINGS_FILE,
