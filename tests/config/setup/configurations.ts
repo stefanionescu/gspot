@@ -1,3 +1,5 @@
+import cliPackage from '#cli-package' with { type: 'json' };
+
 export const COMMAND_PLAYBOOK = `---
 - name: Deploy the service
   hosts: all
@@ -27,6 +29,11 @@ export const STYLELINT_FILES = {
 
 export const COMMITLINT_PACKAGE =
     '{"name":"native-project","private":true,"commitlint":{"rules":{"type-enum":[2,"always",["special"]]}},"kept":[0,false,""]}\n';
+
+export const COMMITLINT_GSPOT_PACKAGE = COMMITLINT_PACKAGE.replace(
+    '"kept"',
+    `"devDependencies":{"${cliPackage.name}":"${cliPackage.version}"},"kept"`,
+);
 
 export const CALLED_WORKFLOW = '.github/workflows/called.yml';
 

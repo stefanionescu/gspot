@@ -4,6 +4,7 @@ import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import type { GspotProject } from '#tests/types/setup.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -15,22 +16,30 @@ async function prepareExample(installation: GspotProject): Promise<string> {
     mkdirSync(root);
     await createFileTree(root, {
         '.gitignore': 'node_modules/\n',
+        '.prettierrc.json': '{ "tabWidth": 4, "singleQuote": true }\n',
         'src/cart.ts': 'export type Cart = { total: number };\n',
         'src/payments.ts':
             'export async function charge(total: number): Promise<void> {\n    await Promise.resolve(total);\n}\n',
         [example.before.path]: 'export {};\n',
     });
+    const devDependencies = { [cliPackage.name]: cliPackage.version };
     for (const [path, contents] of Object.entries({
-        'package.json': { name: 'home-example', private: true, type: 'module', exports: './src/checkout.ts' },
+        'package.json': {
+            name: 'home-example',
+            private: true,
+            type: 'module',
+            exports: './src/checkout.ts',
+            devDependencies,
+        },
         'package-lock.json': {
             name: 'home-example',
             lockfileVersion: 3,
             requires: true,
-            packages: { '': { name: 'home-example' } },
+            packages: { '': { name: 'home-example', devDependencies } },
         },
         'tsconfig.json': { compilerOptions: { strict: true, module: 'NodeNext', target: 'ES2022' }, include: ['src'] },
     }))
-        writeFileSync(join(root, path), await format(JSON.stringify(contents), { parser: 'json', tabWidth: 4 }));
+        writeFileSync(join(root, path), await format(JSON.stringify(contents), { filepath: path, tabWidth: 4 }));
     commitAll(root);
     await initSandbox(
         { root, run: installation.online.run },

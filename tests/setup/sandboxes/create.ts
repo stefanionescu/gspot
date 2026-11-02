@@ -53,6 +53,14 @@ async function prepareInstalledSandbox(root: string, plan: InstalledSandboxPlan)
         const result = await runCommand([...command], { cwd: root });
         if (result.code !== 0) throw new Error(`${command.join(' ')} failed: ${result.stdout}${result.stderr}`);
     }
+    await writeFile(
+        join(root, '.prettierrc.json'),
+        JSON.stringify({
+            tabWidth: JSON_INDENT,
+            printWidth: formatSchema.shape.print_width.parse(undefined),
+            singleQuote: true,
+        }),
+    );
     commitAll(root);
     await initSandbox(
         { root, run: spawnGspot },

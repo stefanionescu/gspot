@@ -13,7 +13,7 @@ import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { test, expect, describe, beforeAll, beforeEach } from 'bun:test';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { LICENSE, COMMITLINT_PACKAGE } from '#tests/config/setup/configurations.ts';
+import { LICENSE, COMMITLINT_GSPOT_PACKAGE } from '#tests/config/setup/configurations.ts';
 import { COMMIT_MESSAGES, UNTYPED_MESSAGE_RULES } from '#tests/config/integration/general.ts';
 import { runGspot, spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
@@ -160,7 +160,7 @@ test.each(['', 'app'])(
         const packageFile = posix.join(scope, 'package.json');
         const messageFile = posix.join(scope, 'message.txt');
         await using sandbox = await createGitSandbox({
-            [packageFile]: COMMITLINT_PACKAGE,
+            [packageFile]: COMMITLINT_GSPOT_PACKAGE,
             [messageFile]: 'special: authored contract\n',
         });
         commitAll(sandbox.path);
@@ -172,7 +172,7 @@ test.each(['', 'app'])(
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         const target = `${scope === '' ? './' : '../'}${getManifestTarget('commits', 'commitlint.json')}`;
         expect(await readFile(join(sandbox.path, packageFile), 'utf8')).toBe(
-            COMMITLINT_PACKAGE.replace('{"rules":{"type-enum":[2,"always",["special"]]}}', () =>
+            COMMITLINT_GSPOT_PACKAGE.replace('{"rules":{"type-enum":[2,"always",["special"]]}}', () =>
                 JSON.stringify({ extends: target }),
             ),
         );
@@ -184,7 +184,7 @@ test.each(['', 'app'])(
             expect(changed.code, changed.stdout + changed.stderr).toBe(0);
             const packageText = await readFile(join(sandbox.path, packageFile), 'utf8');
             const expected = Object.fromEntries(
-                Object.entries(parseJsonFile('package.json', COMMITLINT_PACKAGE)).filter(
+                Object.entries(parseJsonFile('package.json', COMMITLINT_GSPOT_PACKAGE)).filter(
                     ([key]) => key !== 'commitlint',
                 ),
             );

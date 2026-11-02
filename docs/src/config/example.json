@@ -8,8 +8,8 @@
         "content": "import type { Cart } from './cart.js';\nimport { charge } from './payments.js';\n\nexport async function pay(cart: Cart) {\n    await charge(cart.total);\n}\n"
     },
     "insertedLines": [5],
-    "rejectedSummary": "Failed: 2 checks with 4 findings. Passed: 23 checks. Skipped: 8 checks.",
-    "passedSummary": "Passed: 25 checks. Skipped: 8 checks.",
+    "rejectedSummary": "Failed: 2 checks with 4 findings. Passed: 29 checks. Skipped: 7 checks.",
+    "passedSummary": "Passed: 31 checks. Skipped: 7 checks.",
     "findings": [
         {
             "check": "javascript/eslint",

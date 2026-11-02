@@ -58,12 +58,19 @@ export const PYTHON_TUTORIAL = {
         ['uv', 'init', '--lib'],
         ['uv', 'sync'],
     ],
-    files: {},
+    files: {
+        'src/orders_python/__init__.py': `__all__ = ["hello"]
+
+
+def hello() -> str:
+    return "Hello from orders-python!"
+`,
+    },
     sourcePath: 'src/orders_python/__init__.py',
-    invalidSource: 'def total(items):\n    return sum(items\n',
+    invalidSource: 'VALUE = eval("1 + 1")\n',
     check: 'python/ruff',
-    rule: 'invalid-syntax',
-    line: 3,
+    rule: 'S307',
+    line: 1,
 } as const;
 
 export const SWIFT_TUTORIAL = {

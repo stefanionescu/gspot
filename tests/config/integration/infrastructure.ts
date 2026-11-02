@@ -299,5 +299,9 @@ export const CI_CHECKS = {
             check: 'data-files/v8r',
             reason: 'The jobs test the generated workflow, not the JSON schema check.',
         },
+        {
+            check: 'gspot/detected-configurations',
+            reason: 'The project/syntax check of this sandbox reads the scripts, not the bash configuration.',
+        },
     ],
 } as const;

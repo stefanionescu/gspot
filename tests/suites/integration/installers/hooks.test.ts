@@ -46,7 +46,7 @@ async function assertCloneHooks(source: string, environment: Record<string, stri
     const uninstalled = parseCheckReport(await runGspot(clone, ['check', '--only', 'bash/shellcheck', '--json']));
     expect(uninstalled.code, uninstalled.stdout + uninstalled.stderr).toBe(0);
     expect(uninstalled.report).toMatchObject({
-        stage: 'all',
+        stages: ['commit', 'push'],
         checks: [{ check: 'bash/shellcheck', scope: '', status: 'passed', fileCount: 2, findings: [] }],
         exitCode: 0,
     });
@@ -67,7 +67,7 @@ async function assertCloneHooks(source: string, environment: Record<string, stri
     expect(
         (rejected.stdout + rejected.stderr).split('\n').some((line) => line.startsWith(UNQUOTED_FINDING_PREFIX)),
     ).toBe(true);
-    await writeFile(join(clone, 'scripts/b.sh'), '#!/usr/bin/env bash\necho "${1:-ready}"\n');
+    await writeFile(join(clone, 'scripts/b.sh'), '#!/usr/bin/env bash\nprintf \'%s\\n\' "${1:-ready}"\n');
     runGitStep(clone, ['add', 'scripts/b.sh']);
     const accepted = runCommandBlocking(['git', 'commit', '-qm', 'Quote shell input'], {
         cwd: clone,
@@ -77,7 +77,10 @@ async function assertCloneHooks(source: string, environment: Record<string, stri
 }
 
 test('a commit with a ShellCheck finding fails through the installed hook, in the repository and in a fresh clone, and passes after the fix', async () => {
-    await using sandbox = await testdir({ 'scripts/a.sh': CLEAN_BASH_SCRIPT });
+    await using sandbox = await testdir({
+        '.editorconfig': '[*]\nindent_style = space\nindent_size = 4\n',
+        'scripts/a.sh': CLEAN_BASH_SCRIPT,
+    });
 
     await writeRuntimePins(sandbox.path);
     commitAll(sandbox.path);
@@ -93,7 +96,7 @@ test('a commit with a ShellCheck finding fails through the installed hook, in th
     expect((commit.stdout + commit.stderr).split('\n').some((line) => line.startsWith(UNQUOTED_FINDING_PREFIX))).toBe(
         true,
     );
-    await writeFile(join(sandbox.path, 'scripts/b.sh'), '#!/usr/bin/env bash\necho "$1"\n');
+    await writeFile(join(sandbox.path, 'scripts/b.sh'), '#!/usr/bin/env bash\nprintf \'%s\\n\' "$1"\n');
     runGitStep(sandbox.path, ['add', '-A']);
     const corrected = runCommandBlocking(['git', 'commit', '-qm', 'Correct shell input'], {
         cwd: sandbox.path,

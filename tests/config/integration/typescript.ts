@@ -59,6 +59,7 @@ export const doubled = twice(wrong);
 
 export const TYPESCRIPT_SANDBOX = {
     configurations: ['typescript'],
+    without: ['markdown'],
 
     json: {
         'tsconfig.json': {

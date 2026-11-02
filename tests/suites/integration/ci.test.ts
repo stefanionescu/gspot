@@ -4,12 +4,12 @@ import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { join, dirname, delimiter } from 'node:path';
 import { readFile, writeFile } from 'node:fs/promises';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { LINE_BREAK } from '#tests/config/setup/sandboxes.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { CiDocument } from '#tests/types/integration.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
@@ -50,10 +50,16 @@ application:
     await applyThenInstall(root);
 }
 
+function commitPastHooks(root: string, message: string): string {
+    runGitStep(root, ['add', '-A']);
+    runGitStep(root, ['commit', '-qm', message, '--no-verify']);
+    return runGitStep(root, ['rev-parse', 'HEAD']);
+}
+
 async function commitCiChanges(root: string, provider: 'gitlab' | 'github') {
-    const base = commitAll(root, 'base');
+    const base = commitPastHooks(root, 'base');
     await writeFile(join(root, 'changed.sh'), BROKEN_IF_SCRIPT);
-    commitAll(root, 'invalid change');
+    commitPastHooks(root, 'invalid change');
     const workflowPath = provider === 'gitlab' ? '.gitlab/ci/gspot.yml' : '.github/workflows/gspot.yml';
     const generated = Bun.YAML.parse(await readFile(join(root, workflowPath), 'utf8')) as CiDocument;
     return { base, generated };
@@ -145,8 +151,7 @@ describe.each(['gitlab', 'github'] as const)('%s CI', (provider) => {
             '  changed.sh: syntax error',
         ]);
         await writeFile(join(sandbox.path, 'changed.sh'), 'echo corrected\n');
-        runGitStep(sandbox.path, ['add', 'changed.sh']);
-        runGitStep(sandbox.path, ['commit', '-qm', 'correct syntax']);
+        commitPastHooks(sandbox.path, 'correct syntax');
         const valid = await runCiJob(sandbox.path, generated, executables.path, base);
         expect(valid.code, valid.stdout + valid.stderr).toBe(0);
         const firstPush = await runCiJob(sandbox.path, generated, executables.path, '0'.repeat(base.length));
@@ -164,7 +169,7 @@ describe.each(['gitlab', 'github'] as const)('%s CI', (provider) => {
         const failurePath = await fakeCiMise(executables.path);
         const malformed = await runCiJob(sandbox.path, generated, executables.path, '$(touch injected)');
         expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
-        expect(malformed.stderr).toStartWith('Git merge-base failed for $(touch injected): ');
+        expect(malformed.stderr).toContain('$(touch injected) is not a branch, tag, or commit in this repository.');
         expect(existsSync(join(sandbox.path, 'injected'))).toBe(false);
         await writeFile(failurePath, '');
         const refused = await runCiJob(sandbox.path, generated, executables.path, base);
