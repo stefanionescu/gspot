@@ -27,6 +27,16 @@ test('psql variables are not names, and quoted names keep their positions', asyn
         { name: 'id', line: 3, column: 21 },
     ]);
 });
+test('a qualified SQL name with spaces around its dots and quoted parts gives the position of its last part', async () => {
+    const source =
+        'CREATE TABLE "my.app" . "Accounts" (id int);\nCREATE FUNCTION app . "Touch""Up"() RETURNS void LANGUAGE sql AS $$ SELECT 1 $$;';
+    const { identifiers } = await extractSqlIdentifiers('schema.sql', source, createRunCache(process.cwd()));
+    expect(identifiers.map(({ name, line, column }) => ({ name, line, column }))).toStrictEqual([
+        { name: 'Accounts', line: 1, column: 26 },
+        { name: 'id', line: 1, column: 37 },
+        { name: 'Touch"Up', line: 2, column: 24 },
+    ]);
+});
 test('qualified SQL function and parameter names use their own declaration positions', async () => {
     const { identifiers: found } = await extractSqlIdentifiers(
         'schema.sql',

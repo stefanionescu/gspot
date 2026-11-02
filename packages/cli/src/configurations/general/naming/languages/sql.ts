@@ -9,8 +9,9 @@ import type { SqlName, Identifier, IdentifierRead } from '#cli/types/configurati
 import {
     NAME_TOKEN,
     CREATE_KIND,
+    DOTTED_NAME,
+    LEADING_NAME,
     CREATE_PREFIX,
-    QUALIFIED_NAME,
     CATEGORY_LABELS,
     CREATE_MODIFIER,
     PARAMETER_DEPTH,
@@ -91,8 +92,20 @@ function skipCreateWords(source: string, start: number): number {
     return offset;
 }
 
+function matchQualifiedName(text: string): string | undefined {
+    const first = LEADING_NAME.exec(text);
+    if (first === null) return undefined;
+    let length = first[0].length;
+    let dotted = DOTTED_NAME.exec(text.slice(length));
+    while (dotted !== null) {
+        length += dotted[0].length;
+        dotted = DOTTED_NAME.exec(text.slice(length));
+    }
+    return text.slice(0, length);
+}
+
 function findLastNameOffset(source: string, start: number): number {
-    const qualified = QUALIFIED_NAME.exec(source.slice(start))?.[0] ?? '';
+    const qualified = matchQualifiedName(source.slice(start)) ?? '';
     const lastToken = qualified.matchAll(NAME_TOKEN).toArray().at(-1);
     return start + (lastToken?.index ?? 0);
 }
@@ -100,7 +113,7 @@ function findLastNameOffset(source: string, start: number): number {
 function findFunctionName(statement: SqlStatement<'CreateFunctionStmt'>, source: string) {
     let start = skipCreateWords(source, statement.start);
     start += source.slice(start).length - source.slice(start).trimStart().length;
-    const qualified = QUALIFIED_NAME.exec(source.slice(start))?.[0] ?? '';
+    const qualified = matchQualifiedName(source.slice(start)) ?? '';
     return { start, qualified, offset: findLastNameOffset(source, start) };
 }
 
@@ -191,7 +204,7 @@ function extractStatementIdentifiers({
         .flatMap((sqlName): Identifier[] => {
             const found = findIdentifierOffset(sqlName, parsed, lexicalSource, offset);
             if (found !== -1)
-                offset = found + (QUALIFIED_NAME.exec(lexicalSource.slice(found))?.[0].length ?? sqlName.name.length);
+                offset = found + (matchQualifiedName(lexicalSource.slice(found))?.length ?? sqlName.name.length);
             if (parsed.variables.some(({ start, end }) => found >= start && found < end)) return [];
             return [buildSqlIdentifier(sqlName, { file, source, start: found === -1 ? statement.start : found })];
         });

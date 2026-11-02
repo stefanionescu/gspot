@@ -74,10 +74,9 @@ export const CREATE_KIND = /^\w+(?:\s+IF\s+NOT\s+EXISTS)?/iu;
 
 export const NAME_TOKEN = /"(?:[^"]|"")*"|[\p{L}_][\p{L}\p{N}_$]*/gu;
 
-export const QUALIFIED_NAME = new RegExp(
-    String.raw`^(?:${NAME_TOKEN.source})(?:\s*\.\s*(?:${NAME_TOKEN.source}))*`,
-    'u',
-);
+export const LEADING_NAME = new RegExp(`^(?:${NAME_TOKEN.source})`, 'u');
+
+export const DOTTED_NAME = new RegExp(String.raw`^\s*\.\s*(?:${NAME_TOKEN.source})`, 'u');
 
 export const TABLE_PARAMETERS = /^\s*RETURNS\s+TABLE\s*\(/iu;
 
