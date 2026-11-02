@@ -193,6 +193,16 @@ Here they override four shipped rules:
 - The npm package ships `manifest.toml`, `rules/`, and `files/` of each configuration from their paths under
   `packages/cli/src/configurations/`, where the runtime reads them.
 
+### ESLint plugin
+
+- `packages/eslint-plugin/src/rules/<topic>/` holds one file per rule. A topic says what its rules check, and holds at
+  least two rules.
+- `config/` and `types/` name their files after the rule topics. A small topic joins the closest file, such as control
+  flow in `logic.ts` and promises in `functions.ts`. Their files named `plugin.ts` hold what several topics read.
+- `language/` holds helpers that read JavaScript and TypeScript code, and `libraries/` holds helpers that read one
+  library or framework.
+- `registry.ts` holds the tables of rules, and `plugin.ts` exports the plugin.
+
 ### Commands and layers
 
 - `packages/cli/src/commands/` has one file per command, `commands/<command>.ts`. A command that needs more files gets
