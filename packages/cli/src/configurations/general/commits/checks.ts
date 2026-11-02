@@ -7,7 +7,7 @@ import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { runGit, readGitSetting } from '#cli/repository/git/run.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { listPushedCommits } from '#cli/configurations/pushed-commits.ts';
+import { readPushedCommits } from '#cli/repository/revisions/push.ts';
 import type { CommitMessage } from '#cli/types/configurations/general.ts';
 import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/engine/results.ts';
@@ -29,8 +29,7 @@ Checks every pushed commit message, including empty commits that change no files
 */
 export async function checkCommitlintPushed(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     using folder = createTemporaryFolder();
-    const commits = await listPushedCommits(session, planned);
-    if (!Array.isArray(commits)) return commits;
+    const commits = planned.commits ?? (await readPushedCommits(session.toolsRoot, session.cancelSignal));
     const read = await session.limitProcess(() =>
         runGit(session.root, GIT_COMMIT_MESSAGE_ARGUMENTS, {
             stdin: `${commits.join('\n')}\n`,

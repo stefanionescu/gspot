@@ -11,10 +11,9 @@ import type { EnvironmentRead } from '#cli/types/parsers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { readPushedRange } from '#cli/repository/revisions/push.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { listPushedCommits } from '#cli/configurations/pushed-commits.ts';
 import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
+import { readPushedRange, readPushedCommits } from '#cli/repository/revisions/push.ts';
 import { listPythonEnvironmentReads, listJavascriptEnvironmentReads } from '#cli/parsers/code/environment.ts';
 
 import {
@@ -69,8 +68,7 @@ Scans each pushed commit with Gitleaks, so a secret removed before the last comm
 @param planned the configured check and selected scope files.
 */
 export async function checkGitleaksPushed(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
-    const commits = await listPushedCommits(session, planned);
-    if (!Array.isArray(commits)) return commits;
+    const commits = planned.commits ?? (await readPushedCommits(session.toolsRoot, session.cancelSignal));
     if (commits.length === 0) return buildBaseResult(planned, session);
     const range = planned.range ?? (await readPushedRange(session.toolsRoot, session.cancelSignal));
     return runCommandCheck(session, planned, {
