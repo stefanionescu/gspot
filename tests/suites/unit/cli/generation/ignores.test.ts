@@ -8,6 +8,7 @@ import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import { buildConfigs } from '#cli/generation/configs.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { buildIgnoreSections } from '#cli/generation/ignores.ts';
@@ -98,8 +99,18 @@ test('shared Markdown settings leave inherited link files out of generated path 
         'docs/README.md': '# Docs\n',
     });
     const session = await openSession(sandbox.path);
-    const ignored = buildIgnoreSections(session).find(({ key }) => key === 'gspot')!.patterns;
+    const ignored = buildIgnoreSections(session, buildConfigs(session)).find(({ key }) => key === 'gspot')!.patterns;
     expect(ignored.filter((path) => path.endsWith('.markdownlint.jsonc'))).toStrictEqual(['/.markdownlint.jsonc']);
+});
+
+test('a Markdown scope with no root config keeps its link file', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { scopes: [{ path: 'app', configurations: ['markdown'] }] }),
+        'app/README.md': '# App\n',
+    });
+    const session = await openSession(sandbox.path);
+    const ignored = buildIgnoreSections(session, buildConfigs(session)).find(({ key }) => key === 'gspot')!.patterns;
+    expect(ignored.filter((path) => path.endsWith('.markdownlint.jsonc'))).toStrictEqual(['/app/.markdownlint.jsonc']);
 });
 
 test.each([...PRETTIER_IGNORE_CASES])(
@@ -198,7 +209,7 @@ test('the ignore lists name only the files that gspot writes, and Ruff gets only
         .map(({ path }) => path)
         .filter((path) => !path.startsWith(`${GSPOT_FOLDER}/`))
         .map((path) => `/${path}`);
-    const listed = buildIgnoreSections(session)
+    const listed = buildIgnoreSections(session, buildConfigs(session))
         .find(({ key }) => key === 'gspot')!
         .patterns.filter((pattern) => !pattern.startsWith(`${GSPOT_FOLDER}/`));
     expect(listed.toSorted(compareText)).toStrictEqual(
@@ -215,9 +226,9 @@ test('each submodule checkout gets an ignore pattern of its own', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['javascript']) });
     runGitStep(sandbox.path, ['update-index', '--add', '--cacheinfo', `160000,${'a'.repeat(40)},vendor/library`]);
     const session = await openSession(sandbox.path);
-    expect(buildIgnoreSections(session).find(({ key }) => key === 'submodules')?.patterns).toStrictEqual([
-        '/vendor/library/',
-    ]);
+    expect(
+        buildIgnoreSections(session, buildConfigs(session)).find(({ key }) => key === 'submodules')?.patterns,
+    ).toStrictEqual(['/vendor/library/']);
 });
 
 test('a second apply writes the same files when .prettierignore covers every source file', async () => {

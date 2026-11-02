@@ -8,7 +8,7 @@ import { formatHeader } from '#cli/generation/header.ts';
 import { join, dirname, relative } from 'node:path/posix';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import { listOwnedConfigs } from '#cli/generation/selection.ts';
-import { buildIgnoreSections } from '#cli/generation/ignores.ts';
+import { isPointerInherited, buildIgnoreSections } from '#cli/generation/ignores.ts';
 import type { ConfigGeneration } from '#cli/types/engine/tool-runs.ts';
 import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
@@ -42,7 +42,7 @@ import type { BuiltConfig, OwnedSourceFile, ConfigBuildState } from '#cli/types/
 import { buildV8rFile, buildTaploFile } from '#cli/configurations/general/data-files/generate.ts';
 import { buildRuffFile, buildBasedpyrightFile } from '#cli/configurations/language/python/generate.ts';
 import { buildTrivyFile, buildHadolintFile } from '#cli/configurations/infrastructure/docker/generate.ts';
-import { isMarkdownlintShared, buildMarkdownlintFile } from '#cli/configurations/language/markdown/generate.ts';
+import { buildMarkdownlintFile } from '#cli/configurations/language/markdown/generate.ts';
 
 import {
     TS_EXTENSION,
@@ -254,7 +254,7 @@ function listLinkFileTargets(
 
 function addLinkFiles(selected: OwnedConfig, configs: OwnedConfig[], generated: ConfigBuildState): void {
     const { config, owner } = selected;
-    if (isMarkdownlintShared(selected, configs)) return;
+    if (isPointerInherited(selected, generated)) return;
     const targetLinkFiles = listTargetLinkFiles(configs, selected);
     for (const linkFile of buildLinkFiles(owner, config, listLinkFileTargets(selected, configs, generated))) {
         if (config.source === undefined || config.pointer?.folders !== undefined || !targetLinkFiles.has(linkFile.path))
@@ -264,13 +264,17 @@ function addLinkFiles(selected: OwnedConfig, configs: OwnedConfig[], generated: 
 
 function buildScopeConfigs(session: Session): ConfigGeneration {
     const configs = listOwnedConfigs(session);
-    const state: ConfigBuildState = {
-        targets: new Map(),
-        files: new Map(),
-        failures: new Map(),
-        ignoreSections: buildIgnoreSections(session),
-    };
-    addSourceFiles(configs, state);
+    const state: ConfigBuildState = { targets: new Map(), files: new Map(), failures: new Map(), ignoreSections: [] };
+    // A tool that inherits its parent config reads no ignores, and the ignores leave out the pointers it does not need.
+    addSourceFiles(
+        configs.filter(({ config }) => config.pointer?.inherit === true),
+        state,
+    );
+    state.ignoreSections = buildIgnoreSections(session, state);
+    addSourceFiles(
+        configs.filter(({ config }) => config.pointer?.inherit !== true),
+        state,
+    );
     for (const config of configs)
         if (state.failures.get(config.owner.scope.path)?.has(config.config.target) !== true)
             addLinkFiles(config, configs, state);

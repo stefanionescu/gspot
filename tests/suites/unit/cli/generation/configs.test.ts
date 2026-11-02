@@ -47,7 +47,7 @@ test('every shipped source config has a working producer, including optional out
         expect(() =>
             buildConfigFile({ config: { ...config, source }, owner }, config.target, {
                 targets,
-                ignoreSections: buildIgnoreSections(session),
+                ignoreSections: buildIgnoreSections(session, { targets: new Map() }),
             }),
         ).not.toThrow();
     }

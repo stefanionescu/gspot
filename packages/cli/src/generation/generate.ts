@@ -8,7 +8,6 @@ import { buildConfigs } from '#cli/generation/configs.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
 import { getSettingValue } from '#cli/settings/inherit.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { AGENTS_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/repository/setup.ts';
 import { listWrittenPaths } from '#cli/generation/ignores.ts';
 import { buildLinkFieldEdits } from '#cli/generation/links.ts';
 import { listHookNames } from '#cli/tools/installers/hooks.ts';
@@ -21,6 +20,7 @@ import { listPackagePins, buildMiseInstall } from '#cli/tools/pins.ts';
 import { buildPythonProjectTable } from '#cli/tools/installers/pypi.ts';
 import type { Session, Generation, GeneratedFile } from '#cli/types/tools.ts';
 import { JSON_INDENT, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
+import { AGENTS_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/repository/setup.ts';
 import { buildBunScannerEdits } from '#cli/configurations/general/dependencies/generate.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { LFS_FILTER, FILTER_ATTRIBUTE, GITATTRIBUTES_FILE } from '#cli/config/repository/files.ts';
@@ -105,7 +105,7 @@ function buildAttributesBlock(outsidePaths: string[], authored: string): string 
 
 function addManagedBlocks(session: Session, rules: RuleFile[], generated: Generation): void {
     const { settings, cache } = session;
-    const outsidePaths = listWrittenPaths(session).map((path) => path.slice(1));
+    const outsidePaths = listWrittenPaths(session, buildConfigs(session)).map((path) => path.slice(1));
     const text = find(cache, GITATTRIBUTES_FILE) ?? '';
     const authored = stripBlock(text, { path: GITATTRIBUTES_FILE });
     generated.blocks.push({ path: GITATTRIBUTES_FILE, body: buildAttributesBlock(outsidePaths, authored) });

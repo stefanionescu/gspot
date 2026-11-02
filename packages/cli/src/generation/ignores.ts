@@ -10,9 +10,10 @@ import { readLinguistPatterns } from '#cli/repository/read.ts';
 import { listOwnedConfigs } from '#cli/generation/selection.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
+import type { ConfigTargets } from '#cli/types/engine/tool-runs.ts';
+import type { OwnedConfig } from '#cli/types/configurations/language.ts';
 import type { IgnoreSection } from '#cli/types/configurations/general.ts';
 import { IGNORE_SECTION_TITLES } from '#cli/config/configurations/registry.ts';
-import { isMarkdownlintShared } from '#cli/configurations/language/markdown/generate.ts';
 
 import {
     GITHUB_WORKFLOW,
@@ -23,20 +24,32 @@ import {
 } from '#cli/config/generation.ts';
 
 /**
+Check whether a scope reads the root config of a tool that walks up to its parent configs, so it needs no pointer.
+
+@param owned the config file and the scope that owns it.
+@param generated the file of each config in each scope.
+*/
+export function isPointerInherited(owned: OwnedConfig, generated: Pick<ConfigTargets, 'targets'>): boolean {
+    const { config, owner } = owned;
+    const files = ['', owner.scope.path].map((scope) => generated.targets.get(scope)?.get(config.target));
+    return config.pointer?.inherit === true && owner.scope.path !== '' && files.every((file) => file === config.target);
+}
+
+/**
 List the paths outside .gspot/ that a run writes: the root targets and link file paths of the config files it writes, and the CI workflow when CI runs.
 
 @param session the scopes and the settings.
+@param generated the file of each config in each scope.
 @returns the paths, each from the repository root with a leading slash.
 */
-export function listWrittenPaths(session: Session): string[] {
-    const configs = listOwnedConfigs(session);
-    const paths = configs.flatMap((owned) => {
+export function listWrittenPaths(session: Session, generated: Pick<ConfigTargets, 'targets'>): string[] {
+    const paths = listOwnedConfigs(session).flatMap((owned) => {
         const { config, owner } = owned;
         const sourceTargets =
             config.source === undefined || isGspotPath(config.target)
                 ? []
                 : [config.per_scope ? joinScope(owner.scope.path, config.target) : config.target];
-        return [...sourceTargets, ...(isMarkdownlintShared(owned, configs) ? [] : listLinkFilePaths(owner, config))];
+        return [...sourceTargets, ...(isPointerInherited(owned, generated) ? [] : listLinkFilePaths(owner, config))];
     });
     if (session.settings.ci?.enabled === true)
         paths.push(session.settings.ci.provider === 'github' ? GITHUB_WORKFLOW : GITLAB_WORKFLOW);
@@ -47,8 +60,9 @@ export function listWrittenPaths(session: Session): string[] {
 Group path ignores by source, before the ignores of a check.
 
 @param session the repository to read.
+@param generated the file of each config in each scope.
 */
-export function buildIgnoreSections(session: Session): IgnoreSection[] {
+export function buildIgnoreSections(session: Session, generated: Pick<ConfigTargets, 'targets'>): IgnoreSection[] {
     const { cache, repository, scopes } = session;
     const generatorOutputs = scopes.flatMap(({ path: scopePath, configurations }) =>
         configurations.flatMap((configuration) => configuration.generated.map((file) => join(scopePath, file))),
@@ -61,7 +75,7 @@ export function buildIgnoreSections(session: Session): IgnoreSection[] {
             ),
         ),
     ];
-    const configs = listWrittenPaths(session);
+    const configs = listWrittenPaths(session, generated);
     return [
         {
             key: 'build',

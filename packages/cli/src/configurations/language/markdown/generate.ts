@@ -1,7 +1,7 @@
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { refuseIdleRuleOptions } from '#cli/configurations/rule-options.ts';
-import type { OwnedConfig, PlannedConfig } from '#cli/types/configurations/language.ts';
 
 import {
     PRETTIER_STYLE,
@@ -43,20 +43,4 @@ export function buildMarkdownlintFile(planned: Pick<PlannedConfig, 'scope' | 'le
         Object.fromEntries(listIgnoredRules(planned.scope, MARKDOWNLINT_CHECK).map((rule) => [rule, false])),
     );
     return JSON.stringify(document, null, JSON_INDENT);
-}
-
-/**
-Check whether a Markdown scope inherits the root config because both scopes generate the same text.
-
-@param selected the scoped config file.
-@param configs the config files and their owners.
-*/
-export function isMarkdownlintShared(selected: OwnedConfig, configs: OwnedConfig[]): boolean {
-    const { config, owner } = selected;
-    if (config.pointer?.inherit !== true || owner.scope.path === '') return false;
-    const root = configs.find((each) => each.config.target === config.target && each.owner.scope.path === '');
-    if (root === undefined) return false;
-    const level = owner.session.settings.level;
-    const texts = [selected, root].map((owned) => buildMarkdownlintFile({ scope: owned.owner.scope, level }));
-    return texts[0] === texts[1];
 }
