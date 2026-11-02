@@ -49,9 +49,9 @@ du -sh .gspot
 
 To compare configurations, measure a disposable Git repository after `gspot init --no-configurations` and
 `gspot install`. Add one configuration with `gspot add <configuration>`, run `gspot install` again, and repeat the
-measurement. The increase includes its required configurations and newly needed tools. The total leaves out global
-mise tools and the Python installs of uv; `mise where <tool>`, `uv python dir`, and `uv cache dir` show their
-locations.
+measurement. The increase includes its required configurations and the npm and Python tools that it adds to `.gspot/`.
+It leaves out global mise tools and the Python installs of uv, so a configuration that adds only mise tools can add
+almost nothing to `.gspot/`; `mise where <tool>`, `uv python dir`, and `uv cache dir` show their locations.
 
 ## Reclaim shared disk space
 
