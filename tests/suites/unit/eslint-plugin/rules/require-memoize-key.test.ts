@@ -7,6 +7,7 @@ buildRuleTester().run('require-memoize-key', plugin.rules['require-memoize-key']
         'import { memoize } from "lodash";\nexport const price = memoize((id, rate) => id * rate, (id, rate) => `${id}:${rate}`);',
         'import { memoize } from "./cache";\nexport const price = memoize((id, rate) => id * rate);',
         'import { memoize } from "lodash";\nexport const price = memoize(function (this: Cart, id: string) { return id; });',
+        'import { memoize } from "lodash";\nexport function cache(read, options) { return memoize(read); }',
     ],
     invalid: [
         {

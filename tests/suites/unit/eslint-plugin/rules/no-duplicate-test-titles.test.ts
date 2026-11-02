@@ -22,6 +22,7 @@ buildRuleTester({ root }).run('no-duplicate-test-titles', plugin.rules['no-dupli
             code: 'function cases() { it("adds", () => {}); }\ndescribe("a", cases);\ndescribe("b", () => { cases(); });',
             filename,
         },
+        { code: 'describe("a", (cases) => { cases(); it("adds", () => {}); });', filename, name: 'a parameter call' },
     ],
     invalid: [
         {

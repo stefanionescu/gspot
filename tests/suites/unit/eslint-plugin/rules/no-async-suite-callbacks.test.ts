@@ -16,6 +16,11 @@ buildRuleTester({ root }).run('no-async-suite-callbacks', plugin.rules['no-async
             name: 'a helper that declares no test',
         },
         {
+            code: 'async function declareSuite(cases) { await login(); describe("cart", cases); }',
+            filename,
+            name: 'a callback that the suite receives as a parameter',
+        },
+        {
             code: 'import { describe } from "vitest";\ndescribe("cart", async () => { await load(); });',
             filename: join(root, 'plain/b.test.ts'),
         },

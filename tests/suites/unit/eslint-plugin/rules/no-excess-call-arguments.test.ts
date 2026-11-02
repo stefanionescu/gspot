@@ -14,6 +14,8 @@ buildRuleTester().run('no-excess-call-arguments', plugin.rules['no-excess-call-a
         'const api = { read(value) { return value; } }; api.read(1, 2);',
         'import read from "reader"; read(1, 2);',
         'function read(value: string): void; function read(value: number): void; function read(value: unknown) {} read(1, 2);',
+        'function run(callback: (first: number, second: number) => number) { return callback(1, 2); }',
+        'function run({ visit }) { return visit(1, 2); }',
     ],
     invalid: [
         { code: 'function read(value) { return value; } read(1, 2);', errors: [{ messageId: 'arguments' }] },
