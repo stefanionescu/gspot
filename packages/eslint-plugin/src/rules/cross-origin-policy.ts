@@ -2,7 +2,7 @@ import { createRule } from '../rule.ts';
 import { findFunction } from '../functions.ts';
 import { readQualifiedName } from '../modules.ts';
 import type { FunctionNode } from '../types/rules.ts';
-import { readExpressionValue, readOptionProperties } from '../expressions.ts';
+import { listArgumentValues, readExpressionValue, readOptionProperties } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -49,10 +49,23 @@ function isCompared(identifier: TSESTree.Node): boolean {
     return false;
 }
 
+function isTestedArgument(identifier: TSESTree.Node): boolean {
+    let child = identifier;
+    let isArgument = false;
+    for (let node = identifier.parent; node !== undefined && !ASTUtils.isFunction(node); node = node.parent) {
+        isArgument ||= node.type === AST_NODE_TYPES.CallExpression && node.callee !== child;
+        if ('test' in node && Object.is(node.test, child)) return isArgument;
+        child = node;
+    }
+    return false;
+}
+
 function isValidated(source: Readonly<TSESLint.SourceCode>, header: TSESTree.Node | undefined): boolean {
     if (header?.type !== AST_NODE_TYPES.Identifier) return false;
     const variable = ASTUtils.findVariable(source.getScope(header), header);
-    return variable?.references.some(({ identifier }) => isCompared(identifier)) === true;
+    return (
+        variable?.references.some(({ identifier }) => isCompared(identifier) || isTestedArgument(identifier)) === true
+    );
 }
 
 function isCopiedOrigin(
@@ -82,27 +95,25 @@ function listPermissiveServers(source: Readonly<TSESLint.SourceCode>, node: TSES
         .map(({ callee }) => callee);
 }
 
-function findOriginMiddleware(
-    source: Readonly<TSESLint.SourceCode>,
-    node: TSESTree.CallExpression,
-): TSESTree.CallExpression | undefined {
-    const middleware = readExpressionValue(node.arguments[0], source);
-    const isCrossOrigin =
-        middleware?.type === AST_NODE_TYPES.CallExpression &&
-        readQualifiedName(middleware, source) === CROSS_ORIGIN_MODULE;
-    return isCrossOrigin ? middleware : undefined;
+function hasOpenOrigin(source: Readonly<TSESLint.SourceCode>, options: TSESTree.Node): boolean {
+    const origin = readOptionProperties(options, source).get('origin');
+    if (origin === undefined) return true;
+    const value = ASTUtils.getStaticValue(origin.value, source.getScope(origin.value))?.value;
+    return value === '*' || value === true;
 }
 
 function listPermissiveMiddlewares(
     source: Readonly<TSESLint.SourceCode>,
     node: TSESTree.CallExpression,
 ): TSESTree.Node[] {
-    const middleware = findOriginMiddleware(source, node);
+    const middleware = listArgumentValues(node.arguments, source).find(
+        (value): value is TSESTree.CallExpression =>
+            value.type === AST_NODE_TYPES.CallExpression && readQualifiedName(value, source) === CROSS_ORIGIN_MODULE,
+    );
     if (middleware?.arguments.length === 0) return [node];
     const options = readExpressionValue(middleware?.arguments[0], source);
     if (options?.type !== AST_NODE_TYPES.ObjectExpression) return [];
-    const origin = readOptionProperties(options, source).get('origin');
-    return origin && readText(source, origin.value) !== '*' ? [] : [node.callee];
+    return hasOpenOrigin(source, options) ? [node.callee] : [];
 }
 
 function listCopiedOrigins(source: Readonly<TSESLint.SourceCode>, node: TSESTree.CallExpression): TSESTree.Node[] {
@@ -115,7 +126,7 @@ function listCopiedOrigins(source: Readonly<TSESLint.SourceCode>, node: TSESTree
 }
 
 function listPermissiveNodes(source: Readonly<TSESLint.SourceCode>, node: TSESTree.CallExpression): TSESTree.Node[] {
-    const name = readQualifiedName(node.callee, source) ?? '';
+    const name = (readQualifiedName(node.callee, source) ?? '').replace('.Router.', '.');
     const [module, method, ...members] = name.split('.');
     if (name === SERVER_FUNCTION) return listPermissiveServers(source, node);
     if (module !== EXPRESS_MODULE || members.length > 0) return [];
@@ -131,7 +142,7 @@ export const crossOriginPolicy = createRule<[], 'permissive'>({
         docs: {
             level: 'recommended',
             description:
-                'Finds CORS policies that let any site read the responses: an `Access-Control-Allow-Origin` header of `*` in `http.createServer` handlers, the `crossOriginPolicy` middleware in `app.use` with no `origin` or an `origin` of `*`, and Express route handlers that copy the request `Origin` header into `Access-Control-Allow-Origin` without comparing it.',
+                'Finds CORS policies that let any site read the responses: an `Access-Control-Allow-Origin` header of `*` in `http.createServer` handlers, the `crossOriginPolicy` middleware in `app.use` or `router.use` with no `origin` or an `origin` of `*` or `true`, and Express route handlers that copy the request `Origin` header into `Access-Control-Allow-Origin` without comparing it.',
             why: 'A permissive CORS policy lets any site read the responses that a signed-in user receives.',
             fix: 'Allow only the origins that need access: set `origin` to a list of trusted sites, and compare a request origin with that list before you send it back.',
             example:
