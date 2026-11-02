@@ -6,7 +6,8 @@ import { SITE_BUILD_OPTIONS } from '#tests/config/setup/programs.ts';
 import { statSync, mkdirSync, readdirSync, copyFileSync, writeFileSync } from 'node:fs';
 
 const { values } = parseArgs({ options: SITE_BUILD_OPTIONS });
-for (const pair of values.copy ?? []) {
+const pairs = values.copy ?? [];
+for (const pair of pairs) {
     const source = pair.slice(0, pair.indexOf('='));
     const target = pair.slice(pair.indexOf('=') + 1);
     const files = statSync(source).isDirectory()

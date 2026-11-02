@@ -37,10 +37,9 @@ test('a stream reader that throws stops its child process', async () => {
                 timeoutSeconds: CHILD_TIMEOUT_SECONDS,
             },
             async (chunks) => {
-                for await (const chunk of chunks) {
-                    expect(Buffer.from(chunk).toString('utf8')).toBe('ready');
-                    throw failure;
-                }
+                const first = await chunks[Symbol.asyncIterator]().next();
+                expect(first).toStrictEqual({ done: false, value: Buffer.from('ready') });
+                throw failure;
             },
         ),
     );

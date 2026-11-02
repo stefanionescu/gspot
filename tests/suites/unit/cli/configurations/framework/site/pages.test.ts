@@ -36,12 +36,12 @@ test('a sitemap index supplies the base path for encoded and CDATA page URLs and
     using _spawn = fakeCommands('lychee', (command, options) => {
         const mappings = command.filter((_, index) => command[index - 1] === '--remap');
         const buildUrl = `${pathToFileURL(options.cwd).href}/`;
-        remaps.push(
-            mappings.map((mapping) => {
-                const [pattern, target] = mapping.split(' ', 2);
-                return 'https://example.com/docs/guide/'.replace(new RegExp(pattern!), target!);
-            }),
-        );
+        const remapped: string[] = [];
+        for (const mapping of mappings) {
+            const [pattern, target] = mapping.split(' ', 2);
+            remapped.push('https://example.com/docs/guide/'.replace(new RegExp(pattern!), () => target!));
+        }
+        remaps.push(remapped);
         expect(mappings[1]).toBe(`^${escapeRegExp(buildUrl + 'docs/')} ${buildUrl}`);
         expect(remaps.at(-1)?.[0]).toBe(buildUrl + 'guide/');
         return Promise.resolve(buildProcessResult());

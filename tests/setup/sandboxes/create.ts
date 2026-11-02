@@ -49,7 +49,8 @@ async function writeSandbox(root: string, plan: SandboxPlan): Promise<void> {
 async function prepareInstalledSandbox(root: string, plan: InstalledSandboxPlan): Promise<void> {
     await writeSandbox(root, plan);
     if (plan.dependencies !== undefined) await linkPackages(join(root, 'node_modules'), Object.keys(plan.dependencies));
-    for (const command of plan.commands ?? []) {
+    const commands = plan.commands ?? [];
+    for (const command of commands) {
         const result = await runCommand([...command], { cwd: root });
         if (result.code !== 0) throw new Error(`${command.join(' ')} failed: ${result.stdout}${result.stderr}`);
     }
@@ -81,7 +82,8 @@ export async function createSandbox(plan: SandboxPlan): Promise<Sandbox & AsyncD
     const { path: root } = resources.use(await testdir());
     await writeSandbox(root, plan);
     commitAll(root);
-    for (const path of plan.executable ?? []) await markExecutable(root, path);
+    const executable = plan.executable ?? [];
+    for (const path of executable) await markExecutable(root, path);
     await writeFile(
         join(root, SETTINGS_FILE),
         buildSandboxSettings([...plan.configurations], { level: plan.level ?? 'all' }),
