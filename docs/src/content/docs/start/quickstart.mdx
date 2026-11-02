@@ -17,7 +17,8 @@ npx @gspothq/cli scan
 ```
 
 `gspot scan` copies the files that Git tracks into `.gspot-copies/`, sets up gspot in the copy, installs the tools
-there, and runs the checks with no fixes. It then deletes the copy, so your repository does not change.
+there, and runs the checks with no fixes. It then deletes the copy, so your repository does not change. The scan loads
+your JavaScript Prettier config and runs your project's tools, so use it only on code you trust.
 
 The report gives the findings by category, with three examples each, and the number of files that differ from your
 style. It also gives the cost in tools, megabytes, and seconds, and the plan of `gspot init`. It lists every command
