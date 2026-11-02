@@ -142,7 +142,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'docs/missing-paths': { check: checkMissingPaths },
     'docs/required-files': { check: checkRequiredFiles },
     'docs/version-strings': { check: checkVersionStrings },
-    'engineering/agents-files': { check: checkAgentsFiles },
+    'engineering/nested-agents-files': { check: checkAgentsFiles },
     'structure/jscpd': { check: checkJscpd },
     'expo/expo-doctor': { check: checkExpoDoctor },
     'github-actions/actionlint': { run: checkActionlint },
