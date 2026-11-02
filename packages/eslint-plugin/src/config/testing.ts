@@ -267,7 +267,7 @@ export const DEBUG_METHODS: ReadonlyMap<string | null, readonly string[]> = new 
     ['logTestingPlaygroundURL', ['library']],
 ]);
 
-export const CYPRESS_ACTIONS = new Map([
+export const CYPRESS_ACTIONS: ReadonlyMap<string | null, number> = new Map([
     ['click', 0],
     ['check', 0],
     ['clear', 0],
@@ -279,7 +279,7 @@ export const CYPRESS_ACTIONS = new Map([
     ['uncheck', 0],
 ]);
 
-export const PLAYWRIGHT_ACTIONS = new Map([
+export const PLAYWRIGHT_ACTIONS: ReadonlyMap<string | null, number> = new Map([
     ['check', 0],
     ['clear', 0],
     ['click', 0],

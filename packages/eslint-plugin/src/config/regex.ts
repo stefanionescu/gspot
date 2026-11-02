@@ -1,6 +1,6 @@
 import type { JSONSchema4 } from '@typescript-eslint/utils/json-schema';
 
-export const STRING_PATTERN_METHODS: ReadonlySet<string> = new Set(['match', 'matchAll', 'search']);
+export const STRING_PATTERN_METHODS: ReadonlySet<string | null> = new Set(['match', 'matchAll', 'search']);
 
 export const REGEXP_CONSTRUCTOR = 'RegExp';
 

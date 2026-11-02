@@ -25,14 +25,14 @@ function listUpdated(update: TSESTree.Node, source: TSESLint.SourceCode): TSESTr
 
 function listTested(test: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node[] {
     return listDescendants(test, source.visitorKeys).filter((node) => {
-        const { parent } = node;
-        if (parent === undefined) return false;
-        if (node.type === AST_NODE_TYPES.Identifier)
+        if (node.type === AST_NODE_TYPES.Identifier) {
+            const { parent } = node;
             return parent.type !== AST_NODE_TYPES.MemberExpression || parent.computed || parent.object === node;
+        }
         return (
             node.type === AST_NODE_TYPES.MemberExpression &&
-            parent.type !== AST_NODE_TYPES.MemberExpression &&
-            parent.type !== AST_NODE_TYPES.CallExpression
+            node.parent.type !== AST_NODE_TYPES.MemberExpression &&
+            node.parent.type !== AST_NODE_TYPES.CallExpression
         );
     });
 }

@@ -4,8 +4,8 @@ import type { Branch, BranchSet } from '../types/rules.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isMultiline(statements: readonly TSESTree.Node[], source: TSESLint.SourceCode): boolean {
-    const tokens = [statements.at(0), statements.at(-1)]
-        .flatMap((node) => (node === undefined ? [] : source.getTokens(node)))
+    const tokens = statements
+        .flatMap((node) => source.getTokens(node))
         .filter((token) => token.value !== '{' && token.value !== '}');
     const [first] = tokens;
     const last = tokens.at(-1);

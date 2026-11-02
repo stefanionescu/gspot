@@ -132,7 +132,7 @@ function buildRemovalRange(source: TSESLint.SourceCode, text: string, comment: T
         BLANK.test(text.slice(comment.range[0] - comment.loc.start.column, comment.range[0])) &&
         BLANK.test(text.slice(comment.range[1], end))
     )
-        return [lineStart, newline === -1 ? end : end + 1];
+        return [lineStart, end + 1];
     let start = comment.range[0];
     while (start > 0 && (text[start - 1] === ' ' || text[start - 1] === '\t')) start -= 1;
     return [start, comment.range[1]];

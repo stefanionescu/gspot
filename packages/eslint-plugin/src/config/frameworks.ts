@@ -51,7 +51,7 @@ export const JQUERY_ORIGINS = new Set(
     ]),
 );
 
-export const JQUERY_METHODS = new Map([
+export const JQUERY_METHODS: ReadonlyMap<string | null, { alternative: string; isDeprecated: boolean }> = new Map([
     ['isArray', { alternative: 'Array.isArray()', isDeprecated: true }],
     ['parseJSON', { alternative: 'JSON.parse()', isDeprecated: true }],
     ['now', { alternative: 'Date.now()', isDeprecated: true }],
@@ -80,7 +80,7 @@ export const AXIOS_CONFIG_POSITIONS = new Map([
 
 export const TIMER_FUNCTION = /^(?:lodash|lodash-es|underscore)[./](debounce|throttle)$/u;
 
-export const TIMER_WORDS = new Map([
+export const TIMER_WORDS: ReadonlyMap<string | undefined, Record<string, string>> = new Map([
     ['debounce', { kind: 'debounced', purpose: 'debouncing' }],
     ['throttle', { kind: 'throttled', purpose: 'throttling' }],
 ]);

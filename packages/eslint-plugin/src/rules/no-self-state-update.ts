@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
 import { readStateHook } from '../react.ts';
-import { ASTUtils, type TSESTree } from '@typescript-eslint/utils';
+import type { TSESTree } from '@typescript-eslint/utils';
 
 export const noSelfStateUpdate = createRule<[], 'useless'>({
     name: 'no-self-state-update',
@@ -23,11 +23,11 @@ export const noSelfStateUpdate = createRule<[], 'useless'>({
         const source = context.sourceCode;
         return {
             'CallExpression[callee.type="Identifier"][arguments.length=1][arguments.0.type="Identifier"]'(
-                node: TSESTree.CallExpression & { callee: TSESTree.Identifier },
+                node: TSESTree.CallExpression & { callee: TSESTree.Identifier; arguments: [TSESTree.Identifier] },
             ) {
                 const hook = readStateHook(node.callee, source);
                 const [argument] = node.arguments;
-                const value = ASTUtils.isIdentifier(argument) ? readStateHook(argument, source) : undefined;
+                const value = readStateHook(argument, source);
                 if (hook !== undefined && hook.name === hook.setter && value?.name === hook.value)
                     context.report({ node, messageId: 'useless' });
             },

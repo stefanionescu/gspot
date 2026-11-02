@@ -1,9 +1,11 @@
 import { createRule } from '../rule.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-function readDetachedCallToken(node: TSESTree.CallExpression, source: TSESLint.SourceCode): TSESTree.Token | undefined {
-    const first = node.arguments[0];
-    if (first === undefined) return undefined;
+function readDetachedCallToken(
+    node: TSESTree.CallExpression,
+    first: TSESTree.CallExpressionArgument,
+    source: TSESLint.SourceCode,
+): TSESTree.Token | undefined {
     const callee = node.typeArguments ?? node.callee;
     const closing = source.getTokensBetween(callee, first).findLast((token) => token.value === ')');
     const previous = closing ?? source.getLastToken(callee);
@@ -34,8 +36,10 @@ export const noDetachedCall = createRule<[], 'call' | 'template'>({
     create(context) {
         return {
             CallExpression: (node) => {
-                if (node.callee.type === AST_NODE_TYPES.CallExpression || node.arguments.length !== 1) return;
-                const delimiter = readDetachedCallToken(node, context.sourceCode);
+                const [first, ...others] = node.arguments;
+                if (node.callee.type === AST_NODE_TYPES.CallExpression || first === undefined || others.length > 0)
+                    return;
+                const delimiter = readDetachedCallToken(node, first, context.sourceCode);
                 if (delimiter !== undefined) context.report({ node, loc: delimiter.loc, messageId: 'call' });
             },
             TaggedTemplateExpression: (node) => {

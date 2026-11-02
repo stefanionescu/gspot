@@ -124,10 +124,7 @@ export function usesModule(
 }
 
 function compareVersions(left: readonly number[], right: readonly number[]): number {
-    const differences = Array.from(
-        { length: Math.max(left.length, right.length) },
-        (_, position) => (left[position] ?? 0) - (right[position] ?? 0),
-    );
+    const differences = right.map((value, position) => (left[position] ?? 0) - value);
     return differences.find((difference) => difference !== 0) ?? 0;
 }
 

@@ -35,7 +35,7 @@ export const preferNativeJquery = createRule<[], 'deprecated' | 'dependency'>({
             'CallExpression[optional=false][callee.type="MemberExpression"][callee.optional=false][callee.computed=false][callee.object.type="Identifier"]'(
                 node: MemberCall,
             ) {
-                const method = ASTUtils.getPropertyName(node.callee) ?? '';
+                const method = ASTUtils.getPropertyName(node.callee);
                 const replacement = JQUERY_METHODS.get(method);
                 const receiver = node.callee.object;
                 if (

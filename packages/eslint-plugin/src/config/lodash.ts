@@ -1,9 +1,3 @@
-export const LAST_NUMBERED_EDITION = 5;
-
-export const FIRST_YEAR_EDITION = 2015;
-
-export const ECMA_YEAR_OFFSET = 2009;
-
 export const LIBRARY_NAMES = new Map([
     ['lodash', 'lodash'],
     ['lodash-es', 'lodash-es'],

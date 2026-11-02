@@ -314,12 +314,12 @@ export const FRESH_PREDICATES = new Set<string>(['truthy', 'defined', 'exists'])
 
 export const IDENTITY_STYLES = new Set<string>(['jest-like', 'playwright', 'node-assert']);
 
-export const DEEP_MATCHERS = new Map([
-    ['jest-like', ['toEqual', 'not.toEqual']],
-    ['jasmine', ['toEqual', 'not.toEqual']],
-    ['playwright', ['toEqual', 'not.toEqual']],
-    ['chai-bdd', ['deep.equal', 'not.deep.equal']],
-    ['cypress', ['deep.equal', 'not.deep.equal']],
-    ['chai-assert', ['deepEqual', 'notDeepEqual']],
-    ['node-assert', ['deepStrictEqual', 'notDeepStrictEqual']],
-]);
+export const DEEP_MATCHERS = {
+    'jest-like': ['toEqual', 'not.toEqual'],
+    jasmine: ['toEqual', 'not.toEqual'],
+    playwright: ['toEqual', 'not.toEqual'],
+    'chai-bdd': ['deep.equal', 'not.deep.equal'],
+    cypress: ['deep.equal', 'not.deep.equal'],
+    'chai-assert': ['deepEqual', 'notDeepEqual'],
+    'node-assert': ['deepStrictEqual', 'notDeepStrictEqual'],
+} as const;

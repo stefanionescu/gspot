@@ -13,8 +13,7 @@ function isCompiledTemplateCall(source: Readonly<TSESLint.SourceCode>, node: TSE
     return writes.length === 1 && writes[0]?.writeExpr?.type === AST_NODE_TYPES.CallExpression;
 }
 
-function isBuiltTemplate(template: TSESTree.CallExpressionArgument | undefined): boolean {
-    if (template === undefined) return false;
+function isBuiltTemplate(template: TSESTree.CallExpressionArgument): boolean {
     if (template.type === AST_NODE_TYPES.BinaryExpression && template.operator === '+')
         return isDynamicString(template);
     return template.type === AST_NODE_TYPES.TemplateLiteral
@@ -42,7 +41,9 @@ export const dynamicTemplates = createRule<[], 'builtTemplate'>({
     create(context) {
         const source = context.sourceCode;
         return {
-            'CallExpression[arguments.length>0]'(node: TSESTree.CallExpression) {
+            'CallExpression[arguments.length>0]'(
+                node: TSESTree.CallExpression & { arguments: [TSESTree.CallExpressionArgument] },
+            ) {
                 const [template] = node.arguments;
                 const name = readQualifiedName(node, source);
                 if (isBuiltTemplate(template) && TEMPLATE_FUNCTIONS.has(name) && !isCompiledTemplateCall(source, node))

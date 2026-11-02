@@ -27,7 +27,7 @@ export const noStringRegexPattern = createRule<[], 'pattern'>({
                 const { callee } = node;
                 const [pattern] = node.arguments;
                 if (callee.type !== AST_NODE_TYPES.MemberExpression || pattern === undefined) return;
-                const method = ASTUtils.getPropertyName(callee) ?? '';
+                const method = ASTUtils.getPropertyName(callee);
                 if (!STRING_PATTERN_METHODS.has(method)) return;
                 const isString = readTypeCategory(types, types.read(callee.object)) === 'string';
                 if (!isString || readTypeCategory(types, types.read(pattern)) !== 'string') return;

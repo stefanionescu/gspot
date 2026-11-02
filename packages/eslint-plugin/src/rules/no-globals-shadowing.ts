@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
-import type { NameSet, FunctionNode } from '../types/rules.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import type { NameSet, NamedNode, FunctionNode } from '../types/rules.ts';
 import { ARGUMENTS_NAME, UNDEFINED_NAME, BUILTIN_GLOBALS, SHADOWING_EXCEPTIONS } from '../config/builtins.ts';
 
 function listNames(node: TSESTree.Node | null | undefined): TSESTree.Identifier[] {
@@ -40,7 +40,7 @@ function listVariableNames(node: TSESTree.VariableDeclarator): NameSet[] {
     return [{ names, kind: 'variable', unset }];
 }
 
-function listNameSets(node: TSESTree.Node): NameSet[] {
+function listNameSets(node: NamedNode): NameSet[] {
     switch (node.type) {
         case AST_NODE_TYPES.FunctionDeclaration:
         case AST_NODE_TYPES.FunctionExpression:
@@ -58,9 +58,6 @@ function listNameSets(node: TSESTree.Node): NameSet[] {
         }
         case AST_NODE_TYPES.UpdateExpression: {
             return [{ names: listNames(node.argument), kind: 'assignment', unset: [] }];
-        }
-        default: {
-            return [];
         }
     }
 }
@@ -92,7 +89,7 @@ export const noGlobalsShadowing = createRule<[], 'declaration' | 'assignment'>({
         },
     },
     create(context) {
-        const inspect = (node: TSESTree.Node) => {
+        const inspect = (node: NamedNode) => {
             for (const { names, kind, unset } of listNameSets(node)) {
                 const messageId = kind === 'assignment' ? 'assignment' : 'declaration';
                 for (const identifier of names) {

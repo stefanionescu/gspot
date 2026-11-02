@@ -34,7 +34,7 @@ function listMisplacedHooks(members: SuiteMember[]): [TSESTree.CallExpression, '
     const misplaced = hooks.filter(({ index, isAfter }) => index > first && !(isAfter && index > last));
     const top = hooks.filter(({ index, isAfter }) => isAfter && index < first);
     const bottom = hooks.filter(({ index, isAfter }) => isAfter && index > last);
-    const smaller = [bottom, top].toSorted((left, right) => left.length - right.length).at(0) ?? [];
+    const smaller = top.length < bottom.length ? top : bottom;
     return [
         ...misplaced.map(({ call, index, isAfter }): [TSESTree.CallExpression, 'before' | 'after'] => [
             call,

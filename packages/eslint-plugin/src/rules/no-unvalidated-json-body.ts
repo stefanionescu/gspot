@@ -12,8 +12,8 @@ function isValidatedLater(wait: TSESTree.AwaitExpression, source: TSESLint.Sourc
     const declarator = wait.parent;
     if (declarator.type !== AST_NODE_TYPES.VariableDeclarator || declarator.id.type !== AST_NODE_TYPES.Identifier)
         return false;
-    const variable = ASTUtils.findVariable(source.getScope(declarator.id), declarator.id);
-    return (variable?.references ?? []).some(({ identifier }) => isParsedBy(identifier, BODY_SCHEMA_PARSERS));
+    const references = source.getDeclaredVariables(declarator).flatMap((variable) => variable.references);
+    return references.some(({ identifier }) => isParsedBy(identifier, BODY_SCHEMA_PARSERS));
 }
 
 export const noUnvalidatedJsonBody = createRule<[], 'unvalidated'>({

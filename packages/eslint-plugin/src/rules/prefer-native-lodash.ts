@@ -14,20 +14,11 @@ import {
     SEARCH_METHODS,
     STRING_INCLUDES,
     CALLBACK_METHODS,
-    ECMA_YEAR_OFFSET,
-    FIRST_YEAR_EDITION,
     NATIVE_REPLACEMENTS,
     SHORTHAND_ITERATEES,
-    LAST_NUMBERED_EDITION,
 } from '../config/lodash.ts';
 
 const methodNames = new Map([...NATIVE_REPLACEMENTS.keys()].map((method) => [method.toLowerCase(), method]));
-
-function readEcmaYear(version: unknown): number {
-    const isShortForm = typeof version === 'number' && version > LAST_NUMBERED_EDITION && version < FIRST_YEAR_EDITION;
-    if (typeof version !== 'number') return Number.POSITIVE_INFINITY;
-    return isShortForm ? version + ECMA_YEAR_OFFSET : version;
-}
 
 function isDirectMember(callee: TSESTree.Node): boolean {
     const member = callee.type === AST_NODE_TYPES.MemberExpression ? callee : undefined;
@@ -130,7 +121,7 @@ export const preferNativeLodash = createRule<[], 'direct' | 'cautious' | 'exampl
     create(context) {
         const source = context.sourceCode;
         const types = readTypes(context);
-        const year = readEcmaYear(context.languageOptions.ecmaVersion);
+        const year = context.languageOptions.ecmaVersion as number;
         return {
             CallExpression(node) {
                 const call = readLibraryCall(node, source);

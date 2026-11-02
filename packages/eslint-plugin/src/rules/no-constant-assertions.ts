@@ -48,7 +48,7 @@ function readIdentityFinding(
     source: TSESLint.SourceCode,
 ): ConstantFinding | undefined {
     const fresh = [assertion.received, assertion.expected].find((value) => readValue(value, source).isFresh);
-    const [positive = '', negative = ''] = DEEP_MATCHERS.get(assertion.style) ?? [];
+    const [positive, negative] = DEEP_MATCHERS[assertion.style];
     if (assertion.comparison !== 'strict' || fresh === undefined) return undefined;
     return { node: fresh, messageId: 'identity', matcher: assertion.negated ? negative : positive };
 }

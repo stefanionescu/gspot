@@ -24,14 +24,15 @@ function readExecutor(
 
 function readSettleAction(node: TSESTree.NewExpression): string | undefined {
     const executor = readExecutor(node);
-    const call = executor === undefined ? undefined : readOnlyExpression(executor.body);
+    if (executor === undefined) return undefined;
+    const call = readOnlyExpression(executor.body);
     if (call?.type !== AST_NODE_TYPES.CallExpression || call.arguments.length !== 1) return undefined;
     const { callee } = call;
     if (!ASTUtils.isIdentifier(callee)) return undefined;
-    const index = executor?.params.findIndex(
+    const index = executor.params.findIndex(
         (parameter) => ASTUtils.isIdentifier(parameter) && parameter.name === callee.name,
     );
-    return index === undefined ? undefined : SETTLE_ACTIONS[index];
+    return SETTLE_ACTIONS[index];
 }
 
 export const preferPromiseShorthand = createRule<[], 'shorthand'>({

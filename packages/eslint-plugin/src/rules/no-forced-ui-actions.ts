@@ -28,7 +28,7 @@ function readActionPosition(
     source: TSESLint.SourceCode,
     frameworks: UiFrameworks,
 ): number | undefined {
-    const name = ASTUtils.getPropertyName(node.callee) ?? '';
+    const name = ASTUtils.getPropertyName(node.callee);
     const cypress = frameworks.hasCypress && isCypressChain(node.callee.object) ? CYPRESS_ACTIONS.get(name) : undefined;
     const playwright =
         frameworks.hasPlaywright && isLocator(node.callee.object, source) ? PLAYWRIGHT_ACTIONS.get(name) : undefined;

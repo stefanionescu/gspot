@@ -52,13 +52,9 @@ function isLazyRef(call: TSESTree.CallExpression, source: TSESLint.SourceCode): 
     return ref !== undefined && REF_GUARD.test(guard) && isRefVariable(ref, source);
 }
 
-function isExempt(
-    call: TSESTree.CallExpression,
-    callback: TSESTree.Node | undefined,
-    source: TSESLint.SourceCode,
-): boolean {
+function isExempt(call: TSESTree.CallExpression, callback: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     const ancestors = source.getAncestors(call);
-    const inner = ancestors.slice(callback === undefined ? 0 : ancestors.indexOf(callback) + 1);
+    const inner = ancestors.slice(ancestors.indexOf(callback) + 1);
     const isMemoized = inner.some(
         (ancestor) =>
             ancestor.type === AST_NODE_TYPES.CallExpression &&
@@ -75,10 +71,9 @@ function isReactClass(node: TSESTree.Node | undefined, source: TSESLint.SourceCo
 }
 
 function readComponentKind(
-    callback: TSESTree.Node | undefined,
+    callback: TSESTree.Node,
     outputMethods: ReadonlySet<TSESTree.Node>,
 ): 'function' | 'class' | undefined {
-    if (callback === undefined) return undefined;
     if (isNamedFunction(callback, STATEFUL_FUNCTION_NAME)) return 'function';
     return outputMethods.has(callback) ? 'class' : undefined;
 }
@@ -112,10 +107,11 @@ export const noComponentDebounce = createRule<[], 'function' | 'class'>({
                 if (isReactClass(node.parent.parent?.parent, source)) outputMethods.add(node);
             },
             CallExpression(node) {
-                const [, method = ''] = TIMER_FUNCTION.exec(readModuleName(node.callee, source) ?? '') ?? [];
+                const method = TIMER_FUNCTION.exec(readModuleName(node.callee, source) ?? '')?.[1];
                 const words = TIMER_WORDS.get(method);
                 if (words === undefined) return;
                 const callback = source.getAncestors(node).findLast((ancestor) => ASTUtils.isFunction(ancestor));
+                if (callback === undefined) return;
                 const kind = readComponentKind(callback, outputMethods);
                 if (kind === undefined || isExempt(node, callback, source)) return;
                 const report =

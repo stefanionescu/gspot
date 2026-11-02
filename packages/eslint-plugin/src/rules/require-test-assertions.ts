@@ -47,9 +47,8 @@ function isHttpExpectation(node: TSESTree.CallExpression, types: TypeReader | un
 
 function readImportedText(callee: TSESTree.Node, types: TypeReader): string {
     const declaration = types.read(callee).getCallSignatures().at(0)?.getDeclaration();
-    const file = declaration?.getSourceFile();
-    const isOwn = file !== undefined && !types.program.isSourceFileDefaultLibrary(file);
-    return isOwn ? (declaration?.getText() ?? '') : '';
+    const isOwn = declaration !== undefined && !types.program.isSourceFileDefaultLibrary(declaration.getSourceFile());
+    return isOwn ? declaration.getText() : '';
 }
 
 function hasCalleeAssertion(node: TSESTree.CallExpression, search: AssertionSearch): boolean {

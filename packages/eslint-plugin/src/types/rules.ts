@@ -40,6 +40,13 @@ export type FunctionNode =
     | TSESTree.FunctionExpression
     | TSESTree.ArrowFunctionExpression;
 
+export type NamedNode =
+    | FunctionNode
+    | TSESTree.VariableDeclarator
+    | TSESTree.CatchClause
+    | TSESTree.AssignmentExpression
+    | TSESTree.UpdateExpression;
+
 export type ImportBlock = { first: TSESTree.Statement; last: TSESTree.Statement };
 
 export type CommentGroup = { first: TSESTree.Comment; last: TSESTree.Comment; comments: TSESTree.Comment[] };

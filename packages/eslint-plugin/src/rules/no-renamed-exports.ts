@@ -57,7 +57,7 @@ export const noRenamedExports = createRule<[], 'renamed'>({
             },
             ExportSpecifier(node) {
                 if (node.parent.source !== null) return;
-                const local = node.local.type === AST_NODE_TYPES.Identifier ? node.local.name : node.local.value;
+                const local = context.sourceCode.getText(node.local);
                 const name =
                     node.exported.type === AST_NODE_TYPES.Identifier ? node.exported.name : node.exported.value;
                 if (local === 'default' || name === 'default') return;
