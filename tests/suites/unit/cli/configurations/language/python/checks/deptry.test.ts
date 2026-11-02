@@ -103,6 +103,7 @@ test('deptry counts the project name and each package under src as first party',
         'src/shop_tools/nested/__init__.py': '',
         '.venv/pyvenv.cfg': '',
         [join(join(GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder), 'deptry')]: 'stub',
+        ...buildPythonToolFiles('deptry'),
     });
     const { commands } = await runFakeDeptry(sandbox.path);
     const command = commands.find((command) => command.includes('deptry'))!;

@@ -44,7 +44,9 @@ function listTypeNamedFiles(session: Session, planned: PlannedCheck): Set<string
     const { limitLookup } = readNamingSettings(session.settings, planned.scope);
     return new Set(
         listNamedFiles(planned)
-            .filter(({ language }) => limitLookup(language, 'files').cases.includes(TYPE_FILE_CASE))
+            .filter(({ language }) =>
+                limitLookup(language, 'files').cases.some((name) => name.startsWith(TYPE_FILE_CASE)),
+            )
             .map(({ file }) => file.path),
     );
 }
