@@ -1,9 +1,7 @@
 import type { RuleDocs } from './types/plugin.ts';
 import { PLUGIN_PREFIX } from './config/plugin.ts';
-import { testRules, frameworkRules } from './registry.ts';
 import { noInMisuse } from './rules/collections/no-in-misuse.ts';
 import pluginPackage from '../package.json' with { type: 'json' };
-import { awsRules, securityRules } from './libraries/security.ts';
 import { noTryPromise } from './rules/promises/no-try-promise.ts';
 import { noGlobalThis } from './rules/variables/no-global-this.ts';
 import { tableHeader } from './rules/accessibility/table-header.ts';
@@ -63,6 +61,7 @@ import { noUndefinedArgument } from './rules/functions/no-undefined-argument.ts'
 import { preferBooleanReturn } from './rules/functions/prefer-boolean-return.ts';
 import { noUselessIntersection } from './rules/types/no-useless-intersection.ts';
 import { noCommentsInImports } from './rules/structure/no-comments-in-imports.ts';
+import { awsRules, testRules, securityRules, frameworkRules } from './registry.ts';
 import { noSwitchCaseLabels } from './rules/control-flow/no-switch-case-labels.ts';
 import { noIdenticalFunctions } from './rules/functions/no-identical-functions.ts';
 import { noVoidArrayCallback } from './rules/collections/no-void-array-callback.ts';
