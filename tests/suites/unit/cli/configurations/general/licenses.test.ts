@@ -56,13 +56,14 @@ test('licenses/allowed reports a disallowed license of a locked package, on its 
     ]);
 });
 
-test('licenses/allowed sends the allowed list and leaves gspot and nested scopes out', async () => {
+test('licenses/allowed asks for every package, sends the allowed list, and leaves gspot and nested scopes out', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['licenses'], { tables: LICENSE_TABLES, scopes: [{ path: 'app' }] }),
         'package-lock.json': '{}\n',
         'app/package-lock.json': '{}\n',
     });
     const { command } = await runLicenseCheck(sandbox.path, [MIT_PACKAGE]);
+    expect(command).toContain('--all-packages');
     expect(command).toContain('--licenses=MIT,Apache-2.0');
     expect(command.filter((_argument, index) => command[index - 1] === '--experimental-exclude')).toStrictEqual([
         GSPOT_FOLDER,

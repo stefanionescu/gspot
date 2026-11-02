@@ -214,6 +214,7 @@ export const OSV_LICENSE_COMMAND = [
     'source',
     '--format',
     'json',
+    '--all-packages',
     '--allow-no-lockfiles',
     '--recursive',
     '--experimental-exclude',
