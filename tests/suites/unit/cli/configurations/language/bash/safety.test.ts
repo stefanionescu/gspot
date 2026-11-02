@@ -91,7 +91,7 @@ test.each([
         'run.sh': `#!/usr/bin/env bash\n${source}\n`,
     });
     const findings = await runSandboxCheck(sandbox.path, 'bash/safety');
-    expect(findings.map((finding) => finding.rule)).toStrictEqual(rules);
+    expect(findings.map((finding) => finding.rule)).toStrictEqual([...rules]);
 });
 
 test.each(['set -x', 'for index in $(seq 1 3); do :; done', 'IFS=,'])('level basic permits %s', async (source) => {
