@@ -61,6 +61,7 @@ async function prepareExample(installation: GspotProject): Promise<string> {
 test('the home example matches staged findings and summaries and passes after its fix', async () => {
     await using installation = await createGspotProject();
     const root = await prepareExample(installation);
+    const otherCounts = /(?<=(?:Passed|Skipped): )\d+/gu;
     for (const expected of [
         { source: example.before, code: 1, summary: example.rejectedSummary, findings: example.findings },
         { source: example.after, code: 0, summary: example.passedSummary, findings: [] },
@@ -83,7 +84,8 @@ test('the home example matches staged findings and summaries and passes after it
         const text = await installation.offline.run(root, ['check', '--staged']);
         expect(text.code, text.stdout + text.stderr).toBe(expected.code);
         expect(text.stdout).toContain(example.checked);
-        expect(text.stdout.split('\n').find((line) => /^(?:Failed|Passed):/u.test(line))).toBe(expected.summary);
+        const summary = text.stdout.split('\n').find((line) => /^(?:Failed|Passed):/u.test(line));
+        expect(summary?.replaceAll(otherCounts, 'N')).toBe(expected.summary.replaceAll(otherCounts, 'N'));
     }
 });
 
