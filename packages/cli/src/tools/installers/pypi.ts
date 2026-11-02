@@ -8,9 +8,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import type { SpawnResult } from '#cli/types/system.ts';
 import { uvLockfileSchema } from '#cli/schemas/parsers.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
 import { formatUnavailableNote } from '#cli/tools/inspect.ts';
-import { getTool, listPackagePins } from '#cli/tools/pins.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
 import type { ReplacementRequest } from '#cli/types/repository.ts';
 import { GSPOT_PATHS, UV_LOCKFILE } from '#cli/config/manifests.ts';
@@ -20,6 +18,7 @@ import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
 import { PRIVATE_FILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { uvSettingsSchema, uvProjectSettingsSchema } from '#cli/schemas/tools.ts';
+import { getTool, listPackagePins, buildPythonProjectTable } from '#cli/tools/pins.ts';
 
 import {
     redactInstallOutput,
@@ -47,7 +46,6 @@ import {
     INDEX_SETTINGS,
     PYTHON_TOOL_NOUN,
     UV_SETTINGS_FILE,
-    PYTHON_TOOL_PROJECT,
     UV_INSTALL_ARGUMENTS,
     UV_LOCKFILE_ARGUMENTS,
     UV_PROJECT_ENVIRONMENT,
@@ -322,14 +320,4 @@ export function readPythonSettings(root: string): PythonIndexSettings {
         return settingValues.flatMap((value) => extractUrlPasswords(value));
     });
     return { settings: selected, credentials };
-}
-
-/**
-Build the project table of the Python tool project: its name, its Python version, and the tool pins.
-
-@param configurations the configurations in use.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The written pyproject.toml and the lockfile state of the installers build the same table through it.
-export function buildPythonProjectTable(configurations: Configuration[]): PythonToolProject {
-    return { ...PYTHON_TOOL_PROJECT, dependencies: listPackagePins(configurations).python };
 }

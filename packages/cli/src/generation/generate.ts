@@ -16,13 +16,12 @@ import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { FROZEN_INSTALLS } from '#cli/config/repository/javascript.ts';
 import { parseAttributePatterns } from '#cli/repository/git/output.ts';
-import { listPackagePins, buildMiseInstall } from '#cli/tools/pins.ts';
-import { buildPythonProjectTable } from '#cli/tools/installers/pypi.ts';
 import type { Session, Generation, GeneratedFile } from '#cli/types/tools.ts';
 import { JSON_INDENT, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import { AGENTS_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/repository/setup.ts';
 import { buildBunScannerEdits } from '#cli/configurations/general/dependencies/generate.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
+import { listPackagePins, buildMiseInstall, buildPythonProjectTable } from '#cli/tools/pins.ts';
 import { LFS_FILTER, FILTER_ATTRIBUTE, GITATTRIBUTES_FILE } from '#cli/config/repository/files.ts';
 import type { Pipeline, RuleFile, FrozenLockfile, CiPackageManager } from '#cli/types/generation.ts';
 

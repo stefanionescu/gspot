@@ -4,9 +4,7 @@ import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { dirname, relative } from 'node:path/posix';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { buildValeIni } from '#cli/tools/installers/vale.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { VALE_PACKAGES, VALE_STYLES_PATH, VALE_PACKAGE_URLS } from '#cli/config/tools/vale.ts';
 
 import {
     ACRONYMS,
@@ -20,6 +18,25 @@ import {
     BANNED_HEADING_MESSAGE,
     ACRONYM_DEFINITION_PATTERN,
 } from '#cli/config/configurations/prose.ts';
+import {
+    VOCAB_LINE,
+    VALE_PACKAGES,
+    BLOCK_IGNORES,
+    TOKEN_IGNORES,
+    PROSE_GRAMMARS,
+    MIN_ALERT_LINE,
+    NO_STYLES_LINE,
+    VALE_OFF_RULES,
+    VALE_STYLES_PATH,
+    VALE_PACKAGE_URLS,
+    ALL_FILES_SECTION,
+    VALE_MARKUP_RULES,
+    VALE_MARKUP_FILES,
+    VALE_COMMENT_RULES,
+    STYLES_PATH_COMMENT,
+    VALE_SKIPPED_SCOPES,
+    MARKUP_RULES_COMMENT,
+} from '#cli/config/tools/vale.ts';
 
 function listExceptions(words: string[]): string[] {
     return [...new Set([...words, ...ACRONYMS])]
@@ -79,12 +96,38 @@ Build vale.ini: the Vale style locations and rule levels for the prose checks.
 @param planned the config file to build.
 */
 export function buildValeIniFile(planned: PlannedConfig): string {
-    return buildValeIni({
-        stylesPaths: [VALE_STYLES_PATH, GSPOT_PATHS.valePackages].map((path) =>
-            relative(dirname(planned.targetPath), path),
+    const formats = Object.entries(PROSE_GRAMMARS).flatMap(([extension, grammar]) =>
+        'format' in grammar ? [[extension.slice(1), grammar.format] as const] : [],
+    );
+    const lines = [
+        STYLES_PATH_COMMENT,
+        ...[VALE_STYLES_PATH, GSPOT_PATHS.valePackages].map(
+            (path) => `StylesPath = ${relative(dirname(planned.targetPath), path)}`,
         ),
-        packages: VALE_PACKAGES.map((name) => VALE_PACKAGE_URLS[name]),
-    });
+        MIN_ALERT_LINE,
+        `SkippedScopes = ${VALE_SKIPPED_SCOPES}`,
+        `Packages = ${VALE_PACKAGES.map((name) => VALE_PACKAGE_URLS[name]).join(', ')}`,
+        VOCAB_LINE,
+        '',
+        '[formats]',
+        ...formats.map(([extension, format]) => `${extension} = ${format}`),
+        '',
+        ALL_FILES_SECTION,
+        `BasedOnStyles = ${['gspot', 'Vale', ...VALE_PACKAGES].join(', ')}`,
+        `BlockIgnores = ${BLOCK_IGNORES.join(', ')}`,
+        `TokenIgnores = ${TOKEN_IGNORES.join(', ')}`,
+        ...Object.entries(VALE_OFF_RULES).flatMap(([rule, reason]) => [`# ${reason}`, `${rule} = NO`]),
+        MARKUP_RULES_COMMENT,
+        ...VALE_MARKUP_RULES.map((rule) => `${rule} = NO`),
+        '',
+        `[*.{${formats.map(([extension]) => extension).join(',')}}]`,
+        NO_STYLES_LINE,
+        ...VALE_COMMENT_RULES.map((rule) => `${rule} = YES`),
+        '',
+        `[${VALE_MARKUP_FILES}]`,
+        ...VALE_MARKUP_RULES.map((rule) => `${rule} = YES`),
+    ];
+    return lines.join('\n');
 }
 
 /**

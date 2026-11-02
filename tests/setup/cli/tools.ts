@@ -9,12 +9,12 @@ import type { ToolProjectFiles } from '#tests/types/setup.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
+import { readPythonSettings } from '#cli/tools/installers/pypi.ts';
 import type { Tool, Configuration } from '#cli/types/manifests.ts';
 import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
 import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
-import { listMisePins, listPackagePins, listDistinctTools } from '#cli/tools/pins.ts';
 import { readToolPackageManager } from '#cli/repository/javascript/package-manager.ts';
-import { readPythonSettings, buildPythonProjectTable } from '#cli/tools/installers/pypi.ts';
+import { listMisePins, listPackagePins, listDistinctTools, buildPythonProjectTable } from '#cli/tools/pins.ts';
 import type { Session, ToolSearch, ToolInstall, NpmToolInstall, ToolPackageManager } from '#cli/types/tools.ts';
 
 /**

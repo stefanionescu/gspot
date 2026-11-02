@@ -1,12 +1,12 @@
 import http from 'node:http';
 import { createHash } from 'node:crypto';
 import { getTool } from '#cli/tools/pins.ts';
+import { join, posix, dirname } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { join, posix, dirname, resolve } from 'node:path';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { VALE_TEMPORARY_NAME } from '#cli/config/repository/setup.ts';
@@ -25,27 +25,12 @@ import {
 } from '#cli/config/tools/installers.ts';
 import {
     VALE_TOOL,
-    VOCAB_LINE,
     VALE_PACKAGES,
-    BLOCK_IGNORES,
-    TOKEN_IGNORES,
-    PROSE_GRAMMARS,
-    MIN_ALERT_LINE,
-    NO_STYLES_LINE,
-    VALE_OFF_RULES,
-    VALE_STYLES_PATH,
     VALE_PACKAGE_URLS,
     VALE_INSTALL_STEP,
-    ALL_FILES_SECTION,
-    VALE_MARKUP_RULES,
-    VALE_MARKUP_FILES,
     VALE_DOWNLOAD_NAME,
     VALE_ARCHIVE_LIMIT,
-    VALE_COMMENT_RULES,
-    STYLES_PATH_COMMENT,
     VALE_INSTALL_PREFIX,
-    VALE_SKIPPED_SCOPES,
-    MARKUP_RULES_COMMENT,
     VALE_PACKAGE_FOLDERS,
     VALE_PACKAGE_RELEASES,
     VALE_INSTALL_ARGUMENTS,
@@ -139,15 +124,10 @@ export async function installValePackages(install: ToolInstall, miseBinPaths: st
     );
     try {
         const config = join(temporary, GSPOT_PATHS.valeConfig);
-        const content = buildValeIni({
-            stylesPaths: [
-                convertToPosixPath(resolve(root, VALE_STYLES_PATH)),
-                posix.relative(posix.dirname(GSPOT_PATHS.valeConfig), GSPOT_PATHS.valePackages),
-            ],
-            packages: await downloadValePackages(install, temporary),
-        });
+        const stylesPath = posix.relative(posix.dirname(GSPOT_PATHS.valeConfig), GSPOT_PATHS.valePackages);
+        const packages = await downloadValePackages(install, temporary);
         mkdirSync(dirname(config), { recursive: true });
-        writeFileSync(config, content);
+        writeFileSync(config, `StylesPath = ${stylesPath}\nPackages = ${packages.join(', ')}\n`);
         const command = [available.path, CONFIG_FLAG, config, ...VALE_INSTALL_ARGUMENTS];
         await runRequiredInstallStep(install, command, {
             cwd: dirname(config),
@@ -161,46 +141,6 @@ export async function installValePackages(install: ToolInstall, miseBinPaths: st
     } finally {
         rmSync(temporary, { recursive: true, force: true });
     }
-}
-
-/**
-Build the text of a vale.ini from its style folders and package sources.
-
-@param ini the vale.ini settings.
-@param ini.stylesPaths the style folders; Vale installs packages in the last one.
-@param ini.packages the package archives: each a URL or a local path.
-*/
-export function buildValeIni({ stylesPaths, packages }: { stylesPaths: string[]; packages: string[] }): string {
-    const formats = Object.entries(PROSE_GRAMMARS).flatMap(([extension, grammar]) =>
-        'format' in grammar ? [[extension.slice(1), grammar.format] as const] : [],
-    );
-    const lines = [
-        STYLES_PATH_COMMENT,
-        ...stylesPaths.map((path) => `StylesPath = ${path}`),
-        MIN_ALERT_LINE,
-        `SkippedScopes = ${VALE_SKIPPED_SCOPES}`,
-        `Packages = ${packages.join(', ')}`,
-        VOCAB_LINE,
-        '',
-        '[formats]',
-        ...formats.map(([extension, format]) => `${extension} = ${format}`),
-        '',
-        ALL_FILES_SECTION,
-        `BasedOnStyles = ${['gspot', 'Vale', ...VALE_PACKAGES].join(', ')}`,
-        `BlockIgnores = ${BLOCK_IGNORES.join(', ')}`,
-        `TokenIgnores = ${TOKEN_IGNORES.join(', ')}`,
-        ...Object.entries(VALE_OFF_RULES).flatMap(([rule, reason]) => [`# ${reason}`, `${rule} = NO`]),
-        MARKUP_RULES_COMMENT,
-        ...VALE_MARKUP_RULES.map((rule) => `${rule} = NO`),
-        '',
-        `[*.{${formats.map(([extension]) => extension).join(',')}}]`,
-        NO_STYLES_LINE,
-        ...VALE_COMMENT_RULES.map((rule) => `${rule} = YES`),
-        '',
-        `[${VALE_MARKUP_FILES}]`,
-        ...VALE_MARKUP_RULES.map((rule) => `${rule} = YES`),
-    ];
-    return lines.join('\n');
 }
 
 /**

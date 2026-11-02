@@ -6,8 +6,8 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import type { LintCommandSearch } from '#cli/types/repository.ts';
 import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
 import { LINT_PACKAGE, SECOND_TOOLS } from '#cli/config/repository/setup.ts';
-import { UV_TOOL, NODE_TOOL, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
-import type { Host, PackagePin, MiseToolPin, PackagePins, GeneratedFile } from '#cli/types/tools.ts';
+import { UV_TOOL, NODE_TOOL, CONFIG_TOML_FORMAT, PYTHON_TOOL_PROJECT } from '#cli/config/tools/installers.ts';
+import type { Host, PackagePin, MiseToolPin, PackagePins, GeneratedFile, PythonToolProject } from '#cli/types/tools.ts';
 
 /**
 List the tools that mise installs, apart from those in the npm and Python tool projects, and add uv when a Python
@@ -102,6 +102,16 @@ export function listReplacedTools(configurations: Configuration[]): Pick<LintCom
         ),
     }));
     return { tools: new Set([...names, ...covered]), pins: listPackagePins(stack).npm };
+}
+
+/**
+Build the project table of the Python tool project: its name, its Python version, and the tool pins.
+
+@param configurations the configurations in use.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The written pyproject.toml and the lockfile state of the installers build the same table through it.
+export function buildPythonProjectTable(configurations: Configuration[]): PythonToolProject {
+    return { ...PYTHON_TOOL_PROJECT, dependencies: listPackagePins(configurations).python };
 }
 
 /**

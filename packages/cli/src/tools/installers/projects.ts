@@ -10,16 +10,15 @@ import { isMiseLockfileFresh } from '#cli/tools/installers/mise.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
 import { UV_TOOL, UV_REINSTALL_FLAG } from '#cli/config/tools/installers.ts';
 import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
-import { listMisePins, findPackagePin, listPackagePins } from '#cli/tools/pins.ts';
 import { installNpmTools, planNpmLockfile } from '#cli/tools/installers/npm/project.ts';
 import { isLockfileFresh, selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
+import { listMisePins, findPackagePin, listPackagePins, buildPythonProjectTable } from '#cli/tools/pins.ts';
 
 import {
     installPythonTools,
     planPythonLockfile,
     installPythonProjects,
     isPythonLockfileFresh,
-    buildPythonProjectTable,
 } from '#cli/tools/installers/pypi.ts';
 import type {
     Session,
