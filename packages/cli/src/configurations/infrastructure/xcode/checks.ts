@@ -9,15 +9,16 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { getPosition, escapeRegExp } from '#cli/system/text.ts';
 import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { parseProjectSources } from '#cli/parsers/projects/xcode.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { PACKAGE_SWIFT, PBXPROJ_SUFFIX, SWIFT_EXTENSION } from '#cli/config/parsers.ts';
+import { parseBuildTargets, parseProjectSources } from '#cli/parsers/projects/xcode.ts';
 import { stringsFileSchema, assetContentsSchema } from '#cli/schemas/configurations.ts';
 
 import {
     PLIST_KEY,
     IMAGE_SET,
     NAMED_SETS,
+    LINT_SCRIPT,
     XCODE_RULES,
     PLIST_SUFFIX,
     WORD_SEPARATOR,
@@ -220,5 +221,41 @@ export function checkAppTransportSecurity(session: Session, planned: PlannedChec
                 message: INSECURE_TRANSPORT_MESSAGE,
             },
         ];
+    });
+}
+
+/**
+Reports each target without strict concurrency, and each run-script phase that declares no files or runs the linter.
+
+@param session the repository and its tools.
+@param planned the scope files to read.
+*/
+export function checkBuildSettings(session: Session, planned: PlannedCheck): CheckFinding[] {
+    return listSourcePaths(planned.files, [PBXPROJ_SUFFIX]).flatMap((path) => {
+        const parsed = parseCheckedFile(path, () => parseBuildTargets(read(session.cache, path), path));
+        if ('error' in parsed) return [parsed.error];
+        return parsed.value.flatMap((target) =>
+            [
+                {
+                    isFound: !target.isStrict,
+                    rule: XCODE_RULES.strictConcurrency,
+                    message: `Target ${target.name} does not set SWIFT_STRICT_CONCURRENCY = complete or Swift 6.`,
+                },
+                ...target.scripts.flatMap(({ name, script, hasFiles }) => [
+                    {
+                        isFound: !hasFiles,
+                        rule: XCODE_RULES.undeclaredScript,
+                        message: `Run-script phase ${name} of ${target.name} declares no input or output files.`,
+                    },
+                    {
+                        isFound: LINT_SCRIPT.test(script),
+                        rule: XCODE_RULES.lintScript,
+                        message: `Run-script phase ${name} of ${target.name} runs the linter. gspot runs it at commit.`,
+                    },
+                ]),
+            ]
+                .filter(({ isFound }) => isFound)
+                .map(({ rule, message }) => ({ file: path, line: 1, rule, message })),
+        );
     });
 }

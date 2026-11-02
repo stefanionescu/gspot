@@ -32,6 +32,16 @@ summary = "Parses every property list and entitlements file with plutil."
 why = "A broken plist fails the build or, worse, ships an app whose settings silently fell back to defaults."
 
 [[check]]
+example = "A run-script phase that calls `swiftlint` reports `lint-script`. Delete the phase: gspot runs SwiftLint before each commit."
+files = { paths = ["**/*.xcodeproj/project.pbxproj"] }
+help = "Set `SWIFT_STRICT_CONCURRENCY = complete`, declare the input and output files of each run-script phase, and take the linter and the formatter out of the build."
+name = "build-settings"
+runs = "scope"
+stage = "commit"
+summary = "Reports a target without strict concurrency, a run-script phase with no declared files, and a run-script phase that runs the linter or the formatter."
+why = "A phase with no declared files runs on every build, and data races pass the compiler without strict concurrency."
+
+[[check]]
 example = "A catalog string that lacks a required locale reports a finding. Add the translation, or mark the string as not translated."
 files = { extensions = [".xcstrings"] }
 help = "Add the translation, or mark the string as not translated in the catalog."

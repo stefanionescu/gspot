@@ -231,3 +231,37 @@ test('xcode/app-transport-security reports arbitrary loads at its line and passe
     );
     expect(await runSandboxCheck(sandbox.path, 'xcode/app-transport-security')).toStrictEqual([]);
 });
+
+test('xcode/build-settings reports each target and run-script finding, and passes a strict project', async () => {
+    const project = `// !$*UTF8*$!
+{
+    objects = {
+        P = { isa = PBXProject; mainGroup = G; targets = (T,); buildConfigurationList = PL; };
+        G = { isa = PBXGroup; children = (); sourceTree = "<group>"; };
+        PL = { isa = XCConfigurationList; buildConfigurations = (PD,); };
+        PD = { isa = XCBuildConfiguration; name = Debug; buildSettings = { }; };
+        T = { isa = PBXNativeTarget; name = App; buildPhases = (S,); buildConfigurationList = TL; };
+        TL = { isa = XCConfigurationList; buildConfigurations = (TD,); };
+        TD = { isa = XCBuildConfiguration; name = Debug; buildSettings = { SETTINGS }; };
+        S = { isa = PBXShellScriptBuildPhase; name = Lint; PHASE };
+    };
+    rootObject = P;
+}
+`;
+    const path = 'App.xcodeproj/project.pbxproj';
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['xcode']),
+        [path]: project
+            .replace('SETTINGS', 'SWIFT_VERSION = 5.10;')
+            .replace('PHASE', 'shellScript = "swiftlint lint";'),
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'xcode/build-settings');
+    expect(findings.map(({ rule }) => rule)).toStrictEqual(['strict-concurrency', 'undeclared-script', 'lint-script']);
+    await writeFile(
+        join(sandbox.path, path),
+        project
+            .replace('SETTINGS', 'SWIFT_VERSION = 6.0;')
+            .replace('PHASE', 'shellScript = "./gen.sh"; outputPaths = (out.swift,);'),
+    );
+    expect(await runSandboxCheck(sandbox.path, 'xcode/build-settings')).toStrictEqual([]);
+});

@@ -10,6 +10,7 @@ import type {
     ProjectTokens,
     ParsedPbxproj,
     ProjectSources,
+    ProjectBuildTarget,
     ProjectBuildSettings,
 } from '#cli/types/parsers.ts';
 import {
@@ -19,8 +20,10 @@ import {
     PROJECT_ESCAPE,
     SWIFT_EXTENSION,
     PROJECT_ESCAPES,
+    SWIFT_SIX_PREFIX,
     HEXADECIMAL_RADIX,
     SETTING_REFERENCE,
+    STRICT_CONCURRENCY,
     OCTAL_ESCAPE_START,
     PROJECT_PUNCTUATION,
     GROUP_CYCLE_MESSAGE,
@@ -228,6 +231,61 @@ export function parseProjectSources(text: string, path: string): ProjectSources 
             folders: targets.flatMap((target) => target.folders),
             targets,
         };
+    } catch (error) {
+        throw projectParseError(path, error);
+    }
+}
+
+function listConfigurations(project: ParsedPbxproj, list: string | undefined): PbxElement[] {
+    const configurations = list === undefined ? [] : (getElement(project, list).buildConfigurations ?? []);
+    return configurations.map((configuration) => getElement(project, configuration));
+}
+
+function isStrictConfiguration(project: ParsedPbxproj, list: string | undefined): boolean {
+    const shared = listConfigurations(project, project.root.buildConfigurationList);
+    return listConfigurations(project, list).every((configuration) => {
+        if (configuration.baseConfigurationReference !== undefined) return true;
+        const inherited = shared.find((each) => each.name === configuration.name)?.buildSettings;
+        const settings = { ...inherited, ...configuration.buildSettings };
+        return (
+            settings.SWIFT_STRICT_CONCURRENCY === STRICT_CONCURRENCY ||
+            settings.SWIFT_VERSION?.startsWith(SWIFT_SIX_PREFIX) === true
+        );
+    });
+}
+
+/**
+List the native targets of a project with their concurrency setting and run-script phases.
+
+@param text the project file.
+@param path the project.pbxproj file that the errors name.
+*/
+export function parseBuildTargets(text: string, path: string): ProjectBuildTarget[] {
+    const project = parsePbxproj(text, path);
+    try {
+        return (project.root.targets ?? []).flatMap((id) => {
+            const target = getElement(project, id);
+            if (target.isa !== 'PBXNativeTarget') return [];
+            const phases = (target.buildPhases ?? []).map((phaseId) => getElement(project, phaseId));
+            return [
+                {
+                    name: target.name ?? id,
+                    isStrict: isStrictConfiguration(project, target.buildConfigurationList),
+                    scripts: phases
+                        .filter((phase) => phase.isa === 'PBXShellScriptBuildPhase')
+                        .map((phase) => ({
+                            name: phase.name ?? 'Run Script',
+                            script: phase.shellScript ?? '',
+                            hasFiles: [
+                                phase.inputPaths,
+                                phase.outputPaths,
+                                phase.inputFileListPaths,
+                                phase.outputFileListPaths,
+                            ].some((paths) => paths !== undefined && paths.length > 0),
+                        })),
+                },
+            ];
+        });
     } catch (error) {
         throw projectParseError(path, error);
     }

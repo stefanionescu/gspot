@@ -160,6 +160,7 @@ export const tsconfigSchema = z.looseObject({
 });
 
 const buildSettingsSchema = z.object({
+    SWIFT_STRICT_CONCURRENCY: z.string().optional(),
     SDKROOT: z.string().optional(),
     SWIFT_VERSION: z.string().optional(),
 });
@@ -167,6 +168,14 @@ const buildSettingsSchema = z.object({
 const pbxRecordSchema = z.object({
     isa: z.string(),
     buildSettings: buildSettingsSchema.optional(),
+    buildConfigurationList: z.string().optional(),
+    buildConfigurations: z.string().array().optional(),
+    baseConfigurationReference: z.string().optional(),
+    shellScript: z.string().optional(),
+    inputPaths: z.string().array().optional(),
+    outputPaths: z.string().array().optional(),
+    inputFileListPaths: z.string().array().optional(),
+    outputFileListPaths: z.string().array().optional(),
     name: z.string().optional(),
     path: z.string().optional(),
     sourceTree: z.string().optional(),

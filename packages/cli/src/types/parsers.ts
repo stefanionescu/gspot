@@ -255,6 +255,10 @@ export type ProjectSources = {
     targets: { name: string; sources: string[]; folders: TargetFolder[] }[];
 };
 
+export type ProjectBuildScript = { name: string; script: string; hasFiles: boolean };
+
+export type ProjectBuildTarget = { name: string; isStrict: boolean; scripts: ProjectBuildScript[] };
+
 export type ProjectBuildSettings = { sdkRoot: string | undefined; swiftVersion: string | undefined };
 
 export type ProjectTokens = { tokens: string[]; index: number };

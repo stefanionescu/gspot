@@ -338,12 +338,17 @@ export const UNTARGETED_FILE_MESSAGE = 'This Swift file is in no target of the p
 
 export const EMPTY_SET_MESSAGE = 'This image set names no image file.';
 
+export const LINT_SCRIPT = /\b(?:swiftlint|swiftformat)\b/u;
+
 export const XCODE_RULES = {
     unusedAsset: 'unused-asset',
     missingTranslation: 'missing-translation',
     entitlement: 'entitlement',
     arbitraryLoads: 'arbitrary-loads',
     untargeted: 'untargeted',
+    strictConcurrency: 'strict-concurrency',
+    undeclaredScript: 'undeclared-script',
+    lintScript: 'lint-script',
     emptySet: 'empty-set',
     missingImage: 'missing-image',
 } as const;

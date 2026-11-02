@@ -9,6 +9,10 @@ export const PBXPROJ_FILE = 'project.pbxproj';
 
 export const SWIFT_EXTENSION = '.swift';
 
+export const STRICT_CONCURRENCY = 'complete';
+
+export const SWIFT_SIX_PREFIX = '6';
+
 export const PBXPROJ_SUFFIX = `.xcodeproj/${PBXPROJ_FILE}`;
 
 export const NPM_PACKAGE_FOLDER = `${NODE_MODULES}/`;
