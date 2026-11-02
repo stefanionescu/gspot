@@ -63,7 +63,7 @@ export const HOOK_ID_SEPARATOR = /-/gu;
 
 export const COMMAND_KEYS: ReadonlySet<string> = new Set(['run', 'script', 'before_script', 'after_script']);
 
-export const PRE_COMMIT_KEYS: ReadonlySet<string> = new Set(['id', 'entry']);
+export const PYGREP_LANGUAGE = 'pygrep';
 
 export const PRE_COMMIT_TOOL = 'pre-commit';
 

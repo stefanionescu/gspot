@@ -5,9 +5,9 @@ import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { isTable, getRequired } from '#cli/system/tables.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { LINE_BREAK, PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { parseYamlDocuments } from '#cli/parsers/formats/yaml.ts';
-import { lintCommandPackageSchema } from '#cli/schemas/repository.ts';
 import { hasToolSection, parseSharedFile } from '#cli/repository/conflicts.ts';
+import { parseYamlFile, parseYamlDocuments } from '#cli/parsers/formats/yaml.ts';
+import { preCommitConfigSchema, lintCommandPackageSchema } from '#cli/schemas/repository.ts';
 
 import type {
     LintCommand,
@@ -25,7 +25,7 @@ import {
     SECOND_TOOLS,
     COMMAND_FILES,
     TASK_AFTER_RUN,
-    PRE_COMMIT_KEYS,
+    PYGREP_LANGUAGE,
     PRE_COMMIT_TOOL,
     LINT_STAGED_KEY,
     YAML_EXTENSIONS,
@@ -95,13 +95,24 @@ function parseCommandDocuments({ file, text }: LintCommandPlace): unknown[] | un
 
 function readDocumentRows(place: LintCommandPlace, search: CommandSearch): LintCommand[] {
     const documents = parseCommandDocuments(place);
-    if (place.source === 'pre-commit')
-        return listDocumentCommands(documents, PRE_COMMIT_KEYS).flatMap((command) =>
-            buildRow(place, command, search, command.replaceAll(HOOK_ID_SEPARATOR, ' ')),
-        );
     return listDocumentCommands(documents, COMMAND_KEYS).flatMap((command) =>
         command.split(LINE_BREAK).flatMap((line) => buildRow(place, line, search)),
     );
+}
+
+function readPreCommitRows(place: LintCommandPlace, search: CommandSearch): LintCommand[] {
+    const config = tryParseFile(() => parseYamlFile(place.file, place.text, preCommitConfigSchema));
+    const lines = place.text.split(LINE_BREAK);
+    let start = 0;
+    return (config?.repos ?? [])
+        .flatMap(({ hooks }) => hooks)
+        .flatMap(({ id, entry, language }) => {
+            const line = lines.findIndex((text, index) => index >= start && text.includes('id:') && text.includes(id));
+            start = line + 1;
+            if (language === PYGREP_LANGUAGE) return [];
+            const words = `${id.split(HOOK_ID_SEPARATOR)[0] ?? id} ${entry ?? ''}`;
+            return buildRow(place, entry ?? id, search, words).map((row) => ({ ...row, line: start }));
+        });
 }
 
 function readLineRows(place: LintCommandPlace, search: CommandSearch): LintCommand[] {
@@ -205,7 +216,7 @@ export function listLintCommands(input: LintCommandSearch): LintCommand[] {
     ];
     const preCommit = places
         .filter(({ source }) => source === 'pre-commit')
-        .flatMap((place) => readDocumentRows(place, search));
+        .flatMap((place) => readPreCommitRows(place, search));
     const wide = {
         ...search,
         tools: new Set([

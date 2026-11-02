@@ -33,6 +33,18 @@ const stringListSchema = configTableSchema.transform((table) =>
         .filter((value) => typeof value === 'string'),
 );
 
+const preCommitHooksSchema = z
+    .looseObject({
+        id: z.string(),
+        entry: z.string().optional(),
+        language: z.string().optional(),
+    })
+    .array();
+
+const preCommitReposSchema = z.looseObject({ hooks: preCommitHooksSchema.catch([]) }).array();
+
+export const preCommitConfigSchema = z.looseObject({ repos: preCommitReposSchema.catch([]) });
+
 export const lintCommandPackageSchema = z.looseObject({
     scripts: stringValuesSchema.catch({}),
     devDependencies: stringValuesSchema.catch({}),

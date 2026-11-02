@@ -57,6 +57,47 @@ test('lint commands: a pre-commit entry counts by its id, and a CI step that run
     ]);
 });
 
+test('lint commands: each pre-commit hook gives one row at the line of its id', async () => {
+    await using sandbox = await createGitSandbox({
+        '.pre-commit-config.yaml': `ci:
+  skip: [ruff, prettier]
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    hooks:
+      - id: ruff
+      - id: ruff
+  - repo: local
+    hooks:
+      - id: local-prettier
+        entry: npx prettier --write
+      - id: eslint
+        entry: npm run lint:files
+`,
+    });
+    const rows = await listRows(sandbox.path);
+    expect(rows.map(({ line, command, tool }) => [line, command, tool])).toStrictEqual([
+        [6, 'ruff', 'ruff'],
+        [7, 'ruff', 'ruff'],
+        [10, 'npx prettier --write', 'prettier'],
+        [12, 'npm run lint:files', 'eslint'],
+    ]);
+});
+
+test('lint commands: a hook id or a pygrep pattern that only names a tool gives no row', async () => {
+    await using sandbox = await createGitSandbox({
+        '.pre-commit-config.yaml': `repos:
+  - repo: local
+    hooks:
+      - id: check-eslint-settings
+        entry: ./scripts/check_settings.py
+      - id: inclusive-language
+        language: pygrep
+        entry: (black|white)list|eslint
+`,
+    });
+    expect(await listRows(sandbox.path)).toStrictEqual([]);
+});
+
 test('lint commands: a root devDependency that gspot pins names both versions', async () => {
     await using sandbox = await createGitSandbox({
         'package.json': JSON.stringify({ devDependencies: { eslint: '^8.57.0', vitest: '^3.0.0' } }, null, 2),
