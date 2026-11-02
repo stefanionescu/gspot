@@ -29,7 +29,7 @@ export const CARRY_ROW_CASES = [
             'README.md': '# Example\n',
         },
         path: '.markdownlint.json',
-        row: { covered: 1, dropped: ['line-length'] },
+        row: { covered: 1, dropped: ['MD013'] },
     },
     {
         name: 'a markdownlint value that is no table of options',

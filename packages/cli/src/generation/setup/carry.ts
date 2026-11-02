@@ -44,6 +44,7 @@ import {
     COMMITLINT_CHECK_ID,
     IGNORE_REASON_START,
     MARKDOWNLINT_TARGET,
+    MARKDOWNLINT_ALIASES,
     PRETTIER_EXCLUDE_KEY,
     UNREAD_CONFIG_MESSAGE,
     MARKDOWNLINT_CHECK_ID,
@@ -52,6 +53,7 @@ import {
     MARKDOWNLINT_RUNNER_FILE,
     MARKDOWNLINT_CONFIG_FILES,
     UNREADABLE_CONFIG_MESSAGE,
+    MARKDOWNLINT_RETIRED_RULES,
 } from '#cli/config/repository/setup.ts';
 
 function convertIgnorePattern(pattern: string, folder: string, tracked: string[]): string | undefined {
@@ -171,7 +173,9 @@ function readMarkdownlintCarry({ repository, session, tools }: CarryInput): Carr
         ...Object.fromEntries(MARKDOWNLINT_PRETTIER_DISABLED.map((rule) => [rule, false])),
         ...readGeneratedFile(session, MARKDOWNLINT_TARGET),
     };
-    const rules = Object.entries(found.rules);
+    const rules = Object.entries(found.rules).map(
+        ([rule, value]) => [MARKDOWNLINT_ALIASES[rule] ?? rule, value] as const,
+    );
     const user: RuleTable = new Map(
         rules
             .filter(([rule]) => MARKDOWNLINT_RULE_ID.test(rule))
@@ -180,7 +184,8 @@ function readMarkdownlintCarry({ repository, session, tools }: CarryInput): Carr
     const compared = compareRules({
         check: MARKDOWNLINT_CHECK_ID,
         user,
-        lookup: (rule) => convertRule(document[rule] ?? true, false),
+        lookup: (rule) =>
+            MARKDOWNLINT_RETIRED_RULES.has(rule) ? undefined : convertRule(document[rule] ?? true, false),
     });
     return buildToolCarry({
         setting: 'markdownlint',

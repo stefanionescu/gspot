@@ -85,6 +85,27 @@ test('init compares the markdownlint table with what gspot runs', async () => {
     });
 });
 
+test('init compares a markdownlint alias under its rule ID', async () => {
+    await using sandbox = await createGitSandbox({
+        '.markdownlint.json': '{ "heading-increment": false }',
+        'README.md': '# Example\n',
+    });
+    const { plan } = await runInit(sandbox.path);
+    expect(plan.carry.find(({ path }) => path === '.markdownlint.json')).toMatchObject({
+        reasons: ['gspot ignore markdown/markdownlint --rule MD001 --reason "<why>"'],
+        dropped: [],
+    });
+});
+
+test('init asks for no reason for a markdownlint rule that markdownlint retired', async () => {
+    await using sandbox = await createGitSandbox({
+        '.markdownlint.json': '{ "MD002": false }',
+        'README.md': '# Example\n',
+    });
+    const { plan } = await runInit(sandbox.path);
+    expect(plan.carry.find(({ path }) => path === '.markdownlint.json')).toMatchObject({ covered: 1, reasons: [] });
+});
+
 test('init compares the rules that the commitlint of the repository prints', async () => {
     await using sandbox = await createGitSandbox({
         '.commitlintrc.json': '{}\n',
