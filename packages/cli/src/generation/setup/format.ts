@@ -95,35 +95,6 @@ function buildFormatterOverrides(fields: TomlTable, repository: Repository): Tom
     });
 }
 
-/**
-Build the format overrides of a Prettier config. A glob that matches no tracked file stays out, because
-`gspot/unmatched-paths` reports such a glob.
-
-@param options the options that hold the overrides.
-@param scope the scope of the config, empty for the root.
-@param repository the tracked files.
-@returns one record per override with a path and a format option.
-*/
-export function buildPrettierOverrides(
-    options: PrettierStyle | null,
-    scope: string,
-    repository: Repository,
-): TomlTable[] {
-    const tracked = [...includeParentFolders(repository.files.map(({ path }) => path))];
-    return (options?.overrides ?? [])
-        .map((override) => ({
-            paths: [override.files]
-                .flat()
-                .map((glob) => (glob.includes('/') ? glob : `**/${glob}`))
-                .filter((glob) => tracked.some(buildPathMatcher([joinScopeSelector(glob, scope)]))),
-            ...convertPrettierFormat(override.options),
-        }))
-        .filter(
-            (override: TomlTable & { paths: string[] }) =>
-                override.paths.length > 0 && Object.values(override).filter((value) => value !== undefined).length > 1,
-        );
-}
-
 function listLineSettings(files: string, fields: Record<string, string>): string[] {
     const sections: Readonly<Record<string, object>> = EDITORCONFIG_FIXED_SECTIONS;
     return Object.entries({ ...sections['*'], ...sections[files] })
@@ -205,9 +176,9 @@ function readFormatOptions(
         .filter((path) => path !== '.prettierignore')
         .map((path) => ({ path, text: findText(folder, path) }))
         .find((read): read is { path: string; text: string } => read.text !== undefined);
-    const usesPrettier =
+    const hasPrettier =
         prettierFile !== undefined || packageOptions !== undefined || dependencies['prettier'] !== undefined;
-    if (!usesPrettier) return editorconfig;
+    if (!hasPrettier) return editorconfig;
     const packageFields = isTable(packageOptions) ? packageOptions : {};
     const options =
         prettierFile === undefined
@@ -215,6 +186,35 @@ function readFormatOptions(
             : parsePrettierFile(posix.join(scopePath, prettierFile.path), prettierFile.text, scripts);
     const overrides = [editorconfig, options].flatMap((source) => source?.overrides ?? []);
     return { ...PRETTIER_DEFAULTS, ...editorconfig, ...options, overrides };
+}
+
+/**
+Build the format overrides of a Prettier config. A glob that matches no tracked file stays out, because
+`gspot/unmatched-paths` reports such a glob.
+
+@param options the options that hold the overrides.
+@param scope the scope of the config, empty for the root.
+@param repository the tracked files.
+@returns one record per override with a path and a format option.
+*/
+export function buildPrettierOverrides(
+    options: PrettierStyle | null,
+    scope: string,
+    repository: Repository,
+): TomlTable[] {
+    const tracked = [...includeParentFolders(repository.files.map(({ path }) => path))];
+    return (options?.overrides ?? [])
+        .map((override) => ({
+            paths: [override.files]
+                .flat()
+                .map((glob) => (glob.includes('/') ? glob : `**/${glob}`))
+                .filter((glob) => tracked.some(buildPathMatcher([joinScopeSelector(glob, scope)]))),
+            ...convertPrettierFormat(override.options),
+        }))
+        .filter(
+            (override: TomlTable & { paths: string[] }) =>
+                override.paths.length > 0 && Object.values(override).filter((value) => value !== undefined).length > 1,
+        );
 }
 
 /**
@@ -251,7 +251,7 @@ export function readPrettierOptions(
     root: string,
     scope: string,
     scripts: PrettierScripts,
-): { path: string; options: PrettierOptions }[] {
+): Array<{ path: string; options: PrettierOptions }> {
     const files = PRETTIER_ROOT_FILES.map((name) => joinScope(scope, name)).flatMap((path) => {
         const text = findText(root, path);
         const options = text === undefined ? undefined : parsePrettierFile(path, text, scripts);
@@ -290,7 +290,7 @@ export async function readPrettierScripts(
         .filter((path) => PRETTIER_SCRIPT_NAME.test(posix.basename(path)) && folders.has(posix.dirname(path)));
     using _output = muteOutput();
     const results = await Promise.all(
-        scripts.map(async (path): Promise<[string, PrettierOptions][]> => {
+        scripts.map(async (path): Promise<Array<[string, PrettierOptions]>> => {
             try {
                 const module = (await import(pathToFileURL(join(root, path)).href)) as { default?: unknown };
                 return [[path, parseFileFields(path, module.default ?? module, prettierSettingsSchema)]];

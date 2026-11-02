@@ -121,27 +121,29 @@ function formatConfigurationSection(rows: InitPlan['configurations'], level: Ini
     return ['configurations', ...[...lines, alwaysLine].map((line) => `  ${line}`), ''];
 }
 
+function buildGeneratedRow(path: string, conflicts: ConflictingConfigs): InitFileRow {
+    const replaced = conflicts.deleted.find((row) => row.path === path);
+    if (replaced !== undefined)
+        return {
+            path,
+            note: [
+                `replaces your file; read the old one with git show HEAD:${path}`,
+                ...(replaced.unreadablePrettier ? [PRETTIER_SCRIPT_NOTE] : []),
+                ...(replaced.dropsLineEndings ? [DROPPED_LINE_SETTINGS_NOTE] : []),
+            ].join('; '),
+        };
+    return {
+        path,
+        note: Object.hasOwn(CI_FILE_NOTES, path)
+            ? CI_FILE_NOTES[path as keyof typeof CI_FILE_NOTES]
+            : GENERATED_FILE_NOUN,
+    };
+}
+
 function buildGeneratedRows(generated: Generation, conflicts: ConflictingConfigs, tracked: Set<string>): InitFileRow[] {
     return [...generated.files, ...generated.blocks.filter(({ path }) => !tracked.has(path))]
         .filter(({ path }) => !isGspotPath(path) && path !== ATTRIBUTES_ROW.path)
-        .map(({ path }) => {
-            const replaced = conflicts.deleted.find((row) => row.path === path);
-            if (replaced !== undefined)
-                return {
-                    path,
-                    note: [
-                        `replaces your file; read the old one with git show HEAD:${path}`,
-                        ...(replaced.unreadablePrettier ? [PRETTIER_SCRIPT_NOTE] : []),
-                        ...(replaced.dropsLineEndings ? [DROPPED_LINE_SETTINGS_NOTE] : []),
-                    ].join('; '),
-                };
-            return {
-                path,
-                note: Object.hasOwn(CI_FILE_NOTES, path)
-                    ? CI_FILE_NOTES[path as keyof typeof CI_FILE_NOTES]
-                    : GENERATED_FILE_NOUN,
-            };
-        });
+        .map(({ path }) => buildGeneratedRow(path, conflicts));
 }
 
 /**
@@ -193,7 +195,7 @@ export function planInitFiles(
     ];
     return {
         level: settings.level,
-        ...(scan.template === undefined ? {} : { from: { file: scan.template.file, leftOut: scan.template.leftOut } }),
+        ...(scan.template !== undefined && { from: { file: scan.template.file, leftOut: scan.template.leftOut } }),
         configurations: buildConfigurationRows(scan, settings),
         write,
         delete: conflicts.deleted

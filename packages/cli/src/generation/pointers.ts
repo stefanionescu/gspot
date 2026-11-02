@@ -43,6 +43,21 @@ function fillTarget(body: string, pointerPath: string, targetPath: string): stri
     });
 }
 
+function buildPointerLocation(
+    file: Config,
+    target: string,
+    scope: string,
+    scopePaths: PlannedPointerField['scopePaths'],
+): { scope: string; children: string[]; target: string } {
+    const scopePath = file.per_scope ? scope : '';
+    const children = file.per_scope ? listNestedScopes(scopePaths, scopePath) : [];
+    const pointerPath =
+        file.pointer === undefined || (scopePath !== '' && file.pointer.overrides === true)
+            ? target
+            : joinScope(scopePath, file.pointer.path);
+    return { scope: scopePath, children, target: pointerPath };
+}
+
 function listPointerFieldTargets({
     scope,
     configuration,
@@ -59,22 +74,12 @@ function listPointerFieldTargets({
                 .map((file) => ({ file, target: getConfigTarget(scope.path, file, configs) }))
                 .filter(
                     ({ file, target }) =>
-                        file.tool.includes(tool.name) && (!file.per_scope || consumed || !paths.has(target)),
+                        file.tool.includes(tool.name) && (consumed || !file.per_scope || !paths.has(target)),
                 )
-                .map(({ file, target }) => {
-                    const scopePath = file.per_scope ? scope.path : '';
-                    const children = file.per_scope ? listNestedScopes(scopePaths, scopePath) : [];
-                    const pointerPath =
-                        file.pointer === undefined || (file.pointer.overrides === true && scopePath !== '')
-                            ? target
-                            : joinScope(scopePath, file.pointer.path);
-                    return {
-                        key: replacement.key,
-                        scope: scopePath,
-                        children,
-                        target: pointerPath,
-                    };
-                }),
+                .map(({ file, target }) => ({
+                    key: replacement.key,
+                    ...buildPointerLocation(file, target, scope.path, scopePaths),
+                })),
         );
 }
 

@@ -57,18 +57,15 @@ function addWorkflow(session: Session, generated: Generation): void {
     if (settings.ci?.enabled !== true) return;
     const lockfiles = listProjectLockfiles(session);
     const packageManagers = listWorkflowPackageManagers(session, generated, lockfiles);
+    const available = buildAvailableSettings(listSelectedConfigurations(scopes), settings.level);
     generated.files.push(
         (settings.ci.provider === 'github' ? buildGithubWorkflow : buildGitlabWorkflow)({
             version: cliPackage.version,
             packageManager: session.packageManager,
             setupCommand: settings.ci.setup_command,
             projectInstall: settings.ci.setup_command === undefined ? listProjectInstallLines(session) : [],
-            operatingSystems: getSettingValue(
-                buildAvailableSettings(listSelectedConfigurations(scopes), settings.level),
-                settings,
-                CI_SYSTEMS_SETTING,
-                '',
-            )?.value as Pipeline['operatingSystems'],
+            operatingSystems: getSettingValue(available, settings, CI_SYSTEMS_SETTING, '')
+                ?.value as Pipeline['operatingSystems'],
             linuxRunner: settings.ci.linux_runner,
             lockfiles,
             packageManagers,

@@ -121,49 +121,13 @@ function replaceReferences(
     return text;
 }
 
-/**
-Build the text of one config file, and of the files that it imports.
-
-@param owned the config file and the scope that owns it.
-@param targetPath the repository path where gspot writes the file.
-@param generated the config paths and shared ignore sections.
-@returns the generated file, with paths relative to where it sits, and its companion files.
-*/
-export function buildConfigFile(
-    owned: OwnedSourceFile,
-    targetPath: string,
-    generated: Pick<ConfigBuildState, 'targets' | 'ignoreSections'>,
-): Pick<BuiltConfig, 'file' | 'companions'> {
-    const { config, owner } = owned;
-    const planned: PlannedConfig = {
-        ...owner,
-        config,
-        targetPath,
-        ignoreSections: generated.ignoreSections,
-        level: owner.session.settings.level,
-    };
-    const builder = CONFIG_BUILDERS[`${planned.configuration.name}/${config.file}`];
-    let built: ReturnType<ConfigBuilder>;
-    if (builder === undefined) {
-        const source = config.source;
-        const shipped = readFileSync(buildAssetPath(`${planned.configuration.folder}/${source}`), 'utf8');
-        const ts = source.endsWith(TS_EXTENSION) ? requireTypescript() : undefined;
-        built =
-            ts === undefined
-                ? shipped
-                : ts.transpileModule(shipped, {
-                      compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
-                  }).outputText;
-    } else built = builder(planned);
-    const { content, companions } = typeof built === 'string' ? { content: built, companions: [] } : built;
-    const source = replaceReferences(content, config, targetPath, generated.targets.get(planned.scope.path));
-    return {
-        file: { path: targetPath, content: `${formatHeader(targetPath)}${source.trimEnd()}\n` },
-        companions: companions.map((companion) => ({
-            path: companion.path,
-            content: `${formatHeader(companion.path)}${companion.content.trimEnd()}\n`,
-        })),
-    };
+function addConfigFailures(generated: ConfigBuildState, owners: OwnedSourceFile[], error: GspotError): void {
+    for (const { owner, config } of owners) {
+        const scope = owner.scope.path;
+        const failures = generated.failures.get(scope) ?? new Map<string, Error>();
+        failures.set(config.target, error);
+        generated.failures.set(scope, failures);
+    }
 }
 
 function buildOwnedOutput(
@@ -175,12 +139,7 @@ function buildOwnedOutput(
         return [{ ...owned, ...buildConfigFile(owned, owned.config.target, generated) }];
     } catch (error) {
         if (!(error instanceof GspotError)) throw error;
-        for (const { owner, config } of owned.config.per_scope ? [owned] : ownedFiles) {
-            const scope = owner.scope.path;
-            const failures = generated.failures.get(scope) ?? new Map<string, Error>();
-            failures.set(config.target, error);
-            generated.failures.set(scope, failures);
-        }
+        addConfigFailures(generated, owned.config.per_scope ? [owned] : ownedFiles, error);
         return [];
     }
 }
@@ -256,7 +215,8 @@ function addPointerFiles(selected: OwnedConfig, configs: OwnedConfig[], generate
     const { config, owner } = selected;
     if (isPointerInherited(selected, generated)) return;
     const targetPointers = listTargetPointers(configs, selected);
-    for (const pointer of buildPointerFiles(owner, config, listPointerTargets(selected, configs, generated))) {
+    const pointers = buildPointerFiles(owner, config, listPointerTargets(selected, configs, generated));
+    for (const pointer of pointers) {
         if (config.source === undefined || config.pointer?.folders !== undefined || !targetPointers.has(pointer.path))
             generated.files.set(pointer.path, pointer);
     }
@@ -285,6 +245,51 @@ function buildPerScopeTarget(config: Pick<Config, 'target' | 'file' | 'root'>, s
     if (config.root) return join(scopePath, config.target);
     const folder = config.target.slice(0, config.target.length - config.file.length);
     return join(folder, CONFIG_SCOPES_FOLDER, scopePath, config.file);
+}
+
+/**
+Build the text of one config file, and of the files that it imports.
+
+@param owned the config file and the scope that owns it.
+@param targetPath the repository path where gspot writes the file.
+@param generated the config paths and shared ignore sections.
+@returns the generated file, with paths relative to where it sits, and its companion files.
+*/
+export function buildConfigFile(
+    owned: OwnedSourceFile,
+    targetPath: string,
+    generated: Pick<ConfigBuildState, 'targets' | 'ignoreSections'>,
+): Pick<BuiltConfig, 'file' | 'companions'> {
+    const { config, owner } = owned;
+    const planned: PlannedConfig = {
+        ...owner,
+        config,
+        targetPath,
+        ignoreSections: generated.ignoreSections,
+        level: owner.session.settings.level,
+    };
+    const builder = CONFIG_BUILDERS[`${planned.configuration.name}/${config.file}`];
+    let built: ReturnType<ConfigBuilder>;
+    if (builder === undefined) {
+        const source = config.source;
+        const shipped = readFileSync(buildAssetPath(`${planned.configuration.folder}/${source}`), 'utf8');
+        const ts = source.endsWith(TS_EXTENSION) ? requireTypescript() : undefined;
+        built =
+            ts === undefined
+                ? shipped
+                : ts.transpileModule(shipped, {
+                      compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+                  }).outputText;
+    } else built = builder(planned);
+    const { content, companions } = typeof built === 'string' ? { content: built, companions: [] } : built;
+    const source = replaceReferences(content, config, targetPath, generated.targets.get(planned.scope.path));
+    return {
+        file: { path: targetPath, content: `${formatHeader(targetPath)}${source.trimEnd()}\n` },
+        companions: companions.map((companion) => ({
+            path: companion.path,
+            content: `${formatHeader(companion.path)}${companion.content.trimEnd()}\n`,
+        })),
+    };
 }
 
 /**

@@ -46,14 +46,23 @@ function listConfigurationRules(configurations: Configuration[], repository: Rep
     );
 }
 
+function buildLevelCut(
+    text: string,
+    section: Pick<RuleSection, 'start' | 'end'>,
+    marker: NonNullable<RuleSection['marker']>,
+    level: Level,
+): Pick<RuleSection, 'start' | 'end'> {
+    if (level !== 'all') return section;
+    const isBlankAround = text.startsWith(BLANK_LINE, marker.end) && text.endsWith(BLANK_LINE, marker.start);
+    return { start: marker.start, end: marker.end + (isBlankAround ? BLANK_LINE.length : 1) };
+}
+
 function buildLevelRuleText(text: string, level: Level): string {
     let through = 0;
     const output: string[] = [];
     for (const { start, end, marker } of parseHeadingSections(text)) {
         if (marker === undefined || start < through) continue;
-        const markerEnd =
-            text.startsWith(BLANK_LINE, marker.end) && text.endsWith(BLANK_LINE, marker.start) ? BLANK_LINE.length : 1;
-        const cut = level === 'all' ? { start: marker.start, end: marker.end + markerEnd } : { start, end };
+        const cut = buildLevelCut(text, { start, end }, marker, level);
         output.push(text.slice(through, cut.start));
         through = cut.end;
     }
@@ -61,7 +70,7 @@ function buildLevelRuleText(text: string, level: Level): string {
     return output.join('').trimEnd() + '\n';
 }
 
-function listIndexLines(files: RuleFile[]): [string, string[]][] {
+function listIndexLines(files: RuleFile[]): Array<[string, string[]]> {
     const rows = new Map<string, string[]>();
     for (const file of files) {
         if (FIRST_READ.includes(file.path)) continue;
@@ -74,10 +83,10 @@ function listIndexLines(files: RuleFile[]): [string, string[]][] {
         list.push(`\`${file.target}\`${scope}: ${sentence}`);
         rows.set(label, list);
     }
-    return GROUPS.flatMap((group) => {
+    return GROUPS.flatMap((group): Array<[string, string[]]> => {
         const label = GROUP_LABELS[group];
         const lines = rows.get(label);
-        return lines === undefined ? [] : [[label, lines.toSorted(compareText)] as [string, string[]]];
+        return lines === undefined ? [] : [[label, lines.toSorted(compareText)]];
     });
 }
 
@@ -98,20 +107,9 @@ function formatRulesIndex(files: RuleFile[]): string[] {
     ];
 }
 
-/**
-List the commands that change gspot.toml, as the AGENTS.md block and the gspot.toml preface name them.
-*/
-export function formatSettingsCommands(): string {
-    const commands = SETTINGS_COMMANDS.map((command, index) => (index === 0 ? `gspot ${command}` : command));
-    return formatNameList(
-        commands.map((command) => '`' + command + '`'),
-        'disjunction',
-    );
-}
-
 function parseHeadingSections(text: string): RuleSection[] {
     const nodes = fromMarkdown(text).children;
-    const headings: Omit<RuleSection, 'end'>[] = [];
+    const headings: Array<Omit<RuleSection, 'end'>> = [];
     for (const [index, node] of nodes.entries()) {
         if (node.type !== 'heading') continue;
         const start = (node.position as SourcePosition).start.offset;
@@ -134,6 +132,17 @@ function parseHeadingSections(text: string): RuleSection[] {
 function listScopeRules(scope: Scope): Set<string> {
     return new Set(
         scope.configurations.flatMap((configuration) => listRuleFiles(configuration).map((file) => file.path)),
+    );
+}
+
+/**
+List the commands that change gspot.toml, as the AGENTS.md block and the gspot.toml preface name them.
+*/
+export function formatSettingsCommands(): string {
+    const commands = SETTINGS_COMMANDS.map((command, index) => (index === 0 ? `gspot ${command}` : command));
+    return formatNameList(
+        commands.map((command) => '`' + command + '`'),
+        'disjunction',
     );
 }
 

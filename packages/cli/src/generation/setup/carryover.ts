@@ -59,11 +59,11 @@ import {
 function convertIgnorePattern(pattern: string, folder: string, tracked: string[]): string | undefined {
     const inFolder = tracked.filter((path) => folder === '' || path.startsWith(`${folder}/`));
     const base = pattern.replace(LEADING_SLASH, '').replace(TRAILING_SLASH, '');
-    const anchored = pattern.slice(0, -1).includes('/');
-    const glob = joinScope(folder, anchored ? base : `**/${base}`);
+    const isAnchored = pattern.slice(0, -1).includes('/');
+    const glob = joinScope(folder, isAnchored ? base : `**/${base}`);
     return [glob, `${glob}/**`].find((selector) => {
-        const matches = buildPathMatcher([selector]);
-        return inFolder.some((path) => matches(path));
+        const isMatched = buildPathMatcher([selector]);
+        return inFolder.some((path) => isMatched(path));
     });
 }
 
@@ -237,7 +237,7 @@ function listUnreadRows({ conflictingConfigs, tools }: CarryoverInput, rows: Car
     const unread = conflictingConfigs.filter(
         ({ path, tool }) => CARRIED_TOOLS.has(tool) && tools.has(tool) && !read.has(path),
     );
-    return [...new Map(unread.map(({ path, tool }) => [path, tool])).entries()].map(([path, tool]) => ({
+    return [...new Map(unread.map(({ path, tool }) => [path, tool]))].map(([path, tool]) => ({
         ...CARRYOVER_ROW_START,
         path,
         tool,

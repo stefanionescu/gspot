@@ -91,7 +91,7 @@ export function compareRuffRules(input: RuffRuleInput): RuffRules {
     const running = new RegExp(String.raw`^(?:${shipped.join('|')})(?:\d|$)`, 'u');
     const added = selected.filter((rule) => !running.test(rule));
     const rules = added.filter((rule) => RUFF_SELECTOR.test(rule));
-    const held = [...shipped, ...rules].join('|').replace(RUFF_ALL_SELECTOR, RUFF_ANY_PREFIX);
+    const held = [...shipped, ...rules].join('|').replace(RUFF_ALL_SELECTOR, () => RUFF_ANY_PREFIX);
     const runsAfterInit = new RegExp(String.raw`^(?:${held})(?:\d|$)`, 'u');
     const perFile = [lint['per-file-ignores'], lint['extend-per-file-ignores']].flatMap((table) =>
         table === undefined ? [] : Object.entries(table),

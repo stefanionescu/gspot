@@ -22,8 +22,9 @@ function listStaleOutputs(files: Files, generated: Generation): StaleFile[] {
         const onDisk = files.read(file.path);
         if (onDisk === undefined) return [{ path: file.path, kind: 'absent' }];
         const mode = file.executable === true ? EXECUTABLE_FILE : OWNER_WRITABLE_FILE;
-        if (isSameContents(onDisk, { bytes: Buffer.from(file.content), mode })) return [];
-        return [{ path: file.path, kind: 'changed' }];
+        return isSameContents(onDisk, { bytes: Buffer.from(file.content), mode })
+            ? []
+            : [{ path: file.path, kind: 'changed' }];
     });
 }
 
@@ -108,12 +109,10 @@ export function listStaleFiles(
     const files = openFiles(session.root);
     const expected = listExpectedPaths(session, generated);
     const lockfiles = listStaleLockfiles(session, generated.files);
-    const strays = listStrayPaths(session, expected, listOwnablePaths(session)).map(
-        (path): StaleFile => ({
-            path,
-            kind: 'stray',
-        }),
-    );
+    const strays: StaleFile[] = listStrayPaths(session, expected, listOwnablePaths(session)).map((path) => ({
+        path,
+        kind: 'stray',
+    }));
     return [
         ...lockfiles.map(({ path, kind }) => ({ path, kind })),
         ...listStaleOutputs(files, generated),
