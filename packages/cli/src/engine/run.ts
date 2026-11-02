@@ -37,6 +37,7 @@ import type {
     ReproduceOptions,
 } from '#cli/types/engine/run.ts';
 import {
+    FIX_FLAG,
     HOOK_FLAG,
     BASE_FLAG,
     DOCKER_TOOL,
@@ -160,6 +161,16 @@ function formatReproduceCommand(checkId: string, scopeArgument: string | undefin
     return words.join(' ');
 }
 
+function findFixCommand(run: Run, result: CheckResult): Pick<CheckResult, 'fixCommand'> {
+    const files = new Set(result.findings.filter(({ fixable }) => fixable).map(({ file }) => file));
+    if (run.options.fix || files.size === 0) return {};
+    const paths = [...files].map((file) => {
+        const path = convertToPosixPath(relative(run.options.cwd, join(run.session.toolsRoot, file)));
+        return quoteArgument(path.startsWith('-') ? `./${path}` : path);
+    });
+    return { fixCommand: [CHECK_COMMAND, FIX_FLAG, '--only', quoteArgument(result.check), ...paths].join(' ') };
+}
+
 function finishResult(run: Run, ran: CheckResult): CheckResult {
     const result = normalizeResultPaths(run.session, removeAcceptedFindings(run, removeOutsideFindings(ran, run)));
     if (!FAILED_STATUSES.has(result.status) || run.session.cancelSignal?.aborted === true) return result;
@@ -169,6 +180,7 @@ function finishResult(run: Run, ran: CheckResult): CheckResult {
             : convertToPosixPath(relative(run.options.cwd, join(run.session.toolsRoot, result.scope))) || '.';
     return {
         ...result,
+        ...findFixCommand(run, result),
         rerun: formatReproduceCommand(result.check, scopeArgument, buildReproduceOptions(run.options)),
     };
 }

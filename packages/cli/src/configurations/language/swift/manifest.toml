@@ -89,7 +89,7 @@ cwd = "scope"
 example = "`value as! NSString` reports `force_cast`. Use `as?` and handle the failure, or change the input type so no cast remains."
 files = { extensions = [".swift"] }
 fix = ["swiftlint", "lint", "--fix", "--quiet", "--no-cache", "{files}"]
-help = "Run `gspot check --fix` for the rules that fix themselves."
+help = "Run the `fix:` command that the report prints for the rules that fix themselves."
 limits = { "file_length" = "max_file_lines", "function_parameter_count" = "max_function_parameters", "function_body_length" = "max_function_lines", "type_body_length" = "max_type_lines", "closure_body_length" = "max_closure_lines", "max_cyclomatic_complexity" = "max_cyclomatic_complexity" }
 limit_languages = ["swift"]
 name = "swiftlint"
@@ -104,7 +104,7 @@ example = "`func   greeting` reports `consecutiveSpaces`. Run `gspot check --fix
 exit_codes = [1]
 files = { extensions = [".swift"] }
 fix = ["swiftformat", "--quiet", "--config", "{config_file:swiftformat}", "{files}"]
-help = "Run `gspot check --fix`."
+help = "Run the `fix:` command that the report prints."
 name = "swiftformat"
 output = { format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?:error|warning): \\((?<rule>\\w+)\\) (?<message>.*)$" }
 stage = "commit"

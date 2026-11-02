@@ -334,7 +334,7 @@ example = "`eval(user_input)` reports S307. Parse the input instead, and allow o
 exit_codes = [1]
 files = { extensions = [".py", ".pyi"] }
 fix = ["ruff", "check", "--no-cache", "--fix", "--quiet", "{files}"]
-help = "Run `gspot check --fix` for the rules that fix themselves."
+help = "Run the `fix:` command that the report prints for the rules that fix themselves."
 limits = { "C901" = "max_cyclomatic_complexity", "PLR0915" = "max_function_statements", "PLR0913" = "max_function_parameters", "PLR0912" = "max_function_branches", "PLR0911" = "max_function_returns" }
 limit_languages = ["python"]
 name = "ruff"
@@ -357,7 +357,7 @@ example = "`value=1` differs from the Ruff output. Run `gspot check --fix` to ge
 exit_codes = [1]
 files = { extensions = [".py", ".pyi"] }
 fix = ["ruff", "format", "--no-cache", "--quiet", "{files}"]
-help = "Run `gspot check --fix`."
+help = "Run the `fix:` command that the report prints."
 name = "ruff-format"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): unformatted: ", fixable = "unformatted: ", message = "This file is not formatted the way Ruff formats it." }
 stage = "commit"

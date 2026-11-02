@@ -32,7 +32,7 @@ command = ["markdownlint-cli2", "--no-globs", "--config", "{config_file:markdown
 example = "A heading that jumps from level one to level three reports MD001. Change the later heading to level two."
 exit_codes = [1]
 fix = ["markdownlint-cli2", "--fix", "--no-globs", "--config", "{config_file:markdownlint-cli2}", "{files:prefix=:}"]
-help = "Run `gspot check --fix` for the rules that fix themselves; read the rule name for the rest."
+help = "Run the `fix:` command that the report prints for the rules that fix themselves; read the rule name for the rest."
 name = "markdownlint"
 output = { format = "json", fields = { file = "fileName", line = "lineNumber", column = "errorRange.0", rule = "ruleNames.0", message = ["ruleDescription", "errorDetail", "errorContext"], fixable = "fixInfo" } }
 run_in_copy = true

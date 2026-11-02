@@ -15,6 +15,7 @@ import { formatCount, formatScope, quoteArgument } from '#cli/system/text.ts';
 import type { FixReport, RunReport, CheckResult, FindingOptions } from '#cli/types/engine/run.ts';
 
 import {
+    FIX_LABEL,
     OFF_LABEL,
     OFF_CAUSES,
     RERUN_LABEL,
@@ -108,6 +109,8 @@ function formatCheck(result: CheckResult, { verbose }: { verbose: boolean }): st
         if (result.stack !== undefined) lines.push(...result.stack.split('\n').map((line) => `  ${line}`));
     }
     if (result.status === 'failed' || result.status === 'error') lines.push(...formatFindings(result, { verbose }));
+    if (result.fixCommand !== undefined)
+        lines.push(`  ${styleText('dim', FIX_LABEL, { stream: process.stdout })} ${result.fixCommand}`);
     if (result.rerun !== undefined)
         lines.push(`  ${styleText('dim', RERUN_LABEL, { stream: process.stdout })} ${result.rerun}`);
     return lines;

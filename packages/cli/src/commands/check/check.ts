@@ -19,10 +19,16 @@ import { writeProgress, runCancelableCommand } from '#cli/system/terminal.ts';
 import type { CommandLocation, CommandDefinition } from '#cli/types/commands/edits.ts';
 import type { CheckFlags, CheckOptions, CheckCommandJson } from '#cli/types/commands/reports.ts';
 import { readStagedPaths, hasStagedChanges, isWorkingTreeClean } from '#cli/repository/revisions/changes.ts';
-import { BASE_FLAG, STAGED_FLAG, REPORT_STAGES, PROGRESS_CLEAR, GIT_WRITE_TREE_ARGUMENTS } from '#cli/config/engine.ts';
 
 import {
     FIX_FLAG,
+    BASE_FLAG,
+    STAGED_FLAG,
+    REPORT_STAGES,
+    PROGRESS_CLEAR,
+    GIT_WRITE_TREE_ARGUMENTS,
+} from '#cli/config/engine.ts';
+import {
     STAGE_FLAG,
     SETUP_PATHS,
     ONLY_OPTION,
@@ -106,7 +112,7 @@ function assertCheckSelection(options: CheckOptions, flags: CheckFlags): void {
     if (options.staged && options.fix)
         throw new GspotError(
             'arguments',
-            `--fix cannot run with ${STAGED_FLAG}: fixers change the working tree, not the staged files. Run gspot check --fix, then stage the changes.`,
+            `--fix cannot run with ${STAGED_FLAG}: fixers change the working tree, not the staged files. Run gspot check --fix, then stage them with git add -p.`,
         );
     assertComparisonFlags(options, flags);
 }

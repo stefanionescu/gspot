@@ -1,5 +1,8 @@
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { stringify } from '@decimalturn/toml-patch';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { parseBashScript } from '#cli/parsers/code/bash.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
@@ -37,4 +40,33 @@ test('a rerun line quotes a check name and protects a path beginning with a dash
     expect(repeated.report.checks.flatMap(({ findings }) => findings)).toStrictEqual(
         checked.report.checks.flatMap(({ findings }) => findings),
     );
+});
+
+test('a fixable finding prints the fix command of its check, and that command changes only the reported file', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], {
+            tables: stringify({
+                command_check: [
+                    {
+                        id: 'project/fixable',
+                        stage: 'commit',
+                        paths: ['*.txt'],
+                        command: buildProgramCommand('fakes/tool', '--line', 'broken.txt', '--exit', '1'),
+                        fix: buildProgramCommand('fakes/tool', '--text', 'fixed\n', '{files}'),
+                        output: { format: 'regex', pattern: '(?<file>.+)', fixable: 'broken' },
+                    },
+                ],
+            }),
+        }),
+        'broken.txt': 'input\n',
+        'other.txt': 'input\n',
+    });
+    runGitStep(sandbox.path, ['add', '-A']);
+    const printed = await runGspot(sandbox.path, ['check', '--staged']);
+    const command = 'gspot check --fix --only project/fixable broken.txt';
+    expect(printed.stdout).toContain(`  fix: ${command}\n`);
+    const parsed = await parseBashScript(command);
+    await runGspot(sandbox.path, parsed.commands[0]!.arguments as string[]);
+    expect(await readFile(join(sandbox.path, 'broken.txt'), 'utf8')).toBe('fixed\n');
+    expect(await readFile(join(sandbox.path, 'other.txt'), 'utf8')).toBe('input\n');
 });

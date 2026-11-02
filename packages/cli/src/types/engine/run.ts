@@ -136,6 +136,7 @@ export type CheckResult = {
     reportNotes?: readonly string[];
     stack?: string;
     cause?: SkipCause | 'no-files';
+    fixCommand?: string;
     rerun?: string;
     command?: readonly string[];
 };

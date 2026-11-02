@@ -47,7 +47,7 @@ command = ["taplo", "fmt", "--config", "{config_file:taplo}", "--colors", "never
 example = "The TOML line `enabled=true` differs from the taplo output. Run `gspot check --fix` to get `enabled = true`."
 files = { extensions = [".toml"] }
 fix = ["taplo", "fmt", "--config", "{config_file:taplo}", "--colors", "never", "{files}"]
-help = "Run `gspot check --fix`."
+help = "Run the `fix:` command that the report prints."
 name = "taplo-format"
 output = { format = "taplo" }
 stage = "commit"

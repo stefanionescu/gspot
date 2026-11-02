@@ -49,7 +49,7 @@ const LINE_FEED_BYTE = 0x0a;
 export const FIX_REFUSALS = [
     [
         ['--staged', '--fix'],
-        '--fix cannot run with --staged: fixers change the working tree, not the staged files. Run gspot check --fix, then stage the changes.',
+        '--fix cannot run with --staged: fixers change the working tree, not the staged files. Run gspot check --fix, then stage them with git add -p.',
     ],
     [
         ['--hook', 'pre-push', '--fix'],

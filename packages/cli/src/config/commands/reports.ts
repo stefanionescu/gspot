@@ -25,8 +25,6 @@ export const SKIP_OPTION = '--skip <checks>';
 
 export const BASE_OPTION = '--base <ref>';
 
-export const FIX_FLAG = '--fix';
-
 export const HOOK_OPTION = '--hook <hook>';
 
 export const VERBOSE_FLAG = '--verbose';
@@ -72,6 +70,8 @@ export const STATUS_LABEL_WIDTH = 7;
 export const SENTENCE_END = /\.(?= |$)/u;
 
 export const UNCHANGED_FIX_MESSAGE = 'No fixer changed anything.';
+
+export const FIX_LABEL = 'fix:';
 
 export const RERUN_LABEL = 'rerun:';
 
