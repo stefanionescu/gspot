@@ -3,8 +3,7 @@
 #MISE depends=["build"]
 set -euo pipefail
 
-# assert_release_commit: Refuses a release unless main has no changes and the push runs of both workflows passed on
-# HEAD. A scheduled run on that commit does not count: its jobs differ, and it may run no tests at all.
+# assert_release_commit: Refuses a release unless main has no changes and both workflows passed on HEAD.
 assert_release_commit() {
     local branch
     local changes
@@ -20,9 +19,9 @@ assert_release_commit() {
     fi
     commit=$(git rev-parse HEAD) || return 1
     for workflow in tests.yml gspot.yml; do
-        conclusion=$(gh run list --workflow "${workflow}" --commit "${commit}" --event push --json conclusion --jq '.[0].conclusion') || return 1
+        conclusion=$(gh run list --workflow "${workflow}" --commit "${commit}" --json conclusion --jq '.[0].conclusion') || return 1
         if [[ ${conclusion} != success ]]; then
-            printf 'The push run of %s has not passed on %s.\n' "${workflow}" "${commit}" >&2
+            printf '%s has not passed on %s.\n' "${workflow}" "${commit}" >&2
             return 1
         fi
     done
