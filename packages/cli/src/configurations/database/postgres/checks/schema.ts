@@ -4,14 +4,14 @@ import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 
 import {
     dropFunctions,
-    readAlterFunction,
-    readCreateFunction,
+    applyAlterFunction,
+    applyCreateFunction,
 } from '#cli/configurations/database/postgres/checks/functions.ts';
 import {
     dropPolicy,
     qualifyName,
-    readAlterPolicy,
-    readCreatePolicy,
+    applyAlterPolicy,
+    applyCreatePolicy,
 } from '#cli/configurations/database/postgres/checks/policies.ts';
 import {
     SCHEMA_NAME_INDEX,
@@ -25,7 +25,7 @@ import type {
     Migration,
     SchemaState,
     SourceStatement,
-    StatementReader,
+    StatementApplier,
     SchemaAlterations,
     SqlStatementVisitors,
 } from '#cli/types/configurations/infrastructure.ts';
@@ -38,7 +38,7 @@ function removeTable(state: SchemaState, table: string): void {
     state.indexes = state.indexes.filter((index) => index.table !== table);
 }
 
-function readViewOptions(
+function applyViewOptions(
     state: SchemaState,
     view: string,
     options: Node[] | undefined,
@@ -121,7 +121,7 @@ function addConstraint(state: SchemaState, location: Location, node: Constraint,
     if (isForeign) addForeignKey(state, location, name, columns);
 }
 
-const readCreateTable: StatementReader<'CreateStmt'> = (statement, state, migration) => {
+const applyCreateTable: StatementApplier<'CreateStmt'> = (statement, state, migration) => {
     const table = qualifyName(statement.fields.relation?.schemaname, statement.fields.relation?.relname);
     if (state.tables.has(table) && statement.fields.if_not_exists === true) return;
     removeTable(state, table);
@@ -161,11 +161,11 @@ const ALTERATIONS: SchemaAlterations = {
         if (node !== undefined) addConstraint(state, at, node);
     },
     AT_SetRelOptions: (state, at, command) => {
-        readViewOptions(state, at.table, findNodeFields(command.def, 'List')?.items);
+        applyViewOptions(state, at.table, findNodeFields(command.def, 'List')?.items);
     },
 };
 
-const readAlterTable: StatementReader<'AlterTableStmt'> = (statement, state, migration) => {
+const applyAlterTable: StatementApplier<'AlterTableStmt'> = (statement, state, migration) => {
     const at: Location = {
         migration,
         statement,
@@ -175,7 +175,7 @@ const readAlterTable: StatementReader<'AlterTableStmt'> = (statement, state, mig
         if (command.subtype !== undefined) ALTERATIONS[command.subtype]?.(state, at, command);
 };
 
-const DROP_READERS: Partial<Record<string, (state: SchemaState, name: string, names: string[]) => void>> = {
+const DROP_APPLIERS: Partial<Record<string, (state: SchemaState, name: string, names: string[]) => void>> = {
     OBJECT_POLICY: dropPolicy,
     OBJECT_TABLE: (state, name) => {
         removeTable(state, name);
@@ -188,12 +188,12 @@ const DROP_READERS: Partial<Record<string, (state: SchemaState, name: string, na
     },
 };
 
-const readDrop: StatementReader<'DropStmt'> = (statement, state) => {
+const applyDrop: StatementApplier<'DropStmt'> = (statement, state) => {
     const { removeType = '' } = statement.fields;
     if (removeType === 'OBJECT_FUNCTION') dropFunctions(statement, state);
     for (const nodeField of listNodeFields(statement.fields.objects, 'List')) {
         const names = listNodeFields(nodeField.items, 'String').map((stringNode) => stringNode.sval ?? '');
-        DROP_READERS[removeType]?.(state, qualifyName(names.at(SCHEMA_NAME_INDEX), names.at(-1)), names);
+        DROP_APPLIERS[removeType]?.(state, qualifyName(names.at(SCHEMA_NAME_INDEX), names.at(-1)), names);
     }
 };
 
@@ -227,22 +227,22 @@ function renameIndex(state: SchemaState, previous: string, name: string): void {
     index.name = name;
 }
 
-const STATEMENT_READERS: SqlStatementVisitors<void, [SchemaState, Migration]> = {
-    DropStmt: readDrop,
-    CreateStmt: readCreateTable,
-    AlterTableStmt: readAlterTable,
+const STATEMENT_APPLIERS: SqlStatementVisitors<void, [SchemaState, Migration]> = {
+    DropStmt: applyDrop,
+    CreateStmt: applyCreateTable,
+    AlterTableStmt: applyAlterTable,
     ViewStmt: (statement, state, migration) => {
         const view = qualifyName(statement.fields.view?.schemaname, statement.fields.view?.relname);
-        readViewOptions(state, view, statement.fields.options, {
+        applyViewOptions(state, view, statement.fields.options, {
             path: migration.path,
             offset: statement.start,
             text: migration.text,
         });
     },
-    CreateFunctionStmt: readCreateFunction,
-    AlterFunctionStmt: readAlterFunction,
-    CreatePolicyStmt: readCreatePolicy,
-    AlterPolicyStmt: readAlterPolicy,
+    CreateFunctionStmt: applyCreateFunction,
+    AlterFunctionStmt: applyAlterFunction,
+    CreatePolicyStmt: applyCreatePolicy,
+    AlterPolicyStmt: applyAlterPolicy,
     RenameStmt: ({ fields }, state) => {
         const { relation = {}, newname: name = '', subname: previous = '' } = fields;
         const table = qualifyName(relation.schemaname, relation.relname);
@@ -293,10 +293,10 @@ export function buildDatabaseSchema(migrations: Migration[]): Schema {
     };
     for (const migration of migrations)
         for (const statement of migration.statements) {
-            const read = STATEMENT_READERS[statement.kind] as
+            const apply = STATEMENT_APPLIERS[statement.kind] as
                 | ((statement: SqlStatement, state: SchemaState, migration: Migration) => void)
                 | undefined;
-            read?.(statement, state, migration);
+            apply?.(statement, state, migration);
         }
     const foreignKeys = state.constraints
         .values()

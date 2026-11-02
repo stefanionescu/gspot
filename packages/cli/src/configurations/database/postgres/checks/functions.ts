@@ -2,7 +2,7 @@ import type { SqlStatement } from '#cli/types/parsers.ts';
 import type { Node, DefElem, TypeName } from '@pgsql/types';
 import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 import { PUBLIC_SCHEMA } from '#cli/config/configurations/infrastructure.ts';
-import type { SchemaState, StatementReader, FunctionSecurity } from '#cli/types/configurations/infrastructure.ts';
+import type { SchemaState, StatementApplier, FunctionSecurity } from '#cli/types/configurations/infrastructure.ts';
 
 function buildFunctionKey(names: Node[] | undefined, parameters: (TypeName | undefined)[]): string {
     const path = listNodeFields(names, 'String').map(({ sval = '' }) => sval);
@@ -35,7 +35,7 @@ Record a new function with its security options.
 @param state the schema so far.
 @param migration the file of the statement.
 */
-export const readCreateFunction: StatementReader<'CreateFunctionStmt'> = (statement, state, migration) => {
+export const applyCreateFunction: StatementApplier<'CreateFunctionStmt'> = (statement, state, migration) => {
     const options = listNodeFields(statement.fields.options, 'DefElem');
     const parameters = listNodeFields(statement.fields.parameters, 'FunctionParameter')
         .filter(({ mode }) => mode !== 'FUNC_PARAM_OUT' && mode !== 'FUNC_PARAM_TABLE')
@@ -60,7 +60,7 @@ Apply the changed security options of a function.
 @param state the schema so far.
 @param migration the file of the statement.
 */
-export const readAlterFunction: StatementReader<'AlterFunctionStmt'> = (statement, state, migration) => {
+export const applyAlterFunction: StatementApplier<'AlterFunctionStmt'> = (statement, state, migration) => {
     const { fields } = statement;
     const key = buildFunctionKey(fields.func?.objname, listNodeFields(fields.func?.objargs, 'TypeName'));
     const security = state.functions.get(key) ?? { migration, statement, definer: false, path: false };

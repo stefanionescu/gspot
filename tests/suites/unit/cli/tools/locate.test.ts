@@ -36,7 +36,7 @@ test('mise reads the tool project for one call only while it is the generated on
     const root = realpathSync(sandbox.path);
     const calls: SpawnOptions[] = [];
     using _lookup = fakeExecutableLookup((name) => (name === 'mise' ? join(root, 'bin/mise') : undefined));
-    using _spawn = spyOn(processes, 'spawnProcess').mockImplementation((_command, options) => {
+    using _spawn = spyOn(processes, 'runProcess').mockImplementation((_command, options) => {
         calls.push(options);
         return Promise.resolve(buildProcessResult({ stdout: '/mise/installs/shfmt/3.12.0\n' }));
     });

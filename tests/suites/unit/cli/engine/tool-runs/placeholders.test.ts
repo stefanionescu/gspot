@@ -4,8 +4,8 @@ import { createFileTree } from 'testdirs';
 import { planChecks } from '#cli/engine/plan.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
+import { runProcess } from '#cli/system/processes.ts';
 import { buildCheckSession } from '#cli/engine/run.ts';
-import { spawnProcess } from '#cli/system/processes.ts';
 import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { GENERATED_HEADER_TEXT } from '#cli/config/generation.ts';
 import { buildCommandLaunch } from '#cli/engine/tool-runs/check.ts';
@@ -165,7 +165,7 @@ test('per-file commands keep the arguments after the file', async () => {
         root: session.root,
         toolPath: process.execPath,
     });
-    const result = await spawnProcess(setup.commandLines[0]!.commandArguments, {
+    const result = await runProcess(setup.commandLines[0]!.commandArguments, {
         cwd: setup.cwd,
         env: setup.env,
     });

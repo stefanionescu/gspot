@@ -64,7 +64,7 @@ export async function readDefaultRef(root: string, cancelSignal?: AbortSignal): 
     return preferred?.[1] ?? '';
 }
 
-async function readInvalidBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<MergeBase> {
+async function explainInvalidBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<MergeBase> {
     if (COMMIT_HASH_PATTERN.test(compared)) {
         const presence = await runGit(root, [...GIT_HASH_EXISTS_ARGUMENTS, compared], { cancelSignal });
         if (presence.code !== 0) return { note: `Checked every file: base ${compared} is not present in this clone.` };
@@ -91,7 +91,7 @@ export async function readMergeBase(root: string, compared: string, cancelSignal
     const commit = await runGit(root, [...GIT_VERIFY_COMMIT_ARGUMENTS, `${compared}${COMMIT_SUFFIX}`], {
         cancelSignal,
     });
-    if (commit.code !== 0) return readInvalidBase(root, compared, cancelSignal);
+    if (commit.code !== 0) return explainInvalidBase(root, compared, cancelSignal);
     const base = await runGit(root, [...GIT_MERGE_BASE_ARGUMENTS, commit.stdout.trim(), 'HEAD'], {
         cancelSignal,
     });

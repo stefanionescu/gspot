@@ -3,8 +3,8 @@ import { realpathSync } from 'node:fs';
 import type { Tool } from '#cli/types/manifests.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { openFiles } from '#cli/system/files/open.ts';
+import { runProcess } from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { spawnProcess } from '#cli/system/processes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import type { Files, SpawnResult } from '#cli/types/system.ts';
@@ -159,7 +159,7 @@ export async function readToolVersion(inspected: InspectedTool, path: string): P
     const { root, cwd, tool, timeoutSeconds, miseBinPaths, runsVersionCommand } = inspected;
     const metadataVersion = readMetadataVersion(inspected, path);
     if (metadataVersion !== undefined && runsVersionCommand !== true) return { version: metadataVersion };
-    const result = await spawnProcess([path, ...(tool.version_command ?? [VERSION_FLAG])], {
+    const result = await runProcess([path, ...(tool.version_command ?? [VERSION_FLAG])], {
         cwd: convertToPosixPath(relative(root, path)).startsWith(`${GSPOT_FOLDER}/`) ? join(root, GSPOT_FOLDER) : cwd,
         timeoutSeconds,
         env: TOOL_ENVIRONMENT,

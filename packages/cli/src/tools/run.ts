@@ -1,4 +1,4 @@
-import { spawnProcess } from '#cli/system/processes.ts';
+import { runProcess } from '#cli/system/processes.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
 import type { ToolRunOptions } from '#cli/types/tools.ts';
 import { TOOL_ENVIRONMENT } from '#cli/config/tools/programs.ts';
@@ -14,7 +14,7 @@ export async function runTool(command: readonly string[], options: ToolRunOption
     const { timeoutSeconds, cancelSignal, ...spawnOptions } = options;
     const selected = await buildGitEnvironment(spawnOptions.cwd, command, { ...TOOL_ENVIRONMENT, ...spawnOptions.env });
     if ('failure' in selected) return selected.failure;
-    const result = await spawnProcess(command, {
+    const result = await runProcess(command, {
         ...spawnOptions,
         env: selected.variables,
         timeoutSeconds,

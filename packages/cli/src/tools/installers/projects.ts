@@ -36,14 +36,14 @@ import type {
     ToolPackageManagerName,
 } from '#cli/types/tools.ts';
 
-function readMiseLockfileState(files: Files, configurations: Session['toolConfigurations']): StaleLockfile | undefined {
+function findStaleMiseLockfile(files: Files, configurations: Session['toolConfigurations']): StaleLockfile | undefined {
     const path = GSPOT_PATHS.miseLockfile;
     const saved = files.read(path);
     if (isMiseLockfileFresh(listMisePins(configurations), saved?.bytes.toString('utf8'))) return undefined;
     return { path, kind: saved === undefined ? 'absent' : 'changed' };
 }
 
-function readNpmLockfileState(
+function findStaleNpmLockfile(
     files: Files,
     packageManager: ToolPackageManagerName,
     session: Pick<Session, 'scopes' | 'toolConfigurations'>,
@@ -56,7 +56,7 @@ function readNpmLockfileState(
         : { path, kind: 'changed' };
 }
 
-function readPythonLockfileState(
+function findStalePythonLockfile(
     files: Files,
     configurations: Session['toolConfigurations'],
 ): StaleLockfile | undefined {
@@ -95,10 +95,10 @@ export function listStaleLockfiles(
     const projects = new Set(generated.map((file) => file.path));
     const files = openFiles(root);
     const lockfiles: (StaleLockfile | undefined)[] = [];
-    if (projects.has(GSPOT_PATHS.miseProject)) lockfiles.push(readMiseLockfileState(files, toolConfigurations));
+    if (projects.has(GSPOT_PATHS.miseProject)) lockfiles.push(findStaleMiseLockfile(files, toolConfigurations));
     if (projects.has(GSPOT_PATHS.npmProject) && toolPackageManager !== undefined)
-        lockfiles.push(readNpmLockfileState(files, toolPackageManager, session));
-    if (projects.has(GSPOT_PATHS.pythonProject)) lockfiles.push(readPythonLockfileState(files, toolConfigurations));
+        lockfiles.push(findStaleNpmLockfile(files, toolPackageManager, session));
+    if (projects.has(GSPOT_PATHS.pythonProject)) lockfiles.push(findStalePythonLockfile(files, toolConfigurations));
     return lockfiles.filter((lockfile): lockfile is StaleLockfile => lockfile !== undefined);
 }
 

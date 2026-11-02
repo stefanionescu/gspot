@@ -13,7 +13,7 @@ import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { runGit, isNotRepository } from '#cli/repository/git/run.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { readText, findText, readBytes } from '#cli/system/files/reads.ts';
-import { listGitFiles, listTrackedFiles } from '#cli/repository/files/tracked.ts';
+import { readGitListing, listTrackedFiles } from '#cli/repository/files/tracked.ts';
 import { INDEX_LINE, GIT_LOCALE, TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/repository/git.ts';
 
 import {
@@ -61,8 +61,8 @@ attributes.
 export async function listRepositoryFiles(cache: RunCache): Promise<RepositoryListing> {
     const root = cache.root;
     const unreadablePaths: string[] = [];
-    const indexed = await listGitFiles(root, GIT_INDEX_FILES_ARGUMENTS, undefined, unreadablePaths);
-    const untracked = await listGitFiles(root, GIT_UNTRACKED_FILES_ARGUMENTS, undefined, unreadablePaths);
+    const indexed = await readGitListing(root, GIT_INDEX_FILES_ARGUMENTS, undefined, unreadablePaths);
+    const untracked = await readGitListing(root, GIT_UNTRACKED_FILES_ARGUMENTS, undefined, unreadablePaths);
     const index = indexed
         .split('\0')
         .filter(Boolean)

@@ -1,7 +1,7 @@
 import { stat } from 'node:fs/promises';
 import { hasErrorCode } from '#cli/system/errors.ts';
+import { runProcess } from '#cli/system/processes.ts';
 import type { ChildProcess } from 'node:child_process';
-import { spawnProcess } from '#cli/system/processes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
@@ -36,7 +36,7 @@ Run a command within its requested limit and the command timeout.
 */
 export async function runCommand(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
     const limited = limitCommand(command, options);
-    const result = await spawnProcess(command, limited.options);
+    const result = await runProcess(command, limited.options);
     return readCommandResult(result, limited);
 }
 

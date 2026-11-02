@@ -9,11 +9,11 @@ import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { ProgramName } from '#tests/types/setup.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
+import type { runProcess } from '#cli/system/processes.ts';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
 import { join, parse, dirname, basename } from 'node:path';
 import { GIT_PROGRAM } from '#cli/config/repository/git.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import type { spawnProcess } from '#cli/system/processes.ts';
 import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
@@ -23,18 +23,18 @@ import { UNPINNED_NPM_MESSAGE } from '#tests/config/setup/programs.ts';
 Replace the child command found by this path or program name, or without a name every child command but Git. Run the
 others normally, and record only the replaced commands. Without a replacement, the replaced commands run normally too.
 */
-export function fakeCommands(name?: string, spawn?: typeof spawnProcess): Mock<typeof spawnProcess> {
-    const unfaked = processes.spawnProcess;
-    const spy = spyOn(processes, 'spawnProcess');
-    const runProcess = spy.getMockImplementation() ?? unfaked;
-    const fake = mock(spawn ?? runProcess);
+export function fakeCommands(name?: string, spawn?: typeof runProcess): Mock<typeof runProcess> {
+    const unfaked = processes.runProcess;
+    const spy = spyOn(processes, 'runProcess');
+    const run = spy.getMockImplementation() ?? unfaked;
+    const fake = mock(spawn ?? run);
     spy.mockImplementation((command, options) => {
         const program = command[0] ?? '';
         const replaced =
             name === undefined
                 ? program !== GIT_PROGRAM
                 : [program, basename(program), parse(program).name].includes(name);
-        return replaced ? fake(command, options) : runProcess(command, options);
+        return replaced ? fake(command, options) : run(command, options);
     });
     return Object.assign(fake, {
         [Symbol.dispose]: () => {
@@ -56,8 +56,8 @@ export function fakeToolExecutables(tools: Tool[]): DisposableStack {
         }),
     );
     resources.use(spyOn(locate, 'readToolBinPaths').mockResolvedValue({ folders: [folder] }));
-    const unfaked = processes.spawnProcess;
-    const spy = spyOn(processes, 'spawnProcess');
+    const unfaked = processes.runProcess;
+    const spy = spyOn(processes, 'runProcess');
     const run = spy.getMockImplementation() ?? unfaked;
     spy.mockImplementation(async (command, options) => {
         const executable = command[0]!;

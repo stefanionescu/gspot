@@ -15,7 +15,7 @@ import type { TomlTable, InheritedSetting } from '#cli/types/settings.ts';
 import { SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
 import { getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 import { formatSettingValueError } from '#cli/settings/validation/messages.ts';
-import { findEditedSetting, writeSettingsEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
+import { writeSettingsEdit, selectSettingToEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
 import { TOML_QUOTES, NUMBER_TEXT, BOOLEAN_WORDS, TOML_COMPOUND_START } from '#cli/config/commands/edits.ts';
 
 import type {
@@ -139,7 +139,7 @@ function buildSettingChange(
     options: SetOptions,
 ): { setting: Setting; change: ParsedSettingValue; summary: string; notes: string[] } {
     const { settings } = edit;
-    const { availableSettings, match, scope } = findEditedSetting(edit, options.key);
+    const { availableSettings, match, scope } = selectSettingToEdit(edit, options.key);
     const setting = match.setting;
     const change: ParsedSettingValue =
         setting.reason_values === true

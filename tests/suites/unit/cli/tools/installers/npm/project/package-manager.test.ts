@@ -54,8 +54,8 @@ test('a pinned pnpm runs through mise instead of the older PATH executable', asy
         'gspot.toml': buildSandboxSettings([]),
         'package.json': '{"private":true,"packageManager":"pnpm@10.30.0"}',
     });
-    const run = processes.spawnProcess;
-    using _commands = spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
+    const run = processes.runProcess;
+    using _commands = spyOn(processes, 'runProcess').mockImplementation((command, options) => {
         if (command[0] === 'pnpm') return Promise.resolve(buildProcessResult({ stdout: '9.9.0\n' }));
         return command[0] === 'mise'
             ? Promise.resolve(buildProcessResult({ stdout: '10.30.0\n' }))

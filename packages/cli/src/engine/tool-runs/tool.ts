@@ -15,7 +15,7 @@ import { PROCESS_KILLED_LINE, RAISE_TIMEOUT_MESSAGE } from '#cli/config/engine.t
 import { foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { CheckTool, CheckToolOptions, CheckToolProgram, ToolProcessResult } from '#cli/types/engine/tool-runs.ts';
 
-async function getCheckTool(
+async function readCheckTool(
     session: CheckSession,
     planned: PlannedCheck,
     name: string,
@@ -108,7 +108,7 @@ export async function runCheckTool(
     command: readonly string[] | CheckToolProgram,
     options: CheckToolOptions,
 ): Promise<SpawnResult> {
-    const { name, path, start, env } = await getCheckTool(
+    const { name, path, start, env } = await readCheckTool(
         session,
         planned,
         'tool' in command ? command.tool : (command[0] as string),

@@ -95,7 +95,7 @@ test.each([...SYSTEM_PLUGIN_REPORTS])('a system plugin query classifies the $nam
     await using sandbox = await testdir();
     const tool = getTool(readConfigurations().values(), 'pytest-cov');
     using _which = fakeExecutableLookup('/native/pytest');
-    using versionRun = spyOn(processes, 'spawnProcess').mockResolvedValue(
+    using versionRun = spyOn(processes, 'runProcess').mockResolvedValue(
         buildProcessResult({ code: report.code, stdout: report.stdout, missing: report.missing }),
     );
     const inspected = await inspectTool(buildToolSearch(sandbox.path, { cwd: join(sandbox.path, 'app') }), tool);

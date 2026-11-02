@@ -3,7 +3,7 @@ import { remember } from '#cli/system/cache.ts';
 import { statSync, realpathSync } from 'node:fs';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { spawnProcess } from '#cli/system/processes.ts';
+import { runProcess } from '#cli/system/processes.ts';
 import { LINE_BREAK, GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { listMisePins, buildMiseInstall } from '#cli/tools/pins.ts';
@@ -71,7 +71,7 @@ async function listSystemExecutablePaths(cwd: string, name: string, timeoutSecon
         paths.map(async (path): Promise<ExecutableList> => {
             if (mise === undefined || basename(dirname(path)) !== MISE_LAUNCHER_FOLDER) return { paths: [path] };
             const command = [mise, MISE_WHICH, name];
-            const result = await spawnProcess(command, { cwd: cwd, env: TOOL_ENVIRONMENT, timeoutSeconds });
+            const result = await runProcess(command, { cwd: cwd, env: TOOL_ENVIRONMENT, timeoutSeconds });
             const program = result.stdout.trim();
             if (result.code !== 0) return { paths: [], failure: formatMiseFailure(['mise', MISE_WHICH], result) };
             return { paths: program === '' ? [] : [program] };
@@ -146,7 +146,7 @@ export async function readMiseBinPaths(
     const trust = buildMiseTrust(root, options.project);
     if ('refusal' in trust) return { folders: [], failure: trust.refusal };
     const command = [...MISE_BIN_PATHS_ARGUMENTS, ...toolNames];
-    const result = await spawnProcess(command, {
+    const result = await runProcess(command, {
         cwd: join(root, GSPOT_FOLDER),
         timeoutSeconds: options.timeoutSeconds,
         env: { ...TOOL_ENVIRONMENT, ...trust.variables },

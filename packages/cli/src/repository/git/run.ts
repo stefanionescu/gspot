@@ -2,7 +2,7 @@ import { resolve } from 'node:path';
 import { realpathSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
-import { spawnProcess, streamProcess } from '#cli/system/processes.ts';
+import { runProcess, streamProcess } from '#cli/system/processes.ts';
 import type { SpawnResult, StdoutReader, AsyncSpawnOptions } from '#cli/types/system.ts';
 import type { GitLookup, GitRepository, GitEnvironment, GitVariableGroups } from '#cli/types/repository.ts';
 import { foldVariableName, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
@@ -41,7 +41,7 @@ async function readInheritedGitEnvironment(origin: string): Promise<GitLookup> {
             return value === undefined ? [] : [[name, resolve(origin, value)]];
         }),
     );
-    const source = await spawnProcess([GIT_PROGRAM, ...GIT_SOURCE_ARGUMENTS], {
+    const source = await runProcess([GIT_PROGRAM, ...GIT_SOURCE_ARGUMENTS], {
         cwd: origin,
         env,
     });
@@ -54,7 +54,7 @@ async function readInheritedGitEnvironment(origin: string): Promise<GitLookup> {
         readEnvironmentVariable(GIT_DIR_VARIABLE) !== undefined &&
         readEnvironmentVariable(GIT_WORK_TREE_VARIABLE) === undefined
     ) {
-        const worktree = await spawnProcess([GIT_PROGRAM, ...GIT_TOP_LEVEL_ARGUMENTS], {
+        const worktree = await runProcess([GIT_PROGRAM, ...GIT_TOP_LEVEL_ARGUMENTS], {
             cwd: origin,
             env,
         });
@@ -69,7 +69,7 @@ async function readFolderGitEnvironment(
     source: GitRepository,
     { isolated, overrides }: GitVariableGroups,
 ): Promise<GitEnvironment> {
-    const target = await spawnProcess([GIT_PROGRAM, ...GIT_FOLDER_ARGUMENTS], {
+    const target = await runProcess([GIT_PROGRAM, ...GIT_FOLDER_ARGUMENTS], {
         cwd: root,
         env: { ...isolated, ...overrides, ...GIT_LOCALE },
     });
@@ -113,7 +113,7 @@ export async function buildGitEnvironment(
     )
         return { variables: explicit };
     const origin = process.cwd();
-    localVariablesRead ??= spawnProcess([GIT_PROGRAM, ...GIT_LOCAL_VARIABLES_ARGUMENTS], { cwd: origin, env: {} });
+    localVariablesRead ??= runProcess([GIT_PROGRAM, ...GIT_LOCAL_VARIABLES_ARGUMENTS], { cwd: origin, env: {} });
     const listed = await localVariablesRead;
     if (listed.code !== 0) return { failure: listed };
     const localVariables = listed.stdout
@@ -146,7 +146,7 @@ export async function runGit(
     const command = [GIT_PROGRAM, ...commandArguments];
     const selected = await buildGitEnvironment(cwd, command, { ...options.env });
     if ('failure' in selected) return selected.failure;
-    return spawnProcess(command, { ...options, env: selected.variables, cwd: cwd });
+    return runProcess(command, { ...options, env: selected.variables, cwd: cwd });
 }
 
 /**

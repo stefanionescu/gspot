@@ -35,7 +35,7 @@ test('actionlint copies root actions and unchanged actions outside .github with 
     using _pins = fakeToolExecutables(
         ['actionlint', 'shellcheck'].map((name) => getTool(readConfigurations().values(), name)),
     );
-    using boundary = spyOn(processes, 'spawnProcess').mockImplementation(async (_command, options) => {
+    using boundary = spyOn(processes, 'runProcess').mockImplementation(async (_command, options) => {
         expect(await readFile(join(options.cwd, 'action.yml'), 'utf8')).toContain('uses: ./actions/setup');
         expect(await readFile(join(options.cwd, 'actions/setup/action.yml'), 'utf8')).toBe(
             OUTSIDE_GITHUB_ACTIONS['actions/setup/action.yml'],
@@ -69,7 +69,7 @@ test.each([...WORKFLOW_TEXT_CASES])(
             getTool(readConfigurations().values(), 'actionlint'),
             getTool(readConfigurations().values(), 'shellcheck'),
         ]);
-        using run = spyOn(processes, 'spawnProcess').mockImplementation(async (_command, options) => {
+        using run = spyOn(processes, 'runProcess').mockImplementation(async (_command, options) => {
             const written = await readFile(join(options.cwd, path), 'utf8');
             expect(written).toBe(expected);
             return buildProcessResult();

@@ -20,7 +20,7 @@ import { writeSettings, readSettingsFile } from '#cli/settings/file.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
 import { selectScope, buildArgumentPath } from '#cli/repository/scopes.ts';
-import { openScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
+import { addScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
 import { formatApplyReport, writeGeneratedFiles } from '#cli/generation/write.ts';
 import { assertConfigurationsExist, assertConfigurationsEditable } from '#cli/manifests/select.ts';
 import type { Scope, Settings, TomlTable, SettingsEdit, SettingMatch, AvailableSettings } from '#cli/types/settings.ts';
@@ -71,7 +71,7 @@ export async function readSettingsEditContext(root: string, scopePath?: string):
             'arguments',
             `There is no scope called ${path}. Name a project folder or a written scope.`,
         );
-    return { ...context, session, scope: path, scopeTable: openScopeTable(input.table, path) };
+    return { ...context, session, scope: path, scopeTable: addScopeTable(input.table, path) };
 }
 
 /**
@@ -161,7 +161,7 @@ the repository select.
 @param context the settings from before the edit.
 @param key the dotted setting name.
 */
-export function findEditedSetting(
+export function selectSettingToEdit(
     context: SettingsEditContext,
     key: string,
 ): { availableSettings: AvailableSettings; match: SettingMatch; scope: Scope } {

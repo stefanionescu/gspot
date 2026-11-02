@@ -20,17 +20,17 @@ function isLimitLoosening(direction: Exclude<ReasonRequirement, 'adding'>, value
     return direction === 'raising' ? value > shipped : value < shipped;
 }
 
-function readReason(reason: unknown, where: KeyPath, path: KeyPath, suggestion?: string): SettingsError[] {
+function validateReasonValue(reason: unknown, where: KeyPath, path: KeyPath, suggestion?: string): SettingsError[] {
     const written = typeof reason === 'string' ? reason : undefined;
     const message = validateReason(where.map(String).join('.'), written, suggestion);
     return message === undefined ? [] : [{ path, message }];
 }
 
-function readReasonTable(table: unknown, keys: KeyPath): SettingsError[] {
+function validateReasonTable(table: unknown, keys: KeyPath): SettingsError[] {
     const suggestion = keys.at(-1) === REMOVED_CONFIGURATIONS ? REMOVAL_REASON_SUGGESTION : undefined;
     if (!isTable(table)) return [];
     return Object.entries(table).flatMap(([name, reason]) =>
-        readReason(reason, [...keys, name], [...keys, name], suggestion),
+        validateReasonValue(reason, [...keys, name], [...keys, name], suggestion),
     );
 }
 
@@ -51,9 +51,9 @@ export function validateSettingReasons(schema: z.ZodType | undefined, value: unk
     return Object.entries(value).flatMap(([key, child]) => {
         const field = findChildSchema(schema, key);
         if (field === undefined || (key === 'rules' && keys.includes('tools'))) return [];
-        if (key === 'reason') return readReason(child, keys, [...keys, key]);
+        if (key === 'reason') return validateReasonValue(child, keys, [...keys, key]);
         return field.meta()?.['reason_values'] === true || key === REMOVED_CONFIGURATIONS
-            ? readReasonTable(child, [...keys, key])
+            ? validateReasonTable(child, [...keys, key])
             : validateSettingReasons(field, child, [...keys, key]);
     });
 }

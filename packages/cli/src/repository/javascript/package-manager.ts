@@ -5,7 +5,7 @@ import { remember } from '#cli/system/cache.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { RunCache } from '#cli/types/system.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { spawnProcess } from '#cli/system/processes.ts';
+import { runProcess } from '#cli/system/processes.ts';
 import type { PackageJson } from '#cli/types/parsers.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { isGspotPath } from '#cli/repository/files/classify.ts';
@@ -136,7 +136,7 @@ export async function readPackageManagerVersion(
     return await remember(cache, PACKAGE_MANAGER_VERSIONS, key, async (): Promise<PackageManager> => {
         const { name, version } = packageManager;
         if (version !== undefined) return { name, version };
-        const result = await spawnProcess([name, VERSION_FLAG], {
+        const result = await runProcess([name, VERSION_FLAG], {
             cwd: root,
             timeoutSeconds,
         });

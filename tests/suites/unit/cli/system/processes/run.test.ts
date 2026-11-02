@@ -2,7 +2,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { chmod } from 'node:fs/promises';
 import { join, delimiter } from 'node:path';
-import { spawnProcess } from '#cli/system/processes.ts';
+import { runProcess } from '#cli/system/processes.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
@@ -15,7 +15,7 @@ test('a program runs its sibling commands before unrelated PATH tools', async ()
     await writeProgramCommand(sandbox.path, 'selected/parent', 'processes/command', 'sibling');
     await writeProgramCommand(sandbox.path, 'selected/sibling', 'fakes/tool', '--line', 'selected');
     await writeProgramCommand(sandbox.path, 'unrelated/sibling', 'fakes/tool', '--line', 'unrelated');
-    const result = await spawnProcess([join(sandbox.path, 'selected', listExecutableNames('parent')[0] as string)], {
+    const result = await runProcess([join(sandbox.path, 'selected', listExecutableNames('parent')[0] as string)], {
         cwd: sandbox.path,
         env: { PATH: join(sandbox.path, 'unrelated') },
     });
@@ -30,7 +30,7 @@ test('Git runs from outside the repository of the folder', async () => {
     process.chdir(sandbox.path);
     try {
         const env = { PATH: `${join(sandbox.path, 'bin')}${delimiter}${readEnvironmentVariable('PATH') ?? ''}` };
-        const result = await spawnProcess(['git', '--version'], { cwd: sandbox.path, env });
+        const result = await runProcess(['git', '--version'], { cwd: sandbox.path, env });
         expect(result.stdout).toStartWith('git version');
     } finally {
         process.chdir(previous);
@@ -43,7 +43,7 @@ test('a program with no copy outside the repository is missing', async () => {
     const previous = process.cwd();
     process.chdir(sandbox.path);
     try {
-        const result = await spawnProcess(['mise', '--version'], {
+        const result = await runProcess(['mise', '--version'], {
             cwd: sandbox.path,
             env: { PATH: join(sandbox.path, 'bin') },
         });
@@ -65,7 +65,7 @@ test('reads both large output streams to the end and keeps exit code 1', async (
         '--exit',
         String(status),
     );
-    const result = await spawnProcess(command, {
+    const result = await runProcess(command, {
         cwd: sandbox.path,
     });
     expect(result.code).toBe(status);
@@ -77,7 +77,7 @@ test('reads both large output streams to the end and keeps exit code 1', async (
 
 test('a missing program is a launch failure with its error output', async () => {
     await using sandbox = await testdir();
-    const result = await spawnProcess([join(sandbox.path, 'missing-executable')], { cwd: sandbox.path });
+    const result = await runProcess([join(sandbox.path, 'missing-executable')], { cwd: sandbox.path });
     expect(result.code).toBe(127);
     expect(result.missing).toBe(true);
     expect(result.stderr).toBe(`Executable not found: ${join(sandbox.path, 'missing-executable')}`);
@@ -88,7 +88,7 @@ test.skipIf(isWindows)('a program without permission to run is not a missing pro
 
     const executable = join(sandbox.path, 'denied.sh');
     await chmod(executable, 0o600);
-    const result = await spawnProcess([executable], { cwd: sandbox.path });
+    const result = await runProcess([executable], { cwd: sandbox.path });
     expect(result.code).not.toBe(0);
     expect(result.code).not.toBe(127);
     expect(result.missing).toBe(false);
@@ -100,14 +100,14 @@ test.skipIf(isWindows)('a program that the system cannot execute fails without s
 
     const executable = join(sandbox.path, 'empty-program');
     await chmod(executable, 0o755);
-    const result = await spawnProcess([executable], { cwd: sandbox.path });
+    const result = await runProcess([executable], { cwd: sandbox.path });
     expect(result.code).not.toBe(0);
     expect(result).toMatchObject({ missing: false, errored: true });
 });
 
 test('a timeout stops the process and reports it', async () => {
     await using sandbox = await testdir();
-    const result = await spawnProcess(buildProgramCommand('fakes/tool', '--wait'), {
+    const result = await runProcess(buildProgramCommand('fakes/tool', '--wait'), {
         cwd: sandbox.path,
         timeoutSeconds: 0.15,
     });
@@ -117,7 +117,7 @@ test('a timeout stops the process and reports it', async () => {
 
 test.skipIf(isWindows)('a signal before the timeout is not a timeout', async () => {
     await using sandbox = await testdir();
-    const result = await spawnProcess(buildProgramCommand('fakes/tool', '--signal', 'SIGTERM'), {
+    const result = await runProcess(buildProgramCommand('fakes/tool', '--signal', 'SIGTERM'), {
         cwd: sandbox.path,
     });
     expect(result.timedOut).toBe(false);
@@ -130,7 +130,7 @@ test('a process canceled before it starts reports the cancellation', async () =>
     await using sandbox = await testdir();
     const controller = new AbortController();
     controller.abort(new Error('Native cancellation'));
-    const result = await spawnProcess(buildProgramCommand('fakes/tool'), {
+    const result = await runProcess(buildProgramCommand('fakes/tool'), {
         cwd: sandbox.path,
         cancelSignal: controller.signal,
     });
@@ -144,7 +144,7 @@ test('keeps stdin, argument boundaries, final newlines, and the environment', as
     await using sandbox = await testdir();
     const input = 'line one\nline two\n';
 
-    const result = await spawnProcess(
+    const result = await runProcess(
         buildProgramCommand(
             'fakes/tool',
             '--record',
@@ -175,7 +175,7 @@ test('keeps stdin, argument boundaries, final newlines, and the environment', as
 test.skipIf(isWindows)('an environment variable set to undefined is removed', async () => {
     await using sandbox = await testdir();
 
-    const result = await spawnProcess(buildProgramCommand('fakes/tool', '--record', '-', '--environment', 'PATH'), {
+    const result = await runProcess(buildProgramCommand('fakes/tool', '--record', '-', '--environment', 'PATH'), {
         cwd: sandbox.path,
         env: { PATH: undefined },
     });
@@ -185,7 +185,7 @@ test.skipIf(isWindows)('an environment variable set to undefined is removed', as
 
 test('sets PWD to the child working folder', async () => {
     await using sandbox = await testdir();
-    const result = await spawnProcess(buildProgramCommand('fakes/tool', '--record', '-', '--environment', 'PWD'), {
+    const result = await runProcess(buildProgramCommand('fakes/tool', '--record', '-', '--environment', 'PWD'), {
         cwd: sandbox.path,
         env: { PWD: '/different/symlink/path' },
     });

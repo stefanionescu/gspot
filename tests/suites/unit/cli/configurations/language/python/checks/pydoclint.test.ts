@@ -37,7 +37,7 @@ test.each([...PYDOCLINT_PROJECT_CASES])('pydoclint $name', async ({ project, set
         { tables: setting === undefined ? '' : `[python]\ndocstring_convention = "${setting}"\n` },
     );
     const { session, planned } = prepared;
-    using run = spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult());
+    using run = spyOn(processes, 'runProcess').mockResolvedValue(buildProcessResult());
     const result = await runCheckCode(
         buildCheckSession(session, CHECK_GENERATION),
         planned,
@@ -60,7 +60,7 @@ test.each([
         { 'pyproject.toml': `${PYPROJECT}${project}`, 'source.py': 'value = 1\n' },
         { level },
     );
-    using run = spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult());
+    using run = spyOn(processes, 'runProcess').mockResolvedValue(buildProcessResult());
     await runCheckCode(
         buildCheckSession(prepared.session, CHECK_GENERATION),
         prepared.planned,
@@ -103,7 +103,7 @@ test('pydoclint keeps earlier style findings when a later style batch fails', as
         'numpy.py': NUMPY_DOCSTRING_MODULE,
     });
     const { session, planned } = prepared;
-    using _command = spyOn(processes, 'spawnProcess')
+    using _command = spyOn(processes, 'runProcess')
         .mockResolvedValueOnce(
             buildProcessResult({
                 code: 1,

@@ -9,7 +9,7 @@ import type { SqlFile, SqlStatement, NumberedLine, SqlNodeFields } from '#cli/ty
 
 export type SourceStatement = { path: string; offset: number; text: string };
 
-export type StatementReader<Kind extends keyof SqlNodeFields> = (
+export type StatementApplier<Kind extends keyof SqlNodeFields> = (
     statement: SqlStatement<Kind>,
     state: SchemaState,
     migration: Migration,

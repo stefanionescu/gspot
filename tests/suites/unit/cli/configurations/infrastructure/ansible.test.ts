@@ -26,7 +26,7 @@ test('each Ansible project lints its own files and not those of a nested project
     });
     const input = planSandboxCheck(session, 'ansible/ansible-lint');
     resources.use(
-        spyOn(processes, 'spawnProcess').mockImplementation(() =>
+        spyOn(processes, 'runProcess').mockImplementation(() =>
             Promise.resolve(
                 buildProcessResult({
                     code: 2,

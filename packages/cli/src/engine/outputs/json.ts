@@ -22,7 +22,7 @@ function buildJsonSyntaxError(stdout: string, cause?: unknown): CheckStop {
     return new CheckStop('error', message, { cause });
 }
 
-function listAt(value: unknown, path: string | undefined): unknown[] {
+function assertReportArray(value: unknown, path: string | undefined): unknown[] {
     const found = path === undefined || path === '' ? value : findValueAt(value, path.split('.'));
     if (!Array.isArray(found))
         throw new CheckStop('error', `Required JSON report array ${path ?? '<root>'} is missing or invalid.`);
@@ -32,7 +32,7 @@ function listAt(value: unknown, path: string | undefined): unknown[] {
 function listChains(chain: unknown[], keys: string[]): unknown[][] {
     const [key, ...rest] = keys;
     if (key === undefined) return [chain];
-    const children = findValueAt(chain[0], key.split('.')) === undefined ? [] : listAt(chain[0], key);
+    const children = findValueAt(chain[0], key.split('.')) === undefined ? [] : assertReportArray(chain[0], key);
     return children.flatMap((child) => listChains([child, ...chain], rest));
 }
 
@@ -97,7 +97,7 @@ export function parseJsonFindings(output: ToolOutput): Finding[] {
         if (!(error instanceof CheckStop)) throw error;
         throw buildJsonSyntaxError(stdout, error);
     }
-    return listAt(parsed, format.list).flatMap((element) =>
+    return assertReportArray(parsed, format.list).flatMap((element) =>
         listChains([element], format.children ?? []).map((chain) => buildJsonFinding(output, chain)),
     );
 }

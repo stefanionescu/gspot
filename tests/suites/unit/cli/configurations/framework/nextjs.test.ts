@@ -63,7 +63,7 @@ function fakeNextjsCommands(spawn: (command: readonly string[], options: AsyncSp
     const commands: string[][] = [];
     resources.use(fakeExecutableLookup(process.execPath));
     resources.use(
-        spyOn(processes, 'spawnProcess').mockImplementation(async (command, options) => {
+        spyOn(processes, 'runProcess').mockImplementation(async (command, options) => {
             if (command[1] === 'bin-paths') return buildProcessResult();
             if (command.at(-1) === '--version')
                 return buildProcessResult({

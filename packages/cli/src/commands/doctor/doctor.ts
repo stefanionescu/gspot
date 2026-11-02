@@ -5,7 +5,7 @@ import { lookUpTool } from '#cli/tools/inspect.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { EXIT_FINDINGS } from '#cli/config/engine.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { spawnProcess } from '#cli/system/processes.ts';
+import { runProcess } from '#cli/system/processes.ts';
 import { findMissingEnvironment } from '#cli/tools/uv.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
@@ -129,7 +129,7 @@ async function readHookState(session: Session): Promise<HookStatus> {
     if (!hooks.ready || !session.settings.hooks.enabled) return hooks;
     const { command, installCommand } = session.startRunner;
     const versionCommand = [...command.split(' '), VERSION_FLAG];
-    const result = await spawnProcess(versionCommand, {
+    const result = await runProcess(versionCommand, {
         cwd: session.root,
         timeoutSeconds: session.settings.tool_timeout_seconds,
     });

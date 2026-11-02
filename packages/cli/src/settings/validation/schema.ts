@@ -107,7 +107,7 @@ Refuse invalid configuration lists, tool options, ignores, and paths.
 @param settings the parsed gspot.toml.
 @param root the folder for checking declared scope paths.
 */
-export function assertSettings(settings: Settings, root: string): SettingsError[] {
+export function validateSettings(settings: Settings, root: string): SettingsError[] {
     const configurationsByName = readConfigurations();
     const written: WrittenConfiguration[] = [
         ...settings.configurations.map((name, index) => ({ name, path: ['configurations', index] })),

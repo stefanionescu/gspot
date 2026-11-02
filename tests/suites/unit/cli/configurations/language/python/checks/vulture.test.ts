@@ -28,7 +28,7 @@ test('vulture reads every Python file of the scope and reports unused definition
     using resources = fakeToolExecutables([getTool(readConfigurations().values(), 'vulture')]);
     const output = [...VULTURE_OUTPUT].join('\n').replaceAll('app/', `app${sep}`);
     const spawn = resources.use(
-        spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout: output, code: 3 })),
+        spyOn(processes, 'runProcess').mockResolvedValue(buildProcessResult({ stdout: output, code: 3 })),
     );
     const checked = await runChecks(session, buildRunOptions({ only: ['python/vulture'] }));
     const findings = checked.report.checks.flatMap((check) => check.findings);

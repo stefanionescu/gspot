@@ -8,8 +8,8 @@ import type { Session } from '#cli/types/tools.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { findToolPath } from '#cli/tools/inspect.ts';
+import { runProcess } from '#cli/system/processes.ts';
 import { buildRunReport } from '#cli/engine/report.ts';
-import { spawnProcess } from '#cli/system/processes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { findMissingEnvironment } from '#cli/tools/uv.ts';
 import { subtractBaseline } from '#cli/engine/baseline.ts';
@@ -71,7 +71,7 @@ async function findUnrunnableResult(
     const docker = await findToolPath(session, getTool(readConfigurations().values(), DOCKER_TOOL), session.root);
     if ('status' in docker) return { ...base, status: 'missing', note: DOCKER_MISSING_MESSAGE };
     const result = await remember(session.cache, DOCKER_AVAILABILITY, session.root, () =>
-        spawnProcess([docker.path, 'info'], {
+        runProcess([docker.path, 'info'], {
             cwd: session.root,
             timeoutSeconds: session.settings.tool_timeout_seconds,
             cancelSignal: session.cancelSignal,

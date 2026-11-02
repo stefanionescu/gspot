@@ -52,7 +52,7 @@ Read a Git file listing and separate names with invalid UTF-8.
 @param unreadablePaths receives quoted names with invalid UTF-8.
 @returns the readable null-delimited listing.
 */
-export async function listGitFiles(
+export async function readGitListing(
     root: string,
     gitArguments: readonly string[],
     cancelSignal: AbortSignal | undefined,

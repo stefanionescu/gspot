@@ -27,7 +27,7 @@ test('a command in a scope runs in the scope folder with paths relative to it', 
     const session = await openSession(sandbox.path);
     using _pins = fakeToolExecutables([getTool(readConfigurations().values(), 'swiftlint')]);
     const calls: { cwd: string; files: string[] }[] = [];
-    using _spawn = spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
+    using _spawn = spyOn(processes, 'runProcess').mockImplementation((command, options) => {
         calls.push({ cwd: options.cwd, files: command.filter((argument) => argument.endsWith('.swift')) });
         return Promise.resolve(buildProcessResult({ stdout: '[]' }));
     });

@@ -81,8 +81,8 @@ test('a refused pinned package manager keeps project files and gives no install 
     });
     await runGspot(sandbox.path, ['apply']);
     const previous = await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8');
-    const run = processes.spawnProcess;
-    using _boundary = spyOn(processes, 'spawnProcess').mockImplementation((command, options) =>
+    const run = processes.runProcess;
+    using _boundary = spyOn(processes, 'runProcess').mockImplementation((command, options) =>
         command[0] === 'mise'
             ? Promise.resolve(buildProcessResult({ code: 1, stderr: 'The requested version is not available.' }))
             : run(command, options),
@@ -124,7 +124,7 @@ test('a lockfile beside a later nested package selects its manager', async () =>
 
 test('Yarn uses npm without querying Yarn', async () => {
     await using sandbox = await testdir();
-    using run = spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout: '11.19.0\n' }));
+    using run = spyOn(processes, 'runProcess').mockResolvedValue(buildProcessResult({ stdout: '11.19.0\n' }));
     expect(
         await readToolPackageManager(
             sandbox.path,

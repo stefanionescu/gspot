@@ -1,7 +1,7 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { getRequired } from '#cli/system/tables.ts';
-import { listGitFiles } from '#cli/repository/files/tracked.ts';
 import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
+import { readGitListing } from '#cli/repository/files/tracked.ts';
 import type { GitFile, Revision } from '#cli/types/repository.ts';
 import { runGit, runGitStream, runGitForBytes } from '#cli/repository/git/run.ts';
 import { SYMLINK_MODE, GITLINK_MODE, GIT_INDEX_FILES_ARGUMENTS } from '#cli/config/repository/files.ts';
@@ -32,7 +32,7 @@ export async function listRevisionFiles(
 ): Promise<GitFile[]> {
     if (source.kind === 'index')
         return stripIndexStages(
-            await listGitFiles(root, GIT_INDEX_FILES_ARGUMENTS, cancelSignal, unreadablePaths).then((listed) =>
+            await readGitListing(root, GIT_INDEX_FILES_ARGUMENTS, cancelSignal, unreadablePaths).then((listed) =>
                 listed
                     .split('\0')
                     .filter(Boolean)

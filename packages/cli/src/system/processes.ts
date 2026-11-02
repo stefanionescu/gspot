@@ -1,7 +1,7 @@
 import { statSync } from 'node:fs';
 import { execa, type Options } from 'execa';
 import { hasErrorCode } from '#cli/system/errors.ts';
-import { selectProgram } from '#cli/system/programs.ts';
+import { findProgramCommand } from '#cli/system/programs.ts';
 import { trackProcessTree } from '#cli/system/process-trees.ts';
 import { dirname, resolve, delimiter, isAbsolute } from 'node:path';
 import { foldVariableName, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
@@ -44,13 +44,14 @@ function buildExecaOptions(options: SpawnOptions, executable: string) {
     };
 }
 
-function isExecutableAbsent(executable: string, cwd: string): boolean {
-    if (!PATH_SEPARATORS.test(executable)) return false;
+function isExecutableFilePresent(executable: string, cwd: string): boolean {
+    // A bare command name has no path to test, so the program lookup decides.
+    if (!PATH_SEPARATORS.test(executable)) return true;
     const path = resolve(cwd, executable);
     const extensions =
         process.platform === 'win32' ? (readEnvironmentVariable('PATHEXT') ?? PATHEXT_DEFAULT).split(';') : [];
-    return [path, ...extensions.map((extension) => path + extension.toLowerCase())].every(
-        (executablePath) => statSync(executablePath, { throwIfNoEntry: false }) === undefined,
+    return [path, ...extensions.map((extension) => path + extension.toLowerCase())].some(
+        (executablePath) => statSync(executablePath, { throwIfNoEntry: false }) !== undefined,
     );
 }
 
@@ -136,7 +137,7 @@ function findMissingExecutable(
 ): SpawnResult | undefined {
     const executable = command[0];
     if (executable === undefined) throw new Error(EMPTY_COMMAND_MESSAGE);
-    if (!isExecutableAbsent(executable, options.cwd) && selectProgram(command, options.env) !== undefined)
+    if (isExecutableFilePresent(executable, options.cwd) && findProgramCommand(command, options.env) !== undefined)
         return undefined;
     return buildSpawnResult(
         {
@@ -173,8 +174,11 @@ function findUnstartedProcess(
     );
 }
 
-function launchProcess(command: readonly string[], options: AsyncSpawnOptions, output: Pick<Options, 'buffer'>) {
-    const [executable, ...commandArguments] = selectProgram(command, options.env) as readonly [string, ...string[]];
+function spawnProcess(command: readonly string[], options: AsyncSpawnOptions, output: Pick<Options, 'buffer'>) {
+    const [executable, ...commandArguments] = findProgramCommand(command, options.env) as readonly [
+        string,
+        ...string[],
+    ];
     const child = execa(executable, commandArguments, {
         ...buildExecaOptions(options, command[0] as string),
         ...output,
@@ -190,13 +194,13 @@ Run a supervised process tree and capture its text.
 @param command executable and literal arguments.
 @param options where and how the process runs.
 */
-export async function spawnProcess(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
+export async function runProcess(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
     const started = performance.now();
     const unstarted = findUnstartedProcess(command, options, started);
     if (unstarted !== undefined) return unstarted;
-    let launched;
+    let spawned;
     try {
-        launched = launchProcess(command, options, {});
+        spawned = spawnProcess(command, options, {});
     } catch (error) {
         return buildSpawnResult(
             {
@@ -211,7 +215,7 @@ export async function spawnProcess(command: readonly string[], options: AsyncSpa
             started,
         );
     }
-    return finishProcess(launched.child, launched.supervision, started, launched.child);
+    return finishProcess(spawned.child, spawned.supervision, started, spawned.child);
 }
 
 /**
@@ -230,6 +234,6 @@ export async function streamProcess(
     const started = performance.now();
     const unstarted = findUnstartedProcess(command, options, started);
     if (unstarted !== undefined) return unstarted;
-    const { child, supervision } = launchProcess(command, options, { buffer: { stdout: false } });
+    const { child, supervision } = spawnProcess(command, options, { buffer: { stdout: false } });
     return finishProcess(child, supervision, started, readProcessOutput(child, options, readStdout));
 }

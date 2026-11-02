@@ -22,7 +22,7 @@ test('a missing OpenAPI document is reported before generation', async () => {
 
     const session = await openSession(sandbox.path);
     const input = planSandboxCheck(session, 'openapi/stale-document');
-    const run = resources.use(spyOn(processes, 'spawnProcess'));
+    const run = resources.use(spyOn(processes, 'runProcess'));
     const missingResult = await runCheckCode(
         buildCheckSession(session, CHECK_GENERATION),
         input,

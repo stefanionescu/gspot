@@ -53,7 +53,10 @@ per folder and search path.
 @param env the variable overrides of the process.
 @returns the command to run, or undefined when no copy sits outside the repository.
 */
-export function selectProgram(command: readonly string[], env: SpawnOptions['env']): readonly string[] | undefined {
+export function findProgramCommand(
+    command: readonly string[],
+    env: SpawnOptions['env'],
+): readonly string[] | undefined {
     const [name, ...commandArguments] = command as readonly [string, ...string[]];
     if (!OUTSIDE_PROGRAMS.has(name)) return command;
     const variables = Object.entries(buildSpawnEnvironment(env));

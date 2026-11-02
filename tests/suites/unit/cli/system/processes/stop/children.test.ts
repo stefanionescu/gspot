@@ -4,8 +4,8 @@ import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import * as childProcess from 'node:child_process';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { runProcess, streamProcess } from '#cli/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { spawnProcess, streamProcess } from '#cli/system/processes.ts';
 import { isWindows, fakePlatform } from '#tests/setup/system/platform.ts';
 import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system.ts';
 import { CLEANING_TOOL, STUBBORN_TOOL, STREAM_FAILURE, STOPPED_CAPTURES } from '#tests/config/system.ts';
@@ -147,9 +147,9 @@ test('the stop after a normal exit accepts the macOS refusal to signal an exited
     expect(result.errored).toBe(false);
 });
 
-async function stopTool(root: string, script: string): Promise<Awaited<ReturnType<typeof spawnProcess>>> {
+async function stopTool(root: string, script: string): Promise<Awaited<ReturnType<typeof runProcess>>> {
     const controller = new AbortController();
-    const running = spawnProcess(['sh', '-c', script], {
+    const running = runProcess(['sh', '-c', script], {
         cwd: root,
         cancelSignal: controller.signal,
         timeoutSeconds: CHILD_TIMEOUT_SECONDS,
@@ -182,7 +182,7 @@ async function captureProcess(
         timeoutSeconds: CHILD_TIMEOUT_SECONDS,
         ...options,
     };
-    if (capture === 'text') return spawnProcess(command, limitCommand(command, bounded).options);
+    if (capture === 'text') return runProcess(command, limitCommand(command, bounded).options);
     const chunks: Buffer[] = [];
     const result = await streamProcess(command, limitCommand(command, bounded).options, async (output) => {
         for await (const chunk of output) chunks.push(chunk);

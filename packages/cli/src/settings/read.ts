@@ -4,7 +4,7 @@ import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { formatSettingsError } from '#cli/settings/validation/messages.ts';
 import { parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
-import { assertSettings, formatSettingsIssue } from '#cli/settings/validation/schema.ts';
+import { validateSettings, formatSettingsIssue } from '#cli/settings/validation/schema.ts';
 import type { Settings, TomlTable, SettingsError, ParsedSettings } from '#cli/types/settings.ts';
 import { COMMAND_CHECK_WHY, COMMAND_CHECK_HELP, COMMAND_CHECK_DEFAULTS } from '#cli/config/settings/validation.ts';
 
@@ -45,7 +45,7 @@ export function parseSettings(text: string, root: string): Settings | SettingsEr
     let parsed: Settings | SettingsError[];
     if (result.success) {
         const settings = buildSettings(result.data, written);
-        const errors = assertSettings(settings, root);
+        const errors = validateSettings(settings, root);
         parsed = errors.length === 0 ? settings : errors;
     } else parsed = result.error.issues.flatMap((issue) => formatSettingsIssue(issue, syntax));
     return parsed;

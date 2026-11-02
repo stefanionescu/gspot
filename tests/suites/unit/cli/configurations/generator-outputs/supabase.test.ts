@@ -17,7 +17,7 @@ import { DATABASE_SCHEMAS, SUPABASE_TYPES_OUTPUT } from '#tests/config/configura
 async function prepareSupabaseCheck(
     root: string,
     scopePath: string,
-    result: Awaited<ReturnType<typeof processes.spawnProcess>>,
+    result: Awaited<ReturnType<typeof processes.runProcess>>,
     schemas?: readonly string[],
 ) {
     using resources = new DisposableStack();
@@ -40,7 +40,7 @@ async function prepareSupabaseCheck(
     const supabase = executables.sync('supabase', { path: bin });
     const docker = executables.sync('docker', { path: bin });
     const requests: { commandArguments: string[]; cwd: string }[] = [];
-    const { spawnProcess: spawn } = processes;
+    const { runProcess: spawn } = processes;
     resources.use(
         fakeExecutableLookup((name) =>
             new Map([
@@ -50,7 +50,7 @@ async function prepareSupabaseCheck(
         ),
     );
     resources.use(
-        spyOn(processes, 'spawnProcess').mockImplementation(async (commandArguments, options) => {
+        spyOn(processes, 'runProcess').mockImplementation(async (commandArguments, options) => {
             if (commandArguments.at(-1) === '--version' && [supabase, docker].includes(commandArguments[0] ?? ''))
                 return buildProcessResult({
                     stdout: commandArguments[0] === docker ? 'Docker version 29.2.1\n' : '2.75.0\n',

@@ -17,7 +17,7 @@ test.each([...ANALYZER_EXIT_CASES])(
         await using resources = new AsyncDisposableStack();
         await using prepared = await prepareSwiftCheck(sandbox, 'swift/swiftlint-analyze');
         resources.use(
-            spyOn(processes, 'spawnProcess')
+            spyOn(processes, 'runProcess')
                 .mockResolvedValueOnce(buildProcessResult({ code: buildCode }))
                 .mockResolvedValue(buildProcessResult({ code: analyzerCode })),
         );
@@ -42,7 +42,7 @@ test('analyzer: swift/swiftlint-analyze removes the old compiler files, so its c
     await mkdir(plan.scratch, { recursive: true });
     await writeFile(compilerState, 'incremental');
     resources.use(
-        spyOn(processes, 'spawnProcess')
+        spyOn(processes, 'runProcess')
             .mockResolvedValueOnce(buildProcessResult({ stdout: 'complete compiler log' }))
             .mockResolvedValue(buildProcessResult()),
     );
