@@ -147,17 +147,12 @@ Build the file changes that init reports before it writes them.
 @param scan the repository facts, answers, and configurations.
 @param settings the validated gspot.toml and its generated files.
 @param settings.settings the parsed gspot.toml for file generation.
-@param settings.settingsText the proposed gspot.toml text.
 @param settings.requirements the configurations whose tools the checks need.
 @param settings.generated the files to write and their ownership plan.
 */
 export function planInitFiles(
     scan: InitScan,
-    {
-        settings,
-        requirements,
-        generated,
-    }: { settings: Settings; settingsText: string; requirements: Configuration[]; generated: Generation },
+    { settings, requirements, generated }: { settings: Settings; requirements: Configuration[]; generated: Generation },
 ): InitPlan {
     const { repository, repositorySetup, conflicts } = scan;
     const tracked = new Set(repository.files.map((file) => file.path));

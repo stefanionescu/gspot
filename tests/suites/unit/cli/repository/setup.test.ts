@@ -24,10 +24,7 @@ test('tool discovery finds nested config files and skips root .gspot and vendore
     await using sandbox = await createGitSandbox(PRETTIER_SETTINGS_FILES);
 
     const repository = await readTestRepository(sandbox.path);
-    const discovered = await readRepositorySetup(createRunCache(sandbox.path), {
-        files: repository.files,
-        dependencyFiles: [],
-    });
+    const discovered = await readRepositorySetup(createRunCache(sandbox.path), { files: repository.files });
     expect(discovered.conflictingConfigs.map((conflictingConfig) => conflictingConfig.path)).toStrictEqual([
         'src/.prettierrc.json',
     ]);
@@ -63,10 +60,7 @@ test('tool discovery reads tool sections through a link inside the repository', 
     const source = '[tool.ruff]\nline-length = 100\n';
     await createFileTree(sandbox.path, { 'settings/python.toml': source });
     await symlink('settings/python.toml', join(sandbox.path, 'pyproject.toml'));
-    const repositorySetup = await readRepositorySetup(createRunCache(sandbox.path), {
-        files: [],
-        dependencyFiles: [],
-    });
+    const repositorySetup = await readRepositorySetup(createRunCache(sandbox.path), { files: [] });
     expect(repositorySetup.conflictingConfigs).toStrictEqual([LINKED_RUFF_SECTION]);
 });
 
@@ -81,16 +75,12 @@ test.each(['.claude/rules'])('a linked %s counts as present without reading a ru
     await mkdir(dirname(join(root, path)), { recursive: true });
     await symlink(join(sandbox.path, 'outside'), join(root, path), 'dir');
     expect(
-        await readRepositorySetup(createRunCache(root), { files: [], dependencyFiles: [] }).then(
-            ({ ruleFolders }) => ruleFolders,
-        ),
+        await readRepositorySetup(createRunCache(root), { files: [] }).then(({ ruleFolders }) => ruleFolders),
     ).toStrictEqual([path]);
     await unlink(join(root, path));
     await createFileTree(root, { [`${path}/guide.md`]: 'authored rules\n' });
     expect(
-        await readRepositorySetup(createRunCache(root), { files: [], dependencyFiles: [] }).then(
-            ({ ruleFolders }) => ruleFolders,
-        ),
+        await readRepositorySetup(createRunCache(root), { files: [] }).then(({ ruleFolders }) => ruleFolders),
     ).toStrictEqual([path]);
 });
 

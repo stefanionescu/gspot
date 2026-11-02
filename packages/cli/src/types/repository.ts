@@ -162,7 +162,6 @@ export type RepositorySetup = {
     agentFiles: string[];
     ruleFolders: string[];
     lintFolders: string[];
-    toolOnlyPackages: string[];
 };
 
 export type ConflictingConfig = {

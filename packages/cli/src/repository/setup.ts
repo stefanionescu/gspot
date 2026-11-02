@@ -5,6 +5,7 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseYamlDocuments } from '#cli/parsers/formats/yaml.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { find, findContainedPath } from '#cli/system/files/reads.ts';
 import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
 import { join, dirname, resolve, basename, relative } from 'node:path';
@@ -12,7 +13,6 @@ import { statSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 import { ciJobSchema, ciDocumentSchema } from '#cli/schemas/repository.ts';
 import { readGitSetting, readHooksFolder } from '#cli/repository/git/run.ts';
 import { EXECUTABLE_BITS, MARKDOWN_EXTENSION } from '#cli/config/repository/files.ts';
-import { readPackageJson, listToolOnlyPackages } from '#cli/repository/dependencies.ts';
 import type { CiJob, Repository, RepositoryHooks, RepositorySetup } from '#cli/types/repository.ts';
 
 import {
@@ -219,15 +219,12 @@ Find config files to replace, hooks, CI, agent files, and lint folders.
 */
 export async function readRepositorySetup(
     cache: RunCache,
-    repository: Pick<Repository, 'files' | 'dependencyFiles'>,
+    repository: Pick<Repository, 'files'>,
 ): Promise<RepositorySetup> {
     const root = cache.root;
-    const { files, dependencyFiles } = repository;
+    const { files } = repository;
     const paths = new Set(files.map((file) => file.path));
     const configurationsByName = readConfigurations();
-    const toolOnlyPackages = [...listToolOnlyPackages(dependencyFiles, configurationsByName.values())].toSorted(
-        (a, b) => Number(a === PACKAGE_JSON) - Number(b === PACKAGE_JSON),
-    );
 
     const conflictingConfigs = listConflictingConfigs(root, files, configurationsByName.values());
     const { hooks } = await readHooks({ root });
@@ -262,6 +259,5 @@ export async function readRepositorySetup(
                 listFolder(root, name).some((child) => child.endsWith(MARKDOWN_EXTENSION)),
         ),
         lintFolders: LINT_FOLDERS.filter((name) => listFolder(root, name).length > 0),
-        toolOnlyPackages,
     };
 }

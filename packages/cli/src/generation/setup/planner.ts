@@ -73,7 +73,7 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
         template: options.template,
         pinPath: hasPin ? undefined : pinPath,
     };
-    const plan = planInitFiles(planning, { settings, settingsText, requirements: applicable, generated });
+    const plan = planInitFiles(planning, { settings, requirements: applicable, generated });
     return {
         detection,
         session,
