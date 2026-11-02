@@ -5,9 +5,11 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
 import type { Config } from '#cli/types/repository.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { BASE_RULES } from '#cli/config/configurations/eslint.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
+import { buildRuntimes } from '#cli/configurations/language/javascript/eslint/runtimes.ts';
 import { escapeGlob, convertToPosixPath, extractParentFolder } from '#cli/system/paths.ts';
 import { MISE_TASKS_GLOB, NODE_SHEBANG_TAG } from '#cli/config/configurations/structure.ts';
 import { CODE_LANGUAGES, DEFAULT_PROJECT_FILES } from '#cli/config/configurations/blocks.ts';
@@ -82,6 +84,13 @@ export function buildPlannedEslintFile(planned: PlannedConfig): PlannedEslintFil
             javascript: buildScopeLimitRules(settings).javascript,
         },
         blockWriter: {
+            runtimes: buildRuntimes(scopes, session.repository.dependencyFiles),
+            rulePrefixes: new Map(
+                readConfigurations()
+                    .values()
+                    .flatMap(({ tools }) => tools)
+                    .map((tool) => [tool.installers['npm']?.name ?? tool.name, tool.rule_prefix]),
+            ),
             allLevelRules: new Set(
                 configurations.flatMap((configuration) => [...configuration.eslint.all_level_rules]),
             ),

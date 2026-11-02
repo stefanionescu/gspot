@@ -1,6 +1,5 @@
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { TYPE } from '@formatjs/icu-messageformat-parser';
-import type { EslintPlugins } from '#cli/types/configurations/language.ts';
 
 export const TSCONFIG_COPY_FOLDER = `${GSPOT_PATHS.configurations}/language/typescript`;
 
@@ -257,49 +256,6 @@ export const VUE_RULES = {
     'vue/html-button-has-type': 'error',
     'vue/no-template-target-blank': 'error',
 } as const;
-
-export const CONFIGURATION_PLUGINS = {
-    expo: { expoPlugin: ['expoPlugin', 'eslint-plugin-expo'] },
-    'react-native': {
-        reactNativePlatform: ['reactNativePlatform', '@react-native/eslint-plugin'],
-    },
-    zod: { zodPlugin: ['zodPlugin', 'eslint-plugin-zod'] },
-    translations: { i18next: ['i18next', 'eslint-plugin-i18next'] },
-    nextjs: {
-        nextPlugin: ['nextPlugin', '@next/eslint-plugin-next'],
-        reactRefresh: ['reactRefresh', 'eslint-plugin-react-refresh'],
-    },
-    vue: {
-        vuePlugin: ['vuePlugin', 'eslint-plugin-vue'],
-        vueParser: ['vueParser', 'vue-eslint-parser'],
-        vueAccessibility: ['vueAccessibility', 'eslint-plugin-vuejs-accessibility'],
-    },
-    'react-dom': { accessibility: ['accessibility', 'eslint-plugin-jsx-a11y-x'] },
-    astro: { astroPlugin: ['astroPlugin', 'eslint-plugin-astro'] },
-    zustand: {},
-    svelte: {
-        sveltePlugin: ['sveltePlugin', 'eslint-plugin-svelte'],
-        svelteParser: ['svelteParser', 'svelte-eslint-parser'],
-    },
-    nestjs: { nestjsTyped: ['nestjsTyped', '@darraghor/eslint-plugin-nestjs-typed'] },
-    'tanstack-query': { tanstackQuery: ['tanstackQuery', '@tanstack/eslint-plugin-query'] },
-    vitest: { vitest: ['vitest', '@vitest/eslint-plugin'] },
-    typescript: {
-        tseslint: ['tseslint', 'typescript-eslint'],
-        '{ createTypeScriptImportResolver }': [
-            '{ createTypeScriptImportResolver }',
-            'eslint-import-resolver-typescript',
-        ],
-    },
-    'testing-library': { testingLibrary: ['testingLibrary', 'eslint-plugin-testing-library'] },
-    react: {
-        reactHooks: ['reactHooks', 'eslint-plugin-react-hooks'],
-        react: ['react', '@eslint-react/eslint-plugin'],
-        reactRefresh: ['reactRefresh', 'eslint-plugin-react-refresh'],
-    },
-    drizzle: { drizzlePlugin: ['drizzlePlugin', 'eslint-plugin-drizzle'] },
-    jest: { jest: ['jest', 'eslint-plugin-jest'] },
-} as const satisfies Record<string, EslintPlugins>;
 
 export const DRIZZLE_RULES = ['drizzle/enforce-delete-with-where', 'drizzle/enforce-update-with-where'] as const;
 

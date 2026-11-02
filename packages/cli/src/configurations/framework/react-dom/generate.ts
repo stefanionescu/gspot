@@ -2,7 +2,6 @@ import type { EslintScope, ConfigurationBlocks } from '#cli/types/configurations
 
 import {
     REACT_FILES,
-    CONFIGURATION_PLUGINS,
     REACT_DOM_RULE_OPTIONS,
     REACT_NATIVE_CONFIGURATION,
 } from '#cli/config/configurations/framework.ts';
@@ -13,19 +12,16 @@ Apply the accessibility lint rules to the React DOM files.
 @param scope the planned ESLint file of the scope.
 */
 export function buildReactDomBlocks(scope: Pick<EslintScope, 'settings'>): ConfigurationBlocks {
-    const blocks: ConfigurationBlocks['blocks'] = [];
+    const blocks: ConfigurationBlocks = [];
     if (!scope.settings.configurations.includes(REACT_NATIVE_CONFIGURATION)) {
         blocks.push({
             fields: { files: REACT_FILES },
-            presets: [{ importName: 'accessibility', path: 'configs.recommended', merge: 'rules' }],
+            presets: [{ package: 'eslint-plugin-jsx-a11y-x', path: 'configs.recommended', merge: 'rules' }],
             calls: [
-                { name: 'addPlugins', args: [{ imports: { 'jsx-a11y-x': 'accessibility' } }] },
+                { name: 'addPlugins', args: [{ plugins: ['eslint-plugin-jsx-a11y-x'] }] },
                 { name: 'mergeRuleOptions', args: [{ value: REACT_DOM_RULE_OPTIONS }] },
             ],
         });
     }
-    return {
-        imports: CONFIGURATION_PLUGINS['react-dom'],
-        blocks,
-    };
+    return blocks;
 }

@@ -14,8 +14,8 @@ import { buildRestrictedImportBlocks } from '#cli/configurations/language/javasc
 import type {
     EslintBlock,
     EslintFiles,
-    EslintPlugins,
     EslintRuntime,
+    ListedPlugins,
     EslintBlockFields,
     PlannedEslintFile,
     ConfigurationBlocks,
@@ -49,7 +49,7 @@ import {
     PRESETS_BEFORE_CONFIGURATIONS,
 } from '#cli/config/configurations/blocks.ts';
 
-function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBlock[]): ConfigurationBlocks['blocks'] {
+function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBlock[]): ConfigurationBlocks {
     const { session, projects } = planned;
     return [
         ...buildImportStyleBlocks(
@@ -74,25 +74,12 @@ function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBl
     }));
 }
 
-function buildRootCalls(
-    plugins: EslintPlugins,
-    hasBoundaries: boolean,
-): NonNullable<ConfigurationBlocks['blocks'][number]['calls']> {
-    const imports = Object.fromEntries(Object.entries(plugins).map(([name, [importName]]) => [name, importName]));
-    const roots = [['settings', 'gspot', 'root'], ...(hasBoundaries ? [['settings', 'boundaries/root-path']] : [])];
-    return [
-        { name: 'addPlugins', args: [{ imports }] },
-        { name: 'setRuntime', args: [{ importName: 'globals' }, { value: 'es2024' }, { value: 'module' }] },
-        { name: 'setRootFolder', args: [{ value: roots }] },
-    ];
-}
-
 function buildRootBlock(
     planned: PlannedEslintFile,
-    plugins: EslintPlugins,
+    plugins: ListedPlugins,
     boundaryBlocks: EslintBlock[],
     ignoredGlobs: string[],
-): ConfigurationBlocks['blocks'][number] {
+): ConfigurationBlocks[number] {
     const { eslintFiles, session, blockWriter } = planned;
     const rules = planned.levelRules;
     const pluginOptions = Object.fromEntries(
@@ -118,13 +105,33 @@ function buildRootBlock(
                 ...IMPORT_LAYOUT_RULES,
             },
         },
-        calls: buildRootCalls(plugins, boundaryBlocks.length > 0),
-        presets: [{ importName: 'gspot', path: `configs.${GSPOT_PRESET_LEVELS[blockWriter.level]}`, merge: 'rules' }],
+        calls: [
+            { name: 'addPlugins', args: [plugins] },
+            { name: 'setRuntime', args: [{ package: 'globals' }, { value: 'es2024' }, { value: 'module' }] },
+            {
+                name: 'setRootFolder',
+                args: [
+                    {
+                        value: [
+                            ['settings', 'gspot', 'root'],
+                            ...(boundaryBlocks.length > 0 ? [['settings', 'boundaries/root-path']] : []),
+                        ],
+                    },
+                ],
+            },
+        ],
+        presets: [
+            {
+                package: '@gspothq/eslint-plugin',
+                path: `configs.${GSPOT_PRESET_LEVELS[blockWriter.level]}`,
+                merge: 'rules',
+            },
+        ],
     };
 }
 
-function buildRuntimeBlocks(eslintFiles: EslintFiles, runtimeBlocks: EslintRuntime[]): ConfigurationBlocks['blocks'] {
-    const runtimes: ConfigurationBlocks['blocks'] = runtimeBlocks.map(({ runtime }, index) => {
+function buildRuntimeBlocks(eslintFiles: EslintFiles, runtimeBlocks: EslintRuntime[]): ConfigurationBlocks {
+    const runtimes: ConfigurationBlocks = runtimeBlocks.map(({ runtime }, index) => {
         const names = RUNTIME_GLOBALS[runtime] ?? runtime;
         return {
             fields: {
@@ -137,7 +144,7 @@ function buildRuntimeBlocks(eslintFiles: EslintFiles, runtimeBlocks: EslintRunti
                 {
                     name: 'setRuntime',
                     args: [
-                        { importName: 'globals' },
+                        { package: 'globals' },
                         { value: names },
                         { value: runtime === 'commonjs' ? 'commonjs' : 'module' },
                     ],
@@ -181,23 +188,23 @@ function buildConsoleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'eslint
 Build the blocks before the configuration blocks: default lint rules, pinned presets, and project settings.
 
 @param planned the ESLint context of the scope.
-@param plugins the import names and packages to load.
+@param plugins the shipped plugin packages and the local plugins to load.
 @param boundaryBlocks the project classifications and dependency policies.
 @param ignoredGlobs the shared ignored paths.
 */
 export function buildOpeningBlocks(
     planned: PlannedEslintFile,
-    plugins: EslintPlugins,
+    plugins: ListedPlugins,
     boundaryBlocks: EslintBlock[],
     ignoredGlobs: string[],
-): ConfigurationBlocks['blocks'] {
+): ConfigurationBlocks {
     const { eslintFiles } = planned;
     return [
         ...PRESETS_BEFORE_CONFIGURATIONS.map((preset) => ({
             fields: { files: eslintFiles.code },
             presets: [
                 {
-                    importName: preset.importName,
+                    package: preset.package,
                     path: planned.blockWriter.level === 'all' && 'allPath' in preset ? preset.allPath : preset.path,
                     merge: 'fields' as const,
                 },
@@ -208,7 +215,7 @@ export function buildOpeningBlocks(
             fields: { files: eslintFiles.javascript, rules: JAVASCRIPT_RULES },
         },
         ...buildProjectBlocks(planned, boundaryBlocks),
-        ...buildRestrictedImportBlocks(planned).map((block): ConfigurationBlocks['blocks'][number] => ({
+        ...buildRestrictedImportBlocks(planned).map((block): ConfigurationBlocks[number] => ({
             fields: block,
         })),
     ];
@@ -220,10 +227,7 @@ Build the blocks after the configuration blocks: runtime, selector, test, script
 @param planned the ESLint context of the scope.
 @param runtimeBlocks the runtime declarations shared with file matchers.
 */
-export function buildClosingBlocks(
-    planned: PlannedEslintFile,
-    runtimeBlocks: EslintRuntime[],
-): ConfigurationBlocks['blocks'] {
+export function buildClosingBlocks(planned: PlannedEslintFile, runtimeBlocks: EslintRuntime[]): ConfigurationBlocks {
     const { eslintFiles, session } = planned;
     const { level } = planned.blockWriter;
     const rules = planned.levelRules;
@@ -240,21 +244,21 @@ export function buildClosingBlocks(
         ...buildRuntimeBlocks(eslintFiles, runtimeBlocks),
         ...selectorGroups
             .filter((group) => group.selectors.length > 0)
-            .map((group): ConfigurationBlocks['blocks'][number] => ({
+            .map((group): ConfigurationBlocks[number] => ({
                 fields: {
                     files: buildScopeFiles(eslintFiles.code, group.scope, ['**/*']),
                     ignores: group.ignoredScopes.map((scope) => `${escapeGlob(scope)}/**`),
                     rules: { [RESTRICTED_SYNTAX_RULE]: ['error', ...group.selectors] },
                 },
             })),
-        ...buildConsoleBlocks(planned).map((block): ConfigurationBlocks['blocks'][number] => ({
+        ...buildConsoleBlocks(planned).map((block): ConfigurationBlocks[number] => ({
             fields: block,
         })),
         { fields: { files: eslintFiles.scripts, rules: SCRIPT_RULES } },
         { fields: { files: eslintFiles.tests, rules: TEST_RULES } },
         ...PRESETS_AFTER_CONFIGURATIONS.map((preset) => ({
             fields: { files: 'files' in preset ? [...preset.files] : eslintFiles.code },
-            presets: [{ importName: preset.importName, path: preset.path, merge: 'fields' as const }],
+            presets: [{ ...preset, merge: 'fields' as const }],
         })),
         {
             fields: {

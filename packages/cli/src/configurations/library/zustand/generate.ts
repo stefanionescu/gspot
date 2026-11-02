@@ -1,11 +1,6 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import type { EslintScope, ConfigurationBlocks } from '#cli/types/configurations/language.ts';
-
-import {
-    CREATE_STORE_MESSAGE,
-    ZUSTAND_STORE_IMPORTS,
-    CONFIGURATION_PLUGINS,
-} from '#cli/config/configurations/framework.ts';
+import { CREATE_STORE_MESSAGE, ZUSTAND_STORE_IMPORTS } from '#cli/config/configurations/framework.ts';
 
 /**
 Restrict the Zustand store creators to the store files, so a store lives in a factory that a provider owns.
@@ -14,7 +9,7 @@ Restrict the Zustand store creators to the store files, so a store lives in a fa
 */
 export function buildZustandBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'settings'>): ConfigurationBlocks {
     const { eslintFiles, settings } = scope;
-    const blocks: ConfigurationBlocks['blocks'] = [
+    return [
         {
             fields: {
                 files: eslintFiles.code,
@@ -33,8 +28,4 @@ export function buildZustandBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'set
             },
         },
     ];
-    return {
-        imports: CONFIGURATION_PLUGINS['zustand'],
-        blocks,
-    };
 }

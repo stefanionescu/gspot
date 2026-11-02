@@ -6,7 +6,6 @@ import {
     TS_PATTERN,
     NESTJS_RULES,
     SWAGGER_PACKAGE,
-    CONFIGURATION_PLUGINS,
     NESTJS_INJECTABLE_FILTER_PATHS,
 } from '#cli/config/configurations/framework.ts';
 
@@ -16,11 +15,12 @@ files.
 
 @param scope the planned ESLint file of the scope.
 */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: CONFIGURATION_BUILDERS calls it by configuration name, like every block builder.
 export function buildNestjsBlocks(
     scope: Pick<EslintScope, 'eslintFiles' | 'path' | 'dependencies'>,
 ): ConfigurationBlocks {
     const { eslintFiles, path: scopePath, dependencies: scopeDependencies } = scope;
-    const blocks: ConfigurationBlocks['blocks'] = [
+    return [
         {
             fields: {
                 files: eslintFiles.typed,
@@ -42,18 +42,23 @@ export function buildNestjsBlocks(
                 },
             },
             calls: [
-                { name: 'addPlugins', args: [{ imports: { '@darraghor/nestjs-typed': ['nestjsTyped', 'plugin'] } }] },
+                {
+                    name: 'addPlugins',
+                    args: [{ plugins: [{ package: '@darraghor/eslint-plugin-nestjs-typed', path: 'plugin' }] }],
+                },
             ],
             presets: [
-                { importName: 'nestjsTyped', path: 'configs.flatRecommended', merge: 'rules' },
+                { package: '@darraghor/eslint-plugin-nestjs-typed', path: 'configs.flatRecommended', merge: 'rules' },
                 ...(scopeDependencies.includes(SWAGGER_PACKAGE)
                     ? []
-                    : [{ importName: 'nestjsTyped', path: 'configs.flatNoSwagger', merge: 'rules' } as const]),
+                    : [
+                          {
+                              package: '@darraghor/eslint-plugin-nestjs-typed',
+                              path: 'configs.flatNoSwagger',
+                              merge: 'rules',
+                          } as const,
+                      ]),
             ],
         },
     ];
-    return {
-        imports: CONFIGURATION_PLUGINS.nestjs,
-        blocks,
-    };
 }

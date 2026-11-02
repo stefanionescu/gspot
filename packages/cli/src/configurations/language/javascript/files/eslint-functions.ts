@@ -47,16 +47,14 @@ function setRuleLevel(value: unknown, level: unknown): unknown {
 Remove host runtime globals and keep framework compiler and test names. Runtime APIs get their globals from blocks with
 their own file selectors.
 
-@param block the framework ESLint configuration block.
+@param preset the config or configs of a framework.
 @param globalsByRuntime the globals tables of the globals package, keyed by runtime name.
-@returns a copy of the block without the runtime names in its globals, or the block itself when it declares no globals.
+@returns a copy of each config without the runtime names in its globals.
 */
 export function stripRuntimeGlobals(
-    block: JavascriptBlock,
+    preset: JavascriptBlock | JavascriptBlock[],
     globalsByRuntime: Record<string, EslintGlobals>,
-): JavascriptBlock {
-    const blockGlobals = block.languageOptions?.globals;
-    if (blockGlobals === undefined) return block;
+): JavascriptBlock[] {
     const names = new Set(
         Object.keys({
             ...globalsByRuntime['node'],
@@ -66,13 +64,17 @@ export function stripRuntimeGlobals(
             ...globalsByRuntime['react-native'],
         }),
     );
-    return {
-        ...block,
-        languageOptions: {
-            ...block.languageOptions,
-            globals: Object.fromEntries(Object.entries(blockGlobals).filter(([name]) => !names.has(name))),
-        },
-    };
+    return [preset].flat().map((config) => {
+        const configGlobals = config.languageOptions?.globals;
+        if (configGlobals === undefined) return config;
+        return {
+            ...config,
+            languageOptions: {
+                ...config.languageOptions,
+                globals: Object.fromEntries(Object.entries(configGlobals).filter(([name]) => !names.has(name))),
+            },
+        };
+    });
 }
 
 /**
@@ -173,75 +175,17 @@ export function importSvelteParser(moduleUrl: string = import.meta.url): Compone
 }
 
 /**
-Read one value of a preset or parser package.
-
-@param preset the imported package.
-@param path the dotted export path.
-*/
-export function readPreset(preset: unknown, path: string): unknown {
-    let value = preset;
-    for (const key of path === '' ? [] : path.split('.')) value = (value as Record<string, unknown>)[key];
-    return value;
-}
-
-/**
-Put one config of an imported preset under the block: its fields, then those of the block, and its rules before the rules of the block.
+Put the rules of a preset before the rules of the block, without its other fields. A preset list gives the rules of each
+config in order.
 
 @param block the block that the generated file writes.
-@param preset the default export of the preset package.
-@param path the dotted path of the config in that export, empty for the export itself.
+@param preset the config or configs of the preset.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Generated ESLint files import this transformation by name.
-export function mergePreset(block: JavascriptBlock, preset: unknown, path: string): JavascriptBlock {
-    const selected = readPreset(preset, path) as JavascriptBlock;
-    return { ...selected, ...block, rules: { ...selected.rules, ...block.rules } };
-}
-
-/**
-Put the rules of an imported preset before the rules of the block, without its other fields. A preset list gives the
-rules of each config in order.
-
-@param block the block that the generated file writes.
-@param preset the default export of the preset package.
-@param path the dotted path of the config or list in that export, empty for the export itself.
-*/
-export function mergePresetRules(block: JavascriptBlock, preset: unknown, path: string): JavascriptBlock {
-    const selected = readPreset(preset, path) as JavascriptBlock | JavascriptBlock[];
-    const rules = [selected, block]
+export function mergePresetRules(block: JavascriptBlock, preset: JavascriptBlock | JavascriptBlock[]): JavascriptBlock {
+    const rules = [preset, block]
         .flat()
         .flatMap((config) => (config.rules === undefined ? [] : Object.entries(config.rules)));
     return { ...block, rules: Object.fromEntries(rules) };
-}
-
-/**
-Copy each config of an imported preset list into one scope. A config that names files keeps them inside the scope. A
-config without files takes the files of the block. Every config takes the ignores of the block and loses the host
-runtime globals, as stripRuntimeGlobals removes them.
-
-@param block the files and ignores of the scope.
-@param preset the default export of the preset package.
-@param path the dotted path of the list in that export.
-@param scope the scope folder glob and the globals tables of the globals package.
-@param scope.files the glob of the scope folder, such as docs/**\/*.
-@param scope.globals the globals tables of the globals package, keyed by runtime name.
-@returns one block per config of the preset.
-*/
-export function spreadPreset(
-    block: JavascriptBlock & { files: unknown[] },
-    preset: unknown,
-    path: string,
-    scope: { files: string; globals: Record<string, EslintGlobals> },
-): JavascriptBlock[] {
-    return (readPreset(preset, path) as JavascriptBlock[]).map((config) =>
-        stripRuntimeGlobals(
-            {
-                ...config,
-                files: config.files?.map((pattern) => [...[pattern].flat(), scope.files]) ?? block.files,
-                ignores: [...(config.ignores ?? []), ...(block.ignores ?? [])],
-            },
-            scope.globals,
-        ),
-    );
 }
 
 /**

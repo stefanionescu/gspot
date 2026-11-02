@@ -1,30 +1,28 @@
 import type { PluginRuleBlock } from '#cli/types/configurations/language.ts';
-import { CONFIGURATION_PLUGINS } from '#cli/config/configurations/framework.ts';
+import { REACT_FILES, REACT_RULES } from '#cli/config/configurations/framework.ts';
 
 export const TSC_UNFORMATTED_OUTPUT = ['--pretty', 'false'] as const;
 
-export const ESLINT_PLUGIN_IMPORTS = {
-    gspot: ['gspot', '@gspothq/eslint-plugin'],
-    'import-x': ['importX', 'eslint-plugin-import-x'],
-    jsdoc: ['jsdoc', 'eslint-plugin-jsdoc'],
-    n: ['nodePlugin', 'eslint-plugin-n'],
-    regexp: ['regexp', 'eslint-plugin-regexp'],
-    security: ['security', 'eslint-plugin-security'],
-} as const;
+export const ESLINT_PLUGIN_PACKAGES = [
+    '@gspothq/eslint-plugin',
+    'eslint-plugin-import-x',
+    'eslint-plugin-jsdoc',
+    'eslint-plugin-n',
+    'eslint-plugin-regexp',
+    'eslint-plugin-security',
+] as const;
 
-export const LEVEL_ALL_PLUGIN_IMPORTS = {
-    perfectionist: ['perfectionist', 'eslint-plugin-perfectionist'],
-} as const;
+export const LEVEL_ALL_PLUGIN_PACKAGE = 'eslint-plugin-perfectionist';
 
-export const BOUNDARIES_PLUGIN_IMPORT = { boundaries: ['boundaries', 'eslint-plugin-boundaries'] } as const;
+export const BOUNDARIES_PLUGIN_PACKAGE = 'eslint-plugin-boundaries';
 
 export const ESLINT_FUNCTIONS_FILE = 'functions.mjs';
 
-export const GLOBALS_IMPORT = ['globals', 'globals'] as const;
-
 export const CONFIGURATION_BLOCKS_SUFFIX = 'Blocks';
 
-export const NAME_HYPHEN = /-(?<letter>[a-z0-9])/gu;
+export const PACKAGE_SCOPE_MARK = /^@/u;
+
+export const NAME_SEPARATOR = /[-/.](?<letter>[a-z0-9])/gu;
 
 export const ESLINT_BASE_LABEL = 'javascript';
 
@@ -32,35 +30,17 @@ export const ESLINT_SETTINGS_TABLE = 'tools.eslint';
 
 export const COMPONENT_CONFIGURATIONS = ['vue', 'svelte'] as const;
 
-export const ESLINT_FUNCTIONS = [
-    'readPreset',
-    'mergePreset',
-    'mergePresetRules',
-    'spreadPreset',
-    'mergeRuleOptions',
-    'setRuleOptions',
-    'setLevelRules',
-    'addPlugins',
-    'setRootFolder',
-    'setImportLookup',
-    'setBoundaryLookup',
-    'setRuntime',
-    'setComponentParser',
-    'setScriptParser',
-    'setJestGlobals',
-    'buildRuntimeMatcher',
-    'stripRuntimeGlobals',
-    'buildComponentMatcher',
-    'importAstroPlugin',
-    'importSvelteParser',
-] as const;
+export const ESLINT_PACKAGE_IMPORTERS: Readonly<Record<string, string | undefined>> = {
+    'eslint-plugin-astro': 'importAstroPlugin',
+    'svelte-eslint-parser': 'importSvelteParser',
+};
 
-export const IMPORT_NAME_PUNCTUATION = /[{}\s]/gu;
+export const ESLINT_CONFIG_API = 'eslint/config';
 
-export const ESLINT_PLUGIN_IMPORTERS = new Map([
-    ['eslint-plugin-astro', 'importAstroPlugin'],
-    ['svelte-eslint-parser', 'importSvelteParser'],
-]);
+export const ESLINT_NAMED_IMPORTS: Readonly<Record<string, string | undefined>> = {
+    'eslint-import-resolver-typescript': 'createTypeScriptImportResolver',
+    [ESLINT_CONFIG_API]: 'defineConfig',
+};
 
 const EXPO_RULES = {
     'expo/no-env-var-destructuring': 'error',
@@ -77,6 +57,12 @@ const REACT_NATIVE_RULES = {
 } as const;
 
 const TRANSLATIONS_RULES = { 'i18next/no-literal-string': ['error', { mode: 'jsx-text-only' }] } as const;
+
+const ZOD_RULES = {
+    'zod/consistent-import': ['error', { syntax: 'named' }],
+    'zod/prefer-strict-object': 'error',
+    'zod/prefer-meta-last': 'error',
+} as const;
 
 const JSX_FILES = ['**/*.{jsx,tsx}'] as const;
 
@@ -122,10 +108,9 @@ export const VAGUE_TEST_TITLE_WORDS = [
 
 export const PLUGIN_RULE_BLOCKS: Readonly<Record<string, PluginRuleBlock>> = {
     jest: {
-        imports: CONFIGURATION_PLUGINS.jest,
         calls: [
-            { name: 'addPlugins', args: [{ imports: { jest: 'jest' } }] },
-            { name: 'setJestGlobals', args: [{ importName: 'jest' }] },
+            { name: 'addPlugins', args: [{ plugins: ['eslint-plugin-jest'] }] },
+            { name: 'setJestGlobals', args: [{ package: 'eslint-plugin-jest' }] },
         ],
         fields: { settings: { jest: { globalPackage: JEST_GLOBAL_PACKAGE } } },
         files: 'tests',
@@ -137,24 +122,54 @@ export const PLUGIN_RULE_BLOCKS: Readonly<Record<string, PluginRuleBlock>> = {
         allLevelRules: { 'jest/valid-title': ['error', { disallowedWords: VAGUE_TEST_TITLE_WORDS }] },
     },
     expo: {
-        imports: CONFIGURATION_PLUGINS.expo,
-        calls: [{ name: 'addPlugins', args: [{ imports: { expo: 'expoPlugin' } }] }],
+        calls: [{ name: 'addPlugins', args: [{ plugins: ['eslint-plugin-expo'] }] }],
         files: 'code',
         rules: EXPO_RULES,
     },
-    express: { imports: {}, calls: [], files: 'code', rules: EXPRESS_RULES },
+    express: { files: 'code', rules: EXPRESS_RULES },
     'react-native': {
-        imports: CONFIGURATION_PLUGINS['react-native'],
-        calls: [{ name: 'addPlugins', args: [{ imports: { '@react-native': 'reactNativePlatform' } }] }],
+        calls: [{ name: 'addPlugins', args: [{ plugins: ['@react-native/eslint-plugin'] }] }],
         files: 'code',
         rules: REACT_NATIVE_RULES,
     },
     translations: {
-        imports: CONFIGURATION_PLUGINS.translations,
-        calls: [{ name: 'addPlugins', args: [{ imports: { i18next: 'i18next' } }] }],
+        calls: [{ name: 'addPlugins', args: [{ plugins: ['eslint-plugin-i18next'] }] }],
         files: JSX_FILES,
         ignoresTests: true,
         rules: TRANSLATIONS_RULES,
+    },
+    zod: {
+        calls: [{ name: 'addPlugins', args: [{ plugins: ['eslint-plugin-zod'] }] }],
+        presets: [{ package: 'eslint-plugin-zod', path: 'configs.recommended', merge: 'rules' }],
+        files: 'code',
+        rules: ZOD_RULES,
+    },
+    'tanstack-query': {
+        presets: [{ package: '@tanstack/eslint-plugin-query', path: 'configs.flat/recommended', merge: 'fields' }],
+        files: 'code',
+    },
+    react: {
+        calls: [
+            {
+                name: 'addPlugins',
+                args: [
+                    {
+                        plugins: [
+                            'eslint-plugin-react-hooks',
+                            '@eslint-react/eslint-plugin',
+                            'eslint-plugin-react-refresh',
+                        ],
+                    },
+                ],
+            },
+        ],
+        presets: [
+            { package: '@eslint-react/eslint-plugin', path: 'configs.recommended', merge: 'fields' },
+            { package: 'eslint-plugin-react-hooks', path: 'configs.flat.recommended-latest', merge: 'rules' },
+            { package: 'eslint-plugin-react-refresh', path: 'configs.recommended', merge: 'rules' },
+        ],
+        files: REACT_FILES,
+        rules: REACT_RULES,
     },
 };
 

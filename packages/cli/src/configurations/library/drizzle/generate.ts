@@ -1,6 +1,6 @@
 import { getTable } from '#cli/settings/scopes.ts';
+import { DRIZZLE_RULES } from '#cli/config/configurations/framework.ts';
 import type { EslintScope, ConfigurationBlocks } from '#cli/types/configurations/language.ts';
-import { DRIZZLE_RULES, CONFIGURATION_PLUGINS } from '#cli/config/configurations/framework.ts';
 
 /**
 Require safe changes in Drizzle queries.
@@ -10,17 +10,13 @@ Require safe changes in Drizzle queries.
 export function buildDrizzleBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'settings'>): ConfigurationBlocks {
     const { eslintFiles, settings } = scope;
     const rule = ['error', { drizzleObjectName: getTable(settings, 'drizzle').client_names }];
-    const blocks: ConfigurationBlocks['blocks'] = [
+    return [
         {
             fields: {
                 files: eslintFiles.code,
                 rules: Object.fromEntries(DRIZZLE_RULES.map((name) => [name, rule])),
             },
-            calls: [{ name: 'addPlugins', args: [{ imports: { drizzle: 'drizzlePlugin' } }] }],
+            calls: [{ name: 'addPlugins', args: [{ plugins: ['eslint-plugin-drizzle'] }] }],
         },
     ];
-    return {
-        imports: CONFIGURATION_PLUGINS.drizzle,
-        blocks,
-    };
 }

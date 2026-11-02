@@ -29,9 +29,13 @@ List the import of each plugin module, keyed by its rule prefix, as the generate
 
 @param scopes every project and its settings.
 @param targetPath the generated ESLint file, which imports each module by a path relative to it.
-@param shipped the plugins that gspot loads, whose prefixes your plugins may not take.
+@param shipped the rule prefixes of the plugins that gspot loads, which your plugins may not take.
 */
-export function listLocalPlugins(scopes: Scope[], targetPath: string, shipped: EslintPlugins): EslintPlugins {
+export function listLocalPlugins(
+    scopes: Scope[],
+    targetPath: string,
+    shipped: ReadonlySet<string | undefined>,
+): EslintPlugins {
     const records = listPluginRecords(scopes);
     const paths = new Map<string, string>();
     for (const { name, path } of records) {
@@ -45,7 +49,7 @@ export function listLocalPlugins(scopes: Scope[], targetPath: string, shipped: E
     }
     return Object.fromEntries(
         [...paths].map(([name, path], index) => {
-            if (Object.hasOwn(shipped, name))
+            if (shipped.has(name))
                 throw new GspotError(
                     'settings',
                     `tools.eslint.plugins: ${name} is the rule prefix of a plugin that gspot loads. Choose another name.`,

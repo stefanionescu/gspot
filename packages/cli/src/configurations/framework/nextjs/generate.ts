@@ -9,7 +9,6 @@ import {
     NEXT_RULE_OPTIONS,
     NEXT_SERVER_FILES,
     NEXT_PAGES_FOLDERS,
-    CONFIGURATION_PLUGINS,
 } from '#cli/config/configurations/framework.ts';
 
 /**
@@ -27,7 +26,7 @@ export function buildNextjsBlocks(
     const scopePath = findEnclosingFolder(path, new Set(nextProjects)) ?? path;
     const prefix = scopePath === '' ? '' : `${scopePath}/`;
     const hasPages = sourceFiles.some((path) => NEXT_PAGES_FOLDERS.some((folder) => path.startsWith(prefix + folder)));
-    const blocks: ConfigurationBlocks['blocks'] = [
+    return [
         {
             fields: {
                 files: REACT_FILES,
@@ -39,11 +38,11 @@ export function buildNextjsBlocks(
                 },
             },
             presets: [
-                { importName: 'nextPlugin', path: 'configs.core-web-vitals', merge: 'rules' },
-                { importName: 'reactRefresh', path: 'configs.next', merge: 'rules' },
+                { package: '@next/eslint-plugin-next', path: 'configs.core-web-vitals', merge: 'rules' },
+                { package: 'eslint-plugin-react-refresh', path: 'configs.next', merge: 'rules' },
             ],
             calls: [
-                { name: 'addPlugins', args: [{ imports: { '@next/next': 'nextPlugin' } }] },
+                { name: 'addPlugins', args: [{ plugins: ['@next/eslint-plugin-next'] }] },
                 { name: 'setRootFolder', args: [{ value: [['settings', 'next', 'rootDir']] }, { value: scopePath }] },
                 { name: 'mergeRuleOptions', args: [{ value: NEXT_RULE_OPTIONS }] },
             ],
@@ -55,8 +54,4 @@ export function buildNextjsBlocks(
             },
         },
     ];
-    return {
-        imports: CONFIGURATION_PLUGINS.nextjs,
-        blocks,
-    };
 }

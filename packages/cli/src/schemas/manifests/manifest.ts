@@ -93,6 +93,7 @@ const configSchema = z
         check: consumerNamesSchema,
         pointer: pointerSchema.optional(),
         per_scope: z.boolean().default(false),
+        references: stringsSchema,
     })
     .transform((config) => {
         if (config.pointer?.folders !== undefined)

@@ -213,25 +213,18 @@ export const ENVIRONMENT_RULES = {
 
 export const PACKAGE_JSON_RULE_PREFIX = 'package-json/';
 
-export const PRESET_IMPORTERS: Readonly<Record<string, string | undefined>> = {
-    astroPlugin: 'importAstroPlugin',
-    svelteParser: 'importSvelteParser',
-};
-
 export const PRESETS_AFTER_CONFIGURATIONS = [
     {
-        importName: 'packageJson',
         package: 'eslint-plugin-package-json',
         path: 'configs.recommended',
         files: [PACKAGE_JSON_PATTERN],
     },
-    { importName: 'prettierConfig', package: 'eslint-config-prettier', path: '' },
+    { package: 'eslint-config-prettier' },
 ] as const;
 
 export const PRESETS_BEFORE_CONFIGURATIONS = [
-    { importName: 'eslint', package: '@eslint/js', path: 'configs.recommended' },
+    { package: '@eslint/js', path: 'configs.recommended' },
     {
-        importName: 'unicorn',
         package: 'eslint-plugin-unicorn',
         path: 'configs.unopinionated',
         allPath: 'configs.recommended',

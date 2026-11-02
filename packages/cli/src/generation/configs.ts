@@ -13,6 +13,7 @@ import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import { IMPORT_CYCLES_CONFIG } from '#cli/config/configurations/eslint.ts';
 import { buildLinkFiles, listLinkFilePaths } from '#cli/generation/links.ts';
+import { TS_EXTENSION, CONFIG_SCOPES_FOLDER } from '#cli/config/generation.ts';
 import { buildLycheeFile } from '#cli/configurations/general/docs/generate.ts';
 import { buildKnipFile } from '#cli/configurations/language/javascript/knip.ts';
 import { buildSqlfluffFile } from '#cli/configurations/language/sql/generate.ts';
@@ -39,7 +40,6 @@ import { buildSpectralFile } from '#cli/configurations/infrastructure/openapi/ge
 import { buildEslintFile } from '#cli/configurations/language/javascript/eslint/config.ts';
 import { buildAnsibleLintFile } from '#cli/configurations/infrastructure/ansible/generate.ts';
 import type { BuiltConfig, OwnedSourceFile, ConfigBuildState } from '#cli/types/generation.ts';
-import { TS_EXTENSION, CONFIG_REFERENCE, CONFIG_SCOPES_FOLDER } from '#cli/config/generation.ts';
 import { buildV8rFile, buildTaploFile } from '#cli/configurations/general/data-files/generate.ts';
 import { buildRuffFile, buildBasedpyrightFile } from '#cli/configurations/language/python/generate.ts';
 import { buildTrivyFile, buildHadolintFile } from '#cli/configurations/infrastructure/docker/generate.ts';
@@ -106,6 +106,21 @@ const CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder | undefined>> = {
 
 const CONFIGS = Symbol('config files');
 
+function replaceReferences(
+    content: string,
+    config: Config,
+    targetPath: string,
+    targets: ReadonlyMap<string, string> | undefined,
+): string {
+    let text = content;
+    for (const reference of config.references) {
+        const mapped = targets?.get(join(dirname(config.target), reference));
+        if (mapped !== undefined)
+            text = text.replaceAll(`'${reference}'`, () => `'${relative(dirname(targetPath), mapped)}'`);
+    }
+    return text;
+}
+
 /**
 Build the text of one config file, and of the files that it imports.
 
@@ -141,11 +156,7 @@ export function buildConfigFile(
                   }).outputText;
     } else built = builder(planned);
     const { content, companions } = typeof built === 'string' ? { content: built, companions: [] } : built;
-    const source = content.replaceAll(CONFIG_REFERENCE, (match: string, path: string) => {
-        const referenced = join(dirname(config.target), path);
-        const mapped = generated.targets.get(planned.scope.path)?.get(referenced);
-        return mapped === undefined ? match : match.replace(path, () => relative(dirname(targetPath), mapped));
-    });
+    const source = replaceReferences(content, config, targetPath, generated.targets.get(planned.scope.path));
     return {
         file: { path: targetPath, content: `${formatHeader(targetPath)}${source.trimEnd()}\n` },
         companions: companions.map((companion) => ({

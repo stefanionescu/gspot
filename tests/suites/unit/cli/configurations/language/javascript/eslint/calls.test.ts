@@ -21,16 +21,13 @@ test('generated ESLint modules hold static imports and calls without executable 
         const source = ts.createSourceFile(file.path, file.content, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
         expect(source.statements.slice(0, -1).every((statement) => ts.isImportDeclaration(statement))).toBe(true);
         const last = source.statements.at(-1);
-        expect(last !== undefined && ts.isExportAssignment(last) && ts.isArrayLiteralExpression(last.expression)).toBe(
-            true,
-        );
+        expect(last !== undefined && ts.isExportAssignment(last)).toBe(true);
         const pending: ts.Node[] = [source];
         while (pending.length > 0) {
             const node = pending.pop()!;
             expect(
                 [
                     ts.isPropertyAccessExpression(node),
-                    ts.isElementAccessExpression(node),
                     ts.isConditionalExpression(node),
                     ts.isBinaryExpression(node),
                     ts.isArrowFunction(node),

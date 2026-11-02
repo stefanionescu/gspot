@@ -4,11 +4,9 @@ import type { Scope } from '#cli/types/settings.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { getTable, findParentScope } from '#cli/settings/scopes.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
-import { buildZodBlocks } from '#cli/configurations/library/zod/generate.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { buildVueBlocks } from '#cli/configurations/framework/vue/generate.ts';
 import { buildAstroBlocks } from '#cli/configurations/framework/astro/generate.ts';
-import { buildReactBlocks } from '#cli/configurations/framework/react/generate.ts';
 import { buildVitestBlocks } from '#cli/configurations/testing/vitest/generate.ts';
 import { buildNestjsBlocks } from '#cli/configurations/framework/nestjs/generate.ts';
 import { buildNextjsBlocks } from '#cli/configurations/framework/nextjs/generate.ts';
@@ -19,13 +17,11 @@ import { buildReactDomBlocks } from '#cli/configurations/framework/react-dom/gen
 import { buildTypescriptBlocks } from '#cli/configurations/language/typescript/generate.ts';
 import { IMPORT_EXTENSIONS, FILE_EXTENSION_RULE } from '#cli/config/configurations/blocks.ts';
 import { SUPABASE_RULES, PLUGIN_RULE_BLOCKS } from '#cli/config/configurations/javascript.ts';
-import { buildTanstackQueryBlocks } from '#cli/configurations/library/tanstack-query/generate.ts';
 import { buildTestingLibraryBlocks } from '#cli/configurations/library/testing-library/generate.ts';
 import { buildTestFiles, listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
 
 import type {
     EslintScope,
-    EslintPlugins,
     PlannedEslintFile,
     PlannedEslintBlock,
     ConfigurationBlocks,
@@ -41,14 +37,11 @@ const CONFIGURATION_BUILDERS: Readonly<Record<string, ConfigurationBuilder | und
     nextjs: buildNextjsBlocks,
     typescript: buildTypescriptBlocks,
     zustand: buildZustandBlocks,
-    zod: buildZodBlocks,
     'testing-library': buildTestingLibraryBlocks,
     vitest: buildVitestBlocks,
-    react: buildReactBlocks,
     'react-dom': buildReactDomBlocks,
     nestjs: buildNestjsBlocks,
     drizzle: buildDrizzleBlocks,
-    'tanstack-query': buildTanstackQueryBlocks,
     supabase: buildSupabaseBlocks,
 };
 
@@ -91,7 +84,7 @@ function listMatchingScopes(
             .filter(({ path, blocks }) => {
                 const parent = findParentScope(scopes, path);
                 const previous = scopeBlocks.find((each) => each.path === parent?.path);
-                return previous !== undefined && isDeepStrictEqual(blocks.blocks, previous.blocks.blocks);
+                return previous !== undefined && isDeepStrictEqual(blocks, previous.blocks);
             })
             .map(({ path }) => path),
     );
@@ -120,8 +113,7 @@ function buildScopeConfigurationBlocks(
                 .map((child) => joinScope(escapeGlob(child), '**'));
             result.push({
                 configuration,
-                imports: blocks.imports,
-                blocks: blocks.blocks.map((block) => ({
+                blocks: blocks.map((block) => ({
                     ...block,
                     scope: { path, excluded },
                     label: configuration.name,
@@ -136,26 +128,22 @@ function buildPluginRuleBlocks(scope: EslintScope, configuration: string): Confi
     const declaration = PLUGIN_RULE_BLOCKS[configuration] as (typeof PLUGIN_RULE_BLOCKS)[string];
     const selectors = { code: scope.eslintFiles.code, tests: scope.eslintFiles.tests };
     const files = typeof declaration.files === 'string' ? selectors[declaration.files] : declaration.files;
-    return {
-        imports: declaration.imports,
-        blocks: [
-            {
-                fields: {
-                    ...declaration.fields,
-                    files,
-                    ...(declaration.ignoresTests === true && {
-                        ignores: [
-                            ...new Set(
-                                scope.eslintFiles.tests.map(([test]) => test).filter((test) => test !== undefined),
-                            ),
-                        ],
-                    }),
-                    rules: { ...declaration.rules, ...(scope.level === 'all' && declaration.allLevelRules) },
-                },
-                calls: declaration.calls,
+    return [
+        {
+            fields: {
+                ...declaration.fields,
+                files,
+                ...(declaration.ignoresTests === true && {
+                    ignores: [
+                        ...new Set(scope.eslintFiles.tests.map(([test]) => test).filter((test) => test !== undefined)),
+                    ],
+                }),
+                rules: { ...declaration.rules, ...(scope.level === 'all' && declaration.allLevelRules) },
             },
-        ],
-    };
+            calls: declaration.calls ?? [],
+            presets: declaration.presets ?? [],
+        },
+    ];
 }
 
 /**
@@ -167,35 +155,23 @@ function buildSupabaseBlocks(scope: EslintScope): ConfigurationBlocks {
     const folder = escapeGlob(getTable(scope.settings, 'supabase').functions_folder);
     const files = scope.eslintFiles.code.map((pattern) => [`${folder}/**`, pattern]);
     const settings = { n: { tryExtensions: IMPORT_EXTENSIONS, typescriptExtensionMap: [] } };
-    return {
-        imports: {},
-        blocks: [
-            { fields: { files, settings, rules: { ...SUPABASE_RULES, [FILE_EXTENSION_RULE]: ['error', 'always'] } } },
-        ],
-    };
+    return [{ fields: { files, settings, rules: { ...SUPABASE_RULES, [FILE_EXTENSION_RULE]: ['error', 'always'] } } }];
 }
 
 /**
-Collect imported bindings and the scoped blocks of each configuration.
+Collect the scoped blocks of each configuration.
 
 @param planned the source facts and resolved scopes.
 @returns the blocks of each configuration in plan order.
 */
-export function listConfigurationBlocks(planned: PlannedEslintFile): {
-    configurationBlocks: Map<Configuration, PlannedEslintBlock[]>;
-    configurationImports: EslintPlugins;
-} {
+export function listConfigurationBlocks(planned: PlannedEslintFile): Map<Configuration, PlannedEslintBlock[]> {
     const configurations = planned.configurations.flatMap((configuration) => {
         const builder = CONFIGURATION_BUILDERS[configuration.name];
         return builder === undefined ? [] : { configuration, builder };
     });
-    const selected = buildScopeConfigurationBlocks(configurations, planned);
-    return {
-        configurationBlocks: new Map(
-            Map.groupBy(selected, ({ configuration }) => configuration)
-                .entries()
-                .map(([configuration, groups]) => [configuration, groups.flatMap(({ blocks }) => blocks)]),
-        ),
-        configurationImports: Object.fromEntries(selected.flatMap((blocks) => Object.entries(blocks.imports))),
-    };
+    return new Map(
+        Map.groupBy(buildScopeConfigurationBlocks(configurations, planned), ({ configuration }) => configuration)
+            .entries()
+            .map(([configuration, groups]) => [configuration, groups.flatMap(({ blocks }) => blocks)]),
+    );
 }

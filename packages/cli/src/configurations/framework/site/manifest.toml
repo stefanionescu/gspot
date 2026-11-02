@@ -36,6 +36,7 @@ tool = "purgecss"
 [[config_file]]
 check = "site/purgecss"
 per_scope = true
+references = ["purgecss-safelist.json"]
 source = "purgecss.ts"
 target = "purgecss.mjs"
 tool = "purgecss"

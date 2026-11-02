@@ -1,21 +1,16 @@
 import type { EslintScope, ConfigurationBlocks } from '#cli/types/configurations/language.ts';
-
-import {
-    SVELTE_RULES,
-    SVELTE_FILES,
-    CONFIGURATION_PLUGINS,
-    TYPESCRIPT_CONFIGURATION,
-} from '#cli/config/configurations/framework.ts';
+import { SVELTE_RULES, SVELTE_FILES, TYPESCRIPT_CONFIGURATION } from '#cli/config/configurations/framework.ts';
 
 /**
 Apply the Svelte presets and the Svelte component parser.
 
 @param scope the planned ESLint file of the scope.
 */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: CONFIGURATION_BUILDERS calls it by configuration name, like every block builder.
 export function buildSvelteBlocks(scope: Pick<EslintScope, 'settings'>): ConfigurationBlocks {
     const isTyped = scope.settings.configurations.includes(TYPESCRIPT_CONFIGURATION);
-    const blocks: ConfigurationBlocks['blocks'] = [
-        { fields: {}, presets: [{ importName: 'sveltePlugin', path: 'configs.recommended', merge: 'spread' }] },
+    return [
+        { fields: {}, presets: [{ package: 'eslint-plugin-svelte', path: 'configs.recommended', merge: 'fields' }] },
         {
             fields: {
                 files: SVELTE_FILES,
@@ -26,15 +21,11 @@ export function buildSvelteBlocks(scope: Pick<EslintScope, 'settings'>): Configu
                 {
                     name: 'setComponentParser',
                     args: [
-                        { importName: 'svelteParser' },
-                        ...(isTyped ? [{ importName: 'tseslint', path: 'parser' }] : []),
+                        { package: 'svelte-eslint-parser' },
+                        ...(isTyped ? [{ package: 'typescript-eslint', path: 'parser' }] : []),
                     ],
                 },
             ],
         },
     ];
-    return {
-        imports: CONFIGURATION_PLUGINS.svelte,
-        blocks,
-    };
 }

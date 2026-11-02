@@ -138,11 +138,18 @@ export type EslintRuleBlock = PathExpressions & { scope: string; rules: Record<s
 export type EslintRuleOptions = PathExpressions & { scope: string; rules: NonNullable<EslintSettings['rules']> };
 
 export type BlockWriter = {
-    runtimes?: EslintRuntime[];
+    runtimes: EslintRuntime[];
+    rulePrefixes: ReadonlyMap<string, string | undefined>;
     allLevelRules: Set<string>;
     level: Level;
     codeFiles: string[];
     ruleOptions: EslintRuleOptions[];
+};
+
+export type EslintFileWriter = BlockWriter & {
+    functions: Set<string>;
+    packages: Set<string>;
+    modules: Map<string, string>;
 };
 
 export type SelectorBlock = { scope: string; ignoredScopes: string[]; selectors: SelectorPaths[] };
@@ -216,12 +223,13 @@ export type PlannedEslintFile = {
     configurations: Configuration[];
 };
 
-type EslintPresetSource = { importName: string; path: string; merge: 'fields' | 'rules' | 'spread' };
+export type EslintReference = { package: string; path?: string };
 
-export type EslintCallArgument =
-    | { importName: string; path?: string }
-    | { value: unknown }
-    | { imports: Readonly<Record<string, string | readonly [string, string]>> };
+type EslintPresetSource = EslintReference & { merge: 'fields' | 'rules' };
+
+export type ListedPlugins = { plugins: readonly (string | EslintReference)[]; local: EslintPlugins };
+
+export type EslintCallArgument = EslintReference | { value: unknown } | ListedPlugins | Pick<ListedPlugins, 'plugins'>;
 
 type EslintCall = { name: string; args: readonly EslintCallArgument[] };
 
@@ -232,7 +240,7 @@ export type EslintLevelRules = {
 
 export type EslintPlugins = Record<string, readonly [string, string]>;
 
-export type ConfigurationBlocks = { imports: EslintPlugins; blocks: Omit<PlannedEslintBlock, 'scope' | 'label'>[] };
+export type ConfigurationBlocks = Omit<PlannedEslintBlock, 'scope' | 'label'>[];
 
 export type EslintImportBoundaryRule = [
     'error',
@@ -261,19 +269,15 @@ export type EslintScope = {
 
 export type ConfigurationBuilder = (scope: EslintScope, configuration: string) => ConfigurationBlocks;
 
-export type ConfigurationScopeBlocks = {
-    configuration: Configuration;
-    imports: EslintPlugins;
-    blocks: PlannedEslintBlock[];
-};
+export type ConfigurationScopeBlocks = { configuration: Configuration; blocks: PlannedEslintBlock[] };
 
 export type PluginRuleBlock = {
     fields?: EslintBlockFields;
-    imports: EslintPlugins;
-    calls: readonly EslintCall[];
+    calls?: readonly EslintCall[];
+    presets?: EslintPresetSource[];
     files: 'code' | 'tests' | readonly string[];
     ignoresTests?: true;
-    rules: Readonly<Record<string, unknown>>;
+    rules?: Readonly<Record<string, unknown>>;
     allLevelRules?: Readonly<Record<string, unknown>>;
 };
 

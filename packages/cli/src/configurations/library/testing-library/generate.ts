@@ -1,7 +1,6 @@
 import type { EslintScope, ConfigurationBlocks } from '#cli/types/configurations/language.ts';
 
 import {
-    CONFIGURATION_PLUGINS,
     TESTING_LIBRARY_SCOPE,
     TESTING_LIBRARY_PRESETS,
     TESTING_LIBRARY_SETTINGS,
@@ -25,13 +24,9 @@ export function buildTestingLibraryBlocks(
         dependencies.length === 0
             ? []
             : [...new Set(presetNames.length === 0 ? [TESTING_LIBRARY_DEFAULT_PRESET] : presetNames)];
-    const blocks: ConfigurationBlocks['blocks'] = selected.map((name) => ({
+    return selected.map((name) => ({
         fields: { files: eslintFiles.tests, settings: TESTING_LIBRARY_SETTINGS },
-        presets: [{ importName: 'testingLibrary', path: `configs.flat/${name}`, merge: 'rules' }],
-        calls: [{ name: 'addPlugins', args: [{ imports: { 'testing-library': 'testingLibrary' } }] }],
+        presets: [{ package: 'eslint-plugin-testing-library', path: `configs.flat/${name}`, merge: 'rules' }],
+        calls: [{ name: 'addPlugins', args: [{ plugins: ['eslint-plugin-testing-library'] }] }],
     }));
-    return {
-        imports: CONFIGURATION_PLUGINS['testing-library'],
-        blocks,
-    };
 }

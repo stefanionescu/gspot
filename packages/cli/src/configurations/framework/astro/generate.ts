@@ -6,7 +6,6 @@ import {
     ASTRO_TYPED_RULES,
     ASTRO_RULE_OPTIONS,
     ASTRO_SCRIPT_FILES,
-    CONFIGURATION_PLUGINS,
     TYPESCRIPT_CONFIGURATION,
 } from '#cli/config/configurations/framework.ts';
 
@@ -16,14 +15,14 @@ Apply Astro's presets and its component parser.
 @param scope the selected configurations.
 */
 export function buildAstroBlocks(scope: Pick<EslintScope, 'settings'>): ConfigurationBlocks {
-    const blocks: ConfigurationBlocks['blocks'] = [
+    const blocks: ConfigurationBlocks = [
         {
-            fields: { files: ASTRO_FILES },
-            presets: [{ importName: 'astroPlugin', path: 'configs.flat/recommended', merge: 'spread' }],
+            fields: { files: [...ASTRO_FILES, ...ASTRO_SCRIPT_FILES] },
+            presets: [{ package: 'eslint-plugin-astro', path: 'configs.flat/recommended', merge: 'fields' }],
         },
         {
             fields: { files: ASTRO_FILES, rules: ASTRO_RULES },
-            presets: [{ importName: 'astroPlugin', path: 'configs.flat/jsx-a11y-recommended', merge: 'rules' }],
+            presets: [{ package: 'eslint-plugin-astro', path: 'configs.flat/jsx-a11y-recommended', merge: 'rules' }],
             calls: [
                 { name: 'mergeRuleOptions', args: [{ value: ASTRO_RULE_OPTIONS }] },
                 {
@@ -44,13 +43,13 @@ export function buildAstroBlocks(scope: Pick<EslintScope, 'settings'>): Configur
                         parserOptions: { project: true, projectService: false, extraFileExtensions: ['.astro'] },
                     },
                 },
-                calls: [{ name: 'setScriptParser', args: [{ importName: 'tseslint', path: 'parser' }] }],
+                calls: [{ name: 'setScriptParser', args: [{ package: 'typescript-eslint', path: 'parser' }] }],
             },
             {
                 fields: { files: ASTRO_SCRIPT_FILES },
-                presets: [{ importName: 'tseslint', path: 'configs.disableTypeChecked', merge: 'fields' }],
+                presets: [{ package: 'typescript-eslint', path: 'configs.disableTypeChecked', merge: 'fields' }],
             },
         );
     }
-    return { imports: CONFIGURATION_PLUGINS.astro, blocks };
+    return blocks;
 }

@@ -1,4 +1,3 @@
-import { CONFIGURATION_PLUGINS } from '#cli/config/configurations/framework.ts';
 import { VAGUE_TEST_TITLE_WORDS } from '#cli/config/configurations/javascript.ts';
 import type { EslintScope, ConfigurationBlocks } from '#cli/types/configurations/language.ts';
 
@@ -7,9 +6,10 @@ Apply the Vitest recommended preset and the test rules to the test files.
 
 @param scope the presets and file selectors of the scope.
 */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: CONFIGURATION_BUILDERS calls it by configuration name, like every block builder.
 export function buildVitestBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'level'>): ConfigurationBlocks {
     const { eslintFiles } = scope;
-    const blocks: ConfigurationBlocks['blocks'] = [
+    return [
         {
             fields: {
                 files: eslintFiles.tests,
@@ -26,12 +26,8 @@ export function buildVitestBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'leve
                     'vitest/max-nested-describe': 'error',
                 },
             },
-            calls: [{ name: 'addPlugins', args: [{ imports: { vitest: 'vitest' } }] }],
-            presets: [{ importName: 'vitest', path: 'configs.recommended', merge: 'rules' }],
+            calls: [{ name: 'addPlugins', args: [{ plugins: ['@vitest/eslint-plugin'] }] }],
+            presets: [{ package: '@vitest/eslint-plugin', path: 'configs.recommended', merge: 'rules' }],
         },
     ];
-    return {
-        imports: CONFIGURATION_PLUGINS.vitest,
-        blocks,
-    };
 }

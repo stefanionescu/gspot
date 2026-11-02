@@ -238,8 +238,6 @@ export const TOOL_PROJECT_FILES: readonly string[] = [
     GSPOT_PATHS.miseProject,
 ];
 
-export const CONFIG_REFERENCE = /(?:['"]\.\/|\bnew\s+URL\(\s*['"])(?<path>[^'"]+)['"]/gu;
-
 export const TS_EXTENSION = '.ts';
 
 export const CONFIG_SCOPES_FOLDER = 'scopes';
