@@ -221,8 +221,8 @@ public_prefixes = ["VITE_"]
 
 [[eslint.rules_off]]
 files = ["**/*.config.*"]
-reason = "A tool reads the default export of its config file."
-rules = ["import-x/no-default-export"]
+reason = "A tool reads the default export of its config file, which the file builds when it loads."
+rules = ["import-x/no-default-export", "unicorn/no-top-level-side-effects"]
 
 [[config_file]]
 target = "eslint/eslint.mjs"
