@@ -64,7 +64,7 @@ test('init names each replaced config that it does not read', async () => {
     });
     const { plan } = await runInit(sandbox.path);
     expect(plan.carryover.filter(({ path }) => path !== 'ruff.toml')).toMatchObject([
-        { path: 'sample/.prettierrc', dropped: [expect.stringContaining('at the root and at a scope')] },
-        { path: 'tools/.ruff.toml', dropped: [expect.stringContaining('at the root and at a scope')] },
+        { path: 'sample/.prettierrc', dropped: [expect.stringContaining('init does not read this config')] },
+        { path: 'tools/.ruff.toml', dropped: [expect.stringContaining('init does not read this config')] },
     ]);
 });
