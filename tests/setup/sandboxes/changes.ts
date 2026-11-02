@@ -1,29 +1,35 @@
+import { lstatSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { openSession } from '#cli/engine/session.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import type { SpawnResult } from '#cli/types/system.ts';
 import { runGspotStep } from '#tests/setup/cli/commands.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { runGitStep, markExecutable } from '#tests/setup/system/git.ts';
+import { rm, mkdir, rmdir, unlink, readFile, writeFile } from 'node:fs/promises';
 import type { Sandbox, SandboxWrite, SandboxChanges } from '#tests/types/setup.ts';
-import { rm, mkdir, lstat, rmdir, unlink, readFile, writeFile } from 'node:fs/promises';
 
 async function deleteLeftover(root: string, path: string): Promise<void> {
     await rm(join(root, path), { force: true });
     for (let folder = dirname(path); folder !== '.'; folder = dirname(folder)) {
-        const isRemoved = await rmdir(join(root, folder)).then(
-            () => true,
-            (error: unknown) => {
-                if (!hasErrorCode(error, 'ENOTEMPTY') && !hasErrorCode(error, 'ENOENT')) throw error;
-                return false;
-            },
-        );
-        if (!isRemoved) return;
+        try {
+            await rmdir(join(root, folder));
+        } catch (error) {
+            if (hasErrorCode(error, 'ENOTEMPTY') || hasErrorCode(error, 'ENOENT')) return;
+            throw error;
+        }
     }
+}
+
+function resetHead(root: string, head: SpawnResult): void {
+    if (head.code === 0) runGitStep(root, ['reset', '--soft', head.stdout.trim()]);
+    else if (runBlockingCommand(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: root, env: {} }).code === 0)
+        runGitStep(root, ['update-ref', '-d', 'HEAD']);
 }
 
 async function writeChanges(root: string, changes: SandboxWrite): Promise<void> {
@@ -31,11 +37,7 @@ async function writeChanges(root: string, changes: SandboxWrite): Promise<void> 
     for (const [path, text] of Object.entries(changes.files)) {
         const absolute = join(root, path);
         await mkdir(dirname(absolute), { recursive: true });
-        const attributes = await lstat(absolute).catch((error: unknown) => {
-            if (!hasErrorCode(error, 'ENOENT')) throw error;
-            return undefined;
-        });
-        if (attributes?.isSymbolicLink() === true) await unlink(absolute);
+        if (lstatSync(absolute, { throwIfNoEntry: false })?.isSymbolicLink() === true) await unlink(absolute);
         await writeFile(absolute, text);
     }
     for (const path of changes.executable) await markExecutable(root, path);
@@ -73,9 +75,7 @@ export async function changeSandbox(sandbox: Sandbox, changes: SandboxChanges): 
             ]).split('\0');
             runGitStep(cwd, ['add', '-A'], environment);
             runGitStep(cwd, ['read-tree', '-u', '--reset', savedTree], environment);
-            if (head.code === 0) runGitStep(cwd, ['reset', '--soft', head.stdout.trim()]);
-            else if (runBlockingCommand(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: cwd, env: {} }).code === 0)
-                runGitStep(cwd, ['update-ref', '-d', 'HEAD']);
+            resetHead(cwd, head);
             runGitStep(cwd, ['read-tree', index]);
             for (const path of ignoredAfter) if (path !== '' && !ignored.has(path)) await deleteLeftover(cwd, path);
         } finally {

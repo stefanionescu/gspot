@@ -57,7 +57,8 @@ test.each(['index', 'commit'] as const)('a %s copy keeps gitlinks without readin
     runGitStep(sandbox.path, ['commit', '-qm', 'Gitlink']);
     await mkdir(join(sandbox.path, 'vendor'));
     await symlink(outside.path, join(sandbox.path, path), 'dir');
-    expect(listSubmodulePaths(await readTestRepository(sandbox.path).then(({ index }) => index))).toStrictEqual([path]);
+    const { index } = await readTestRepository(sandbox.path);
+    expect(listSubmodulePaths(index)).toStrictEqual([path]);
     const session = await openSession(sandbox.path);
     expect(session.repository.files.map((file) => file.path)).toStrictEqual(['gspot.toml', 'source.txt']);
     const expected = runGitStep(sandbox.path, ['write-tree']);
@@ -67,7 +68,8 @@ test.each(['index', 'commit'] as const)('a %s copy keeps gitlinks without readin
     expect(runGitStep(copy.root, ['write-tree'])).toBe(expected);
     expect(await readdir(join(copy.root, path))).toStrictEqual([]);
     expect(await readFile(join(copy.root, 'source.txt'), 'utf8')).toBe(SELECTED_SOURCE);
-    expect(listSubmodulePaths(await readTestRepository(copy.root).then(({ index }) => index))).toStrictEqual([path]);
+    const copied = await readTestRepository(copy.root);
+    expect(listSubmodulePaths(copied.index)).toStrictEqual([path]);
     expect(await readFile(join(outside.path, 'package.json'), 'utf8')).toBe('{');
     expect(await readFile(join(outside.path, 'source.txt'), 'utf8')).toBe('outside source');
 });

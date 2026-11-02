@@ -72,9 +72,8 @@ test('a .git file that points at a missing folder is reported, not read as a fol
 
     const listError = await captureRejection(readTestRepository(sandbox.path));
     expect(listError.message).toStartWith('Git ls-files failed');
-    expect(await captureRejection(readRepositoryRoot(sandbox.path)).then(({ message }) => message)).toContain(
-        `Git could not open ${sandbox.path}:`,
-    );
+    const rootError = await captureRejection(readRepositoryRoot(sandbox.path));
+    expect(rootError.message).toContain(`Git could not open ${sandbox.path}:`);
 });
 
 test('a missing git program is reported instead of a successful walk', async () => {
@@ -85,9 +84,8 @@ test('a missing git program is reported instead of a successful walk', async () 
     resources.use(overrideEnvironment({ PATH: empty.path }));
     const missingGitError = await captureRejection(readTestRepository(sandbox.path));
     expect(missingGitError.message).toMatch(/Git ls-files failed.*(?:not found|not recognized)/su);
-    expect(await captureRejection(readRepositoryRoot(sandbox.path)).then(({ message }) => message)).toMatch(
-        /Git could not open [^:]*:.*(?:not found|not recognized)/su,
-    );
+    const rootError = await captureRejection(readRepositoryRoot(sandbox.path));
+    expect(rootError.message).toMatch(/Git could not open [^:]*:.*(?:not found|not recognized)/su);
 });
 
 test.skipIf(!isWindows)('on Windows the executable bit comes from the Git index', async () => {
@@ -136,8 +134,8 @@ test('the index keeps deleted tracked paths and encoded names and leaves out unt
 
     runGitStep(sandbox.path, ['add', '--', path]);
     await rm(join(sandbox.path, path));
-    const files = await readTestRepository(sandbox.path).then(({ index }) => index);
-    expect(files.map((file) => file.path)).toStrictEqual([path]);
+    const { index } = await readTestRepository(sandbox.path);
+    expect(index.map((file) => file.path)).toStrictEqual([path]);
 });
 
 test('an invalid UTF-8 index name is reported separately from readable files', async () => {

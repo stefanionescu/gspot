@@ -46,7 +46,7 @@ test('another pinned version stops the commands that run tools, and names the in
         'mise.toml': '[tools]\n"npm:@gspothq/cli" = "0.0.1"\n',
     });
     const error = await captureRejection(
-        Promise.resolve().then(() => {
+        Promise.try(() => {
             assertGspotPin(sandbox.path);
         }),
     );

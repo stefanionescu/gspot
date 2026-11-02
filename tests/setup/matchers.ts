@@ -8,7 +8,7 @@ export async function captureRejection(promise: Promise<unknown>): Promise<Error
         await promise;
     } catch (error) {
         if (error instanceof Error) return error;
-        throw new Error(`The promise rejected with a value that is not an error: ${String(error)}`);
+        throw new Error(`The promise rejected with a value that is not an error: ${String(error)}`, { cause: error });
     }
     throw new Error('The promise resolved, and a rejection was expected.');
 }

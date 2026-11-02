@@ -80,7 +80,7 @@ test.each([...HOOK_CONFIGURATION_CASES])(
             [path]: oneHook,
         });
         const session = await openSession(sandbox.path);
-        expect(await readHookStatus(session, session.repository).then(({ ready }) => ready)).toBe(false);
+        expect(await readHookStatus(session, session.repository)).toMatchObject({ ready: false });
         await writeFile(join(sandbox.path, path), bothHooks);
         expect(await readHookStatus(session, session.repository)).toMatchObject({
             ready: true,
@@ -180,13 +180,13 @@ test('hook status ignores commented commands and commands in the wrong hook file
         '.githooks/pre-commit': '# .gspot/hooks/pre-commit\n.gspot/hooks/pre-push\n',
     });
     const session = await openSession(sandbox.path);
-    expect(await readHookStatus(session, session.repository).then(({ ready }) => ready)).toBe(false);
+    expect(await readHookStatus(session, session.repository)).toMatchObject({ ready: false });
     await writeFile(join(sandbox.path, '.githooks/pre-commit'), '.gspot/hooks/pre-commit\n.gspot/hooks/pre-push\n');
-    expect(await readHookStatus(session, session.repository).then(({ ready }) => ready)).toBe(false);
+    expect(await readHookStatus(session, session.repository)).toMatchObject({ ready: false });
     await writeFile(join(sandbox.path, '.githooks/pre-push'), '.gspot/hooks/pre-push\n');
-    expect(await readHookStatus(session, session.repository).then(({ ready }) => ready)).toBe(false);
+    expect(await readHookStatus(session, session.repository)).toMatchObject({ ready: false });
     await writeFile(join(sandbox.path, '.githooks/commit-msg'), '.gspot/hooks/commit-msg\n');
-    expect(await readHookStatus(session, session.repository).then(({ ready }) => ready)).toBe(true);
+    expect(await readHookStatus(session, session.repository)).toMatchObject({ ready: true });
 });
 
 test('a linked executable Git hook is retained by install', async () => {
