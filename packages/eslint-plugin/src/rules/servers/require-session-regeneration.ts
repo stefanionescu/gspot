@@ -9,7 +9,7 @@ import { REGENERATE_METHOD, AUTHENTICATE_FUNCTION, ROUTE_CALLBACK_POSITION } fro
 function isStateless(source: Readonly<TSESLint.SourceCode>, options: TSESTree.Node | undefined): boolean {
     if (options?.type !== AST_NODE_TYPES.ObjectExpression) return false;
     const session = getOptionProperties(options, source).get('session');
-    return session ? ASTUtils.getStaticValue(session.value, source.getScope(options))?.value === false : false;
+    return session !== undefined && ASTUtils.getStaticValue(session.value, source.getScope(options))?.value === false;
 }
 
 function findAuthenticatedCallback(

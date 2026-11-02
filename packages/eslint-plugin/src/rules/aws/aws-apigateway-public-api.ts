@@ -83,7 +83,7 @@ export const awsApigatewayPublicApi = createRule<[], 'omitted' | 'invalid'>({
             const inherited = authorization.status === 'missing' ? findDefault(node.callee) : undefined;
             if (authorization.status === 'found' && getCdkName(source, authorization.node) === NO_AUTHORIZATION)
                 context.report({ node: authorization.node, messageId: 'invalid' });
-            else if (authorization.status === 'missing' && inherited === undefined)
+            else if (inherited === undefined && authorization.status === 'missing')
                 context.report({ node: authorization.node, messageId: 'omitted' });
             else if (inherited && getCdkName(source, inherited) === NO_AUTHORIZATION)
                 context.report({ node, messageId: 'invalid' });

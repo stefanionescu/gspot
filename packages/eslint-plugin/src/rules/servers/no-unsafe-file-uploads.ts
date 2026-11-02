@@ -81,7 +81,7 @@ export const noUnsafeFileUploads = createRule<[], 'folder' | 'extension' | 'exte
                 const form = assignment ? forms.get(assignment.variable) : undefined;
                 if (form === undefined || assignment === undefined) return;
                 if (assignment.property === 'uploadDir') form.hasFolder = true;
-                if (assignment.property === 'keepExtensions')
+                else if (assignment.property === 'keepExtensions')
                     form.keepsExtensions = node.right.type === AST_NODE_TYPES.Literal && node.right.value === true;
             },
             'Program:exit'() {

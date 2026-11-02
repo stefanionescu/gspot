@@ -48,8 +48,8 @@ function isTerminating(statement: TSESTree.Statement | undefined): boolean {
 
 function isGuardStep(ancestor: TSESTree.Node, child: TSESTree.Node): boolean {
     const field = GUARD_TESTS.get(ancestor.type);
-    const earlier = ancestor.type === AST_NODE_TYPES.BlockStatement ? ancestor.body : [];
     if (field !== undefined) return ancestor[field as keyof TSESTree.Node] !== child;
+    const earlier = ancestor.type === AST_NODE_TYPES.BlockStatement ? ancestor.body : [];
     return earlier.some(
         (statement) =>
             statement.range[1] <= child.range[0] &&

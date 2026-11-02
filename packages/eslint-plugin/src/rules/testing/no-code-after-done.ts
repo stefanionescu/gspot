@@ -19,7 +19,8 @@ function findCodeAfter(call: TSESTree.Node, source: TSESLint.SourceCode): TSESTr
         .slice(boundary + 1)
         .filter((node) => node.type.endsWith('Statement') && node.type !== AST_NODE_TYPES.BlockStatement)
         .toReversed();
-    for (const next of statements.flatMap((statement) => listFollowingStatements(statement))) {
+    const following = statements.flatMap((statement) => listFollowingStatements(statement));
+    for (const next of following) {
         if (DONE_STOP_STATEMENTS.has(next.type)) return undefined;
         const found = listBodyNodes(next, source).find((node) => node.type === AST_NODE_TYPES.ExpressionStatement);
         if (found !== undefined) return found;

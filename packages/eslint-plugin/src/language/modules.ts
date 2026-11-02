@@ -26,9 +26,9 @@ function getCalledModule(
     source: TSESLint.SourceCode,
     seen: Set<TSESTree.Node>,
 ): string | undefined {
-    const argument = node.arguments[0];
     if (node.callee.type !== AST_NODE_TYPES.Identifier || node.callee.name !== 'require')
         return getModuleName(node.callee, source, seen);
+    const argument = node.arguments[0];
     return argument?.type === AST_NODE_TYPES.Literal && typeof argument.value === 'string' ? argument.value : undefined;
 }
 
@@ -165,7 +165,7 @@ slashes written as dots, then the members. After `import * as s3 from 'aws-cdk-l
 export function getQualifiedName(node: TSESTree.Node, source: TSESLint.SourceCode): string | undefined {
     const name = getModuleName(node, source);
     if (name === undefined) return undefined;
-    return name.replace(NODE_PREFIX, '').replaceAll('/', MODULE_SEPARATOR);
+    return name.replace(NODE_PREFIX, '').split('/').join(MODULE_SEPARATOR);
 }
 
 /**

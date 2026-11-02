@@ -33,11 +33,10 @@ function listMiddleware(
     source: TSESLint.SourceCode,
     seen = new Set<TSESTree.Node>(),
 ): TSESTree.CallExpression[] {
-    const value = getExpressionValue(node, source);
+    const value = getExpressionValue(node.type === AST_NODE_TYPES.SpreadElement ? node.argument : node, source);
     if (value === undefined || seen.has(value)) return [];
     seen.add(value);
     if (value.type === AST_NODE_TYPES.CallExpression) return [value];
-    if (value.type === AST_NODE_TYPES.SpreadElement) return listMiddleware(value.argument, source, seen);
     if (value.type !== AST_NODE_TYPES.ArrayExpression) return [];
     return value.elements
         .filter((element) => element !== null)
@@ -56,25 +55,33 @@ function listUnsafeOptions(call: TSESTree.CallExpression, source: TSESLint.Sourc
     const name = getModuleName(call.callee, source);
     const properties = getOptionProperties(call.arguments[0], source);
     if (name === 'helmet')
-        return [...properties.values()].filter((property) => {
-            const key = ASTUtils.getPropertyName(property, source.getScope(property));
-            return (
-                key !== null && DISABLED_SECURITY_HEADERS.has(key) && getLiteralValue(property.value, source) === false
-            );
-        });
+        return properties
+            .values()
+            .filter((property) => {
+                const key = ASTUtils.getPropertyName(property, source.getScope(property));
+                return (
+                    key !== null &&
+                    DISABLED_SECURITY_HEADERS.has(key) &&
+                    getLiteralValue(property.value, source) === false
+                );
+            })
+            .toArray();
     if (name === 'helmet.referrerPolicy') {
         const policy = properties.get('policy');
         return policy !== undefined && hasUnsafeReferrerPolicy(policy.value, source) ? [policy] : [];
     }
     if (name !== 'helmet.hsts' && name !== 'hsts') return [];
-    return [...properties.values()].filter((property) => {
-        const key = ASTUtils.getPropertyName(property, source.getScope(property));
-        const value = getLiteralValue(property.value, source);
-        return (
-            (key === 'includeSubDomains' && value === false) ||
-            (key === 'maxAge' && typeof value === 'number' && value < MINIMUM_HSTS_AGE)
-        );
-    });
+    return properties
+        .values()
+        .filter((property) => {
+            const key = ASTUtils.getPropertyName(property, source.getScope(property));
+            const value = getLiteralValue(property.value, source);
+            return (
+                (key === 'includeSubDomains' && value === false) ||
+                (key === 'maxAge' && typeof value === 'number' && value < MINIMUM_HSTS_AGE)
+            );
+        })
+        .toArray();
 }
 
 export const noUnsafeSecurityHeaders = createRule<[], 'header'>({
@@ -104,9 +111,8 @@ export const noUnsafeSecurityHeaders = createRule<[], 'header'>({
                     !isApplication(callee.object, context.sourceCode)
                 )
                     return;
-                for (const middleware of node.arguments.flatMap((argument) =>
-                    listMiddleware(argument, context.sourceCode),
-                ))
+                const middlewares = node.arguments.flatMap((argument) => listMiddleware(argument, context.sourceCode));
+                for (const middleware of middlewares)
                     for (const option of listUnsafeOptions(middleware, context.sourceCode))
                         context.report({
                             node: option,

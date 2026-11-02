@@ -62,7 +62,7 @@ function hasCalleeAssertion(node: TSESTree.CallExpression, search: AssertionSear
             ? ASTUtils.findVariable(search.source.getScope(callee), callee)
             : null;
     const body = getLocalBody(variable?.defs.at(0)?.node);
-    const text = search.types === undefined || body !== undefined ? '' : getImportedText(callee, search.types);
+    const text = body !== undefined || search.types === undefined ? '' : getImportedText(callee, search.types);
     return body === undefined ? ASSERTION_TEXT.test(text) : hasAssertion(body, search);
 }
 

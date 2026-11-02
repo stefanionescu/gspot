@@ -34,7 +34,7 @@ function getMode(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | un
         }
         case AST_NODE_TYPES.BinaryExpression: {
             const [left, right] = [getMode(source, value.left), getMode(source, value.right)];
-            return value.operator === '|' && left !== undefined && right !== undefined ? left | right : undefined;
+            return left !== undefined && right !== undefined && value.operator === '|' ? left | right : undefined;
         }
         default: {
             return undefined;

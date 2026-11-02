@@ -37,7 +37,8 @@ function trackAssertion(node: TSESTree.CallExpression, context: FileContext, sta
     if (statement === undefined) return;
     const placement = getPlacement(node, context.sourceCode);
     if (placement === 'suite') state.reported.add(statement);
-    if (placement === 'top') state.topLevel.set(statement, state.topLevel.get(statement) === true || kind === 'script');
+    else if (placement === 'top')
+        state.topLevel.set(statement, state.topLevel.get(statement) === true || kind === 'script');
 }
 
 export const noMisplacedAssertions = createRule<[], 'misplaced'>({
@@ -59,8 +60,8 @@ export const noMisplacedAssertions = createRule<[], 'misplaced'>({
     },
     create(context) {
         const source = context.sourceCode;
-        const state: PlacementState = { reported: new Set(), topLevel: new Map(), hasTests: false };
         if (!isModuleUsed(context, EVIDENCE_IMPORTS, EVIDENCE_DEPENDENCIES)) return {};
+        const state: PlacementState = { reported: new Set(), topLevel: new Map(), hasTests: false };
         return {
             CallExpression(node) {
                 const test = getTestCall(node, source);
@@ -69,7 +70,7 @@ export const noMisplacedAssertions = createRule<[], 'misplaced'>({
             },
             'Program:exit'() {
                 for (const [statement, isScript] of state.topLevel)
-                    if (state.hasTests || !isScript) state.reported.add(statement);
+                    if (!isScript || state.hasTests) state.reported.add(statement);
                 for (const statement of state.reported) context.report({ node: statement, messageId: 'misplaced' });
             },
         };

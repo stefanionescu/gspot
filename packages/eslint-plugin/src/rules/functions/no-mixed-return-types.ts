@@ -59,7 +59,7 @@ function isMixedFunction(node: FunctionNode, values: readonly TSESTree.Expressio
     const labels = values.flatMap((value) => {
         const type = types.get(value);
         const text = types.checker.typeToString(type);
-        return EMPTY_TYPE_NAMES.has(text) || text === ANY_TYPE ? [] : [getTypeLabel(type, types)];
+        return text === ANY_TYPE || EMPTY_TYPE_NAMES.has(text) ? [] : [getTypeLabel(type, types)];
     });
     return new Set(labels).size > 1;
 }
@@ -68,7 +68,7 @@ function getNamedLocation(node: FunctionNode): TSESTree.SourceLocation | undefin
     const { parent } = node;
     if (node.type === AST_NODE_TYPES.FunctionDeclaration) return node.id?.loc;
     const isMember = parent.type === AST_NODE_TYPES.MethodDefinition || parent.type === AST_NODE_TYPES.Property;
-    return node.type === AST_NODE_TYPES.FunctionExpression && isMember ? parent.key.loc : undefined;
+    return isMember && node.type === AST_NODE_TYPES.FunctionExpression ? parent.key.loc : undefined;
 }
 
 function getFunctionLocation(node: FunctionNode, source: TSESLint.SourceCode): TSESTree.SourceLocation {
@@ -101,7 +101,9 @@ export const noMixedReturnTypes = createRule<[], 'mixed'>({
         if (types === undefined) return {};
         const frames: TSESTree.Expression[][] = [];
         return {
-            ':function': () => frames.push([]),
+            ':function': () => {
+                frames.push([]);
+            },
             ReturnStatement: ({ argument }) => {
                 if (argument !== null) frames.at(-1)?.push(argument);
             },

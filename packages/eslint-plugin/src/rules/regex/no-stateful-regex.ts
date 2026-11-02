@@ -34,11 +34,11 @@ function getGlobalVariable(node: TSESTree.CallExpression, source: TSESLint.Sourc
     const variable = name === undefined ? null : ASTUtils.findVariable(source.getScope(node), name);
     const value = variable === null ? undefined : getAssignedValue(variable);
     const regex = value === undefined ? undefined : getRegex(value, source);
-    return regex?.flags.global === true && variable !== null ? variable : undefined;
+    return variable !== null && regex?.flags.global === true ? variable : undefined;
 }
 
 function isReusedOnSubjects(uses: readonly TSESTree.CallExpression[], source: TSESLint.SourceCode): boolean {
-    const subjects = new Set(uses.map(({ arguments: [input] }) => source.getText(input)));
+    const subjects = new Set(uses.map((use) => source.getText(use.arguments[0])));
     return subjects.size >= DISTINCT_SUBJECTS && subjects.isDisjointFrom(EMPTY_STRING_TEXTS);
 }
 

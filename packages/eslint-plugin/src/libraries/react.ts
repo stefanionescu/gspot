@@ -4,18 +4,11 @@ import type { StateHook } from '../types/libraries.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getOwnerName(node: TSESTree.Node): TSESTree.Node | null | undefined {
-    switch (node.type) {
-        case AST_NODE_TYPES.FunctionDeclaration:
-        case AST_NODE_TYPES.VariableDeclarator: {
-            return node.id;
-        }
-        case AST_NODE_TYPES.CallExpression: {
-            return getOwnerName(node.parent);
-        }
-        default: {
-            return undefined;
-        }
-    }
+    let owner = node;
+    while (owner.type === AST_NODE_TYPES.CallExpression) owner = owner.parent;
+    return owner.type === AST_NODE_TYPES.FunctionDeclaration || owner.type === AST_NODE_TYPES.VariableDeclarator
+        ? owner.id
+        : undefined;
 }
 
 /**

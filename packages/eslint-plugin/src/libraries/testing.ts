@@ -68,7 +68,7 @@ export function getCalleeName(callee: TSESTree.Node, source: TSESLint.SourceCode
         }
     }
     const isFactory = steps.some((step, index) => step === 'each' && steps[index - 1] !== CALL_STEP);
-    if (node.type !== AST_NODE_TYPES.Identifier || isFactory) return undefined;
+    if (isFactory || node.type !== AST_NODE_TYPES.Identifier) return undefined;
     const origin = getOrigin(node, source);
     const modifiers = steps.filter((step) => step !== CALL_STEP).toReversed();
     return origin && { ...origin, base: node, modifiers };
@@ -199,22 +199,9 @@ Check whether an expression chains Cypress commands from `cy`.
 */
 export function isCypressChain(node: TSESTree.Node): boolean {
     let value = node;
-    while (value.type !== AST_NODE_TYPES.Identifier) {
-        switch (value.type) {
-            case AST_NODE_TYPES.MemberExpression: {
-                value = value.object;
-                break;
-            }
-            case AST_NODE_TYPES.CallExpression: {
-                value = value.callee;
-                break;
-            }
-            default: {
-                return false;
-            }
-        }
-    }
-    return value.name === 'cy';
+    while (value.type === AST_NODE_TYPES.MemberExpression || value.type === AST_NODE_TYPES.CallExpression)
+        value = value.type === AST_NODE_TYPES.MemberExpression ? value.object : value.callee;
+    return value.type === AST_NODE_TYPES.Identifier && value.name === 'cy';
 }
 
 /**

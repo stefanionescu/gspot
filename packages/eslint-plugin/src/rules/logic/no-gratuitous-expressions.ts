@@ -112,13 +112,18 @@ export const noGratuitousExpressions = createRule<[], 'decided'>({
                 if (!isConditionOperand(node) || isJsxGuard(node, source)) return;
                 const reference = source.getScope(node).references.find((each) => Object.is(each.identifier, node));
                 const variable = reference?.resolved ?? null;
-                const values = [...decided.values()].flatMap((variables) => [
-                    ...new Set(
-                        variables.filter((each) => Object.is(each.variable, variable)).map(({ value }) => value),
-                    ),
-                ]);
-                for (const value of variable === null ? [] : values)
-                    context.report({ node, messageId: 'decided', data: { value } });
+                if (variable === null) return;
+                const values = decided
+                    .values()
+                    .flatMap(
+                        (variables) =>
+                            new Set(
+                                variables
+                                    .filter((each) => Object.is(each.variable, variable))
+                                    .map(({ value }) => value),
+                            ),
+                    );
+                for (const value of values) context.report({ node, messageId: 'decided', data: { value } });
             },
         };
     },

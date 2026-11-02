@@ -160,7 +160,7 @@ function getCypressCall(node: TSESTree.CallExpression, styles: AssertionStyles):
     const [chainer, ...values] = node.arguments;
     const isMethod =
         callee.type === AST_NODE_TYPES.MemberExpression && CYPRESS_ASSERTIONS.has(ASTUtils.getPropertyName(callee));
-    return styles.cypress && isMethod && values.length === 1 && isCypressChain(callee.object)
+    return isMethod && styles.cypress && values.length === 1 && isCypressChain(callee.object)
         ? getCheckedCall(node, getCypressChecks(chainer), callee.property, [callee.object, ...values])
         : undefined;
 }
@@ -202,8 +202,8 @@ export function readAssertion(
     context: FileContext,
 ): Assertion | undefined {
     const styles = readAssertionStyles(context);
-    const source = context.sourceCode;
     if (node.type === AST_NODE_TYPES.MemberExpression) return styles.chai ? getChaiPredicate(node) : undefined;
+    const source = context.sourceCode;
     const checks = getAssertChecks(getModuleName(node.callee, source) ?? source.getText(node.callee), styles);
     return (
         getExpectAssertion(node, styles.expect) ??

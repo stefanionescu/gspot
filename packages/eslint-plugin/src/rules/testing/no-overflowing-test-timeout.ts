@@ -38,7 +38,7 @@ export const noOverflowingTestTimeout = createRule<[], 'overflow'>({
                     const isMarked = call?.modifiers.every((modifier) => MARKED_TEST_MODIFIERS.has(modifier)) === true;
                     return isMarked && MOCHA_CONSTRUCTS.has(call.name);
                 });
-                if (typeof value === 'number' && value > MAXIMUM_TIMER_DELAY && isInsideTest)
+                if (isInsideTest && typeof value === 'number' && value > MAXIMUM_TIMER_DELAY)
                     context.report({ node: node.arguments[0] ?? node, messageId: 'overflow' });
             },
         };

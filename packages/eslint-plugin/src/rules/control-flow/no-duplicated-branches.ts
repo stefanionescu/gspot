@@ -87,7 +87,8 @@ export const noDuplicatedBranches = createRule<[], 'branch' | 'all' | 'ternary'>
                 context.report({ node: owner, messageId: 'all', data: { kind } });
                 return;
             }
-            for (const { branch, first } of listRepeats({ branches, isChain: isSame && closing === 'none' }, source)) {
+            const repeats = listRepeats({ branches, isChain: isSame && closing === 'none' }, source);
+            for (const { branch, first } of repeats) {
                 context.report({
                     node: branch.node,
                     messageId: 'branch',

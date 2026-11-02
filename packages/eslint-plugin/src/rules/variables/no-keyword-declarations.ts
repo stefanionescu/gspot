@@ -19,9 +19,9 @@ export const noKeywordDeclarations = createRule<[], 'keyword'>({
     create(context) {
         return {
             'Program:exit': (node) => {
-                const scopes = [context.sourceCode.getScope(node)];
-                for (const scope of scopes) {
-                    scopes.push(...scope.childScopes);
+                const pending = [context.sourceCode.getScope(node)];
+                for (let scope = pending.pop(); scope !== undefined; scope = pending.pop()) {
+                    pending.push(...scope.childScopes);
                     for (const variable of scope.variables) {
                         const declaration = variable.defs[0];
                         if (declaration !== undefined && RESERVED_DECLARATION_NAMES.has(variable.name))

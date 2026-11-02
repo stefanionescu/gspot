@@ -51,7 +51,7 @@ function getIdentityFinding(
 ): ConstantFinding | undefined {
     const fresh = [assertion.received, assertion.expected].find((value) => getValue(value, source).isFresh);
     const [positive, negative] = DEEP_MATCHERS[assertion.style];
-    if (assertion.comparison !== 'strict' || fresh === undefined) return undefined;
+    if (fresh === undefined || assertion.comparison !== 'strict') return undefined;
     return { node: fresh, messageId: 'identity', matcher: assertion.negated ? negative : positive };
 }
 

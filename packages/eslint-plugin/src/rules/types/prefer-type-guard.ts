@@ -71,7 +71,7 @@ export const preferTypeGuard = createRule<[], 'guard'>({
             if (node.returnType?.typeAnnotation.type === AST_NODE_TYPES.TSTypePredicate) return;
             const cast = getCast(node);
             const isSubject = node.params.length === 1 || cast?.expression.type === AST_NODE_TYPES.ThisExpression;
-            if (cast === undefined || node.params.length > 1 || !isSubject) return;
+            if (cast === undefined || !isSubject || node.params.length > 1) return;
             const value = context.sourceCode.getText(cast.expression);
             context.report({
                 node,

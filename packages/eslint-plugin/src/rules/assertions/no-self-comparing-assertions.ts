@@ -55,7 +55,8 @@ export const noSelfComparingAssertions = createRule<[], 'duplicate'>({
         return {
             ExpressionStatement({ expression }) {
                 const groups = [listChainArguments(expression), listAssertArguments(expression)];
-                for (const values of groups.filter((group) => group !== undefined)) {
+                for (const values of groups) {
+                    if (values === undefined) continue;
                     const copies = values.filter(
                         (value, index) =>
                             value.type !== AST_NODE_TYPES.Literal &&

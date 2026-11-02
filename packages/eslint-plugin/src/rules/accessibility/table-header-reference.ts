@@ -18,7 +18,7 @@ function listBlocks(grid: ReadonlyArray<readonly TableCell[]>): TableBlock[] {
         if (block) Object.assign(block, { lastRow: row, lastColumn: column });
         else blocks.set(cell.block, { cell, firstRow: row, lastRow: row, firstColumn: column, lastColumn: column });
     }
-    return [...blocks.values()];
+    return blocks.values().toArray();
 }
 
 function listHeaderIssues(grid: ReadonlyArray<readonly TableCell[]>): HeaderIssue[] {

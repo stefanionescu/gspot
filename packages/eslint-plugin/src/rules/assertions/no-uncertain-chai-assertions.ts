@@ -68,7 +68,7 @@ export const noUncertainChaiAssertions = createRule<[], 'uncertain'>({
                 const links = listChainLinks(expression);
                 const isAssertion =
                     links[0]?.name.name === 'expect' || links.some(({ name }) => name.name === 'should');
-                const pairs = links.length > 1 && isAssertion ? listUncertainPairs(links) : [];
+                const pairs = isAssertion && links.length > 1 ? listUncertainPairs(links) : [];
                 for (const [first, second] of pairs)
                     context.report({
                         loc: { start: first.name.loc.start, end: second.name.loc.end },

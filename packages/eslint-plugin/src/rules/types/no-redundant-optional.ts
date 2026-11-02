@@ -43,7 +43,7 @@ export const noRedundantOptional = createRule<[], 'optional'>({
         if (types?.program.getCompilerOptions().exactOptionalPropertyTypes === true) return {};
         const inspect = (node: TSESTree.PropertyDefinition | TSESTree.TSPropertySignature) => {
             const type = node.typeAnnotation?.typeAnnotation;
-            if (!node.optional || type === undefined) return;
+            if (type === undefined || !node.optional) return;
             const isWritten = type.type === AST_NODE_TYPES.TSUnionType && hasWrittenUndefined(type);
             if (!isWritten && (types === undefined || !hasAliasedUndefined(type, types))) return;
             context.report({ node: node.key, messageId: 'optional' });

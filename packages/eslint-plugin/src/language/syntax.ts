@@ -49,7 +49,7 @@ function getOutermostMember(node: TSESTree.Node): TSESTree.Node {
 
 function isMemberWrite(member: TSESTree.Node): boolean {
     const { parent } = member;
-    if (member.type !== AST_NODE_TYPES.MemberExpression || parent === undefined) return false;
+    if (parent === undefined || member.type !== AST_NODE_TYPES.MemberExpression) return false;
     return (
         (parent.type === AST_NODE_TYPES.AssignmentExpression && parent.left === member) ||
         parent.type === AST_NODE_TYPES.UpdateExpression ||
@@ -93,7 +93,8 @@ export function buildSourceVisitors(checkSource: (source: TSESTree.Node) => void
         [IMPORT_EQUALS_SELECTOR]: ({ expression }: TSESTree.TSExternalModuleReference) => {
             checkSource(expression);
         },
-        [REQUIRE_SELECTOR]: ({ arguments: [argument] }: TSESTree.CallExpression) => {
+        [REQUIRE_SELECTOR]: (call: TSESTree.CallExpression) => {
+            const [argument] = call.arguments;
             if (argument !== undefined) checkSource(argument);
         },
     };

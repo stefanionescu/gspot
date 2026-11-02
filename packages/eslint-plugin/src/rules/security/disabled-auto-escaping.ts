@@ -19,8 +19,11 @@ function isEscapingOff(
     const property =
         options?.type === AST_NODE_TYPES.ObjectExpression
             ? getOptionProperties(options, source).get(setting.property)
-            : null;
-    return property ? ASTUtils.getStaticValue(property.value, source.getScope(node))?.value === setting.value : false;
+            : undefined;
+    return (
+        property !== undefined &&
+        ASTUtils.getStaticValue(property.value, source.getScope(node))?.value === setting.value
+    );
 }
 
 function getReturnedValue(escape: FunctionNode): TSESTree.Node | null {

@@ -78,9 +78,9 @@ export const noMismatchedAssertionTypes = createRule<[], 'incompatible'>({
     },
     create(context) {
         const types = getTypes(context);
+        if (types === undefined) return {};
         const source = context.sourceCode;
         const patched = new Set<TSESLint.Scope.Variable>();
-        if (types === undefined) return {};
         return {
             'AssignmentExpression[operator="="][left.type="MemberExpression"][right.type=/^(?:Arrow)?FunctionExpression$/]'(
                 node: TSESTree.AssignmentExpression & { left: TSESTree.MemberExpression },

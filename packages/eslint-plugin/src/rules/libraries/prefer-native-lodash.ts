@@ -18,7 +18,7 @@ import {
     SHORTHAND_ITERATEES,
 } from '../../config/libraries.ts';
 
-const methodNames = new Map([...NATIVE_REPLACEMENTS.keys()].map((method) => [method.toLowerCase(), method]));
+const methodNames = new Map(NATIVE_REPLACEMENTS.keys().map((method) => [method.toLowerCase(), method]));
 
 function isDirectMember(callee: TSESTree.Node): boolean {
     const member = callee.type === AST_NODE_TYPES.MemberExpression ? callee : undefined;

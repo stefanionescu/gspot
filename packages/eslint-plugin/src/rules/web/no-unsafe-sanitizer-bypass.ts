@@ -73,8 +73,8 @@ export const noUnsafeSanitizerBypass = createRule<[], 'bypass'>({
                     return;
                 const argument = node.arguments[0];
                 if (
-                    node.arguments.length === 1 &&
                     argument !== undefined &&
+                    node.arguments.length === 1 &&
                     !isLiteralSanitizerValue(argument, context.sourceCode)
                 )
                     context.report({ node: callee.property, messageId: 'bypass' });

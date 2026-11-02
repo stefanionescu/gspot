@@ -9,9 +9,9 @@ function getAssertArguments(node: TSESTree.CallExpression): OrderedArguments | u
     const { callee } = node;
     const [first, second] = node.arguments;
     if (
+        second === undefined ||
         callee.type !== AST_NODE_TYPES.MemberExpression ||
-        !ASTUtils.isIdentifier(callee.object) ||
-        second === undefined
+        !ASTUtils.isIdentifier(callee.object)
     )
         return undefined;
     const format = `${callee.object.name}.${ASTUtils.getPropertyName(callee) ?? ''}`;

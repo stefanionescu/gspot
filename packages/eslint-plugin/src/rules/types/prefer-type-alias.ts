@@ -28,7 +28,7 @@ export const preferTypeAlias = createRule<[], 'alias'>({
             const isAliased = context.sourceCode
                 .getAncestors(node)
                 .some((ancestor) => ancestor.type === AST_NODE_TYPES.TSTypeAliasDeclaration);
-            if (node.types.length <= ALIAS_MEMBER_LIMIT || isNullable || isAliased) return;
+            if (isNullable || isAliased || node.types.length <= ALIAS_MEMBER_LIMIT) return;
             const key = node.types
                 .map((member) => context.sourceCode.getText(member))
                 .toSorted((left, right) => Number(left > right) - Number(left < right))

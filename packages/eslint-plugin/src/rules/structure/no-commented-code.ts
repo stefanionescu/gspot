@@ -36,7 +36,7 @@ function balanceBraces(text: string): string {
 }
 
 function isCommentedCode(parser: TSESLint.Parser.LooseParserModule, text: string): boolean {
-    if (COMMENT_DIRECTIVES.some((pattern) => pattern.test(text)) || !COMMENT_CODE.test(text) || text === '}')
+    if (text === '}' || COMMENT_DIRECTIVES.some((pattern) => pattern.test(text)) || !COMMENT_CODE.test(text))
         return false;
     return (
         isParsedAsCode(parser, text) ||
@@ -60,10 +60,10 @@ function groupComments(comments: TSESTree.Comment[]): CommentGroup[] {
         const group = groups.at(-1);
         const previous = group?.last;
         if (
+            group !== undefined &&
             comment.type === AST_TOKEN_TYPES.Line &&
             previous?.type === AST_TOKEN_TYPES.Line &&
-            comment.loc.start.line === previous.loc.end.line + 1 &&
-            group !== undefined
+            comment.loc.start.line === previous.loc.end.line + 1
         ) {
             group.comments.push(comment);
             group.last = comment;

@@ -53,7 +53,7 @@ export const requireCsrfMiddleware = createRule<[], 'ignoredMethod' | 'unprotect
             const values = method === MIDDLEWARE_METHOD ? listArgumentValues(node.arguments, source) : node.arguments;
             const isProtected = values.some((value) => getQualifiedName(value, source) === CSRF_MODULE);
             if (method === MIDDLEWARE_METHOD) isAppProtected ||= isProtected;
-            else if (CSRF_CHANGING_METHODS.has(method) && isImported && !isAppProtected && !isProtected)
+            else if (isImported && !isAppProtected && !isProtected && CSRF_CHANGING_METHODS.has(method))
                 context.report({ node: node.callee, messageId: 'unprotectedRoute' });
         };
         return {

@@ -113,7 +113,7 @@ function listAdminAccess(source: Readonly<TSESLint.SourceCode>, node: TSESTree.C
     const separator = name.lastIndexOf('.');
     const isConnection = CONNECTION_OWNERS.has(name.slice(0, separator));
     const method = name.slice(separator + 1);
-    if ((isConnection && method === ALLOW_FROM) || name === INGRESS_RULE) return listOpenRanges(source, node);
+    if (name === INGRESS_RULE || (isConnection && method === ALLOW_FROM)) return listOpenRanges(source, node);
     if (isConnection && method === ALLOW_FROM_ANY_IPV4)
         return isAdminPort(source, node.arguments[0]) ? [{ node: node.callee, messageId: 'anyAddress' }] : [];
     return listDefaultPortAccess(source, node, name);

@@ -34,10 +34,9 @@ export const preferNativeAxios = createRule<[], 'helper' | 'cancelToken'>({
                 const options = configs.flatMap((config) =>
                     config?.type === AST_NODE_TYPES.ObjectExpression ? config.properties : [],
                 );
-                for (const option of options.filter(
-                    (each) => each.type === AST_NODE_TYPES.Property && ASTUtils.getPropertyName(each) === 'cancelToken',
-                ))
-                    context.report({ node: option, messageId: 'cancelToken' });
+                for (const option of options)
+                    if (option.type === AST_NODE_TYPES.Property && ASTUtils.getPropertyName(option) === 'cancelToken')
+                        context.report({ node: option, messageId: 'cancelToken' });
             },
             'MemberExpression[property.name="CancelToken"]'(node: TSESTree.MemberExpression) {
                 const name = getModuleName(node, source);

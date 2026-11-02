@@ -53,7 +53,7 @@ function getIncompleteAssertion(node: TSESTree.Node): AssertionFinding | undefin
     if (node.type !== AST_NODE_TYPES.MemberExpression || !isAssertionChain(node, ASSERTION_ROOTS)) return undefined;
     const name = ASTUtils.getPropertyName(node);
     const isRejects = name === 'rejects' && isAssertionChain(node.object, EXPECT_ROOTS);
-    if (ASSERTION_METHODS.has(name) && !isRejects) return [node.property, 'call'];
+    if (!isRejects && ASSERTION_METHODS.has(name)) return [node.property, 'call'];
     return ASSERTION_WORDS.has(name) ? [node.property, 'complete'] : undefined;
 }
 

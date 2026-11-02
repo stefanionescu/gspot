@@ -75,7 +75,7 @@ function isCopiedOrigin(
 ): boolean {
     const [name, header] = call.arguments;
     const value = getExpressionValue(header, source);
-    if (getText(source, name)?.toLowerCase() !== ALLOW_ORIGIN_HEADER || value === undefined) return false;
+    if (value === undefined || getText(source, name)?.toLowerCase() !== ALLOW_ORIGIN_HEADER) return false;
     if (value.type === AST_NODE_TYPES.CallExpression)
         return (
             source.getText(value.callee) === `${request}.header` &&

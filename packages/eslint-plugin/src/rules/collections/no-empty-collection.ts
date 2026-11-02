@@ -43,7 +43,7 @@ function listEmptyReads(variable: TSESLint.Scope.Variable, source: TSESLint.Sour
         writes.length > 0 &&
         writes.every((reference) => listInitialElements(getStoredValue(reference, source))?.length === 0);
     const isOnlyRead = reads.every((reference) => isCollectionRead(reference, source));
-    return variable.references.length > 1 && !isPassedIn && isEmptied && isOnlyRead ? reads : [];
+    return !isPassedIn && isEmptied && isOnlyRead && variable.references.length > 1 ? reads : [];
 }
 
 export const noEmptyCollection = createRule<[], 'empty'>({

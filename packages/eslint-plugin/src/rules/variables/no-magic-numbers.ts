@@ -60,7 +60,8 @@ export const noMagicNumbers = createRule<MagicNumbersOptions, 'noMagic' | 'useCo
                 options: { value: ESLintUtils.applyDefault(rule.meta.defaultOptions, context.options) },
                 report: {
                     value: (descriptor: TSESLint.ReportDescriptor<string>) => {
-                        if ('node' in descriptor && isConstantValue(descriptor.node as TSESTree.Node)) return;
+                        if ('node' in descriptor && 'parent' in descriptor.node && isConstantValue(descriptor.node))
+                            return;
                         context.report(descriptor as TSESLint.ReportDescriptor<'noMagic' | 'useConst'>);
                     },
                 },

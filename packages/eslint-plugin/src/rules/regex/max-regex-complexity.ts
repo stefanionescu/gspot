@@ -10,8 +10,8 @@ import {
 } from '../../config/regex.ts';
 
 function getDeepening(node: AST.Node): number {
-    const choices = 'alternatives' in node && node.alternatives.length > 1 ? 1 : 0;
     if (node.type === 'Quantifier' || node.type === 'CharacterClass') return 1;
+    const choices = 'alternatives' in node && node.alternatives.length > 1 ? 1 : 0;
     return node.type === 'Assertion' && LOOKAROUND_KINDS.has(node.kind) ? 1 + choices : choices;
 }
 

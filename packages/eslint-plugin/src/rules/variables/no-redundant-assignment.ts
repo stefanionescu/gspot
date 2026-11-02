@@ -45,7 +45,10 @@ function buildOutgoing(flow: SegmentFlow, incoming: ValueState): ValueState {
 }
 
 function solveFlows(flows: ReadonlyMap<string, SegmentFlow>): void {
-    const pending = [...flows.values()].map(({ segment }) => segment);
+    const pending = flows
+        .values()
+        .map(({ segment }) => segment)
+        .toArray();
     for (let segment = pending.pop(); segment !== undefined; segment = pending.pop()) {
         const flow = flows.get(segment.id);
         if (flow === undefined) continue;
@@ -155,7 +158,8 @@ function indexIdentifiers(
     references: Map<TSESTree.Node, TSESLint.Scope.Reference>,
     definitions: Map<TSESTree.Node, TSESLint.Scope.Variable>,
 ): void {
-    for (const scope of source.scopeManager?.scopes ?? []) {
+    const scopes = source.scopeManager?.scopes ?? [];
+    for (const scope of scopes) {
         for (const reference of scope.references) references.set(reference.identifier, reference);
         for (const variable of scope.variables) for (const { name } of variable.defs) definitions.set(name, variable);
     }
@@ -173,7 +177,8 @@ function addReference(
         return;
     }
     if (reference.resolved === null) return;
-    for (const { id } of frame?.segments ?? []) flows.get(id)?.references.add(reference);
+    const segments = frame?.segments ?? [];
+    for (const { id } of segments) flows.get(id)?.references.add(reference);
 }
 
 function recordUsage(
@@ -213,15 +218,18 @@ export const noRedundantAssignment = createRule<[], 'redundant'>({
             Program: () => {
                 indexIdentifiers(source, references, definitions);
             },
-            onCodePathStart: (codePath: TSESLint.CodePath) => frames.push({ codePath, assignments: [], segments: [] }),
+            onCodePathStart: (codePath: TSESLint.CodePath) => {
+                frames.push({ codePath, assignments: [], segments: [] });
+            },
             onCodePathEnd: () => frames.pop(),
             onCodePathSegmentStart: (segment: TSESLint.CodePathSegment) => {
                 flows.set(segment.id, { segment, incoming: new Map(), outgoing: new Map(), references: new Set() });
                 frames.at(-1)?.segments.push(segment);
             },
             onCodePathSegmentEnd: () => frames.at(-1)?.segments.pop(),
-            ':matches(AssignmentExpression, VariableDeclarator[init])': (node: AssignmentFrame['node']) =>
-                frames.at(-1)?.assignments.push({ node, left: new Set(), right: new Set() }),
+            ':matches(AssignmentExpression, VariableDeclarator[init])': (node: AssignmentFrame['node']) => {
+                frames.at(-1)?.assignments.push({ node, left: new Set(), right: new Set() });
+            },
             ':matches(AssignmentExpression, VariableDeclarator[init]):exit': () => {
                 const assignment = frames.at(-1)?.assignments.pop();
                 if (assignment === undefined) return;
@@ -236,7 +244,7 @@ export const noRedundantAssignment = createRule<[], 'redundant'>({
             },
             'Program:exit': () => {
                 solveFlows(flows);
-                const redundant = [...flows.values()].flatMap((flow) => listRedundantWrites(flow, usages, source));
+                const redundant = flows.values().flatMap((flow) => listRedundantWrites(flow, usages, source));
                 for (const report of redundant) context.report(report);
             },
         };

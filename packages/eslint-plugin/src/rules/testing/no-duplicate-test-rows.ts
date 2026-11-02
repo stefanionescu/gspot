@@ -13,10 +13,14 @@ function listCopies(table: TSESTree.Node | undefined, source: TSESLint.SourceCod
         (each): each is TSESTree.Expression => each !== null && each.type !== AST_NODE_TYPES.SpreadElement,
     );
     for (const row of values) {
-        const first = [...groups.keys()].find((each) => isSameTokens(each, row, source)) ?? row;
+        const first = groups.keys().find((each) => isSameTokens(each, row, source)) ?? row;
         groups.set(first, [...(groups.get(first) ?? []), row]);
     }
-    return [...groups.values()].map((group) => group.slice(1)).filter((copies) => copies.length > 0);
+    return groups
+        .values()
+        .map((group) => group.slice(1))
+        .filter((copies) => copies.length > 0)
+        .toArray();
 }
 
 export const noDuplicateTestRows = createRule<[], 'duplicate'>({
@@ -40,7 +44,8 @@ export const noDuplicateTestRows = createRule<[], 'duplicate'>({
         const source = context.sourceCode;
         return {
             [TABLE_CALL](node: TableCall) {
-                for (const copies of listCopies(readTestTable(node, context), source)) {
+                const groups = listCopies(readTestTable(node, context), source);
+                for (const copies of groups) {
                     const removals = copies.map((copy): [number, number] => [
                         source.getTokenBefore(copy)?.range[0] ?? copy.range[0],
                         copy.range[1],

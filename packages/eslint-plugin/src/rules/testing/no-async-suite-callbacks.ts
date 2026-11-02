@@ -100,7 +100,7 @@ export const noAsyncSuiteCallbacks = createRule<
         const reportKeyword = (callback: FunctionNode): void => {
             const token = source.getFirstToken(callback);
             const next = token && source.getTokenAfter(token);
-            if (token?.value !== 'async' || !next) return;
+            if (!next || token.value !== 'async') return;
             context.report({
                 loc: token.loc,
                 messageId: 'removeAsync',

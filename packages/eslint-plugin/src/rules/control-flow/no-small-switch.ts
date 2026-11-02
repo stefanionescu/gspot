@@ -6,10 +6,10 @@ import { NEVER_TYPE, SMALL_SWITCH_CASES } from '../../config/logic.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getStatementCall(statement: TSESTree.Statement): TSESTree.CallExpression | undefined {
-    let value: TSESTree.Node | null = null;
-    if (statement.type === AST_NODE_TYPES.ExpressionStatement) value = statement.expression;
-    if (statement.type === AST_NODE_TYPES.ReturnStatement || statement.type === AST_NODE_TYPES.ThrowStatement)
-        value = statement.argument;
+    const isExit =
+        statement.type === AST_NODE_TYPES.ReturnStatement || statement.type === AST_NODE_TYPES.ThrowStatement;
+    if (!isExit && statement.type !== AST_NODE_TYPES.ExpressionStatement) return undefined;
+    const value = isExit ? statement.argument : statement.expression;
     return value?.type === AST_NODE_TYPES.CallExpression ? value : undefined;
 }
 
@@ -60,7 +60,7 @@ export const noSmallSwitch = createRule<[], 'small'>({
                 const defaultCase = cases.find((clause) => clause.test === null);
                 if (
                     cases.length > SMALL_SWITCH_CASES ||
-                    (cases.length === SMALL_SWITCH_CASES && defaultCase === undefined)
+                    (defaultCase === undefined && cases.length === SMALL_SWITCH_CASES)
                 )
                     return;
                 const isExhaustive = defaultCase?.consequent.some((statement) => {

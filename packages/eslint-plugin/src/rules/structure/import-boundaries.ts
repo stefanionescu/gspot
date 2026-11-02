@@ -107,7 +107,7 @@ export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'e
                 fix: (fixer) => {
                     if (node.type !== AST_NODE_TYPES.Literal) return null;
                     const quote = node.raw.charAt(0);
-                    const text = `${alias}${query}`.replaceAll('\\', '\\\\').replaceAll(quote, `\\${quote}`);
+                    const text = `${alias}${query}`.replaceAll('\\', '\\\\').replaceAll(quote, String.raw`\$&`);
                     return fixer.replaceText(node, `${quote}${text}${quote}`);
                 },
             });

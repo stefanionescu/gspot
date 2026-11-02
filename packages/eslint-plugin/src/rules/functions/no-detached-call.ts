@@ -38,7 +38,7 @@ export const noDetachedCall = createRule<[], 'call' | 'template'>({
         return {
             CallExpression: (node) => {
                 const [first, ...others] = node.arguments;
-                if (node.callee.type === AST_NODE_TYPES.CallExpression || first === undefined || others.length > 0)
+                if (first === undefined || node.callee.type === AST_NODE_TYPES.CallExpression || others.length > 0)
                     return;
                 const delimiter = getDetachedCallToken(node, first, context.sourceCode);
                 if (delimiter !== undefined) context.report({ node, loc: delimiter.loc, messageId: 'call' });

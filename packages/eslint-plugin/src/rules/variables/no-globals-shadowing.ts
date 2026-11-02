@@ -5,22 +5,24 @@ import type { NameSet, NamedNode } from '../../types/variables.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { ARGUMENTS_NAME, BUILTIN_GLOBALS, SHADOWING_EXCEPTIONS } from '../../config/variables.ts';
 
+function unwrapPattern(node: TSESTree.Node | null | undefined): TSESTree.Node | null | undefined {
+    let pattern = node;
+    while (pattern?.type === AST_NODE_TYPES.RestElement || pattern?.type === AST_NODE_TYPES.AssignmentPattern)
+        pattern = pattern.type === AST_NODE_TYPES.RestElement ? pattern.argument : pattern.left;
+    return pattern;
+}
+
 function listNames(node: TSESTree.Node | null | undefined): TSESTree.Identifier[] {
-    switch (node?.type) {
+    const pattern = unwrapPattern(node);
+    switch (pattern?.type) {
         case AST_NODE_TYPES.Identifier: {
-            return [node];
-        }
-        case AST_NODE_TYPES.RestElement: {
-            return listNames(node.argument);
-        }
-        case AST_NODE_TYPES.AssignmentPattern: {
-            return listNames(node.left);
+            return [pattern];
         }
         case AST_NODE_TYPES.ArrayPattern: {
-            return node.elements.flatMap((element) => listNames(element));
+            return pattern.elements.flatMap((element) => listNames(element));
         }
         case AST_NODE_TYPES.ObjectPattern: {
-            return node.properties.flatMap((property) =>
+            return pattern.properties.flatMap((property) =>
                 listNames(property.type === AST_NODE_TYPES.Property ? property.value : property.argument),
             );
         }
