@@ -4,6 +4,9 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 buildRuleTester().run('aws-public-instances', plugin.rules['aws-public-instances'], {
     valid: [
         "import * as ec2 from 'aws-cdk-lib/aws-ec2';\nnew ec2.Instance(this, 'Host', { vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS } });",
+        "import * as ec2 from 'aws-cdk-lib/aws-ec2';\nnew ec2.CfnInstance(this, 'Host', {});",
+        "import * as ec2 from 'aws-cdk-lib/aws-ec2';\nimport * as rds from 'aws-cdk-lib/aws-rds';\nnew rds.DatabaseInstance(this, 'Db', { vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED } });",
+        "import * as ec2 from 'aws-cdk-lib/aws-ec2';\nimport * as rds from 'aws-cdk-lib/aws-rds';\nnew rds.DatabaseInstance(this, 'Db', { vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC }, publiclyAccessible: false });",
     ],
     invalid: [
         {

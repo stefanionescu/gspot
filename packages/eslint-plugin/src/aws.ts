@@ -32,8 +32,8 @@ becomes an underscore, so `aws-cdk-lib/aws-s3` and `aws_cdk_lib.aws_s3` read ali
 @param node the expression to name.
 @returns the dotted name, or undefined when the value has none.
 */
-export function getCdkName(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node): string | undefined {
-    const name = readQualifiedName(node, source);
+export function getCdkName(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): string | undefined {
+    const name = node && readQualifiedName(node, source);
     if (name === undefined) return undefined;
     return name.replaceAll('-', '_');
 }

@@ -1,9 +1,9 @@
 import { createRule } from '../rule.ts';
 import type { AdminAccess } from '../types/rules.ts';
 import { CDK_PROPS_POSITION } from '../config/plugin.ts';
+import { getCdkName, readCdkResult, readCdkArgument, readCdkProperty } from '../aws.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { readLiteralValue, readExpressionValue, readOptionProperties } from '../expressions.ts';
-import { getCdkName, isUnresolved, readCdkResult, readCdkArgument, readCdkProperty } from '../aws.ts';
+import { readLiteralValue, listArgumentValues, readExpressionValue, readOptionProperties } from '../expressions.ts';
 
 import {
     ANY_PEERS,
@@ -27,18 +27,10 @@ import {
     SECURITY_GROUP_INGRESS,
 } from '../config/networks.ts';
 
-function readField(source: Readonly<TSESLint.SourceCode>, options: TSESTree.ObjectExpression, key: string): unknown {
+function readField(source: Readonly<TSESLint.SourceCode>, options: TSESTree.Node | undefined, key: string): unknown {
     const property = readOptionProperties(options, source).get(key);
     if (!property) return undefined;
     return readLiteralValue(property.value, source);
-}
-
-function readTracedValue(
-    source: Readonly<TSESLint.SourceCode>,
-    node: TSESTree.Node | undefined,
-): TSESTree.Node | undefined {
-    if (node === undefined || isUnresolved(source, node)) return undefined;
-    return readExpressionValue(node, source) ?? node;
 }
 
 function findArgument(
@@ -46,25 +38,21 @@ function findArgument(
     node: TSESTree.Node | undefined,
     position: number,
 ): TSESTree.Node | undefined {
-    const call = readTracedValue(source, node);
+    const call = readExpressionValue(node, source);
     const isCall = call?.type === AST_NODE_TYPES.CallExpression || call?.type === AST_NODE_TYPES.NewExpression;
-    return readTracedValue(source, isCall ? call.arguments[position] : undefined);
+    return readExpressionValue(isCall ? call.arguments[position] : undefined, source);
 }
 
-function isAdminRange(start: number | undefined, end: number | undefined): boolean {
-    if (start === undefined) return false;
+function isAdminRange(start: number, end: number | undefined): boolean {
     const high = end ?? start;
     return ADMIN_PORTS.some((port) => port >= start && port <= high);
 }
 
 function isAdminPortOptions(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): boolean {
-    const options = readExpressionValue(node, source);
-    if (options?.type !== AST_NODE_TYPES.ObjectExpression) return false;
-    const protocol = readOptionProperties(options, source).get('protocol');
-    const value = protocol ? (readExpressionValue(protocol.value, source) ?? protocol.value) : undefined;
-    const isTcp =
-        value !== undefined && !isUnresolved(source, value) && TCP_PROTOCOL_NAMES.has(getCdkName(source, value));
-    const [start, end] = ['fromPort', 'toPort'].map((key) => Number.parseInt(String(readField(source, options, key))));
+    const protocol = readOptionProperties(node, source).get('protocol');
+    const isTcp = protocol !== undefined && TCP_PROTOCOL_NAMES.has(getCdkName(source, protocol.value));
+    const start = Number.parseInt(String(readField(source, node, 'fromPort')));
+    const end = Number.parseInt(String(readField(source, node, 'toPort')));
     return isTcp && isAdminRange(start, end);
 }
 
@@ -79,16 +67,16 @@ function isAdminPortCall(
 }
 
 function isAdminPort(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): boolean {
-    const name = node === undefined ? '' : (getCdkName(source, node) ?? '');
+    const name = getCdkName(source, node);
     if (ALL_PORTS.has(name)) return true;
     if (name === PORT_CONSTRUCT) return isAdminPortOptions(source, findArgument(source, node, 0));
     return (name === SINGLE_PORT || name === PORT_RANGE) && isAdminPortCall(source, node, name);
 }
 
 function isOpenPeer(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): boolean {
-    const name = node === undefined ? '' : (getCdkName(source, node) ?? '');
+    const name = getCdkName(source, node);
     if (ANY_PEERS.has(name)) return true;
-    const address = Object.hasOwn(ADDRESS_PEERS, name) ? ADDRESS_PEERS[name] : undefined;
+    const address = ADDRESS_PEERS.get(name);
     return address !== undefined && readLiteralValue(findArgument(source, node, 0), source) === address;
 }
 
@@ -125,14 +113,13 @@ function listAdminAccess(source: Readonly<TSESLint.SourceCode>, node: TSESTree.C
     return listDefaultPortAccess(source, node, name);
 }
 
-function listOpenIngress(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | null | undefined): AdminAccess[] {
-    const options = readExpressionValue(node ?? undefined, source);
-    if (options?.type !== AST_NODE_TYPES.ObjectExpression) return [];
-    const protocol = readField(source, options, 'ipProtocol');
-    const [start, end] = ['fromPort', 'toPort'].map((key) => Number.parseInt(String(readField(source, options, key))));
+function listOpenIngress(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): AdminAccess[] {
+    const protocol = readField(source, node, 'ipProtocol');
+    const start = Number.parseInt(String(readField(source, node, 'fromPort')));
+    const end = Number.parseInt(String(readField(source, node, 'toPort')));
     const isAdmin = protocol === ALL_PROTOCOLS || (TCP_PROTOCOLS.has(protocol) && isAdminRange(start, end));
     return Object.entries(OPEN_ADDRESSES).flatMap(([key, address]) => {
-        const property = readOptionProperties(options, source).get(key);
+        const property = readOptionProperties(node, source).get(key);
         const value = property ? readExpressionValue(property.value, source) : undefined;
         return isAdmin && value?.type === AST_NODE_TYPES.Literal && value.value === address
             ? [{ node: value, messageId: 'openRange' as const }]
@@ -141,15 +128,8 @@ function listOpenIngress(source: Readonly<TSESLint.SourceCode>, node: TSESTree.N
 }
 
 function listGroupIngress(source: Readonly<TSESLint.SourceCode>, node: TSESTree.NewExpression): AdminAccess[] {
-    const options = readExpressionValue(node.arguments[2], source);
-    const ingress =
-        options?.type === AST_NODE_TYPES.ObjectExpression
-            ? readOptionProperties(options, source).get('securityGroupIngress')
-            : null;
-    const rules = ingress ? readExpressionValue(ingress.value, source) : undefined;
-    return rules?.type === AST_NODE_TYPES.ArrayExpression
-        ? rules.elements.flatMap((rule) => listOpenIngress(source, rule))
-        : [];
+    const ingress = readOptionProperties(node.arguments[2], source).get('securityGroupIngress');
+    return ingress ? listArgumentValues([ingress.value], source).flatMap((rule) => listOpenIngress(source, rule)) : [];
 }
 
 export const awsOpenAdminPorts = createRule<[], 'openRange' | 'anyAddress'>({
@@ -176,14 +156,13 @@ export const awsOpenAdminPorts = createRule<[], 'openRange' | 'anyAddress'>({
         const source = context.sourceCode;
         return {
             'CallExpression, NewExpression'(node: TSESTree.CallExpression | TSESTree.NewExpression) {
-                const name = getCdkName(source, node.callee) ?? '';
-                const isSpread = node.arguments.some(({ type }) => type === AST_NODE_TYPES.SpreadElement);
+                const name = getCdkName(source, node.callee);
                 let found: AdminAccess[] = [];
                 if (node.type === AST_NODE_TYPES.CallExpression) found = listAdminAccess(source, node);
                 else if (name === SECURITY_GROUP) found = listGroupIngress(source, node);
                 else if (name === SECURITY_GROUP_INGRESS)
                     found = listOpenIngress(source, node.arguments[CDK_PROPS_POSITION]);
-                for (const access of isSpread ? [] : found) context.report(access);
+                for (const access of found) context.report(access);
             },
         };
     },

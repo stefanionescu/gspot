@@ -18,8 +18,8 @@ function findUnencryptedStorage(
 ): StorageIssue | undefined {
     const encrypted = readOptionProperties(options, source).get('storageEncrypted');
     if (encrypted === undefined) return { node: options, messageId: 'omitted' };
-    const value = readExpressionValue(encrypted.value, source) ?? encrypted.value;
-    return value.type === AST_NODE_TYPES.Literal && value.value === false
+    const value = readExpressionValue(encrypted.value, source);
+    return value?.type === AST_NODE_TYPES.Literal && value.value === false
         ? { node: value, messageId: 'unencrypted' }
         : undefined;
 }

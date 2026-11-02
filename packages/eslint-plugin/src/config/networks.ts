@@ -235,10 +235,10 @@ export const ANY_PEERS: ReadonlySet<string | undefined> = new Set([
     'aws_cdk_lib.aws_ec2.Peer.anyIpv6',
 ]);
 
-export const ADDRESS_PEERS: Readonly<Record<string, string>> = {
-    'aws_cdk_lib.aws_ec2.Peer.ipv4': '0.0.0.0/0',
-    'aws_cdk_lib.aws_ec2.Peer.ipv6': '::/0',
-};
+export const ADDRESS_PEERS: ReadonlyMap<string | undefined, string> = new Map([
+    ['aws_cdk_lib.aws_ec2.Peer.ipv4', '0.0.0.0/0'],
+    ['aws_cdk_lib.aws_ec2.Peer.ipv6', '::/0'],
+]);
 
 export const ALL_PORTS: ReadonlySet<string | undefined> = new Set([
     'aws_cdk_lib.aws_ec2.Port.allTcp',

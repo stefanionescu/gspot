@@ -1,4 +1,5 @@
 import { createRule } from '../rule.ts';
+import { listArgumentValues } from '../expressions.ts';
 import type { PolicyStatement } from '../types/plugin.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { getCdkName, listCdkStrings, readCdkProperty, listAllowStatements } from '../aws.ts';
@@ -9,7 +10,6 @@ function findPublicPrincipal(
     policy: PolicyStatement,
 ): TSESTree.Node | undefined {
     const principals = readCdkProperty(source, policy.statement, policy.keys.principals);
-    if (principals.status !== 'found') return undefined;
     if (policy.keys.isJson)
         return listCdkStrings(
             source,
@@ -17,9 +17,8 @@ function findPublicPrincipal(
                 ? principals
                 : readCdkProperty(source, principals, JSON_PRINCIPAL_KEY),
         ).find(({ value }) => value === ANY_PRINCIPAL);
-    const elements = principals.node.type === AST_NODE_TYPES.ArrayExpression ? principals.node.elements : [];
-    return elements.find((element): element is TSESTree.NewExpression => {
-        if (element?.type !== AST_NODE_TYPES.NewExpression) return false;
+    return listArgumentValues([principals.node], source).find((element) => {
+        if (element.type !== AST_NODE_TYPES.NewExpression) return false;
         const name = getCdkName(source, element.callee);
         const [arn] = element.arguments;
         return (

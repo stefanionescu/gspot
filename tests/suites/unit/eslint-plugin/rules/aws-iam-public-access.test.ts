@@ -4,6 +4,7 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 buildRuleTester().run('aws-iam-public-access', plugin.rules['aws-iam-public-access'], {
     valid: [
         "import * as iam from 'aws-cdk-lib/aws-iam';\nnew iam.PolicyStatement({ principals: [new iam.AccountPrincipal('123456789012')] });",
+        "import * as iam from 'aws-cdk-lib/aws-iam';\nnew iam.PolicyStatement({ principals: [role] });",
     ],
     invalid: [
         {

@@ -109,34 +109,47 @@ export const KMS_KEYS: ReadonlySet<string | undefined> = new Set([
     'aws_cdk_lib.aws_kms.Alias',
 ]);
 
-export const SEARCH_DOMAINS: Readonly<
-    Record<string, { encryption: string; version: string; isText: boolean; engine: 'OpenSearch' | 'Elasticsearch' }>
-> = {
-    'aws_cdk_lib.aws_opensearchservice.Domain': {
-        encryption: 'encryptionAtRest',
-        version: 'version',
-        isText: false,
-        engine: 'OpenSearch',
-    },
-    'aws_cdk_lib.aws_opensearchservice.CfnDomain': {
-        encryption: 'encryptionAtRestOptions',
-        version: 'engineVersion',
-        isText: true,
-        engine: 'OpenSearch',
-    },
-    'aws_cdk_lib.aws_elasticsearch.Domain': {
-        encryption: 'encryptionAtRest',
-        version: 'version',
-        isText: false,
-        engine: 'Elasticsearch',
-    },
-    'aws_cdk_lib.aws_elasticsearch.CfnDomain': {
-        encryption: 'encryptionAtRestOptions',
-        version: 'elasticsearchVersion',
-        isText: true,
-        engine: 'Elasticsearch',
-    },
-};
+export const SEARCH_DOMAINS: ReadonlyMap<
+    string | undefined,
+    { encryption: string; version: string; isText: boolean; engine: 'OpenSearch' | 'Elasticsearch' }
+> = new Map([
+    [
+        'aws_cdk_lib.aws_opensearchservice.Domain',
+        {
+            encryption: 'encryptionAtRest',
+            version: 'version',
+            isText: false,
+            engine: 'OpenSearch',
+        },
+    ],
+    [
+        'aws_cdk_lib.aws_opensearchservice.CfnDomain',
+        {
+            encryption: 'encryptionAtRestOptions',
+            version: 'engineVersion',
+            isText: true,
+            engine: 'OpenSearch',
+        },
+    ],
+    [
+        'aws_cdk_lib.aws_elasticsearch.Domain',
+        {
+            encryption: 'encryptionAtRest',
+            version: 'version',
+            isText: false,
+            engine: 'Elasticsearch',
+        },
+    ],
+    [
+        'aws_cdk_lib.aws_elasticsearch.CfnDomain',
+        {
+            encryption: 'encryptionAtRestOptions',
+            version: 'elasticsearchVersion',
+            isText: true,
+            engine: 'Elasticsearch',
+        },
+    ],
+]);
 
 export const SEARCH_ENGINES = [
     ['opensearch', 'OpenSearch'],

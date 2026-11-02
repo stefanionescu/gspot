@@ -15,5 +15,15 @@ buildRuleTester().run('aws-opensearchservice-domain', plugin.rules['aws-opensear
                 { messageId: 'omitted', line: 7 },
             ],
         },
+        {
+            code: "import * as os from 'aws-cdk-lib/aws-opensearchservice';\nnew os.CfnDomain(this, 'a', { engineVersion: 'Elasticsearch_7.10' });",
+            errors: [
+                {
+                    messageId: 'omitted',
+                    data: { property: 'encryptionAtRestOptions', engine: 'Elasticsearch' },
+                    line: 2,
+                },
+            ],
+        },
     ],
 });

@@ -31,19 +31,16 @@ function findDefaultAuthorization(
 
 function stepResource(resource: TSESTree.Node): TSESTree.Node | undefined {
     const { type } = resource;
-    if (type === AST_NODE_TYPES.CallExpression)
-        return resource.callee.type === AST_NODE_TYPES.MemberExpression && !resource.callee.computed
-            ? resource.callee
-            : undefined;
+    if (type === AST_NODE_TYPES.CallExpression) return resource.callee;
     return type === AST_NODE_TYPES.MemberExpression && RESOURCE_CHAIN.has(ASTUtils.getPropertyName(resource))
         ? resource.object
         : undefined;
 }
 
-function readResourceMethod(name: string): string | undefined {
-    const methods = name.startsWith(ROOT_RESOURCE) ? name.slice(ROOT_RESOURCE.length).split('.') : [];
-    const isChain = methods.length > 0 && methods.every((method) => RESOURCE_METHODS.has(method));
-    return isChain ? methods.at(-1) : undefined;
+function readResourceMethod(name: string | undefined): string | undefined {
+    if (name?.startsWith(ROOT_RESOURCE) !== true) return undefined;
+    const methods = name.slice(ROOT_RESOURCE.length).split('.');
+    return methods.every((method) => RESOURCE_METHODS.has(method)) ? methods.at(-1) : undefined;
 }
 
 export const awsApigatewayPublicApi = createRule<[], 'omitted' | 'invalid'>({
@@ -101,8 +98,8 @@ export const awsApigatewayPublicApi = createRule<[], 'omitted' | 'invalid'>({
                 for (const { node: target, kind } of listCdkTableIssues(source, node, METHOD_CHECKS))
                     context.report({ node: target, messageId: kind });
             },
-            CallExpression(node) {
-                const method = readResourceMethod(getCdkName(source, node.callee) ?? '');
+            'CallExpression:exit'(node: TSESTree.CallExpression) {
+                const method = readResourceMethod(getCdkName(source, node.callee));
                 const authorization = method === ADD_RESOURCE ? findDefaultAuthorization(source, node, 1) : undefined;
                 if (authorization) defaults.set(node, authorization);
                 if (method === ADD_METHOD && node.arguments.every(({ type }) => type !== AST_NODE_TYPES.SpreadElement))

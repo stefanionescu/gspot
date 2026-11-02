@@ -3,8 +3,8 @@ import { readQualifiedName } from '../modules.ts';
 import type { CdkResult } from '../types/plugin.ts';
 import { CDK_PROPS_POSITION } from '../config/plugin.ts';
 import { SEARCH_DOMAINS, SEARCH_ENGINES } from '../config/aws.ts';
+import { type TSESLint, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { getCdkName, readCdkResult, readCdkArgument, readCdkProperty } from '../aws.ts';
-import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function detectEngine(
     source: Readonly<TSESLint.SourceCode>,
@@ -14,7 +14,7 @@ function detectEngine(
     const { node } = version;
     const isText = domain.isText && node.type === AST_NODE_TYPES.Literal && typeof node.value === 'string';
     const name = isText ? `${domain.version}.${node.value}` : readQualifiedName(node, source);
-    const segments = version.status === 'found' ? (name ?? '').toLowerCase().split('.').toReversed() : [];
+    const segments = (name ?? '').toLowerCase().split('.').toReversed();
     const segment = segments.find((label) => SEARCH_ENGINES.some(([key]) => label.includes(key)));
     return SEARCH_ENGINES.find(([key]) => segment?.includes(key) === true)?.[1] ?? domain.engine;
 }
@@ -41,29 +41,25 @@ export const awsOpensearchserviceDomain = createRule<[], 'omitted' | 'unencrypte
     },
     create(context) {
         const source = context.sourceCode;
-        const checkDomain = (node: TSESTree.NewExpression, name: string): void => {
-            const domain = SEARCH_DOMAINS[name];
-            const options = readCdkArgument(source, readCdkResult(source, node), CDK_PROPS_POSITION);
-            if (domain === undefined) return;
-            const enabled = readCdkProperty(source, readCdkProperty(source, options, domain.encryption), 'enabled');
-            const engine = detectEngine(source, readCdkProperty(source, options, domain.version), domain);
-            const isOff =
-                enabled.status === 'found' &&
-                enabled.node.type === AST_NODE_TYPES.Literal &&
-                enabled.node.value === false;
-            if (enabled.status === 'missing')
-                context.report({
-                    node: enabled.node,
-                    messageId: 'omitted',
-                    data: { property: domain.encryption, engine },
-                });
-            else if (isOff) context.report({ node: enabled.node, messageId: 'unencrypted', data: { engine } });
-        };
         return {
             NewExpression(node) {
-                const name = getCdkName(source, node.callee) ?? '';
+                const domain = SEARCH_DOMAINS.get(getCdkName(source, node.callee));
                 const isSpread = node.arguments.some(({ type }) => type === AST_NODE_TYPES.SpreadElement);
-                if (Object.hasOwn(SEARCH_DOMAINS, name) && !isSpread) checkDomain(node, name);
+                if (domain === undefined || isSpread) return;
+                const options = readCdkArgument(source, readCdkResult(source, node), CDK_PROPS_POSITION);
+                const enabled = readCdkProperty(source, readCdkProperty(source, options, domain.encryption), 'enabled');
+                const engine = detectEngine(source, readCdkProperty(source, options, domain.version), domain);
+                const isOff =
+                    enabled.status === 'found' &&
+                    enabled.node.type === AST_NODE_TYPES.Literal &&
+                    enabled.node.value === false;
+                if (enabled.status === 'missing')
+                    context.report({
+                        node: enabled.node,
+                        messageId: 'omitted',
+                        data: { property: domain.encryption, engine },
+                    });
+                else if (isOff) context.report({ node: enabled.node, messageId: 'unencrypted', data: { engine } });
             },
         };
     },

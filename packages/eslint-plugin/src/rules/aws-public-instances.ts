@@ -1,5 +1,6 @@
 import { createRule } from '../rule.ts';
 import type { CdkResult } from '../types/plugin.ts';
+import { listArgumentValues } from '../expressions.ts';
 import { CDK_PROPS_POSITION } from '../config/plugin.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
@@ -41,12 +42,8 @@ function isPrivateInterface(source: Readonly<TSESLint.SourceCode>, networkInterf
 
 function findPublicInterface(source: Readonly<TSESLint.SourceCode>, options: CdkResult): TSESTree.Node | undefined {
     const interfaces = readCdkProperty(source, options, 'networkInterfaces');
-    const elements =
-        interfaces.status === 'found' && interfaces.node.type === AST_NODE_TYPES.ArrayExpression
-            ? interfaces.node.elements
-            : [];
+    const elements = interfaces.status === 'found' ? listArgumentValues([interfaces.node], source) : [];
     for (const element of elements) {
-        if (element === null) continue;
         const networkInterface = readCdkResult(source, element);
         const address = readCdkProperty(source, networkInterface, 'associatePublicIpAddress');
         if (readCdkLiteral(address) === true && !isPrivateInterface(source, networkInterface)) return address.node;
@@ -57,8 +54,7 @@ function findPublicInterface(source: Readonly<TSESLint.SourceCode>, options: Cdk
 function findPublicDatabase(source: Readonly<TSESLint.SourceCode>, options: CdkResult): TSESTree.Node | undefined {
     const subnet = readCdkProperty(source, readCdkProperty(source, options, 'vpcSubnets'), 'subnetType');
     const access = readCdkProperty(source, options, 'publiclyAccessible');
-    const subnetName = subnet.status === 'found' ? getCdkName(source, subnet.node) : undefined;
-    if (subnetName !== PUBLIC_SUBNET) return undefined;
+    if (getCdkName(source, subnet.node) !== PUBLIC_SUBNET) return undefined;
     if (readCdkLiteral(access) === true) return access.node;
     return access.status === 'found' ? undefined : subnet.node;
 }

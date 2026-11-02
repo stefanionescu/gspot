@@ -1,9 +1,9 @@
 import { createRule } from '../rule.ts';
 import { S3_BUCKET } from '../config/plugin.ts';
-import { readExpressionValue } from '../expressions.ts';
 import { getCdkName, findBucketOption } from '../aws.ts';
+import { readExpressionValue, readOptionProperties } from '../expressions.ts';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { BLOCK_ACLS_ONLY, BLOCK_PUBLIC_ACCESS, BLOCK_PUBLIC_ACCESS_KEYS } from '../config/aws.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function listUnblockedSettings(
     source: Readonly<TSESLint.SourceCode>,
@@ -13,18 +13,12 @@ function listUnblockedSettings(
         value?.type === AST_NODE_TYPES.NewExpression &&
         value.callee.type === AST_NODE_TYPES.MemberExpression &&
         getCdkName(source, value.callee) === BLOCK_PUBLIC_ACCESS;
-    const settings = isBlockConstruction ? readExpressionValue(value.arguments[0], source) : undefined;
-    return settings?.type === AST_NODE_TYPES.ObjectExpression
-        ? settings.properties.filter((property): property is TSESTree.Property => {
-              if (property.type !== AST_NODE_TYPES.Property || !ASTUtils.isIdentifier(property.key)) return false;
-              const setting = readExpressionValue(property.value, source);
-              return (
-                  BLOCK_PUBLIC_ACCESS_KEYS.has(property.key.name) &&
-                  setting?.type === AST_NODE_TYPES.Literal &&
-                  setting.value === false
-              );
-          })
-        : [];
+    const settings = readOptionProperties(isBlockConstruction ? value.arguments[0] : undefined, source);
+    return [...settings].flatMap(([key, property]) => {
+        const setting = readExpressionValue(property.value, source);
+        const isOff = BLOCK_PUBLIC_ACCESS_KEYS.has(key) && setting?.type === AST_NODE_TYPES.Literal;
+        return isOff && setting.value === false ? [property] : [];
+    });
 }
 
 export const awsUnblockedPublicBuckets = createRule<[], 'aclsOnly' | 'public'>({
