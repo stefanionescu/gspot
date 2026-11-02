@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { parse } from '@decimalturn/toml-patch';
@@ -9,7 +10,6 @@ import { readSettings } from '#cli/settings/read.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { InitJson } from '#cli/types/commands/edits.ts';
 import type { FormatSettings } from '#cli/types/configurations/language.ts';
 
@@ -135,7 +135,7 @@ test('init runs no Prettier config outside the root and the scopes', async () =>
     });
     commitAll(sandbox.path);
     await readInitFormatOptions(sandbox.path, ['init', '--configurations', 'format']);
-    expect(await isOnDisk(join(sandbox.path, 'tests/samples/ran'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'tests/samples/ran'))).toBe(false);
 });
 
 test('init carries the bracket, arrow, and prose options of Prettier', async () => {
