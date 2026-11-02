@@ -177,3 +177,15 @@ test('a rule file path that names a folder is refused', async () => {
         'gspot.toml:2: security.rule_files.0: rules names no file. Point rule_files at a file, relative to its table.',
     ]);
 });
+
+test('a Stylelint plugin path that names no file is refused', async () => {
+    await using sandbox = await testdir({ 'README.md': '# Example\n' });
+    expect(
+        validateSettingsText(
+            'configurations = ["css"]\n[[tools.stylelint.plugins]]\npath = "tools/missing.mjs"\nrules = {}\n',
+            sandbox.path,
+        ),
+    ).toStrictEqual([
+        'gspot.toml:3: tools.stylelint.plugins.0.path: tools/missing.mjs names no file. Point path at a file, relative to its table.',
+    ]);
+});

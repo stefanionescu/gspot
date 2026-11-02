@@ -107,10 +107,13 @@ test('without import rules the check is skipped', async () => {
     ]);
 });
 
-test('import rules exempt a local ESLint plugin named by settings', async () => {
+test.each([
+    ['ESLint', '[[tools.eslint.plugins]]\nname = "local"'],
+    ['Stylelint', '[[tools.stylelint.plugins]]'],
+])('import rules exempt a local %s plugin named by settings', async (_tool, record) => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript'], {
-            tables: '[[import_rule]]\nname = "source"\npaths = ["src/**"]\n[[tools.eslint.plugins]]\nname = "local"\npath = "tools/lint/plugin.mjs"\nrules = {}\n',
+        'gspot.toml': buildSandboxSettings(['javascript', 'css'], {
+            tables: `[[import_rule]]\nname = "source"\npaths = ["src/**"]\n${record}\npath = "tools/lint/plugin.mjs"\nrules = {}\n`,
         }),
         'src/index.js': 'export {};\n',
         'tools/lint/plugin.mjs': EMPTY_DEFAULT_SOURCE,

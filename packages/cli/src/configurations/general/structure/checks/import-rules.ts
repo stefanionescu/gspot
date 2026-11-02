@@ -59,7 +59,10 @@ function buildExemption(planned: PlannedCheck): (file: TrackedFile) => boolean {
     const matches = buildPathMatcher([
         ...settings.test_files,
         ...CONFIG_PATTERNS,
-        ...(settings.tables[ESLINT_SETTINGS_TABLE]?.plugins ?? []).flatMap((plugin) => plugin.path ?? []),
+        ...[
+            ...(settings.tables[ESLINT_SETTINGS_TABLE]?.plugins ?? []),
+            ...(settings.tables['tools.stylelint']?.plugins ?? []),
+        ].flatMap((plugin) => plugin.path ?? []),
         ...(settings.tables.javascript?.script_files ?? []),
         joinScope(escapeGlob(scopePath), MISE_TASKS_GLOB),
     ]);

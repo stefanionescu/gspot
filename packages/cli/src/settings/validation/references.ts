@@ -63,13 +63,14 @@ Check the rule file paths of the root and every scope against the repository fil
 export function validateRuleFilePaths(root: string, settings: Settings): SettingsError[] {
     const files = openFiles(root);
     return listSettingsTables(settings).flatMap(({ table, scope, path }) => {
-        const plugins = table.tools?.['eslint']?.['plugins'];
         const ruleFiles = table.security?.rule_files;
         const paths = [
-            ...(plugins ?? []).flatMap(({ path: value }, index) =>
-                value === undefined
-                    ? []
-                    : [{ value, key: 'path', path: [...path, 'tools', 'eslint', 'plugins', index, 'path'] }],
+            ...(['eslint', 'stylelint'] as const).flatMap((tool) =>
+                (table.tools?.[tool]?.['plugins'] ?? []).flatMap(({ path: value }, index) =>
+                    value === undefined
+                        ? []
+                        : [{ value, key: 'path', path: [...path, 'tools', tool, 'plugins', index, 'path'] }],
+                ),
             ),
             ...(ruleFiles ?? []).map((value, index) => ({
                 value,
