@@ -174,7 +174,7 @@ export type ConflictingConfig = {
     pointer?: boolean;
 };
 
-export type LintCommandSource = keyof typeof LINT_COMMAND_FIXES;
+type LintCommandSource = keyof typeof LINT_COMMAND_FIXES;
 
 export type LintCommand = {
     file: string;

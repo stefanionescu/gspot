@@ -6,10 +6,10 @@ import { listSettingsTables } from '#cli/settings/inherit.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
-import { mapSettingPaths, joinScopeSelector } from '#cli/settings/paths.ts';
 import { findSettingLine, readSettingsFile } from '#cli/settings/file.ts';
 import type { PathVisitor, SettingLocation } from '#cli/types/settings.ts';
+import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
+import { mapSettingPaths, joinScopeSelector } from '#cli/settings/paths.ts';
 import { GSPOT_RULES, BRACKET_HELP, NEGATED_PATTERN, UNESCAPED_BRACKET } from '#cli/config/configurations/structure.ts';
 
 /**

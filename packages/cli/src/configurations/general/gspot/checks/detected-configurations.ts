@@ -1,5 +1,5 @@
-import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { quoteArgument } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
