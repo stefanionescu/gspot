@@ -49,7 +49,7 @@ function formatChangeLines(key: string, setting: Setting, scopeSetting: SettingS
 
 function readShippedSetting(key: string): ExplainedSetting | undefined {
     const settings = buildSettings(settingsSchema.parse({}), {});
-    const available = buildAvailableSettings([...readConfigurations().values()], settings.level);
+    const available = buildAvailableSettings(readConfigurations().values().toArray(), settings.level);
     const match = findSetting(available, key);
     if (match === undefined) return undefined;
     const shipped = findSettingDefault(available, settings, match, '')?.value;

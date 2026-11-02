@@ -40,6 +40,53 @@ import type {
     ConfigurationsOptions,
 } from '#cli/types/commands/edits.ts';
 
+async function writeEditedFiles(
+    session: Session,
+    generated: Generation,
+    { writer, summary }: { writer: Files; summary: string },
+): Promise<ApplyReport> {
+    try {
+        return await writeGeneratedFiles(session, generated, writer);
+    } catch (error) {
+        if (!(error instanceof GspotError)) throw error;
+        throw new GspotError(
+            'writing',
+            [
+                summary,
+                `gspot.toml keeps this change, and applying it stopped: ${error.message}`,
+                FIX_APPLY_MESSAGE,
+            ].join('\n'),
+            { cause: error },
+        );
+    }
+}
+
+function assertNoCheckPaths(context: IgnoreEditContext, paths: string[]): void {
+    const checks = new Set(listCheckIds(Object.values(context.settings.commandChecks)));
+    for (const path of paths)
+        if (checks.has(path))
+            throw new GspotError(
+                'arguments',
+                `--paths ${quoteArgument(path)} names a check. Give the check as a positional argument.`,
+            );
+}
+
+function assertSelectorsMatch(context: IgnoreEditContext, selectors: string[]): void {
+    for (const selector of selectors) {
+        const path = selector.startsWith('!') ? selector.slice(1) : selector;
+        const isMatched = buildPathMatcher([path]);
+        if (
+            context.listing.files.every(
+                (file) => file.path !== path && !file.path.startsWith(`${path}/`) && !isMatched(file.path),
+            )
+        )
+            throw new GspotError(
+                'arguments',
+                `--paths ${quoteArgument(selector)} matches no repository file. Name an existing file, folder, or matching glob.`,
+            );
+    }
+}
+
 /**
 Read and parse gspot.toml and list the repository, without a session.
 
@@ -66,7 +113,7 @@ export async function readSettingsEditContext(root: string, scopePath?: string):
     const { edit: input, settings, cache, listing } = context;
     const session = await openSession(root, { settings, cache, listing });
     const path = scopePath === undefined ? '' : buildArgumentPath(root, root, scopePath);
-    if (!session.scopes.some((scope) => scope.path === path))
+    if (session.scopes.every((scope) => scope.path !== path))
         throw new GspotError(
             'arguments',
             `There is no scope called ${path}. Name a project folder or a written scope.`,
@@ -86,27 +133,9 @@ export function buildIgnorePaths(
     cwd: string,
     paths: string[] | undefined,
 ): string[] | undefined {
-    const checks = new Set(listCheckIds(Object.values(context.settings.commandChecks)));
-    for (const path of paths ?? [])
-        if (checks.has(path))
-            throw new GspotError(
-                'arguments',
-                `--paths ${quoteArgument(path)} names a check. Give the check as a positional argument.`,
-            );
+    assertNoCheckPaths(context, paths ?? []);
     const selectors = buildArgumentPaths(context.root, cwd, paths);
-    for (const selector of selectors ?? []) {
-        const path = selector.startsWith('!') ? selector.slice(1) : selector;
-        const matches = buildPathMatcher([path]);
-        if (
-            !context.listing.files.some(
-                (file) => file.path === path || file.path.startsWith(`${path}/`) || matches(file.path),
-            )
-        )
-            throw new GspotError(
-                'arguments',
-                `--paths ${quoteArgument(selector)} matches no repository file. Name an existing file, folder, or matching glob.`,
-            );
-    }
+    assertSelectorsMatch(context, selectors ?? []);
     return selectors;
 }
 
@@ -207,27 +236,6 @@ export function buildUnchangedResult(
     return { text: `${summary}\n${noteLines.join('')}`, json: { changed: false, summary, notes }, exitCode: 0 };
 }
 
-async function writeEditedFiles(
-    session: Session,
-    generated: Generation,
-    { writer, summary }: { writer: Files; summary: string },
-): Promise<ApplyReport> {
-    try {
-        return await writeGeneratedFiles(session, generated, writer);
-    } catch (error) {
-        if (!(error instanceof GspotError)) throw error;
-        throw new GspotError(
-            'writing',
-            [
-                summary,
-                `gspot.toml keeps this change, and applying it stopped: ${error.message}`,
-                FIX_APPLY_MESSAGE,
-            ].join('\n'),
-            { cause: error },
-        );
-    }
-}
-
 /**
 Edit settings, check them, and write them and their generated files. Installs nothing.
 
@@ -252,7 +260,7 @@ export async function writeSettingsEdit(
     const report = await writeEditedFiles(session, generated, { writer, summary });
     report.notes.push(...(options.notes ?? []));
     const written = report.written.length + report.updated.length + report.removed.length;
-    if (!result.changed && written === 0)
+    if (written === 0 && !result.changed)
         return buildUnchangedResult(options.unchangedSummary ?? UNCHANGED_SETTINGS_MESSAGE, report.notes);
     const shown = result.changed ? summary : (options.unchangedSummary ?? REPAIRED_FILES_MESSAGE);
     return {

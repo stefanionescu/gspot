@@ -23,11 +23,11 @@ function isSettingsTable(schema: z.ZodType): boolean {
     return inner instanceof z.ZodObject && schema.meta()?.['reasoned'] !== true;
 }
 
-function listSettingValues(table: TomlTable, prefix: string): { key: string; value: unknown }[] {
+function listSettingValues(table: TomlTable, prefix: string): Array<{ key: string; value: unknown }> {
     return Object.entries(table).flatMap(([name, value]) => {
         const key = prefix === '' ? name : `${prefix}.${name}`;
         const schema = findSettingSchema(key);
-        return isTable(value) && schema !== undefined && isSettingsTable(schema)
+        return schema !== undefined && isTable(value) && isSettingsTable(schema)
             ? listSettingValues(value, key)
             : [{ key, value }];
     });
@@ -84,14 +84,16 @@ function splitSettings(settings: TomlTable): { table: TomlTable; leftOut: LeftOu
     return { table, leftOut };
 }
 
-function splitTemplate(written: TomlTable): { table: TomlTable; leftOut: LeftOutSetting[] } {
-    const leftOut: LeftOutSetting[] = [];
-    const commandChecks = new Set(((written['command_check'] ?? []) as TomlTable[]).map((record) => record['id']));
-    for (const [name, label] of Object.entries(LOCAL_RECORDS)) {
+function listLocalRecords(written: TomlTable): LeftOutSetting[] {
+    return Object.entries(LOCAL_RECORDS).flatMap(([name, label]) => {
         const note = name === 'command_check' ? LEFT_OUT_NOTES.code : LEFT_OUT_NOTES.paths;
-        for (const record of (written[name] ?? []) as TomlTable[])
-            leftOut.push({ key: `[[${name}]] ${String(record[label])}`, note });
-    }
+        const records = (written[name] ?? []) as TomlTable[];
+        return records.map((record) => ({ key: `[[${name}]] ${String(record[label])}`, note }));
+    });
+}
+
+function splitTemplate(written: TomlTable): { table: TomlTable; leftOut: LeftOutSetting[] } {
+    const commandChecks = new Set(((written['command_check'] ?? []) as TomlTable[]).map((record) => record['id']));
     const ignores = splitIgnores((written['ignore'] ?? []) as TomlTable[], commandChecks);
     const copied = splitSettings(
         Object.fromEntries(
@@ -99,7 +101,10 @@ function splitTemplate(written: TomlTable): { table: TomlTable; leftOut: LeftOut
         ),
     );
     if (ignores.kept.length > 0) copied.table['ignore'] = ignores.kept;
-    return { table: copied.table, leftOut: [...leftOut, ...ignores.leftOut, ...copied.leftOut] };
+    return {
+        table: copied.table,
+        leftOut: [...listLocalRecords(written), ...ignores.leftOut, ...copied.leftOut],
+    };
 }
 
 function readTemplateBytes(file: string, cwd: string): Buffer {

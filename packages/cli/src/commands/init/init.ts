@@ -49,7 +49,7 @@ async function runInitCommand(root: string, options: InitOptions): Promise<Comma
     const next =
         pinPath === undefined
             ? NEXT_INSTALL_MESSAGE
-            : NEXT_PIN_MESSAGE.replace('{runner}', session.startRunner.name).replace('{file}', () => pinPath);
+            : NEXT_PIN_MESSAGE.replace('{runner}', () => session.startRunner.name).replace('{file}', () => pinPath);
     return {
         text: [WROTE_PLAN_MESSAGE, ...notes, '', next].join('\n'),
         json: { ...json, ...applied, notes: [...notes, next] },
@@ -69,7 +69,10 @@ function parseConfigurationNames(value: string, previous: string[] | false | und
 function assertTemplateFlags(from: string | undefined, configurations: string[] | false | undefined): void {
     if (from === undefined || configurations === undefined) return;
     const flag = configurations === false ? '--no-configurations' : '--configurations';
-    throw new GspotError('arguments', FROM_CONFLICT_MESSAGE.replace('{flag}', flag));
+    throw new GspotError(
+        'arguments',
+        FROM_CONFLICT_MESSAGE.replace('{flag}', () => flag),
+    );
 }
 
 export const initCommand: CommandDefinition<[], InitFlags> = {

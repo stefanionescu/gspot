@@ -167,9 +167,10 @@ function addCommandDefinition(program: Command, definition: CommandDefinition): 
         .summary(help.summary)
         .description(help.description)
         .helpGroup(help.group);
-    for (const argument of definition.arguments ?? [])
+    const { arguments: definedArguments = [], options = [] } = definition;
+    for (const argument of definedArguments)
         command.addArgument(buildArgument(argument, help.arguments[argument.term]));
-    for (const option of definition.options ?? []) command.addOption(buildOption(option, help.options[option.flags]));
+    for (const option of options) command.addOption(buildOption(option, help.options[option.flags]));
     command.helpOption(HELP_FLAG, GLOBAL_OPTIONS[HELP_FLAG]);
     command.option(JSON_FLAG, help.options[JSON_FLAG]);
     command.configureHelp({ helpWidth: HELP_WIDTH, styleDescriptionText: (text) => text.replaceAll(CODE_MARK, '') });

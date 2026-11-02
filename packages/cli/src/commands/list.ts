@@ -36,12 +36,15 @@ function buildSettingsResult(session: Session): CommandResult {
         JSON.stringify([key, value, reasonRequirement, source]),
     );
     const width = Math.max(...settings.map((row) => row.key.length)) + KEY_GAP;
-    const lines = [...groups.values()].map((rows) => {
-        const [row] = rows as [(typeof settings)[number]];
-        const value = row.value === undefined ? NOT_SET : JSON.stringify(row.value);
-        const where = session.scopes.length === 1 ? '' : `  in ${formatScopeGroup(rows.map(({ scope }) => scope))}`;
-        return `${row.key.padEnd(width)}${value.padEnd(VALUE_WIDTH)} ${(row.reasonRequirement ?? '').padEnd(REASON_HEADER.length)}  ${row.source}${where}`;
-    });
+    const lines = groups
+        .values()
+        .map((rows) => {
+            const [row] = rows as [(typeof settings)[number]];
+            const value = row.value === undefined ? NOT_SET : JSON.stringify(row.value);
+            const where = session.scopes.length === 1 ? '' : `  in ${formatScopeGroup(rows.map(({ scope }) => scope))}`;
+            return `${row.key.padEnd(width)}${value.padEnd(VALUE_WIDTH)} ${(row.reasonRequirement ?? '').padEnd(REASON_HEADER.length)}  ${row.source}${where}`;
+        })
+        .toArray();
     lines.unshift(`${'setting'.padEnd(width)}${'value'.padEnd(VALUE_WIDTH)} ${REASON_HEADER}  source`);
     return { text: `${lines.join('\n')}\n`, json: { settings } satisfies SettingsListJson, exitCode: 0 };
 }

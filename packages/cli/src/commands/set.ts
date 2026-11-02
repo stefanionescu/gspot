@@ -55,7 +55,7 @@ function parseWords(values: string[], setting: Setting): ParsedSettingValue {
         throw new GspotError('arguments', `${setting.name} takes one value. Quote a value with spaces.`);
     return {
         type: 'scalar',
-        value: setting.type === 'table' && isCompound ? parseInlineValue(first) : parseScalarWord(first, setting),
+        value: isCompound && setting.type === 'table' ? parseInlineValue(first) : parseScalarWord(first, setting),
     };
 }
 
@@ -98,16 +98,16 @@ function setSetting(scopeTable: TomlTable, change: ParsedSettingValue, setting: 
 
 function assertReason({ options, setting, change, joined, previous, shippedDefault }: SettingReasonContext): void {
     if (setting.reason_values === true) return;
-    const weakens = isWeakening(setting, joined, shippedDefault);
+    const doesWeaken = isWeakening(setting, joined, shippedDefault);
     if (options.reason === undefined) {
-        if (change.type === 'list' && previous?.reason !== undefined && weakens)
+        if (doesWeaken && change.type === 'list' && previous?.reason !== undefined)
             throw new GspotError(
                 'arguments',
                 `${options.key} already has the reason ${JSON.stringify(previous.reason)}. Pass --reason with a reason that covers every item.`,
             );
         return;
     }
-    if (!weakens)
+    if (!doesWeaken)
         throw new GspotError(
             'arguments',
             `${options.key} takes no reason here: the value does not loosen the shipped default. Run the command without --reason.`,

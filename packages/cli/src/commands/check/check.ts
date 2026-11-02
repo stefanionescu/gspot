@@ -172,7 +172,7 @@ function parseCheckFlags(
 async function assertSetupStaged(root: string, cancelSignal: AbortSignal): Promise<void> {
     const indexed = await readGitPaths(root, GIT_SETUP_FILES_ARGUMENTS, { cancelSignal });
     const unstaged = SETUP_PATHS.filter(
-        (path) => existsSync(join(root, path)) && !indexed.some((file) => file.startsWith(path)),
+        (path) => existsSync(join(root, path)) && indexed.every((file) => !file.startsWith(path)),
     );
     if (unstaged.length > 0)
         throw new GspotError(

@@ -31,7 +31,7 @@ async function runExplainCommand(
     location: CommandLocation,
     subject: string,
     rule: string | undefined,
-    verbose: boolean,
+    isVerbose: boolean,
 ): Promise<CommandResult> {
     const { root, cwd } = location;
 
@@ -41,8 +41,8 @@ async function runExplainCommand(
         rule === undefined
             ? explainSubject(session, { subject, cwd })
             : await explainLintRule(root, subject, rule, {
-                  verbose,
-                  ...(session === undefined ? {} : { session }),
+                  verbose: isVerbose,
+                  ...(session !== undefined && { session }),
               });
     if (result === undefined)
         throw new GspotError('arguments', `gspot does not know rule ${rule ?? ''} of ${subject}.`);
@@ -55,7 +55,7 @@ async function runExplainCommand(
 
 function explainSubject(session: Session | undefined, { subject, cwd }: { subject: string; cwd: string }): Explanation {
     const file = explainPath(session, subject, cwd);
-    if (subject.startsWith('.') && file !== undefined) return file;
+    if (file !== undefined && subject.startsWith('.')) return file;
     const explanation =
         explainCheck(session, subject) ??
         explainSetting(session, subject) ??

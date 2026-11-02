@@ -49,8 +49,9 @@ async function runRevisionCheck(
         const settings = await readGitLines(root, ['ls-tree', '--name-only', revision.hash, '--', SETTINGS_FILE], {
             cancelSignal,
         });
-        if (settings.length === 0) return { skipped: 'the commit has no gspot.toml' };
-        return await checkRevisionTree(root, options, cancelSignal, revision);
+        return settings.length === 0
+            ? { skipped: 'the commit has no gspot.toml' }
+            : await checkRevisionTree(root, options, cancelSignal, revision);
     } catch (error) {
         if (!cancelSignal.aborted) throw error;
         return undefined;
@@ -70,6 +71,16 @@ function buildPushReport(
         exitCode: Math.max(0, ...revisions.map((revision) => revision.report.exitCode)),
         ...(cancelSignal.aborted && { canceled: { pendingRefs } }),
     };
+}
+
+function formatUncheckedRefs(pushed: PushedRevisions, report: PushReport): string[] {
+    const canceled =
+        report.canceled === undefined
+            ? []
+            : [
+                  `Push checks canceled. Branches and tags not checked: ${report.canceled.pendingRefs.join(', ') || NO_PENDING_REFS}.\n`,
+              ];
+    return [...canceled, ...pushed.skipped.map((skip) => `${skip.ref}: ${skip.reason}; no checks apply.\n`)];
 }
 
 /**
@@ -109,10 +120,9 @@ export async function runPushCheck(
         text.push(`${revision.refs.join(', ')} at ${revision.hash}\n${result.text}`);
     }
     const report = buildPushReport(selected, revisions, cancelSignal, revisionCount);
-    if (report.canceled !== undefined)
-        text.push(
-            `Push checks canceled. Branches and tags not checked: ${report.canceled.pendingRefs.join(', ') || NO_PENDING_REFS}.\n`,
-        );
-    const skipped = selected.skipped.map((skip) => `${skip.ref}: ${skip.reason}; no checks apply.\n`);
-    return { text: [...text, ...skipped].join(''), json: report, exitCode: report.exitCode };
+    return {
+        text: [...text, ...formatUncheckedRefs(selected, report)].join(''),
+        json: report,
+        exitCode: report.exitCode,
+    };
 }

@@ -101,13 +101,14 @@ function formatReportLine(result: CheckResult, tail: string): string {
     return `${shown}  ${scope}${result.check}  ${tail}`.trimEnd();
 }
 
+function formatVerboseLines({ command, stack }: CheckResult): string[] {
+    const lines = stack?.split('\n').map((line) => `  ${line}`) ?? [];
+    return command ? [`  ${styleText('dim', '$ ' + command.join(' '), { stream: process.stdout })}`, ...lines] : lines;
+}
+
 function formatCheck(result: CheckResult, { verbose }: { verbose: boolean }): string[] {
     const lines = [formatReportLine(result, formatCheckTail(result))];
-    if (verbose) {
-        if (result.command)
-            lines.push(`  ${styleText('dim', '$ ' + result.command.join(' '), { stream: process.stdout })}`);
-        if (result.stack !== undefined) lines.push(...result.stack.split('\n').map((line) => `  ${line}`));
-    }
+    if (verbose) lines.push(...formatVerboseLines(result));
     if (result.status === 'failed' || result.status === 'error') lines.push(...formatFindings(result, { verbose }));
     if (result.fixCommand !== undefined)
         lines.push(`  ${styleText('dim', FIX_LABEL, { stream: process.stdout })} ${result.fixCommand}`);
@@ -137,10 +138,12 @@ function formatIncompleteCounts({ checks }: RunReport): string[] {
     const tools = new Set(
         missing.filter((check) => check.note !== PROJECT_ENVIRONMENT_MESSAGE).map(({ note }) => note),
     );
-    const needsInstall = [...tools].some((note) => note?.endsWith(STANDARD_INSTALL_HELP) === true);
+    const requiresInstall = [...tools].some((note) => note?.endsWith(STANDARD_INSTALL_HELP) === true);
     const errors = checks.filter((check) => check.status === 'error').length;
     return [
-        ...(tools.size === 0 ? [] : [`Missing tools: ${String(tools.size)}${needsInstall ? INSTALL_REMINDER : ''}.`]),
+        ...(tools.size === 0
+            ? []
+            : [`Missing tools: ${String(tools.size)}${requiresInstall ? INSTALL_REMINDER : ''}.`]),
         ...(environments.length === 0 ? [] : [`Missing environments: ${String(environments.length)}.`]),
         ...(errors === 0 ? [] : [`Errors: ${String(errors)}.`]),
     ];
@@ -178,14 +181,14 @@ function formatMissingGroup(note: string, missing: readonly CheckResult[]): stri
     const scopes = new Set(missing.map(({ scope }) => scope)).size;
     const where = scopes === 1 ? names : `${names} in ${String(scopes)} scopes`;
     const label = styleText('red', first.status.padEnd(STATUS_LABEL_WIDTH), { stream: process.stdout });
-    const sentence = note.replace(SENTENCE_END, ` (${where}).`);
+    const sentence = note.replace(SENTENCE_END, () => ` (${where}).`);
     return `${label}  ${sentence}`;
 }
 
 function formatMissingChecks(checks: readonly CheckResult[]): string[] {
     const groups = Map.groupBy(
         checks.filter((check) => check.status === 'missing'),
-        ({ note }) => note ?? '',
+        ({ note = '' }) => note,
     );
     const lines = [...groups].map(([note, missing]) => formatMissingGroup(note, missing));
     return lines.length === 0 ? [] : [...lines, ''];
@@ -238,9 +241,9 @@ export function formatRunReport(
     const checks = report.checks.filter(
         (check) => verbose || (check.status !== 'passed' && check.status !== 'skipped'),
     );
-    const lines = checks
-        .filter((check) => check.status !== 'missing')
-        .flatMap((check) => [...formatCheck(check, { verbose }), '']);
+    const lines = checks.flatMap((check) =>
+        check.status === 'missing' ? [] : [...formatCheck(check, { verbose }), ''],
+    );
     const ending = canceled ? CANCELED_RUN_MESSAGE : `Exit code ${String(report.exitCode)}.`;
     lines.push(
         ...formatMissingChecks(checks),

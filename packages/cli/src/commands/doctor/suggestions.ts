@@ -76,9 +76,9 @@ function buildInactiveFileRow(
             [check.tool, ...(check.secondary_tools ?? [])].includes(config.tool) || check.command?.[0] === config.tool,
     );
     const note = `no applicable ${config.tool} check at level ${session.settings.level}`;
-    if (session.settings.level === 'basic' && checks.length > 0 && checks.every((check) => check.level === 'all'))
-        return { path: config.path, note, command: LEVEL_COMMAND };
-    return { path: config.path, note: `${note}; add the source files that this check reads` };
+    return session.settings.level === 'basic' && checks.length > 0 && checks.every((check) => check.level === 'all')
+        ? { path: config.path, note, command: LEVEL_COMMAND }
+        : { path: config.path, note: `${note}; add the source files that this check reads` };
 }
 
 function buildFileRow(

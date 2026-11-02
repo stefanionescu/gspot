@@ -36,7 +36,7 @@ function formatDetectedScopes(summary: DetectionSummary): string | undefined {
     return formatDetectionRow('scopes', [...paths, note]);
 }
 
-function formatDetectedTools(summary: DetectionSummary): (string | undefined)[] {
+function formatDetectedTools(summary: DetectionSummary): Array<string | undefined> {
     const { repositorySetup } = summary;
     const hooks = repositorySetup.hooks.map((hook) => {
         const location = hook.files.length === 0 ? hook.path : `${hook.path}/  ${hook.files.join(', ')}`;

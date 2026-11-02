@@ -36,8 +36,7 @@ function buildCategories(findings: Finding[]): ScanCategory[] {
     const groups = Map.groupBy(findings, (finding) => selectCategory(finding));
     return SCAN_CATEGORIES.flatMap(({ name }) => {
         const found = groups.get(name) ?? [];
-        if (found.length === 0) return [];
-        return [{ name, count: found.length, examples: found.slice(0, SCAN_EXAMPLES_SHOWN) }];
+        return found.length === 0 ? [] : [{ name, count: found.length, examples: found.slice(0, SCAN_EXAMPLES_SHOWN) }];
     });
 }
 
@@ -61,48 +60,13 @@ function buildCost({ session, report, toolBytes }: ScanInput): ScanReport['cost'
 
 function listChecksNotRun({ checks }: RunReport): string[] {
     const stopped = checks.filter(({ status }) => INCOMPLETE_STATUSES.has(status));
-    return [...new Set(stopped.map(({ check, note }) => `${check}: ${note ?? ''}`.trim()))];
+    return [...new Set(stopped.map(({ check, note = '' }) => `${check}: ${note}`.trim()))];
 }
 
 function listNextSteps({ pinPath, session }: ScanInput['planning']): string[] {
     const { command, installCommand } = session.startRunner;
     const add = installCommand.replace('<version>', () => cliPackage.version);
     return [...(pinPath === undefined ? [] : [add]), ...SCAN_NEXT_STEPS.map((step) => `${command} ${step}`)];
-}
-
-/**
-Sum up a finished trial run.
-
-@param input the plan of init, the session and the report of the run in the copy, and the bytes of its tools.
-@returns the report that scan prints, with every finding in `checks`.
-*/
-export function buildScanReport(input: ScanInput): ScanReport {
-    const { planning, report } = input;
-    const findings = report.checks.flatMap((check) => check.findings);
-    const formatting = findings.filter(({ check }) => SCAN_FORMAT_CHECKS.has(check));
-    return {
-        totals: {
-            files: planning.session.repository.files.length,
-            checks: report.checks.filter(({ status }) => status === 'passed' || status === 'failed').length,
-            findings: findings.length,
-            filesFlagged: new Set(findings.map(({ file }) => file).filter((file) => file !== '')).size,
-            seconds: report.duration / MILLISECONDS_PER_SECOND,
-        },
-        categories: buildCategories(findings.filter(({ check }) => !SCAN_FORMAT_CHECKS.has(check))),
-        filesToFormat: new Set(formatting.map(({ file }) => file)).size,
-        notRun: listChecksNotRun(report),
-        cost: buildCost(input),
-        plan: {
-            ...planning.plan,
-            carryover: [
-                ...planning.plan.carryover.filter(({ path }) => input.ruleRows.every((row) => row.path !== path)),
-                ...input.ruleRows,
-            ],
-        },
-        settingsText: planning.settingsText,
-        nextSteps: listNextSteps(planning),
-        checks: report.checks,
-    };
 }
 
 function formatExample({ file, line, check, rule, message }: Finding): string {
@@ -159,6 +123,41 @@ function listSections(report: ScanReport): ScanSection[] {
         },
         { title: SCAN_NEXT_STEPS_TITLE, rows: nextSteps },
     ];
+}
+
+/**
+Sum up a finished trial run.
+
+@param input the plan of init, the session and the report of the run in the copy, and the bytes of its tools.
+@returns the report that scan prints, with every finding in `checks`.
+*/
+export function buildScanReport(input: ScanInput): ScanReport {
+    const { planning, report } = input;
+    const findings = report.checks.flatMap((check) => check.findings);
+    const formatting = findings.filter(({ check }) => SCAN_FORMAT_CHECKS.has(check));
+    return {
+        totals: {
+            files: planning.session.repository.files.length,
+            checks: report.checks.filter(({ status }) => status === 'passed' || status === 'failed').length,
+            findings: findings.length,
+            filesFlagged: new Set(findings.map(({ file }) => file).filter((file) => file !== '')).size,
+            seconds: report.duration / MILLISECONDS_PER_SECOND,
+        },
+        categories: buildCategories(findings.filter(({ check }) => !SCAN_FORMAT_CHECKS.has(check))),
+        filesToFormat: new Set(formatting.map(({ file }) => file)).size,
+        notRun: listChecksNotRun(report),
+        cost: buildCost(input),
+        plan: {
+            ...planning.plan,
+            carryover: [
+                ...planning.plan.carryover.filter(({ path }) => input.ruleRows.every((row) => row.path !== path)),
+                ...input.ruleRows,
+            ],
+        },
+        settingsText: planning.settingsText,
+        nextSteps: listNextSteps(planning),
+        checks: report.checks,
+    };
 }
 
 /**

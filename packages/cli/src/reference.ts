@@ -63,7 +63,7 @@ function buildConfigurationsReference(shipped: Configuration[]): ConfigurationRe
             version: tool.version,
             source:
                 findPackagePin(tool)?.kind ??
-                (tool.system !== true && tool.installers['mise'] !== undefined ? 'mise' : 'system'),
+                (tool.system === true || tool.installers['mise'] === undefined ? 'system' : 'mise'),
         })),
     }));
 }
@@ -138,17 +138,17 @@ export function readCliReference(): CliReference {
                 command: command.join(' '),
             })),
         ],
-        suppressions: [
-            ...new Map(
-                configurations.flatMap(({ tools }) =>
-                    tools.flatMap((tool) =>
-                        tool.suppression === undefined
-                            ? []
-                            : [[tool.name, { name: tool.name, form: tool.suppression }] as const],
-                    ),
+        suppressions: new Map(
+            configurations.flatMap(({ tools }) =>
+                tools.flatMap((tool) =>
+                    tool.suppression === undefined
+                        ? []
+                        : [[tool.name, { name: tool.name, form: tool.suppression }] as const],
                 ),
-            ).values(),
-        ],
+            ),
+        )
+            .values()
+            .toArray(),
     };
 }
 

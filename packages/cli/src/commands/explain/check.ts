@@ -127,8 +127,9 @@ function formatBuiltinRuleIgnore(checkId: string): string | undefined {
     const ruleDocs = CHECK_CODE[checkId]?.ruleDocs;
     if (ruleDocs === undefined) return undefined;
     const rule = Object.keys(ruleDocs).at(0);
-    if (rule === undefined) return undefined;
-    return `gspot ignore ${quoteArgument(checkId)} --rule ${quoteArgument(rule)} --reason "<why>"`;
+    return rule === undefined
+        ? undefined
+        : `gspot ignore ${quoteArgument(checkId)} --rule ${quoteArgument(rule)} --reason "<why>"`;
 }
 
 function formatRuleOptions(tool: string | undefined, identifier: string, configuration: Configuration): string[] {

@@ -34,7 +34,7 @@ function assertRemovable(
 ): void {
     for (const configuration of names) {
         const chain = kept
-            .map((name) => findRequirementChain(configuration, name, configurationsByName))
+            .map((name) => findRequirementChain(configuration, name, configurationsByName, new Set()))
             .find((found) => found !== undefined);
         if (chain)
             throw new GspotError(
@@ -114,7 +114,7 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     const returning = listReturningConfigurations(context.session, { scope, removed, written, configurationsByName });
     scopeTable['configurations'] = written.filter((name) => !removed.includes(name));
     const reasons = {
-        ...(isTable(previous) ? previous : {}),
+        ...(isTable(previous) && previous),
         ...Object.fromEntries(returning.map((name) => [name, options.reason])),
     };
     if (Object.keys(reasons).length > 0) scopeTable['removed_configurations'] = reasons;
@@ -123,7 +123,7 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     const summary =
         formatConfigurationChange({ action: 'Removed', changed: removed, where, unchanged, state: 'not selected' }) +
         removeUnusedSettings(input.table, configurationsByName, scope);
-    const ownsManagedKeys = configurationsByName
+    const hasManagedKeys = configurationsByName
         .values()
         .filter((configuration) => removed.includes(configuration.name))
         .flatMap((configuration) => configuration.tools)
@@ -133,7 +133,7 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
         listing: context.listing,
         edit: input,
         summary,
-        notes: ownsManagedKeys ? [MANAGED_KEYS_NOTE] : [],
+        notes: hasManagedKeys ? [MANAGED_KEYS_NOTE] : [],
     });
 }
 
@@ -141,20 +141,17 @@ function findRequirementChain(
     required: string,
     from: string,
     configurationsByName: ReadonlyMap<string, Configuration>,
+    seen: Set<string>,
 ): string[] | undefined {
-    const seen = new Set<string>();
-    function findChain(start: string): string[] | undefined {
-        if (start === required) return [start];
-        if (seen.has(start)) return undefined;
-        seen.add(start);
-        const requirements = configurationsByName.get(start)?.requires ?? [];
-        for (const next of requirements) {
-            const rest = findChain(next);
-            if (rest !== undefined) return [start, ...rest];
-        }
-        return undefined;
+    if (from === required) return [from];
+    if (seen.has(from)) return undefined;
+    seen.add(from);
+    const requirements = configurationsByName.get(from)?.requires ?? [];
+    for (const next of requirements) {
+        const rest = findRequirementChain(required, next, configurationsByName, seen);
+        if (rest !== undefined) return [from, ...rest];
     }
-    return findChain(from);
+    return undefined;
 }
 
 export const removeCommand: CommandDefinition<[string[]], ScopeFlags & { reason: string }> = {

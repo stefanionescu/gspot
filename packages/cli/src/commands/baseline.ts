@@ -51,7 +51,7 @@ async function runBaselineCommand(
         ? `Removed ${formatCount(removed, 'finding')} from ${BASELINE_FILE}. It holds ${held}.`
         : `Wrote ${BASELINE_FILE}: ${held}. Commit it.`;
     const leftOut = report.checks
-        .filter(({ check, findings: reported }) => reported.length > 0 && !found.some((each) => each.check === check))
+        .filter(({ check, findings: reported }) => reported.length > 0 && found.every((each) => each.check !== check))
         .map(({ check }) => check);
     const notes = leftOut.length === 0 ? [] : [`${BASELINE_LEFT_OUT_MESSAGE} ${formatNameList(leftOut)}.`];
     return {

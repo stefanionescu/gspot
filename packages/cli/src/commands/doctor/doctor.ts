@@ -103,7 +103,7 @@ async function detectCiProvider(root: string, paths: string[]): Promise<CiState[
     if (paths.some((path) => path.startsWith(GITHUB_WORKFLOWS_FOLDER))) return 'github';
     const remote = (await readGitSetting(root, ORIGIN_URL_SETTING)) ?? '';
     const host = remote.replace(REMOTE_URL_SCHEME, '').replace(REMOTE_URL_USER, '');
-    return (Object.keys(CI_OFF_NOTES) as (keyof typeof CI_OFF_NOTES)[]).find(
+    return (Object.keys(CI_OFF_NOTES) as Array<keyof typeof CI_OFF_NOTES>).find(
         (provider) => host.startsWith(`${provider}.com:`) || host.startsWith(`${provider}.com/`),
     );
 }
@@ -185,11 +185,11 @@ async function runDoctorCommand(root: string): Promise<CommandResult> {
         ruleFiles: selectRuleFiles(session).length,
     };
     const broken = report.tools.filter((tool) => !AVAILABLE_TOOL_STATES.has(tool.state) || tool.path === undefined);
-    const needsAction = !hooks.ready || report.environments.length > 0 || broken.length > 0;
+    const requiresAction = !hooks.ready || report.environments.length > 0 || broken.length > 0;
     return {
         text: formatDoctorReport(report, { hooks: hooksText, ci: ciText, broken }),
         json: report,
-        exitCode: needsAction ? EXIT_FINDINGS : 0,
+        exitCode: requiresAction ? EXIT_FINDINGS : 0,
     };
 }
 

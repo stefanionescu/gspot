@@ -90,8 +90,9 @@ function assertNamedChecks(session: Session, options: Pick<CheckOptions, 'only' 
     const shipped = listChecksById(readConfigurations().values());
     const settings = session.settings;
     const commandChecks = Object.values(settings.commandChecks);
-    for (const id of options.skip ?? []) assertCheckExists(id, commandChecks);
-    return (options.only ?? []).flatMap((id) => {
+    const { skip = [], only = [] } = options;
+    for (const id of skip) assertCheckExists(id, commandChecks);
+    return only.flatMap((id) => {
         assertCheckExists(id, commandChecks);
         const match = selected.find(({ check }) => check.id === id);
         if (match !== undefined)
