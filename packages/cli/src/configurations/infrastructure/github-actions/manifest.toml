@@ -17,8 +17,8 @@ version = "1.7.12"
 name = "shellcheck"
 
 [[tool]]
+mise = { name = "aqua:zizmorcore/zizmor", checksums = { "linux-x64" = "sha256:d185f726bdaf92df78273217dfdd24ebcd6b0ef48cf3ce776ff5762b6e138c99", "linux-arm64" = "sha256:37eebbd5762a44f262d94875431b14a6d2402991e90a685113ea97b8b41be833", "macos-x64" = "sha256:72ae63bb85b67229c06242f04195cb43927e9fab5f43803c6434dc701a517d61", "macos-arm64" = "sha256:ad5aa633cd56215b11e6c51d51f90c7e6b22904a75047d1215abbd422f61d698", "windows-x64" = "sha256:4de30371c8a3b483aecbcf0dec1fd6a2b6aae65051ca226b4f6527baac6a8c7a" } }
 name = "zizmor"
-pypi = "zizmor"
 version = "1.31.1"
 
 [[config_file]]
