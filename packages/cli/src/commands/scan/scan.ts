@@ -13,6 +13,7 @@ import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { buildToolProjects } from '#cli/generation/generate.ts';
 import { installTools } from '#cli/tools/installers/install.ts';
 import { findText, measureFolder } from '#cli/system/files/reads.ts';
+import { linkEnvironments } from '#cli/engine/copies/dependencies.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
 import { planInit, writeInitFiles } from '#cli/generation/setup/planner.ts';
 import type { ScanFlags, ScanReport } from '#cli/types/commands/reports.ts';
@@ -42,6 +43,11 @@ async function runScanCommand(
         ...(await openSession(copy.root, { cancelSignal })),
         startRunner: planning.session.startRunner,
     };
+    linkEnvironments(
+        root,
+        copy.root,
+        session.scopes.map(({ path }) => path),
+    );
     await installTools(session, {
         writer: openFiles(copy.root),
         generated: { files: buildToolProjects(session) },

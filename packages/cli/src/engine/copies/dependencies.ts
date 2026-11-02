@@ -8,11 +8,11 @@ import type { GitFile } from '#cli/types/repository.ts';
 import type { ParsedTsconfig } from '#cli/types/parsers.ts';
 import { splitSystemPath } from '#cli/system/files/reads.ts';
 import { join, dirname, basename, relative } from 'node:path';
-import { NODE_MODULES, DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import { JSCONFIG_FILE, GIT_CHECK_IGNORE_ARGUMENTS } from '#cli/config/engine.ts';
 import { readTsconfig, listSourceFiles } from '#cli/parsers/projects/tsconfig.ts';
 import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import type { CopyPlan, DeclarationDependencies } from '#cli/types/engine/tool-runs.ts';
+import { NODE_MODULES, DECLARATION_EXTENSIONS, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 
 import {
     statSync,
@@ -83,6 +83,22 @@ function readMatchingTsconfig(
         return !splitSystemPath(local).includes(NODE_MODULES) && !unchangedPaths.has(local);
     });
     return changed === true ? undefined : tsconfig;
+}
+
+/**
+Link the Python environment of each scope into a copy that holds its own tools, so that the checks of the copy read it.
+The checks run uv with --no-sync, so the environment does not change.
+
+@param root the working tree.
+@param target the copy.
+@param scopes the scope folders.
+*/
+export function linkEnvironments(root: string, target: string, scopes: string[]): void {
+    for (const scope of scopes) {
+        const installed = join(root, scope, PYTHON_ENVIRONMENT_FOLDER);
+        const output = join(target, scope, PYTHON_ENVIRONMENT_FOLDER);
+        if (existsSync(installed) && !existsSync(output)) symlinkSync(installed, output, 'junction');
+    }
 }
 
 /**

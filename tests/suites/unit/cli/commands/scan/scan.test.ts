@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+import { mkdir } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
@@ -88,6 +90,18 @@ test('scan leaves the pin out of its copy, so the lockfile of the repository sta
     expect(checks.find(({ check }) => check === 'dependencies/stale-lockfile')?.findings).toStrictEqual([]);
     const generated = checks.find(({ check }) => check === 'gspot/generated-files')?.findings ?? [];
     expect(generated.filter(({ rule }) => rule === 'changed')).toStrictEqual([]);
+});
+
+test('scan links the Python environment of the repository into its copy', async () => {
+    await using sandbox = await createGitSandbox({
+        '.gitignore': '.venv/\n',
+        'pyproject.toml': '[project]\nname = "example"\nversion = "1.0.0"\n',
+        'main.py': 'VALUE = 1\n',
+    });
+    commitAll(sandbox.path);
+    await mkdir(join(sandbox.path, '.venv'));
+    const { notRun } = await runScan(sandbox.path);
+    expect(notRun.filter((row) => row.includes('.venv'))).toStrictEqual([]);
 });
 
 test('scan reads the staged files, so a file that Git does not track stays out of the report', async () => {
