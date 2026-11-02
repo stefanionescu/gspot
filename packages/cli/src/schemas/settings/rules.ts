@@ -138,6 +138,14 @@ const pluginSourceFields = {
         }),
 };
 
+const pluginSourceRefinement = [
+    (plugin: Partial<Record<'path' | 'package' | 'version', string | undefined>>) =>
+        plugin.path === undefined
+            ? plugin.package !== undefined && plugin.version !== undefined
+            : plugin.package === undefined && plugin.version === undefined,
+    PLUGIN_SOURCE_REFUSAL,
+] as const;
+
 export const eslintPluginsSchema = z
     .strictObject({
         name: z.string().regex(ESLINT_PLUGIN_NAME, 'Use a lowercase rule prefix, such as local.').meta({
@@ -148,13 +156,7 @@ export const eslintPluginsSchema = z
             description: 'The rules of the plugin to turn on, with their options.',
         }),
     })
-    .refine(
-        (plugin) =>
-            plugin.path === undefined
-                ? plugin.package !== undefined && plugin.version !== undefined
-                : plugin.package === undefined && plugin.version === undefined,
-        PLUGIN_SOURCE_REFUSAL,
-    )
+    .refine(...pluginSourceRefinement)
     .array()
     .default([] as [])
     .meta({
@@ -188,13 +190,7 @@ export const stylelintPluginsSchema = z
             description: 'The rules of the plugin to turn on, with their options.',
         }),
     })
-    .refine(
-        (plugin) =>
-            plugin.path === undefined
-                ? plugin.package !== undefined && plugin.version !== undefined
-                : plugin.package === undefined && plugin.version === undefined,
-        PLUGIN_SOURCE_REFUSAL,
-    )
+    .refine(...pluginSourceRefinement)
     .array()
     .default([] as [])
     .meta({
