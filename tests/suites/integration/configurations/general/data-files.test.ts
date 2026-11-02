@@ -19,10 +19,9 @@ async function assertYamlFiles(root: string, rule?: string): Promise<void> {
     const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', 'data-files/yaml', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(rule === undefined ? 0 : 1);
     expect(checked.report.checks).toMatchObject([
-        { check: 'data-files/yaml', scope: '', status: 'passed', findings: [] },
         {
             check: 'data-files/yaml',
-            scope: 'app',
+            scope: '',
             status: rule === undefined ? 'passed' : 'failed',
             findings: rule === undefined ? [] : [matchFields({ file: 'app/settings/project.yml', rule, line: 2 })],
         },
@@ -46,9 +45,7 @@ test('v8r validates a staged JSON file with a non-ASCII path against its schema'
     await using _change = await writeSandboxChanges(installedSandbox(), {
         files: { 'settings/café.json': JSON.stringify({ count: 'invalid' }), '.v8rrc.yml': UNCLOSED_SEQUENCE },
         settings: stringify({
-            tools: {
-                v8r: { schema: [{ paths: ['settings/café.json'], url: `${server.url.href}schema.json` }] },
-            },
+            data_files: { schemas: [{ paths: ['settings/café.json'], url: `${server.url.href}schema.json` }] },
         }),
     });
     runGitStep(root, ['add', '-A']);
@@ -100,7 +97,7 @@ test('Taplo never downloads a schema named in a #:schema comment', async () => {
     expect(requests).toBe(0);
 });
 
-test('the built-in YAML check reports its scope, and Prettier keeps two-space YAML', async () => {
+test('the built-in YAML check reads a child scope from the root, and Prettier keeps two-space YAML', async () => {
     const { root } = installedSandbox();
     await using _change = await writeSandboxChanges(installedSandbox(), {
         removed: Object.keys(FILES_SANDBOX.files),

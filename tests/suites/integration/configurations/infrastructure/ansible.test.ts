@@ -67,7 +67,7 @@ async function assertLevelProfile(sandbox: Sandbox): Promise<void> {
     });
 
     const checked = parseCheckReport(
-        await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint', '--json']),
+        await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint-production', '--json']),
     ).report;
     expect(checked.exitCode, JSON.stringify(checked)).toBe(1);
     expect(listFindingRows(checked)).toStrictEqual([
@@ -77,7 +77,7 @@ async function assertLevelProfile(sandbox: Sandbox): Promise<void> {
     await writeFile(join(root, 'deploy/site.yml'), ANSIBLE_PLAYBOOK);
     await writeFile(join(root, 'app/deploy/site.yml'), ANSIBLE_PLAYBOOK);
     const fixed = parseCheckReport(
-        await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint', '--json']),
+        await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint-production', '--json']),
     ).report;
     expect(fixed.exitCode, JSON.stringify(fixed)).toBe(0);
 }

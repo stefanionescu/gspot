@@ -88,7 +88,7 @@ export const STYLESHEETS = {
     -webkit-text-size-adjust: 100%;
 }
 `,
-    'app/site.css': `#example {
+    'app/site.css': `.example {
     color: #f00;
     width: 1.5px;
     -webkit-backdrop-filter: blur(2px);
@@ -114,7 +114,7 @@ export const CORRECTED_STYLESHEETS = {
     text-size-adjust: 100%;
 }
 `,
-    'app/site.css': `#example {
+    'app/site.css': `.example {
     color: #ff0000;
     width: 1px;
     backdrop-filter: blur(2px);

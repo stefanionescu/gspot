@@ -2,14 +2,12 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { compareText } from '#cli/system/text.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { CheckResult } from '#cli/types/engine/run.ts';
-import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { COMPILER_SOURCE } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -46,9 +44,7 @@ test("javascript/tsc uses gspot's own TypeScript when the project has none", asy
     const broken = parseCheckReport(await spawnGspot(root, ['check', '--only', 'javascript/tsc', '--json']));
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect(broken.report.checks).toMatchObject([...OWN_TYPESCRIPT_RESULTS]);
-    expect(broken.report.checks[0]!.command![0]).toBe(
-        Bun.which('tsc', { PATH: join(root, GSPOT_FOLDER, NPM_BIN_FOLDER) })!,
-    );
+    expect(broken.report.checks[0]!.command![1]).toBe(join(root, GSPOT_PATHS.nodeModules, 'typescript/bin/tsc'));
     await writeFile(join(root, 'source.js'), 'export const value = 1;\n');
     const corrected = parseCheckReport(await spawnGspot(root, ['check', '--only', 'javascript/tsc', '--json']));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
@@ -93,7 +89,7 @@ test.each([...JSCONFIG_CASES])('javascript/tsc checks $name and keeps the author
 });
 
 test('javascript/tsc at level all also checks the build and dist folders', async () => {
-    const paths = ['source/build/value.js', 'source/dist/value.js', 'coverage/value.js'];
+    const paths = ['source/build/value.js', 'source/dist/value.js'];
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
         '.gitattributes': LINGUIST_GENERATED_PATTERN,

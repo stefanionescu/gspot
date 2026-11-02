@@ -20,13 +20,13 @@ import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli
 test('bash/shellcheck without ShellCheck on PATH exits 2 and names the pinned version', async () => {
     await using sandbox = await createGitSandbox({
         'scripts/a.sh': CLEAN_BASH_SCRIPT,
-        '.gitignore': 'home/\nbin/\n',
+        '.gitignore': 'home/\n',
         home: {},
-        bin: {},
     });
+    await using programs = await testdir();
 
     commitAll(sandbox.path);
-    const bin = join(sandbox.path, 'bin');
+    const bin = programs.path;
     const gitPath = Bun.which('git');
     expect(gitPath).not.toBeNull();
     await symlink(process.execPath, join(bin, isWindows ? 'bun.exe' : 'bun'));
@@ -88,7 +88,7 @@ test.skipIf(isWindows || process.getuid?.() === 0)(
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['sql'], {
                 level: 'all',
-                tables: stringify({ tools: { sqlfluff: { dialect: 'postgres' } } }),
+                tables: stringify({ sql: { dialect: 'postgres' } }),
             }),
             'source/sample.sql': 'select  * from foo;\n',
         });

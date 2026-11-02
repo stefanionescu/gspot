@@ -207,6 +207,7 @@ export const PYTHON_PROJECT_IGNORES = [
     'python/basedpyright',
     'python/pydoclint',
     'python/deptry',
+    'python/vulture',
 ] as const;
 
 export const PYTHON_INDEX_NAME = 'gspot-test';

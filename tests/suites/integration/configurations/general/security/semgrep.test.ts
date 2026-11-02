@@ -144,7 +144,7 @@ async function assertPlatformRules(sandbox: Sandbox): Promise<void> {
 async function assertAuthoredRules(sandbox: Sandbox): Promise<void> {
     const sourceFiles = {
         'gspot.toml': buildSandboxSettings(['typescript', 'security'], {
-            tables: stringify({ tools: { semgrep: { rule_files: ['security/own.yml'] } } }),
+            tables: stringify({ security: { rule_files: ['security/own.yml'] } }),
         }),
         'src/index.ts': `export function double(value: number): number {
     return value * 2;

@@ -7,7 +7,6 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { INIT_FILES } from '#tests/config/setup/sandboxes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -28,12 +27,12 @@ test('after init and install, apply has nothing to write', async () => {
 test.each([true, false])(
     'init, install, and check keep the staged index, the unstaged edits, and HEAD (has commits: %s)',
     async (hasCommits) => {
-        await using sandbox = await createGitSandbox({ 'scripts/a.sh': CLEAN_BASH_SCRIPT });
+        await using sandbox = await createGitSandbox({ 'plans.txt': 'committed\n' });
 
         if (hasCommits) commitAll(sandbox.path);
-        await writeFile(join(sandbox.path, 'scripts/a.sh'), CLEAN_BASH_SCRIPT + '\n');
-        runGitStep(sandbox.path, ['add', 'scripts/a.sh']);
-        await writeFile(join(sandbox.path, 'scripts/a.sh'), CLEAN_BASH_SCRIPT + '\n\n');
+        await writeFile(join(sandbox.path, 'plans.txt'), 'staged\n');
+        runGitStep(sandbox.path, ['add', 'plans.txt']);
+        await writeFile(join(sandbox.path, 'plans.txt'), 'unstaged\n');
         await writeFile(join(sandbox.path, 'notes.txt'), 'draft\n');
         const staged = runGitStep(sandbox.path, ['diff', '--cached', '--binary']);
         const head = runCommandBlocking(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: sandbox.path, env: {} });
@@ -43,7 +42,7 @@ test.each([true, false])(
         await applyThenInstall(sandbox.path);
         const checked = await spawnGspot(sandbox.path, ['check', '--json']);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-        expect(await readFile(join(sandbox.path, 'scripts/a.sh'), 'utf8')).toBe(CLEAN_BASH_SCRIPT + '\n\n');
+        expect(await readFile(join(sandbox.path, 'plans.txt'), 'utf8')).toBe('unstaged\n');
         expect(await readFile(join(sandbox.path, 'notes.txt'), 'utf8')).toBe('draft\n');
         expect(runGitStep(sandbox.path, ['diff', '--cached', '--binary'])).toBe(staged);
         const after = runCommandBlocking(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: sandbox.path, env: {} });

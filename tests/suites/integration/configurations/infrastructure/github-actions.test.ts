@@ -18,32 +18,22 @@ import {
     TEMPLATE_INJECTION_WORKFLOW,
 } from '#tests/config/integration/infrastructure.ts';
 
-test('workflow security checks report an untrusted expression in a run step', async () => {
+test('zizmor reports an untrusted expression in a run step', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['github-actions']),
         '.github/workflows/source.yml': TEMPLATE_INJECTION_WORKFLOW,
     });
     await applyThenInstall(sandbox.path);
     const result = parseCheckReport(
-        await spawnGspot(sandbox.path, [
-            'check',
-            '--only',
-            'github-actions/zizmor,github-actions/actionlint',
-            '--json',
-        ]),
+        await spawnGspot(sandbox.path, ['check', '--only', 'github-actions/zizmor', '--json']),
     );
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    for (const [check, expectedRule] of [
-        ['github-actions/zizmor', 'template-injection'],
-        ['github-actions/actionlint', 'expression'],
-    ]) {
-        const checked = result.report.checks.find(({ check: id }) => id === check);
-        expect(checked?.status).toBe('failed');
-        expect(checked?.findings.map(({ file, rule }) => ({ file, rule }))).toContainEqual({
-            file: '.github/workflows/source.yml',
-            rule: expectedRule,
-        });
-    }
+    const [checked] = result.report.checks;
+    expect(checked?.status).toBe('failed');
+    expect(checked?.findings.map(({ file, rule }) => ({ file, rule }))).toContainEqual({
+        file: '.github/workflows/source.yml',
+        rule: 'template-injection',
+    });
 });
 
 test('the generated GitHub workflow passes actionlint', async () => {

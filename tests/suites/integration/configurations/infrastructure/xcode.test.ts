@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { chmod } from 'node:fs/promises';
 import { planChecks } from '#cli/engine/plan.ts';
 import { test, expect, describe } from 'bun:test';
@@ -10,6 +9,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import { isMacos, hasToolBuild } from '#tests/setup/system/platform.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { XCODE_CASES, PLUTIL_UNREADABLE_FILES } from '#tests/config/integration/infrastructure.ts';
 
 describe.skipIf(!isMacos)('Xcode samples', () => {
@@ -26,7 +26,7 @@ describe.skipIf(!isMacos)('Xcode samples', () => {
 test.skipIf(!hasToolBuild('plutil'))(
     'xcode/plutil turns a parse error beside a missing or unreadable file into a note that names both files',
     async () => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['xcode']),
             'bad.plist': '<plist><dict>',
             'private.plist': '<plist><dict/></plist>\n',

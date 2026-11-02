@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { getTool } from '#cli/tools/pins.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
@@ -17,6 +17,7 @@ import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { VALE_PACKAGES_INI } from '#tests/config/setup/configurations.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { hasValePackages, installValePackages } from '#cli/tools/installers/vale.ts';
 
@@ -77,7 +78,7 @@ test('a Vale reinstall for new package releases replaces an edited package and k
 test.each([...VALE_INSTALL_FAILURES])(
     'a failed Vale package install reports $name, and the next install succeeds after the fix',
     async ({ fakeArguments, message, settings }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['prose'], { level: 'all', tables: settings }),
             [GSPOT_PATHS.valeConfig]: VALE_PACKAGES_INI,
             [`${GSPOT_PATHS.valePackages}/Google/terms.yml`]: PREVIOUS_BYTES,

@@ -66,16 +66,22 @@ async function prepareSwiftScope(scopePath: string) {
     return { root, prefix, [Symbol.asyncDispose]: lifetime[Symbol.asyncDispose].bind(lifetime) };
 }
 
-test.skipIf(!hasToolBuild('swiftlint'))('SwiftLint at the root fixes an explicit init call with --fix', async () => {
+test.skipIf(!hasToolBuild('swiftlint'))('SwiftLint at the root fixes a negated flag with --fix', async () => {
     await using sandbox = await prepareSwiftScope('');
     const { root, prefix } = sandbox;
-    await writeFile(
-        join(root, `${prefix}Sources/Value.swift`),
-        CORRECTED_PARSER_SOURCE.replace('Int(value)', 'Int.init(value)'),
-    );
+    const source = `/// Inverts a sample flag.
+public func inverted(_ value: Bool) -> Bool {
+    var flag = value
+    flag = !flag
+    return flag
+}
+`;
+    await writeFile(join(root, `${prefix}Sources/Value.swift`), source);
     const fixed = await spawnGspot(root, ['check', '--only', 'swift/swiftlint', '--json', '--fix']);
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-    expect(await readFile(join(root, `${prefix}Sources/Value.swift`), 'utf8')).toBe(CORRECTED_PARSER_SOURCE);
+    expect(await readFile(join(root, `${prefix}Sources/Value.swift`), 'utf8')).toBe(
+        source.replace('flag = !flag', 'flag.toggle()'),
+    );
 });
 
 test.skipIf(!hasToolBuild('swiftlint')).each(['AppTests', 'AppTests/Helpers'])(

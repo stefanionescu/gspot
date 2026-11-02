@@ -77,7 +77,9 @@ test('vitest/tests reports coverage under its limit and passes after the fix, in
 });
 
 test('vitest/tests at a limit above 0 reports @vitest/coverage-v8 as missing when the project lacks it', async () => {
-    await using sandbox = await createVitestProject(COVERAGE_ZERO_LIMITS.replace(/^lines = .*$/mu, 'lines = 80'));
+    await using sandbox = await createVitestProject(
+        COVERAGE_ZERO_LIMITS.replace(/^min_line_percent = .*$/mu, 'min_line_percent = 80'),
+    );
     await rm(join(sandbox.path, 'node_modules/@vitest/coverage-v8'));
     const checked = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'vitest/tests', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(2);
