@@ -2,6 +2,7 @@ import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { TYPO } from '#tests/config/setup/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
@@ -142,6 +143,7 @@ test('prose/commit-message reports the word rules in a new commit message, and s
     const { root } = installedSandbox();
     const message = join(root, 'message.txt');
     await writeFile(message, 'fix(cli): keep the file\n\nWe should simply retry.\n# You should not read this.\n');
+    runGitStep(root, ['add', 'gspot.toml']);
     const { report } = parseCheckReport(
         await spawnGspot(root, ['check', '--hook', 'commit-msg', '--json', '--', message]),
     );
