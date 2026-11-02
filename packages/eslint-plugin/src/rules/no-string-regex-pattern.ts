@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
-import { getTypes, getTypeCategory } from '../checker.ts';
 import { STRING_PATTERN_METHODS } from '../config/regex.ts';
+import { getTypes, getTypeCategory } from '../language/checker.ts';
 import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 export const noStringRegexPattern = createRule<[], 'pattern'>({

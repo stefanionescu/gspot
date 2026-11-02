@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { getCallText } from '../modules.ts';
+import { getCallText } from '../language/modules.ts';
 import { CIPHER_FUNCTION, WEAK_CIPHER_PREFIXES } from '../config/security.ts';
 
 export const noWeakCipher = createRule<[], 'weak'>({

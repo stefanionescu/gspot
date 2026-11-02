@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
-import { usesModule } from '../packages.ts';
-import { getTestCall } from '../testing.ts';
-import { readAssertionKind } from '../assertions.ts';
+import { usesModule } from '../libraries/packages.ts';
+import { getTestCall } from '../libraries/testing.ts';
+import { readAssertionKind } from '../libraries/assertions.ts';
 import type { FileContext, PlacementState } from '../types/rules.ts';
 import { STATEMENT_LINKS, EVIDENCE_IMPORTS, EVIDENCE_DEPENDENCIES } from '../config/evidence.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';

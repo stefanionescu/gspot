@@ -1,4 +1,4 @@
-import { COLLECTION_TYPE_NAMES } from './config/collections.ts';
+import { COLLECTION_TYPE_NAMES } from '../config/collections.ts';
 import { ASTUtils, TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 /**

@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { getNextStatement } from '../syntax.ts';
+import { getNextStatement } from '../language/syntax.ts';
 import { IMMEDIATE_RETURN_DECLARATION } from '../config/rules.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

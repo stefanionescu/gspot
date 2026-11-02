@@ -1,5 +1,5 @@
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { PlacedRow, TableCell, JsxAttributeValue } from './types/plugin.ts';
+import type { PlacedRow, TableCell, JsxAttributeValue } from '../types/plugin.ts';
 
 import {
     TABLE_CELLS,
@@ -10,7 +10,7 @@ import {
     HEADER_SEPARATOR,
     MAXIMUM_ROW_SPAN,
     MAXIMUM_COLUMN_SPAN,
-} from './config/plugin.ts';
+} from '../config/plugin.ts';
 
 /**
 Name the element of a JSX tag as written: `table`, `Layout.Table`, or `svg:rect`.

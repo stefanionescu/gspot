@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
 import type { Isolation } from '../types/rules.ts';
-import { haveSameTokens, unwrapExpression } from '../syntax.ts';
-import { getAssignedValue, getQualifiedName } from '../modules.ts';
+import { haveSameTokens, unwrapExpression } from '../language/syntax.ts';
+import { getAssignedValue, getQualifiedName } from '../language/modules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {

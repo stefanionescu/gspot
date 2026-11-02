@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
 import { TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { getStoredValue, listLocalVariables, listInitialElements } from '../collections.ts';
 import { ELEMENT_WRITE_OPERATORS, READING_COLLECTION_METHODS } from '../config/collections.ts';
+import { getStoredValue, listLocalVariables, listInitialElements } from '../language/collections.ts';
 
 function isElementWrite(member: TSESTree.MemberExpression, source: TSESLint.SourceCode): boolean {
     const chain = [...source.getAncestors(member), member];

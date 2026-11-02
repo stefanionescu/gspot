@@ -1,5 +1,5 @@
 import { unwrapExpression } from './syntax.ts';
-import type { MemberAssignment } from './types/plugin.ts';
+import type { MemberAssignment } from '../types/plugin.ts';
 import { getAssignedValue, getQualifiedName } from './modules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

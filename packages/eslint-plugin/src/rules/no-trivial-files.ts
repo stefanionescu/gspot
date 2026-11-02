@@ -1,9 +1,9 @@
 import picomatch from 'picomatch';
 import { basename } from 'node:path';
 import { createRule } from '../rule.ts';
-import { findPathInFolder } from '../modules.ts';
 import { PLUGIN_PREFIX } from '../config/plugin.ts';
-import { isAlias, isTypeAlias } from '../syntax.ts';
+import { findPathInFolder } from '../language/modules.ts';
+import { isAlias, isTypeAlias } from '../language/syntax.ts';
 import type { TrivialFilesOptions } from '../types/rules.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

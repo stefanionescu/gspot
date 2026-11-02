@@ -1,8 +1,8 @@
 import { createRule } from '../rule.ts';
-import { usesModule } from '../packages.ts';
-import { findFunction } from '../functions.ts';
+import { usesModule } from '../libraries/packages.ts';
 import type { FunctionNode } from '../types/rules.ts';
-import { getTestCall, listBodyNodes } from '../testing.ts';
+import { findFunction } from '../language/functions.ts';
+import { getTestCall, listBodyNodes } from '../libraries/testing.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { ASYNC_SUITE_MODULES, ASYNC_SUITE_ORIGINS, ASYNC_SUITE_MODIFIERS } from '../config/testing.ts';
 

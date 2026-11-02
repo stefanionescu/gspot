@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
-import { getQualifiedName } from '../modules.ts';
-import { isDynamicString } from '../expressions.ts';
 import { TEMPLATE_FUNCTIONS } from '../config/servers.ts';
+import { getQualifiedName } from '../language/modules.ts';
+import { isDynamicString } from '../language/expressions.ts';
 import { ASTUtils, TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isCompiledTemplateCall(source: Readonly<TSESLint.SourceCode>, node: TSESTree.CallExpression): boolean {

@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
-import { getModuleName } from '../modules.ts';
-import { isNamedFunction } from '../react.ts';
+import { getModuleName } from '../language/modules.ts';
+import { isNamedFunction } from '../libraries/react.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {

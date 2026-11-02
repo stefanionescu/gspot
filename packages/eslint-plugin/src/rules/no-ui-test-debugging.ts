@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
-import { getModuleName } from '../modules.ts';
-import { isCypressChain, isTestRelatedPath } from '../testing.ts';
+import { getModuleName } from '../language/modules.ts';
+import { isCypressChain, isTestRelatedPath } from '../libraries/testing.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { DEBUG_ROOTS, DEBUG_METHODS, TESTING_LIBRARY_MODULES, TESTING_LIBRARY_DEBUGGERS } from '../config/testing.ts';
 

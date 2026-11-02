@@ -1,8 +1,8 @@
 import { createRule } from '../rule.ts';
-import { getQualifiedName } from '../modules.ts';
-import { getCdkName, listCdkIssues, listCdkTableIssues } from '../aws.ts';
-import { getExpressionValue, getOptionProperties } from '../expressions.ts';
+import { getQualifiedName } from '../language/modules.ts';
 import type { ClearTextReport, ClearTextListener } from '../types/rules.ts';
+import { getCdkName, listCdkIssues, listCdkTableIssues } from '../libraries/aws.ts';
+import { getExpressionValue, getOptionProperties } from '../language/expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {

@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
-import { listCdkTableIssues } from '../aws.ts';
 import { EBS_VOLUME_CHECKS } from '../config/aws.ts';
+import { listCdkTableIssues } from '../libraries/aws.ts';
 
 export const awsUnencryptedVolumes = createRule<[], 'omitted' | 'invalid'>({
     name: 'aws-unencrypted-volumes',

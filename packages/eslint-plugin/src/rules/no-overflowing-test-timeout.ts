@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
-import { getTestCall } from '../testing.ts';
-import { getLiteralValue } from '../expressions.ts';
-import { listImportedModules } from '../packages.ts';
+import { getTestCall } from '../libraries/testing.ts';
+import { getLiteralValue } from '../language/expressions.ts';
+import { listImportedModules } from '../libraries/packages.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { MOCHA_CONSTRUCTS, MAXIMUM_TIMER_DELAY, MARKED_TEST_MODIFIERS } from '../config/testing.ts';
 

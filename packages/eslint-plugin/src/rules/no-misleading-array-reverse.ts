@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
 import type { TypeReader } from '../types/plugin.ts';
-import { getTypes, getTypeCategory } from '../checker.ts';
+import { getTypes, getTypeCategory } from '../language/checker.ts';
 import { RETURNED_PARENTS, STANDALONE_PARENTS } from '../config/rules.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { MUTABLE_TARGETS, GETTER_DECLARATION, MUTATING_ORDER_METHODS } from '../config/builtins.ts';

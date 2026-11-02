@@ -1,6 +1,6 @@
-import { getQualifiedName } from './modules.ts';
-import { listArgumentValues, getExpressionValue, getOptionProperties } from './expressions.ts';
+import { getQualifiedName } from '../language/modules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { listArgumentValues, getExpressionValue, getOptionProperties } from '../language/expressions.ts';
 
 import type {
     CdkIssue,
@@ -11,7 +11,7 @@ import type {
     PolicyStatement,
     CdkLiteralTarget,
     CdkPropertyCheck,
-} from './types/plugin.ts';
+} from '../types/plugin.ts';
 import {
     S3_BUCKET,
     UNDEFINED_NAME,
@@ -22,7 +22,7 @@ import {
     POLICY_CONSTRUCT_KEYS,
     POLICY_STATEMENTS_KEY,
     POLICY_DOCUMENT_FROM_JSON,
-} from './config/plugin.ts';
+} from '../config/plugin.ts';
 
 /**
 Name the value of the cloud development kit that an expression reads, as `getQualifiedName` does. Each hyphen

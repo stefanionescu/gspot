@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
-import { getAssignedValue } from '../modules.ts';
-import { getOptionProperties } from '../expressions.ts';
+import { getAssignedValue } from '../language/modules.ts';
 import { SANITIZER_BYPASS_METHODS } from '../config/security.ts';
+import { getOptionProperties } from '../language/expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getSanitizerSource(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node {

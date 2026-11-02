@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
-import { getModuleName } from '../modules.ts';
-import { getLiteralValue } from '../expressions.ts';
+import { getModuleName } from '../language/modules.ts';
+import { getLiteralValue } from '../language/expressions.ts';
 import { PATH_COMMAND_METHODS, EXPLICIT_COMMAND_PREFIXES } from '../config/security.ts';
 
 export const noPathCommand = createRule<[], 'path'>({

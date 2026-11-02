@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
-import { traceRegex } from '../regex.ts';
-import { unwrapExpression } from '../syntax.ts';
+import { traceRegex } from '../language/regex.ts';
 import type { GroupRead } from '../types/rules.ts';
+import { unwrapExpression } from '../language/syntax.ts';
 import { type AST, visitRegExpAST } from '@eslint-community/regexpp';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { EXEC_METHOD, MATCH_METHODS, GROUPS_PROPERTY, INDICES_PROPERTY } from '../config/regex.ts';

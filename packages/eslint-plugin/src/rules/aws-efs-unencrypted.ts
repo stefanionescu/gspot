@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
 import { EFS_CHECKS } from '../config/aws.ts';
-import { listCdkTableIssues } from '../aws.ts';
+import { listCdkTableIssues } from '../libraries/aws.ts';
 
 export const awsEfsUnencrypted = createRule<[], 'omitted' | 'invalid'>({
     name: 'aws-efs-unencrypted',

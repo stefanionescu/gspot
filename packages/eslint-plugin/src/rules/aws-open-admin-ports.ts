@@ -1,10 +1,15 @@
 import { createRule } from '../rule.ts';
 import type { AdminAccess } from '../types/rules.ts';
 import { CDK_PROPS_POSITION } from '../config/plugin.ts';
-import { getCdkName, getCdkResult, getCdkArgument, getCdkProperty } from '../aws.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { getLiteralValue, listArgumentValues, getExpressionValue, getOptionProperties } from '../expressions.ts';
+import { getCdkName, getCdkResult, getCdkArgument, getCdkProperty } from '../libraries/aws.ts';
 
+import {
+    getLiteralValue,
+    listArgumentValues,
+    getExpressionValue,
+    getOptionProperties,
+} from '../language/expressions.ts';
 import {
     ANY_PEERS,
     ALL_PORTS,

@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { listBodyNodes } from '../testing.ts';
+import { listBodyNodes } from '../libraries/testing.ts';
 import { GENERATED_KEY_CALLS } from '../config/frameworks.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

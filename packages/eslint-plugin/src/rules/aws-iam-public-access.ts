@@ -1,9 +1,9 @@
 import { createRule } from '../rule.ts';
-import { listArgumentValues } from '../expressions.ts';
 import type { PolicyStatement } from '../types/plugin.ts';
+import { listArgumentValues } from '../language/expressions.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { getCdkName, listCdkStrings, getCdkProperty, listAllowStatements } from '../aws.ts';
 import { ANY_PRINCIPAL, ARN_PRINCIPAL, ANY_PRINCIPALS, JSON_PRINCIPAL_KEY } from '../config/aws.ts';
+import { getCdkName, listCdkStrings, getCdkProperty, listAllowStatements } from '../libraries/aws.ts';
 
 function findPublicPrincipal(
     source: Readonly<TSESLint.SourceCode>,

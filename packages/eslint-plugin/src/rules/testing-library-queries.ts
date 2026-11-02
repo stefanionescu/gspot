@@ -1,8 +1,8 @@
 import { createRule } from '../rule.ts';
-import { isCallOf } from '../testing.ts';
-import { getModuleName } from '../modules.ts';
-import { unwrapExpression } from '../syntax.ts';
+import { isCallOf } from '../libraries/testing.ts';
 import { FUNCTION_NODES } from '../config/rules.ts';
+import { getModuleName } from '../language/modules.ts';
+import { unwrapExpression } from '../language/syntax.ts';
 import type { QueryUse, MemberCall, ExpectSubject } from '../types/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

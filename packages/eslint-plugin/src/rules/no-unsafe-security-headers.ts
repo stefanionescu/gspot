@@ -1,8 +1,13 @@
 import { createRule } from '../rule.ts';
-import { getModuleName } from '../modules.ts';
+import { getModuleName } from '../language/modules.ts';
 import { ASTUtils, TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { getLiteralValue, listArgumentValues, getExpressionValue, getOptionProperties } from '../expressions.ts';
 
+import {
+    getLiteralValue,
+    listArgumentValues,
+    getExpressionValue,
+    getOptionProperties,
+} from '../language/expressions.ts';
 import {
     MINIMUM_HSTS_AGE,
     POWERED_BY_FACTORIES,

@@ -1,9 +1,9 @@
 import { posix } from 'node:path';
 import picomatch from 'picomatch';
 import { createRule } from '../rule.ts';
-import { findPathInFolder } from '../modules.ts';
-import { buildSourceVisitors } from '../syntax.ts';
 import { PLUGIN_PREFIX } from '../config/plugin.ts';
+import { findPathInFolder } from '../language/modules.ts';
+import { buildSourceVisitors } from '../language/syntax.ts';
 import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { RelativeImport, ImportBoundariesOptions } from '../types/rules.ts';
 

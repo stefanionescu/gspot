@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
-import { getQualifiedName } from '../modules.ts';
-import { getExpressionValue, getOptionProperties } from '../expressions.ts';
+import { getQualifiedName } from '../language/modules.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { getExpressionValue, getOptionProperties } from '../language/expressions.ts';
 import { NO_ALGORITHM, JWT_FUNCTIONS, JWT_OPTIONS_ARGUMENT } from '../config/security.ts';
 
 export const insecureJwtToken = createRule<[], 'unsignedSign' | 'unsignedVerify'>({

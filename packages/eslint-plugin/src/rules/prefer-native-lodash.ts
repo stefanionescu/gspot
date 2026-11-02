@@ -1,10 +1,10 @@
 import { createRule } from '../rule.ts';
-import { isCallOf } from '../testing.ts';
-import { getModuleName } from '../modules.ts';
-import { unwrapExpression } from '../syntax.ts';
+import { isCallOf } from '../libraries/testing.ts';
 import type { TypeReader } from '../types/plugin.ts';
-import { getExpressionValue } from '../expressions.ts';
-import { getTypes, getTypeCategory } from '../checker.ts';
+import { getModuleName } from '../language/modules.ts';
+import { unwrapExpression } from '../language/syntax.ts';
+import { getExpressionValue } from '../language/expressions.ts';
+import { getTypes, getTypeCategory } from '../language/checker.ts';
 import type { LibraryCall, NativeReplacement } from '../types/rules.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

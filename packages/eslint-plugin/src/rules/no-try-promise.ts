@@ -1,8 +1,8 @@
 import { createRule } from '../rule.ts';
-import { listChildren } from '../syntax.ts';
 import type { PromiseUse } from '../types/rules.ts';
-import { getTypes, isThenable } from '../checker.ts';
+import { listChildren } from '../language/syntax.ts';
 import type { TypeReader } from '../types/plugin.ts';
+import { getTypes, isThenable } from '../language/checker.ts';
 import { CALL_NODES, CHAINED_USES, CATCH_METHOD, HANDLING_PARENTS } from '../config/builtins.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

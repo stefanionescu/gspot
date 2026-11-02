@@ -1,9 +1,15 @@
 import { createRule } from '../rule.ts';
-import { getQualifiedName } from '../modules.ts';
 import type { UploadForm } from '../types/rules.ts';
+import { getQualifiedName } from '../language/modules.ts';
 import { MULTER_MODULE, UPLOAD_MESSAGES, FORMIDABLE_MODULE } from '../config/servers.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { getExpressionValue, getOptionProperties, findAssignedVariable, findMemberAssignment } from '../expressions.ts';
+
+import {
+    getExpressionValue,
+    getOptionProperties,
+    findAssignedVariable,
+    findMemberAssignment,
+} from '../language/expressions.ts';
 
 function getOption(source: Readonly<TSESLint.SourceCode>, options: TSESTree.Node | undefined, key: string) {
     const literal = getExpressionValue(options, source);

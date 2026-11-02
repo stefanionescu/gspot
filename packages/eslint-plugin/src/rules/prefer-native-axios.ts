@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { getModuleName } from '../modules.ts';
+import { getModuleName } from '../language/modules.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { AXIOS_DEPRECATIONS, AXIOS_CANCEL_TOKEN, AXIOS_CONFIG_POSITIONS } from '../config/frameworks.ts';
 

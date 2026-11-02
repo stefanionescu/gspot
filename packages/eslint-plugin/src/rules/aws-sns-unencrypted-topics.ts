@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
-import { listCdkTableIssues } from '../aws.ts';
 import { SNS_TOPIC_CHECKS } from '../config/aws.ts';
+import { listCdkTableIssues } from '../libraries/aws.ts';
 
 export const awsSnsUnencryptedTopics = createRule<[], 'omitted'>({
     name: 'aws-sns-unencrypted-topics',

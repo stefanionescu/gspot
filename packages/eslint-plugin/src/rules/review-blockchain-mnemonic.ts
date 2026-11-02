@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
-import { listImportedModules } from '../packages.ts';
-import { getExpressionValue } from '../expressions.ts';
+import { listImportedModules } from '../libraries/packages.ts';
+import { getExpressionValue } from '../language/expressions.ts';
 import { WALLET_MODULES, MNEMONIC_FUNCTIONS } from '../config/security.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

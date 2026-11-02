@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
-import { getQualifiedName } from '../modules.ts';
 import type { FunctionNode } from '../types/rules.ts';
-import { listArgumentValues } from '../expressions.ts';
+import { getQualifiedName } from '../language/modules.ts';
+import { listArgumentValues } from '../language/expressions.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {

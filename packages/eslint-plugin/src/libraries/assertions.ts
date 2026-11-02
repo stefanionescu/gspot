@@ -1,4 +1,4 @@
-import { getModuleName } from './modules.ts';
+import { getModuleName } from '../language/modules.ts';
 import { isCallOf, isCypressChain } from './testing.ts';
 import { usesModule, listImportedModules } from './packages.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
@@ -13,7 +13,7 @@ import type {
     AssertionSubject,
     AssertionPredicate,
     AssertionComparison,
-} from './types/rules.ts';
+} from '../types/rules.ts';
 import {
     EXPECT_SETUP,
     TYPE_ASSERTION,
@@ -25,7 +25,7 @@ import {
     SCRIPT_ASSERTIONS,
     GLOBAL_EXPECT_IMPORTS,
     GLOBAL_EXPECT_DEPENDENCIES,
-} from './config/evidence.ts';
+} from '../config/evidence.ts';
 import {
     CHAI_MODULES,
     EXPECT_STYLES,
@@ -41,7 +41,7 @@ import {
     CHAI_ASSERT_CHECKS,
     CYPRESS_ASSERTIONS,
     NODE_ASSERT_MODULES,
-} from './config/assertions.ts';
+} from '../config/assertions.ts';
 
 const styleCache = new WeakMap<TSESLint.SourceCode, AssertionStyles>();
 const expectPredicates = new Map<string | null, AssertionPredicate>(EXPECT_PREDICATES);

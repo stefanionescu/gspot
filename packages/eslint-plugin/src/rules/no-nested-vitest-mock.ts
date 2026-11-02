@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
-import { usesModule } from '../packages.ts';
-import { getCalleeName } from '../testing.ts';
+import { usesModule } from '../libraries/packages.ts';
+import { getCalleeName } from '../libraries/testing.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { VITEST_MOCK_RECEIVERS, VITEST_GLOBAL_ORIGINS, VITEST_IMPORT_ORIGINS } from '../config/testing.ts';
 

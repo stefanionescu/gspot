@@ -1,9 +1,9 @@
 import { createRule } from '../rule.ts';
-import { findFunction } from '../functions.ts';
 import type { FunctionNode } from '../types/rules.ts';
+import { findFunction } from '../language/functions.ts';
 import { TLS_OPTION_ARGUMENTS } from '../config/security.ts';
-import { listOptionLiterals, getOptionProperties } from '../expressions.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { listOptionLiterals, getOptionProperties } from '../language/expressions.ts';
 
 export const unverifiedHostname = createRule<[], 'unverified'>({
     name: 'unverified-hostname',

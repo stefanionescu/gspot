@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
-import { getAssignedValue } from '../modules.ts';
 import { LOOP_STATEMENTS } from '../config/builtins.ts';
-import { getRegex, buildRegexVisitors } from '../regex.ts';
+import { getAssignedValue } from '../language/modules.ts';
+import { getRegex, buildRegexVisitors } from '../language/regex.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { EXEC_METHOD, DISTINCT_SUBJECTS, EMPTY_STRING_TEXTS, STATEFUL_REGEX_METHODS } from '../config/regex.ts';
 

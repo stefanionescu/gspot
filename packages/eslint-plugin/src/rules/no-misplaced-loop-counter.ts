@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { haveSameTokens, listDescendants } from '../syntax.ts';
+import { haveSameTokens, listDescendants } from '../language/syntax.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function listAssignedNodes(node: TSESTree.Node): TSESTree.Node[] {

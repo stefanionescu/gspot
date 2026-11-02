@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
 import { ASTUtils } from '@typescript-eslint/utils';
 import { TLS_OPTION_ARGUMENTS } from '../config/security.ts';
-import { listOptionLiterals, getOptionProperties } from '../expressions.ts';
+import { listOptionLiterals, getOptionProperties } from '../language/expressions.ts';
 
 export const unverifiedCertificate = createRule<[], 'unverified'>({
     name: 'unverified-certificate',

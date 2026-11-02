@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { haveSameTokens } from '../syntax.ts';
+import { haveSameTokens } from '../language/syntax.ts';
 import type { Branch, BranchSet } from '../types/rules.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

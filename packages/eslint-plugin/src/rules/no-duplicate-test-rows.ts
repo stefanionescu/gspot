@@ -1,8 +1,8 @@
 import { createRule } from '../rule.ts';
-import { unwrapExpression } from '../syntax.ts';
 import { TABLE_CALL } from '../config/testing.ts';
 import type { TableCall } from '../types/rules.ts';
-import { isSameTokens, readTestTable } from '../testing.ts';
+import { unwrapExpression } from '../language/syntax.ts';
+import { isSameTokens, readTestTable } from '../libraries/testing.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function listCopies(table: TSESTree.Node | undefined, source: TSESLint.SourceCode): TSESTree.Node[][] {

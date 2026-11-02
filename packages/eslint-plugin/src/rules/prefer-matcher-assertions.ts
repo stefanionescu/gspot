@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
-import { readAssertion } from '../assertions.ts';
-import { requiresVersion, readPackageFacts } from '../packages.ts';
+import { readAssertion } from '../libraries/assertions.ts';
+import { requiresVersion, readPackageFacts } from '../libraries/packages.ts';
 import type { FileContext, MatcherSuggestion, ComparisonAssertion } from '../types/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

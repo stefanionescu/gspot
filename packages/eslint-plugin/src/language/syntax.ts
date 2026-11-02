@@ -1,4 +1,4 @@
-import type { ImportSource } from './types/plugin.ts';
+import type { ImportSource } from '../types/plugin.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -7,7 +7,7 @@ import {
     UNWRAPPABLE_NODES,
     IMPORT_EQUALS_SELECTOR,
     MODULE_DECLARATION_NODES,
-} from './config/plugin.ts';
+} from '../config/plugin.ts';
 
 const isModuleDeclaration = ASTUtils.isNodeOfTypes(MODULE_DECLARATION_NODES.map((type) => AST_NODE_TYPES[type]));
 

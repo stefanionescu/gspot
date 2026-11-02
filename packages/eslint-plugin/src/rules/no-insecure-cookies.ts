@@ -1,8 +1,8 @@
 import { createRule } from '../rule.ts';
-import { getModuleName } from '../modules.ts';
+import { getModuleName } from '../language/modules.ts';
 import { COOKIE_SECURITY_FLAGS, COOKIE_SET_OPTIONS_POSITION } from '../config/security.ts';
-import { getLiteralValue, getExpressionValue, getOptionProperties } from '../expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { getLiteralValue, getExpressionValue, getOptionProperties } from '../language/expressions.ts';
 
 function getCookiesOptions(call: TSESTree.CallExpression, source: TSESLint.SourceCode): TSESTree.Node | undefined {
     if (call.callee.type !== AST_NODE_TYPES.MemberExpression || ASTUtils.getPropertyName(call.callee) !== 'set')

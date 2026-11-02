@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
 import { WRITING_COLLECTION_METHODS } from '../config/collections.ts';
-import { getStoredValue, listLocalVariables, listInitialElements } from '../collections.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { getStoredValue, listLocalVariables, listInitialElements } from '../language/collections.ts';
 
 function isWriteStatement(expression: TSESTree.Expression, identifier: TSESTree.Node): boolean {
     if (expression.type === AST_NODE_TYPES.AssignmentExpression)

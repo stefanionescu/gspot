@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { getTypes } from '../checker.ts';
+import { getTypes } from '../language/checker.ts';
 import type { TypeReader, CheckedType } from '../types/plugin.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

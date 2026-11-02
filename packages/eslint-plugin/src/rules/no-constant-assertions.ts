@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { readAssertion } from '../assertions.ts';
+import { readAssertion } from '../libraries/assertions.ts';
 import { ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 import type { Assertion, AssertedValue, ConstantFinding } from '../types/rules.ts';
 import { FRESH_VALUES, DEEP_MATCHERS, IDENTITY_STYLES, FRESH_PREDICATES } from '../config/assertions.ts';

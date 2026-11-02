@@ -1,8 +1,8 @@
 import { createRule } from '../rule.ts';
-import { getTypes } from '../checker.ts';
-import { getLocalFunction } from '../functions.ts';
+import { getTypes } from '../language/checker.ts';
 import type { TypeReader } from '../types/plugin.ts';
 import { COMPARISON_OPERATORS } from '../config/rules.ts';
+import { getLocalFunction } from '../language/functions.ts';
 import type { CallNode, SwappedPair, ParameterNames } from '../types/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

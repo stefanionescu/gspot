@@ -1,8 +1,8 @@
 import { createRule } from '../rule.ts';
-import { getModuleName } from '../modules.ts';
-import { getLocalFunction } from '../functions.ts';
+import { getModuleName } from '../language/modules.ts';
 import type { LocalFunction } from '../types/plugin.ts';
 import { MEMOIZE_FUNCTIONS } from '../config/frameworks.ts';
+import { getLocalFunction } from '../language/functions.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isMissingKey(keyFunction: TSESTree.CallExpressionArgument | undefined): boolean {

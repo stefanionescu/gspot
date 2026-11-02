@@ -1,10 +1,10 @@
 import { createRule } from '../rule.ts';
-import { getTypes } from '../checker.ts';
-import { usesModule } from '../packages.ts';
-import { listChildNodes } from '../testing.ts';
+import { getTypes } from '../language/checker.ts';
 import type { TypeReader } from '../types/plugin.ts';
+import { usesModule } from '../libraries/packages.ts';
+import { listChildNodes } from '../libraries/testing.ts';
 import type { AssertionSearch } from '../types/rules.ts';
-import { readAssertionKind, isChaiPropertyAssertion } from '../assertions.ts';
+import { readAssertionKind, isChaiPropertyAssertion } from '../libraries/assertions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {

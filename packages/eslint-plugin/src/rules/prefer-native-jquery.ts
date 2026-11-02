@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
-import { getModuleName } from '../modules.ts';
 import type { MemberCall } from '../types/rules.ts';
+import { getModuleName } from '../language/modules.ts';
 import { ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 import { JQUERY_GLOBALS, JQUERY_METHODS, JQUERY_ORIGINS } from '../config/frameworks.ts';
 

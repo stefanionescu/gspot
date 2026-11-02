@@ -1,8 +1,8 @@
 import { createRule } from '../rule.ts';
-import { unwrapExpression } from '../syntax.ts';
-import { getTypes, isThenable } from '../checker.ts';
 import type { TypeReader } from '../types/plugin.ts';
+import { unwrapExpression } from '../language/syntax.ts';
 import { CONSTRUCTOR_BODY_DEPTH } from '../config/rules.ts';
+import { getTypes, isThenable } from '../language/checker.ts';
 import { PROMISE_NAME, SETTLE_METHOD } from '../config/builtins.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

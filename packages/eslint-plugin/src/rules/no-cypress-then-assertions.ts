@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { listBodyNodes, isTestRelatedPath } from '../testing.ts';
+import { listBodyNodes, isTestRelatedPath } from '../libraries/testing.ts';
 import type { ThenCall, MemberCall, FunctionNode, CallbackScope } from '../types/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
 import type { TypeReader } from '../types/plugin.ts';
-import { getTypes, getTypeCategory } from '../checker.ts';
+import { getTypes, getTypeCategory } from '../language/checker.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { BITWISE_JOINS, BITWISE_OPERATORS } from '../config/operators.ts';
 import { CONDITION_PARENTS, NUMERIC_VALUE_TYPES } from '../config/rules.ts';

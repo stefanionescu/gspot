@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { getQualifiedName } from '../modules.ts';
+import { getQualifiedName } from '../language/modules.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {

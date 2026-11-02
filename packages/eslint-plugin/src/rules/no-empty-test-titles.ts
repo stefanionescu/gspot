@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
-import { usesModule } from '../packages.ts';
-import { getTestCall } from '../testing.ts';
+import { usesModule } from '../libraries/packages.ts';
+import { getTestCall } from '../libraries/testing.ts';
 import { ASTUtils, type TSESTree } from '@typescript-eslint/utils';
 import { TEST_FRAMEWORK_MODULES, RUNNING_TEST_MODIFIERS } from '../config/testing.ts';
 

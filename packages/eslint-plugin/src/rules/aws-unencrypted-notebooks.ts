@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { listCdkTableIssues } from '../aws.ts';
+import { listCdkTableIssues } from '../libraries/aws.ts';
 import { SAGEMAKER_NOTEBOOK_CHECKS } from '../config/aws.ts';
 
 export const awsUnencryptedNotebooks = createRule<[], 'omitted'>({

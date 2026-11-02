@@ -1,9 +1,9 @@
 import { createRule } from '../rule.ts';
-import { usesModule, readPackageFacts } from '../packages.ts';
-import { listBodyNodes, isCypressChain } from '../testing.ts';
 import type { MemberCall, UiFrameworks } from '../types/rules.ts';
-import { getLiteralValue, getExpressionValue, getOptionProperties } from '../expressions.ts';
+import { usesModule, readPackageFacts } from '../libraries/packages.ts';
+import { listBodyNodes, isCypressChain } from '../libraries/testing.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { getLiteralValue, getExpressionValue, getOptionProperties } from '../language/expressions.ts';
 
 import {
     CYPRESS_ACTIONS,

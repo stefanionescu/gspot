@@ -1,9 +1,9 @@
 import { createRule } from '../rule.ts';
-import { findFunction } from '../functions.ts';
-import { getQualifiedName } from '../modules.ts';
 import type { FunctionNode } from '../types/rules.ts';
-import { listArgumentValues, getExpressionValue, getOptionProperties } from '../expressions.ts';
+import { findFunction } from '../language/functions.ts';
+import { getQualifiedName } from '../language/modules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { listArgumentValues, getExpressionValue, getOptionProperties } from '../language/expressions.ts';
 
 import {
     EXPRESS_MODULE,

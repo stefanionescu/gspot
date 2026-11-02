@@ -2,7 +2,7 @@ import { createRule } from '../rule.ts';
 import type { StateHook } from '../types/rules.ts';
 import { FUNCTION_NODES } from '../config/rules.ts';
 import { COMPONENT_NAME } from '../config/frameworks.ts';
-import { getStateHook, isNamedFunction } from '../react.ts';
+import { getStateHook, isNamedFunction } from '../libraries/react.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isComponentBody(hook: StateHook, ancestors: TSESTree.Node[], source: TSESLint.SourceCode): boolean {

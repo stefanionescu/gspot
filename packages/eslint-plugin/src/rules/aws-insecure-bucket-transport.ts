@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { findDisabledBucketOption } from '../aws.ts';
+import { findDisabledBucketOption } from '../libraries/aws.ts';
 
 export const awsInsecureBucketTransport = createRule<[], 'omitted' | 'authorized'>({
     name: 'aws-insecure-bucket-transport',

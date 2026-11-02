@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
-import { getTestCall, listChildNodes } from '../testing.ts';
 import type { TestCall, SimilarTest } from '../types/rules.ts';
-import { usesModule, listImportedModules } from '../packages.ts';
+import { getTestCall, listChildNodes } from '../libraries/testing.ts';
+import { usesModule, listImportedModules } from '../libraries/packages.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {

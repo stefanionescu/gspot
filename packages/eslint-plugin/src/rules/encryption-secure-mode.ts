@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { getCallText } from '../modules.ts';
+import { getCallText } from '../language/modules.ts';
 import { INSECURE_MODES, CIPHER_FUNCTION, MODELESS_CIPHERS } from '../config/security.ts';
 
 export const encryptionSecureMode = createRule<[], 'insecure'>({

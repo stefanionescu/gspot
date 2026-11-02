@@ -1,5 +1,5 @@
-import { isAlias } from '../syntax.ts';
 import { createRule } from '../rule.ts';
+import { isAlias } from '../language/syntax.ts';
 import { type RenamedValue } from '../types/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

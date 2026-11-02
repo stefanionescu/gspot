@@ -1,5 +1,5 @@
 import { getExpressionValue } from './expressions.ts';
-import { REGEXP_CONSTRUCTOR } from './config/regex.ts';
+import { REGEXP_CONSTRUCTOR } from '../config/regex.ts';
 import { type AST, parseRegExpLiteral } from '@eslint-community/regexpp';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

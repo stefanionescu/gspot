@@ -1,8 +1,8 @@
 import { createRule } from '../rule.ts';
-import { getExpressionValue } from '../expressions.ts';
 import { CDK_PROPS_POSITION } from '../config/plugin.ts';
+import { getExpressionValue } from '../language/expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { getCdkName, getCdkResult, getCdkArgument, getCdkProperty, listCdkTableIssues } from '../aws.ts';
+import { getCdkName, getCdkResult, getCdkArgument, getCdkProperty, listCdkTableIssues } from '../libraries/aws.ts';
 
 import {
     REST_API,

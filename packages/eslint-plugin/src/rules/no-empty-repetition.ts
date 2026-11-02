@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { buildRegexVisitors } from '../regex.ts';
+import { buildRegexVisitors } from '../language/regex.ts';
 import { type AST, visitRegExpAST } from '@eslint-community/regexpp';
 
 function matchesEmpty(node: AST.Node): boolean {

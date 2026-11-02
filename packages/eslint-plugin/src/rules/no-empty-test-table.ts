@@ -1,8 +1,8 @@
 import { createRule } from '../rule.ts';
-import { readTestTable } from '../testing.ts';
-import { unwrapExpression } from '../syntax.ts';
 import { TABLE_CALL } from '../config/testing.ts';
 import type { TableCall } from '../types/rules.ts';
+import { readTestTable } from '../libraries/testing.ts';
+import { unwrapExpression } from '../language/syntax.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isEmptyArray(node: TSESTree.Node | null | undefined): boolean {

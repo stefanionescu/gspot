@@ -1126,6 +1126,8 @@ export default [
                         "category": "import-rule:plugin",
                         "pattern": [
                             "packages/eslint-plugin/src/*.ts",
+                            "packages/eslint-plugin/src/language/**",
+                            "packages/eslint-plugin/src/libraries/**",
                             "packages/eslint-plugin/src/rules/**",
                             "packages/eslint-plugin/plugin.d.ts"
                         ]

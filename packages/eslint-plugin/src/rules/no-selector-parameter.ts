@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
-import { getTypes } from '../checker.ts';
-import { listChildren } from '../syntax.ts';
+import { getTypes } from '../language/checker.ts';
+import { listChildren } from '../language/syntax.ts';
 import type { TypeReader } from '../types/plugin.ts';
 import type { FunctionNode } from '../types/rules.ts';
 import { ASTUtils, TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';

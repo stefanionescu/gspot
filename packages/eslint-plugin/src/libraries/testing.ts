@@ -1,7 +1,7 @@
-import { findFunction } from './functions.ts';
-import { FUNCTION_NODES } from './config/rules.ts';
+import { FUNCTION_NODES } from '../config/rules.ts';
+import { findFunction } from '../language/functions.ts';
 import { usesModule, getRequiredModule } from './packages.ts';
-import type { TestCall, TableCall, TestOrigin, TestCallee, FileContext } from './types/rules.ts';
+import type { TestCall, TableCall, TestOrigin, TestCallee, FileContext } from '../types/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -17,7 +17,7 @@ import {
     RUNNING_TEST_MODIFIERS,
     PLAYWRIGHT_SUITE_MODES,
     TEST_FRAMEWORK_MODULES,
-} from './config/testing.ts';
+} from '../config/testing.ts';
 
 function getImportedName(definition: TSESLint.Scope.Definition): TestOrigin | undefined {
     const { node, parent } = definition;

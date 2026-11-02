@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { getTypes } from '../checker.ts';
+import { getTypes } from '../language/checker.ts';
 import type { ScriptSettings, IntegrityMessage } from '../types/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { SCRIPT_TYPE, ALIASED_PATH, VERSIONED_PATH, REMOTE_PREFIXES, CREATE_SCRIPT_SELECTOR } from '../config/web.ts';

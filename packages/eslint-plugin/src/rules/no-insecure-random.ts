@@ -1,5 +1,5 @@
 import { createRule } from '../rule.ts';
-import { getModuleName } from '../modules.ts';
+import { getModuleName } from '../language/modules.ts';
 import { INSECURE_RANDOM_GENERATOR } from '../config/security.ts';
 
 export const noInsecureRandom = createRule<[], 'random'>({

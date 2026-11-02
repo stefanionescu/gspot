@@ -1,6 +1,6 @@
 import { createRule } from '../rule.ts';
-import { getLocalFunction } from '../functions.ts';
 import type { LocalFunction } from '../types/plugin.ts';
+import { getLocalFunction } from '../language/functions.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 export const noExcessCallArguments = createRule<[], 'arguments'>({

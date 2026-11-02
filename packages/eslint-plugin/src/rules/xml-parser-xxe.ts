@@ -1,8 +1,8 @@
 import { createRule } from '../rule.ts';
-import { getQualifiedName } from '../modules.ts';
 import { XML_PARSERS } from '../config/servers.ts';
+import { getQualifiedName } from '../language/modules.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { getExpressionValue, getOptionProperties } from '../expressions.ts';
+import { getExpressionValue, getOptionProperties } from '../language/expressions.ts';
 
 export const xmlParserXxe = createRule<[], 'entities'>({
     name: 'xml-parser-xxe',

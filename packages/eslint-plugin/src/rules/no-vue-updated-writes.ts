@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
-import { getModuleName } from '../modules.ts';
-import { listBodyNodes } from '../testing.ts';
-import { getExpressionValue } from '../expressions.ts';
+import { getModuleName } from '../language/modules.ts';
+import { listBodyNodes } from '../libraries/testing.ts';
+import { getExpressionValue } from '../language/expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {

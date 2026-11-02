@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
-import { getTypes } from '../checker.ts';
-import { listBodyNodes } from '../testing.ts';
-import { getAssignedValue } from '../modules.ts';
+import { getTypes } from '../language/checker.ts';
+import { listBodyNodes } from '../libraries/testing.ts';
+import { getAssignedValue } from '../language/modules.ts';
 import type { TypeReader, CheckedType } from '../types/plugin.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

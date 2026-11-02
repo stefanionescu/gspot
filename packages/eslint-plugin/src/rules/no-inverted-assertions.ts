@@ -1,7 +1,7 @@
 import { createRule } from '../rule.ts';
-import { isCallOf, getTestCall } from '../testing.ts';
 import type { OrderedArguments } from '../types/rules.ts';
 import { MARKED_TEST_MODIFIERS } from '../config/testing.ts';
+import { isCallOf, getTestCall } from '../libraries/testing.ts';
 import { ORDERED_ASSERTIONS, ORDERED_EXPECT_METHODS } from '../config/assertions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
