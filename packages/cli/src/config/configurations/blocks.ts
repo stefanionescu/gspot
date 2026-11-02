@@ -34,7 +34,7 @@ export const NODE_RULES = {
     'n/no-path-concat': 'error',
     'n/no-missing-import': 'off',
     'n/no-missing-require': 'off',
-    'n/no-unpublished-import': ['error', { ignoreTypeImport: true, ignorePrivate: false }],
+    'n/no-unpublished-import': ['error', { ignoreTypeImport: true }],
     'n/no-unpublished-require': 'error',
     'n/hashbang': 'error',
     'n/no-extraneous-import': 'error',
