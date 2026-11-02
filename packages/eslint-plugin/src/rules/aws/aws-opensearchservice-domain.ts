@@ -1,9 +1,8 @@
 import { createRule } from '../../rule.ts';
 import type { CdkResult } from '../../types/plugin.ts';
-import { CDK_PROPS_POSITION } from '../../config/plugin.ts';
 import { getQualifiedName } from '../../language/modules.ts';
-import { SEARCH_DOMAINS, SEARCH_ENGINES } from '../../config/aws.ts';
 import { type TSESLint, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { SEARCH_DOMAINS, SEARCH_ENGINES, CDK_PROPS_POSITION } from '../../config/aws.ts';
 import { getCdkName, getCdkResult, getCdkArgument, getCdkProperty } from '../../libraries/aws.ts';
 
 function detectEngine(

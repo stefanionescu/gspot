@@ -1,9 +1,8 @@
 import { createRule } from '../../rule.ts';
-import { S3_BUCKET } from '../../config/plugin.ts';
 import { getCdkName, findBucketOption } from '../../libraries/aws.ts';
 import { getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { BLOCK_ACLS_ONLY, BLOCK_PUBLIC_ACCESS, BLOCK_PUBLIC_ACCESS_KEYS } from '../../config/aws.ts';
+import { S3_BUCKET, BLOCK_ACLS_ONLY, BLOCK_PUBLIC_ACCESS, BLOCK_PUBLIC_ACCESS_KEYS } from '../../config/aws.ts';
 
 function listUnblockedSettings(
     source: Readonly<TSESLint.SourceCode>,

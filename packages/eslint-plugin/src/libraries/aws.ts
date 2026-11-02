@@ -1,3 +1,4 @@
+import { UNDEFINED_NAME } from '../config/plugin.ts';
 import { getQualifiedName } from '../language/modules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { listArgumentValues, getExpressionValue, getOptionProperties } from '../language/expressions.ts';
@@ -14,15 +15,14 @@ import type {
 } from '../types/plugin.ts';
 import {
     S3_BUCKET,
-    UNDEFINED_NAME,
+    POLICY_FROM_JSON,
     POLICY_JSON_KEYS,
     POLICY_STATEMENT,
-    POLICY_FROM_JSON,
     CDK_PROPS_POSITION,
     POLICY_CONSTRUCT_KEYS,
     POLICY_STATEMENTS_KEY,
     POLICY_DOCUMENT_FROM_JSON,
-} from '../config/plugin.ts';
+} from '../config/aws.ts';
 
 /**
 Name the value of the cloud development kit that an expression reads, as `getQualifiedName` does. Each hyphen

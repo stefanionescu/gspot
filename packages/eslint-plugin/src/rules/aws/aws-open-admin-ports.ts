@@ -1,6 +1,5 @@
 import { createRule } from '../../rule.ts';
 import type { AdminAccess } from '../../types/rules.ts';
-import { CDK_PROPS_POSITION } from '../../config/plugin.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { getCdkName, getCdkResult, getCdkArgument, getCdkProperty } from '../../libraries/aws.ts';
 
@@ -11,26 +10,27 @@ import {
     getOptionProperties,
 } from '../../language/expressions.ts';
 import {
-    ANY_PEERS,
     ALL_PORTS,
+    ANY_PEERS,
     ALLOW_FROM,
     PORT_RANGE,
     ADMIN_PORTS,
     SINGLE_PORT,
     INGRESS_RULE,
+    ADDRESS_PEERS,
     ALL_PROTOCOLS,
     TCP_PROTOCOLS,
-    ADDRESS_PEERS,
     OPEN_ADDRESSES,
     PORT_CONSTRUCT,
     SECURITY_GROUP,
     CONNECTION_OWNERS,
     DEFAULT_PORT_FROM,
+    CDK_PROPS_POSITION,
     TCP_PROTOCOL_NAMES,
     ALLOW_FROM_ANY_IPV4,
     DEFAULT_PORT_ANYWHERE,
     SECURITY_GROUP_INGRESS,
-} from '../../config/networks.ts';
+} from '../../config/aws.ts';
 
 function getField(source: Readonly<TSESLint.SourceCode>, options: TSESTree.Node | undefined, key: string): unknown {
     const property = getOptionProperties(options, source).get(key);

@@ -10,7 +10,7 @@ import {
     HEADER_SEPARATOR,
     MAXIMUM_ROW_SPAN,
     MAXIMUM_COLUMN_SPAN,
-} from '../config/plugin.ts';
+} from '../config/accessibility.ts';
 
 /**
 Name the element of a JSX tag as written: `table`, `Layout.Table`, or `svg:rect`.

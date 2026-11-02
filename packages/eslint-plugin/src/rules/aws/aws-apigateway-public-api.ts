@@ -1,5 +1,4 @@
 import { createRule } from '../../rule.ts';
-import { CDK_PROPS_POSITION } from '../../config/plugin.ts';
 import { getExpressionValue } from '../../language/expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { getCdkName, getCdkResult, getCdkArgument, getCdkProperty, listCdkTableIssues } from '../../libraries/aws.ts';
@@ -11,9 +10,10 @@ import {
     METHOD_CHECKS,
     ROOT_RESOURCE,
     RESOURCE_CHAIN,
-    RESOURCE_METHODS,
     NO_AUTHORIZATION,
-} from '../../config/networks.ts';
+    RESOURCE_METHODS,
+    CDK_PROPS_POSITION,
+} from '../../config/aws.ts';
 
 function findDefaultAuthorization(
     source: Readonly<TSESLint.SourceCode>,

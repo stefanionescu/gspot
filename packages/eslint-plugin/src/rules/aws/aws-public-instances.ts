@@ -1,6 +1,5 @@
 import { createRule } from '../../rule.ts';
 import type { CdkResult } from '../../types/plugin.ts';
-import { CDK_PROPS_POSITION } from '../../config/plugin.ts';
 import { listArgumentValues } from '../../language/expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
@@ -17,9 +16,10 @@ import {
     PUBLIC_SUBNET,
     PRIVATE_SUBNETS,
     COMPUTE_INSTANCE,
+    CDK_PROPS_POSITION,
     PUBLIC_NETWORK_CHECKS,
     SUBNET_SELECTION_METHOD,
-} from '../../config/networks.ts';
+} from '../../config/aws.ts';
 
 function findSubnetSelection(source: Readonly<TSESLint.SourceCode>, networkInterface: CdkResult): CdkResult {
     let subnet = getCdkProperty(source, networkInterface, 'subnetId');
