@@ -16,6 +16,7 @@ import {
 import {
     CI_PINS,
     CI_PROVIDERS,
+    NEGATED_IMPORT_PATH,
     GITHUB_ONLY_CI_KEYS,
     DOCSTRING_CONVENTIONS,
     NAMING_TABLE_CATEGORIES,
@@ -89,7 +90,8 @@ const importRuleSchema = z.strictObject({
         description: 'The name that other import rules use in can_import.',
     }),
     paths: nonemptyPathsSchema.meta({
-        description: 'The files of the import rule.',
+        description:
+            'The files of the import rule. A file belongs to the first rule that matches it, and a path cannot exclude files with a leading !.',
     }),
     can_import: z.string().array().optional().meta({
         description:
@@ -99,13 +101,21 @@ const importRuleSchema = z.strictObject({
 
 function validateImportRules(rules: ImportRule[]): SettingsError[] {
     const names = new Set(rules.map((rule) => rule.name));
-    return rules.flatMap((rule, index) =>
-        (rule.can_import ?? []).flatMap((name, edge) =>
+    return rules.flatMap((rule, index) => [
+        ...(rule.can_import ?? []).flatMap((name, edge) =>
             names.has(name)
                 ? []
                 : { path: [index, 'can_import', edge], message: `There is no import rule called ${name}.` },
         ),
-    );
+        ...rule.paths.flatMap((path, position) =>
+            NEGATED_IMPORT_PATH.test(path)
+                ? {
+                      path: [index, 'paths', position],
+                      message: `The import rule ${rule.name} cannot exclude ${path}. Put a narrower rule for those files first, and list what it may import in can_import.`,
+                  }
+                : [],
+        ),
+    ]);
 }
 
 export const importRulesSchema = importRuleSchema

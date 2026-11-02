@@ -56,6 +56,17 @@ test('can_import lists exact rules and names only declared rules', () => {
     ).toThrow('import_rule.1.can_import.0: There is no import rule called missing.');
 });
 
+test('an import rule refuses a leading ! and accepts an extglob', () => {
+    using sandbox = createTemporaryFolder();
+    const refused = ORDERED_IMPORT_RULES.replace('["app/**"]', '["app/**", "!app/generated.ts"]');
+    expect(() => readSettings(refused, sandbox.path)).toThrow(
+        'gspot.toml:7: import_rule.1.paths.1: The import rule app cannot exclude !app/generated.ts. Put a narrower rule for those files first, and list what it may import in can_import.',
+    );
+    const extglobs = ['app/!(procedures).*', '!(procedures)/**'];
+    const settings = readSettings(ORDERED_IMPORT_RULES.replace('["app/**"]', JSON.stringify(extglobs)), sandbox.path);
+    expect(settings.import_rule[1]?.paths).toStrictEqual(extglobs);
+});
+
 test('an ignore without check needs paths and takes no rule', () => {
     using sandbox = createTemporaryFolder();
     const reason = 'Product photos and facts are data, not code.';
