@@ -240,7 +240,7 @@ export const GITLEAKS_LOG_OPTIONS = '--diff-merges=separate';
 
 export const SECRET_KEY_NAME = /(?:TOKEN|SECRET|KEY|PASSWORD)/u;
 
-export const ENV_DEFAULT_RULE = 'env-fallback';
+export const ENVIRONMENT_DEFAULT_RULE = 'environment-default';
 
 export const NESTED_AGENTS_RULE = 'nested-agents-file';
 

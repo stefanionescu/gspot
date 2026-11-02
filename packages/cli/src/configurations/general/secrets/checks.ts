@@ -20,9 +20,9 @@ import {
     ENV_KEY_LINE,
     SECRET_KEY_NAME,
     MISSING_KEY_RULE,
-    ENV_DEFAULT_RULE,
     GITLEAKS_LOG_FLAG,
     GITLEAKS_LOG_OPTIONS,
+    ENVIRONMENT_DEFAULT_RULE,
     ENVIRONMENT_READ_LANGUAGES,
 } from '#cli/config/configurations/general.ts';
 
@@ -139,7 +139,7 @@ export async function checkEnvDefaults(session: Session, planned: PlannedCheck):
                     file: file.path,
                     line,
                     column,
-                    rule: ENV_DEFAULT_RULE,
+                    rule: ENVIRONMENT_DEFAULT_RULE,
                     message: `${String(key)} has a literal fallback. A secret has no default: fail when it is missing.`,
                 })),
         );
