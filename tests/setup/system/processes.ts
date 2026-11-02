@@ -1,13 +1,13 @@
 import { stat } from 'node:fs/promises';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import type { ChildProcess } from 'node:child_process';
+import { spawnProcess } from '#cli/system/processes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import type { ChildCapture, ProcessCapture } from '#tests/types/setup.ts';
 import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system.ts';
 import { POLL_INTERVAL_MILLISECONDS } from '#tests/config/setup/programs.ts';
-import { spawnProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
 import { TEST_TIMEOUT_MILLISECONDS, UNIT_TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/sandboxes.ts';
 
 function readCommandResult(result: SpawnResult, limited: ReturnType<typeof limitCommand>): SpawnResult {
@@ -45,7 +45,19 @@ Run a synchronous command within the command timeout.
 */
 export function runCommandBlocking(command: readonly string[], options: AsyncSpawnOptions): SpawnResult {
     const limited = limitCommand(command, options);
-    const result = spawnProcessBlocking(command, limited.options);
+    const child = Bun.spawnSync([...command], {
+        cwd: limited.options.cwd,
+        env: buildSpawnEnvironment(limited.options.env),
+        ...(limited.options.stdin !== undefined && { stdin: Buffer.from(limited.options.stdin) }),
+        timeout: Math.ceil(limited.options.timeoutSeconds * MILLISECONDS_PER_SECOND),
+        killSignal: 'SIGKILL',
+    });
+    const result = buildProcessResult({
+        code: child.exitCode,
+        stdout: child.stdout.toString(),
+        stderr: child.stderr.toString(),
+        timedOut: child.exitedDueToTimeout === true,
+    });
     return readCommandResult(result, limited);
 }
 

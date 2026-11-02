@@ -17,10 +17,10 @@ import { readToolPackageManager } from '#cli/repository/javascript/package-manag
 import { repairToolProjects, installToolProjects } from '#cli/tools/installers/projects.ts';
 import type { Session, BrokenTool, ToolInstall, InstallResult, ToolPackageManager } from '#cli/types/tools.ts';
 
-function readInstallPackageManager(session: Session): ToolPackageManager | undefined {
+async function readInstallPackageManager(session: Session): Promise<ToolPackageManager | undefined> {
     const pin = session.packageManager;
     if (pin === undefined) return undefined;
-    const packageManager = readToolPackageManager(
+    const packageManager = await readToolPackageManager(
         session.toolsRoot,
         pin,
         session.settings.tool_timeout_seconds,
@@ -79,7 +79,7 @@ export async function installTools(
     session: Session,
     input: Pick<ToolInstall, 'writer' | 'generated' | 'checkTools'>,
 ): Promise<InstallResult> {
-    const context = buildToolInstall(session, input);
+    const context = await buildToolInstall(session, input);
     const { steps } = context;
     await assertPackageManagerVersion(context);
     writeToolProjects(context);
@@ -110,17 +110,17 @@ Build what every install step reads from the session.
 @param session the repository and its settings.
 @param input the repository handle, generated files, and tools of the checks.
 */
-function buildToolInstall(
+async function buildToolInstall(
     session: Session,
     input: Pick<ToolInstall, 'writer' | 'generated' | 'checkTools'>,
-): ToolInstall {
+): Promise<ToolInstall> {
     const configurations = session.toolConfigurations;
     const steps: (readonly string[])[] = [];
     const tools = listDistinctTools(configurations);
     const misePath = findProgram(MISE_TOOL);
     return {
         session,
-        packageManager: readInstallPackageManager(session),
+        packageManager: await readInstallPackageManager(session),
         pythonSettings: readPythonSettings(session.root),
         releaseAgeDays: getTable(getRootScope(session.scopes).settings, 'dependencies').min_release_age_days,
         ...input,

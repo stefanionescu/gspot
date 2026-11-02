@@ -22,19 +22,10 @@ test('apply starts no npm, and install reports a failed npm version lookup', asy
         'entry.sh': 'echo example\n',
     });
 
-    const run = processes.spawnProcessBlocking;
-    using boundary = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) => {
-        return command[0] === 'npm' && command[1] === '--version'
-            ? buildProcessResult(FAILED_NPM_VERSION)
-            : run(command, options);
-    });
-    using spawned = spyOn(processes, 'spawnProcess');
+    using npm = fakeCommands('npm', () => Promise.resolve(buildProcessResult(FAILED_NPM_VERSION)));
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const npmCalls = [...boundary.mock.calls, ...spawned.mock.calls].filter(([command]) =>
-        /(?:^|[\\/])npm(?:\.cmd)?$/u.test(command[0] ?? ''),
-    );
-    expect(npmCalls).toStrictEqual([]);
+    expect(npm).not.toHaveBeenCalled();
     const before = await readTree(sandbox.path);
     const structured = await runGspot(sandbox.path, ['install', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(2);

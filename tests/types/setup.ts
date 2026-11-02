@@ -1,12 +1,12 @@
 import type { z } from 'zod';
 import type { Linter } from 'eslint';
 import type { Level } from '#cli/types/settings.ts';
+import type { SpawnResult } from '#cli/types/system.ts';
 import type { ManagedKeys } from '#cli/types/repository.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import type { ToolPackageManager } from '#cli/types/tools.ts';
 import type { miseLockfileSchema } from '#cli/schemas/tools.ts';
 import type { PROGRAM_NAMES } from '#tests/config/setup/programs.ts';
-import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system.ts';
 
 export type SandboxWrite = {
     files: Record<string, string>;
@@ -88,11 +88,6 @@ type MiseVersion = z.infer<typeof miseLockfileSchema>['tools'][string][number];
 export type MiseProject = { tools: Record<string, string | MiseVersion> };
 
 export type PausedGit = { pid: number; checkout?: string };
-
-export type ProcessBackend = {
-    name: string;
-    run: (command: string[], options: AsyncSpawnOptions) => SpawnResult | Promise<SpawnResult>;
-};
 
 export type ProcessOutput = Pick<SpawnResult, 'code' | 'stdout' | 'stderr'>;
 

@@ -1,13 +1,11 @@
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { test, spyOn, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
-import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { YARN_CLIENTS } from '#tests/config/setup/programs.ts';
 import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -18,12 +16,6 @@ test.each([...YARN_CLIENTS])(
             'gspot.toml': buildSandboxSettings([]),
             'package.json': JSON.stringify({ private: true, packageManager: `yarn@${packageManager.version}` }),
         });
-        const run = processes.spawnProcessBlocking;
-        using _npmVersion = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
-            command[0] === 'npm' && command[1] === '--version'
-                ? buildProcessResult({ stdout: '11.19.0\n' })
-                : run(command, options),
-        );
         const session = await openSession(sandbox.path);
         const generated = buildGeneratedFiles(session);
         expect(generated.files.some(({ path }) => path === '.gspot/.yarnrc.yml')).toBe(false);

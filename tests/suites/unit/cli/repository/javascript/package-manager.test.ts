@@ -35,7 +35,7 @@ test('without a packageManager field or Bun on PATH, the tool project uses npm a
     const installer = detectPackageManager(sandbox.path, []);
     expect(installer).toStrictEqual({ name: 'npm' });
     expect(
-        readPackageManagerVersion(
+        await readPackageManagerVersion(
             sandbox.path,
             installer,
             rootSettingSchemas.tool_timeout_seconds.parse(undefined),
@@ -124,9 +124,14 @@ test('a lockfile beside a later nested package selects its manager', async () =>
 
 test('Yarn uses npm without querying Yarn', async () => {
     await using sandbox = await testdir();
-    using run = spyOn(processes, 'spawnProcessBlocking').mockReturnValue(buildProcessResult({ stdout: '11.19.0\n' }));
+    using run = spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout: '11.19.0\n' }));
     expect(
-        readToolPackageManager(sandbox.path, { name: 'yarn', version: '0.0.0-test' }, 30, createRunCache(sandbox.path)),
+        await readToolPackageManager(
+            sandbox.path,
+            { name: 'yarn', version: '0.0.0-test' },
+            30,
+            createRunCache(sandbox.path),
+        ),
     ).toStrictEqual({ name: 'npm', version: '11.19.0' });
     expect(run.mock.calls.map(([command]) => command)).toStrictEqual([['npm', '--version']]);
 });

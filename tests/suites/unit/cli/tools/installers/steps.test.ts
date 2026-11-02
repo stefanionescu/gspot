@@ -34,7 +34,7 @@ test.each([
     },
 ])('$name gives its explanation', async ({ status, published, expected }) => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const install = buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
     using _registry = spyOn(globalThis, 'fetch').mockImplementation(
         Object.assign(() => Promise.resolve(Response.json({ time: published }, { status })), {
             preconnect: fetch.preconnect,

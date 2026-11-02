@@ -43,12 +43,17 @@ Build the tool install for a sandbox.
 @param writer holds the repository lock and saves files.
 @returns the session, writer, generated files, and tools that the install steps read.
 */
-export function buildSandboxToolInstall(session: Session, writer: Files): ToolInstall {
+export async function buildSandboxToolInstall(session: Session, writer: Files): Promise<ToolInstall> {
     const pin = session.packageManager;
     const packageManager =
         pin === undefined
             ? undefined
-            : readToolPackageManager(session.toolsRoot, pin, session.settings.tool_timeout_seconds, session.cache);
+            : await readToolPackageManager(
+                  session.toolsRoot,
+                  pin,
+                  session.settings.tool_timeout_seconds,
+                  session.cache,
+              );
     return {
         session,
         packageManager:
@@ -77,7 +82,7 @@ Build the npm tool install for a sandbox whose package.json names its package pa
 @returns the tool install with its package packageManager and registry environment.
 */
 export async function buildNpmToolInstall(session: Session, writer: Files): Promise<NpmToolInstall> {
-    const install = buildSandboxToolInstall(session, writer);
+    const install = await buildSandboxToolInstall(session, writer);
     const { packageManager } = install;
     if (packageManager === undefined) throw new Error('The sandbox package.json names no package packageManager.');
     return { ...install, packageManager, registryEnvironment: await readRegistryEnvironment(session.root) };

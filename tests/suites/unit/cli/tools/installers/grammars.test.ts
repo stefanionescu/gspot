@@ -16,7 +16,7 @@ test('install downloads the grammars of the repository once, and refuses other b
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]), 'entry.sh': 'echo a\n' });
     await using cache = await testdir();
     using _environment = overrideEnvironment({ XDG_CACHE_HOME: cache.path });
-    const install = buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
     const bytes = readFileSync(join(SHARED_GRAMMARS, 'bash.wasm'));
     using request = spyOn(globalThis, 'fetch').mockImplementation(
         Object.assign(() => Promise.resolve(new Response('other bytes')), { preconnect: fetch.preconnect }),

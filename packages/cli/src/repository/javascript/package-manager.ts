@@ -6,10 +6,10 @@ import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { RunCache } from '#cli/types/system.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { spawnProcess } from '#cli/system/processes.ts';
 import type { PackageJson } from '#cli/types/parsers.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { isGspotPath } from '#cli/repository/files/classify.ts';
-import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { packageManagerSchema, packageManagerPinSchema } from '#cli/schemas/repository.ts';
 
@@ -126,17 +126,17 @@ Resolve an undeclared package manager version only when generating or installing
 @param timeoutSeconds the limit for the version query.
 @param cache the run cache that owns the resolved version.
 */
-export function readPackageManagerVersion(
+export async function readPackageManagerVersion(
     root: string,
     packageManager: PackageManagerPin,
     timeoutSeconds: number,
     cache: RunCache,
-): PackageManager {
+): Promise<PackageManager> {
     const key = JSON.stringify([root, packageManager.name, packageManager.version]);
-    return remember(cache, PACKAGE_MANAGER_VERSIONS, key, (): PackageManager => {
+    return await remember(cache, PACKAGE_MANAGER_VERSIONS, key, async (): Promise<PackageManager> => {
         const { name, version } = packageManager;
         if (version !== undefined) return { name, version };
-        const result = spawnProcessBlocking([name, VERSION_FLAG], {
+        const result = await spawnProcess([name, VERSION_FLAG], {
             cwd: root,
             timeoutSeconds,
         });
@@ -162,15 +162,15 @@ Resolve a package manager for the tool project, using npm when the repository pi
 @param cache the run cache for resolved versions.
 @returns a package manager that can hold back new tool releases.
 */
-export function readToolPackageManager(
+export async function readToolPackageManager(
     root: string,
     packageManager: PackageManagerPin,
     timeoutSeconds: number,
     cache: RunCache,
-): PackageManager & { name: Exclude<PackageManager['name'], 'yarn'> } {
+): Promise<PackageManager & { name: Exclude<PackageManager['name'], 'yarn'> }> {
     const name = packageManager.name === 'yarn' ? NPM_TOOL : packageManager.name;
     const selected = name === packageManager.name ? packageManager : { name };
-    return { ...readPackageManagerVersion(root, selected, timeoutSeconds, cache), name };
+    return { ...(await readPackageManagerVersion(root, selected, timeoutSeconds, cache)), name };
 }
 
 /**

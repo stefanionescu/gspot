@@ -1,6 +1,6 @@
 import { statSync } from 'node:fs';
+import { execa, type Options } from 'execa';
 import { hasErrorCode } from '#cli/system/errors.ts';
-import { execa, execaSync, type Options } from 'execa';
 import { selectProgram } from '#cli/system/programs.ts';
 import { trackProcessTree } from '#cli/system/process-trees.ts';
 import { dirname, resolve, delimiter, isAbsolute } from 'node:path';
@@ -23,7 +23,6 @@ import {
     PATH_SEPARATORS,
     EMPTY_COMMAND_MESSAGE,
     CANCELED_START_MESSAGE,
-    MILLISECONDS_PER_SECOND,
 } from '#cli/config/system.ts';
 
 function buildExecaOptions(options: SpawnOptions, executable: string) {
@@ -217,25 +216,4 @@ export async function streamProcess(
     if (unstarted !== undefined) return unstarted;
     const { child, supervision } = launchProcess(command, options, { buffer: { stdout: false } });
     return finishProcess(child, supervision, started, readProcessOutput(child, options, readStdout));
-}
-
-/**
-Run a process and wait.
-
-@param command executable and literal arguments.
-@param options where and how the process runs.
-*/
-export function spawnProcessBlocking(command: readonly string[], options: SpawnOptions): SpawnResult {
-    const started = performance.now();
-    const missing = findMissingExecutable(command, options, started);
-    if (missing !== undefined) return missing;
-    const [executable, ...commandArguments] = selectProgram(command, options.env) as readonly [string, ...string[]];
-    const deadline =
-        options.timeoutSeconds === undefined ? {} : { timeout: options.timeoutSeconds * MILLISECONDS_PER_SECOND };
-    const result = execaSync(executable, commandArguments, {
-        ...buildExecaOptions(options, command[0] as string),
-        killSignal: 'SIGKILL',
-        ...deadline,
-    });
-    return buildSpawnResult(result, started);
 }
