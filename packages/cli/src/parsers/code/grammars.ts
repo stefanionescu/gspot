@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
+import { setFlagsFromString } from 'node:v8';
 import { remember } from '#cli/system/cache.ts';
 import { setImmediate } from 'node:timers/promises';
 import { readText } from '#cli/system/files/reads.ts';
@@ -11,6 +12,7 @@ import type { ParseCache, SourceTree, GrammarName, ParserGrammars, GrammarSource
 
 import {
     GRAMMARS_FOLDER,
+    SWIFT_WASM_FLAGS,
     GRAMMAR_EXTENSIONS,
     PARSES_BETWEEN_TURNS,
     GRAMMAR_CONFIGURATIONS,
@@ -35,6 +37,7 @@ function readGrammar(grammar: GrammarName): Buffer {
 }
 
 async function buildParser(grammar: GrammarName): Promise<Parser> {
+    if (grammar === 'swift') for (const flag of SWIFT_WASM_FLAGS) setFlagsFromString(flag);
     grammars.runtime ??= Parser.init();
     await grammars.runtime;
     const language = await Language.load(readGrammar(grammar));

@@ -176,6 +176,9 @@ export const GRAMMAR_EXTENSIONS: Readonly<Record<string, readonly string[]>> = {
 
 export const GRAMMAR_FILE_EXTENSION = '.wasm';
 
+// V8's optimizing tier needs gigabytes of memory to compile the Swift grammar.
+export const SWIFT_WASM_FLAGS = ['--no-wasm-tier-up', '--no-wasm-dynamic-tiering'] as const;
+
 export const GRAMMAR_RELEASES: Readonly<Record<(typeof GRAMMAR_NAMES)[number], { sha256: string; url: string }>> = {
     bash: {
         sha256: '8292919c88a0f7d3fb31d0cd0253ca5a9531bc1ede82b0537f2c63dd8abe6a7a',
