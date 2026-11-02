@@ -6,68 +6,72 @@ import { expandSuggestions, selectConfigurations, assertConfigurationsExist } fr
 
 import type {
     ScopeFolder,
-    InitRepository,
-    InitConfigurations,
     ConfigurationOrigin,
+    ConfigurationRequest,
     ConfigurationChoices,
     ConfigurationEvidence,
+    ProposedConfigurations,
     ConfigurationSelection,
 } from '#cli/types/repository.ts';
 
 function selectRootConfigurations(
-    init: InitRepository,
+    request: ConfigurationRequest,
     detected: Pick<ConfigurationEvidence, 'configuration'>[],
 ): string[] {
-    const named = init.options.configurations;
+    const named = request.options.configurations;
     if (named !== undefined) return [...new Set(named)];
-    const hasScopes = init.repository.scopeFolders.length > 1;
-    const root = selectScopeConfigurations(init, { path: '', origin: 'root', configurations: [] }, []);
+    const hasScopes = request.repository.scopeFolders.length > 1;
+    const root = selectScopeConfigurations(request, { path: '', origin: 'root', configurations: [] }, []);
     const detectedConfigurations = detected
         .filter((evidence) => {
-            const configuration = init.configurationsByName.get(evidence.configuration);
+            const configuration = request.configurationsByName.get(evidence.configuration);
             if (!configuration) return false;
             const { group } = configuration;
             return !hasScopes || group === 'general' || group === 'language' || root.includes(configuration.name);
         })
         .map((evidence) => evidence.configuration);
-    return [...new Set([...(init.options.template?.configurations ?? []), ...detectedConfigurations])].filter(
-        (name) => init.options.template?.removed.includes(name) !== true,
+    return [...new Set([...(request.options.template?.configurations ?? []), ...detectedConfigurations])].filter(
+        (name) => request.options.template?.removed.includes(name) !== true,
     );
 }
 
-function selectScopeConfigurations(init: InitRepository, scopeFolder: ScopeFolder, rootNames: string[]): string[] {
+function selectScopeConfigurations(
+    request: ConfigurationRequest,
+    scopeFolder: ScopeFolder,
+    rootNames: string[],
+): string[] {
     const repository =
         scopeFolder.path === ''
             ? {
-                  ...init.repository,
-                  files: init.repository.files.filter(
-                      (file) => selectScopePath(file.path, init.repository.scopeFolders) === '',
+                  ...request.repository,
+                  files: request.repository.files.filter(
+                      (file) => selectScopePath(file.path, request.repository.scopeFolders) === '',
                   ),
-                  dependencyFiles: init.repository.dependencyFiles.filter(
-                      (file) => selectScopePath(file.path, init.repository.scopeFolders) === '',
+                  dependencyFiles: request.repository.dependencyFiles.filter(
+                      (file) => selectScopePath(file.path, request.repository.scopeFolders) === '',
                   ),
               }
-            : init.repository;
-    const names = detectConfigurations(repository, init.configurationsByName, scopeFolder.path)
+            : request.repository;
+    const names = detectConfigurations(repository, request.configurationsByName, scopeFolder.path)
         .filter((evidence) => {
-            const configuration = init.configurationsByName.get(evidence.configuration);
+            const configuration = request.configurationsByName.get(evidence.configuration);
             return configuration !== undefined && configuration.group !== 'general';
         })
         .map((evidence) => evidence.configuration);
     const atRoot = new Set(rootNames);
     return names.filter(
         (name) =>
-            (!atRoot.has(name) || init.configurationsByName.get(name)?.group !== 'language') &&
-            init.options.template?.removed.includes(name) !== true,
+            (!atRoot.has(name) || request.configurationsByName.get(name)?.group !== 'language') &&
+            request.options.template?.removed.includes(name) !== true,
     );
 }
 
 function hasSourceOutsideScopes(
-    init: InitRepository,
+    request: ConfigurationRequest,
     configuration: Configuration,
     scopeFolders: ScopeFolder[],
 ): boolean {
-    return init.repository.files.some(
+    return request.repository.files.some(
         (file) =>
             file.kind === 'source' &&
             scopeFolders.every((scope) => scope.path === '' || !isInScope(file.path, scope.path)) &&
@@ -83,31 +87,34 @@ function getConfigurationOrigin(name: string, sources: ConfigurationChoices): Co
 }
 
 /**
-Select configurations for init from the files, the named configurations, and the project scopes.
+Select configurations from the files, the named configurations, and the project scopes.
 
-@param init what init detected, with the flags.
+@param request the repository, the shipped configurations, and the flags.
 @returns the scopes and the configurations of each.
 */
-export function selectForInit(init: InitRepository): InitConfigurations {
-    const { repository, configurationsByName, options } = init;
+export function selectProposedConfigurations(request: ConfigurationRequest): ProposedConfigurations {
+    const { repository, configurationsByName, options } = request;
     assertConfigurationsExist(options.configurations ?? [], configurationsByName);
     const scopes = repository.scopeFolders;
     const hasScopes = scopes.length > 1;
     const detected = detectConfigurations(repository, configurationsByName);
-    const proposedRoot = selectRootConfigurations(init, detected);
+    const proposedRoot = selectRootConfigurations(request, detected);
     const scopeConfigurations = new Map<string, string[]>();
-    const rootDetected = new Set(selectScopeConfigurations(init, { path: '', origin: 'root', configurations: [] }, []));
+    const rootDetected = new Set(
+        selectScopeConfigurations(request, { path: '', origin: 'root', configurations: [] }, []),
+    );
     const heldAtRoot = proposedRoot.filter((name) => {
         const configuration = configurationsByName.get(name) as Configuration;
         return (
             configuration.group === 'general' ||
             !hasScopes ||
             rootDetected.has(name) ||
-            hasSourceOutsideScopes(init, configuration, scopes)
+            hasSourceOutsideScopes(request, configuration, scopes)
         );
     });
     for (const scope of scopes)
-        if (scope.path !== '') scopeConfigurations.set(scope.path, selectScopeConfigurations(init, scope, heldAtRoot));
+        if (scope.path !== '')
+            scopeConfigurations.set(scope.path, selectScopeConfigurations(request, scope, heldAtRoot));
     const inScopes = new Set(scopeConfigurations.values().toArray().flat());
     const named = new Set(options.configurations);
     const template = new Set(options.template?.configurations);
@@ -152,7 +159,7 @@ Find newly detected configurations in each project scope, respecting removals.
 export function listDetectedAdditions(
     session: ConfigurationSelection,
 ): { scope: string; configurations: string[]; evidence: ConfigurationEvidence[] }[] {
-    const proposed = selectForInit({
+    const proposed = selectProposedConfigurations({
         repository: session.repository,
         configurationsByName: readConfigurations(),
         options: {},

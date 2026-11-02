@@ -9,8 +9,8 @@ import { buildDetectedTables } from '#cli/settings/detected.ts';
 import { formatSettingsCommands } from '#cli/generation/rules.ts';
 import { stripDefaults } from '#cli/generation/setup/defaults.ts';
 import { readScopeFormat } from '#cli/generation/setup/format.ts';
-import type { Repository, InitConfigurations } from '#cli/types/repository.ts';
 import { LEADING_COMMENTS, HAND_EDIT_RECORDS } from '#cli/config/generation.ts';
+import type { Repository, ProposedConfigurations } from '#cli/types/repository.ts';
 import type { InitOptions, SettingsDraft, PrettierScripts } from '#cli/types/generation.ts';
 
 function buildSettingsTable(
@@ -82,7 +82,7 @@ Draft the settings from the configuration choices.
 @param prettierScripts the options of the JavaScript Prettier configs.
 */
 export function buildSettingsDraft(
-    configurations: InitConfigurations,
+    configurations: ProposedConfigurations,
     options: Pick<InitOptions, 'level' | 'template'>,
     prettierScripts: PrettierScripts,
 ): SettingsDraft {

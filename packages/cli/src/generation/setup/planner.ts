@@ -11,7 +11,6 @@ import type { TomlTable } from '#cli/types/settings.ts';
 import { readCarry } from '#cli/generation/setup/carry.ts';
 import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { selectForInit } from '#cli/repository/proposals.ts';
 import { planInitFiles } from '#cli/generation/setup/plan.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { readRepositorySetup } from '#cli/repository/setup.ts';
@@ -21,6 +20,7 @@ import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { listLintCommands } from '#cli/repository/lint-commands.ts';
 import { readPrettierScripts } from '#cli/generation/setup/format.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
+import { selectProposedConfigurations } from '#cli/repository/proposals.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 import { readGspotPin, writeGspotPin } from '#cli/repository/javascript/gspot-pin.ts';
 import { buildInitSettings, buildSettingsDraft } from '#cli/generation/setup/settings.ts';
@@ -78,12 +78,12 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
     const configurationsByName = readConfigurations();
     const listing = await listRepositoryFiles(cache);
     const repository = await readRepository(cache, listing, { generatedPaths: [], scopes: [], configurationsByName });
-    const initConfigurations = selectForInit({ repository, configurationsByName, options });
+    const proposed = selectProposedConfigurations({ repository, configurationsByName, options });
     const repositorySetup = await readRepositorySetup(cache, repository);
-    const prettierScripts = await readPrettierScripts(root, repository.files, initConfigurations.scopes);
+    const prettierScripts = await readPrettierScripts(root, repository.files, proposed.scopes);
     const { carry, settingsText, settings, planned } = await planSettings({
         root,
-        draft: buildSettingsDraft(initConfigurations, options, prettierScripts),
+        draft: buildSettingsDraft(proposed, options, prettierScripts),
         repository,
         configurationsByName,
         conflictingConfigs: repositorySetup.conflictingConfigs,
@@ -103,7 +103,7 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
     const planning: InitScan = {
         repository: session.repository,
         repositorySetup,
-        configurations: initConfigurations,
+        configurations: proposed,
         scopes: session.scopes,
         everySelected,
         conflicts,
@@ -116,8 +116,8 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
     return {
         detection: {
             files: repository.files,
-            detected: initConfigurations.detected,
-            scopes: initConfigurations.scopes,
+            detected: proposed.detected,
+            scopes: proposed.scopes,
             repositorySetup,
             owned: detected.filter((tool) => tools.has(tool)),
             unowned: detected.filter((tool) => !tools.has(tool)),

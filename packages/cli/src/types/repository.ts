@@ -18,7 +18,7 @@ import type {
 
 export type ConfigurationOrigin = 'named' | 'template' | 'detected' | 'suggested' | 'required' | 'always';
 
-export type InitConfigurations = {
+export type ProposedConfigurations = {
     scopes: ScopeFolder[];
     rootNames: string[];
     scopeConfigurations: Map<string, string[]>;
@@ -26,7 +26,7 @@ export type InitConfigurations = {
     origins: Map<string, ConfigurationOrigin>;
 };
 
-export type InitRepository = {
+export type ConfigurationRequest = {
     repository: Repository;
     configurationsByName: ReadonlyMap<string, Configuration>;
     options: {

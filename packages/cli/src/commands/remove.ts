@@ -15,9 +15,9 @@ import { removeKey, getScopeTable } from '#cli/settings/edit.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
-import { selectForInit, listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { GSPOT_REMOVE, REMOVE_CONFIGURATION_MESSAGE } from '#cli/config/commands/edits.ts';
 import { findSetting, listWrittenKeys, listSettingsTables } from '#cli/settings/inherit.ts';
+import { listDetectedAdditions, selectProposedConfigurations } from '#cli/repository/proposals.ts';
 import type { ScopeFlags, CommandDefinition, ConfigurationsOptions } from '#cli/types/commands/edits.ts';
 
 import {
@@ -78,7 +78,11 @@ function listReturningConfigurations(
     },
 ): string[] {
     const { scope, removed, written, configurationsByName } = removal;
-    const proposed = selectForInit({ repository: session.repository, configurationsByName, options: {} });
+    const proposed = selectProposedConfigurations({
+        repository: session.repository,
+        configurationsByName,
+        options: {},
+    });
     const detected = scope === '' ? proposed.rootNames : (proposed.scopeConfigurations.get(scope) ?? []);
     return removed.filter((name) => detected.includes(name) || !written.includes(name));
 }

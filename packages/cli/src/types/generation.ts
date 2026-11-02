@@ -20,9 +20,9 @@ import type {
     RepositorySetup,
     PackageManagerPin,
     ConflictingConfig,
-    InitConfigurations,
     ConfigurationOrigin,
     ConfigurationEvidence,
+    ProposedConfigurations,
 } from '#cli/types/repository.ts';
 
 export type PlannedLinkField = {
@@ -105,7 +105,7 @@ export type InitScan = {
     template?: Template | undefined;
     repository: Repository;
     repositorySetup: RepositorySetup;
-    configurations: InitConfigurations;
+    configurations: ProposedConfigurations;
     scopes: Pick<Scope, 'path' | 'configurations'>[];
     everySelected: Configuration[];
     conflicts: ConflictingConfigs;
