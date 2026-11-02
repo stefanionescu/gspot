@@ -9,7 +9,7 @@ import {
     ARRAY_TYPE_NAMES,
     ARRAY_FROM_METHOD,
     ARRAY_CALLBACK_METHODS,
-} from '../../config/calls.ts';
+} from '../../config/collections.ts';
 
 function isArrayFrom(callee: TSESTree.MemberExpression): boolean {
     const { object, property } = callee;

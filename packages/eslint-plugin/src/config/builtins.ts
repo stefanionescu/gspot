@@ -102,28 +102,6 @@ export const BUILTIN_GLOBALS: ReadonlySet<string> = new Set([
     'WeakSet',
 ]);
 
-export const ARRAY_PROTOTYPE_NAMES: ReadonlySet<string> = new Set([
-    'indexOf',
-    'lastIndexOf',
-    'forEach',
-    'map',
-    'filter',
-    'every',
-    'some',
-]);
-
-export const REDUCE_METHOD = 'reduce';
-
-export const INDEX_OF_METHOD = 'indexOf';
-
-export const MUTATING_ORDER_METHODS: ReadonlyMap<string, string> = new Map([
-    ['reverse', 'toReversed'],
-    ['sort', 'toSorted'],
-]);
-
-export const GETTER_DECLARATION =
-    /^(?:@\S+\s+)*(?:(?:public|private|protected|static|override|abstract|declare)\s+)*get\s/u;
-
 export const PURE_RECEIVER_SYMBOLS: ReadonlySet<string> = new Set(['Array', 'Date', 'Math', 'RegExp']);
 
 export const EARLY_EXIT_METHODS: ReadonlySet<string> = new Set(['find', 'findIndex', 'findLast', 'findLastIndex']);
@@ -269,14 +247,7 @@ export const PROMISE_NAME = 'Promise';
 
 export const SETTLE_METHOD = 'resolve';
 
-export const KEY_WRITE_ARGUMENTS: ReadonlyMap<string, number> = new Map([
-    ['add', 1],
-    ['set', 2],
-]);
-
 export const REPLACE_METHOD = 'replace';
-
-export const MUTABLE_TARGETS: ReadonlySet<string> = new Set(['Identifier', 'MemberExpression']);
 
 export const CATCH_METHOD = 'catch';
 

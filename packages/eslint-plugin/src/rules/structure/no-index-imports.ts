@@ -2,7 +2,7 @@ import { posix } from 'node:path';
 import { createRule } from '../../rule.ts';
 import { buildSourceVisitors } from '../../language/syntax.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { RESOURCE_QUERY, LOCAL_PREFIXES, INDEX_BASENAMES, MODULE_MOCK_METHODS } from '../../config/rules.ts';
+import { LOCAL_PREFIXES, RESOURCE_QUERY, INDEX_BASENAMES, MODULE_MOCK_METHODS } from '../../config/structure.ts';
 
 export const noIndexImports = createRule<[], 'index'>({
     name: 'no-index-imports',

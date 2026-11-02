@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import { INDEX_OF_METHOD } from '../../config/builtins.ts';
+import { INDEX_OF_METHOD } from '../../config/collections.ts';
 import { getTypes, getTypeCategory } from '../../language/checker.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

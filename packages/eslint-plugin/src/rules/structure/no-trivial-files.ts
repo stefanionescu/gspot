@@ -13,7 +13,7 @@ import {
     BARREL_DECLARATIONS,
     DECLARING_DEFAULT_EXPORTS,
     TRIVIAL_FILE_OPTIONS_SCHEMA,
-} from '../../config/rules.ts';
+} from '../../config/structure.ts';
 
 function listBoundValues(statement: TSESTree.Node): (TSESTree.Node | null)[] {
     switch (statement.type) {

@@ -6,11 +6,11 @@ import {
     COMMENT_CODE,
     COMMENT_DIRECTIVES,
     COMMENT_PARSE_ERRORS,
-    COMMENT_JSX_ATTRIBUTE,
-    COMMENT_DOCUMENTATION,
     COMMENT_CODE_PATTERNS,
+    COMMENT_DOCUMENTATION,
+    COMMENT_JSX_ATTRIBUTE,
     COMMENT_PARSER_OPTIONS,
-} from '../../config/comments.ts';
+} from '../../config/structure.ts';
 
 function parsesAsCode(parser: TSESLint.Parser.LooseParserModule, text: string): boolean {
     try {

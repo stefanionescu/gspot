@@ -1,7 +1,7 @@
 import { createRule } from '../../rule.ts';
 import type { KeyWrite } from '../../types/rules.ts';
 import { haveSameTokens } from '../../language/syntax.ts';
-import { KEY_WRITE_ARGUMENTS } from '../../config/builtins.ts';
+import { KEY_WRITE_ARGUMENTS } from '../../config/collections.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getKey(node: TSESTree.Node | undefined): string | undefined {

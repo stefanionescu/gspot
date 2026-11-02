@@ -12,7 +12,7 @@ import {
     RELATIVE_SPECIFIER,
     DEFAULT_BOUNDARY_FOLDERS,
     IMPORT_BOUNDARY_OPTIONS_SCHEMA,
-} from '../../config/rules.ts';
+} from '../../config/structure.ts';
 
 function matchAlias(importedPath: string, pattern: string, target: string): string | undefined {
     const keyStar = pattern.indexOf('*');
