@@ -59,6 +59,8 @@ buildRuleTester({ root }).run('require-test-assertions', rule, {
         },
         ...[
             'import chai from "chai";\nit("reads", () => { value.should.be; });',
+            'import chai from "chai";\nit("reads", () => { value.should(); });',
+            'import test from "node:test";\nimport assert from "node:assert";\ntest("adds", (done, t) => { t.assert.ok(add(1, 2)); });',
             'import { expect } from "chai";\nit("loads", (done) => { run(); done(); });',
             'import { expect } from "chai";\nfunction check(value) { log(value); }\nit("adds", () => { check(run()); });',
             'import { test, expect } from "vitest";\ntest("adds", () => { expect.assertions(1); });',

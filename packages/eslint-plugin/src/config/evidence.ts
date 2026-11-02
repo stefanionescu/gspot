@@ -83,7 +83,7 @@ export const TEST_FRAMEWORK_DEPENDENCIES = [
     'vitest',
 ];
 
-export const CHAI_TERMINALS = new Set([
+export const CHAI_TERMINALS: ReadonlySet<string | null> = new Set([
     'Arguments',
     'NaN',
     'arguments',

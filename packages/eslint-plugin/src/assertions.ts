@@ -44,10 +44,10 @@ import {
 } from './config/assertions.ts';
 
 const styleCache = new WeakMap<TSESLint.SourceCode, AssertionStyles>();
-const expectPredicates = new Map<string, AssertionPredicate>(EXPECT_PREDICATES);
-const expectComparisons = new Map<string, AssertionComparison>(EXPECT_COMPARISONS);
-const chaiPredicates = new Map<string, AssertionPredicate>(CHAI_PREDICATES);
-const chaiComparisons = new Map<string, AssertionComparison>(CHAI_COMPARISONS);
+const expectPredicates = new Map<string | null, AssertionPredicate>(EXPECT_PREDICATES);
+const expectComparisons = new Map<string | null, AssertionComparison>(EXPECT_COMPARISONS);
+const chaiPredicates = new Map<string | null, AssertionPredicate>(CHAI_PREDICATES);
+const chaiComparisons = new Map<string | null | undefined, AssertionComparison>(CHAI_COMPARISONS);
 const chaiAssertChecks = new Map<string, AssertionChecks>(
     CHAI_ASSERT_CHECKS.map(([name, checks]) => [name, { style: 'chai-assert', ...checks }]),
 );
@@ -90,22 +90,21 @@ function readExpectSubject(node: TSESTree.Node): AssertionSubject | undefined {
 function readExpectAssertion(node: TSESTree.CallExpression, style: AssertionStyles['expect']): Assertion | undefined {
     const callee = node.callee;
     if (style === undefined || callee.type !== AST_NODE_TYPES.MemberExpression) return undefined;
-    const matcher = ASTUtils.getPropertyName(callee) ?? '';
+    const matcher = ASTUtils.getPropertyName(callee);
     const subject = readExpectSubject(callee.object);
     const predicate = node.arguments.length === 0 ? expectPredicates.get(matcher) : undefined;
     if (subject === undefined) return undefined;
     if (predicate !== undefined)
         return { ...subject, style, kind: 'predicate', predicate, node, report: subject.received };
     const checks = { style, comparison: expectComparisons.get(matcher), negated: subject.negated };
-    const values = [subject.received, ...node.arguments];
-    return node.arguments.length === 1 ? readCheckedCall(node, checks, callee.property, values) : undefined;
+    return readCheckedCall(node, checks, callee.property, [subject.received, ...node.arguments]);
 }
 
 function readChaiChain(node: TSESTree.Node): ChaiChain | undefined {
-    const names: string[] = [];
+    const names: (string | null)[] = [];
     let value = node;
     while (value.type === AST_NODE_TYPES.MemberExpression && !value.computed) {
-        const name = ASTUtils.getPropertyName(value) ?? '';
+        const name = ASTUtils.getPropertyName(value);
         if (name === 'should') return { received: value.object, names };
         names.unshift(name);
         value = value.object;
@@ -116,7 +115,7 @@ function readChaiChain(node: TSESTree.Node): ChaiChain | undefined {
 
 function readChaiPredicate(node: TSESTree.MemberExpression): Assertion | undefined {
     const chain = readChaiChain(node.object);
-    const predicate = chaiPredicates.get(ASTUtils.getPropertyName(node) ?? '');
+    const predicate = chaiPredicates.get(ASTUtils.getPropertyName(node));
     if (chain === undefined || predicate === undefined) return undefined;
     const negated = chain.names.includes('not');
     return {
@@ -134,7 +133,7 @@ function readChaiCall(node: TSESTree.CallExpression, styles: AssertionStyles): A
     const member = node.callee;
     if (!styles.chai || member.type !== AST_NODE_TYPES.MemberExpression) return undefined;
     const chain = readChaiChain(member.object);
-    const comparison = chaiComparisons.get(ASTUtils.getPropertyName(member) ?? '');
+    const comparison = chaiComparisons.get(ASTUtils.getPropertyName(member));
     if (chain === undefined || comparison === undefined) return undefined;
     const negated = chain.names.includes('not');
     const checks = {
@@ -148,19 +147,18 @@ function readChaiCall(node: TSESTree.CallExpression, styles: AssertionStyles): A
 function readCypressChecks(chainer: TSESTree.Node | undefined): AssertionChecks | undefined {
     const names =
         chainer?.type === AST_NODE_TYPES.Literal && typeof chainer.value === 'string' ? chainer.value.split('.') : [];
-    const comparison = chaiComparisons.get(names.at(-1) ?? '');
+    const comparison = chaiComparisons.get(names.at(-1));
     const negated = names.includes('not');
     if (comparison === undefined) return undefined;
     return { style: 'cypress', comparison: names.includes('deep') ? 'deep' : comparison, negated };
 }
 
 function readCypressCall(node: TSESTree.CallExpression, styles: AssertionStyles): Assertion | undefined {
-    const callee = node.callee;
+    const { callee } = node;
     const [chainer, ...values] = node.arguments;
-    const method = callee.type === AST_NODE_TYPES.MemberExpression ? ASTUtils.getPropertyName(callee) : null;
-    const isAssertion = styles.cypress && CYPRESS_ASSERTIONS.has(method ?? '') && values.length === 1;
-    if (!isAssertion || callee.type !== AST_NODE_TYPES.MemberExpression || !isCypressChain(callee.object))
-        return undefined;
+    const isMethod =
+        callee.type === AST_NODE_TYPES.MemberExpression && CYPRESS_ASSERTIONS.has(ASTUtils.getPropertyName(callee));
+    if (!styles.cypress || !isMethod || values.length !== 1 || !isCypressChain(callee.object)) return undefined;
     return readCheckedCall(node, readCypressChecks(chainer), callee.property, [callee.object, ...values]);
 }
 
@@ -196,11 +194,13 @@ predicate on one value or a comparison of two values.
 @param node the call or member to read.
 @param context the rule context of the file.
 */
-export function readAssertion(node: TSESTree.Node, context: FileContext): Assertion | undefined {
+export function readAssertion(
+    node: TSESTree.CallExpression | TSESTree.MemberExpression,
+    context: FileContext,
+): Assertion | undefined {
     const styles = readAssertionStyles(context);
     const source = context.sourceCode;
     if (node.type === AST_NODE_TYPES.MemberExpression) return styles.chai ? readChaiPredicate(node) : undefined;
-    if (node.type !== AST_NODE_TYPES.CallExpression) return undefined;
     const checks = readAssertChecks(readModuleName(node.callee, source) ?? source.getText(node.callee), styles);
     return (
         readExpectAssertion(node, styles.expect) ??
@@ -244,24 +244,19 @@ function isNodeTestAssertion(node: TSESTree.CallExpression, source: TSESLint.Sou
     );
 }
 
-function isCypressAssertion(node: TSESTree.CallExpression): boolean {
-    const { callee } = node;
-    const method = callee.type === AST_NODE_TYPES.MemberExpression ? ASTUtils.getPropertyName(callee) : null;
-    return (
-        callee.type === AST_NODE_TYPES.MemberExpression &&
-        CYPRESS_ASSERTIONS.has(method ?? '') &&
-        isCypressChain(callee.object)
-    );
-}
-
 function isRunnerAssertion(
     node: TSESTree.CallExpression,
     name: string,
     styles: AssertionStyles,
     source: TSESLint.SourceCode,
 ): boolean {
+    const { callee } = node;
     const isRunner = RUNNER_ASSERTION.test(name) && !EXPECT_SETUP.test(name);
-    const isCypress = styles.cypress && isCypressAssertion(node);
+    const isCypress =
+        styles.cypress &&
+        callee.type === AST_NODE_TYPES.MemberExpression &&
+        CYPRESS_ASSERTIONS.has(ASTUtils.getPropertyName(callee)) &&
+        isCypressChain(callee.object);
     return isRunner || isCypress || (styles.globalExpect && isGlobalExpect(node, source));
 }
 
@@ -305,5 +300,5 @@ export function isChaiPropertyAssertion(node: TSESTree.Node): boolean {
             ? readChainEnd(node)
             : undefined;
     const isCall = top?.parent.type === AST_NODE_TYPES.CallExpression && top.parent.callee === top;
-    return top !== undefined && (isCall || CHAI_TERMINALS.has(ASTUtils.getPropertyName(top) ?? ''));
+    return top !== undefined && (isCall || CHAI_TERMINALS.has(ASTUtils.getPropertyName(top)));
 }

@@ -227,7 +227,7 @@ export const CHAI_MODULES = ['chai', 'chai/register-assert', 'chai/register-expe
 
 export const CYPRESS_MODULES = ['cypress'];
 
-export const CYPRESS_ASSERTIONS = new Set(['should', 'and']);
+export const CYPRESS_ASSERTIONS: ReadonlySet<string | null> = new Set(['should', 'and']);
 
 export const NODE_ASSERT_MODULES = ['assert', 'node:assert', 'assert/strict', 'node:assert/strict'];
 

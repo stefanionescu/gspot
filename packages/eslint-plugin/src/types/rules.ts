@@ -249,7 +249,7 @@ export type AssertionStyles = {
 
 export type AssertionKind = 'script' | 'runner' | 'type';
 
-export type ChaiChain = { received: TSESTree.Expression; names: string[] };
+export type ChaiChain = { received: TSESTree.Expression; names: (string | null)[] };
 
 export type AssertedValue = { isFresh: boolean; isConstant: boolean; value: unknown };
 
