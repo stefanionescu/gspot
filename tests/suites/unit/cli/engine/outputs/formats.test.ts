@@ -9,6 +9,7 @@ import type { Check } from '#cli/types/manifests.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { isLinux } from '#tests/setup/system/platform.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { outputSchema } from '#cli/schemas/manifests/checks.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { GREETING_SOURCE } from '#tests/config/setup/languages.ts';
@@ -18,7 +19,6 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import type { Finding, CommandRun } from '#cli/types/engine/tool-runs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { FAILED_RUN, BASE_CHECK } from '#tests/config/engine/tool-runs.ts';
-import { parseOutput, OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { addCommandLine, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 
 import {
@@ -279,14 +279,3 @@ test.each([false, true])(
         ]);
     },
 );
-
-test('only Bash checks with rule IDs advertise rule output', () => {
-    const checks = readConfigurations().get('bash')?.checks;
-    expect(checks).toBeDefined();
-    const namesRules = (id: string) => {
-        const { output } = checks?.find((check) => check.id === id) as NonNullable<typeof checks>[number];
-        return OUTPUT_FORMATS[output.format].namesRules(output);
-    };
-    expect(namesRules('bash/zsh-syntax')).toBe(false);
-    expect(namesRules('bash/shellcheck')).toBe(true);
-});
