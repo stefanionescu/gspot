@@ -129,10 +129,11 @@ const JSDOC_RULES = {
             publicOnly: true,
             require: {
                 FunctionDeclaration: true,
-                ArrowFunctionExpression: true,
-                FunctionExpression: true,
                 MethodDefinition: true,
             },
+            contexts: [
+                ':matches(VariableDeclarator, AssignmentExpression, ExportDefaultDeclaration, PropertyDefinition) > :matches(ArrowFunctionExpression, FunctionExpression)',
+            ],
         },
     ],
     'jsdoc/require-description': 'error',

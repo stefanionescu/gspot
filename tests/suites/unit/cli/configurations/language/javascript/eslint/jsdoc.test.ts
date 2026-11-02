@@ -14,6 +14,7 @@ import {
     JSDOC_FINDINGS,
     CORRECTED_JSDOC,
     ROOT_PARAMETERS,
+    MEMBER_FUNCTIONS,
 } from '#tests/config/configurations/javascript/plugins.ts';
 
 test.each(['all'] as const)(
@@ -91,6 +92,20 @@ test('jsdoc/match-name reports the root0 placeholder and keeps a parameter named
     const eslint = await buildEslint(sandbox.path);
     expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['jsdoc/match-name'])).toStrictEqual([
         { file: 'source.js', rule: 'jsdoc/match-name', line: 11 },
+    ]);
+});
+
+test('jsdoc/require-jsdoc skips the functions of an exported object literal', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'source.js': MEMBER_FUNCTIONS,
+    });
+
+    const eslint = await buildEslint(sandbox.path);
+    expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['jsdoc/require-jsdoc'])).toStrictEqual([
+        { file: 'source.js', rule: 'jsdoc/require-jsdoc', line: 7 },
+        { file: 'source.js', rule: 'jsdoc/require-jsdoc', line: 9 },
     ]);
 });
 
