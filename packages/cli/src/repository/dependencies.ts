@@ -42,7 +42,6 @@ Read the supported dependency files.
 
 @param cache the run cache.
 @param files the tracked inventory.
-@returns one dependency file per supported source file.
 */
 export async function readDependencyFiles(cache: RunCache, files: TrackedFile[]): Promise<DependencyFile[]> {
     const dependencies: DependencyFile[] = [];

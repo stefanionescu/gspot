@@ -158,7 +158,6 @@ Remove terminal escape sequences, control characters except tabs and line feeds,
 bidirectional overrides. Keep the color codes of the gspot palette. Repository text then cannot control terminal output.
 
 @param text the text to print.
-@returns the text without them.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Terminal writers share the same control-character removal.
 function stripControlCharacters(text: string): string {

@@ -20,7 +20,7 @@ import type {
     SqlStatementVisitors,
 } from '#cli/types/configurations/infrastructure.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Ten schema readers in this file qualify a name with its schema through it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The statement readers of this file qualify each table and index name with its schema through it.
 function qualifyName(schema: string | undefined, name: string | undefined = ''): string {
     return `${schema === undefined || schema === '' ? PUBLIC_SCHEMA : schema}.${name}`;
 }

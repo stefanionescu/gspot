@@ -156,7 +156,6 @@ Replace comments with spaces while preserving source offsets and line breaks.
 @param grammar the grammar of the source.
 @param text the source contents.
 @param cache the parsed trees of this run.
-@returns source text with comment contents masked.
 */
 async function maskGrammarComments(grammar: GrammarName | 'sql', text: string, cache: ParseCache): Promise<string> {
     const ranges: TextRange[] = [];

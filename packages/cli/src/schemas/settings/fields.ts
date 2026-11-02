@@ -108,7 +108,7 @@ Accept a setting value, or a reasoned value with the same value schema.
 @param schema the value validator.
 @param definition the description of the setting and the change that needs a reason.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlining repeats the reasoned-value schema and exceeds file length and duplication limits.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The settings schemas accept a reasoned value for each setting through this one schema.
 export function allowReasonedValue<Output, Input>(
     schema: z.ZodType<Output, Input>,
     definition: ReasonedSettingDefinition & { default: z.util.NoUndefined<Output> },

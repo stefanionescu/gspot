@@ -24,7 +24,6 @@ List the path ignores of one check, each with its written reason.
 
 @param scopeSettings the merged settings and ignores of the scope.
 @param checkId the ID whose path ignores apply.
-@returns one section for each path ignore.
 */
 export function listCheckIgnoreSections(scopeSettings: ScopeSettings, checkId: string): IgnoreSection[] {
     return listIgnores(scopeSettings, checkId)

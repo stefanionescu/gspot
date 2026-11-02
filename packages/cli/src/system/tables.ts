@@ -2,7 +2,6 @@
 Check whether a parsed value holds named fields without an array or date prototype.
 
 @param value the parsed value to tell apart from arrays, dates, and null.
-@returns whether the value holds keys.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers narrow the type through it.
 export function isTable(value: unknown): value is Record<string, unknown> {

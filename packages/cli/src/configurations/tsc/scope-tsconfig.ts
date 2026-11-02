@@ -25,7 +25,6 @@ Builds the scope compiler configuration, extending its authored project when pre
 @param session the repository and run cache.
 @param scope the scope and settings.
 @param file the absolute destination of the configuration.
-@returns the compiler configuration.
 */
 export function buildTsconfig(session: Session, scope: Scope, file: string): Record<string, unknown> {
     const ts = requireTypescript();

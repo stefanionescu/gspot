@@ -155,7 +155,7 @@ List the root settings and every scope table, with their locations in the docume
 @param settings the parsed gspot.toml.
 @returns the tables in written order, root first.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Settings validation, the gspot check, remove, and two generators walk the root and scope tables in written order through it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Settings validation, the gspot check, remove, and the format and ESLint generators walk the root and scope tables in written order through it.
 export function listSettingsTables(settings: Settings): WrittenScopeTable[] {
     return [
         { table: settings, scope: '', path: [] },
@@ -323,7 +323,6 @@ List the settings that apply, with language defaults and written variants, in ke
 @param availableSettings the settings and defaults of the selected configurations.
 @param settings the parsed gspot.toml.
 @param scopePath the folder whose table applies last, if any.
-@returns the resolved settings in key order.
 */
 export function listInheritedSettings(
     availableSettings: AvailableSettings,

@@ -14,7 +14,6 @@ export const executableLayout = process.platform === 'win32' ? EXECUTABLE_LAYOUT
 Convert a path to forward slashes on every system, for path patterns, stored paths, and output.
 
 @param path the path, with system separators.
-@returns the path with forward slashes.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers write stored and printed paths with forward slashes through this one Windows rule.
 export function convertToPosixPath(path: string): string {
@@ -25,7 +24,6 @@ export function convertToPosixPath(path: string): string {
 Check whether a path relative to a folder stays inside it: not absolute, not the parent, and not under the parent.
 
 @param local the path relative to the folder, with either separator.
-@returns whether the path stays inside the folder.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers refuse a path outside its folder by this test, which accepts both separators.
 export function isInside(local: string): boolean {
@@ -33,7 +31,7 @@ export function isInside(local: string): boolean {
 }
 
 /**
-Extract the extension with its dot, in lower case. Double extensions such as '.d.ts' stay whole.
+Extract the extension with its dot, in lower case. A declaration extension such as '.d.ts' stays whole.
 
 @param path the path, with forward slashes.
 @returns '' without an extension.
@@ -84,7 +82,6 @@ export function extractBaseName(path: string): string {
 Collect each path and every folder above it.
 
 @param paths the repository-relative files.
-@returns the paths and parent folders, each once.
 */
 export function includeParentFolders(paths: readonly string[]): Set<string> {
     const covered = new Set(paths);
@@ -99,7 +96,6 @@ export function includeParentFolders(paths: readonly string[]): Set<string> {
 List the file names that an executable can have on this system, in the order the system tries them.
 
 @param name the executable without a suffix.
-@returns the names to look for.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Checks, tools, and tests list the executable names with the suffixes of this system.
 export function listExecutableNames(name: string): string[] {
@@ -177,7 +173,6 @@ export function buildModuleSpecifier(fromFile: string, toFile: string): string {
 Test whether a path passes through an installed dependency folder.
 
 @param path the repository-relative path.
-@returns whether a folder segment names installed dependencies.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Checks and repository reads skip installed dependency folders by this one rule.
 export function isInInstalledFolder(path: string): boolean {
@@ -188,7 +183,6 @@ export function isInInstalledFolder(path: string): boolean {
 Escape a literal repository path for use within a glob.
 
 @param path the literal path.
-@returns the path with glob syntax escaped.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers escape a literal path for a glob with the one set of special characters.
 export function escapeGlob(path: string): string {

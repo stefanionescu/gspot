@@ -281,7 +281,6 @@ Build the error for a Git command that exited with a failure.
 @param cwd where Git ran.
 @param commandArguments the arguments after git.
 @param result how Git exited.
-@returns the error to throw.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Git commands in system and repository code report a failure with this one message.
 export function buildGitError(
@@ -299,7 +298,6 @@ export function buildGitError(
 Check whether Git refused to run because the folder holds no repository.
 
 @param result how Git exited.
-@returns whether Git reported that the folder holds no repository.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The repository read and the Git commands tell a folder without a repository apart by this one test.
 export function isNotRepository(result: Pick<SpawnResult, 'code' | 'stderr'>): boolean {

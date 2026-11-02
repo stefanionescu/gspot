@@ -56,7 +56,6 @@ Read settings and report every invalid field at its source line.
 
 @param text the settings file contents.
 @param root the repository root.
-@returns validated settings.
 */
 export function readSettings(text: string, root: string): Settings {
     const result = parseSettings(text, root);

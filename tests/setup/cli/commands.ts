@@ -14,16 +14,10 @@ import type { Sandbox, FindingRow, StdinOptions, ProcessOutput, ScopeFindingRow 
 
 export const CLI_BIN = join(REPOSITORY_ROOT, 'packages/cli/src/bin.ts');
 
-/**
-List the file, line, and rule of every finding in the report.
-*/
 export function listFindingRows(report: RunReport): FindingRow[] {
     return report.checks.flatMap(({ findings }) => findings.map(({ file, line, rule }) => ({ file, line, rule })));
 }
 
-/**
-List the scope, file, line, and rule of every finding in the report.
-*/
 export function listScopeFindingRows(report: RunReport): ScopeFindingRow[] {
     return report.checks.flatMap(({ scope, findings }) =>
         findings.map(({ file, line, rule }) => ({ scope, file, line, rule })),
@@ -61,10 +55,6 @@ export async function runGspot(
     }
 }
 
-/**
-Parse the JSON report of a completed check run.
-*/
-
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: This reader keeps the parsed report cast at one boundary.
 export function parseCheckReport(output: ProcessOutput): ProcessOutput & { report: RunReport & { fixes?: FixReport } } {
     return { ...output, report: JSON.parse(output.stdout) as RunReport & { fixes?: FixReport } };
@@ -73,7 +63,6 @@ export function parseCheckReport(output: ProcessOutput): ProcessOutput & { repor
 /**
 Run gspot as a child process in a folder with color off and CI set.
 */
-
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Sandbox.run takes it as a value.
 export async function spawnGspot(
     cwd: string,
@@ -88,9 +77,6 @@ export async function spawnGspot(
     });
 }
 
-/**
-Run one check as a child process and return its result for the root scope.
-*/
 export async function spawnRootCheck(root: string, checkId: string): Promise<CheckResult> {
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', checkId, '--json']));
     const found = result.report.checks.find((each) => each.scope === '');
@@ -126,9 +112,6 @@ export async function assertRefusalWithoutWrites(
     expect(await readTree(root)).toStrictEqual(before);
 }
 
-/**
-Run apply and install in a sandbox.
-*/
 export async function applyThenInstall(root: string): Promise<void> {
     const sandbox = { root, run: spawnGspot };
     await runGspotStep(sandbox, ['apply']);

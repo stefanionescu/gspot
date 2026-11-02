@@ -106,9 +106,6 @@ export async function writeSandboxChanges(sandbox: Sandbox, changes: SandboxChan
     return resources.move();
 }
 
-/**
-Write the generated files for an existing test repository.
-*/
 export async function applyGeneratedFiles(root: string): Promise<void> {
     const writer = openFiles(root);
     const session = await openSession(root);
@@ -118,7 +115,6 @@ export async function applyGeneratedFiles(root: string): Promise<void> {
 /**
 Build the changes that replace the files of a sandbox plan with these files and keep its .gitignore.
 */
-
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests in many files replace the files of a sandbox through it, and jscpd reports the inlined copies as clones.
 export function buildSandboxChanges(
     planFiles: Readonly<Record<string, string>>,

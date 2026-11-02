@@ -85,8 +85,6 @@ export function formatSimilarNames(name: string, names: string[]): string {
 Quote one argument for a POSIX shell command shown to the reader.
 
 @param argument the command token to display without shell expansion.
-
-@returns the argument with any required shell quoting.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Commands, CI generation, and settings messages quote a shell argument by this one rule.
 export function quoteArgument(argument: string): string {
@@ -133,7 +131,6 @@ Format a count with its singular or plural noun.
 
 @param count the quantity that selects the noun ending.
 @param noun the singular word.
-@returns the count and the noun with the matching ending.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Messages in many layers form a counted noun with this one plural rule.
 export function formatCount(count: number, noun: string): string {
@@ -156,7 +153,6 @@ Compare text by code units so paths and generated names keep the same order in e
 
 @param left the first text.
 @param right the second text.
-@returns a negative number, zero, or a positive number for the text order.
 */
 export function compareText(left: string, right: string): number {
     if (left < right) return -1;

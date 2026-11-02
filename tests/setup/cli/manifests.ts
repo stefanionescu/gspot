@@ -4,9 +4,6 @@ import { manifestSchema } from '#cli/schemas/manifests/manifest.ts';
 import { type Check, type Configuration } from '#cli/types/manifests.ts';
 import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
 
-/**
-List the shipped configurations that gspot selects in every repository.
-*/
 export function listAlwaysSelected(): string[] {
     return readConfigurations()
         .values()

@@ -113,9 +113,6 @@ export async function runSandboxCheck(
     return result.findings;
 }
 
-/**
-Open a session with fake pinned versions of these tools.
-*/
 export async function openFakeToolSession(
     root: string,
     toolNames: string[],
@@ -126,9 +123,6 @@ export async function openFakeToolSession(
     return session;
 }
 
-/**
-Find the code of a built-in check, as a function that resolves to its findings.
-*/
 export function getBuiltInCheck(checkId: string): (session: Session, planned: PlannedCheck) => Promise<Finding[]> {
     const check = CHECK_CODE[checkId]?.check;
     if (check === undefined) throw new Error(`${checkId} has no built-in check.`);

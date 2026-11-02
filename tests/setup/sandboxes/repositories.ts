@@ -72,8 +72,6 @@ export async function createLfsRepository(): Promise<TestdirResult> {
 
 /**
 Create a repository with a committed migration and freeze its migrations.
-
-@returns the repository and its cleanup.
 */
 export async function createMigrationHistory(): Promise<AsyncDisposable & { path: string }> {
     const sandbox = await testdir({

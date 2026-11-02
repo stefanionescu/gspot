@@ -228,7 +228,7 @@ List the written ignores that apply to a check or to every check.
 @param check the check name.
 @returns the matching ignores.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Planning and five generators select the ignores of one check by this rule: an ignore without a check covers every check.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Planning and the config file generators select the ignores of one check by this rule: an ignore without a check covers every check.
 export function listIgnores(scopeSettings: ScopeSettings, check: string): ScopeSettings['ignores'] {
     return scopeSettings.ignores.filter((ignore) => ignore.check === check || ignore.check === undefined);
 }

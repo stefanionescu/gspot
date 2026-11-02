@@ -5,9 +5,8 @@ import type { EslintScope, ConfigurationBlocks } from '#cli/types/configurations
 Apply the basic rules and strict schema conventions of Zod.
 
 @param scope the code files of the scope.
-@returns the imported plugin and its rule block.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The configuration builder table or shared block builders call this function.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: CONFIGURATION_BUILDERS calls it by configuration name, like every block builder.
 export function buildZodBlocks(scope: Pick<EslintScope, 'eslintFiles'>): ConfigurationBlocks {
     return {
         imports: CONFIGURATION_PLUGINS.zod,

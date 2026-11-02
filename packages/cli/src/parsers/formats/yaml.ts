@@ -31,7 +31,6 @@ Parse every document of a YAML file.
 
 @param path the file, for the error.
 @param text the complete source, including document separators.
-@returns the value of each document, in order.
 */
 export function parseYamlDocuments(path: string, text: string): unknown[] {
     const documents = parseAllDocuments(text, { merge: true, logLevel: 'error' });

@@ -176,7 +176,6 @@ export function importSvelteParser(moduleUrl: string = import.meta.url): Compone
 Copy a block before applying its configuration calls.
 
 @param block the JSON fields of the block.
-@returns a new block.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Generated ESLint files import this transformation by name.
 export function buildBlock(block: JavascriptBlock): JavascriptBlock {
@@ -188,7 +187,6 @@ Read one value of a preset or parser package.
 
 @param preset the imported package.
 @param path the dotted export path.
-@returns the selected export.
 */
 export function readPreset(preset: unknown, path: string): unknown {
     let value = preset;
@@ -202,7 +200,6 @@ Put one config of an imported preset under the block: its fields, then those of 
 @param block the block that the generated file writes.
 @param preset the default export of the preset package.
 @param path the dotted path of the config in that export, empty for the export itself.
-@returns a new block.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Generated ESLint files import this transformation by name.
 export function mergePreset(block: JavascriptBlock, preset: unknown, path: string): JavascriptBlock {
@@ -217,7 +214,6 @@ rules of each config in order.
 @param block the block that the generated file writes.
 @param preset the default export of the preset package.
 @param path the dotted path of the config or list in that export, empty for the export itself.
-@returns a new block.
 */
 export function mergePresetRules(block: JavascriptBlock, preset: unknown, path: string): JavascriptBlock {
     const selected = readPreset(preset, path) as JavascriptBlock | JavascriptBlock[];
@@ -264,7 +260,6 @@ keeps its value.
 
 @param block the block after its preset.
 @param options the added options of each rule.
-@returns a new block.
 */
 export function mergeRuleOptions(
     block: JavascriptBlock,
@@ -314,7 +309,6 @@ Give each enabled gspot rule the severity from the plugin config. Disable rules 
 @param plugin the gspot ESLint plugin.
 @param plugin.configs the rule presets by level.
 @param config the config of the level, such as recommended.
-@returns a new block.
 */
 export function setLevelRules(
     block: JavascriptBlock,
@@ -336,7 +330,6 @@ Set the plugins of the block.
 
 @param block the block that the generated file writes.
 @param plugins each imported plugin, by its rule prefix.
-@returns a new block.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Generated ESLint files import this transformation by name.
 export function addPlugins(block: JavascriptBlock, plugins: Record<string, unknown>): JavascriptBlock {
@@ -349,7 +342,6 @@ Set each key of the block to the repository root, or to the scope folder under i
 @param block the block that the generated file writes.
 @param keys the dotted keys, such as languageOptions.parserOptions.tsconfigRootDir.
 @param scope the scope folder, from the root.
-@returns a new block.
 */
 export function setRootFolder(block: JavascriptBlock, keys: string[][], scope = ''): JavascriptBlock {
     const result: JavascriptBlock = { ...block };
@@ -371,7 +363,6 @@ Set the import-x/resolver-next setting of the block to one TypeScript resolver o
 @param block the block that the generated file writes.
 @param createImportLookup createTypeScriptImportResolver of eslint-import-resolver-typescript.
 @param projects the tsconfig.json paths, from the repository root.
-@returns a new block.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Generated ESLint files import this transformation by name.
 export function setImportLookup(
@@ -393,7 +384,6 @@ Configure the resolver interface of the boundaries plugin.
 
 @param block the configuration block.
 @param projects the TypeScript project paths.
-@returns the block with its resolver.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Generated ESLint files import this transformation by name.
 export function setBoundaryLookup(block: JavascriptBlock, projects: string[]): JavascriptBlock {
@@ -413,7 +403,6 @@ Set the source type and the globals of the block. Refuse a runtime that the glob
 @param globals the default export of the globals package.
 @param names the globals table of the runtime, such as nodeBuiltin.
 @param sourceType commonjs for CommonJS files.
-@returns a new block.
 */
 export function setRuntime(
     block: JavascriptBlock,
@@ -435,7 +424,6 @@ Set the parser of a Vue or Svelte block. Apply the supplied TypeScript parser to
 @param block the block that the generated file writes.
 @param parser vue-eslint-parser or svelte-eslint-parser.
 @param typescriptParser the parser of TypeScript script elements.
-@returns a new block.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Generated ESLint files import this transformation by name.
 export function setComponentParser(
@@ -464,7 +452,6 @@ Set the TypeScript parser of an Astro component.
 
 @param block the component block.
 @param parser the TypeScript parser.
-@returns the block with its script parser.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Generated ESLint files import this transformation by name.
 export function setScriptParser(block: JavascriptBlock, parser: unknown): JavascriptBlock {
@@ -478,14 +465,13 @@ export function setScriptParser(block: JavascriptBlock, parser: unknown): Javasc
 }
 
 /**
-Read language globals from the Jest plugin.
+Replace the globals of the test block with the Jest globals of the plugin.
 
 @param block the test block.
 @param plugin the imported Jest plugin.
 @param plugin.environments the test environments.
 @param plugin.environments.globals the default Jest environment.
 @param plugin.environments.globals.globals the global identifiers of Jest.
-@returns the block with Jest globals.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Generated ESLint files import this transformation by name.
 export function setJestGlobals(

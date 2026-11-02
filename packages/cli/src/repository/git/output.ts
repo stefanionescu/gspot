@@ -110,7 +110,6 @@ Validate the fields of an index or tree entry.
 
 @param match the entry matched against its listing format.
 @param schema the expected fields and supported file modes.
-@returns the validated entry.
 */
 export function parseListingLine<T>(match: RegExpExecArray | null, schema: z.ZodType<T>): T {
     const parsed = schema.safeParse(match?.groups);

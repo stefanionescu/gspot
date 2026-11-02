@@ -176,7 +176,6 @@ Order two migration versions group by group, each group as a number.
 
 @param left a version.
 @param right another version.
-@returns a negative number when left comes first, zero for equal versions, or a positive number otherwise.
 */
 export function compareMigrationVersions(left: string, right: string): number {
     const first = left.replaceAll('_', '.').split('.');

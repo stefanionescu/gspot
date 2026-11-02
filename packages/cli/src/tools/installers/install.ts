@@ -109,7 +109,6 @@ Build what every install step reads from the session.
 
 @param session the repository and its settings.
 @param input the repository handle, generated files, and tools of the checks.
-@returns the install of the tools.
 */
 function buildToolInstall(
     session: Session,

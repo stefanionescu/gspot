@@ -199,7 +199,6 @@ List the general configurations that gspot adds without an explicit selection.
 
 @param configurationsByName every shipped configuration
 @param repository the available inventory, if any
-@returns the automatic configurations, each once
 */
 export function listAutomaticConfigurations(
     configurationsByName: ReadonlyMap<string, Configuration>,

@@ -167,7 +167,6 @@ Write the values over the TOML text, and keep its order, its layout, and its com
 @param previous the parsed text.
 @param values the table to write.
 @param format the toml-patch format of the new values.
-@returns the TOML text.
 */
 export function buildPatchedToml(
     previous: TomlSyntax,

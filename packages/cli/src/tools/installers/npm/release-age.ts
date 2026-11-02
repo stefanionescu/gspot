@@ -6,7 +6,8 @@ import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 import { GSPOT_PACKAGES, MINUTES_PER_DAY, SECONDS_PER_DAY, RELEASE_AGE_FILES } from '#cli/config/tools/installers.ts';
 
 /**
-Set the minimum release age for the tool project lockfile. Pass flags to npm and write local settings for pnpm and Bun.
+Set the minimum release age for the tool project lockfile: pass flags to npm, and write local settings for pnpm. Bun
+reads the file that writeBunReleaseAge writes.
 The gspot packages install at the version of the CLI, so the hold skips them.
 
 @param runFolder the temporary folder that the package manager runs in.

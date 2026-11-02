@@ -10,9 +10,6 @@ import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
 
-/**
-Find the generated config file for a tool and scope.
-*/
 export function getConfigPath(session: Session, tool: string, scopePath = ''): string {
     const declaration = session.scopes
         .find((scope) => scope.path === scopePath)

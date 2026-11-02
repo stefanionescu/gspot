@@ -93,7 +93,6 @@ Print a block: its fields, the presets under it, and the calls that finish it. A
 
 @param blockWriter the level, the code files, and the runtimes of the file.
 @param block the block, its scope, and its label.
-@returns the serialized block.
 */
 export function buildBlockCalls(blockWriter: BlockWriter, block: PlannedEslintBlock): string {
     const source = `buildBlock(${serializeFields(buildScopeFields(blockWriter, block), blockWriter.runtimes ?? [])})`;

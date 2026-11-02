@@ -81,7 +81,6 @@ Checks file and folder names against the naming settings.
 
 @param session the repository and its tools.
 @param planned the scope files to check.
-@returns the findings.
 */
 export function checkPaths(session: Session, planned: PlannedCheck): CheckFinding[] {
     const settings = readNamingSettings(session.settings, planned.scope);

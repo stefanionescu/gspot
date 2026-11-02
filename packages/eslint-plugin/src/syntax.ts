@@ -84,7 +84,6 @@ export function isAlias(node: TSESTree.Node | null, scope: TSESLint.Scope.Scope)
 Build the visitors that hand each module specifier of a file to one check: imports, re-exports, dynamic and type imports, import-equals declarations, and CommonJS require calls.
 
 @param checkSource the check that receives each specifier node.
-@returns the visitors of the rule.
 */
 export function buildSourceVisitors(checkSource: (source: TSESTree.Node) => void): TSESLint.RuleListener {
     return {

@@ -13,7 +13,7 @@ import {
     PYTHON_PARAMETER_NODES,
 } from '#cli/config/configurations/naming.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three identifier readers in this file find the block that holds a definition through it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The identifier readers of this file find the block that holds a definition through it.
 function getHolderType(node: Node): string {
     const block = node.parent?.type === 'decorated_definition' ? node.parent.parent : node.parent;
     return block?.type === 'block' ? (block.parent?.type ?? 'module') : 'module';

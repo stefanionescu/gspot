@@ -83,7 +83,8 @@ function selectPackageManagers(
 }
 
 /**
-Refuse invalid settings or configuration choices.
+Read the settings and files of a repository, and build its scopes, checks, and tool configurations. Refuse invalid
+settings or configuration choices.
 
 @param root the repository root.
 @param options where the tools sit, and what the run already read.

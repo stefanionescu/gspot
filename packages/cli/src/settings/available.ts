@@ -148,8 +148,8 @@ function buildSettingsByConfiguration(): Map<string, Setting[]> {
 }
 
 /**
-Build the known settings in the order of the selected configurations. Framework, platform, library, and database
-configurations override single-value defaults.
+Build the known settings in the order of the selected configurations. Configurations of the OVERRIDING_GROUPS groups
+override single-value defaults.
 
 @param configurations the manifests of the selection, in order.
 @param level picks the defaults of the configured level.

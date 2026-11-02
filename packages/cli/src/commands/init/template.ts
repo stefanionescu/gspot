@@ -119,7 +119,6 @@ Read the gspot.toml that init --from names, and split it into the settings that 
 
 @param file the path as typed.
 @param cwd the folder the command runs in.
-@returns the parsed template.
 */
 export function readTemplate(file: string, cwd: string): Template {
     const text = decodeUtf8(readTemplateBytes(file, cwd));

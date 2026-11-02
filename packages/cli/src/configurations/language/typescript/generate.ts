@@ -8,7 +8,7 @@ project files.
 
 @param scope the file selectors and projects of the scope.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The configuration builder table or shared block builders call this function.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: CONFIGURATION_BUILDERS calls it by configuration name, like every block builder.
 export function buildTypescriptBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'projects'>): ConfigurationBlocks {
     const { eslintFiles, projects } = scope;
     return {

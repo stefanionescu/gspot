@@ -35,7 +35,7 @@ Starts a passed check result with the check ID, scope, and file count.
 @param planned the check to run.
 @param session the scopes of the run.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Sharing the result shape prevents duplicate literals in command checks.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Built-in checks, command checks, and the check runner start each result from this one shape.
 export function buildBaseResult(planned: PlannedCheck, session: Pick<Session, 'scopes'>): CheckResult {
     return {
         check: planned.check.id,

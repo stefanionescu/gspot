@@ -36,7 +36,11 @@ and errors. Rewrite or delete a comment that describes behavior the code lacks, 
 - Do not write work status in a comment. For example, do not describe a paused job or a temporary choice.
 - Never mention a removed feature, an old name, earlier behavior, or a decision not to build something. The commit
   message records what changed.
-- Never copy a size, time, or default from the code into a comment; name the constant.
+- Never copy a size, time, default, or list of values from the code into a comment; name the constant.
+- Write a `@returns` only for a fact the type lacks.
+- Write a nested `@param a.b` only for a destructured parameter.
+- A suppression reason states one present cause: no caller counts, no counterfactual, and no reason pasted across unlike
+  sites.
 
 ## Deferred work
 

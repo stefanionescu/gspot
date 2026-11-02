@@ -5,9 +5,8 @@ import type { EslintScope, ConfigurationBlocks } from '#cli/types/configurations
 Apply the TanStack Query presets to the code files.
 
 @param scope the code selectors.
-@returns the plugin and the preset blocks.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The configuration builder table or shared block builders call this function.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: CONFIGURATION_BUILDERS calls it by configuration name, like every block builder.
 export function buildTanstackQueryBlocks(scope: Pick<EslintScope, 'eslintFiles'>): ConfigurationBlocks {
     return {
         imports: CONFIGURATION_PLUGINS['tanstack-query'],

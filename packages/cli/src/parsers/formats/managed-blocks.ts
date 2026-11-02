@@ -81,7 +81,6 @@ Keep the text outside a managed block.
 @param text the file contents.
 @param file the managed file.
 @param file.path the repository-relative path.
-@returns the text with the managed block removed.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Generation and file classification remove a managed block at the same span through it.
 export function stripBlock(text: string, file: { path: string }): string {

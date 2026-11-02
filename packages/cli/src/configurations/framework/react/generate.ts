@@ -3,10 +3,8 @@ import { REACT_RULES, REACT_FILES, CONFIGURATION_PLUGINS } from '#cli/config/con
 
 /**
 Apply the React, hooks, and refresh lint rules for the JSX mode.
-
-@returns the plugins and the block of the React files.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The configuration builder table or shared block builders call this function.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: CONFIGURATION_BUILDERS calls it by configuration name, like every block builder.
 export function buildReactBlocks(): ConfigurationBlocks {
     const blocks: ConfigurationBlocks['blocks'] = [
         {

@@ -22,9 +22,8 @@ function buildLimitRules(scopeSettings: ScopeSettings, language: 'typescript' | 
 Build the code and JavaScript limit rules of one scope.
 
 @param settings the configured size and complexity thresholds for this project.
-@returns the limit rules, by rule ID.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The configuration builder table or shared block builders call this function.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The ESLint plan and buildLimitRuleBlocks read the limit rules of a scope through it.
 export function buildScopeLimitRules(settings: ScopeSettings): EslintLevelRules {
     return {
         code: {

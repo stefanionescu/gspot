@@ -39,7 +39,6 @@ Test scope containment. The empty root path matches every file.
 
 @param path the file to test.
 @param scope the folder that may contain the file.
-@returns whether the scope contains the file.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers test scope containment by this rule: the root scope, an empty path, holds every path.
 export function isInScope(path: string, scope: string): boolean {
@@ -93,7 +92,6 @@ Resolve a scope-relative path within its repository.
 
 @param scope the repository-relative folder.
 @param path the scope-relative file.
-@returns the repository-relative path.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers join a path to its scope by this rule: the root scope, an empty path, adds no prefix.
 export function joinScope(scope: string, path: string): string {

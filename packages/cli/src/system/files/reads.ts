@@ -35,7 +35,6 @@ Read file bytes inside a folder, and refuse a link outside it. A run cache keeps
 @param path the root-relative file.
 @param options the limit of a read that needs only the first bytes and keeps nothing.
 @param options.limit the maximum byte count.
-@returns the file bytes.
 */
 export function readBytes(source: string | RunCache, path: string, options?: { limit: number }): Buffer {
     if (typeof source === 'string') return readFileSync(readContainedPath(realpathSync(source), path));
@@ -63,7 +62,6 @@ Read UTF-8 text, or return undefined for a missing file.
 
 @param source the folder of the relative path, or the run cache of that folder.
 @param path the root-relative file.
-@returns the file text.
 */
 export function find(source: string | RunCache, path: string): string | undefined {
     try {

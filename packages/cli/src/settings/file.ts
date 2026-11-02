@@ -55,7 +55,6 @@ Find the source line of a written setting or record.
 @param text the gspot.toml text.
 @param written the table that the text holds.
 @param keys the setting key or record path.
-@returns the written source line.
 */
 export function findSettingLine(text: string, written: Settings['written'], keys: KeyPath): number {
     const syntax = parseTomlSyntax(text, written);

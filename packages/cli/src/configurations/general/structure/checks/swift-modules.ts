@@ -59,7 +59,6 @@ function listXcodeModules(session: Session, path: string, swiftFiles: string[]):
 Read the files owned by each SwiftPM or Xcode module.
 
 @param session the repository and cached project files.
-@returns modules and their source paths.
 */
 export async function listSwiftModules(session: Session): Promise<SwiftModule[]> {
     const paths = session.repository.files.map((file) => file.path);

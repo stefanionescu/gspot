@@ -34,7 +34,6 @@ Turn the compiler lines of the reported levels into findings, with paths from th
 @param options the levels to report, and the rule of a line without one.
 @param options.levels the message levels to report.
 @param options.defaultRule the rule of a line without a rule suffix.
-@returns one finding for each compiler line of those levels.
 */
 function parseOutputFindings(
     session: Session,
