@@ -7,13 +7,13 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { readGitSetting } from '#cli/repository/git/run.ts';
 import { runtimePinsSchema } from '#tests/schemas/setup.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 import type { DoctorReport } from '#cli/types/commands/reports.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runCommand, runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { MISE_TRUST, HOOKS_SETTINGS, TOOL_PINS_FILE } from '#tests/config/setup/sandboxes.ts';
 import { runGspot, spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -59,7 +59,7 @@ async function assertCloneHooks(source: string, environment: Record<string, stri
     expect(ready.code, ready.stdout + ready.stderr).toBe(0);
     await writeFile(join(clone, 'scripts/b.sh'), UNQUOTED_SCRIPT);
     runGitStep(clone, ['add', 'scripts/b.sh']);
-    const rejected = runCommandBlocking(['git', 'commit', '-qm', 'Unquoted shell input'], {
+    const rejected = await runCommand(['git', 'commit', '-qm', 'Unquoted shell input'], {
         cwd: clone,
         env: environment,
     });
@@ -69,7 +69,7 @@ async function assertCloneHooks(source: string, environment: Record<string, stri
     ).toBe(true);
     await writeFile(join(clone, 'scripts/b.sh'), '#!/usr/bin/env bash\nprintf \'%s\\n\' "${1:-ready}"\n');
     runGitStep(clone, ['add', 'scripts/b.sh']);
-    const accepted = runCommandBlocking(['git', 'commit', '-qm', 'Quote shell input'], {
+    const accepted = await runCommand(['git', 'commit', '-qm', 'Quote shell input'], {
         cwd: clone,
         env: environment,
     });
@@ -91,14 +91,14 @@ test('a commit with a ShellCheck finding fails through the installed hook, in th
     await writeFile(join(sandbox.path, 'scripts', 'b.sh'), UNQUOTED_SCRIPT);
     runGitStep(sandbox.path, ['add', '-A']);
     const environment = { NO_COLOR: '1' };
-    const commit = runCommandBlocking(['git', 'commit', '-qm', 'bad'], { cwd: sandbox.path, env: environment });
+    const commit = await runCommand(['git', 'commit', '-qm', 'bad'], { cwd: sandbox.path, env: environment });
     expect(commit.code, commit.stdout + commit.stderr).toBe(1);
     expect((commit.stdout + commit.stderr).split('\n').some((line) => line.startsWith(UNQUOTED_FINDING_PREFIX))).toBe(
         true,
     );
     await writeFile(join(sandbox.path, 'scripts/b.sh'), '#!/usr/bin/env bash\nprintf \'%s\\n\' "$1"\n');
     runGitStep(sandbox.path, ['add', '-A']);
-    const corrected = runCommandBlocking(['git', 'commit', '-qm', 'Correct shell input'], {
+    const corrected = await runCommand(['git', 'commit', '-qm', 'Correct shell input'], {
         cwd: sandbox.path,
         env: environment,
     });
@@ -147,12 +147,12 @@ test('a commit in a linked worktree runs staged checks and blocks a finding', as
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     await writeFile(join(linked, 'src/added.txt'), 'DEFECT\n');
     runGitStep(linked, ['add', 'src/added.txt']);
-    const blocked = runCommandBlocking(['git', 'commit', '-qm', 'Defect'], { cwd: linked, env: environment });
+    const blocked = await runCommand(['git', 'commit', '-qm', 'Defect'], { cwd: linked, env: environment });
     expect(blocked.code, blocked.stdout + blocked.stderr).toBe(1);
     expect((blocked.stdout + blocked.stderr).split('\n')).toContain('  src/added.txt');
     await writeFile(join(linked, 'src/added.txt'), 'clean\n');
     runGitStep(linked, ['add', 'src/added.txt']);
-    const accepted = runCommandBlocking(['git', 'commit', '-qm', 'Clean'], { cwd: linked, env: environment });
+    const accepted = await runCommand(['git', 'commit', '-qm', 'Clean'], { cwd: linked, env: environment });
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
 });
 
@@ -196,12 +196,12 @@ test('a hook ignores a nested gspot.toml and checks the index at the Git root', 
     expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
     runGitStep(sandbox.path, ['add', '-A']);
     await writeFile(join(sandbox.path, 'source.txt'), 'corrected working tree\n');
-    const rejected = runCommandBlocking(['git', 'hook', 'run', 'pre-commit'], { cwd: sandbox.path, env: {} });
+    const rejected = await runCommand(['git', 'hook', 'run', 'pre-commit'], { cwd: sandbox.path, env: {} });
     expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
     expect((rejected.stdout + rejected.stderr).split('\n')).toContain('  source.txt:1  Indexed defect');
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected working tree\n');
     runGitStep(sandbox.path, ['add', 'source.txt']);
-    const corrected = runCommandBlocking(['git', 'hook', 'run', 'pre-commit'], { cwd: sandbox.path, env: {} });
+    const corrected = await runCommand(['git', 'hook', 'run', 'pre-commit'], { cwd: sandbox.path, env: {} });
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
