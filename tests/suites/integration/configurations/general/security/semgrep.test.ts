@@ -34,7 +34,7 @@ describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
 async function assertUnparsableBash(sandbox: Sandbox): Promise<void> {
     const sourceFiles = {
         'gspot.toml': buildSandboxSettings(['bash', 'security'], {
-            tables: '[security]\nrule_files = ["security/own.yml"]\n',
+            tables: '[security]\nsemgrep_rules = ["security/own.yml"]\n',
         }),
         'scripts/café build.sh': BROKEN_IF_SCRIPT,
         'security/own.yml': REPOSITORY_BASH_RULE,
@@ -55,7 +55,7 @@ async function assertUnparsableBash(sandbox: Sandbox): Promise<void> {
 async function assertAuthoredRules(sandbox: Sandbox): Promise<void> {
     const sourceFiles = {
         'gspot.toml': buildSandboxSettings(['typescript', 'security'], {
-            tables: '[security]\nrule_files = ["security/own.yml"]\n',
+            tables: '[security]\nsemgrep_rules = ["security/own.yml"]\n',
         }),
         'src/index.ts': `export function double(value: number): number {
     return value * 2;

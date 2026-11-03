@@ -83,7 +83,7 @@ Check the rule file paths of the root and every scope against the repository fil
 export function validateRuleFilePaths(root: string, settings: Settings): SettingsError[] {
     const files = openFiles(root);
     return listSettingsTables(settings).flatMap(({ table, scope, path }) => {
-        const ruleFiles = table.security?.rule_files;
+        const ruleFiles = table.security?.semgrep_rules;
         const paths = [
             ...(['eslint', 'stylelint'] as const).flatMap((tool) =>
                 (table.tools?.[tool]?.['plugins'] ?? []).flatMap(({ path: value }, index) =>
@@ -94,8 +94,8 @@ export function validateRuleFilePaths(root: string, settings: Settings): Setting
             ),
             ...(ruleFiles ?? []).map((value, index) => ({
                 value,
-                key: 'rule_files',
-                path: [...path, 'security', 'rule_files', index],
+                key: 'semgrep_rules',
+                path: [...path, 'security', 'semgrep_rules', index],
             })),
         ];
         return paths.flatMap(({ value, key, path }) => {

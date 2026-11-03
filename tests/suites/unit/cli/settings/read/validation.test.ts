@@ -274,13 +274,13 @@ test('linked ESLint plugins and Semgrep rule files fail settings validation at t
             stringify({
                 configurations: ['javascript', 'security'],
                 tools: { eslint: { plugins: [{ name: 'local', path: 'local.mjs', rules: {} }] } },
-                security: { rule_files: ['local.mjs'] },
+                security: { semgrep_rules: ['local.mjs'] },
             }),
             root,
         ),
     ).toStrictEqual([
         'gspot.toml:4: tools.eslint.plugins.0.path: local.mjs is a link. gspot does not write through links.',
-        'gspot.toml:7: security.rule_files.0: local.mjs is a link. gspot does not write through links.',
+        'gspot.toml:7: security.semgrep_rules.0: local.mjs is a link. gspot does not write through links.',
     ]);
 });
 

@@ -194,7 +194,7 @@ export const toolConfigurationSchemas = {
         .optional(),
     security: z
         .strictObject({
-            rule_files: relativePathSchema
+            semgrep_rules: relativePathSchema
                 .array()
                 .default([])
                 .meta({

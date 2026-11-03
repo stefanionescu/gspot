@@ -115,21 +115,21 @@ bun_scanners = "@socketsecurity/bun-security-scanner"
 export const RULE_FILE_SETTINGS = {
     configurations: ['javascript', 'security'],
     tools: { eslint: { plugins: [{ name: 'root', path: 'missing-root.mjs', rules: {} }] } },
-    security: { rule_files: ['missing-root.yml', 'present.yml'] },
+    security: { semgrep_rules: ['missing-root.yml', 'present.yml'] },
     scope: [
         {
             path: 'app',
             tools: { eslint: { plugins: [{ name: 'local', path: 'missing-scope.mjs', rules: {} }] } },
-            security: { rule_files: ['missing-scope.yml', 'present.yml'] },
+            security: { semgrep_rules: ['missing-scope.yml', 'present.yml'] },
         },
     ],
 } as const;
 
 export const RULE_FILE_ERRORS = [
     'gspot.toml:4: tools.eslint.plugins.0.path: missing-root.mjs names no file. Point path at a file, relative to its table.',
-    'gspot.toml:7: security.rule_files.0: missing-root.yml names no file. Point rule_files at a file, relative to its table.',
+    'gspot.toml:7: security.semgrep_rules.0: missing-root.yml names no file. Point semgrep_rules at a file, relative to its table.',
     'gspot.toml:11: scope.0.tools.eslint.plugins.0.path: missing-scope.mjs names no file. Point path at a file, relative to its table.',
-    'gspot.toml:12: scope.0.security.rule_files.0: missing-scope.yml names no file. Point rule_files at a file, relative to its table.',
+    'gspot.toml:12: scope.0.security.semgrep_rules.0: missing-scope.yml names no file. Point semgrep_rules at a file, relative to its table.',
 ] as const;
 
 export const EMPTY_REASONS = [

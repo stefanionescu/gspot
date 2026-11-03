@@ -18,12 +18,12 @@ version = "1.181.0"
 
 [[check]]
 command = ["semgrep", "scan", "--strict", "--error", "--metrics", "off", "--disable-version-check", "--no-rewrite-rule-ids", "--quiet", "--json", "{files}"]
-example = "A rule in `security.rule_files` with the pattern `eval(...)` reports its ID and location at `eval(userInput)`. Parse the input instead, and allow only known operations."
+example = "A rule in `security.semgrep_rules` with the pattern `eval(...)` reports its ID and location at `eval(userInput)`. Parse the input instead, and allow only known operations."
 exit_codes = [1, 3]
 help = "Change the code the way the message says."
 name = "semgrep"
 output = { format = "semgrep" }
 stage = "push"
-summary = "Runs the Semgrep rules of the FastAPI configuration and the files in security.rule_files over the files of the run."
+summary = "Runs the Semgrep rules of the FastAPI configuration and the files in security.semgrep_rules over the files of the run."
 when = { config_file = "semgrep" }
 why = "An injection or a logged secret reads like ordinary code, and a pattern rule finds it before a reviewer has to."

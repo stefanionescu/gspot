@@ -40,7 +40,7 @@ the order of untouched settings and tables.
 | You want to                                               | Do this                                                                | Read                                                |
 | --------------------------------------------------------- | ---------------------------------------------------------------------- | --------------------------------------------------- |
 | Add a JavaScript or TypeScript lint rule                  | A plugin and a `[[tools.eslint.plugins]]` record                       | [Lint rule options](/configure/lint-rules/#plugins) |
-| Add a rule for any language                               | A Semgrep rule file in `security.rule_files`                           | [Security](/topics/security/#semgrep)               |
+| Add a rule for any language                               | A Semgrep rule file in `security.semgrep_rules`                        | [Security](/topics/security/#semgrep)               |
 | Describe the layers of your code                          | `[[import_rule]]` records                                              | [Import rules](/configure/import-rules/)            |
 | Run a tool or script of your own, in the hooks and CI too | A `[[command_check]]` record                                           | [Command checks](/configure/command-checks/)        |
 | Give coding agents rules of your own                      | Write them in `AGENTS.md`, outside the gspot managed block             | [Coding agents](/use/coding-agents/)                |
