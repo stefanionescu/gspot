@@ -425,7 +425,6 @@ level = "all"
 limits = ["max_function_lines"]
 limit_languages = ["python"]
 name = "function-size"
-runs = "scope"
 stage = "commit"
 summary = "Checks the code line count of each Python function against `limits.max_function_lines`."
 why = "A long function does more than one job, and a reader has to hold all of it at once."
@@ -454,7 +453,6 @@ files = { extensions = [".py"] }
 help = "Say what the function or class does that its name does not, or for whom it exists."
 level = "all"
 name = "placeholder-docstrings"
-runs = "scope"
 stage = "commit"
 summary = "Finds docstrings that hold a placeholder word, repeat the name of their function or class, or start a class docstring with `Class that`, `Class for`, or `A class`."
 why = "A docstring that says nothing satisfies the lint rule and wastes the line."

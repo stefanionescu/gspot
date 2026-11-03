@@ -355,7 +355,6 @@ level = "all"
 limits = { "complexity/noExcessiveCognitiveComplexity" = "max_cognitive_complexity" }
 limit_languages = ["javascript", "typescript"]
 name = "biome"
-runs = "scope"
 stage = "commit"
 summary = "Checks cognitive complexity against the scope's language limits."
 why = "Nested control flow makes a function harder to follow and change."

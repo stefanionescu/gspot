@@ -123,3 +123,20 @@ async function run() {}
         'The private function run sits below the public function default. Move run above default.',
     ]);
 });
+
+test('a run narrowed to one file reports only that file', async () => {
+    const misplaced = `export function render(): string {
+    return label();
+}
+function label(): string {
+    return 'Rows';
+}
+`;
+    await using sandbox = await createGitSandbox({
+        'src/rows.ts': misplaced,
+        'src/view.ts': misplaced,
+        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'structure/function-order', { paths: ['src/view.ts'] });
+    expect(findings.map(({ file, line }) => `${file}:${String(line)}`)).toStrictEqual(['src/view.ts:4']);
+});
