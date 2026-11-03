@@ -13,7 +13,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildToolLockfiles, buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
-import { listStaleLockfiles, installToolProjects } from '#cli/tools/installers/projects.ts';
+import { listStaleLockfiles, installNpmToolProject } from '#cli/tools/installers/projects.ts';
 
 test.each([...YARN_CLIENTS])(
     'Yarn $packageManager.version plans an npm tool lockfile without Yarn settings',
@@ -61,9 +61,9 @@ test('a changed npm tool lockfile installs into an empty node_modules, and a cur
         return buildProcessResult({ stdout: command.at(-1) === '--version' ? '0.0.0-test\n' : '' });
     });
     const install = await buildSandboxToolInstall(session, openFiles(sandbox.path));
-    await installToolProjects(install, []);
+    await installNpmToolProject(install);
     expect(existsSync(join(sandbox.path, GSPOT_PATHS.nodeModules, 'dropped'))).toBe(false);
     await createFileTree(sandbox.path, { [`${GSPOT_PATHS.nodeModules}/kept/package.json`]: '{}\n' });
-    await installToolProjects(install, []);
+    await installNpmToolProject(install);
     expect(existsSync(join(sandbox.path, GSPOT_PATHS.nodeModules, 'kept'))).toBe(true);
 });

@@ -126,29 +126,48 @@ export function listStaleLockfiles(
 }
 
 /**
-Resolve the owned lockfiles, then install the frozen npm and Python tool projects. A changed npm tool lockfile installs
-into an empty node_modules folder.
+Resolve the npm tool lockfile, then install the frozen npm tool project. A changed lockfile installs into an empty
+node_modules folder. The npm project needs no tool that mise installs, so it can install beside them.
+
+@param install what install needs for this step.
+@returns nothing installed and no tools without a package manager.
+*/
+export async function installNpmToolProject(install: ToolInstall): Promise<ToolProjectsInstall> {
+    const { session, writer, tools, packageManager } = install;
+    if (packageManager === undefined) return { installed: [], tools: [] };
+    const npm = { ...install, packageManager, registryEnvironment: await readRegistryEnvironment(session.root) };
+    const lockfiles = await planLockfiles(install, { npm, uvPath: undefined });
+    writePlans(writer, planReplacements(writer, lockfiles));
+    return {
+        installed: [await installNpmProject(npm, lockfiles)],
+        tools: tools.filter((tool) => tool.system !== true && findPackagePin(tool)?.kind === 'npm'),
+    };
+}
+
+/**
+Resolve the Python tool lockfile, then install the frozen Python tools and projects with uv.
 
 @param install what install needs for this step.
 @param miseBinPaths the program folders that mise installed, where uv may sit.
+@returns nothing installed and no tools when no uv is found.
 */
-export async function installToolProjects(install: ToolInstall, miseBinPaths: string[]): Promise<ToolProjectsInstall> {
-    const { session, writer, tools, packageManager } = install;
-    const installed: string[] = [];
+export async function installPythonToolProjects(
+    install: ToolInstall,
+    miseBinPaths: string[],
+): Promise<ToolProjectsInstall> {
+    const { session, writer, tools } = install;
     const uvPath = await findUvPath(install, miseBinPaths);
-    const npm =
-        packageManager === undefined
-            ? undefined
-            : { ...install, packageManager, registryEnvironment: await readRegistryEnvironment(session.root) };
-    const lockfiles = await planLockfiles(install, { npm, uvPath });
+    if (uvPath === undefined) return { installed: [], tools: [] };
+    const installed: string[] = [];
+    const lockfiles = await planLockfiles(install, { npm: undefined, uvPath });
     writePlans(writer, planReplacements(writer, lockfiles));
-    if (npm !== undefined) installed.push(await installNpmProject(npm, lockfiles));
-    if (uvPath !== undefined && listPackagePins(session.toolConfigurations).python.length > 0)
+    if (listPackagePins(session.toolConfigurations).python.length > 0)
         installed.push(await installPythonTools(install, uvPath));
-    if (uvPath !== undefined) installed.push(...(await installPythonProjects(install, uvPath)));
-    const kinds = new Set([npm === undefined ? undefined : 'npm', uvPath === undefined ? undefined : 'python']);
-    kinds.delete(undefined);
-    return { installed, tools: tools.filter((tool) => tool.system !== true && kinds.has(findPackagePin(tool)?.kind)) };
+    installed.push(...(await installPythonProjects(install, uvPath)));
+    return {
+        installed,
+        tools: tools.filter((tool) => tool.system !== true && findPackagePin(tool)?.kind === 'python'),
+    };
 }
 
 /**

@@ -19,7 +19,13 @@ import { readToolPackageManager } from '#cli/repository/javascript/package-manag
 import { lookUpTool, inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { findMisePin, findPackagePin, findMissingBuild, listDistinctTools } from '#cli/tools/pins.ts';
 import type { Session, BrokenTool, ToolInstall, InstallResult, ToolPackageManager } from '#cli/types/tools.ts';
-import { repairToolProjects, listStaleLockfiles, installToolProjects } from '#cli/tools/installers/projects.ts';
+
+import {
+    repairToolProjects,
+    listStaleLockfiles,
+    installNpmToolProject,
+    installPythonToolProjects,
+} from '#cli/tools/installers/projects.ts';
 
 async function readInstallPackageManager(session: Session): Promise<ToolPackageManager | undefined> {
     const pin = session.packageManager;
@@ -153,15 +159,21 @@ export async function installTools(
         return { installed: added.filter(Boolean), missing: [], notes: [], steps };
     }
     writeToolProjects(context);
-    const mise = await installMiseTools(context);
-    const projects = await installToolProjects(context, mise.binPaths);
+    // Both steps run to the end before a failure stops the install, so no package manager writes after it.
+    const [miseRun, npmRun] = await Promise.allSettled([installMiseTools(context), installNpmToolProject(context)]);
+    if (miseRun.status === 'rejected') throw miseRun.reason;
+    if (npmRun.status === 'rejected') throw npmRun.reason;
+    const mise = miseRun.value;
+    const python = await installPythonToolProjects(context, mise.binPaths);
     const installed = [
         mise.installed,
-        ...projects.installed,
+        ...npmRun.value.installed,
+        ...python.installed,
         await installValePackages(context, mise.binPaths),
         await installGrammars(context),
     ];
-    const broken = await repairTools(context, [...mise.tools, ...projects.tools], mise.binPaths);
+    const tools = [...mise.tools, ...npmRun.value.tools, ...python.tools];
+    const broken = await repairTools(context, tools, mise.binPaths);
     const hooks = await installHooks(session, steps);
     if (hooks.command !== undefined) installed.push(hooks.note);
     const notes = [hooks.command === undefined ? hooks.note : ''];

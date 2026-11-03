@@ -1,3 +1,4 @@
+import { tmpdir } from 'node:os';
 import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { join, parse } from 'node:path';
@@ -7,6 +8,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { buildToolProjects } from '#cli/generation/generate.ts';
 import { installTools } from '#cli/tools/installers/install.ts';
@@ -72,6 +74,31 @@ test('a tool that cannot start fails its inspection, though its package names th
     expect(result.missing).toContain(
         `prettier ${String(prettier.version)} still fails after a forced install. The version command of prettier exited 1: damaged`,
     );
+});
+
+test('a failed mise install stops the install after the npm tool project, which installs beside it', async () => {
+    await using sandbox = await createGitSandbox(BUN_SANDBOX);
+    const session = await openSession(sandbox.path);
+    await createFileTree(sandbox.path, buildToolLockfiles(session.toolConfigurations));
+    const programs = new Map([['mise', join(tmpdir(), 'test-tools', 'mise')]]);
+    using _lookup = fakeExecutableLookup((name) => (name === 'node' ? undefined : (programs.get(name) ?? null)));
+    const installs: string[][] = [];
+    using _commands = fakeCommands(undefined, (command) => {
+        if (command[1] === 'install') return Promise.resolve(buildProcessResult({ code: 1, stderr: 'mise failed' }));
+        if (command.includes('install')) installs.push([...command]);
+        return Promise.resolve(buildProcessResult({ stdout: '1.4.2\n' }));
+    });
+    const error = await captureRejection(
+        installTools(session, {
+            writer: openFiles(sandbox.path),
+            generated: { files: buildToolProjects(session) },
+            checkTools: listHostCheckTools(session.configuredChecks),
+        }),
+    );
+    expect(error.message).toContain('mise failed');
+    expect(
+        installs.map((command) => command.slice(command.indexOf('--') + 1, command.indexOf('--') + 3)),
+    ).toStrictEqual([['bun', 'install']]);
 });
 
 test('a tool that fails again is named with its reason', async () => {
