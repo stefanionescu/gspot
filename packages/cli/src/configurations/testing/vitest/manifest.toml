@@ -44,7 +44,7 @@ required_tools = ["@vitest/eslint-plugin"]
 all_level_rules = ["vitest/prefer-strict-equal"]
 
 [[check]]
-command = ["vitest", "run", "--passWithNoTests", "--coverage", "--coverage.reporter=text-summary", "--coverage.thresholds.lines={setting:coverage.min_line_percent}", "--coverage.thresholds.branches={setting:coverage.min_branch_percent}", "--coverage.thresholds.functions={setting:coverage.min_function_percent}", "--coverage.thresholds.statements={setting:coverage.min_statement_percent}"]
+command = ["vitest", "run", "--passWithNoTests", "--exclude", "**/.gspot-copies/**", "--coverage", "--coverage.reporter=text-summary", "--coverage.thresholds.lines={setting:coverage.min_line_percent}", "--coverage.thresholds.branches={setting:coverage.min_branch_percent}", "--coverage.thresholds.functions={setting:coverage.min_function_percent}", "--coverage.thresholds.statements={setting:coverage.min_statement_percent}"]
 coverage_arguments = ["--coverage", "--coverage.reporter", "--coverage.thresholds.lines", "--coverage.thresholds.branches", "--coverage.thresholds.functions", "--coverage.thresholds.statements"]
 cwd = "scope"
 example = "Vitest reports `ERROR: Coverage for lines (85%) does not meet global threshold (90%)`. Add tests for the uncovered lines."

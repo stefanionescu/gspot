@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { rm, writeFile } from 'node:fs/promises';
 import { createFileTree, type TestdirResult } from 'testdirs';
@@ -88,4 +89,16 @@ test('vitest/tests at a limit above 0 reports @vitest/coverage-v8 as missing whe
         { scope: '', status: 'missing', note },
         { scope: 'app', status: 'missing', note },
     ]);
+});
+
+test('vitest/tests without a Vitest config runs none of the test files that other checks copy', async () => {
+    await using sandbox = await createVitestProject(COVERAGE_ZERO_LIMITS);
+    for (const folder of ['', 'app']) await rm(join(sandbox.path, folder, 'vitest.config.mjs'));
+    const marker = join(sandbox.path, 'copy-ran.txt');
+    await createFileTree(join(sandbox.path, '.gspot-copies/1234-copy'), {
+        'test/copied.test.ts': `import { test } from 'vitest';\nimport { writeFileSync } from 'node:fs';\ntest('copied', () => { writeFileSync(${JSON.stringify(marker)}, ''); });\n`,
+    });
+    const checked = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'vitest/tests', '--json']));
+    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+    expect(existsSync(marker)).toBe(false);
 });
