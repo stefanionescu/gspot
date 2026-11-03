@@ -254,10 +254,6 @@ export const BASE_SELECTORS = [
         message: 'Do not assert twice. Narrow the value, fix its type, or check it at run time.',
     },
     {
-        selector: ':matches(TSAsExpression, TSTypeAssertion) > TSAnyKeyword',
-        message: 'Do not assert to any. Give the value a real type, or check it at run time.',
-    },
-    {
         selector: ':matches(TSAsExpression, TSTypeAssertion) > TSNeverKeyword',
         message: 'Do not assert to never to silence the type system.',
     },
