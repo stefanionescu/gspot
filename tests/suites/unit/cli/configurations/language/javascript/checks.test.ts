@@ -135,7 +135,7 @@ test('a scope whose jsconfig lists no JavaScript file passes with nothing to com
     const site = planChecks(reopened, {
         stage: 'push',
         only: ['javascript/tsc'],
-        staged: ['gspot.toml'],
+        selection: { content: 'index', paths: ['gspot.toml'] },
     }).find((check) => check.scope.path === 'site')!;
     expect(
         await runCheckCode(

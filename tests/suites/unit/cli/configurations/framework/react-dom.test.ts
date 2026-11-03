@@ -36,7 +36,7 @@ test('a staged lockfile alone plans react-versions', async () => {
     const session = await openSession(sandbox.path);
     const [planned] = planChecks(session, {
         stage: 'commit',
-        staged: ['bun.lock'],
+        selection: { content: 'index', paths: ['bun.lock'] },
         only: ['react-dom/react-versions'],
     });
     expect(planned?.files.map(({ path }) => path)).toContain('bun.lock');

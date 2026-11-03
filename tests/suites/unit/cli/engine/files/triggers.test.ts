@@ -77,7 +77,12 @@ test.each(LAST_FILE_CHANGES)(
         await replaceChildScopeChecks(session);
         const selected =
             selection === 'staged' ? await readStagedPaths(sandbox.path) : await readChangedPaths(sandbox.path, 'HEAD');
-        const revision = 'staged' in selected ? { staged: selected.staged } : { changed: selected.paths };
+        const revision = {
+            selection:
+                'staged' in selected
+                    ? { content: 'index' as const, paths: selected.staged }
+                    : { content: 'working-tree' as const, paths: selected.paths },
+        };
         const planned = planChecks(session, { ...TSC_PUSH_OPTIONS, ...revision });
         const api = planned.find((check) => check.scope.path === 'api')!;
         expect(api.files).toStrictEqual([]);
@@ -106,7 +111,7 @@ test('a fixer of a deleted trigger path restores it', async () => {
     const session = await openSession(sandbox.path);
     await replaceChildScopeChecks(session);
     const { paths } = await readChangedPaths(sandbox.path, 'HEAD');
-    const api = planChecks(session, { ...TSC_PUSH_OPTIONS, changed: paths }).find(
+    const api = planChecks(session, { ...TSC_PUSH_OPTIONS, selection: { content: 'working-tree', paths } }).find(
         (check) => check.scope.path === 'api',
     )!;
     const applied = await runFixers(buildCheckSession(session, CHECK_GENERATION), [api]);
@@ -121,7 +126,7 @@ test('a deleted file from another language does not trigger a TypeScript project
     await replaceChildScopeChecks(session);
     const planned = planChecks(session, {
         ...TSC_PUSH_OPTIONS,
-        changed: ['api/removed.py'],
+        selection: { content: 'working-tree', paths: ['api/removed.py'] },
     });
     expect(planned.flatMap((check) => check.files)).toStrictEqual([]);
     expect(planned.flatMap((check) => check.triggerPaths)).toStrictEqual([]);
@@ -145,7 +150,7 @@ configurations = []
     await replaceChildScopeChecks(session);
     const planned = planChecks(session, {
         ...TSC_PUSH_OPTIONS,
-        changed: ['api/nested/removed.ts'],
+        selection: { content: 'working-tree', paths: ['api/nested/removed.ts'] },
     });
     expect(
         planned.filter((check) => check.triggerPaths.length > 0).map((check) => [check.scope.path, check.triggerPaths]),
@@ -164,7 +169,11 @@ test.each(['gspot.toml', getManifestTarget('docs', 'lychee.toml')])(
         });
 
         const session = await openSession(sandbox.path);
-        const planned = planChecks(session, { stage: 'commit', staged: [path], only: ['docs/lychee'] });
+        const planned = planChecks(session, {
+            stage: 'commit',
+            selection: { content: 'index', paths: [path] },
+            only: ['docs/lychee'],
+        });
         expect(
             planned.map((plannedCheck) => ({
                 scope: plannedCheck.scope.path,
@@ -198,21 +207,35 @@ test('dependencies/osv-scanner reads every lockfile, and runs only when a trigge
     const [scopeCheck] = planChecks(session, options);
     expect(scopeCheck!.files.map(({ path }) => path)).toStrictEqual(['app/uv.lock', 'bun.lock', 'uv.lock']);
     for (const prefix of ['', 'app/']) {
-        const [triggered] = planChecks(session, { ...options, staged: [`${prefix}uv.lock`] });
+        const [triggered] = planChecks(session, {
+            ...options,
+            selection: { content: 'index', paths: [`${prefix}uv.lock`] },
+        });
         expect(isActive(triggered!), prefix).toBe(true);
         expect(triggered!.files).toStrictEqual(scopeCheck!.files);
-        const [unrelated] = planChecks(session, { ...options, staged: [prefix + 'source.txt'] });
+        const [unrelated] = planChecks(session, {
+            ...options,
+            selection: { content: 'index', paths: [prefix + 'source.txt'] },
+        });
         expect(isActive(unrelated!)).toBe(false);
     }
-    expect(isActive(planChecks(session, { ...options, staged: ['ignored/uv.lock'] })[0]!)).toBe(false);
-    expect(isActive(planChecks(session, { ...options, changed: ['source.txt'] })[0]!)).toBe(false);
+    expect(
+        isActive(planChecks(session, { ...options, selection: { content: 'index', paths: ['ignored/uv.lock'] } })[0]!),
+    ).toBe(false);
+    expect(
+        isActive(
+            planChecks(session, { ...options, selection: { content: 'working-tree', paths: ['source.txt'] } })[0]!,
+        ),
+    ).toBe(false);
     await unlink(join(sandbox.path, 'app/uv.lock'));
     const reopened = await openSession(sandbox.path);
-    const [deleted] = planChecks(reopened, { ...options, staged: ['app/uv.lock'] });
+    const [deleted] = planChecks(reopened, { ...options, selection: { content: 'index', paths: ['app/uv.lock'] } });
     expect(deleted!.triggerPaths).toStrictEqual(['app/uv.lock']);
     expect(deleted!.files.map(({ path }) => path)).toStrictEqual(['bun.lock', 'uv.lock']);
     expect(isActive(deleted!)).toBe(true);
-    expect(isActive(planChecks(session, { ...options, staged: ['gspot.toml'] })[0]!)).toBe(true);
+    expect(
+        isActive(planChecks(session, { ...options, selection: { content: 'index', paths: ['gspot.toml'] } })[0]!),
+    ).toBe(true);
 });
 
 test.each([
@@ -230,7 +253,7 @@ test.each([
     commitAll(sandbox.path);
     runGitStep(sandbox.path, ['rm', 'docs/guide.md']);
     const session = await openSession(sandbox.path);
-    const [links] = planChecks(session, { stage: 'commit', only: ['links'], staged: ['docs/guide.md'] });
+    const [links] = planChecks(session, { stage: 'commit', only: ['links'], selection: { content: 'index', paths: ['docs/guide.md'] } });
     expect(links!.triggerPaths).toStrictEqual(triggers);
     expect(isActive(links!)).toBe(triggers.length > 0);
 });

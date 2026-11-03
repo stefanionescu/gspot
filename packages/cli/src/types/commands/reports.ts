@@ -1,13 +1,13 @@
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
-import type { StageFilter, CheckDescription } from '#cli/types/engine/plan.ts';
 import type { Session, HookStatus, ToolInspection } from '#cli/types/tools.ts';
 import type { Tool, Check, Setting, Configuration } from '#cli/types/manifests.ts';
 import type { RunReport, PushInput, CheckProgress } from '#cli/types/engine/run.ts';
 import type { InitPlan, CarryoverRow, InitPlanning } from '#cli/types/generation.ts';
 import type { RunCache, CommandResult, CanceledCommandJson } from '#cli/types/system.ts';
+import type { StageFilter, RunSelection, CheckDescription } from '#cli/types/engine/plan.ts';
+import type { FileKind, PushedRevisions, RepositoryListing } from '#cli/types/repository.ts';
 import type { Settings, InheritedSetting, RemovedConfiguration } from '#cli/types/settings.ts';
 import type { CI_FILES, CHECK_STAGES, CHECK_INPUT_HOOKS } from '#cli/config/commands/reports.ts';
-import type { FileKind, StagedPaths, ChangedPaths, PushedRevisions, RepositoryListing } from '#cli/types/repository.ts';
 
 type CheckedRevision = { hash: string; refs: string[]; commits: string[]; shallow: boolean; report: RunReport };
 
@@ -19,13 +19,6 @@ export type PushReport = {
 };
 
 export type RevisionCheckResult = CommandResult<RunReport> | { skipped: PushedRevisions['skipped'][number]['reason'] };
-
-export type RunFilters = {
-    paths: string[] | undefined;
-    changed: ChangedPaths | undefined;
-    staging: StagedPaths | { staged: undefined; unstaged: number };
-    stage: StageFilter;
-};
 
 export type CheckOptions = {
     changed?: boolean;
@@ -47,28 +40,13 @@ export type CheckOptions = {
     listing?: RepositoryListing | undefined;
 };
 
-export type RevisionSource = (
-    | {
-          content: 'index';
-          cwd: string;
-          paths: string[];
-          toolsRoot: string;
-          reference: string;
-          reportRoot: string;
-          staged: StagedPaths;
-          started: Date;
-      }
-    | {
-          content: 'commit';
-          toolsRoot: string;
-          reference: string;
-          base?: string;
-          commits: string[];
-          range?: string[];
-          shallow: boolean;
-          changed?: string[];
-      }
-) & { dependencyNote?: string; unreadablePaths?: string[] };
+export type RevisionSource = {
+    toolsRoot: string;
+    selection: RunSelection & { content: 'index' | 'commit' };
+    started?: Date;
+    dependencyNote?: string;
+    unreadablePaths?: string[];
+};
 
 type CheckHook = (typeof CHECK_INPUT_HOOKS)[number];
 

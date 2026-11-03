@@ -30,7 +30,7 @@ async function lintProject(
     if (files.length === 0) return [];
     const cwd = join(session.root, folder);
     const selected = { ...planned, files };
-    const substitutions = buildCommandSubstitutions(session.root, selected, cwd);
+    const substitutions = buildCommandSubstitutions(session.root, selected, cwd, session.selection?.messageFile);
     const commandArguments = expandCommand(session, selected, planned.check.command as string[], substitutions).filter(
         (argument) => typeof argument === 'string',
     );

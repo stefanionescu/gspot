@@ -16,8 +16,8 @@ async function checkMessage(
     const messageFile = join(sandbox.path, '.git', 'COMMIT_EDITMSG');
     await writeFile(messageFile, message);
     const session = await openSession(sandbox.path);
-    const planned = { ...planSandboxCheck(session, 'commits/references'), messageFile };
-    const findings = await getBuiltInCheck('commits/references')(session, planned);
+    const planned = planSandboxCheck(session, 'commits/references');
+    const findings = await getBuiltInCheck('commits/references', { content: 'message', messageFile })(session, planned);
     return findings.map(({ rule, message: text }) => ({ rule, message: text }));
 }
 

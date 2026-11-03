@@ -55,7 +55,7 @@ test('a command check at the root checks a changed file of a child scope once', 
     const options = buildRunOptions({
         stage: 'push',
         only: ['project/syntax'],
-        changed: ['api/source.sh'],
+        selection: { content: 'working-tree', paths: ['api/source.sh'] },
     });
     const failed = await runChecks(await openSession(sandbox.path), options);
     expect(failed.report.exitCode).toBe(1);

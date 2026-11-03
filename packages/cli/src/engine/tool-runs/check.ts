@@ -143,7 +143,7 @@ Resolves the working folder and expands the tool environment values.
 function buildCommandSetup(session: CheckSession, planned: PlannedCheck, root: string): CommandSetup {
     const { scope } = planned;
     const cwd = selectCommandFolder(root, planned);
-    const substitutions = buildCommandSubstitutions(root, planned, cwd);
+    const substitutions = buildCommandSubstitutions(root, planned, cwd, session.selection?.messageFile);
     const files = substitutions.files;
     const env =
         planned.check.env === undefined
@@ -180,9 +180,15 @@ Builds the placeholder values from the scope and working folder.
 @param root the repository, or the copy of it that the tool runs in.
 @param planned the check and its files.
 @param cwd the folder that the tool runs in.
+@param messageFile the commit message file of the run, if any.
 @returns the placeholder values, with paths relative to cwd.
 */
-export function buildCommandSubstitutions(root: string, planned: PlannedCheck, cwd: string): Substitutions {
+export function buildCommandSubstitutions(
+    root: string,
+    planned: PlannedCheck,
+    cwd: string,
+    messageFile: string | undefined,
+): Substitutions {
     const substitutions: Substitutions = {
         files: planned.files
             .map((file) => convertToPosixPath(relative(cwd, join(root, file.path))))
@@ -190,7 +196,7 @@ export function buildCommandSubstitutions(root: string, planned: PlannedCheck, c
         scope: planned.scope.path,
         root,
     };
-    if (planned.messageFile !== undefined) substitutions.messageFile = planned.messageFile;
+    if (messageFile !== undefined) substitutions.messageFile = messageFile;
     return substitutions;
 }
 

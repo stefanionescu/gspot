@@ -30,9 +30,11 @@ test('stage all leaves out message checks even when only names one', async () =>
         planChecks(session, { stage: 'all', only: ['commits/commitlint'] }).map(({ check }) => check.id),
     ).toStrictEqual([]);
     expect(
-        planChecks(session, { stage: 'message', only: ['commits/commitlint'], messageFile: 'message.txt' }).map(
-            ({ check, scope }) => [check.id, scope.path],
-        ),
+        planChecks(session, {
+            stage: 'message',
+            only: ['commits/commitlint'],
+            selection: { content: 'message', messageFile: 'message.txt' },
+        }).map(({ check, scope }) => [check.id, scope.path]),
     ).toStrictEqual([['commits/commitlint', '']]);
 });
 
@@ -99,7 +101,7 @@ test('explicit paths intersect the staged set', async () => {
             stage: 'commit',
             only: ['javascript/eslint'],
             paths: ['first.js', 'second.js'],
-            staged: ['second.js', 'third.js'],
+            selection: { content: 'index', paths: ['second.js', 'third.js'] },
         }).map(({ check, files }) => ({ check: check.id, files: files.map(({ path }) => path) })),
     ).toStrictEqual([{ check: 'javascript/eslint', files: ['second.js'] }]);
 });
@@ -116,8 +118,7 @@ test('a skipped history check does not refuse a shallow push', async () => {
         planChecks(session, {
             stage: 'push',
             only: ['secrets/gitleaks-pushed'],
-            shallow: true,
-            commits: ['selected'],
+            selection: { content: 'commit', shallow: true, commits: ['selected'] },
         }).map(({ check, skip }) => ({ check: check.id, skip })),
     ).toStrictEqual([
         {

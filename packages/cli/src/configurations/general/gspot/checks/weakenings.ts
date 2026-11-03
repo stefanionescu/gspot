@@ -1,5 +1,4 @@
 import { LEVELS } from '#cli/config/manifests.ts';
-import type { Session } from '#cli/types/tools.ts';
 import { EVERY_CHECK } from '#cli/config/engine.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { buildSettings } from '#cli/settings/read.ts';
@@ -7,7 +6,6 @@ import { findText } from '#cli/system/files/reads.ts';
 import { parseBaseline } from '#cli/engine/baseline.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
@@ -15,8 +13,8 @@ import type { Settings, IgnoreRecord } from '#cli/types/settings.ts';
 import type { Weakening } from '#cli/types/configurations/general.ts';
 import { readCommittedTexts } from '#cli/repository/revisions/files.ts';
 import { BASELINE_FILE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import type { BaselineCount, BuiltInCheckResult } from '#cli/types/engine/run.ts';
 import { getSettingValue, listWrittenKeys, listSettingsTables } from '#cli/settings/inherit.ts';
+import type { CheckSession, BaselineCount, BuiltInCheckResult } from '#cli/types/engine/run.ts';
 import { listRemovedConfigurations, selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 
 import {
@@ -150,13 +148,12 @@ function listBaselineGrowth(text: string | undefined, head: BaselineCount[]): We
 Compare gspot.toml and the baseline with the base revision: the pushed range, `--base`, or the last commit. A weakening
 with no reason fails the check, and one with a reason prints as a note.
 
-@param session the settings of the tree that the run checks.
-@param planned the check, with the base revision of the run.
+@param session the settings of the tree that the run checks, and the base revision of the run.
 */
-export async function checkWeakenings(session: Session, planned: PlannedCheck): Promise<BuiltInCheckResult> {
-    const { root, settings, cancelSignal, repository } = session;
+export async function checkWeakenings(session: CheckSession): Promise<BuiltInCheckResult> {
+    const { root, settings, cancelSignal, repository, selection } = session;
     const paths = [SETTINGS_FILE, BASELINE_FILE];
-    const texts = await readCommittedTexts(root, paths, planned.base ?? 'HEAD', cancelSignal);
+    const texts = await readCommittedTexts(root, paths, selection?.base ?? 'HEAD', cancelSignal);
     const settingsText = texts.get(SETTINGS_FILE);
     const tracked = repository.files.map(({ path }) => path);
     const weakenings = [

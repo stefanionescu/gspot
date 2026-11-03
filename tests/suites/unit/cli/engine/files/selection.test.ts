@@ -64,7 +64,7 @@ test.each([...PROJECT_PATH_IGNORES])(
         const session = await openSession(sandbox.path);
         const planned = planChecks(session, {
             ...TSC_PUSH_OPTIONS,
-            changed: [...changed],
+            selection: { content: 'working-tree', paths: [...changed] },
         });
         expect(planned.flatMap((plannedCheck) => plannedCheck.files.map((file) => file.path))).toStrictEqual([
             ...files,
@@ -190,7 +190,7 @@ test('a deleted generated path is not a trigger for a configured project check',
     const planned = planChecks(await openSession(sandbox.path), {
         stage: 'push',
         only: ['dependencies/osv-scanner'],
-        changed: ['.gspot/package-lock.json'],
+        selection: { content: 'working-tree', paths: ['.gspot/package-lock.json'] },
     });
     expect(planned.map(({ check, triggerPaths }) => ({ check: check.id, triggerPaths }))).toStrictEqual([
         { check: 'dependencies/osv-scanner', triggerPaths: [] },

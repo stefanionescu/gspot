@@ -161,7 +161,7 @@ test('gspot/weakenings compares with the base of the run, not the last commit', 
     commitAll(sandbox.path, 'lower the level');
     const { report } = await runChecks(
         await openSession(sandbox.path),
-        buildRunOptions({ only: ['gspot/weakenings'], base }),
+        buildRunOptions({ only: ['gspot/weakenings'], selection: { content: 'working-tree', base } }),
     );
     expect(report.checks.flatMap(({ findings }) => findings.map(({ rule }) => rule))).toStrictEqual(['level']);
 });

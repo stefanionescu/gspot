@@ -82,7 +82,7 @@ Build the check results, detected configuration warning, and exit status of a fi
 @param run the planned checks and their results.
 */
 export function buildRunReport(run: FinishedRun): RunReport {
-    const { session, options, started, planned, results: ran, fixes, baselined } = run;
+    const { session, options, comparison, started, planned, results: ran, fixes, baselined } = run;
     const results = new Map(run.active.map((check, index) => [check, ran[index] as CheckResult]));
     const checks = planned.map((check) =>
         addFindingExplanations(
@@ -105,13 +105,13 @@ export function buildRunReport(run: FinishedRun): RunReport {
         ...checks.flatMap(({ reportNotes }) => reportNotes ?? []),
     ];
     return {
-        ...(options.comparison !== undefined && { comparison: options.comparison }),
+        ...(comparison !== undefined && { comparison }),
         ...buildEmptyRunReport(options.stage, started, notes),
         checks: checks.map(({ reportNotes: _notes, ...check }) => check),
         ignores: session.settings.ignore,
         baselined,
-        unstagedChanges: options.unstagedChanges ?? 0,
-        partial: [options.staged, options.changed, options.paths].some((selection) => selection !== undefined),
+        unstagedChanges: options.selection?.unstagedChanges ?? 0,
+        partial: options.selection?.paths !== undefined || options.paths !== undefined,
         failed,
         exitCode: code,
     };

@@ -193,7 +193,7 @@ test.each(['mise.toml', '.config/mise.toml'])('a staged %s alone plans package-m
     const session = await openSession(sandbox.path);
     const [planned] = planChecks(session, {
         stage: 'commit',
-        staged: [file],
+        selection: { content: 'index', paths: [file] },
         only: ['dependencies/package-manager-pin'],
     });
     expect(planned?.files.map(({ path }) => path)).toContain(file);

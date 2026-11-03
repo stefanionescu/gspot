@@ -24,12 +24,12 @@ import {
 /**
 Checks every pushed commit message, including empty commits that change no files.
 
-@param session the repository and its tools.
-@param planned the commitlint check and commit range.
+@param session the repository, its tools, and the pushed commits of the run.
+@param planned the configured commitlint check.
 */
 export async function checkCommitlintPushed(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     using folder = createTemporaryFolder();
-    const commits = planned.commits ?? (await readPushedCommits(session.toolsRoot, session.cancelSignal));
+    const commits = session.selection?.commits ?? (await readPushedCommits(session.toolsRoot, session.cancelSignal));
     const read = await session.limitProcess(() =>
         runGit(session.root, GIT_COMMIT_MESSAGE_ARGUMENTS, {
             stdin: `${commits.join('\n')}\n`,
@@ -48,7 +48,10 @@ export async function checkCommitlintPushed(session: CheckSession, planned: Plan
             const [commit, message] = record.split(COMMIT_FIELD_END) as [string, string];
             const commitFile = join(folder.path, `${String(index)}-${MESSAGE_FILE}`);
             writeFileSync(commitFile, message, { mode: PRIVATE_FILE });
-            const checked = await runCommandCheck(session, { ...planned, messageFile: commitFile });
+            const checked = await runCommandCheck(
+                { ...session, selection: { content: 'message', messageFile: commitFile } },
+                planned,
+            );
             return {
                 ...checked,
                 findings: checked.findings.map((finding) => ({
@@ -83,12 +86,12 @@ export async function readCommitMessage(session: CheckSession, messageFile: stri
 /**
 Report each line of a new commit message that links to an AI session.
 
-@param session the repository and its tools.
-@param planned the check and the commit message file.
+@param session the repository, its tools, and the commit message file of the run.
 */
-export async function checkReferences(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
-    if (planned.messageFile === undefined) return [];
-    const { text: message, prefix } = await readCommitMessage(session, planned.messageFile);
+export async function checkReferences(session: CheckSession): Promise<CheckFinding[]> {
+    const messageFile = session.selection?.messageFile;
+    if (messageFile === undefined) return [];
+    const { text: message, prefix } = await readCommitMessage(session, messageFile);
     return message.split('\n').flatMap((line, index) =>
         line.startsWith(prefix)
             ? []

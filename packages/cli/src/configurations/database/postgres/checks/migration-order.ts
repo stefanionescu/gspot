@@ -1,4 +1,4 @@
-import type { Session } from '#cli/types/tools.ts';
+import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { compareMigrationVersions } from '#cli/parsers/code/sql.ts';
@@ -36,14 +36,14 @@ Reports a version that two files share, a file with no version, and a new file t
 @param session the repository and its tools.
 @param planned the scope whose migrations to compare with the last commit.
 */
-export async function checkMigrationOrder(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkMigrationOrder(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const { migrations, findings: syntax } = await readMigrations(session, planned);
     if (syntax.length > 0) return syntax;
     const findings = listVersionFindings(migrations);
     const texts = await readCommittedMigrations(
         session,
         migrations.map((migration) => migration.path),
-        planned.base ?? 'HEAD',
+        session.selection?.base ?? 'HEAD',
     );
     const committed = migrations.filter((migration) => texts.has(migration.path));
     const newest = committed.at(-1);

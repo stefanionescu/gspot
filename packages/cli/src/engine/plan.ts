@@ -8,9 +8,9 @@ import type { Session, ScopeCheck } from '#cli/types/tools.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import { findFirstSkip, findSettingsSkip } from '#cli/engine/skips.ts';
-import type { PlanOptions, PlannedScope, PlannedCheck } from '#cli/types/engine/plan.ts';
 import { isRootOnlyCheck, isRepositoryRun, selectCheckFiles } from '#cli/engine/files.ts';
 import { OFF_BY_LEVEL, NO_MATCHING_FILES, COVERAGE_DIMENSIONS } from '#cli/config/engine.ts';
+import type { PlanOptions, PlannedScope, RunSelection, PlannedCheck } from '#cli/types/engine/plan.ts';
 
 function listScopeChecks(settings: Settings, scope: Scope, root: Scope): ScopeCheck[] {
     const isRoot = scope.path === '';
@@ -38,7 +38,7 @@ function isWanted(check: Check, options: PlanOptions): boolean {
 }
 
 function planCheck(planned: PlannedScope, scopeCheck: ScopeCheck): PlannedCheck {
-    const { session, scope, options } = planned;
+    const { session, scope } = planned;
     const { check, configuration } = scopeCheck;
     const rootScope = getRootScope(session.scopes);
     const name = findToolName(check);
@@ -49,25 +49,21 @@ function planCheck(planned: PlannedScope, scopeCheck: ScopeCheck): PlannedCheck 
         ...selectCheckFiles(planned, scopeCheck),
         configuration,
         tool,
-        base: options.base,
-        commits: options.commits,
-        range: options.range,
-        messageFile: options.messageFile,
     };
     const skip = findFirstSkip(plannedCheck, planned);
     return skip === undefined ? plannedCheck : { ...plannedCheck, skip };
 }
 
 function buildNarrowedPaths(options: PlanOptions): Set<string> | undefined {
-    const changed = options.staged ?? options.changed;
+    const changed = options.selection?.paths;
     if (options.paths === undefined) return changed === undefined ? undefined : new Set(changed);
     return new Set(options.paths.filter((path) => changed === undefined || changed.includes(path)));
 }
 
-function skipReplacedChecks(planned: PlannedCheck[]): PlannedCheck[] {
+function skipReplacedChecks(planned: PlannedCheck[], selection: RunSelection | undefined): PlannedCheck[] {
     const replacers = new Map(
         planned.flatMap((check): Array<[string, string]> =>
-            check.check.instead_of === undefined || check.skip !== undefined || !isActive(check)
+            check.check.instead_of === undefined || check.skip !== undefined || !isActive(check, selection)
                 ? []
                 : [[check.check.instead_of, check.check.id]],
         ),
@@ -124,14 +120,15 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
 Check whether a planned check has files, deleted trigger paths, a commit message, or pushed commits to read.
 
 @param planned the plan to inspect.
+@param selection the content of the run; without one, the run reads no pushed commits.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Planning, check, and list decide whether a planned check has work through this one rule.
-export function isActive(planned: PlannedCheck): boolean {
+export function isActive(planned: PlannedCheck, selection?: RunSelection): boolean {
     return (
         planned.files.length > 0 ||
         planned.triggerPaths.length > 0 ||
         planned.check.stage === 'message' ||
-        (planned.check.runs === 'history' && (planned.commits?.length ?? 0) > 0)
+        (planned.check.runs === 'history' && (selection?.commits?.length ?? 0) > 0)
     );
 }
 
@@ -156,9 +153,9 @@ skips, and refuse history checks when the pushed history lacks commits.
 */
 export function planChecks(session: Session, options: PlanOptions): PlannedCheck[] {
     const checks = planScopes(session, options)
-        .flatMap((planned) => skipReplacedChecks(planned))
+        .flatMap((planned) => skipReplacedChecks(planned, options.selection))
         .filter(({ check }) => options.skip?.includes(check.id) !== true);
-    if (options.shallow === true) {
+    if (options.selection?.shallow === true) {
         const historyChecks = checks.filter((check) => check.skip === undefined && check.check.runs === 'history');
         if (historyChecks.length > 0)
             throw new GspotError(

@@ -112,7 +112,12 @@ function listGeneratorOutputs(
 }
 
 function planGeneratorRun(session: CheckSession, planned: PlannedCheck): GeneratorRun | undefined {
-    const values = buildCommandSubstitutions(session.root, planned, join(session.root, planned.scope.path));
+    const values = buildCommandSubstitutions(
+        session.root,
+        planned,
+        join(session.root, planned.scope.path),
+        session.selection?.messageFile,
+    );
     const declaration = planned.check.command ?? [];
     const command = expandCommand(session, planned, declaration, values);
     if (command.length === 0) return undefined;

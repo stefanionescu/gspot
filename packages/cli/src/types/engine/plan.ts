@@ -9,19 +9,25 @@ export type SkipCause = 'level' | 'system' | 'replaced' | 'setting' | 'condition
 
 export type Skip = { cause: SkipCause; note: string };
 
-export type PlanOptions = {
+export type RunSelection = {
+    content: 'working-tree' | 'index' | 'commit' | 'message';
+    reference?: string | undefined;
     base?: string | undefined;
+    paths?: string[] | undefined;
     commits?: string[] | undefined;
     range?: string[] | undefined;
     shallow?: boolean | undefined;
+    messageFile?: string | undefined;
+    unstagedChanges?: number | undefined;
+};
+
+export type PlanOptions = {
     stage: StageFilter | 'any';
     keepLevelOff?: boolean | undefined;
-    staged?: string[] | undefined;
-    changed?: string[] | undefined;
     only?: string[] | undefined;
     skip?: string[] | undefined;
     paths?: string[] | undefined;
-    messageFile?: string | undefined;
+    selection?: RunSelection | undefined;
 };
 
 export type PlannedScope = {
@@ -36,14 +42,10 @@ export type PlannedScope = {
 export type SettingsSkip = { cause: 'level' | 'ignore' | 'setting'; note: string };
 
 export type PlannedCheck = ScopeCheck & {
-    base?: string | undefined;
-    commits?: string[] | undefined;
-    range?: string[] | undefined;
     files: TrackedFile[];
     skip?: Skip | undefined;
     triggerPaths: string[];
     narrowedLinks?: string[] | undefined;
-    messageFile?: string | undefined;
 };
 
 export type StageFilter = (typeof STAGE_FILTERS)[number];

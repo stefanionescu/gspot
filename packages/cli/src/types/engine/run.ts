@@ -2,25 +2,19 @@ import type { LimitFunction } from 'p-limit';
 import type { Check } from '#cli/types/manifests.ts';
 import type { IgnoreRecord } from '#cli/types/settings.ts';
 import type { Session, LintRuleDocs } from '#cli/types/tools.ts';
-import type { SkipCause, PlanOptions, StageFilter, PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Finding, CommandLine, CheckFinding, ConfigTargets } from '#cli/types/engine/tool-runs.ts';
+import type { SkipCause, PlanOptions, StageFilter, RunSelection, PlannedCheck } from '#cli/types/engine/plan.ts';
 
 export type FinishedRun = {
     session: Session;
     options: RunOptions;
+    comparison: RunReport['comparison'];
     started: Date;
     planned: PlannedCheck[];
     active: PlannedCheck[];
     results: CheckResult[];
     fixes: FixReport | undefined;
     baselined: RunReport['baselined'];
-};
-
-export type ReproduceOptions = {
-    paths: string[];
-    changed: string | undefined;
-    messageFile: string | undefined;
-    staged: boolean;
 };
 
 export type PathBytes = Map<string, Buffer | undefined>;
@@ -46,6 +40,7 @@ export type PlanAfterFixes = { session: CheckSession; planned: PlannedCheck[]; f
 export type Run = {
     session: CheckSession;
     options: RunOptions;
+    comparison: RunReport['comparison'];
     codes: Map<PlannedCheck, CheckCode | undefined>;
     baselineRun: BaselineRun;
     baselined: Record<string, number>;
@@ -67,8 +62,6 @@ export type RunOptions = PlanOptions & {
     started?: Date | undefined;
     stage: StageFilter;
     onProgress?: ((progress: CheckProgress) => void) | undefined;
-    comparison?: NonNullable<RunReport['comparison']> | undefined;
-    unstagedChanges?: number | undefined;
     cwd: string;
     pathArguments: string[];
     fix: boolean;
@@ -162,4 +155,5 @@ export type CheckGeneration = {
 export type CheckSession = Session & {
     generation: CheckGeneration;
     limitProcess: LimitFunction;
+    selection?: RunSelection | undefined;
 };

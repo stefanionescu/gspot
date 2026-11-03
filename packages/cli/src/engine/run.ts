@@ -17,10 +17,10 @@ import { isActive, planChecks } from '#cli/engine/plan.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { CheckStop, GspotError } from '#cli/system/errors.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { holdCopyFolder } from '#cli/engine/copies/folders.ts';
 import { formatUnexpectedError } from '#cli/system/terminal.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
+import type { RunSelection, PlannedCheck } from '#cli/types/engine/plan.ts';
 import { buildBaseResult, runBuiltInCheck, normalizeResultPaths } from '#cli/engine/results.ts';
 
 import type {
@@ -33,7 +33,6 @@ import type {
     PlanAfterFixes,
     CheckGeneration,
     CheckRunOptions,
-    ReproduceOptions,
 } from '#cli/types/engine/run.ts';
 import {
     FIX_FLAG,
@@ -135,32 +134,26 @@ function removeOutsideFindings(result: CheckResult, run: Run): CheckResult {
     };
 }
 
-function buildReproduceOptions(options: RunOptions): ReproduceOptions {
-    const comparison = options.comparison;
-    let changed: string | undefined;
-    if (comparison?.content === 'working-tree') changed = comparison.reference;
-    else if (comparison?.content === 'commit') changed = options.base?.slice(0, SHORT_HASH_LENGTH);
-    return {
-        paths: options.pathArguments,
-        changed,
-        messageFile: options.messageFile,
-        staged: comparison?.content === 'index',
-    };
+function listSelectionArguments(selection: RunSelection): string[] {
+    const base = selection.content === 'commit' ? selection.base?.slice(0, SHORT_HASH_LENGTH) : selection.base;
+    const words = base === undefined ? [] : [BASE_FLAG, quoteArgument(base)];
+    if (selection.messageFile !== undefined)
+        words.push(HOOK_FLAG, 'commit-msg', '--', quoteArgument(selection.messageFile));
+    if (selection.content === 'index') words.push(STAGED_FLAG);
+    return words;
 }
 
-function formatReproduceCommand(checkId: string, scopeArgument: string | undefined, options: ReproduceOptions): string {
-    const { paths, changed, messageFile, staged } = options;
-    const isScopeTarget = scopeArgument !== undefined && messageFile === undefined && paths.length === 0;
+function formatReproduceCommand(checkId: string, scopeArgument: string | undefined, options: RunOptions): string {
+    const { pathArguments: paths, selection = { content: 'working-tree' } } = options;
+    const isScopeTarget = scopeArgument !== undefined && selection.messageFile === undefined && paths.length === 0;
     const targets = isScopeTarget ? [scopeArgument] : paths;
     const words = [
         CHECK_COMMAND,
         ...targets.map((path) => quoteArgument(path.startsWith('-') ? `./${path}` : path)),
         '--only',
         quoteArgument(checkId),
+        ...listSelectionArguments(selection),
     ];
-    if (changed !== undefined) words.push(BASE_FLAG, quoteArgument(changed));
-    if (messageFile !== undefined) words.push(HOOK_FLAG, 'commit-msg', '--', quoteArgument(messageFile));
-    if (staged) words.push(STAGED_FLAG);
     return words.join(' ');
 }
 
@@ -184,7 +177,7 @@ function finishResult(run: Run, ran: CheckResult): CheckResult {
     return {
         ...result,
         ...findFixCommand(run, result),
-        rerun: formatReproduceCommand(result.check, scopeArgument, buildReproduceOptions(run.options)),
+        rerun: formatReproduceCommand(result.check, scopeArgument, run.options),
     };
 }
 
@@ -199,7 +192,7 @@ async function runActiveChecks(run: Run, checks: PlannedCheck[]): Promise<CheckR
                 duration: result.duration,
                 finished: ++run.progress.finished,
                 total: run.progress.total,
-                comparison: run.options.comparison,
+                comparison: run.comparison,
             });
             return result;
         }),
@@ -222,6 +215,7 @@ async function planAfterFixes(session: CheckSession, options: RunOptions): Promi
             cancelSignal: session.cancelSignal,
         }),
         session.generation,
+        session.selection,
     );
     return { session: fixed, planned: planChecks(fixed, options), fixes };
 }
@@ -237,18 +231,24 @@ report.
 export async function runChecks(session: Session, options: RunOptions): Promise<RunResult> {
     using _copies = holdCopyFolder(session.root);
     const started = options.started ?? new Date();
+    const { selection } = options;
+    const comparison =
+        selection?.reference === undefined || selection.content === 'message'
+            ? undefined
+            : { content: selection.content, reference: selection.reference };
     const {
         session: checked,
         planned,
         fixes,
-    } = await planAfterFixes(buildCheckSession(session, options.generation), options);
-    const active = planned.filter((check) => isActive(check) && check.skip === undefined);
+    } = await planAfterFixes(buildCheckSession(session, options.generation, selection), options);
+    const active = planned.filter((check) => isActive(check, selection) && check.skip === undefined);
     const codes = new Map(active.map((check) => [check, options.selectCheckCode(check.check)]));
     const last = active.filter((check) => codes.get(check)?.runsLast === true);
     const first = active.filter((check) => !last.includes(check));
     const run: Run = {
         session: checked,
         options,
+        comparison,
         codes,
         baselineRun: {
             unused: Map.groupBy(structuredClone(options.baseline ?? []), ({ file }) => file),
@@ -262,6 +262,7 @@ export async function runChecks(session: Session, options: RunOptions): Promise<
     const report = buildRunReport({
         session: checked,
         options,
+        comparison,
         started,
         planned,
         active: [...first, ...last],
@@ -273,14 +274,20 @@ export async function runChecks(session: Session, options: RunOptions): Promise<
 }
 
 /**
-Give a session the generators of its checks, and the one limiter that every tool process of its checks waits for.
+Give a session the generators of its checks, the content that the run selected, and the one limiter that every tool
+process of its checks waits for.
 
 @param session the repository and its tools.
 @param generation the generators called by checks when they need their output.
+@param selection the content of the run; without one, checks compare with `HEAD` and read the pushed commits.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: A check run, the session after fixers, and the tests build a check session through it, each with its own process limiter.
-export function buildCheckSession(session: Session, generation: CheckGeneration): CheckSession {
-    return { ...session, generation, limitProcess: pLimit(availableParallelism()) };
+export function buildCheckSession(
+    session: Session,
+    generation: CheckGeneration,
+    selection?: RunSelection,
+): CheckSession {
+    return { ...session, generation, selection, limitProcess: pLimit(availableParallelism()) };
 }
 
 /**

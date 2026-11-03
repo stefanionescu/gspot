@@ -68,9 +68,9 @@ Scans each pushed commit with Gitleaks, so a secret removed before the last comm
 @param planned the configured check and selected scope files.
 */
 export async function checkGitleaksPushed(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
-    const commits = planned.commits ?? (await readPushedCommits(session.toolsRoot, session.cancelSignal));
+    const commits = session.selection?.commits ?? (await readPushedCommits(session.toolsRoot, session.cancelSignal));
     if (commits.length === 0) return buildBaseResult(planned, session);
-    const range = planned.range ?? (await readPushedRange(session.toolsRoot, session.cancelSignal));
+    const range = session.selection?.range ?? (await readPushedRange(session.toolsRoot, session.cancelSignal));
     return runCommandCheck(session, planned, {
         command: [
             ...(planned.check.command as string[]),

@@ -25,7 +25,7 @@ test('history checks compare committed migration changes with the selected base 
     const only = ['postgres/edited-migrations', 'postgres/migration-order'];
     const initial = await runChecks(session, buildRunOptions({ only }));
     expect(initial.report.checks.flatMap((result) => result.findings)).toStrictEqual([]);
-    const changed = await runChecks(session, buildRunOptions({ only, base }));
+    const changed = await runChecks(session, buildRunOptions({ only, selection: { content: 'working-tree', base } }));
     expect(
         changed.report.checks
             .find(({ check }) => check === 'postgres/edited-migrations')

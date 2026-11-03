@@ -17,15 +17,10 @@ async function checkRevisionTree(
     cancelSignal: AbortSignal,
     revision: PushRevision,
 ): Promise<RevisionCheckResult> {
+    const { hash, base, paths, commits, range, shallow } = revision;
     const source = {
-        base: revision.base,
-        commits: revision.commits,
-        range: revision.range,
-        shallow: revision.shallow,
-        content: 'commit',
         toolsRoot: root,
-        reference: revision.hash,
-        ...(revision.paths !== undefined && { changed: revision.paths }),
+        selection: { content: 'commit', reference: hash, base, paths, commits, range, shallow },
     } as const;
     const head = await readHead(root, cancelSignal);
     if (revision.hash === head && (await isWorkingTreeClean(root, cancelSignal)))

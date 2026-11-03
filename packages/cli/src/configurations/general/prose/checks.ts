@@ -142,12 +142,13 @@ export async function checkVale(session: CheckSession, planned: PlannedCheck): P
 /**
 Runs the word rules on a new commit message, with the comment lines that Git adds blanked out.
 
-@param session the repository and its tools.
-@param planned the check and the commit message file.
+@param session the repository, its tools, and the commit message file of the run.
+@param planned the configured Vale check.
 */
 export async function checkCommitMessage(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
-    if (planned.messageFile === undefined) return [];
-    const { text, prefix } = await readCommitMessage(session, planned.messageFile);
+    const messageFile = session.selection?.messageFile;
+    if (messageFile === undefined) return [];
+    const { text, prefix } = await readCommitMessage(session, messageFile);
     const lines = text.split('\n').map((line) => (line.startsWith(prefix) ? '' : line));
     const folder = dirname(join(session.root, GSPOT_PATHS.valeMessageConfig));
     const result = await runCheckTool(

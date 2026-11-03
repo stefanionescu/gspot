@@ -111,7 +111,11 @@ test('a staged outward link plans local-files, and a run that stages another fil
     using resources = createRunResources();
     const session = await openSession(sandbox.path, { resources });
     const run = async (staged: string[]): Promise<string[]> => {
-        const [planned] = planChecks(session, { stage: 'commit', staged, only: ['repository/local-files'] });
+        const [planned] = planChecks(session, {
+            stage: 'commit',
+            selection: { content: 'index', paths: staged },
+            only: ['repository/local-files'],
+        });
         const check = planned as PlannedCheck;
         const result = await runCheckCode(
             buildCheckSession(session, CHECK_GENERATION),

@@ -8,6 +8,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import type { RunSelection } from '#cli/types/engine/plan.ts';
 import { listAlwaysSelected } from '#tests/setup/cli/manifests.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -141,24 +142,22 @@ test.each(['all'] as const)('%s plans history checks once at the root and only f
     });
     const session = await openSession(sandbox.path);
     const names = ['commits/commitlint-pushed', 'secrets/gitleaks-pushed'];
-    const planned = planChecks(session, {
-        stage: 'push',
-        only: [...names, 'sandbox/once'],
-        staged: [],
-        commits: ['selected'],
-    });
+    const pushed: RunSelection = { content: 'commit', paths: [], commits: ['selected'] };
+    const planned = planChecks(session, { stage: 'push', only: [...names, 'sandbox/once'], selection: pushed });
     expect(planned.filter((check) => check.check.runs === 'history').map((check) => check.check.id)).toStrictEqual(
         names,
     );
     expect(planned.map((check) => check.scope.path)).toStrictEqual([...names.map(() => ''), '']);
-    expect(planned.map((check) => isActive(check))).toStrictEqual([...names.map(() => true), false]);
+    expect(planned.map((check) => isActive(check, pushed))).toStrictEqual([...names.map(() => true), false]);
+    const empty: RunSelection = { content: 'commit', paths: [], commits: [] };
     expect(
-        planChecks(session, { stage: 'push', only: names, staged: [], commits: [] }).map((check) => isActive(check)),
+        planChecks(session, { stage: 'push', only: names, selection: empty }).map((check) => isActive(check, empty)),
     ).toStrictEqual(names.map(() => false));
-    expect(() => planChecks(session, { stage: 'push', only: ['secrets/gitleaks-pushed'], shallow: true })).toThrow(
+    const shallow: RunSelection = { content: 'commit', shallow: true };
+    expect(() => planChecks(session, { stage: 'push', only: ['secrets/gitleaks-pushed'], selection: shallow })).toThrow(
         new Error('Pushed history is incomplete for secrets/gitleaks-pushed. Run git fetch --unshallow and retry.'),
     );
-    expect(planChecks(session, { stage: 'push', only: ['sandbox/once'], shallow: true })).toHaveLength(1);
+    expect(planChecks(session, { stage: 'push', only: ['sandbox/once'], selection: shallow })).toHaveLength(1);
 });
 
 test.each([...TSC_REPLACEMENTS])(

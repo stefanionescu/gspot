@@ -6,7 +6,6 @@ import { openSession } from '#cli/engine/session.ts';
 import { runBuiltInCheck } from '#cli/engine/results.ts';
 import * as environment from '#cli/system/environment.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { linkGrammars } from '#tests/setup/runner/run-folder.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
@@ -15,6 +14,7 @@ import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import type { NamingSettings } from '#cli/types/configurations/general.ts';
+import type { RunSelection, PlannedCheck } from '#cli/types/engine/plan.ts';
 import { ROOT_LABEL, SWIFT_PACKAGE } from '#tests/config/setup/programs.ts';
 import { CHECK_CODE, selectCheckCode } from '#cli/configurations/registry.ts';
 import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
@@ -106,13 +106,16 @@ export async function openFakeToolSession(
     return session;
 }
 
-export function getBuiltInCheck(checkId: string): (session: Session, planned: PlannedCheck) => Promise<Finding[]> {
+export function getBuiltInCheck(
+    checkId: string,
+    selection?: RunSelection,
+): (session: Session, planned: PlannedCheck) => Promise<Finding[]> {
     const check = CHECK_CODE[checkId]?.check;
     if (check === undefined) throw new Error(`${checkId} has no built-in check.`);
     return async (session, planned) => {
         const result = await runBuiltInCheck(
             check,
-            buildCheckSession(session, CHECK_GENERATION),
+            buildCheckSession(session, CHECK_GENERATION, selection),
             planned,
             CHECK_RUN_OPTIONS,
         );

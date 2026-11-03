@@ -9,7 +9,6 @@ import { runTreeCheck } from '#cli/commands/check/tree.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { constants, accessSync, existsSync } from 'node:fs';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
-import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { TRAILING_NEWLINE } from '#cli/config/repository/git.ts';
 import { InvalidArgumentError } from '@commander-js/extra-typings';
 import { readGitText, readGitPaths } from '#cli/repository/git/run.ts';
@@ -180,35 +179,27 @@ async function runStagedCheck(
 ): Promise<CommandResult<CheckCommandJson>> {
     const started = new Date();
     await assertSetupStaged(root, cancelSignal);
-    const staged = await readStagedPaths(root, cancelSignal);
-    if (staged.staged.length === 0 && !(await hasStagedChanges(root, cancelSignal))) {
+    const { staged: stagedPaths, unstaged } = await readStagedPaths(root, cancelSignal);
+    if (stagedPaths.length === 0 && !(await hasStagedChanges(root, cancelSignal))) {
         const json = buildEmptyRunReport(options.stage ?? 'all', started, [NOTHING_STAGED_MESSAGE]);
         return { text: `${NOTHING_STAGED_MESSAGE}\n`, json, exitCode: 0 };
     }
-    const revision = {
-        content: 'index',
-        cwd: options.cwd,
-        paths: options.paths,
-        toolsRoot: root,
-        staged,
-        started,
-    } as const;
-    if (staged.staged.length === 0 || (await isWorkingTreeClean(root, cancelSignal))) {
+    const selection = { content: 'index', paths: stagedPaths, unstagedChanges: unstaged } as const;
+    if (stagedPaths.length === 0 || (await isWorkingTreeClean(root, cancelSignal))) {
         const tree = await readGitText(root, GIT_WRITE_TREE_ARGUMENTS, { cancelSignal });
         return await runTreeCheck(root, options, cancelSignal, {
-            ...revision,
-            reference: tree.replace(TRAILING_NEWLINE, ''),
-            reportRoot: root,
+            toolsRoot: root,
+            started,
+            selection: { ...selection, reference: tree.replace(TRAILING_NEWLINE, '') },
         });
     }
     using copy = await copyRevision(root, { kind: 'index' }, cancelSignal);
-    const paths = options.paths.map((path) => buildArgumentPath(root, options.cwd, path));
-    return await runTreeCheck(copy.root, { ...options, cwd: copy.root, paths }, cancelSignal, {
-        ...revision,
+    return await runTreeCheck(copy.root, options, cancelSignal, {
+        toolsRoot: root,
+        started,
+        selection: { ...selection, reference: copy.tree },
         ...(copy.dependencyNote !== undefined && { dependencyNote: copy.dependencyNote }),
         unreadablePaths: copy.unreadablePaths,
-        reference: copy.tree,
-        reportRoot: root,
     });
 }
 
