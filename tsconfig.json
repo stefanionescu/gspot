@@ -40,5 +40,5 @@
             "typescript": ["./node_modules/.test-tools/node_modules/typescript"]
         }
     },
-    "include": ["tests/**/*.ts", "packages/cli/src/types/**/*.d.ts"]
+    "include": ["tests/**/*.ts", ".mise/release/*.ts", "packages/cli/src/types/**/*.d.ts"]
 }

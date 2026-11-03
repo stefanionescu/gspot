@@ -1,0 +1,1235 @@
+<!-- mise run changelog <version> writes each section of this file. Do not edit it by hand. -->
+
+# Changelog
+
+Each section lists the features, fixes, and performance changes of one gspot CLI release, breaking changes first. Its
+table names the settings that the release renamed or removed, from the settings reference of the previous release.
+
+## 0.3.8
+
+### Breaking changes
+
+- feat(cli)!: check licenses through osv-scanner
+- feat(cli)!: report undetected configurations through one check
+- feat(cli,docs,tests)!: stop running eslint-plugin-sonarjs
+- feat(cli,eslint-plugin)!: set one Node floor, and test it in CI
+- feat(cli,docs,tests)!: write one root Stylelint pointer for every scope
+- feat(cli,docs,tests)!: print one JSON shape from every command
+- fix(cli,docs,tests)!: hold back pinned tools like their dependencies
+- feat(cli,docs,tests)!: require names for add; doctor prints the add line
+- fix(cli,tests)!: move docs.banned_headings to prose.banned_headings
+- feat(cli,eslint-plugin,docs,tests)!: implement findings and fixes
+- feat(cli,docs,tests)!: remove unused output and tool installers
+- fix(cli)!: apply the bug, dependency, clean-up, and test findings
+- fix(cli)!: replace shipped list defaults with written lists
+- fix(cli)!: replace list values when setting them
+
+### Changes
+
+- fix(cli): remove the hook times from the scan report
+- fix(docs): stop the rule reference page linking to itself
+- fix(cli): refuse one plugin package at two versions
+- fix(eslint-plugin): name the cors middleware in the rule docs
+- fix(cli): stop naming a scope in the unread config row
+- fix(cli): accept only a clean version in a plugin record
+- fix(cli): treat Stylelint plugin paths like ESLint plugin paths
+- fix(cli): offer no plugin record for a plugin that gspot loads
+- fix(cli): load Stylelint plugin paths from the config file
+- fix(cli): read the astro-check version without a type check
+- fix(cli): read a leading !( as an extglob in path selectors
+- feat(cli): pin third-party ESLint and Stylelint plugins
+- fix(cli): refuse a leading ! in import rule paths
+- fix(cli): hold each file in the first import rule
+- fix(cli): read pre-commit hooks by their structure
+- fix(cli): compare markdownlint aliases and retired rules by ID
+- fix(cli): report Ruff settings fully, in lines that gspot accepts
+- fix(cli): name each override and config that init does not carry
+- fix(cli): keep or name every EditorConfig value in init
+- fix(eslint-plugin): give no matcher advice for a bare chai call
+- fix(eslint-plugin): judge what no-mixed-return-types can mix
+- fix(eslint-plugin): correct closures, wrapped components, and clones
+- fix(eslint-plugin): stop reporting exact values in tests
+- fix(eslint-plugin): narrow no-swapped-arguments
+- fix(eslint-plugin): narrow no-clear-text-protocols
+- fix(eslint-plugin): stop reading a path as a file mode
+- fix(cli): read the EditorConfig quote type
+- fix(cli): leave out an EditorConfig indent style of unset
+- fix(cli): keep the format overrides of a scope in init
+- fix(cli): start each program in install and doctor
+- fix(eslint-plugin): stop asking to drop a required g flag
+- fix(eslint-plugin): count an awaited call as an effect
+- fix(eslint-plugin): read manual iterator loops and loop bodies
+- fix(cli): let a nested pyproject.toml fail as a parse error
+- fix(cli): stop calling values carried when gspot.toml lacks them
+- fix(cli): report plain secrets in ENV and ARG through Trivy
+- fix(eslint-plugin): accept an origin check through a variable
+- fix(eslint-plugin): correct and widen cross-origin-policy
+- fix(eslint-plugin): survive a package.json that does not parse
+- fix(cli): name a CI file that does not parse in the init plan
+- fix(cli): name a broken package manifest in every run
+- perf(cli): parse only the Swift files that can carry a tag
+- fix(cli): keep the Swift grammar out of the WASM optimizing tier
+- fix(cli): let a run hold the copies folder without writing it
+- fix(cli): remove the weekly job from the generated workflow
+- fix(cli): keep the copies ignore file for the whole run
+- fix(cli): run the two Git listings one after the other
+- fix(cli): let scan read the Python environment of the repository
+- fix(cli): keep what scan sets up out of its report
+- fix(cli): hold gspot baseline to the pin
+- fix(cli): count taplo and shfmt as formatting in the scan report
+- fix(cli): ask for a reason when a carried Ruff selector holds a rule
+- fix(cli): keep a user config from stopping init or scan
+- fix(cli): leave ENV and ARG secrets to gitleaks in Trivy
+- fix(cli): list every package in the license scan
+- fix(cli): sort the imports of the format reader
+- fix(cli): keep a Prettier config's output out of init
+- fix(cli): describe security/semgrep by a local rule
+- feat(cli): run the JavaScript security rules in ESLint
+- fix(cli): match tsconfig files to repository paths on Windows
+- fix(eslint-plugin): compare every field of two versions
+- feat(cli): print the exact fix command for each fixable check
+- fix(cli): end an empty pre-commit early, read commit-msg from the index
+- perf(cli): run Git without blocking, and hold no finished spawn
+- fix(cli): read only source files in docs/version-strings
+- fix(cli): start npm tools through Node when Bun runs gspot
+- fix(cli): sort the imports that the rebase moved
+- fix(cli): keep the notes of a check out of its JSON result
+- feat(cli): carry ignore files and lint rules, and show it in scan
+- feat(cli): carry every Prettier and Ruff format option at init
+- feat(cli): report the old lint commands until they are gone
+- feat(cli): add gspot/weakenings, which compares settings with the base
+- feat(cli): check Bash and Swift security rules without Semgrep
+- fix(cli): keep the format of the file that init pins gspot in
+- fix(cli): keep vulture findings on Windows
+- fix(cli): stop import-cycles reporting other rules' directives
+- fix(cli): point the first-read rules at .gspot/rules
+- fix(cli): check pushed commits that leave the tree unchanged
+- fix(cli): clear the push gate findings of the rebased work
+- fix(cli): read the Swift file cases of the current naming table
+- fix(cli): build each Swift scope once, pinned and under a lock
+- fix(cli): match the renamed checks to the current manifests
+- fix(cli): pass a src-layout package's own name to deptry
+- fix(cli): explain the failed diff step in generated CI
+- fix(cli): install gspot before the project's code in generated CI
+- fix(cli): make the GitLab include run on GitLab's own runners
+- fix(cli): run the settings-gated checks where the rule text says
+- feat(cli): render setting values into rule text
+- fix(cli): require the real .ts extension in Deno code
+- fix(cli): lint TypeScript files that no tsconfig includes
+- fix(cli): run the typos fixer only on prose files
+- fix(cli): plan repository/local-files for staged links
+- fix(cli): let log fields and log methods pass the naming check
+- fix(cli): lint a typeless package's .js files as CommonJS
+- fix(cli): exempt decorated functions and tests in trivial-functions
+- fix(cli): write a CI workflow without the local package manager version
+- fix(cli): keep submodule checkouts out of every generated ignore list
+- fix(cli): ban raw Drizzle statements, not sql fragments
+- fix(cli): apply Testing Library rules only to Testing Library queries
+- fix(cli): turn vue/require-default-prop off in every file
+- fix(cli): accept Astro's :global() in Stylelint
+- fix(cli): keep the runtime imports that Pydantic and FastAPI need
+- fix(cli): run Squawk require-table-schema at level all
+- fix(cli): ask for named Zod imports at level all
+- fix(cli): keep access modifiers on the declarations of Swift extensions
+- fix(cli): use a bind mount for the nginx check copies
+- fix(cli): group shared prefixes once, and leave Swift type files alone
+- fix(cli): give knip its default entries, and hide only gspot's packages
+- fix(cli): run Vale without the host's global config
+- fix(cli): pass --passWithNoTests to Vitest
+- perf(cli): read every pushed commit message with one git log
+- fix(cli): run the cheap dependency checks at commit
+- fix(cli): name the Zustand fix, and report stores in store files
+- fix(cli): print the foreign hook note only on a foreign hook
+- fix(eslint-plugin): count a rule tester built by a call as tests
+- fix(eslint-plugin): stop reporting prose as commented code
+- fix(cli): report an unvalidated Supabase body with one tool
+- fix(cli): run the version command unless mise holds the pin
+- fix(eslint-plugin): stop resolving a parameter to its function
+- fix(cli): declare the npm config modules outside the module file
+- fix(cli): sort the imports that the merge with main moved
+- fix(cli): sort the fixer imports and drop an unused fake import
+- fix(cli): follow the proxy values and the package.json reader
+- feat(cli): report a second AGENTS.md
+- feat(cli): add the small checks of the docs, Docker, and reasons
+- feat(cli): report a secret with a fallback value
+- feat(cli): add three Xcode project findings
+- feat(cli): run the prose rules on comments and commit messages
+- feat(cli): scan unchanged lockfiles for new advisories every week
+- feat(cli): turn on package-json/scripts-name-casing at level all
+- feat(cli): add a Dockerfile instruction check
+- feat(cli): ban vague test titles at level all
+- feat(cli): check every WRITING.md title, heading, and arrow rule
+- feat(cli): turn on the smaller rules that plugins and selectors give
+- feat(cli): refuse CI skips, Xcode user state, and force-pushes
+- feat(cli): add github-actions/workflow-shape
+- feat(cli): enforce the TypeScript and JavaScript rules that plugins ship
+- feat(cli): ban abbreviations and generic verbs in the naming lists
+- feat(cli): add the Postgres policy and migration rules
+- feat(cli): enforce CSS.md and HTML.md with core Stylelint rules
+- feat(cli): enforce the Python rules that Ruff and manifests check
+- feat(cli): enforce the forbidden Bash syntax in bash/safety
+- feat(cli): start commit subjects in lowercase
+- feat(cli): run the @eslint-react naming rules at level all
+- feat(cli): format the embedded code of Vue and Astro files
+- fix(cli): let Ruff PLR0917 use its own default
+- feat(cli): report ADD at basic in hadolint
+- feat(cli): ban @ts-ignore and @ts-nocheck at basic
+- feat(cli): report debug output, work markers, and Any at basic
+- feat(cli): report merge-conflict markers at basic
+- feat(cli): state the level rule and move checks to basic
+- fix(cli): pin Biome 2.6.3 inside the release hold
+- fix(cli): name the install that the pin of init leaves to do
+- feat(cli): add gspot baseline for findings that predate gspot
+- feat(cli): add gspot scan, a trial run that changes nothing
+- fix(cli): sort the imports that the rebase merged
+- fix(cli): call the generated hook scripts from other hook managers
+- feat(cli): download grammars during install
+- feat(cli): pin gspot at init and refuse to run another version
+- fix(cli): blame the release-age hold only when it caused the failure
+- feat(cli): install the project's Python environment and name the install
+- feat(cli): start npm tools through Node
+- fix(cli): honor proxies, UTF-8 output, and the Swift toolchain
+- fix(cli): pass mise's own failure to each affected check
+- fix(cli): verify and repair every tool that install installs
+- feat(cli): let install build the tool projects and report missing tools
+- fix(cli): rebuild a broken mise lockfile
+- fix(cli): let uv sync create the tool environment
+- fix(cli): find git, mise, node, and npm outside the repository
+- feat(cli): block install scripts and settings in the tool project
+- feat(cli): ship audited checksums for every mise pin
+- fix(cli): leave SvelteKit server files out of the Vite client rule
+- fix(eslint-plugin): check the app parameter of any function
+- feat(cli): check the client env reads of a Vite app
+- feat(cli): run the test runners in their own CI job
+- fix(docs): label the python-environment check need
+- fix(cli): follow the settings and imports that moved on main
+- perf(cli): narrow files before reading them, and decode each file once
+- perf(cli): look up the nearest folder one way, and list configs once
+- fix(cli): let a scope setting turn on a check that runs once
+- fix(cli): show the tool's stderr tail in crash and timeout notes
+- perf(cli): check staged files in place when the index matches the tree
+- fix(cli): yield to the event loop during long built-in work
+- fix(cli): accept a linked Python environment and refuse a file
+- fix(cli): expand command placeholders in one pass
+- fix(cli): stop tools with SIGTERM before SIGKILL
+- fix(cli): write tracked links as files on Windows when links fail
+- fix(cli): leave symbolic links out of every tool's file list
+- fix(cli): split the link refusal out of read-only probes
+- feat(cli): write every detected value into gspot.toml
+- feat(cli): make the init plan say what init does
+- fix(cli): let a nodenext tsconfig win over a framework's import style
+- feat(cli): detect configurations from strong evidence only
+- feat(cli): give existing code the formatters' own defaults
+- fix(eslint-plugin): stop at a middleware array that holds itself
+- fix(eslint-plugin): read the imports of a Svelte script
+- fix(eslint-plugin): lint JavaScript classes without decorators
+- feat(cli): name every numeric bound with max_ or min_ and its unit
+- feat(cli): put each setting in its configuration's table
+- feat(cli): delete format.final_newline and format.line_ending
+- fix(cli): give every path setting one base
+- feat(cli): keep each default in one place
+- fix(cli): parse gspot set values by type, and read reasons once
+- feat(cli): report progress when stderr is not a terminal
+- feat(cli): put each check's help on the check in the JSON report
+- feat(cli): wrap help at 80 columns and rewrite its unclear lines
+- feat(cli): trim explain to what applies, and keep check help to the fix
+- feat(cli): count only programs as tools in doctor
+- feat(cli): print every setting in full in list, and group scope states
+- feat(cli): print scopes and report lines in one shape
+- feat(cli): use one word for each concept in what gspot prints
+- feat(cli): give the JSON output one vocabulary and named fields
+- feat(cli): test the assertion and framework SonarJS twins
+- feat(eslint-plugin): prefer native methods over lodash
+- feat(eslint-plugin): report Vue state writes in updated hooks
+- feat(eslint-plugin): prefer read-only props on components
+- feat(eslint-plugin): report debounce created in a component
+- feat(eslint-plugin): report Cypress assertions in then callbacks
+- feat(eslint-plugin): report assertions outside tests and hooks
+- feat(eslint-plugin): require an assertion in each test
+- feat(eslint-plugin): report throw assertions without a callback
+- feat(eslint-plugin): report assertions on mismatched types
+- feat(eslint-plugin): suggest dedicated assertion matchers
+- feat(eslint-plugin): report assertions on constant values
+- feat(cli): run the remaining twins of replaced SonarJS rules
+- feat(eslint-plugin): add data-flow SonarJS twins
+- feat(eslint-plugin): add call and return SonarJS twins
+- feat(eslint-plugin): add collection and dead-logic SonarJS twins
+- feat(eslint-plugin): add regular expression SonarJS twins
+- feat(eslint-plugin): add rules that replace SonarJS security rules
+- fix(cli): give site builds the tracked root files
+- feat(eslint-plugin): add gspot/restricted-syntax, one block per scope
+- feat(eslint-plugin): report each re-export once, in no-trivial-files
+- feat(eslint-plugin): check client env reads in Astro scripts and Expo
+- feat(eslint-plugin): skip overloads and framework exports as trivial
+- fix(eslint-plugin): keep explaining comments in place after imports
+- fix(eslint-plugin): say where to declare an alias in import-boundaries
+- fix(eslint-plugin): report renames made in the import as renamed exports
+- fix(eslint-plugin): report call arguments in no-magic-numbers constants
+- fix(docs): let the docs build find the CLI package again
+- feat(cli): check Supabase JSON bodies and test the SonarJS rule twins
+- fix(eslint-plugin): run no-empty-test-file through the presets
+- feat(eslint-plugin): add memoize, jQuery, and Axios rules for SonarJS
+- feat(eslint-plugin): add React, Vue, and library rules for SonarJS
+- feat(eslint-plugin): add assertion and UI test rules for SonarJS
+- feat(eslint-plugin): add test suite rules that replace SonarJS
+- feat(eslint-plugin): add test runner rules that replace SonarJS
+- feat(cli): run the regexp and core twins of replaced SonarJS rules
+- feat(eslint-plugin): require a RegExp for string match patterns
+- feat(eslint-plugin): add type-shape SonarJS twins
+- feat(eslint-plugin): add loop, branch, and typed SonarJS twins
+- feat(cli,docs,tests): land the open FIXES.md work
+- feat(eslint-plugin): add rules that replace SonarJS rules
+- fix(cli): keep check copies inside the repository
+- feat(eslint-plugin): check cookie and security header settings
+- feat(eslint-plugin): preserve random and header protections
+- fix(cli): preserve files changed after review
+- fix(cli): collect warnings in JSON results
+- fix(cli): declare the bug report address
+- feat(eslint-plugin): add rules for redundant and disabled code
+- fix(cli): run Bun hooks through the installed binary
+- fix: push package tags before publishing
+- fix(cli): resolve JavaScript type roots from each scope
+- fix(cli): hide the copy folder that gspot makes beside the repository
+- fix(cli,tests): create each copy beside the repository
+- feat(cli): add structure/function-order for four languages
+- fix(tests): copy a planned check instead of changing the shared one
+- fix(cli): run docker/compose without a running Docker daemon
+- fix(cli,tests): run knip in the folder of an independent package
+- fix(cli): do not start a process whose cancel signal already fired
+- perf(docs): match the fallback font to Geist so the swap moves nothing
+- fix(tests): fake the tools and let Git run in check tests
+- fix(cli): throw GspotError for failures the user can fix
+- fix(cli,tests): let doctor suggest configurations that it detects
+- perf(cli): load TypeScript and @npmcli/config on first use
+- perf(cli): scan the license projects of a check at the same time
+- fix(cli): share one process limiter through the check session
+- fix(cli,docs,tests): close four small output gaps
+- feat(cli,docs,tests): show ignores and removals in explain and list
+- fix(cli,tests): use one word per concept and one form in CLI messages
+- perf(cli,tests): stop syncing every staged write to disk
+- fix(cli,eslint-plugin,tests): link plugin rules to their merged page
+- fix(cli): pin every range only in the repository's own private packages
+- fix(cli,tests): tell install to set GITHUB_TOKEN at the API rate limit
+- fix(cli,tests): list only what init changes in its plan
+- fix(cli,tests): repair four broken set and settings messages
+- fix(cli,tests): write gspot.toml in init's order and Taplo's layout
+- fix(cli,tests): record a removal only for a configuration that returns
+- fix(cli,docs,tests): keep one reason for each removed configuration
+- fix(cli,tests): keep each missing check's hint and report a missing venv
+- fix(cli,tests): check that the hooks can start gspot in doctor
+- perf(cli,tests): skip the index copy when nothing is staged
+- fix(cli,tests): say which setup files are not staged in a staged check
+- fix(cli,tests): note changed tools only when a tool lockfile is stale
+- fix(cli,tests): say which folder the apply file count covers
+- fix(cli,tests): say that a stale generated file is out of date
+- fix(cli,tests): drop the doubled period in the package manager error
+- fix(docs): keep the hand-written reference and line breaks in llms-small
+- fix(docs): let long table cells wrap so tables fit on a phone
+- perf(docs): inline the tool icons and ship a smaller hero
+- fix(docs): serve the README banners from the site
+- perf(docs): stop blocking the first paint until the article is parsed
+- fix(cli,tests): point the AGENTS.md block at .gitattributes
+- fix(cli,tests): pin the ranges of published packages only for dev tools
+- feat(cli,tests): check the arguments of one-line Python docstrings
+- feat(cli,tests): require an Arguments section on public Bash functions
+- feat(cli,tests): require parameter docs on public Swift functions
+- fix(eslint-plugin,docs,tests): report renames in exported destructuring
+- feat(cli,tests): refuse commit references that readers cannot follow
+- feat(cli): report AI session links in docs and comments
+- feat(cli,tests): keep AI chat sessions out of commit messages
+- fix(cli,tests): drop the staged-check line from the AGENTS.md block
+- fix(cli): ask about licenses only when licenses.allowed lists some
+- fix(cli): leave unused classes and functions to vulture at level all
+- fix(cli): turn off Ruff D417, which pydoclint repeats
+- fix(cli,tests): turn off the SwiftLint rules that SwiftFormat repeats
+- fix(cli): turn off the sonarjs rules that other rules already report
+- fix(cli): let gspot.dates own dates, and turn off Google.DateFormat
+- fix(cli,tests): leave inline Markdown link targets to lychee
+- fix(cli): turn off sonarjs/class-name, which naming/identifiers repeats
+- fix(cli): turn off the sonarjs rule that contradicts unicorn
+- fix(cli,eslint-plugin,tests): never report object-literal members
+- fix(cli,tests): pin the default nginx image by digest
+- fix(cli,tests): pin Node by exact version in generated workflows
+- fix(cli,tests): give the mise token only to the step that installs gspot
+- fix(cli,tests): cache the mise download store in CI, not installed tools
+- fix(cli,tests): refuse GitHub expressions in generated workflow commands
+- fix(cli,tests): give check tools an environment without credentials
+- fix(cli,tests): link Vale packages into a copy without following links
+- fix(cli,tests): ignore the repository .npmrc for gspot tool installs
+- fix(cli,tests): trust .gspot/mise.toml for each mise call, not lasting
+- fix(cli,tests): look up mise-pinned tools only in mise and .gspot
+- fix(cli,tests): refuse a mise lock that points at another download
+- fix(cli,tests): strip terminal controls once, where gspot prints
+- fix(cli,tests): write a scope's config file for the checks that read it
+- fix(cli,tests): find HTML comment directives in MDX files
+- fix(eslint-plugin,tests): skip methods that a framework calls
+- fix(cli,tests): reinstall Vale packages when one package folder is gone
+- fix(cli): name one pushed commit message in the singular
+- fix(cli): split dependency paths with forward slashes on Windows
+- fix(cli,tests): probe Docker through the located binary
+- fix(cli,tests): correct source check false positives
+- fix(cli): accept environment readers without a reason
+- fix(cli,docs,tests): fix check, install, and settings regressions
+- fix(cli,docs,tests): check only project styles for unused selectors
+- fix(cli,eslint-plugin,docs,tests): fix audited setup and lint cases
+- fix(cli,docs,tests): select and lock only the tools a project needs
+- fix(cli,docs,tests): refuse to downgrade a repository pin
+- fix(cli,tests): run knip in packages outside the workspaces
+- fix(cli,tests): skip Docker checks in scopes without their inputs
+- fix(eslint-plugin,tests): accept server-only markers in JavaScript
+- fix(eslint-plugin,tests): report every small named function again
+- fix(cli,docs,tests): skip unchanged npm and Vale installs
+- fix(cli,docs,tests): delete header files only where gspot writes them
+- fix(cli,docs,tests): list generated files outside .gspot in one place
+- fix(cli,docs,tests): restore files the fixers broke, keeping edits
+- fix(cli,docs,tests): fail a check run whose fixers broke a file
+- fix(cli,docs,tests): exempt exact tool pins from the release-age hold
+- fix(cli,tests): take the tool releases that fix expired advisories
+- fix(cli): find the PurgeCSS child script beside the running module
+- fix(cli): resolve mise shims in every executable search
+- fix(cli): say a canceled check was canceled
+- fix(cli): suggest --scope only for settings that a scope accepts
+- fix(cli): report astro check diagnostics in every file type
+- fix(cli): read core.hooksPath the same way in every hooks check
+- fix(cli): keep comments of scope tables when gspot edits settings
+- fix(cli): apply scope limits in the shared ESLint config
+- fix(cli): read pushed commits from the checkout in staged checks
+- fix(cli): write the CLI shebang before the bundle again
+- fix(cli): repair the gaps the integration suite found
+- fix(cli): print run again scope paths with forward slashes
+- fix(cli): checksum mise archives whose releases publish none
+- fix(cli): mark every generated file outside .gspot as generated
+- fix(cli): validate set values before their reasons
+- fix(cli): keep Git ignores out of tool configurations
+- fix(cli): keep Yarn state in node_modules
+- fix(cli): leave framework peers in the project
+- fix(cli): parse Astro components with their own typed project
+- fix(cli): run pinned package managers in CI
+- fix(cli): refuse expired ignore dates
+- fix(cli): set PWD to the child working folder
+- fix(cli): keep Next lint plugins on the shipped pin
+- fix(cli): run Yarn entry commands through exec
+- fix(cli): recognize supported dependency lockfiles
+- fix(eslint-plugin): require runtime server-only markers
+- fix(eslint-plugin): describe upstream magic-number rule options
+- fix(eslint-plugin): find home-alias index imports
+- fix(eslint-plugin): allow Vite built-in environment names
+- fix(eslint-plugin): preserve side-effect entry modules
+- fix(eslint-plugin): share scope-aware export alias checks
+- fix(eslint-plugin): allow tool directives throughout imports
+- fix(eslint-plugin): match exact and suffix import aliases
+- fix(cli): ignore rule options for missing scopes
+- fix(cli): match double-underscore tool containers first
+- fix(cli): allow native framework snapshot names
+- fix(cli): detect Python Postgres driver variants
+- fix(cli): avoid invalid silent-e word stems
+- fix(cli): allow route function names in JavaScript
+- fix(cli): accept schema-validated Supabase request bodies
+- fix(cli): find direct HTML assignments to DOM elements
+- fix(cli): select JavaScript implicit typing by lint level
+- fix(cli): keep ordinary domain words out of naming findings
+- fix(cli): detect static sites from their build outputs
+- fix(cli): disable React runtime prop declarations
+- fix(cli): allow React Native text components
+- fix(cli): match query and form selectors at their syntax
+- fix(cli): run correctness selectors at both levels
+- fix(cli): skip row security when no client schemas exist
+- fix(cli): recognize Prisma and Drizzle migration paths
+- fix(cli): name invalid formatter files in init errors
+- fix(cli): redact malformed registry credentials safely
+- fix(cli): validate uv settings with their Python document
+- fix(cli): enforce package manager release hold versions
+- fix(cli): use npm for Yarn Classic tool projects
+- fix(cli): preserve written defaults when editing settings
+- fix(cli): keep tool rule options outside reason validation
+- fix(cli): remove settings of removed configurations
+- fix(cli): accept only Markdown rule IDs in option tables
+- fix(cli): suggest reason syntax for the affected setting
+- fix(cli): validate each authored reason once
+- fix(cli): attach linked rule file errors to their settings
+- fix(cli): keep the package release hold at repository scope
+- fix(cli): refuse duplicate import rule names
+- fix(cli): require individual SPDX licenses in allowances
+- fix(cli): report Git refusals with Git diagnostics
+- fix(cli): inspect every nested package for its manager
+- fix(cli): explain unsupported package manager declarations
+- fix(cli): isolate filename tables from object prototypes
+- fix(cli): order generated paths without process collation
+- fix(cli): compare numeric migration freeze versions
+- fix(cli): report invalid mise aliases as TOML errors
+- fix(cli): parse component comments inside code sections
+- fix(cli): name invalid Python requirements and their files
+- fix(cli): parse Swift package declarations as syntax
+- fix(cli): honor replaced Python registry origins
+- fix(cli): refuse unknown explicit ESLint core rules
+- fix(cli): name the configuration of an unselected check
+- fix(cli): classify refused ignore reasons as argument errors
+- fix(cli): report only configurations that a command changes
+- fix(cli): warn about managed keys only when ownership ends
+- fix(cli): distinguish missing installs from changed tool projects
+- fix(cli): preserve settings bytes when apply finds no directive
+- fix(cli): include the required reason in doctor removal commands
+- fix(cli): explain every shipped core ESLint rule
+- fix(cli): resolve command subjects from the calling folder
+- fix(cli): unignore escaped paths after their files disappear
+- fix: keep JSON flags after the value separator as values
+- fix(cli): retain numeric and boolean words in string settings
+- fix(cli): read Prettier file formats and report script settings
+- fix(cli): resolve reproduction paths from the calling folder
+- fix(cli): reproduce path and history check selections
+- fix(cli): list repository checks once at their root
+- fix(cli): refuse explicitly requested checks disabled by level
+- fix(cli): narrow staged project findings to requested paths
+- fix(cli): require committed files before init replaces them
+- fix(cli): derive Next lint pins from declared dependencies
+- fix(cli): validate every YAML rule option name
+- fix(cli): refuse inactive commit message rule options
+- fix(cli): refuse inactive Markdown rule options
+- fix(cli): share refusals for inactive rule options
+- fix(cli): omit inherited Markdown pointers from ignores
+- fix(cli): read calls in quoted Bash trap handlers
+- fix(cli): respect ordered Docker ignore allowlists
+- fix(cli): distinguish executable HTML script blocks
+- fix(cli): apply registry checks only to download URLs
+- fix(cli): pair Compose files with named overrides
+- fix(cli): compare direct React importer versions
+- fix(cli): report malformed Supabase settings
+- fix(cli): run JavaScript checks with the generated target
+- fix(cli): keep inferred type roots inside the repository
+- fix(cli): copy local actions outside the workflow folder
+- fix(cli): report malformed sitemap locations
+- fix(cli): stop function comments at the shebang
+- fix(cli): replay migration table and column renames
+- fix(cli): inspect default privilege grants
+- fix(cli): replay changes to function security settings
+- fix(cli): match indexes against composite foreign keys
+- fix(cli): compare migration history with the selected base
+- fix(cli): read compiler settings through dependency links
+- fix(cli): keep filenames out of command options
+- fix(cli): scan generated GitHub workflows for injection
+- fix(cli): reject substituted tool lockfile packages
+- fix(cli): allow gspot installation on clean CI runners
+- feat(cli): javascript.import_boundaries keeps imports inside folders
+
+## 0.3.7
+
+### Changes
+
+- fix(docs): first paint is dark and in Geist, with no font swap
+- feat(cli): one lint job per system in the GitHub workflow
+- fix(cli): no crash on paths outside the repository, ASD, rule index
+
+## 0.3.6
+
+### Changes
+
+- feat(cli): the javascript ESLint files sit in their own eslint/ folder
+- feat(cli): structure/pass-through-folders reports a folder of one folder
+- fix(cli): a malformed tsconfig on Windows reports its JSON error
+- feat(cli): apply --dry-run --json lists outdated files under outdated
+- fix(cli): set and add quote each list value they report
+- fix(cli): the pre-push hook names the gspot version to install
+- fix(cli): unset compares a key without a table with top-level settings
+- fix(cli): the ignore section of configuration paths says what it holds
+- fix(cli): doctor aligns its suggestions and lists each tool once
+- fix(cli): commitlint accepts the ! marker of a breaking change
+- fix(cli): prose/vale accepts the currency codes it asks for, and TODO
+- fix(cli): explain <path> lists the configurations that check the file
+- fix(cli): an exact package.json import needs no file extension
+- fix(cli): typescript/tsc reports a referenced project's error once
+- fix(cli): a broken tsconfig names its file from the repository root
+- fix(cli): swift/build names a tracked file that is missing
+- fix(cli): site/build names its command as you would type it
+- fix(cli): tool failures and findings use the tool's own words
+- feat(cli): gspot.toml is checked with the schema of its gspot version
+- feat: comments, messages, docs, and shipped rules, steps 7.01 to 7.36
+- feat(eslint-plugin): the trivial rules count statements only
+- feat(eslint-plugin): report every trivial function
+- fix(cli): detect site by its files in any folder
+- fix(cli): gspot.ampm reports "1 pm" and not "5 amps"
+- fix(cli): a broken Supabase bucket table fails the check
+- fix(cli): docs/missing-paths reads .mdx pages
+- fix(cli): one mise file list for the pin check and the docs check
+- fix(cli): the docs checks read required files from the repository list
+- fix(cli): github-actions prepares action.yaml
+- fix(cli): a nested Ansible project lints each file once
+- fix(cli): the Swift build cache keys on the installed checkout
+- fix(cli): Python class and exception names keep their length limit
+- fix(cli): bash/unread-arguments skips calls that forward "$@"
+- fix(cli): bash/unused-functions counts trap handlers as calls
+- fix(cli): files-only naming allowances read the file stem
+- fix(cli): argument errors use the arguments code
+- fix(cli): check prints the unstaged-changes line once
+- fix(cli): explain lists only the tool floors of the check
+- fix(cli): explain lists every detection rule of a configuration
+- fix(cli): list settings aligns its columns
+- fix(cli): init lists a file once, and .gitattributes only with Git
+- fix(cli): init reads EditorConfig sections as overrides
+- fix(cli): doctor suggests no removed configuration
+- fix(cli): remove --scope drops an inherited configuration
+- fix(cli): the report keeps the names of an ignore
+- fix(cli): a message that ends in a bracketed word keeps it
+- fix(cli): a finding outside the scope keeps its own path
+- fix(cli): the generated-files ignore section anchors each path
+- fix(cli): tool files find ignore sections by key
+- fix(cli): a local ESLint plugin reaches its scope once
+- fix(cli): nested scopes keep test, script, and mise task ESLint blocks
+- fix(cli): a scope's restricted imports reach the ESLint file
+- fix(cli): the published JSON Schema holds no internal metadata
+- fix(cli): the dry run and gspot/generated-files compare the file mode
+- fix(cli): the css and html naming tables accept their keys
+- fix(cli): the exact-version message quotes the package manager field
+- fix(cli): hooks are ready only when every hook runs gspot
+- fix(cli): the file walk outside Git keeps symlinked files
+- fix(cli): decode quoted .gitattributes patterns and skip macro lines
+- fix(cli): read the suppressions of scripts and type stubs
+- fix(cli): EditorConfig settings errors are settings errors
+- fix(cli): a held or broken writer lock is a filesystem error
+- fix(cli): a user file that is not UTF-8 is a files error
+- fix(cli): a broken workspace file is a files error
+- fix(cli): a broken JSON or TOML file of the user is a files error
+- fix(cli): an internal error ends with one period
+
+## 0.3.5
+
+### Changes
+
+- fix(cli): keep Vale name ignores out of code fences
+
+## 0.3.4
+
+### Changes
+
+- fix(cli): false positives that gspot 0.3.3 found in its own repository
+
+## 0.3.3
+
+### Changes
+
+- fix(cli): gspot set names no undefined earlier value
+- fix(cli): Vale rules that contradict each other
+- feat(cli): MDX, root links, Cloudflare, and small rule fixes
+- feat(cli): command outputs, mise task packages, and install checks
+- fix(cli): keep build output findings and inherited excludes
+- feat(cli): Python parity checks
+- feat(cli): externals and project-local ESLint plugins
+- fix(cli): structure, naming, and framework false positives
+- fix(eslint-plugin): trivial code rules agree
+- fix(cli): Python names and trivial functions
+- feat(cli): import rules for Python and Swift
+- feat(cli): exact import lists, readable import rule messages
+- fix(cli): clearer flags and hook messages
+- fix(cli): init plans scopes, levels, and agent files right
+- fix(cli): read licenses from the locked dependency set
+- fix(cli): run uv and Python checks with the right interpreter
+- fix(cli): keep gitignored files out of generated tool files
+- fix(cli): keep fixers from breaking imports and names
+- fix(cli): parse only code files with a code grammar
+- feat(cli): settings for 0.3.3
+
+## 0.3.2
+
+This release holds no feature, fix, or performance commit.
+
+## 0.3.1
+
+### Changes
+
+- feat(cli): init says the rules in replaced tool files do not carry over
+- fix(cli): Vale installs pinned releases of its upstream styles
+- feat(cli): level recommended asks tsconfig only for strict
+- feat(cli): the release hold covers only the tools gspot installs
+- feat(cli): a refused gspot.toml key names the fix
+- fix(cli): Husky 9 no longer crashes check and doctor
+- fix(docs): the home page links its Markdown copy at /index.md
+
+## 0.3.0
+
+### Changes
+
+- feat(cli): shipped rules take the general lines of AGENTS.md
+- feat(cli): help text marks code, and the terminal drops the marks
+- fix(cli): the package manager refusal says what it found
+- feat(cli): every setting and reasoned value has its own text
+- feat(cli): configuration and check texts say what runs
+- feat(cli): shipped rules agree with the shipped tools
+- feat(cli): a .markdownlint.jsonc pointer wherever Markdown is
+- feat(cli): [[import_rule]] in place of the architecture table
+- fix(cli): the scope tool file path and html-validate names
+- feat(cli): one .gspot folder per configuration
+- fix(cli): a Windows tree stop that taskkill reports late is done
+- fix(docs): keep map placeholders out of setting row IDs
+- fix(cli): keep root key descriptions in the schema
+- fix: keep gspot's own ignore files out of the configured checks
+- fix: run the Vale alt-text style on markup files only
+- feat: remove the coverage configuration
+- feat: merge cloudflare/security-headers into cloudflare/headers
+- feat: remove the xcode/xcconfig check
+- feat: replace dependencies/package-json with a lint rule
+- feat: make prettier.config.mjs a one-line pointer
+- fix: list only the files gspot writes in the ignore lists
+- feat: stop writing commit scopes in init
+- feat: say why the lychee and OSV-Scanner files exist
+- feat: write only the Vale styles that the level runs
+- feat: write a Git hook only when a check runs in it
+- feat: stop writing .semgrepignore
+- feat: drop the level line from the AGENTS.md block
+- fix: apply the JavaScript limits to JavaScript files
+- feat: accept only the limits and naming keys that some code reads
+- fix: make CLI messages say what is true and what to do next
+- fix: describe every top-level table in the published schema
+- fix: put the guides first in the llms files and slim llms-small
+- fix: correct facts and formatting on the generated reference pages
+- fix: stop reporting heredocs that write data files
+- feat: delete the bash/forwarders check
+- fix: report a migration that does not parse once
+- fix: report a suppression of every rule as its own lint rule
+- fix: build the gspot help from the registered commands
+- fix: list the configured checks of a file the way the session does
+- fix: show scope defaults and record-list advice correctly in explain
+- fix: keep one copy of the refusal and of the install notes
+- fix: correct the init label and the count of up-to-date files
+- fix: say no change when set or unset leaves gspot.toml as it was
+- fix: let set and unset reach settings of detected configurations
+- fix: report only the root0 placeholder in jsdoc/match-name
+- fix: name the folders of a scoped rule in AGENTS.md without parentheses
+
+## 0.2.2
+
+### Changes
+
+- fix: write the agent rules into AGENTS.md only
+- fix: let apply replace the files that gspot 0.1 generated
+- fix: bold only the first sentence of the home page report summaries
+- fix: write npm release hold excludes as a list npm reads
+
+## 0.2.1
+
+### Changes
+
+- fix: name one tool without a plural in the init plan
+- fix: hold new releases only where the tool project picks versions
+
+## 0.2.0
+
+### Changes
+
+- feat: hold new releases for seven days in every installer gspot sets up
+- fix: let secrets/trufflehog-pushed scan a repository on Windows
+- fix: load the PurgeCSS tool file by URL so site/purgecss runs on Windows
+- fix: give mise the GitHub token in the generated workflow
+- fix: name the time limit when an install step runs out of time
+- fix: install editorconfig-checker from its release through mise
+- perf: read the package manager version only where it is used
+- fix: find scope JavaScript projects on Windows
+- fix: stop installing Prettier with the CLI
+- fix: give generated reference pages heading links
+- fix: redirect every moved guide to its final page
+- fix: print the help when gspot runs without a command
+- fix: match JavaScript project files on Windows
+- fix: write the CLI hashbang in the shell on every system
+- fix: name files relative to the root in tool messages
+- fix: handle Windows file paths and executable names
+- fix: link the compiler from the test workspace
+- fix: declare CLI types and correct documentation link checks
+- feat: align commands, settings and shipped rules
+- perf: copy only GitHub files for actionlint
+- fix: allow fresh clones to update generated files
+- fix: keep apply from changing configuration selections
+- fix: describe removed scope configurations correctly
+- fix: enforce the gap after imports and preserve directives
+- fix: stop promising a fix for generated file drift
+- fix: correct shipped setting advice and rule text
+- fix: reject message checks outside the message stage
+- fix: keep installed Vale packages until downloads finish
+- fix: retain project scopes after applying fixes
+- fix: rebase every scoped Semgrep ignore pattern
+- fix: keep package manifests in the init plan
+- fix: validate settings before writing their defaults
+- fix: recognize clone hosts and Mise file tasks in docs
+- fix: check lone files from the selected file list
+- fix: use scoped environment readers for Bash layout
+- fix: find example environment files in nested scopes
+- fix: check the files of authored TypeScript projects
+- fix: include tool packages in fix previews
+- fix: prepare shared test tools before starting the workers
+- fix: give each function verb one action
+- fix: state the required Node version and working install commands
+- fix: ignore local build and Wrangler output
+- fix: put workflow descriptions before the first key
+- fix: check main with the tools installed by the tests
+- fix: let CI runs on main finish
+- fix: copy only runtime pins into hook sandboxes
+- fix: inspect Git with the inherited executable path
+- fix: stop settings writes from changing with each release
+- fix: restore the website design and remove preview notices
+- fix: select companion tools at the configured level
+- fix: allow setup with current work and restore the website
+
+## 0.1.1
+
+### Changes
+
+- fix: install Docker Compose for macOS integration tests
+- fix: pin Bun's patch for parallel subprocess hangs
+- fix: preserve native environment variable spelling
+- fix: use native registry configuration for package clients
+- fix: parse Swift build paths on Windows
+- fix: run package checks on each supported system
+- fix: keep checks in scratch copies and make clean setup work
+- fix(root): drop the deleted patches from package.json
+- fix(root): avoid duplicate cold Python tool publication
+- fix(root): partition heavy native tool tests
+- fix(cli): drain durable installation writes in bounded groups
+- fix(root): exclude the database test on Windows
+- fix(root): preserve native Windows package dependencies
+- fix(root): expand native tools CI shards
+- fix(root): authenticate CI GitHub downloads
+- fix(root): distinguish hosted image updates from invalid pins
+- fix(cli): declare the supported Bun engine
+- fix(cli): keep native checks inside configuration boundaries
+- fix(root): measure package tests on every CI platform
+- fix(docs): restore the original product description
+- fix(root): copy validated private npm caches directly
+- fix(cli): inspect native generator version floors
+- fix(cli): serialize native Bun lock resolution
+- fix(cli): compile typed settings for native checks
+- fix(root): isolate CLI runner prerequisites
+- fix(root): declare exact sandbox dependencies
+- fix(cli): validate command placeholders and honor chosen runners
+- fix(cli): share repository scope path calculations
+- fix(cli): emit tool TOML with native default formatting
+- fix(cli): resolve generated compiler paths across drives
+- fix(root): remove the prescribed custom naming ban
+- fix(cli): make Xcode findings actionable
+- fix(root): keep native npm fixture caches on disk
+- fix(root): isolate Git fixtures from host configuration
+- fix(root): remove incidental validation prerequisites
+- fix(root): simplify policy and shared tool installation
+- fix(root): align coverage guide and native test plans
+- fix(root): prepare docs dependencies and close native checks
+- fix(cli): lock the plugin archive from the pinned Node runtime
+- fix(cli): honor declared platform files and native tool commands
+- fix(cli): share policy validation and preserve native tool state
+- fix(cli): prepare native release pins and reusable docs secrets
+- fix(docs): resolve CLI sources without a workspace dependency
+- fix(cli): audit policy allowances and remove stale entries
+- fix(cli): reuse authored global Git attributes
+- fix(cli): share Compose defaults and canonical test policy
+- fix(cli): limit path claims to prose and shell bodies
+- feat(cli): prepare generated CI from repository policy
+- fix(cli): preserve authored configuration choices on apply
+- fix(cli): put all-level rule literals inside their level branch
+- fix(cli): use runner install hints and nonterminal dry-run defaults
+- fix(root): use suite-owned executables in native fixtures
+- fix(cli): compile captured sources with installed type roots
+- fix(cli): align tool installation and configuration contracts
+- fix(root): record the pinned plugin archive integrity
+- fix(root): share confined compiler workspaces
+- fix(root): isolate native formatter and stylesheet output
+- feat(root): infer init formats from native project settings
+- fix(root): preserve exact template choices and correction contracts
+- fix(root): select frozen installs through declared input triggers
+- fix(cli): preserve live claims and consolidate cancellation tests
+- fix(root): preserve native platform and CLI test contracts
+- fix(cli): read hook readiness through the opened file
+- fix(cli): validate native lists and use typed check settings
+- fix(cli): finish tool file wording and policy accounting
+- fix(cli): preserve captured policy input and template values
+- fix: Apply scoped prose contracts and repository acceptances
+- fix: Consolidate command and generation contracts
+- fix: Check project coverage providers before execution
+- fix: Override the vulnerable Handlebars dependency
+- fix: Preserve native checks while consolidating test cases
+- fix: Generate NodeNext-compatible plugin declarations
+- fix: Align native fixture and process contracts
+- fix: simplify generated configuration contracts
+- fix: align configuration detection and scoped tool ownership
+- fix: apply native infrastructure check contracts
+- fix: preserve native policy and scoped tool contracts
+- fix: apply native policy and site contracts
+- fix: stabilize compiled schema formatting
+- fix: run ordinary TypeScript checks in place
+- fix: simplify scoped checks and resource cleanup
+- fix: simplify plugin rules and SQL delivery
+- fix: simplify check selection and naming contracts
+- fix: preserve trusted tool installation configuration
+- fix: share manifest tool installations across native suites
+- fix: restore npm packaging and owner contracts
+- fix(docs): restore the September 29 README banner exactly
+- fix(cli): give regex performance and typed deprecation one owner
+- fix(docs): restore the original README banner artwork
+- fix(docs): deliver README banners as standalone images
+- fix(cli): use one native binding and execution owner
+- fix(cli): remove duplicate native lint reports
+- fix(cli): load architecture tools for declared modules
+- fix(cli): validate JavaScript JSDoc types
+- fix(cli): use native unused-directive reporting
+- fix(cli): restore native HTML autoplay accessibility
+- fix(cli): isolate built HTML configuration by scope
+- fix(cli): inherit presets and handle optional policy values
+- fix(cli): align native lint styles and coverage levels
+- fix(deps): override vulnerable Sharp resolution
+- fix(cli): detect JavaScript from source files
+- fix(cli): inherit JavaScript compiler projects
+- fix(cli): generate standalone TypeScript projects
+- fix(cli): own compiler fallback and suppression auditing
+- fix(cli): audit required rules across source languages
+- fix(cli): preserve native POSIX filename boundaries
+- fix(cli): preserve native Knip diagnostics
+- fix(cli): lint detected Node scripts
+- fix(cli): take over applicable native commit configurations
+- fix(docs): restore the logo inside README banners
+- fix(cli): report accurate language tool guidance
+- fix(cli): own shared native configuration fields
+- fix(cli): honor scoped Node engine contracts
+- fix(cli): preserve native import and script contracts
+- fix(cli): keep acronym vocabulary with its project
+- fix(cli): correct prose checks for source notation
+- fix(cli): consolidate prose suppression ownership
+- fix(cli): correct portable prose rule selection
+- fix(cli): validate authored policy reason shapes
+- fix(cli): preserve reasons in exception lists
+- fix(cli): scope native naming contracts to their owners
+- fix(cli): validate naming categories and vocabulary
+- fix(cli): honor language naming contracts
+- fix(cli): align native file reader contracts
+- fix(cli): declare environment readers per project
+- fix(cli): scope documentation links and task sources
+- fix(cli): isolate YAML rules and formatter ownership
+- fix(cli): preserve native commit-message ownership
+- fix(cli): keep common checks automatic across manual selections
+- fix(cli): assign stylesheet syntax to framework consumers
+- fix(cli): select framework checks by level and dependencies
+- fix(cli): preserve manual language and framework overrides
+- fix(cli): keep Stylelint coverage under the selected level
+- fix(cli): keep Markdown coverage under the selected level
+- fix(cli): keep ESLint coverage under the selected level
+- fix(deps): pin patches for registry and source-map advisories
+- fix(cli): align SQL checks with their declared dialect
+- fix(cli): align temporary cleanup and Bash safety
+- fix(cli): refine portable Bash structure checks
+- fix(cli): apply native version floors to their checks
+- fix(cli): preserve native shell dialects and rule ownership
+- fix(cli): select applicable checks through coverage levels
+- fix(cli): preserve native Python configuration and diagnostics
+- fix(cli): give actionable acquisition diagnostics
+- fix(cli): preserve Python versions and diagnostic ownership
+- fix(cli): align Python configuration rules and formatting
+- fix(root): run tests without repository check installations
+- fix(cli): match sensitive values in logging and preferences
+- fix(cli): remove false positives and preserve other tool files
+- fix(cli): remove misleading and duplicate security rules
+- fix(cli): align library rules with supported project layouts
+- fix(cli): correct Cloudflare and Supabase security checks
+- fix(cli): align framework configuration with project evidence
+- fix(cli): honor declared findings exits for checks and fixes
+- fix(cli): derive file coverage from inventory tags
+- fix(cli): resolve discovery and SVG settings from their owners
+- fix(cli): use configuration data from its owners
+- fix(cli): keep project checks within their scopes
+- fix(cli): consolidate check and parser ownership
+- fix(cli): consolidate general checks and source parsing
+- fix(cli): use effective test paths and ordered naming declarations
+- fix(cli): validate authored rule paths and finish policy review
+- fix(cli): respect authored file validation and test patterns
+- fix(cli): validate mise CI tools before checking
+- fix(cli): keep human listings readable across scopes
+- fix(cli): name the pinned mise command after uv acquisition fails
+- fix(cli): use selected in configuration listing JSON
+- fix(cli): reject conflicting setting controls before policy reads
+- fix(cli): preview set and ignore policy changes without writes
+- fix(cli): preview initialization changes only where applicable
+- fix(cli): clarify check selection and correction feedback
+- fix(cli): preserve ignore removal feedback
+- fix(cli): send check progress to stderr
+- fix(cli): omit runner files for Python-only inputs
+- fix(cli): discover supported hook configuration filenames
+- fix(cli): honor explicit text attributes in file classification
+- fix(cli): use one verbosity value for command output
+- fix(root): bound test children by the remaining budget
+- fix(root): update the configuration owner in ci
+- fix(cli): share hook folders and exempt their scripts
+- fix(eslint-plugin): handle classes from the JavaScript parser
+- fix(cli): Delete an adopted file under .gspot that gspot stops writing
+- fix(cli): Leave out a rule file the level leaves empty
+- fix(cli): Refuse a path pattern that starts with a drive letter
+- fix(eslint-plugin): Read a Windows drive letter in either case
+- fix(cli): Report a tool project with conflict markers as drift
+- fix(cli): Say that gspot.toml keeps a change whose apply stopped
+- fix(cli): Say to run gspot install when add or remove cannot install
+- fix(cli): Leave no state folder behind a writer that wrote nothing
+- fix(cli): Keep the run when one check throws past its handling
+- fix(cli): Refuse pre-push flags before reading the push input
+- fix(cli): Refuse a package manager range in plain words
+- fix(cli): Explain paths that differ only by letter case
+- fix(cli): Print every failure as one JSON object under --json
+- fix(cli): Name the writer lock when another process holds it
+- fix(cli): Replace the tools of an install killed before its record
+- fix(cli): Keep tracked links out of the way of the commit hooks
+- feat(eslint-plugin): Give the plugin rule options one name each
+- feat(eslint-plugin): Give nine plugin rules shorter names
+- feat(cli): Check GitHub Actions workflows in an actions kit
+- fix(cli): Read the Taplo syntax errors on Windows
+- feat(cli): Let React components and Nest modules be small
+- feat(cli): Let kits constrain the packages a Python tool pulls in
+- fix(cli): Leave the private tool locks out of the OSV scan
+- fix(cli): Say what set added to or removed from a list
+- fix(cli): Count .d.mts and .d.cts files as declaration files
+- fix(cli): Write diff headers with forward slashes on Windows
+- fix(cli): Compare values with isDeepStrictEqual instead of JSON text
+- fix(cli): Tell users to reinstall the package for a missing grammar
+- fix(cli): Install the FastAPI and Next.js security guides
+- fix(cli): Explain a tracked file before guessing a tool rule
+- fix(cli): Install the native Taplo on every platform
+- fix(cli): Write the architecture as eslint-plugin-boundaries 7 policies
+- fix(cli): Read an @generated marker only in a comment line
+- fix(cli): Leave a source file named like a license as source
+- fix(cli): End a list option at a program option such as --json
+- fix(cli): Accept a Git checkout of a read-only generated file
+- fix(cli): Remove the folders a pruned file leaves empty
+- fix(cli): Take the knip workspaces from the package workspaces
+- fix(cli): Match tool paths to the root in any drive letter case
+- fix(cli): Report svelte-check files with forward slashes
+- fix(cli): Hand check engines tool output with LF line endings
+- fix(cli): Give scratch copies their long Windows path
+- fix(cli): Keep LF in every file gspot writes outside its folder
+- fix(cli): Read an npm tool's version beside its Windows shim
+- fix(cli): Accept the macOS refusal to signal an exited process group
+- fix(cli): Read the executable bit from the Git index on Windows
+- fix(eslint-plugin): Give the barrel export parse a root folder
+- fix(cli): Call pinact with its documented --verify-comment flag
+- fix(cli): Keep the .gitattributes block of gspot
+- fix(cli): Leave out tools with no build for the host in doctor
+- fix(cli): Expect plutil on macOS only
+- fix(cli): Write forward slashes in the fixer diff headers
+- fix(cli): Install the Vale packages with the locked tools
+- fix(cli): Check only the commits after the base of --changed
+- fix(cli): Stop excluding the removed baselines folder from typos
+- fix(eslint-plugin): Build without emptying dist first
+- fix(cli): Keep .gspot to what a developer needs
+- fix(cli): Stop sorting __slots__ alphabetically
+- fix(cli): Keep private installs whole and delete finished backups
+- feat(cli): Add the Astro kit
+- fix(cli): Lint every package.json with the package-json rules
+- fix(cli): Find the package root from code bundled into the docs site
+- fix(cli): Fix the false findings a new npm project gets
+- fix(cli): Require Bash 4.4 for the bash and Bats checks
+- fix(cli): Repair links into another linked tree after that tree
+- fix(hooks): Write the Lefthook command without double quotes
+- perf(cli): Run the private tools of gspot in place in snapshots
+- fix(cli): Write Xcode settings only when a selected kit declares them
+- fix(cli): Copy every workspace store and compare manifests as Git does
+- fix(root): Make the native suite pass on a fresh install
+- fix(cli): Compare copied links against the resolved snapshot root
+- fix(cli): Spell hook paths the Windows way and keep directory links
+- fix(root): Repair the acceptance fixtures and the Windows launchers
+- fix(root): Make the test suite run on Windows
+- fix(root): Finish the kits and guides keys in fixtures and examples
+- fix(cli): Pass a scope with no JavaScript file to compile
+- feat(cli): Order imports and exports by length in every language
+- feat(cli): Enforce trivial functions and import blocks at full force
+- fix(cli): Publish directory aliases inside installed tools
+- fix(cli): Exclude private tools from Python dependency scans
+- fix(cli): Keep process output flowing during workspace copies
+- fix(root): Repair native lint configuration resolution
+- fix(root): Complete repository cleanup
+- feat(root): Rebalance baseline and convention levels [skip ci]
+- fix(root): Repair recovery and rule analysis [skip ci]
+- feat(cli): Name the constants folder in the architecture policy [skip ci]
+- fix(cli): Report only the schema fields of a pushed revision
+- feat(cli): Ban the term actual outside test code [skip ci]
+- fix(cli): Rewrite the Yarn lock URL before recording its relative form [skip ci]
+- fix(eslint-plugin): Keep the file header above sorted imports [skip ci]
+- feat(cli): Carry framework naming rules and setting detection in the manifests [skip ci]
+- feat(cli): Report a cut list item in a rule file and test completion and every template [skip ci]
+- fix(cli): Read every language by path in Vale and skip only module bindings in naming [skip ci]
+- feat(cli): Scan files for secrets without git and keep the git checks for a repository [skip ci]
+- feat(cli): Ship the generated drift check and regenerate a file a merge broke [skip ci]
+- fix(cli): Name the GitHub refusal when a package installation fails [skip ci]
+- fix(cli): Claim .css alone for the css configuration and name Sass as unsupported [skip ci]
+- feat(cli): Propose a scope for every folder that holds a project file [skip ci]
+- feat(cli): Keep policy lines under 120 characters and merge ignores by reason [skip ci]
+- fix(cli): Say when a table has no settings instead of listing none [skip ci]
+- feat(cli): Report a wrong policy line as a finding and run the rest [skip ci]
+- fix(cli): Write every ESLint preview module before importing the first [skip ci]
+- fix(cli): Select a recommended configuration only when it is detected [skip ci]
+- fix(cli): Read only the error lines of validate-pyproject [skip ci]
+- fix(cli): Point the generated basedpyright configuration at the project [skip ci]
+- fix(cli): Report a copied block on the copy [skip ci]
+- fix(cli): Attribute per-file findings without a path to their file [skip ci]
+- fix(cli): Turn embedded formatting on for Svelte components [skip ci]
+- fix(cli): Escape the path filters of the NestJS provider rule [skip ci]
+- fix(cli): Find private type checkers outside the scratch copy [skip ci]
+- feat(cli): Relocate negated Prettier override selectors [skip ci]
+- feat(cli): Convert nested Prettier ignore files [skip ci]
+- fix(cli): Fail Expo Doctor runs that report no check summary [skip ci]
+- feat(cli): Complete the NestJS configuration [skip ci]
+- feat(cli): Lint component style blocks with stylelint [skip ci]
+- feat(cli): Format Svelte components with Prettier [skip ci]
+- feat(cli): Run svelte-check over Svelte scopes [skip ci]
+- feat(cli): Add the Svelte Testing Library rules [skip ci]
+- feat(cli): Type-check Vue components with vue-tsc [skip ci]
+- feat(cli): Add Vue accessibility and Testing Library rules [skip ci]
+- feat(cli): Add the React Native plugins and Expo Doctor [skip ci]
+- feat(cli): Complete the React configuration [skip ci]
+- fix(cli): Rewrite read-only JavaScript configuration copies
+- fix(cli): Render root Prettier overrides relative to their file
+- fix(cli): Validate self-repository workflow references
+- feat: Redesign gspot presentation [skip ci]
+- fix(root): preserve rules across languages and frameworks
+- fix(root): Preserve enforcement through rule consolidation [skip ci]
+- fix(cli): Probe tools with the check environment [skip ci]
+- fix(eslint-plugin): Keep forwarding preferences at all
+- fix(cli): Resolve TypeScript configuration with the compiler
+- fix(cli): Accept multiple build targets after one flag
+- fix(cli): Scope Swift build results to each command
+- fix(cli): preserve Git configuration observation failures
+- fix(cli): report invalid cache observations
+- fix(cli): report failed TypeScript configuration reads
+- fix(cli): require explicit integration configuration
+- fix(cli): reject escaping configuration directories
+- fix(cli): preserve failed Swift command verdicts
+- fix(cli): serialize configured JavaScript runtime names
+- fix(cli): report failed alias configuration reads
+- fix(cli): serialize JSON keys and YAML values
+- fix(cli): keep exception reasons inside generated comments
+- fix(cli): serialize dynamic TOML settings
+- fix(cli): serialize generated spelling configuration
+- perf(cli): share bounded file classification reads
+- fix(cli): scope tool observations to command sessions
+- fix(cli): preserve failed index observations in checks
+- fix(cli): resolve workspaces within the requested root
+- fix(cli): reject failed project manifest observations
+- fix(cli): propagate required input read failures
+- fix(cli): permit service and generation names
+- fix(cli): include comparison sources in the report schema
+- fix(cli): preserve failures from tool version probes
+- feat(cli): select changed paths from an optional reference
+- fix(hooks): restore the message hook executable bit
+- feat(cli): ban shell in the shipped naming policy
+- fix(cli): use stage selection and hide message-hook options
+- feat(cli): select paths and accept lists after one flag
+- fix(cli): share parsed takeover input across carry readers
+- fix(cli): refuse takeover when configuration cannot be read
+- fix(cli): preserve task configuration read failures
+- fix(cli): parse stylesheet rules and escaped class names
+- fix(cli): parse license expressions and Markdown structure
+- fix(cli): preserve failed push-base observations
+- fix(cli): validate engine dispatch at manifest load
+- fix(cli): honor installer-specific tool versions
+- feat(cli): export reusable profiles with global ignores
+- fix(cli): pass tool configuration through check environments
+- fix(cli): check TypeScript solution references
+- fix(eslint-plugin): compare resolved import folder boundaries
+- fix(cli): honor exemptions across naming checks
+- fix(cli): honor declared entry files in structural lint
+- fix(cli): require route imports from tests in the same scope
+- fix(cli): use parser positions for SQL statements
+- fix(cli): preserve configuration prerequisites from manifests
+- fix(cli): enforce Bash features by minimum runtime version
+- fix(cli): apply inline ignores by producing engine
+- fix(cli): report unmet prerequisites and leave checks explicit
+- fix(cli): validate shell syntax by interpreter
+- fix(cli): report unavailable shell analysis tools
+- fix(cli): distinguish source folders from Git hooks
+- fix(cli): preserve per-file command arguments
+- fix(cli): preserve verdicts when result storage fails
+- fix(cli): preserve deleted paths as project check triggers
+- fix(cli): report failed file observations and bound prefix reads
+- fix(cli): preserve process outcomes through stream completion
+- fix(root): isolate release registry startup and cleanup
+- fix(cli): share JSON output metadata across check definitions
+- fix(root): Reject configuration that has no implementation
+- fix(root): Report correction failures and byte changes
+- fix(root): Remove the unused Python formatter pin
+- fix(root): Run repository checks without cache inputs
+- fix(root): Await planted CLI subprocess completion
+- fix(root): Distinguish Boolean actions from predicates in lint policy
+- fix(root): Report failures during Git root discovery
+- fix(root): Report Git listing failures before directory fallback
+- fix(root): Report unreadable and malformed package manifests
+- fix(root): Keep agent preferences outside managed blocks
+- fix(root): Validate plugin build arguments before writing
+- fix(root): Validate build and publish arguments before effects
+- fix(root): Reject malformed generator arguments
+- fix(root): Preserve forward slashes in tool file arguments
+- fix(root): Bound tool batches for Windows command wrappers
+- feat(root): Explain file paths through the explain command
+- fix(root): Preserve Swift source file headers
+- fix(root): Isolate the second static site build
+- fix(root): Compare canonical Windows clone paths
+- fix(root): Normalize native Vale finding paths
+- fix(root): Preserve findings from native tool paths
+- fix(root): Upgrade HTML validation for Windows paths
+- fix(root): Parse flushed Taplo formatting diffs
+- fix(root): Resolve native profile file paths
+- fix(root): Parse Windows tool diagnostics
+- fix(root): Preserve both tool diagnostic streams
+- fix(root): Use native filesystem paths in plugin resolution
+- fix(root): Declare SwiftLint platform support
+- fix(root): Normalize Windows environment variable names
+- fix(root): Convert file URLs before filesystem access
+- fix(root): Preserve the cause after tool startup messages
+- fix(root): Select the installer that provides the ec command
+- fix(root): Keep workflow check diagnostics in the job log
+- fix(root): Prefer active tools over global mise shims
+- fix(root): Verify workflow action pins
+- fix(root): declare Apache-2.0 in every package
+- fix(root): say what gspot is in the one sentence the project uses
+- fix(cli): read a table typed for gspot set, and refuse a quoted one
+- feat(root): add the react-native preset, which closes Phase 7
+- feat(root): add the ruby preset
+- feat(root): add the django preset
+- feat(root): add the nestjs preset
+- feat(root): add the vue and svelte presets
+- feat(root): add the react preset, and make nextjs require it
+- feat(root): add the rust preset
+- feat(root): add the go preset
+- fix(cli): tighten two structure checks after their first real run
+- fix(root): hold basedpyright findings, and call an absent tool missing
+- fix(cli): make the Swift analyzer read a package, and test the build
+- feat(root): add the Swift structure checks
+- fix(root): keep the typos exclude list for files named by gspot
+- fix(cli): stop lower-baselines deleting baselines it cannot judge
+- fix(cli): carry the locale of an old typos file at takeover
+- fix(cli): install what an added preset pins, and count what is held
+- fix(cli): make add run and hold only what the new preset changes
+- fix(root): stop doctor calling three working tools wrong
+- feat(root): add the nextjs type check, build and required rules
+- feat(root): add the cloudflare, nextjs, i18n and library presets
+- fix(root): read the link report lychee prints today
+- feat(root): add the static-site preset
+- feat(root): add the css and html presets
+- feat(cli): give one check its first baseline with apply --baseline
+- feat(root): add the Python structure checks
+- feat(root): add the python, pytest and fastapi presets
+- fix(cli): validate the proposed policy before init writes it
+- fix(cli): make the first commit after a takeover possible
+- fix(cli): baseline what an added preset finds
+- fix(cli): run scoped checks with the configuration of their scope
+- fix(cli): stop a tool crash from passing as a finding
+- fix(cli): repair what the first real migration broke
+- feat(root): lint this repository with the five concern presets
+- feat(root): add the xcode and xctest presets
+- feat(root): add the swift preset and the Swift naming extractor
+- feat(root): add the ansible preset
+- feat(root): add the vitest and express presets
+- feat(root): add the supabase preset
+- feat(root): add the postgres preset
+- feat(root): add the sql preset with a Postgres parser inside
+- feat(root): add the docker and nginx presets
+- feat(cli): check the install policy and the hosts of a lockfile
+- feat(root): add the security preset with Semgrep and CodeQL
+- feat(root): add the dependencies, licenses and duplication presets
+- feat(root): add the secrets preset and the acceptance harness
+- feat(cli): profiles, the preset question and a plugin that stands alone
+- feat(cli): recommended presets, a rules-only install, rule files alone
+- feat(cli): batch file lists, time out tools and publish the schemas
+- fix(cli): make a first install work on a machine gspot has not seen
+- feat(root): add the manual
+- feat(cli): upgrade reports what this version changes on disk
+- feat(cli): add six repository-shape integrity checks
+- feat(cli): drive the ESLint suppressions file as the baseline
+- feat(root): add the config-files preset
+- feat(root): add the commits preset

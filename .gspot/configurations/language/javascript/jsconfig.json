@@ -26,6 +26,7 @@
         "../../../../eslint.config.mjs",
         "../../../../prettier.config.mjs",
         "../../../../packages/cli/README.md",
+        "../../../../**/CHANGELOG.md",
         "../../../../docs/worker-configuration.d.ts",
         "../../../../docs/cloudflare-env.d.ts",
         "../../../../**/node_modules/**",

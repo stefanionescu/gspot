@@ -54,6 +54,8 @@
                 "packages/cli/src/reference.ts",
                 "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts",
                 "packages/cli/src/configurations/framework/site/files/purgecss.ts",
+                ".mise/release/changelog.ts",
+                ".mise/release/pin-ages.ts",
                 "{index,cli,main}.{js,mjs,cjs,jsx,ts,tsx,mts,cts}",
                 "src/{index,cli,main}.{js,mjs,cjs,jsx,ts,tsx,mts,cts}",
                 "**/test/**",

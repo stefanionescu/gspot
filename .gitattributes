@@ -1,6 +1,7 @@
 * text=auto eol=lf
 
 packages/cli/README.md linguist-generated
+CHANGELOG.md linguist-generated
 
 # >>> gspot managed >>>
 .gspot/** linguist-generated

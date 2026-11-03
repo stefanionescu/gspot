@@ -38,6 +38,7 @@ extend-exclude = [
   "prettier.config.mjs",
   # Generator outputs
   "packages/cli/README.md",
+  "**/CHANGELOG.md",
   "docs/worker-configuration.d.ts",
   "docs/cloudflare-env.d.ts",
   "**/*.pbxproj",

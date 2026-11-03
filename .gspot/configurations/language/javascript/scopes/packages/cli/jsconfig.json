@@ -17,6 +17,7 @@
     "exclude": [
         "../../../../../../../packages/cli/**/gspot.baseline.json",
         "../../../../../../../packages/cli/README.md",
+        "../../../../../../../packages/cli/**/CHANGELOG.md",
         "../../../../../../../packages/cli/**/node_modules/**",
         "../../../../../../../packages/cli/**/bower_components/**",
         "../../../../../../../packages/cli/**/coverage/**",

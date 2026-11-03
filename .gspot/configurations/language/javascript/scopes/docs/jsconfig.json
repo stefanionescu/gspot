@@ -15,6 +15,7 @@
     "extends": "../../../../../../docs/tsconfig.json",
     "exclude": [
         "../../../../../../docs/**/gspot.baseline.json",
+        "../../../../../../docs/**/CHANGELOG.md",
         "../../../../../../docs/worker-configuration.d.ts",
         "../../../../../../docs/cloudflare-env.d.ts",
         "../../../../../../docs/**/node_modules/**",

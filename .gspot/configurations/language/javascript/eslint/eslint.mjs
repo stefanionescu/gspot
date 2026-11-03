@@ -88,6 +88,7 @@ export default setRuleOptions(defineConfig([
         "eslint.config.mjs",
         "prettier.config.mjs",
         "packages/cli/README.md",
+        "**/CHANGELOG.md",
         "docs/worker-configuration.d.ts",
         "docs/cloudflare-env.d.ts",
         "**/node_modules/**",
@@ -805,6 +806,13 @@ export default setRuleOptions(defineConfig([
                 "category": "import-rule:tests",
                 "pattern": [
                     "tests/suites/**"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:release",
+                "pattern": [
+                    ".mise/release/**"
                 ],
                 "stopMatching": true
             },
@@ -1816,6 +1824,51 @@ export default setRuleOptions(defineConfig([
                     {
                         "from": {
                             "file": {
+                                "categories": "import-rule:release"
+                            }
+                        },
+                        "disallow": {
+                            "to": {
+                                "file": {
+                                    "path": "**/*"
+                                }
+                            }
+                        },
+                        "message": "Import rule \"release\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-types\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:release"
+                            }
+                        },
+                        "allow": {
+                            "to": {
+                                "file": {
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:release",
+                                            "import-rule:system",
+                                            "import-rule:parsers",
+                                            "import-rule:manifests",
+                                            "import-rule:repository",
+                                            "import-rule:settings",
+                                            "import-rule:tools",
+                                            "import-rule:engine",
+                                            "import-rule:configurations",
+                                            "import-rule:generation",
+                                            "import-rule:commands",
+                                            "import-rule:main",
+                                            "import-rule:cli-types"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
                                 "isUnknown": true
                             }
                         },
@@ -1948,7 +2001,8 @@ export default setRuleOptions(defineConfig([
                                         "import-rule:tests-data",
                                         "import-rule:tests-types",
                                         "import-rule:tests-setup",
-                                        "import-rule:tests"
+                                        "import-rule:tests",
+                                        "import-rule:release"
                                     ]
                                 }
                             }
@@ -1989,7 +2043,8 @@ export default setRuleOptions(defineConfig([
                                             "import-rule:tests-data",
                                             "import-rule:tests-types",
                                             "import-rule:tests-setup",
-                                            "import-rule:tests"
+                                            "import-rule:tests",
+                                            "import-rule:release"
                                         ]
                                     }
                                 }

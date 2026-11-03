@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Tag a tested main commit, publish both npm packages, deploy the docs site, create the GitHub release, and set the repository description and homepage from the CLI package."
+#MISE description="Tag a tested main commit whose npm pins are past the release hold, publish both npm packages, deploy the docs site, create the GitHub release from the CHANGELOG.md section of the CLI version, and set the repository description and homepage from the CLI package."
 #MISE depends=["build"]
 set -euo pipefail
 
@@ -75,19 +75,48 @@ push_tag() {
     fi
 }
 
-# create_release: Creates the GitHub release of a CLI tag, listing the commit subjects since the previous CLI tag.
+# print_changelog_section: Prints the CHANGELOG.md section of a CLI version without its heading.
+# Arguments:
+#   CLI version.
+# Returns:
+#   1 when CHANGELOG.md has no section for the version.
+print_changelog_section() {
+    local version="$1"
+    local line
+    local is_inside=false
+    local is_found=false
+
+    while IFS= read -r line || [[ -n ${line} ]]; do
+        if [[ ${line} == '## '* ]]; then
+            is_inside=false
+            if [[ ${line} == "## ${version}" ]]; then
+                is_inside=true
+                is_found=true
+                continue
+            fi
+        fi
+        if [[ ${is_inside} == true ]]; then
+            printf '%s\n' "${line}"
+        fi
+    done <CHANGELOG.md
+    if [[ ${is_found} != true ]]; then
+        printf 'CHANGELOG.md has no section for %s. Run mise run changelog %s, then commit it with the version.\n' \
+            "${version}" "${version}" >&2
+        return 1
+    fi
+}
+
+# create_release: Creates the GitHub release of a CLI tag unless it exists.
 # Arguments:
 #   CLI tag.
+#   Release notes.
 create_release() {
     local tag="$1"
-    local previous
-    local notes
+    local notes="$2"
 
     if gh release view "${tag}" >/dev/null 2>&1; then
         return 0
     fi
-    previous=$(git describe --tags --abbrev=0 --match 'v[0-9]*' --exclude "${tag}" "${tag}") || return 1
-    notes=$(git log --no-merges --format='- %s' "${previous}..${tag}") || return 1
     gh release create "${tag}" --verify-tag --title "${tag}" --notes "${notes}" || return 1
 }
 
@@ -96,6 +125,7 @@ main() {
     local cli_spec
     local plugin_tag
     local cli_tag
+    local notes
     local description
     local homepage
 
@@ -106,12 +136,14 @@ main() {
     cli_tag="v${cli_spec##*@}"
     assert_version_raised packages/eslint-plugin "${plugin_spec}" "${plugin_tag}"
     assert_version_raised packages/cli "${cli_spec}" "${cli_tag}"
+    notes=$(print_changelog_section "${cli_spec##*@}")
+    bun .mise/release/pin-ages.ts || exit 1
     push_tag "${plugin_tag}"
     push_tag "${cli_tag}"
     publish_package packages/eslint-plugin "${plugin_spec}"
     publish_package packages/cli "${cli_spec}"
     mise run docs:deploy || exit 1
-    create_release "${cli_tag}"
+    create_release "${cli_tag}" "${notes}"
     description=$(npm pkg get description --prefix packages/cli | jq -r .) || exit 1
     homepage=$(npm pkg get homepage --prefix packages/cli | jq -r .) || exit 1
     gh repo edit --description "${description}" --homepage "${homepage}" || exit 1

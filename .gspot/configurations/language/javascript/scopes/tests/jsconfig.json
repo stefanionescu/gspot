@@ -19,6 +19,7 @@
     ],
     "exclude": [
         "../../../../../../tests/**/gspot.baseline.json",
+        "../../../../../../tests/**/CHANGELOG.md",
         "../../../../../../tests/**/node_modules/**",
         "../../../../../../tests/**/bower_components/**",
         "../../../../../../tests/**/coverage/**",

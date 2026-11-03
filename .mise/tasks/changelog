@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+#MISE description="Write the CHANGELOG.md section of a CLI version: the feat, fix, and perf commit subjects after the previous CLI tag, breaking ones first, and a table of the settings that the version renamed or removed. Commit the section with the version bump."
+#USAGE arg "<version>" help="The CLI version, such as 0.4.0"
+set -euo pipefail
+: "${usage_version:?mise must provide the version}"
+
+bun .mise/release/changelog.ts "${usage_version}"

@@ -16,6 +16,7 @@
     "extends": "../../../../../../../packages/eslint-plugin/tsconfig.json",
     "exclude": [
         "../../../../../../../packages/eslint-plugin/**/gspot.baseline.json",
+        "../../../../../../../packages/eslint-plugin/**/CHANGELOG.md",
         "../../../../../../../packages/eslint-plugin/**/node_modules/**",
         "../../../../../../../packages/eslint-plugin/**/bower_components/**",
         "../../../../../../../packages/eslint-plugin/**/coverage/**",
