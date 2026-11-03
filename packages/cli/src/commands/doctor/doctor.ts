@@ -134,8 +134,15 @@ async function readHookRunnerStatus(session: Session): Promise<HookStatus> {
         timeoutSeconds: session.settings.tool_timeout_seconds,
     });
     if (result.code === 0) return hooks;
+    const cause = result.stderr
+        .split('\n')
+        .map((line) => line.trim())
+        .find((line) => line !== '');
     const install = installCommand.replace('<version>', () => cliPackage.version);
-    const failure = `${versionCommand.join(' ')} fails. Install gspot with: ${install}`;
+    const failure =
+        cause === undefined
+            ? `${versionCommand.join(' ')} fails. Install gspot with: ${install}`
+            : `${versionCommand.join(' ')} fails: ${cause}`;
     return { ...hooks, ready: false, lines: [failure], text: `${hooks.text}, but ${failure}` };
 }
 

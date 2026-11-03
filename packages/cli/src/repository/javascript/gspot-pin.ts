@@ -18,10 +18,13 @@ import { selectStartRunner } from '#cli/repository/javascript/package-manager.ts
 
 import {
     GSPOT_MISE_TOOL,
+    SETUP_NODE_VERSION,
     GSPOT_MISE_OPTIONS,
     DEFAULT_JSON_INDENT,
     JSON_INDENT_PATTERN,
 } from '#cli/config/repository/javascript.ts';
+
+const MISE_NODE_TOOL = 'node';
 
 function readMisePin(root: string): string | undefined {
     const text = findText(root, MISE_CONFIG_FILE);
@@ -43,6 +46,26 @@ function addPackagePin(text: string): string {
         formattingOptions: { insertSpaces: !indent.startsWith('\t'), tabSize: indent.length },
     });
     return applyEdits(text, edits);
+}
+
+/**
+Pin this gspot in mise.toml, and pin Node.js when mise.toml names none, because mise otherwise starts gspot with the
+Node.js of the system.
+
+@param writer the repository handle.
+*/
+function writeMisePin(writer: Files): void {
+    const tools = writer.read(MISE_CONFIG_FILE);
+    const text = tools?.bytes.toString('utf8') ?? '';
+    const document = parseTomlFile(MISE_CONFIG_FILE, text, miseToolsSchema);
+    const pin = { version: cliPackage.version, ...GSPOT_MISE_OPTIONS };
+    const node = document.tools?.[MISE_NODE_TOOL] === undefined ? { [MISE_NODE_TOOL]: SETUP_NODE_VERSION } : {};
+    const next = { ...document, tools: { ...node, ...document.tools, [GSPOT_MISE_TOOL]: pin } };
+    const patched = patch(text, next);
+    writer.write(MISE_CONFIG_FILE, {
+        bytes: Buffer.from(patched.endsWith('\n') ? patched : `${patched}\n`),
+        mode: tools?.mode ?? OWNER_WRITABLE_FILE,
+    });
 }
 
 /**
@@ -86,13 +109,5 @@ export function writeGspotPin(writer: Files): void {
         writer.write(PACKAGE_JSON, { ...manifest, bytes });
         return;
     }
-    const tools = writer.read(MISE_CONFIG_FILE);
-    const text = tools?.bytes.toString('utf8') ?? '';
-    const document = parseTomlFile(MISE_CONFIG_FILE, text, miseToolsSchema);
-    const pin = { version: cliPackage.version, ...GSPOT_MISE_OPTIONS };
-    const patched = patch(text, { ...document, tools: { ...document.tools, [GSPOT_MISE_TOOL]: pin } });
-    writer.write(MISE_CONFIG_FILE, {
-        bytes: Buffer.from(patched.endsWith('\n') ? patched : `${patched}\n`),
-        mode: tools?.mode ?? OWNER_WRITABLE_FILE,
-    });
+    writeMisePin(writer);
 }

@@ -26,11 +26,11 @@ test('the pin keeps the indentation of package.json', async () => {
     );
 });
 
-test('the pin of a repository with neither file writes a mise.toml with a final newline', async () => {
+test('the pin of a repository with neither file writes a mise.toml that pins Node.js, with a final newline', async () => {
     await using sandbox = await createGitSandbox({});
     writeGspotPin(openFiles(sandbox.path));
     expect(await readFile(join(sandbox.path, 'mise.toml'), 'utf8')).toBe(
-        `[tools]\n"npm:${cliPackage.name}" = { version = "${cliPackage.version}", allow_low_downloads = "true" }\n`,
+        `[tools]\nnode = "24"\n"npm:${cliPackage.name}" = { version = "${cliPackage.version}", allow_low_downloads = "true" }\n`,
     );
 });
 
@@ -49,7 +49,9 @@ test('a mise.toml whose tools field is not a table refuses the pin and names the
 test('the pin of a repository without package.json is a mise tool beside the others', async () => {
     await using sandbox = await createGitSandbox({ 'mise.toml': '[tools]\nnode = "24.0.0"\n' });
     writeGspotPin(openFiles(sandbox.path));
-    expect(await readFile(join(sandbox.path, 'mise.toml'), 'utf8')).toContain('node = "24.0.0"');
+    const text = await readFile(join(sandbox.path, 'mise.toml'), 'utf8');
+    expect(text.match(/^node = /gmu)).toStrictEqual(['node = ']);
+    expect(text).toContain('node = "24.0.0"');
     expect(readGspotPin(sandbox.path)).toBe(cliPackage.version);
 });
 

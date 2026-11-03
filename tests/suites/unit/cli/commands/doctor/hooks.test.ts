@@ -44,7 +44,7 @@ test.each([false, true])(
                       ready: false,
                       tool: 'gspot',
                       lines: [
-                          `bunx --no-install gspot --version fails. Install gspot with: bun add --dev --exact @gspothq/cli@${cliPackage.version}`,
+                          "bunx --no-install gspot --version fails: error: Could not find an existing 'gspot' binary to run. Stopping because --no-install was passed.",
                       ],
                   },
         );

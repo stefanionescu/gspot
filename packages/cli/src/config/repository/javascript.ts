@@ -45,7 +45,9 @@ export const LOCKFILES = [
 
 export const CI_NODE = 'node@24.20.0';
 
-export const SETUP_NODE = 'node@24';
+export const SETUP_NODE_VERSION = '24';
+
+export const SETUP_NODE = `node@${SETUP_NODE_VERSION}`;
 
 export const PACKAGE_MANAGER_HASH_SUFFIX = '+sha';
 
