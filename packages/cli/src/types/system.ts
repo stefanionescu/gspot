@@ -96,6 +96,7 @@ export type CommandResult<Json extends object = Record<string, unknown>> = {
     text: string;
     json: Json & { notes?: string[] };
     exitCode: number;
+    annotations?: readonly string[];
 };
 
 export type CommandFailureJson = { error: ErrorCode; message: string; stack?: string };

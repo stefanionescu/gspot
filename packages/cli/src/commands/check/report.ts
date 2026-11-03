@@ -10,6 +10,7 @@ import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { BASELINE_FILE } from '#cli/config/repository/files.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import type { CheckCommandJson } from '#cli/types/commands/reports.ts';
 import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 import { formatCount, formatScope, quoteArgument } from '#cli/system/text.ts';
 import type { FixReport, RunReport, CheckResult } from '#cli/types/engine/run.ts';
@@ -30,6 +31,20 @@ import {
     STANDARD_INSTALL_HELP,
     UNCHANGED_FIX_MESSAGE,
 } from '#cli/config/commands/reports.ts';
+
+const GITHUB_ANNOTATION_LIMIT = 10;
+
+const ANNOTATION_ESCAPES: Readonly<Record<string, string>> = {
+    '%': '%25',
+    '\r': '%0D',
+    '\n': '%0A',
+    ':': '%3A',
+    ',': '%2C',
+};
+
+const ANNOTATION_MESSAGE_CHARACTERS = /[%\r\n]/gu;
+
+const ANNOTATION_PROPERTY_CHARACTERS = /[%\r\n:,]/gu;
 
 function formatUnstagedChanges(report: RunReport): string[] {
     if (report.unstagedChanges === 0) return [];
@@ -268,6 +283,40 @@ export function formatRunReport(
         `Time: ${(report.duration / MILLISECONDS_PER_SECOND).toFixed(1)}s. ${ending}`,
     );
     return `${formatComparison(report.comparison)}${lines.join('\n')}\n`;
+}
+
+/**
+Format one GitHub error annotation per finding, up to the number of error annotations that GitHub shows for one step.
+The annotations print after the report, once workflow commands run again. The escapes keep tool text from closing a
+property or from starting a second command.
+
+@param json the report of the check command.
+@returns no line outside GitHub Actions.
+*/
+export function formatAnnotations(json: CheckCommandJson): string[] {
+    if (readEnvironmentVariable('GITHUB_ACTIONS') !== 'true' || 'error' in json) return [];
+    const reports = 'revisions' in json ? json.revisions.map(({ report }) => report) : [json];
+    const findings = reports.flatMap(({ checks }) => checks.flatMap((check) => check.findings));
+    return findings.slice(0, GITHUB_ANNOTATION_LIMIT).map((finding) => {
+        const properties = [
+            ['file', finding.file === '' ? undefined : finding.file],
+            ['line', finding.line === undefined ? undefined : String(finding.line)],
+            ['col', finding.column === undefined ? undefined : String(finding.column)],
+            ['title', [finding.check, finding.rule].filter((name) => name !== undefined).join(' ')],
+        ] as const;
+        const fields = properties.flatMap(([name, value]) =>
+            value === undefined
+                ? []
+                : [
+                      `${name}=${value.replaceAll(ANNOTATION_PROPERTY_CHARACTERS, (character) => ANNOTATION_ESCAPES[character] ?? character)}`,
+                  ],
+        );
+        const message = finding.message.replaceAll(
+            ANNOTATION_MESSAGE_CHARACTERS,
+            (character) => ANNOTATION_ESCAPES[character] ?? character,
+        );
+        return `::error ${fields.join(',')}::${message}`;
+    });
 }
 
 /**

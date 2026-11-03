@@ -66,10 +66,14 @@ test('GitHub Actions fences untrusted report text with a unique token and leaves
     const lines = guarded.stdout.trimEnd().split('\n');
     const token = lines[0]!.replace('::stop-commands::', '');
     expect(token).toMatch(/^[\da-f-]{36}$/u);
-    expect(lines.at(-1)).toBe(`::${token}::`);
+    const end = lines.indexOf(`::${token}::`);
+    expect(lines.slice(end + 1)).toStrictEqual([
+        '::error title=project/output::::error::forged',
+        '::error title=project/output::::add-mask::hidden',
+    ]);
     expect(
         lines
-            .slice(1, -1)
+            .slice(1, end)
             .join('\n')
             .replaceAll(/\b\d+\.\ds\b/gu, '0.0s'),
     ).toBe(ordinary.stdout.trimEnd().replaceAll(/\b\d+\.\ds\b/gu, '0.0s'));
@@ -81,4 +85,33 @@ test('GitHub Actions fences untrusted report text with a unique token and leaves
         '::error::forged',
         '::add-mask::hidden',
     ]);
+});
+
+test('GitHub Actions gets an escaped error annotation for each finding, up to ten for the step', async () => {
+    const findings = Array.from({ length: 12 }, (_, index) => `a,b.txt:${String(index + 1)}:2:R1:Use 100% of it.`);
+    const tables = stringify({
+        command_check: [
+            {
+                id: 'project/located',
+                stage: 'commit',
+                paths: ['a,b.txt'],
+                output: {
+                    format: 'regex',
+                    pattern: String.raw`^(?<file>[^:]+):(?<line>\d+):(?<column>\d+):(?<rule>[^:]+):(?<message>.*)$`,
+                },
+                command: buildProgramCommand('fakes/tool', '--stdout', `${findings.join('\n')}\n`, '--exit', '1'),
+            },
+        ],
+    });
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables }),
+        'a,b.txt': 'Input.\n',
+    });
+    const result = await runGspot(sandbox.path, ['check', '--only', 'project/located'], { GITHUB_ACTIONS: 'true' });
+    expect(result.code, result.stdout + result.stderr).toBe(1);
+    const annotations = result.stdout.split('\n').filter((line) => line.startsWith('::error '));
+    expect(annotations).toHaveLength(10);
+    expect(annotations[0]).toBe('::error file=a%2Cb.txt,line=1,col=2,title=project/located R1::Use 100%25 of it.');
+    const outside = await runGspot(sandbox.path, ['check', '--only', 'project/located'], { GITHUB_ACTIONS: 'false' });
+    expect(outside.stdout).not.toContain('::error ');
 });

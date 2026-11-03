@@ -25,7 +25,7 @@ import { CODE_MARK, COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { assertGspotPin } from '#cli/repository/javascript/gspot-pin.ts';
 import { DASH_VALUE_HELP, COMMAND_SUGGESTION } from '#cli/config/commands/edits.ts';
 import { Option, Command, Argument, type Help, CommanderError } from '@commander-js/extra-typings';
-import { printError, printResult, setOutputOptions, printUnexpectedError } from '#cli/system/terminal.ts';
+import { print, printError, printResult, setOutputOptions, printUnexpectedError } from '#cli/system/terminal.ts';
 
 import type {
     CommandHelp,
@@ -262,9 +262,10 @@ export async function runProgram(commandArguments: string[], cwd: string): Promi
     const options = separator === -1 ? commandArguments : commandArguments.slice(0, separator);
     setOutputOptions({ isJson: options.includes(JSON_FLAG) });
     let exitCode = 0;
+    let annotations: readonly string[] = [];
     const program = buildProgram((result) => {
         printResult(result);
-        ({ exitCode } = result);
+        ({ exitCode, annotations = [] } = result);
     }, cwd);
     let endReport: (() => void) | undefined;
     program.hook('preAction', (_program, command) => {
@@ -277,5 +278,6 @@ export async function runProgram(commandArguments: string[], cwd: string): Promi
         return printFailure(error, program, commandArguments);
     } finally {
         endReport?.();
+        for (const annotation of annotations) print(annotation);
     }
 }

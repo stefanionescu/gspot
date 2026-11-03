@@ -10,6 +10,7 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { constants, accessSync, existsSync } from 'node:fs';
 import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
+import { formatAnnotations } from '#cli/commands/check/report.ts';
 import { InvalidArgumentError } from '@commander-js/extra-typings';
 import { readIndexTree } from '#cli/repository/revisions/files.ts';
 import { readTreeStatus } from '#cli/repository/revisions/changes.ts';
@@ -234,10 +235,11 @@ async function runCheckCommand(
     location: CommandLocation,
 ): Promise<CommandResult<CheckCommandJson>> {
     try {
-        return await runCancelableCommand(async (cancelSignal) => {
+        const result = await runCancelableCommand(async (cancelSignal) => {
             const { root, options } = parseCheckFlags(paths, flags, location);
             return await runCheckSelection(root, options, cancelSignal);
         }, CHECK_STOPPED_MESSAGE);
+        return { ...result, annotations: formatAnnotations(result.json) };
     } finally {
         rewriteProgress('');
     }
