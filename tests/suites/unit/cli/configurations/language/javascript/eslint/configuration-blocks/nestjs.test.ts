@@ -10,8 +10,8 @@ test.each([
         name: 'with',
         swagger: { '@nestjs/swagger': '11.2.3' },
         expected: [
-            { rule: '@darraghor/nestjs-typed/controllers-should-supply-api-tags', line: 9 },
-            { rule: '@darraghor/nestjs-typed/api-method-should-specify-api-response', line: 23 },
+            { rule: '@darraghor/nestjs-typed/controllers-should-supply-api-tags', line: 10 },
+            { rule: '@darraghor/nestjs-typed/api-method-should-specify-api-response', line: 24 },
         ],
     },
 ])('a package.json $name @nestjs/swagger decides the Swagger lint rules', async ({ swagger, expected }) => {
