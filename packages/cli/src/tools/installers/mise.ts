@@ -1,9 +1,9 @@
 import which from 'which';
 import { join, dirname } from 'node:path';
+import { patch } from '@decimalturn/toml-patch';
 import { isTable } from '#cli/system/tables.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { stringify } from '@decimalturn/toml-patch';
 import type { Tool } from '#cli/types/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -96,7 +96,7 @@ function writeChecksums(lockfile: string, pins: MiseToolPin[]): string {
         const versions = document.tools[pin.name] ?? [];
         for (const version of versions) if (version.version === pin.version) fillVersionChecksums(version, pin);
     }
-    return stringify(document);
+    return patch(lockfile, document);
 }
 
 function parseMiseLockfile(lockfile: string): MiseLockfile | undefined {

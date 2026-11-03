@@ -51,7 +51,7 @@ export function buildMiseInstall(configurations: Configuration[]): GeneratedFile
     );
     return {
         path: GSPOT_PATHS.miseProject,
-        content: stringify({ tools, settings: { lockfile: true } }, { ...CONFIG_TOML_FORMAT, inlineTableStart: 1 }),
+        content: stringify({ tools }, { ...CONFIG_TOML_FORMAT, inlineTableStart: 1 }),
     };
 }
 

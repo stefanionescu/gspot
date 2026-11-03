@@ -144,6 +144,9 @@ test('mise fills missing release checksums from the audited pins without fetchin
     expect(request).not.toHaveBeenCalled();
     for (const checksums of audited.values()) expect(lockfile).toContain(checksums['linux-x64']!);
     expect(isMiseLockfileFresh(listMisePins(session.toolConfigurations), lockfile)).toBe(true);
+    expect(lockfile).toStartWith('[[tools.');
+    expect(lockfile).toContain(`[tools.taplo."platforms.linux-x64"]\nurl = "${url}"\nchecksum = `);
+    expect(project.content).not.toContain('[settings]');
 });
 
 test('mise lock that leaves a platform without a download URL is refused and writes no lockfile', async () => {
