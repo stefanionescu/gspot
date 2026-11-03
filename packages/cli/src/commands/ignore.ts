@@ -8,11 +8,11 @@ import { formatNameList } from '#cli/system/text.ts';
 import type { Check } from '#cli/types/manifests.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
-import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { ignoreSchema } from '#cli/schemas/settings/file.ts';
 import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { readCheckRuleDocs } from '#cli/configurations/rules.ts';
 import { RUFF_RULE_PREFIX } from '#cli/config/settings/schema.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { IGNORE_CHECK_MESSAGE } from '#cli/config/commands/edits.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { RULE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
@@ -32,7 +32,8 @@ function findRuleCheck({ settings }: Session, checkId: string): Check {
     const check = settings.commandChecks[checkId] ?? shippedCheck;
     if (
         check === undefined ||
-        (!OUTPUT_FORMATS[check.output.format].namesRules(check.output) && CHECK_CODE[checkId]?.ruleDocs === undefined)
+        (!OUTPUT_FORMATS[check.output.format].namesRules(check.output) &&
+            selectCheckCode(check)?.ruleDocs === undefined)
     )
         throw new GspotError(
             'arguments',

@@ -4,9 +4,9 @@ import { describeCheck } from '#cli/engine/reference.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { getTool, findToolName } from '#cli/tools/pins.ts';
 import type { CommandCheck } from '#cli/types/settings.ts';
-import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { readCheckRuleDocs } from '#cli/configurations/rules.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
@@ -124,13 +124,13 @@ function formatCheckExplanation(
     return `${lines.join('\n')}\n`;
 }
 
-function formatBuiltinRuleIgnore(checkId: string): string | undefined {
-    const ruleDocs = CHECK_CODE[checkId]?.ruleDocs;
+function formatBuiltinRuleIgnore(check: Check): string | undefined {
+    const ruleDocs = selectCheckCode(check)?.ruleDocs;
     if (ruleDocs === undefined) return undefined;
     const rule = Object.keys(ruleDocs).at(0);
     return rule === undefined
         ? undefined
-        : `gspot ignore ${quoteArgument(checkId)} --rule ${quoteArgument(rule)} --reason "<why>"`;
+        : `gspot ignore ${quoteArgument(check.id)} --rule ${quoteArgument(rule)} --reason "<why>"`;
 }
 
 function formatRuleOptions(tool: string | undefined, identifier: string, configuration: Configuration): string[] {
@@ -176,7 +176,7 @@ function findRuleCheck(checkId: string): ConfigurationCheck | undefined {
     if (
         found !== undefined &&
         !OUTPUT_FORMATS[found.check.output.format].namesRules(found.check.output) &&
-        CHECK_CODE[checkId]?.ruleDocs === undefined
+        selectCheckCode(found.check)?.ruleDocs === undefined
     )
         throw new GspotError(
             'arguments',
@@ -201,7 +201,7 @@ export function explainCheck(session: Session | undefined, checkId: string): Exp
     if (found === undefined) return undefined;
     const { check, configuration } = found;
     const facts = buildCheckFacts(check, configuration, configurationsByName, session);
-    facts.turnOff.rule ??= formatBuiltinRuleIgnore(checkId);
+    facts.turnOff.rule ??= formatBuiltinRuleIgnore(check);
     return {
         kind: 'check',
         subject: checkId,

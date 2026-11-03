@@ -6,9 +6,9 @@ import { GROUP_LABELS } from '#cli/config/generation.ts';
 import { describeCheck } from '#cli/engine/reference.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { buildJsonSchema } from '#cli/settings/editor-schema.ts';
 import { compareText, quoteArgument } from '#cli/system/text.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildSettingsReference } from '#cli/settings/reference.ts';
 import { RELEASE_AGE_VERSIONS } from '#cli/config/tools/installers.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
@@ -73,7 +73,7 @@ function buildCheckReference(
     configurations: Configuration[],
 ): CheckReference {
     const description = describeCheck(check, configurations);
-    const ruleDocs = CHECK_CODE[check.id]?.ruleDocs;
+    const ruleDocs = selectCheckCode(check)?.ruleDocs;
     if (ruleDocs === undefined) return { check, configuration, ...description, ruleDocs };
     const firstRule = Object.keys(ruleDocs)[0];
     return {

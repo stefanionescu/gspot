@@ -2,8 +2,8 @@ import { findToolName } from '#cli/tools/pins.ts';
 import type { Check } from '#cli/types/manifests.ts';
 import { readLintRuleDocs } from '#cli/tools/rules.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';
-import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
 import type { Session, LintRuleDocs, RuleDocsOptions } from '#cli/types/tools.ts';
 
 /**
@@ -20,7 +20,7 @@ export async function readCheckRuleDocs(
     identifier: string,
     session?: Session,
 ): Promise<LintRuleDocs | undefined> {
-    const ruleDocs = CHECK_CODE[check.id]?.ruleDocs;
+    const ruleDocs = selectCheckCode(check)?.ruleDocs;
     if (ruleDocs !== undefined) return Object.hasOwn(ruleDocs, identifier) ? ruleDocs[identifier] : undefined;
     const tool = OUTPUT_FORMATS[check.output.format].namesRules(check.output) ? findToolName(check) : undefined;
     if (tool === undefined) return undefined;

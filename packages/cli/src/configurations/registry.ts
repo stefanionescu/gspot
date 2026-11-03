@@ -6,6 +6,7 @@ import { checkAllowed } from '#cli/configurations/general/licenses/checks.ts';
 import { checkSemgrep } from '#cli/configurations/general/security/checks.ts';
 import { checkFences } from '#cli/configurations/language/markdown/checks.ts';
 import { checkExpoDoctor } from '#cli/configurations/framework/expo/checks.ts';
+import { UNUSED_ASSET_RULE_DOCS } from '#cli/config/configurations/registry.ts';
 import { checkNextjsTsc } from '#cli/configurations/framework/nextjs/checks.ts';
 import { checkPaths } from '#cli/configurations/general/naming/checks/paths.ts';
 import { checkGeneratorOutputs } from '#cli/configurations/generator-outputs.ts';
@@ -70,7 +71,6 @@ import { checkEnvironmentReaders } from '#cli/configurations/general/structure/c
 import { checkPassThroughFolders } from '#cli/configurations/general/structure/checks/pass-through-folders.ts';
 import { checkDetectedConfigurations } from '#cli/configurations/general/gspot/checks/detected-configurations.ts';
 import { checkActionlint, checkWorkflowShape } from '#cli/configurations/infrastructure/github-actions/checks.ts';
-import { YAML_RULE_DOCS, WEAKENING_RULE_DOCS, UNUSED_ASSET_RULE_DOCS } from '#cli/config/configurations/registry.ts';
 import { checkMissingPaths, checkRequiredFiles, checkVersionStrings } from '#cli/configurations/general/docs/checks.ts';
 
 import {
@@ -96,12 +96,24 @@ import {
     checkConflictMarkers,
 } from '#cli/configurations/general/repository/checks.ts';
 import {
+    IMPORT_RULE_DOCS,
+    NAMING_RULE_DOCS,
+    IDENTIFIER_RULE_DOCS,
+    TRIVIAL_FUNCTION_RULE_DOCS,
+} from '#cli/config/configurations/rule-docs/structure.ts';
+import {
     checkDenoLint,
     checkDenoCheck,
     checkVerifyJwt,
     checkServiceRoleKey,
     checkStoragePolicies,
 } from '#cli/configurations/platform/supabase/checks.ts';
+import {
+    WEAKENING_RULE_DOCS,
+    GENERATED_FILE_RULE_DOCS,
+    GENERATOR_OUTPUT_RULE_DOCS,
+    CONFLICTING_CONFIG_RULE_DOCS,
+} from '#cli/config/configurations/rule-docs/gspot.ts';
 import {
     checkDeptry,
     checkVulture,
@@ -119,6 +131,17 @@ import {
     checkFilesWithoutTarget,
     checkAppTransportSecurity,
 } from '#cli/configurations/infrastructure/xcode/checks.ts';
+import {
+    YAML_RULE_DOCS,
+    LICENSE_RULE_DOCS,
+    ENCODING_RULE_DOCS,
+    LOCKFILE_RULE_DOCS,
+    REFERENCE_RULE_DOCS,
+    LOCAL_FILE_RULE_DOCS,
+    MISSING_PATH_RULE_DOCS,
+    REQUIRED_FILE_RULE_DOCS,
+    PACKAGE_MANAGER_PIN_DOCS,
+} from '#cli/config/configurations/rule-docs/general.ts';
 
 export const CHECK_CODE: Record<string, CheckCode> = {
     'ansible/ansible-lint': { check: checkAnsibleLint },
@@ -134,17 +157,17 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'cloudflare/headers': { check: checkHeaders },
     'cloudflare/redirects': { check: checkRedirects },
     'commits/commitlint-pushed': { run: checkCommitlintPushed },
-    'commits/references': { check: checkReferences },
+    'commits/references': { check: checkReferences, ruleDocs: REFERENCE_RULE_DOCS },
     'data-files/yaml': { check: checkYaml, ruleDocs: YAML_RULE_DOCS },
-    'dependencies/lockfiles': { check: checkLockfiles },
-    'dependencies/package-manager-pin': { check: checkPackageManagerPin },
+    'dependencies/lockfiles': { check: checkLockfiles, ruleDocs: LOCKFILE_RULE_DOCS },
+    'dependencies/package-manager-pin': { check: checkPackageManagerPin, ruleDocs: PACKAGE_MANAGER_PIN_DOCS },
     'dependencies/stale-lockfile': { check: checkStaleLockfile },
     'docker/compose': { run: checkCompose },
     'docker/dockerignore': { check: checkDockerignore },
     'docker/instructions': { check: checkInstructions },
     'docker/trivy-image': { check: checkTrivyImage },
-    'docs/missing-paths': { check: checkMissingPaths },
-    'docs/required-files': { check: checkRequiredFiles },
+    'docs/missing-paths': { check: checkMissingPaths, ruleDocs: MISSING_PATH_RULE_DOCS },
+    'docs/required-files': { check: checkRequiredFiles, ruleDocs: REQUIRED_FILE_RULE_DOCS },
     'docs/version-strings': { check: checkVersionStrings },
     'engineering/nested-agents-files': { check: checkNestedAgentsFiles },
     'structure/jscpd': { check: checkJscpd },
@@ -153,19 +176,19 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'gspot/baseline': { check: checkBaseline, runsLast: true },
     'github-actions/workflow-shape': { check: checkWorkflowShape },
     'gspot/detected-configurations': { check: checkDetectedConfigurations },
-    'gspot/generated-files': { check: checkGeneratedFiles },
-    'gspot/conflicting-configs': { check: checkConflictingConfigs },
+    'gspot/generated-files': { check: checkGeneratedFiles, ruleDocs: GENERATED_FILE_RULE_DOCS },
+    'gspot/conflicting-configs': { check: checkConflictingConfigs, ruleDocs: CONFLICTING_CONFIG_RULE_DOCS },
     'gspot/suppressions': { check: checkSuppressions },
     'gspot/unmatched-paths': { check: checkUnmatchedPaths },
     'gspot/weakenings': { check: checkWeakenings, ruleDocs: WEAKENING_RULE_DOCS },
     'html/inline-scripts': { check: checkHtmlInlineScripts },
     'javascript/tsc': { run: checkJavascriptTsc },
     'javascript/biome': { run: checkJavascriptBiome },
-    'licenses/allowed': { check: checkAllowed },
+    'licenses/allowed': { check: checkAllowed, ruleDocs: LICENSE_RULE_DOCS },
     'markdown/fences': { check: checkFences },
     'naming/allowed-names': { check: checkAllowedNames },
-    'naming/identifiers': { check: checkIdentifiers },
-    'naming/paths': { check: checkPaths },
+    'naming/identifiers': { check: checkIdentifiers, ruleDocs: IDENTIFIER_RULE_DOCS },
+    'naming/paths': { check: checkPaths, ruleDocs: NAMING_RULE_DOCS },
     'nextjs/tsc': { run: checkNextjsTsc },
     'nginx/syntax': { check: checkSyntax },
     'postgres/definer-search-path': { check: checkDefinerSearchPath },
@@ -185,10 +208,10 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'python/vulture': { check: checkVulture },
     'pytest/tests': { run: checkPytestCoverage },
     'repository/conflict-markers': { check: checkConflictMarkers },
-    'repository/encoding': { check: checkEncoding },
+    'repository/encoding': { check: checkEncoding, ruleDocs: ENCODING_RULE_DOCS },
     'react-dom/react-versions': { check: checkReactVersions },
     'repository/large-files': { check: checkLargeFiles },
-    'repository/local-files': { check: checkLocalFiles },
+    'repository/local-files': { check: checkLocalFiles, ruleDocs: LOCAL_FILE_RULE_DOCS },
     'secrets/environment-examples': { check: checkEnvironmentExamples },
     'secrets/environment-defaults': { check: checkEnvironmentDefaults },
     'secrets/gitleaks-pushed': { run: checkGitleaksPushed },
@@ -201,14 +224,14 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'site/unused-assets': { check: checkSiteUnusedAssets, ruleDocs: UNUSED_ASSET_RULE_DOCS },
     'structure/environment-readers': { check: checkEnvironmentReaders },
     'structure/file-folder-clashes': { check: checkFileFolderClashes },
-    'structure/import-rules': { check: checkImportRules },
+    'structure/import-rules': { check: checkImportRules, ruleDocs: IMPORT_RULE_DOCS },
     'structure/bare-blocks': { check: checkBareBlocks },
     'structure/function-order': { check: checkFunctionOrder },
     'structure/lone-files': { check: checkLoneFiles },
     'structure/pass-through-folders': { check: checkPassThroughFolders },
     'structure/long-files': { check: checkLongFiles },
     'structure/shared-prefixes': { check: checkSharedPrefixes },
-    'structure/trivial-functions': { check: checkTrivialFunctions },
+    'structure/trivial-functions': { check: checkTrivialFunctions, ruleDocs: TRIVIAL_FUNCTION_RULE_DOCS },
     'supabase/deno-check': { check: checkDenoCheck },
     'supabase/deno-lint': { check: checkDenoLint },
     'supabase/service-role-key': { check: checkServiceRoleKey },
@@ -241,6 +264,7 @@ Find the implementation of a built-in check or a check that compares generator o
 @param check the manifest check.
 */
 export function selectCheckCode(check: Check): CheckCode | undefined {
-    if (check.generator_outputs !== undefined) return { check: checkGeneratorOutputs };
+    if (check.generator_outputs !== undefined)
+        return { check: checkGeneratorOutputs, ruleDocs: GENERATOR_OUTPUT_RULE_DOCS };
     return CHECK_CODE[check.id];
 }

@@ -15,3 +15,11 @@ test('explain reads built-in YAML rule fixes without an installed tool and rejec
     expect(refused.code).toBe(2);
     expect(refused.stderr).toBe('gspot does not know rule document of data-files/yaml.\n');
 });
+
+test('explain reads a documented rule of a check that compares generator outputs', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['drizzle']) });
+    const explained = await runGspot(sandbox.path, ['explain', 'drizzle/stale-migrations', 'stale']);
+    expect(explained.code, explained.stderr).toBe(0);
+    expect(explained.stdout).toContain('What to do:');
+    expect(explained.stdout).toContain('gspot ignore drizzle/stale-migrations --rule stale --paths');
+});

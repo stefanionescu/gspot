@@ -44,6 +44,27 @@ test('gspot ignore takes the unused-asset rule that site/unused-assets reports',
     ]);
 });
 
+test('gspot ignore takes a documented rule of a built-in check that reports several rules', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['naming']) });
+    const ignored = await runGspot(sandbox.path, [
+        'ignore',
+        'naming/identifiers',
+        '--rule',
+        'banned-word',
+        '--reason',
+        'The vendored client keeps its upstream names.',
+    ]);
+    expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
+    const written = parse(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
+    expect(written['ignore']).toStrictEqual([
+        {
+            check: 'naming/identifiers',
+            rule: 'banned-word',
+            reason: 'The vendored client keeps its upstream names.',
+        },
+    ]);
+});
+
 test('a documented YAML exception suppresses only its rule and path, and typos leave settings unchanged', async () => {
     const settings = buildSandboxSettings(['data-files']);
     await using sandbox = await createGitSandbox({
