@@ -40,6 +40,9 @@ import {
     INSTALLED_DEPENDENCIES_MESSAGE,
 } from '#cli/config/engine.ts';
 
+const UNSTAGED_COPY_CAUSE =
+    ' The staged check runs in a copy of the index because the working tree holds unstaged or untracked files. Stashing them with git stash push --keep-index --include-untracked also lets it run.';
+
 function listDependencyFolders(installed: Files, projects: string[]): string[] {
     return projects.flatMap((path) => {
         const folder = dirname(path);
@@ -48,7 +51,7 @@ function listDependencyFolders(installed: Files, projects: string[]): string[] {
     });
 }
 
-function assertDependencyReady(copyRoot: string, folder: string): void {
+function assertDependencyReady(copyRoot: string, folder: string, copyCause: string): void {
     if (
         LOCKFILES.every(
             (lockfile) =>
@@ -61,7 +64,7 @@ function assertDependencyReady(copyRoot: string, folder: string): void {
     )
         throw new GspotError(
             'copy',
-            `${folder} has no lockfile, so gspot cannot tell whether its installed dependencies match this revision. Commit a lockfile.`,
+            `${folder} has no lockfile, so gspot cannot tell whether its installed dependencies match this revision. Commit a lockfile.${copyCause}`,
         );
 }
 
@@ -100,7 +103,7 @@ function listInstalledDependencies(copyRoot: string, folders: string[]): string[
 async function selectRevisionDependencies(
     root: string,
     copyRoot: string,
-    indexFiles: GitFile[],
+    { indexFiles, copyCause }: { indexFiles: GitFile[]; copyCause: string },
     cancelSignal?: AbortSignal,
 ): Promise<RevisionDependencies> {
     const installed = openFiles(root);
@@ -143,7 +146,7 @@ async function selectRevisionDependencies(
         (copied.length + environments.length > 0 && dependencyFiles.some(({ path }) => !unchangedPaths.has(path)));
     const note = requiresNote ? { dependencyNote: DEPENDENCY_REVISION_NOTE } : {};
     if (copied.length === 0) return { dependencies: [], ...note };
-    for (const folder of folders) assertDependencyReady(copyRoot, folder);
+    for (const folder of folders) assertDependencyReady(copyRoot, folder, copyCause);
     const dependencies: string[] = [
         ...declarations.copies,
         ...untrackedArtifacts,
@@ -263,7 +266,8 @@ the index from the working tree, and takes every other file from its Git blob. T
 Git commands use the copied revision.
 
 @param root the checkout with the Git objects and installed dependencies.
-@param source the revision to copy; an index source may carry the status that the caller read.
+@param source the revision to copy. A staged check passes the status that sent it to a copy of the index, which saves
+a second read and names that cause in a refusal.
 @param cancelSignal stops the copy.
 */
 export async function copyRevision(root: string, source: Revision, cancelSignal?: AbortSignal): Promise<RevisionCopy> {
@@ -290,7 +294,8 @@ export async function copyRevision(root: string, source: Revision, cancelSignal?
             copy.path,
             indexFiles.map((indexFile) => indexFile.path),
         );
-        const selected = await selectRevisionDependencies(toplevel, copy.path, indexFiles, cancelSignal);
+        const copyCause = source.kind === 'index' && source.status !== undefined ? UNSTAGED_COPY_CAUSE : '';
+        const selected = await selectRevisionDependencies(toplevel, copy.path, { indexFiles, copyCause }, cancelSignal);
         await copyDependencies({
             root: toplevel,
             target: copy.path,

@@ -96,6 +96,22 @@ test('a staged check after apply names the setup files that are not staged', asy
     });
 });
 
+test('a staged check that a folder without a lockfile refuses names the unstaged files and the stash that avoids the copy', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([]),
+        'app/package.json': '{}',
+        '.gitignore': 'node_modules/\n',
+        'app/node_modules/example/index.js': 'export const value = 1;',
+    });
+    runGitStep(sandbox.path, ['add', '.']);
+    await writeFile(join(sandbox.path, 'notes.txt'), 'unstaged\n');
+    const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toBe(
+        'app has no lockfile, so gspot cannot tell whether its installed dependencies match this revision. Commit a lockfile. The staged check runs in a copy of the index because the working tree holds unstaged or untracked files. Stashing them with git stash push --keep-index --include-untracked also lets it run.',
+    );
+});
+
 test('a staged check during a merge conflict exits 2, names the conflict, and leaves no copy behind', async () => {
     await using sandbox = await createFixableSandbox();
     runGitStep(sandbox.path, ['checkout', '-qb', 'other']);
