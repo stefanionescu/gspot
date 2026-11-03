@@ -1,17 +1,19 @@
 import { join } from 'node:path';
 import { getTool } from '#cli/tools/pins.ts';
+import { runChecks } from '#cli/engine/run.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildToolSearch } from '#tests/setup/cli/tools.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { unlink, symlink, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { mkdir, unlink, symlink, writeFile } from 'node:fs/promises';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { SYSTEM_PLUGIN_REPORTS, PACKAGE_METADATA_FAILURES } from '#tests/config/tools/versions.ts';
@@ -186,5 +188,29 @@ test.each([...PACKAGE_METADATA_FAILURES])(
         });
         await writeFile(path, '{"name":"teller","version":"5.0.1"}');
         expect(await inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });
+    },
+);
+
+test.each(['typescript/tsc', 'javascript/eslint'])(
+    '%s is missing until a node_modules folder holds the dependencies of its scope',
+    async (check) => {
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings(['typescript']),
+            'package.json': '{"private":true,"type":"module","dependencies":{"zod":"4.0.0"}}',
+            'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
+            'source.ts': 'export const value = 1;\n',
+        });
+        const note = 'Install the project dependencies first: node_modules is missing in the repository root.';
+        const missing = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
+        expect(missing.report.checks).toMatchObject([{ status: 'missing', note }]);
+        await writeFile(
+            join(sandbox.path, 'package.json'),
+            '{"private":true,"type":"module","devDependencies":{"@gspothq/cli":"0.0.0-test"}}',
+        );
+        const ownPackages = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
+        expect(ownPackages.report.checks[0]?.note).not.toBe(note);
+        await mkdir(join(sandbox.path, 'node_modules'));
+        const installed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
+        expect(installed.report.checks[0]?.note).not.toBe(note);
     },
 );

@@ -6,7 +6,6 @@ import { remember } from '#cli/system/cache.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { findToolPath } from '#cli/tools/inspect.ts';
 import { runProcess } from '#cli/system/processes.ts';
 import { buildRunReport } from '#cli/engine/report.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
@@ -21,6 +20,7 @@ import { formatUnexpectedError } from '#cli/system/terminal.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { runFixers, listConflictedPaths } from '#cli/engine/fixes.ts';
 import type { RunSelection, PlannedCheck } from '#cli/types/engine/plan.ts';
+import { findToolPath, findMissingDependencies } from '#cli/tools/inspect.ts';
 import { buildBaseResult, runBuiltInCheck, normalizeResultPaths } from '#cli/engine/results.ts';
 
 import type {
@@ -50,17 +50,13 @@ import {
 
 const DOCKER_AVAILABILITY = Symbol('docker availability');
 
-async function findUnrunnableResult(
+async function findMissingDocker(
     session: CheckSession,
     planned: PlannedCheck,
-    base: CheckResult,
-): Promise<CheckResult | undefined> {
-    if (session.cancelSignal?.aborted === true) return { ...base, status: 'error', note: CANCELED_CHECK_NOTE };
-    const environment = findMissingEnvironment(session, planned);
-    if (environment !== undefined) return { ...base, ...environment };
+): Promise<Pick<CheckResult, 'status' | 'note'> | undefined> {
     if (planned.check.needs?.includes('docker') !== true) return undefined;
     const docker = await findToolPath(session, getTool(readConfigurations().values(), DOCKER_TOOL), session.root);
-    if ('status' in docker) return { ...base, status: 'missing', note: DOCKER_MISSING_MESSAGE };
+    if ('status' in docker) return { status: 'missing', note: DOCKER_MISSING_MESSAGE };
     const result = await remember(session.cache, DOCKER_AVAILABILITY, session.root, () =>
         runProcess([docker.path, 'info'], {
             cwd: session.root,
@@ -68,7 +64,20 @@ async function findUnrunnableResult(
             cancelSignal: session.cancelSignal,
         }),
     );
-    return result.code === 0 ? undefined : { ...base, status: 'missing', note: DOCKER_DAEMON_NOTE };
+    return result.code === 0 ? undefined : { status: 'missing', note: DOCKER_DAEMON_NOTE };
+}
+
+async function findUnrunnableResult(
+    session: CheckSession,
+    planned: PlannedCheck,
+    base: CheckResult,
+): Promise<CheckResult | undefined> {
+    if (session.cancelSignal?.aborted === true) return { ...base, status: 'error', note: CANCELED_CHECK_NOTE };
+    const missing =
+        findMissingEnvironment(session, planned) ??
+        findMissingDependencies(session, planned) ??
+        (await findMissingDocker(session, planned));
+    return missing === undefined ? undefined : { ...base, ...missing };
 }
 
 function classifyCheckError(

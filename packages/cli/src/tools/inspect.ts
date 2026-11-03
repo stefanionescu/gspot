@@ -1,26 +1,31 @@
 import { join, relative } from 'node:path';
 import { remember } from '#cli/system/cache.ts';
-import { isInside } from '#cli/system/paths.ts';
 import type { Tool } from '#cli/types/manifests.ts';
+import { NODE_MODULES } from '#cli/config/system.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { findProgram } from '#cli/system/programs.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { MISE_TOOL } from '#cli/config/tools/installers.ts';
 import { findMisePin, findPackagePin } from '#cli/tools/pins.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { PACKAGE_JSON, GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { START_RUNNERS } from '#cli/config/repository/javascript.ts';
+import { isInside, listEnclosingFolders } from '#cli/system/paths.ts';
+import { MISE_TOOL, GSPOT_PACKAGES } from '#cli/config/tools/installers.ts';
 import { readToolVersion, classifyToolVersion } from '#cli/tools/versions.ts';
 import { detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
 import { readToolProjectPackage, findInstalledDependency } from '#cli/tools/packages.ts';
+import { readPackageJson, listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { INSTALL_HELP, MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/tools/programs.ts';
 import { readToolBinPaths, listExecutablePaths, listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
 
 import type {
+    Session,
     ToolSearch,
+    ScopeCheck,
     ToolFolders,
     InspectedTool,
     ToolInspection,
+    ProcessFailure,
     ToolAvailability,
     ToolLookupSession,
     InstalledDependency,
@@ -28,12 +33,16 @@ import type {
 
 const TOOL_LOOKUPS = Symbol('tool lookups');
 
+const PROJECT_DEPENDENCIES_MESSAGE = 'Install the project dependencies first: node_modules is missing in {folder}.';
+
+const ROOT_FOLDER_NAME = 'the repository root';
+
 function buildProjectInstallHelp(folders: ToolFolders, name: string): string {
     const { root, cwd } = folders;
     const project = readPackageJson(cwd, PACKAGE_JSON);
     if (project?.dependencies?.[name] !== undefined || project?.devDependencies?.[name] !== undefined) {
         const scope = relative(root, cwd);
-        return `Install the project dependencies first: node_modules is missing in ${scope === '' ? 'the repository root' : scope}.`;
+        return PROJECT_DEPENDENCIES_MESSAGE.replace('{folder}', () => (scope === '' ? ROOT_FOLDER_NAME : scope));
     }
     const { installCommand } = START_RUNNERS[detectPackageManager(root, []).name];
     return `Run ${installCommand.replace('<package>@<version>', () => name)}.`;
@@ -178,6 +187,34 @@ function buildInspectedTool(search: ToolSearch, tool: Tool): InspectedTool {
         miseBinPaths: search.miseBinPaths,
         runsVersionCommand: search.runsVersionCommand,
     };
+}
+
+/**
+Require the installed npm dependencies of the scope before a check whose types or imports come from them. Without
+them, every imported type reads as any, and the typed rules report each use. The packages of gspot itself give the
+project no types, so a scope that declares only them can run.
+
+@param session the repository and the folder that holds its installed packages.
+@param planned the check and its project scope.
+@returns the missing-dependencies result, or undefined when the check can run.
+*/
+export function findMissingDependencies(
+    session: Pick<Session, 'repository' | 'toolsRoot'>,
+    planned: Pick<ScopeCheck, 'check' | 'scope'>,
+): ProcessFailure | undefined {
+    if (planned.check.needs?.includes('dependencies') !== true) return undefined;
+    const scope = planned.scope.path;
+    const names = listProjectDependencyNames(session.repository.dependencyFiles, scope);
+    if (names.every((name) => (GSPOT_PACKAGES as readonly string[]).includes(name))) return undefined;
+    const files = openFiles(session.toolsRoot);
+    const isInstalled = listEnclosingFolders(scope).some((folder) => {
+        const modules = files.findStats(joinScope(folder, NODE_MODULES));
+        return modules?.isDirectory() === true || modules?.isSymbolicLink() === true;
+    });
+    const folder = scope === '' ? ROOT_FOLDER_NAME : scope;
+    return isInstalled
+        ? undefined
+        : { status: 'missing', note: PROJECT_DEPENDENCIES_MESSAGE.replace('{folder}', () => folder) };
 }
 
 /**

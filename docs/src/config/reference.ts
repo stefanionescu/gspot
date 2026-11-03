@@ -18,6 +18,7 @@ export const CHECK_RUN_LABELS = {
 
 export const CHECK_NEEDS_LABELS = {
     build: 'a build of the project',
+    dependencies: 'the installed npm dependencies of the project',
     docker: 'Docker, running',
     network: 'network access',
     'python-environment': 'the Python environment of the project',

@@ -47,6 +47,7 @@ cwd = "scope"
 example = "`const count: number = \"one\";` reports an incompatible assignment. Assign a number, such as `const count: number = 1;`."
 help = "Fix the first error tsc prints; later errors often come from the same mistake."
 name = "tsc"
+needs = ["dependencies"]
 runs = "scope"
 stage = "push"
 summary = "Runs tsc on each tsconfig project, or on the TypeScript files of a scope that has no tsconfig, with the strict options of the level."
