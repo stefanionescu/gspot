@@ -101,7 +101,7 @@ test('a gspot.toml without hooks installs none', async () => {
     expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBeUndefined();
 });
 
-test('turning hooks off removes .gspot/hooks and leaves unsetting core.hooksPath to install', async () => {
+test('turning hooks off removes .gspot/hooks and unsets core.hooksPath at once', async () => {
     await using sandbox = await testdir();
     const root = sandbox.path;
     const settings = buildSandboxSettings([], { tables: HOOKS_SETTINGS });
@@ -115,12 +115,10 @@ test('turning hooks off removes .gspot/hooks and leaves unsetting core.hooksPath
     await writeFile(join(root, 'gspot.toml'), settings.replace('enabled = true', 'enabled = false'));
     const removed = await runGspot(root, ['apply']);
     expect(removed.code).toBe(0);
+    expect(removed.stdout).toContain('note     disabled hooks: unset core.hooksPath\n');
     expect(existsSync(hook)).toBe(false);
-    expect(await readGitSetting(root, 'core.hooksPath')).toBe(ownPath);
-    const removedSteps: Array<readonly string[]> = [];
-    const session = await openSession(root);
-    await installHooks(session, removedSteps);
     expect(await readGitSetting(root, 'core.hooksPath')).toBeUndefined();
+    const session = await openSession(root);
     runGitStep(root, ['config', 'core.hooksPath', '.githooks']);
     const steps: Array<readonly string[]> = [];
     expect(await installHooks(session, steps)).toHaveProperty('note', '');

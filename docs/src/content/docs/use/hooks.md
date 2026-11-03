@@ -31,7 +31,7 @@ gspot set hooks.enabled true
 gspot install
 ```
 
-To turn them off, run `gspot set hooks.enabled false`, then `gspot install`.
+To turn them off, run `gspot set hooks.enabled false`. It removes `.gspot/hooks` and unsets `core.hooksPath`.
 
 ## Existing hook managers
 

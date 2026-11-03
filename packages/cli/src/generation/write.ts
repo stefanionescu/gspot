@@ -8,6 +8,7 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { ApplyReport } from '#cli/types/generation.ts';
 import { listExpectedPaths } from '#cli/generation/stale.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { installHooks } from '#cli/tools/installers/hooks.ts';
 import { listOwnablePaths } from '#cli/generation/pointers.ts';
 import type { Session, Generation } from '#cli/types/tools.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
@@ -98,7 +99,8 @@ export function formatApplyReport(report: ApplyReport): string {
 }
 
 /**
-Plan, write, and report generated file changes.
+Plan, write, and report generated file changes. When the settings turn the hooks off, unset core.hooksPath at once, so
+Git does not keep pointing at the removed hooks folder until the next install.
 
 @param session the repository to write to.
 @param generated the files to write, with resolved lockfiles.
@@ -146,7 +148,10 @@ export async function writeGeneratedFiles(
     report.removed.push(...pruned.filter((plan) => plan.after === undefined).map(({ path }) => path));
     report.updated.push(...pruned.filter((plan) => plan.after !== undefined).map(({ path }) => path));
     const { hooksPath } = await readHooks(session.repository);
-    if (
+    if (!session.settings.hooks.enabled && hooksPath === GSPOT_PATHS.hooks) {
+        const { note } = await installHooks(session, []);
+        report.notes.push(note);
+    } else if (
         hooksPath !== GSPOT_PATHS.hooks &&
         [...report.removed, ...report.written].some((path) => path.startsWith(`${GSPOT_PATHS.hooks}/`))
     )
