@@ -61,8 +61,9 @@ not find. Run this command and commit the file:
 gspot baseline --prune
 ```
 
-`--prune` lowers each count to what the checks still find, and adds nothing, so the file only shrinks. Only
-`gspot baseline` without `--prune` adds counts. A run of some files or some checks judges only what it read, so a
+`--prune` lowers each count to what the checks still find, and adds nothing, so the file only shrinks. A check that
+cannot run, such as a network check offline, keeps its counts, and the command names it. Only `gspot baseline` without
+`--prune` adds counts. A run of some files or some checks judges only what it read, so a
 full `gspot check` reports every stale count.
 
 ## See what a change weakens

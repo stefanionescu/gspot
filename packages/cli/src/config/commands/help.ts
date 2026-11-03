@@ -111,7 +111,7 @@ export const COMMAND_HELP = {
         summary: 'Accept the findings that exist now, so that only new findings fail',
         group: 'Run the checks:',
         description:
-            'Run the commit and push checks on every file, and write gspot.baseline.json: a count per file, check, and lint rule. gspot check then subtracts those counts, so a file fails only when it gains a finding. Commit the file.\n\nFindings of secrets/* and gspot/* checks stay out: a committed secret needs rotation, not acceptance.\n\nThe check gspot/baseline reports each count that the checks no longer find. --prune lowers those counts and adds none, so the file only shrinks. For a permanent decision with a reason, use gspot ignore.',
+            'Run the commit and push checks on every file, and write gspot.baseline.json: a count per file, check, and lint rule. gspot check then subtracts those counts, so a file fails only when it gains a finding. Commit the file.\n\nFindings of secrets/* and gspot/* checks stay out: a committed secret needs rotation, not acceptance.\n\nThe check gspot/baseline reports each count that the checks no longer find. --prune lowers those counts and adds none, so the file only shrinks; a check that cannot run keeps its counts. For a permanent decision with a reason, use gspot ignore.',
         arguments: {},
         options: {
             '--prune': 'Remove what the checks no longer find, and add nothing',

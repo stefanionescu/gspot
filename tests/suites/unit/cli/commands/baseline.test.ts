@@ -121,6 +121,27 @@ test('baseline leaves the file alone when a check cannot run', async () => {
     expect(pruned.stderr).toBe('This repository has no gspot.baseline.json to prune. Run gspot baseline.\n');
 });
 
+test('--prune lowers the counts of the checks that ran and keeps those of a check that did not run', async () => {
+    await using sandbox = await createBaselineSandbox(
+        { 'guide.md': 'See `src/one.ts` and `src/two.ts`.\n' },
+        '[[command_check]]\nid = "missing/tool"\ncommand = ["gspot-missing-tool"]\npaths = ["**"]\nstage = "commit"\nsummary = "Runs a tool."\nhelp = "Install it."\noutput = { format = "none" }\n',
+    );
+    const counts = {
+        'guide.md': { 'docs/missing-paths': { 'missing-path': 2 }, 'missing/tool': { 'missing/tool': 1 } },
+    };
+    await writeFile(join(sandbox.path, 'gspot.baseline.json'), `${JSON.stringify(counts)}\n`);
+    await writeFile(join(sandbox.path, 'guide.md'), 'See `src/one.ts`.\n');
+    const pruned = await runGspot(sandbox.path, ['baseline', '--prune']);
+    expect(pruned.code, pruned.stdout + pruned.stderr).toBe(0);
+    expect(pruned.stdout).toEndWith(
+        'Removed 1 finding from gspot.baseline.json. It holds 2 findings in 1 file. It keeps the counts of missing/tool, which did not run.\n',
+    );
+    const written = await readFile(join(sandbox.path, 'gspot.baseline.json'), 'utf8');
+    expect(JSON.parse(written)).toStrictEqual({
+        'guide.md': { 'docs/missing-paths': { 'missing-path': 1 }, 'missing/tool': { 'missing/tool': 1 } },
+    });
+});
+
 test('apply keeps the baseline, and no generated-file check reports it', async () => {
     await using sandbox = await createBaselineSandbox({ 'guide.md': 'See `src/one.ts`.\n' });
     await runGspot(sandbox.path, ['baseline']);
