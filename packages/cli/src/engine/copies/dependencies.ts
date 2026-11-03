@@ -9,7 +9,7 @@ import type { ParsedTsconfig } from '#cli/types/parsers.ts';
 import { splitSystemPath } from '#cli/system/files/reads.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { JSCONFIG_FILE, GIT_CHECK_IGNORE_ARGUMENTS } from '#cli/config/engine.ts';
-import { readTsconfig, listSourceFiles } from '#cli/parsers/projects/tsconfig.ts';
+import { findTsconfig, listSourceFiles } from '#cli/parsers/projects/tsconfig.ts';
 import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import type { CopyPlan, DeclarationDependencies } from '#cli/types/engine/tool-runs.ts';
 import { NODE_MODULES, DECLARATION_EXTENSIONS, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
@@ -76,7 +76,7 @@ function readMatchingTsconfig(
     if (!unchangedPaths.has(path)) return undefined;
     let tsconfig: ParsedTsconfig | undefined;
     try {
-        tsconfig = readTsconfig(cache.root, join(cache.root, path), cache);
+        tsconfig = findTsconfig(cache.root, join(cache.root, path), cache);
     } catch (error) {
         if (!(error instanceof GspotError) || error.code !== 'configuration') throw error;
         return undefined;

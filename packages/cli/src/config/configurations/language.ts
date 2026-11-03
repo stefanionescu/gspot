@@ -269,6 +269,8 @@ export const TSCONFIG_NAME = /^tsconfig\.(?:.+\.)?json$/u;
 
 export const MISSING_TSCONFIG_RULE = 'missing';
 
+export const UNREADABLE_TSCONFIG_RULE = 'unreadable';
+
 export const MISSING_TSCONFIG_MESSAGE =
     'Add a tsconfig.json to this scope. ESLint and tsc read the TypeScript files through it.';
 

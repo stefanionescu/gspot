@@ -183,6 +183,24 @@ export function readTsconfig(root: string, path: string, cache: RunCache): Parse
 }
 
 /**
+Resolve a tsconfig like readTsconfig, and treat a tsconfig that fails to load as absent. typescript/tsconfig reports
+that file in its scope, so a template that extends an uninstalled package stops no command.
+
+@param root the base folder of the cached readers.
+@param path the absolute tsconfig file.
+@param cache the run cache.
+@returns undefined when the file does not exist or fails to load.
+*/
+export function findTsconfig(root: string, path: string, cache: RunCache): ParsedTsconfig | undefined {
+    try {
+        return readTsconfig(root, path, cache);
+    } catch (error) {
+        if (error instanceof GspotError && error.code === 'configuration') return undefined;
+        throw error;
+    }
+}
+
+/**
 Find the nearest TypeScript project that includes every source of a scope.
 
 @param root the base folder of the cached readers.
@@ -199,7 +217,7 @@ export function readTsconfigProject(
 ): TypeScriptProject | undefined {
     for (const folder of listEnclosingFolders(scopePath)) {
         const path = join(root, folder, TSCONFIG_FILE);
-        const config = readTsconfig(root, path, cache);
+        const config = findTsconfig(root, path, cache);
         if (config === undefined) continue;
         const projects = readReferencedProjects(root, path, cache);
         const members = new Set(

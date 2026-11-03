@@ -3,7 +3,13 @@ import { SWIFT_SECURITY_RULES } from '#cli/config/configurations/swift.ts';
 import { COVERAGE_RULE, FAILED_TEST_RULE } from '#cli/config/configurations/builds.ts';
 import { PYTHON_RULES, PIP_INSTALL_MESSAGE } from '#cli/config/configurations/python.ts';
 import type { COMPILER_OPTIONS, NESTJS_COMPILER_OPTIONS } from '#cli/config/configurations/registry.ts';
-import { HTML_RULES, MISSING_TSCONFIG_RULE, type STRICT_FAMILY_OPTIONS } from '#cli/config/configurations/language.ts';
+
+import {
+    HTML_RULES,
+    MISSING_TSCONFIG_RULE,
+    UNREADABLE_TSCONFIG_RULE,
+    type STRICT_FAMILY_OPTIONS,
+} from '#cli/config/configurations/language.ts';
 
 export const HTML_RULE_DOCS = {
     [HTML_RULES.inlineScript]: {
@@ -136,6 +142,13 @@ export const TSCONFIG_RULE_DOCS = {
         fix: 'Create `tsconfig.json` in the scope folder; it can extend a shared tsconfig.',
         example: 'A scope with `src/index.ts` and no `tsconfig.json` reports `missing`.',
     },
+    [UNREADABLE_TSCONFIG_RULE]: {
+        description: 'Each tsconfig of the scope loads, with every config that it extends.',
+        why: 'The type checks and the typed lint rules skip a project whose tsconfig fails to load.',
+        fix: 'Install the package that the tsconfig extends, or correct the file. For a template that nobody installs, ignore its path with a reason.',
+        example:
+            'A tsconfig that extends `@tsconfig/svelte/tsconfig.json` while that package is not installed reports `unreadable`.',
+    },
     strict: {
         description: '`strict` is on.',
         why: 'It turns on the strict family of type checks, such as `strictNullChecks`.',
@@ -248,6 +261,7 @@ export const TSCONFIG_RULE_DOCS = {
 } as const satisfies Readonly<
     Record<
         | typeof MISSING_TSCONFIG_RULE
+        | typeof UNREADABLE_TSCONFIG_RULE
         | keyof typeof COMPILER_OPTIONS
         | keyof typeof NESTJS_COMPILER_OPTIONS
         | (typeof STRICT_FAMILY_OPTIONS)[number],

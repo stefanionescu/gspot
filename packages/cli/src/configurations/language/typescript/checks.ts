@@ -1,9 +1,10 @@
-import { CheckStop } from '#cli/system/errors.ts';
 import { join, posix, relative } from 'node:path';
 import type { Session } from '#cli/types/tools.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { ParsedTsconfig } from '#cli/types/parsers.ts';
+import { CheckStop, GspotError } from '#cli/system/errors.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { claimProjectCheck } from '#cli/configurations/tsc/compiler.ts';
@@ -18,15 +19,67 @@ import {
     STRICT_FAMILY_OPTIONS,
     MISSING_TSCONFIG_RULE,
     MISSING_TSCONFIG_MESSAGE,
+    UNREADABLE_TSCONFIG_RULE,
 } from '#cli/config/configurations/language.ts';
 
+type TsconfigProject = { path: string; parsed: ParsedTsconfig };
+
+const UNREADABLE_TSCONFIG_HELP =
+    'Install the package that the tsconfig extends, or correct the file. For a template that nobody installs, run gspot ignore typescript/tsconfig with its paths and a reason.';
+
+function listUnreadableTsconfigs(session: Session, planned: PlannedCheck): CheckFinding[] {
+    const paths = new Set([
+        joinScope(planned.scope.path, TSCONFIG_FILE),
+        ...planned.files.map((file) => file.path).filter((path) => TSCONFIG_NAME.test(posix.basename(path))),
+    ]);
+    return [...paths].flatMap((path) => {
+        try {
+            readTsconfig(session.root, join(session.root, path), session.cache);
+            return [];
+        } catch (error) {
+            if (!(error instanceof GspotError) || error.code !== 'configuration') throw error;
+            return [
+                {
+                    file: path,
+                    line: 1,
+                    rule: UNREADABLE_TSCONFIG_RULE,
+                    message: error.message,
+                    help: UNREADABLE_TSCONFIG_HELP,
+                },
+            ];
+        }
+    });
+}
+
+function claimOwnedProjects(
+    session: Session,
+    planned: PlannedCheck,
+    { projects, required }: { projects: TsconfigProject[]; required: Record<string, boolean> },
+): TsconfigProject[] {
+    const owned: TsconfigProject[] = [];
+    for (const project of projects) {
+        const isOwned = claimProjectCheck(session.cache, {
+            check: planned.check.id,
+            path: join(session.root, project.path),
+            scope: planned.scope.path,
+            required,
+        });
+        if (isOwned) owned.push(project);
+    }
+    if (projects.length > 0 && owned.length === 0) throw new CheckStop('skipped', PARENT_TSCONFIG_SKIP);
+    return owned;
+}
+
 /**
-Reports each required compiler option that a scope tsconfig leaves off.
+Reports each required compiler option that a scope tsconfig leaves off. A tsconfig that fails to load reports alone,
+because the other checks treat it as absent.
 
 @param session the repository and its tools.
 @param planned the scope to check.
 */
 export function checkTsconfig(session: Session, planned: PlannedCheck): CheckFinding[] {
+    const unreadable = listUnreadableTsconfigs(session, planned);
+    if (unreadable.length > 0) return unreadable;
     const project = readTsconfigProject(
         session.root,
         planned.scope.path,
@@ -56,17 +109,7 @@ export function checkTsconfig(session: Session, planned: PlannedCheck): CheckFin
             ? []
             : { path, parsed };
     });
-    const owned: typeof projects = [];
-    for (const project of projects) {
-        const isOwned = claimProjectCheck(session.cache, {
-            check: planned.check.id,
-            path: join(session.root, project.path),
-            scope: planned.scope.path,
-            required,
-        });
-        if (isOwned) owned.push(project);
-    }
-    if (projects.length > 0 && owned.length === 0) throw new CheckStop('skipped', PARENT_TSCONFIG_SKIP);
+    const owned = claimOwnedProjects(session, planned, { projects, required });
     return owned.flatMap(({ path, parsed }) =>
         [
             ...Object.keys(required).filter((option) => parsed.options[option] !== true),

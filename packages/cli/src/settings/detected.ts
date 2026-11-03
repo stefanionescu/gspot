@@ -7,7 +7,7 @@ import { findText } from '#cli/system/files/reads.ts';
 import type { Repository } from '#cli/types/repository.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import { buildFilenameMatcher } from '#cli/system/matchers.ts';
-import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
+import { findTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
 import { TSCONFIG_FILE, PBXPROJ_SUFFIX } from '#cli/config/parsers.ts';
 import { joinScope, selectScopePath } from '#cli/repository/scopes.ts';
@@ -95,7 +95,7 @@ function detectImportExtension(
     cache: RunCache,
 ): ImportExtensionStyle | undefined {
     const path = join(repository.root, joinScope(scopePath, TSCONFIG_FILE));
-    const options = readTsconfig(repository.root, path, cache)?.options;
+    const options = findTsconfig(repository.root, path, cache)?.options;
     const compilerStyle = options === undefined ? undefined : detectCompilerStyle(options);
     if (compilerStyle !== undefined) return compilerStyle;
     return listProjectDependencyNames(repository.dependencyFiles, scopePath).some((name) => BUNDLER_PACKAGES.has(name))

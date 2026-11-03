@@ -2,10 +2,11 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { STRICT_TSCONFIG_TEXT } from '#tests/config/setup/languages.ts';
-import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
@@ -21,15 +22,21 @@ import {
 } from '#tests/config/configurations/language.ts';
 
 test.each([...TSCONFIG_READ_ERRORS])(
-    '$name is a read error that names the file, not missing options',
+    '$name is an unreadable finding that names the file, not missing options',
     async ({ tsconfig, error, fixed }) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['typescript']),
             'tsconfig.json': tsconfig,
         });
 
-        const failure = await captureRejection(runSandboxCheck(sandbox.path, 'typescript/tsconfig'));
-        expect(failure.message).toBe(error.replaceAll('{root}', () => convertToPosixPath(sandbox.path)));
+        const findings = await runSandboxCheck(sandbox.path, 'typescript/tsconfig');
+        expect(findings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([
+            {
+                file: 'tsconfig.json',
+                rule: 'unreadable',
+                message: error.replaceAll('{root}', () => convertToPosixPath(sandbox.path)),
+            },
+        ]);
         await writeFile(join(sandbox.path, fixed), STRICT_TSCONFIG_TEXT);
         expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig')).toStrictEqual([]);
     },
@@ -228,5 +235,21 @@ test('strict requires explicitly disabled members of the strict family', async (
     const findings = await runSandboxCheck(sandbox.path, 'typescript/tsconfig');
     expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
         { file: 'tsconfig.json', rule: 'strictNullChecks' },
+    ]);
+});
+
+test('a template tsconfig that extends an uninstalled package is a finding of its scope, and stops no config', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript', 'typescript']),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'tsconfig.json': STRICT_TSCONFIG_TEXT,
+        'src/index.ts': 'export const value = 1;\n',
+        'templates/app/tsconfig.json': '{"extends":"@tsconfig/svelte/tsconfig.json","include":["src"]}\n',
+        'templates/app/src/main.ts': 'export const app = 1;\n',
+    });
+    expect(buildGeneratedFiles(await openSession(sandbox.path)).files.length).toBeGreaterThan(0);
+    const findings = await runSandboxCheck(sandbox.path, 'typescript/tsconfig');
+    expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
+        { file: 'templates/app/tsconfig.json', rule: 'unreadable' },
     ]);
 });
