@@ -4,14 +4,14 @@ import { LEVELS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
-import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { changeSandbox, applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { APP_SCOPE_SETTINGS, STRICT_TSCONFIG_TEXT } from '#tests/config/setup/languages.ts';
-import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     KEPT_DECLARATION_FILES,
@@ -79,7 +79,7 @@ test('typescript/tsc checks a scope through the parent tsconfig, alone when name
     await linkTypescript(join(sandbox.path, 'node_modules'));
     const selection = ['--only', 'typescript/tsc', '--json', '--verbose'];
     const { mode } = await stat(join(sandbox.path, 'tsconfig.json'));
-    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
+    await applyGeneratedFiles(sandbox.path);
     const checked = parseCheckReport(await spawnGspot(sandbox.path, ['check', ...selection]));
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     expect(checked.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([

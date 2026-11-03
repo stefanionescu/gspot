@@ -94,6 +94,6 @@ export const CONFIGURATION_LIST_SEPARATOR = ',';
 
 export const ADD_REMOVE_MESSAGE = 'Use gspot add or gspot remove to change configurations.';
 
-export const FIX_APPLY_MESSAGE = 'Fix that, then run gspot apply.';
+export const FIX_INSTALL_MESSAGE = 'Fix that, then run gspot install.';
 
 export const COMMAND_SUGGESTION = /\(Did you mean ([^?)]+)\??\)/u;

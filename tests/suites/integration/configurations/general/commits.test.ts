@@ -10,12 +10,13 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { test, expect, describe, beforeAll, beforeEach } from 'bun:test';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { LICENSE, COMMITLINT_GSPOT_PACKAGE } from '#tests/config/setup/configurations.ts';
 import { COMMIT_MESSAGES, UNTYPED_MESSAGE_RULES } from '#tests/config/integration/general.ts';
-import { runGspot, spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { runGspot, spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 async function assertDraftCheck(root: string, draft: string, rules: string[] = []): Promise<void> {
     const checked = parseCheckReport(
@@ -49,7 +50,7 @@ test('commitlint accepts exact folder-name scopes or no scope, reports bad messa
     const settingsPath = join(sandbox.path, 'gspot.toml');
     commitAll(sandbox.path);
 
-    await applyThenInstall(sandbox.path);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
     const draft = join(sandbox.path, 'draft.txt');
     for (const { message, rule } of COMMIT_MESSAGES) {
         await writeFile(draft, `${message}\n`);
@@ -66,8 +67,7 @@ test('commitlint accepts exact folder-name scopes or no scope, reports bad messa
                 },
             }),
     );
-    const configured = await spawnGspot(sandbox.path, ['apply']);
-    expect(configured.code, configured.stdout + configured.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     await writeFile(draft, `fix(Core): ${'x'.repeat(35)}\n`);
     await assertDraftCheck(sandbox.path, draft, ['header-max-length']);
     for (const message of ['fix(Core): repair source', 'fix: repair source']) {

@@ -4,7 +4,7 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import type { PythonProject } from '#tests/types/setup.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 
 import {
@@ -49,7 +49,7 @@ export async function createPythonProject(
     const rootProject = await readFile(join(root, 'pyproject.toml'));
     const rootConfiguration = await readFile(join(root, indexFile));
     commitAll(root);
-    await runGspotStep({ root, run: spawnGspot }, ['apply']);
+    await applyGeneratedFiles(root);
     const owned = resources.move();
     return {
         rootProject,

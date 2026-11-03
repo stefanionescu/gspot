@@ -8,12 +8,12 @@ import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import type { LinterJsonFinding } from '#tests/types/integration.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings, prepareParameterProject } from '#tests/setup/cli/settings.ts';
+import { writeSandboxChanges, applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 
 import {
     CAST_SWIFT,
@@ -59,8 +59,7 @@ async function prepareSwiftScope(scopePath: string) {
         [`${prefix}AppTests/Value.swift`]: PARSER_SOURCE,
         [`${prefix}AppTests/Deep/Value.swift`]: PARSER_SOURCE,
     });
-    const applied = await spawnGspot(root, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(root);
     expect(existsSync(join(root, `${prefix}AppTests/.swiftlint.yml`))).toBe(true);
     const lifetime = resources.move();
     return { root, prefix, [Symbol.asyncDispose]: lifetime[Symbol.asyncDispose].bind(lifetime) };
@@ -95,8 +94,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each(['AppTests', 'AppTests/Helpers'])(
             [`${scope}/Value.swift`]: PARSER_SOURCE,
         });
 
-        const applied = await spawnGspot(sandbox.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        await applyGeneratedFiles(sandbox.path);
         expect(existsSync(join(sandbox.path, `${scope}/.swiftlint.yml`))).toBe(true);
         const toolResult = await runCommand(
             ['swiftlint', 'lint', '--strict', '--quiet', '--no-cache', '--reporter', 'json', 'Value.swift'],

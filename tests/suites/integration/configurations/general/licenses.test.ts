@@ -3,8 +3,9 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runGspot, spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 test('licenses/allowed passes a project whose every package has an allowed license', async () => {
     await using sandbox = await createGitSandbox({
@@ -20,7 +21,7 @@ test('licenses/allowed passes a project whose every package has an allowed licen
             },
         }),
     });
-    await applyThenInstall(sandbox.path);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
     const passed = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'licenses/allowed', '--json']));
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);
     expect(passed.report.checks).toMatchObject([{ check: 'licenses/allowed', status: 'passed', findings: [] }]);
@@ -48,7 +49,7 @@ test('licenses/allowed reads the license of a locked package, and an allowed_pac
         'package-lock.json': lockfile,
     });
     const root = sandbox.path;
-    await applyThenInstall(root);
+    await runGspotStep({ root, run: spawnGspot }, ['install']);
     const command = ['check', '--only', 'licenses/allowed', '--json'];
     const failed = parseCheckReport(await spawnGspot(root, command));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
@@ -66,8 +67,7 @@ test('licenses/allowed reads the license of a locked package, and an allowed_pac
             tables: `${allowed}[[licenses.allowed_package]]\nname = "caniuse-lite"\nversion = "*"\nreason = "CC-BY-4.0. The data file stays unchanged."\n`,
         }),
     );
-    const applied = await runGspot(root, ['apply', '--json']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(root);
     const passed = parseCheckReport(await spawnGspot(root, command));
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);
     expect(passed.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);

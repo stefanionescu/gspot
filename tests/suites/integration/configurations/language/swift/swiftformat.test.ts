@@ -4,11 +4,11 @@ import { stat, chmod, readFile } from 'node:fs/promises';
 import { CLEAN_SWIFT } from '#tests/config/setup/languages.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
-import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { changeSandbox, applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 
 import {
     SWIFT_SANDBOX,
@@ -45,8 +45,7 @@ test.skipIf(!hasToolBuild('swiftformat'))(
             'Value.swift': SWIFT_DOCS_SOURCE,
         });
 
-        const applied = await spawnGspot(sandbox.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        await applyGeneratedFiles(sandbox.path);
         expect(await readFormatFindings(sandbox.path, 1)).toStrictEqual(
             SPACED_COMMENT_FINDINGS.map(([line, column, rule]) => ['Value.swift', line, column, rule]),
         );
@@ -72,8 +71,7 @@ test.skipIf(!hasToolBuild('swiftformat'))(
             'Value.swift': SWIFT_DOCS_SOURCE,
         });
         const root = sandbox.path;
-        const applied = await spawnGspot(root, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        await applyGeneratedFiles(root);
         expect(await readFormatFindings(root, 1)).toStrictEqual(
             BLOCK_COMMENT_FINDINGS.map(([line, column, rule]) => ['Value.swift', line, column, rule]),
         );
@@ -92,8 +90,7 @@ test.skipIf(!hasToolBuild('swiftformat'))(
             'Value.swift': SWIFT_INLINE_DOCS,
         });
         const root = sandbox.path;
-        const applied = await spawnGspot(root, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        await applyGeneratedFiles(root);
         await chmod(join(root, 'Value.swift'), 0o444);
         const found = await readFormatFindings(root, 1);
         const { mode } = await stat(join(root, 'Value.swift'));

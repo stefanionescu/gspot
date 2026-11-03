@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { spawnGspot, listFindingRows, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     SQUAWK_SCOPE_SETTINGS,
@@ -20,7 +20,7 @@ test("Squawk uses each scope's assume_in_transaction setting", async () => {
         [SQUAWK_CHILD_MIGRATION_PATH]: UNWRAPPED_MIGRATION_SQL,
     });
 
-    await applyThenInstall(sandbox.path);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
     const transactional = await spawnGspot(sandbox.path, [
         'check',
         SQUAWK_CHILD_MIGRATION_PATH,

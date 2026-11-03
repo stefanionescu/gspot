@@ -79,7 +79,7 @@ test('all applies your rule options except in script and test files', async () =
     expect(testFile.rules['jsdoc/require-description']![0]).toBe(0);
 });
 
-test('apply refuses options for a rule of level all at level basic, and ESLint refuses options for a rule that no block turns on', async () => {
+test('install refuses options for a rule of level all at level basic, and ESLint refuses options for a rule that no block turns on', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'basic',
@@ -88,7 +88,7 @@ test('apply refuses options for a rule of level all at level basic, and ESLint r
         'package.json': '{"private":true,"type":"module"}',
         'source.js': '',
     });
-    const refused = await runGspot(sandbox.path, ['apply']);
+    const refused = await runGspot(sandbox.path, ['install']);
     expect(refused.code).toBe(2);
     expect(refused.stderr).toBe(
         'n/no-process-exit runs only at level all. gspot sets options only for the rules that run at level basic.\n',

@@ -9,6 +9,7 @@ import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import type { DoctorReport } from '#cli/types/commands/reports.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { REMOVE_SUGGESTIONS, CI_PREFERENCE_CASES } from '#tests/config/commands/reports.ts';
 import { STYLELINT_FILES, COMMITLINT_PACKAGE } from '#tests/config/setup/configurations.ts';
@@ -70,8 +71,7 @@ test('doctor recognizes managed Stylelint fields in every selected scope', async
         }),
     });
 
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     const doctor = await runGspot(sandbox.path, ['doctor', '--json']);
     const { suggestions } = JSON.parse(doctor.stdout) as DoctorReport;
     expect(suggestions.unowned).toStrictEqual([]);

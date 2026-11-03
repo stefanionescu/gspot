@@ -8,8 +8,8 @@ import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import type { Sandbox, SandboxChanges } from '#tests/types/setup.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { changeSandbox, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
-import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { changeSandbox, buildSandboxChanges, applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 
 import {
     SEMGREP_CHECK,
@@ -82,6 +82,6 @@ async function applyStagedSandboxChanges(sandbox: Sandbox, changes: SandboxChang
     await using resources = new AsyncDisposableStack();
     resources.use(await changeSandbox(sandbox, changes));
     runGitStep(sandbox.root, ['add', '--all']);
-    await runGspotStep(sandbox, ['apply']);
+    await applyGeneratedFiles(sandbox.root);
     return resources.move();
 }

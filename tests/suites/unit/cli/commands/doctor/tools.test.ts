@@ -14,6 +14,7 @@ import type { DoctorReport } from '#cli/types/commands/reports.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { join, dirname, extname, basename, delimiter } from 'node:path';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -34,8 +35,7 @@ test('doctor reports no unowned gspot files in a fresh clone', async () => {
     const checkout = join(sandbox.path, 'checkout');
     await createFileTree(source, { 'gspot.toml': buildSandboxSettings([]) });
     runGitStep(source, ['init', '-q']);
-    const applied = await runGspot(source, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(source);
     commitAll(source);
     runGitStep(sandbox.path, ['clone', '--quiet', source, checkout]);
     const result = await runGspot(checkout, ['doctor', '--json']);

@@ -13,9 +13,9 @@ import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { CLI_BIN, applyThenInstall } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import type { ProcessOutput, GithubWorkflow } from '#tests/types/setup.ts';
+import { CLI_BIN, spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
 import { CI_CHECKS, GITHUB_WORKFLOW } from '#tests/config/integration/infrastructure.ts';
 
 async function prepareCiProject(root: string, provider: 'gitlab' | 'github') {
@@ -47,7 +47,7 @@ application:
         'legacy.sh': BROKEN_IF_SCRIPT,
     });
     await writeFile(join(root, 'gspot.toml'), settings);
-    await applyThenInstall(root);
+    await runGspotStep({ root, run: spawnGspot }, ['install']);
 }
 
 function commitPastHooks(root: string, message: string): string {

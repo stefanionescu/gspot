@@ -14,22 +14,22 @@ and put it in place of `<version>` below.
         <TabItem label={label}>
             <Code
                 lang="shell"
-                code={[`${add}@<version>`, `${start} apply`, `${start} install`, `${start} check`].join('\n')}
+                code={[`${add}@<version>`, `${start} install`, `${start} check`].join('\n')}
             />
         </TabItem>
     ))}
 </Tabs>
 
-`gspot apply` updates the generated files. If it refuses a key of `gspot.toml`, the message names the close keys. Edit
-`gspot.toml`, then run `gspot apply` again.
+`gspot install` updates the generated files and the tools. If it refuses a key of `gspot.toml`, the message names the
+close keys. Edit `gspot.toml`, then run `gspot install` again.
 
-When `gspot apply` succeeds, review the diff and fix any findings. Then commit the generated files that changed, in
+When `gspot install` succeeds, review the diff and fix any findings. Then commit the generated files that changed, in
 `.gspot/` and outside it, and either `package.json` with its lockfile or `mise.toml`, together. Commit `gspot.toml` too
 if you changed it to fix findings. Every other clone then runs `gspot install`. See [Set up a
 clone](/start/install/#set-up-a-clone).
 
-If `gspot apply` says that it did not overwrite some files, gspot did not write them. Move each one aside, then run
-`gspot apply` again.
+If `gspot install` says that it did not overwrite some files, gspot did not write them. Move each one aside, then run
+`gspot install` again.
 
 To return to an older gspot, check out the commit before the upgrade.
 

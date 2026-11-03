@@ -55,7 +55,7 @@ test('an unmatched ignore points at its written record', async () => {
     expect(findings).toMatchObject([{ file: 'gspot.toml', line: text.split('\n').indexOf('[[ignore]]') + 1 }]);
 });
 
-test('a missing scope with rule options leaves apply usable and unmatched paths reports the typo', async () => {
+test('a missing scope with rule options leaves install usable and unmatched paths reports the typo', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             tables: '[[scope]]\npath = "missing"\ntools.eslint.rules = { eqeqeq = ["always"] }\n',

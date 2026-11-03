@@ -169,7 +169,7 @@ test('explain tells you to write a record list by hand, not with gspot set', asy
     const explained = await runGspot(sandbox.path, ['explain', 'import_rule']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
     expect(explained.stdout).toContain(
-        'Change it: write [[import_rule]] records by hand in gspot.toml, then run gspot apply.',
+        'Change it: write [[import_rule]] records by hand in gspot.toml, then run gspot install.',
     );
 });
 

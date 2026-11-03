@@ -45,10 +45,10 @@ Save this note under the example filename:
 FIXME: document the deployment command.
 ```
 
-Apply the settings and run the check:
+Write the generated files and run the check:
 
 ```shell
-gspot apply
+gspot install
 gspot check --only notes
 ```
 

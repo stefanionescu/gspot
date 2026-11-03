@@ -6,6 +6,7 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { UNSET_REFUSALS } from '#tests/config/commands/edits.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BUN_SCANNER_SETTINGS } from '#tests/config/setup/languages.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each([...UNSET_REFUSALS])(
@@ -28,16 +29,14 @@ test('unset removes the scanner setting and keeps bunfig.toml', async () => {
         }),
         'bun.lock': '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
     });
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     const previous = await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8');
     const unset = await runGspot(sandbox.path, ['unset', 'dependencies.bun_scanner']);
     expect(unset.code, unset.stdout + unset.stderr).toBe(0);
     const settings = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
     expect(parse(settings)).not.toHaveProperty('dependencies.bun_scanner');
     expect(await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8')).toBe(previous);
-    const repeated = await runGspot(sandbox.path, ['apply']);
-    expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     expect(await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8')).toBe(previous);
 });
 

@@ -26,8 +26,8 @@ import { listInstallNotes, formatApplyReport, writeGeneratedFiles } from '#cli/g
 import type { Scope, Settings, TomlTable, SettingsEdit, SettingMatch, AvailableSettings } from '#cli/types/settings.ts';
 
 import {
-    FIX_APPLY_MESSAGE,
     ADD_REMOVE_MESSAGE,
+    FIX_INSTALL_MESSAGE,
     REPAIRED_FILES_MESSAGE,
     UNCHANGED_SETTINGS_MESSAGE,
 } from '#cli/config/commands/edits.ts';
@@ -53,8 +53,8 @@ async function writeEditedFiles(
             'writing',
             [
                 summary,
-                `gspot.toml keeps this change, and applying it stopped: ${error.message}`,
-                FIX_APPLY_MESSAGE,
+                `gspot.toml keeps this change, and writing the generated files stopped: ${error.message}`,
+                FIX_INSTALL_MESSAGE,
             ].join('\n'),
             { cause: error },
         );

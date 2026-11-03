@@ -50,9 +50,10 @@ function listBrokenHooks(root: string, names: HookName[]): string[] {
     return names.flatMap((name) => {
         const path = `${GSPOT_PATHS.hooks}/${name}`;
         const stats = statSync(resolve(root, path), { throwIfNoEntry: false });
-        if (stats?.isFile() !== true) return [`${path} is missing, so Git skips the ${name} checks. Run gspot apply.`];
+        if (stats?.isFile() !== true)
+            return [`${path} is missing, so Git skips the ${name} checks. Run gspot install.`];
         const isExecutable = process.platform === 'win32' || (stats.mode & EXECUTABLE_BITS) !== 0;
-        return isExecutable ? [] : [`${path} is not executable, so Git skips the ${name} checks. Run gspot apply.`];
+        return isExecutable ? [] : [`${path} is not executable, so Git skips the ${name} checks. Run gspot install.`];
     });
 }
 

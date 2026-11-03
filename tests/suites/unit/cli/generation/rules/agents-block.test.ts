@@ -3,12 +3,12 @@ import { format } from 'prettier';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildAgentsBlock } from '#cli/generation/rules.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { COMMANDS_HEADING } from '#tests/config/generation/generate.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 function listIndexPaths(block: string): Array<string | undefined> {
@@ -27,8 +27,7 @@ test('the AGENTS.md block names the folders of a scoped rule without parentheses
         }),
         'app/main.js': 'console.log("ready");\n',
     });
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     const agents = await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8');
     expect(agents.split('\n').find((line) => line.includes('/JAVASCRIPT.md`'))).toContain('` in `app/`: ');
 });
@@ -65,8 +64,7 @@ test('the AGENTS.md block moves its headings one level down in a file with its o
         'gspot.toml': buildSandboxSettings([], { rules: true }),
         'AGENTS.md': '# Shop\n\nHow agents work here.\n\n```bash\n# not a heading\n```\n',
     });
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     const agents = await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8');
     expect(agents.split('\n').filter((line) => /^#+ /u.test(line))).toStrictEqual([
         '# Shop',
@@ -76,8 +74,7 @@ test('the AGENTS.md block moves its headings one level down in a file with its o
         '### Commands',
         '### Generated files',
     ]);
-    const again = await runGspot(sandbox.path, ['apply']);
-    expect(again.code, again.stdout + again.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).toBe(agents);
 });
 

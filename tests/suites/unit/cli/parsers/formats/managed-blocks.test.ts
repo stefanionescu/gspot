@@ -13,7 +13,7 @@ test('a managed block is appended and replaced without changing your own text', 
 });
 test.each([...MALFORMED_BLOCKS])('every block operation refuses malformed markers in $path: $source', (context) => {
     const { source, path } = context;
-    const message = `${path} has incomplete or repeated gspot block markers. Fix the markers, then run gspot apply.`;
+    const message = `${path} has incomplete or repeated gspot block markers. Fix the markers, then run gspot install.`;
     expect(() => findBlockSpan(source, context)).toThrow(message);
     expect(() => findBlockBody(source, context)).toThrow(message);
     expect(() => replaceBlock(source, 'replacement', context)).toThrow(message);

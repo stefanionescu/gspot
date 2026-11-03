@@ -4,7 +4,6 @@ import { EXIT_ERROR } from '#cli/config/system.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { LIST_COMMAND } from '#cli/commands/list.ts';
 import { formatNameList } from '#cli/system/text.ts';
-import { APPLY_COMMAND } from '#cli/commands/apply.ts';
 import { UNSET_COMMAND } from '#cli/commands/unset.ts';
 import type { InvalidValue } from '#cli/types/main.ts';
 import { IGNORE_COMMAND } from '#cli/commands/ignore.ts';
@@ -46,6 +45,7 @@ import {
     GLOBAL_OPTIONS,
     HELP_ERROR_CODE,
     ALLOWED_CHOICES,
+    REMOVED_COMMANDS,
     PROGRAM_EXIT_CODES,
     HELP_MIN_WRAP_WIDTH,
     PROGRAM_HELP_FOOTER,
@@ -81,6 +81,7 @@ function formatArgumentError(error: CommanderError, program: Command, command: s
     const correction = suggestion === undefined ? '' : ` Did you mean ${suggestion}?`;
     if (error.code === UNKNOWN_COMMAND_ERROR_CODE) {
         const [, name] = UNKNOWN_COMMAND_NAME.exec(message) as RegExpExecArray & { 1: string };
+        if (Object.hasOwn(REMOVED_COMMANDS, name)) return REMOVED_COMMANDS[name as keyof typeof REMOVED_COMMANDS];
         return `There is no command called ${name}.${correction} ${COMMANDS_HELP_MESSAGE}`;
     }
     const helpLine =
@@ -221,7 +222,6 @@ export function buildProgram(onResult: CommandCompletion, cwd: string): Command 
         SCAN_COMMAND,
         INIT_COMMAND,
         INSTALL_COMMAND,
-        APPLY_COMMAND,
         CHECK_COMMAND,
         BASELINE_COMMAND,
         ADD_COMMAND,

@@ -13,6 +13,7 @@ import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
@@ -112,8 +113,7 @@ test('init deletes the .sqlfluffignore of the db package, and project/read-sql t
     const settings = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
     const sqlCheck = { ...SQL_COMMAND_CHECK, command: buildProgramCommand('checks/search', ...SQL_SEARCH_ARGUMENTS) };
     await writeFile(join(sandbox.path, 'gspot.toml'), settings + stringify({ command_check: [sqlCheck] }));
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     expect(existsSync(join(sandbox.path, 'db/.sqlfluffignore'))).toBe(false);
     const levelSet = await runGspot(sandbox.path, ['set', 'level', 'all']);
     expect(levelSet.code, levelSet.stdout + levelSet.stderr).toBe(0);

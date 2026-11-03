@@ -4,7 +4,6 @@ import { join, dirname } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { readGitSetting } from '#cli/repository/git/run.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
@@ -107,15 +106,14 @@ test('turning hooks off removes .gspot/hooks and unsets core.hooksPath at once',
     const settings = buildSandboxSettings([], { tables: HOOKS_SETTINGS });
     await createFileTree(root, { 'gspot.toml': settings });
     runGitStep(sandbox.path, ['init', '-q']);
-    expect(await runGspot(root, ['apply'])).toHaveProperty('code', 0);
+    await applyGeneratedFiles(root);
     const ownPath = GSPOT_PATHS.hooks;
     runGitStep(root, ['config', 'core.hooksPath', ownPath]);
     expect(await readGitSetting(root, 'core.hooksPath')).toBe(ownPath);
     const hook = join(root, `${GSPOT_PATHS.hooks}/pre-commit`);
     await writeFile(join(root, 'gspot.toml'), settings.replace('enabled = true', 'enabled = false'));
-    const removed = await runGspot(root, ['apply']);
-    expect(removed.code).toBe(0);
-    expect(removed.stdout).toContain('note     disabled hooks: unset core.hooksPath\n');
+    const removed = await applyGeneratedFiles(root);
+    expect(removed.notes).toContain('disabled hooks: unset core.hooksPath');
     expect(existsSync(hook)).toBe(false);
     expect(await readGitSetting(root, 'core.hooksPath')).toBeUndefined();
     const session = await openSession(root);
@@ -174,8 +172,8 @@ test('the gspot hooks are not ready while a hook file is missing', async () => {
     expect(await readHookStatus(session, session.repository)).toStrictEqual({
         ready: false,
         tool: 'gspot',
-        lines: ['.gspot/hooks/pre-push is missing, so Git skips the pre-push checks. Run gspot apply.'],
-        text: 'not ready; .gspot/hooks/pre-push is missing, so Git skips the pre-push checks. Run gspot apply.',
+        lines: ['.gspot/hooks/pre-push is missing, so Git skips the pre-push checks. Run gspot install.'],
+        text: 'not ready; .gspot/hooks/pre-push is missing, so Git skips the pre-push checks. Run gspot install.',
     });
 });
 
@@ -189,7 +187,7 @@ test.skipIf(isWindows)('the gspot hooks are not ready while a hook file is not e
     const session = await openSession(sandbox.path);
     expect(await readHookStatus(session, session.repository)).toMatchObject({
         ready: false,
-        lines: ['.gspot/hooks/pre-commit is not executable, so Git skips the pre-commit checks. Run gspot apply.'],
+        lines: ['.gspot/hooks/pre-commit is not executable, so Git skips the pre-commit checks. Run gspot install.'],
     });
 });
 

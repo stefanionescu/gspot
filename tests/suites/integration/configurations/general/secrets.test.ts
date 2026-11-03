@@ -11,6 +11,7 @@ import { AWS_KEY_ID } from '#tests/config/setup/configurations.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import type { GitleaksHistory } from '#tests/types/integration.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { API_TOKEN, SECRET_FILES, FIXED_SECRET_FILES, DOTENV_LINTER_CASES } from '#tests/config/integration/general.ts';
@@ -18,8 +19,7 @@ import { API_TOKEN, SECRET_FILES, FIXED_SECRET_FILES, DOTENV_LINTER_CASES } from
 async function prepareSecrets(root: string): Promise<void> {
     runGitStep(root, ['init', '-q']);
     await createFileTree(root, { 'gspot.toml': buildSandboxSettings(['secrets']) });
-    const applied = await spawnGspot(root, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(root);
 }
 
 async function prepareHistory(root: string): Promise<GitleaksHistory> {
@@ -70,8 +70,7 @@ test('secrets/gitleaks-staged reports a committed secret in a full check, and on
     });
     commitAll(sandbox.path);
 
-    const applied = await spawnGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     const everyFile = parseCheckReport(
         await spawnGspot(sandbox.path, ['check', '--only', 'secrets/gitleaks-staged', '--json']),
     ).report.checks;

@@ -13,10 +13,11 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { MISE_TRUST, HOOKS_SETTINGS, TOOL_PINS_FILE } from '#tests/config/setup/sandboxes.ts';
-import { runGspot, spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { runGspot, spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { UNQUOTED_SCRIPT, HOOKS_OFF_SETTINGS, UNQUOTED_FINDING_PREFIX } from '#tests/config/integration/commands.ts';
 
 test('doctor reports hooks this clone has not installed and accepts them after install', async () => {
@@ -27,8 +28,7 @@ test('doctor reports hooks this clone has not installed and accepts them after i
     const missing = await spawnGspot(sandbox.path, ['doctor', '--json']);
     expect(missing.code, missing.stdout + missing.stderr).toBe(1);
     expect((JSON.parse(missing.stdout) as DoctorReport).hooks).toStrictEqual({ ready: false });
-    const applied = await spawnGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     const installed = await spawnGspot(sandbox.path, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     const diagnosed = await spawnGspot(sandbox.path, ['doctor', '--json']);
@@ -141,7 +141,7 @@ test('a commit in a linked worktree runs staged checks and blocks a finding', as
     await writeRuntimePins(main);
     commitAll(main);
     const environment = { NO_COLOR: '1' };
-    await applyThenInstall(main);
+    await runGspotStep({ root: main, run: spawnGspot }, ['install']);
     const formatted = await spawnGspot(main, ['check', '--only', 'data-files/taplo-format', '--fix']);
     expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
     commitAll(main);
@@ -185,8 +185,7 @@ test('a hook ignores a nested gspot.toml and checks the index at the Git root', 
         'source.txt': 'invalid\n',
     });
     await writeRuntimePins(sandbox.path);
-    const applied = await spawnGspot(project, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(project);
     const installed = await spawnGspot(project, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBe(GSPOT_PATHS.hooks);

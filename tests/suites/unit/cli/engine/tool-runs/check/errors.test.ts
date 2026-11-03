@@ -87,7 +87,7 @@ test.skipIf(isWindows)('a per-file process killed by a signal is an error, not a
     expect(failed.findings).toStrictEqual([]);
 });
 
-test('a command check whose config file is missing errors before it runs and names gspot apply', async () => {
+test('a command check whose config file is missing errors before it runs and names gspot install', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),
         'source.js': 'export const ready = true;\n',
@@ -101,7 +101,7 @@ test('a command check whose config file is missing errors before it runs and nam
     });
     expect(result).toMatchObject({
         status: 'error',
-        note: 'The generated file .gspot/configurations/general/format/prettier.json is missing. Run gspot apply.',
+        note: 'The generated file .gspot/configurations/general/format/prettier.json is missing. Run gspot install.',
         findings: [],
     });
 });

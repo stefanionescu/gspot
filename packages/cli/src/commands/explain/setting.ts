@@ -37,7 +37,7 @@ function formatReasonLines(setting: Setting, { shipped, inherited }: SettingScop
 
 function formatChangeLines(key: string, setting: Setting, scopeSetting: SettingScope): string[] {
     if (Object.hasOwn(RECORD_FIELDS, key))
-        return [`Change it: write [[${key}]] records by hand in gspot.toml, then run gspot apply.`];
+        return [`Change it: write [[${key}]] records by hand in gspot.toml, then run gspot install.`];
     const { scope } = scopeSetting;
     const target = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
     return [

@@ -1,8 +1,9 @@
 import { join } from 'node:path';
 import { appendFile } from 'node:fs/promises';
+import { spawnGspot } from '#tests/setup/cli/commands.ts';
 import { test, expect, describe, beforeAll } from 'bun:test';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import { spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { TYPESCRIPT_CASES, TYPESCRIPT_SANDBOX, ARCHITECTURE_SETTINGS } from '#tests/config/integration/typescript.ts';
 
@@ -11,7 +12,7 @@ describe('after the shared TypeScript sandbox installs its tools', () => {
 
     beforeAll(async () => {
         await appendFile(join(installedSandbox().root, 'gspot.toml'), ARCHITECTURE_SETTINGS);
-        await runGspotStep(installedSandbox(), ['apply']);
+        await applyGeneratedFiles(installedSandbox().root);
     });
 
     test.each([...TYPESCRIPT_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {

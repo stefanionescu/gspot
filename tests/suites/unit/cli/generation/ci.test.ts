@@ -5,7 +5,6 @@ import { readFile } from 'node:fs/promises';
 import { join, delimiter } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import type { Pipeline } from '#cli/types/generation.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
@@ -17,6 +16,7 @@ import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import type { GithubWorkflow, GitlabPipeline } from '#tests/types/setup.ts';
 import { CI_CHECK_COMMAND, GITHUB_EXPRESSION_MESSAGE } from '#cli/config/generation.ts';
@@ -115,8 +115,7 @@ test('the swift configuration defaults the CI jobs to Linux and macOS', async ()
         'gspot.toml': buildSandboxSettings(['swift'], { tables: '[ci]\nenabled = true\n' }),
         'Package.swift': '// swift-tools-version: 6.0\n',
     });
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     const workflow = parse(await readFile(join(sandbox.path, '.github/workflows/gspot.yml'), 'utf8')) as GithubWorkflow;
     expect(Object.keys(workflow.jobs)).toStrictEqual(['lint-linux', 'lint-macos']);
 });

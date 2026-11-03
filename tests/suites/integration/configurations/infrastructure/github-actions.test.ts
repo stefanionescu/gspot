@@ -9,7 +9,7 @@ import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { CALLER_WORKFLOW } from '#tests/config/setup/configurations.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     COMPOSITE_ACTION,
@@ -23,7 +23,7 @@ test('zizmor reports an untrusted expression in a run step', async () => {
         'gspot.toml': buildSandboxSettings(['github-actions']),
         '.github/workflows/source.yml': TEMPLATE_INJECTION_WORKFLOW,
     });
-    await applyThenInstall(sandbox.path);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
     const result = parseCheckReport(
         await spawnGspot(sandbox.path, ['check', '--only', 'github-actions/zizmor', '--json']),
     );
@@ -98,7 +98,7 @@ test('zizmor checks composite actions in the root and a scope', async () => {
         'app/.github/actions/greet/action.yaml': COMPOSITE_ACTION,
     });
 
-    await applyThenInstall(sandbox.path);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
     const failed = parseCheckReport(
         await spawnGspot(sandbox.path, ['check', '--only', 'github-actions/zizmor', '--json']),
     ).report;

@@ -37,6 +37,16 @@ test('an unknown command exits 2 and names the closest command', async () => {
     });
 });
 
+test('gspot apply exits 2 with one line that names gspot install', async () => {
+    await using sandbox = await testdir();
+    const result = await runGspot(sandbox.path, ['apply']);
+    expect(result).toStrictEqual({
+        code: 2,
+        stdout: '',
+        stderr: 'gspot install writes the generated files. Run gspot install.\n',
+    });
+});
+
 test.each([['init'], ['set', 'level', 'all']].map((commandArguments) => ({ commandArguments })))(
     '$commandArguments requires a Git worktree before reading settings or writing, while its help works outside Git',
     async ({ commandArguments }) => {

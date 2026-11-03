@@ -9,9 +9,9 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { stat, chmod, readdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { writeSandboxChanges, buildSandboxChanges, applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 
 import {
     OUTDIR_CASES,
@@ -119,7 +119,7 @@ test.each([...OUTDIR_CASES])('$name', async ({ kind }) => {
         ? symlink(outside.path, join(sandbox.path, 'node_modules'), 'dir')
         : linkTypescript(join(sandbox.path, 'node_modules')));
     commitAll(sandbox.path);
-    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
+    await applyGeneratedFiles(sandbox.path);
     const checked = await runTscCheck(sandbox.path);
     expect(checked.code, checked.output).toBe(0);
     expect(await readdir(outside.path)).toStrictEqual(outsideFiles);

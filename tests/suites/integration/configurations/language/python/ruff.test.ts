@@ -16,7 +16,7 @@ import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
 import { ruffRulesSchema, ruffConfigurationSchema } from '#tests/schemas/integration.ts';
 import { buildSandboxSettings, prepareParameterProject } from '#tests/setup/cli/settings.ts';
 import { writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
-import { spawnGspot, listFindingRows, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     RUFF_SANDBOX,
@@ -276,7 +276,7 @@ test('Ruff counts parameters with maximum default', async () => {
     const scenario = PARAMETER_LIMIT_CASE;
     await using sandbox = await createGitSandbox({});
     const { maximum, defaultMaximum } = await prepareParameterProject(sandbox.path, scenario, 'default');
-    await applyThenInstall(sandbox.path);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
     const result = runBlockingCommand(
         [
             buildVenvExecutablePath(join(sandbox.path, GSPOT_PATHS.pythonEnvironment), 'ruff'),

@@ -126,9 +126,3 @@ export async function assertRefusalWithoutWrites(
     expect(JSON.parse(structured.stdout)).toMatchObject(refusal);
     expect(await readTree(root)).toStrictEqual(before);
 }
-
-export async function applyThenInstall(root: string): Promise<void> {
-    const sandbox = { root, run: spawnGspot };
-    await runGspotStep(sandbox, ['apply']);
-    await runGspotStep(sandbox, ['install']);
-}

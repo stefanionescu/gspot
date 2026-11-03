@@ -44,7 +44,7 @@ test('a TOML edit names the file when a scalar is in the way of a table', () => 
     expect(() => {
         document.set(['install', 'minimumReleaseAge'], 604_800);
     }).toThrow(
-        'apps/api/bunfig.toml has a TOML field that is not a table: install. Fix the field, then run gspot apply.',
+        'apps/api/bunfig.toml has a TOML field that is not a table: install. Fix the field, then run gspot install.',
     );
     expect(document.getText()).toBe(source);
 });

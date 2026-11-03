@@ -15,7 +15,7 @@ import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { chmod, symlink, readFile, writeFile } from 'node:fs/promises';
 import { PARTIAL_FIX_CASES } from '#tests/config/integration/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 test('bash/shellcheck without ShellCheck on PATH exits 2 and names the pinned version', async () => {
     await using sandbox = await createGitSandbox({
@@ -62,7 +62,7 @@ test('a pre-push check in a shallow clone refuses commits/commitlint-pushed and 
         'source.sh': 'echo base\n',
     });
     runGitStep(source, ['init', '-q']);
-    await applyThenInstall(source);
+    await runGspotStep({ root: source, run: spawnGspot }, ['install']);
     runGitStep(source, ['add', '-A']);
     runGitStep(source, ['commit', '-qm', 'chore: initialize']);
     await writeFile(join(source, 'source.sh'), 'echo selected\n');
@@ -74,7 +74,7 @@ test('a pre-push check in a shallow clone refuses commits/commitlint-pushed and 
     const remote = ['--', 'unseen', 'unused'];
     const input = { stdin: `refs/heads/main ${selected} refs/heads/main ${'0'.repeat(selected.length)}\n` };
     runGitStep(checkout, ['remote', 'add', 'unseen', pathToFileURL(source).href]);
-    await applyThenInstall(checkout);
+    await runGspotStep({ root: checkout, run: spawnGspot }, ['install']);
     const refused = await spawnGspot(checkout, [...command, 'commits/commitlint-pushed', ...remote], {}, input);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toBe(
@@ -93,7 +93,7 @@ test.skipIf(isWindows || process.getuid?.() === 0)(
             'source/sample.sql': 'select  * from foo;\n',
         });
 
-        await applyThenInstall(sandbox.path);
+        await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
         const command = ['check', '--only', 'sql/sqlfluff', '--fix', '--json'];
         await chmod(join(sandbox.path, 'source'), 0o500);
         try {
@@ -123,7 +123,7 @@ test.each([...PARTIAL_FIX_CASES])(
             [path]: sample,
         });
 
-        await applyThenInstall(sandbox.path);
+        await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
         const command = ['check', '--only', check, '--fix', '--json'];
         const failed = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
         expect(failed.exitCode, JSON.stringify(failed)).toBe(1);

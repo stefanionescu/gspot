@@ -73,7 +73,7 @@ export const INSTALLED_DEPENDENCIES_MESSAGE =
 export const DECLARATION_CONFIG_EXTENSIONS = new Set(['.json', '.jsonc']);
 
 export const INSTALLED_VALE_MESSAGE =
-    'The installed Vale packages do not match the Vale settings of this revision. Check this commit in its own clone after running gspot apply and gspot install there.';
+    'The installed Vale packages do not match the Vale settings of this revision. Check this commit in its own clone after running gspot install there.';
 
 export const MISSING_PATH_CODES: ReadonlySet<string> = new Set(['ENOENT', 'ENOTDIR']);
 

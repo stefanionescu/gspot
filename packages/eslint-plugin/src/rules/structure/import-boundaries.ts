@@ -75,12 +75,12 @@ export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'e
             description:
                 'Finds relative imports that leave the nearest boundary folder, every second-level folder such as `src/cart` by default. The `folders` option names other boundaries.',
             why: 'Relative paths between folders couple separate parts of a project to the tree shape.',
-            fix: 'Keep relative imports within the selected folder. eslint --fix uses a configured alias when one exists, and keeps a query such as `?raw`. Otherwise, add an alias for the target in package.json `imports`, or in tsconfig `paths` when a bundler resolves them, run gspot apply, and import through it. Or move the shared code into a package that both folders depend on, and import its package name.',
+            fix: 'Keep relative imports within the selected folder. eslint --fix uses a configured alias when one exists, and keeps a query such as `?raw`. Otherwise, add an alias for the target in package.json `imports`, or in tsconfig `paths` when a bundler resolves them, run gspot install, and import through it. Or move the shared code into a package that both folders depend on, and import its package name.',
         },
         schema: [IMPORT_BOUNDARY_OPTIONS_SCHEMA],
         messages: {
             alias: 'Import "{{alias}}" instead of climbing folders with "{{source}}".',
-            escape: 'Relative import "{{source}}" leaves the "{{folder}}" folder for "{{target}}". Add an alias for {{target}} in package.json `imports` (or tsconfig `paths` when a bundler resolves them), run gspot apply, and import through it. Or move the shared code into a package that both folders depend on.',
+            escape: 'Relative import "{{source}}" leaves the "{{folder}}" folder for "{{target}}". Add an alias for {{target}} in package.json `imports` (or tsconfig `paths` when a bundler resolves them), run gspot install, and import through it. Or move the shared code into a package that both folders depend on.',
         },
     },
     create(context, [options]) {

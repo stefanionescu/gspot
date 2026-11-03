@@ -45,7 +45,7 @@ and the action to take. An unexpected failure includes its message and stack in 
 
 ## Generated files
 
-`init`, `install`, `apply`, and the commands that change settings list the generated files by what happened to them. Each field
+`init`, `install`, and the commands that change settings list the generated files by what happened to them. Each field
 holds repository-relative paths.
 
 | Field       | Meaning                                                 |
@@ -106,11 +106,6 @@ The object of `gspot install --json` also has the [generated-file fields](#gener
 | `steps`     | The commands that install ran, as argument lists.                |
 
 `notes` holds what you still have to do, such as the lines to add to hooks that another tool manages.
-
-## `gspot apply`
-
-`gspot apply --json` returns the [generated-file fields](#generated-files). `notes` says, for example, when the tools
-changed and `gspot install` must run.
 
 ## `gspot check`
 

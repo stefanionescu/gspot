@@ -76,7 +76,7 @@ test.each(['', 'app'])('javascript/tsc resolves project types in scope "%s" with
     ]);
 });
 
-test('javascript/tsc checks a stale jsconfig and skips an absent one with apply advice', async () => {
+test('javascript/tsc checks a stale jsconfig and skips an absent one with install advice', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript']),
         'source.js': 'export const ready = true;\n',
@@ -95,7 +95,7 @@ test('javascript/tsc checks a stale jsconfig and skips an absent one with apply 
     await unlink(path);
     const absent = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['javascript/tsc'] }));
     expect(absent.report.checks).toMatchObject([
-        { status: 'missing', note: `The generated file ${target} is missing. Run gspot apply.` },
+        { status: 'missing', note: `The generated file ${target} is missing. Run gspot install.` },
     ]);
 });
 

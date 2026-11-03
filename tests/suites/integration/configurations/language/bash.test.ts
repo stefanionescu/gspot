@@ -14,8 +14,9 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { spawnGspot, runGspotStep, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     SYNTAX_FILES,
@@ -31,7 +32,7 @@ test('ShellCheck reports a finding in a filename that starts with a dash', async
         '-f.sh': '#!/bin/sh\necho $1\n',
         'ok.sh': '#!/bin/sh\necho ok\n',
     });
-    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
+    await applyGeneratedFiles(sandbox.path);
     const result = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json']));
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(result.report.checks).toMatchObject([
@@ -64,7 +65,7 @@ load_helper
 load_helper() { :; }
 `,
     });
-    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
+    await applyGeneratedFiles(sandbox.path);
     const result = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json']));
     expect(
         result.report.checks.flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule }))),
@@ -76,7 +77,7 @@ test('ShellCheck reports dialect findings by shebang and leaves source files unc
         'gspot.toml': buildSandboxSettings(['bash'], { level: 'all', scopes: [{ path: 'app' }] }),
         ...DIALECT_SOURCES,
     });
-    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
+    await applyGeneratedFiles(sandbox.path);
     const command = ['check', '--only', 'bash/shellcheck', '--json'];
     const checked = parseCheckReport(await spawnGspot(sandbox.path, command));
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
@@ -118,7 +119,7 @@ ${body}
         ...Object.fromEntries(examples),
         'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
     });
-    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
+    await applyGeneratedFiles(sandbox.path);
     const result = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json']));
     expect(result.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
 });
@@ -148,7 +149,7 @@ test.skipIf(isWindows).each([...SYNTAX_CASES])(
             ...SYNTAX_FILES,
         });
 
-        await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
+        await applyGeneratedFiles(sandbox.path);
         const clean = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', row.check, '--json']));
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
         expect(clean.report.checks).toMatchObject([{ status: 'passed', fileCount: row.files.length, findings: [] }]);
@@ -218,7 +219,7 @@ test.each([
         [path]: source,
     });
 
-    await applyThenInstall(sandbox.path);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
     const command = ['check', '--only', 'bash/shfmt', '--json'];
     const broken = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
     expect(broken.exitCode, JSON.stringify(broken)).toBe(1);

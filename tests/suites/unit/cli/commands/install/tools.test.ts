@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { createFileTree } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
 import { GspotError } from '#cli/system/errors.ts';
 import { openSession } from '#cli/engine/session.ts';
@@ -9,24 +8,34 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
+import { createFileTree, type TestdirResult } from 'testdirs';
 import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import type { InstallCommandJson } from '#cli/types/commands/edits.ts';
 import { FAILED_NPM_VERSION } from '#tests/config/commands/reports.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 
-test('apply starts no npm, and install reports a failed npm version lookup', async () => {
+async function createMarkdownSandbox(): Promise<TestdirResult> {
+    const sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['markdown']),
+        'README.md': '# Example\n',
+    });
+    await applyGeneratedFiles(sandbox.path);
+    return sandbox;
+}
+
+test('writing the generated files starts no npm, and install reports a failed npm version lookup', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'entry.sh': 'echo example\n',
     });
 
     using npm = fakeCommands('npm', () => Promise.resolve(buildProcessResult(FAILED_NPM_VERSION)));
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     expect(npm).not.toHaveBeenCalled();
     const before = await readTree(sandbox.path);
     const structured = await runGspot(sandbox.path, ['install', '--json']);
@@ -40,13 +49,7 @@ test('apply starts no npm, and install reports a failed npm version lookup', asy
 });
 
 test('an unexpected error during install prints the internal error once, its stack with --verbose, and changes nothing', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['markdown']),
-        'README.md': '# Example\n',
-    });
-
-    const applied = await runGspot(sandbox.path, ['apply', '--json']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await using sandbox = await createMarkdownSandbox();
     const before = await readTree(sandbox.path);
     const run = processes.runProcess;
     using _spawn = spyOn(processes, 'runProcess').mockImplementation(async (command, options) => {
@@ -73,8 +76,7 @@ test('install writes the tool projects again when an edit changed one', async ()
         'gspot.toml': buildSandboxSettings(['bash']),
         'entry.sh': 'echo example\n',
     });
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     const project = join(sandbox.path, GSPOT_PATHS.miseProject);
     const generated = await readFile(project, 'utf8');
     await writeFile(project, '[tools]\n');
@@ -111,12 +113,7 @@ test('install writes the generated files, exits 1, and names the tools that stay
 });
 
 test('install stopped by SIGINT reports cancellation once and exits 130', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['markdown']),
-        'README.md': '# Example\n',
-    });
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await using sandbox = await createMarkdownSandbox();
     const before = await readTree(sandbox.path);
     const run = processes.runProcess;
     using _spawn = spyOn(processes, 'runProcess').mockImplementation(async (command, options) => {

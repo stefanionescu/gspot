@@ -11,6 +11,7 @@ import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { API_SCOPE_FILES } from '#tests/config/commands/reports.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 
@@ -27,8 +28,7 @@ test('add --scope writes the scope list and applies the generated files', async 
         ...API_SCOPE_FILES,
     });
     commitAll(sandbox.path);
-    const initial = await runGspot(sandbox.path, ['apply']);
-    expect(initial.code, initial.stdout + initial.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     const generated = join(sandbox.path, getManifestTarget('bash', 'shellcheckrc'));
     expect(existsSync(generated)).toBe(false);
     const result = await runGspot(sandbox.path, ['add', 'bash', '--scope', 'api', '--json']);
@@ -36,8 +36,7 @@ test('add --scope writes the scope list and applies the generated files', async 
     const saved = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
     expect(saved.scopes.get('api')!.configurations).toStrictEqual(['bash']);
     expect(saved.configurations).toStrictEqual(['markdown']);
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     expect(existsSync(generated)).toBe(true);
 });
 

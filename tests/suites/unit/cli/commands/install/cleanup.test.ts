@@ -2,10 +2,13 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { existsSync, utimesSync } from 'node:fs';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import * as installers from '#cli/tools/installers/install.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { EMPTY_TOOL_INSTALL } from '#tests/config/commands/edits.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
-test('apply removes interrupted temporary writes and keeps active writes and unrelated files', async () => {
+test('install removes interrupted temporary writes and keeps active writes and unrelated files', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     const exited = 12_345;
     const suffix = '12345678-1234-1234-1234-123456789012.tmp';
     const stale = `.gspot-${String(exited)}-${suffix}`;
@@ -27,7 +30,7 @@ test('apply removes interrupted temporary writes and keeps active writes and unr
         if (pid === exited) throw Object.assign(new Error('The process exited.'), { code: 'ESRCH' });
         return kill(pid, signal);
     });
-    const result = await runGspot(sandbox.path, ['apply', '--json']);
+    const result = await runGspot(sandbox.path, ['install', '--json']);
     expect(result).toMatchObject({ code: 0 });
     expect(existsSync(join(sandbox.path, stale))).toBe(false);
     expect(existsSync(join(sandbox.path, ownerless))).toBe(false);

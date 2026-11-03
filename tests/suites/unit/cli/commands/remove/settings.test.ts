@@ -14,6 +14,7 @@ import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { TOOLS_CHANGED_NOTE } from '#tests/config/commands/edits.ts';
 import { MANAGED_KEYS_NOTE } from '#tests/config/setup/sandboxes.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('remove deletes settings that only the removed configuration exposes and names the deleted keys', async () => {
@@ -76,8 +77,7 @@ test('remove after add says nothing about tools once the tool lockfiles match ag
         'gspot.toml': buildSandboxSettings([]),
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}',
     });
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     const session = await openSession(sandbox.path);
     await createFileTree(sandbox.path, buildToolLockfiles(session.toolConfigurations));
     const added = await runGspot(sandbox.path, ['add', 'bash', '--json']);

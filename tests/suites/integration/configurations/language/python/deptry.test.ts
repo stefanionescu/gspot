@@ -5,7 +5,7 @@ import { writeFile } from 'node:fs/promises';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { spawnGspot, listFindingRows, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 test("deptry ignores gspot's tool folder and reads the authored exclude settings again after they change", async () => {
     await using sandbox = await createGitSandbox({});
@@ -27,7 +27,7 @@ extend_exclude = ["^vendor/"]
         'vendor/client.py': 'import vendor_dependency\n',
     });
 
-    await applyThenInstall(sandbox.path);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
     await runCommand(['uv', 'venv', '.venv'], { cwd: sandbox.path });
     const commandArguments = ['check', '--only', 'python/deptry', '--json'];
     const failed = parseCheckReport(await spawnGspot(sandbox.path, commandArguments));
@@ -50,7 +50,7 @@ test('deptry reads the project name and the packages under src as first party', 
         'src/shop_core/__init__.py': 'from shop_tools import helper\n\nprint(helper)\n',
         'src/shop_tools/__init__.py': 'helper = 1\n',
     });
-    await applyThenInstall(sandbox.path);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
     await runCommand(['uv', 'venv', '.venv'], { cwd: sandbox.path });
     const checked = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'python/deptry', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);

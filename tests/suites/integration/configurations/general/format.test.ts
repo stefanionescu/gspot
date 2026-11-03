@@ -7,9 +7,9 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { writeSandboxChanges, applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { PRETTIER_OPTIONS_BY_FILE, FORMAT_OVERRIDES_SETTINGS } from '#tests/config/setup/configurations.ts';
 
 import {
@@ -93,7 +93,7 @@ test('editorconfig-checker leaves indentation to the formatter and checks line e
     }
 });
 
-test('check --staged formats with the staged Prettier config file after a later apply changes it, and leaves the working files and the index unchanged', async () => {
+test('check --staged formats with the staged Prettier config file after a later write changes it, and leaves the working files and the index unchanged', async () => {
     const root = installedSandbox().root;
     await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
         files: {
@@ -113,8 +113,7 @@ test('check --staged formats with the staged Prettier config file after a later 
     const index = runGitStep(root, ['write-tree']);
     const changed = await spawnGspot(root, ['set', 'format.indent_width', '4', '--scope', 'app']);
     expect(changed.code, changed.stdout + changed.stderr).toBe(0);
-    const applied = await spawnGspot(root, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(root);
     await writeFile(join(root, STAGED_FORMAT_PATHS.source), STAGED_FORMAT_SOURCE.working);
     expect(existsSync(join(root, STAGED_FORMAT_PATHS.scopeConfig))).toBe(false);
     const files = new Map<string, string>();

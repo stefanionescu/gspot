@@ -67,7 +67,7 @@ test('a plugin record with a package and no version is a settings error', async 
         }),
         'package.json': '{"private":true,"type":"module"}\n',
     });
-    const refused = await runGspot(sandbox.path, ['apply']);
+    const refused = await runGspot(sandbox.path, ['install']);
     expect(refused.code).toBe(2);
     expect(refused.stderr).toContain('Name a tracked module with path, or an npm package with package and version.');
 });
@@ -101,7 +101,7 @@ test('tools.eslint.plugins loads your plugin by its path and refuses the gspot r
         `${sandbox.path}/gspot.toml`,
         buildSandboxSettings(['javascript'], { tables: LOCAL_PLUGIN_TABLES.replace('"local"', '"gspot"') }),
     );
-    const refused = await runGspot(sandbox.path, ['apply']);
+    const refused = await runGspot(sandbox.path, ['install']);
     expect(refused.code).toBe(2);
     expect({ stdout: refused.stdout, stderr: refused.stderr }).toStrictEqual({
         stdout: '',

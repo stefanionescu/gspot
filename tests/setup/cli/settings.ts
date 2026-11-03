@@ -7,7 +7,7 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import type { WrittenSettings } from '#cli/types/configurations/language.ts';
 
 /**
@@ -100,6 +100,6 @@ export async function prepareParameterProject(
         'gspot.toml': buildSandboxSettings([scenario.language], { tables: limits, level: 'all' }),
         [scenario.file]: scenario.source,
     });
-    await runGspotStep({ root, run: spawnGspot }, ['apply']);
+    await applyGeneratedFiles(root);
     return { maximum, defaultMaximum };
 }

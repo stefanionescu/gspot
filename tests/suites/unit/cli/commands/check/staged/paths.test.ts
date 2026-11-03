@@ -7,6 +7,7 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -43,8 +44,7 @@ test('a staged check with nothing staged prints that and exits 0 without copying
         'gspot.toml': buildSandboxSettings(['bash']),
         'source.sh': CLEAN_BASH_SCRIPT,
     });
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     commitAll(sandbox.path);
     const temporaryFile = join(sandbox.path, '.git', 'temporary-file');
     await writeFile(temporaryFile, '');

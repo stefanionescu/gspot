@@ -3,14 +3,14 @@ title: Generated files
 description: Which files gspot writes, which to commit, and which to leave alone.
 ---
 
-Change `gspot.toml`, then run `gspot apply`; gspot writes every generated file from it.
+Change `gspot.toml`, then run `gspot install`; gspot writes every generated file from it.
 
 ## What gspot writes
 
 | Path                                                                                                                      | What it holds                                                                                                                                                                                                                                               | Commit |
 | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
 | `gspot.toml`                                                                                                              | Your settings.                                                                                                                                                                                                                                              | Yes    |
-| `gspot.baseline.json`                                                                                                     | The findings that you accepted. `gspot baseline` writes it, and `gspot apply` leaves it alone. See [Keep the findings that predate gspot](/use/ignore/#keep-the-findings-that-predate-gspot).                                                               | Yes    |
+| `gspot.baseline.json`                                                                                                     | The findings that you accepted. `gspot baseline` writes it, and `gspot install` leaves it alone. See [Keep the findings that predate gspot](/use/ignore/#keep-the-findings-that-predate-gspot).                                                             | Yes    |
 | `.gspot/configurations/<group>/<configuration>/`                                                                          | The config files of each configuration, named after their tool. Each configuration with ESLint rules gets its own `eslint.mjs`, which the JavaScript configuration imports. A scope that needs other text gets `scopes/<scope path>/<file>` in that folder. | Yes    |
 | The `rules` folder of `.gspot/`                                                                                           | The rules for coding agents.                                                                                                                                                                                                                                | Yes    |
 | `.gspot/package.json` and its lockfile                                                                                    | The npm tools.                                                                                                                                                                                                                                              | Yes    |
@@ -35,15 +35,15 @@ For installed tools, temporary check copies, and caches, see [What gspot adds to
 Do not edit a generated file. Each one sits in `.gspot/`, starts with a gspot header, or sits in a managed block between
 the gspot markers. Files in `.gspot/` carry no header; the managed block of `.gitattributes` marks them generated.
 
-`gspot apply` replaces those files from your settings, even files with
-local edits or merge markers. Move any change you need into `gspot.toml` before you apply.
+`gspot install` replaces those files from your settings, even files with
+local edits or merge markers. Move any change you need into `gspot.toml` before you run it.
 
 A file outside `.gspot/` that starts with the gspot header belongs to gspot only when gspot writes that path. Any other
-file with the header stays yours, and `gspot apply` leaves it in place.
+file with the header stays yours, and `gspot install` leaves it in place.
 
-`gspot apply` names each file that it removes. The hooks of Git Large File Storage (LFS) exist only when a file of the
+`gspot install` names each file that it removes. The hooks of Git Large File Storage (LFS) exist only when a file of the
 repository uses `filter=lfs`. When you turn off `dependencies.bun_scanner`, its key stays in `bunfig.toml` as yours,
-and `gspot apply` says so.
+and `gspot install` says so.
 
 ## Dependency bots
 

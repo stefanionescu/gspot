@@ -5,6 +5,7 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 const PAGE = await readFile(join(REPOSITORY_ROOT, 'docs/src/content/docs/reference/json-output.mdx'), 'utf8');
@@ -26,7 +27,6 @@ function readFields(heading: string): { every: string[]; required: string[] } {
 test.each([
     { commandArguments: ['scan', '--json'], headings: ['## `gspot scan`'], settings: false },
     { commandArguments: ['init', '--json'], headings: ['## `gspot init`', '## Generated files'], settings: false },
-    { commandArguments: ['apply', '--json'], headings: ['## Generated files'] },
     { commandArguments: ['install', '--json'], headings: ['## `gspot install`', '## Generated files'] },
     { commandArguments: ['check', '--json'], headings: ['## `gspot check`'], exitCode: 2 },
     {
@@ -57,7 +57,7 @@ test.each([
         notes: [],
         steps: [],
     });
-    if (row.settings !== false) await runGspot(sandbox.path, ['apply']);
+    if (row.settings !== false) await applyGeneratedFiles(sandbox.path);
     const result = await runGspot(sandbox.path, row.commandArguments);
     expect(result.code, result.stdout + result.stderr).toBe(row.exitCode ?? 0);
     const keys = Object.keys(JSON.parse(result.stdout) as object).filter(

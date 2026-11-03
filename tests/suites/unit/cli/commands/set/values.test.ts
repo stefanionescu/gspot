@@ -6,6 +6,7 @@ import { parse } from '@decimalturn/toml-patch';
 import { findValueAt } from '#cli/system/tables.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { SETTING_REASON } from '#tests/config/setup/sandboxes.ts';
@@ -13,8 +14,8 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { rm, symlink, readFile, writeFile } from 'node:fs/promises';
 import { ROOT_EDITORCONFIG } from '#tests/config/commands/reports.ts';
-import { runGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
 import type { SettingsListJson } from '#cli/types/commands/reports.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
@@ -54,12 +55,11 @@ test('set names -- when a value reads as an option, and takes the values after -
 });
 
 test.each([...KEPT_SETTING_CHANGES])(
-    '%s keeps its change in gspot.toml and exits 2 when apply then stops',
+    '%s keeps its change in gspot.toml and exits 2 when the write of the generated files then stops',
     async (_, commandArguments, written) => {
         await using sandbox = await createGitSandbox(STOPPED_APPLY_FILES);
 
-        const applied = await runGspot(sandbox.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        await applyGeneratedFiles(sandbox.path);
         const generated = join(sandbox.path, '.editorconfig');
         const authored = join(sandbox.path, 'authored-editorconfig');
         await writeFile(authored, ROOT_EDITORCONFIG);
@@ -128,7 +128,7 @@ test('set level all writes the level in a fresh clone', async () => {
         'entry.sh': 'echo example\n',
     });
     runGitStep(source, ['init', '-q']);
-    await runGspotStep({ root: source, run: runGspot }, ['apply']);
+    await applyGeneratedFiles(source);
     commitAll(source);
     runGitStep(sandbox.path, ['clone', '--quiet', source, checkout]);
     const changed = await runGspot(checkout, ['set', 'level', 'all']);

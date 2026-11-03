@@ -28,7 +28,7 @@ export function findBlockSpan(text: string, file: { path: string }): TextRange |
     ) {
         throw new GspotError(
             'filesystem',
-            `${file.path} has incomplete or repeated gspot block markers. Fix the markers, then run gspot apply.`,
+            `${file.path} has incomplete or repeated gspot block markers. Fix the markers, then run gspot install.`,
         );
     }
     const end = closing + markersForStyle.end.length;

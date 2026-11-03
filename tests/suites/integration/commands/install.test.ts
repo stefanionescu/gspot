@@ -11,15 +11,15 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
-import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
-test('after init and install, apply has nothing to write', async () => {
+test('after init and install, gspot/generated-files reports nothing', async () => {
     await using sandbox = await testdir(INIT_FILES);
 
     commitAll(sandbox.path);
     const init = await spawnGspot(sandbox.path, ['init']);
     expect(init.code, init.stdout + init.stderr).toBe(0);
-    await applyThenInstall(sandbox.path);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
     const applied = await spawnGspot(sandbox.path, ['check', '--only', 'gspot/generated-files', '--json']);
     expect(parseCheckReport(applied).report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
@@ -40,7 +40,7 @@ test.each([true, false])(
         const initialized = await spawnGspot(sandbox.path, ['init', '--json', '--no-configurations']);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(true);
-        await applyThenInstall(sandbox.path);
+        await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
         const checked = await spawnGspot(sandbox.path, ['check', '--json']);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         expect(await readFile(join(sandbox.path, 'plans.txt'), 'utf8')).toBe('unstaged\n');
@@ -87,7 +87,7 @@ test('a repeated install reports No change while a uv-locked project matches its
     const locked = await runCommand(['uv', 'lock'], { cwd: sandbox.path });
     expect(locked.code, locked.stdout + locked.stderr).toBe(0);
     commitAll(sandbox.path);
-    await applyThenInstall(sandbox.path);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
     const repeated = await spawnGspot(sandbox.path, ['install', '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
     expect(JSON.parse(repeated.stdout)).toMatchObject({

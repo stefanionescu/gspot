@@ -13,6 +13,7 @@ import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -79,7 +80,7 @@ test('a refused pinned package manager keeps project files and gives no install 
         source: 'kept\n',
         'gspot.toml': buildSandboxSettings([]),
     });
-    await runGspot(sandbox.path, ['apply']);
+    await applyGeneratedFiles(sandbox.path);
     const previous = await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8');
     const run = processes.runProcess;
     using _boundary = spyOn(processes, 'runProcess').mockImplementation((command, options) =>

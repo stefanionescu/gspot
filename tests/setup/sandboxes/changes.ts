@@ -5,10 +5,9 @@ import { openSession } from '#cli/engine/session.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
-import { runGspotStep } from '#tests/setup/cli/commands.ts';
-import { writeGeneratedFiles } from '#cli/generation/write.ts';
+import type { ApplyReport } from '#cli/types/generation.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { writeEveryGeneratedFile } from '#cli/generation/write.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { runGitStep, markExecutable } from '#tests/setup/system/git.ts';
 import { rm, mkdir, rmdir, unlink, readFile, writeFile } from 'node:fs/promises';
@@ -97,19 +96,23 @@ export async function changeSandbox(sandbox: Sandbox, changes: SandboxChanges): 
 }
 
 /**
-Write the sample files and run apply. Disposal restores the working files, index, and current commit.
+Write the generated files of a folder from its gspot.toml in this process, as gspot install does before it installs
+the tools.
+*/
+export async function applyGeneratedFiles(root: string): Promise<ApplyReport> {
+    const session = await openSession(root);
+    const { report } = await writeEveryGeneratedFile(session, openFiles(root));
+    return report;
+}
+
+/**
+Write the sample files and the generated files. Disposal restores the working files, index, and current commit.
 */
 export async function writeSandboxChanges(sandbox: Sandbox, changes: SandboxChanges): Promise<AsyncDisposable> {
     await using resources = new AsyncDisposableStack();
     resources.use(await changeSandbox(sandbox, changes));
-    await runGspotStep(sandbox, ['apply']);
+    await applyGeneratedFiles(sandbox.root);
     return resources.move();
-}
-
-export async function applyGeneratedFiles(root: string): Promise<void> {
-    const writer = openFiles(root);
-    const session = await openSession(root);
-    await writeGeneratedFiles(session, buildGeneratedFiles(session), writer);
 }
 
 /**

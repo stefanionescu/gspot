@@ -14,9 +14,10 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     DOCKER_CASES,
@@ -45,7 +46,7 @@ test('Trivy checks each Dockerfile in its deepest scope and honors an ignore lim
     });
     commitAll(sandbox.path);
     await createFileTree(sandbox.path, { 'untracked/Dockerfile': ROOT_USER_DOCKERFILE });
-    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
+    await applyGeneratedFiles(sandbox.path);
     const command = ['check', '--only', 'docker/trivy-config', '--json'];
     const failed = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
     expect(failed.exitCode, JSON.stringify(failed)).toBe(1);
@@ -68,7 +69,7 @@ test('Trivy reports a password in ENV, which gitleaks does not report', async ()
         Dockerfile: `${ROOT_USER_DOCKERFILE}\nENV DB_PASSWORD=hunter2\n`,
     });
     commitAll(sandbox.path);
-    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
+    await applyGeneratedFiles(sandbox.path);
     const command = ['check', '--only', 'docker/trivy-config', '--json'];
     const { report } = parseCheckReport(await spawnGspot(sandbox.path, command));
     expect(JSON.stringify(report.checks)).toContain('DB_PASSWORD');
@@ -86,7 +87,7 @@ test.each([...LEVELS])(
             'app/Dockerfile': DEBIAN_DOCKERFILE,
         });
 
-        await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
+        await applyGeneratedFiles(sandbox.path);
         const pins = level === 'all' ? ([['Dockerfile', 'DL3008']] as const) : [];
         for (const scope of ['', 'app']) {
             const dockerfile = posix.join(scope, 'Dockerfile');
@@ -125,7 +126,7 @@ test.skipIf(!isLinux || Bun.which('docker') === null)(
             'compose.yaml': `services: {app: {image: "${tags[0]}"}}\n`,
             'payload.pem': privateKey,
         });
-        await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
+        await applyGeneratedFiles(sandbox.path);
         const configPath = join(sandbox.path, getManifestTarget('docker', 'trivy.yml'));
         const configuration = await readFile(configPath, 'utf8');
         const command = ['check', '--only', 'docker/trivy-image', '--json'];

@@ -6,7 +6,7 @@ import { runGitStep } from '#tests/setup/system/git.ts';
 import { extractConfigName } from '#cli/engine/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
-import { runGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import type { LintFinding, EslintConfiguration } from '#tests/types/setup.ts';
 
@@ -39,12 +39,13 @@ export async function listLintFindings(
 }
 
 /**
-Link the test packages, run apply in a folder with a gspot.toml, and load the generated ESLint config file.
+Link the test packages, write the generated files of a folder with a gspot.toml, and load the generated ESLint config
+file.
 */
 export async function buildEslint(root: string, options?: Pick<ESLint.Options, 'fix'>): Promise<ESLint> {
     runGitStep(root, ['init', '--quiet']);
     await linkInstalledModules(join(root, 'node_modules'));
-    await runGspotStep({ root: root, run: runGspot }, ['apply']);
+    await applyGeneratedFiles(root);
     const session = await openSession(root);
     const scope = session.scopes.find((each) =>
         each.configurations.some((configuration) =>

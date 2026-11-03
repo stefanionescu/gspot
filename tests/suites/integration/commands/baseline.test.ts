@@ -3,7 +3,7 @@ import { rm } from 'node:fs/promises';
 import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 test('a baseline holds the findings that no fixer fixes, and a prune drops the counts that went away', async () => {
     await using sandbox = await createGitSandbox({
@@ -13,7 +13,7 @@ test('a baseline holds the findings that no fixer fixes, and a prune drops the c
     commitAll(sandbox.path);
     const initialized = await spawnGspot(sandbox.path, ['init', '--configurations', 'javascript']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-    await applyThenInstall(sandbox.path);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
     const before = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--json']));
     expect(before.code, before.stdout + before.stderr).toBe(1);
     const written = await spawnGspot(sandbox.path, ['baseline']);

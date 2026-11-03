@@ -24,10 +24,9 @@ configurations = ["swift", "xcode"]
 
 Each `[[scope]]` names its folder in `path`. Its settings cover that folder only.
 
-After you change the scopes, apply the settings, install the tools, and check one scope:
+After you change the scopes, write the generated files, install the tools, and check one scope:
 
 ```shell
-gspot apply
 gspot install
 gspot check api
 ```

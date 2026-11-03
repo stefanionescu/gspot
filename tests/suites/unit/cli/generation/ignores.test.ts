@@ -231,7 +231,7 @@ test('each submodule checkout gets an ignore pattern of its own', async () => {
     ).toStrictEqual(['/vendor/library/']);
 });
 
-test('a second apply writes the same files when .prettierignore covers every source file', async () => {
+test('a second write of the generated files gives the same files when .prettierignore covers every source file', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
         'source/build/value.js': 'export const value = 1;\n',

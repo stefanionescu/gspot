@@ -83,7 +83,7 @@ ${setup.flatMap(({ label, prerequisites }) => prerequisites.map((command) => `  
 - Never suppress a size or complexity limit. Split the code, or ask the user to raise the limit with
   \`gspot set limits.<name> <value> --reason "<why>"\`.
 - Change settings only with \`gspot add\`, \`remove\`, \`set\`, \`unset\`, \`ignore\`, and \`unignore\`. Do not edit files
-  under \`.gspot/\` or other generated files. After you edit \`gspot.toml\`, a package manifest, or a tsconfig, run \`gspot apply\`.
+  under \`.gspot/\` or other generated files. After you edit \`gspot.toml\`, a package manifest, or a tsconfig, run \`gspot install\`.
 - In a monorepo, each \`[[scope]]\` record in \`gspot.toml\` holds the settings of one folder. Add \`--scope <path>\` to
   \`add\`, \`remove\`, \`set\`, or \`unset\` to change one scope.
 - Commit with the hooks on. Never use \`--no-verify\`.

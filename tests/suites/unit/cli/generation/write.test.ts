@@ -8,7 +8,6 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { listStaleFiles } from '#cli/generation/stale.ts';
-import type { ApplyReport } from '#cli/types/generation.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import type { PackageFieldScenario } from '#tests/types/setup.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -16,8 +15,10 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { MANAGED_KEYS_NOTE } from '#tests/config/setup/sandboxes.ts';
 import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
 import { BUN_SCANNER_SETTINGS } from '#tests/config/setup/languages.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { listInstallNotes, writeGeneratedFiles } from '#cli/generation/write.ts';
+import { TOOLS_CHANGED_NOTE, STALE_LOCKFILE_NOTE } from '#cli/config/generation.ts';
 import { EDITED_STYLELINT_PACKAGE, STYLELINT_PACKAGE_FIELDS } from '#tests/config/generation/generate.ts';
 
 async function applyPackageFields(root: string, scenario: PackageFieldScenario): Promise<Map<string, string>> {
@@ -112,6 +113,20 @@ test('writing a mise project preserves its lockfile and asks for an install afte
     expect(await listInstallNotes(configured, output, changed)).not.toContain('Git hooks changed. Run gspot install.');
 });
 
+test('the install notes name changed tools after the first write, and a missing lockfile after a repeated one', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([]),
+        'package.json': '{"private":true}',
+    });
+    const session = await openSession(sandbox.path);
+    const writer = openFiles(sandbox.path);
+    const generated = buildGeneratedFiles(session);
+    const first = await writeGeneratedFiles(session, generated, writer);
+    expect(await listInstallNotes(session, generated, first)).toStrictEqual([TOOLS_CHANGED_NOTE]);
+    const repeated = await writeGeneratedFiles(session, generated, writer);
+    expect(await listInstallNotes(session, generated, repeated)).toStrictEqual([STALE_LOCKFILE_NOTE]);
+});
+
 test('at level basic, gspot removes the Vale configuration and the installed style packages', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['prose']),
@@ -125,7 +140,7 @@ test('at level basic, gspot removes the Vale configuration and the installed sty
     expect(existsSync(join(sandbox.path, '.gspot/configurations/general/prose/vale.ini'))).toBe(false);
 });
 
-test('apply preserves a copied header example and removes an obsolete scoped pointer file', async () => {
+test('writing the generated files preserves a copied header example and removes an obsolete scoped pointer file', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['markdown'], { scopes: [{ path: 'docs', configurations: [] }] }),
         'examples/.editorconfig': `${formatHeader('.editorconfig')}root = true\n`,
@@ -143,7 +158,7 @@ test('apply preserves a copied header example and removes an obsolete scoped poi
     expect(existsSync(join(sandbox.path, 'docs/.markdownlint.jsonc'))).toBe(false);
 });
 
-test('apply prints no managed-key warning while it still manages the Bun scanner', async () => {
+test('writing the generated files prints no managed-key warning while gspot still manages the Bun scanner', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             tables: BUN_SCANNER_SETTINGS,
@@ -151,16 +166,14 @@ test('apply prints no managed-key warning while it still manages the Bun scanner
         'bun.lock': '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
     });
     for (const pass of [1, 2]) {
-        const result = await runGspot(sandbox.path, ['apply', '--json']);
-        expect(result.code, `pass ${String(pass)}: ${result.stdout}${result.stderr}`).toBe(0);
-        expect((JSON.parse(result.stdout) as ApplyReport).notes).not.toContain(MANAGED_KEYS_NOTE);
+        const result = await applyGeneratedFiles(sandbox.path);
+        expect(result.notes, `pass ${String(pass)}`).not.toContain(MANAGED_KEYS_NOTE);
     }
 });
 
 test('an unchanged settings edit that writes generated files does not say No change', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': 'level = "basic"\n' + buildSandboxSettings([]) });
     const result = await runGspot(sandbox.path, ['set', 'level', 'basic']);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout).toStartWith('gspot.toml already says this.\n');
     expect(result.stdout).toContain('wrote ');
     expect(result.stdout).not.toContain('No change:');

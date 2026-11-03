@@ -225,7 +225,7 @@ allowed_names = ["helperCommand"]
 reason = "An external API requires this exact name."
 ```
 
-Write override records by hand, then run `gspot apply`. The override removes this `banned-word` finding; other names
+Write override records by hand, then run `gspot install`. The override removes this `banned-word` finding; other names
 keep their checks.
 
 ## Edit the file by hand
@@ -241,7 +241,6 @@ After an edit, inspect the generated-file differences, then write them and insta
 
 ```shell
 gspot check --only gspot/generated-files --verbose
-gspot apply
 gspot install
 ```
 
@@ -252,5 +251,5 @@ for each scope. It leaves out configurations in `removed_configurations`. Run th
 removed configuration explicitly to select it again.
 
 When the files go away, its checks become inactive. Its configurations, settings, ignores, and command checks stay in
-gspot.toml. `gspot apply` writes generated files from your saved settings and does not change `configurations` or
+gspot.toml. `gspot install` writes generated files from your saved settings and does not change `configurations` or
 `removed_configurations`.

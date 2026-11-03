@@ -59,19 +59,6 @@ export const COMMAND_HELP = {
         ],
         example: 'gspot install',
     },
-    apply: {
-        summary: 'Write the generated files again from gspot.toml',
-        group: 'Set up a repository:',
-        description:
-            'Write the generated files again from gspot.toml: config files for the tools, rule files, Git hooks, and the CI workflow. apply replaces the generated files that gspot owns.\n\napply does not change gspot.toml and installs no tools. Run `gspot install` when apply says the tools changed.',
-        arguments: {},
-        options: {},
-        exitCodes: [
-            ['0', 'The generated files were written.'],
-            ['2', 'gspot.toml is not valid, or apply could not finish.'],
-        ],
-        example: 'gspot apply',
-    },
     check: {
         summary: 'Run the checks and print the findings',
         group: 'Run the checks:',

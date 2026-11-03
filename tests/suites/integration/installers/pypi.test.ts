@@ -11,11 +11,12 @@ import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import type { IndexedPythonProject } from '#tests/types/integration.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
 import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
-import { spawnGspot, runGspotStep, applyThenInstall } from '#tests/setup/cli/commands.ts';
 import { REGISTRY_HOST, AUTHENTICATION_REQUIRED_MESSAGE } from '#tests/config/setup/sandboxes.ts';
 
 import {
@@ -65,7 +66,7 @@ test.each([...PYTHON_PROJECTS])(
         await using sandbox = await createGitSandbox({});
         await using artifacts = await createGitSandbox({});
         await using project = await createPythonProject(sandbox.path, { indexFile: configuration });
-        await applyThenInstall(sandbox.path);
+        await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
         const { projectFile, lockfile } = await readToolProjectFiles(sandbox.path, 'uv');
         const { rootConfiguration } = project;
         const clone = join(artifacts.path, 'clone');
@@ -100,7 +101,7 @@ test('apply keeps a conflicted Python lockfile and install repairs it', async ()
     const conflict = '<<<<<<< interrupted lockfile\n';
     await chmod(lockfilePath, 0o644);
     await writeFile(lockfilePath, conflict);
-    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
+    await applyGeneratedFiles(sandbox.path);
     expect(await readFile(lockfilePath, 'utf8')).toBe(conflict);
     const installed = await spawnGspot(sandbox.path, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
@@ -113,7 +114,7 @@ test('apply keeps a conflicted Python lockfile and install repairs it', async ()
 
 async function createPythonIndex(workFolder: string): Promise<Disposable & { url: string }> {
     await using _source = await createPythonProject(workFolder, { indexFile: 'uv.toml' });
-    await applyThenInstall(workFolder);
+    await runGspotStep({ root: workFolder, run: spawnGspot }, ['install']);
     const binary = buildVenvExecutablePath(join(workFolder, GSPOT_PATHS.pythonEnvironment), 'ruff');
     const inspected = await runCommand([binary, '--version'], { cwd: workFolder });
     if (inspected.code !== 0) throw new Error(`Ruff version failed: ${inspected.stderr}`);
@@ -195,7 +196,7 @@ async function createIndexedPythonProject(
     await using resources = new AsyncDisposableStack();
     const index = await pythonIndex.promise;
     const project = resources.use(await createPythonProject(root, { indexFile, indexUrl: index.url }));
-    await applyThenInstall(root);
+    await runGspotStep({ root, run: spawnGspot }, ['install']);
     const projectFiles = await readToolProjectFiles(root, 'uv');
     const owned = resources.move();
     return {

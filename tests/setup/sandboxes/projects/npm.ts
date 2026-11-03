@@ -8,7 +8,7 @@ import type { PackageManager } from '#cli/types/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import type { NpmProject, NpmRegistry } from '#tests/types/setup.ts';
 import { startNpmRegistry } from '#tests/setup/runner/npm-registry.ts';
-import { spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import prettierPackage from 'prettier/package.json' with { type: 'json' };
 
 import {
@@ -83,7 +83,7 @@ export async function createNpmProject(
     };
     const registry = resources.use(await startNpmRegistry(artifacts, installPlan));
     const authored = await writeNpmProject({ root, artifacts, registry, packageManager, projectPath });
-    await runGspotStep({ root, run: spawnGspot }, ['apply']);
+    await applyGeneratedFiles(root);
     const owned = resources.move();
     return {
         root,

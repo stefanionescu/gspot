@@ -5,7 +5,7 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
-import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { VALE_SUPPRESSIONS, RUFF_SUPPRESSIONS, VALE_SUPPRESSION_SETTINGS } from '#tests/config/integration/general.ts';
 
 test('suppression detection agrees with Ruff on every noqa comment form and place', async () => {
@@ -14,7 +14,7 @@ test('suppression detection agrees with Ruff on every noqa comment form and plac
         'gspot.toml': buildSandboxSettings(['python'], { level: 'all' }),
         ...Object.fromEntries(RUFF_SUPPRESSIONS.map(({ source }, index) => [paths[index]!, source])),
     });
-    await applyThenInstall(sandbox.path);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
     const ruff = buildVenvExecutablePath(join(sandbox.path, GSPOT_PATHS.pythonEnvironment), 'ruff');
     const toolResult = await runCommand(
         [ruff, 'check', '--isolated', '--select', 'F401', '--output-format', 'json', ...paths],

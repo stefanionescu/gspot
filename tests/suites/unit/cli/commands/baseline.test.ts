@@ -6,6 +6,7 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
 import { BASELINE_SANDBOX } from '#tests/config/commands/check.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -142,11 +143,10 @@ test('--prune lowers the counts of the checks that ran and keeps those of a chec
     });
 });
 
-test('apply keeps the baseline, and no generated-file check reports it', async () => {
+test('writing the generated files keeps the baseline, and no generated-file check reports it', async () => {
     await using sandbox = await createBaselineSandbox({ 'guide.md': 'See `src/one.ts`.\n' });
     await runGspot(sandbox.path, ['baseline']);
     const before = await readFile(join(sandbox.path, 'gspot.baseline.json'), 'utf8');
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     expect(await readFile(join(sandbox.path, 'gspot.baseline.json'), 'utf8')).toBe(before);
 });

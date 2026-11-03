@@ -150,7 +150,7 @@ test.each(['', 'nested/'])('revision copies link the installed Vale packages und
     await writeFile(join(sandbox.path, config), 'Packages = Different\n');
     const valeError = await captureRejection(copyRevision(sandbox.path, { kind: 'index' }));
     expect(valeError.message).toBe(
-        'The installed Vale packages do not match the Vale settings of this revision. Check this commit in its own clone after running gspot apply and gspot install there.',
+        'The installed Vale packages do not match the Vale settings of this revision. Check this commit in its own clone after running gspot install there.',
     );
 });
 

@@ -49,7 +49,7 @@ export async function checkJscpd(session: CheckSession, planned: PlannedCheck): 
     const generatedPath = getConfigPath(session, planned, JSCPD_TOOL);
     const generated = files.read(generatedPath);
     if (generated === undefined)
-        throw new CheckStop('missing', `The generated file ${generatedPath} is missing. Run gspot apply.`);
+        throw new CheckStop('missing', `The generated file ${generatedPath} is missing. Run gspot install.`);
     const shipped = parseJsonFile(generatedPath, generated.bytes.toString('utf8'));
     const config = join(workFolder.path, JSCPD_CONFIG_FILE);
     writeFileSync(config, JSON.stringify({ ...shipped, path: [...owned].map((path) => join(session.root, path)) }));

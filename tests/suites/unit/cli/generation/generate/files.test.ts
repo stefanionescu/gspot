@@ -62,8 +62,7 @@ test('generated attributes keep LF through an autocrlf checkout', async () => {
         '.gitattributes': '*.txt text\n',
     });
 
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     const path = getRuleFilePath('engineering', 'WORKING.md');
     const bytes = await readFile(join(sandbox.path, path));
     runGitStep(sandbox.path, ['add', '--', '.gitattributes', path]);
@@ -78,7 +77,7 @@ test('generated attributes keep LF through an autocrlf checkout', async () => {
 });
 
 test.each([true, false])(
-    'apply refuses a folder outside Git and writes its tool folder ignores after Git init (%p)',
+    'install refuses a folder outside Git and writes its tool folder ignores after Git init (%p)',
     async (authored) => {
         await using sandbox = await testdir();
         const previous = '# Authored entries\nprivate.tmp\n';
@@ -86,7 +85,7 @@ test.each([true, false])(
             'gspot.toml': buildSandboxSettings([]),
             ...(authored && { '.gitignore': previous }),
         });
-        const refused = await runGspot(sandbox.path, ['apply']);
+        const refused = await runGspot(sandbox.path, ['install']);
         expect(refused.code).toBe(2);
         const path = join(sandbox.path, '.gitignore');
         expect(existsSync(path) ? await readFile(path, 'utf8') : undefined).toBe(authored ? previous : undefined);

@@ -13,6 +13,7 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeNpmTool, writeProgramCommand } from '#tests/setup/system/fakes.ts';
@@ -167,8 +168,7 @@ test('a command check reads each matching file once across nested scopes', async
         'api/worker/query.sql': 'SELECT 1;\n',
     });
 
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     const checked = parseCheckReport(
         await runGspot(sandbox.path, ['check', '--only', 'project/bash-syntax', '--json']),
     );

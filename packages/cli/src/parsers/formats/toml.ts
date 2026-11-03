@@ -41,7 +41,7 @@ function findTomlTable(
         if (!isTable(child))
             throw new GspotError(
                 'parse',
-                `${options.filePath} has a TOML field that is not a table: ${String(key)}. Fix the field, then run gspot apply.`,
+                `${options.filePath} has a TOML field that is not a table: ${String(key)}. Fix the field, then run gspot install.`,
             );
         table = child;
     }

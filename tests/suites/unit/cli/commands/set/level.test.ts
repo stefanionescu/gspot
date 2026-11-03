@@ -4,6 +4,7 @@ import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('setting level all and unsetting it restores every generated file and its bytes', async () => {
@@ -13,8 +14,7 @@ test('setting level all and unsetting it restores every generated file and its b
         'main.py': 'PORT = 8080\n',
         'README.md': '# Example\n',
     });
-    const initial = await runGspot(sandbox.path, ['apply']);
-    expect(initial.code, initial.stdout + initial.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     const before = await readTree(sandbox.path);
     const all = await runGspot(sandbox.path, ['set', 'level', 'all']);
     expect(all.code, all.stdout + all.stderr).toBe(0);

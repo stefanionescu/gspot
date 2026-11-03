@@ -12,6 +12,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { NOTES_MARKDOWN } from '#tests/config/setup/configurations.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { rmSync, existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -150,8 +151,7 @@ test('a staged check keeps each Python scope config and reports the installed de
         'child/main.py': 'value = 2\n',
     });
     for (const scope of ['', 'child']) await mkdir(join(sandbox.path, scope, '.venv'));
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     runGitStep(sandbox.path, ['add', '-A']);
     const previous = await readFile(join(sandbox.path, getManifestTarget('python', 'basedpyright.json')));
     const commandArguments = ['check', '--staged', '--only', 'gspot/generated-files', '--json'];
@@ -262,8 +262,7 @@ test('staged checks read an indexed file when its working file is missing', asyn
 
 test('a staged check reads the pushed commits of the repository, not of the index copy', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([], { level: 'all' }) });
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     runGitStep(sandbox.path, ['add', '-A']);
     runGitStep(sandbox.path, ['commit', '-qm', 'chore: start']);
     await writeFile(join(sandbox.path, 'notes.md'), NOTES_MARKDOWN);

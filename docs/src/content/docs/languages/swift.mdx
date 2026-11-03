@@ -72,10 +72,10 @@ min_line_percent = 80
 ```
 
 Replace `Orders` with the target named in the coverage report. Add `reason` when `lines` falls below `coverage.min_line_percent`.
-Then apply the record and run the check:
+Then write the generated files and run the check:
 
 ```shell
-gspot apply
+gspot install
 gspot check --only swift/tests
 ```
 

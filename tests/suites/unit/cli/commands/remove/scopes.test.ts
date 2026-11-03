@@ -13,6 +13,7 @@ import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { API_SCOPE_FILES } from '#tests/config/commands/reports.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
@@ -71,8 +72,7 @@ test('remove --scope writes removed_configurations with its reason and applies t
         ...API_SCOPE_FILES,
     });
     commitAll(sandbox.path);
-    const initial = await runGspot(sandbox.path, ['apply']);
-    expect(initial.code, initial.stdout + initial.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     const generated = join(sandbox.path, getManifestTarget('bash', 'shellcheckrc'));
     expect(existsSync(generated)).toBe(true);
     const reason = 'The API scope no longer uses Bash.';
@@ -84,8 +84,7 @@ test('remove --scope writes removed_configurations with its reason and applies t
     expect(saved.configurations).toStrictEqual(['markdown']);
     const contents = (parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable)['scope'];
     expect(contents).toStrictEqual([{ path: 'api', configurations: [], removed_configurations: { bash: reason } }]);
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyGeneratedFiles(sandbox.path);
     expect(existsSync(generated)).toBe(false);
 });
 
