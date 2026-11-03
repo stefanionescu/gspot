@@ -152,43 +152,6 @@ cases = ["camel"]
 [naming.languages.typescript.categories.enum_cases]
 cases = ["pascal", "camel"]
 
-[naming.languages.javascript]
-
-[naming.languages.javascript.categories]
-
-[naming.languages.javascript.categories.files]
-cases = ["kebab"]
-
-[naming.languages.javascript.categories.folders]
-cases = ["kebab"]
-
-[naming.languages.javascript.categories.types]
-cases = ["pascal"]
-
-[naming.languages.javascript.categories.classes]
-cases = ["pascal"]
-
-[naming.languages.javascript.categories.functions]
-cases = ["camel"]
-
-[naming.languages.javascript.categories.methods]
-cases = ["camel"]
-
-[naming.languages.javascript.categories.parameters]
-cases = ["camel"]
-
-[naming.languages.javascript.categories.variables]
-cases = ["camel", "upper-snake"]
-
-[naming.languages.javascript.categories.constants]
-cases = ["camel", "upper-snake"]
-
-[naming.languages.javascript.categories.properties]
-cases = ["camel", "upper-snake"]
-
-[naming.languages.javascript.categories.routes]
-cases = ["kebab"]
-
 [naming.languages.python]
 
 [naming.languages.python.categories]

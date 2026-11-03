@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { nonemptyStringSchema } from '#cli/schemas/manifests/tools.ts';
 import type { ReasonedValue, ReasonedSettingDefinition } from '#cli/types/settings.ts';
-import { CASE_NAMES, SETTING_LANGUAGES, REASON_DESCRIPTIONS, BOUND_REASON_DESCRIPTION } from '#cli/config/manifests.ts';
+import { CASE_NAMES, REASON_DESCRIPTIONS, BOUND_REASON_DESCRIPTION } from '#cli/config/manifests.ts';
 
 import {
     INDENT_MAX,
@@ -13,6 +13,7 @@ import {
     PRINT_WIDTH_MIN,
     PRINT_WIDTH_MAX,
     TRAILING_COMMAS,
+    NAMING_LANGUAGES,
     PRINT_WIDTH_DEFAULT,
     FORMAT_INDENT_STYLES,
     RELATIVE_PATH_PATTERN,
@@ -158,14 +159,14 @@ export const namingCategorySchema = z
         max_characters: allowReasonedValue(z.int().positive(), {
             configurations: ['naming'],
             description: 'The most characters one identifier may have.',
-            languages: SETTING_LANGUAGES,
+            languages: NAMING_LANGUAGES,
             language_defaults: { swift: 40, sql: 55 },
             default: 35,
         }),
         max_words: allowReasonedValue(z.int().positive(), {
             configurations: ['naming'],
             description: 'The most words one identifier may have.',
-            languages: SETTING_LANGUAGES,
+            languages: NAMING_LANGUAGES,
             language_defaults: { swift: 5, sql: 7 },
             default: 4,
         }),
@@ -174,7 +175,7 @@ export const namingCategorySchema = z
             description:
                 'The case patterns that one identifier category accepts: camel, pascal, kebab, snake, upper-snake, pascal-extension (String+Format.swift), or timestamp-snake (20260103120000_create_users.sql). Ruff checks the case of Python classes, functions, and parameters, and SwiftLint checks Swift types, variables, parameters, and enum cases; this setting covers the rest.',
             reason_when: 'adding',
-            languages: SETTING_LANGUAGES,
+            languages: NAMING_LANGUAGES,
             default: [],
         }),
     })

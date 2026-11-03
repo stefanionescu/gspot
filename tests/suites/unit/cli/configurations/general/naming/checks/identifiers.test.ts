@@ -5,8 +5,8 @@ import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
 
 import {
     FRAMEWORK_NAMES,
@@ -146,6 +146,25 @@ test('with pytest selected, the test_ prefix does not count as a word', async ()
     );
 
     expect(corrected.report.failed).toStrictEqual([]);
+});
+
+test('the naming.typescript settings cover JavaScript files, and gspot refuses a naming.javascript table', async () => {
+    const tables = '[naming.typescript]\nmax_words = 2\n';
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript', 'naming'], { tables, level: 'all' }),
+        'source.js': 'export const pendingOrderCount = 1;\nexport const orderCount = 2;\n',
+    });
+
+    const failed = await runSandboxCheck(sandbox.path, 'naming/identifiers');
+
+    expect(failed.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
+        { file: 'source.js', line: 1, rule: 'words' },
+    ]);
+    const refused = validateSettingsText(
+        buildSandboxSettings(['javascript'], { tables: '[naming.javascript]\nmax_words = 2\n' }),
+        sandbox.path,
+    );
+    expect(refused.join('\n')).toContain('naming.javascript');
 });
 
 test('an allowed property name does not hide a bad name on the next line', async () => {

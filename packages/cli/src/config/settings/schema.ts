@@ -80,7 +80,6 @@ export const NAMING_TABLE_CATEGORIES = [
 
 export const NAMING_LANGUAGE_CATEGORIES = {
     typescript: NAMING_TABLE_CATEGORIES,
-    javascript: NAMING_TABLE_CATEGORIES,
     python: NAMING_TABLE_CATEGORIES,
     swift: NAMING_TABLE_CATEGORIES,
     bash: ['files', 'folders', 'functions', 'variables'],
@@ -88,6 +87,10 @@ export const NAMING_LANGUAGE_CATEGORIES = {
     css: ['files', 'folders'],
     html: ['files', 'folders'],
 } as const;
+
+export const NAMING_LANGUAGES = Object.keys(NAMING_LANGUAGE_CATEGORIES) as Array<
+    keyof typeof NAMING_LANGUAGE_CATEGORIES
+>;
 
 export const HIDDEN_FACT_KEYS = [
     'configurations',

@@ -2,11 +2,10 @@ import { splitWords } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { readNamingDefaults } from '#cli/manifests/read.ts';
-import { SETTING_LANGUAGES } from '#cli/config/manifests.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { CATEGORY_PARENTS } from '#cli/config/settings/validation.ts';
-import { NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';
 import type { Scope, Settings, ScopeSettings } from '#cli/types/settings.ts';
+import { NAMING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';
 
 import type {
     NamingCase,
@@ -16,6 +15,9 @@ import type {
     CompiledOverride,
     ParsedNamingLanguageFields,
 } from '#cli/types/configurations/general.ts';
+
+// JavaScript files follow the naming table of TypeScript, so one set of naming.typescript settings covers both.
+const SHARED_NAMING_LANGUAGES: Readonly<Record<string, string>> = { javascript: 'typescript' };
 
 function compileOverride(override: NamingOverride): CompiledOverride {
     const [languages, categories, allowedNames] = [override.languages, override.categories, override.allowed_names].map(
@@ -37,7 +39,7 @@ function compileOverride(override: NamingOverride): CompiledOverride {
 
 function getNamingLimits(scopeSettings: ScopeSettings, language: string, category: string) {
     const root = getTable(scopeSettings, 'naming');
-    const languageKey = SETTING_LANGUAGES.find((name) => name === language);
+    const languageKey = NAMING_LANGUAGES.find((name) => name === language);
     const languageTable: ParsedNamingLanguageFields | undefined =
         languageKey === undefined ? undefined : root[languageKey];
     const categoryKey = NAMING_TABLE_CATEGORIES.find((name) => name === category);
@@ -50,7 +52,8 @@ function getNamingLimits(scopeSettings: ScopeSettings, language: string, categor
 }
 
 function buildLimitLookup(scopeSettings: ScopeSettings): NamingSettings['limitLookup'] {
-    return (language, category) => {
+    return (identifierLanguage, category) => {
+        const language = SHARED_NAMING_LANGUAGES[identifierLanguage] ?? identifierLanguage;
         const parent = CATEGORY_PARENTS[category] ?? category;
         const limits = getNamingLimits(scopeSettings, language, parent);
         return {

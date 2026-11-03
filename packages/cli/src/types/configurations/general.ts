@@ -10,9 +10,10 @@ import type { ConfigurationTables } from '#cli/types/engine/plan.ts';
 import type { namingOverrideSchema } from '#cli/schemas/manifests/tools.ts';
 import type { CASE_NAMES, NAMED_CATEGORIES } from '#cli/config/manifests.ts';
 import type { Finding, Substitutions } from '#cli/types/engine/tool-runs.ts';
+import type { Level, ImportRule, TableSettings } from '#cli/types/settings.ts';
+import type { NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/schema.ts';
 import type { SqlFile, NumberedLine, ParsedTsconfig } from '#cli/types/parsers.ts';
 import type { IGNORE_SECTION_TITLES } from '#cli/config/configurations/registry.ts';
-import type { Level, ImportRule, TableSettings, SettingLanguage } from '#cli/types/settings.ts';
 import type { ConfigOutput, PlannedConfig, FormatSettings } from '#cli/types/configurations/language.ts';
 
 export type GeneratorRun = {
@@ -183,7 +184,7 @@ export type NamedCategory = (typeof NAMED_CATEGORIES)[number];
 
 export type NamingCase = (typeof CASE_NAMES)[number];
 
-export type ParsedNamingLanguageFields = NonNullable<TableSettings<'naming'>[SettingLanguage]>;
+export type ParsedNamingLanguageFields = NonNullable<TableSettings<'naming'>[keyof typeof NAMING_LANGUAGE_CATEGORIES]>;
 
 export type WrittenFormat = z.input<typeof formatSchema>;
 

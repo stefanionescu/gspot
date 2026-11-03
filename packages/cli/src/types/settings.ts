@@ -119,7 +119,7 @@ export type SettingLocation = { keys: KeyPath; names: string[] };
 
 export type PathVisitor = (path: string, location: SettingLocation, role: NonNullable<Setting['path_role']>) => string;
 
-export type SettingLanguage = (typeof SETTING_LANGUAGES)[number];
+type SettingLanguage = (typeof SETTING_LANGUAGES)[number];
 
 export type NamingCategory = (typeof NAMING_TABLE_CATEGORIES)[number];
 

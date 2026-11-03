@@ -13,9 +13,9 @@ test('settings reference keeps reasoned values as leaves and names language and 
         children: [],
     });
     expect(limits?.children.find(({ name }) => name === 'javascript')?.variantOf).toBe('limits');
-    const javascript = naming?.children.find(({ name }) => name === 'javascript');
-    expect(javascript?.variantOf).toBe('naming');
-    expect(javascript?.children.find(({ name }) => name === 'functions')?.variantOf).toBe('naming.<language>');
+    const typescript = naming?.children.find(({ name }) => name === 'typescript');
+    expect(typescript?.variantOf).toBe('naming');
+    expect(typescript?.children.find(({ name }) => name === 'functions')?.variantOf).toBe('naming.<language>');
 });
 
 test('settings reference distinguishes root-only tables and scope keys from nested required fields', () => {

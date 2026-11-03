@@ -5,7 +5,7 @@ import parseExpression from 'spdx-expression-parse';
 import { GLOB_EXCLUSION } from '#cli/config/system.ts';
 import { SETTING_LANGUAGES } from '#cli/config/manifests.ts';
 import { commandSchema } from '#cli/schemas/manifests/checks.ts';
-import type { ImportRule, SettingsError, NamingCategory, SettingLanguage } from '#cli/types/settings.ts';
+import type { ImportRule, SettingsError, NamingCategory } from '#cli/types/settings.ts';
 import { nonemptyStringSchema, namingOverrideSchema, operatingSystemSchema } from '#cli/schemas/manifests/tools.ts';
 
 import {
@@ -228,7 +228,7 @@ const languageSchemas = Object.fromEntries(
             .describe(`Naming rules for ${language} files, folders, and identifiers.`)
             .meta({ variantOf: 'naming' }),
     ]),
-) as Record<SettingLanguage, typeof languageSchema>;
+) as Record<keyof typeof NAMING_LANGUAGE_CATEGORIES, typeof languageSchema>;
 
 const lists = {
     banned_words: z
@@ -274,7 +274,6 @@ export const namingSchema = z.strictObject({
     ...namingCategorySchema.shape,
     ...lists,
     typescript: languageSchemas['typescript'].optional(),
-    javascript: languageSchemas['javascript'].optional(),
     python: languageSchemas['python'].optional(),
     swift: languageSchemas['swift'].optional(),
     bash: languageSchemas['bash'].optional(),

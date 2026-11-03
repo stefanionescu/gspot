@@ -1,5 +1,4 @@
 import { findSettingSchema } from '#cli/settings/lookup.ts';
-import { SETTING_LANGUAGES } from '#cli/config/manifests.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { addTable, findValueAt } from '#cli/system/tables.ts';
 import { selectConfigurations } from '#cli/manifests/select.ts';
@@ -8,9 +7,9 @@ import { isInScope, extractParentFolder } from '#cli/system/paths.ts';
 import { namingCategorySchema } from '#cli/schemas/settings/fields.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
 import { NO_ROOT_SCOPE_MESSAGE } from '#cli/config/settings/validation.ts';
-import { NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/schema.ts';
 import { tableValuesSchema } from '#cli/schemas/settings/configurations.ts';
 import { getSettingValue, listInheritedSettings } from '#cli/settings/inherit.ts';
+import { NAMING_LANGUAGES, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/schema.ts';
 import { isScopeCovered, selectScopePath, compareScopeDepth } from '#cli/repository/scopes.ts';
 
 import type {
@@ -30,7 +29,7 @@ function listNamingVariants(
     settings: Settings,
     scopePath: string,
 ): InheritedSetting[] {
-    return SETTING_LANGUAGES.flatMap((language) =>
+    return NAMING_LANGUAGES.flatMap((language) =>
         Object.keys(namingCategorySchema.shape).flatMap((field) => [
             `naming.${language}.${field}`,
             ...NAMING_LANGUAGE_CATEGORIES[language].map((category) => `naming.${language}.${category}.${field}`),
