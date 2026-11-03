@@ -18,8 +18,8 @@ Choose a suite:
 | `mise run test integration` | Tool installation, registry access, and checks against installed tools.                                                                           |
 | `mise run test e2e`         | Packed packages installed into fresh projects, including a Python and a Swift project through the installed hook, and the documented quickstarts. |
 
-`mise run test` runs the unit suite. Each command builds the ESLint plugin, creates a temporary test folder, and removes
-it when the run ends, and it sets the time limit of each test. Integration and end-to-end runs also build and pack the
+`mise run test` runs the unit suite. Each command builds the CLI and the ESLint plugin, creates a temporary test folder,
+and removes it when the run ends, and it sets the time limit of each test. Integration and end-to-end runs also pack the
 packages. Integration runs install pinned tools, and end-to-end runs get their tools from `gspot install`. These suites
 need network access and take longer than the unit suite.
 
