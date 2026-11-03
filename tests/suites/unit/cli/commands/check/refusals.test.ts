@@ -158,7 +158,7 @@ test('a staged check reports a file name that is not UTF-8 and leaves no copy be
             file: String.raw`"bad-\377.txt"`,
             line: 1,
             rule: 'path-encoding',
-            explain: 'gspot explain repository/encoding',
+            explain: 'gspot explain repository/encoding path-encoding',
             message: String.raw`"bad-\377.txt" is not a UTF-8 path. Rename the file using UTF-8.`,
             fixable: false,
         },

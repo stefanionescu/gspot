@@ -3,6 +3,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { EVERY_CHECK } from '#cli/config/engine.ts';
 import { mergeIgnore } from '#cli/settings/text.ts';
+import { hasRuleDocs } from '#cli/engine/results.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import type { Check } from '#cli/types/manifests.ts';
@@ -47,6 +48,7 @@ async function assertDocumentedRule(
     { checkId, rule }: { checkId: string; rule: string },
 ): Promise<void> {
     const check = findRuleCheck(session, checkId);
+    if (!hasRuleDocs(check, selectCheckCode(check))) return;
     if (findToolName(check) === 'ruff' && RUFF_RULE_PREFIX.test(rule)) return;
     const docs = await readCheckRuleDocs(session.root, check, rule, session);
     if (docs === undefined) throw new GspotError('arguments', `gspot does not know rule ${rule} of ${checkId}.`);

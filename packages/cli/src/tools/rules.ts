@@ -33,6 +33,15 @@ import {
     MARKDOWNLINT_RULE_DESCRIPTION,
 } from '#cli/config/tools/programs.ts';
 
+const RULE_READER_TOOLS: ReadonlySet<string> = new Set([
+    'ruff',
+    'markdownlint-cli2',
+    VALE_TOOL,
+    'swiftlint',
+    ESLINT_MANIFEST_TOOL,
+    STYLELINT_MANIFEST_TOOL,
+]);
+
 /**
 Read the longest declared plugin prefix of a qualified lint rule.
 
@@ -233,6 +242,17 @@ function getRuleMetadata(rule: unknown, page: string | undefined): LintRuleDocs 
     const url = metadata.url ?? page;
     if (url !== undefined && docs.url === undefined) docs.url = url;
     return docs;
+}
+
+/**
+Tell whether gspot reads the rules of this tool: through a reader of its own, or through the rule page address in its
+manifest. Without either, gspot has no list of the rules to explain or to check an ignore against.
+
+@param tool the manifest tool name.
+*/
+export function canReadRuleDocs(tool: string): boolean {
+    if (RULE_READER_TOOLS.has(tool)) return true;
+    return getTool(readConfigurations().values(), tool).rule_url !== undefined;
 }
 
 /**

@@ -3,27 +3,47 @@ import { findToolName } from '#cli/tools/pins.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { setImmediate } from 'node:timers/promises';
+import type { Check } from '#cli/types/manifests.ts';
+import { canReadRuleDocs } from '#cli/tools/rules.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { INCOMPLETE_STATUSES } from '#cli/config/engine.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
-import type { CheckResult, CheckSession, BuiltInCheck, CheckRunOptions } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckResult, CheckSession, BuiltInCheck, CheckRunOptions } from '#cli/types/engine/run.ts';
 
 /**
-Build the command that explains a finding's check and rule.
+Tell whether a check has a rule catalog: rule docs in its code, or a tool whose rules gspot reads. Only then can gspot
+explain one of its rules, or check a rule of an ignore against the rules that exist.
+
+@param check the check that reports the rules.
+@param code the implementation of the check, if it has one.
+*/
+export function hasRuleDocs(check: Check, code: CheckCode | undefined): boolean {
+    if (code?.ruleDocs !== undefined) return true;
+    const tool = OUTPUT_FORMATS[check.output.format].namesRules(check.output) ? findToolName(check) : undefined;
+    return tool !== undefined && canReadRuleDocs(tool);
+}
+
+/**
+Build the command that explains a finding's check, and its rule when the rule catalog of the check holds it.
 
 @param finding the reported check and optional rule identifier.
+@param selectCheckCode finds the implementation of a check, whose rule docs name its rules.
 */
-export function formatExplainCommand(finding: Pick<Finding, 'check' | 'rule'>): string {
+export function formatExplainCommand(
+    finding: Pick<Finding, 'check' | 'rule'>,
+    selectCheckCode: (check: Check) => CheckCode | undefined,
+): string {
     const argumentsList = [finding.check];
     const found = listChecksById(readConfigurations().values()).get(finding.check);
+    const code = found === undefined ? undefined : selectCheckCode(found.check);
     if (
         found !== undefined &&
         finding.rule !== undefined &&
-        OUTPUT_FORMATS[found.check.output.format].namesRules(found.check.output) &&
-        findToolName(found.check) !== undefined
+        hasRuleDocs(found.check, code) &&
+        (code?.ruleDocs === undefined || Object.hasOwn(code.ruleDocs, finding.rule))
     )
         argumentsList.push(finding.rule);
     return `gspot explain ${argumentsList.map((argument) => quoteArgument(argument)).join(' ')}`;

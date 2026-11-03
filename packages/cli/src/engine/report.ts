@@ -51,10 +51,13 @@ function isIncomplete(session: Session, results: CheckResult[], fixes: FixReport
     );
 }
 
-function addFindingExplanations(result: CheckResult, help: string): CheckResult {
+function addFindingExplanations(
+    result: CheckResult,
+    { help, selectCheckCode }: { help: string; selectCheckCode: RunOptions['selectCheckCode'] },
+): CheckResult {
     const findings = result.findings.map(({ help: own, ...finding }) => ({
         ...finding,
-        explain: formatExplainCommand(finding),
+        explain: formatExplainCommand(finding, selectCheckCode),
         ...(own !== undefined && own !== help && { help: own }),
     }));
     return { ...result, ...(findings.length > 0 && { help }), findings };
@@ -104,7 +107,7 @@ export function buildRunReport(run: FinishedRun): RunReport {
                 cause: check.skip?.cause ?? 'no-files',
                 note: check.skip?.note ?? NO_FILES_MESSAGE,
             },
-            check.check.help,
+            { help: check.check.help, selectCheckCode: options.selectCheckCode },
         ),
     );
     const skipped = Map.groupBy(

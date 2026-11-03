@@ -9,6 +9,7 @@ import { print, printWarning } from '#cli/system/terminal.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { BASELINE_FILE } from '#cli/config/repository/files.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { CheckCommandJson } from '#cli/types/commands/reports.ts';
 import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
@@ -90,7 +91,9 @@ that help shares one, and a rule placeholder when they name several.
 function formatHelpLines(findings: readonly Finding[], result: Pick<CheckResult, 'check' | 'help'>): string[] {
     const groups = Map.groupBy(findings, (finding) => (finding.help ?? result.help ?? '').replaceAll(CODE_MARK, ''));
     return [...groups].map(([help, group]) => {
-        const [command, ...others] = new Set(group.map((finding) => finding.explain ?? formatExplainCommand(finding)));
+        const [command, ...others] = new Set(
+            group.map((finding) => finding.explain ?? formatExplainCommand(finding, selectCheckCode)),
+        );
         const explain =
             command !== undefined && others.length === 0
                 ? command
