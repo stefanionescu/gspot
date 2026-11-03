@@ -7,6 +7,7 @@ import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
+    CALLER_CASES,
     TRIVIAL_FILES,
     PYTHON_INTERFACES,
     ACCESSOR_DECLARATIONS,
@@ -128,9 +129,21 @@ test.each([...STATEMENT_COUNT_CASES])(
                 line: 1,
                 rule: 'trivial-function',
                 message:
-                    'example has 2 statements. Functions with 2 or fewer are reported. Inline it into its callers, or record the API it serves with gspot ignore.',
+                    'example has 2 statements, and one place calls it at most. Functions with 2 or fewer statements and one caller are reported. Inline it into its caller, or record the API it serves with gspot ignore.',
             },
         ]);
+    },
+);
+
+test.each([...CALLER_CASES])(
+    '$language reports a trivial function that one place calls, and keeps one that two places call',
+    async ({ language, definition, source, single, shared }) => {
+        const settings = buildSandboxSettings([language], { level: 'all' });
+        await using reported = await createGitSandbox({ [definition]: source, ...single, 'gspot.toml': settings });
+        const findings = await runSandboxCheck(reported.path, 'structure/trivial-functions');
+        expect(findings.map(({ file, line }) => ({ file, line }))).toStrictEqual([{ file: definition, line: 1 }]);
+        await using kept = await createGitSandbox({ [definition]: source, ...shared, 'gspot.toml': settings });
+        expect(await runSandboxCheck(kept.path, 'structure/trivial-functions')).toStrictEqual([]);
     },
 );
 

@@ -2,6 +2,8 @@ import { basename } from 'node:path';
 import type { Node } from 'web-tree-sitter';
 import { getLimit } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { listCheckFiles } from '#cli/engine/files.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { isDocstring } from '#cli/parsers/code/python.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -28,6 +30,15 @@ import {
     TRIVIAL_FUNCTION_RULES,
     COUNTED_FUNCTION_NODES,
 } from '#cli/config/configurations/structure.ts';
+
+type TrivialFunction = { finding: CheckFinding; key?: string };
+
+// The syntax node of a name in a call, a reference, or a definition; a Bash function runs as a command word.
+const NAME_NODES: Readonly<Record<ParsedLanguage, string>> = {
+    python: 'identifier',
+    swift: 'simple_identifier',
+    bash: 'word',
+};
 
 function extractFunctionBody(node: Node, language: ParsedLanguage): Node[] {
     const body = node.childForFieldName('body') ?? node;
@@ -121,33 +132,88 @@ function formatAccessorName(node: Node, label: string): string {
     return name === undefined ? label : `${label} of ${name}`;
 }
 
-function listTrivialFunctions(planned: PlannedCheck, source: ParsedSource): CheckFinding[] {
+/**
+Describe a function at the statement limit. A named function counts its callers, and an accessor, which code reaches
+without its name, does not.
+
+@param node the declaration, whose name or accessor label the message shows.
+@param count the statements of its body, without comments and docstrings.
+@param limit the most statements that the check reports.
+*/
+function formatTrivialFunction(node: Node, count: number, limit: number): string {
+    const named = node.childForFieldName('name')?.text;
+    const label = named ?? SWIFT_FUNCTION_LABELS[node.type] ?? FUNCTION_LABEL;
+    const name = SWIFT_ACCESSOR_NODES.has(node.type) ? formatAccessorName(node, label) : label;
+    const statements = count === 1 ? ONE_STATEMENT : `${String(count)} statements`;
+    return named === undefined
+        ? `${name} has ${statements}. Functions with ${String(limit)} or fewer are reported. Inline it into its callers, or record the API it serves with gspot ignore.`
+        : `${name} has ${statements}, and one place calls it at most. Functions with ${String(limit)} or fewer statements and one caller are reported. Inline it into its caller, or record the API it serves with gspot ignore.`;
+}
+
+function listTrivialFunctions(planned: PlannedCheck, source: ParsedSource): TrivialFunction[] {
     const limit = getLimit(planned.scope.settings, 'min_function_statements', source.language);
     const functions = (source.captures.get(FUNCTION_LABEL) ?? []).filter(
         (node) => node.parent?.type !== DECORATED_PYTHON_NODE,
     );
     return functions.flatMap((node) => {
-        const body = extractFunctionBody(node, source.language);
-        const count = countExecutableStatements(body, source.language);
+        const count = countExecutableStatements(extractFunctionBody(node, source.language), source.language);
         if (count > limit) return [];
-        const label = node.childForFieldName('name')?.text ?? SWIFT_FUNCTION_LABELS[node.type] ?? FUNCTION_LABEL;
-        const name = SWIFT_ACCESSOR_NODES.has(node.type) ? formatAccessorName(node, label) : label;
-        const statements = count === 1 ? ONE_STATEMENT : `${String(count)} statements`;
-        const message = `${name} has ${statements}. Functions with ${String(limit)} or fewer are reported. Inline it into its callers, or record the API it serves with gspot ignore.`;
-        return [
-            {
-                file: source.path,
-                line: node.startPosition.row + 1,
-                column: node.startPosition.column + 1,
-                rule: TRIVIAL_FUNCTION_RULES.trivialFunction,
-                message: message,
-            },
-        ];
+        const named = node.childForFieldName('name')?.text;
+        const finding = {
+            file: source.path,
+            line: node.startPosition.row + 1,
+            column: node.startPosition.column + 1,
+            rule: TRIVIAL_FUNCTION_RULES.trivialFunction,
+            message: formatTrivialFunction(node, count, limit),
+        };
+        return [{ finding, ...(named !== undefined && { key: `${source.language} ${named}` }) }];
     });
 }
 
+function isImportedName(node: Node): boolean {
+    for (let parent = node.parent; parent !== null; parent = parent.parent)
+        if (parent.type.startsWith('import')) return true;
+    return false;
+}
+
 /**
-Report named functions at the statement limit and files that only forward code.
+Count the places that name each function in the files of the check in the scope, apart from the definitions and the
+imports. Only a file whose text holds one of the names gets parsed.
+
+@param session the repository and its tools.
+@param planned the scope and the check whose files to read.
+@param keys the language and name of each function, joined by a space.
+*/
+async function countNameUses(
+    session: Session,
+    planned: PlannedCheck,
+    keys: ReadonlySet<string>,
+): Promise<Map<string, number>> {
+    const names = [...keys].map((key) => key.slice(key.indexOf(' ') + 1));
+    const files = listCheckFiles({ scope: planned.scope, files: session.repository.files }, planned.check.id).filter(
+        (file) => {
+            const text = findText(session.cache, file.path) ?? '';
+            return names.some((name) => text.includes(name));
+        },
+    );
+    const uses = new Map<string, number>();
+    await visitQueriedSources(session, { ...planned, files }, (source) => {
+        const definitions = new Set(
+            (source.captures.get(FUNCTION_LABEL) ?? []).map((node) => node.childForFieldName('name')?.id),
+        );
+        const nameNodes = source.rootNode.descendantsOfType(NAME_NODES[source.language]);
+        for (const node of nameNodes) {
+            const key = `${source.language} ${node.text}`;
+            if (keys.has(key) && !definitions.has(node.id) && !isImportedName(node))
+                uses.set(key, (uses.get(key) ?? 0) + 1);
+        }
+    });
+    return uses;
+}
+
+/**
+Report named functions at the statement limit that one place calls at most, accessors at the limit, and files that
+only forward code. A function counts the places in the scope that name it, so a helper that two places share passes.
 
 @param session the repository and its tools.
 @param planned the scope files and statement limits.
@@ -155,11 +221,11 @@ Report named functions at the statement limit and files that only forward code.
 export async function checkTrivialFunctions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const isTest = buildPathMatcher(planned.scope.settings.test_files);
     const hasPackageExports = session.settings.structure.reexports === 'index-only';
-    const functions: CheckFinding[] = [];
+    const trivialFunctions: TrivialFunction[] = [];
     const trivialFiles: Array<{ path: string; line: number }> = [];
     await visitQueriedSources(session, planned, (source) => {
         if (source.language === 'python' && isTest(source.path)) return;
-        functions.push(...listTrivialFunctions(planned, source));
+        trivialFunctions.push(...listTrivialFunctions(planned, source));
         if (!isTrivialFile(source.rootNode, source.language)) return;
         const statement = source.rootNode.namedChildren.find((node) => !node.type.includes('comment'));
         trivialFiles.push({
@@ -175,5 +241,10 @@ export async function checkTrivialFunctions(session: Session, planned: PlannedCh
             rule: TRIVIAL_FUNCTION_RULES.trivialFile,
             message: TRIVIAL_FILE_MESSAGE,
         }));
+    const keys = new Set(trivialFunctions.flatMap(({ key }) => (key === undefined ? [] : [key])));
+    const uses = keys.size === 0 ? new Map<string, number>() : await countNameUses(session, planned, keys);
+    const functions = trivialFunctions
+        .filter(({ key }) => key === undefined || (uses.get(key) ?? 0) <= 1)
+        .map(({ finding }) => finding);
     return [...functions, ...files];
 }

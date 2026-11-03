@@ -254,6 +254,33 @@ export const STATEMENT_COUNT_CASES = [
     ['bash', 'example() { # comment\necho value; echo value\n}'],
 ] as const;
 
+export const CALLER_CASES = [
+    {
+        language: 'python',
+        definition: 'shared.py',
+        source: 'def total():\n    return 1\n',
+        single: { 'first.py': 'from shared import total\n\nVALUE = total()\n' },
+        shared: {
+            'first.py': 'from shared import total\n\nVALUE = total()\n',
+            'second.py': 'from shared import total\n\nOTHER = total() + 1\n',
+        },
+    },
+    {
+        language: 'swift',
+        definition: 'Shared.swift',
+        source: 'func total() -> Int {\n    return 1\n}\n',
+        single: { 'First.swift': 'let value = total()\n' },
+        shared: { 'First.swift': 'let value = total()\n', 'Second.swift': 'let other = total() + 1\n' },
+    },
+    {
+        language: 'bash',
+        definition: 'shared.sh',
+        source: 'total() {\n  echo 1\n}\n',
+        single: { 'run.sh': '. ./shared.sh\ntotal\n' },
+        shared: { 'run.sh': '. ./shared.sh\ntotal\ntrap total EXIT\n' },
+    },
+] as const;
+
 export const NESTED_PYTHON_FUNCTIONS = `class A:
     @decorator
     def method(self):

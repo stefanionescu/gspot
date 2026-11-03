@@ -93,16 +93,16 @@ summary = "Checks the code line count of each Python, SQL and shell file against
 why = "A long file hides independent responsibilities from the reader."
 
 [[check]]
-example = "A Bash function that only calls another reports a finding. Inline the call at each caller, and delete the wrapper."
+example = "A Bash function that only calls another, and that one place calls, reports a finding. Inline the call at that place, and delete the wrapper."
 files = { extensions = [".py", ".swift"], tags = ["shell"], kinds = ["source"] }
-help = "Inline the function at its calls and delete it, or import from the module that defines the code and delete the forwarding file. When a function must stay, list its name under `names` in an `[[ignore]]` record with the reason."
+help = "Inline the function at its call and delete it, or import from the module that defines the code and delete the forwarding file. When a function must stay, list its name under `names` in an `[[ignore]]` record with the reason."
 level = "all"
 limits = ["min_function_statements"]
 limit_languages = ["python", "swift", "bash"]
 name = "trivial-functions"
 stage = "commit"
-summary = "Finds named Python, Swift, and Bash functions at or under `limits.min_function_statements`, methods and accessors included, and files whose statements are only imports, re-exports, and aliases."
-why = "A function of one statement makes the reader jump for nothing."
+summary = "Finds named Python, Swift, and Bash functions at or under `limits.min_function_statements` that one place in the scope calls at most, methods included, the accessors at that limit, and files whose statements are only imports, re-exports, and aliases."
+why = "A function of one statement that one place calls makes the reader jump for nothing."
 
 [[check]]
 example = "A TypeScript file whose `function parseRow` sits below `export function loadRows`, and that no function above `parseRow` calls, reports `private-below-public`. Move `parseRow` above `loadRows`, or below the function that calls it."
