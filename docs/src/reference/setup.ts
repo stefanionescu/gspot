@@ -97,6 +97,7 @@ export const LLMS_PAGES = {
         REFERENCE_FOLDERS.settings,
         REFERENCE_FOLDERS.configurations,
         REFERENCE_FOLDERS.checks,
+        REFERENCE_FOLDERS.eslintPlugin,
     ].map((folder) => `reference/${folder}/**`),
     minify: { whitespace: false },
     customSets: [
