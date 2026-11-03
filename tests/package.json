@@ -22,7 +22,7 @@
         "testdirs": "4.0.2",
         "unist-util-visit": "5.1.0",
         "which": "7.0.0",
-        "yaml": "2.9.0",
+        "yaml": "2.9.1",
         "zod": "4.6.7"
     },
     "engines": {
