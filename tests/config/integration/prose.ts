@@ -23,7 +23,7 @@ export const PROSE_CASES = [
     {
         check: 'prose/vale',
         files: {
-            'docs/selling.md': `# A Page
+            'docs/selling.md': `# A page
 
 This powerful cache makes the application much faster.
 `,
@@ -31,7 +31,7 @@ This powerful cache makes the application much faster.
         expected: { file: 'docs/selling.md', rule: 'gspot.marketing', line: 3, column: 6 },
         corrected: {
             files: {
-                'docs/selling.md': `# A Page
+                'docs/selling.md': `# A page
 
 This cache returns stored records.
 `,
@@ -242,7 +242,11 @@ Read [here](guide.md).
 \`\`\`
 `;
 
-export const HEADING_CASE_GUIDE = `# Guide
+export const HEADING_CASE_GUIDE = `---
+title: Request Guide
+---
+
+# Request Guide
 
 ## HTTP request rules
 

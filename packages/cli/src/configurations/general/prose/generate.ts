@@ -14,7 +14,7 @@ import {
     ACRONYM_PATTERN,
     BANNED_HEADINGS,
     VALE_REGEX_SYMBOLS,
-    CAPITALIZATION_STYLES,
+    HEADING_CASE_STYLE,
     BANNED_HEADING_MESSAGE,
     ACRONYM_DEFINITION_PATTERN,
 } from '#cli/config/configurations/prose.ts';
@@ -56,15 +56,14 @@ function listAllowedWords(session: Session): string[] {
 }
 
 /**
-Build the title or heading capitalization rule with the accepted vocabulary.
+Build the `heading-case` style of Vale: sentence case for titles and headings, with the accepted vocabulary.
 
 @param planned the generated config file and scope.
-@param name whether to check heading or title case.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: CONFIG_BUILDERS builds heading-case.yml and title-case.yml through it, one call per case style.
-export function buildCapitalizationStyle(planned: PlannedConfig, name: keyof typeof CAPITALIZATION_STYLES): string {
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: CONFIG_BUILDERS selects the generator of heading-case.yml through its shared builder interface.
+export function buildHeadingCaseStyle(planned: PlannedConfig): string {
     return stringify({
-        ...CAPITALIZATION_STYLES[name],
+        ...HEADING_CASE_STYLE,
         extends: 'capitalization',
         level: 'error',
         exceptions: listExceptions(listAllowedWords(planned.session)),

@@ -59,11 +59,6 @@ tool = "vale"
 
 [[config_file]]
 level = "all"
-target = "styles/gspot/title-case.yml"
-tool = "vale"
-
-[[config_file]]
-level = "all"
 target = "styles/config/vocabularies/words/accept.txt"
 tool = "vale"
 

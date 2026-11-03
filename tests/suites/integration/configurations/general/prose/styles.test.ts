@@ -58,7 +58,7 @@ test("Vale's version-range rule accepts a minimum version and reports vague rang
     );
 });
 
-test("Vale's heading-case rule accepts a reviewed product name and reports title case", async () => {
+test("Vale's heading-case rule accepts a reviewed product name and reports title case in titles and headings", async () => {
     const { root } = installedSandbox();
     await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
         files: {
@@ -71,7 +71,9 @@ test("Vale's heading-case rule accepts a reviewed product name and reports title
     });
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'prose/vale', '--json']));
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    expect(listFindingRows(result.report)).toStrictEqual([{ file: 'guide.md', line: 7, rule: 'gspot.heading-case' }]);
+    expect(listFindingRows(result.report)).toStrictEqual(
+        [2, 5, 11].map((line) => ({ file: 'guide.md', line, rule: 'gspot.heading-case' })),
+    );
 });
 
 test.each([...STYLE_CASES])(

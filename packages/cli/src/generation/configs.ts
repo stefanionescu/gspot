@@ -53,8 +53,8 @@ import {
     buildValeIniFile,
     buildLengthStyle,
     buildAcronymsStyle,
+    buildHeadingCaseStyle,
     buildAcceptedWordsFile,
-    buildCapitalizationStyle,
     buildBannedHeadingsStyle,
 } from '#cli/configurations/general/prose/generate.ts';
 
@@ -81,11 +81,10 @@ const CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder | undefined>> = {
     'format/.editorconfig': buildEditorconfigFile,
     'prose/styles/config/vocabularies/words/accept.txt': buildAcceptedWordsFile,
     'prose/vale.ini': buildValeIniFile,
-    'prose/styles/gspot/heading-case.yml': (planned) => buildCapitalizationStyle(planned, 'heading'),
+    'prose/styles/gspot/heading-case.yml': buildHeadingCaseStyle,
     'prose/styles/gspot/paragraph-length.yml': (planned) => buildLengthStyle(planned, 'paragraph'),
     'prose/styles/gspot/banned-headings.yml': buildBannedHeadingsStyle,
     'prose/styles/gspot/sentence-length.yml': (planned) => buildLengthStyle(planned, 'sentence'),
-    'prose/styles/gspot/title-case.yml': (planned) => buildCapitalizationStyle(planned, 'title'),
     'prose/styles/gspot/item-length.yml': (planned) => buildLengthStyle(planned, 'item'),
     'spelling/typos.toml': buildTyposFile,
     'python/basedpyright.json': buildBasedpyrightFile,

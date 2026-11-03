@@ -52,7 +52,8 @@ term for each concept. Dates shown to people include their time zone; machine va
 - Address the reader as you. Write no first-person pronouns or exclamation marks.
 - Use words instead of an emoji or an arrow.
 - Put a file path in code formatting, and write a placeholder as `<kebab-case>`.
-- Write the page title in title case and every lower heading in sentence case, with no end punctuation.
+- Write every title and heading in sentence case, with no end punctuation. Keep a title to a few words that name its
+  topic.
 - Keep a sentence within {setting:prose.max_sentence_words} words, a list item within
   {setting:prose.max_list_item_words} words, and a paragraph within {setting:prose.max_paragraph_sentences} sentences.
 

@@ -1,6 +1,6 @@
 import { BASE_INSTALLED_FILES } from '#tests/config/integration/commands.ts';
 
-export const GUIDE = `# The Guide
+export const GUIDE = `# The guide
 
 The worker retries the request three times. Each retry waits one second.
 `;
