@@ -61,7 +61,7 @@ function formatRuleTable(reference: CliReference['checks'][number]): string {
     if (rules.length === 0) return '';
     return formatTable(
         ['Rule', 'Meaning', 'What to do'],
-        rules.map(([name, docs]) => [`\`${name}\``, formatText(docs.description ?? ''), formatText(docs.fix ?? '')]),
+        rules.map(([name, docs]) => [`\`${name}\``, docs.description ?? '', docs.fix ?? '']),
     );
 }
 
