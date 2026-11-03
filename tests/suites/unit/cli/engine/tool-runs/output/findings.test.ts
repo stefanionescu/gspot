@@ -69,7 +69,7 @@ test('an ESLint finding whose source text holds a module error word stays a find
             { cwd: sandbox.path, root: sandbox.path },
             {},
         ).note,
-    ).toBe(`eslint failed with exit 2:\nConfigError: invalid configuration\n${stdout}`);
+    ).toBe('eslint failed with exit 2:\nConfigError: invalid configuration');
     expect(
         parseCommandFindings(
             planned,

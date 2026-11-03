@@ -41,7 +41,7 @@ test('the typos format tells findings from fatal exits', async () => {
             { cwd: sandbox.path, root: sandbox.path },
             {},
         ).note,
-    ).toBe(`typos failed with exit 78:\nInvalid native configuration.\n${stdout}`);
+    ).toBe('typos failed with exit 78:\nInvalid native configuration.');
     expect(
         parseCommandFindings(planned, { ...result, stdout: '' }, { cwd: sandbox.path, root: sandbox.path }, {}).note,
     ).toBe('typos failed with exit 2 and printed nothing.');

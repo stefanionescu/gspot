@@ -59,12 +59,20 @@ function isOnDisk(file: string, roots: string[]): boolean {
     );
 }
 
+/**
+Describe a crash by the error output of the tool, so the cause comes first. The report on stdout, such as the JSON
+of a scanner that cannot reach its server, shows only when the tool printed no error, or with --verbose.
+
+@param planned the check that ran.
+@param result the exit code and output.
+@param options controls crash details.
+@param options.verbose includes stack frames and both streams.
+*/
 function formatCrash(planned: OutputCheck, result: SpawnResult, options: { verbose?: boolean | undefined }): string {
     const failure = `${planned.tool?.name ?? planned.check.id} failed with exit ${String(result.code)}`;
-    const detail = formatOutputTail(result, '', options);
-    const message = detail === '' ? `${failure} and printed nothing.` : `${failure}:\n${detail}`;
-    const network = planned.check.needs?.includes('network') === true ? ' This check needs network access.' : '';
-    return message + network;
+    const errors = options.verbose === true ? '' : formatOutputTail({ stdout: '', stderr: result.stderr }, '', options);
+    const detail = errors === '' ? formatOutputTail(result, '', options) : errors;
+    return detail === '' ? `${failure} and printed nothing.` : `${failure}:\n${detail}`;
 }
 
 function isSilentCrash(check: Check, result: SpawnResult, parsed: Finding[], paths: OutputPaths): boolean {

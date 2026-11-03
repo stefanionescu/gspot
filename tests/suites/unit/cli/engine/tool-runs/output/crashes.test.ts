@@ -47,12 +47,20 @@ test('a tool that runs out of memory gets a cause instead of the garbage collect
     );
 });
 
-test('a network crash keeps its output tail and states the network requirement separately', async () => {
+test('a crash note leads with the error output of the tool, and only --verbose adds its report', async () => {
     await using sandbox = await testdir();
     const check = { ...BASE_CHECK, needs: ['network' as const], exit_codes: [0] };
     const result = buildProcessResult({ code: 2, stdout: '{"Results":[]}', stderr: 'scan log\nrequest refused\n' });
-    expect(parseCommandFindings({ check }, result, { cwd: sandbox.path, root: sandbox.path }, {}).note).toBe(
-        `${check.id} failed with exit 2:\nscan log\nrequest refused\n{"Results":[]} This check needs network access.`,
+    const paths = { cwd: sandbox.path, root: sandbox.path };
+    expect(parseCommandFindings({ check }, result, paths, {}).note).toBe(
+        `${check.id} failed with exit 2:\nscan log\nrequest refused`,
+    );
+    expect(parseCommandFindings({ check }, result, paths, { verbose: true }).note).toBe(
+        `${check.id} failed with exit 2:\nscan log\nrequest refused\n{"Results":[]}`,
+    );
+    const silent = buildProcessResult({ code: 2, stdout: 'Unexpected token in package.json', stderr: '' });
+    expect(parseCommandFindings({ check }, silent, paths, {}).note).toBe(
+        `${check.id} failed with exit 2:\nUnexpected token in package.json`,
     );
 });
 

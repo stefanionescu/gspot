@@ -99,7 +99,8 @@ export const VALE_INSTALL_FAILURES = [
             '--exit',
             '7',
         ],
-        message: 'Vale sync failed (exit 7):\nRegistry request failed: https://[redacted]@example.com/styles.zip',
+        message:
+            'Vale sync failed (exit 7):\nRegistry request failed: https://[redacted]@example.com/styles.zip\nCheck the network or proxy, then run again.',
         settings: '',
     },
 ] as const;

@@ -6,7 +6,13 @@ import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import type { ToolInstall, ToolRelease } from '#cli/types/tools.ts';
 import { redactInstallOutput } from '#cli/tools/installers/credentials.ts';
 import { npmReleaseSchema, pypiReleaseSchema } from '#cli/schemas/tools.ts';
-import { NOT_FOUND_STATUS, MILLISECONDS_PER_DAY, PYTHON_DEFAULT_INDEX_ORIGIN } from '#cli/config/tools/installers.ts';
+
+import {
+    NETWORK_ADVICE,
+    NOT_FOUND_STATUS,
+    MILLISECONDS_PER_DAY,
+    PYTHON_DEFAULT_INDEX_ORIGIN,
+} from '#cli/config/tools/installers.ts';
 
 async function readReleaseState(install: ToolInstall, release: ToolRelease): Promise<'absent' | 'held' | undefined> {
     const response = await fetch(release.url, {
@@ -76,7 +82,10 @@ export async function runRequiredInstallStep(
     const result = await runInstallStep(install, command, spawn);
     const exit = result.signal === undefined ? `exit ${String(result.code)}` : `stopped by ${result.signal}`;
     if (result.code !== 0)
-        throw new GspotError('install', `${name} failed (${exit}):\n${redactInstallOutput(result, [])}`);
+        throw new GspotError(
+            'install',
+            `${name} failed (${exit}):\n${redactInstallOutput(result, [])}\n${NETWORK_ADVICE}`,
+        );
     return result;
 }
 
