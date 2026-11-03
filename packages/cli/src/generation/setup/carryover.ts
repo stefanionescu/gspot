@@ -28,7 +28,7 @@ import type {
 } from '#cli/types/generation.ts';
 import {
     CARRIED_TOOLS,
-    RUFF_CHECK_ID,
+    RUFF_CHECK,
     RUFF_CHECK_IDS,
     EMPTY_CARRYOVER,
     RUFF_STYLE_KEYS,
@@ -72,7 +72,7 @@ function readRuffCarryover(input: CarryoverInput): CarryoverSection {
         ignore: [
             ...(paths.length === 0 ? [] : RUFF_CHECK_IDS.map((check) => ({ check, paths, reason }))),
             ...ignores.map(({ rule, file }) => ({
-                check: RUFF_CHECK_ID,
+                check: RUFF_CHECK,
                 rule,
                 ...(file !== undefined && { paths: [file] }),
                 reason,
