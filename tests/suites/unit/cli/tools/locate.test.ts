@@ -15,7 +15,7 @@ import { readMiseBinPaths, listExecutablePaths } from '#cli/tools/locate.ts';
 import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { MISE_PROJECT_MESSAGE, MISE_STALE_PROJECT_MESSAGE } from '#cli/config/tools/installers.ts';
 
-test('project pytest is found in its virtual environment before the global executable', async () => {
+test('project pytest is found in its virtual environment, and the global executable only without it', async () => {
     const executable = isWindows ? '.venv/Scripts/pytest.exe' : '.venv/bin/pytest';
     await using sandbox = await testdir({
         [`project/${executable}`]: 'project pytest',
@@ -23,11 +23,27 @@ test('project pytest is found in its virtual environment before the global execu
     });
     const globalPath = join(sandbox.path, 'system/pytest');
     using _lookup = fakeExecutableLookup((name) => (name === 'pytest' ? globalPath : null));
-    const { paths } = await listExecutablePaths(sandbox.path, 'pytest', {
-        folders: [join(sandbox.path, 'project')],
+    const search = { folders: [join(sandbox.path, 'project')], timeoutSeconds: 1 };
+    const project = await listExecutablePaths(sandbox.path, 'pytest', search);
+    expect(project.paths).toStrictEqual([join(sandbox.path, 'project', executable)]);
+    await rm(join(sandbox.path, 'project', executable));
+    const global = await listExecutablePaths(sandbox.path, 'pytest', search);
+    expect(global.paths).toStrictEqual([globalPath]);
+});
+
+test('a program in a folder that mise lists is found without asking mise for its shim', async () => {
+    await using sandbox = await testdir({ 'installs/vale/.keep': '' });
+    const installs = join(sandbox.path, 'installs/vale');
+    await writeFile(join(installs, isWindows ? 'vale.exe' : 'vale'), '');
+    using _lookup = fakeExecutableLookup((name) => join(sandbox.path, 'mise/shims', name));
+    using spawn = fakeCommands('mise', () => Promise.resolve(buildProcessResult({ code: 1 })));
+    const { paths } = await listExecutablePaths(sandbox.path, 'vale', {
+        folders: [join(sandbox.path, '.gspot')],
+        miseBinPaths: [installs],
         timeoutSeconds: 1,
     });
-    expect(paths).toStrictEqual([join(sandbox.path, 'project', executable), globalPath]);
+    expect(paths).toStrictEqual([join(installs, isWindows ? 'vale.exe' : 'vale')]);
+    expect(spawn).not.toHaveBeenCalled();
 });
 
 test('mise reads the tool project for one call only while it is the generated one with no other mise file', async () => {

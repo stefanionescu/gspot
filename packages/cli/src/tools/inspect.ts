@@ -209,7 +209,8 @@ export async function inspectTool(search: ToolSearch, tool: Tool): Promise<ToolI
 }
 
 /**
-Inspect one tool once per run. The working folder counts only for a system tool, which a project can supply.
+Inspect one tool once per run. The working folder counts only for a system tool, which a project can supply. Only a
+tool that mise installs waits for the folders that mise lists.
 
 @param session the run, with its tool cache.
 @param tool the tool to inspect.
@@ -217,8 +218,9 @@ Inspect one tool once per run. The working folder counts only for a system tool,
 */
 export function lookUpTool(session: ToolLookupSession, tool: Tool, cwd: string): Promise<ToolInspection> {
     const folder = tool.system === true ? relative(session.root, cwd) : '';
+    const isMiseTool = tool.system !== true && findPackagePin(tool) === undefined;
     return remember(session.toolCache, TOOL_LOOKUPS, JSON.stringify([folder, tool]), async () => {
-        const { folders, failure } = await readToolBinPaths(session);
+        const { folders, failure } = isMiseTool ? await readToolBinPaths(session) : { folders: [], failure: undefined };
         return inspectTool({ ...session, cwd, miseBinPaths: folders, miseFailure: failure }, tool);
     });
 }
