@@ -33,7 +33,6 @@ import { checkSwiftSecurity } from '#cli/configurations/language/swift/checks/se
 import { checkIdentifiers } from '#cli/configurations/general/naming/checks/identifiers.ts';
 import { checkLoneFiles } from '#cli/configurations/general/structure/checks/lone-files.ts';
 import { checkLongFiles } from '#cli/configurations/general/structure/checks/long-files.ts';
-import { YAML_RULE_DOCS, WEAKENING_RULE_DOCS } from '#cli/config/configurations/registry.ts';
 import { checkSuppressions } from '#cli/configurations/general/gspot/checks/suppressions.ts';
 import { checkSkipReasons } from '#cli/configurations/language/swift/checks/skip-reasons.ts';
 import { checkBareBlocks } from '#cli/configurations/general/structure/checks/bare-blocks.ts';
@@ -71,6 +70,7 @@ import { checkEnvironmentReaders } from '#cli/configurations/general/structure/c
 import { checkPassThroughFolders } from '#cli/configurations/general/structure/checks/pass-through-folders.ts';
 import { checkDetectedConfigurations } from '#cli/configurations/general/gspot/checks/detected-configurations.ts';
 import { checkActionlint, checkWorkflowShape } from '#cli/configurations/infrastructure/github-actions/checks.ts';
+import { YAML_RULE_DOCS, WEAKENING_RULE_DOCS, UNUSED_ASSET_RULE_DOCS } from '#cli/config/configurations/registry.ts';
 import { checkMissingPaths, checkRequiredFiles, checkVersionStrings } from '#cli/configurations/general/docs/checks.ts';
 
 import {
@@ -198,7 +198,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'site/lychee': { check: checkLychee },
     'site/purgecss': { check: checkPurgecss },
     'site/sitemap': { check: checkSitemap },
-    'site/unused-assets': { check: checkSiteUnusedAssets },
+    'site/unused-assets': { check: checkSiteUnusedAssets, ruleDocs: UNUSED_ASSET_RULE_DOCS },
     'structure/environment-readers': { check: checkEnvironmentReaders },
     'structure/file-folder-clashes': { check: checkFileFolderClashes },
     'structure/import-rules': { check: checkImportRules },

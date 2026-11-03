@@ -1,5 +1,6 @@
 import type { LintRuleDocs } from '#cli/types/tools.ts';
 import { WEAKENING_RULES } from '#cli/config/configurations/structure.ts';
+import { UNUSED_ASSET_RULE } from '#cli/config/configurations/framework.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { YAML_RULES, YAML_MESSAGES } from '#cli/config/configurations/general.ts';
 
@@ -141,6 +142,15 @@ export const YAML_RULE_DOCS = {
         why: 'One extension keeps file discovery predictable while preserving required tool names.',
         fix: YAML_MESSAGES.extension,
         example: 'Rename `settings.yaml` to `settings.yml`; keep `pnpm-workspace.yaml`.',
+    },
+} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+
+export const UNUSED_ASSET_RULE_DOCS = {
+    [UNUSED_ASSET_RULE]: {
+        description: 'No page, stylesheet, or script names a file under an assets folder.',
+        why: 'The file ships with every deploy, and nobody can tell whether a page still needs it.',
+        fix: 'Delete the file, or name it in the page, stylesheet, or script that loads it.',
+        example: '`src/assets/old-logo.png`, which no page or stylesheet names, reports `unused-asset`.',
     },
 } as const satisfies Readonly<Record<string, LintRuleDocs>>;
 

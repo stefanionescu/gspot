@@ -1,6 +1,8 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { parse } from '@decimalturn/toml-patch';
+import type { TomlTable } from '#cli/types/settings.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -13,6 +15,33 @@ test('gspot ignore takes a Ruff rule prefix, which Ruff has no page for', async 
     const ignored = await runGspot(sandbox.path, ['ignore', 'python/ruff', '--rule', 'D', '--reason', 'Legacy docs.']);
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toContain('rule = "D"');
+});
+
+test('gspot ignore takes the unused-asset rule that site/unused-assets reports', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['site']),
+        'src/assets/mark.webp': '',
+    });
+    const ignored = await runGspot(sandbox.path, [
+        'ignore',
+        'site/unused-assets',
+        '--rule',
+        'unused-asset',
+        '--paths',
+        'src/assets/mark.webp',
+        '--reason',
+        'The deploy script copies the mark.',
+    ]);
+    expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
+    const written = parse(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
+    expect(written['ignore']).toStrictEqual([
+        {
+            check: 'site/unused-assets',
+            rule: 'unused-asset',
+            paths: ['src/assets/mark.webp'],
+            reason: 'The deploy script copies the mark.',
+        },
+    ]);
 });
 
 test('a documented YAML exception suppresses only its rule and path, and typos leave settings unchanged', async () => {
