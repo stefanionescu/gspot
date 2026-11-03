@@ -19,6 +19,7 @@ import {
     formatSchema,
     relativePathSchema,
     nonemptyPathsSchema,
+    configurationNameSchema,
     removedConfigurationsSchema,
 } from '#cli/schemas/settings/fields.ts';
 import {
@@ -39,6 +40,7 @@ import {
 export const ignoreSchema = z
     .strictObject({
         check: z.string().optional().meta({
+            value_names: 'checks',
             description:
                 'The check to ignore: a shipped check or a command check. Leave it out to keep the paths out of every check.',
         }),
@@ -165,7 +167,7 @@ export const scopeSchema = z.strictObject({
         .meta({
             description: 'The folder of the scope; no two records may name the same folder.',
         }),
-    configurations: z.string().array().default([]).meta({
+    configurations: configurationNameSchema.array().default([]).meta({
         description: 'Configurations for this folder, on top of the root ones; `gspot add --scope` writes this list.',
     }),
     removed_configurations: removedConfigurationsSchema.prefault({}).meta({
@@ -209,7 +211,7 @@ export const rootSettingSchemas = {
 export const settingsSchema = z
     .strictObject({
         ...rootSettingSchemas,
-        configurations: z.string().array().default([]).meta({
+        configurations: configurationNameSchema.array().default([]).meta({
             description:
                 'The configurations this repository uses besides the always-selected ones. `gspot init` writes the detected ones here; `gspot add` and `gspot remove` change the list.',
         }),

@@ -22,8 +22,10 @@ import {
 
 export const nonemptyStringsSchema = nonemptyStringSchema.array();
 
+export const configurationNameSchema = z.string().meta({ value_names: 'configurations' });
+
 export const removedConfigurationsSchema = z
-    .record(z.string(), z.string().describe(REMOVAL_REASON_DESCRIPTION))
+    .record(configurationNameSchema, z.string().describe(REMOVAL_REASON_DESCRIPTION))
     .transform((reasons) => Object.keys(reasons));
 
 export const nonnegativeIntegerSchema = z.int().nonnegative();

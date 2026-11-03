@@ -9,6 +9,13 @@ export const PUBLISHED_SCHEMA_CASES = [
         valid: true,
     },
     { name: 'GitLab CI without systems', input: { ci: { provider: 'gitlab' } }, valid: true },
+    { name: 'a shipped configuration name', input: { configurations: ['python'] }, valid: true },
+    { name: 'an unknown configuration name', input: { configurations: ['cobol'] }, valid: false },
+    {
+        name: 'an unknown configuration name in a scope',
+        input: { scope: [{ path: 'api', configurations: ['cobol'] }] },
+        valid: false,
+    },
     {
         name: 'GitLab CI with systems',
         input: { ci: { provider: 'gitlab', operating_systems: ['linux'] } },

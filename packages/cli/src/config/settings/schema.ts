@@ -100,6 +100,7 @@ export const HIDDEN_FACT_KEYS = [
     'default_all',
     'reasoned',
     'variantOf',
+    'value_names',
 ] as const;
 
 export const JSON_SCHEMA_DIALECT = 'https://json-schema.org/draft/2020-12/schema';

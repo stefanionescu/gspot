@@ -1,8 +1,25 @@
 import { z } from 'zod';
+import { compareText } from '#cli/system/text.ts';
 import { DOCS_PATHS } from '#cli/config/manifests.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
 import { HIDDEN_FACT_KEYS, SCHEMA_DESCRIPTION, JSON_SCHEMA_DIALECT } from '#cli/config/settings/schema.ts';
+
+/**
+Copy the examples of a setting into its converted schema. A configuration name may only be a shipped name, and a check
+ID gets the shipped IDs as examples, because a command check may add its own.
+
+@param zodSchema the setting schema.
+@param jsonSchema the converted schema, which this function changes.
+*/
+function copySchemaExamples(zodSchema: z.core.$ZodType, jsonSchema: z.core.JSONSchema.BaseSchema): void {
+    const definition = z.globalRegistry.get(zodSchema);
+    if (definition?.['examples'] !== undefined) Object.assign(jsonSchema, { examples: definition['examples'] });
+    if (definition?.['value_names'] === 'configurations')
+        jsonSchema.enum = readConfigurations().keys().toArray().toSorted(compareText);
+    if (definition?.['value_names'] === 'checks') jsonSchema.examples = listCheckIds([]);
+}
 
 /**
 Edit the converted schema of one setting in place: hide the facts that only gspot reads, and keep the default and the
@@ -19,8 +36,7 @@ function normalizeSchemaNode(zodSchema: z.core.$ZodType, jsonSchema: z.core.JSON
         delete jsonSchema['maximum'];
         jsonSchema.default = zodSchema.def.defaultValue;
     }
-    const definition = z.globalRegistry.get(zodSchema);
-    if (definition?.['examples'] !== undefined) Object.assign(jsonSchema, { examples: definition['examples'] });
+    copySchemaExamples(zodSchema, jsonSchema);
 }
 
 /**
