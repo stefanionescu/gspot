@@ -31,6 +31,7 @@ jobs:
               with:
                   version: '2026.10.7'
                   install_args: bun node npm@11.19.0
+                  cache: false
             - if: matrix.node == 'minimum'
               run: mise exec -- npm install --global npm@11.19.0
             - if: runner.os == 'Windows'
