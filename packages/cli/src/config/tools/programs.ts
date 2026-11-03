@@ -28,7 +28,8 @@ export const TOOL_ENVIRONMENT = { NO_COLOR: '1', FORCE_COLOR: '0', PYTHONUTF8: '
 
 export const UV_RUN_ARGUMENTS = ['run', '--no-sync'] as const;
 
-export const PROJECT_ENVIRONMENT_MESSAGE = 'The project environment .venv is missing. Run uv sync, then check again.';
+export const PROJECT_ENVIRONMENT_MESSAGE =
+    'The project has no .venv folder, and VIRTUAL_ENV names no environment. Create the environment with the package manager of the project, such as uv sync, or activate it, then check again.';
 
 export const NO_VERSION = 'No version is set for shim';
 

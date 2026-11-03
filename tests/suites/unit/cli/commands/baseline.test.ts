@@ -113,7 +113,9 @@ test('baseline leaves the file alone when a check cannot run', async () => {
     );
     const refused = await runGspot(sandbox.path, ['baseline']);
     expect(refused.code).toBe(2);
-    expect(refused.stderr).toContain('gspot baseline needs every check to run, and missing/tool could not.');
+    expect(refused.stderr).toEndWith(
+        'gspot baseline needs every check to run, and missing/tool could not:\n  missing/tool: gspot-missing-tool is not installed. Install gspot-missing-tool.\n',
+    );
     const pruned = await runGspot(sandbox.path, ['baseline', '--prune']);
     expect(pruned.code).toBe(2);
     expect(pruned.stderr).toBe('This repository has no gspot.baseline.json to prune. Run gspot baseline.\n');

@@ -158,7 +158,7 @@ export const ENVIRONMENT_CHECK = {
     fileCount: 1,
     duration: 0,
     findings: [],
-    note: 'The project environment .venv is missing. Run uv sync, then check again.',
+    note: 'The project has no .venv folder, and VIRTUAL_ENV names no environment. Create the environment with the package manager of the project, such as uv sync, or activate it, then check again.',
 };
 
 export const STAGED_PACKAGE_JSON = {

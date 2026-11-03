@@ -5,12 +5,12 @@ import { findText } from '#cli/system/files/reads.ts';
 import { runEveryCheck } from '#cli/generation/checks.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { INCOMPLETE_STATUSES } from '#cli/config/engine.ts';
-import type { BaselineCount } from '#cli/types/engine/run.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
 import { BASELINE_FILE } from '#cli/config/repository/files.ts';
 import { formatCount, formatNameList } from '#cli/system/text.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
+import type { CheckResult, BaselineCount } from '#cli/types/engine/run.ts';
 import type { BaselineJson, BaselineFlags } from '#cli/types/commands/reports.ts';
 import { pruneCounts, parseBaseline, countFindings, formatBaseline } from '#cli/engine/baseline.ts';
 
@@ -20,6 +20,15 @@ import {
     BASELINE_STOPPED_MESSAGE,
     BASELINE_LEFT_OUT_MESSAGE,
 } from '#cli/config/commands/reports.ts';
+
+function formatStoppedChecks(checks: CheckResult[]): string {
+    const causes = checks.map(({ check, note }) => {
+        const cause = note?.split('\n', 1).join('') ?? '';
+        return cause === '' ? `  ${check}` : `  ${check}: ${cause}`;
+    });
+    const names = formatNameList([...new Set(checks.map(({ check }) => check))]);
+    return `gspot baseline needs every check to run, and ${names} could not:\n${[...new Set(causes)].join('\n')}`;
+}
 
 function sumCounts(counts: BaselineCount[]): Pick<BaselineJson, 'files' | 'findings'> {
     const findings = counts.reduce((total, { count }) => total + count, 0);
@@ -35,12 +44,8 @@ async function runBaselineCommand(
     if (prune && findText(root, BASELINE_FILE) === undefined) throw new GspotError('arguments', NO_BASELINE_MESSAGE);
     const previous = parseBaseline(findText(root, BASELINE_FILE));
     const { report } = await runEveryCheck(await openSession(root, { cancelSignal }));
-    const stopped = report.checks.filter(({ status }) => INCOMPLETE_STATUSES.has(status)).map(({ check }) => check);
-    if (stopped.length > 0)
-        throw new GspotError(
-            'tool',
-            `gspot baseline needs every check to run, and ${formatNameList([...new Set(stopped)])} could not. Run gspot check to see why.`,
-        );
+    const stopped = report.checks.filter(({ status }) => INCOMPLETE_STATUSES.has(status));
+    if (stopped.length > 0) throw new GspotError('tool', formatStoppedChecks(stopped));
     const found = countFindings(report.checks);
     const counts = prune ? pruneCounts(previous, found) : found;
     openFiles(root).write(BASELINE_FILE, { bytes: Buffer.from(formatBaseline(counts)), mode: OWNER_WRITABLE_FILE });
