@@ -220,8 +220,7 @@ test.each(
         });
         const session = await openSession(sandbox.path);
         const generated = buildGeneratedFiles(session).files.find(({ path }) => path.endsWith(file));
-        expect(generated, `${check} generates ${file}`).toBeDefined();
-        expect(generated!.content).toMatch(new RegExp(String.raw`\b${value}\b`, 'u'));
+        expect(generated?.content, `${check} generates ${file}`).toMatch(new RegExp(String.raw`\b${value}\b`, 'u'));
     },
 );
 
