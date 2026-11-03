@@ -47,7 +47,7 @@ export const EMPTY_PUSH_MESSAGE = 'The push sends no commits to check.\n';
 
 export const NO_PENDING_REFS = 'none; see canceled checks above';
 
-export const NOTE_STATUSES = new Set(['missing', 'error', 'skipped']);
+export const NOTE_STATUSES = new Set(['missing', 'error', 'canceled', 'skipped']);
 
 export const FINDINGS_SHOWN = 200;
 
@@ -56,6 +56,7 @@ export const CHECK_STATUS_COLORS = {
     failed: 'red',
     missing: 'red',
     error: 'red',
+    canceled: 'yellow',
     skipped: 'yellow',
 } as const;
 

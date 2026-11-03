@@ -39,6 +39,15 @@ test('the summary counts environments and errors apart from tools', () => {
     );
 });
 
+test('the summary counts canceled checks apart from errors', () => {
+    const crashed = { ...ENVIRONMENT_CHECK, check: 'python/ruff', status: 'error' as const, note: 'It stopped.' };
+    const canceled = { ...ENVIRONMENT_CHECK, check: 'bash/shellcheck', status: 'canceled' as const, note: 'Canceled.' };
+    const report = { ...FAILED_CHECK_REPORT, ignores: [], failed: [], exitCode: 2, checks: [crashed, canceled] };
+    const text = formatRunReport(report, { verbose: false, canceled: true });
+    expect(text).toContain('canceled  bash/shellcheck  Canceled.');
+    expect(text).toContain('Errors: 1. Canceled: 1 check. Passed: 0 checks.');
+});
+
 test.each([
     {
         name: 'keeps the hint of its own note and adds no install hint',

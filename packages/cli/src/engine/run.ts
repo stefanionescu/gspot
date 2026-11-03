@@ -74,7 +74,7 @@ async function findUnrunnableResult(
     planned: PlannedCheck,
     base: CheckResult,
 ): Promise<CheckResult | undefined> {
-    if (session.cancelSignal?.aborted === true) return { ...base, status: 'error', note: CANCELED_CHECK_NOTE };
+    if (session.cancelSignal?.aborted === true) return { ...base, status: 'canceled', note: CANCELED_CHECK_NOTE };
     const missing =
         findMissingEnvironment(session, planned) ??
         findMissingDependencies(session, planned) ??
@@ -113,7 +113,7 @@ async function runPlannedCheck(run: Run, planned: PlannedCheck): Promise<CheckRe
             ...base,
             duration: Math.round(performance.now() - started),
             ...(session.cancelSignal?.aborted === true
-                ? { status: 'error', note: CANCELED_CHECK_NOTE }
+                ? { status: 'canceled', note: CANCELED_CHECK_NOTE }
                 : classifyCheckError(planned.check.id, error, run.options.verbose === true)),
         };
     }

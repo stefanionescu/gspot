@@ -40,7 +40,7 @@ function findProcessFailure(
         exitCodes,
     }: { name: string; timeoutSeconds: number; exitCodes: readonly number[] | undefined },
 ): ProcessFailure | undefined {
-    if (result.end === 'canceled') return { status: 'error', note: `${name} was canceled.` };
+    if (result.end === 'canceled') return { status: 'canceled', note: `${name} was canceled.` };
     if (result.end === 'timed-out')
         return {
             status: 'error',

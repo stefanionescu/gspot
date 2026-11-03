@@ -160,7 +160,7 @@ export const TYPOS_CODE_HELP = "Rename it with your editor's rename, and update 
 
 export const IGNORED_PATHS_MESSAGE = 'every selected path is ignored in gspot.toml';
 
-export const INCOMPLETE_STATUSES = new Set<CheckStatus>(['missing', 'error']);
+export const INCOMPLETE_STATUSES = new Set<CheckStatus>(['missing', 'error', 'canceled']);
 
 export const RAN_STATUSES = new Set<CheckStatus>(['passed', 'failed']);
 

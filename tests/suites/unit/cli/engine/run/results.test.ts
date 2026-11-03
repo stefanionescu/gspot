@@ -41,7 +41,7 @@ test('an aborted run stops its command and reports cancellation on every system'
     const result = await running;
     expect(result.report.exitCode).toBe(2);
     expect(result.report.checks).toMatchObject([
-        { check: 'project/cancel', status: 'error', note: `${process.execPath} was canceled.` },
+        { check: 'project/cancel', status: 'canceled', note: `${process.execPath} was canceled.` },
     ]);
     await waitForExit(Number(await readFile(marker, 'utf8')));
 });
@@ -65,7 +65,9 @@ test('a check whose code fails because the run was canceled reports the cancella
     expect(await waitForFile(marker)).toBe(true);
     controller.abort(130);
     const result = await running;
-    expect(result.report.checks).toMatchObject([{ check: 'site/build', status: 'error', note: CANCELED_CHECK_NOTE }]);
+    expect(result.report.checks).toMatchObject([
+        { check: 'site/build', status: 'canceled', note: CANCELED_CHECK_NOTE },
+    ]);
     await waitForExit(Number(await readFile(marker, 'utf8')));
 });
 

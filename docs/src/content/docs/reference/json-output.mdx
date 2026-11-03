@@ -137,9 +137,11 @@ gspot neither computes nor includes those diffs.
 Each `checks` item has `check`, `scope`, `status`, `fileCount`, `duration`, and `findings`. It can also have `help`,
 which says how to fix its findings, `files`,
 `note`, `rerun`, `command`, and, for a skipped check, `cause`. Under `--verbose`, an internal check error also has
-`stack` with its message and stack. `status` holds `passed`, `failed`, `missing`,
-`error`, or `skipped`. `missing` and `error` make the run incomplete, with exit code `2`. `cause` holds `system`,
-`replaced`, `setting`, `condition`, `level`, `ignore`, or `no-files`.
+`stack` with its message and stack.
+
+`status` holds `passed`, `failed`, `missing`, `error`, `canceled`, or `skipped`. `missing` and `error` make the run
+incomplete, with exit code `2`. `canceled` marks a check that a signal stopped; the run then exits with the code of the
+signal. `cause` holds `system`, `replaced`, `setting`, `condition`, `level`, `ignore`, or `no-files`.
 
 Each finding has `check`, `file`, `message`, `fixable`, and `explain`. The `explain` field holds the command that
 explains its check or lint rule.

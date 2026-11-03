@@ -102,14 +102,14 @@ test('compiler: canceled Swift compilation refuses to launch the compiler', asyn
     prepared.session.cancelSignal = AbortSignal.abort();
     const run = resources.use(fakeCommands());
     const compilation = await runChecks(prepared.session, buildRunOptions({ only: ['swift/build'] }));
-    expect(compilation.report.checks).toMatchObject([{ status: 'error', note: CANCELED_CHECK_NOTE }]);
+    expect(compilation.report.checks).toMatchObject([{ status: 'canceled', note: CANCELED_CHECK_NOTE }]);
     const analyzer = planSwiftBuild(prepared.session, input);
     if (analyzer.kind !== 'package') throw new Error(UNEXPECTED_PLAN_MESSAGE);
     await mkdir(analyzer.scratch, { recursive: true });
     const state = join(analyzer.scratch, 'state');
     await writeFile(state, 'retained compiler state');
     const analysis = await runChecks(prepared.session, buildRunOptions({ only: ['swift/swiftlint-analyze'] }));
-    expect(analysis.report.checks).toMatchObject([{ status: 'error', note: CANCELED_CHECK_NOTE }]);
+    expect(analysis.report.checks).toMatchObject([{ status: 'canceled', note: CANCELED_CHECK_NOTE }]);
     expect(await readFile(state, 'utf8')).toBe('retained compiler state');
     expect(run).not.toHaveBeenCalled();
 });

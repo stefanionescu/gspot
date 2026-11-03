@@ -90,7 +90,7 @@ export type RunReport = {
 
 export type RunResult = { report: RunReport; planned: PlannedCheck[]; setup: number; fixes?: FixReport };
 
-export type CheckStatus = 'passed' | 'failed' | 'missing' | 'skipped' | 'error';
+export type CheckStatus = 'passed' | 'failed' | 'missing' | 'skipped' | 'error' | 'canceled';
 
 export type CheckCode = ({ check: BuiltInCheck; run?: never } | { run?: CheckRun; check?: never }) & {
     ruleDocs?: Readonly<Record<string, LintRuleDocs>>;

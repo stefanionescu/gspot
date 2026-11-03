@@ -36,5 +36,7 @@ test('a run uses the cancel signal supplied when its session opens', async () =>
     expect(result.report.exitCode).toBe(2);
     expect(
         result.report.checks.map(({ check, status, note, findings }) => ({ check, status, note, findings })),
-    ).toStrictEqual([{ check: 'naming/identifiers', status: 'error', note: 'The check was canceled.', findings: [] }]);
+    ).toStrictEqual([
+        { check: 'naming/identifiers', status: 'canceled', note: 'The check was canceled.', findings: [] },
+    ]);
 });

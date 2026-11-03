@@ -241,7 +241,7 @@ export type ToolRunOptions = Pick<CancelableSpawnOptions, 'cwd' | 'env' | 'stdin
 
 export type ToolAvailability = ProcessFailure | { path: string };
 
-export type ProcessFailure = { status: 'error' | 'missing'; note: string };
+export type ProcessFailure = { status: 'error' | 'missing' | 'canceled'; note: string };
 
 export type InstalledDependency = { path: string; version: string | undefined };
 

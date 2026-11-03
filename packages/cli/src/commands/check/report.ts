@@ -137,7 +137,7 @@ function formatVerboseLines({ command, stack }: CheckResult): string[] {
 function formatCheck(result: CheckResult, { verbose }: { verbose: boolean }): string[] {
     const lines = [formatReportLine(result, formatCheckTail(result))];
     if (verbose) lines.push(...formatVerboseLines(result));
-    if (result.status === 'failed' || result.status === 'error') lines.push(...formatFindings(result, { verbose }));
+    if (['failed', 'error', 'canceled'].includes(result.status)) lines.push(...formatFindings(result, { verbose }));
     if (result.fixCommand !== undefined)
         lines.push(`  ${styleText('dim', FIX_LABEL, { stream: process.stdout })} ${result.fixCommand}`);
     if (result.rerun !== undefined)
@@ -168,10 +168,12 @@ function formatIncompleteCounts({ checks }: RunReport): string[] {
     );
     const hasInstallNote = [...tools].some((note) => note?.endsWith(STANDARD_INSTALL_HELP) === true);
     const errors = checks.filter((check) => check.status === 'error').length;
+    const canceled = checks.filter((check) => check.status === 'canceled').length;
     return [
         ...(tools.size === 0 ? [] : [`Missing tools: ${String(tools.size)}${hasInstallNote ? INSTALL_REMINDER : ''}.`]),
         ...(environments.length === 0 ? [] : [`Missing environments: ${String(environments.length)}.`]),
         ...(errors === 0 ? [] : [`Errors: ${String(errors)}.`]),
+        ...(canceled === 0 ? [] : [`Canceled: ${formatCount(canceled, 'check')}.`]),
     ];
 }
 
