@@ -153,7 +153,7 @@ export const noClearTextProtocols = createRule<[], 'clearText' | 'transitEncrypt
             why: 'A clear-text protocol sends data and credentials that anyone on the network path can read and change.',
             fix: 'Use the secure protocol, such as `https`, `sftp`, or `wss`, and turn on TLS for mail, FTP, and AWS resources.',
             example:
-                'The literal `"https://api.acme.io/users"` reports `clearText`. Use `"https://api.acme.io/users"`. `"http://localhost:3000"` and `"https://www.example.com"` pass.',
+                'The literal `"http://api.acme.internal/users"` reports `clearText`. Use `"https://api.acme.internal/users"`. `"http://localhost:3000"` and `"https://www.example.com"` pass.',
         },
         schema: [],
         messages: {
