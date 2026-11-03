@@ -13,6 +13,7 @@ import { TOOL_PINS_FILE } from '#tests/config/setup/sandboxes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { SWIFT_TUTORIAL, PYTHON_TUTORIAL } from '#tests/config/e2e.ts';
+import { isolatedEnvironment } from '#tests/setup/sandboxes/projects/gspot.ts';
 import { listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { runCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
 
@@ -32,6 +33,7 @@ async function runQuickstart(tutorial: typeof PYTHON_TUTORIAL | typeof SWIFT_TUT
     const root = join(sandbox.path, tutorial.folder);
     await mkdir(root);
     const environment = {
+        ...isolatedEnvironment,
         MISE_CONFIG_DIR: join(sandbox.path, 'config'),
         MISE_DATA_DIR: join(sandbox.path, 'data'),
         MISE_STATE_DIR: join(sandbox.path, 'state'),

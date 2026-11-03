@@ -40,13 +40,9 @@ await prepareRunFolders(resources);
 if (!existsSync(join(TEST_RUN_FOLDER, PACKED_PACKAGES_FILE)))
     throw new Error('Run mise run test integration or mise run test e2e first.');
 
-const toolPaths = join(TEST_RUN_FOLDER, TOOL_PATHS_FILE);
-
-const toolFolders = existsSync(toolPaths)
-    ? readFileSync(toolPaths, 'utf8')
-          .split(LINE_BREAK)
-          .filter((folder) => folder !== '')
-    : [];
+const toolFolders = readFileSync(join(TEST_RUN_FOLDER, TOOL_PATHS_FILE), 'utf8')
+    .split(LINE_BREAK)
+    .filter((folder) => folder !== '');
 
 const work = resources.use(await testdir());
 
