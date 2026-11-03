@@ -2,14 +2,46 @@
 import type { ImageMetadata } from 'astro';
 import type { SvgComponent } from 'astro/types';
 import Hero from '#docs/components/home/hero/Hero.astro';
+import { TOOLS, HOME_TITLE } from '#docs/config/home.ts';
 import InlineText from '#docs/components/InlineText.astro';
 import cliPackage from '#cli-package' with { type: 'json' };
 import Example from '#docs/components/home/example/Example.astro';
-import { TOOLS, USE_CASES, HOME_TITLE } from '#docs/config/home.ts';
 import { NPM_URL, DOCS_PATH, REPOSITORY_URL } from '#docs/config/site.ts';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import { REFERENCE_PATH, REFERENCE_FOLDERS } from '#docs/config/reference.ts';
 
+const BENEFITS = [
+    {
+        title: 'Catch mistakes before they land',
+        text: 'Every commit runs the checks on the files you staged. A failure stops the commit and shows the file, the line, and the rule.',
+        icon: ['M12 3l7 3v5c0 4.5-3 8.4-7 10-4-1.6-7-5.5-7-10V6l7-3z', 'M9 12l2 2 4-4'],
+    },
+    {
+        title: 'Set up every linter with one command',
+        text: '`gspot init` finds your languages and frameworks, picks the tools, and writes their configs. You stop maintaining a pile of config files.',
+        icon: ['M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z', 'M7 9l3 3-3 3', 'M12 15h5'],
+    },
+    {
+        title: 'Run the same checks everywhere',
+        text: 'gspot pins every tool to one version, so you, your agent, and CI run the same checks with the same versions.',
+        icon: ['M12 16v5', 'M8 3h8l-1 6 3 3v2H6v-2l3-3-1-6z'],
+    },
+    {
+        title: 'Tell your agent the rules',
+        text: 'gspot writes `AGENTS.md` and a rule file for each language, matched to the checks it runs.',
+        icon: ['M6 3h9l4 4v14H6z', 'M14 3v5h5', 'M9 13h7', 'M9 17h5'],
+    },
+    {
+        title: 'Close the quiet off switch',
+        text: 'Every ignore and every suppression needs a written reason. Lowering the strictness without one fails the push.',
+        icon: ['M7 11V7a5 5 0 0 1 10 0v4', 'M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2z'],
+    },
+    {
+        title: 'Keep keys and vulnerable packages out',
+        text: 'A commit that adds an API key or a token stops. A push reports packages with known security advisories.',
+        icon: ['M4 15a4 4 0 1 0 8 0a4 4 0 1 0-8 0', 'M10.9 12.1L20 3', 'M16 7l3 3', 'M13.5 9.5l2 2'],
+    },
+] as const;
 const icons = import.meta.glob<SvgComponent>('../assets/tools/*.svg', { eager: true, import: 'default' });
 const images = import.meta.glob<ImageMetadata>('../assets/tools/*.png', { eager: true, import: 'default' });
 const tools = TOOLS.map(({ name, icon }) => {
@@ -61,17 +93,12 @@ const tools = TOOLS.map(({ name, icon }) => {
             </div>
             <Example />
         </section>
-        <section class="section" aria-labelledby="handles-title">
+        <section class="section" aria-labelledby="benefits-title">
             <div class="intro">
-                <h2 id="handles-title">What gspot does</h2>
-                <p class="lead">
-                    Run <code>gspot init</code> once. It looks at your repository and turns on the checks it needs.
-                    Quick checks then run on every commit, slower ones before every push, and CI runs them again on each
-                    pull request and on the default branch.
-                </p>
+                <h2 id="benefits-title">What you get</h2>
             </div>
             <ul class="cards">
-                {USE_CASES.map(({ title, text, icon }) => (
+                {BENEFITS.map(({ title, text, icon }) => (
                     <li class="card">
                         <svg
                             class="use-icon"
@@ -95,7 +122,7 @@ const tools = TOOLS.map(({ name, icon }) => {
                 ))}
             </ul>
             <p class="more">
-                <a href={`${REFERENCE_PATH}${REFERENCE_FOLDERS.checks}/`}>See every check →</a>
+                <a href={`${REFERENCE_PATH}${REFERENCE_FOLDERS.checks}/`}>See all checks</a>
             </p>
         </section>
     </div>
