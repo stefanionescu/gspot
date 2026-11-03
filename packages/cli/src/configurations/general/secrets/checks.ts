@@ -12,8 +12,8 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import { readPushedRange, readPushedCommits } from '#cli/repository/revisions/push.ts';
+import type { CheckResult, CheckSession, CheckRunOptions } from '#cli/types/engine/run.ts';
 import { listPythonEnvironmentReads, listJavascriptEnvironmentReads } from '#cli/parsers/code/environment.ts';
 
 import {
@@ -25,6 +25,14 @@ import {
     ENVIRONMENT_DEFAULT_RULE,
     ENVIRONMENT_READ_LANGUAGES,
 } from '#cli/config/configurations/general.ts';
+
+const GITLEAKS_GIT_MODE = 'git';
+
+const GITLEAKS_FILES_MODE = 'dir';
+
+const GITLEAKS_STAGED_FLAG = '--staged';
+
+const ROOT_PLACEHOLDER = '{root}';
 
 async function readEnvironmentReferences(
     session: Session,
@@ -59,6 +67,33 @@ function listMissingEnvironmentKeys(
         });
     }
     return findings;
+}
+
+/**
+Scans the staged change with Gitleaks. A full check, with no staged change, path, or pushed range to narrow it, scans
+every file that Git does not ignore, so a secret that an earlier commit added still reports.
+
+@param session the repository and its tools.
+@param planned the configured check and selected scope files.
+@param options the command override and the verbosity of the notes.
+*/
+export async function checkGitleaksStaged(
+    session: CheckSession,
+    planned: PlannedCheck,
+    options: Pick<CheckRunOptions, 'verbose' | 'command'> = {},
+): Promise<CheckResult> {
+    const { selection } = session;
+    const isRepositoryWide =
+        selection === undefined ||
+        (selection.content === 'working-tree' && selection.paths === undefined && selection.reference === undefined);
+    if (options.command !== undefined || !isRepositoryWide) return runCommandCheck(session, planned, options);
+    const command = (planned.check.command as string[])
+        .filter((argument) => argument !== GITLEAKS_STAGED_FLAG)
+        .map((argument) => {
+            if (argument === GITLEAKS_GIT_MODE) return GITLEAKS_FILES_MODE;
+            return argument === ROOT_PLACEHOLDER ? '.' : argument;
+        });
+    return runCommandCheck(session, planned, { ...options, command });
 }
 
 /**

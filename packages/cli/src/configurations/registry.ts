@@ -89,11 +89,6 @@ import {
     checkHtmlValidate,
 } from '#cli/configurations/framework/site/checks/pages.ts';
 import {
-    checkGitleaksPushed,
-    checkEnvironmentExamples,
-    checkEnvironmentDefaults,
-} from '#cli/configurations/general/secrets/checks.ts';
-import {
     checkEncoding,
     checkLargeFiles,
     checkLocalFiles,
@@ -111,6 +106,12 @@ import {
     IDENTIFIER_RULE_DOCS,
     TRIVIAL_FUNCTION_RULE_DOCS,
 } from '#cli/config/configurations/rule-docs/structure.ts';
+import {
+    checkGitleaksStaged,
+    checkGitleaksPushed,
+    checkEnvironmentExamples,
+    checkEnvironmentDefaults,
+} from '#cli/configurations/general/secrets/checks.ts';
 import {
     checkDenoLint,
     checkDenoCheck,
@@ -246,6 +247,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'repository/local-files': { check: checkLocalFiles, ruleDocs: LOCAL_FILE_RULE_DOCS },
     'secrets/environment-examples': { check: checkEnvironmentExamples },
     'secrets/environment-defaults': { check: checkEnvironmentDefaults },
+    'secrets/gitleaks-staged': { run: checkGitleaksStaged },
     'secrets/gitleaks-pushed': { run: checkGitleaksPushed },
     'security/semgrep': { run: checkSemgrep },
     'site/build': { check: checkSiteBuild },

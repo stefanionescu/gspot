@@ -51,7 +51,7 @@ function assertSecretFindings(result: CheckResult | undefined, output: string, p
     for (const token of [AWS_KEY_ID, API_TOKEN]) expect(output).not.toContain(token);
 }
 
-test('secrets/gitleaks-staged passes a committed secret and reports a staged one', async () => {
+test('secrets/gitleaks-staged reports a committed secret in a full check, and only a staged one with --staged', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['secrets']),
         'src/config.js': `const token = "${API_TOKEN}";\n`,
@@ -60,15 +60,17 @@ test('secrets/gitleaks-staged passes a committed secret and reports a staged one
 
     const applied = await spawnGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const committed = parseCheckReport(
+    const everyFile = parseCheckReport(
         await spawnGspot(sandbox.path, ['check', '--only', 'secrets/gitleaks-staged', '--json']),
     ).report.checks;
-    expect(committed).toMatchObject([{ check: 'secrets/gitleaks-staged', status: 'passed', findings: [] }]);
+    expect(everyFile).toMatchObject([
+        { check: 'secrets/gitleaks-staged', status: 'failed', findings: [{ file: 'src/config.js' }] },
+    ]);
+    const command = ['check', '--staged', '--only', 'secrets/gitleaks-staged', '--json'];
+    commitAll(sandbox.path);
     await createFileTree(sandbox.path, { 'src/staged.js': `const token = "${API_TOKEN}";\n` });
     runGitStep(sandbox.path, ['add', 'src/staged.js']);
-    const staged = parseCheckReport(
-        await spawnGspot(sandbox.path, ['check', '--only', 'secrets/gitleaks-staged', '--json']),
-    ).report.checks;
+    const staged = parseCheckReport(await spawnGspot(sandbox.path, command)).report.checks;
     expect(staged).toMatchObject([
         { check: 'secrets/gitleaks-staged', status: 'failed', findings: [{ file: 'src/staged.js' }] },
     ]);
