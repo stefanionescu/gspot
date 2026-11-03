@@ -218,14 +218,14 @@ This complete example accepts that exact variable name in one file:
 configurations = ["javascript"]
 level = "all"
 
-[[naming.override]]
+[[naming.exception]]
 paths = ["helper.js"]
 categories = ["variables"]
 allowed_names = ["helperCommand"]
 reason = "An external API requires this exact name."
 ```
 
-Write override records by hand, then run `gspot install`. The override removes this `banned-word` finding; other names
+Write exception records by hand, then run `gspot install`. The exception removes this `banned-word` finding; other names
 keep their checks.
 
 ## Edit the file by hand

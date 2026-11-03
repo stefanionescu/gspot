@@ -15,7 +15,7 @@ paths = ["supabase/config.toml", "{setting:supabase.functions_folder}/**", "supa
 [defaults]
 "postgres.client_schemas" = ["public"]
 
-[[naming.override]]
+[[naming.exception]]
 allowed_names = ["shared"]
 categories = ["folders"]
 paths = ["**/supabase/functions/_shared/**"]

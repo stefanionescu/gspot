@@ -20,7 +20,7 @@ export const RECORD_FIELDS: Readonly<Record<string, readonly string[]>> = Object
         ignore: ignoreSchema.shape,
         import_rule: importRulesSchema.unwrap().element.shape,
         'format.override': formatSchema.shape.override.unwrap().element.shape,
-        'naming.override': namingSchema.shape.override.unwrap().element.shape,
+        'naming.exception': namingSchema.shape.exception.unwrap().element.shape,
         'coverage.swift_target': configurationTableSchemas.coverage.unwrap().shape.swift_target.unwrap().element.shape,
         'licenses.allowed_package': configurationTableSchemas.licenses.unwrap().shape.allowed_package.unwrap().element
             .shape,

@@ -138,7 +138,7 @@ test('case follows the category, and each dot-separated piece of a file name is 
 });
 
 test('the naming check accepts _ as a variable, a digit in a tests/ path, and a Bash name with an ignored prefix', async () => {
-    const naming = await readNaming(`[[naming.override]]
+    const naming = await readNaming(`[[naming.exception]]
 paths = ["tests/acceptance/**"]
 allow_digits = true
 reason = "Acceptance tests number their steps."
@@ -227,7 +227,7 @@ test.each([...LINTER_LIMIT_CASES])(
             buildSandboxSettings(['naming'], {
                 rules: true,
                 level: 'all',
-                tables: `[[naming.override]]
+                tables: `[[naming.exception]]
 paths = ["source"]
 cases = ["upper-snake"]
 reason = "The authored interface selects this case."

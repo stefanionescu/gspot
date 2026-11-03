@@ -8,7 +8,7 @@ languages = true
 
 [[check]]
 example = "`export const userHelper = 1;` reports the banned word `helper`. Rename it after what it holds, such as `userCount`."
-help = "Rename the thing after what it holds or does. To keep a name, list it exactly under `allowed_names` in a `[[naming.override]]` record with a reason, or change a limit with `gspot set naming.<language>.max_words`."
+help = "Rename the thing after what it holds or does. To keep a name, list it exactly under `allowed_names` in a `[[naming.exception]]` record with a reason, or change a limit with `gspot set naming.<language>.max_words`."
 level = "all"
 name = "identifiers"
 stage = "commit"
@@ -17,7 +17,7 @@ why = "Names such as `enhancedHandler`, `ensureConfigIfNeeded`, and `utils` hide
 
 [[check]]
 example = "`utils/format.js` reports `utils`. Move it into the folder of the feature it serves, such as `invoices/format.js`."
-help = "Rename the file or folder, or add a path rule under [[naming.override]] with a reason."
+help = "Rename the file or folder, or add a path rule under [[naming.exception]] with a reason."
 level = "all"
 name = "paths"
 stage = "commit"
@@ -289,44 +289,44 @@ cases = ["snake"]
 [naming.languages.sql.categories.policies]
 cases = ["snake"]
 
-[[naming.override]]
+[[naming.exception]]
 paths = ["**"]
 categories = ["variables", "parameters"]
 allowed_names = ["_"]
 reason = "An underscore marks a discarded binding."
 
-[[naming.override]]
+[[naming.exception]]
 paths = ["**/.githooks/**", "**/.gspot/hooks/**", "**/.husky/**", "**/hooks/**"]
 categories = ["files"]
 allowed_names = ["pre-commit", "pre-push", "commit-msg", "post-checkout", "post-merge", "pre-rebase", "prepare-commit-msg"]
 reason = "git names its hooks."
 
-[[naming.override]]
+[[naming.exception]]
 allowed_names = ["debug", "info", "warn", "error", "fatal", "trace"]
 categories = ["methods"]
 paths = ["**"]
 reason = "A logging interface names its methods after the log levels."
 
-[[naming.override]]
+[[naming.exception]]
 allowed_names = ["main"]
 categories = ["files"]
 languages = ["swift"]
 paths = ["**"]
 reason = "The Swift compiler reads the top-level code of a package from main.swift."
 
-[[naming.override]]
+[[naming.exception]]
 paths = ["**/e2e/**"]
 categories = ["folders", "files"]
 allow_digits = true
 reason = "The folder name e2e holds a digit."
 
-[[naming.override]]
+[[naming.exception]]
 paths = ["**/migrations/**"]
 categories = ["folders", "files"]
 allow_digits = true
 reason = "Migration tools name their folders and files with timestamps."
 
-[[naming.override]]
+[[naming.exception]]
 allowed_names = ["_default"]
 categories = ["files"]
 paths = ["**/mise-tasks/**", "**/.mise-tasks/**", "**/.mise/tasks/**", "**/.config/mise/tasks/**", "**/mise/tasks/**"]

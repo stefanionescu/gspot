@@ -45,7 +45,7 @@ async function readSourceNames(session: Session, planned: PlannedCheck): Promise
 }
 
 function listOverrideNames(
-    override: Session['settings']['naming']['override'][number],
+    override: Session['settings']['naming']['exception'][number],
     files: FileNames[],
     folders: FileNames['folders'],
 ): Set<string> {
@@ -67,14 +67,14 @@ function listOverrideNames(
 }
 
 /**
-Reports allowed names in root naming overrides that match no code or path name. Only the files that an override with
+Reports allowed names in root naming exceptions that match no code or path name. Only the files that an override with
 allowed names covers, by their path or a folder above them, get parsed.
 
 @param session the repository and its tools.
 @param planned the settings and tracked files.
 */
 export async function checkAllowedNames(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
-    const matchers = session.settings.naming.override
+    const matchers = session.settings.naming.exception
         .filter((override) => (override.allowed_names ?? []).length > 0)
         .map((override) => buildPathMatcher(override.paths));
     const covered = session.repository.files.filter((file) => {
@@ -86,14 +86,14 @@ export async function checkAllowedNames(session: Session, planned: PlannedCheck)
     });
     const files = await readSourceNames(session, { ...planned, files: covered });
     const folders = files.flatMap((file) => file.folders).filter((identifier) => identifier.category === 'folders');
-    return session.settings.naming.override.flatMap((override, index) => {
+    return session.settings.naming.exception.flatMap((override, index) => {
         const sourceNames = listOverrideNames(override, files, folders);
         return (override.allowed_names ?? [])
             .filter((name) => !sourceNames.has(name))
             .map((name) => ({
                 file: SETTINGS_FILE,
                 rule: UNUSED_RECORD_RULE,
-                message: `[[naming.override]] record ${String(index + 1)} allowed_names includes "${name}", which no identifier under its paths uses.`,
+                message: `[[naming.exception]] record ${String(index + 1)} allowed_names includes "${name}", which no identifier under its paths uses.`,
             }));
     });
 }

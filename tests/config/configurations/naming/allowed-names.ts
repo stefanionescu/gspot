@@ -1,7 +1,7 @@
 const ALLOWED_NAME_LAYOUT = {
     configurations: ['naming', 'bash'],
     naming: {
-        override: [
+        exception: [
             { allowed_names: ['remoteRecord'], reason: 'The external JavaScript interface fixes this name.' },
             {
                 paths: ['web/**'],
@@ -34,7 +34,7 @@ export const UNUSED_NAME_CASES = [
         settings: {
             configurations: ['javascript'],
             naming: {
-                override: [
+                exception: [
                     {
                         categories: ['properties'],
                         allowed_names: ['requestName'],
@@ -44,7 +44,7 @@ export const UNUSED_NAME_CASES = [
             },
         },
         messages: [
-            '[[naming.override]] record 1 allowed_names includes "requestName", which no identifier under its paths uses.',
+            '[[naming.exception]] record 1 allowed_names includes "requestName", which no identifier under its paths uses.',
         ],
     },
     {
@@ -53,7 +53,7 @@ export const UNUSED_NAME_CASES = [
         settings: {
             configurations: ['javascript'],
             naming: {
-                override: [
+                exception: [
                     {
                         categories: ['files'],
                         allowed_names: ['brokenName'],
@@ -74,7 +74,7 @@ export const UNUSED_NAME_CASES = [
         settings: {
             configurations: ['javascript'],
             naming: {
-                override: [
+                exception: [
                     {
                         paths: ['src/**'],
                         categories: ['files'],
@@ -92,7 +92,7 @@ export const UNUSED_NAME_CASES = [
         settings: {
             configurations: ['javascript'],
             naming: {
-                override: [
+                exception: [
                     {
                         paths: ['src/*'],
                         categories: ['folders'],
@@ -103,7 +103,7 @@ export const UNUSED_NAME_CASES = [
             },
         },
         messages: [
-            '[[naming.override]] record 1 allowed_names includes "missingName", which no identifier under its paths uses.',
+            '[[naming.exception]] record 1 allowed_names includes "missingName", which no identifier under its paths uses.',
         ],
     },
     {
@@ -112,7 +112,7 @@ export const UNUSED_NAME_CASES = [
         settings: {
             configurations: ['javascript'],
             naming: {
-                override: [
+                exception: [
                     {
                         paths: ['*.js'],
                         allowed_names: ['keptName', 'phantomName', 'commentName'],
@@ -134,8 +134,8 @@ export const UNUSED_NAME_CASES = [
             },
         },
         messages: [
-            '[[naming.override]] record 1 allowed_names includes "commentName", which no identifier under its paths uses.',
-            '[[naming.override]] record 3 allowed_names includes "missingFile", which no identifier under its paths uses.',
+            '[[naming.exception]] record 1 allowed_names includes "commentName", which no identifier under its paths uses.',
+            '[[naming.exception]] record 3 allowed_names includes "missingFile", which no identifier under its paths uses.',
         ],
     },
     {
@@ -147,7 +147,7 @@ export const UNUSED_NAME_CASES = [
         settings: {
             configurations: ['javascript'],
             naming: {
-                override: [
+                exception: [
                     {
                         paths: ['app/**'],
                         allowed_names: ['keptName', 'siblingName'],
@@ -158,7 +158,7 @@ export const UNUSED_NAME_CASES = [
             scope: [{ path: 'app' }, { path: 'worker' }],
         },
         messages: [
-            '[[naming.override]] record 1 allowed_names includes "siblingName", which no identifier under its paths uses.',
+            '[[naming.exception]] record 1 allowed_names includes "siblingName", which no identifier under its paths uses.',
         ],
     },
     {
@@ -173,15 +173,15 @@ export const UNUSED_NAME_CASES = [
         settings: {
             ...ALLOWED_NAME_LAYOUT,
             naming: {
-                override: [
-                    ALLOWED_NAME_LAYOUT.naming.override[0],
-                    ALLOWED_NAME_LAYOUT.naming.override[1],
-                    { ...ALLOWED_NAME_LAYOUT.naming.override[2], allowed_names: ['remoteRecord'] },
+                exception: [
+                    ALLOWED_NAME_LAYOUT.naming.exception[0],
+                    ALLOWED_NAME_LAYOUT.naming.exception[1],
+                    { ...ALLOWED_NAME_LAYOUT.naming.exception[2], allowed_names: ['remoteRecord'] },
                 ],
             },
         },
         messages: [
-            '[[naming.override]] record 3 allowed_names includes "remoteRecord", which no identifier under its paths uses.',
+            '[[naming.exception]] record 3 allowed_names includes "remoteRecord", which no identifier under its paths uses.',
         ],
     },
     {
@@ -189,8 +189,8 @@ export const UNUSED_NAME_CASES = [
         files: { ...ALLOWED_NAME_FILES, 'web/source.js': 'export const localRecord = 1;\n' },
         settings: ALLOWED_NAME_LAYOUT,
         messages: [
-            '[[naming.override]] record 1 allowed_names includes "remoteRecord", which no identifier under its paths uses.',
-            '[[naming.override]] record 2 allowed_names includes "remoteRecord", which no identifier under its paths uses.',
+            '[[naming.exception]] record 1 allowed_names includes "remoteRecord", which no identifier under its paths uses.',
+            '[[naming.exception]] record 2 allowed_names includes "remoteRecord", which no identifier under its paths uses.',
         ],
     },
 ] as const;

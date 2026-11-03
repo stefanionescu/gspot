@@ -71,13 +71,13 @@ export const KEY_PATH_CASES = [
         correction: ['"latest"', '"^1.2.3"'],
     },
     {
-        name: 'an invalid naming override regular expression',
+        name: 'an invalid naming exception regular expression',
         configurations: ['naming'],
         options: {
-            tables: '[[naming.override]]\npaths = ["src/**"]\nignored_names_pattern = "("\nreason = "The library exports these reviewed names."\n',
+            tables: '[[naming.exception]]\npaths = ["src/**"]\nignored_names_pattern = "("\nreason = "The library exports these reviewed names."\n',
         },
         where: [
-            'gspot.toml:4: naming.override.0.ignored_names_pattern: The value "(" is not valid for naming.override.0.ignored_names_pattern. Use a valid Unicode regular expression.',
+            'gspot.toml:4: naming.exception.0.ignored_names_pattern: The value "(" is not valid for naming.exception.0.ignored_names_pattern. Use a valid Unicode regular expression.',
         ],
         correction: ['"("', '"^_"'],
     },

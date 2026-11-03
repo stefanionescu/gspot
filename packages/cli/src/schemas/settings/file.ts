@@ -144,7 +144,7 @@ const scopeBody = describeTables({
         })
         .optional(),
     licenses: configurationTableSchemas.licenses.unwrap().omit({ allowed_package: true }).optional(),
-    naming: namingSchema.omit({ override: true }).optional(),
+    naming: namingSchema.omit({ exception: true }).optional(),
     structure: rootStructure.unwrap().pick({ environment_readers: true }).optional(),
     format: formatSchema.optional(),
     tools: publicToolsSchema

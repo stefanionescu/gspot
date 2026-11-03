@@ -14,28 +14,28 @@ tags = ["shebang:python"]
 extensions = [".py", ".pyi"]
 filenames = ["pyproject.toml", "setup.cfg"]
 
-[[naming.override]]
+[[naming.exception]]
 allowed_names = ["__init__", "__main__"]
 categories = ["files"]
 languages = ["python"]
 paths = ["**/__init__.py", "**/__main__.py"]
 reason = "Python names these files."
 
-[[naming.override]]
+[[naming.exception]]
 allowed_names = ["setUp", "setUpClass", "tearDown", "tearDownClass"]
 categories = ["methods"]
 languages = ["python"]
 paths = ["**"]
 reason = "unittest discovers its lifecycle methods by these names."
 
-[[naming.override]]
+[[naming.exception]]
 categories = ["functions", "methods", "variables", "constants", "attributes"]
 ignored_names_pattern = "^__[a-z][a-z0-9_]*__$"
 languages = ["python"]
 paths = ["**"]
 reason = "Python names its special methods and attributes with two underscores on each side."
 
-[[naming.override]]
+[[naming.exception]]
 categories = ["functions", "variables", "constants", "methods", "attributes", "type_aliases"]
 ignored_prefix = "^_+"
 languages = ["python"]

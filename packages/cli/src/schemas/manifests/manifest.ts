@@ -220,7 +220,7 @@ const namingTableSchema = z.strictObject({
     allowed_names: z.string().array().default([]),
     allowed_phrases: z.string().array().default([]),
     languages: z.record(z.string(), languageSchema).default({}),
-    override: writtenNamingOverrideSchema.array().default([]),
+    exception: writtenNamingOverrideSchema.array().default([]),
 });
 
 export const manifestSchema = z

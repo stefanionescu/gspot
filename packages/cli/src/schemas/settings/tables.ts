@@ -250,7 +250,7 @@ const lists = {
             description:
                 'Words this repository replaces, each with the word to use instead. The naming checks report the word in identifiers, and the prose checks in documentation, code comments, and commit messages. A scope adds its words to the root words.',
         }),
-    override: namingOverrideSchema
+    exception: namingOverrideSchema
         .extend({
             paths: nonemptyPathsSchema.default(['**']).describe(namingOverrideSchema.shape.paths.description as string),
             languages: z

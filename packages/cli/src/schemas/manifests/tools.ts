@@ -51,7 +51,7 @@ const identifierCategorySchema = z.enum(NAMED_CATEGORIES);
 const sourcePathSchema = z.string().min(1);
 
 export const namingOverrideSchema = z.strictObject({
-    paths: sourcePathSchema.array().min(1).optional().meta({ description: 'Where the override applies.' }),
+    paths: sourcePathSchema.array().min(1).optional().meta({ description: 'Where the exception applies.' }),
     languages: z.string().array().optional().meta({ description: 'The languages it applies to.' }),
     categories: identifierCategorySchema
         .array()

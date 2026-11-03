@@ -1,5 +1,5 @@
 export const NUMBERED_PREFIX_OVERRIDE =
-    '[[naming.override]]\npaths = [".mise/tasks/*.sh", "scripts/steps/*.sh"]\n' +
+    '[[naming.exception]]\npaths = [".mise/tasks/*.sh", "scripts/steps/*.sh"]\n' +
     String.raw`categories = ["files"]
 ignored_prefix = '^\d{2}-'
 reason = "The project orders its tasks by this prefix."
@@ -82,18 +82,18 @@ export const HANDLE_ROUTE_IDENTIFIER = {
 
 export const HOOK_PREFIX_TABLES = `[naming]
 banned_words = ["handle", "use"]
-[[naming.override]]
+[[naming.exception]]
 paths = ["src/hooks/**"]
 categories = ["functions"]
 ignored_prefix = "^use(?=[A-Z])"
 reason = "A hook starts with use."
 `;
 
-export const ALLOWED_NAME_TABLES = `[[naming.override]]
+export const ALLOWED_NAME_TABLES = `[[naming.exception]]
 paths = ["**"]
 allowed_names = ["requestAnimationFrame"]
 reason = "The browser API names it."
-[[naming.override]]
+[[naming.exception]]
 paths = ["api/route.ts"]
 allowed_names = ["Content-Type"]
 reason = "The HTTP header names it."
@@ -101,7 +101,7 @@ reason = "The HTTP header names it."
 
 export const HANDLE_PREFIX_TABLES = `[naming]
 banned_words = ["handle"]
-[[naming.override]]
+[[naming.exception]]
 paths = ["src/**"]
 languages = ["typescript", "javascript"]
 categories = ["functions", "methods"]

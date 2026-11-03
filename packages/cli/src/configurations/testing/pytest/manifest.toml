@@ -7,7 +7,7 @@ title = "pytest"
 dependencies = ["pytest"]
 filenames = ["conftest.py", "pytest.ini"]
 
-[[naming.override]]
+[[naming.exception]]
 categories = ["functions", "methods"]
 ignored_prefix = "^test_"
 languages = ["python"]

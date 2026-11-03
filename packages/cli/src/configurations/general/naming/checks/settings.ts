@@ -100,13 +100,13 @@ export function readNamingSettings(settings: Settings, scope: Scope): NamingSett
     ];
     const overrides = [
         compileOverride({ allowed_names: shipped.allowed_names }),
-        ...shipped.override.map((override) => compileOverride(override)),
+        ...shipped.exception.map((override) => compileOverride(override)),
         ...configurations
             .filter((configuration) => configuration.name !== 'naming')
             .flatMap((configuration) =>
-                (configuration.naming?.override ?? []).map((override) => compileOverride(override)),
+                (configuration.naming?.exception ?? []).map((override) => compileOverride(override)),
             ),
-        ...settings.naming.override.map((override) => compileOverride(override)),
+        ...settings.naming.exception.map((override) => compileOverride(override)),
     ];
     return {
         bannedWords: terms,

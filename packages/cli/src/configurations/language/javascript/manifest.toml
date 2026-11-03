@@ -35,14 +35,14 @@ dependencies = ["astro", "svelte", "vue", "react"]
 [rules."BUN.md"]
 filenames = ["bun.lock", "bun.lockb", "bunfig.toml"]
 
-[[naming.override]]
+[[naming.exception]]
 categories = ["parameters", "variables"]
 ignored_prefix = "^_+"
 languages = ["typescript", "javascript"]
 paths = ["**"]
 reason = "A leading underscore marks an unused parameter or variable."
 
-[[naming.override]]
+[[naming.exception]]
 categories = ["functions", "methods"]
 ignored_prefix = "^handle(?=[A-Z])"
 languages = ["typescript", "javascript"]

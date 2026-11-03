@@ -13,7 +13,7 @@ export const NAMING_RULE_DOCS = {
     [NAMING_RULES.digits]: {
         description: 'A name holds no digit as a word.',
         why: 'A digit, as in `summary2`, says nothing about how the two values differ.',
-        fix: 'Name the difference, or set `allow_digits` in a `[[naming.override]]` record with a reason.',
+        fix: 'Name the difference, or set `allow_digits` in a `[[naming.exception]]` record with a reason.',
         example: '`summary2` reports `digits`; `weeklySummary` does not.',
     },
     [NAMING_RULES.length]: {
@@ -31,13 +31,13 @@ export const NAMING_RULE_DOCS = {
     [NAMING_RULES.duplicateWords]: {
         description: 'A name repeats no word.',
         why: 'A repeated word, as in `orderOrderLines`, adds no meaning.',
-        fix: 'Remove the repeated word, or set `allow_repeated_words` in a `[[naming.override]]` record.',
+        fix: 'Remove the repeated word, or set `allow_repeated_words` in a `[[naming.exception]]` record.',
         example: '`orderOrderLines` reports `duplicate-words`; `orderLines` does not.',
     },
     [NAMING_RULES.bannedWord]: {
         description: 'A name holds no word that `naming.banned_words` or the shipped word lists ban.',
         why: 'A word such as `manager` or `helper` hides what the code holds or does.',
-        fix: 'Choose a word that names the role, or keep the name through `allowed_names` in a `[[naming.override]]` record.',
+        fix: 'Choose a word that names the role, or keep the name through `allowed_names` in a `[[naming.exception]]` record.',
         example: '`sessionManager` reports `banned-word`; `sessionStore` does not.',
     },
 } as const satisfies Readonly<Record<string, LintRuleDocs>>;

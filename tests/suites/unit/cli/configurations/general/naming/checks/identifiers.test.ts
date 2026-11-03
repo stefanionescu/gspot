@@ -152,7 +152,7 @@ test('an allowed property name does not hide a bad name on the next line', async
     const source = "export class Template {\n    external_key = '';\n    user_name = '';\n    USER_COUNT = 0;\n}\n";
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript', 'naming'], {
-            tables: '[[naming.override]]\npaths = ["source.ts"]\ncategories = ["properties"]\nallowed_names = ["external_key"]\nreason = "The remote API fixes this exact property key."\n',
+            tables: '[[naming.exception]]\npaths = ["source.ts"]\ncategories = ["properties"]\nallowed_names = ["external_key"]\nreason = "The remote API fixes this exact property key."\n',
             level: 'all',
         }),
         'source.ts': source,

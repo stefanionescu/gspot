@@ -27,7 +27,7 @@ concept reads alike throughout the program.
 
 `naming/identifiers` and `naming/paths` check banned words, case, length, and word count. Fix a finding by renaming.
 Never hide a bad name in a string key, an alias, or a file name. When no file uses a name of `allowed_names` in a
-`[[naming.override]]` record, remove it.
+`[[naming.exception]]` record, remove it.
 
 ## Principles
 

@@ -8,14 +8,14 @@ title = "Shell scripts"
 extensions = [".sh", ".bash", ".zsh", ".bats"]
 tags = ["shebang:shell"]
 
-[[naming.override]]
+[[naming.exception]]
 allowed_names = ["IFS", "OPTARG", "OPTIND", "EUID", "UID", "PPID", "RANDOM", "SECONDS", "LINENO", "BASH_SOURCE", "BASH_REMATCH", "BASH_VERSION", "BASH_VERSINFO", "FUNCNAME", "PIPESTATUS", "REPLY", "CDPATH", "OLDPWD", "SHLVL", "HOSTNAME", "OSTYPE", "MACHTYPE", "COLUMNS", "LINES"]
 categories = ["variables"]
 languages = ["bash"]
 paths = ["**"]
 reason = "The shell defines these variable names."
 
-[[naming.override]]
+[[naming.exception]]
 categories = ["functions", "variables", "constants", "methods", "attributes"]
 ignored_prefix = "^_+"
 languages = ["bash"]
