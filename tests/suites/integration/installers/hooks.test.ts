@@ -64,8 +64,10 @@ async function assertCloneHooks(source: string, environment: Record<string, stri
         env: environment,
     });
     expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
+    const rejectedOutput = rejected.stdout + rejected.stderr;
     expect(
-        (rejected.stdout + rejected.stderr).split('\n').some((line) => line.startsWith(UNQUOTED_FINDING_PREFIX)),
+        rejectedOutput.split('\n').some((line) => line.startsWith(UNQUOTED_FINDING_PREFIX)),
+        rejectedOutput,
     ).toBe(true);
     await writeFile(join(clone, 'scripts/b.sh'), '#!/usr/bin/env bash\nprintf \'%s\\n\' "${1:-ready}"\n');
     runGitStep(clone, ['add', 'scripts/b.sh']);
@@ -93,9 +95,11 @@ test('a commit with a ShellCheck finding fails through the installed hook, in th
     const environment = { NO_COLOR: '1' };
     const commit = await runCommand(['git', 'commit', '-qm', 'bad'], { cwd: sandbox.path, env: environment });
     expect(commit.code, commit.stdout + commit.stderr).toBe(1);
-    expect((commit.stdout + commit.stderr).split('\n').some((line) => line.startsWith(UNQUOTED_FINDING_PREFIX))).toBe(
-        true,
-    );
+    const commitOutput = commit.stdout + commit.stderr;
+    expect(
+        commitOutput.split('\n').some((line) => line.startsWith(UNQUOTED_FINDING_PREFIX)),
+        commitOutput,
+    ).toBe(true);
     await writeFile(join(sandbox.path, 'scripts/b.sh'), '#!/usr/bin/env bash\nprintf \'%s\\n\' "$1"\n');
     runGitStep(sandbox.path, ['add', '-A']);
     const corrected = await runCommand(['git', 'commit', '-qm', 'Correct shell input'], {
