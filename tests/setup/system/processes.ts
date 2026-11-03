@@ -16,6 +16,17 @@ function readCommandResult(result: SpawnResult, limited: ReturnType<typeof limit
     throw new Error(message);
 }
 
+function hasExited(pid: number): boolean {
+    try {
+        process.kill(pid, 0);
+        return false;
+    } catch (error) {
+        if (hasErrorCode(error, 'ESRCH')) return true;
+        if (pid < 0 && hasErrorCode(error, 'EPERM')) return true;
+        throw error;
+    }
+}
+
 /**
 Limit a child command and build the text a timeout error shows.
 */
@@ -62,18 +73,15 @@ export function runBlockingCommand(command: readonly string[], options: Cancelab
 }
 
 /**
-Wait within the command timeout, then kill a child that remains alive.
+Wait within the command timeout, then kill a child that remains alive. A negative pid names a process group, as in
+process.kill, and the wait lasts until no process of the group runs. macOS refuses to signal a group whose leader
+exited, so that refusal counts as an exit.
 */
 export async function waitForExit(pid: number): Promise<void> {
-    if (!Number.isSafeInteger(pid) || pid <= 0) throw new Error(`Invalid child PID: ${String(pid)}.`);
+    if (pid === 0 || !Number.isSafeInteger(pid)) throw new Error(`Invalid child PID: ${String(pid)}.`);
     const deadline = performance.now() + UNIT_TEST_TIMEOUT_MILLISECONDS - MILLISECONDS_PER_SECOND;
     while (performance.now() < deadline) {
-        try {
-            process.kill(pid, 0);
-        } catch (error) {
-            if (hasErrorCode(error, 'ESRCH')) return;
-            throw error;
-        }
+        if (hasExited(pid)) return;
         await Bun.sleep(POLL_INTERVAL_MILLISECONDS);
     }
     process.kill(pid, 'SIGKILL');

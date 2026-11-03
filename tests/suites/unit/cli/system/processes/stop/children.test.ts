@@ -148,15 +148,20 @@ test('the stop after a normal exit accepts the macOS refusal to signal an exited
 });
 
 async function stopTool(root: string, script: string): Promise<Awaited<ReturnType<typeof runProcess>>> {
+    using children = spyOn(childProcess, 'spawn');
     const controller = new AbortController();
     const running = runProcess(['sh', '-c', script], {
         cwd: root,
         cancelSignal: controller.signal,
         timeoutSeconds: CHILD_TIMEOUT_SECONDS,
     });
-    expect(await waitForFile(join(root, 'ready'))).toBe(true);
+    const launched = children.mock.results[0];
+    if (launched?.type !== 'return' || launched.value.pid === undefined) throw new Error('The stop started no child.');
+    const isReady = await waitForFile(join(root, 'ready'));
     controller.abort();
     const result = await running;
+    await waitForExit(-launched.value.pid);
+    expect(isReady).toBe(true);
     expect(result.canceled).toBe(true);
     return result;
 }
