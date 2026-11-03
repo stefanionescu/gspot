@@ -291,7 +291,7 @@ message = "message"
 rule = "ruleId"
 
 [[check]]
-command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config_file:import-cycles}", "--format", "json", "{files}"]
+command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--no-inline-config", "--config", "{config_file:import-cycles}", "--format", "json", "{files}"]
 example = "`a.ts` imports `b.ts`, and `b.ts` imports `a.ts`: `import-x/no-cycle` reports each import. Move the shared code to a third module."
 exit_codes = [1]
 help = "Move the code that both files share to a module that imports neither of them."
