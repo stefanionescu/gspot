@@ -36,7 +36,7 @@ test.each(START_COMMANDS.map(([program, packageManager, prefix]) => ({ program, 
         const folder = 'project';
         await using sandbox = await createGitSandbox({
             [join(folder, 'gspot.toml')]: buildSandboxSettings([], { rules: true }),
-            'node_modules/.bin/gspot': '',
+            'node_modules/@gspothq/cli/package.json': '{}',
         });
 
         const root = join(sandbox.path, folder);
@@ -125,27 +125,30 @@ test.each(START_COMMANDS)(
     },
 );
 
-test('an npm hook with no local gspot binary names both worktree installation steps before starting npm', async () => {
-    await using sandbox = await createGitSandbox({
-        'package.json': JSON.stringify({
-            packageManager: 'npm@0.0.0-test',
-            devDependencies: { '@gspothq/cli': '0.0.0-test' },
-        }),
-    });
-    const hook = buildHookFiles(selectStartRunner(sandbox.path), ['pre-commit'], { hasLfsFiles: false })[0]!;
-    const path = join(sandbox.path, 'pre-commit');
-    await writeFile(path, hook.content);
-    const log = join(sandbox.path, 'calls.jsonl');
-    const bin = await writeProgramCommand(sandbox.path, 'bin/npm', 'fakes/tool', '--record', log);
-    const result = await runCommand([Bun.which('sh')!, path], {
-        cwd: sandbox.path,
-        env: { PATH: bin },
-        stdin: '',
-    });
-    expect(result.code, result.stdout + result.stderr).toBe(2);
-    expect(result.stderr).toBe('Run npm install, then gspot install, in this worktree.\n');
-    expect(existsSync(log)).toBe(false);
-});
+test.each(START_COMMANDS.filter(([program]) => program !== 'mise'))(
+    'a %s hook with no gspot in the project names the installation steps before it starts a global gspot',
+    async (program, packageManager) => {
+        await using sandbox = await createGitSandbox({
+            'package.json': JSON.stringify({ packageManager, devDependencies: { '@gspothq/cli': '0.0.0-test' } }),
+        });
+        const hook = buildHookFiles(selectStartRunner(sandbox.path), ['pre-commit'], { hasLfsFiles: false })[0]!;
+        const path = join(sandbox.path, 'pre-commit');
+        await writeFile(path, hook.content);
+        const log = join(sandbox.path, 'calls.jsonl');
+        const bin = await writeProgramCommand(sandbox.path, `bin/${program}`, 'fakes/tool', '--record', log);
+        const result = await runCommand([Bun.which('sh')!, path], {
+            cwd: sandbox.path,
+            env: { PATH: bin },
+            stdin: '',
+        });
+        expect(result.code, result.stdout + result.stderr).toBe(2);
+        const name = program === 'bunx' ? 'bun' : program;
+        expect(result.stderr).toBe(
+            `gspot is not installed in this worktree. Run ${name} install, then gspot install.\n`,
+        );
+        expect(existsSync(log)).toBe(false);
+    },
+);
 
 test('with Git LFS, the pre-push hook gives its input to gspot and then to git lfs, and the other LFS hooks run git lfs', async () => {
     await using sandbox = await createLfsRepository();

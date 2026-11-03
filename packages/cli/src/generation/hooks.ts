@@ -1,5 +1,6 @@
 import { quoteArgument } from '#cli/system/text.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import type { StartRunner } from '#cli/types/repository.ts';
 import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
 import type { HookName, GeneratedFile } from '#cli/types/tools.ts';
@@ -12,6 +13,16 @@ import {
     COMMIT_MESSAGE_PATH_LINES,
 } from '#cli/config/generation.ts';
 
+// Yarn Plug'n'Play keeps packages out of node_modules, so its loader file shows that the project is installed.
+const YARN_PNP_FILE = '.pnp.cjs';
+
+function buildInstallGuard(name: Exclude<StartRunner['name'], 'mise'>): string {
+    const pnp = name === 'yarn' ? `test -f ${YARN_PNP_FILE} || ` : '';
+    const installed = `test -f node_modules/${cliPackage.name}/package.json`;
+    const message = quoteArgument(`gspot is not installed in this worktree. Run ${name} install, then gspot install.`);
+    return String.raw`${pnp}${installed} || { printf '%s\n' ${message} >&2; exit 2; }`;
+}
+
 function buildHookScript(name: HookName, runner: StartRunner, lfsHooks: readonly string[]): string {
     const program = runner.command.split(' ', 1)[0] as string;
     const { missing } = runner;
@@ -22,11 +33,7 @@ function buildHookScript(name: HookName, runner: StartRunner, lfsHooks: readonly
         ...(isLfs ? [LFS_MISSING_GUARD, PUSH_INPUT_SAVE] : []),
         ...messagePathLines,
         `command -v ${program} >/dev/null 2>&1 || { printf ${quoteArgument(missing.replace('$PATH', '%s') + '\n')} "$PATH" >&2; exit 2; }`,
-        ...(runner.name === 'npm'
-            ? [
-                  String.raw`test -f node_modules/.bin/gspot || { printf '%s\n' 'Run npm install, then gspot install, in this worktree.' >&2; exit 2; }`,
-              ]
-            : []),
+        ...(runner.name === 'mise' ? [] : [buildInstallGuard(runner.name)]),
         ...(isLfs
             ? [`${PUSH_INPUT_REPLAY}${check} || exit $?`, `${PUSH_INPUT_REPLAY}git lfs ${name} "$@"`]
             : [`exec ${check}`]),
