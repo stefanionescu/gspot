@@ -27,7 +27,7 @@ export const HOOK_REPOSITORIES = [
             'package.json': NPM_PROJECT_PACKAGE,
             '.husky/pre-commit': 'npm test\n',
         },
-        setting: undefined,
+        setting: ['config', 'core.hooksPath', '.husky'],
         gitHook: false,
     },
     {

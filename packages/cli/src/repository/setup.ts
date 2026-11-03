@@ -126,7 +126,9 @@ async function listGitFolderHooks(root: string): Promise<RepositorySetup['hooks'
 }
 
 /**
-Read the hooks that a clone already runs: another hooks folder, a tool hooks folder, and hook manager settings.
+Read the hooks that a clone already runs: another hooks folder, a tool hooks folder, and hook manager settings. A
+`.husky` folder runs only while core.hooksPath points into it, as Husky sets it, so a clone that never installed
+Husky gets the gspot hooks.
 
 @param repository the repository to read
 */
@@ -134,8 +136,10 @@ export async function readHooks(repository: Pick<Repository, 'root'>): Promise<R
     const { root } = repository;
     const written = await readGitSetting(root, HOOKS_PATH_SETTING);
     const hooksPath = convertToPosixPath(relative(root, resolve(root, written ?? '')));
-    const isOwn = hooksPath === GSPOT_PATHS.hooks || hooksPath === HUSKY_PATH || hooksPath.startsWith(`${HUSKY_PATH}/`);
-    const hooks = await listHookSetups(root, isOwn ? '' : hooksPath);
+    const isHusky = hooksPath === HUSKY_PATH || hooksPath.startsWith(`${HUSKY_PATH}/`);
+    const isOwn = hooksPath === GSPOT_PATHS.hooks || isHusky;
+    const setups = await listHookSetups(root, isOwn ? '' : hooksPath);
+    const hooks = setups.filter((hook) => isHusky || hook.kind !== 'husky');
     if (written === undefined) hooks.push(...(await listGitFolderHooks(root)));
     return { hooksPath, hooks };
 }

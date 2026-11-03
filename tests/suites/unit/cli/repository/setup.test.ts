@@ -81,13 +81,17 @@ test('a hooks folder outside the repository that core.hooksPath names is listed'
     expect(hooks).toStrictEqual([{ kind: 'hooksPath', path: '../hooks', files: ['pre-commit'] }]);
 });
 
-test('hook discovery reports other hook folders and leaves gspot and task scripts out', async () => {
+test('hook discovery reports other hook folders and leaves gspot, task scripts, and an inactive Husky folder out', async () => {
     await using sandbox = await createGitSandbox(HOOK_FOLDER_FILES);
 
     const { hooks } = await readHooks({ root: sandbox.path });
     expect(hooks.toSorted((left, right) => compareText(left.path, right.path))).toStrictEqual([
         { kind: 'githooks', path: '.git-hooks', files: ['pre-commit'] },
         { kind: 'githooks', path: '.githooks', files: ['pre-commit'] },
+    ]);
+    runGitStep(sandbox.path, ['config', 'core.hooksPath', '.husky/_']);
+    const active = await readHooks({ root: sandbox.path });
+    expect(active.hooks.filter(({ kind }) => kind === 'husky')).toStrictEqual([
         { kind: 'husky', path: '.husky', files: ['pre-commit'] },
     ]);
 });

@@ -35,8 +35,9 @@ To turn them off, run `gspot set hooks.enabled false`, then `gspot install`.
 
 ## Existing hook managers
 
-A repository with Husky, Lefthook, or your own hook folder keeps its hooks. gspot prints one line for each hook instead;
-add each line to the matching hook:
+A repository with Husky, Lefthook, or your own hook folder keeps its hooks. A `.husky` folder counts only while
+`core.hooksPath` points into it, as Husky sets it. gspot prints one line for each hook instead; add each line to the
+matching hook:
 
 ```shell
 # pre-commit
