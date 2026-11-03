@@ -1,4 +1,4 @@
-# Documentation Site
+# Documentation site
 
 The documentation site uses Astro Starlight.
 
