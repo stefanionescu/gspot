@@ -127,8 +127,6 @@ test('a pre-push run checks the push stage and leaves the commit stage to the co
     const head = commitAll(sandbox.path, 'broken');
     const stdin = `refs/heads/main ${head} refs/heads/main ${base}\n`;
     const result = await runGspot(sandbox.path, PUSH_CHECK_COMMAND, {}, { stdin });
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { report } = (JSON.parse(result.stdout) as PushReport).revisions[0]!;
-    expect(report.stages).toStrictEqual(['push']);
-    expect(report.checks).toStrictEqual([]);
+    expect(result.code, result.stdout + result.stderr).toBe(2);
+    expect(result.stdout + result.stderr).toContain('project/bash-syntax runs at the commit stage, not at push.');
 });

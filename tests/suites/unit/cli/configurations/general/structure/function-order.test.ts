@@ -135,10 +135,13 @@ async function run() {}
 
 test('a run narrowed to one file reports only that file', async () => {
     const misplaced = `export function render(): string {
-    return label();
+    return 'Rows';
 }
 function label(): string {
     return 'Rows';
+}
+export function title(): string {
+    return label();
 }
 `;
     await using sandbox = await createGitSandbox({

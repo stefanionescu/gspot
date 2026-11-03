@@ -3,7 +3,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { installHooks } from '#cli/tools/installers/hooks.ts';
-import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
+import { HOOKS_SETTINGS, BASH_SYNTAX_PUSH_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -21,7 +21,7 @@ test('check names a package.json that does not parse, which gives the run no dep
 
 test('check warns once for missing hooks, skips the warning for pre-push, and stops warning once the hooks run', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
+        'gspot.toml': buildSandboxSettings([], { tables: `${HOOKS_SETTINGS}${BASH_SYNTAX_PUSH_CHECK}` }),
         'source.txt': 'valid text\n',
     });
     const head = commitAll(sandbox.path);
@@ -30,7 +30,7 @@ test('check warns once for missing hooks, skips the warning for pre-push, and st
     expect(before.stderr).toStartWith('[warn] The Git hooks are not installed in this clone. Run gspot install.\n');
     const pushed = await runGspot(
         sandbox.path,
-        ['check', '--hook', 'pre-push', '--only', 'repository/encoding'],
+        ['check', '--hook', 'pre-push', '--only', 'project/bash-syntax'],
         {},
         {
             stdin: `refs/heads/main ${head} refs/heads/main ${'0'.repeat(head.length)}\n`,
