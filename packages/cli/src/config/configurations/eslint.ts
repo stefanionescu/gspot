@@ -91,6 +91,9 @@ const UNICORN_RULES = {
 
     'unicorn/prefer-ternary': 'off',
     'unicorn/prefer-await': 'off',
+    'unicorn/no-negated-array-predicate': 'off',
+    'unicorn/prefer-simple-condition-first': 'off',
+    'unicorn/prefer-combined-guards': 'off',
     'unicorn/expiring-todo-comments': 'off',
     'unicorn/consistent-boolean-name': [
         'error',
