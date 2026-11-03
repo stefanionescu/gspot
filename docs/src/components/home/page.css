@@ -1,13 +1,9 @@
 @import './hero/layout.css';
 @import './setup/controls.css';
 @import './example/layout.css';
-@import './example/report.css';
 
 :root {
     --home-finding-bg: color-mix(in srgb, var(--brand-tangerine) 14%, transparent);
-    --home-fixed-bg: color-mix(in srgb, var(--sl-color-accent) 16%, transparent);
-    --home-pass: var(--sl-color-accent-high);
-    --home-badge-text: var(--sl-color-black);
     --home-code-text: #d6deeb;
     --home-width: 1200px;
     --home-section-space: 64px;
@@ -17,10 +13,8 @@
 }
 
 :root[data-theme='light'] {
-    --home-badge-text: var(--sl-color-white);
     --home-code-text: #403f53;
     --home-finding-bg: color-mix(in srgb, var(--brand-tangerine) 12%, transparent);
-    --home-fixed-bg: color-mix(in srgb, var(--sl-color-accent) 10%, transparent);
 }
 
 @media (width >= 50rem) {

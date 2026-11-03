@@ -1,8 +1,9 @@
-.example-grid {
+.example {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
     gap: 16px;
+    max-width: 48rem;
     margin-block-start: 40px;
+    margin-inline: auto;
 }
 
 .panel {
@@ -36,18 +37,10 @@
     font-family: var(--sl-font-mono);
     font-size: 0.7813rem;
     font-weight: 400;
-    white-space: nowrap;
-}
-
-.panel-head .run .prompt {
-    color: var(--sl-color-gray-3);
 }
 
 .status {
     flex: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
     padding: 3px 10px;
     border-radius: 999px;
     font-size: 0.75rem;
@@ -59,70 +52,45 @@
     color: var(--sl-color-orange-high);
 }
 
-.status.passed {
-    background: var(--home-fixed-bg);
-    color: var(--home-pass);
+.panel .expressive-code {
+    margin: 0;
 }
 
-.panel-body {
-    flex: 1;
+.panel .expressive-code .frame {
+    border-radius: 0;
+    box-shadow: none;
 }
 
-.badge {
-    display: inline-grid;
-    place-items: center;
-    width: 20px;
-    height: 20px;
-    align-self: center;
-    border-radius: 50%;
-    background: var(--brand-tangerine);
-    color: var(--home-badge-text);
-    font-family: var(--sl-font);
-    font-size: 0.7188rem;
-    font-weight: 700;
-    line-height: 1;
-    user-select: none;
-}
-
-.issues {
+.findings {
     display: grid;
-    gap: 12px;
+    gap: 14px;
     margin: 0;
     padding: 16px;
-    border-top: 1px solid var(--sl-color-gray-5);
     list-style: none;
-    font-size: 0.875rem;
-    line-height: 1.5;
 }
 
-.issues li {
+.findings li {
     display: grid;
-    grid-template-columns: 20px minmax(0, 1fr);
-    gap: 12px;
-    align-items: start;
+    gap: 4px;
 }
 
-.issues .badge {
-    align-self: start;
-    margin-block-start: 1px;
+.findings .location {
+    color: var(--sl-color-orange-high);
+    font-family: var(--sl-font-mono);
+    font-size: 0.7813rem;
+    overflow-wrap: anywhere;
 }
 
-.issues strong {
-    color: var(--sl-color-white);
-    font-weight: 600;
-}
-
-.panel-note {
-    margin: 0;
-    padding: 16px;
-    border-top: 1px solid var(--sl-color-gray-5);
+.findings .message {
+    color: var(--sl-color-gray-2);
     font-size: 0.875rem;
     line-height: 1.5;
 }
 
-@media (width >= 72rem) {
-    .example-grid {
-        grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-        align-items: stretch;
-    }
+.example-note {
+    margin: 8px 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    text-align: center;
+    text-wrap: pretty;
 }

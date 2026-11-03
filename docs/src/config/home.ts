@@ -43,7 +43,20 @@ export const USE_CASES = [
         icon: ['M12 16v5', 'M8 3h8l-1 6 3 3v2H6v-2l3-3-1-6z'],
     },
 ] as const;
-export const SUMMARY_SENTENCE_BREAK = /(?<=\.) /u;
+export const CAUGHT_EXAMPLE = {
+    file: 'eslint-plugin.ts',
+    lines: [114, 115],
+    rule: 'unicorn/no-unsafe-string-replacement',
+    message: 'Do not use a non-literal replacement value with `String#replace()`.',
+    before: [
+        `page.replace('## Install\\n', \`## Install\\n\\n\${requirements}\\n\`)`,
+        `page.replace('## Use\\n', \`## Use\\n\\n\${presets}\\n\`)`,
+    ],
+    after: [
+        `page.replace('## Install\\n', () => \`## Install\\n\\n\${requirements}\\n\`)`,
+        `page.replace('## Use\\n', () => \`## Use\\n\\n\${presets}\\n\`)`,
+    ],
+} as const;
 export const URL_BREAK = /(?<=\/)(?!\/)/u;
 export const COPY_FAILED_MESSAGE = 'Copy failed. Select and copy the text.';
 export const COPIED_MESSAGE = 'Copied.';

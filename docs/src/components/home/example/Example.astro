@@ -1,45 +1,42 @@
 ---
-import example from '#docs/config/example.json';
 import { Code } from '@astrojs/starlight/components';
-import Run from '#docs/components/home/example/Run.astro';
+import { CAUGHT_EXAMPLE } from '#docs/config/home.ts';
 import InlineText from '#docs/components/InlineText.astro';
 
-const issueMarkers = example.issues.map(({ lines }, index) => ({ range: lines.join(','), label: String(index + 1) }));
-const insertedLines = example.insertedLines.join(',');
+const REPLACEMENT_TEMPLATE = /`[^`]*`/gu;
+const REPLACEMENT_FUNCTION = '() =>';
+const { file, lines, message, before, after } = CAUGHT_EXAMPLE;
 ---
 
-<div class="example-grid">
-    <figure class="panel before">
+<div class="example">
+    <figure class="panel">
+        <figcaption class="panel-head">Before</figcaption>
+        <Code code={before.join('\n')} lang="ts" title={file} del={REPLACEMENT_TEMPLATE} />
+    </figure>
+    <figure class="panel">
         <figcaption class="panel-head">
-            <span>Before: what the agent wrote</span>
+            <span class="run">gspot</span>
+            <span class="status failed">Failed</span>
         </figcaption>
-        <div class="panel-body">
-            <Code code={example.before.content} lang="ts" title={example.before.path} mark={issueMarkers} />
-        </div>
-        <ol class="issues">
-            {example.issues.map(({ title, text }, index) => (
+        <ol class="findings">
+            {lines.map((line) => (
                 <li>
-                    <span class="badge" aria-hidden="true">
-                        {index + 1}
+                    <span class="location">
+                        {file}:{line}
                     </span>
-                    <span>
-                        <strong>{title}</strong> <InlineText text={text} />
+                    <span class="message">
+                        <InlineText text={message} />
                     </span>
                 </li>
             ))}
         </ol>
     </figure>
-    <Run status="failed" summary={example.rejectedSummary} />
-    <figure class="panel after">
-        <figcaption class="panel-head">
-            <span>After: the fix</span>
-        </figcaption>
-        <div class="panel-body">
-            <Code code={example.after.content} lang="ts" title={example.after.path} ins={insertedLines} />
-        </div>
-        <p class="panel-note">
-            <code>pay</code> now waits for the charge, and a failed payment reaches the caller.
-        </p>
+    <p class="example-note">
+        <code>replace</code> treats <code>{'$&'}</code> in the new text as a special pattern, so any text with{' '}
+        <code>{'$&'}</code> would come out wrong.
+    </p>
+    <figure class="panel">
+        <figcaption class="panel-head">After</figcaption>
+        <Code code={after.join('\n')} lang="ts" title={file} ins={REPLACEMENT_FUNCTION} />
     </figure>
-    <Run status="passed" summary={example.passedSummary} />
 </div>

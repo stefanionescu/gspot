@@ -3,15 +3,17 @@ import { format } from 'prettier';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { CAUGHT_EXAMPLE } from '#docs/config/home.ts';
 import type { GspotProject } from '#tests/types/setup.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import example from '#docs/config/example.json' with { type: 'json' };
 import { OFFLINE_ENVIRONMENT } from '#tests/config/setup/programs.ts';
 import { createGspotProject, isolatedEnvironment } from '#tests/setup/sandboxes/projects/gspot.ts';
+
+const PAGE_FILE = 'src/plugin-page.ts';
 
 async function prepareExample(installation: GspotProject): Promise<string> {
     const root = join(installation.workspace, 'example');
@@ -19,10 +21,7 @@ async function prepareExample(installation: GspotProject): Promise<string> {
     await createFileTree(root, {
         '.gitignore': 'node_modules/\n',
         '.prettierrc.json': '{ "tabWidth": 4, "singleQuote": true }\n',
-        'src/cart.ts': 'export type Cart = { total: number };\n',
-        'src/payments.ts':
-            'export async function charge(total: number): Promise<void> {\n    await Promise.resolve(total);\n}\n',
-        [example.before.path]: 'export {};\n',
+        [PAGE_FILE]: 'export {};\n',
     });
     const devDependencies = { [cliPackage.name]: cliPackage.version };
     const projectFiles = {
@@ -30,7 +29,7 @@ async function prepareExample(installation: GspotProject): Promise<string> {
             name: 'home-example',
             private: true,
             type: 'module',
-            exports: './src/checkout.ts',
+            exports: `./${PAGE_FILE}`,
             devDependencies,
         },
         'package-lock.json': {
@@ -48,7 +47,7 @@ async function prepareExample(installation: GspotProject): Promise<string> {
         { root, run: installation.online.run },
         {
             configurations: ['typescript'],
-            level: 'basic',
+            level: 'all',
             install: false,
         },
     );
@@ -59,35 +58,46 @@ async function prepareExample(installation: GspotProject): Promise<string> {
     return root;
 }
 
-test('the home example matches staged findings and summaries and passes after its fix', async () => {
+test('the home example reports its rule on both replace calls and passes after its fix', async () => {
     await using installation = await createGspotProject();
     const root = await prepareExample(installation);
-    const otherCounts = /(?<=(?:Passed|Skipped): )\d+/gu;
+    const { rule, message } = CAUGHT_EXAMPLE;
     for (const expected of [
-        { source: example.before, code: 1, summary: example.rejectedSummary, findings: example.findings },
-        { source: example.after, code: 0, summary: example.passedSummary, findings: [] },
+        { calls: CAUGHT_EXAMPLE.before, code: 1, findings: CAUGHT_EXAMPLE.lines.map(() => ({ rule, message })) },
+        { calls: CAUGHT_EXAMPLE.after, code: 0, findings: [] },
     ]) {
-        writeFileSync(join(root, expected.source.path), expected.source.content);
-        runGitStep(root, ['add', '--', expected.source.path]);
-        const checked = parseCheckReport(await installation.offline.run(root, ['check', '--staged', '--json']));
+        const [install, use] = expected.calls;
+        const source = `/**
+Fill the install and use sections of the plugin page.
+
+@param page the text of the plugin page
+@param requirements the line that names the requirements
+@param presets the list of presets
+@returns the page once with each section filled
+*/
+export function fillPluginPage(page: string, requirements: string, presets: string): string[] {
+    const installPage = ${install};
+    const usePage = ${use};
+    return [installPage, usePage];
+}
+`;
+        writeFileSync(join(root, PAGE_FILE), source);
+        runGitStep(root, ['add', '--', PAGE_FILE]);
+        const checked = parseCheckReport(
+            await installation.offline.run(root, [
+                'check',
+                '--staged',
+                '--only',
+                'javascript/eslint',
+                '--json',
+                PAGE_FILE,
+            ]),
+        );
         expect(checked.code, checked.stdout + checked.stderr).toBe(expected.code);
         const findings = checked.report.checks
             .flatMap((check) => check.findings)
-            .map((finding) => ({
-                check: finding.check,
-                file: finding.file,
-                line: finding.line,
-                ...(finding.column !== undefined && { column: finding.column }),
-                rule: finding.rule,
-                message: finding.message,
-            }));
+            .map((finding) => ({ rule: finding.rule, message: finding.message }));
         expect(findings).toStrictEqual(expected.findings);
-        const text = await installation.offline.run(root, ['check', '--staged']);
-        expect(text.code, text.stdout + text.stderr).toBe(expected.code);
-        expect(text.stdout).toContain(example.checked);
-        const summary = text.stdout.split('\n').find((line) => /^(?:Failed|Passed):/u.test(line));
-        expect(summary?.replaceAll(otherCounts, 'N')).toBe(expected.summary.replaceAll(otherCounts, 'N'));
-        expect(summary).toMatch(/Passed: [1-9]/u);
     }
 });
 
@@ -95,7 +105,6 @@ test('a pre-push check on Node reports a type error in a pushed commit that HEAD
     await using installation = await createGspotProject();
     const root = await prepareExample(installation);
     const invalid = join(root, 'src/total.ts');
-    writeFileSync(join(root, example.after.path), example.after.content);
     writeFileSync(invalid, "export const total: number = 'none';\n");
     runGitStep(root, ['add', '-A']);
     runGitStep(root, ['commit', '--no-verify', '-qm', 'feat: add the total']);
