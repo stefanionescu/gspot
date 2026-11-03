@@ -14,9 +14,9 @@ export const { runtimeMinimums, packageManagerMinimums, setup, yarnClassicInstal
 
 const REFERENCE_URL = CLI_REFERENCE.docs.reference;
 
-const LLMS_URL = `${CLI_REFERENCE.package.homepage}/llms.txt`;
+export const LLMS_URL = `${CLI_REFERENCE.package.homepage}/llms.txt`;
 
-const LLMS_COMMAND = `${CURL_COMMAND} ${LLMS_URL}`;
+export const LLMS_COMMAND = `${CURL_COMMAND} ${LLMS_URL}`;
 
 const SCAN_COMMAND = `npx ${CLI_REFERENCE.package.name} scan`;
 

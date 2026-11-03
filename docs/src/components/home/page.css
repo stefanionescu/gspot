@@ -8,6 +8,7 @@
     --home-fixed-bg: color-mix(in srgb, var(--sl-color-accent) 16%, transparent);
     --home-pass: var(--sl-color-accent-high);
     --home-badge-text: var(--sl-color-black);
+    --home-code-text: #d6deeb;
     --home-width: 1200px;
     --home-section-space: 64px;
     --home-title-size: 2.5rem;
@@ -17,6 +18,7 @@
 
 :root[data-theme='light'] {
     --home-badge-text: var(--sl-color-white);
+    --home-code-text: #403f53;
     --home-finding-bg: color-mix(in srgb, var(--brand-tangerine) 12%, transparent);
     --home-fixed-bg: color-mix(in srgb, var(--sl-color-accent) 10%, transparent);
 }
@@ -35,12 +37,6 @@
         --home-title-size: 4rem;
         --home-heading-size: 2.5rem;
     }
-}
-
-.landing,
-.home-footer {
-    width: min(100% - 2 * var(--sl-content-pad-x), var(--home-width));
-    margin-inline: auto;
 }
 
 .landing a {

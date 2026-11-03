@@ -42,3 +42,6 @@ export const USE_CASES = [
     },
 ] as const;
 export const SUMMARY_SENTENCE_BREAK = /(?<=\.) /u;
+export const URL_BREAK = /(?<=\/)(?!\/)/u;
+export const COPY_FAILED_MESSAGE = 'Copy failed. Select and copy the text.';
+export const COPIED_MESSAGE = 'Copied.';

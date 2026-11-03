@@ -120,7 +120,12 @@ html:not([data-has-sidebar]) .sl-container {
 }
 
 html[data-has-hero] .content-panel {
+    padding-top: 0;
     border: 0;
+}
+
+html[data-has-hero] .sl-markdown-content {
+    margin-top: 0;
 }
 
 html[data-has-hero] main {
