@@ -29,6 +29,14 @@ During a rolling deploy, readers accept both shapes until no old writer runs.
 Before you add a module, folder, or helper, find the code that will call it. When you add a file, tell the user why that
 code needs a new file.
 
+## Open questions
+
+- When a request, a plan, or a feature leaves a decision open, ask the user before you write code or a plan. Ask
+  until no open point remains.
+- Do not fill a gap with a guess, a default you chose, or an idea the user did not ask for.
+- Ask only what the user decides: behavior, scope, names, wording, and trade-offs. Look up yourself what the code,
+  the docs, or a command can answer.
+
 ## Scope discipline
 
 - Complete the requested task. Do not expand scope.

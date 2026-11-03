@@ -4,6 +4,9 @@ Read this rule before you write a plan.
 
 ## Complete changes
 
+Settle every open question with the user before you write the plan. A plan holds no open question and no choice that
+you made for the user.
+
 A plan says what each step changes, so another agent can carry it out without inventing anything.
 
 - Name every command that creates, moves, renames, regenerates, or deletes a file. List each generated file the change
