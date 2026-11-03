@@ -72,7 +72,7 @@ export const INIT_INSTALL_NOTES: ReadonlySet<string> = new Set([HOOKS_CHANGED_NO
 export const WROTE_PLAN_MESSAGE = 'Wrote the plan above.';
 
 export const SETTINGS_EXIST_MESSAGE =
-    'This repository already has a gspot.toml. Run gspot doctor to inspect its setup; it prints the gspot add line for newly detected configurations.';
+    'This repository already has a gspot.toml. Run gspot doctor to inspect its setup, and gspot check --only gspot/detected-configurations for the gspot add line of each newly detected configuration.';
 
 export const NEXT_INSTALL_MESSAGE = 'Next: gspot install, then gspot check --fix, then gspot baseline.';
 
