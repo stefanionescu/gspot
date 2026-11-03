@@ -39,6 +39,10 @@
     }
 }
 
+.landing {
+    margin-block-start: 0;
+}
+
 .landing a {
     color: var(--sl-color-text-accent);
     text-underline-offset: 3px;

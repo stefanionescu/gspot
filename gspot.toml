@@ -12,11 +12,6 @@ enabled = true
 banned_words = ["catalog", "corpus", "render", "sync", "materialize", "coerce", "scoped", "bind", "load", "fetch", "resolve", "probe", "fixture", "shell", "diagnostic", "directory", "envelope", "outcome", "emit", "violation", "problem", "tooling", "implementation", "candidate", "fragment", "invocation", "lexeme", "substantial", "substance", "floor", "hint", "sink", "inputs", "memo", "collect", "summarize", "verdict", "your", "odd", "qa", "cfg", "obsolete", "release hold", "installed root", "working folder", "root path", "item", "items", "part", "parts", "known", "declared", "needed", "prepared", "pinned", "existing", "current", "extra", "complete", "whole", "plain", "full", "real", "additional", "given", "retained", "observed", "computed", "actual", "effective", "original", "specific", "captured", "recorded", "chosen", "internal", "helper", "helpers", "util", "utils", "payload", "fallback", "attempt", "normalized", "expanded", "composed", "thing", "things", "misc", "info", "details", "stuff", "perform", "execute", "ensure", "wrapper", "temp", "tmp", "various", "several", "certain", "resulting", "handled", "wrapped", "underlying", "corresponding", "relevant", "appropriate", "proper", "basic", "generic", "overall"]
 
 [[naming.override]]
-paths = ["docs/src/content/docs/404.md"]
-allow_digits = true
-reason = "Starlight routes the HTTP 404 page by this filename."
-
-[[naming.override]]
 paths = ["tests/types/integration.ts"]
 allowed_names = ["rule_id"]
 reason = "SwiftLint JSON diagnostics identify the native rule using rule_id."

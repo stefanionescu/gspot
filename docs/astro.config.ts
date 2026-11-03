@@ -53,6 +53,7 @@ export default defineConfig({
         starlight({
             title: SITE_TITLE,
             favicon: FAVICON,
+            disable404Route: true,
             plugins: [
                 starlightLlmsTxt({
                     projectName: 'gspot',
@@ -78,7 +79,7 @@ export default defineConfig({
                 Head: './src/components/starlight/Head.astro',
                 Header: './src/components/starlight/Header.astro',
                 Footer: './src/components/starlight/Footer.astro',
-                Hero: './src/components/home/hero/Hero.astro',
+                Hero: './src/components/starlight/Hero.astro',
                 SiteTitle: './src/components/starlight/SiteTitle.astro',
                 ThemeProvider: './src/components/starlight/theme/Provider.astro',
                 ThemeSelect: './src/components/starlight/theme/Select.astro',

@@ -1,6 +1,7 @@
 ---
 import type { ImageMetadata } from 'astro';
 import type { SvgComponent } from 'astro/types';
+import Hero from '#docs/components/home/hero/Hero.astro';
 import InlineText from '#docs/components/InlineText.astro';
 import cliPackage from '#cli-package' with { type: 'json' };
 import Example from '#docs/components/home/example/Example.astro';
@@ -32,6 +33,7 @@ const tools = TOOLS.map(({ name, icon }) => {
         tableOfContents: false,
     }}
 >
+    <Hero />
     <div class="landing not-content">
         <section class="tools" aria-labelledby="tools-label">
             <p class="tools-label" id="tools-label">

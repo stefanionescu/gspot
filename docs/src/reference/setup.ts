@@ -91,16 +91,13 @@ ${setup.flatMap(({ label, prerequisites }) => prerequisites.map((command) => `  
 
 export const LLMS_PAGES = {
     promote: SIDEBAR.flatMap(({ items }) => items.map(({ slug }) => slug.replace(/\/index$/u, ''))),
-    demote: ['404', 'reference/**'],
+    demote: ['reference/**'],
     exclude: [
-        '404',
-        ...[
-            REFERENCE_FOLDERS.commands,
-            REFERENCE_FOLDERS.settings,
-            REFERENCE_FOLDERS.configurations,
-            REFERENCE_FOLDERS.checks,
-        ].map((folder) => `reference/${folder}/**`),
-    ],
+        REFERENCE_FOLDERS.commands,
+        REFERENCE_FOLDERS.settings,
+        REFERENCE_FOLDERS.configurations,
+        REFERENCE_FOLDERS.checks,
+    ].map((folder) => `reference/${folder}/**`),
     minify: { whitespace: false },
     customSets: [
         {

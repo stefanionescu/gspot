@@ -1,0 +1,139 @@
+---
+import { Image } from 'astro:assets';
+import hero from '../assets/hero.avif';
+import { DOCS_PATH } from '#docs/config/site.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+
+const url = `${cliPackage.homepage}/404`;
+---
+
+<StarlightPage
+    frontmatter={{
+        title: 'Page not found',
+        description: 'Find a gspot guide or return to the homepage.',
+        template: 'splash',
+        hero: {},
+        editUrl: false,
+        lastUpdated: false,
+        pagefind: false,
+        head: [
+            { tag: 'link', attrs: { rel: 'canonical', href: url } },
+            { tag: 'meta', attrs: { property: 'og:url', content: url } },
+        ],
+    }}
+>
+    <section class="not-found not-content" aria-labelledby="_top">
+        <div class="not-found-body">
+            <p class="not-found-code" aria-hidden="true">
+                <span>4</span>
+                <Image src={hero} alt="" width={160} height={160} loading="eager" decoding="async" />
+                <span>4</span>
+            </p>
+            <h1 id="_top">Page not found</h1>
+            <p class="not-found-text">The link may be old, or the address may have a typo.</p>
+            <a class="not-found-action" href={DOCS_PATH}>Go to the docs</a>
+        </div>
+    </section>
+</StarlightPage>
+<style>
+    .not-found {
+        --not-found-mark-shadow: drop-shadow(0 16px 56px rgb(0 0 0 / 50%));
+
+        display: grid;
+        place-items: center;
+
+        /* Starlight puts 1.5rem under the content panel and 3vh under main. */
+        min-height: calc(100dvh - var(--sl-nav-height) - 1.5rem - 3vh);
+        padding-block: 48px 96px;
+        overflow: clip;
+        text-align: center;
+    }
+
+    :global(:root[data-theme='light']) .not-found {
+        --not-found-mark-shadow: drop-shadow(0 16px 48px color-mix(in srgb, var(--sl-color-accent) 28%, transparent));
+    }
+
+    .not-found-body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        max-width: 45rem;
+    }
+
+    .not-found-code {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.04em;
+        margin: 0;
+        color: var(--sl-color-white);
+        font-size: 7.5rem;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: -0.02em;
+    }
+
+    .not-found-code::before {
+        position: absolute;
+        inset: -40% -15%;
+        z-index: -1;
+        background: radial-gradient(closest-side, color-mix(in srgb, var(--sl-color-accent) 14%, transparent), transparent);
+        content: '';
+    }
+
+    .not-found-code :global(img) {
+        width: 0.92em;
+        height: 0.92em;
+        rotate: -8deg;
+        filter: var(--not-found-mark-shadow);
+    }
+
+    h1 {
+        margin-block: 8px 0;
+        color: var(--sl-color-white);
+        font-size: 1.75rem;
+        font-weight: 700;
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+    }
+
+    .not-found-text {
+        margin: 0;
+        color: var(--sl-color-gray-3);
+        font-size: 1rem;
+        line-height: 1.5;
+        text-wrap: balance;
+    }
+
+    .not-found-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 200px;
+        min-height: 48px;
+        margin-block-start: 8px;
+        padding-inline: 24px;
+        border-radius: 8px;
+        background: var(--sl-color-accent);
+        color: var(--sl-color-black);
+        font-size: 1rem;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .not-found-action:hover {
+        background: var(--sl-color-accent-high);
+    }
+
+    @media (width >= 50rem) {
+        .not-found-code {
+            font-size: 10rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+        }
+    }
+</style>
