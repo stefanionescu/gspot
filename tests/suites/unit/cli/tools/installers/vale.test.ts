@@ -66,9 +66,10 @@ test('install reclaims interrupted Vale downloads while preserving live download
         '.gspot/vale-notes/notes.txt': 'authored',
     });
     utimesSync(join(sandbox.path, '.gspot/vale-ABCDEF'), new Date(0), new Date(0));
-    using _processes = spyOn(process, 'kill').mockImplementation((pid) => {
+    const kill: typeof process.kill = process.kill.bind(process);
+    using _processes = spyOn(process, 'kill').mockImplementation((pid, signal) => {
         if (pid === exited) throw Object.assign(new Error('The process exited.'), { code: 'ESRCH' });
-        return true;
+        return kill(pid, signal);
     });
     const session = await openSession(sandbox.path);
     await installValePackages(await buildSandboxToolInstall(session, openFiles(sandbox.path)), []);
