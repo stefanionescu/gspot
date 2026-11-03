@@ -78,7 +78,11 @@ test('ignore rejects unknown rules and checks without rule output before writing
     });
     for (const [check, rule, message] of [
         ['javascript/eslint', 'no-consolee', 'gspot does not know rule no-consolee of javascript/eslint.'],
-        ['bash/shfmt', 'indent', 'bash/shfmt does not report lint rules. Omit --rule.'],
+        [
+            'bash/shfmt',
+            'indent',
+            'gspot cannot ignore one lint rule of bash/shfmt. Leave out --rule, and give --paths to ignore the check for those files.',
+        ],
     ] as const) {
         const result = await runGspot(sandbox.path, [
             'ignore',

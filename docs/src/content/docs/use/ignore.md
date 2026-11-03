@@ -26,7 +26,7 @@ gspot ignore dependencies/osv-scanner --rule <advisory-id> --reason "<why>"
 
 For ESLint, Stylelint, Ruff, Markdownlint, SwiftLint, and Vale, `gspot ignore --rule` checks the installed rule catalog
 before saving the ignore.
-A check that does not report rule IDs refuses `--rule`.
+When a check refuses `--rule`, leave out `--rule`, and give `--paths` to ignore the check for those files.
 
 To remove the ignore:
 

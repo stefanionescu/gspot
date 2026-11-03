@@ -34,7 +34,10 @@ function findRuleCheck({ settings }: Session, checkId: string): Check {
         check === undefined ||
         (!OUTPUT_FORMATS[check.output.format].namesRules(check.output) && CHECK_CODE[checkId]?.ruleDocs === undefined)
     )
-        throw new GspotError('arguments', `${checkId} does not report lint rules. Omit --rule.`);
+        throw new GspotError(
+            'arguments',
+            `gspot cannot ignore one lint rule of ${checkId}. Leave out --rule, and give --paths to ignore the check for those files.`,
+        );
     return check;
 }
 

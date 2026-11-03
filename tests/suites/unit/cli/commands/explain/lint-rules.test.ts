@@ -145,5 +145,7 @@ test('explain requires installed tools and refuses rules of checks with no rule 
     expect(missing.stderr).toContain('Run gspot install.');
     const unknown = await runGspot(sandbox.path, ['explain', 'bash/shfmt', 'unknown']);
     expect(unknown.code).toBe(2);
-    expect(unknown.stderr).toBe('gspot does not know rule unknown of bash/shfmt.\n');
+    expect(unknown.stderr).toBe(
+        'gspot cannot explain one lint rule of bash/shfmt. Leave out the rule to explain the whole check.\n',
+    );
 });

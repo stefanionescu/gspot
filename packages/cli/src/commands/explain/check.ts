@@ -1,3 +1,4 @@
+import { GspotError } from '#cli/system/errors.ts';
 import { CODE_MARK } from '#cli/config/commands/help.ts';
 import { describeCheck } from '#cli/engine/reference.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
@@ -8,9 +9,9 @@ import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { readCheckRuleDocs } from '#cli/configurations/rules.ts';
 import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
-import type { Check, Configuration } from '#cli/types/manifests.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import type { Session, ScopeCheck, LintRuleDocs } from '#cli/types/tools.ts';
+import type { Check, Configuration, ConfigurationCheck } from '#cli/types/manifests.ts';
 import { listRuleFiles, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
 import type { CheckFacts, CheckIgnore, Explanation } from '#cli/types/commands/reports.ts';
 
@@ -170,6 +171,20 @@ function formatLintRuleLines(
     ];
 }
 
+function findRuleCheck(checkId: string): ConfigurationCheck | undefined {
+    const found = listChecksById(readConfigurations().values()).get(checkId);
+    if (
+        found !== undefined &&
+        !OUTPUT_FORMATS[found.check.output.format].namesRules(found.check.output) &&
+        CHECK_CODE[checkId]?.ruleDocs === undefined
+    )
+        throw new GspotError(
+            'arguments',
+            `gspot cannot explain one lint rule of ${checkId}. Leave out the rule to explain the whole check.`,
+        );
+    return found;
+}
+
 /**
 Explain a shipped check or a command check.
 
@@ -222,6 +237,7 @@ options. ESLint and Stylelint rules must exist in the tools that gspot installed
 @param options.verbose whether to include the full explanation.
 @param options.session the repository settings and tool project, when available.
 @returns undefined when no check runs the tool, or when ESLint or Stylelint has no such rule.
+@throws GspotError when gspot cannot name one lint rule of the check.
 */
 export async function explainLintRule(
     root: string,
@@ -229,8 +245,7 @@ export async function explainLintRule(
     identifier: string,
     { verbose, session }: { verbose?: boolean; session?: Session } = {},
 ): Promise<Explanation | undefined> {
-    const configurationsByName = readConfigurations();
-    const found = listChecksById(configurationsByName.values()).get(checkId);
+    const found = findRuleCheck(checkId);
     if (found === undefined) return undefined;
     const tool = OUTPUT_FORMATS[found.check.output.format].namesRules(found.check.output)
         ? findToolName(found.check)
