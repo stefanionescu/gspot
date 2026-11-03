@@ -14,9 +14,14 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { CLI_BIN, runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { GSPOT_ENVIRONMENT, SIGNAL_MARKER_OPTION } from '#tests/config/setup/programs.ts';
-import { BASH_SYNTAX_CHECK, UNIT_TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/sandboxes.ts';
 import { SIGNAL_EXITS, AUTHORED_SCRIPT, CHECK_STOPPED_MESSAGE } from '#tests/config/commands/check.ts';
 import { waitForExit, waitForFile, captureChild, spawnCommand, limitCommand } from '#tests/setup/system/processes.ts';
+
+import {
+    BASH_SYNTAX_CHECK,
+    BASH_SYNTAX_PUSH_CHECK,
+    UNIT_TEST_TIMEOUT_MILLISECONDS,
+} from '#tests/config/setup/sandboxes.ts';
 
 async function prepareStagedCancellation(root: string, operation: 'status' | 'init' | 'cat-file') {
     await createFileTree(root, {
@@ -96,7 +101,7 @@ test.skipIf(isWindows)(
     'canceling a pre-push check keeps the finished reports and names the refs it did not check',
     async () => {
         await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
+            'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_PUSH_CHECK }),
             'source.sh': 'echo first\n',
         });
 
@@ -148,7 +153,7 @@ test.skipIf(isWindows)(
         await using sandbox = await testdir();
         const root = sandbox.path;
         await createFileTree(root, {
-            'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
+            'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_PUSH_CHECK }),
             'source.sh': 'echo indexed\n',
         });
         commitAll(root);

@@ -6,7 +6,7 @@ export const CHECK_HOOKS = ['pre-commit', 'pre-push', 'commit-msg'] as const;
 
 export const HOOK_CHECKS = {
     'pre-commit': { arguments: 'check --staged --stage commit', stages: ['commit'] },
-    'pre-push': { arguments: 'check --hook pre-push -- "$@"', stages: ['commit', 'push'] },
+    'pre-push': { arguments: 'check --hook pre-push -- "$@"', stages: ['push'] },
     'commit-msg': { arguments: 'check --hook commit-msg -- "$1"', stages: ['message'] },
 } as const satisfies Record<(typeof CHECK_HOOKS)[number], { arguments: string; stages: readonly string[] }>;
 

@@ -12,7 +12,7 @@ async function runChangeChecks(format: 'sha1' | 'sha256'): Promise<unknown> {
     const files = {
         'gspot.toml': buildSandboxSettings([], {
             tables: stringify({
-                command_check: [buildReportingCheck({ id: 'sandbox/report', paths: ['src/**'], stage: 'commit' })],
+                command_check: [buildReportingCheck({ id: 'sandbox/report', paths: ['src/**'], stage: 'push' })],
             }),
         }),
         'src/kept.ts': 'export {};\n',

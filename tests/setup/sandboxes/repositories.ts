@@ -12,9 +12,9 @@ import {
     LFS_ATTRIBUTES,
     CHANGED_CONTEXT,
     TEAMS_TABLE_SQL,
-    BASH_SYNTAX_CHECK,
     NESTED_SCOPE_FILES,
     TEAMS_MIGRATION_PATH,
+    BASH_SYNTAX_PUSH_CHECK,
 } from '#tests/config/setup/sandboxes.ts';
 
 /**
@@ -34,7 +34,7 @@ export async function preparePushRepository(
     root: string,
 ): Promise<{ base: string; reviewed: string; broken: string; zero: string }> {
     await createFileTree(root, {
-        'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
+        'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_PUSH_CHECK }),
         'changed.sh': PUSH_CONTENT.base,
         'legacy.sh': PUSH_CONTENT.broken,
     });

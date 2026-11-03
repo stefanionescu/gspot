@@ -11,7 +11,7 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check.ts';
-import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
+import { BASH_SYNTAX_CHECK, BASH_SYNTAX_PUSH_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { createGitSandbox, assertWorkingTreeKept, preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
 
 async function runBrokenPushCheck(root: string, base: string, broken: string): Promise<RunReport> {
@@ -54,7 +54,7 @@ test('the pre-push report prints a command that reproduces the same findings', a
 
 test('a pushed commit that changes gspot.toml checks every file of that commit', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
+        'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_PUSH_CHECK }),
         'changed.sh': 'echo base\n',
         'legacy.sh': BROKEN_IF_SCRIPT,
     });
@@ -64,7 +64,7 @@ test('a pushed commit that changes gspot.toml checks every file of that commit',
     await writeFile(join(sandbox.path, 'changed.sh'), 'echo changed\n');
     await writeFile(
         join(sandbox.path, 'gspot.toml'),
-        buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK + '[hooks]\n' }),
+        buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_PUSH_CHECK + '[hooks]\n' }),
     );
     runGitStep(sandbox.path, ['add', 'gspot.toml', 'changed.sh']);
     runGitStep(sandbox.path, ['commit', '-qm', 'full pushed tree']);
@@ -115,4 +115,20 @@ test('push skips pre-adoption and unchanged refs without opening a copy or parsi
         expect(text.stdout).toBe(`refs/heads/legacy: ${reason}; no checks apply.\n`);
     }
     expect(await readFile(join(sandbox.path, '.gspot-copies'), 'utf8')).toBe('A copy cannot be created here.');
+});
+
+test('a pre-push run checks the push stage and leaves the commit stage to the commit hook', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables: BASH_SYNTAX_CHECK }),
+        'entry.sh': 'echo base\n',
+    });
+    const base = commitAll(sandbox.path);
+    await writeFile(join(sandbox.path, 'entry.sh'), BROKEN_IF_SCRIPT);
+    const head = commitAll(sandbox.path, 'broken');
+    const stdin = `refs/heads/main ${head} refs/heads/main ${base}\n`;
+    const result = await runGspot(sandbox.path, PUSH_CHECK_COMMAND, {}, { stdin });
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const { report } = (JSON.parse(result.stdout) as PushReport).revisions[0]!;
+    expect(report.stages).toStrictEqual(['push']);
+    expect(report.checks).toStrictEqual([]);
 });

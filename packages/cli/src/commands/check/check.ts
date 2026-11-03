@@ -8,6 +8,7 @@ import { runPushCheck } from '#cli/commands/check/push.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { constants, accessSync, existsSync } from 'node:fs';
+import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { InvalidArgumentError } from '@commander-js/extra-typings';
 import { readIndexTree } from '#cli/repository/revisions/files.ts';
@@ -151,7 +152,7 @@ function parseCheckFlags(
         skip: flags.skip,
         base: flags.base,
         messageFile: hook === 'commit-msg' && paths[0] !== undefined ? resolve(cwd, paths[0]) : undefined,
-        stage: hook === 'commit-msg' ? 'message' : flags.stage,
+        stage: hook === undefined ? flags.stage : HOOK_CHECKS[hook].stages[0],
         onProgress: printProgress,
     };
     assertCheckSelection(options, flags);

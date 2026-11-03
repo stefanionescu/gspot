@@ -8,7 +8,7 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check.ts';
-import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
+import { BASH_SYNTAX_PUSH_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each([
@@ -17,7 +17,7 @@ test.each([
 ])('a push of HEAD %s', async (_scenario, isStaged, copies) => {
     await using sandbox = await createGitSandbox({
         '.gitignore': `${GSPOT_FOLDER}/\n`,
-        'gspot.toml': buildSandboxSettings([], { tables: BASH_SYNTAX_CHECK }),
+        'gspot.toml': buildSandboxSettings([], { tables: BASH_SYNTAX_PUSH_CHECK }),
         'entry.sh': 'echo base\n',
     });
     const base = commitAll(sandbox.path);

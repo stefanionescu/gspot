@@ -221,13 +221,18 @@ export const NESTED_SCOPE_FILES = {
     'nested settings/source.txt': 'committed',
 } as const;
 
-export const BASH_SYNTAX_CHECK = String.raw`[[command_check]]
+const BASH_SYNTAX_COMMAND = `[[command_check]]
 id = "project/bash-syntax"
 command = ["bash", "-n", "{file}"]
 paths = ["**/*.sh"]
-stage = "commit"
-output = { format = "regex", pattern = "^.*: line (?<line>\\d+): (?<message>.*)$" }
 `;
+
+const BASH_SYNTAX_OUTPUT = String.raw`output = { format = "regex", pattern = "^.*: line (?<line>\\d+): (?<message>.*)$" }
+`;
+
+export const BASH_SYNTAX_CHECK = `${BASH_SYNTAX_COMMAND}stage = "commit"\n${BASH_SYNTAX_OUTPUT}`;
+
+export const BASH_SYNTAX_PUSH_CHECK = `${BASH_SYNTAX_COMMAND}stage = "push"\n${BASH_SYNTAX_OUTPUT}`;
 
 export const TEAMS_TABLE_SQL = 'CREATE TABLE teams (id integer PRIMARY KEY);\n';
 

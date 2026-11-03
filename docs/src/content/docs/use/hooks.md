@@ -6,14 +6,15 @@ description: Run checks before commits and pushes and check commit messages.
 The `gspot init` plan includes Git hooks. With `hooks.enabled = true`, gspot writes each hook below that runs at least
 one check, and `gspot install` turns them on.
 
-| Hook         | Checks                                                                                                                                                                               |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `pre-commit` | The commit-stage checks, on the staged files.                                                                                                                                        |
-| `pre-push`   | The commit- and push-stage checks, on the files the push changes, as they are in the pushed tip. At level `all`, `commits/commitlint-pushed` also checks each pushed commit message. |
-| `commit-msg` | The message-stage checks on the new commit message: `commits/references`, and at level `all` also `commits/commitlint` and `prose/commit-message`.                                   |
+| Hook         | Checks                                                                                                                                                                   |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pre-commit` | The commit-stage checks, on the staged files.                                                                                                                            |
+| `pre-push`   | The push-stage checks, on the files the push changes, as they are in the pushed tip. At level `all`, `commits/commitlint-pushed` also checks each pushed commit message. |
+| `commit-msg` | The message-stage checks on the new commit message: `commits/references`, and at level `all` also `commits/commitlint` and `prose/commit-message`.                       |
 
 The commit hook checks the staged files. The push hook checks the tip of each pushed branch; a mistake fixed in a later
-commit of the same push does not fail it.
+commit of the same push does not fail it. The commit hook already checked each commit, so the push hook leaves out the
+commit-stage checks, and CI runs both stages.
 
 Some checks, such as the type checker, read the whole project and can report a finding in a file you did not change.
 
