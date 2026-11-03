@@ -3,7 +3,6 @@ import { join, relative } from 'node:path';
 import { getTool } from '#cli/tools/pins.ts';
 import { availableParallelism } from 'node:os';
 import { remember } from '#cli/system/cache.ts';
-import { runFixers } from '#cli/engine/fixes.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
@@ -20,6 +19,7 @@ import { CheckStop, GspotError } from '#cli/system/errors.ts';
 import { holdCopyFolder } from '#cli/engine/copies/folders.ts';
 import { formatUnexpectedError } from '#cli/system/terminal.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
+import { runFixers, listConflictedPaths } from '#cli/engine/fixes.ts';
 import type { RunSelection, PlannedCheck } from '#cli/types/engine/plan.ts';
 import { buildBaseResult, runBuiltInCheck, normalizeResultPaths } from '#cli/engine/results.ts';
 
@@ -158,9 +158,11 @@ function formatReproduceCommand(checkId: string, scopeArgument: string | undefin
 }
 
 function findFixCommand(run: Run, result: CheckResult): Pick<CheckResult, 'fixCommand'> {
-    const files = new Set(result.findings.filter(({ fixable }) => fixable).map(({ file }) => file));
-    if (run.options.fix || files.size === 0) return {};
-    const paths = [...files].map((file) => {
+    const fixable = [...new Set(result.findings.filter((finding) => finding.fixable).map(({ file }) => file))];
+    const conflicted = new Set(listConflictedPaths(run.session.root, fixable));
+    const files = fixable.filter((file) => !conflicted.has(file));
+    if (run.options.fix || files.length === 0) return {};
+    const paths = files.map((file) => {
         const path = convertToPosixPath(relative(run.options.cwd, join(run.session.toolsRoot, file)));
         return quoteArgument(path.startsWith('-') ? `./${path}` : path);
     });

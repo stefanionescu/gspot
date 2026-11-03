@@ -191,11 +191,6 @@ function restoreBrokenFiles(root: string, broken: string[], rounds: FixRounds): 
     }
 }
 
-function listConflictedPaths(root: string, paths: string[]): string[] {
-    const contents = readContents(root, paths);
-    return paths.filter((path) => CONFLICT_MARKER_LINE.test(contents.get(path)?.toString('utf8') ?? ''));
-}
-
 function buildFixResult(
     check: string,
     changed: string[],
@@ -205,6 +200,17 @@ function buildFixResult(
     if (signal?.aborted === true) return { check, changed, status: 'canceled', note: note ?? 'Canceled.' };
     if (note !== undefined) return { check, changed, status: 'failed', note };
     return { check, changed, status: changed.length === 0 ? 'unchanged' : 'changed' };
+}
+
+/**
+List the files that hold merge-conflict markers, which no fixer changes.
+
+@param root the repository or the copy that holds the files.
+@param paths the files to read.
+*/
+export function listConflictedPaths(root: string, paths: string[]): string[] {
+    const contents = readContents(root, paths);
+    return paths.filter((path) => CONFLICT_MARKER_LINE.test(contents.get(path)?.toString('utf8') ?? ''));
 }
 
 /**
