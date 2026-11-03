@@ -10,6 +10,7 @@ import { listReplacedTools } from '#cli/tools/pins.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { includeParentFolders } from '#cli/system/paths.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { readRepositorySetup } from '#cli/repository/setup.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
@@ -59,6 +60,7 @@ async function planSettings(plan: SettingsPlan): Promise<PlannedSettings> {
         tools: new Set(configurations.flatMap((configuration) => configuration.tools.map(({ name }) => name))),
         level: first.level,
         prettierScripts: draft.prettierScripts,
+        trackedPaths: draft.trackedPaths,
         templateIgnore: (draft.template?.table['ignore'] ?? []) as TomlTable[],
     });
     const settingsText = buildInitSettings({ ...draft, carried: carryover.settings }, repository, configurationsByName);
@@ -81,9 +83,10 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
     const proposed = selectProposedConfigurations({ repository, configurationsByName, options });
     const repositorySetup = await readRepositorySetup(cache, repository);
     const prettierScripts = await readPrettierScripts(root, repository.files, proposed.scopes);
+    const trackedPaths = [...includeParentFolders(repository.files.map(({ path }) => path))];
     const { carryover, settingsText, settings, planned } = await planSettings({
         root,
-        draft: buildSettingsDraft(proposed, options, prettierScripts),
+        draft: buildSettingsDraft(proposed, options, { prettierScripts, trackedPaths }),
         repository,
         configurationsByName,
         conflictingConfigs: repositorySetup.conflictingConfigs,

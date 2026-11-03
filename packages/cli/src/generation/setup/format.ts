@@ -6,7 +6,6 @@ import { muteOutput } from '#cli/system/terminal.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { includeParentFolders } from '#cli/system/paths.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
@@ -194,21 +193,20 @@ Build the format overrides of a Prettier config. A glob that matches no tracked 
 
 @param options the options that hold the overrides.
 @param scope the scope of the config, empty for the root.
-@param repository the tracked files.
+@param trackedPaths the tracked files and every folder above them.
 @returns one record per override with a path and a format option.
 */
 export function buildPrettierOverrides(
     options: PrettierStyle | null,
     scope: string,
-    repository: Repository,
+    trackedPaths: readonly string[],
 ): TomlTable[] {
-    const tracked = [...includeParentFolders(repository.files.map(({ path }) => path))];
     return (options?.overrides ?? [])
         .map((override) => ({
             paths: [override.files]
                 .flat()
                 .map((glob) => (glob.includes('/') ? glob : `**/${glob}`))
-                .filter((glob) => tracked.some(buildPathMatcher([joinScopeSelector(glob, scope)]))),
+                .filter((glob) => trackedPaths.some(buildPathMatcher([joinScopeSelector(glob, scope)]))),
             ...convertPrettierFormat(override.options),
         }))
         .filter(
@@ -347,7 +345,7 @@ export function readScopeFormat(
     const options = scope === '' && hasCode(repository) ? { ...PRETTIER_DEFAULTS, ...read } : read;
     const fields = options === null ? {} : convertPrettierFormat(options);
     const overrides = [
-        ...buildPrettierOverrides(options, scope, repository),
+        ...buildPrettierOverrides(options, scope, draft.trackedPaths),
         ...(scope === '' ? buildFormatterOverrides(fields, repository) : []),
     ];
     const table: TomlTable = { ...fields, ...(overrides.length > 0 && { override: overrides }) };

@@ -61,7 +61,7 @@ test('setting level keeps the opening init comment first', async () => {
         configurationsByName,
     });
     const text = buildInitSettings(
-        { configurations: [], scopes: [], base: '', prettierScripts: new Map() },
+        { configurations: [], scopes: [], base: '', prettierScripts: new Map(), trackedPaths: [] },
         repository,
         configurationsByName,
     );

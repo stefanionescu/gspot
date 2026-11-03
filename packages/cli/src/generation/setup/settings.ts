@@ -7,9 +7,9 @@ import { formatSettingsCommands } from '#cli/generation/rules.ts';
 import { stripDefaults } from '#cli/generation/setup/defaults.ts';
 import { readScopeFormat } from '#cli/generation/setup/format.ts';
 import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
+import type { InitOptions, SettingsDraft } from '#cli/types/generation.ts';
 import { LEADING_COMMENTS, HAND_EDIT_RECORDS } from '#cli/config/generation.ts';
 import type { Repository, ProposedConfigurations } from '#cli/types/repository.ts';
-import type { InitOptions, SettingsDraft, PrettierScripts } from '#cli/types/generation.ts';
 
 function buildSettingsTable(
     draft: SettingsDraft,
@@ -67,12 +67,14 @@ Draft the settings from the configuration choices.
 
 @param configurations the configurations and scopes.
 @param options the authored level, when selected.
-@param prettierScripts the options of the JavaScript Prettier configs.
+@param format what the format settings read from the repository.
+@param format.prettierScripts the options of the JavaScript Prettier configs.
+@param format.trackedPaths the tracked files and every folder above them.
 */
 export function buildSettingsDraft(
     configurations: ProposedConfigurations,
     options: Pick<InitOptions, 'level' | 'template'>,
-    prettierScripts: PrettierScripts,
+    { prettierScripts, trackedPaths }: Pick<SettingsDraft, 'prettierScripts' | 'trackedPaths'>,
 ): SettingsDraft {
     const scopes = configurations.scopes.filter((scope) => scope.path !== '');
     return {
@@ -85,5 +87,6 @@ export function buildSettingsDraft(
         level: options.level,
         template: options.template,
         prettierScripts,
+        trackedPaths,
     };
 }

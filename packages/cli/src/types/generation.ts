@@ -173,6 +173,7 @@ export type CarryoverInput = {
     tools: ReadonlySet<string>;
     level: Level;
     prettierScripts: PrettierScripts;
+    trackedPaths: readonly string[];
     templateIgnore: readonly TomlTable[];
 };
 
@@ -232,6 +233,7 @@ export type SettingsDraft = {
     configurations: string[];
     scopes: ScopeFolder[];
     prettierScripts: PrettierScripts;
+    trackedPaths: readonly string[];
     carried?: TomlTable | undefined;
 };
 

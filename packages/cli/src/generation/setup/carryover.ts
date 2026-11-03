@@ -245,7 +245,13 @@ function listUnreadRows({ conflictingConfigs, tools }: CarryoverInput, rows: Car
     }));
 }
 
-function listPrettierRows({ repository, session, prettierScripts, tools }: CarryoverInput): CarryoverRow[] {
+function listPrettierRows({
+    repository,
+    session,
+    prettierScripts,
+    trackedPaths,
+    tools,
+}: CarryoverInput): CarryoverRow[] {
     if (!tools.has('prettier')) return [];
     return session.scopes.flatMap(({ path: scope }) => {
         const sources = readPrettierOptions(repository.root, scope, prettierScripts);
@@ -264,7 +270,7 @@ function listPrettierRows({ repository, session, prettierScripts, tools }: Carry
                 ),
             );
             const isOverridden =
-                held.has(PRETTIER_OVERRIDES_KEY) && buildPrettierOverrides(options, scope, repository).length > 0;
+                held.has(PRETTIER_OVERRIDES_KEY) && buildPrettierOverrides(options, scope, trackedPaths).length > 0;
             return {
                 ...CARRYOVER_ROW_START,
                 path,
