@@ -74,7 +74,7 @@ export function listGeneratedChangeLines(report: ApplyReport): string[] {
     for (const [action, paths] of [
         ['wrote', report.written],
         ['updated', report.updated],
-        ['removed', report.removed],
+        ['removed', report.deleted],
     ] as const) {
         const gspotCount = paths.filter((path) => isGspotPath(path)).length;
         const label = action.padEnd(CHANGE_LABEL_WIDTH);
@@ -121,7 +121,7 @@ export async function writeGeneratedFiles(
     const report: ApplyReport = {
         written: [],
         unchanged: [],
-        removed: [],
+        deleted: [],
         updated: [],
         notes: [],
     };
@@ -148,7 +148,7 @@ export async function writeGeneratedFiles(
         ...[...blocks, ...managedKeyPlans].filter((plan) => plan.status === 'changed').map((plan) => plan.path),
     );
     const pruned = pruning.filter((plan) => plan.status === 'changed');
-    report.removed.push(...pruned.filter((plan) => plan.after === undefined).map(({ path }) => path));
+    report.deleted.push(...pruned.filter((plan) => plan.after === undefined).map(({ path }) => path));
     report.updated.push(...pruned.filter((plan) => plan.after !== undefined).map(({ path }) => path));
     const { hooksPath } = await readHooks(session.repository);
     if (!session.settings.hooks.enabled && hooksPath === GSPOT_PATHS.hooks) {
@@ -196,7 +196,7 @@ export async function listInstallNotes(
     if (
         session.settings.hooks.enabled &&
         hooksPath !== GSPOT_PATHS.hooks &&
-        [...report.removed, ...report.written].some((path) => path.startsWith(`${GSPOT_PATHS.hooks}/`))
+        [...report.deleted, ...report.written].some((path) => path.startsWith(`${GSPOT_PATHS.hooks}/`))
     )
         notes.push(HOOKS_CHANGED_NOTE);
     if (listStaleLockfiles(session, generated.files).length === 0) return notes;

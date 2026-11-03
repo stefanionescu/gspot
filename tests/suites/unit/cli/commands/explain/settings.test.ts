@@ -59,9 +59,14 @@ test('explain reads an inherited limits.max_function_lines value and its reason,
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
     expect(JSON.parse(explained.stdout)).toMatchObject({
         kind: 'setting',
-        key: 'limits.max_function_lines',
+        setting: 'limits.max_function_lines',
         type: 'number',
-        scopes: ['', 'app'].map((scope) => ({ scope, value: 100, source: 'gspot.toml', reason: SETTING_REASON })),
+        scopes: ['', 'app'].map((scope) => ({
+            scope,
+            value: 100,
+            source: { kind: 'root', name: 'gspot.toml' },
+            reason: SETTING_REASON,
+        })),
     });
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
@@ -100,15 +105,15 @@ test.each([...REASON_VALUES])(
         expect(
             (
                 JSON.parse(reported.stdout) as {
-                    scopes: Array<{ scope: string; value: unknown; source: string; reason?: string }>;
+                    scopes: Array<{ scope: string; value: unknown; source: object; reason?: string }>;
                 }
             ).scopes.map(({ scope, value, source, reason }) => ({ scope, value, source, reason })),
         ).toStrictEqual([
-            { scope: '', value: row.value[0], source: 'gspot.toml', reason: undefined },
+            { scope: '', value: row.value[0], source: { kind: 'root', name: 'gspot.toml' }, reason: undefined },
             {
                 scope: 'app',
                 value: row.value[1],
-                source: 'scope app',
+                source: { kind: 'scope', name: 'app' },
                 reason: row.needsReason ? explanation : undefined,
             },
         ]);
@@ -153,10 +158,10 @@ test('explain shows the default of a path setting joined with the scope, as gspo
     const explained = await runGspot(sandbox.path, ['explain', 'site.build_folder', '--json']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
     const { scopes } = JSON.parse(explained.stdout) as {
-        scopes: Array<{ scope: string; default: unknown; value: unknown; source: string }>;
+        scopes: Array<{ scope: string; default: unknown; value: unknown; source: object }>;
     };
     expect(scopes.filter((each) => each.scope === 'web')).toStrictEqual([
-        { scope: 'web', default: 'web/dist', value: 'web/dist', source: 'configuration site' },
+        { scope: 'web', default: 'web/dist', value: 'web/dist', source: { kind: 'configuration', name: 'site' } },
     ]);
 });
 
@@ -216,7 +221,7 @@ test('explain reads a shipped default before init and prints plain command examp
     await using sandbox = await createGitSandbox({});
     const result = await runGspot(sandbox.path, ['explain', 'limits.max_file_lines', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(JSON.parse(result.stdout)).toMatchObject({ kind: 'setting', key: 'limits.max_file_lines' });
+    expect(JSON.parse(result.stdout)).toMatchObject({ kind: 'setting', setting: 'limits.max_file_lines' });
     const rules = await runGspot(sandbox.path, ['explain', 'tools.eslint.rules']);
     expect(rules.code, rules.stdout + rules.stderr).toBe(0);
     expect(rules.stdout).toContain('gspot ignore javascript/eslint --rule <rule> --reason "<why>"');

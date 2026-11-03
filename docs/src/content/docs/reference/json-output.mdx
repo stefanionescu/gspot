@@ -52,7 +52,7 @@ holds repository-relative paths.
 | ----------- | ------------------------------------------------------- |
 | `written`   | Files that gspot created or replaced.                   |
 | `updated`   | Files where gspot changed only its own block or keys.   |
-| `removed`   | Files that gspot deleted because no setting needs them. |
+| `deleted`   | Files that gspot deleted because no setting needs them. |
 | `unchanged` | Files that already matched `gspot.toml`.                |
 
 ## `gspot scan`
@@ -71,12 +71,12 @@ holds repository-relative paths.
 
 ## `gspot baseline`
 
-| Field      | Meaning                                                                     |
-| ---------- | --------------------------------------------------------------------------- |
-| `summary`  | One sentence about the result.                                              |
-| `findings` | Number of findings that `gspot.baseline.json` holds.                        |
-| `files`    | Number of files that those findings sit in.                                 |
-| `leftOut`  | The checks that keep failing, because a baseline leaves their findings out. |
+| Field          | Meaning                                                                     |
+| -------------- | --------------------------------------------------------------------------- |
+| `summary`      | One sentence about the result.                                              |
+| `findingCount` | Number of findings that `gspot.baseline.json` holds.                        |
+| `fileCount`    | Number of files that those findings sit in.                                 |
+| `leftOut`      | The checks that keep failing, because a baseline leaves their findings out. |
 
 ## `gspot init`
 
@@ -91,11 +91,11 @@ The object of `gspot init --json` also has the [generated-file fields](#generate
 | `missing`      | What stays missing after the install, with what to do about it.          |
 | `steps`        | The commands that the install ran, as argument lists.                    |
 
-`plan` holds `level`, `configurations`, the file lists `write`, `delete`, `keep`, `change`, and `lintFolders`, and the
+`plan` holds `level`, `configurations`, the file lists `write`, `deleted`, `keep`, `change`, and `lintFolders`, and the
 lists `lintCommands` and `carryover`. Each row of `lintCommands` has `file`, `line`, `source`, `command`, `tool`, and `fix`.
 Each row of `carryover` has `path`, `tool`, `covered`, `carried`, `differing`, `reasons`, `plugins`, `commandChecks`, and `dropped`. Each
 item of `configurations` has `configuration`, `origin`, `scopes`, `checks`, and `checksOff`. Each file row has `path` and `note`. With `--from`, `plan`
-also has `from`, with the `file` that `--from` names and the `leftOut` settings.
+also has `from`, with the `file` that `--from` names and the `leftOutSettings`.
 
 ## `gspot install`
 
@@ -183,8 +183,9 @@ Each item of `checks` has `check`, `scope`, and `status`: `on`, or `skipped` wit
 | ---------- | --------------------------- |
 | `settings` | Each setting of each scope. |
 
-Each item has `key`, `value`, `source`, `origin`, `reasonRequirement`, and `scope`, and `originScope` when a scope inherits the
-value from another scope.
+Each item has `setting`, `value`, `source`, `reasonWhen`, and `scope`. `source` says where the value comes from, with
+`kind` and `name`: `default` and `gspot`, `configuration` and its name, `root` and `gspot.toml`, `scope` and the path of
+the scope that sets it, or `unset`. `reasonWhen` holds the change that needs a reason, when one does.
 
 ## `gspot explain`
 
@@ -209,7 +210,7 @@ after its check, such as `gspot explain javascript/eslint no-console --json`.
 | `runInCopy`     | When present, whether the check runs on a copy of the files.                   |
 | `minVersions`   | The oldest version of each runtime or tool that the check needs.               |
 | `turnOff`       | The `gspot ignore` command for some paths, and for one lint rule when present. |
-| `settings`      | The settings that change the check.                                            |
+| `settingNames`  | The settings that change the check.                                            |
 | `ruleFiles`     | The rule files that state the check.                                           |
 | `selected`      | When present, whether a scope selects the configuration of the check.          |
 | `ignores`       | The ignores of `gspot.toml` that name the check, with `reason` and `command`.  |
@@ -241,23 +242,23 @@ after its check, such as `gspot explain javascript/eslint no-console --json`.
 | `requires`       | The configurations that it needs.                                              |
 | `tools`          | Its tools and their versions.                                                  |
 | `checks`         | Its checks, each with `check` and `stage`.                                     |
-| `settings`       | Its settings.                                                                  |
+| `settingNames`   | Its settings.                                                                  |
 | `ruleFiles`      | Its rule files in this repository.                                             |
 | `alwaysSelected` | Whether gspot selects it in every repository.                                  |
 | `removed`        | Each scope that removes it, with `scope`, `reason`, and the `command` to undo. |
 
 ### `setting`
 
-| Field               | Meaning                                                                                           |
-| ------------------- | ------------------------------------------------------------------------------------------------- |
-| `key`               | The setting name.                                                                                 |
-| `type`              | Its type.                                                                                         |
-| `description`       | What it does.                                                                                     |
-| `default`           | When present, its default.                                                                        |
-| `defaultAll`        | When present, its default at level `all`.                                                         |
-| `languageDefaults`  | When present, its default per language.                                                           |
-| `reasonRequirement` | When present, the change that needs a reason.                                                     |
-| `scopes`            | Each scope, with `scope`, `default`, `value`, `source`, and, when present, `readBy` and `reason`. |
+| Field              | Meaning                                                                                                                       |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `setting`          | The setting name.                                                                                                             |
+| `type`             | Its type.                                                                                                                     |
+| `description`      | What it does.                                                                                                                 |
+| `default`          | When present, its default.                                                                                                    |
+| `defaultAll`       | When present, its default at level `all`.                                                                                     |
+| `languageDefaults` | When present, its default per language.                                                                                       |
+| `reasonWhen`       | When present, the change that needs a reason.                                                                                 |
+| `scopes`           | Each scope, with `scope`, `default`, `value`, `source` as in `gspot list settings`, and, when present, `readBy` and `reason`. |
 
 ### `path`
 
@@ -279,15 +280,15 @@ after its check, such as `gspot explain javascript/eslint no-console --json`.
 `gspot doctor --json` returns the state of the setup. `exitCode` holds `1` when a tool, environment, or hook needs
 your action.
 
-| Field          | Meaning                                                                                         |
-| -------------- | ----------------------------------------------------------------------------------------------- |
-| `tools`        | Each tool with `name`, `kind`, and `state`, and `want`, `found`, `path`, and `help` when known. |
-| `environments` | Project environments that a check needs and that are missing.                                   |
-| `suggestions`  | Configurations to add, and files that no configuration checks.                                  |
-| `hooks`        | The state of the Git hooks.                                                                     |
-| `ci`           | The state of the CI workflow.                                                                   |
-| `ruleFiles`    | The number of rule files for coding agents.                                                     |
-| `submodules`   | Submodule paths, whose contents gspot does not read.                                            |
+| Field           | Meaning                                                                                         |
+| --------------- | ----------------------------------------------------------------------------------------------- |
+| `tools`         | Each tool with `name`, `kind`, and `state`, and `want`, `found`, `path`, and `help` when known. |
+| `environments`  | Project environments that a check needs and that are missing.                                   |
+| `suggestions`   | Configurations to add, and files that no configuration checks.                                  |
+| `hooks`         | The state of the Git hooks.                                                                     |
+| `ci`            | The state of the CI workflow.                                                                   |
+| `ruleFileCount` | The number of rule files for coding agents.                                                     |
+| `submodules`    | Submodule paths, whose contents gspot does not read.                                            |
 
 `hooks` has `ready`, and when known, `tool`, what runs the hooks, and `lines`, what to do about them. `ci`
 has `enabled`, and when known, `provider` and the workflow `file`.

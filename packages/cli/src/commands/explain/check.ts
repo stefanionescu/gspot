@@ -96,7 +96,7 @@ function formatRepositoryUse(facts: CheckExplanation): string[] {
 }
 
 function formatCheckExplanation(facts: CheckExplanation): string {
-    const { settings, ruleFiles, minVersions } = facts;
+    const { settingNames: settings, ruleFiles, minVersions } = facts;
     const source = facts.configuration === undefined ? REPOSITORY_COMMAND : `${facts.configuration} configuration`;
     const lines = [
         `${facts.check}  (${source}, ${facts.stage} stage, ${facts.level} level)`,
@@ -203,7 +203,7 @@ function buildCheckExplanation(
         runInCopy: check.run_in_copy,
         minVersions: described.minVersions,
         turnOff: { ...described.turnOff, rule: described.turnOff.rule ?? formatBuiltinRuleIgnore(check) },
-        settings: described.settings,
+        settingNames: described.settings,
         ruleFiles: described.ruleFiles,
         ...(selected !== undefined && { selected }),
         ignores: described.ignores,

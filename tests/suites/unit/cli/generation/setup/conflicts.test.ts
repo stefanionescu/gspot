@@ -75,7 +75,7 @@ test('the init plan deletes the conflicting config files and lists the lint fold
     ]);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const plan = (JSON.parse(initialized.stdout) as InitJson).plan;
-    expect(plan.delete.map(({ path }) => path)).toStrictEqual(REPLACED_CONFIG_DELETIONS.map(({ path }) => path));
+    expect(plan.deleted.map(({ path }) => path)).toStrictEqual(REPLACED_CONFIG_DELETIONS.map(({ path }) => path));
     expect(plan.lintFolders).toStrictEqual([
         {
             path: 'quality/',
@@ -143,7 +143,7 @@ test('init keeps a linked shared file and the bytes and mode of the file it link
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const plan = (JSON.parse(initialized.stdout) as InitJson).plan;
     expect(plan.keep).toStrictEqual([{ path: 'setup.cfg', note: SQLFLUFF_KEPT_NOTE }]);
-    expect(plan.delete.map(({ path }) => path)).not.toContain('setup.cfg');
+    expect(plan.deleted.map(({ path }) => path)).not.toContain('setup.cfg');
     expect(await readlink(join(sandbox.path, 'setup.cfg'))).toBe(join('settings', 'shared.cfg'));
     expect(await readFile(target, 'utf8')).toBe(LINKED_SETUP_CONFIG);
     const attributes = await stat(target);
@@ -181,7 +181,7 @@ test('at level basic, init keeps the config files of checks that are off', async
     const written = await runGspot(sandbox.path, ['init', '--no-configurations', '--level', 'basic', '--json']);
     expect(written.code, written.stdout + written.stderr).toBe(0);
     const plan = (JSON.parse(written.stdout) as InitJson).plan;
-    expect(plan.delete).toStrictEqual([]);
+    expect(plan.deleted).toStrictEqual([]);
     expect(plan.change.map(({ path }) => path)).toStrictEqual(['package.json']);
     expect(plan.write.map(({ path }) => path).filter((path) => /commitlint|syncpack/u.test(path))).toStrictEqual([]);
     for (const [path, source] of Object.entries(INACTIVE_CONFIGURATIONS)) {
@@ -212,7 +212,7 @@ test.each([...STYLELINT_REPLACEMENT_CASES])(
         const written = await runGspot(sandbox.path, [...initCommand, '--json']);
         expect(written.code, written.stdout + written.stderr).toBe(0);
         const plan = (JSON.parse(written.stdout) as InitJson).plan;
-        expect(plan.delete).toContainEqual({
+        expect(plan.deleted).toContainEqual({
             path: authoredConfiguration,
             note: 'replaced by the generated file for stylelint',
         });

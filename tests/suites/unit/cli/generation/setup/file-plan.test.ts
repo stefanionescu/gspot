@@ -42,7 +42,7 @@ test.each([
     expect(plan.write.filter(({ path }) => path === ATTRIBUTES_PLAN_ROW.path)).toStrictEqual(
         attributes === 'write' ? [ATTRIBUTES_PLAN_ROW] : [],
     );
-    expect(plan.delete).toStrictEqual([]);
+    expect(plan.deleted).toStrictEqual([]);
     expect(plan.lintFolders).toStrictEqual([]);
 });
 
@@ -96,7 +96,7 @@ test('init plans no scope for an old lint folder, and --level all replaces the c
     expect(plan.level).toBe('all');
     expect(readSettings(settingsText, sandbox.path)).toMatchObject({ level: 'all', scopes: {} });
     expect(plan.lintFolders.map(({ path }) => path)).toStrictEqual(['quality/']);
-    expect(plan.delete).toStrictEqual([
+    expect(plan.deleted).toStrictEqual([
         { path: '.commitlintrc.json', note: 'replaced by the generated file for commitlint' },
     ]);
 });
@@ -142,7 +142,7 @@ test('init lists your .editorconfig under write and not under delete when the ge
     const initialized = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const { plan } = JSON.parse(initialized.stdout) as Required<Pick<InitJson, 'plan'>>;
-    expect(plan.delete.map(({ path }) => path)).not.toContain('.editorconfig');
+    expect(plan.deleted.map(({ path }) => path)).not.toContain('.editorconfig');
     expect(plan.write.filter(({ path }) => path === '.editorconfig')).toStrictEqual([...EDITORCONFIG_WRITE]);
     expect(await readFile(join(sandbox.path, '.editorconfig'), 'utf8')).not.toBe(authored);
     expect(runGitStep(sandbox.path, ['show', 'HEAD:.editorconfig'])).toBe(authored.trimEnd());

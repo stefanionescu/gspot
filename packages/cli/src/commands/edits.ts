@@ -304,7 +304,7 @@ export async function writeSettingsEdit(
         ...(options.notes ?? []),
         ...listBaselineNotes(root, { previous: options.previous, session }),
     );
-    const written = report.written.length + report.updated.length + report.removed.length;
+    const written = report.written.length + report.updated.length + report.deleted.length;
     if (written === 0 && !result.changed)
         return buildUnchangedResult(options.unchangedSummary ?? UNCHANGED_SETTINGS_MESSAGE, report.notes);
     const shown = result.changed ? summary : (options.unchangedSummary ?? REPAIRED_FILES_MESSAGE);

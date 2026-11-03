@@ -125,7 +125,7 @@ test.each([...UNREADABLE_PRETTIER_FILES])(
         const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         const { plan, settingsText } = JSON.parse(result.stdout) as InitJson;
-        expect([...plan.delete, ...plan.write].find((file) => file.path === path)?.note).toContain(
+        expect([...plan.deleted, ...plan.write].find((file) => file.path === path)?.note).toContain(
             'gspot could not load this Prettier config, so set format.indent_width and format.print_width by hand',
         );
         expect(parse(settingsText) as TomlTable).toHaveProperty('format', {

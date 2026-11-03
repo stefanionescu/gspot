@@ -23,7 +23,7 @@ async function expectSettled(root: string): Promise<void> {
         preview.report.checks.flatMap(({ findings }) => findings).filter(({ file }) => !TOOL_LOCKFILES.has(file)),
     ).toStrictEqual([]);
     const repeated = await applyGeneratedFiles(root);
-    expect(repeated).toMatchObject({ written: [], updated: [], removed: [] });
+    expect(repeated).toMatchObject({ written: [], updated: [], deleted: [] });
     expect(await readTree(root)).toStrictEqual(before);
 }
 

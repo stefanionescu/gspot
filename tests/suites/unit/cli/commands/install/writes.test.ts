@@ -26,7 +26,7 @@ test('install leaves generated files writable, keeps their bytes, and deletes a 
     await createFileTree(sandbox.path, { [`${GSPOT_FOLDER}/obsolete/old.txt`]: 'installed\n' });
     const applied = await runGspot(sandbox.path, ['install', '--json']);
     expect(applied.code).toBe(0);
-    expect((JSON.parse(applied.stdout) as ApplyReport).removed).toContain(`${GSPOT_FOLDER}/obsolete/old.txt`);
+    expect((JSON.parse(applied.stdout) as ApplyReport).deleted).toContain(`${GSPOT_FOLDER}/obsolete/old.txt`);
     expect(existsSync(join(sandbox.path, `${GSPOT_FOLDER}/obsolete/old.txt`))).toBe(false);
     expect(existsSync(join(sandbox.path, `${GSPOT_FOLDER}/obsolete`))).toBe(false);
     expect(existsSync(join(sandbox.path, '.gitattributes'))).toBe(true);
@@ -150,7 +150,7 @@ test('an ignore of every path skips the check and keeps its configured tool and 
     const report = JSON.parse(removed.stdout) as ApplyReport;
     expect(report.written).toStrictEqual(['.prettierignore']);
     expect(await readFile(join(sandbox.path, '.prettierignore'), 'utf8')).toContain('**/*.json');
-    expect(report.removed).toStrictEqual([]);
+    expect(report.deleted).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toContain('prettier');
     const generated = join(sandbox.path, getManifestTarget('format', 'prettier.json'));
     expect(existsSync(generated)).toBe(true);
@@ -162,7 +162,7 @@ test('an ignore of every path skips the check and keeps its configured tool and 
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
     const settled = JSON.parse(repeated.stdout) as ApplyReport;
     expect(settled.unchanged.filter((path) => path === '.prettierignore')).toStrictEqual(['.prettierignore']);
-    expect({ written: settled.written, removed: settled.removed }).toStrictEqual({ written: [], removed: [] });
+    expect({ written: settled.written, deleted: settled.deleted }).toStrictEqual({ written: [], deleted: [] });
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(FORMAT_SETTINGS + PRETTIER_PATH_IGNORE);
     expect(await readFile(join(sandbox.path, 'sample.json'), 'utf8')).toBe('{"value":1}\n');
 });

@@ -68,12 +68,10 @@ export type CheckFlags = {
 export type CheckCommandJson = RunReport | PushReport | CanceledCommandJson;
 
 type SettingRow = {
-    key: string;
+    setting: string;
     value: unknown;
-    source: string;
-    origin: InheritedSetting['origin'];
-    originScope?: string | undefined;
-    reasonRequirement: Setting['reason_when'];
+    source: InheritedSetting['origin'];
+    reasonWhen: Setting['reason_when'];
     scope: string;
 };
 
@@ -105,7 +103,7 @@ export type DoctorReport = {
     suggestions: Suggestions;
     hooks: Omit<HookStatus, 'text'>;
     ci: CiState;
-    ruleFiles: number;
+    ruleFileCount: number;
 };
 
 export type CiState = { enabled: boolean; provider?: keyof typeof CI_FILES; file?: string };
@@ -133,7 +131,7 @@ export type CheckExplanation = {
     runInCopy: boolean | undefined;
     minVersions: Record<string, string>;
     turnOff: CheckDescription['turnOff'];
-    settings: string[];
+    settingNames: string[];
     ruleFiles: string[];
     selected?: boolean;
     ignores: CheckIgnore[];
@@ -154,18 +152,18 @@ export type LintRuleExplanation = {
 };
 
 type SettingExplanation = {
-    key: string;
+    setting: string;
     type: Setting['type'];
     description: string;
     default: unknown;
     defaultAll: unknown;
     languageDefaults: Setting['language_defaults'];
-    reasonRequirement: Setting['reason_when'];
+    reasonWhen: Setting['reason_when'];
     scopes: Array<{
         scope: string;
         default: unknown;
         value?: unknown;
-        source?: string | undefined;
+        source?: InheritedSetting['origin'] | undefined;
         readBy?: string[];
         reason?: string | undefined;
     }>;
@@ -203,7 +201,7 @@ export type ConfigurationExplanation = {
     requires: string[];
     tools: string[];
     checks: Array<{ check: string; stage: string }>;
-    settings: string[];
+    settingNames: string[];
     ruleFiles: string[];
     alwaysSelected: boolean;
     removed: Array<{ scope: string; reason: string; command: string }>;
@@ -246,4 +244,4 @@ export type ScanSection = { title: string; rows: string[]; preformatted?: boolea
 
 export type BaselineFlags = { prune?: boolean; only?: string[] };
 
-export type BaselineJson = { summary: string; findings: number; files: number; leftOut: string[] };
+export type BaselineJson = { summary: string; findingCount: number; fileCount: number; leftOut: string[] };

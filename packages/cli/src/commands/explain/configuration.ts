@@ -55,7 +55,7 @@ export function explainConfiguration(session: Session | undefined, name: string)
             tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`,
         ),
         checks: configuration.checks.map((check) => ({ check: check.id, stage: check.stage })),
-        settings: (SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? []).map((setting) => setting.name),
+        settingNames: (SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? []).map((setting) => setting.name),
         ruleFiles: (session === undefined ? [] : selectRuleFiles(session))
             .filter((file) => listRuleFiles(configuration).some((rule) => rule.path === file.path))
             .map((file) => file.path),
@@ -81,7 +81,7 @@ export function explainConfiguration(session: Session | undefined, name: string)
             label: `Checks at ${stage}`,
             values: facts.checks.filter((check) => check.stage === stage).map((check) => check.check),
         })),
-        { label: 'Settings', values: facts.settings },
+        { label: 'Settings', values: facts.settingNames },
         { label: 'Rule files', values: facts.ruleFiles },
     ];
     const lines = [

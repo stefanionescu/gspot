@@ -205,10 +205,12 @@ export function planInitFiles(
     ];
     return {
         level: settings.level,
-        ...(scan.template !== undefined && { from: { file: scan.template.file, leftOut: scan.template.leftOut } }),
+        ...(scan.template !== undefined && {
+            from: { file: scan.template.file, leftOutSettings: scan.template.leftOut },
+        }),
         configurations: buildConfigurationRows(scan, settings),
         write,
-        delete: conflicts.deleted
+        deleted: conflicts.deleted
             .filter(({ path }) => write.every((row) => row.path !== path))
             .map(({ path, tool, unreadablePrettier }) => ({
                 path,
@@ -251,10 +253,13 @@ export function formatInitPlan(plan: InitPlan, settingsText: string): string {
             ? []
             : formatFileSection(
                   `left out of ${plan.from.file}`,
-                  plan.from.leftOut.map(({ key, note }) => ({ path: key, note })),
+                  plan.from.leftOutSettings.map(({ key, note }) => ({ path: key, note })),
               )),
         ...formatFileSection('write', plan.write),
-        ...formatFileSection(`delete ${styleText('dim', DELETED_RULES_NOTE, { stream: process.stdout })}`, plan.delete),
+        ...formatFileSection(
+            `delete ${styleText('dim', DELETED_RULES_NOTE, { stream: process.stdout })}`,
+            plan.deleted,
+        ),
         ...formatFileSection('keep', plan.keep),
         ...formatFileSection('change', plan.change),
         ...formatFileSection(LINT_FOLDERS_HEADING, plan.lintFolders),

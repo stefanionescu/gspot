@@ -107,7 +107,7 @@ Delete the config files that init replaces, and keep each one that changed after
 */
 export function deleteConflictingConfigs(
     writer: Files,
-    deleted: InitPlan['delete'],
+    deleted: InitPlan['deleted'],
     reviewed: ReadonlyMap<string, FileContents | undefined>,
 ): string[] {
     const kept: string[] = [];

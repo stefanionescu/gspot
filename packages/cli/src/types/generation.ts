@@ -54,7 +54,7 @@ export type UsedNames = { tools: Set<string>; checks: Set<string> };
 export type ApplyReport = {
     written: string[];
     unchanged: string[];
-    removed: string[];
+    deleted: string[];
     updated: string[];
     notes: string[];
 };
@@ -111,7 +111,7 @@ export type InitScan = {
 };
 
 export type InitPlan = {
-    from?: { file: string; leftOut: LeftOutSetting[] };
+    from?: { file: string; leftOutSettings: LeftOutSetting[] };
     level: Level;
     configurations: Array<{
         configuration: string;
@@ -121,7 +121,7 @@ export type InitPlan = {
         checksOff: number;
     }>;
     write: InitFileRow[];
-    delete: InitFileRow[];
+    deleted: InitFileRow[];
     keep: InitFileRow[];
     change: InitFileRow[];
     lintFolders: InitFileRow[];

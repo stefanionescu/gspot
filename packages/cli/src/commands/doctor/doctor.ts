@@ -205,7 +205,7 @@ function formatDoctorReport(
         `hooks: ${states.hooks}`,
         ...report.submodules.map((path) => `submodule  ${path} (contents are not read)`),
         `ci: ${states.ci}`,
-        `rule files: ${String(report.ruleFiles)}`,
+        `rule files: ${String(report.ruleFileCount)}`,
         `gspot      ${cliPackage.version}`,
     ];
     return `${lines.join('\n')}\n`;
@@ -222,7 +222,7 @@ async function runDoctorCommand(root: string): Promise<CommandResult> {
         suggestions: await listSuggestions(session),
         hooks,
         ci,
-        ruleFiles: selectRuleFiles(session).length,
+        ruleFileCount: selectRuleFiles(session).length,
     };
     const broken = report.tools.filter((tool) => !AVAILABLE_TOOL_STATES.has(tool.state) || tool.path === undefined);
     const hasFindings = !hooks.ready || report.environments.length > 0 || broken.length > 0;

@@ -68,6 +68,8 @@ export const TABLE_KEY_SEGMENTS = 2;
 
 export const SHIPPED_DEFAULT_ORIGIN = 'gspot default';
 
+export const SHIPPED_DEFAULT_OWNER = 'gspot';
+
 export const NAMING_TABLE_CATEGORIES = [
     'files',
     'folders',

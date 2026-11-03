@@ -93,11 +93,12 @@ export type InheritedSetting = {
     value: unknown;
     reason?: string | undefined;
     source: string;
-    origin: 'root' | 'scope' | 'configuration' | 'unset';
-    originScope?: string | undefined;
+    origin: SettingOrigin;
 };
 
-export type InheritedValue = Pick<InheritedSetting, 'value' | 'source' | 'origin' | 'originScope'> & {
+export type SettingOrigin = { kind: 'default' | 'configuration' | 'root' | 'scope' | 'unset'; name: string };
+
+export type InheritedValue = Pick<InheritedSetting, 'value' | 'source' | 'origin'> & {
     reason: string | undefined;
 };
 

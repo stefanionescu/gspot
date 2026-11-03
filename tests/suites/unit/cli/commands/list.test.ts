@@ -37,7 +37,7 @@ test('list shows selected settings and available configurations', async () => {
     const listedSettings = await runGspot(sandbox.path, ['list', 'settings', '--json']);
     expect(listedSettings.code, listedSettings.stdout + listedSettings.stderr).toBe(0);
     const rows = (JSON.parse(listedSettings.stdout) as SettingsListJson).settings;
-    expect(rows.find((row) => row.key === 'level')?.value).toBe('basic');
+    expect(rows.find((row) => row.setting === 'level')?.value).toBe('basic');
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
@@ -101,12 +101,14 @@ test('the settings list reports inherited values and their source scope', async 
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
     const { settings } = JSON.parse(structured.stdout) as SettingsListJson;
-    expect(settings.find((row) => row.key === 'test_files')?.reasonRequirement).toBeUndefined();
-    expect(settings.find((row) => row.key === 'limits.max_file_lines')?.reasonRequirement).toBe('raising');
-    expect(settings.find((row) => row.scope === 'api/worker' && row.key === 'limits.max_file_lines')).toMatchObject({
-        value: 200,
-        source: 'scope api',
-    });
+    expect(settings.find((row) => row.setting === 'test_files')?.reasonWhen).toBeUndefined();
+    expect(settings.find((row) => row.setting === 'limits.max_file_lines')?.reasonWhen).toBe('raising');
+    expect(settings.find((row) => row.scope === 'api/worker' && row.setting === 'limits.max_file_lines')).toMatchObject(
+        {
+            value: 200,
+            source: { kind: 'scope', name: 'api' },
+        },
+    );
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
@@ -126,7 +128,7 @@ test('the text settings list shortens long values', async () => {
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
     const report = JSON.parse(structured.stdout) as SettingsListJson;
-    expect(report.settings.find((row) => row.key === 'naming.banned_words')?.value).toStrictEqual([
+    expect(report.settings.find((row) => row.setting === 'naming.banned_words')?.value).toStrictEqual([
         'generated-long-name-one/**',
         'generated-long-name-two/**',
     ]);

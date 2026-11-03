@@ -54,7 +54,7 @@ test('scan reports its run and the plan of init, and leaves the repository as it
     commitAll(sandbox.path);
     const before = await readTree(sandbox.path);
     const report = await runScan(sandbox.path);
-    expect(report.plan.delete.map(({ path }) => path)).toContain('.eslintrc.json');
+    expect(report.plan.deleted.map(({ path }) => path)).toContain('.eslintrc.json');
     expect(report.settingsText).toContain('configurations = ');
     expect(report.categories.find(({ name }) => name === 'Secrets')?.examples).toMatchObject([
         { check: 'secrets/environment-examples', file: 'src/a.js', line: 1 },

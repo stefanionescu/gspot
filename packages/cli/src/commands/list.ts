@@ -4,14 +4,15 @@ import type { CommandResult } from '#cli/types/system.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { Scope, Settings } from '#cli/types/settings.ts';
 import { formatCount, formatScope } from '#cli/system/text.ts';
 import { listInheritedSettings } from '#cli/settings/inherit.ts';
 import { planChecks, buildCheckState } from '#cli/engine/plan.ts';
 import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
+import { SHIPPED_DEFAULT_ORIGIN } from '#cli/config/settings/schema.ts';
 import { isRootOnlyCheck, isRepositoryRun } from '#cli/engine/files.ts';
+import type { Scope, Settings, SettingOrigin } from '#cli/types/settings.ts';
 import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/reports.ts';
 
 import {
@@ -30,19 +31,25 @@ function formatScopeGroup(scopes: readonly string[]): string {
     return nested.length === scopes.length ? named : `${formatScope('')} and ${named}`;
 }
 
+function formatSettingSource({ kind, name }: SettingOrigin): string {
+    if (kind === 'default') return SHIPPED_DEFAULT_ORIGIN;
+    if (kind === 'scope' || kind === 'configuration') return `${kind} ${name}`;
+    return kind === 'root' ? name : kind;
+}
+
 function buildSettingsResult(session: Session): CommandResult {
     const settings = buildSettingRows(session.settings, session.scopes);
-    const groups = Map.groupBy(settings, ({ key, value, reasonRequirement, source }) =>
-        JSON.stringify([key, value, reasonRequirement, source]),
+    const groups = Map.groupBy(settings, ({ setting, value, reasonWhen, source }) =>
+        JSON.stringify([setting, value, reasonWhen, source]),
     );
-    const width = Math.max(...settings.map((row) => row.key.length)) + KEY_GAP;
+    const width = Math.max(...settings.map((row) => row.setting.length)) + KEY_GAP;
     const lines = groups
         .values()
         .map((rows) => {
             const [row] = rows as [(typeof settings)[number]];
             const value = row.value === undefined ? NOT_SET : JSON.stringify(row.value);
             const where = session.scopes.length === 1 ? '' : `  in ${formatScopeGroup(rows.map(({ scope }) => scope))}`;
-            return `${row.key.padEnd(width)}${value.padEnd(VALUE_WIDTH)} ${(row.reasonRequirement ?? '').padEnd(REASON_HEADER.length)}  ${row.source}${where}`;
+            return `${row.setting.padEnd(width)}${value.padEnd(VALUE_WIDTH)} ${(row.reasonWhen ?? '').padEnd(REASON_HEADER.length)}  ${formatSettingSource(row.source)}${where}`;
         })
         .toArray();
     lines.unshift(`${'setting'.padEnd(width)}${'value'.padEnd(VALUE_WIDTH)} ${REASON_HEADER}  source`);
@@ -114,12 +121,10 @@ function buildSettingRows(settings: Settings, scopes: Scope[]): SettingsListJson
     return scopes.flatMap((scope) => {
         const scopePath = scope.path;
         return listInheritedSettings(scope.availableSettings, settings, scopePath).map((row) => ({
-            key: row.key,
+            setting: row.key,
             value: row.value,
-            source: row.source,
-            origin: row.origin,
-            originScope: row.originScope,
-            reasonRequirement: row.setting.reason_when,
+            source: row.origin,
+            reasonWhen: row.setting.reason_when,
             scope: scopePath,
         }));
     });

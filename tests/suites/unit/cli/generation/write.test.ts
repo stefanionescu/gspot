@@ -154,7 +154,7 @@ test('writing the generated files preserves a copied header example and removes 
     const writer = openFiles(sandbox.path);
     const report = await writeGeneratedFiles(session, buildGeneratedFiles(session), writer);
     expect(await readFile(join(sandbox.path, 'examples/.editorconfig'))).toStrictEqual(before);
-    expect(report.removed).toContain('docs/.markdownlint.jsonc');
+    expect(report.deleted).toContain('docs/.markdownlint.jsonc');
     expect(existsSync(join(sandbox.path, 'docs/.markdownlint.jsonc'))).toBe(false);
 });
 

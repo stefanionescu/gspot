@@ -13,6 +13,7 @@ import { CATEGORY_PARENTS, CATEGORY_KEY_SEGMENTS } from '#cli/config/settings/va
 
 import {
     LANGUAGE_GROUP_TABLES,
+    SHIPPED_DEFAULT_OWNER,
     SHIPPED_DEFAULT_ORIGIN,
     NAMING_LANGUAGE_CATEGORIES,
 } from '#cli/config/settings/schema.ts';
@@ -20,6 +21,7 @@ import type {
     Settings,
     SettingMatch,
     SettingsTable,
+    SettingOrigin,
     InheritedValue,
     SettingDefault,
     WrittenSetting,
@@ -81,19 +83,18 @@ function mergeTable(
         .map((writtenKey) => ({ writtenKey, found: findWrittenSetting(table.table, writtenKey) }))
         .filter((row): row is typeof row & { found: NonNullable<typeof row.found> } => row.found !== undefined);
     const owner = table.scope === '' ? SETTINGS_FILE : `scope ${table.scope}`;
-    const origin = table.scope === '' ? 'root' : 'scope';
-    const originScope = table.scope === '' ? {} : { originScope: table.scope };
+    const origin: SettingOrigin =
+        table.scope === '' ? { kind: 'root', name: SETTINGS_FILE } : { kind: 'scope', name: table.scope };
     for (const { writtenKey, found } of written) {
         const value = findValueAt(table.table, writtenKey.split('.'));
         result = {
             value: mergeValue(
                 setting,
-                result.origin === 'configuration' ? undefined : result.value,
+                ['default', 'configuration'].includes(result.origin.kind) ? undefined : result.value,
                 joinSettingPaths(writtenKey, value, table.scope),
             ),
             source: writtenKey === key ? owner : `${owner} (${writtenKey})`,
             origin,
-            ...originScope,
             reason: found.reason,
         };
     }
@@ -274,7 +275,12 @@ export function getSettingValue(
     const shipped = findSettingDefault(availableSettings, settings, match, scopePath);
     const tables = listApplicableTables(settings, scopePath);
     const keys = listPossibleKeys(availableSettings, match, key);
-    let inherited: InheritedValue = { value: undefined, source: 'unset', origin: 'unset', reason: undefined };
+    let inherited: InheritedValue = {
+        value: undefined,
+        source: 'unset',
+        origin: { kind: 'unset', name: '' },
+        reason: undefined,
+    };
     if (shipped !== undefined)
         inherited = {
             value: shipped.value,
@@ -282,11 +288,14 @@ export function getSettingValue(
                 shipped.configuration === SHIPPED_DEFAULT_ORIGIN
                     ? SHIPPED_DEFAULT_ORIGIN
                     : `configuration ${shipped.configuration}`,
-            origin: 'configuration',
+            origin:
+                shipped.configuration === SHIPPED_DEFAULT_ORIGIN
+                    ? { kind: 'default', name: SHIPPED_DEFAULT_OWNER }
+                    : { kind: 'configuration', name: shipped.configuration },
             reason: undefined,
         };
     for (const table of tables) inherited = mergeTable(setting, key, inherited, table, keys);
-    const { value, source, reason, origin, originScope } = inherited;
+    const { value, source, reason, origin } = inherited;
     return {
         key,
         setting,
@@ -294,7 +303,6 @@ export function getSettingValue(
         source,
         origin,
         reason,
-        originScope,
     };
 }
 

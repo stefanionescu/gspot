@@ -208,7 +208,7 @@ test('explain --json reports every field of a configuration', async () => {
         requires: [],
         tools: [],
         checks: [{ check: 'engineering/nested-agents-files', stage: 'commit' }],
-        settings: [],
+        settingNames: [],
         ruleFiles: [],
         alwaysSelected: true,
         removed: [],

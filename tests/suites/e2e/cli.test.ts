@@ -13,7 +13,7 @@ import { createGspotProject } from '#tests/setup/sandboxes/projects/gspot.ts';
 
 async function assertConflictingConfigs(root: string, output: string): Promise<void> {
     const { plan } = JSON.parse(output) as InitJson;
-    expect(plan.delete).toStrictEqual([]);
+    expect(plan.deleted).toStrictEqual([]);
     expect(plan.write.filter(({ path }) => ['prettier.config.mjs', '.editorconfig'].includes(path))).toStrictEqual([
         { path: '.editorconfig', note: 'replaces your file; read the old one with git show HEAD:.editorconfig' },
         {

@@ -23,7 +23,7 @@ test('baseline writes a count per file, check, and rule, and check subtracts it'
     await using sandbox = await createBaselineSandbox({ 'guide.md': 'See `src/one.ts` and `src/two.ts`.\n' });
     const written = await runGspot(sandbox.path, ['baseline', '--json']);
     expect(written.code, written.stdout + written.stderr).toBe(0);
-    expect(JSON.parse(written.stdout)).toMatchObject({ findings: 2, files: 1, leftOut: [] });
+    expect(JSON.parse(written.stdout)).toMatchObject({ findingCount: 2, fileCount: 1, leftOut: [] });
     const baseline = await readFile(join(sandbox.path, 'gspot.baseline.json'), 'utf8');
     expect(JSON.parse(baseline)).toStrictEqual({ 'guide.md': { 'docs/missing-paths': { 'missing-path': 2 } } });
     const { report, code } = parseCheckReport(await runGspot(sandbox.path, ['check', '--json']));
@@ -92,7 +92,7 @@ test('a secret never enters the baseline, and check reports a count that someone
     });
     const written = await runGspot(sandbox.path, ['baseline', '--json']);
     expect(written.code, written.stdout + written.stderr).toBe(0);
-    expect(JSON.parse(written.stdout)).toMatchObject({ findings: 0, leftOut: ['secrets/environment-examples'] });
+    expect(JSON.parse(written.stdout)).toMatchObject({ findingCount: 0, leftOut: ['secrets/environment-examples'] });
     const baseline = await readFile(join(sandbox.path, 'gspot.baseline.json'), 'utf8');
     expect(JSON.parse(baseline)).toStrictEqual({});
     await writeFile(
@@ -154,7 +154,7 @@ test('--only counts the named check again and keeps the counts of the other chec
     await writeFile(join(sandbox.path, 'gspot.baseline.json'), `${JSON.stringify(counts)}\n`);
     const written = await runGspot(sandbox.path, ['baseline', '--only', 'docs/missing-paths', '--json']);
     expect(written.code, written.stdout + written.stderr).toBe(0);
-    expect(JSON.parse(written.stdout)).toMatchObject({ findings: 5, files: 1 });
+    expect(JSON.parse(written.stdout)).toMatchObject({ findingCount: 5, fileCount: 1 });
     const baseline = JSON.parse(await readFile(join(sandbox.path, 'gspot.baseline.json'), 'utf8')) as unknown;
     expect(baseline).toStrictEqual({
         'guide.md': { 'docs/missing-paths': { 'missing-path': 2 }, 'missing/tool': { 'missing/tool': 3 } },

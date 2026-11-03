@@ -34,7 +34,7 @@ function formatStoppedChecks(checks: readonly CheckResult[]): string {
     return `gspot baseline needs every check to run, and ${names} could not:\n${[...new Set(causes)].join('\n')}`;
 }
 
-function sumCounts(counts: BaselineCount[]): Pick<BaselineJson, 'files' | 'findings'> {
+function sumCounts(counts: BaselineCount[]): { findings: number; files: number } {
     const findings = counts.reduce((total, { count }) => total + count, 0);
     const files = new Set(counts.map(({ file }) => file)).size;
     return { findings, files };
@@ -143,7 +143,7 @@ async function runBaselineCommand(
     const notes = leftOut.length === 0 ? [] : [`${BASELINE_LEFT_OUT_MESSAGE} ${formatNameList(leftOut)}.`];
     return {
         text: `${[summary, ...notes].join('\n')}\n`,
-        json: { summary, findings, files, leftOut },
+        json: { summary, findingCount: findings, fileCount: files, leftOut },
         exitCode: 0,
     };
 }

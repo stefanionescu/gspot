@@ -105,7 +105,7 @@ test('turning rules off reports exactly the stray rule files that install remove
     expect(strays).toStrictEqual([...ownedPaths, 'AGENTS.md'].toSorted(compareText));
     for (const path of ownedPaths) expect(existsSync(join(sandbox.path, path))).toBe(true);
     const written = await applyGeneratedFiles(sandbox.path);
-    expect(written.removed.toSorted(compareText)).toStrictEqual(strays);
+    expect(written.deleted.toSorted(compareText)).toStrictEqual(strays);
     for (const path of ownedPaths) expect(existsSync(join(sandbox.path, path))).toBe(false);
 });
 

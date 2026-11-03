@@ -186,7 +186,7 @@ test.each([...WEAKENED_SETTINGS])(
         expect(listed.code, listed.stdout + listed.stderr).toBe(0);
         expect(
             (JSON.parse(listed.stdout) as SettingsListJson).settings
-                .filter((row) => row.key === key)
+                .filter((row) => row.setting === key)
                 .map(({ value }) => value),
         ).toStrictEqual([[second], [second], [second]]);
     },
