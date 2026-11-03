@@ -127,6 +127,17 @@ export const TYPESCRIPT_RULES = {
     ],
     '@typescript-eslint/no-require-imports': 'off',
     '@typescript-eslint/strict-boolean-expressions': 'error',
+    '@typescript-eslint/restrict-template-expressions': [
+        'error',
+        {
+            allowAny: false,
+            allowBoolean: false,
+            allowNever: false,
+            allowNullish: false,
+            allowNumber: true,
+            allowRegExp: false,
+        },
+    ],
     '@typescript-eslint/explicit-module-boundary-types': 'error',
     '@typescript-eslint/prefer-optional-chain': 'error',
     '@typescript-eslint/array-type': ['error', { default: 'array-simple' }],

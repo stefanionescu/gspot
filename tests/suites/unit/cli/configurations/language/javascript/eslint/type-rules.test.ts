@@ -75,3 +75,22 @@ test.each([...LEVELS])(
         expect(await listLintFindings(eslint, sandbox.path, ['signal.ts'], rules)).toStrictEqual([]);
     },
 );
+
+test.each([...LEVELS])('at level %s, a template takes a number and refuses a boolean', async (level) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript'], { level }),
+        'tsconfig.json': '{"compilerOptions":{"strict":true,"target":"esnext","lib":["esnext"]},"include":["*.ts"]}',
+        'package.json': '{"private":true,"type":"module"}',
+        'count.ts': [
+            'declare const count: number;',
+            'declare const isReady: boolean;',
+            'export const files = `${count} files`;',
+            'export const state = `ready: ${isReady}`;',
+        ].join('\n'),
+    });
+    const eslint = await buildEslint(sandbox.path);
+    const rules = ['@typescript-eslint/restrict-template-expressions'];
+    expect(await listLintFindings(eslint, sandbox.path, ['count.ts'], rules)).toStrictEqual([
+        { file: 'count.ts', rule: '@typescript-eslint/restrict-template-expressions', line: 4 },
+    ]);
+});
