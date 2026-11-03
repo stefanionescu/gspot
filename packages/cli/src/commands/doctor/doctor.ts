@@ -18,9 +18,9 @@ import { VERSION_FLAG } from '#cli/config/repository/javascript.ts';
 import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
-import { findMissingBuild, listDistinctTools } from '#cli/tools/pins.ts';
 import type { Session, HookStatus, ToolInspection } from '#cli/types/tools.ts';
 import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/setup.ts';
+import { getTool, findToolName, findMissingBuild, listDistinctTools } from '#cli/tools/pins.ts';
 import { AVAILABLE_TOOL_STATES, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 import type { CiState, DoctorTool, Suggestions, DoctorReport } from '#cli/types/commands/reports.ts';
 
@@ -74,6 +74,35 @@ function formatSuggestions(suggestions: Suggestions): string[] {
     return sections.flat();
 }
 
+function listCommandPrograms(session: Session): ReadonlySet<string> {
+    return new Set(
+        session.configuredChecks
+            .filter(({ configuration }) => configuration === undefined)
+            .flatMap(({ check }) => [findToolName(check), check.fix?.[0]])
+            .filter((name) => name !== undefined),
+    );
+}
+
+/**
+Look up the program of each command check and of its fix, in the repository root where check runs them, so that doctor
+reports a missing one as check does. gspot install does not install such a program, so its row names its own help.
+
+@param session the configured checks and their tools.
+*/
+async function inspectCommandTools(session: Session): Promise<Array<[string, DoctorTool]>> {
+    return await Promise.all(
+        [...listCommandPrograms(session)].map(async (name): Promise<[string, DoctorTool]> => {
+            const tool = getTool(session.toolConfigurations, name);
+            const inspection = await lookUpTool(session, tool, session.root);
+            const note = inspection.note ?? (AVAILABLE_TOOL_STATES.has(inspection.state) ? undefined : inspection.help);
+            return [
+                JSON.stringify(inspection),
+                { ...inspection, ...(note !== undefined && { note }), kind: tool.kind },
+            ];
+        }),
+    );
+}
+
 async function inspectScopeTools(session: Session): Promise<DoctorTool[]> {
     const platform = getOperatingSystem();
     const pins = listDistinctTools(session.toolConfigurations).filter(
@@ -91,7 +120,7 @@ async function inspectScopeTools(session: Session): Promise<DoctorTool[]> {
                 return [JSON.stringify(inspection), { ...inspection, kind: tool.kind }];
             });
     });
-    const inspections = new Map(await Promise.all(lookups));
+    const inspections = new Map([...(await Promise.all(lookups)), ...(await inspectCommandTools(session))]);
     return inspections
         .values()
         .toArray()
@@ -153,14 +182,18 @@ function listMissingEnvironments(session: Session): string[] {
     return [...new Set(scopes)].toSorted((left, right) => compareText(left, right));
 }
 
-function formatDoctorReport(report: DoctorReport, states: { hooks: string; ci: string; broken: DoctorTool[] }): string {
+function formatDoctorReport(
+    report: DoctorReport,
+    states: { hooks: string; ci: string; broken: DoctorTool[]; commandPrograms: ReadonlySet<string> },
+): string {
     const programs = states.broken.filter((tool) => tool.kind === 'program');
+    const installable = programs.filter((tool) => !states.commandPrograms.has(tool.name));
     const aheadOfPin = report.tools.filter((tool) => tool.kind === 'program' && tool.state === 'newer');
     const packages = states.broken.length - programs.length;
     const ready = report.tools.filter((tool) => tool.kind === 'program').length - programs.length;
     const lines = [
         ...formatTools([...programs, ...aheadOfPin]),
-        ...(programs.length === 0 ? [] : ['Run gspot install to install the missing or outdated tools.']),
+        ...(installable.length === 0 ? [] : ['Run gspot install to install the missing or outdated tools.']),
         ...(packages === 0 ? [] : [`missing npm packages: ${String(packages)} (run gspot install)`]),
         `tools: ${String(ready)} ready`,
         ...report.environments.map(
@@ -194,7 +227,12 @@ async function runDoctorCommand(root: string): Promise<CommandResult> {
     const broken = report.tools.filter((tool) => !AVAILABLE_TOOL_STATES.has(tool.state) || tool.path === undefined);
     const hasFindings = !hooks.ready || report.environments.length > 0 || broken.length > 0;
     return {
-        text: formatDoctorReport(report, { hooks: hooksText, ci: ciText, broken }),
+        text: formatDoctorReport(report, {
+            hooks: hooksText,
+            ci: ciText,
+            broken,
+            commandPrograms: listCommandPrograms(session),
+        }),
         json: report,
         exitCode: hasFindings ? EXIT_FINDINGS : 0,
     };
