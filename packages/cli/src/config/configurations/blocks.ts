@@ -13,9 +13,7 @@ export const NODE_RUNTIMES: readonly string[] = ['node', 'nodeBuiltin', 'commonj
 
 export const TEST_RULES = {
     'jsdoc/require-jsdoc': 'off',
-    'jsdoc/require-param': 'off',
     'jsdoc/require-description': 'off',
-    'jsdoc/require-param-description': 'off',
     'n/no-unpublished-import': 'off',
     'n/no-unpublished-require': 'off',
     'no-template-curly-in-string': 'off',

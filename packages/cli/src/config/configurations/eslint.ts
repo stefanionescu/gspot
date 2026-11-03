@@ -138,7 +138,6 @@ const JSDOC_RULES = {
         },
     ],
     'jsdoc/require-description': 'error',
-    'jsdoc/require-param': ['error', { enableFixer: false }],
     'jsdoc/match-name': [
         'error',
         {
@@ -152,7 +151,6 @@ const JSDOC_RULES = {
         },
     ],
     'jsdoc/informative-docs': 'error',
-    'jsdoc/require-param-description': 'error',
     'jsdoc/tag-lines': ['error', 'any', { startLines: 1 }],
 } as const;
 

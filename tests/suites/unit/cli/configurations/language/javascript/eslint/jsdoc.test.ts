@@ -82,6 +82,25 @@ test('JavaScript needs valid JSDoc types, and tsc reads the generated jsconfig',
     expect(compiled.code, compiled.stdout + compiled.stderr).toBe(0);
 });
 
+test('a doc comment needs no @param line, and a @param line names a parameter', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["*.ts"]}\n',
+        'measure.ts': [
+            '/**\nCount the characters of the input text.\n*/',
+            'export function measure(value: string): number {\n    return value.length;\n}\n',
+            '/**\nCount the words of the input text.\n\n@param text the input, split at each space.\n*/',
+            "export function count(value: string): number {\n    return value.split(' ').length;\n}\n",
+        ].join('\n'),
+    });
+    const eslint = await buildEslint(sandbox.path);
+    const rules = ['jsdoc/require-param', 'jsdoc/require-param-description', 'jsdoc/check-param-names'];
+    expect(await listLintFindings(eslint, sandbox.path, ['measure.ts'], rules)).toStrictEqual([
+        { file: 'measure.ts', rule: 'jsdoc/check-param-names', line: 11 },
+    ]);
+});
+
 test('jsdoc/match-name reports the root0 placeholder and keeps a parameter named root', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
