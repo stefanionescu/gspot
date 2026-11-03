@@ -26,9 +26,7 @@ const ESLINT_RULES = {
     'array-callback-return': 'error',
     'block-scoped-var': 'error',
     'no-const-assign': 'error',
-    'no-delete-var': 'error',
     'no-loop-func': 'error',
-    'require-yield': 'error',
     'no-labels': 'error',
     'no-new': 'error',
     'no-nested-ternary': 'error',
@@ -82,7 +80,6 @@ const SORTING_RULES = {
 } as const;
 
 const UNICORN_RULES = {
-    'unicorn/no-lonely-if': 'error',
     'unicorn/name-replacements': 'off',
     'unicorn/filename-case': 'off',
     'unicorn/no-null': 'off',
