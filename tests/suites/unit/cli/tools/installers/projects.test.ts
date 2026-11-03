@@ -1,13 +1,19 @@
+import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { YARN_CLIENTS } from '#tests/config/setup/programs.ts';
-import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildToolLockfiles, buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
+import { listStaleLockfiles, installToolProjects } from '#cli/tools/installers/projects.ts';
 
 test.each([...YARN_CLIENTS])(
     'Yarn $packageManager.version plans an npm tool lockfile without Yarn settings',
@@ -40,4 +46,24 @@ test('tool lockfiles report missing and changed projects and omit current projec
     expect(listStaleLockfiles(session, generated)).toStrictEqual([]);
     await createFileTree(sandbox.path, Object.fromEntries(paths.map((path) => [path, 'invalid ='])));
     expect(listStaleLockfiles(session, generated)).toStrictEqual(paths.map((path) => ({ path, kind: 'changed' })));
+});
+
+test('a changed npm tool lockfile installs into an empty node_modules, and a current one keeps it', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([]),
+        'package.json': '{"private":true,"packageManager":"bun@0.0.0-test"}',
+        [`${GSPOT_PATHS.nodeModules}/dropped/package.json`]: '{}\n',
+    });
+    const session = await openSession(sandbox.path);
+    const lockfile = buildToolLockfiles(session.toolConfigurations)['.gspot/bun.lock']!;
+    using _bun = fakeCommands('mise', async (command, options) => {
+        if (command.includes('--lockfile-only')) await writeFile(join(options.cwd, 'bun.lock'), lockfile);
+        return buildProcessResult({ stdout: command.at(-1) === '--version' ? '0.0.0-test\n' : '' });
+    });
+    const install = await buildSandboxToolInstall(session, openFiles(sandbox.path));
+    await installToolProjects(install, []);
+    expect(existsSync(join(sandbox.path, GSPOT_PATHS.nodeModules, 'dropped'))).toBe(false);
+    await createFileTree(sandbox.path, { [`${GSPOT_PATHS.nodeModules}/kept/package.json`]: '{}\n' });
+    await installToolProjects(install, []);
+    expect(existsSync(join(sandbox.path, GSPOT_PATHS.nodeModules, 'kept'))).toBe(true);
 });

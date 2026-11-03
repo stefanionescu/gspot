@@ -89,6 +89,21 @@ async function findUvPath(install: ToolInstall, miseBinPaths: string[]): Promise
 }
 
 /**
+Install the npm tool project. Bun keeps the packages that a new lockfile drops, so a changed lockfile installs into an
+empty node_modules folder.
+
+@param npm what the npm install needs.
+@param lockfiles the lockfiles that this install wrote.
+*/
+async function installNpmProject(npm: NpmToolInstall, lockfiles: ReplacementRequest[]): Promise<string> {
+    const lockfile = `${GSPOT_FOLDER}/${selectLockfileName(npm.packageManager.name)}`;
+    const plan = lockfiles.find(({ path }) => path === lockfile);
+    if (plan !== undefined && plan.previous?.bytes.equals(plan.next.bytes) !== true)
+        npm.writer.deleteTree(GSPOT_PATHS.nodeModules);
+    return installNpmTools(npm);
+}
+
+/**
 List the state of each tool project lockfile: whether it exists and names every pin at its version. It resolves and
 writes nothing, and it reads no package manager settings.
 
@@ -111,7 +126,8 @@ export function listStaleLockfiles(
 }
 
 /**
-Resolve the owned lockfiles, then install the frozen npm and Python tool projects.
+Resolve the owned lockfiles, then install the frozen npm and Python tool projects. A changed npm tool lockfile installs
+into an empty node_modules folder.
 
 @param install what install needs for this step.
 @param miseBinPaths the program folders that mise installed, where uv may sit.
@@ -126,7 +142,7 @@ export async function installToolProjects(install: ToolInstall, miseBinPaths: st
             : { ...install, packageManager, registryEnvironment: await readRegistryEnvironment(session.root) };
     const lockfiles = await planLockfiles(install, { npm, uvPath });
     writePlans(writer, planReplacements(writer, lockfiles));
-    if (npm !== undefined) installed.push(await installNpmTools(npm));
+    if (npm !== undefined) installed.push(await installNpmProject(npm, lockfiles));
     if (uvPath !== undefined && listPackagePins(session.toolConfigurations).python.length > 0)
         installed.push(await installPythonTools(install, uvPath));
     if (uvPath !== undefined) installed.push(...(await installPythonProjects(install, uvPath)));
