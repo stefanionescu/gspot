@@ -145,6 +145,7 @@ const checkFieldsSchema = z.strictObject({
             config_file: true,
             setting: true,
             dependencies: true,
+            filenames: true,
             tags: true,
         })
         .partial()

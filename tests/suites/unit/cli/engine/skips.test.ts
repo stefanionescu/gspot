@@ -158,6 +158,27 @@ test('generated and vendored test files do not satisfy a source-tag condition', 
     ]);
 });
 
+test('pytest/tests skips a scope that holds no test file', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['python', 'pytest'], { scopes: [{ path: 'docs' }, { path: 'app' }] }),
+        'docs/conf.py': 'project = "example"\n',
+        'app/main.py': 'VALUE = 1\n',
+        'app/tests/test_main.py': 'def test_value():\n    assert True\n',
+    });
+    const planned = planChecks(await openSession(sandbox.path), { stage: 'push', only: ['pytest/tests'] });
+    expect(planned.map(({ scope, skip }) => ({ scope: scope.path, skip }))).toStrictEqual([
+        { scope: '', skip: undefined },
+        { scope: 'app', skip: undefined },
+        {
+            scope: 'docs',
+            skip: {
+                cause: 'condition',
+                note: 'Needs a file named test_*.py, *_test.py, or conftest.py in this scope.',
+            },
+        },
+    ]);
+});
+
 test('a check for other systems names the host in its skip note', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['swift'], { level: 'all' }),

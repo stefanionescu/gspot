@@ -55,4 +55,5 @@ runs = "scope"
 stage = "push"
 summary = "Runs pytest with coverage, and fails on a failed test or when the covered lines fall under their minimum."
 tool = ["pytest", "pytest-cov"]
+when = { filenames = ["test_*.py", "*_test.py", "conftest.py"] }
 why = "A coverage minimum keeps new code from arriving untested."

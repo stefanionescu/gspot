@@ -11,6 +11,7 @@ import type { Tool, Check } from '#cli/types/manifests.ts';
 import type { Repository } from '#cli/types/repository.ts';
 import { LOCAL_RULES_SETTING } from '#cli/config/engine.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
+import { buildFilenameMatcher } from '#cli/system/matchers.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import type { Skip, PlannedCheck, PlannedScope, SettingsSkip, SettingReader } from '#cli/types/engine/plan.ts';
 
@@ -37,8 +38,23 @@ function findTagSkip(tags: string[] | undefined, scopePath: string, files: Repos
         : { cause: 'condition', note: `Needs files marked ${formatNameList(tags, 'disjunction')} in this scope.` };
 }
 
+function findFilenameSkip(
+    filenames: string[] | undefined,
+    scopePath: string,
+    files: Repository['files'],
+): Skip | undefined {
+    if (filenames === undefined) return undefined;
+    const isNamed = buildFilenameMatcher(filenames);
+    const hasNamedFile = files.some(
+        (file) => file.kind === 'source' && isInScope(file.path, scopePath) && isNamed(file.path),
+    );
+    return hasNamedFile
+        ? undefined
+        : { cause: 'condition', note: `Needs a file named ${formatNameList(filenames, 'disjunction')} in this scope.` };
+}
+
 function findConditionSkip(planned: PlannedCheck, repository: Repository): Skip | undefined {
-    const { configuration, dependencies, tags } = { ...planned.check.when };
+    const { configuration, dependencies, filenames, tags } = { ...planned.check.when };
     const scope = planned.scope.path;
     if (configuration !== undefined && !planned.scope.settings.configurations.includes(configuration))
         return {
@@ -47,6 +63,7 @@ function findConditionSkip(planned: PlannedCheck, repository: Repository): Skip 
         };
     return (
         findDependencySkip(dependencies, scope, repository.dependencyFiles) ??
+        findFilenameSkip(filenames, scope, repository.files) ??
         findTagSkip(tags, scope, repository.files)
     );
 }
