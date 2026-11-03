@@ -60,7 +60,7 @@ command = ["shellcheck", "--rcfile", "{config_file:shellcheckrc}", "--severity=s
 example = "In a Bash script, `printf \"%s\\n\" $name` reports SC2086 because the expansion permits word splitting and globbing. Use `printf \"%s\\n\" \"$name\"` to pass the value as one argument."
 exit_codes = [1]
 files = { tags = ["bash", "sh", "bats"] }
-help = "Read the SC code in the finding; `gspot explain shellcheck/SC2086` links to its page."
+help = "Read the SC code in the finding; `gspot explain bash/shellcheck SC2086` explains one code."
 name = "shellcheck"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?:note|warning|error|style): (?<message>.*?) \\[(?<rule>SC\\d+)\\]$" }
 stage = "commit"
