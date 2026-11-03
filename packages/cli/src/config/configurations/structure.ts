@@ -4,16 +4,16 @@ import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { FOREIGN_HOOK_FOLDERS } from '#cli/config/repository/setup.ts';
 import { SHEBANG_TAG, BASELINE_FILE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
 
-const APPLY_HELP = 'Run gspot apply.';
+const INSTALL_HELP = 'Run gspot install.';
 
 export const GSPOT_FIXED_NAMES: ReadonlySet<string> = new Set([SETTINGS_FILE, BASELINE_FILE]);
 
 export const GENERATED_FILE_FINDINGS = {
-    changed: { message: 'This generated file is out of date.', help: APPLY_HELP },
-    absent: { message: 'This generated file is absent.', help: APPLY_HELP },
+    changed: { message: 'This generated file is out of date.', help: INSTALL_HELP },
+    absent: { message: 'This generated file is absent.', help: INSTALL_HELP },
     stray: {
         message: 'gspot wrote this file, and no selected configuration writes it now.',
-        help: 'Run gspot apply to delete it.',
+        help: 'Run gspot install to delete it.',
     },
 } as const;
 
