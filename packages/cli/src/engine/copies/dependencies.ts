@@ -7,11 +7,11 @@ import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
 import type { GitFile } from '#cli/types/repository.ts';
 import type { ParsedTsconfig } from '#cli/types/parsers.ts';
 import { splitSystemPath } from '#cli/system/files/reads.ts';
-import { join, dirname, basename, relative } from 'node:path';
+import { join, posix, dirname, basename, relative } from 'node:path';
 import { JSCONFIG_FILE, GIT_CHECK_IGNORE_ARGUMENTS } from '#cli/config/engine.ts';
 import { findTsconfig, listSourceFiles } from '#cli/parsers/projects/tsconfig.ts';
-import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import type { CopyPlan, DeclarationDependencies } from '#cli/types/engine/tool-runs.ts';
+import { isInside, isInScope, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import { NODE_MODULES, DECLARATION_EXTENSIONS, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 
 import {
@@ -66,6 +66,15 @@ function linkInstalledPackages(plan: Pick<CopyPlan, 'root' | 'target' | 'cancelS
         if (isPackageGroup) linkInstalledPackages(plan, child);
         else linkInstalledDependency(plan, child);
     }
+}
+
+function listCheckedTsconfigs(indexFiles: GitFile[], checkedPaths: string[] | undefined): GitFile[] {
+    return indexFiles.filter(({ path }) => {
+        const name = basename(path);
+        if (name !== TSCONFIG_FILE && name !== JSCONFIG_FILE) return false;
+        const folder = posix.dirname(path);
+        return checkedPaths?.some((checked) => isInScope(checked, folder === '.' ? '' : folder)) !== false;
+    });
 }
 
 function readMatchingTsconfig(
@@ -150,26 +159,30 @@ export async function copyDependencies(
 }
 
 /**
-Lists the ignored declaration files that your own tsconfig needs.
+Lists the ignored declaration files that your own tsconfig needs. With checked paths, only the tsconfig files whose
+folder holds one of them count, because the type-aware tools of the run read only those programs.
 
 @param root the checkout with installed declaration files.
-@param indexFiles the tracked files of the revision.
-@param unchangedPaths dependency files whose bytes match the selected revision.
+@param revision what the copy holds and checks.
+@param revision.indexFiles the tracked files of the revision.
+@param revision.unchangedPaths dependency files whose bytes match the selected revision.
+@param revision.paths the paths that the run checks, or undefined to read every tsconfig.
 @param cancelSignal stops the Git queries.
 */
 export async function readDeclarationDependencies(
     root: string,
-    indexFiles: GitFile[],
-    unchangedPaths: ReadonlySet<string>,
+    {
+        indexFiles,
+        unchangedPaths,
+        paths: checkedPaths,
+    }: { indexFiles: GitFile[]; unchangedPaths: ReadonlySet<string>; paths: string[] | undefined },
     cancelSignal?: AbortSignal,
 ): Promise<DeclarationDependencies> {
     const tracked = new Set(indexFiles.map(({ path }) => path));
     const cache = createRunCache(root);
     let paths = new Set<string>();
     let isMismatched = false;
-    for (const indexFile of indexFiles) {
-        const name = basename(indexFile.path);
-        if (name !== TSCONFIG_FILE && name !== JSCONFIG_FILE) continue;
+    for (const indexFile of listCheckedTsconfigs(indexFiles, checkedPaths)) {
         const tsconfig = readMatchingTsconfig(cache, indexFile.path, unchangedPaths);
         if (tsconfig === undefined) {
             isMismatched = true;

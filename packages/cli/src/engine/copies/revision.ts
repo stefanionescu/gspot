@@ -99,7 +99,7 @@ function listInstalledDependencies(copyRoot: string, folders: string[]): string[
 async function selectRevisionDependencies(
     root: string,
     copyRoot: string,
-    { indexFiles, copyCause }: { indexFiles: GitFile[]; copyCause: string },
+    { indexFiles, copyCause, paths }: { indexFiles: GitFile[]; copyCause: string; paths: string[] | undefined },
     cancelSignal?: AbortSignal,
 ): Promise<RevisionDependencies> {
     const installed = openFiles(root);
@@ -125,7 +125,7 @@ async function selectRevisionDependencies(
         ),
         cancelSignal,
     );
-    const declarations = await readDeclarationDependencies(root, indexFiles, unchangedPaths, cancelSignal);
+    const declarations = await readDeclarationDependencies(root, { indexFiles, unchangedPaths, paths }, cancelSignal);
     const artifacts = await readIgnoredPaths(
         root,
         listPackageFiles(
@@ -183,7 +183,8 @@ Git commands use the copied revision.
 
 @param root the checkout with the Git objects and installed dependencies.
 @param source the revision to copy. A staged check passes the status that sent it to a copy of the index, which saves
-a second read and names that cause in a refusal.
+a second read and names that cause in a refusal. The paths that the run checks, when the source names them, limit the
+ignored declaration files that the copy reads to the tsconfig files whose folder holds one of them.
 @param cancelSignal stops the copy.
 */
 export async function copyRevision(root: string, source: Revision, cancelSignal?: AbortSignal): Promise<RevisionCopy> {
@@ -207,7 +208,12 @@ export async function copyRevision(root: string, source: Revision, cancelSignal?
             indexFiles.map((indexFile) => indexFile.path),
         );
         const copyCause = source.kind === 'index' && source.status !== undefined ? UNSTAGED_COPY_CAUSE : '';
-        const selected = await selectRevisionDependencies(toplevel, copy.path, { indexFiles, copyCause }, cancelSignal);
+        const selected = await selectRevisionDependencies(
+            toplevel,
+            copy.path,
+            { indexFiles, copyCause, paths: source.paths },
+            cancelSignal,
+        );
         await copyDependencies({
             root: toplevel,
             target: copy.path,

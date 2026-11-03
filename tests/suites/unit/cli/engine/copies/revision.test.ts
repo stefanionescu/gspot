@@ -204,3 +204,21 @@ test('an index copy holds the LF bytes of the index for a file that core.autocrl
     expect(await readFile(join(copy.root, 'source.txt'), 'utf8')).toBe('one\ntwo\n');
     expect(await readFile(join(copy.root, 'kept.txt'), 'utf8')).toBe('kept');
 });
+
+test('a copy with checked paths clones the ignored declarations of only the tsconfig files whose folder holds one', async () => {
+    await using sandbox = await testdir({
+        '.gitignore': '*.gen.d.ts\n',
+        'site/tsconfig.json': '{"include":["src/**/*.ts","types.gen.d.ts"]}',
+        'site/types.gen.d.ts': 'declare const site: string;\n',
+        'site/src/page.ts': 'export const page = 1;\n',
+        'tools/tsconfig.json': '{"include":["src/**/*.ts","types.gen.d.ts"]}',
+        'tools/types.gen.d.ts': 'declare const tools: string;\n',
+        'tools/src/main.ts': 'export const main = 1;\n',
+    });
+    commitAll(sandbox.path);
+    using checked = await copyRevision(sandbox.path, { kind: 'index', paths: ['site/src/page.ts'] });
+    expect(existsSync(join(checked.root, 'site/types.gen.d.ts'))).toBe(true);
+    expect(existsSync(join(checked.root, 'tools/types.gen.d.ts'))).toBe(false);
+    using every = await copyRevision(sandbox.path, { kind: 'index' });
+    expect(existsSync(join(every.root, 'tools/types.gen.d.ts'))).toBe(true);
+});

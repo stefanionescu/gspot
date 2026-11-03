@@ -38,7 +38,7 @@ async function checkRevisionTree(
     } as const;
     if (revision.hash === cleanHead?.hash)
         return await runTreeCheck(root, options, cancelSignal, { ...source, untracked: cleanHead.untracked });
-    using copy = await copyRevision(root, { kind: 'commit', hash: revision.hash }, cancelSignal);
+    using copy = await copyRevision(root, { kind: 'commit', hash, paths }, cancelSignal);
     return await runTreeCheck(copy.root, options, cancelSignal, {
         ...source,
         ...(copy.dependencyNote !== undefined && { dependencyNote: copy.dependencyNote }),
