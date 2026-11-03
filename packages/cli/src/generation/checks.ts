@@ -1,12 +1,11 @@
 import { runChecks } from '#cli/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { printProgress } from '#cli/engine/report.ts';
-import { PROGRESS_CLEAR } from '#cli/config/engine.ts';
-import { writeProgress } from '#cli/system/terminal.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
 import { listStaleFiles } from '#cli/generation/stale.ts';
 import { convertToGlobs } from '#cli/configurations/ignores.ts';
 import { buildIgnoreSections } from '#cli/generation/ignores.ts';
+import { rewriteProgress } from '#cli/system/terminal.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import type { RunResult, CheckGeneration } from '#cli/types/engine/run.ts';
@@ -35,6 +34,6 @@ export async function runEveryCheck(session: Session): Promise<RunResult> {
             onProgress: printProgress,
         });
     } finally {
-        if (process.stderr.isTTY) writeProgress(PROGRESS_CLEAR);
+        rewriteProgress('');
     }
 }

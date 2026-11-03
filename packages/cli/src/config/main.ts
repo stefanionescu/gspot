@@ -10,6 +10,8 @@ export const COMMANDS_HELP_MESSAGE = 'Run gspot --help to see the commands.';
 
 export const HELP_WIDTH = 80;
 
+export const HELP_MIN_WRAP_WIDTH = 20;
+
 export const GLOBAL_OPTIONS = {
     '--verbose': 'Print more detail, such as the stack of an internal error',
     '--json': 'Print the report as JSON',

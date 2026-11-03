@@ -15,10 +15,10 @@ import { readIndexTree } from '#cli/repository/revisions/files.ts';
 import { readTreeStatus } from '#cli/repository/revisions/changes.ts';
 import { readGitText, readGitPaths } from '#cli/repository/git/run.ts';
 import { printProgress, buildEmptyRunReport } from '#cli/engine/report.ts';
-import { writeProgress, runCancelableCommand } from '#cli/system/terminal.ts';
+import { rewriteProgress, runCancelableCommand } from '#cli/system/terminal.ts';
 import type { CommandLocation, CommandDefinition } from '#cli/types/commands/edits.ts';
 import type { CheckFlags, CheckOptions, CheckCommandJson } from '#cli/types/commands/reports.ts';
-import { FIX_FLAG, BASE_FLAG, STAGED_FLAG, PROGRESS_CLEAR } from '#cli/config/engine.ts';
+import { FIX_FLAG, BASE_FLAG, STAGED_FLAG } from '#cli/config/engine.ts';
 
 import {
     STAGE_FLAG,
@@ -239,7 +239,7 @@ async function runCheckCommand(
             return await runCheckSelection(root, options, cancelSignal);
         }, CHECK_STOPPED_MESSAGE);
     } finally {
-        if (process.stderr.isTTY) writeProgress(PROGRESS_CLEAR);
+        rewriteProgress('');
     }
 }
 

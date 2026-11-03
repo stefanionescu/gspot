@@ -112,6 +112,20 @@ test.each([[], ['check']])('the help of %p fits 80 columns', async (...commandAr
     expect(help.stdout.split('\n').filter((line) => line.length > 80)).toStrictEqual([]);
 });
 
+test('the help of check fits a terminal narrower than 80 columns', async () => {
+    await using sandbox = await testdir();
+    const columns = Object.getOwnPropertyDescriptor(process.stdout, 'columns');
+    Object.defineProperty(process.stdout, 'columns', { value: 60, configurable: true });
+    try {
+        const help = await runGspot(sandbox.path, ['check', '--help']);
+        expect(help.code).toBe(0);
+        expect(help.stdout.split('\n').filter((line) => line.length > 60)).toStrictEqual([]);
+    } finally {
+        if (columns === undefined) Reflect.deleteProperty(process.stdout, 'columns');
+        else Object.defineProperty(process.stdout, 'columns', columns);
+    }
+});
+
 test.each(Object.keys(COMMAND_HELP))('the help of %s prints its commands without code marks', async (command) => {
     await using sandbox = await testdir();
     const help = await runGspot(sandbox.path, [command, '--help']);

@@ -152,7 +152,7 @@ test('the report prints planned skips once with their reason only in verbose out
 test('terminal progress rewrites one status line, and a log gets one line per finished check', () => {
     const terminal: string[] = [];
     const log: string[] = [];
-    using _environment = overrideEnvironment({ NO_COLOR: undefined });
+    using _environment = overrideEnvironment({ NO_COLOR: undefined, TERM: 'xterm-256color' });
     for (const [isTerminal, lines] of [
         [true, terminal],
         [false, log],
@@ -182,6 +182,31 @@ test('terminal progress rewrites one status line, and a log gets one line per fi
     expect(log[1]).toBe('done  python/ruff  1.2s\n');
 });
 
+test.each([{ TERM: 'dumb' }, { NO_COLOR: '1' }])(
+    'a terminal with %p gets the plain progress lines, without control sequences',
+    (environment) => {
+        const lines: string[] = [];
+        using _environment = overrideEnvironment({ NO_COLOR: undefined, TERM: 'xterm-256color', ...environment });
+        using _terminals = fakeTerminals([
+            [process.stdout, true],
+            [process.stderr, true],
+        ]);
+        using _write = spyOn(process.stderr, 'write').mockImplementation((chunk) => {
+            lines.push(String(chunk));
+            return true;
+        });
+        printProgress({
+            check: 'python/ruff',
+            scope: '',
+            duration: 1200,
+            finished: 1,
+            total: 1,
+            comparison: undefined,
+        });
+        expect(lines).toStrictEqual(['done  python/ruff  1.2s\n']);
+    },
+);
+
 test('NO_COLOR prints findings without color on terminal streams', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': NO_COLOR_SETTINGS });
 
@@ -197,9 +222,8 @@ test('NO_COLOR prints findings without color on terminal streams', async () => {
     expect(result.stdout).toContain('absent/** under [[ignore]] matches no tracked file or folder.');
     expect(result.stdout).toContain('gspot/unmatched-paths');
     expect(result.stdout).not.toContain('\u{1B}[');
-    expect(result.stderr).toEndWith('\r\u{1B}[2K');
-    const stderr = result.stderr.replaceAll('\r\u{1B}[2K', '');
-    expect(stderr).toBe(stripVTControlCharacters(stderr));
+    expect(result.stderr).not.toContain('\u{1B}[');
+    expect(result.stderr).not.toContain('\r');
 });
 
 test('a staged report with unstaged changes names their count once', async () => {

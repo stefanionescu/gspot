@@ -1,5 +1,6 @@
 import cliPackage from '#cli-package' with { type: 'json' };
 import { styleText, stripVTControlCharacters } from 'node:util';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
 
 import {
     EXIT_ERROR,
@@ -16,6 +17,8 @@ import type {
     CommandFailureJson,
     CanceledCommandJson,
 } from '#cli/types/system.ts';
+
+const PROGRESS_CLEAR = '\r\u{1B}[2K';
 
 const options: OutputState = { isJson: false, notes: [] };
 
@@ -124,6 +127,20 @@ Write progress text to stderr, unless --json keeps the output to the result.
 export function writeProgress(text: string): void {
     if (options.isJson) return;
     process.stderr.write(text);
+}
+
+/**
+Replace the progress line in place on a terminal that is not dumb, while NO_COLOR has no value. A dumb terminal and a
+reader that asks for no control sequences show the raw sequence, so they get nothing.
+
+@param text the new progress line, or an empty line to clear it.
+@returns whether stderr took the line, so the caller prints plain progress lines when it did not.
+*/
+export function rewriteProgress(text: string): boolean {
+    const noColor = readEnvironmentVariable('NO_COLOR') ?? '';
+    if (noColor !== '' || !process.stderr.isTTY || readEnvironmentVariable('TERM') === 'dumb') return false;
+    writeProgress(`${PROGRESS_CLEAR}${text}`);
+    return true;
 }
 
 /**

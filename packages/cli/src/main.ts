@@ -47,6 +47,7 @@ import {
     HELP_ERROR_CODE,
     ALLOWED_CHOICES,
     PROGRAM_EXIT_CODES,
+    HELP_MIN_WRAP_WIDTH,
     PROGRAM_HELP_FOOTER,
     UNKNOWN_COMMAND_NAME,
     COMMANDS_HELP_MESSAGE,
@@ -165,7 +166,7 @@ function buildOption(
     return option;
 }
 
-function addCommandDefinition(program: Command, definition: CommandDefinition): Command {
+function addCommandDefinition(program: Command, definition: CommandDefinition, helpWidth: number): Command {
     const help: CommandHelp = COMMAND_HELP[definition.name];
     const command = program
         .command(definition.name)
@@ -179,7 +180,11 @@ function addCommandDefinition(program: Command, definition: CommandDefinition): 
     command.option(VERBOSE_FLAG, help.options[VERBOSE_FLAG] ?? GLOBAL_OPTIONS[VERBOSE_FLAG]);
     command.option(JSON_FLAG, help.options[JSON_FLAG] ?? GLOBAL_OPTIONS[JSON_FLAG]);
     command.helpOption(HELP_FLAG, GLOBAL_OPTIONS[HELP_FLAG]);
-    command.configureHelp({ helpWidth: HELP_WIDTH, styleDescriptionText: (text) => text.replaceAll(CODE_MARK, '') });
+    command.configureHelp({
+        helpWidth,
+        minWidthToWrap: HELP_MIN_WRAP_WIDTH,
+        styleDescriptionText: (text) => text.replaceAll(CODE_MARK, ''),
+    });
     const exitCodes = formatExitCodes(help.exitCodes, command.createHelp());
     command.addHelpText('after', `\nExit codes:\n${exitCodes}\n\nExample:\n  ${help.example}\n`);
     return command;
@@ -229,13 +234,19 @@ export function buildProgram(onResult: CommandCompletion, cwd: string): Command 
         EXPLAIN_COMMAND,
         DOCTOR_COMMAND,
     ];
+    const { columns } = process.stdout;
+    const helpWidth = columns > 0 ? Math.min(HELP_WIDTH, columns) : HELP_WIDTH;
     for (const definition of definitions) {
-        const command = addCommandDefinition(program, definition);
+        const command = addCommandDefinition(program, definition, helpWidth);
         command.action(async () => {
             onResult(await definition.run(command.processedArgs, command.optsWithGlobals(), location));
         });
     }
-    program.configureHelp({ helpWidth: HELP_WIDTH, formatHelp: () => formatProgramHelp(program) });
+    program.configureHelp({
+        helpWidth,
+        minWidthToWrap: HELP_MIN_WRAP_WIDTH,
+        formatHelp: () => formatProgramHelp(program),
+    });
     return program;
 }
 
