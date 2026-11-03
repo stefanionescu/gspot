@@ -448,3 +448,9 @@ check = "prose/vale"
 rule = "gspot.title-case"
 paths = ["docs/**", "packages/cli/src/configurations/*/*/rules/*.md"]
 reason = "Titles use sentence case, and the title case style of gspot 0.3.8 asks for title case."
+
+[[ignore]]
+check = "github-actions/workflow-shape"
+rule = "push-concurrency"
+paths = [".github/workflows/tests.yml"]
+reason = "The published gspot 0.3.8 refuses a concurrency group on a push-only workflow, and the next release drops that rule."
