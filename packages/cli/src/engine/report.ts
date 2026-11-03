@@ -5,8 +5,15 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { EXIT_ERROR, MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
 import { buildBaseResult, formatExplainCommand } from '#cli/engine/results.ts';
-import type { FixReport, RunReport, CheckResult, FinishedRun, CheckProgress } from '#cli/types/engine/run.ts';
 
+import type {
+    FixReport,
+    RunReport,
+    RunOptions,
+    CheckResult,
+    FinishedRun,
+    CheckProgress,
+} from '#cli/types/engine/run.ts';
 import {
     STAGED_FILES,
     WORKING_TREE,
@@ -44,6 +51,32 @@ function addFindingExplanations(result: CheckResult, help: string): CheckResult 
 }
 
 /**
+Build the report of a run that checked nothing. Every report starts from it.
+
+@param stage the stage that the run selected.
+@param started when the run started.
+@param notes what the report says about the run.
+*/
+export function buildEmptyRunReport(stage: RunOptions['stage'], started: Date, notes: string[]): RunReport {
+    const stages = REPORT_STAGES[stage];
+    const duration = Date.now() - started.getTime();
+    return {
+        version: cliPackage.version,
+        notes,
+        stages,
+        started: started.toISOString(),
+        duration,
+        checks: [],
+        ignores: [],
+        baselined: {},
+        unstagedChanges: 0,
+        partial: true,
+        failed: [],
+        exitCode: 0,
+    };
+}
+
+/**
 Build the check results, detected configuration warning, and exit status of a finished run.
 
 @param run the planned checks and their results.
@@ -65,18 +98,15 @@ export function buildRunReport(run: FinishedRun): RunReport {
     const failed = listFailedChecks(checks, fixes);
     let code = failed.length > 0 ? EXIT_FINDINGS : 0;
     if (isIncomplete(session, ran, fixes)) code = EXIT_ERROR;
+    const notes = [
+        ...listUnparsedDependencyFiles(session.repository.files, session.repository.dependencyFiles).map(
+            (path) => `${path} does not parse, so gspot read no dependencies from it.`,
+        ),
+        ...checks.flatMap(({ reportNotes }) => reportNotes ?? []),
+    ];
     return {
         ...(options.comparison !== undefined && { comparison: options.comparison }),
-        version: cliPackage.version,
-        notes: [
-            ...listUnparsedDependencyFiles(session.repository.files, session.repository.dependencyFiles).map(
-                (path) => `${path} does not parse, so gspot read no dependencies from it.`,
-            ),
-            ...checks.flatMap(({ reportNotes }) => reportNotes ?? []),
-        ],
-        stages: REPORT_STAGES[options.stage],
-        started: started.toISOString(),
-        duration: Date.now() - started.getTime(),
+        ...buildEmptyRunReport(options.stage, started, notes),
         checks: checks.map(({ reportNotes: _notes, ...check }) => check),
         ignores: session.settings.ignore,
         baselined,

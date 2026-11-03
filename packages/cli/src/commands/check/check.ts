@@ -3,11 +3,9 @@ import { addAbortSignal } from 'node:stream';
 import { GspotError } from '#cli/system/errors.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { formatNameList } from '#cli/system/text.ts';
-import { printProgress } from '#cli/engine/report.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { runPushCheck } from '#cli/commands/check/push.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
-import cliPackage from '#cli-package' with { type: 'json' };
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { constants, accessSync, existsSync } from 'node:fs';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
@@ -15,19 +13,13 @@ import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { TRAILING_NEWLINE } from '#cli/config/repository/git.ts';
 import { InvalidArgumentError } from '@commander-js/extra-typings';
 import { readGitText, readGitPaths } from '#cli/repository/git/run.ts';
+import { printProgress, buildEmptyRunReport } from '#cli/engine/report.ts';
 import { writeProgress, runCancelableCommand } from '#cli/system/terminal.ts';
 import type { CommandLocation, CommandDefinition } from '#cli/types/commands/edits.ts';
 import type { CheckFlags, CheckOptions, CheckCommandJson } from '#cli/types/commands/reports.ts';
 import { readStagedPaths, hasStagedChanges, isWorkingTreeClean } from '#cli/repository/revisions/changes.ts';
+import { FIX_FLAG, BASE_FLAG, STAGED_FLAG, PROGRESS_CLEAR, GIT_WRITE_TREE_ARGUMENTS } from '#cli/config/engine.ts';
 
-import {
-    FIX_FLAG,
-    BASE_FLAG,
-    STAGED_FLAG,
-    REPORT_STAGES,
-    PROGRESS_CLEAR,
-    GIT_WRITE_TREE_ARGUMENTS,
-} from '#cli/config/engine.ts';
 import {
     STAGE_FLAG,
     SETUP_PATHS,
@@ -190,20 +182,7 @@ async function runStagedCheck(
     await assertSetupStaged(root, cancelSignal);
     const staged = await readStagedPaths(root, cancelSignal);
     if (staged.staged.length === 0 && !(await hasStagedChanges(root, cancelSignal))) {
-        const json = {
-            version: cliPackage.version,
-            notes: [NOTHING_STAGED_MESSAGE],
-            stages: REPORT_STAGES[options.stage ?? 'all'],
-            started: started.toISOString(),
-            duration: Date.now() - started.getTime(),
-            checks: [],
-            ignores: [],
-            baselined: {},
-            unstagedChanges: 0,
-            partial: true,
-            failed: [],
-            exitCode: 0,
-        };
+        const json = buildEmptyRunReport(options.stage ?? 'all', started, [NOTHING_STAGED_MESSAGE]);
         return { text: `${NOTHING_STAGED_MESSAGE}\n`, json, exitCode: 0 };
     }
     const revision = {
