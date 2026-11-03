@@ -59,6 +59,9 @@ program shows, and use it everywhere. For example, a command-line tool that writ
 | program, tool               | tool                 | A program that the tool installs and runs.                    |
 | rule, for two concepts      | lint rule, rule file | A rule of a linter; a file of instructions for coding agents. |
 
+Add each word you reject to `naming.terms` with its replacement, such as `"config file" = "generated file"`. The naming
+check then reports the word in identifiers, and the prose check in documentation, code comments, and commit messages.
+
 A role word carries meaning where a primitive or weak type does not.
 
 | Avoid               | Prefer                        | Why                              |

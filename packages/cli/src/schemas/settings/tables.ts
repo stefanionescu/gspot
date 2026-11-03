@@ -23,6 +23,8 @@ import {
     NAMING_LANGUAGE_CATEGORIES,
 } from '#cli/config/settings/schema.ts';
 
+const TERM = /^[\p{L}\p{N}]+(?:[ -][\p{L}\p{N}]+)*$/u;
+
 export const ciFields = {
     enabled: z.boolean().default(false).meta({
         leftOut: 'ci',
@@ -236,6 +238,17 @@ const lists = {
         .meta({
             configurations: ['naming'],
             description: 'Words this repository bans in identifiers, beyond the shipped groups.',
+        }),
+    terms: z
+        .record(
+            z.string().regex(TERM, 'Use words separated by spaces, without a regular expression pattern.'),
+            z.string(),
+        )
+        .default({})
+        .meta({
+            configurations: ['naming'],
+            description:
+                'Words this repository replaces, each with the word to use instead. The naming checks report the word in identifiers, and the prose checks in documentation, code comments, and commit messages. A scope adds its words to the root words.',
         }),
     override: namingOverrideSchema
         .extend({

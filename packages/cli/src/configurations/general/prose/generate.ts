@@ -39,6 +39,8 @@ import {
     MARKUP_RULES_COMMENT,
 } from '#cli/config/tools/vale.ts';
 
+const TERMS_MESSAGE = "Use '%s' instead of '%s'.";
+
 function listExceptions(words: string[]): string[] {
     return [...new Set([...words, ...ACRONYMS])]
         .toSorted(compareText)
@@ -149,6 +151,22 @@ export function buildBannedHeadingsStyle(planned: PlannedConfig): string {
             (heading) =>
                 String.raw`(?:\b|^)${heading.replaceAll(VALE_REGEX_SYMBOLS, (symbol) => '\\' + symbol)}(?:\b|$)`,
         ),
+    });
+}
+
+/**
+Build the `terms` style of Vale: each word of naming.terms, with the word to use instead.
+
+@param planned the config file to build.
+*/
+export function buildTermsStyle(planned: PlannedConfig): string {
+    const terms = Object.entries(getTable(planned.scope.settings, 'naming').terms);
+    return stringify({
+        extends: 'substitution',
+        message: TERMS_MESSAGE,
+        level: 'error',
+        ignorecase: true,
+        swap: Object.fromEntries(terms.toSorted(([left], [right]) => compareText(left, right))),
     });
 }
 

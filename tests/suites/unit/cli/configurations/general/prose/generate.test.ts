@@ -42,6 +42,25 @@ test('the heading-case exceptions accept a file name and refuse a plain word, a 
     ]);
 });
 
+test('the naming terms reach the terms style, and Vale runs that style on code comments', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['prose', 'naming'], {
+            level: 'all',
+            tables: '[naming]\nterms = { "config file" = "generated file", program = "tool" }\n',
+        }),
+        'guide.md': '# Guide\n',
+    });
+    const files = buildGeneratedFiles(await openSession(sandbox.path)).files;
+    const style = files.find(({ path }) => path === getManifestTarget('prose', 'styles/gspot/terms.yml'))!.content;
+    expect(parse(style)).toMatchObject({
+        extends: 'substitution',
+        level: 'error',
+        swap: { 'config file': 'generated file', program: 'tool' },
+    });
+    const ini = files.find(({ path }) => path === getManifestTarget('prose', 'vale.ini'))!.content;
+    expect(ini.split('\n').filter((line) => line === 'gspot.terms = YES')).toHaveLength(1);
+});
+
 test.each([...PROSE_STYLE_CASES])(
     'Vale keeps the configured $name rule and its message',
     async ({ name, expected }) => {

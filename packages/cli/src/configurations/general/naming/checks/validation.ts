@@ -194,13 +194,13 @@ function validateBannedWords(checked: CheckedIdentifier, nameWords: string[]): C
             (term.categories === undefined || term.categories.includes(checked.identifier.category)) &&
             hasTerm(words, term),
     );
-    return banned === undefined
-        ? undefined
-        : {
-              ...checked.place,
-              rule: RULES.bannedWord,
-              message: `${checked.prefix}"${banned.word}" is banned (${banned.setting}).`,
-          };
+    if (banned === undefined) return undefined;
+    const advice = banned.replacement === undefined ? '' : ` Use "${banned.replacement}".`;
+    return {
+        ...checked.place,
+        rule: RULES.bannedWord,
+        message: `${checked.prefix}"${banned.word}" is banned (${banned.setting}).${advice}`,
+    };
 }
 
 function findRepeatedWord(words: string[]): string | undefined {

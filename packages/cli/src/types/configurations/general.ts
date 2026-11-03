@@ -73,6 +73,7 @@ export type BannedWord = {
     list?: string;
     categories?: string[];
     firstWord?: boolean;
+    replacement?: string;
 };
 
 export type FileNaming = { settings: NamingSettings; isTestFile: boolean };

@@ -94,6 +94,29 @@ test('SwiftLint owns the case and length of Swift types; banned words are still 
     expect(corrected).toStrictEqual([]);
 });
 
+test('a word of naming.terms in an identifier reports the word to use instead, and the renamed identifier passes', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript', 'naming'], {
+            level: 'all',
+            tables: '[naming]\nterms = { "config file" = "generated file" }\n',
+        }),
+        'entry.ts': 'export const configFilePath = "";\n',
+    });
+
+    const failed = await runSandboxCheck(sandbox.path, 'naming/identifiers');
+
+    expect(failed.map(({ line, rule, message }) => ({ line, rule, message }))).toStrictEqual([
+        {
+            line: 1,
+            rule: 'banned-word',
+            message:
+                'typescript variable "configFilePath": "config file" is banned (naming.terms). Use "generated file".',
+        },
+    ]);
+    await writeFile(join(sandbox.path, 'entry.ts'), 'export const generatedFilePath = "";\n');
+    expect(await runSandboxCheck(sandbox.path, 'naming/identifiers')).toStrictEqual([]);
+});
+
 test('with pytest selected, the test_ prefix does not count as a word', async () => {
     const source = 'def test_read_account_summary_columns():\n    pass\n';
     await using sandbox = await createGitSandbox({

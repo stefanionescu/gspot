@@ -49,6 +49,11 @@ tool = "vale"
 
 [[config_file]]
 level = "all"
+target = "styles/gspot/terms.yml"
+tool = "vale"
+
+[[config_file]]
+level = "all"
 target = "styles/gspot/item-length.yml"
 tool = "vale"
 

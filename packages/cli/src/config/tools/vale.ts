@@ -127,6 +127,7 @@ export const VALE_COMMENT_RULES = [
     'gspot.symbols',
     'gspot.idioms',
     'gspot.home-paths',
+    'gspot.terms',
 ] as const;
 
 export const VALE_MESSAGE_RULES = [
@@ -141,6 +142,7 @@ export const VALE_MESSAGE_RULES = [
     'gspot.em-dashes',
     'gspot.session-identifiers',
     'gspot.home-paths',
+    'gspot.terms',
 ] as const;
 
 export const VALE_MARKUP_FILES = '*.{md,mdx}';

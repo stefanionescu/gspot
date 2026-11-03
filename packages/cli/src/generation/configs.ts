@@ -57,6 +57,7 @@ import {
     buildPrettierignoreFile,
 } from '#cli/configurations/general/format/generate.ts';
 import {
+    buildTermsStyle,
     buildValeIniFile,
     buildLengthStyle,
     buildAcronymsStyle,
@@ -101,6 +102,7 @@ const CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder | undefined>> = {
     'prose/styles/gspot/heading-case.yml': buildHeadingCaseStyle,
     'prose/styles/gspot/paragraph-length.yml': (planned) => buildLengthStyle(planned, 'paragraph'),
     'prose/styles/gspot/banned-headings.yml': buildBannedHeadingsStyle,
+    'prose/styles/gspot/terms.yml': buildTermsStyle,
     'prose/styles/gspot/sentence-length.yml': (planned) => buildLengthStyle(planned, 'sentence'),
     'prose/styles/gspot/item-length.yml': (planned) => buildLengthStyle(planned, 'item'),
     'spelling/typos.toml': buildTyposFile,

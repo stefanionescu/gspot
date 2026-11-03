@@ -32,6 +32,7 @@ the order of untouched settings and tables.
 | Change indentation, line length, or quotes                | `[format]`, and `[[format.override]]` for some files                       | [Settings](/reference/gspot-toml/#format)   |
 | Accept a word that the spelling checks report             | `gspot set spelling.allowed_words <word> --reason "<why>"`                 | [Spelling and prose](/topics/prose/)        |
 | Refuse words in names                                     | `gspot set naming.banned_words <word>...`, with every word of the list     | [Settings](/reference/gspot-toml/#naming)   |
+| Replace a word in names, documentation, and messages      | `gspot set naming.terms '{ "<word>" = "<replacement>" }'`, with every pair | [Settings](/reference/gspot-toml/#naming)   |
 | Change coverage minimums, allowed licenses, or registries | `coverage`, `licenses`, and `dependencies` settings                        | [Settings](/reference/gspot-toml/)          |
 
 ### Add rules and checks of your own
