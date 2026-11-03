@@ -184,7 +184,7 @@ export const REFERENCE_TEXT_ENTITIES: Readonly<Record<string, string>> = {
     '|': '&#124;',
 };
 
-export const REFERENCE_CODE_CHARACTERS = /[&<>|[\]*_~`\\]/gu;
+export const REFERENCE_CODE_CHARACTERS = /[&<>|[\]*_~`\\"']/gu;
 export const REFERENCE_CODE_ENTITIES: Readonly<Record<string, string>> = {
     ...REFERENCE_TEXT_ENTITIES,
     '[': '&#91;',
@@ -194,6 +194,8 @@ export const REFERENCE_CODE_ENTITIES: Readonly<Record<string, string>> = {
     '~': '&#126;',
     '`': '&#96;',
     '\\': '&#92;',
+    '"': '&#34;',
+    "'": '&#39;',
 };
 
 export const RELEASE_AGE_EXCLUSIONS = [
