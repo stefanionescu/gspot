@@ -4,7 +4,6 @@ import { createFileTree } from 'testdirs';
 import { getTool } from '#cli/tools/pins.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
-import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
@@ -13,6 +12,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { runSandboxCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
@@ -55,7 +55,7 @@ test('custom Worker type settings reach wrangler types as --env-interface', asyn
         buildCheckSession(session, CHECK_GENERATION),
         planned,
         selectCheckCode(planned.check),
-        {},
+        CHECK_RUN_OPTIONS,
     );
     expect(result.findings).toStrictEqual([]);
     expect(run.mock.calls.map(([command]) => command.slice(1))).toStrictEqual([
@@ -83,7 +83,7 @@ test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and 
         buildCheckSession(untracked, CHECK_GENERATION),
         untrackedCheck,
         selectCheckCode(untrackedCheck.check),
-        {},
+        CHECK_RUN_OPTIONS,
     );
     expect(untrackedResult.findings).toMatchObject([...UNTRACKED_CLOUDFLARE_FINDINGS]);
     expect(run).not.toHaveBeenCalled();
@@ -94,7 +94,7 @@ test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and 
         buildCheckSession(tracked, CHECK_GENERATION),
         trackedCheck,
         selectCheckCode(trackedCheck.check),
-        {},
+        CHECK_RUN_OPTIONS,
     );
     expect(trackedResult.findings).toStrictEqual([]);
     expect(run.mock.calls.map(([command]) => command.slice(1))).toStrictEqual([

@@ -8,7 +8,6 @@ import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -18,6 +17,7 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { open, chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
 import type { SpawnResult, CancelableSpawnOptions } from '#cli/types/system.ts';
 
 import {
@@ -96,7 +96,7 @@ test('nextjs/tsc in a child scope reports its finding, passes after the fix, and
     const routesSeen: string[] = [];
     using fakes = fakeNextjsCommands((command, options) => fakeNextjsBuild(command, options, routesSeen));
     const { folders } = fakes;
-    const { findings: found } = await runCheckCode(session, planned, CHECK_CODE['nextjs/tsc'], {});
+    const { findings: found } = await runCheckCode(session, planned, CHECK_CODE['nextjs/tsc'], CHECK_RUN_OPTIONS);
     expect(found.map(({ check, file, line, rule, message }) => ({ check, file, line, rule, message }))).toStrictEqual([
         {
             check: 'nextjs/tsc',
@@ -107,7 +107,7 @@ test('nextjs/tsc in a child scope reports its finding, passes after the fix, and
         },
     ]);
     await writeFile(join(sandbox.path, join(scope, 'src/app/page.ts')), 'corrected input\n');
-    expect(await runCheckCode(session, planned, CHECK_CODE['nextjs/tsc'], {})).toMatchObject({
+    expect(await runCheckCode(session, planned, CHECK_CODE['nextjs/tsc'], CHECK_RUN_OPTIONS)).toMatchObject({
         status: 'passed',
         findings: [],
     });
@@ -145,7 +145,12 @@ test('nextjs/tsc removes its copy after a failed type generation and keeps a con
         return buildProcessResult({ code: 1, stderr: `Error: ${message}` });
     });
     const error = await captureRejection(
-        runCheckCode(buildCheckSession(session, CHECK_GENERATION), planned, CHECK_CODE['nextjs/tsc'], {}),
+        runCheckCode(
+            buildCheckSession(session, CHECK_GENERATION),
+            planned,
+            CHECK_CODE['nextjs/tsc'],
+            CHECK_RUN_OPTIONS,
+        ),
     );
     expect(error.message).toBe(`The next typegen command failed: Error: ${message}`);
     expect(scratch).not.toBe('');

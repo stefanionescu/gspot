@@ -10,9 +10,9 @@ import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { BINARY_OUTPUT_HEX } from '#tests/config/configurations/general.ts';
-import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { runChecks, runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { checkGeneratorOutputs } from '#cli/configurations/generator-outputs.ts';
+import { buildRunOptions, CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
 
 test('a [[command_check]] with outputs reports an output that differs from what its command writes', async () => {
     await using sandbox = await createGitSandbox({});
@@ -59,7 +59,7 @@ test('generator output patterns omit links to folders', async () => {
         buildCheckSession(session, CHECK_GENERATION),
         planned,
         { check: checkGeneratorOutputs },
-        {},
+        CHECK_RUN_OPTIONS,
     );
     expect(result.findings).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, 'generated/regular/output.txt'), 'utf8')).toBe('generated\n');

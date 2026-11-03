@@ -4,7 +4,6 @@ import { join, basename } from 'node:path';
 import { openSession } from '#cli/engine/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -12,6 +11,7 @@ import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
 import { checkGeneratorOutputs } from '#cli/configurations/generator-outputs.ts';
 import { PROJECT_NOTES, GENERATOR_CASES, UNTRACKED_NOTES } from '#tests/config/configurations/general.ts';
 
@@ -44,7 +44,12 @@ test.each([...GENERATOR_CASES])(
         await using sandbox = await createGitSandbox({});
         const { session, planned } = await prepareGeneratorCheck(sandbox.path, row);
         const error = await captureRejection(
-            runCheckCode(buildCheckSession(session, CHECK_GENERATION), planned, { check: checkGeneratorOutputs }, {}),
+            runCheckCode(
+                buildCheckSession(session, CHECK_GENERATION),
+                planned,
+                { check: checkGeneratorOutputs },
+                CHECK_RUN_OPTIONS,
+            ),
         );
         expect(error.message).toBe(
             `The ${basename(process.execPath)} command failed (exit 1): Generation failed\nfailure`,
@@ -54,7 +59,7 @@ test.each([...GENERATOR_CASES])(
             buildCheckSession(session, CHECK_GENERATION),
             planned,
             { check: checkGeneratorOutputs },
-            {},
+            CHECK_RUN_OPTIONS,
         );
         expect(stale.findings.map(({ check, file, rule }) => ({ check, file, rule }))).toStrictEqual([
             { check: row.check, file: row.output, rule: 'stale' },
@@ -64,7 +69,7 @@ test.each([...GENERATOR_CASES])(
             buildCheckSession(session, CHECK_GENERATION),
             planned,
             { check: checkGeneratorOutputs },
-            {},
+            CHECK_RUN_OPTIONS,
         );
         expect(fresh.findings).toStrictEqual([]);
         expect(await readFile(join(sandbox.path, row.output), 'utf8')).toBe('dirty');

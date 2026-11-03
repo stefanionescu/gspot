@@ -14,7 +14,7 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runChecks, runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { LOCAL_FILE_PATHS, LARGE_FILE_TABLES } from '#tests/config/configurations/general.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildRunOptions, CHECK_GENERATION, createRunResources } from '#tests/setup/cli/run.ts';
+import { buildRunOptions, CHECK_GENERATION, CHECK_RUN_OPTIONS, createRunResources } from '#tests/setup/cli/run.ts';
 
 test(`local-files reports each tracked path that a scope's configurations leave untracked, once, including a path only in the Git index`, async () => {
     await using sandbox = await createGitSandbox({});
@@ -117,7 +117,7 @@ test('a staged outward link plans local-files, and a run that stages another fil
             buildCheckSession(session, CHECK_GENERATION),
             check,
             selectCheckCode(check.check),
-            {},
+            CHECK_RUN_OPTIONS,
         );
         return result.findings.map(({ file }) => file);
     };

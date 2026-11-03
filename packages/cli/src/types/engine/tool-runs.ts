@@ -113,7 +113,7 @@ export type FolderRun = {
     command: string[];
     toolPath: string;
     base: CheckResult;
-    options: CheckRunOptions;
+    options: Pick<CheckRunOptions, 'verbose' | 'command'>;
 };
 
 export type CommandRun = { root: string; cwd: string; findings: Finding[]; failed: boolean };

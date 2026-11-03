@@ -14,7 +14,7 @@ Reports each generated file on disk that does not match what the settings genera
 export function checkGeneratedFiles(
     session: CheckSession,
     _planned: PlannedCheck,
-    options: CheckRunOptions = {},
+    options: Pick<CheckRunOptions, 'verbose'> = {},
 ): CheckFinding[] {
     const stale = session.generation.listStaleFiles(session, options);
     return stale.map((staleFile) => {

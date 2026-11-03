@@ -11,8 +11,8 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { fakeNpmTool, fakeCommands } from '#tests/setup/system/fakes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { runChecks, runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
+import { buildRunOptions, CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
 import { cp, chmod, mkdir, unlink, copyFile, readFile, realpath, writeFile } from 'node:fs/promises';
 import { toolModules, linkTypescript, linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { EMPTY_PROJECT_RESULT, IMPORTED_AMBIENT_FILES } from '#tests/config/configurations/javascript/checks.ts';
@@ -114,7 +114,7 @@ test('javascript/tsc excludes type roots inherited from folders above the reposi
         buildCheckSession(session, CHECK_GENERATION),
         planned,
         CHECK_CODE['javascript/tsc'],
-        {},
+        CHECK_RUN_OPTIONS,
     );
     expect(result.findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
         { file: 'source.js', rule: 'TS2304' },
@@ -138,7 +138,12 @@ test('a scope whose jsconfig lists no JavaScript file passes with nothing to com
         staged: ['gspot.toml'],
     }).find((check) => check.scope.path === 'site')!;
     expect(
-        await runCheckCode(buildCheckSession(reopened, CHECK_GENERATION), site, CHECK_CODE['javascript/tsc'], {}),
+        await runCheckCode(
+            buildCheckSession(reopened, CHECK_GENERATION),
+            site,
+            CHECK_CODE['javascript/tsc'],
+            CHECK_RUN_OPTIONS,
+        ),
     ).toStrictEqual(EMPTY_PROJECT_RESULT);
 });
 

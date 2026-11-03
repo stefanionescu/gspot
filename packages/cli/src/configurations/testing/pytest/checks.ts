@@ -30,7 +30,7 @@ Runs pytest, and leaves the shipped coverage settings out when the project write
 export async function checkPytestCoverage(
     session: CheckSession,
     planned: PlannedCheck,
-    options: CheckRunOptions = {},
+    options: Pick<CheckRunOptions, 'verbose' | 'command'> = {},
 ): Promise<CheckResult> {
     if (options.command !== undefined || !hasProjectCoverage(session, planned.scope.path))
         return runCommandCheck(session, planned, options);

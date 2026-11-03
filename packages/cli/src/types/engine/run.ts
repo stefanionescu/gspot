@@ -109,7 +109,7 @@ type CheckRun = (
 export type CheckRunOptions = {
     verbose?: boolean | undefined;
     command?: string[];
-    baselineRun?: BaselineRun | undefined;
+    baselineRun: BaselineRun;
 };
 
 export type FindingOptions = { verbose: boolean; help: string | undefined };

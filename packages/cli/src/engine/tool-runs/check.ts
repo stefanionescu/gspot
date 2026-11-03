@@ -237,7 +237,7 @@ Finds the tool and runs the expanded commands of a check.
 export async function runCommandCheck(
     session: CheckSession,
     planned: PlannedCheck,
-    options: CheckRunOptions = {},
+    options: Pick<CheckRunOptions, 'verbose' | 'command'> = {},
 ): Promise<CheckResult> {
     const tool = planned.tool as Tool;
     const base = buildBaseResult(planned, session);

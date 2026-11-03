@@ -19,8 +19,8 @@ import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
-import { CHECK_GENERATION, createRunResources } from '#tests/setup/cli/run.ts';
 import { fakeToolExecutables, buildPythonToolFiles } from '#tests/setup/system/fakes.ts';
+import { CHECK_GENERATION, CHECK_RUN_OPTIONS, createRunResources } from '#tests/setup/cli/run.ts';
 
 import {
     FAILED_STYLE_BATCH,
@@ -42,7 +42,7 @@ test.each([...PYDOCLINT_PROJECT_CASES])('pydoclint $name', async ({ project, set
         buildCheckSession(session, CHECK_GENERATION),
         planned,
         CHECK_CODE['python/pydoclint'],
-        {},
+        CHECK_RUN_OPTIONS,
     );
     expect(result.status).toBe('passed');
     const commandArguments = run.mock.calls[0]![0];
@@ -65,7 +65,7 @@ test.each([
         buildCheckSession(prepared.session, CHECK_GENERATION),
         prepared.planned,
         CHECK_CODE['python/pydoclint'],
-        {},
+        CHECK_RUN_OPTIONS,
     );
     const commandArguments = run.mock.calls[0]![0];
     const index = commandArguments.indexOf('--skip-checking-short-docstrings');
@@ -116,7 +116,7 @@ test('pydoclint keeps earlier style findings when a later style batch fails', as
         buildCheckSession(session, CHECK_GENERATION),
         planned,
         CHECK_CODE['python/pydoclint'],
-        {},
+        CHECK_RUN_OPTIONS,
     );
     expect(result.status).toBe('error');
     expect(result.fileCount).toBe(2);

@@ -6,7 +6,7 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import type { RunOptions, CheckGeneration } from '#cli/types/engine/run.ts';
+import type { RunOptions, CheckRunOptions, CheckGeneration } from '#cli/types/engine/run.ts';
 
 /**
 Options for an in-process run of every stage, with no fixes.
@@ -47,6 +47,13 @@ paths = ${JSON.stringify(paths)}
 stage = "commit"
 `;
 }
+
+/**
+The options of one check that a test runs outside the engine, with an empty baseline that no test changes.
+*/
+export const CHECK_RUN_OPTIONS: CheckRunOptions = {
+    baselineRun: { unused: new Map(), finished: [], paths: undefined },
+};
 
 /**
 The production generators, called only when a check needs their output.

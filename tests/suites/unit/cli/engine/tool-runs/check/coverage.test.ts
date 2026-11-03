@@ -3,7 +3,6 @@ import { join, resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -12,6 +11,7 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { COVERAGE_PROJECT_FILES } from '#tests/config/engine/tool-runs.ts';
+import { CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
 
 test.each(COVERAGE_PROJECT_FILES)(
     'pytest respects $name and only adds its generated omissions as a fallback',
@@ -39,7 +39,7 @@ test.each(COVERAGE_PROJECT_FILES)(
             buildCheckSession(session, CHECK_GENERATION),
             planned,
             selectCheckCode(planned.check),
-            {},
+            CHECK_RUN_OPTIONS,
         );
         expect(result.status, result.note).toBe('passed');
         expect(commands).toHaveLength(1);

@@ -2,9 +2,9 @@ import { formatCount } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { BASELINE_FILE } from '#cli/config/repository/files.ts';
+import type { CheckRunOptions } from '#cli/types/engine/run.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { GSPOT_RULES } from '#cli/config/configurations/structure.ts';
-import type { BaselineRun, CheckRunOptions } from '#cli/types/engine/run.ts';
 
 /**
 Reports each baseline count that no finding used. The engine runs this check after the others. A count stays unjudged
@@ -16,7 +16,7 @@ check outside the settings, stays stale in every run.
 @param options the state of the baseline in this run.
 */
 export function checkBaseline(session: Session, _planned: PlannedCheck, options: CheckRunOptions): CheckFinding[] {
-    const { unused, finished, paths } = options.baselineRun as BaselineRun;
+    const { unused, finished, paths } = options.baselineRun;
     const tracked = new Set(session.repository.files.map(({ path }) => path));
     const configured = new Set(session.configuredChecks.map(({ check }) => check.id));
     const read = new Set(

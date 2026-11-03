@@ -16,9 +16,9 @@ import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { CALLER_WORKFLOW } from '#tests/config/setup/configurations.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { CHECK_CODE, selectCheckCode } from '#cli/configurations/registry.ts';
 import { writeProgramCommand, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
+import { buildRunOptions, CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
 
 import {
     ACTIONLINT_EXITS,
@@ -47,7 +47,7 @@ test('actionlint copies root actions and unchanged actions outside .github with 
         buildCheckSession(session, CHECK_GENERATION),
         planned,
         CHECK_CODE['github-actions/actionlint'],
-        {},
+        CHECK_RUN_OPTIONS,
     );
     expect(result.findings).toStrictEqual([]);
     expect(boundary).toHaveBeenCalledTimes(1);
@@ -79,7 +79,7 @@ test.each([...WORKFLOW_TEXT_CASES])(
             buildCheckSession(session, CHECK_GENERATION),
             planned!,
             selectCheckCode(planned!.check),
-            {},
+            CHECK_RUN_OPTIONS,
         );
         expect(result.status, JSON.stringify(result)).toBe('passed');
         expect(run).toHaveBeenCalledTimes(1);
@@ -121,7 +121,7 @@ test.each([...ACTIONLINT_EXITS])(
             buildCheckSession(session, CHECK_GENERATION),
             planned,
             CHECK_CODE['github-actions/actionlint'],
-            {},
+            CHECK_RUN_OPTIONS,
         );
         expect(result.status, JSON.stringify(result)).toBe(status);
         const [call] = await readCallRecords(record);

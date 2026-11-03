@@ -17,9 +17,9 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import type { NamingSettings } from '#cli/types/configurations/general.ts';
 import { ROOT_LABEL, SWIFT_PACKAGE } from '#tests/config/setup/programs.ts';
 import { CHECK_CODE, selectCheckCode } from '#cli/configurations/registry.ts';
-import { CHECK_GENERATION, createRunResources } from '#tests/setup/cli/run.ts';
 import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
+import { CHECK_GENERATION, CHECK_RUN_OPTIONS, createRunResources } from '#tests/setup/cli/run.ts';
 
 /**
 Keep the compiler cache in a temporary folder until the test ends.
@@ -91,7 +91,7 @@ export async function runSandboxCheck(
         buildCheckSession(session, CHECK_GENERATION),
         planned,
         selectCheckCode(planned.check),
-        {},
+        CHECK_RUN_OPTIONS,
     );
     return result.findings;
 }
@@ -110,7 +110,12 @@ export function getBuiltInCheck(checkId: string): (session: Session, planned: Pl
     const check = CHECK_CODE[checkId]?.check;
     if (check === undefined) throw new Error(`${checkId} has no built-in check.`);
     return async (session, planned) => {
-        const result = await runBuiltInCheck(check, buildCheckSession(session, CHECK_GENERATION), planned, {});
+        const result = await runBuiltInCheck(
+            check,
+            buildCheckSession(session, CHECK_GENERATION),
+            planned,
+            CHECK_RUN_OPTIONS,
+        );
         return [...result.findings];
     };
 }
