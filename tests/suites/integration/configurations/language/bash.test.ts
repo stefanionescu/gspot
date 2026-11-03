@@ -201,9 +201,16 @@ test.each([
     {
         name: 'tabs',
         tables: '[format]\nindent_style = "tab"\nindent_width = 4\n',
+        path: 'bin/example',
+        source: '#!/bin/sh\nif true; then\n  echo ready\nfi\n',
+        fixed: '#!/bin/sh\nif true; then\n\techo ready\nfi\n',
+    },
+    {
+        name: 'the indent of the .sh files over the indent of every file',
+        tables: '[format]\nindent_width = 2\n',
         path: 'example.sh',
-        source: 'if true; then\n  echo ready\nfi\n',
-        fixed: 'if true; then\n\techo ready\nfi\n',
+        source: 'if true; then\n    echo ready\nfi\ncase "$1" in\nup) echo up ;;\nesac\n',
+        fixed: 'if true; then\n    echo ready\nfi\ncase "$1" in\n    up) echo up ;;\nesac\n',
     },
 ])('shfmt reports and fixes script formatting with $name', async ({ tables, path, source, fixed }) => {
     await using sandbox = await createGitSandbox({

@@ -53,6 +53,20 @@ indent_size = 4${shfmt}
 `);
 });
 
+test.each([
+    { indent: ' '.repeat(4), section: 'indent_style = space\nindent_size = 4' },
+    { indent: '\t', section: 'indent_style = tab' },
+])('EditorConfig gives .sh and .bash files the indent of the scripts: $section', async ({ indent, section }) => {
+    const settings = { configurations: ['bash'], format: { indent_style: 'space', indent_width: 2 } };
+    const text = await buildGeneratedFile(stringify(settings), '.editorconfig', {
+        'run.sh': `main() {\n${indent}if true; then\n${indent}${indent}echo ready\n${indent}fi\n}\n`,
+        'tools/build.bash': `for name in a b; do\n${indent}echo "$name"\ndone\n`,
+        hook: '#!/bin/sh\nif true; then\n  echo ready\nfi\n',
+    });
+    expect(text).toContain('indent_style = space\nindent_size = 2\nswitch_case_indent = true\nsimplify = true\n');
+    expect(text).toContain(`[*.{sh,bash}]\n${section}\n`);
+});
+
 test('Prettier loads the selected plugin through the root pointer file', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['svelte']),
