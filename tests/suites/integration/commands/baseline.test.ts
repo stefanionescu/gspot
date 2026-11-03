@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { rm } from 'node:fs/promises';
+import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
