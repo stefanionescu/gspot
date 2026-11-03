@@ -119,7 +119,7 @@ class HttpClient extends Base {
     constructor(private readonly baseUrl: string) {}
     async send(body: Body): Promise<void> {}
 }
-interface Options { retries?: number; 'Content-Type': string }
+interface Options { retries?: number; 'Content-Type': string; reset_all(): void }
 type Verdict = 'ok';
 enum Mode { Fast, Slow = 2 }
 const table = { keyOne: 1 };
@@ -130,7 +130,7 @@ const EXPECTED_TYPESCRIPT_NAMES = {
     parameters: ['rawInput', 'rest', 'first', 'second', 'event', 'baseUrl', 'body'],
     variables: ['enhancedHandler', 'payload', 'table'],
     classes: ['HttpClient'],
-    properties: ['secret', 'DEFAULT_PORT', 'baseUrl', 'retries'],
+    properties: ['secret', 'DEFAULT_PORT', 'baseUrl'],
     methods: ['send'],
     types: ['Options', 'Verdict', 'Mode'],
     enum_cases: ['Fast', 'Slow'],

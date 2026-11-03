@@ -126,8 +126,7 @@ test('with pytest selected, the test_ prefix does not count as a word', async ()
 });
 
 test('an allowed property name does not hide a bad name on the next line', async () => {
-    const source =
-        'export type Template = {\n    external_key: string;\n    user_name: string;\n    USER_COUNT: number;\n};\n';
+    const source = "export class Template {\n    external_key = '';\n    user_name = '';\n    USER_COUNT = 0;\n}\n";
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript', 'naming'], {
             tables: '[[naming.override]]\npaths = ["source.ts"]\ncategories = ["properties"]\nallowed_names = ["external_key"]\nreason = "The remote API fixes this exact property key."\n',
@@ -223,11 +222,11 @@ test('snapshot names describe storage and subscription concepts outside tests', 
     expect(await runSandboxCheck(sandbox.path, 'naming/identifiers')).toStrictEqual([]);
 });
 
-test('a property with a function type counts as a method, so log level methods pass', async () => {
+test('a field with a function type counts as a method, so log level methods pass', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
         'logger.ts':
-            'export type Logger = { error: (message: string) => void; warn: (message: string) => void; retry_count: number };\n',
+            'export class Logger { error: (message: string) => void = log; warn: (message: string) => void = log; retry_count = 0; }\n',
     });
     const findings = await runSandboxCheck(sandbox.path, 'naming/identifiers');
     expect(findings).toHaveLength(1);

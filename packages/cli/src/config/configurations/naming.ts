@@ -119,10 +119,10 @@ const METHOD_NODES = ['method_definition', 'method_signature', 'abstract_method_
 
 export const DECLARATIONS = [
     [TYPESCRIPT_FUNCTION_NODES, 'functions'],
-    [METHOD_NODES, 'methods'],
+    [['method_definition', 'abstract_method_signature'], 'methods'],
     [['class_declaration', 'abstract_class_declaration'], 'classes'],
     [['interface_declaration', 'type_alias_declaration', 'enum_declaration'], 'types'],
-    [['public_field_definition', 'property_signature'], 'properties'],
+    [['public_field_definition'], 'properties'],
     [['enum_assignment'], 'enum_cases'],
 ] as const;
 
