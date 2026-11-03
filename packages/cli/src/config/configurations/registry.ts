@@ -54,6 +54,7 @@ export const IGNORE_SECTION_TITLES = {
     configurations: 'Paths that configurations leave out',
     lockfiles: 'Lockfiles',
     submodules: 'Git submodules',
+    gitignore: 'Paths that the tracked .gitignore files leave out',
 } as const;
 
 export const NESTJS_CONFIGURATION = 'nestjs';

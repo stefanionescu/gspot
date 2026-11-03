@@ -280,20 +280,18 @@ test('root paths in the generated-files section are anchored, so an authored too
     expect(ignored).not.toContain('**/eslint.config.mjs');
 });
 
-test('changing tracked gitignore patterns leaves generated tool configurations unchanged', async () => {
+test('the generated tool configs leave out what the tracked .gitignore files ignore', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript', 'spelling']),
-        '.gitignore': '',
-        'source.js': 'export const value = 1;\n',
+        'gspot.toml': buildSandboxSettings(['python', 'spelling']),
+        '.gitignore': 'other/\n',
+        'main.py': 'VALUE = 1\n',
     });
-    runGitStep(sandbox.path, ['add', '--', 'gspot.toml', '.gitignore', 'source.js']);
-    const before = buildGeneratedFiles(await openSession(sandbox.path)).files.filter(({ path }) =>
-        ['.prettierignore', 'typos.toml', 'knip.json', 'eslint.mjs'].some((name) => path.endsWith(name)),
-    );
-    expect(before).toHaveLength(4);
-    await writeFile(join(sandbox.path, '.gitignore'), 'coverage/\nlogs/\n');
-    const after = buildGeneratedFiles(await openSession(sandbox.path)).files.filter(({ path }) =>
-        ['.prettierignore', 'typos.toml', 'knip.json', 'eslint.mjs'].some((name) => path.endsWith(name)),
-    );
-    expect(after).toStrictEqual(before);
+    runGitStep(sandbox.path, ['add', '--', 'gspot.toml', '.gitignore', 'main.py']);
+    const { files } = buildGeneratedFiles(await openSession(sandbox.path));
+    const pyright = JSON.parse(files.find(({ path }) => path.endsWith('/basedpyright.json'))!.content) as {
+        exclude: string[];
+    };
+    expect(pyright.exclude).toContain('../../../../**/other/**');
+    const typos: unknown = parse(files.find(({ path }) => path.endsWith('/typos.toml'))!.content);
+    expect(findValueAt(typos, ['files', 'extend-exclude'])).toContain('**/other/**');
 });

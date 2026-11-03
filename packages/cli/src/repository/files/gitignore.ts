@@ -2,10 +2,31 @@ import ignore from 'ignore';
 import { posix } from 'node:path';
 import type { RunCache } from '#cli/types/system.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { readText } from '#cli/system/files/reads.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { readText, findText } from '#cli/system/files/reads.ts';
 import { GITIGNORE_FILE } from '#cli/config/repository/files.ts';
 import type { GitignoreMatcher } from '#cli/types/repository.ts';
 import { isInside, extractParentFolder } from '#cli/system/paths.ts';
+
+const SKIPPED_PATTERN_STARTS = ['#', '!'] as const;
+
+/**
+Anchor one line of a .gitignore file at the folder of that file. A pattern with a slash before its end is relative to
+that folder, and any other pattern matches at any depth below it.
+
+@param line the line as written.
+@param folder the folder of the .gitignore file, empty at the root.
+@returns no pattern for a blank line, a comment, a negation, or an escaped character.
+*/
+function anchorPattern(line: string, folder: string): string[] {
+    const pattern = line.trimEnd();
+    if (pattern === '' || pattern.includes('\\') || SKIPPED_PATTERN_STARTS.some((start) => pattern.startsWith(start)))
+        return [];
+    const body = pattern.startsWith('/') ? pattern.slice(1) : pattern;
+    const isAnchored = pattern.slice(0, -1).includes('/');
+    if (folder === '') return [isAnchored ? `/${body}` : body];
+    return [isAnchored ? `/${folder}/${body}` : `/${folder}/**/${body}`];
+}
 
 /**
 Test a path against ignore files in order, keeping later negations.
@@ -47,4 +68,32 @@ export function buildGitignoreMatcher(cache: RunCache, trackedPaths: string[]): 
         const folders = segments.slice(0, -1).map((_, index) => `${segments.slice(0, index + 1).join('/')}/`);
         return [...folders, path, `${path}/`].some((checkedPath) => isIgnored(checkedPath, ignores));
     };
+}
+
+/**
+List the patterns of the tracked .gitignore files outside .gspot/, each anchored at the folder of its file. Every clone
+tracks the same files, so every clone lists the same patterns. A pattern that matches a tracked file stays out, because
+Git checks a tracked file whatever its ignore files say.
+
+@param cache the run cache.
+@param trackedPaths the tracked files of the repository.
+*/
+export function listGitignorePatterns(cache: RunCache, trackedPaths: string[]): string[] {
+    const patterns = [
+        ...new Set(
+            trackedPaths
+                .filter((path) => posix.basename(path) === GITIGNORE_FILE && !isGspotPath(path))
+                .flatMap((file) =>
+                    (findText(cache, file) ?? '')
+                        .split('\n')
+                        .flatMap((line) => anchorPattern(line, extractParentFolder(file))),
+                ),
+        ),
+    ];
+    const everyPattern = ignore().add(patterns);
+    const ignoredPaths = trackedPaths.filter((path) => everyPattern.ignores(path));
+    return patterns.filter((pattern) => {
+        const matcher = ignore().add(pattern);
+        return ignoredPaths.every((path) => !matcher.ignores(path));
+    });
 }

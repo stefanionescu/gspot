@@ -13,6 +13,7 @@ import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import type { ConfigTargets } from '#cli/types/engine/tool-runs.ts';
 import type { OwnedConfig } from '#cli/types/configurations/language.ts';
 import type { IgnoreSection } from '#cli/types/configurations/general.ts';
+import { listGitignorePatterns } from '#cli/repository/files/gitignore.ts';
 import { IGNORE_SECTION_TITLES } from '#cli/config/configurations/registry.ts';
 
 import {
@@ -110,6 +111,11 @@ export function buildIgnoreSections(session: Session, generated: Pick<ConfigTarg
             key: 'submodules',
             title: IGNORE_SECTION_TITLES.submodules,
             patterns: repository.index.filter(({ mode }) => mode === GITLINK_MODE).map(({ path }) => `/${path}/`),
+        },
+        {
+            key: 'gitignore',
+            title: IGNORE_SECTION_TITLES.gitignore,
+            patterns: listGitignorePatterns(cache, trackedPaths),
         },
         ...session.settings.ignore
             .filter((ignore) => ignore.check === undefined)
