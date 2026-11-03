@@ -152,10 +152,14 @@ function buildArgument({ term, choices, defaultValue }: CommandArgument, descrip
     return argument;
 }
 
-function buildOption({ flags, choices, required, parse }: CommandOption, description: string | undefined): Option {
+function buildOption(
+    { flags, choices, required, hidden, parse }: CommandOption,
+    description: string | undefined,
+): Option {
     const option = new Option(flags, description);
     if (choices !== undefined) option.choices(choices);
     if (required === true) option.makeOptionMandatory();
+    if (hidden === true) option.hideHelp();
     if (parse !== undefined) option.argParser(parse as (value: string, previous: unknown) => unknown);
     return option;
 }

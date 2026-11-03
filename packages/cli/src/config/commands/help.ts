@@ -81,7 +81,7 @@ export const COMMAND_HELP = {
         summary: 'Run the checks and print the findings',
         group: 'Run the checks:',
         description:
-            'Run the checks and print each finding with its file, line, lint rule, and help.\n\nWithout options, gspot runs the commit and push checks on the working tree. Commit message checks run with --hook commit-msg. Manual checks run only when --only names them.',
+            'Run the checks and print each finding with its file, line, lint rule, and help.\n\nWithout options, gspot runs the commit and push checks on the working tree. Commit message checks run in the commit-msg hook. Manual checks run only when --only names them.',
         arguments: {
             '[paths...]': 'Files or folders to check, relative to the current folder (default: the whole repository)',
         },
@@ -95,7 +95,6 @@ export const COMMAND_HELP = {
             '--base <ref>':
                 'Compare with this branch, tag, or commit; an empty, all-zero, or absent full hash checks every file',
             '--fix': 'Run the fixers, then run the checks on the fixed files',
-            '--hook <hook>': 'Run the pre-push or commit-msg hook. Put the arguments that Git gives the hook after --',
             '--verbose': 'Also print the passed, off, and skipped checks, each command, and each ignore',
             '--json': 'Print the report as JSON',
         },

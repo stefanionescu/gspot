@@ -14,6 +14,7 @@ export type CommandOption = {
     flags: string;
     choices?: readonly string[];
     required?: boolean;
+    hidden?: boolean;
     parse?: (value: string, previous: string[] | undefined) => unknown;
 };
 
