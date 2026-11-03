@@ -9,7 +9,7 @@ import { DOCS_PATH, RELEASES_URL } from '#docs/config/site.ts';
         <img class="brand-mark" src={mark.src} alt="" width="28" height="28" />
         <span>gspot</span>
     </a>
-    <a class="site-version" href={RELEASES_URL} aria-label={`gspot ${cliPackage.version} release notes`}>
+    <a class="site-version" href={RELEASES_URL} aria-label={`v${cliPackage.version} release notes`}>
         v{cliPackage.version}
     </a>
     {Astro.url.pathname !== '/' && (
