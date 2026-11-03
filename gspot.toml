@@ -9,7 +9,7 @@ setup_command = ["mise", "run", "setup"]
 enabled = true
 
 [naming]
-banned_words = ["catalog", "corpus", "render", "sync", "materialize", "coerce", "scoped", "bind", "load", "fetch", "resolve", "probe", "fixture", "shell", "diagnostic", "directory", "envelope", "outcome", "emit", "violation", "problem", "tooling", "implementation", "candidate", "fragment", "invocation", "lexeme", "substantial", "substance", "floor", "hint", "sink", "inputs", "memo", "collect", "summarize", "verdict", "your", "odd", "qa", "cfg", "obsolete", "release hold", "installed root", "working folder", "root path", "entry", "entries", "item", "items", "part", "parts", "data", "known", "declared", "needed", "prepared", "pinned", "existing", "current", "extra", "complete", "whole", "plain", "raw", "full", "real", "additional", "given", "retained", "observed", "computed", "actual", "effective", "original", "specific", "captured", "recorded", "chosen", "internal", "helper", "helpers", "util", "utils", "payload", "fallback", "attempt", "normalized", "expanded", "composed", "thing", "things", "misc", "info", "details", "meta", "stuff", "perform", "execute", "ensure", "wrapper", "temp", "tmp", "various", "several", "certain", "resulting", "handled", "wrapped", "underlying", "corresponding", "relevant", "appropriate", "proper", "basic", "generic", "overall"]
+banned_words = ["catalog", "corpus", "render", "sync", "materialize", "coerce", "scoped", "bind", "load", "fetch", "resolve", "probe", "fixture", "shell", "diagnostic", "directory", "envelope", "outcome", "emit", "violation", "problem", "tooling", "implementation", "candidate", "fragment", "invocation", "lexeme", "substantial", "substance", "floor", "hint", "sink", "inputs", "memo", "collect", "summarize", "verdict", "your", "odd", "qa", "cfg", "obsolete", "release hold", "installed root", "working folder", "root path", "item", "items", "part", "parts", "known", "declared", "needed", "prepared", "pinned", "existing", "current", "extra", "complete", "whole", "plain", "full", "real", "additional", "given", "retained", "observed", "computed", "actual", "effective", "original", "specific", "captured", "recorded", "chosen", "internal", "helper", "helpers", "util", "utils", "payload", "fallback", "attempt", "normalized", "expanded", "composed", "thing", "things", "misc", "info", "details", "stuff", "perform", "execute", "ensure", "wrapper", "temp", "tmp", "various", "several", "certain", "resulting", "handled", "wrapped", "underlying", "corresponding", "relevant", "appropriate", "proper", "basic", "generic", "overall"]
 
 [[naming.override]]
 paths = ["docs/src/content/docs/404.md"]
@@ -26,11 +26,6 @@ paths = ["packages/cli/src/types/configurations/general.ts", "packages/cli/src/t
 categories = ["properties"]
 allowed_names = ["default_all", "language_defaults", "path_role", "reason_values", "reason_when", "removed_configurations", "test_files"]
 reason = "These properties retain the serialized gspot.toml, configuration manifest and tool report field names."
-
-[[naming.override]]
-paths = ["packages/eslint-plugin/src/rules/variables/no-magic-numbers.ts"]
-allowed_names = ["meta"]
-reason = "ESLint names the description of a rule meta."
 
 [[naming.override]]
 paths = ["packages/cli/src/configurations/framework/site/checks/purgecss-process.ts"]
@@ -90,11 +85,6 @@ allowed_names = ["awsS3BucketVersioning"]
 reason = "S3 is an allowed numeric word, and gspot 0.3.8 drops its digit before it tests the case."
 
 [[naming.override]]
-paths = ["docs/src/types/pages.ts"]
-allowed_names = ["data"]
-reason = "Astro content entries keep their fields in data."
-
-[[naming.override]]
 paths = ["packages/cli/src/config/configurations/builds.ts"]
 allowed_names = ["DERIVED_DATA_FLAG", "DERIVED_DATA_FOLDER"]
 reason = "Xcode names its build folder DerivedData and its flag -derivedDataPath."
@@ -103,16 +93,6 @@ reason = "Xcode names its build folder DerivedData and its flag -derivedDataPath
 paths = ["packages/cli/src/configurations/language/python/generate.ts", "tests/suites/unit/cli/configurations/language/python/generate.test.ts"]
 allowed_names = ["extraPaths"]
 reason = "basedpyright names its import search setting extraPaths."
-
-[[naming.override]]
-paths = ["packages/cli/src/types/parsers.ts"]
-allowed_names = ["raw"]
-reason = "toml-patch and the TypeScript compiler API name the source text raw."
-
-[[naming.override]]
-paths = ["packages/cli/src/config/configurations/javascript.ts", "packages/cli/src/configurations/language/javascript/knip.ts", "tests/types/configurations.ts"]
-allowed_names = ["KNIP_JAVASCRIPT_ENTRY_FILES", "selectEntryFiles", "entry", "entries"]
-reason = "knip names its start files entry, and tools.knip.entry passes them on."
 
 [[naming.override]]
 paths = ["packages/cli/src/types/settings.ts", "packages/cli/src/types/manifests.ts"]
